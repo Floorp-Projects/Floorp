@@ -27,14 +27,14 @@ const {
   getValue,
   nodeIsPrimitive,
   nodeHasGetter,
-  nodeHasSetter
+  nodeHasSetter,
 } = Utils.node;
 
 import type { CachedNodes, Props } from "../types";
 
 type DefaultProps = {
   autoExpandAll: boolean,
-  autoExpandDepth: number
+  autoExpandDepth: number,
 };
 
 // This implements a component that renders an interactive inspector
@@ -163,7 +163,7 @@ class ObjectInspector extends Component<Props> {
       evaluations,
       loadedProperties,
       cachedNodes,
-      item
+      item,
     });
   }
 
@@ -198,7 +198,7 @@ class ObjectInspector extends Component<Props> {
       nodeExpand,
       nodeCollapse,
       recordTelemetryEvent,
-      roots
+      roots,
     } = this.props;
 
     if (expand === true) {
@@ -252,14 +252,14 @@ class ObjectInspector extends Component<Props> {
       focusable = true,
       disableWrap = false,
       expandedPaths,
-      inline
+      inline,
     } = this.props;
 
     return Tree({
       className: classnames({
         inline,
         nowrap: disableWrap,
-        "object-inspector": true
+        "object-inspector": true,
       }),
 
       autoExpandAll,
@@ -289,8 +289,8 @@ class ObjectInspector extends Component<Props> {
           focused,
           arrow,
           expanded,
-          setExpanded: this.setExpanded
-        })
+          setExpanded: this.setExpanded,
+        }),
     });
   }
 }
@@ -299,7 +299,7 @@ function mapStateToProps(state, props) {
   return {
     expandedPaths: selectors.getExpandedPaths(state),
     loadedProperties: selectors.getLoadedProperties(state),
-    evaluations: selectors.getEvaluations(state)
+    evaluations: selectors.getEvaluations(state),
   };
 }
 

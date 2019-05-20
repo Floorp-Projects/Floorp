@@ -1,0 +1,47 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* Test that the UI for imported root certificates shows up correctly in the identity popup.
+ */
+
+const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
+
+// This test is incredibly simple, because our test framework already
+// imports root certificates by default, so we just visit example.com
+// and verify that the custom root certificates UI is visible.
+add_task(async function test_https() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+    let promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+    gIdentityHandler._identityBox.click();
+    await promisePanelOpen;
+    let customRootWarning = document.getElementById("identity-popup-security-decription-custom-root");
+    ok(BrowserTestUtils.is_visible(customRootWarning), "custom root warning is visible");
+
+    let securityView = document.getElementById("identity-popup-securityView");
+    let shown = BrowserTestUtils.waitForEvent(securityView, "ViewShown");
+    document.getElementById("identity-popup-security-expander").click();
+    await shown;
+
+    let subPanelInfo = document.getElementById("identity-popup-content-verifier-unknown");
+    ok(BrowserTestUtils.is_visible(subPanelInfo), "custom root warning in sub panel is visible");
+  });
+});
+
+// Also check that there are conditions where this isn't shown.
+add_task(async function test_http() {
+  await BrowserTestUtils.withNewTab("http://example.com", async function() {
+    let promisePanelOpen = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "popupshown");
+    gIdentityHandler._identityBox.click();
+    await promisePanelOpen;
+    let customRootWarning = document.getElementById("identity-popup-security-decription-custom-root");
+    ok(BrowserTestUtils.is_hidden(customRootWarning), "custom root warning is hidden");
+
+    let securityView = document.getElementById("identity-popup-securityView");
+    let shown = BrowserTestUtils.waitForEvent(securityView, "ViewShown");
+    document.getElementById("identity-popup-security-expander").click();
+    await shown;
+
+    let subPanelInfo = document.getElementById("identity-popup-content-verifier-unknown");
+    ok(BrowserTestUtils.is_hidden(subPanelInfo), "custom root warning in sub panel is hidden");
+  });
+});

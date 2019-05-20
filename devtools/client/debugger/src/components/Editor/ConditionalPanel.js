@@ -15,7 +15,7 @@ import {
   getBreakpointForLocation,
   getConditionalPanelLocation,
   getLogPointStatus,
-  getContext
+  getContext,
 } from "../../selectors";
 
 import type { SourceLocation, Context } from "../../types";
@@ -34,7 +34,7 @@ type Props = {
   log: boolean,
   editor: Object,
   openConditionalPanel: typeof actions.openConditionalPanel,
-  closeConditionalPanel: typeof actions.closeConditionalPanel
+  closeConditionalPanel: typeof actions.closeConditionalPanel,
 };
 
 export class ConditionalPanel extends PureComponent<Props> {
@@ -81,7 +81,7 @@ export class ConditionalPanel extends PureComponent<Props> {
     const type = log ? "logValue" : "condition";
     return this.props.setBreakpointOptions(cx, location, {
       ...options,
-      [type]: value
+      [type]: value,
     });
   }
 
@@ -134,7 +134,7 @@ export class ConditionalPanel extends PureComponent<Props> {
       this.renderConditionalPanel(props),
       {
         coverGutter: true,
-        noHScroll: true
+        noHScroll: true,
       }
     );
     if (this.input) {
@@ -167,7 +167,7 @@ export class ConditionalPanel extends PureComponent<Props> {
         log
           ? "editor.conditionalPanel.logPoint.placeholder2"
           : "editor.conditionalPanel.placeholder2"
-      )
+      ),
     });
 
     codeMirror.on("keydown", (cm, e) => {
@@ -203,7 +203,7 @@ export class ConditionalPanel extends PureComponent<Props> {
     ReactDOM.render(
       <div
         className={classNames("conditional-breakpoint-panel", {
-          "log-point": log
+          "log-point": log,
         })}
         onClick={() => this.keepFocusOnInput()}
         onBlur={this.props.closeConditionalPanel}
@@ -232,20 +232,20 @@ const mapStateToProps = state => {
     cx: getContext(state),
     breakpoint: getBreakpointForLocation(state, location),
     location,
-    log
+    log,
   };
 };
 
 const {
   setBreakpointOptions,
   openConditionalPanel,
-  closeConditionalPanel
+  closeConditionalPanel,
 } = actions;
 
 const mapDispatchToProps = {
   setBreakpointOptions,
   openConditionalPanel,
-  closeConditionalPanel
+  closeConditionalPanel,
 };
 
 export default connect(

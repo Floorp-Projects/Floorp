@@ -18,7 +18,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/PreferenceSheet.h"
-#include "nsCSSValue.h"
 #include "nsStyleStruct.h"
 
 class nsAtom;
@@ -469,9 +468,6 @@ void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len,
 
 void Gecko_EnsureStyleAnimationArrayLength(void* array, size_t len);
 void Gecko_EnsureStyleTransitionArrayLength(void* array, size_t len);
-void Gecko_ClearWillChange(nsStyleDisplay* display, size_t length);
-void Gecko_AppendWillChange(nsStyleDisplay* display, nsAtom* atom);
-void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, const nsStyleDisplay* src);
 
 // Searches from the beginning of |keyframes| for a Keyframe object with the
 // specified offset and timing function. If none is found, a new Keyframe object
@@ -588,66 +584,6 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::URLExtraData, URLExtraData);
 void Gecko_FillAllImageLayers(nsStyleImageLayers* layers, uint32_t max_len);
 
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsStyleCoord::Calc, Calc);
-
-nsCSSShadowArray* Gecko_NewCSSShadowArray(uint32_t len);
-
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSShadowArray, CSSShadowArray);
-
-nsCSSValueSharedList* Gecko_NewCSSValueSharedList(uint32_t len);
-nsCSSValueSharedList* Gecko_NewNoneTransform();
-void Gecko_StyleDisplay_GenerateCombinedTransform(nsStyleDisplay*);
-
-// Getter for nsCSSValue
-nsCSSValue* Gecko_CSSValue_GetArrayItem(nsCSSValue*, int32_t index);
-
-// const version of the above function.
-const nsCSSValue* Gecko_CSSValue_GetArrayItemConst(const nsCSSValue*,
-                                                   int32_t index);
-
-nsCSSKeyword Gecko_CSSValue_GetKeyword(const nsCSSValue*);
-float Gecko_CSSValue_GetNumber(const nsCSSValue* css_value);
-float Gecko_CSSValue_GetPercentage(const nsCSSValue* css_value);
-nsStyleCoord::CalcValue Gecko_CSSValue_GetCalc(const nsCSSValue* aCSSValue);
-void Gecko_CSSValue_SetNumber(nsCSSValue* css_value, float number);
-
-void Gecko_CSSValue_SetKeyword(nsCSSValue* css_value, nsCSSKeyword keyword);
-
-void Gecko_CSSValue_SetPercentage(nsCSSValue* css_value, float percent);
-
-void Gecko_CSSValue_SetPixelLength(nsCSSValue* aCSSValue, float aLen);
-
-void Gecko_CSSValue_SetCalc(nsCSSValue* css_value,
-                            nsStyleCoord::CalcValue calc);
-
-void Gecko_CSSValue_SetFunction(nsCSSValue* css_value, int32_t len);
-
-void Gecko_CSSValue_SetString(nsCSSValue* css_value, const uint8_t* string,
-                              uint32_t len, nsCSSUnit unit);
-
-void Gecko_CSSValue_SetStringFromAtom(nsCSSValue* css_value, nsAtom* atom,
-                                      nsCSSUnit unit);
-
-// Take an addrefed nsAtom and set it to the nsCSSValue
-void Gecko_CSSValue_SetAtomIdent(nsCSSValue* css_value, nsAtom* atom);
-void Gecko_CSSValue_SetArray(nsCSSValue* css_value, int32_t len);
-
-void Gecko_CSSValue_SetInt(nsCSSValue* css_value, int32_t integer,
-                           nsCSSUnit unit);
-
-void Gecko_CSSValue_SetFloat(nsCSSValue* css_value, float value,
-                             nsCSSUnit unit);
-
-void Gecko_CSSValue_SetPair(nsCSSValue* css_value, const nsCSSValue* xvalue,
-                            const nsCSSValue* yvalue);
-
-void Gecko_CSSValue_SetList(nsCSSValue* css_value, uint32_t len);
-void Gecko_CSSValue_SetPairList(nsCSSValue* css_value, uint32_t len);
-
-void Gecko_CSSValue_InitSharedList(nsCSSValue* css_value, uint32_t len);
-
-void Gecko_CSSValue_Drop(nsCSSValue* css_value);
-
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
 float Gecko_FontStretch_ToFloat(mozilla::FontStretch aStretch);
 

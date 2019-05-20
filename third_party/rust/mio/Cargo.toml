@@ -12,12 +12,12 @@
 
 [package]
 name = "mio"
-version = "0.6.15"
+version = "0.6.16"
 authors = ["Carl Lerche <me@carllerche.com>"]
 exclude = [".gitignore", ".travis.yml", "deploy.sh"]
 description = "Lightweight non-blocking IO"
 homepage = "https://github.com/carllerche/mio"
-documentation = "https://docs.rs/mio"
+documentation = "https://docs.rs/mio/0.6.16/mio/"
 readme = "README.md"
 keywords = ["io", "async", "non-blocking"]
 categories = ["asynchronous"]
@@ -31,7 +31,7 @@ path = "test/mod.rs"
 version = "0.1.1"
 
 [dependencies.lazycell]
-version = "0.6.0"
+version = "1"
 
 [dependencies.log]
 version = "0.4"

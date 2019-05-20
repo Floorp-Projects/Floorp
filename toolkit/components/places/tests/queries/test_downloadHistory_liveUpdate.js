@@ -28,7 +28,7 @@ function accumulateNotifications(result) {
 add_task(async function test_downloadhistory_query_notifications() {
   const MAX_RESULTS = 5;
   let query = PlacesUtils.history.getNewQuery();
-  query.setTransitions([PlacesUtils.history.TRANSITIONS.DOWNLOAD], 1);
+  query.setTransitions([PlacesUtils.history.TRANSITIONS.DOWNLOAD]);
   let options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
   options.maxResults = MAX_RESULTS;
@@ -74,7 +74,7 @@ add_task(async function test_downloadhistory_query_notifications() {
 add_task(async function test_downloadhistory_query_filtering() {
   const MAX_RESULTS = 3;
   let query = PlacesUtils.history.getNewQuery();
-  query.setTransitions([PlacesUtils.history.TRANSITIONS.DOWNLOAD], 1);
+  query.setTransitions([PlacesUtils.history.TRANSITIONS.DOWNLOAD]);
   let options = PlacesUtils.history.getNewQueryOptions();
   options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
   options.maxResults = MAX_RESULTS;

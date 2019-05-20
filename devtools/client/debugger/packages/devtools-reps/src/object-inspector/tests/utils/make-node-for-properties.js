@@ -8,32 +8,32 @@ const {
   nodeIsDefaultProperties,
   nodeIsEntries,
   nodeIsMapEntry,
-  nodeIsPrototype
+  nodeIsPrototype,
 } = require("../../utils/node");
 const gripArrayStubs = require("../../../reps/stubs/grip-array");
 
 const root = {
   path: "root",
   contents: {
-    value: gripArrayStubs.get("testBasic")
-  }
+    value: gripArrayStubs.get("testBasic"),
+  },
 };
 
 const objProperties = {
   ownProperties: {
     "0": {
-      value: {}
+      value: {},
     },
     "2": {},
     length: {
-      value: 3
-    }
+      value: 3,
+    },
   },
   prototype: {
     type: "object",
     actor: "server2.conn1.child1/pausedobj618",
-    class: "bla"
-  }
+    class: "bla",
+  },
 };
 
 describe("makeNodesForProperties", () => {
@@ -47,7 +47,7 @@ describe("makeNodesForProperties", () => {
     expect(paths).toEqual([
       "Symbol(root/0)",
       "Symbol(root/length)",
-      "Symbol(root/<prototype>)"
+      "Symbol(root/<prototype>)",
     ]);
   });
 
@@ -58,24 +58,24 @@ describe("makeNodesForProperties", () => {
           foo: { value: "foo" },
           bar: {
             get: {
-              type: "object"
+              type: "object",
             },
             set: {
-              type: "undefined"
-            }
+              type: "undefined",
+            },
           },
           baz: {
             get: {
-              type: "undefined"
+              type: "undefined",
             },
             set: {
-              type: "object"
-            }
-          }
+              type: "object",
+            },
+          },
         },
         prototype: {
-          class: "bla"
-        }
+          class: "bla",
+        },
       },
       root
     );
@@ -89,7 +89,7 @@ describe("makeNodesForProperties", () => {
       "foo",
       "<get bar()>",
       "<set baz()>",
-      "<prototype>"
+      "<prototype>",
     ]);
 
     expect(paths).toEqual([
@@ -98,7 +98,7 @@ describe("makeNodesForProperties", () => {
       "Symbol(root/foo)",
       "Symbol(root/<get bar()>)",
       "Symbol(root/<set baz()>)",
-      "Symbol(root/<prototype>)"
+      "Symbol(root/<prototype>)",
     ]);
   });
 
@@ -108,8 +108,8 @@ describe("makeNodesForProperties", () => {
         ownProperties: {
           foo: undefined,
           bar: null,
-          baz: {}
-        }
+          baz: {},
+        },
       },
       root
     );
@@ -129,11 +129,11 @@ describe("makeNodesForProperties", () => {
           1: { value: {} },
           11: { value: {} },
           2: { value: {} },
-          _bar: { value: {} }
+          _bar: { value: {} },
         },
         prototype: {
-          class: "bla"
-        }
+          class: "bla",
+        },
       },
       root
     );
@@ -148,7 +148,7 @@ describe("makeNodesForProperties", () => {
       "Symbol(root/11)",
       "Symbol(root/_bar)",
       "Symbol(root/bar)",
-      "Symbol(root/<prototype>)"
+      "Symbol(root/<prototype>)",
     ]);
   });
 
@@ -156,9 +156,9 @@ describe("makeNodesForProperties", () => {
     const nodes = makeNodesForProperties(
       {
         ownProperties: {
-          bar: { value: {} }
+          bar: { value: {} },
         },
-        prototype: { value: {}, class: "bla" }
+        prototype: { value: {}, class: "bla" },
       },
       root
     );
@@ -177,13 +177,13 @@ describe("makeNodesForProperties", () => {
       {
         ownProperties: {
           bar: { value: {} },
-          location: { value: {} }
+          location: { value: {} },
         },
-        class: "Window"
+        class: "Window",
       },
       {
         path: "root",
-        contents: { value: { class: "Window" } }
+        contents: { value: { class: "Window" } },
       }
     );
 
@@ -193,7 +193,7 @@ describe("makeNodesForProperties", () => {
     expect(names).toEqual(["bar", "<default properties>"]);
     expect(paths).toEqual([
       "Symbol(root/bar)",
-      "Symbol(root/<default properties>)"
+      "Symbol(root/<default properties>)",
     ]);
 
     expect(nodeIsDefaultProperties(nodes[1])).toBe(true);
@@ -206,16 +206,16 @@ describe("makeNodesForProperties", () => {
       name: "map",
       path: "root",
       contents: {
-        value: gripMapStubs.get("testSymbolKeyedMap")
-      }
+        value: gripMapStubs.get("testSymbolKeyedMap"),
+      },
     });
 
     const nodes = makeNodesForProperties(
       {
         ownProperties: {
           size: { value: 1 },
-          custom: { value: "customValue" }
-        }
+          custom: { value: "customValue" },
+        },
       },
       mapNode
     );
@@ -227,7 +227,7 @@ describe("makeNodesForProperties", () => {
     expect(paths).toEqual([
       "Symbol(root/custom)",
       "Symbol(root/size)",
-      "Symbol(root/<entries>)"
+      "Symbol(root/<entries>)",
     ]);
 
     const entriesNode = nodes[2];
@@ -245,7 +245,7 @@ describe("makeNodesForProperties", () => {
     expect(childrenNames).toEqual([0, 1]);
     expect(childrenPaths).toEqual([
       "Symbol(root/<entries>/0)",
-      "Symbol(root/<entries>/1)"
+      "Symbol(root/<entries>/1)",
     ]);
   });
 
@@ -257,11 +257,11 @@ describe("makeNodesForProperties", () => {
           332217: { value: {} },
           "needs-quotes": { value: {} },
           unquoted: { value: {} },
-          "": { value: {} }
+          "": { value: {} },
         },
         prototype: {
-          class: "WindowPrototype"
-        }
+          class: "WindowPrototype",
+        },
       },
       root
     );
@@ -274,14 +274,14 @@ describe("makeNodesForProperties", () => {
       "332217",
       '"needs-quotes"',
       "unquoted",
-      "<prototype>"
+      "<prototype>",
     ]);
     expect(paths).toEqual([
       'Symbol(root/"")',
       "Symbol(root/332217)",
       'Symbol(root/"needs-quotes")',
       "Symbol(root/unquoted)",
-      "Symbol(root/<prototype>)"
+      "Symbol(root/<prototype>)",
     ]);
   });
 });

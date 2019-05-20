@@ -3,9 +3,8 @@ import {actionTypes as at} from "common/Actions.jsm";
 import {GlobalOverrider} from "test/unit/utils";
 import {reducers} from "common/Reducers.jsm";
 import {selectLayoutRender} from "content-src/lib/selectLayoutRender";
-
-const FAKE_LAYOUT = [{width: 3, components: [{type: "foo", feed: {url: "foo.com"}}]}];
-const FAKE_FEEDS = {"foo.com": {data: {recommendations: ["foo", "bar"]}}};
+const FAKE_LAYOUT = [{width: 3, components: [{type: "foo", feed: {url: "foo.com"}, properties: {items: 2}}]}];
+const FAKE_FEEDS = {"foo.com": {data: {recommendations: [{id: "foo"}, {id: "bar"}]}}};
 
 describe("selectLayoutRender", () => {
   let store;
@@ -39,10 +38,10 @@ describe("selectLayoutRender", () => {
 
     assert.lengthOf(layoutRender, 1);
     assert.propertyVal(layoutRender[0], "width", 3);
-    assert.deepEqual(layoutRender[0].components[0], {type: "foo", feed: {url: "foo.com"}, data: {recommendations: ["foo", "bar"]}});
+    assert.deepEqual(layoutRender[0].components[0], {type: "foo", feed: {url: "foo.com"}, properties: {items: 2}, data: {recommendations: [{id: "foo", pos: 0}, {id: "bar", pos: 1}]}});
   });
 
-  it("should return layout property without data if feed isn't available", () => {
+  it("should return layout with placeholder data if feed isn't available", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: FAKE_LAYOUT}});
     store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE});
 
@@ -50,7 +49,7 @@ describe("selectLayoutRender", () => {
 
     assert.lengthOf(layoutRender, 1);
     assert.propertyVal(layoutRender[0], "width", 3);
-    assert.deepEqual(layoutRender[0].components.length, 0);
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations, [{placeholder: true}, {placeholder: true}]);
   });
 
   it("should return feed data offset by layout set prop", () => {
@@ -61,7 +60,7 @@ describe("selectLayoutRender", () => {
 
     const {layoutRender} = selectLayoutRender(store.getState().DiscoveryStream, {}, []);
 
-    assert.deepEqual(layoutRender[0].components[0].data, {recommendations: ["bar"]});
+    assert.deepEqual(layoutRender[0].components[0].data, {recommendations: [{id: "bar"}]});
   });
 
   it("should return spoc result and spocs fill for rolls below the probability", () => {
@@ -81,8 +80,8 @@ describe("selectLayoutRender", () => {
     assert.lengthOf(layoutRender, 1);
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], "fooSpoc");
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], "barSpoc");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], "foo");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], "bar");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], {id: "foo"});
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], {id: "bar"});
 
     assert.deepEqual(spocsFill, [
       {id: undefined, reason: "n/a", displayed: 1, full_recalc: 0},
@@ -107,8 +106,8 @@ describe("selectLayoutRender", () => {
     assert.lengthOf(layoutRender, 1);
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], "fooSpoc");
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], "barSpoc");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], "foo");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], "bar");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], {id: "foo"});
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], {id: "bar"});
 
     assert.deepEqual(spocsFill, [
       {id: undefined, reason: "n/a", displayed: 1, full_recalc: 0},
@@ -131,9 +130,9 @@ describe("selectLayoutRender", () => {
 
     assert.notCalled(randomStub);
     assert.lengthOf(layoutRender, 1);
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], "foo");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], {id: "foo"});
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], "fooSpoc");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], "bar");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], {id: "bar"});
 
     assert.deepEqual(spocsFill, [
       {id: undefined, reason: "n/a", displayed: 1, full_recalc: 0},
@@ -157,8 +156,8 @@ describe("selectLayoutRender", () => {
 
     assert.calledTwice(randomStub);
     assert.lengthOf(layoutRender, 1);
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], "foo");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], "bar");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], {id: "foo"});
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], {id: "bar"});
 
     assert.deepEqual(spocsFill, [
       {id: undefined, reason: "probability_selection", displayed: 0, full_recalc: 0},
@@ -183,8 +182,8 @@ describe("selectLayoutRender", () => {
     assert.lengthOf(layoutRender, 1);
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], "fooSpoc");
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], "barSpoc");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], "foo");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], "bar");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], {id: "foo"});
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[3], {id: "bar"});
 
     assert.deepEqual(spocsFill, [
       {id: undefined, reason: "n/a", displayed: 1, full_recalc: 0},
@@ -207,8 +206,8 @@ describe("selectLayoutRender", () => {
 
     assert.notCalled(randomStub);
     assert.lengthOf(layoutRender, 1);
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], "foo");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], "bar");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], {id: "foo"});
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], {id: "bar"});
 
     assert.deepEqual(spocsFill, [
       {id: undefined, reason: "probability_selection", displayed: 0, full_recalc: 0},
@@ -231,9 +230,9 @@ describe("selectLayoutRender", () => {
 
     assert.notCalled(randomStub);
     assert.lengthOf(layoutRender, 1);
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], "foo");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[0], {id: "foo"});
     assert.deepEqual(layoutRender[0].components[0].data.recommendations[1], "fooSpoc");
-    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], "bar");
+    assert.deepEqual(layoutRender[0].components[0].data.recommendations[2], {id: "bar"});
 
     assert.deepEqual(spocsFill, [
       {id: undefined, reason: "n/a", displayed: 1, full_recalc: 0},
@@ -283,7 +282,9 @@ describe("selectLayoutRender", () => {
 
     assert.equal(layoutRender[0].components[0].type, "foo1");
     assert.equal(layoutRender[0].components[1].type, "foo2");
-    assert.equal(layoutRender[0].components[2], undefined);
+    assert.isTrue(layoutRender[0].components[2].data.recommendations[0].placeholder);
+    assert.lengthOf(layoutRender[0].components, 3);
+    assert.isUndefined(layoutRender[0].components[3]);
   });
   it("should render everything if everything is ready", () => {
     const fakeLayout = [{
@@ -329,7 +330,7 @@ describe("selectLayoutRender", () => {
 
     assert.equal(layoutRender[0].components[0].type, "foo1");
     assert.equal(layoutRender[0].components[1].type, "foo2");
-    assert.equal(layoutRender[0].components[2], undefined);
+    assert.deepEqual(layoutRender[0].components[2].data.recommendations, [{placeholder: true}, {placeholder: true}, {placeholder: true}]);
   });
   it("should not render a spoc if there are no available spocs", () => {
     const fakeLayout = [{
@@ -371,5 +372,20 @@ describe("selectLayoutRender", () => {
 
     assert.equal(layoutRender[0].components[0].type, "TopSites");
     assert.equal(layoutRender[1], undefined);
+  });
+  it("should not render a component if filtered", () => {
+    const fakeLayout = [{
+      width: 3,
+      components: [
+        {type: "Message"},
+        {type: "TopSites"},
+      ],
+    }];
+    store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: fakeLayout}});
+
+    const {layoutRender} = selectLayoutRender(store.getState().DiscoveryStream, {"feeds.topsites": true}, []);
+
+    assert.equal(layoutRender[0].components[0].type, "TopSites");
+    assert.equal(layoutRender[0].components[1], undefined);
   });
 });

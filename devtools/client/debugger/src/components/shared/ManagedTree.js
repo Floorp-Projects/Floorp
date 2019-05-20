@@ -11,7 +11,7 @@ const { Tree } = require("devtools-components");
 export type Item = {
   contents: any,
   name: string,
-  path: string
+  path: string,
 };
 
 type Props = {
@@ -29,23 +29,23 @@ type Props = {
   onCollapse?: (item: Item, expanded: Set<string>) => void,
   renderItem: any,
   focused?: any,
-  expanded?: any
+  expanded?: any,
 };
 
 type State = {
-  expanded: any
+  expanded: any,
 };
 
 class ManagedTree extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      expanded: props.expanded || new Set()
+      expanded: props.expanded || new Set(),
     };
   }
 
   static defaultProps = {
-    onFocus: () => {}
+    onFocus: () => {},
   };
 
   componentWillReceiveProps(nextProps: Props) {
@@ -149,7 +149,7 @@ class ManagedTree extends Component<Props, State> {
           onFocus={this.props.onFocus}
           renderItem={(...args) =>
             this.props.renderItem(...args, {
-              setExpanded: this.setExpanded
+              setExpanded: this.setExpanded,
             })
           }
         />

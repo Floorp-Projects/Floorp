@@ -28,25 +28,25 @@ describe("getGripLengthBubbleText - Zero length", () => {
     const output = "(0)";
     let text = getGripLengthBubbleText(object, {
       mode: undefined,
-      showZeroLength: true
+      showZeroLength: true,
     });
     expect(text).toBe(output);
 
     text = getGripLengthBubbleText(object, {
       mode: MODE.TINY,
-      showZeroLength: true
+      showZeroLength: true,
     });
     expect(text).toBe(output);
 
     text = getGripLengthBubbleText(object, {
       mode: MODE.SHORT,
-      showZeroLength: true
+      showZeroLength: true,
     });
     expect(text).toBe(output);
 
     text = getGripLengthBubbleText(object, {
       mode: MODE.LONG,
-      showZeroLength: true
+      showZeroLength: true,
     });
     expect(text).toBe(output);
   });
@@ -72,25 +72,25 @@ describe("getGripLengthBubbleText - Obvious length for some modes", () => {
     const visibilityThreshold = 5;
     text = getGripLengthBubbleText(object, {
       mode: undefined,
-      visibilityThreshold
+      visibilityThreshold,
     });
     expect(text).toBe(visibleOutput);
 
     text = getGripLengthBubbleText(object, {
       mode: MODE.TINY,
-      visibilityThreshold
+      visibilityThreshold,
     });
     expect(text).toBe(visibleOutput);
 
     text = getGripLengthBubbleText(object, {
       mode: MODE.SHORT,
-      visibilityThreshold
+      visibilityThreshold,
     });
     expect(text).toBe(visibleOutput);
 
     text = getGripLengthBubbleText(object, {
       mode: MODE.LONG,
-      visibilityThreshold
+      visibilityThreshold,
     });
     expect(text).toBe("");
   });

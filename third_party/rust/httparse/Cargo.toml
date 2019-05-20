@@ -12,9 +12,14 @@
 
 [package]
 name = "httparse"
-version = "1.2.3"
-authors = ["Sean McArthur <sean.monstar@gmail.com>"]
+version = "1.3.3"
+authors = ["Sean McArthur <sean@seanmonstar.com>"]
+build = "build.rs"
 description = "A tiny, safe, speedy, zero-copy HTTP/1.x parser."
+documentation = "https://docs.rs/httparse"
+readme = "README.md"
+keywords = ["http", "parser", "no_std"]
+categories = ["network-programming", "no-std", "parser-implementations", "web-programming"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/seanmonstar/httparse"
 [profile.bench]

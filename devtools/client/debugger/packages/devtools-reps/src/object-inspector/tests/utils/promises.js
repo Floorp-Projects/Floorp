@@ -4,7 +4,7 @@
 
 const {
   makeNodesForPromiseProperties,
-  nodeIsPromise
+  nodeIsPromise,
 } = require("../../utils/node");
 
 describe("promises utils function", () => {
@@ -18,13 +18,13 @@ describe("promises utils function", () => {
           promiseState: {
             state: "rejected",
             reason: {
-              type: "undefined"
-            }
+              type: "undefined",
+            },
           },
           class: "Promise",
-          type: "object"
-        }
-      }
+          type: "object",
+        },
+      },
     };
 
     expect(nodeIsPromise(promise)).toEqual(true);
@@ -39,13 +39,13 @@ describe("promises utils function", () => {
           promiseState: {
             state: "rejected",
             reason: {
-              type: "3"
-            }
+              type: "3",
+            },
           },
           class: "Promise",
-          type: "object"
-        }
-      }
+          type: "object",
+        },
+      },
     };
 
     const properties = makeNodesForPromiseProperties(promise);

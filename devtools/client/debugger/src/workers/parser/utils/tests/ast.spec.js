@@ -17,7 +17,7 @@ const astKeys = [
   "loc",
   "program",
   "comments",
-  "tokens"
+  "tokens",
 ];
 
 cases(
@@ -33,7 +33,7 @@ cases(
       id: source.id,
       text: content.value || "",
       contentType: content.contentType,
-      isWasm: false
+      isWasm: false,
     });
     const ast = getAst("foo");
     expect(ast && Object.keys(ast)).toEqual(astKeys);
@@ -42,6 +42,6 @@ cases(
     { name: "text/javascript" },
     { name: "application/javascript" },
     { name: "application/x-javascript" },
-    { name: "text/jsx" }
+    { name: "text/jsx" },
   ]
 );

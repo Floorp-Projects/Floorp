@@ -51,5 +51,5 @@ export const vendored = {
   "lodash-move": move,
   "react-aria-components/src/tabs": reactAriaComponentsTabs,
   "react-transition-group/Transition": transition,
-  reselect
+  reselect,
 };

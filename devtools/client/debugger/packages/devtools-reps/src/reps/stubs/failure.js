@@ -13,7 +13,7 @@ stubs.set("Failure", {
   ownPropertyLength: 1,
   get displayString() {
     throw new Error("failure");
-  }
+  },
 });
 
 module.exports = stubs;

@@ -70,7 +70,8 @@ class ElementStyle {
 
   get unusedCssEnabled() {
     if (!this._unusedCssEnabled) {
-      this._unusedCssEnabled = Services.prefs.getBoolPref(PREF_INACTIVE_CSS_ENABLED);
+      this._unusedCssEnabled =
+        Services.prefs.getBoolPref(PREF_INACTIVE_CSS_ENABLED, false);
     }
     return this._unusedCssEnabled;
   }

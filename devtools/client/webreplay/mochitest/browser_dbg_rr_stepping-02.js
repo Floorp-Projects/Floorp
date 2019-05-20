@@ -20,9 +20,14 @@ add_task(async function() {
   await stepInToLine(client, 25);
   await stepOverToLine(client, 26);
   await stepOverToLine(client, 27);
-  await reverseStepInToLine(client, 33);
+  await reverseStepOverToLine(client, 26);
+  await stepInToLine(client, 30);
+  await stepOverToLine(client, 31);
+  await stepOverToLine(client, 32);
+  await stepOverToLine(client, 33);
   await reverseStepOverToLine(client, 32);
-  await reverseStepOutToLine(client, 26);
+  await stepOutToLine(client, 27);
+  await reverseStepOverToLine(client, 26);
   await reverseStepOverToLine(client, 25);
 
   await client.removeBreakpoint(bp);

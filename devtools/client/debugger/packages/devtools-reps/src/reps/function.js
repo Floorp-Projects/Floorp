@@ -20,7 +20,7 @@ const IGNORED_SOURCE_URLS = ["debugger eval code"];
 FunctionRep.propTypes = {
   object: PropTypes.object.isRequired,
   parameterNames: PropTypes.array,
-  onViewSourceInDebugger: PropTypes.func
+  onViewSourceInDebugger: PropTypes.func,
 };
 
 function FunctionRep(props) {
@@ -45,7 +45,7 @@ function FunctionRep(props) {
           recordTelemetryEvent("jump_to_definition");
         }
         onViewSourceInDebugger(grip.location);
-      }
+      },
     });
   }
 
@@ -55,7 +55,7 @@ function FunctionRep(props) {
       className: "objectBox objectBox-function",
       // Set dir="ltr" to prevent function parentheses from
       // appearing in the wrong direction
-      dir: "ltr"
+      dir: "ltr",
     },
     getTitle(grip, props),
     getFunctionName(grip, props),
@@ -85,7 +85,7 @@ function getTitle(grip, props) {
 
   return span(
     {
-      className: "objectTitle"
+      className: "objectTitle",
     },
     title
   );
@@ -146,7 +146,7 @@ function cleanFunctionName(name) {
     objectProperty,
     arrayProperty,
     functionProperty,
-    annonymousProperty
+    annonymousProperty,
   ]) {
     const match = reg.exec(name);
     if (match) {
@@ -188,5 +188,5 @@ module.exports = {
   supportsObject,
   cleanFunctionName,
   // exported for testing purpose.
-  getFunctionName
+  getFunctionName,
 };

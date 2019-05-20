@@ -17,27 +17,28 @@ export * from "../reducers/file-search";
 export * from "../reducers/ast";
 export * from "../reducers/project-text-search";
 export * from "../reducers/source-tree";
+export * from "../reducers/preview";
 
 export {
   getSourceActor,
   hasSourceActor,
   getSourceActors,
-  getSourceActorsForThread
+  getSourceActorsForThread,
 } from "../reducers/source-actors";
 
 export {
   getQuickOpenEnabled,
   getQuickOpenQuery,
-  getQuickOpenType
+  getQuickOpenType,
 } from "../reducers/quick-open";
 
 export {
   getBreakpointAtLocation,
-  getBreakpointsAtLine
+  getBreakpointsAtLine,
 } from "./breakpointAtLocation";
 export {
   getVisibleBreakpoints,
-  getFirstVisibleBreakpoints
+  getFirstVisibleBreakpoints,
 } from "./visibleBreakpoints";
 export { inComponent } from "./inComponent";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
@@ -48,7 +49,7 @@ export * from "./visibleColumnBreakpoints";
 export {
   getSelectedFrame,
   getSelectedFrames,
-  getVisibleSelectedFrame
+  getVisibleSelectedFrame,
 } from "./pause";
 
 // eslint-disable-next-line import/named
@@ -62,6 +63,6 @@ Object.keys(reducer).forEach(function(key) {
   }
   Object.defineProperty(exports, key, {
     enumerable: true,
-    get: reducer[key]
+    get: reducer[key],
   });
 });

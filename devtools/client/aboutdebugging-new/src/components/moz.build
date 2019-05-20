@@ -14,7 +14,6 @@ DevToolsModules(
     'App.js',
     'CompatibilityWarning.js',
     'ConnectionPromptSetting.js',
-    'ExtensionDebugSetting.js',
     'ProfilerDialog.css',
     'ProfilerDialog.js',
     'RuntimeActions.css',

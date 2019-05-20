@@ -400,7 +400,7 @@
       query.searchTerms = filterString;
 
       if (folderRestrict) {
-        query.setParents(folderRestrict, folderRestrict.length);
+        query.setParents(folderRestrict);
         options.queryType = options.QUERY_TYPE_BOOKMARKS;
       }
 

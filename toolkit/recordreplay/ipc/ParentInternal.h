@@ -76,11 +76,6 @@ void SendGraphicsMemoryToChild();
 // an unhandled recording divergence.
 void UpdateGraphicsInUIProcess(const PaintMessage* aMsg);
 
-// If necessary, update graphics after the active child sends a paint message
-// or reaches a checkpoint.
-void MaybeUpdateGraphicsAtPaint(const PaintMessage& aMsg);
-void MaybeUpdateGraphicsAtCheckpoint(size_t aCheckpointId);
-
 // ID for the mach message sent from a child process to the middleman to
 // request a port for the graphics shmem.
 static const int32_t GraphicsHandshakeMessageId = 42;
@@ -141,7 +136,7 @@ class ChildProcessInfo {
   bool mHasBegunFatalError;
   bool mHasFatalError;
 
-  void OnIncomingMessage(const Message& aMsg, bool aForwardToControl);
+  void OnIncomingMessage(const Message& aMsg);
 
   static void MaybeProcessPendingMessageRunnable();
   void ReceiveChildMessageOnMainThread(Message::UniquePtr aMsg);
@@ -164,9 +159,8 @@ class ChildProcessInfo {
 
   // Handle incoming messages from this process (and no others) until it pauses.
   // The return value is null if it is already paused, otherwise the message
-  // which caused it to pause. In the latter case, OnIncomingMessage will *not*
-  // be called with the message.
-  Message::UniquePtr WaitUntilPaused();
+  // which caused it to pause.
+  void WaitUntilPaused();
 
   static void SetIntroductionMessage(IntroductionMessage* aMessage);
 };

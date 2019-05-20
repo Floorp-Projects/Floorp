@@ -14,8 +14,8 @@ describe("shouldLoadItemFullText", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: longStringStubs.get("testUnloadedFullText")
-      }
+        value: longStringStubs.get("testUnloadedFullText"),
+      },
     });
     expect(shouldLoadItemFullText(node)).toBeTruthy();
   });
@@ -24,8 +24,8 @@ describe("shouldLoadItemFullText", () => {
     const node = createNode({
       name: "root",
       contents: {
-        value: longStringStubs.get("testLoadedFullText")
-      }
+        value: longStringStubs.get("testLoadedFullText"),
+      },
     });
     const loadedProperties = new Map([[node.path, true]]);
     expect(shouldLoadItemFullText(node, loadedProperties)).toBeFalsy();
@@ -41,13 +41,13 @@ describe("shouldLoadItemFullText", () => {
       false,
       null,
       undefined,
-      symbolStubs.get("Symbol")
+      symbolStubs.get("Symbol"),
     ];
 
     const nodes = values.map((value, i) =>
       createNode({
         name: `root${i}`,
-        contents: { value }
+        contents: { value },
       })
     );
 

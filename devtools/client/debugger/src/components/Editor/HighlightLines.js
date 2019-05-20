@@ -10,7 +10,7 @@ import { getHighlightedLineRange } from "../../selectors";
 
 type Props = {
   highlightedLineRange: Object,
-  editor: Object
+  editor: Object,
 };
 
 class HighlightLines extends Component<Props> {
@@ -75,5 +75,5 @@ class HighlightLines extends Component<Props> {
 }
 
 export default connect(state => ({
-  highlightedLineRange: getHighlightedLineRange(state)
+  highlightedLineRange: getHighlightedLineRange(state),
 }))(HighlightLines);

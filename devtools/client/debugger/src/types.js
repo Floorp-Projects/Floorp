@@ -13,7 +13,7 @@ export type { SourceActorId, SourceActor };
 export type SearchModifiers = {
   caseSensitive: boolean,
   wholeWord: boolean,
-  regexMatch: boolean
+  regexMatch: boolean,
 };
 
 export type Mode =
@@ -23,8 +23,8 @@ export type Mode =
       typescript?: boolean,
       base?: {
         name: string,
-        typescript: boolean
-      }
+        typescript: boolean,
+      },
     };
 
 export type ThreadId = string;
@@ -59,7 +59,7 @@ export type QueuedSourceData =
 
 export type OriginalSourceData = {|
   id: string,
-  url: string
+  url: string,
 |};
 
 export type GeneratedSourceData = {
@@ -68,13 +68,13 @@ export type GeneratedSourceData = {
 
   // Many of our tests rely on being able to set a specific ID for the Source
   // object. We may want to consider avoiding that eventually.
-  id?: string
+  id?: string,
 };
 
 export type SourceActorLocation = {|
   +sourceActor: SourceActorId,
   +line: number,
-  +column?: number
+  +column?: number,
 |};
 
 /**
@@ -87,22 +87,22 @@ export type SourceLocation = {|
   +sourceId: SourceId,
   +line: number,
   +column?: number,
-  +sourceUrl?: string
+  +sourceUrl?: string,
 |};
 
 export type MappedLocation = {
   +location: SourceLocation,
-  +generatedLocation: SourceLocation
+  +generatedLocation: SourceLocation,
 };
 
 export type PartialPosition = {
   +line: number,
-  +column?: number
+  +column?: number,
 };
 
 export type Position = {
   +line: number,
-  +column: number
+  +column: number,
 };
 
 export type PartialRange = { end: PartialPosition, start: PartialPosition };
@@ -111,7 +111,7 @@ export type Range = { end: Position, start: Position };
 export type PendingLocation = {
   +line: number,
   +column?: number,
-  +sourceUrl?: string
+  +sourceUrl?: string,
 };
 
 // Type of location used when setting breakpoints in the server. Exactly one of
@@ -122,13 +122,13 @@ export type BreakpointLocation = {
   +line: number,
   +column?: number,
   +sourceUrl?: string,
-  +sourceId?: SourceActorId
+  +sourceId?: SourceActorId,
 };
 
 export type ASTLocation = {|
   +name: ?string,
   +offset: PartialPosition,
-  +index: number
+  +index: number,
 |};
 
 /**
@@ -145,7 +145,7 @@ export type Breakpoint = {|
   +disabled: boolean,
   +text: string,
   +originalText: string,
-  +options: BreakpointOptions
+  +options: BreakpointOptions,
 |};
 
 /**
@@ -155,12 +155,12 @@ export type BreakpointOptions = {
   hidden?: boolean,
   condition?: string | null,
   logValue?: string | null,
-  logGroupId?: string | null
+  logGroupId?: string | null,
 };
 
 export type BreakpointActor = {|
   +actor: ActorId,
-  +source: SourceActor
+  +source: SourceActor,
 |};
 
 /**
@@ -173,7 +173,7 @@ export type XHRBreakpoint = {|
   +method: "GET" | "POST" | "DELETE" | "ANY",
   +loading: boolean,
   +disabled: boolean,
-  +text: string
+  +text: string,
 |};
 
 /**
@@ -184,7 +184,7 @@ export type XHRBreakpoint = {|
  */
 export type BreakpointResult = {
   id: ActorId,
-  actualLocation: SourceActorLocation
+  actualLocation: SourceActorLocation,
 };
 
 /**
@@ -199,7 +199,7 @@ export type PendingBreakpoint = {
   +generatedLocation: PendingLocation,
   +disabled: boolean,
   +text: string,
-  +options: BreakpointOptions
+  +options: BreakpointOptions,
 };
 
 /**
@@ -228,7 +228,7 @@ export type Frame = {
   framework?: string,
   isOriginal?: boolean,
   originalDisplayName?: string,
-  library?: string
+  library?: string,
 };
 
 export type ChromeFrame = {
@@ -236,13 +236,13 @@ export type ChromeFrame = {
   displayName: string,
   scopeChain: any,
   generatedLocation: SourceLocation,
-  location: ?SourceLocation
+  location: ?SourceLocation,
 };
 
 export type OriginalFrame = {
   displayName: string,
   location?: SourceLocation,
-  thread: string
+  thread: string,
 };
 
 /**
@@ -256,7 +256,7 @@ export type ContextMenuItem = {
   label: string,
   accesskey: string,
   disabled: boolean,
-  click: Function
+  click: Function,
 };
 
 /**
@@ -268,7 +268,7 @@ export type ExceptionReason = {|
   exception: string | Grip,
   message: string,
   type: "exception",
-  frameFinished?: Object
+  frameFinished?: Object,
 |};
 
 /**
@@ -280,7 +280,7 @@ export type Why =
   | ExceptionReason
   | {
       type: string,
-      frameFinished?: Object
+      frameFinished?: Object,
     };
 
 /**
@@ -293,14 +293,14 @@ export type Why =
  * @static
  */
 export type WhyPaused = {
-  type: string
+  type: string,
 };
 
 export type LoadedObject = {
   objectId: string,
   parentId: string,
   name: string,
-  value: any
+  value: any,
 };
 
 /**
@@ -313,7 +313,7 @@ export type Pause = {
   frame: Frame,
   frames: Frame[],
   why: Why,
-  loadedObjects?: LoadedObject[]
+  loadedObjects?: LoadedObject[],
 };
 
 /**
@@ -325,7 +325,7 @@ export type Expression = {
   input: string,
   value: Object,
   from: string,
-  updating: boolean
+  updating: boolean,
 };
 
 /**
@@ -353,27 +353,27 @@ export type Grip = {
   url?: string,
   fileName?: string,
   message?: string,
-  name?: string
+  name?: string,
 };
 
 export type TextSourceContent = {|
   type: "text",
   value: string,
-  contentType: string | void
+  contentType: string | void,
 |};
 export type WasmSourceContent = {|
   type: "wasm",
-  value: {| binary: Object |}
+  value: {| binary: Object |},
 |};
 export type SourceContent = TextSourceContent | WasmSourceContent;
 
 export type SourceWithContent = {|
   source: Source,
-  +content: SettledValue<SourceContent> | null
+  +content: SettledValue<SourceContent> | null,
 |};
 export type SourceWithContentAndType<+Content: SourceContent> = {|
   source: Source,
-  +content: FulfilledValue<Content>
+  +content: FulfilledValue<Content>,
 |};
 
 /**
@@ -393,7 +393,7 @@ export type Source = {|
   +introductionUrl: ?string,
   +introductionType: ?string,
   +isExtension: boolean,
-  +isWasm: boolean
+  +isWasm: boolean,
 |};
 
 /**
@@ -410,14 +410,14 @@ export type Script = any;
  * FIXME Define these type more clearly
  */
 export type BindingContents = {
-  value: any
+  value: any,
 };
 
 /**
  * Defines map of binding name to its content.
  */
 export type ScopeBindings = {
-  [name: string]: BindingContents
+  [name: string]: BindingContents,
 };
 
 /**
@@ -431,7 +431,7 @@ export type Scope = {|
   bindings?: {
     arguments: Array<ScopeBindings>,
     variables: ScopeBindings,
-    this?: BindingContents | null
+    this?: BindingContents | null,
   },
   object: ?Object,
   function: ?{
@@ -439,23 +439,23 @@ export type Scope = {|
     class: string,
     displayName: string,
     location: SourceLocation,
-    parameterNames: string[]
+    parameterNames: string[],
   },
-  type: string
+  type: string,
 |};
 
 export type MainThread = {
   +actor: ThreadId,
   +url: string,
   +type: number,
-  +name: string
+  +name: string,
 };
 
 export type Worker = {
   +actor: ThreadId,
   +url: string,
   +type: number,
-  +name: string
+  +name: string,
 };
 
 export type Thread = MainThread & Worker;
@@ -463,7 +463,7 @@ export type ThreadList = Array<Thread>;
 export type WorkerList = Array<Worker>;
 
 export type Cancellable = {
-  cancel: () => void
+  cancel: () => void,
 };
 
 export type EventListenerBreakpoints = string[];

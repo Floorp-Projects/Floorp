@@ -16,7 +16,7 @@ GripLengthBubble.propTypes = {
   maxLengthMap: PropTypes.instanceOf(Map).isRequired,
   getLength: PropTypes.func.isRequired,
   mode: ModePropType,
-  visibilityThreshold: PropTypes.number
+  visibilityThreshold: PropTypes.number,
 };
 
 function GripLengthBubble(props) {
@@ -26,7 +26,7 @@ function GripLengthBubble(props) {
     visibilityThreshold = 2,
     maxLengthMap,
     getLength,
-    showZeroLength = false
+    showZeroLength = false,
   } = props;
 
   const length = getLength(object);
@@ -42,12 +42,12 @@ function GripLengthBubble(props) {
 
   return span(
     {
-      className: "objectLengthBubble"
+      className: "objectLengthBubble",
     },
     `(${length})`
   );
 }
 
 module.exports = {
-  lengthBubble: wrapRender(GripLengthBubble)
+  lengthBubble: wrapRender(GripLengthBubble),
 };

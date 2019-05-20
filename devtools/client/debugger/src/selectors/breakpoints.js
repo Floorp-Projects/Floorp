@@ -8,7 +8,7 @@ import { createSelector } from "reselect";
 
 import type {
   BreakpointsState,
-  XHRBreakpointsList
+  XHRBreakpointsList,
 } from "../reducers/breakpoints";
 import type { Selector } from "../reducers/types";
 import type { Breakpoint } from "../types";

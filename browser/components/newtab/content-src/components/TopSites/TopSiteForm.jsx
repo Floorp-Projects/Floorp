@@ -1,4 +1,5 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {A11yLinkButton} from "content-src/components/A11yLinkButton/A11yLinkButton";
 import {FormattedMessage} from "react-intl";
 import React from "react";
 import {TOP_SITES_SOURCE} from "./TopSitesConstants";
@@ -163,9 +164,9 @@ export class TopSiteForm extends React.PureComponent {
       customScreenshotUrl && this.props.previewUrl === this.cleanUrl(customScreenshotUrl);
 
     if (!this.state.showCustomScreenshotForm) {
-      return (<a className="enable-custom-image-input" onClick={this.onEnableScreenshotUrlForm}>
-        <FormattedMessage id="topsites_form_use_image_link" />
-      </a>);
+      return (<A11yLinkButton onClick={this.onEnableScreenshotUrlForm} className="enable-custom-image-input">
+                <FormattedMessage id="topsites_form_use_image_link" />
+              </A11yLinkButton>);
     }
     return (<div className="custom-image-input-container">
       <TopSiteFormInput
@@ -198,8 +199,10 @@ export class TopSiteForm extends React.PureComponent {
       previewLink.screenshot = this.props.previewResponse;
       previewLink.customScreenshotURL = this.props.previewUrl;
     }
+    // Handles the form submit so an enter press performs the correct action
+    const onSubmit = previewMode ? this.onPreviewButtonClick : this.onDoneButtonClick;
     return (
-      <form className="topsite-form">
+      <form className="topsite-form" onSubmit={onSubmit}>
         <div className="form-input-container">
           <h3 className="section-title">
             <FormattedMessage id={showAsAdd ? "topsites_form_add_header" : "topsites_form_edit_header"} />
@@ -229,14 +232,14 @@ export class TopSiteForm extends React.PureComponent {
           </div>
         </div>
         <section className="actions">
-          <button className="cancel" type="button" onClick={this.onCancelButtonClick}>
+          <button className="cancel" type="button" onClick={this.onCancelButtonClick} >
             <FormattedMessage id="topsites_form_cancel_button" />
           </button>
           {previewMode ?
-            <button className="done preview" type="submit" onClick={this.onPreviewButtonClick}>
+            <button className="done preview" type="submit" >
               <FormattedMessage id="topsites_form_preview_button" />
             </button> :
-            <button className="done" type="submit" onClick={this.onDoneButtonClick}>
+            <button className="done" type="submit" >
               <FormattedMessage id={showAsAdd ? "topsites_form_add_button" : "topsites_form_save_button"} />
             </button>}
         </section>

@@ -1,3 +1,5 @@
+# Keep in sync with top-level .eslintignore
+
 src/workers/parser/tests/fixtures/functionNames.js
 src/workers/parser/tests/fixtures/scopes/*.js
 src/workers/parser/tests/fixtures/pause/*.js

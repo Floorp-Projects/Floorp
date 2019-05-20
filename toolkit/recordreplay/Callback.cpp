@@ -41,7 +41,7 @@ void BeginCallback(size_t aCallbackId) {
 
   Thread* thread = Thread::Current();
   if (thread->IsMainThread()) {
-    child::EndIdleTime();
+    js::EndIdleTime();
   }
   thread->SetPassThrough(false);
 
@@ -59,7 +59,7 @@ void EndCallback() {
 
   Thread* thread = Thread::Current();
   if (thread->IsMainThread()) {
-    child::BeginIdleTime();
+    js::BeginIdleTime();
   }
   thread->SetPassThrough(true);
 }
@@ -99,12 +99,12 @@ void PassThroughThreadEventsAllowCallbacks(const std::function<void()>& aFn) {
 
   if (IsRecording()) {
     if (thread->IsMainThread()) {
-      child::BeginIdleTime();
+      js::BeginIdleTime();
     }
     thread->SetPassThrough(true);
     aFn();
     if (thread->IsMainThread()) {
-      child::EndIdleTime();
+      js::EndIdleTime();
     }
     thread->SetPassThrough(false);
     thread->Events().RecordOrReplayThreadEvent(ThreadEvent::CallbacksFinished);

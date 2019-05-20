@@ -21,7 +21,7 @@ add_task(async function testPrintPreview() {
   await extension.awaitFinish("tabs.printPreview");
   await extension.unload();
 
-  let ppTab = PrintUtils._shouldSimplify ?
+  let ppTab = PrintUtils.shouldSimplify ?
       PrintPreviewListener._simplifiedPrintPreviewTab :
       PrintPreviewListener._printPreviewTab;
 

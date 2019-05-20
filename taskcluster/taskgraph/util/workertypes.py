@@ -13,10 +13,6 @@ from .attributes import keymatch
 WORKER_TYPES = {
     'gce/gecko-1-b-linux': ('docker-worker', 'linux'),
     'releng-hardware/gecko-1-b-win2012-gamma': ('generic-worker', 'windows'),
-    'gce/gecko-2-b-linux': ('docker-worker', 'linux'),
-    'releng-hardware/gecko-2-b-win2012-gamma': ('generic-worker', 'windows'),
-    'gce/gecko-3-b-linux': ('docker-worker', 'linux'),
-    'releng-hardware/gecko-3-b-win2012-gamma': ('generic-worker', 'windows'),
     'invalid/invalid': ('invalid', None),
     'invalid/always-optimized': ('always-optimized', None),
     'scriptworker-prov-v1/balrog-dev': ('balrog', None),

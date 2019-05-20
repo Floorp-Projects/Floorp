@@ -18,7 +18,6 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsStringFwd.h"
 
-class nsCSSValue;
 struct nsCSSRect;
 struct nsTimingFunction;
 struct RawServoDeclarationBlock;

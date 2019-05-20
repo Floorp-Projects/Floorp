@@ -9,6 +9,7 @@
   vertical-align: middle;
   width: $icon-size;
 
+  // helper classes
   &.icon-spacer {
     margin-inline-end: 8px;
   }
@@ -17,6 +18,17 @@
     margin-inline-end: 6px;
   }
 
+  &.icon-button-style {
+    fill: var(--newtab-icon-secondary-color);
+    border: 0;
+
+    &:focus,
+    &:hover {
+      fill: var(--newtab-text-primary-color);
+    }
+  }
+
+  // icon images
   &.icon-bookmark-added {
     background-image: url('chrome://browser/skin/bookmark.svg');
   }
@@ -26,7 +38,6 @@
   }
 
   &.icon-clear-input {
-    fill: var(--newtab-icon-secondary-color);
     background-image: url('#{$image-path}glyph-cancel-16.svg');
   }
 

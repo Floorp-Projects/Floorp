@@ -15,7 +15,7 @@ describe("breakpoint sorting", () => {
         makeMockBreakpoint(undefined, 100, 2),
         makeMockBreakpoint(undefined, 9, 2),
         makeMockBreakpoint(undefined, 2),
-        makeMockBreakpoint(undefined, 2, 7)
+        makeMockBreakpoint(undefined, 2, 7),
       ],
       makeMockSource()
     );

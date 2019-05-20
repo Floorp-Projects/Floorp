@@ -67,7 +67,7 @@ export function recordEvent(eventName: string, fields: {} = {}) {
   /* eslint-disable camelcase */
   telemetry.recordEvent(eventName, "debugger", null, {
     session_id: sessionId,
-    ...fields
+    ...fields,
   });
   /* eslint-enable camelcase */
 

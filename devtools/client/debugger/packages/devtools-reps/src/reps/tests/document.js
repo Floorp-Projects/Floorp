@@ -19,7 +19,7 @@ describe("Document", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       Document.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -32,7 +32,7 @@ describe("Document", () => {
   it("renders location-less document with expected text content", () => {
     const renderedComponent = shallow(
       Document.rep({
-        object: stubs.get("Location-less Document")
+        object: stubs.get("Location-less Document"),
       })
     );
 
@@ -49,7 +49,7 @@ describe("XULDocument", () => {
   it("renders with expected text content", () => {
     const renderedComponent = shallow(
       Document.rep({
-        object: stub
+        object: stub,
       })
     );
 

@@ -200,14 +200,20 @@ async function bindToolboxHandlers() {
 function setupThreadListeners(panel) {
   updateBadgeText(panel.isPaused());
 
-  const onPaused = updateBadgeText.bind(null, true);
+  const onPaused = packet => {
+    if (packet.why.type === "interrupted") {
+      return;
+    }
+    updateBadgeText(true);
+  };
   const onResumed = updateBadgeText.bind(null, false);
-  gToolbox.target.on("thread-paused", onPaused);
-  gToolbox.target.on("thread-resumed", onResumed);
+  const threadClient = gToolbox.target.threadClient;
+  threadClient.addListener("paused", onPaused);
+  threadClient.addListener("resumed", onResumed);
 
   panel.once("destroyed", () => {
-    gToolbox.target.off("thread-paused", onPaused);
-    gToolbox.target.off("thread-resumed", onResumed);
+    threadClient.removeListener("paused", onPaused);
+    threadClient.removeListener("resumed", onResumed);
   });
 }
 

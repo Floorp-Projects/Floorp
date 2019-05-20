@@ -30,5 +30,5 @@ function supportsObject(object, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(Undefined),
-  supportsObject
+  supportsObject,
 };

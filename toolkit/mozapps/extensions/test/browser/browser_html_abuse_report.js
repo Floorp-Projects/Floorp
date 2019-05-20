@@ -26,6 +26,7 @@ const BASE_TEST_MANIFEST = {
     32: "test-icon.png",
   },
 };
+const EXT_WITH_PRIVILEGED_URL_ID = "ext-with-privileged-url@mochi.test";
 const THEME_NO_UNINSTALL_ID = "theme-without-perm-can-uninstall@mochi.test";
 
 let gProvider;
@@ -225,6 +226,12 @@ add_task(async function setup() {
     creator: {name: "Theme creator", url: "http://example.com/creator"},
     type: "theme",
     permissions: 0,
+  }, {
+    id: EXT_WITH_PRIVILEGED_URL_ID,
+    name: "This extension has an unexpected privileged creator URL",
+    version: "1.1",
+    creator: {name: "creator", url: "about:config"},
+    type: "extension",
   }]);
 });
 
@@ -993,36 +1000,70 @@ add_task(async function test_trigger_abusereport_from_browserAction_remove() {
   const promptService = mockPromptService();
   promptService.confirmEx = createPromptConfirmEx({remove: true, report: true});
 
-  info(`Open browserAction context menu in toolbar context menu`);
-  let buttonId = `${makeWidgetId(EXT_ID)}-browser-action`;
-  const menu = document.getElementById("toolbar-context-menu");
-  const node = document.getElementById(CSS.escape(buttonId));
-  const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(node, {type: "contextmenu"});
-  await shown;
+  await BrowserTestUtils.withNewTab("about:blank", async function() {
+    info(`Open browserAction context menu in toolbar context menu`);
+    let buttonId = `${makeWidgetId(EXT_ID)}-browser-action`;
+    const menu = document.getElementById("toolbar-context-menu");
+    const node = document.getElementById(CSS.escape(buttonId));
+    const shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+    EventUtils.synthesizeMouseAtCenter(node, {type: "contextmenu"});
+    await shown;
 
-  info(`Clicking on "Remove Extension" context menu item`);
-  let removeExtension = menu.querySelector(
-    ".customize-context-removeExtension");
-  removeExtension.click();
+    info(`Clicking on "Remove Extension" context menu item`);
+    let removeExtension = menu.querySelector(
+      ".customize-context-removeExtension");
+    removeExtension.click();
 
-  // Wait about:addons to be loaded.
-  const browser = gBrowser.selectedBrowser;
-  await BrowserTestUtils.browserLoaded(browser);
-  is(browser.currentURI.spec, "about:addons",
-    "about:addons tab currently selected");
-  menu.hidePopup();
+    // Wait about:addons to be loaded.
+    const browser = gBrowser.selectedBrowser;
+    await BrowserTestUtils.browserLoaded(browser);
+    is(browser.currentURI.spec, "about:addons",
+      "about:addons tab currently selected");
+    menu.hidePopup();
 
-  const abuseReportFrame = browser.contentDocument
-    .querySelector("addon-abuse-report-xulframe");
+    const abuseReportFrame = browser.contentDocument
+      .querySelector("addon-abuse-report-xulframe");
 
-  ok(!abuseReportFrame.hidden,
-     "Abuse report frame has the expected visibility");
-  is(abuseReportFrame.report.addon.id, EXT_ID,
-    "Abuse report frame has the expected addon id");
-  is(abuseReportFrame.report.reportEntryPoint, "uninstall",
-    "Abuse report frame has the expected reportEntryPoint");
+    ok(!abuseReportFrame.hidden,
+      "Abuse report frame has the expected visibility");
+    is(abuseReportFrame.report.addon.id, EXT_ID,
+      "Abuse report frame has the expected addon id");
+    is(abuseReportFrame.report.reportEntryPoint, "uninstall",
+      "Abuse report frame has the expected reportEntryPoint");
+  });
 
-  await closeAboutAddons();
   await extension.unload();
+});
+
+// This test verify that the abuse report panel is opening the
+// author link using a null triggeringPrincipal.
+add_task(async function test_abuse_report_open_author_url() {
+  const abuseReportEl = await openAbuseReport(EXT_WITH_PRIVILEGED_URL_ID);
+  await promiseAbuseReportRendered(abuseReportEl);
+
+  const authorLink = abuseReportEl._linkAddonAuthor;
+  ok(authorLink, "Got the author link element");
+  is(authorLink.href, "about:config",
+     "Got a privileged url in the link element");
+
+  SimpleTest.waitForExplicitFinish();
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, [{
+      // eslint-disable-next-line max-len
+      message: /Security Error: Content at moz-nullprincipal:{.*} may not load or link to about:config/,
+    }]);
+  });
+
+  let tabSwitched = BrowserTestUtils.waitForEvent(gBrowser, "TabSwitchDone");
+  authorLink.click();
+  await tabSwitched;
+
+  is(gBrowser.selectedBrowser.currentURI.spec, "about:blank",
+     "Got about:blank loaded in the new tab");
+
+  SimpleTest.endMonitorConsole();
+  await waitForConsole;
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await closeAboutAddons();
 });

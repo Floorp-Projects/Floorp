@@ -17,7 +17,7 @@ var todo = window.opener.wrappedJSObject.todo;
 var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var gWbp;
 function printpreview() {
-  gWbp = window.frames[1].docShell.printPreview;
+  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress, 
@@ -44,7 +44,7 @@ function printpreview() {
 }
 
 function exitprintpreview() {
-  window.frames[1].docShell.printPreview.exitPrintPreview();
+  window.frames[1].docShell.exitPrintPreview();
 }
 
 function finish() {
@@ -90,7 +90,7 @@ function run2() {
 }
 
 function run3() {
-  gWbp = window.frames[1].docShell.printPreview;
+  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
   ok(gWbp.doingPrintPreview, "Should be doing print preview");
   exitprintpreview();
   setTimeout(run4, 0);
@@ -105,11 +105,11 @@ function run4() {
   };
   i.addEventListener("load", loadhandler, true);
   document.documentElement.getBoundingClientRect();
-  document.documentElement.appendChild(i);
+  document.documentElement.prepend(i);
 }
 
 function run5() {
-  gWbp = window.frames[0].docShell.printPreview;
+  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
   ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore2");
 
   //XXX this shouldn't be necessary, see bug 405555

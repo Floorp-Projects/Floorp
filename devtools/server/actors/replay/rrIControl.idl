@@ -11,7 +11,7 @@
 interface rrIControl : nsISupports {
   void Initialize(in jsval recordingChildId);
   void ConnectDebugger(in jsval replayDebugger);
-  void HitExecutionPoint(in long childId, in jsval msg);
+  void ManifestFinished(in long childId, in jsval response);
   void BeforeSaveRecording();
   void AfterSaveRecording();
 };

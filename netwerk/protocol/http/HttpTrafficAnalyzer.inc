@@ -10,91 +10,97 @@
 //         and have a LOAD_BACKGROUND load flag.
 
 
-// Y=0 - all requests/connections/bytes that are first party.
-DEFINE_CATEGORY(N1, 0)
+// Y=0 - all system principal connections.
+DEFINE_CATEGORY(N1Sys, 0)
 
-// Y=1 - all requests/connections/bytes that are third party
+// Y=1 - all requests/connections/bytes that are first party.
+DEFINE_CATEGORY(N1, 1)
+
+// Y=2 - all requests/connections/bytes that are third party
 // but don’t fall into other categories
-DEFINE_CATEGORY(N3Oth, 1)
-
-// Y=2 - all requests/connections/bytes associated with third party loads that
-// match the Analytics/Social/Advertising (Basic) Category and have a load of type (A)
-DEFINE_CATEGORY(N3BasicLead, 2)
+DEFINE_CATEGORY(N3Oth, 2)
 
 // Y=3 - all requests/connections/bytes associated with third party loads that
-// match the Analytics/Social/Advertising (Basic) Category and have a load of type (B)
-DEFINE_CATEGORY(N3BasicBg, 3)
+// match the Analytics/Social/Advertising (Basic) Category and have a load of type (A)
+DEFINE_CATEGORY(N3BasicLead, 3)
 
 // Y=4 - all requests/connections/bytes associated with third party loads that
-// match the Analytics/Social/Advertising (Basic) Category and have a load of type (C)
-DEFINE_CATEGORY(N3BasicOth, 4)
+// match the Analytics/Social/Advertising (Basic) Category and have a load of type (B)
+DEFINE_CATEGORY(N3BasicBg, 4)
 
 // Y=5 - all requests/connections/bytes associated with third party loads that
-// match the Content Category and have a load of type (A)
-DEFINE_CATEGORY(N3ContentLead, 5)
+// match the Analytics/Social/Advertising (Basic) Category and have a load of type (C)
+DEFINE_CATEGORY(N3BasicOth, 5)
 
 // Y=6 - all requests/connections/bytes associated with third party loads that
-// match the Content Category and have a load of type (B)
-DEFINE_CATEGORY(N3ContentBg, 6)
+// match the Content Category and have a load of type (A)
+DEFINE_CATEGORY(N3ContentLead, 6)
 
 // Y=7 - all requests/connections/bytes associated with third party loads that
-// match the Content Category and have a load of type (C)
-DEFINE_CATEGORY(N3ContentOth, 7)
+// match the Content Category and have a load of type (B)
+DEFINE_CATEGORY(N3ContentBg, 7)
 
 // Y=8 - all requests/connections/bytes associated with third party loads that
-// match the Fingerprinting Category and have a load of type (A)
-DEFINE_CATEGORY(N3FpLead, 8)
+// match the Content Category and have a load of type (C)
+DEFINE_CATEGORY(N3ContentOth, 8)
 
 // Y=9 - all requests/connections/bytes associated with third party loads that
-// match the Fingerprinting Category and have a load of type (B)
-DEFINE_CATEGORY(N3FpBg, 9)
+// match the Fingerprinting Category and have a load of type (A)
+DEFINE_CATEGORY(N3FpLead, 9)
 
 // Y=10 - all requests/connections/bytes associated with third party loads that
+// match the Fingerprinting Category and have a load of type (B)
+DEFINE_CATEGORY(N3FpBg, 10)
+
+// Y=11 - all requests/connections/bytes associated with third party loads that
 // match the Fingerprinting Category and have a load of type (C)
-DEFINE_CATEGORY(N3FpOth, 10)
+DEFINE_CATEGORY(N3FpOth, 11)
 
-// Y=11 - private mode and all requests/connections/bytes that are first party.
-DEFINE_CATEGORY(P1, 11)
+// Y=12 - private mode system principal connections.
+DEFINE_CATEGORY(P1Sys, 12)
 
-// Y=12 - private mode and all requests/connections/bytes that are third party
+// Y=13 - private mode and all requests/connections/bytes that are first party.
+DEFINE_CATEGORY(P1, 13)
+
+// Y=14 - private mode and all requests/connections/bytes that are third party
 // but don’t fall into other categories
-DEFINE_CATEGORY(P3Oth, 12)
-
-// Y=13 - private mode and all requests/connections/bytes associated with
-// third party loads that match the Analytics/Social/Advertising (Basic) Category
-// and have a load of type (A)
-DEFINE_CATEGORY(P3ContentLead, 13)
-
-// Y=14 - private mode and all requests/connections/bytes associated with
-// third party loads that match the Analytics/Social/Advertising (Basic) Category
-// and have a load of type (B)
-DEFINE_CATEGORY(P3ContentBg, 14)
+DEFINE_CATEGORY(P3Oth, 14)
 
 // Y=15 - private mode and all requests/connections/bytes associated with
 // third party loads that match the Analytics/Social/Advertising (Basic) Category
-// and have a load of type (C)
-DEFINE_CATEGORY(P3ContentOth, 15)
+// and have a load of type (A)
+DEFINE_CATEGORY(P3BasicLead, 15)
 
 // Y=16 - private mode and all requests/connections/bytes associated with
-// third party loads that match the Content Category and have a load of type (A)
-DEFINE_CATEGORY(P3BasicLead, 16)
+// third party loads that match the Analytics/Social/Advertising (Basic) Category
+// and have a load of type (B)
+DEFINE_CATEGORY(P3BasicBg, 16)
 
 // Y=17 - private mode and all requests/connections/bytes associated with
-// third party loads that match the Content Category and have a load of type (B)
-DEFINE_CATEGORY(P3BasicBg, 17)
+// third party loads that match the Analytics/Social/Advertising (Basic) Category
+// and have a load of type (C)
+DEFINE_CATEGORY(P3BasicOth, 17)
 
 // Y=18 - private mode and all requests/connections/bytes associated with
-// third party loads that match the Content Category and have a load of type (C)
-DEFINE_CATEGORY(P3BasicOth, 18)
+// third party loads that match the Content Category and have a load of type (A)
+DEFINE_CATEGORY(P3ContentLead, 18)
 
 // Y=19 - private mode and all requests/connections/bytes associated with
-// third party loads that match the Fingerprinting Category and have a load of type (A)
-DEFINE_CATEGORY(P3FpLead, 19)
+// third party loads that match the Content Category and have a load of type (B)
+DEFINE_CATEGORY(P3ContentBg, 19)
 
 // Y=20 - private mode and all requests/connections/bytes associated with
-// third party loads that match the Fingerprinting Category and have a load of type (B)
-DEFINE_CATEGORY(P3FpBg, 20)
+// third party loads that match the Content Category and have a load of type (C)
+DEFINE_CATEGORY(P3ContentOth, 20)
 
 // Y=21 - private mode and all requests/connections/bytes associated with
+// third party loads that match the Fingerprinting Category and have a load of type (A)
+DEFINE_CATEGORY(P3FpLead, 21)
+
+// Y=22 - private mode and all requests/connections/bytes associated with
+// third party loads that match the Fingerprinting Category and have a load of type (B)
+DEFINE_CATEGORY(P3FpBg, 22)
+
+// Y=23 - private mode and all requests/connections/bytes associated with
 // third party loads that match the Fingerprinting Category and have a load of type (C)
-DEFINE_CATEGORY(P3FpOth, 21)
+DEFINE_CATEGORY(P3FpOth, 23)

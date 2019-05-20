@@ -18,7 +18,7 @@ import {
   getProjectDirectoryRoot,
   getDisplayedSources,
   getFocusedSourceItem,
-  getContext
+  getContext,
 } from "../../selectors";
 
 import { getGeneratedSourceByURL } from "../../reducers/sources";
@@ -37,7 +37,7 @@ import {
   isDirectory,
   getSourceFromNode,
   nodeHasChildren,
-  updateTree
+  updateTree,
 } from "../../utils/sources-tree";
 import { parse } from "../../utils/url";
 import { getRawSourceURL } from "../../utils/source";
@@ -45,12 +45,12 @@ import { getRawSourceURL } from "../../utils/source";
 import type {
   TreeNode,
   TreeDirectory,
-  ParentMap
+  ParentMap,
 } from "../../utils/sources-tree/types";
 import type { Source, Context, Thread } from "../../types";
 import type {
   SourcesMapByThread,
-  State as AppState
+  State as AppState,
 } from "../../reducers/types";
 import type { Item } from "../shared/ManagedTree";
 
@@ -67,7 +67,7 @@ type Props = {
   selectSource: typeof actions.selectSource,
   setExpandedState: typeof actions.setExpandedState,
   focusItem: typeof actions.focusItem,
-  focused: TreeNode
+  focused: TreeNode,
 };
 
 type State = {
@@ -75,7 +75,7 @@ type State = {
   sourceTree: TreeDirectory,
   uncollapsedTree: TreeDirectory,
   listItems?: any,
-  highlightItems?: any
+  highlightItems?: any,
 };
 
 type SetExpanded = (item: TreeNode, expanded: boolean, altKey: boolean) => void;
@@ -97,7 +97,7 @@ class SourcesTree extends Component<Props, State> {
     this.state = createTree({
       debuggeeUrl,
       sources,
-      threads
+      threads,
     });
   }
 
@@ -108,7 +108,7 @@ class SourcesTree extends Component<Props, State> {
       sources,
       shownSource,
       selectedSource,
-      threads
+      threads,
     } = this.props;
     const { uncollapsedTree, sourceTree } = this.state;
 
@@ -124,7 +124,7 @@ class SourcesTree extends Component<Props, State> {
         createTree({
           sources: nextProps.sources,
           debuggeeUrl: nextProps.debuggeeUrl,
-          threads: nextProps.threads
+          threads: nextProps.threads,
         })
       );
     }
@@ -155,7 +155,7 @@ class SourcesTree extends Component<Props, State> {
           prevSources: sources,
           debuggeeUrl,
           uncollapsedTree,
-          sourceTree
+          sourceTree,
         })
       );
     }
@@ -288,7 +288,7 @@ class SourcesTree extends Component<Props, State> {
       onFocus: this.onFocus,
       onActivate: this.onActivate,
       renderItem: this.renderItem,
-      preventBlur: true
+      preventBlur: true,
     };
 
     return <ManagedTree {...treeProps} />;
@@ -301,7 +301,7 @@ class SourcesTree extends Component<Props, State> {
       <div
         key="pane"
         className={classnames("sources-pane", {
-          "sources-list-custom-root": projectRoot
+          "sources-list-custom-root": projectRoot,
         })}
       >
         {children}
@@ -353,7 +353,7 @@ const mapStateToProps = (state, props) => {
     focused: getFocusedSourceItem(state),
     projectRoot: getProjectDirectoryRoot(state),
     sources: displayedSources,
-    sourceCount: Object.values(displayedSources).length
+    sourceCount: Object.values(displayedSources).length,
   };
 };
 
@@ -362,6 +362,6 @@ export default connect(
   {
     selectSource: actions.selectSource,
     setExpandedState: actions.setExpandedState,
-    focusItem: actions.focusItem
+    focusItem: actions.focusItem,
   }
 )(SourcesTree);

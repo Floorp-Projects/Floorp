@@ -164,6 +164,8 @@ class Client {
 
   virtual void ReleaseIOThreadObjects() = 0;
 
+  virtual void OnStorageInitFailed(){};
+
   // Methods which are called on the background thread.
   virtual void AbortOperations(const nsACString& aOrigin) = 0;
 

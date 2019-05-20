@@ -104,7 +104,7 @@ export const prefs = new PrefsHelper("devtools", {
   projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""],
   skipPausing: ["Bool", "debugger.skip-pausing"],
   mapScopes: ["Bool", "debugger.map-scopes-enabled"],
-  logActions: ["Bool", "debugger.log-actions"]
+  logActions: ["Bool", "debugger.log-actions"],
 });
 
 export const features = new PrefsHelper("devtools.debugger.features", {
@@ -127,14 +127,14 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   xhrBreakpoints: ["Bool", "xhr-breakpoints"],
   originalBlackbox: ["Bool", "original-blackbox"],
   eventListenersBreakpoints: ["Bool", "event-listeners-breakpoints"],
-  logPoints: ["Bool", "log-points"]
+  logPoints: ["Bool", "log-points"],
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {
   pendingBreakpoints: ["pending-breakpoints", {}],
   tabs: ["tabs", []],
   xhrBreakpoints: ["xhr-breakpoints", []],
-  eventListenerBreakpoints: ["event-listener-breakpoints", []]
+  eventListenerBreakpoints: ["event-listener-breakpoints", []],
 });
 
 export function verifyPrefSchema() {

@@ -23,7 +23,7 @@ import {
   getShouldPauseOnCaughtExceptions,
   getWorkers,
   getCurrentThread,
-  getThreadContext
+  getThreadContext,
 } from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
@@ -53,7 +53,7 @@ type AccordionPaneItem = {
   opened?: boolean,
   onToggle?: () => void,
   shouldOpen?: () => boolean,
-  buttons?: any
+  buttons?: any,
 };
 
 function debugBtn(onClick, type, className, tooltip) {
@@ -71,7 +71,7 @@ function debugBtn(onClick, type, className, tooltip) {
 
 type State = {
   showExpressionsInput: boolean,
-  showXHRInput: boolean
+  showXHRInput: boolean,
 };
 
 type Props = {
@@ -93,7 +93,7 @@ type Props = {
   toggleMapScopes: typeof actions.toggleMapScopes,
   evaluateExpressions: typeof actions.evaluateExpressions,
   pauseOnExceptions: typeof actions.pauseOnExceptions,
-  breakOnNext: typeof actions.breakOnNext
+  breakOnNext: typeof actions.breakOnNext,
 };
 
 const mdnLink =
@@ -105,7 +105,7 @@ class SecondaryPanes extends Component<Props, State> {
 
     this.state = {
       showExpressionsInput: false,
-      showXHRInput: false
+      showXHRInput: false,
     };
   }
 
@@ -122,7 +122,7 @@ class SecondaryPanes extends Component<Props, State> {
       cx,
       toggleAllBreakpoints,
       breakpoints,
-      breakpointsDisabled
+      breakpointsDisabled,
     } = this.props;
     const isIndeterminate =
       !breakpointsDisabled && breakpoints.some(x => x.disabled);
@@ -152,7 +152,7 @@ class SecondaryPanes extends Component<Props, State> {
       },
       title: breakpointsDisabled
         ? L10N.getStr("breakpoints.enable")
-        : L10N.getStr("breakpoints.disable")
+        : L10N.getStr("breakpoints.disable"),
     };
 
     return <input {...inputProps} />;
@@ -223,7 +223,7 @@ class SecondaryPanes extends Component<Props, State> {
       buttons: this.getScopesButtons(),
       onToggle: opened => {
         prefs.scopesVisible = opened;
-      }
+      },
     };
   }
 
@@ -257,7 +257,7 @@ class SecondaryPanes extends Component<Props, State> {
         >
           <AccessibleImage className="shortcuts" />
         </a>
-      </div>
+      </div>,
     ];
   }
 
@@ -275,7 +275,7 @@ class SecondaryPanes extends Component<Props, State> {
       opened: prefs.expressionsVisible,
       onToggle: opened => {
         prefs.expressionsVisible = opened;
-      }
+      },
     };
   }
 
@@ -293,7 +293,7 @@ class SecondaryPanes extends Component<Props, State> {
       opened: prefs.xhrBreakpointsVisible,
       onToggle: opened => {
         prefs.xhrBreakpointsVisible = opened;
-      }
+      },
     };
   }
 
@@ -305,7 +305,7 @@ class SecondaryPanes extends Component<Props, State> {
       opened: prefs.callStackVisible,
       onToggle: opened => {
         prefs.callStackVisible = opened;
-      }
+      },
     };
   }
 
@@ -319,7 +319,7 @@ class SecondaryPanes extends Component<Props, State> {
       opened: prefs.workersVisible,
       onToggle: opened => {
         prefs.workersVisible = opened;
-      }
+      },
     };
   }
 
@@ -327,7 +327,7 @@ class SecondaryPanes extends Component<Props, State> {
     const {
       shouldPauseOnExceptions,
       shouldPauseOnCaughtExceptions,
-      pauseOnExceptions
+      pauseOnExceptions,
     } = this.props;
 
     return {
@@ -344,7 +344,7 @@ class SecondaryPanes extends Component<Props, State> {
       opened: prefs.breakpointsVisible,
       onToggle: opened => {
         prefs.breakpointsVisible = opened;
-      }
+      },
     };
   }
 
@@ -357,7 +357,7 @@ class SecondaryPanes extends Component<Props, State> {
       opened: prefs.eventListenersVisible,
       onToggle: opened => {
         prefs.eventListenersVisible = opened;
-      }
+      },
     };
   }
 
@@ -500,7 +500,7 @@ const mapStateToProps = state => {
     mapScopesEnabled: isMapScopesEnabled(state),
     shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
     shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
-    workers: getWorkers(state)
+    workers: getWorkers(state),
   };
 };
 
@@ -511,6 +511,6 @@ export default connect(
     evaluateExpressions: actions.evaluateExpressions,
     pauseOnExceptions: actions.pauseOnExceptions,
     toggleMapScopes: actions.toggleMapScopes,
-    breakOnNext: actions.breakOnNext
+    breakOnNext: actions.breakOnNext,
   }
 )(SecondaryPanes);

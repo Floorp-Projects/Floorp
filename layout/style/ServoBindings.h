@@ -59,12 +59,6 @@ BASIC_RULE_FUNCS(CounterStyle)
 #undef BASIC_RULE_FUNCS
 #undef BASIC_RULE_FUNCS_WITHOUT_GETTER
 
-// TODO(emilio): Move CounterStyleRule outside of nsCSSValue, then remove this
-// while at it.
-void Servo_CounterStyleRule_GetDescriptor(const RawServoCounterStyleRule* rule,
-                                          nsCSSCounterDesc desc,
-                                          nsCSSValue* result);
-
 void Servo_CounterStyleRule_GetDescriptorCssText(
     const RawServoCounterStyleRule* rule, nsCSSCounterDesc desc,
     nsAString* result);

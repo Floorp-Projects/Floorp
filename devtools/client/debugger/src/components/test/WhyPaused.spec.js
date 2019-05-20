@@ -11,7 +11,7 @@ import WhyPaused from "../SecondaryPanes/WhyPaused.js";
 function render(why: Object, delay: ?number) {
   const props = {
     why: why,
-    delay: delay
+    delay: delay,
   };
 
   // $FlowIgnore
@@ -24,7 +24,7 @@ describe("WhyPaused", () => {
   it("should pause reason with message", () => {
     const why = {
       type: "breakpoint",
-      message: "bla is hit"
+      message: "bla is hit",
     };
     const { component } = render(why);
     expect(component).toMatchSnapshot();
@@ -37,9 +37,9 @@ describe("WhyPaused", () => {
         class: "Error",
         preview: {
           name: "ReferenceError",
-          message: "o is not defined"
-        }
-      }
+          message: "o is not defined",
+        },
+      },
     };
 
     const { component } = render(why);
@@ -49,7 +49,7 @@ describe("WhyPaused", () => {
   it("should show pause reason with exception string", () => {
     const why = {
       type: "exception",
-      exception: "Not Available"
+      exception: "Not Available",
     };
 
     const { component } = render(why);

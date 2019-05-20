@@ -10,7 +10,7 @@ const {
   getGripType,
   isGrip,
   getURLDisplayString,
-  wrapRender
+  wrapRender,
 } = require("./rep-utils");
 
 const dom = require("react-dom-factories");
@@ -20,7 +20,7 @@ const { span } = dom;
  * Renders a grip representing CSSStyleSheet
  */
 StyleSheet.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function StyleSheet(props) {
@@ -29,7 +29,7 @@ function StyleSheet(props) {
   return span(
     {
       "data-link-actor-id": grip.actor,
-      className: "objectBox objectBox-object"
+      className: "objectBox objectBox-object",
     },
     getTitle(grip),
     span({ className: "objectPropValue" }, getLocation(grip))
@@ -60,5 +60,5 @@ function supportsObject(object, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(StyleSheet),
-  supportsObject
+  supportsObject,
 };

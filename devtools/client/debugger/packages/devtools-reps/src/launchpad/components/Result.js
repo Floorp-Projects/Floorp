@@ -15,7 +15,7 @@ class Result extends Component {
     return {
       expression: PropTypes.object.isRequired,
       showResultPacket: PropTypes.func.isRequired,
-      hideResultPacket: PropTypes.func.isRequired
+      hideResultPacket: PropTypes.func.isRequired,
     };
   }
 
@@ -62,16 +62,16 @@ class Result extends Component {
       {
         className: "rep-element",
         key: path.toString(),
-        "data-mode": modeKey
+        "data-mode": modeKey,
       },
       ObjectInspector({
         roots: [
           {
             path,
             contents: {
-              value: object
-            }
-          }
+              value: object,
+            },
+          },
         ],
         autoExpandDepth: 0,
         mode: MODE[modeKey],
@@ -84,7 +84,7 @@ class Result extends Component {
             depth,
             event,
             focused,
-            expanded
+            expanded,
           }),
         onInspectIconClick: nodeFront =>
           console.log("inspectIcon click", { nodeFront }),
@@ -92,7 +92,7 @@ class Result extends Component {
           console.log("onViewSourceInDebugger", { location }),
         recordTelemetryEvent: (eventName, extra = {}) => {
           console.log("📊", eventName, "📊", extra);
-        }
+        },
       })
     );
   }
@@ -109,21 +109,21 @@ class Result extends Component {
       dom.header(
         {
           className: headerClassName,
-          onClick: this.onHeaderClick
+          onClick: this.onHeaderClick,
         },
         headerLabel,
         dom.span({ className: "copy-label" }, "Copy"),
         dom.button(
           {
             className: "copy-packet-button",
-            onClick: e => this.copyPacketToClipboard(e, packet.result)
+            onClick: e => this.copyPacketToClipboard(e, packet.result),
           },
           "grip"
         ),
         dom.button(
           {
             className: "copy-packet-button",
-            onClick: e => this.copyPacketToClipboard(e, packet)
+            onClick: e => this.copyPacketToClipboard(e, packet),
           },
           "packet"
         )
@@ -149,7 +149,7 @@ class Result extends Component {
       dom.div(
         { className: "reps" },
         this.renderRepInAllModes({
-          object: packet.exception || packet.result
+          object: packet.exception || packet.result,
         })
       ),
       this.renderPacket(expression)

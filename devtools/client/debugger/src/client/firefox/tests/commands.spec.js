@@ -11,8 +11,8 @@ function makeThreadCLient(resp) {
   // thread client.
   return ({
     pauseGrip: () => ({
-      getPrototypeAndProperties: async () => resp
-    })
+      getPrototypeAndProperties: async () => resp,
+    }),
   }: any);
 }
 
@@ -20,7 +20,7 @@ function makeDependencies() {
   return {
     debuggerClient: (null: any),
     supportsWasm: true,
-    tabTarget: (null: any)
+    tabTarget: (null: any),
   };
 }
 
@@ -34,14 +34,14 @@ function makeGrip(actor = "") {
     location: {
       url: "",
       line: 2,
-      column: 34
+      column: 34,
     },
     frozen: false,
     ownPropertyLength: 1,
     preview: {},
     sealed: false,
     optimizedOut: false,
-    type: ""
+    type: "",
   };
 }
 
@@ -51,7 +51,7 @@ describe("firefox commands", () => {
       const { getProperties } = clientCommands;
       const threadClient = makeThreadCLient({
         ownProperties: {},
-        safeGetterValues: {}
+        safeGetterValues: {},
       });
 
       setupCommands({ ...makeDependencies(), threadClient });
@@ -64,9 +64,9 @@ describe("firefox commands", () => {
       const threadClient = makeThreadCLient({
         ownProperties: {
           obj: { value: "obj" },
-          foo: { value: "foo" }
+          foo: { value: "foo" },
         },
-        safeGetterValues: {}
+        safeGetterValues: {},
       });
 
       setupCommands({ ...makeDependencies(), threadClient });
@@ -79,11 +79,11 @@ describe("firefox commands", () => {
       const threadClient = makeThreadCLient({
         ownProperties: {
           obj: { value: "obj" },
-          foo: { value: "foo" }
+          foo: { value: "foo" },
         },
         safeGetterValues: {
-          obj: { getterValue: "getter", enumerable: true, writable: false }
-        }
+          obj: { getterValue: "getter", enumerable: true, writable: false },
+        },
       });
 
       setupCommands({ ...makeDependencies(), threadClient });
@@ -95,11 +95,11 @@ describe("firefox commands", () => {
       const { getProperties } = clientCommands;
       const threadClient = makeThreadCLient({
         ownProperties: {
-          foo: { value: "foo" }
+          foo: { value: "foo" },
         },
         safeGetterValues: {
-          obj: { getterValue: "getter", enumerable: true, writable: false }
-        }
+          obj: { getterValue: "getter", enumerable: true, writable: false },
+        },
       });
 
       setupCommands({ ...makeDependencies(), threadClient });

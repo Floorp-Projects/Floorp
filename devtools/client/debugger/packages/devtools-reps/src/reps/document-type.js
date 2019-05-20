@@ -14,7 +14,7 @@ const { span } = dom;
  * Renders DOM documentType object.
  */
 DocumentType.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function DocumentType(props) {
@@ -26,7 +26,7 @@ function DocumentType(props) {
   return span(
     {
       "data-link-actor-id": props.object.actor,
-      className: "objectBox objectBox-document"
+      className: "objectBox objectBox-document",
     },
     `<!DOCTYPE${name}>`
   );
@@ -45,5 +45,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(DocumentType),
-  supportsObject
+  supportsObject,
 };

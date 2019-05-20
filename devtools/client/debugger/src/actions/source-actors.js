@@ -14,7 +14,7 @@ export function insertSourceActors(items: Array<SourceActor>) {
   return function({ dispatch }: ThunkArgs) {
     dispatch({
       type: "INSERT_SOURCE_ACTORS",
-      items
+      items,
     });
   };
 }
@@ -26,7 +26,7 @@ export function removeSourceActors(items: Array<SourceActor>) {
   return function({ dispatch }: ThunkArgs) {
     dispatch({
       type: "REMOVE_SOURCE_ACTORS",
-      items
+      items,
     });
   };
 }

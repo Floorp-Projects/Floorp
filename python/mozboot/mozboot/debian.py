@@ -5,7 +5,13 @@
 from __future__ import absolute_import, print_function
 
 from mozboot.base import BaseBootstrapper
-from mozboot.linux_common import NasmInstall, NodeInstall, StyloInstall, ClangStaticAnalysisInstall
+from mozboot.linux_common import (
+    ClangStaticAnalysisInstall,
+    NasmInstall,
+    NodeInstall,
+    SccacheInstall,
+    StyloInstall,
+)
 
 
 MERCURIAL_INSTALL_PROMPT = '''
@@ -26,7 +32,7 @@ Your choice: '''
 
 
 class DebianBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnalysisInstall,
-                         BaseBootstrapper):
+                         SccacheInstall, BaseBootstrapper):
     # These are common packages for all Debian-derived distros (such as
     # Ubuntu).
     COMMON_PACKAGES = [

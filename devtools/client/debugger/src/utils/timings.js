@@ -29,7 +29,7 @@ function getStats(times) {
   return {
     times,
     avg: +avg.toPrecision(2),
-    median: +median.toPrecision(2)
+    median: +median.toPrecision(2),
   };
 }
 
@@ -39,7 +39,7 @@ export function steppingTimings() {
 
   return {
     commands: getStats(commandTimings),
-    paused: getStats(pausedTimings)
+    paused: getStats(pausedTimings),
   };
 }
 

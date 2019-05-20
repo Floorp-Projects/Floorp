@@ -13,14 +13,14 @@ import {
   getSelectedLocation,
   getSelectedSourceWithContent,
   getPauseCommand,
-  getCurrentThread
+  getCurrentThread,
 } from "../../selectors";
 
 import type {
   Frame,
   SourceLocation,
   SourceWithContent,
-  SourceDocuments
+  SourceDocuments,
 } from "../../types";
 import type { Command } from "../../reducers/types";
 
@@ -28,7 +28,7 @@ type Props = {
   pauseCommand: Command,
   selectedFrame: Frame,
   selectedLocation: SourceLocation,
-  selectedSourceWithContent: ?SourceWithContent
+  selectedSourceWithContent: ?SourceWithContent,
 };
 
 function isDebugLine(selectedFrame: Frame, selectedLocation: SourceLocation) {
@@ -97,7 +97,7 @@ export class HighlightLine extends Component<Props> {
       pauseCommand,
       selectedLocation,
       selectedFrame,
-      selectedSourceWithContent
+      selectedSourceWithContent,
     } = this.props;
     if (pauseCommand) {
       this.isStepping = true;
@@ -187,5 +187,5 @@ export default connect(state => ({
   pauseCommand: getPauseCommand(state, getCurrentThread(state)),
   selectedFrame: getVisibleSelectedFrame(state),
   selectedLocation: getSelectedLocation(state),
-  selectedSourceWithContent: getSelectedSourceWithContent(state)
+  selectedSourceWithContent: getSelectedSourceWithContent(state),
 }))(HighlightLine);

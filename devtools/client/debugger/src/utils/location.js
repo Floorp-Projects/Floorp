@@ -11,14 +11,14 @@ import type {
   PartialPosition,
   SourceLocation,
   SourceId,
-  Source
+  Source,
 } from "../types";
 
 type IncompleteLocation = {
   sourceId: SourceId,
   line?: number,
   column?: number,
-  sourceUrl?: string
+  sourceUrl?: string,
 };
 
 export function comparePosition(a: ?PartialPosition, b: ?PartialPosition) {
@@ -29,13 +29,13 @@ export function createLocation({
   sourceId,
   line = 1,
   column,
-  sourceUrl = ""
+  sourceUrl = "",
 }: IncompleteLocation): SourceLocation {
   return {
     sourceId,
     line,
     column,
-    sourceUrl
+    sourceUrl,
   };
 }
 
@@ -49,6 +49,6 @@ export function sortSelectedLocations<T: MappedLocation>(
     location => {
       const selectedLocation = getSelectedLocation(location, selectedSource);
       return selectedLocation.column === undefined || selectedLocation.column;
-    }
+    },
   ]);
 }

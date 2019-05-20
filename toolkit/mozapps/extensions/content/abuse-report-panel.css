@@ -22,6 +22,25 @@
   --note-font-weight: 400;
   --subtitle-font-size: 16px;
   --subtitle-font-weight: 600;
+
+  --input-radio-border: var(--in-content-box-border-color);
+  --input-radio-background: var(--grey-90-a10);
+  --input-radio-background-hover: var(--grey-90-a20);
+  --input-radio-background-active: var(--grey-90-a30);
+  --input-radio-background-selected: var(--blue-60);
+  --input-radio-background-selected-hover: var(--blue-70);
+  --input-radio-background-selected-active: var(--blue-80);
+  --input-radio-focus-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+}
+
+@supports -moz-bool-pref("browser.in-content.dark-mode") {
+@media (prefers-color-scheme: dark) {
+  :root {
+    --input-radio-background: #202023;
+    --input-radio-background-hover: #303033;
+    --input-radio-background-active: #404044;
+  }
+}
 }
 
 /* Ensure that the document (embedded in the XUL about:addons using a
@@ -31,7 +50,7 @@ html {
 }
 
 .modal-overlay-outer {
-  background: rgba(12, 12, 13, 0.6);
+  background: var(--grey-90-a60);
   width: 100%;
   height: 100%;
   position: fixed;
@@ -102,7 +121,7 @@ button.abuse-report-close-icon:hover:active {
 }
 
 .abuse-report-note {
-  color: var(--grey-50);
+  color: var(--in-content-deemphasized-text);
   font-size: var(--note-font-size);
   font-weight: var(--note-font-weight);
   line-height: var(--line-height);
@@ -154,28 +173,39 @@ ul.abuse-report-reasons > li > label > span:nth-child(2) {
   height: var(--radio-size);
   width: var(--radio-size);
   border-radius: 100%;
-  border: 1px solid var(--grey-90-a30);
-  background-color: var(--grey-90-a10);
+  border: 1px solid var(--input-radio-border);
+  background-color: var(--input-radio-background);
   margin-inline-start: 4px;
   margin-inline-end: 4px;
 }
 
 .abuse-report-contents [type=radio]:focus {
-  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
+  border: none;
+  box-shadow: var(--input-radio-focus-shadow);
 }
 
+.abuse-report-contents label:hover [type=radio]:not(:active),
 .abuse-report-contents [type=radio]:hover {
-  background-color: var(--grey-90-a20);
+  background-color: var(--input-radio-background-hover);
+}
+
+.abuse-report-contents [type=radio]:active {
+  background-color: var(--input-radio-background-active);
 }
 
 .abuse-report-contents [type=radio]:checked {
   background-image: var(--radio-image-url);
-  background-color: var(--blue-60);
+  background-color: var(--input-radio-background-selected);
   background-position: center center;
 }
 
+.abuse-report-contents label:hover [type=radio]:checked:not(:active),
 .abuse-report-contents [type=radio]:checked:hover {
-  background-color: var(--blue-70);
+  background-color: var(--input-radio-background-selected-hover);
+}
+
+.abuse-report-contents [type=radio]:checked:active {
+  background-color: var(--input-radio-background-selected-active);
 }
 
 abuse-report-submit-panel textarea {

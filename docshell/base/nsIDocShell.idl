@@ -549,11 +549,28 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript, notxpcom] void setIsPrinting(in boolean aIsPrinting);
 
   /**
-   * If the current content viewer isn't initialized for print preview,
-   * it is replaced with one which is and to which an about:blank document
-   * is loaded.
+   * This method should only be called on a docShell that has been specifically
+   * created to display a print preview document.  If the current document
+   * viewer isn't initialized for print preview when this method is called, it
+   * is replaced with a new viewer with an about:blank document (with the URL
+   * about:printpreview).  The viewer is then returned, ready for the print
+   * preview document to be constructed when viewer.printPreview() is called.
+   *
+   * The same viewer will be returned on subsequent calls since various bits of
+   * code assume that, once created, the viewer is never replaced.  Note,
+   * however, that the viewer's document will be replaced with a new document
+   * each time printPreview() is called on it (which is what we do to take
+   * account of print preview settings changes).  Replacing the document
+   * viewer's document breaks the normally unchanging 1:1 relationship between
+   * a document and its viewer, but that seems to be okay.
    */
-  readonly attribute nsIWebBrowserPrint printPreview;
+  nsIWebBrowserPrint initOrReusePrintPreviewViewer();
+
+  /**
+   * Propagated to the print preview document viewer.  Must only be called on
+   * a document viewer that has been initialized for print preview.
+   */
+  void exitPrintPreview();
 
   /**
    * Whether this docshell can execute scripts based on its hierarchy.
@@ -1167,4 +1184,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    * sense that's relevant to document.open.
    */
   [notxpcom, nostdcall] readonly attribute boolean isAttemptingToNavigate;
+
+  /**
+   * Whether developer tools are watching activity in this docshell.
+   */
+  [infallible] attribute boolean watchedByDevtools;
 };

@@ -83,6 +83,7 @@
             <menuitem id="menu_dumpViews" label="&ldb.dumpViews.label;" accesskey="&ldb.dumpViews.accesskey;" oncommand="gDebugger.dumpViews();" />
             <menuseparator />
             <menuitem id="menu_dumpStyleSheets" label="&ldb.dumpStyleSheets.label;" accesskey="&ldb.dumpStyleSheets.accesskey;" oncommand="gDebugger.dumpStyleSheets();" />
+            <menuitem id="menu_dumpMatchedRules" label="&ldb.dumpMatchedRules.label;" accesskey="&ldb.dumpMatchedRules.accesskey;" oncommand="gDebugger.dumpMatchedRules();" />
             <menuitem id="menu_dumpComputedStyles" label="&ldb.dumpComputedStyles.label;" accesskey="&ldb.dumpComputedStyles.accesskey;" oncommand="gDebugger.dumpComputedStyles();" />
             <menuseparator />
             <menuitem id="menu_dumpReflowStats" label="&ldb.dumpReflowStats.label;" accesskey="&ldb.dumpReflowStats.accesskey;" oncommand="gDebugger.dumpReflowStats();" />

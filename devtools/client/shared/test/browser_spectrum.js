@@ -20,9 +20,50 @@ add_task(async function() {
   await testSettingAndGettingANewColor(container);
   await testChangingColorShouldEmitEvents(container);
   await testSettingColorShoudUpdateTheUI(container);
+  await testChangingColorShouldUpdateColorPreview(container);
 
   host.destroy();
 });
+
+/**
+ * Helper method for extracting the rgba overlay value of the color preview's background
+ * image style.
+ *
+ * @param   {String} linearGradientStr
+ *          The linear gradient CSS string.
+ * @return  {String} Returns the rgba string for the color overlay.
+ */
+function extractRgbaOverlayString(linearGradientStr) {
+  const start = linearGradientStr.indexOf("(");
+  const end = linearGradientStr.indexOf(")");
+
+  return linearGradientStr.substring(start + 1, end + 1);
+}
+
+function testColorPreviewDisplay(spectrum, expectedRgbCssString, expectedBorderColor) {
+  const { colorPreview } = spectrum;
+  const colorPreviewStyle = window.getComputedStyle(colorPreview);
+  expectedBorderColor = expectedBorderColor === "transparent" ?
+                          "rgba(0, 0, 0, 0)"
+                          :
+                          expectedBorderColor;
+
+  spectrum.updateUI();
+
+  // Extract the first rgba value from the linear gradient
+  const linearGradientStr = colorPreviewStyle.getPropertyValue("background-image");
+  const colorPreviewValue = extractRgbaOverlayString(linearGradientStr);
+
+  is(colorPreviewValue, expectedRgbCssString,
+    `Color preview should be ${expectedRgbCssString}`);
+
+  info("Test if color preview has a border or not.");
+  // Since border-color is a shorthand CSS property, using getComputedStyle will return
+  // an empty string. Instead, use one of the border sides to find the border-color value
+  // since they will all be the same.
+  const borderColorTop = colorPreviewStyle.getPropertyValue("border-top-color");
+  is(borderColorTop, expectedBorderColor, "Color preview border color is correct.");
+}
 
 function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
   ok(container, "We have the root node to append spectrum to");
@@ -95,6 +136,7 @@ function testSettingColorShoudUpdateTheUI(container) {
   s.show();
   const dragHelperOriginalPos = [s.dragHelper.style.top, s.dragHelper.style.left];
   const alphaHelperOriginalPos = s.alphaSliderHelper.style.left;
+  let hueHelperOriginalPos = s.hueSliderHelper.style.left;
 
   s.rgb = [50, 240, 234, .2];
   s.updateUI();
@@ -102,11 +144,38 @@ function testSettingColorShoudUpdateTheUI(container) {
   ok(s.alphaSliderHelper.style.left != alphaHelperOriginalPos, "Alpha helper has moved");
   ok(s.dragHelper.style.top !== dragHelperOriginalPos[0], "Drag helper has moved");
   ok(s.dragHelper.style.left !== dragHelperOriginalPos[1], "Drag helper has moved");
+  ok(s.hueSliderHelper.style.left !== hueHelperOriginalPos, "Hue helper has moved");
+
+  hueHelperOriginalPos = s.hueSliderHelper.style.left;
 
   s.rgb = [240, 32, 124, 0];
   s.updateUI();
   is(s.alphaSliderHelper.style.left, -(s.alphaSliderHelper.offsetWidth / 2) + "px",
     "Alpha range UI has been updated again");
+  ok(hueHelperOriginalPos !== s.hueSliderHelper.style.left,
+    "Hue Helper slider should have move again");
+
+  s.destroy();
+}
+
+function testChangingColorShouldUpdateColorPreview(container) {
+  const s = new Spectrum(container, [0, 0, 1, 1]);
+  s.show();
+
+  info("Test that color preview is black.");
+  testColorPreviewDisplay(s, "rgb(0, 0, 1)", "transparent");
+
+  info("Test that color preview is blue.");
+  s.rgb = [0, 0, 255, 1];
+  testColorPreviewDisplay(s, "rgb(0, 0, 255)", "transparent");
+
+  info("Test that color preview is red.");
+  s.rgb = [255, 0, 0, 1];
+  testColorPreviewDisplay(s, "rgb(255, 0, 0)", "transparent");
+
+  info("Test that color preview is white and also has a light grey border.");
+  s.rgb = [255, 255, 255, 1];
+  testColorPreviewDisplay(s, "rgb(255, 255, 255)", "rgb(204, 204, 204)");
 
   s.destroy();
 }

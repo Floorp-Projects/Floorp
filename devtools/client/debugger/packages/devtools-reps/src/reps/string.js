@@ -15,7 +15,7 @@ const {
   isGrip,
   ELLIPSIS,
   uneatLastUrlCharsRegex,
-  urlRegex
+  urlRegex,
 } = require("./rep-utils");
 
 const dom = require("react-dom-factories");
@@ -35,7 +35,7 @@ StringRep.propTypes = {
   openLink: PropTypes.func,
   className: PropTypes.string,
   title: PropTypes.string,
-  isInContentPage: PropTypes.bool
+  isInContentPage: PropTypes.bool,
 };
 
 function StringRep(props) {
@@ -50,7 +50,7 @@ function StringRep(props) {
     member,
     openLink,
     title,
-    isInContentPage
+    isInContentPage,
   } = props;
 
   let text = object;
@@ -63,7 +63,7 @@ function StringRep(props) {
     text = maybeCropLongString(
       {
         shouldCrop,
-        cropLimit
+        cropLimit,
       },
       text
     );
@@ -77,7 +77,7 @@ function StringRep(props) {
   text = formatText(
     {
       useQuotes,
-      escapeWhitespace
+      escapeWhitespace,
     },
     text
   );
@@ -86,7 +86,7 @@ function StringRep(props) {
     className,
     style,
     actor: object.actor,
-    title
+    title,
   });
 
   if (!isLong) {
@@ -98,7 +98,7 @@ function StringRep(props) {
           cropLimit: shouldCrop ? cropLimit : null,
           urlCropLimit,
           openLink,
-          isInContentPage
+          isInContentPage,
         })
       );
     }
@@ -108,7 +108,7 @@ function StringRep(props) {
       {
         isLong,
         shouldCrop,
-        cropLimit
+        cropLimit,
       },
       text
     );
@@ -191,7 +191,7 @@ function getLinkifiedElements({
   cropLimit,
   urlCropLimit,
   openLink,
-  isInContentPage
+  isInContentPage,
 }) {
   const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
   const startCropIndex = cropLimit ? halfLimit : null;
@@ -260,7 +260,7 @@ function getLinkifiedElements({
                   e.preventDefault();
                   openLink(useUrl, e);
                 }
-              : null
+              : null,
           },
           linkText
         )
@@ -347,5 +347,5 @@ function supportsObject(object, noGrip = false) {
 module.exports = {
   rep: wrapRender(StringRep),
   supportsObject,
-  isLongString
+  isLongString,
 };

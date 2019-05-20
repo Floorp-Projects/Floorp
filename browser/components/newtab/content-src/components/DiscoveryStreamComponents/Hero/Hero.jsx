@@ -1,5 +1,6 @@
 import {DSCard, PlaceholderDSCard} from "../DSCard/DSCard.jsx";
 import {actionCreators as ac} from "common/Actions.jsm";
+import {clampTotalLines} from "content-src/lib/clamp-total-lines";
 import {DSEmptyState} from "../DSEmptyState/DSEmptyState.jsx";
 import {DSImage} from "../DSImage/DSImage.jsx";
 import {DSLinkMenu} from "../DSLinkMenu/DSLinkMenu";
@@ -37,7 +38,9 @@ export class Hero extends React.PureComponent {
     const cards = [];
     for (let index = 0; index < this.props.items - 1; index++) {
       const rec = otherRecs[index];
-      cards.push(rec ? (
+      cards.push(!rec || rec.placeholder ? (
+        <PlaceholderDSCard key={`dscard-${index}`} />
+      ) : (
         <DSCard
         campaignId={rec.campaign_id}
         key={`dscard-${index}`}
@@ -53,23 +56,17 @@ export class Hero extends React.PureComponent {
         source={rec.domain}
         pocket_id={rec.pocket_id}
         bookmarkGuid={rec.bookmarkGuid} />
-      ) : (
-        <PlaceholderDSCard key={`dscard-${index}`} />
       ));
     }
 
-    let list = (
-      <List
-        recStartingPoint={1}
-        data={this.props.data}
-        hasImages={true}
-        hasBorders={this.props.border === `border`}
-        items={this.props.items - 1}
-        type={`Hero`} />
-    );
+    let heroCard = null;
 
-    return (
-      <div className={`ds-hero ds-hero-${this.props.border}`}>
+    if (!heroRec || heroRec.placeholder) {
+      heroCard = (
+        <PlaceholderDSCard />
+      );
+    } else {
+      heroCard = (
         <div className="ds-hero-item">
           <SafeAnchor
             className="wrapper"
@@ -80,14 +77,16 @@ export class Hero extends React.PureComponent {
               <DSImage extraClassNames="img" source={heroRec.image_src} rawSource={heroRec.raw_image_src} />
             </div>
             <div className="meta">
-              <div className="header-and-excerpt">
+              <div className="header-and-excerpt"
+                data-total-lines="7"
+                ref={clampTotalLines}>
                 {heroRec.context ? (
                   <p className="context">{heroRec.context}</p>
                 ) : (
-                  <p className="source">{heroRec.domain}</p>
+                  <p className="source clamp" data-clamp="1">{heroRec.domain}</p>
                 )}
-                <header>{heroRec.title}</header>
-                <p className="excerpt">{heroRec.excerpt}</p>
+                <header className="clamp" data-clamp="4">{heroRec.title}</header>
+                <p className="excerpt clamp">{heroRec.excerpt}</p>
               </div>
             </div>
             <ImpressionStats
@@ -108,6 +107,22 @@ export class Hero extends React.PureComponent {
             pocket_id={heroRec.pocket_id}
             bookmarkGuid={heroRec.bookmarkGuid} />
         </div>
+      );
+    }
+
+    let list = (
+      <List
+        recStartingPoint={1}
+        data={this.props.data}
+        hasImages={true}
+        hasBorders={this.props.border === `border`}
+        items={this.props.items - 1}
+        type={`Hero`} />
+    );
+
+    return (
+      <div className={`ds-hero ds-hero-${this.props.border}`}>
+        {heroCard}
         <div className={`${this.props.subComponentType}`}>
           { this.props.subComponentType === `cards` ? cards : list }
         </div>

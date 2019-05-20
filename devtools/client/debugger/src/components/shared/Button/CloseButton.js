@@ -12,7 +12,7 @@ import "./styles/CloseButton.css";
 type Props = {
   handleClick: Function,
   buttonClass?: string,
-  tooltip?: string
+  tooltip?: string,
 };
 
 function CloseButton({ handleClick, buttonClass, tooltip }: Props) {

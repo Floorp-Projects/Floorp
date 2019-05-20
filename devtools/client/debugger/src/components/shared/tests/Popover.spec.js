@@ -22,9 +22,9 @@ describe("Popover", () => {
         top: 250,
         right: 0,
         bottom: 0,
-        left: 20
+        left: 20,
       };
-    }
+    },
   };
   const targetPosition = {
     x: 100,
@@ -34,7 +34,7 @@ describe("Popover", () => {
     top: 50,
     right: 0,
     bottom: 0,
-    left: 200
+    left: 200,
   };
   const popover = mount(
     <Popover
@@ -135,9 +135,9 @@ describe("Popover", () => {
           top: 0,
           bottom: 500,
           left: 0,
-          right: 500
+          right: 500,
         };
-      }
+      },
     };
     const target = {
       width: 30,
@@ -145,7 +145,7 @@ describe("Popover", () => {
       top: 100,
       bottom: 110,
       left: 20,
-      right: 50
+      right: 50,
     };
 
     const mountedTooltip = mount(
@@ -173,9 +173,9 @@ describe("Popover", () => {
           top: 0,
           bottom: 100,
           left: 0,
-          right: 100
+          right: 100,
         };
-      }
+      },
     };
     const target = {
       width: 30,
@@ -183,7 +183,7 @@ describe("Popover", () => {
       top: 0,
       bottom: 10,
       left: 20,
-      right: 50
+      right: 50,
     };
 
     const mountedTooltip = mount(

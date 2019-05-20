@@ -24,7 +24,7 @@ import type {
   SourceId,
   SourceActor,
   Worker,
-  Range
+  Range,
 } from "../../types";
 
 import type {
@@ -33,7 +33,7 @@ import type {
   Grip,
   ThreadClient,
   ObjectClient,
-  SourcesPacket
+  SourcesPacket,
 } from "./types";
 
 let workerClients: Object;
@@ -50,7 +50,7 @@ type Dependencies = {
   threadClient: ThreadClient,
   tabTarget: TabTarget,
   debuggerClient: DebuggerClient,
-  supportsWasm: boolean
+  supportsWasm: boolean,
 };
 
 function setupCommands(dependencies: Dependencies) {
@@ -79,7 +79,7 @@ async function loadObjectProperties(root: Node) {
   );
   return utils.node.getChildren({
     item: root,
-    loadedProperties: new Map([[root.path, properties]])
+    loadedProperties: new Map([[root.path, properties]]),
   });
 }
 
@@ -147,16 +147,8 @@ function rewind(thread: string): Promise<*> {
   return lookupThreadClient(thread).rewind();
 }
 
-function reverseStepIn(thread: string): Promise<*> {
-  return lookupThreadClient(thread).reverseStepIn();
-}
-
 function reverseStepOver(thread: string): Promise<*> {
   return lookupThreadClient(thread).reverseStepOver();
-}
-
-function reverseStepOut(thread: string): Promise<*> {
-  return lookupThreadClient(thread).reverseStepOut();
 }
 
 function breakOnNext(thread: string): Promise<*> {
@@ -165,7 +157,7 @@ function breakOnNext(thread: string): Promise<*> {
 
 async function sourceContents({
   actor,
-  thread
+  thread,
 }: SourceActor): Promise<{| source: any, contentType: ?string |}> {
   const sourceThreadClient = lookupThreadClient(thread);
   const sourceFront = sourceThreadClient.source({ actor });
@@ -404,7 +396,7 @@ async function fetchWorkers(): Promise<Worker[]> {
   if (features.windowlessWorkers) {
     const options = {
       breakpoints,
-      observeAsmJS: true
+      observeAsmJS: true,
     };
 
     const newWorkerClients = await updateWorkerClients({
@@ -412,7 +404,7 @@ async function fetchWorkers(): Promise<Worker[]> {
       debuggerClient,
       threadClient,
       workerClients,
-      options
+      options,
     });
 
     // Fetch the sources and install breakpoints on any new workers.
@@ -507,8 +499,6 @@ const clientCommands = {
   stepOut,
   stepOver,
   rewind,
-  reverseStepIn,
-  reverseStepOut,
   reverseStepOver,
   breakOnNext,
   sourceContents,
@@ -538,7 +528,7 @@ const clientCommands = {
   waitForWorkers,
   detachWorkers,
   hasWasmSupport,
-  lookupConsoleClient
+  lookupConsoleClient,
 };
 
 export { setupCommands, clientCommands };

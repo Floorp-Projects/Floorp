@@ -18,12 +18,12 @@ function mount(props) {
     createObjectClient: grip => ObjectClient(grip),
     createLongStringClient: jest.fn(grip =>
       LongStringClient(grip, { substring })
-    )
+    ),
   };
 
   const obj = mountObjectInspector({
     client,
-    props
+    props,
   });
 
   return { ...obj, substring };
@@ -39,10 +39,10 @@ describe("createLongStringClient", () => {
         {
           path: "root",
           contents: {
-            value: stub
-          }
-        }
-      ]
+            value: stub,
+          },
+        },
+      ],
     });
 
     expect(client.createLongStringClient.mock.calls[0][0]).toBe(stub);
@@ -58,10 +58,10 @@ describe("createLongStringClient", () => {
           {
             path: "root",
             contents: {
-              value: stub
-            }
-          }
-        ]
+              value: stub,
+            },
+          },
+        ],
       });
 
       // Third argument is the callback which holds the string response.
@@ -80,10 +80,10 @@ describe("createLongStringClient", () => {
           {
             path: "root",
             contents: {
-              value: stub
-            }
-          }
-        ]
+              value: stub,
+            },
+          },
+        ],
       });
 
       expect(substring.mock.calls).toHaveLength(0);

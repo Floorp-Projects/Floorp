@@ -16,8 +16,7 @@ add_task(async function() {
   for (let i = 0; i < 10; ++i) {
     let iconUri = NetUtil.newURI("http://mozilla.org/" + i);
     let data = readFileData(icon.file);
-    PlacesUtils.favicons.replaceFaviconData(iconUri, data, data.length,
-                                            icon.mimetype);
+    PlacesUtils.favicons.replaceFaviconData(iconUri, data, icon.mimetype);
     await setFaviconForPage(url, iconUri);
   }
 

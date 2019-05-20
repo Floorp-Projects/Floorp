@@ -1320,7 +1320,7 @@ HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
 
   HttpTrafficAnalyzer::ClassOfService cos;
   {
-    if (mClassOfService & nsIClassOfService::Leader &&
+    if ((mClassOfService & nsIClassOfService::Leader) &&
         mLoadInfo->GetExternalContentPolicyType() ==
             nsIContentPolicy::TYPE_SCRIPT) {
       cos = HttpTrafficAnalyzer::ClassOfService::eLeader;
@@ -1352,8 +1352,10 @@ HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
     }
   }
 
-  return HttpTrafficAnalyzer::CreateTrafficCategory(NS_UsePrivateBrowsing(this),
-                                                    isThirdParty, cos, tc);
+  bool isSystemPrincipal = mLoadInfo->LoadingPrincipal() &&
+                           mLoadInfo->LoadingPrincipal()->IsSystemPrincipal();
+  return HttpTrafficAnalyzer::CreateTrafficCategory(
+      NS_UsePrivateBrowsing(this), isSystemPrincipal, isThirdParty, cos, tc);
 }
 
 enum class Report { Error, Warning };

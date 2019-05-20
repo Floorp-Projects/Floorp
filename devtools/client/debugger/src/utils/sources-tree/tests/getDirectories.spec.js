@@ -19,7 +19,7 @@ function createSources(urls) {
       const id = `a${index}`;
       sources[id] = makeMockSource(url, id);
       return sources;
-    }, {})
+    }, {}),
   };
 }
 
@@ -28,7 +28,7 @@ describe("getDirectories", () => {
     const sources = createSources([
       "http://a/b.js",
       "http://a/c.js",
-      "http://b/c.js"
+      "http://b/c.js",
     ]);
 
     const threads = [
@@ -36,31 +36,31 @@ describe("getDirectories", () => {
         actor: "FakeThread",
         url: "http://a",
         type: 1,
-        name: "FakeThread"
-      }
+        name: "FakeThread",
+      },
     ];
 
     const debuggeeUrl = "http://a/";
     const { sourceTree } = createTree({
       sources,
       debuggeeUrl,
-      threads
+      threads,
     });
 
     expect(formatDirectories(sources.FakeThread.a0, sourceTree)).toEqual([
       "FakeThread/a/b.js",
       "FakeThread/a",
-      "FakeThread"
+      "FakeThread",
     ]);
     expect(formatDirectories(sources.FakeThread.a1, sourceTree)).toEqual([
       "FakeThread/a/c.js",
       "FakeThread/a",
-      "FakeThread"
+      "FakeThread",
     ]);
     expect(formatDirectories(sources.FakeThread.a2, sourceTree)).toEqual([
       "FakeThread/b/c.js",
       "FakeThread/b",
-      "FakeThread"
+      "FakeThread",
     ]);
   });
 });

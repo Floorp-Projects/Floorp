@@ -20,7 +20,7 @@ import type { Frame, ThreadContext } from "../../../types";
 type FrameTitleProps = {
   frame: Frame,
   options: Object,
-  l10n: Object
+  l10n: Object,
 };
 
 function FrameTitle({ frame, options = {}, l10n }: FrameTitleProps) {
@@ -75,14 +75,14 @@ type FrameComponentProps = {
   displayFullUrl: boolean,
   getFrameTitle?: string => string,
   disableContextMenu: boolean,
-  selectable: boolean
+  selectable: boolean,
 };
 
 export default class FrameComponent extends Component<FrameComponentProps> {
   static defaultProps = {
     hideLocation: false,
     shouldMapDisplayName: true,
-    disableContextMenu: false
+    disableContextMenu: false,
   };
 
   onContextMenu(event: SyntheticMouseEvent<HTMLElement>) {
@@ -91,7 +91,7 @@ export default class FrameComponent extends Component<FrameComponentProps> {
       copyStackTrace,
       toggleFrameworkGrouping,
       toggleBlackBox,
-      frameworkGroupingOn
+      frameworkGroupingOn,
     } = this.props;
     FrameMenu(
       frame,
@@ -132,12 +132,12 @@ export default class FrameComponent extends Component<FrameComponentProps> {
       displayFullUrl,
       getFrameTitle,
       disableContextMenu,
-      selectable
+      selectable,
     } = this.props;
     const { l10n } = this.context;
 
     const className = classNames("frame", {
-      selected: selectedFrame && selectedFrame.id === frame.id
+      selected: selectedFrame && selectedFrame.id === frame.id,
     });
 
     if (!frame.source) {

@@ -557,22 +557,36 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._parentClosed ? null : undefined;
   },
 
-  _makeOnEnterFrame: function({ pauseAndRespond, rewinding }) {
+  _makeOnEnterFrame: function({ thread, pauseAndRespond }) {
     return frame => {
       const { generatedSourceActor } = this.sources.getFrameLocation(frame);
 
       const url = generatedSourceActor.url;
-
-      // When rewinding into a frame, we end up at the point when it is being popped.
-      if (rewinding) {
-        frame.reportedPop = true;
-      }
-
       if (this.sources.isBlackBoxed(url)) {
         return undefined;
       }
 
-      return pauseAndRespond(frame);
+      // If the initial frame offset is a step target, we are done.
+      if (frame.script.getOffsetMetadata(frame.offset).isStepStart) {
+        return pauseAndRespond(frame);
+      }
+
+      // Continue forward until we get to a valid step target.
+      const { onStep, onPop } = thread._makeSteppingHooks(
+        null, "next", false, null
+      );
+
+      if (thread.dbg.replaying) {
+        const offsets =
+          thread._findReplayingStepOffsets(null, frame,
+                                           /* rewinding = */ false);
+        frame.setReplayingOnStep(onStep, offsets);
+      } else {
+        frame.onStep = onStep;
+      }
+
+      frame.onPop = onPop;
+      return undefined;
     };
   },
 
@@ -652,7 +666,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     const generatedLocation = this.sources.getScriptOffsetLocation(script, offset);
 
-    if (startLocation.generatedUrl !== generatedLocation.generatedUrl) {
+    if (!startLocation || startLocation.generatedUrl !== generatedLocation.generatedUrl) {
       return true;
     }
 
@@ -681,12 +695,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _makeOnStep: function({ thread, pauseAndRespond, startFrame,
                           startLocation, steppingType, completion, rewinding }) {
-    // Breaking in place: we should always pause.
-    if (steppingType === "break") {
-      return () => pauseAndRespond(this);
-    }
-
-    // Otherwise take what a "step" means into consideration.
     return function() {
       // onStep is called with 'this' set to the current frame.
 
@@ -843,11 +851,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (stepFrame) {
       switch (steppingType) {
         case "step":
-          if (rewinding) {
-            this.dbg.replayingOnPopFrame = onEnterFrame;
-          } else {
-            this.dbg.onEnterFrame = onEnterFrame;
-          }
+          assert(!rewinding, "'step' resume limit cannot be used while rewinding");
+          this.dbg.onEnterFrame = onEnterFrame;
           // Fall through.
         case "break":
         case "next":
@@ -868,7 +873,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
               olderFrame = olderFrame.older;
             }
             if (olderFrame) {
-              olderFrame.setReplayingOnStep(onStep, [olderFrame.offset]);
+              // Set an onStep handler in the older frame to stop at the call site.
+              // Make sure the offsets we use are valid breakpoint locations, as we
+              // cannot stop at other offsets when replaying.
+              const offsets = this._findReplayingStepOffsets({}, olderFrame, true);
+              olderFrame.setReplayingOnStep(onStep, offsets);
             }
           } else {
             stepFrame.onPop = onPop;
@@ -1194,7 +1203,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Clear stepping hooks.
     this.dbg.onEnterFrame = undefined;
-    this.dbg.replayingOnPopFrame = undefined;
     this.dbg.onExceptionUnwind = undefined;
     this._clearSteppingHooks();
 

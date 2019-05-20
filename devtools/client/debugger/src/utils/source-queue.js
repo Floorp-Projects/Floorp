@@ -39,5 +39,5 @@ export default {
   clear: () => {
     queuedSources = [];
     queue.cancel();
-  }
+  },
 };

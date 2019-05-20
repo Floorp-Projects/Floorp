@@ -43,6 +43,8 @@ class Mocks {
       this.emitUSBUpdate();
     };
 
+    this.adbMock.adb.isProcessStarted = () => true;
+
     // Prepare a fake observer to be able to emit events from this mock.
     this._observerMock = addObserverMock(this.adbMock.adb);
 

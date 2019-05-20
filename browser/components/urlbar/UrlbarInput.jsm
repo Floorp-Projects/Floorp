@@ -98,13 +98,15 @@ class UrlbarInput {
     this._resultForCurrentValue = null;
     this._suppressStartQuery = false;
     this._untrimmedValue = "";
+    this._openViewOnFocus = false;
 
     // This exists only for tests.
     this._enableAutofillPlaceholder = true;
 
     // Forward textbox methods and properties.
     const METHODS = ["addEventListener", "removeEventListener",
-      "setAttribute", "hasAttribute", "removeAttribute", "getAttribute",
+      "getAttribute", "hasAttribute",
+      "setAttribute", "removeAttribute", "toggleAttribute",
       "select"];
     const READ_ONLY_PROPERTIES = ["inputField", "editor"];
     const READ_WRITE_PROPERTIES = ["placeholder", "readOnly",
@@ -470,7 +472,7 @@ class UrlbarInput {
           // visit anything.  The user can then type a search string.  Also
           // start a new search so that the offer appears in the view by itself
           // to make it even clearer to the user what's going on.
-          this.startQuery();
+          this.startQuery({ allowEmptyInput: true });
           return;
         }
         const actionDetails = {
@@ -612,7 +614,7 @@ class UrlbarInput {
     allowAutofill = true,
     searchString = null,
     resetSearchState = true,
-    allowEmptyInput = true,
+    allowEmptyInput = false,
   } = {}) {
     if (this._suppressStartQuery) {
       return;
@@ -641,7 +643,6 @@ class UrlbarInput {
       isPrivate: this.isPrivate,
       maxResults: UrlbarPrefs.get("maxRichResults"),
       muxer: "UnifiedComplete",
-      providers: ["UnifiedComplete"],
       searchString,
       userContextId: this.window.gBrowser.selectedBrowser.getAttribute("usercontextid"),
     }));
@@ -742,6 +743,15 @@ class UrlbarInput {
 
   set value(val) {
     return this._setValue(val, true);
+  }
+
+  get openViewOnFocus() {
+    return this._openViewOnFocus;
+  }
+
+  set openViewOnFocus(val) {
+    this._openViewOnFocus = val;
+    this.toggleAttribute("hidedropmarker", val);
   }
 
   // Private methods below.
@@ -1301,6 +1311,10 @@ class UrlbarInput {
     if (this.getAttribute("pageproxystate") != "valid") {
       this.window.UpdatePopupNotificationsVisibility();
     }
+
+    if (this.openViewOnFocus) {
+      this.startQuery();
+    }
   }
 
   _on_mouseover(event) {
@@ -1322,7 +1336,7 @@ class UrlbarInput {
       if (this.view.isOpen) {
         this.view.close();
       } else {
-        this.startQuery({ allowEmptyInput: false });
+        this.startQuery();
       }
     }
   }
@@ -1383,6 +1397,7 @@ class UrlbarInput {
     this.startQuery({
       searchString: value,
       allowAutofill,
+      allowEmptyInput: true,
       resetSearchState: false,
     });
   }
@@ -1476,6 +1491,9 @@ class UrlbarInput {
   _on_TabSelect(event) {
     this._resetSearchState();
     this.controller.viewContextChanged();
+    if (this.focused && this.openViewOnFocus) {
+      this.startQuery();
+    }
   }
 
   _on_keydown(event) {

@@ -1100,6 +1100,8 @@ class AddonInstall {
    *        included in the addon manager telemetry events.
    * @param {boolean} [options.isUserRequestedUpdate]
    *        An optional boolean, true if the install object is related to a user triggered update.
+   * @param {nsIURL} [options.releaseNotesURI]
+   *        An optional nsIURL that release notes where release notes can be retrieved.
    * @param {function(string) : Promise<void>} [options.promptHandler]
    *        A callback to prompt the user before installing.
    */
@@ -1118,7 +1120,7 @@ class AddonInstall {
     this.hash = this.originalHash;
     this.existingAddon = options.existingAddon || null;
     this.promptHandler = options.promptHandler || (() => Promise.resolve());
-    this.releaseNotesURI = null;
+    this.releaseNotesURI = options.releaseNotesURI || null;
 
     this._startupPromise = null;
 
@@ -2286,18 +2288,19 @@ function createUpdate(aCallback, aAddon, aUpdate, isUserRequested) {
       isUserRequestedUpdate: isUserRequested,
     };
 
+    try {
+      if (aUpdate.updateInfoURL)
+        opts.releaseNotesURI = Services.io.newURI(escapeAddonURI(aAddon, aUpdate.updateInfoURL));
+    } catch (e) {
+      // If the releaseNotesURI cannot be parsed then just ignore it.
+    }
+
     let install;
     if (url instanceof Ci.nsIFileURL) {
       install = new LocalAddonInstall(aAddon.location, url, opts);
       await install.init();
     } else {
       install = new DownloadAddonInstall(aAddon.location, url, opts);
-    }
-    try {
-      if (aUpdate.updateInfoURL)
-        install.releaseNotesURI = Services.io.newURI(escapeAddonURI(aAddon, aUpdate.updateInfoURL));
-    } catch (e) {
-      // If the releaseNotesURI cannot be parsed then just ignore it.
     }
 
     aCallback(install);
@@ -3308,10 +3311,13 @@ var XPIInstall = {
    *        The XPI file to install the add-on from.
    * @param {XPIStateLocation} location
    *        The install location to install the add-on to.
+   * @param {string?} [oldAppVersion]
+   *        The version of the application last run with this profile or null
+   *        if it is a new profile or the version is unknown
    * @returns {AddonInternal}
    *        The installed Addon object, upon success.
    */
-  async installDistributionAddon(id, file, location) {
+  async installDistributionAddon(id, file, location, oldAppVersion) {
     let addon = await loadManifestFromFile(file, location);
     addon.installTelemetryInfo = {source: "distribution"};
 
@@ -3332,6 +3338,10 @@ var XPIInstall = {
         logger.warn("Profile contains an add-on with a bad or missing install " +
                     `manifest at ${state.path}, overwriting`, e);
       }
+    } else if (addon.type === "locale" && oldAppVersion && Services.vc.compare(oldAppVersion, "67") < 0) {
+        /* Distribution language packs didn't get installed due to the signing
+           issues so we need to force them to be reinstalled. */
+      Services.prefs.clearUserPref(PREF_BRANCH_INSTALLED_ADDON + id);
     } else if (Services.prefs.getBoolPref(PREF_BRANCH_INSTALLED_ADDON + id, false)) {
       return null;
     }

@@ -51,6 +51,7 @@ VALID_MANIFESTS = [{
     'type': 'pageload',
     'unit': 'ms',
 
+    'alert_change_type': None,
     'alert_on': None,
     'playback': None,
 }, {

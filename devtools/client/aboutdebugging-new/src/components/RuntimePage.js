@@ -14,7 +14,6 @@ const Localized = createFactory(FluentReact.Localized);
 
 const CompatibilityWarning = createFactory(require("./CompatibilityWarning"));
 const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
-const ExtensionAction = createFactory(require("./debugtarget/ExtensionAction"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
 const ProfilerDialog = createFactory(require("./ProfilerDialog"));
@@ -166,7 +165,7 @@ class RuntimePage extends PureComponent {
                                  this.getIconByType(DEBUG_TARGETS.EXTENSION),
                                  temporaryExtensions,
                                  this.renderTemporaryExtensionInstallSection(),
-                                 ExtensionAction,
+                                 InspectAction,
                                  TemporaryExtensionAdditionalActions,
                                  TemporaryExtensionDetail,
                                  DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
@@ -175,7 +174,7 @@ class RuntimePage extends PureComponent {
                                  this.getIconByType(DEBUG_TARGETS.EXTENSION),
                                  installedExtensions,
                                  null,
-                                 ExtensionAction,
+                                 InspectAction,
                                  null,
                                  ExtensionDetail,
                                  DEBUG_TARGET_PANE.INSTALLED_EXTENSION,

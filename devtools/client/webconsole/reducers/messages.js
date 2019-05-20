@@ -25,6 +25,7 @@ loader.lazyRequireGetter(this, "createWarningGroupMessage", "devtools/client/web
 loader.lazyRequireGetter(this, "isWarningGroup", "devtools/client/webconsole/utils/messages", true);
 loader.lazyRequireGetter(this, "getWarningGroupType", "devtools/client/webconsole/utils/messages", true);
 loader.lazyRequireGetter(this, "getParentWarningGroupMessageId", "devtools/client/webconsole/utils/messages", true);
+ChromeUtils.defineModuleGetter(this, "pointPrecedes", "resource://devtools/shared/execution-point-utils.js");
 
 const {
   UPDATE_REQUEST,
@@ -40,8 +41,6 @@ const MessageState = overrides => Object.freeze(Object.assign({
   // List of additional data associated with messages (populated async or on-demand at a
   // later time after the message is received).
   messagesPayloadById: new Map(),
-  // When recording or replaying, all progress values in messagesById.
-  replayProgressMessages: new Set(),
   // Array of the visible messages.
   visibleMessages: [],
   // Object for the filtered messages.
@@ -70,13 +69,15 @@ const MessageState = overrides => Object.freeze(Object.assign({
   networkMessagesUpdateById: {},
   // Set of logpoint IDs that have been removed
   removedLogpointIds: new Set(),
+  // Any execution point we are currently paused at, when replaying.
   pausedExecutionPoint: null,
+  // Whether any messages with execution points have been seen.
+  hasExecutionPoints: false,
 }, overrides));
 
 function cloneState(state) {
   return {
     messagesById: new Map(state.messagesById),
-    replayProgressMessages: new Set(state.replayProgressMessages),
     visibleMessages: [...state.visibleMessages],
     filteredMessagesCount: {...state.filteredMessagesCount},
     messagesUiById: [...state.messagesUiById],
@@ -89,6 +90,7 @@ function cloneState(state) {
     networkMessagesUpdateById: {...state.networkMessagesUpdateById},
     removedLogpointIds: new Set(state.removedLogpointIds),
     pausedExecutionPoint: state.pausedExecutionPoint,
+    hasExecutionPoints: state.hasExecutionPoints,
     warningGroupsById: new Map(state.warningGroupsById),
   };
 }
@@ -106,7 +108,6 @@ function cloneState(state) {
 function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   const {
     messagesById,
-    replayProgressMessages,
     groupsById,
     currentGroup,
     repeatById,
@@ -115,17 +116,6 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   if (newMessage.type === constants.MESSAGE_TYPE.NULL_MESSAGE) {
     // When the message has a NULL type, we don't add it.
     return state;
-  }
-
-  if (newMessage.executionPoint && !newMessage.logpointId) {
-    // When replaying old behaviors in a tab, we might see the same messages
-    // multiple times. Ignore duplicate messages with the same progress values.
-    // We don't need to do this for logpoint messages, which will only arrive once.
-    const progress = newMessage.executionPoint.progress;
-    if (replayProgressMessages.has(progress)) {
-      return state;
-    }
-    state.replayProgressMessages.add(progress);
   }
 
   // After messages with a given logpoint ID have been removed, ignore all
@@ -162,6 +152,10 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   }
 
   ensureExecutionPoint(state, newMessage);
+
+  if (newMessage.executionPoint) {
+    state.hasExecutionPoints = true;
+  }
 
   // Check if the current message could be placed in a Warning Group.
   // This needs to be done before setting the new message in messagesById so we have a
@@ -847,13 +841,6 @@ function getMessageVisibility(message, {
     };
   }
 
-  if (!passSearchFilters(message, filtersState)) {
-    return {
-      visible: false,
-      cause: FILTERS.TEXT,
-    };
-  }
-
   // Let's check all level filters (error, warn, log, …) and return visible: false
   // and the message level as a cause if the function returns false.
   if (!passLevelFilters(message, filtersState)) {
@@ -881,6 +868,15 @@ function getMessageVisibility(message, {
     return {
       visible: false,
       cause: FILTERS.NETXHR,
+    };
+  }
+
+  // This should always be the last check, or we might report that a message was hidden
+  // because of text search, while it may be hidden because its category is disabled.
+  if (!passSearchFilters(message, filtersState)) {
+    return {
+      visible: false,
+      cause: FILTERS.TEXT,
     };
   }
 
@@ -1189,7 +1185,7 @@ function ensureExecutionPoint(state, newMessage) {
 
   // Add a lastExecutionPoint property which will place this message immediately
   // after the last visible one when sorting.
-  let point = { progress: 0 }, messageCount = 1;
+  let point = { checkpoint: 0, progress: 0 }, messageCount = 1;
   if (state.visibleMessages.length) {
     const lastId = state.visibleMessages[state.visibleMessages.length - 1];
     const lastMessage = state.messagesById.get(lastId);
@@ -1218,32 +1214,19 @@ function maybeSortVisibleMessages(state) {
   // with respect to how they originally executed. Use the execution point
   // information in the messages to sort visible messages according to how
   // they originally executed. This isn't necessary if we haven't seen any
-  // messages with progress counters, as either we aren't replaying or haven't
+  // messages with execution points, as either we aren't replaying or haven't
   // seen any messages yet.
-  if (state.replayProgressMessages.size) {
+  if (state.hasExecutionPoints) {
     state.visibleMessages.sort((a, b) => {
       const pointA = messageExecutionPoint(state, a);
       const pointB = messageExecutionPoint(state, b);
-      if (pointA.progress != pointB.progress) {
-        return pointA.progress > pointB.progress;
+      if (pointPrecedes(pointB, pointA)) {
+        return true;
+      } else if (pointPrecedes(pointA, pointB)) {
+        return false;
       }
-      // Execution points without a progress counter predate execution points
-      // with one, i.e. a console.log() call (which bumps the progress value)
-      // predates the code that runs afterward.
-      if ("frameIndex" in pointA != "frameIndex" in pointB) {
-        return "frameIndex" in pointA;
-      }
-      // Deeper frames predate shallower frames, if the progress counter is the
-      // same. We bump the progress counter when pushing frames, but not when
-      // popping them.
-      if (pointA.frameIndex != pointB.frameIndex) {
-        return pointA.frameIndex < pointB.frameIndex;
-      }
-      // Earlier script locations predate later script locations.
-      if (pointA.offset != pointB.offset) {
-        return pointA.offset > pointB.offset;
-      }
-      // When messages don't have their own execution point, they can still be
+
+      // When messages have the same execution point, they can still be
       // distinguished by the number of messages since the last one which did
       // have an execution point.
       const countA = messageCountSinceLastExecutionPoint(state, a);

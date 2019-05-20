@@ -5,7 +5,8 @@
 
 "use strict";
 
-/* exported attachUpdateHandler, getBrowserElement, openOptionsInTab */
+/* exported attachUpdateHandler, getBrowserElement, loadReleaseNotes,
+ * openOptionsInTab */
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -63,6 +64,29 @@ function attachUpdateHandler(install) {
       Services.obs.notifyObservers(subject, "webextension-permission-prompt");
     });
   };
+}
+
+async function loadReleaseNotes(uri) {
+  const res = await fetch(uri.spec, {credentials: "omit"});
+
+  if (!res.ok) {
+    throw new Error("Error loading release notes");
+  }
+
+  // Load the content.
+  const text = await res.text();
+
+  // Setup the content sanitizer.
+  const ParserUtils = Cc["@mozilla.org/parserutils;1"]
+    .getService(Ci.nsIParserUtils);
+  const flags =
+    ParserUtils.SanitizerDropMedia |
+    ParserUtils.SanitizerDropNonCSSPresentation |
+    ParserUtils.SanitizerDropForms;
+
+  // Sanitize and parse the content to a fragment.
+  const context = document.createElement("div");
+  return ParserUtils.parseFragment(text, flags, false, uri, context);
 }
 
 function openOptionsInTab(optionsURL) {

@@ -344,6 +344,8 @@ class imgLoader final : public imgILoader,
  private:  // methods
   static already_AddRefed<imgLoader> CreateImageLoader();
 
+  bool PreferLoadFromCache(nsIURI* aURI) const;
+
   bool ValidateEntry(imgCacheEntry* aEntry, nsIURI* aKey,
                      nsIURI* aInitialDocumentURI, nsIURI* aReferrerURI,
                      ReferrerPolicy aReferrerPolicy, nsILoadGroup* aLoadGroup,

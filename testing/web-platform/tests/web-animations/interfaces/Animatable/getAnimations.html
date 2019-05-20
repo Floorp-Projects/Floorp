@@ -42,6 +42,18 @@ test(t => {
 }, 'Returns only the animations specific to each parent/child element');
 
 test(t => {
+  const foreignElement
+    = document.createElementNS('http://example.org/test', 'test');
+  document.body.appendChild(foreignElement);
+  t.add_cleanup(() => {
+    foreignElement.remove();
+  });
+
+  const animation = foreignElement.animate(null, 100 * MS_PER_SEC);
+  assert_array_equals(foreignElement.getAnimations(), [animation]);
+}, 'Returns animations for a foreign element');
+
+test(t => {
   const div = createDiv(t);
   const animation = div.animate(null, 100 * MS_PER_SEC);
   animation.finish();

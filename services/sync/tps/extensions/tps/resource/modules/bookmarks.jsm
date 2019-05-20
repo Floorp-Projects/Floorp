@@ -511,7 +511,7 @@ Bookmark.prototype = {
     if (this.props.tags != null) {
       try {
         let URI = Services.io.newURI(this.props.uri);
-        let tags = PlacesUtils.tagging.getTagsForURI(URI, {});
+        let tags = PlacesUtils.tagging.getTagsForURI(URI);
         tags.sort();
         this.props.tags.sort();
         if (JSON.stringify(tags) != JSON.stringify(this.props.tags)) {

@@ -14,7 +14,7 @@ describe("search", () => {
       const matchLocations = getMatches(query, text, {
         caseSensitive: true,
         wholeWord: false,
-        regexMatch: false
+        regexMatch: false,
       });
       expect(matchLocations).toHaveLength(3);
     });
@@ -25,7 +25,7 @@ describe("search", () => {
       const matchLocations = getMatches(query, text, {
         caseSensitive: true,
         wholeWord: false,
-        regexMatch: false
+        regexMatch: false,
       });
       expect(matchLocations).toHaveLength(1);
     });
@@ -36,7 +36,7 @@ describe("search", () => {
       const matchLocations = getMatches(query, text, {
         caseSensitive: true,
         wholeWord: true,
-        regexMatch: false
+        regexMatch: false,
       });
       expect(matchLocations).toHaveLength(2);
     });
@@ -47,7 +47,7 @@ describe("search", () => {
       const matchLocations = getMatches(query, text, {
         caseSensitive: true,
         wholeWord: false,
-        regexMatch: true
+        regexMatch: true,
       });
       expect(matchLocations).toHaveLength(4);
     });
@@ -58,7 +58,7 @@ describe("search", () => {
       const matchLocations = getMatches(query, text, {
         caseSensitive: true,
         wholeWord: false,
-        regexMatch: true
+        regexMatch: true,
       });
       expect(matchLocations).toHaveLength(0);
     });
@@ -69,7 +69,7 @@ describe("search", () => {
       const matchLocations = getMatches(query, text, {
         caseSensitive: true,
         wholeWord: false,
-        regexMatch: true
+        regexMatch: true,
       });
       expect(matchLocations).toHaveLength(0);
     });
@@ -81,7 +81,7 @@ describe("search", () => {
       const matchLocations = getMatches(query, text, {
         caseSensitive: true,
         wholeWord: false,
-        regexMatch: true
+        regexMatch: true,
       });
       expect(matchLocations).toHaveLength(4);
     });
@@ -93,7 +93,7 @@ describe("search", () => {
       const matchLocations = getMatches(query, text, {
         caseSensitive: true,
         wholeWord: false,
-        regexMatch: true
+        regexMatch: true,
       });
       expect(matchLocations).toHaveLength(1);
     });

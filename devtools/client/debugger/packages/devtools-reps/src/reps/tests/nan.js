@@ -20,7 +20,7 @@ describe("NaN", () => {
   it("renders NaN Rep as expected", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
     expect(renderedComponent).toMatchSnapshot();

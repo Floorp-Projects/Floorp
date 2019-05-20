@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Dragging the mouse on a scrollbar for a transformed, filtered scrollframe</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="text/javascript">
+
+function* test(testDriver) {
+  var scrollableDiv = document.getElementById("scrollable");
+  scrollableDiv.addEventListener("scroll", () => setTimeout(testDriver, 0), {once: true});
+
+  // Scroll down a small amount (10px). The bug in this case is that the
+  // scrollthumb "jumps" most of the way down the scroll track because with
+  // WR enabled the filter and transform display items combine to generate an
+  // incorrect APZC tree, and the mouse position gets untransformed incorrectly.
+  // Given the scrollable height of 2000px and scrollframe height of 400px,
+  // the scrollthumb should be approximately 80px tall, and dragging it 10px
+  // should scroll approximately 50 pixels. If the bug manifests, it will get
+  // dragged an extra ~150px and scroll to approximately 1250px.
+  var dragFinisher = yield* dragVerticalScrollbar(scrollableDiv, testDriver, 10, 10);
+  if (!dragFinisher) {
+    ok(true, "No scrollbar, can't do this test");
+    return;
+  }
+
+  // the events above might be stuck in APZ input queue for a bit until the
+  // layer is activated, so we wait here until the scroll event listener is
+  // triggered.
+  yield;
+
+  yield* dragFinisher();
+
+  // Flush everything just to be safe
+  yield flushApzRepaints(testDriver);
+
+  // In this case we just want to make sure the scroll position moved from 0
+  // which indicates the thumb dragging worked properly.
+  ok(scrollableDiv.scrollTop < 100, "Scrollbar drag resulted in a scroll position of " + scrollableDiv.scrollTop);
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+</head>
+<body>
+    <div style="position: fixed; left: 100px; top: 100px; width: 400px; height: 600px">
+        <div style="transform: translateY(150px); will-change: transform">
+            <div style="filter: grayscale(80%)">
+                <div id="scrollable" style="height: 400px; overflow-y: auto">
+                    <div style="min-height: 2000px">
+                        yay text
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

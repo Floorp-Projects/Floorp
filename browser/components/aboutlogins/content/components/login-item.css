@@ -24,6 +24,30 @@
   flex: auto;
 }
 
+.delete-button,
+.edit-button {
+  background-repeat: no-repeat;
+  background-position: 8px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  min-width: auto;
+}
+
+.delete-button:dir(rtl),
+.edit-button:dir(rtl) {
+  background-position: right 8px center;
+}
+
+.delete-button {
+  background-image: url("chrome://browser/content/aboutlogins/icons/delete.svg");
+  padding-inline-start: 30px; /* 8px on each side, and 14px for icon width */
+}
+
+.edit-button {
+  background-image: url("chrome://browser/content/aboutlogins/icons/edit.svg");
+  padding-inline-start: 32px; /* 8px on each side, and 16px for icon width */
+}
+
 .detail-row {
   display: flex;
   margin-bottom: 20px;
@@ -40,7 +64,7 @@
 .field-label {
   display: block;
   font-size: smaller;
-  opacity: .7;
+  color: var(--in-content-deemphasized-text);
   margin-bottom: 5px;
 }
 

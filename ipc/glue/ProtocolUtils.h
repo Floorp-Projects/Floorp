@@ -467,8 +467,6 @@ class IToplevelProtocol : public IProtocol {
   base::ProcessId OtherPid() const final;
   void SetOtherProcessId(base::ProcessId aOtherPid);
 
-  bool TakeMinidump(nsIFile** aDump, uint32_t* aSequence);
-
   virtual void OnChannelClose() = 0;
   virtual void OnChannelError() = 0;
   virtual void ProcessingError(Result aError, const char* aMsgName) {}

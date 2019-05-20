@@ -8,39 +8,39 @@ import {
   actions,
   createStore,
   selectors,
-  makeSource
+  makeSource,
 } from "../../utils/test-head";
 
 const {
   getSource,
   getTextSearchQuery,
   getTextSearchResults,
-  getTextSearchStatus
+  getTextSearchStatus,
 } = selectors;
 
 const sources = {
   foo1: {
     source: "function foo1() {\n  const foo = 5; return foo;\n}",
-    contentType: "text/javascript"
+    contentType: "text/javascript",
   },
   foo2: {
     source: "function foo2(x, y) {\n  return x + y;\n}",
-    contentType: "text/javascript"
+    contentType: "text/javascript",
   },
   bar: {
     source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
-    contentType: "text/javascript"
+    contentType: "text/javascript",
   },
   "bar:formatted": {
     source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
-    contentType: "text/javascript"
-  }
+    contentType: "text/javascript",
+  },
 };
 
 const threadClient = {
   sourceContents: async ({ source }) => sources[source],
   getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => []
+  getBreakableLines: async () => [],
 };
 
 describe("project text search", () => {
@@ -70,12 +70,12 @@ describe("project text search", () => {
     const mockMaps = {
       getOriginalSourceText: async () => ({
         source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
-        contentType: "text/javascript"
+        contentType: "text/javascript",
       }),
       applySourceMap: async () => {},
       getGeneratedRangesForOriginal: async () => [],
       getOriginalLocations: async items => items,
-      getOriginalLocation: async loc => loc
+      getOriginalLocation: async loc => loc,
     };
 
     const { dispatch, getState, cx } = createStore(threadClient, {}, mockMaps);

@@ -25,6 +25,7 @@ function StackTraceCollector(filters, netmonitors) {
 StackTraceCollector.prototype = {
   init() {
     Services.obs.addObserver(this, "http-on-opening-request");
+    Services.obs.addObserver(this, "network-monitor-alternate-stack");
     ChannelEventSinkFactory.getService().registerCollector(this);
     this.onGetStack = this.onGetStack.bind(this);
     for (const { messageManager } of this.netmonitors) {
@@ -34,6 +35,7 @@ StackTraceCollector.prototype = {
 
   destroy() {
     Services.obs.removeObserver(this, "http-on-opening-request");
+    Services.obs.removeObserver(this, "network-monitor-alternate-stack");
     ChannelEventSinkFactory.getService().unregisterCollector(this);
     for (const { messageManager } of this.netmonitors) {
       messageManager.removeMessageListener("debug:request-stack:request",
@@ -41,42 +43,97 @@ StackTraceCollector.prototype = {
     }
   },
 
-  _saveStackTrace(channel, stacktrace) {
+  _saveStackTrace(id, stacktrace) {
+    if (this.stacktracesById.has(id)) {
+      // We can get up to two stack traces for the same channel: one each from
+      // the two observer topics we are listening to. Use the first stack trace
+      // which is specified, and ignore any later one.
+      return;
+    }
     for (const { messageManager } of this.netmonitors) {
       messageManager.sendAsyncMessage("debug:request-stack-available", {
-        channelId: channel.channelId,
+        channelId: id,
         stacktrace: stacktrace && stacktrace.length > 0,
       });
     }
-    this.stacktracesById.set(channel.channelId, stacktrace);
+    this.stacktracesById.set(id, stacktrace);
   },
 
-  observe(subject) {
-    const channel = subject.QueryInterface(Ci.nsIHttpChannel);
+  observe(subject, topic, data) {
+    let channel, id;
+    try {
+      channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      id = channel.channelId;
+    } catch (e) {
+      // WebSocketChannels do not have IDs, so use the URL. When a WebSocket is
+      // opened in a content process, a channel is created locally but the HTTP
+      // channel for the connection lives entirely in the parent process. When
+      // the server code running in the parent sees that HTTP channel, it will
+      // look for the creation stack using the websocket's URL.
+      channel = subject.QueryInterface(Ci.nsIWebSocketChannel);
+      id = channel.URI.spec;
+    }
 
     if (!matchRequest(channel, this.filters)) {
       return;
     }
 
-    // Convert the nsIStackFrame XPCOM objects to a nice JSON that can be
-    // passed around through message managers etc.
-    let frame = components.stack;
     const stacktrace = [];
-    if (frame && frame.caller) {
-      frame = frame.caller;
-      while (frame) {
-        stacktrace.push({
-          filename: frame.filename,
-          lineNumber: frame.lineNumber,
-          columnNumber: frame.columnNumber,
-          functionName: frame.name,
-          asyncCause: frame.asyncCause,
-        });
-        frame = frame.caller || frame.asyncCaller;
+    switch (topic) {
+      case "http-on-opening-request": {
+        // The channel is being opened on the main thread, associate the current
+        // stack with it.
+        //
+        // Convert the nsIStackFrame XPCOM objects to a nice JSON that can be
+        // passed around through message managers etc.
+        let frame = components.stack;
+        if (frame && frame.caller) {
+          frame = frame.caller;
+          while (frame) {
+            stacktrace.push({
+              filename: frame.filename,
+              lineNumber: frame.lineNumber,
+              columnNumber: frame.columnNumber,
+              functionName: frame.name,
+              asyncCause: frame.asyncCause,
+            });
+            frame = frame.caller || frame.asyncCaller;
+          }
+        }
+        break;
       }
+      case "network-monitor-alternate-stack": {
+        // An alternate stack trace is being specified for this channel.
+        // The topic data is the JSON for the saved frame stack we should use,
+        // so convert this into the expected format.
+        //
+        // This topic is used in the following cases:
+        //
+        // - The HTTP channel is opened asynchronously or on a different thread
+        //   from the code which triggered its creation, in which case the stack
+        //   from components.stack will be empty. The alternate stack will be
+        //   for the point we want to associate with the channel.
+        //
+        // - The channel is not a nsIHttpChannel, and we will receive no
+        //   opening request notification for it.
+        let frame = JSON.parse(data);
+        while (frame) {
+          stacktrace.push({
+            filename: frame.source,
+            lineNumber: frame.line,
+            columnNumber: frame.column,
+            functionName: frame.functionDisplayName,
+            asyncCause: frame.asyncCause,
+          });
+          frame = frame.parent || frame.asyncParent;
+        }
+        break;
+      }
+      default:
+        throw new Error("Unexpected observe() topic");
     }
 
-    this._saveStackTrace(channel, stacktrace);
+    this._saveStackTrace(id, stacktrace);
   },
 
   // eslint-disable-next-line no-shadow
@@ -92,7 +149,7 @@ StackTraceCollector.prototype = {
     const oldId = oldChannel.channelId;
     const stacktrace = this.stacktracesById.get(oldId);
     if (stacktrace) {
-      this._saveStackTrace(newChannel, stacktrace);
+      this._saveStackTrace(newChannel.channelId, stacktrace);
     }
   },
 

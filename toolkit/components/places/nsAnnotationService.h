@@ -106,8 +106,6 @@ class nsAnnotationService final : public nsIAnnotationService,
                                  nsIVariant** _retval);
 
  public:
-  nsresult GetItemAnnotationNamesTArray(int64_t aItemId,
-                                        nsTArray<nsCString>* _result);
   nsresult RemoveItemAnnotations(int64_t aItemId);
 };
 

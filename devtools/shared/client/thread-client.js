@@ -160,20 +160,6 @@ ThreadClient.prototype = {
   },
 
   /**
-   * Rewind step into a function call.
-   */
-  reverseStepIn: function() {
-    return this._doResume({ type: "step" }, true);
-  },
-
-  /**
-   * Rewind step out of a function call.
-   */
-  reverseStepOut: function() {
-    return this._doResume({ type: "finish" }, true);
-  },
-
-  /**
    * Immediately interrupt a running thread.
    */
   interrupt: function() {

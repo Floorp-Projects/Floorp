@@ -30,7 +30,7 @@ use crate::internal_types::{FastHashMap, FastHashSet, TextureSource, TextureUpda
 use crate::profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task::{RenderTaskCache, RenderTaskCacheKey, RenderTaskId};
-use crate::render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskTree};
+use crate::render_task::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle, RenderTaskGraph};
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::collections::hash_map::IterMut;
@@ -536,11 +536,11 @@ impl ResourceCache {
         &mut self,
         key: RenderTaskCacheKey,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskTree,
+        render_tasks: &mut RenderTaskGraph,
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
         f: F,
-    ) -> RenderTaskCacheEntryHandle where F: FnOnce(&mut RenderTaskTree) -> RenderTaskId {
+    ) -> RenderTaskCacheEntryHandle where F: FnOnce(&mut RenderTaskGraph) -> RenderTaskId {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,
@@ -1377,7 +1377,7 @@ impl ResourceCache {
         mut font: FontInstance,
         glyph_keys: &[GlyphKey],
         gpu_cache: &mut GpuCache,
-        render_task_tree: &mut RenderTaskTree,
+        render_task_tree: &mut RenderTaskGraph,
     ) {
         debug_assert_eq!(self.state, State::AddResources);
 
@@ -1593,7 +1593,7 @@ impl ResourceCache {
     pub fn block_until_all_resources_added(
         &mut self,
         gpu_cache: &mut GpuCache,
-        render_tasks: &mut RenderTaskTree,
+        render_tasks: &mut RenderTaskGraph,
         texture_cache_profile: &mut TextureCacheProfileCounters,
     ) {
         profile_scope!("block_until_all_resources_added");

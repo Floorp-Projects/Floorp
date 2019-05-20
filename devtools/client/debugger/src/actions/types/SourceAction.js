@@ -12,11 +12,11 @@ export type LoadSourceAction = PromiseAction<
     +type: "LOAD_SOURCE_TEXT",
     +cx: Context,
     +sourceId: string,
-    +epoch: number
+    +epoch: number,
   |},
   {
     text: string | {| binary: Object |},
-    contentType: string | void
+    contentType: string | void,
   }
 >;
 export type SourceAction =
@@ -24,60 +24,60 @@ export type SourceAction =
   | {|
       +type: "ADD_SOURCE",
       +cx: Context,
-      +source: Source
+      +source: Source,
     |}
   | {|
       +type: "ADD_SOURCES",
       +cx: Context,
-      +sources: Array<Source>
+      +sources: Array<Source>,
     |}
   | {|
       +type: "CLEAR_SOURCE_MAP_URL",
       +cx: Context,
-      +sourceId: SourceId
+      +sourceId: SourceId,
     |}
   | {|
       +type: "SET_SELECTED_LOCATION",
       +cx: Context,
       +source: Source,
-      +location?: SourceLocation
+      +location?: SourceLocation,
     |}
   | {|
       +type: "SET_PENDING_SELECTED_LOCATION",
       +cx: Context,
       +url: string,
       +line?: number,
-      +column?: number
+      +column?: number,
     |}
   | {| type: "CLEAR_SELECTED_LOCATION", +cx: Context |}
   | PromiseAction<
       {|
         +type: "BLACKBOX",
         +cx: Context,
-        +source: Source
+        +source: Source,
       |},
       {|
-        +isBlackBoxed: boolean
+        +isBlackBoxed: boolean,
       |}
     >
   | {|
       +type: "MOVE_TAB",
       +url: string,
-      +tabIndex: number
+      +tabIndex: number,
     |}
   | {|
       +type: "CLOSE_TAB",
       +url: string,
-      +tabs: any
+      +tabs: any,
     |}
   | {|
       +type: "CLOSE_TABS",
       +sources: Array<Source>,
-      +tabs: any
+      +tabs: any,
     |}
   | {|
       type: "SET_BREAKABLE_LINES",
       +cx: Context,
       breakableLines: number[],
-      sourceId: string
+      sourceId: string,
     |};

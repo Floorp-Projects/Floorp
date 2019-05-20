@@ -5,7 +5,7 @@
 // @flow
 
 const {
-  workerUtils: { WorkerDispatcher }
+  workerUtils: { WorkerDispatcher },
 } = require("devtools-utils");
 
 import type {
@@ -13,7 +13,7 @@ import type {
   Range,
   SourceLocation,
   Source,
-  SourceId
+  SourceId,
 } from "../../../src/types";
 import type { SourceMapConsumer } from "source-map";
 import type { LocationOptions } from "./source-map";
@@ -21,18 +21,18 @@ import type { LocationOptions } from "./source-map";
 export const dispatcher = new WorkerDispatcher();
 
 const _getGeneratedRanges = dispatcher.task("getGeneratedRanges", {
-  queue: true
+  queue: true,
 });
 
 const _getGeneratedLocation = dispatcher.task("getGeneratedLocation", {
-  queue: true
+  queue: true,
 });
 const _getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations", {
-  queue: true
+  queue: true,
 });
 
 const _getOriginalLocation = dispatcher.task("getOriginalLocation", {
-  queue: true
+  queue: true,
 });
 
 export const setAssetRootURL = async (assetRoot: string): Promise<void> =>
@@ -53,7 +53,7 @@ export const getOriginalRanges = async (
   Array<{
     line: number,
     columnStart: number,
-    columnEnd: number
+    columnEnd: number,
   }>
 > => dispatcher.invoke("getOriginalRanges", sourceId, url);
 export const getGeneratedRanges = async (
@@ -63,7 +63,7 @@ export const getGeneratedRanges = async (
   Array<{
     line: number,
     columnStart: number,
-    columnEnd: number
+    columnEnd: number,
   }>
 > => _getGeneratedRanges(location, originalSource);
 
@@ -112,7 +112,7 @@ export const getOriginalSourceText = async (
   originalSource: Source
 ): Promise<?{
   text: string,
-  contentType: string
+  contentType: string,
 }> => dispatcher.invoke("getOriginalSourceText", originalSource);
 
 export const applySourceMap = async (
@@ -139,7 +139,7 @@ export {
   originalToGeneratedId,
   generatedToOriginalId,
   isGeneratedId,
-  isOriginalId
+  isOriginalId,
 } from "./utils";
 
 export const startSourceMapWorker = (url: string, assetRoot: string) => {

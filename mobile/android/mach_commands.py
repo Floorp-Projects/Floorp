@@ -592,6 +592,49 @@ class MachCommands(MachCommandBase):
     def gradle_install(self):
         pass
 
+    @Command('install-android', category='post-build',
+             conditional_name='install',
+             conditions=[conditions.is_android],
+             description='Install an Android package on a device or an emulator.')
+    @CommandArgument('--verbose', '-v', action='store_true',
+                     help='Print verbose output when installing.')
+    def install(self, verbose=False):
+        from mozrunner.devices.android_device import verify_android_device
+        verify_android_device(self, verbose=verbose)
+
+        ret = self._run_make(directory='.', target='install', ensure_exit_code=False)
+        if ret == 0:
+            self.notify('Install complete')
+        return ret
+
+    @Command('run-android', category='post-build',
+             conditional_name='run',
+             conditions=[conditions.is_android],
+             description='Run Fennec on an Android device or an emulator.')
+    @CommandArgument('--url', help='URL to open',
+                     default=None)
+    @CommandArgument('--no-install', help='Do not try to install application on device before ' +
+                     'running (default: False)',
+                     action='store_true',
+                     default=False)
+    @CommandArgument('--no-wait', help='Do not wait for application to start before returning ' +
+                     '(default: False)',
+                     action='store_true',
+                     default=False)
+    @CommandArgument('--fail-if-running', help='Fail if application is already running ' +
+                     '(default: False)',
+                     action='store_true',
+                     default=False)
+    def run(self, url=None, no_install=None, no_wait=None, fail_if_running=None):
+        from mozrunner.devices.android_device import verify_android_device, run_firefox_for_android
+
+        verify_android_device(self, install=not no_install)
+        return run_firefox_for_android(self,
+                                       [],
+                                       url=url,
+                                       wait=not no_wait,
+                                       fail_if_running=fail_if_running)
+
 
 def _get_maven_archive_abs_and_relative_paths(maven_folder):
     for subdir, _, files in os.walk(maven_folder):

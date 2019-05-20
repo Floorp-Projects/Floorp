@@ -1975,6 +1975,12 @@ class Document : public nsINode,
     return mOrientationPendingPromise;
   }
 
+  void SetRDMPaneOrientation(OrientationType aType, uint16_t aAngle) {
+    if (mInRDMPane) {
+      SetCurrentOrientation(aType, aAngle);
+    }
+  }
+
   //----------------------------------------------------------------------
 
   // Document notification API's

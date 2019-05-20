@@ -9,7 +9,7 @@ import {
   isPretty,
   getFilename,
   getSourceClassnames,
-  getSourceQueryString
+  getSourceQueryString,
 } from "./source";
 
 import type { Location as BabelLocation } from "@babel/types";
@@ -19,14 +19,14 @@ import type { Tab } from "../reducers/tabs";
 import type { Source } from "../types";
 import type {
   SymbolDeclaration,
-  IdentifierDeclaration
+  IdentifierDeclaration,
 } from "../workers/parser";
 
 export const MODIFIERS = {
   "@": "functions",
   "#": "variables",
   ":": "goto",
-  "?": "shortcuts"
+  "?": "shortcuts",
 };
 
 export function parseQuickOpenQuery(query: string): QuickOpenType {
@@ -54,7 +54,7 @@ export function parseLineColumn(query: string) {
   if (!isNaN(lineNumber)) {
     return {
       line: lineNumber,
-      ...(!isNaN(columnNumber) ? { column: columnNumber } : null)
+      ...(!isNaN(columnNumber) ? { column: columnNumber } : null),
     };
   }
 }
@@ -77,7 +77,7 @@ export function formatSourcesForList(
       ? "tab result-item-icon"
       : classnames(getSourceClassnames(source), "result-item-icon"),
     id: source.id,
-    url: source.url
+    url: source.url,
   };
 }
 
@@ -88,11 +88,11 @@ export type QuickOpenResult = {|
   subtitle?: string,
   location?: BabelLocation,
   url?: string,
-  icon?: string
+  icon?: string,
 |};
 
 export type FormattedSymbolDeclarations = {|
-  functions: Array<QuickOpenResult>
+  functions: Array<QuickOpenResult>,
 |};
 
 export function formatSymbol(
@@ -103,7 +103,7 @@ export function formatSymbol(
     title: symbol.name,
     subtitle: `${symbol.location.start.line}`,
     value: symbol.name,
-    location: symbol.location
+    location: symbol.location,
   };
 }
 
@@ -115,7 +115,7 @@ export function formatSymbols(symbols: ?Symbols): FormattedSymbolDeclarations {
   const { functions } = symbols;
 
   return {
-    functions: functions.map(formatSymbol)
+    functions: functions.map(formatSymbol),
   };
 }
 
@@ -124,18 +124,18 @@ export function formatShortcutResults(): Array<QuickOpenResult> {
     {
       value: L10N.getStr("symbolSearch.search.functionsPlaceholder.title"),
       title: `@ ${L10N.getStr("symbolSearch.search.functionsPlaceholder")}`,
-      id: "@"
+      id: "@",
     },
     {
       value: L10N.getStr("symbolSearch.search.variablesPlaceholder.title"),
       title: `# ${L10N.getStr("symbolSearch.search.variablesPlaceholder")}`,
-      id: "#"
+      id: "#",
     },
     {
       value: L10N.getStr("gotoLineModal.title"),
       title: `: ${L10N.getStr("gotoLineModal.placeholder")}`,
-      id: ":"
-    }
+      id: ":",
+    },
   ];
 }
 

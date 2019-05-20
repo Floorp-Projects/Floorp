@@ -31,7 +31,8 @@ already_AddRefed<nsIPrincipal> nsPermission::ClonePrincipalForPermission(
   MOZ_ASSERT(aPrincipal);
 
   mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   nsAutoCString originNoSuffix;
   nsresult rv = aPrincipal->GetOriginNoSuffix(originNoSuffix);

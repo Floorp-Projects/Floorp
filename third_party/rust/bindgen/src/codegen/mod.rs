@@ -558,10 +558,15 @@ impl CodeGenerator for Var {
             }
         } else {
             let mut attrs = vec![];
-            if let Some(mangled) = self.mangled_name() {
-                attrs.push(attributes::link_name(mangled));
-            } else if canonical_name != self.name() {
-                attrs.push(attributes::link_name(self.name()));
+
+            // If necessary, apply a `#[link_name]` attribute
+            let link_name = self.mangled_name().unwrap_or(self.name());
+            if !utils::names_will_be_identical_after_mangling(
+                &canonical_name,
+                link_name,
+                None,
+            ) {
+                attrs.push(attributes::link_name(link_name));
             }
 
             let maybe_mut = if self.is_const() {
@@ -570,7 +575,7 @@ impl CodeGenerator for Var {
                 quote! { mut }
             };
 
-            let mut tokens = quote!(
+            let tokens = quote!(
                 extern "C" {
                     #(#attrs)*
                     pub static #maybe_mut #canonical_ident: #ty;
@@ -3390,14 +3395,6 @@ impl CodeGenerator for Function {
             write!(&mut canonical_name, "{}", times_seen).unwrap();
         }
 
-        if let Some(mangled) = mangled_name {
-            if canonical_name != mangled {
-                attributes.push(attributes::link_name(mangled));
-            }
-        } else if name != canonical_name {
-            attributes.push(attributes::link_name(name));
-        }
-
         let abi = match signature.abi() {
             Abi::ThisCall if !ctx.options().rust_features().thiscall_abi => {
                 warn!("Skipping function with thiscall ABI that isn't supported by the configured Rust target");
@@ -3417,6 +3414,15 @@ impl CodeGenerator for Function {
             }
             abi => abi,
         };
+
+        let link_name = mangled_name.unwrap_or(name);
+        if !utils::names_will_be_identical_after_mangling(
+            &canonical_name,
+            link_name,
+            Some(abi),
+        ) {
+            attributes.push(attributes::link_name(link_name));
+        }
 
         let ident = ctx.rust_ident(canonical_name);
         let tokens = quote!( extern #abi {
@@ -3581,7 +3587,7 @@ pub(crate) fn codegen(context: BindgenContext) -> (Vec<proc_macro2::TokenStream>
 mod utils {
     use super::{ToRustTyOrOpaque, error};
     use ir::context::BindgenContext;
-    use ir::function::FunctionSig;
+    use ir::function::{Abi, FunctionSig};
     use ir::item::{Item, ItemCanonicalPath};
     use ir::ty::TypeKind;
     use proc_macro2;
@@ -3964,5 +3970,80 @@ mod utils {
         quote! {
             *const ::block::Block<(#(#args,)*), #ret_ty>
         }
+    }
+
+    // Returns true if `canonical_name` will end up as `mangled_name` at the
+    // machine code level, i.e. after LLVM has applied any target specific
+    // mangling.
+    pub fn names_will_be_identical_after_mangling(
+        canonical_name: &str,
+        mangled_name: &str,
+        call_conv: Option<Abi>,
+    ) -> bool {
+        // If the mangled name and the canonical name are the same then no
+        // mangling can have happened between the two versions.
+        if canonical_name == mangled_name {
+            return true;
+        }
+
+        // Working with &[u8] makes indexing simpler than with &str
+        let canonical_name = canonical_name.as_bytes();
+        let mangled_name = mangled_name.as_bytes();
+
+        let (mangling_prefix, expect_suffix) = match call_conv {
+            Some(Abi::C) |
+            // None is the case for global variables
+            None => {
+                (b'_', false)
+            }
+            Some(Abi::Stdcall) => (b'_', true),
+            Some(Abi::Fastcall) => (b'@', true),
+
+            // This is something we don't recognize, stay on the safe side
+            // by emitting the `#[link_name]` attribute
+            Some(_) => return false,
+        };
+
+        // Check that the mangled name is long enough to at least contain the
+        // canonical name plus the expected prefix.
+        if mangled_name.len() < canonical_name.len() + 1 {
+            return false;
+        }
+
+        // Return if the mangled name does not start with the prefix expected
+        // for the given calling convention.
+        if mangled_name[0] != mangling_prefix {
+            return false;
+        }
+
+        // Check that the mangled name contains the canonical name after the
+        // prefix
+        if &mangled_name[1..canonical_name.len() + 1] != canonical_name {
+            return false;
+        }
+
+        // If the given calling convention also prescribes a suffix, check that
+        // it exists too
+        if expect_suffix {
+            let suffix = &mangled_name[canonical_name.len() + 1..];
+
+            // The shortest suffix is "@0"
+            if suffix.len() < 2 {
+                return false;
+            }
+
+            // Check that the suffix starts with '@' and is all ASCII decimals
+            // after that.
+            if suffix[0] != b'@' || !suffix[1..].iter().all(u8::is_ascii_digit)
+            {
+                return false;
+            }
+        } else if mangled_name.len() != canonical_name.len() + 1 {
+            // If we don't expect a prefix but there is one, we need the
+            // #[link_name] attribute
+            return false;
+        }
+
+        true
     }
 }

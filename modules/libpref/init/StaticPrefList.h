@@ -2175,7 +2175,6 @@ VARCACHE_PREF(
 // 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign,
 // 4-rejectTracker
 // Keep the old default of accepting all cookies
-// In Firefox Desktop this pref is set by browser.contentblocking.features.[standard, strict] see firefox.js for details.
 VARCACHE_PREF(
   "network.cookie.cookieBehavior",
   network_cookie_cookieBehavior,
@@ -2428,7 +2427,6 @@ VARCACHE_PREF(
 )
 
 // Block 3rd party fingerprinting resources.
-// In Firefox Desktop this pref is set by browser.contentblocking.features.[standard, strict] see firefox.js for details.
 VARCACHE_PREF(
   "privacy.trackingprotection.fingerprinting.enabled",
    privacy_trackingprotection_fingerprinting_enabled,
@@ -2443,7 +2441,6 @@ VARCACHE_PREF(
 )
 
 // Block 3rd party cryptomining resources.
-// In Firefox Desktop this pref is set by browser.contentblocking.features.[standard, strict] see firefox.js for details.
 VARCACHE_PREF(
   "privacy.trackingprotection.cryptomining.enabled",
    privacy_trackingprotection_cryptomining_enabled,

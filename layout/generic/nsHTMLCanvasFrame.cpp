@@ -57,10 +57,10 @@ static AspectRatio IntrinsicRatioFromCanvasSize(
   return AspectRatio::FromSize(aCanvasSizeInPx.width, aCanvasSizeInPx.height);
 }
 
-class nsDisplayCanvas final : public nsDisplayItem {
+class nsDisplayCanvas final : public nsPaintedDisplayItem {
  public:
   nsDisplayCanvas(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-      : nsDisplayItem(aBuilder, aFrame) {
+      : nsPaintedDisplayItem(aBuilder, aFrame) {
     MOZ_COUNT_CTOR(nsDisplayCanvas);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -200,14 +200,14 @@ class nsDisplayCanvas final : public nsDisplayItem {
       const ContainerLayerParameters& aParameters) override {
     if (HTMLCanvasElement::FromNode(mFrame->GetContent())
             ->ShouldForceInactiveLayer(aManager))
-      return LAYER_INACTIVE;
+      return LayerState::LAYER_INACTIVE;
 
     // If compositing is cheap, just do that
     if (aManager->IsCompositingCheap() ||
         ActiveLayerTracker::IsContentActive(mFrame))
-      return mozilla::LAYER_ACTIVE;
+      return mozilla::LayerState::LAYER_ACTIVE;
 
-    return LAYER_INACTIVE;
+    return LayerState::LAYER_INACTIVE;
   }
 
   // FirstContentfulPaint is supposed to ignore "white" canvases.  We use

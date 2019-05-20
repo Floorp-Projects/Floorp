@@ -353,7 +353,7 @@ class nsTextPaintStyle {
 
   // if this returns false, no text-shadow was specified for the selection
   // and the *aShadow parameter was not modified.
-  bool GetSelectionShadow(nsCSSShadowArray** aShadow);
+  bool GetSelectionShadow(Span<const StyleSimpleShadow>* aShadows);
 
   nsPresContext* PresContext() const { return mPresContext; }
 
@@ -398,8 +398,7 @@ class nsTextPaintStyle {
 
   nscolor mSelectionTextColor;
   nscolor mSelectionBGColor;
-  RefPtr<nsCSSShadowArray> mSelectionShadow;
-  bool mHasSelectionShadow;
+  RefPtr<ComputedStyle> mSelectionPseudoStyle;
 
   // Common data
 
@@ -1822,52 +1821,52 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
       aFrame2->GetParent()->GetContent()) {
     // Does aFrame, or any ancestor between it and aAncestor, have a property
     // that should inhibit cross-element-boundary shaping on aSide?
-    auto PreventCrossBoundaryShaping =
-        [](const nsIFrame* aFrame, const nsIFrame* aAncestor, Side aSide) {
-          while (aFrame != aAncestor) {
-            ComputedStyle* ctx = aFrame->Style();
-            // According to https://drafts.csswg.org/css-text/#boundary-shaping:
-            //
-            // Text shaping must be broken at inline box boundaries when any of
-            // the following are true for any box whose boundary separates the
-            // two typographic character units:
-            //
-            // 1. Any of margin/border/padding separating the two typographic
-            //    character units in the inline axis is non-zero.
-            const auto& margin = ctx->StyleMargin()->mMargin.Get(aSide);
-            if (!margin.ConvertsToLength() ||
-                margin.AsLengthPercentage().ToLength() != 0) {
-              return true;
-            }
-            const auto& padding = ctx->StylePadding()->mPadding.Get(aSide);
-            if (!padding.ConvertsToLength() || padding.ToLength() != 0) {
-              return true;
-            }
-            if (ctx->StyleBorder()->GetComputedBorderWidth(aSide) != 0) {
-              return true;
-            }
+    auto PreventCrossBoundaryShaping = [](const nsIFrame* aFrame,
+                                          const nsIFrame* aAncestor,
+                                          Side aSide) {
+      while (aFrame != aAncestor) {
+        ComputedStyle* ctx = aFrame->Style();
+        // According to https://drafts.csswg.org/css-text/#boundary-shaping:
+        //
+        // Text shaping must be broken at inline box boundaries when any of
+        // the following are true for any box whose boundary separates the
+        // two typographic character units:
+        //
+        // 1. Any of margin/border/padding separating the two typographic
+        //    character units in the inline axis is non-zero.
+        const auto& margin = ctx->StyleMargin()->mMargin.Get(aSide);
+        if (!margin.ConvertsToLength() ||
+            margin.AsLengthPercentage().ToLength() != 0) {
+          return true;
+        }
+        const auto& padding = ctx->StylePadding()->mPadding.Get(aSide);
+        if (!padding.ConvertsToLength() || padding.ToLength() != 0) {
+          return true;
+        }
+        if (ctx->StyleBorder()->GetComputedBorderWidth(aSide) != 0) {
+          return true;
+        }
 
-            // 2. vertical-align is not baseline.
-            //
-            // FIXME: Should this use VerticalAlignEnum()?
-            const auto& verticalAlign = ctx->StyleDisplay()->mVerticalAlign;
-            if (!verticalAlign.IsKeyword() ||
-                verticalAlign.AsKeyword() !=
-                    StyleVerticalAlignKeyword::Baseline) {
-              return true;
-            }
+        // 2. vertical-align is not baseline.
+        //
+        // FIXME: Should this use VerticalAlignEnum()?
+        const auto& verticalAlign = ctx->StyleDisplay()->mVerticalAlign;
+        if (!verticalAlign.IsKeyword() ||
+            verticalAlign.AsKeyword() != StyleVerticalAlignKeyword::Baseline) {
+          return true;
+        }
 
-            // 3. The boundary is a bidi isolation boundary.
-            const uint8_t unicodeBidi = ctx->StyleTextReset()->mUnicodeBidi;
-            if (unicodeBidi == NS_STYLE_UNICODE_BIDI_ISOLATE ||
-                unicodeBidi == NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE) {
-              return true;
-            }
+        // 3. The boundary is a bidi isolation boundary.
+        const uint8_t unicodeBidi = ctx->StyleTextReset()->mUnicodeBidi;
+        if (unicodeBidi == NS_STYLE_UNICODE_BIDI_ISOLATE ||
+            unicodeBidi == NS_STYLE_UNICODE_BIDI_ISOLATE_OVERRIDE) {
+          return true;
+        }
 
-            aFrame = aFrame->GetParent();
-          }
-          return false;
-        };
+        aFrame = aFrame->GetParent();
+      }
+      return false;
+    };
 
     const nsIFrame* ancestor =
         nsLayoutUtils::FindNearestCommonAncestorFrame(aFrame1, aFrame2);
@@ -2588,8 +2587,7 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     // The CSS word-break value may change within a word, so we reset it for
     // each MappedFlow. The line-breaker will flush its text if the property
     // actually changes.
-    auto wordBreak =
-      mappedFlow->mStartFrame->StyleText()->EffectiveWordBreak();
+    auto wordBreak = mappedFlow->mStartFrame->StyleText()->EffectiveWordBreak();
     switch (wordBreak) {
       case StyleWordBreak::BreakAll:
         mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_BreakAll);
@@ -3788,7 +3786,6 @@ nsTextPaintStyle::nsTextPaintStyle(nsTextFrame* aFrame)
       mResolveColors(true),
       mSelectionTextColor(NS_RGBA(0, 0, 0, 0)),
       mSelectionBGColor(NS_RGBA(0, 0, 0, 0)),
-      mHasSelectionShadow(false),
       mSufficientContrast(0),
       mFrameBackgroundColor(NS_RGBA(0, 0, 0, 0)),
       mSystemFieldForegroundColor(NS_RGBA(0, 0, 0, 0)),
@@ -4062,8 +4059,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
         style->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
     mSelectionTextColor =
         style->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
-    mHasSelectionShadow = true;
-    mSelectionShadow = style->StyleText()->mTextShadow;
+    mSelectionPseudoStyle = style.forget();
     return true;
   }
 
@@ -4240,13 +4236,14 @@ bool nsTextPaintStyle::GetSelectionUnderline(nsPresContext* aPresContext,
          color != NS_TRANSPARENT && size > 0.0f;
 }
 
-bool nsTextPaintStyle::GetSelectionShadow(nsCSSShadowArray** aShadow) {
+bool nsTextPaintStyle::GetSelectionShadow(
+    Span<const StyleSimpleShadow>* aShadows) {
   if (!InitSelectionColorsAndShadow()) {
     return false;
   }
 
-  if (mHasSelectionShadow) {
-    *aShadow = mSelectionShadow;
+  if (mSelectionPseudoStyle) {
+    *aShadows = mSelectionPseudoStyle->StyleText()->mTextShadow.AsSpan();
     return true;
   }
 
@@ -5701,21 +5698,18 @@ bool nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
 }
 
 /**
- * This sets *aShadow to the appropriate shadow, if any, for the given
- * type of selection. Returns true if *aShadow was set.
- * If text-shadow was not specified, *aShadow is left untouched
- * (NOT reset to null), and the function returns false.
+ * This sets *aShadows to the appropriate shadows, if any, for the given
+ * type of selection.
+ * If text-shadow was not specified, *aShadows is left untouched.
  */
-static bool GetSelectionTextShadow(nsIFrame* aFrame,
+static void GetSelectionTextShadow(nsIFrame* aFrame,
                                    SelectionType aSelectionType,
                                    nsTextPaintStyle& aTextPaintStyle,
-                                   nsCSSShadowArray** aShadow) {
-  switch (aSelectionType) {
-    case SelectionType::eNormal:
-      return aTextPaintStyle.GetSelectionShadow(aShadow);
-    default:
-      return false;
+                                   Span<const StyleSimpleShadow>* aShadows) {
+  if (aSelectionType != SelectionType::eNormal) {
+    return;
   }
+  aTextPaintStyle.GetSelectionShadow(aShadows);
 }
 
 /**
@@ -5846,22 +5840,21 @@ static void AddHyphenToMetrics(nsTextFrame* aTextFrame,
 }
 
 void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
-                                 nsCSSShadowItem* aShadowDetails,
+                                 const StyleSimpleShadow& aShadowDetails,
                                  gfxRect& aBoundingBox, uint32_t aBlurFlags) {
   AUTO_PROFILER_LABEL("nsTextFrame::PaintOneShadow", GRAPHICS);
 
-  gfx::Point shadowOffset(aShadowDetails->mXOffset, aShadowDetails->mYOffset);
-  nscoord blurRadius = std::max(aShadowDetails->mRadius, 0);
+  nsPoint shadowOffset(aShadowDetails.horizontal.ToAppUnits(),
+                       aShadowDetails.vertical.ToAppUnits());
+  nscoord blurRadius = std::max(aShadowDetails.blur.ToAppUnits(), 0);
 
-  nscolor shadowColor =
-      aShadowDetails->mColor.CalcColor(aParams.foregroundColor);
+  nscolor shadowColor = aShadowDetails.color.CalcColor(aParams.foregroundColor);
 
   if (auto* textDrawer = aParams.context->GetTextDrawer()) {
     wr::Shadow wrShadow;
 
-    wrShadow.offset = {
-        PresContext()->AppUnitsToFloatDevPixels(aShadowDetails->mXOffset),
-        PresContext()->AppUnitsToFloatDevPixels(aShadowDetails->mYOffset)};
+    wrShadow.offset = {PresContext()->AppUnitsToFloatDevPixels(shadowOffset.x),
+                       PresContext()->AppUnitsToFloatDevPixels(shadowOffset.y)};
 
     wrShadow.blur_radius = PresContext()->AppUnitsToFloatDevPixels(blurRadius);
     wrShadow.color = wr::ToColorF(ToDeviceColor(shadowColor));
@@ -5891,7 +5884,8 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
         aBoundingBox + gfxPoint(aParams.framePt.x + aParams.leftSideOffset,
                                 aParams.textBaselinePt.y);
   }
-  shadowGfxRect += gfxPoint(shadowOffset.x, shadowOffset.y);
+  Point shadowGfxOffset(shadowOffset.x, shadowOffset.y);
+  shadowGfxRect += gfxPoint(shadowGfxOffset.x, shadowOffset.y);
 
   nsRect shadowRect(NSToCoordRound(shadowGfxRect.X()),
                     NSToCoordRound(shadowGfxRect.Y()),
@@ -5917,7 +5911,7 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   DrawTextParams params(shadowContext);
   params.advanceWidth = &advanceWidth;
   params.dirtyRect = aParams.dirtyRect;
-  params.framePt = aParams.framePt + shadowOffset;
+  params.framePt = aParams.framePt + shadowGfxOffset;
   params.provider = aParams.provider;
   params.textStyle = &textPaintStyle;
   params.textColor =
@@ -5927,7 +5921,7 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   // Multi-color shadow is not allowed, so we use the same color of the text
   // color.
   params.decorationOverrideColor = &params.textColor;
-  DrawText(aParams.range, aParams.textBaselinePt + shadowOffset, params);
+  DrawText(aParams.range, aParams.textBaselinePt + shadowGfxOffset, params);
 
   contextBoxBlur.DoPaint();
   aParams.context->Restore();
@@ -6081,10 +6075,10 @@ bool nsTextFrame::PaintTextWithSelectionColors(
 
     // Determine what shadow, if any, to draw - either from textStyle
     // or from the ::-moz-selection pseudo-class if specified there
-    nsCSSShadowArray* shadow = textStyle->GetTextShadow();
+    Span<const StyleSimpleShadow> shadows = textStyle->mTextShadow.AsSpan();
     GetSelectionTextShadow(this, selectionType, *aParams.textPaintStyle,
-                           &shadow);
-    if (shadow) {
+                           &shadows);
+    if (!shadows.IsEmpty()) {
       nscoord startEdge = iOffset;
       if (mTextRun->IsInlineReversed()) {
         startEdge -=
@@ -6094,7 +6088,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
       shadowParams.textBaselinePt = textBaselinePt;
       shadowParams.foregroundColor = foreground;
       shadowParams.leftSideOffset = startEdge;
-      PaintShadows(shadow, shadowParams);
+      PaintShadows(shadows, shadowParams);
     }
 
     // Draw text segment
@@ -6454,9 +6448,9 @@ bool nsTextFrame::MeasureCharClippedText(
   return maxLength != 0;
 }
 
-void nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
+void nsTextFrame::PaintShadows(Span<const StyleSimpleShadow> aShadows,
                                const PaintShadowParams& aParams) {
-  if (!aShadow) {
+  if (aShadows.IsEmpty()) {
     return;
   }
 
@@ -6497,9 +6491,8 @@ void nsTextFrame::PaintShadows(nsCSSShadowArray* aShadow,
     Swap(shadowMetrics.mBoundingBox.width, shadowMetrics.mBoundingBox.height);
   }
 
-  for (uint32_t i = aShadow->Length(); i > 0; --i) {
-    PaintOneShadow(aParams, aShadow->ShadowAt(i - 1),
-                   shadowMetrics.mBoundingBox, blurFlags);
+  for (const auto& shadow : Reversed(aShadows)) {
+    PaintOneShadow(aParams, shadow, shadowMetrics.mBoundingBox, blurFlags);
   }
 }
 
@@ -6609,7 +6602,7 @@ void nsTextFrame::PaintText(const PaintTextParams& aParams,
     shadowParams.provider = &provider;
     shadowParams.foregroundColor = foregroundColor;
     shadowParams.clipEdges = &clipEdges;
-    PaintShadows(textStyle->mTextShadow, shadowParams);
+    PaintShadows(textStyle->mTextShadow.AsSpan(), shadowParams);
   }
 
   gfxFloat advanceWidth;

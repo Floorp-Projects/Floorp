@@ -20,14 +20,14 @@ import {
   getSymbols,
   getTabs,
   isSymbolsLoading,
-  getContext
+  getContext,
 } from "../selectors";
 import { scrollList } from "../utils/result-list";
 import {
   formatSymbols,
   parseLineColumn,
   formatShortcutResults,
-  formatSources
+  formatSources,
 } from "../utils/quick-open";
 import Modal from "./shared/Modal";
 import SearchInput from "./shared/SearchInput";
@@ -35,7 +35,7 @@ import ResultList from "./shared/ResultList";
 
 import type {
   FormattedSymbolDeclarations,
-  QuickOpenResult
+  QuickOpenResult,
 } from "../utils/quick-open";
 
 import type { Source, Context } from "../types";
@@ -60,18 +60,18 @@ type Props = {
   setQuickOpenQuery: typeof actions.setQuickOpenQuery,
   highlightLineRange: typeof actions.highlightLineRange,
   closeQuickOpen: typeof actions.closeQuickOpen,
-  toggleShortcutsModal: () => void
+  toggleShortcutsModal: () => void,
 };
 
 type State = {
   results: ?Array<QuickOpenResult>,
-  selectedIndex: number
+  selectedIndex: number,
 };
 
 type GotoLocationType = {
   sourceId?: string,
   line: number,
-  column?: number
+  column?: number,
 };
 
 const updateResultsThrottle = 100;
@@ -83,7 +83,7 @@ function filter(values, query) {
   return fuzzyAldrin.filter(values, query, {
     key: "value",
     maxResults: maxResults,
-    preparedQuery
+    preparedQuery,
   });
 }
 
@@ -143,7 +143,7 @@ export class QuickOpenModal extends Component<Props, State> {
 
   searchSymbols = (query: string) => {
     const {
-      symbols: { functions }
+      symbols: { functions },
     } = this.props;
 
     let results = functions;
@@ -229,7 +229,7 @@ export class QuickOpenModal extends Component<Props, State> {
     if (this.isSymbolSearch()) {
       return this.gotoLocation({
         line:
-          item.location && item.location.start ? item.location.start.line : 0
+          item.location && item.location.start ? item.location.start.line : 0,
       });
     }
 
@@ -247,7 +247,7 @@ export class QuickOpenModal extends Component<Props, State> {
         ...(item.location != null
           ? { start: item.location.start.line, end: item.location.end.line }
           : {}),
-        sourceId: selectedSource.id
+        sourceId: selectedSource.id,
       });
     }
   };
@@ -274,7 +274,7 @@ export class QuickOpenModal extends Component<Props, State> {
       selectSpecificLocation(cx, {
         sourceId,
         line: location.line,
-        column: location.column
+        column: location.column,
       });
       this.closeModal();
     }
@@ -284,7 +284,7 @@ export class QuickOpenModal extends Component<Props, State> {
     const {
       selectedSource,
       selectedContentLoaded,
-      setQuickOpenQuery
+      setQuickOpenQuery,
     } = this.props;
     setQuickOpenQuery(e.target.value);
     const noSource = !selectedSource || !selectedContentLoaded;
@@ -347,8 +347,8 @@ export class QuickOpenModal extends Component<Props, State> {
     const options = {
       wrap: {
         tagOpen: '<mark class="highlight">',
-        tagClose: "</mark>"
-      }
+        tagClose: "</mark>",
+      },
     };
     const html = fuzzyAldrin.wrap(candidateString, query, options);
     return <div dangerouslySetInnerHTML={{ __html: html }} />;
@@ -368,7 +368,11 @@ export class QuickOpenModal extends Component<Props, State> {
       if (typeof result.title == "string") {
         return {
           ...result,
-          title: this.renderHighlight(result.title, basename(newQuery), "title")
+          title: this.renderHighlight(
+            result.title,
+            basename(newQuery),
+            "title"
+          ),
         };
       }
       return result;
@@ -457,7 +461,7 @@ function mapStateToProps(state) {
     symbolsLoading: isSymbolsLoading(state, selectedSource),
     query: getQuickOpenQuery(state),
     searchType: getQuickOpenType(state),
-    tabs
+    tabs,
   };
 }
 
@@ -468,6 +472,6 @@ export default connect(
     selectSpecificLocation: actions.selectSpecificLocation,
     setQuickOpenQuery: actions.setQuickOpenQuery,
     highlightLineRange: actions.highlightLineRange,
-    closeQuickOpen: actions.closeQuickOpen
+    closeQuickOpen: actions.closeQuickOpen,
   }
 )(QuickOpenModal);

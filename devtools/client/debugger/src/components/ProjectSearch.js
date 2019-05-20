@@ -20,7 +20,7 @@ import {
   getTextSearchResults,
   getTextSearchStatus,
   getTextSearchQuery,
-  getContext
+  getContext,
 } from "../selectors";
 
 import ManagedTree from "./shared/ManagedTree";
@@ -42,21 +42,21 @@ export type Match = {
   matchIndex: number,
   match: string,
   value: string,
-  text: string
+  text: string,
 };
 
 type Result = {
   type: "RESULT",
   filepath: string,
   matches: Array<Match>,
-  sourceId: string
+  sourceId: string,
 };
 
 type Item = Result | Match;
 
 type State = {
   inputValue: string,
-  focusedItem: ?Item
+  focusedItem: ?Item,
 };
 
 type Props = {
@@ -70,7 +70,7 @@ type Props = {
   clearSearch: typeof actions.clearSearch,
   selectSpecificLocation: typeof actions.selectSpecificLocation,
   setActiveSearch: typeof actions.setActiveSearch,
-  doSearchForHighlight: typeof actions.doSearchForHighlight
+  doSearchForHighlight: typeof actions.doSearchForHighlight,
 };
 
 function getFilePath(item: Item, index?: number) {
@@ -89,7 +89,7 @@ export class ProjectSearch extends Component<Props, State> {
     super(props);
     this.state = {
       inputValue: this.props.query || "",
-      focusedItem: null
+      focusedItem: null,
     };
   }
 
@@ -142,7 +142,7 @@ export class ProjectSearch extends Component<Props, State> {
     this.props.selectSpecificLocation(this.props.cx, {
       sourceId: matchItem.sourceId,
       line: matchItem.line,
-      column: matchItem.column
+      column: matchItem.column,
     });
     this.props.doSearchForHighlight(
       this.state.inputValue,
@@ -322,7 +322,7 @@ export class ProjectSearch extends Component<Props, State> {
   }
 }
 ProjectSearch.contextTypes = {
-  shortcuts: PropTypes.object
+  shortcuts: PropTypes.object,
 };
 
 const mapStateToProps = state => ({
@@ -330,7 +330,7 @@ const mapStateToProps = state => ({
   activeSearch: getActiveSearch(state),
   results: getTextSearchResults(state),
   query: getTextSearchQuery(state),
-  status: getTextSearchStatus(state)
+  status: getTextSearchStatus(state),
 });
 
 export default connect(
@@ -341,6 +341,6 @@ export default connect(
     clearSearch: actions.clearSearch,
     selectSpecificLocation: actions.selectSpecificLocation,
     setActiveSearch: actions.setActiveSearch,
-    doSearchForHighlight: actions.doSearchForHighlight
+    doSearchForHighlight: actions.doSearchForHighlight,
   }
 )(ProjectSearch);

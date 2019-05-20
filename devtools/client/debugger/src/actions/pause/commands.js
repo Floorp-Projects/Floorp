@@ -10,7 +10,7 @@ import {
   getSourceContent,
   getTopFrame,
   getSelectedFrame,
-  getThreadContext
+  getThreadContext,
 } from "../../selectors";
 import { PROMISE } from "../utils/middleware/promise";
 import { addHiddenBreakpoint } from "../breakpoints";
@@ -26,7 +26,7 @@ import type {
   SourceContent,
   ThreadId,
   Context,
-  ThreadContext
+  ThreadContext,
 } from "../../types";
 import type { ThunkArgs } from "../types";
 import type { Command } from "../../reducers/types";
@@ -64,7 +64,7 @@ export function command(cx: ThreadContext, type: Command) {
         command: type,
         cx,
         thread: cx.thread,
-        [PROMISE]: client[type](cx.thread)
+        [PROMISE]: client[type](cx.thread),
       });
     }
   };
@@ -142,20 +142,6 @@ export function rewind(cx: ThreadContext) {
 }
 
 /**
- * reverseStepIn
- * @memberof actions/pause
- * @static
- * @returns {Function} {@link command}
- */
-export function reverseStepIn(cx: ThreadContext) {
-  return ({ dispatch, getState }: ThunkArgs) => {
-    if (cx.isPaused) {
-      return dispatch(command(cx, "reverseStepIn"));
-    }
-  };
-}
-
-/**
  * reverseStepOver
  * @memberof actions/pause
  * @static
@@ -165,20 +151,6 @@ export function reverseStepOver(cx: ThreadContext) {
   return ({ dispatch, getState }: ThunkArgs) => {
     if (cx.isPaused) {
       return dispatch(astCommand(cx, "reverseStepOver"));
-    }
-  };
-}
-
-/**
- * reverseStepOut
- * @memberof actions/pause
- * @static
- * @returns {Function} {@link command}
- */
-export function reverseStepOut(cx: ThreadContext) {
-  return ({ dispatch, getState }: ThunkArgs) => {
-    if (cx.isPaused) {
-      return dispatch(command(cx, "reverseStepOut"));
     }
   };
 }

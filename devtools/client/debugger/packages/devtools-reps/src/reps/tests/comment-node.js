@@ -22,7 +22,7 @@ describe("CommentNode", () => {
   it("renders with correct class names", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 

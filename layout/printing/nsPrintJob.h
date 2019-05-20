@@ -109,7 +109,13 @@ class nsPrintJob final : public nsIObserver,
 
   void TurnScriptingOn(bool aDoTurnOn);
   bool CheckDocumentForPPCaching();
-  void InstallPrintPreviewListener();
+
+  /**
+   * Filters out certain user events while Print Preview is open to prevent
+   * the user from interacting with the Print Preview document and breaking
+   * printing invariants.
+   */
+  void SuppressPrintPreviewUserEvents();
 
   // nsIDocumentViewerPrint Printing Methods
   bool HasPrintCallbackCanvas();
@@ -135,10 +141,10 @@ class nsPrintJob final : public nsIObserver,
   // If FinishPrintPreview() fails, caller may need to reset the state of the
   // object, for example by calling CleanupOnFailure().
   nsresult FinishPrintPreview();
-  void SetDocAndURLIntoProgress(const mozilla::UniquePtr<nsPrintObject>& aPO,
-                                nsIPrintProgressParams* aParams);
+  void SetURLAndTitleOnProgressParams(
+      const mozilla::UniquePtr<nsPrintObject>& aPO,
+      nsIPrintProgressParams* aParams);
   void EllipseLongString(nsAString& aStr, const uint32_t aLen, bool aDoFront);
-  nsresult CheckForPrinters(nsIPrintSettings* aPrintSettings);
   void CleanupDocTitleArray(char16_t**& aArray, int32_t& aCount);
 
   bool IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin);

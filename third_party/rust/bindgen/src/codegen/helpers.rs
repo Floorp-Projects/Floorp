@@ -43,8 +43,6 @@ pub mod attributes {
     }
 
     pub fn doc(comment: String) -> TokenStream {
-        use std::str::FromStr;
-
         // NOTE(emilio): By this point comments are already preprocessed and in
         // `///` form. Quote turns them into `#[doc]` comments, but oh well.
         TokenStream::from_str(&comment).unwrap()

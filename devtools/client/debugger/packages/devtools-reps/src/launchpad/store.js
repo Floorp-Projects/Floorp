@@ -17,5 +17,5 @@ function configureStore(options, client) {
 }
 
 module.exports = {
-  configureStore
+  configureStore,
 };

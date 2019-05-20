@@ -22,7 +22,7 @@ export function findSourceMatches(
   const modifiers = {
     caseSensitive: false,
     regexMatch: false,
-    wholeWord: false
+    wholeWord: false,
   };
 
   const text = content.value;
@@ -36,7 +36,7 @@ export function findSourceMatches(
       column: ch,
       matchIndex,
       match: queryText,
-      value
+      value,
     };
   });
 }
@@ -47,7 +47,7 @@ const startRegex = /([ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/g;
 const endRegex = new RegExp(
   [
     "([ !@#$%^&*()_+-=[]{};':\"\\|,.<>/?])",
-    '[^ !@#$%^&*()_+-=[]{};\':"\\|,.<>/?]*$"/'
+    '[^ !@#$%^&*()_+-=[]{};\':"\\|,.<>/?]*$"/',
   ].join("")
 );
 
@@ -55,7 +55,7 @@ function truncateLine(text: string, column: number) {
   if (text.length < 100) {
     return {
       matchIndex: column,
-      value: text
+      value: text,
     };
   }
 
@@ -78,6 +78,6 @@ function truncateLine(text: string, column: number) {
 
   return {
     matchIndex: column - start - offset - 1,
-    value
+    value,
   };
 }

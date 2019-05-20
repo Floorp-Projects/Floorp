@@ -880,14 +880,13 @@ class Package(MachCommandBase):
 class Install(MachCommandBase):
     """Install a package."""
 
-    @Command('install', category='post-build',
-        description='Install the package on the machine, or on a device.')
+    @Command('install-desktop', category='post-build',
+        conditional_name='install',
+        conditions=[conditions.is_not_android],
+        description='Install the package on the machine.')
     @CommandArgument('--verbose', '-v', action='store_true',
         help='Print verbose output when installing to an Android emulator.')
     def install(self, verbose=False):
-        if conditions.is_android(self):
-            from mozrunner.devices.android_device import verify_android_device
-            verify_android_device(self, verbose=verbose)
         ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
         if ret == 0:
             self.notify('Install complete')
@@ -909,7 +908,9 @@ class RunProgram(MachCommandBase):
 
     prog_group = 'the compiled program'
 
-    @Command('run', category='post-build',
+    @Command('run-desktop', category='post-build',
+        conditional_name='run',
+        conditions=[conditions.is_not_android],
         description='Run the compiled program, possibly under a debugger or DMD.')
     @CommandArgument('params', nargs='...', group=prog_group,
         help='Command-line arguments to be passed through to the program. Not specifying a --profile or -P option will result in a temporary profile being used.')
@@ -956,89 +957,76 @@ class RunProgram(MachCommandBase):
         enable_crash_reporter, setpref, temp_profile, macos_open, debug,
         debugger, debugger_args, dmd, mode, stacks, show_dump_stats):
 
-        if conditions.is_android(self):
-            # Running Firefox for Android is completely different
-            if dmd:
-                print("DMD is not supported for Firefox for Android")
+        from mozprofile import Profile, Preferences
+
+        try:
+            binpath = self.get_binary_path('app')
+        except Exception as e:
+            print("It looks like your program isn't built.",
+                "You can run |mach build| to build it.")
+            print(e)
+            return 1
+
+        args = []
+        if macos_open:
+            if debug:
+                print("The browser can not be launched in the debugger "
+                    "when using the macOS open command.")
                 return 1
-            from mozrunner.devices.android_device import verify_android_device, run_firefox_for_android
-            if not (debug or debugger or debugger_args):
-                verify_android_device(self, install=True)
-                return run_firefox_for_android(self, params)
-            verify_android_device(self, install=True, debugger=True)
-            args = ['']
-
-        else:
-            from mozprofile import Profile, Preferences
-
             try:
-                binpath = self.get_binary_path('app')
+                m = re.search(r'^.+\.app', binpath)
+                apppath = m.group(0)
+                args = ['open', apppath, '--args']
             except Exception as e:
-                print("It looks like your program isn't built.",
-                    "You can run |mach build| to build it.")
+                print("Couldn't get the .app path from the binary path. "
+                    "The macOS open option can only be used on macOS")
                 print(e)
                 return 1
+        else:
+            args = [binpath]
 
-            args = []
-            if macos_open:
-                if debug:
-                    print("The browser can not be launched in the debugger "
-                        "when using the macOS open command.")
-                    return 1
-                try:
-                    m = re.search(r'^.+\.app', binpath)
-                    apppath = m.group(0)
-                    args = ['open', apppath, '--args']
-                except Exception as e:
-                    print("Couldn't get the .app path from the binary path. "
-                        "The macOS open option can only be used on macOS")
-                    print(e)
-                    return 1
+        if params:
+            args.extend(params)
+
+        if not remote:
+            args.append('-no-remote')
+
+        if not background and sys.platform == 'darwin':
+            args.append('-foreground')
+
+        if sys.platform.startswith('win') and \
+           'MOZ_LAUNCHER_PROCESS' in self.defines:
+            args.append('-wait-for-browser')
+
+        no_profile_option_given = \
+            all(p not in params for p in ['-profile', '--profile', '-P'])
+        if no_profile_option_given and not noprofile:
+            prefs = {
+               'browser.aboutConfig.showWarning': False,
+               'browser.shell.checkDefaultBrowser': False,
+               'general.warnOnAboutConfig': False,
+            }
+            prefs.update(self._mach_context.settings.runprefs)
+            prefs.update([p.split('=', 1) for p in setpref])
+            for pref in prefs:
+                prefs[pref] = Preferences.cast(prefs[pref])
+
+            tmpdir = os.path.join(self.topobjdir, 'tmp')
+            if not os.path.exists(tmpdir):
+                os.makedirs(tmpdir)
+
+            if (temp_profile):
+                path = tempfile.mkdtemp(dir=tmpdir, prefix='profile-')
             else:
-                args = [binpath]
+                path = os.path.join(tmpdir, 'profile-default')
 
-            if params:
-                args.extend(params)
+            profile = Profile(path, preferences=prefs)
+            args.append('-profile')
+            args.append(profile.profile)
 
-            if not remote:
-                args.append('-no-remote')
-
-            if not background and sys.platform == 'darwin':
-                args.append('-foreground')
-
-            if sys.platform.startswith('win') and \
-               'MOZ_LAUNCHER_PROCESS' in self.defines:
-                args.append('-wait-for-browser')
-
-            no_profile_option_given = \
-                all(p not in params for p in ['-profile', '--profile', '-P'])
-            if no_profile_option_given and not noprofile:
-                prefs = {
-                   'browser.aboutConfig.showWarning': False,
-                   'browser.shell.checkDefaultBrowser': False,
-                   'general.warnOnAboutConfig': False,
-                }
-                prefs.update(self._mach_context.settings.runprefs)
-                prefs.update([p.split('=', 1) for p in setpref])
-                for pref in prefs:
-                    prefs[pref] = Preferences.cast(prefs[pref])
-
-                tmpdir = os.path.join(self.topobjdir, 'tmp')
-                if not os.path.exists(tmpdir):
-                    os.makedirs(tmpdir)
-
-                if (temp_profile):
-                    path = tempfile.mkdtemp(dir=tmpdir, prefix='profile-')
-                else:
-                    path = os.path.join(tmpdir, 'profile-default')
-
-                profile = Profile(path, preferences=prefs)
-                args.append('-profile')
-                args.append(profile.profile)
-
-            if not no_profile_option_given and setpref:
-                print("setpref is only supported if a profile is not specified")
-                return 1
+        if not no_profile_option_given and setpref:
+            print("setpref is only supported if a profile is not specified")
+            return 1
 
             if not no_profile_option_given:
                 # The profile name may be non-ascii, but come from the

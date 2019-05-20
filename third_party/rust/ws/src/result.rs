@@ -1,16 +1,18 @@
+use std::borrow::Cow;
+use std::convert::{From, Into};
+use std::error::Error as StdError;
 use std::fmt;
 use std::io;
-use std::borrow::Cow;
-use std::str::Utf8Error;
 use std::result::Result as StdResult;
-use std::error::Error as StdError;
-use std::convert::{From, Into};
+use std::str::Utf8Error;
 
 use httparse;
 use mio;
-#[cfg(feature="ssl")]
+#[cfg(feature = "ssl")]
 use openssl::ssl::{Error as SslError, HandshakeError as SslHandshakeError};
-#[cfg(feature="ssl")]
+#[cfg(feature = "nativetls")]
+use native_tls::{Error as SslError, HandshakeError as SslHandshakeError};
+#[cfg(any(feature = "ssl", feature = "nativetls"))]
 type HandshakeError = SslHandshakeError<mio::tcp::TcpStream>;
 
 use communication::Command;
@@ -21,7 +23,8 @@ pub type Result<T> = StdResult<T, Error>;
 #[derive(Debug)]
 pub enum Kind {
     /// Indicates an internal application error.
-    /// The WebSocket will automatically attempt to send an Error (1011) close code.
+    /// If panic_on_internal is true, which is the default, then the application will panic.
+    /// Otherwise the WebSocket will automatically attempt to send an Error (1011) close code.
     Internal,
     /// Indicates a state where some size limit has been exceeded, such as an inability to accept
     /// any more new connections.
@@ -30,7 +33,7 @@ pub enum Kind {
     Capacity,
     /// Indicates a violation of the WebSocket protocol.
     /// The WebSocket will automatically attempt to send a Protocol (1002) close code, or if
-    /// this error occurs during a handshake, an HTTP 400 reponse will be generated.
+    /// this error occurs during a handshake, an HTTP 400 response will be generated.
     Protocol,
     /// Indicates that the WebSocket received data that should be utf8 encoded but was not.
     /// The WebSocket will automatically attempt to send a Invalid Frame Payload Data (1007) close
@@ -49,13 +52,11 @@ pub enum Kind {
     /// If encountered, retuning from a handler method and waiting for the EventLoop to consume
     /// the queue may relieve the situation.
     Queue(mio::channel::SendError<Command>),
-    /// Indicates a failure to schedule a timeout on the EventLoop.
-    Timer(mio::timer::TimerError),
     /// Indicates a failure to perform SSL encryption.
-    #[cfg(feature="ssl")]
+    #[cfg(any(feature = "ssl", feature = "nativetls"))]
     Ssl(SslError),
     /// Indicates a failure to perform SSL encryption.
-    #[cfg(feature="ssl")]
+    #[cfg(any(feature = "ssl", feature = "nativetls"))]
     SslHandshake(HandshakeError),
     /// A custom error kind for use by applications. This error kind involves extra overhead
     /// because it will allocate the memory on the heap. The WebSocket ignores such errors by
@@ -63,19 +64,19 @@ pub enum Kind {
     Custom(Box<StdError + Send + Sync>),
 }
 
-/// A struct indicating the kind of error that has occured and any precise details of that error.
+/// A struct indicating the kind of error that has occurred and any precise details of that error.
 pub struct Error {
     pub kind: Kind,
     pub details: Cow<'static, str>,
 }
 
 impl Error {
-
     pub fn new<I>(kind: Kind, details: I) -> Error
-        where I: Into<Cow<'static, str>>
+    where
+        I: Into<Cow<'static, str>>,
     {
         Error {
-            kind: kind,
+            kind,
             details: details.into(),
         }
     }
@@ -99,7 +100,6 @@ impl fmt::Debug for Error {
 }
 
 impl fmt::Display for Error {
-
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.details.len() > 0 {
             write!(f, "{}: {}", self.description(), self.details)
@@ -110,34 +110,32 @@ impl fmt::Display for Error {
 }
 
 impl StdError for Error {
-
     fn description(&self) -> &str {
         match self.kind {
-            Kind::Internal              => "Internal Application Error",
-            Kind::Capacity              => "WebSocket at Capacity",
-            Kind::Protocol              => "WebSocket Protocol Error",
-            Kind::Encoding(ref err)     => err.description(),
-            Kind::Io(ref err)           => err.description(),
-            Kind::Http(_)               => "Unable to parse HTTP",
-            #[cfg(feature="ssl")]
-            Kind::Ssl(ref err)          => err.description(),
-            #[cfg(feature="ssl")]
+            Kind::Internal => "Internal Application Error",
+            Kind::Capacity => "WebSocket at Capacity",
+            Kind::Protocol => "WebSocket Protocol Error",
+            Kind::Encoding(ref err) => err.description(),
+            Kind::Io(ref err) => err.description(),
+            Kind::Http(_) => "Unable to parse HTTP",
+            #[cfg(any(feature = "ssl", feature = "nativetls"))]
+            Kind::Ssl(ref err) => err.description(),
+            #[cfg(any(feature = "ssl", feature = "nativetls"))]
             Kind::SslHandshake(ref err) => err.description(),
-            Kind::Queue(_)              => "Unable to send signal on event loop",
-            Kind::Timer(_)              => "Unable to schedule timeout on event loop",
-            Kind::Custom(ref err)       => err.description(),
+            Kind::Queue(_) => "Unable to send signal on event loop",
+            Kind::Custom(ref err) => err.description(),
         }
     }
 
     fn cause(&self) -> Option<&StdError> {
         match self.kind {
             Kind::Encoding(ref err) => Some(err),
-            Kind::Io(ref err)       => Some(err),
-            #[cfg(feature="ssl")]
-            Kind::Ssl(ref err)      => Some(err),
-            #[cfg(feature="ssl")]
-            Kind::SslHandshake(ref err)      => err.cause(),
-            Kind::Custom(ref err)   => Some(err.as_ref()),
+            Kind::Io(ref err) => Some(err),
+            #[cfg(any(feature = "ssl", feature = "nativetls"))]
+            Kind::Ssl(ref err) => Some(err),
+            #[cfg(any(feature = "ssl", feature = "nativetls"))]
+            Kind::SslHandshake(ref err) => err.cause(),
+            Kind::Custom(ref err) => Some(err.as_ref()),
             _ => None,
         }
     }
@@ -150,7 +148,6 @@ impl From<io::Error> for Error {
 }
 
 impl From<httparse::Error> for Error {
-
     fn from(err: httparse::Error) -> Error {
         let details = match err {
             httparse::Error::HeaderName => "Invalid byte in header name.",
@@ -158,34 +155,23 @@ impl From<httparse::Error> for Error {
             httparse::Error::NewLine => "Invalid byte in new line.",
             httparse::Error::Status => "Invalid byte in Response status.",
             httparse::Error::Token => "Invalid byte where token is required.",
-            httparse::Error::TooManyHeaders => "Parsed more headers than provided buffer can contain.",
+            httparse::Error::TooManyHeaders => {
+                "Parsed more headers than provided buffer can contain."
+            }
             httparse::Error::Version => "Invalid byte in HTTP version.",
         };
 
         Error::new(Kind::Http(err), details)
     }
-
 }
 
 impl From<mio::channel::SendError<Command>> for Error {
-
     fn from(err: mio::channel::SendError<Command>) -> Error {
         match err {
             mio::channel::SendError::Io(err) => Error::from(err),
-            _ => Error::new(Kind::Queue(err), "")
+            _ => Error::new(Kind::Queue(err), ""),
         }
     }
-
-}
-
-impl From<mio::timer::TimerError> for Error {
-
-    fn from(err: mio::timer::TimerError) -> Error {
-        match err {
-            _ => Error::new(Kind::Timer(err), "")
-        }
-    }
-
 }
 
 impl From<Utf8Error> for Error {
@@ -194,14 +180,14 @@ impl From<Utf8Error> for Error {
     }
 }
 
-#[cfg(feature="ssl")]
+#[cfg(any(feature = "ssl", feature = "nativetls"))]
 impl From<SslError> for Error {
     fn from(err: SslError) -> Error {
         Error::new(Kind::Ssl(err), "")
     }
 }
 
-#[cfg(feature="ssl")]
+#[cfg(any(feature = "ssl", feature = "nativetls"))]
 impl From<HandshakeError> for Error {
     fn from(err: HandshakeError) -> Error {
         Error::new(Kind::SslHandshake(err), "")
@@ -209,7 +195,8 @@ impl From<HandshakeError> for Error {
 }
 
 impl<B> From<Box<B>> for Error
-    where B: StdError + Send + Sync + 'static
+where
+    B: StdError + Send + Sync + 'static,
 {
     fn from(err: Box<B>) -> Error {
         Error::new(Kind::Custom(err), "")

@@ -26,6 +26,7 @@
 class nsDisplayListBuilder;
 class nsDisplayList;
 class nsDisplayItem;
+class nsPaintedDisplayItem;
 class gfxContext;
 class nsDisplayItemGeometry;
 class nsDisplayMasksAndClipPaths;
@@ -47,7 +48,7 @@ class PaintedLayerData;
 class ContainerState;
 class PaintedDisplayItemLayerUserData;
 
-enum class DisplayItemEntryType {
+enum class DisplayItemEntryType : uint8_t {
   Item,
   PushOpacity,
   PushOpacityWithBg,
@@ -85,8 +86,8 @@ class DisplayItemData final {
   const DisplayItemClip& GetClip() const { return mClip; }
   void Invalidate() { mIsInvalid = true; }
   void ClearAnimationCompositorState();
-  void SetItem(nsDisplayItem* aItem) { mItem = aItem; }
-  nsDisplayItem* GetItem() const { return mItem; }
+  void SetItem(nsPaintedDisplayItem* aItem) { mItem = aItem; }
+  nsPaintedDisplayItem* GetItem() const { return mItem; }
   nsIFrame* FirstFrame() const { return mFrameList[0]; }
 
   bool HasMergedFrames() const { return mFrameList.Length() > 1; }
@@ -105,7 +106,7 @@ class DisplayItemData final {
       return mRefCnt;
     }
     ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "ComputedStyle", sizeof(ComputedStyle));
+    NS_LOG_ADDREF(this, mRefCnt, "DisplayItemData", sizeof(DisplayItemData));
     return mRefCnt;
   }
 
@@ -115,7 +116,7 @@ class DisplayItemData final {
       return mRefCnt;
     }
     --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "ComputedStyle");
+    NS_LOG_RELEASE(this, mRefCnt, "DisplayItemData");
     if (mRefCnt == 0) {
       Destroy();
       return 0;
@@ -167,9 +168,9 @@ class DisplayItemData final {
    * update.
    */
   void BeginUpdate(layers::Layer* aLayer, LayerState aState, bool aFirstUpdate,
-                   nsDisplayItem* aItem = nullptr);
+                   nsPaintedDisplayItem* aItem = nullptr);
   void BeginUpdate(layers::Layer* aLayer, LayerState aState,
-                   nsDisplayItem* aItem, bool aIsReused, bool aIsMerged);
+                   nsPaintedDisplayItem* aItem, bool aIsReused, bool aIsMerged);
 
   /**
    * Completes the update of this, and removes any references to data that won't
@@ -198,7 +199,7 @@ class DisplayItemData final {
    * Temporary stoarage of the display item being referenced, only valid between
    * BeginUpdate and EndUpdate.
    */
-  nsDisplayItem* mItem;
+  nsPaintedDisplayItem* mItem;
   nsRegion mChangedFrameInvalidations;
 
   /**
@@ -223,17 +224,19 @@ class RefCountedRegion {
 };
 
 struct AssignedDisplayItem {
-  AssignedDisplayItem(nsDisplayItem* aItem, LayerState aLayerState,
+  AssignedDisplayItem(nsPaintedDisplayItem* aItem, LayerState aLayerState,
                       DisplayItemData* aData, const nsRect& aContentRect,
                       DisplayItemEntryType aType, const bool aHasOpacity,
                       const RefPtr<TransformClipNode>& aTransform,
                       const bool aIsMerged);
   ~AssignedDisplayItem();
 
-  nsDisplayItem* mItem;
-  LayerState mLayerState;
+  bool HasOpacity() const { return mHasOpacity; }
+
+  bool HasTransform() const { return mTransform; }
+
+  nsPaintedDisplayItem* mItem;
   DisplayItemData* mDisplayItemData;
-  nsRect mContentRect;
 
   /**
    * If the display item is being rendered as an inactive
@@ -242,12 +245,14 @@ struct AssignedDisplayItem {
    */
   RefPtr<layers::LayerManager> mInactiveLayerManager;
   RefPtr<TransformClipNode> mTransform;
+
+  nsRect mContentRect;
+  LayerState mLayerState;
   DisplayItemEntryType mType;
 
   bool mReused;
   bool mMerged;
   bool mHasOpacity;
-  bool mHasTransform;
   bool mHasPaintRect;
 };
 
@@ -633,7 +638,7 @@ class FrameLayerBuilder : public layers::LayerUserData {
    * Stores DisplayItemData associated with aFrame, stores the data in
    * mNewDisplayItemData.
    */
-  DisplayItemData* StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer,
+  DisplayItemData* StoreDataForFrame(nsPaintedDisplayItem* aItem, Layer* aLayer,
                                      LayerState aState, DisplayItemData* aData);
   void StoreDataForFrame(nsIFrame* aFrame, uint32_t aDisplayItemKey,
                          Layer* aLayer, LayerState aState);
@@ -654,19 +659,11 @@ class FrameLayerBuilder : public layers::LayerUserData {
   DisplayItemData* GetDisplayItemData(nsIFrame* aFrame, uint32_t aKey);
 
   /*
-   * Get the DisplayItemData associated with this frame / display item pair,
+   * Get the DisplayItemData associated with this display item,
    * using the LayerManager instead of FrameLayerBuilder.
    */
-  static DisplayItemData* GetDisplayItemDataForManager(nsIFrame* aFrame,
-                                                       uint32_t aDisplayItemKey,
-                                                       LayerManager* aManager);
   static DisplayItemData* GetDisplayItemDataForManager(
-      nsIFrame* aFrame, uint32_t aDisplayItemKey);
-  static DisplayItemData* GetDisplayItemDataForManager(nsDisplayItem* aItem,
-                                                       LayerManager* aManager);
-  static DisplayItemData* GetDisplayItemDataForManager(nsIFrame* aFrame,
-                                                       uint32_t aDisplayItemKey,
-                                                       LayerManagerData* aData);
+      nsPaintedDisplayItem* aItem, LayerManager* aManager);
 
   /**
    * We store one of these for each display item associated with a

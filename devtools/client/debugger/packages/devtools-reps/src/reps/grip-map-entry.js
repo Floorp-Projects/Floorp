@@ -20,7 +20,7 @@ GripMapEntry.propTypes = {
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func
+  onInspectIconClick: PropTypes.func,
 };
 
 function GripMapEntry(props) {
@@ -30,7 +30,7 @@ function GripMapEntry(props) {
 
   return span(
     {
-      className: "objectBox objectBox-map-entry"
+      className: "objectBox objectBox-map-entry",
     },
     PropRep({
       ...props,
@@ -38,7 +38,7 @@ function GripMapEntry(props) {
       object: value,
       equal: " \u2192 ",
       title: null,
-      suppressQuotes: false
+      suppressQuotes: false,
     })
   );
 }
@@ -59,8 +59,8 @@ function createGripMapEntry(key, value) {
     type: "mapEntry",
     preview: {
       key,
-      value
-    }
+      value,
+    },
   };
 }
 
@@ -68,5 +68,5 @@ function createGripMapEntry(key, value) {
 module.exports = {
   rep: wrapRender(GripMapEntry),
   createGripMapEntry,
-  supportsObject
+  supportsObject,
 };

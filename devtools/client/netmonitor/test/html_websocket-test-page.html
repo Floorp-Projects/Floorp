@@ -1,0 +1,10 @@
+<script>
+"use strict";
+openSocket();
+
+function openSocket() {
+  new WebSocket("ws://localhost:8080/");
+}
+
+new Worker("js_websocket-worker-test.js");
+</script>

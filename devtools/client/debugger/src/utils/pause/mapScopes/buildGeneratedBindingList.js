@@ -14,7 +14,7 @@ import { locColumn } from "./locColumn";
 export type GeneratedBindingLocation = {
   name: string,
   loc: BindingLocation,
-  desc: () => Promise<BindingContents | null>
+  desc: () => Promise<BindingContents | null>,
 };
 
 export function buildGeneratedBindingList(
@@ -53,7 +53,7 @@ export function buildGeneratedBindingList(
 
     if (generated === frameThisOwner && thisBinding) {
       bindings.this = {
-        value: thisBinding
+        value: thisBinding,
       };
     }
 
@@ -70,7 +70,7 @@ export function buildGeneratedBindingList(
         acc.push({
           name,
           loc,
-          desc: () => Promise.resolve(bindings[name] || null)
+          desc: () => Promise.resolve(bindings[name] || null),
         });
       }
     }
@@ -91,7 +91,7 @@ export function buildGeneratedBindingList(
           generatedBindings.push({
             name,
             loc,
-            desc: () => Promise.resolve(bindings[name])
+            desc: () => Promise.resolve(bindings[name]),
           });
         } else {
           const globalGrip = globalScope && globalScope.object;
@@ -104,7 +104,7 @@ export function buildGeneratedBindingList(
               desc: async () => {
                 const objectClient = createObjectClient(globalGrip);
                 return (await objectClient.getProperty(name)).descriptor;
-              }
+              },
             });
           }
         }

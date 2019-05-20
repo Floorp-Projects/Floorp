@@ -17,7 +17,7 @@ add_task(async function test_query_result_favicon_changed_on_child() {
   // Get the last 10 bookmarks added to the menu or the toolbar.
   let query = PlacesUtils.history.getNewQuery();
   query.setParents([PlacesUtils.bookmarks.menuGuid,
-                    PlacesUtils.bookmarks.toolbarGuid], 2);
+                    PlacesUtils.bookmarks.toolbarGuid]);
 
   let options = PlacesUtils.history.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;

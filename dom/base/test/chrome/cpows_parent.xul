@@ -510,7 +510,7 @@
 
     function finish() {
       ok(gReceivedErrorProbe, "Should have reported error probe");
-      opener.setTimeout("done()", 0);
+      opener.setTimeout(function() { this.done(); }, 0);
       window.close();
     }
   ]]></script>

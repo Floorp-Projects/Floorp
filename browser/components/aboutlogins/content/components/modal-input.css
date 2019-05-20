@@ -2,11 +2,53 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:host {
+  --reveal-button-opacity: .8;
+  --reveal-button-opacity-hover: .6;
+  --reveal-button-opacity-active: 1;
+
+  display: flex;
+}
+
 :host([editing]) .locked-value,
 :host(:not([editing])) .unlocked-value {
   display: none;
 }
 
-:host(:not([type="password"])) .reveal-button {
+:host(:not([type="password"])) .reveal-checkbox {
   display: none;
+}
+
+.reveal-checkbox {
+  /* !important is needed to override common.css styling for checkboxes */
+  background-color: transparent !important;
+  border-width: 0 !important;
+  background-image: url("chrome://browser/content/aboutlogins/icons/show-password.svg") !important;
+  margin-inline-start: 8px !important;
+  cursor: pointer;
+  -moz-context-properties: fill;
+  fill: currentColor !important;
+  opacity: var(--reveal-button-opacity);
+}
+
+.reveal-checkbox:hover {
+  opacity: var(--reveal-button-opacity-hover);
+}
+
+.reveal-checkbox:hover:active {
+  opacity: var(--reveal-button-opacity-active);
+}
+
+.reveal-checkbox:checked {
+  background-image: url("chrome://browser/content/aboutlogins/icons/hide-password.svg") !important;
+}
+
+@supports -moz-bool-pref("browser.in-content.dark-mode") {
+@media (prefers-color-scheme: dark) {
+  :host {
+    --reveal-button-opacity: .8;
+    --reveal-button-opacity-hover: 1;
+    --reveal-button-opacity-active: .6;
+  }
+}
 }

@@ -31,7 +31,7 @@ export function willNavigate(event: Object) {
     getState,
     client,
     sourceMaps,
-    parser
+    parser,
   }: ThunkArgs) {
     sourceQueue.clear();
     sourceMaps.clearSourceMaps();
@@ -43,19 +43,25 @@ export function willNavigate(event: Object) {
 
     dispatch({
       type: "NAVIGATE",
-      mainThread: { ...thread, url: event.url }
+      mainThread: { ...thread, url: event.url },
     });
   };
 }
 
-export function connect(url: string, actor: string, canRewind: boolean) {
+export function connect(
+  url: string,
+  actor: string,
+  canRewind: boolean,
+  isWebExtension: boolean
+) {
   return async function({ dispatch }: ThunkArgs) {
     await dispatch(updateWorkers());
     dispatch(
       ({
         type: "CONNECT",
         mainThread: { url, actor, type: -1, name: "" },
-        canRewind
+        canRewind,
+        isWebExtension,
       }: Action)
     );
   };

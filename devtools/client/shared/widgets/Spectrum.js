@@ -5,6 +5,8 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
+const { colorUtils } = require("devtools/shared/css/color.js");
+
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -33,31 +35,36 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 function Spectrum(parentEl, rgb) {
   EventEmitter.decorate(this);
 
+  this.document = parentEl.ownerDocument;
   this.element = parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
   this.parentEl = parentEl;
 
   this.element.className = "spectrum-container";
   this.element.innerHTML = `
-    <div class="spectrum-top">
-      <div class="spectrum-fill"></div>
-      <div class="spectrum-top-inner">
-        <div class="spectrum-color spectrum-box">
-          <div class="spectrum-sat">
-            <div class="spectrum-val">
-              <div class="spectrum-dragger"></div>
-            </div>
+    <section class="spectrum-color-picker">
+      <div class="spectrum-color spectrum-box">
+        <div class="spectrum-sat">
+          <div class="spectrum-val">
+            <div class="spectrum-dragger"></div>
           </div>
         </div>
+      </div>
+    </section>
+    <section class="spectrum-controls">
+      <div class="spectrum-color-preview"></div>
+      <div class="spectrum-slider-container">
         <div class="spectrum-hue spectrum-box">
-          <div class="spectrum-slider spectrum-slider-control"></div>
+          <div class="spectrum-hue-inner">
+            <div class="spectrum-hue-handle spectrum-slider-control"></div>
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="spectrum-alpha spectrum-checker spectrum-box">
-      <div class="spectrum-alpha-inner">
-        <div class="spectrum-alpha-handle spectrum-slider-control"></div>
-      </div>
-    </div>
+        <div class="spectrum-alpha spectrum-checker spectrum-box">
+          <div class="spectrum-alpha-inner">
+            <div class="spectrum-alpha-handle spectrum-slider-control"></div>
+          </div>
+         </div>
+        </div>
+     </section>
   `;
 
   this.onElementClick = this.onElementClick.bind(this);
@@ -65,14 +72,29 @@ function Spectrum(parentEl, rgb) {
 
   this.parentEl.appendChild(this.element);
 
-  this.slider = this.element.querySelector(".spectrum-hue");
-  this.slideHelper = this.element.querySelector(".spectrum-slider");
-  Spectrum.draggable(this.slider, this.onSliderMove.bind(this));
-
+  // Color spectrum dragger.
   this.dragger = this.element.querySelector(".spectrum-color");
   this.dragHelper = this.element.querySelector(".spectrum-dragger");
   Spectrum.draggable(this.dragger, this.onDraggerMove.bind(this));
 
+  // Here we define the components for the "controls" section of the color picker.
+  this.controls = this.element.querySelector(".spectrum-controls");
+  this.colorPreview = this.element.querySelector(".spectrum-color-preview");
+
+  // Create the eyedropper.
+  const eyedropper = this.document.createElementNS(XHTML_NS, "button");
+  eyedropper.id = "eyedropper-button";
+  eyedropper.className = "devtools-button";
+  eyedropper.style.pointerEvents = "auto";
+  this.controls.insertBefore(eyedropper, this.colorPreview);
+
+  // Hue slider
+  this.hueSlider = this.element.querySelector(".spectrum-hue");
+  this.hueSliderInner = this.element.querySelector(".spectrum-hue-inner");
+  this.hueSliderHelper = this.element.querySelector(".spectrum-hue-handle");
+  Spectrum.draggable(this.hueSliderInner, this.onHueSliderMove.bind(this));
+
+  // Alpha slider
   this.alphaSlider = this.element.querySelector(".spectrum-alpha");
   this.alphaSliderInner = this.element.querySelector(".spectrum-alpha-inner");
   this.alphaSliderHelper = this.element.querySelector(".spectrum-alpha-handle");
@@ -228,15 +250,15 @@ Spectrum.prototype = {
   },
 
   show: function() {
-    this.element.classList.add("spectrum-show");
-
-    this.slideHeight = this.slider.offsetHeight;
     this.dragWidth = this.dragger.offsetWidth;
     this.dragHeight = this.dragger.offsetHeight;
     this.dragHelperHeight = this.dragHelper.offsetHeight;
-    this.slideHelperHeight = this.slideHelper.offsetHeight;
+
     this.alphaSliderWidth = this.alphaSliderInner.offsetWidth;
     this.alphaSliderHelperWidth = this.alphaSliderHelper.offsetWidth;
+
+    this.hueSliderWidth = this.hueSliderInner.offsetWidth;
+    this.hueSliderHelperWidth = this.hueSliderHelper.offsetWidth;
 
     this.updateUI();
   },
@@ -245,8 +267,8 @@ Spectrum.prototype = {
     e.stopPropagation();
   },
 
-  onSliderMove: function(dragX, dragY) {
-    this.hsv[0] = (dragY / this.slideHeight);
+  onHueSliderMove: function(dragX, dragY) {
+    this.hsv[0] = (dragX / this.hueSliderWidth);
     this.updateUI();
     this.onChange();
   },
@@ -268,13 +290,34 @@ Spectrum.prototype = {
     this.emit("changed", this.rgb, this.rgbCssString);
   },
 
-  updateHelperLocations: function() {
-    // If the UI hasn't been shown yet then none of the dimensions will be
-    // correct
-    if (!this.element.classList.contains("spectrum-show")) {
-      return;
-    }
+  updateAlphaSliderBackground: function() {
+    const rgb = this.rgb;
 
+    const rgbNoAlpha = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
+    const rgbAlpha0 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ", 0)";
+    const alphaGradient = "linear-gradient(to right, " + rgbAlpha0 + ", " +
+      rgbNoAlpha + ")";
+    this.alphaSliderInner.style.background = alphaGradient;
+  },
+
+  updateColorPreview: function() {
+    // Overlay the rgba color over a checkered image background.
+    this.colorPreview.style.setProperty("--overlay-color", this.rgbCssString);
+
+    // We should be able to distinguish the color preview on high luminance rgba values.
+    // Give the color preview a light grey border if the luminance of the current rgba
+    // tuple is great.
+    const colorLuminance = colorUtils.calculateLuminance(this.rgb);
+    this.colorPreview.classList.toggle("high-luminance", colorLuminance > 0.85);
+  },
+
+  updateDraggerBackgroundColor: function() {
+    const flatColor = "rgb(" + this.rgbNoSatVal[0] + ", " + this.rgbNoSatVal[1] + ", " +
+     this.rgbNoSatVal[2] + ")";
+    this.dragger.style.backgroundColor = flatColor;
+  },
+
+  updateHelperLocations: function() {
     const h = this.hsv[0];
     const s = this.hsv[1];
     const v = this.hsv[2];
@@ -297,8 +340,8 @@ Spectrum.prototype = {
     this.dragHelper.style.left = dragX + "px";
 
     // Placing the hue slider
-    const slideY = (h * this.slideHeight) - this.slideHelperHeight / 2;
-    this.slideHelper.style.top = slideY + "px";
+    const hueSliderX = (h * this.hueSliderWidth) - (this.hueSliderHelperWidth / 2);
+    this.hueSliderHelper.style.left = hueSliderX + "px";
 
     // Placing the alpha slider
     const alphaSliderX = (this.hsv[3] * this.alphaSliderWidth) -
@@ -309,19 +352,9 @@ Spectrum.prototype = {
   updateUI: function() {
     this.updateHelperLocations();
 
-    const rgb = this.rgb;
-    const rgbNoSatVal = this.rgbNoSatVal;
-
-    const flatColor = "rgb(" + rgbNoSatVal[0] + ", " + rgbNoSatVal[1] + ", " +
-      rgbNoSatVal[2] + ")";
-
-    this.dragger.style.backgroundColor = flatColor;
-
-    const rgbNoAlpha = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
-    const rgbAlpha0 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ", 0)";
-    const alphaGradient = "linear-gradient(to right, " + rgbAlpha0 + ", " +
-      rgbNoAlpha + ")";
-    this.alphaSliderInner.style.background = alphaGradient;
+    this.updateColorPreview();
+    this.updateDraggerBackgroundColor();
+    this.updateAlphaSliderBackground();
   },
 
   destroy: function() {
@@ -329,10 +362,12 @@ Spectrum.prototype = {
 
     this.parentEl.removeChild(this.element);
 
-    this.slider = null;
     this.dragger = null;
     this.alphaSlider = this.alphaSliderInner = this.alphaSliderHelper = null;
-    this.parentEl = null;
+    this.colorPreview = null;
+    this.dragger = null;
     this.element = null;
+    this.parentEl = null;
+    this.slider = null;
   },
 };

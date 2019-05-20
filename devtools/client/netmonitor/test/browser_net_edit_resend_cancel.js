@@ -34,10 +34,11 @@ add_task(async function() {
   contextResend.click();
 
   // Waits for "Edit & Resend" panel to appear > New request "Cancel"
+  await waitUntil(() => document.querySelector(".custom-request-panel"));
   document.querySelector("#custom-request-close-button").click();
   const finalRequestState = getSelectedRequest(store.getState());
 
-  ok(firstRequestState === finalRequestState,
+  ok(firstRequestState.id === finalRequestState.id,
     "Original request is selected after cancel button is clicked"
   );
 

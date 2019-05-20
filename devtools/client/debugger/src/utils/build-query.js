@@ -9,7 +9,7 @@ import type { SearchModifiers } from "../types";
 
 type QueryOptions = {
   isGlobal?: boolean,
-  ignoreSpaces?: boolean
+  ignoreSpaces?: boolean,
 };
 
 /**

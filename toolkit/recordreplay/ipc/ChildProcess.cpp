@@ -53,8 +53,7 @@ ChildProcessInfo::~ChildProcessInfo() {
   }
 }
 
-void ChildProcessInfo::OnIncomingMessage(const Message& aMsg,
-                                         bool aForwardToControl) {
+void ChildProcessInfo::OnIncomingMessage(const Message& aMsg) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mLastMessageTime = TimeStamp::Now();
 
@@ -69,27 +68,12 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg,
       OnCrash(nmsg.Error());
       return;
     }
-    case MessageType::HitExecutionPoint: {
-      const HitExecutionPointMessage& nmsg =
-          static_cast<const HitExecutionPointMessage&>(aMsg);
-      mPaused = true;
-      if (this == GetActiveChild() && !nmsg.mPoint.HasPosition()) {
-        MaybeUpdateGraphicsAtCheckpoint(nmsg.mPoint.mCheckpoint);
-      }
-      if (aForwardToControl) {
-        js::ForwardHitExecutionPointMessage(GetId(), nmsg);
-      }
-      break;
-    }
     case MessageType::Paint:
-      MaybeUpdateGraphicsAtPaint(static_cast<const PaintMessage&>(aMsg));
+      UpdateGraphicsInUIProcess(&static_cast<const PaintMessage&>(aMsg));
       break;
-    case MessageType::DebuggerResponse:
+    case MessageType::ManifestFinished:
       mPaused = true;
-      js::OnDebuggerResponse(aMsg);
-      break;
-    case MessageType::RecordingFlushed:
-      mPaused = true;
+      js::ForwardManifestFinished(this, aMsg);
       break;
     case MessageType::MiddlemanCallRequest: {
       const MiddlemanCallRequestMessage& nmsg =
@@ -115,16 +99,8 @@ void ChildProcessInfo::SendMessage(Message&& aMsg) {
 
   // Update paused state.
   MOZ_RELEASE_ASSERT(IsPaused() || aMsg.CanBeSentWhileUnpaused());
-  switch (aMsg.mType) {
-    case MessageType::Resume:
-    case MessageType::RestoreCheckpoint:
-    case MessageType::RunToPoint:
-    case MessageType::DebuggerRequest:
-    case MessageType::FlushRecording:
-      mPaused = false;
-      break;
-    default:
-      break;
+  if (aMsg.mType == MessageType::ManifestStart) {
+    mPaused = false;
   }
 
   mLastMessageTime = TimeStamp::Now();
@@ -203,20 +179,8 @@ void ChildProcessInfo::LaunchSubprocess(
 
   SendGraphicsMemoryToChild();
 
-  // The child should send us a HitExecutionPoint message with an invalid point
-  // to pause.
-  WaitUntilPaused();
-
   MOZ_RELEASE_ASSERT(gIntroductionMessage);
   SendMessage(std::move(*gIntroductionMessage));
-
-  // Always save the first checkpoint in replaying child processes.
-  if (!IsRecording()) {
-    SendMessage(SetSaveCheckpointMessage(CheckpointId::First, true));
-  }
-
-  // Always run forward to the first checkpoint after the primordial one.
-  SendMessage(ResumeMessage(/* aForward = */ true));
 }
 
 void ChildProcessInfo::OnCrash(const char* aWhy) {
@@ -291,11 +255,11 @@ static bool gHasPendingMessageRunnable;
 // considering that child to be hung.
 static const size_t HangSeconds = 30;
 
-Message::UniquePtr ChildProcessInfo::WaitUntilPaused() {
+void ChildProcessInfo::WaitUntilPaused() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (IsPaused()) {
-    return nullptr;
+    return;
   }
 
   bool sentTerminateMessage = false;
@@ -307,9 +271,9 @@ Message::UniquePtr ChildProcessInfo::WaitUntilPaused() {
     Message::UniquePtr msg = ExtractChildMessage(&process);
 
     if (msg) {
-      OnIncomingMessage(*msg, /* aForwardToControl = */ false);
+      OnIncomingMessage(*msg);
       if (IsPaused()) {
-        return msg;
+        return;
       }
     } else {
       if (gChildrenAreDebugging || IsRecording()) {
@@ -357,7 +321,7 @@ void ChildProcessInfo::MaybeProcessPendingMessageRunnable() {
 
     if (msg) {
       MonitorAutoUnlock unlock(*gMonitor);
-      process->OnIncomingMessage(*msg, /* aForwardToControl = */ true);
+      process->OnIncomingMessage(*msg);
     } else {
       break;
     }

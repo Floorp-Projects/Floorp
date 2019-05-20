@@ -12,7 +12,7 @@ const {
   parseURLEncodedText,
   parseURLParams,
   maybeEscapePropertyName,
-  getGripPreviewItems
+  getGripPreviewItems,
 } = require("./reps/rep-utils");
 
 module.exports = {
@@ -23,12 +23,12 @@ module.exports = {
   parseURLEncodedText,
   parseURLParams,
   getGripPreviewItems,
-  objectInspector
+  objectInspector,
 };
 
 export type {
   RdpGrip,
   GripProperties,
   Node,
-  Grip
+  Grip,
 } from "./object-inspector/types";

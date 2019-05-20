@@ -4,10 +4,10 @@
 
 const stubs = new Map();
 stubs.set("Infinity", {
-  type: "Infinity"
+  type: "Infinity",
 });
 stubs.set("NegativeInfinity", {
-  type: "-Infinity"
+  type: "-Infinity",
 });
 
 module.exports = stubs;

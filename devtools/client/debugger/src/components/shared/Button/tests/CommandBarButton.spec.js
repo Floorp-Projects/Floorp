@@ -35,6 +35,6 @@ describe("debugBtn", () => {
     const onClickSpy = jest.fn();
     const wrapper = shallow(<debugBtn onClick={onClickSpy} />);
     wrapper.simulate("click");
-    expect(onClickSpy).toBeCalled();
+    expect(onClickSpy).toHaveBeenCalled();
   });
 });

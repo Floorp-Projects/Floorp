@@ -63,7 +63,7 @@ exports.viewSourceInDebugger = async function(
   const dbg = await toolbox.loadTool("jsdebugger");
   const source =
     sourceId ? dbg.getSourceByActorId(sourceId) : dbg.getSourceByURL(sourceURL);
-  if (source) {
+  if (source && dbg.canLoadSource(source.id)) {
     await toolbox.selectTool("jsdebugger", reason);
     try {
       await dbg.selectSource(source.id, sourceLine, sourceColumn);

@@ -41,7 +41,6 @@ var localMuxerModules = {
 // that we can chunk matches coming in that timeframe into a single call.
 const CHUNK_MATCHES_DELAY_MS = 16;
 
-const DEFAULT_PROVIDERS = ["UnifiedComplete"];
 const DEFAULT_MUXER = "UnifiedComplete";
 
 /**
@@ -52,12 +51,8 @@ const DEFAULT_MUXER = "UnifiedComplete";
 class ProvidersManager {
   constructor() {
     // Tracks the available providers.
-    // This is a double map, first it maps by PROVIDER_TYPE, then
-    // registerProvider maps by provider.name: { type: { name: provider }}
-    this.providers = new Map();
-    for (let type of Object.values(UrlbarUtils.PROVIDER_TYPE)) {
-      this.providers.set(type, new Map());
-    }
+    // This is a sorted array, with IMMEDIATE providers at the top.
+    this.providers = [];
     for (let [symbol, module] of Object.entries(localProviderModules)) {
       let {[symbol]: provider} = ChromeUtils.import(module, {});
       this.registerProvider(provider);
@@ -90,7 +85,11 @@ class ProvidersManager {
       throw new Error(`Unknown provider type ${provider.type}`);
     }
     logger.info(`Registering provider ${provider.name}`);
-    this.providers.get(provider.type).set(provider.name, provider);
+    if (provider.type == UrlbarUtils.PROVIDER_TYPE.IMMEDIATE) {
+      this.providers.unshift(provider);
+    } else {
+      this.providers.push(provider);
+    }
   }
 
   /**
@@ -99,7 +98,10 @@ class ProvidersManager {
    */
   unregisterProvider(provider) {
     logger.info(`Unregistering provider ${provider.name}`);
-    this.providers.get(provider.type).delete(provider.name);
+    let index = this.providers.indexOf(provider);
+    if (index != -1) {
+      this.providers.splice(index, 1);
+    }
   }
 
   /**
@@ -139,9 +141,12 @@ class ProvidersManager {
     if (!muxer) {
       throw new Error(`Muxer with name ${muxerName} not found`);
     }
-    // Define the list of providers to use.
-    let providers = queryContext.providers || DEFAULT_PROVIDERS;
-    providers = filterProviders(this.providers, providers);
+
+    // If the queryContext specifies a list of providers to use, filter on it,
+    // otherwise just pass the full list of providers.
+    let providers = queryContext.providers ?
+                      this.providers.filter(p => queryContext.providers.includes(p.name)) :
+                      this.providers;
 
     let query = new Query(queryContext, controller, muxer, providers);
     this.queries.set(queryContext, query);
@@ -213,10 +218,11 @@ class Query {
     this.started = false;
     this.canceled = false;
     this.complete = false;
-    // Array of acceptable RESULT_SOURCE values for this query. Providers not
-    // returning any of these will be skipped, as well as results not part of
-    // this subset (Note we still expect the provider to do its own internal
-    // filtering, our additional filtering will be for sanity).
+
+    // Array of acceptable RESULT_SOURCE values for this query. Providers can
+    // use queryContext.acceptableSources to decide whether they want to be
+    // invoked or not.
+    // This is also used to filter results in add().
     this.acceptableSources = [];
   }
 
@@ -229,37 +235,36 @@ class Query {
     }
     this.started = true;
     UrlbarTokenizer.tokenize(this.context);
+
     this.acceptableSources = getAcceptableMatchSources(this.context);
     logger.debug(`Acceptable sources ${this.acceptableSources}`);
+    // Pass a copy so the provider can't modify our local version.
+    this.context.acceptableSources = this.acceptableSources.slice();
 
+    // Check which providers should be queried.
+    let providers = this.providers.filter(p => p.isActive(this.context));
+    // Check if any of the remaining providers wants to restrict the search.
+    let restrictProviders = providers.filter(p => p.isRestricting(this.context));
+    if (restrictProviders.length) {
+      providers = restrictProviders;
+    }
+
+    // Start querying providers.
     let promises = [];
-    for (let provider of this.providers.get(UrlbarUtils.PROVIDER_TYPE.IMMEDIATE).values()) {
+    let delayStarted = false;
+    for (let provider of providers) {
       if (this.canceled) {
         break;
       }
-      // Immediate type providers may return heuristic results, that usually can
-      // bypass suggest.* preferences, so we always execute them, regardless of
-      // this.acceptableSources, and filter results in add().
-      promises.push(provider.startQuery(this.context, this.add.bind(this)));
-    }
-
-    // Tracks the delay timer. We will fire (in this specific case, cancel would
-    // do the same, since the callback is empty) the timer when the search is
-    // canceled, unblocking start().
-    this._sleepTimer = new SkippableTimer(() => {}, UrlbarPrefs.get("delay"));
-    await this._sleepTimer.promise;
-
-    for (let providerType of [UrlbarUtils.PROVIDER_TYPE.NETWORK,
-                              UrlbarUtils.PROVIDER_TYPE.PROFILE,
-                              UrlbarUtils.PROVIDER_TYPE.EXTENSION]) {
-      for (let provider of this.providers.get(providerType).values()) {
-        if (this.canceled) {
-          break;
-        }
-        if (this._providerHasAcceptableSources(provider)) {
-          promises.push(provider.startQuery(this.context, this.add.bind(this)));
-        }
+      if (provider.type != UrlbarUtils.PROVIDER_TYPE.IMMEDIATE && !delayStarted) {
+        delayStarted = true;
+        // Tracks the delay timer. We will fire (in this specific case, cancel
+        // would do the same, since the callback is empty) the timer when the
+        // search is canceled, unblocking start().
+        this._sleepTimer = new SkippableTimer(() => {}, UrlbarPrefs.get("delay"));
+        await this._sleepTimer.promise;
       }
+      promises.push(provider.startQuery(this.context, this.add.bind(this)));
     }
 
     logger.info(`Queried ${promises.length} providers`);
@@ -286,10 +291,8 @@ class Query {
       return;
     }
     this.canceled = true;
-    for (let providers of this.providers.values()) {
-      for (let provider of providers.values()) {
-        provider.cancelQuery(this.context);
-      }
+    for (let provider of this.providers) {
+      provider.cancelQuery(this.context);
     }
     if (this._chunkTimer) {
       this._chunkTimer.cancel().catch(Cu.reportError);
@@ -348,15 +351,6 @@ class Query {
     } else if (!this._chunkTimer) {
       this._chunkTimer = new SkippableTimer(notifyResults, CHUNK_MATCHES_DELAY_MS);
     }
-  }
-
-  /**
-   * Returns whether a provider's sources are acceptable for this query.
-   * @param {object} provider A provider object.
-   * @returns {boolean}whether the provider sources are acceptable.
-   */
-  _providerHasAcceptableSources(provider) {
-    return provider.sources.some(s => this.acceptableSources.includes(s));
   }
 }
 
@@ -479,21 +473,4 @@ function getAcceptableMatchSources(context) {
     }
   }
   return acceptedSources;
-}
-
-/* Given a providers Map and a list of provider names, produces a filtered
- * Map containing only the provided names.
- * @param providersMap {Map} providers mapped by type and name
- * @param names {array} list of provider names to retain
- * @returns {Map} a new filtered providers Map
- */
-function filterProviders(providersMap, names) {
-  let providers = new Map();
-  for (let [type, providersByName] of providersMap) {
-    providers.set(type, new Map());
-    for (let name of Array.from(providersByName.keys()).filter(n => names.includes(n))) {
-      providers.get(type).set(name, providersByName.get(name));
-    }
-  }
-  return providers;
 }

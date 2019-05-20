@@ -12,11 +12,11 @@ add_task(async function() {
 
   let data = readFileData(do_get_file("favicon-normal16.png"));
   PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(ICON16_URL),
-                                          data, data.length, "image/png");
+                                          data, "image/png");
   await setFaviconForPage(PAGE_URL, ICON16_URL);
   data = readFileData(do_get_file("favicon-normal32.png"));
   PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(ICON32_URL),
-                                          data, data.length, "image/png");
+                                          data, "image/png");
   await setFaviconForPage(PAGE_URL, ICON32_URL);
 
   const PAGE_ICON_URL = "page-icon:" + PAGE_URL;

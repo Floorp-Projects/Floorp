@@ -10,7 +10,7 @@ const ObjectClient = require("../__mocks__/object-client");
 const {
   createNode,
   makeNodesForEntries,
-  makeNumericalBuckets
+  makeNumericalBuckets,
 } = require("../../utils/node");
 
 const repsPath = "../../../reps";
@@ -20,12 +20,12 @@ const gripArrayRepStubs = require(`${repsPath}/stubs/grip-array`);
 function mount(props, overrides = {}) {
   const client = {
     createObjectClient:
-      overrides.createObjectClient || jest.fn(grip => ObjectClient(grip))
+      overrides.createObjectClient || jest.fn(grip => ObjectClient(grip)),
   };
 
   return mountObjectInspector({
     client,
-    props
+    props,
   });
 }
 
@@ -38,10 +38,10 @@ describe("createObjectClient", () => {
         {
           path: "root",
           contents: {
-            value: stub
-          }
-        }
-      ]
+            value: stub,
+          },
+        },
+      ],
     });
 
     expect(client.createObjectClient.mock.calls[0][0]).toBe(stub);
@@ -54,7 +54,7 @@ describe("createObjectClient", () => {
 
     const { client } = mount({
       autoExpandDepth: 1,
-      roots: [entriesNode]
+      roots: [entriesNode],
     });
 
     expect(client.createObjectClient.mock.calls[0][0]).toBe(grip);
@@ -67,7 +67,7 @@ describe("createObjectClient", () => {
 
     const { client } = mount({
       autoExpandDepth: 1,
-      roots: [bucket]
+      roots: [bucket],
     });
     expect(client.createObjectClient.mock.calls[0][0]).toBe(grip);
   });
@@ -80,7 +80,7 @@ describe("createObjectClient", () => {
 
     const { client } = mount({
       autoExpandDepth: 1,
-      roots: [subBucket]
+      roots: [subBucket],
     });
 
     expect(client.createObjectClient.mock.calls[0][0]).toBe(grip);
@@ -98,7 +98,7 @@ describe("createObjectClient", () => {
     mount(
       {
         autoExpandDepth: 1,
-        roots: [root]
+        roots: [root],
       },
       { createObjectClient }
     );

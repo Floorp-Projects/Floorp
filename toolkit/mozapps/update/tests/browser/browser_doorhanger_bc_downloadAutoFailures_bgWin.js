@@ -43,8 +43,9 @@ add_task(async function doorhanger_bc_downloadAutoFailures_bgWin() {
   let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(extraWindow);
 
-  let updateParams = "&badURL=1";
-  await runDoorhangerUpdateTest(updateParams, 1, [
+  let params = {checkAttempts: 1,
+                queryString: "&badURL=1"};
+  await runDoorhangerUpdateTest(params, [
     getBackgroundWindowHandler(false),
     getBackgroundWindowHandler(true),
     {

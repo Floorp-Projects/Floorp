@@ -10,7 +10,7 @@ const {
   getActiveSearch,
   getFrameworkGroupingState,
   getPaneCollapse,
-  getHighlightedLineRange
+  getHighlightedLineRange,
 } = selectors;
 
 describe("ui", () => {

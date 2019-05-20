@@ -1,3 +1,7 @@
+extern crate clap;
+extern crate env_logger;
+#[cfg(feature = "ssl")]
+extern crate openssl;
 /// WebSocket server to demonstrate ssl encryption within an a websocket server.
 ///
 /// The resulting executable takes three arguments:
@@ -7,37 +11,32 @@
 ///
 /// For more details concerning setting up the SSL context, see rust-openssl docs.
 extern crate ws;
-extern crate clap;
-#[cfg(feature="ssl")]
-extern crate openssl;
-extern crate env_logger;
 
-#[cfg(feature="ssl")]
-use std::rc::Rc;
-#[cfg(feature="ssl")]
-use std::io::Read;
-#[cfg(feature="ssl")]
+#[cfg(feature = "ssl")]
 use std::fs::File;
+#[cfg(feature = "ssl")]
+use std::io::Read;
+#[cfg(feature = "ssl")]
+use std::rc::Rc;
 
-#[cfg(feature="ssl")]
-use openssl::ssl::{SslAcceptor, SslAcceptorBuilder, SslMethod, SslStream};
-#[cfg(feature="ssl")]
+#[cfg(feature = "ssl")]
 use openssl::pkey::PKey;
-#[cfg(feature="ssl")]
-use openssl::x509::{X509, X509Ref};
+#[cfg(feature = "ssl")]
+use openssl::ssl::{SslAcceptor, SslMethod, SslStream};
+#[cfg(feature = "ssl")]
+use openssl::x509::X509;
 
-#[cfg(feature="ssl")]
+#[cfg(feature = "ssl")]
 use ws::util::TcpStream;
 
-#[cfg(feature="ssl")]
+#[cfg(feature = "ssl")]
 struct Server {
     out: ws::Sender,
     ssl: Rc<SslAcceptor>,
 }
 
-#[cfg(feature="ssl")]
+#[cfg(feature = "ssl")]
 impl ws::Handler for Server {
-
     fn on_message(&mut self, msg: ws::Message) -> ws::Result<()> {
         self.out.send(msg) // simple echo
     }
@@ -47,28 +46,34 @@ impl ws::Handler for Server {
     }
 }
 
-#[cfg(feature="ssl")]
-fn main () {
+#[cfg(feature = "ssl")]
+fn main() {
     // Setup logging
-    env_logger::init().unwrap();
+    env_logger::init();
 
     // setup command line arguments
     let matches = clap::App::new("WS-RS SSL Server Configuration")
         .version("1.0")
         .author("Jason Housley <housleyjk@gmail.com>")
         .about("Establish a WebSocket server that encrypts and decrypts messages.")
-        .arg(clap::Arg::with_name("ADDR")
-             .help("Address on which to bind the server.")
-             .required(true)
-             .index(1))
-        .arg(clap::Arg::with_name("CERT")
-             .help("Path to the SSL certificate.")
-             .required(true)
-             .index(2))
-        .arg(clap::Arg::with_name("KEY")
-             .help("Path to the SSL certificate key.")
-             .required(true)
-             .index(3))
+        .arg(
+            clap::Arg::with_name("ADDR")
+                .help("Address on which to bind the server.")
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            clap::Arg::with_name("CERT")
+                .help("Path to the SSL certificate.")
+                .required(true)
+                .index(2),
+        )
+        .arg(
+            clap::Arg::with_name("KEY")
+                .help("Path to the SSL certificate key.")
+                .required(true)
+                .index(3),
+        )
         .get_matches();
 
     let cert = {
@@ -81,33 +86,37 @@ fn main () {
         PKey::private_key_from_pem(data.as_ref()).unwrap()
     };
 
-    let acceptor = Rc::new(SslAcceptorBuilder::mozilla_intermediate(
-        SslMethod::tls(),
-        &pkey,
-        &cert,
-        std::iter::empty::<X509Ref>(),
-    ).unwrap().build());
+    let acceptor = Rc::new({
+        let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+        builder.set_private_key(&pkey).unwrap();
+        builder.set_certificate(&cert).unwrap();
 
-    ws::Builder::new().with_settings(ws::Settings {
-        encrypt_server: true,
-        ..ws::Settings::default()
-    }).build(|out: ws::Sender| {
-        Server {
+        builder.build()
+    });
+
+    ws::Builder::new()
+        .with_settings(ws::Settings {
+            encrypt_server: true,
+            ..ws::Settings::default()
+        })
+        .build(|out: ws::Sender| Server {
             out: out,
             ssl: acceptor.clone(),
-        }
-    }).unwrap().listen(matches.value_of("ADDR").unwrap()).unwrap();
+        })
+        .unwrap()
+        .listen(matches.value_of("ADDR").unwrap())
+        .unwrap();
 }
 
-#[cfg(feature="ssl")]
+#[cfg(feature = "ssl")]
 fn read_file(name: &str) -> std::io::Result<Vec<u8>> {
-    let mut file = try!(File::open(name));
+    let mut file = File::open(name)?;
     let mut buf = Vec::new();
-    try!(file.read_to_end(&mut buf));
+    file.read_to_end(&mut buf)?;
     Ok(buf)
 }
 
-#[cfg(not(feature="ssl"))]
+#[cfg(not(feature = "ssl"))]
 fn main() {
     println!("SSL feature is not enabled.")
 }

@@ -11,7 +11,7 @@ const stubs = require("../stubs/grip-array");
 const {
   expectActorAttribute,
   getSelectableInInspectorGrips,
-  getGripLengthBubbleText
+  getGripLengthBubbleText,
 } = require("./test-helpers");
 const { maxLengthMap } = GripArray;
 
@@ -19,7 +19,7 @@ function shallowRenderRep(object, props = {}) {
   return shallow(
     GripArray.rep({
       object,
-      ...props
+      ...props,
     })
   );
 }
@@ -76,7 +76,7 @@ describe("GripArray - max props", () => {
     expect(
       renderRep({
         mode: MODE.LONG,
-        title: "CustomTitle"
+        title: "CustomTitle",
       }).text()
     ).toBe(`CustomTitle${length} [ 1, "foo", {} ]`);
   });
@@ -145,7 +145,7 @@ describe("GripArray - recursive array", () => {
     const renderRep = props => shallowRenderRep(object, props);
     let length = getGripLengthBubbleText(object);
     const childArrayLength = getGripLengthBubbleText(object.preview.items[0], {
-      mode: MODE.TINY
+      mode: MODE.TINY,
     });
 
     const defaultOutput = `Array${length} [ ${childArrayLength} […] ]`;

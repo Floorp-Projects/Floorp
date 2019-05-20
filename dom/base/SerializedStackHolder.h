@@ -49,10 +49,9 @@ class SerializedStackHolder {
 // monitor later on. This may be called on either the main or a worker thread.
 //
 // This always creates a stack, even if the net monitor isn't active for the
-// associated window. Ideally we would only create the stack if the net monitor
-// was active, but there doesn't seem to be an easy way to determine this.
-// The operations this is used with should be rare enough and/or have enough
-// other associated costs that the perf impact is low. See bug 1546736.
+// associated window. The net monitor will only be active if the associated
+// docshell or worker's WatchedByDevtools flag is set, so this should be checked
+// before creating the stack.
 UniquePtr<SerializedStackHolder> GetCurrentStackForNetMonitor(JSContext* aCx);
 
 // If aStackHolder is non-null, this notifies the net monitor that aStackHolder

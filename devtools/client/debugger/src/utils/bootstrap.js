@@ -12,7 +12,7 @@ const { Provider } = require("react-redux");
 import { isFirefoxPanel, isDevelopment, isTesting } from "devtools-environment";
 import SourceMaps, {
   startSourceMapWorker,
-  stopSourceMapWorker
+  stopSourceMapWorker,
 } from "devtools-source-map";
 import * as search from "../workers/search";
 import * as prettyPrint from "../workers/pretty-print";
@@ -46,7 +46,7 @@ function renderPanel(component, store) {
 
 type Workers = {
   sourceMaps: typeof SourceMaps,
-  evaluationsParser: typeof ParserDispatcher
+  evaluationsParser: typeof ParserDispatcher,
 };
 
 export function bootstrapStore(
@@ -60,7 +60,7 @@ export function bootstrapStore(
     timing: isDevelopment(),
     makeThunkArgs: (args, state) => {
       return { ...args, client, ...workers, panel };
-    }
+    },
   });
 
   const store = createStore(combineReducers(reducers), initialState);

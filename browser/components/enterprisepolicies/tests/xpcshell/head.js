@@ -7,7 +7,15 @@
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+const {updateAppInfo, getAppInfo} = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
 const {FileTestUtils} = ChromeUtils.import("resource://testing-common/FileTestUtils.jsm");
+
+updateAppInfo({
+  name: "XPCShell",
+  ID: "xpcshell@tests.mozilla.org",
+  version: "48",
+  platformVersion: "48",
+});
 
 // This initializes the policy engine for xpcshell tests
 let policies = Cc["@mozilla.org/enterprisepolicies;1"].getService(Ci.nsIObserver);

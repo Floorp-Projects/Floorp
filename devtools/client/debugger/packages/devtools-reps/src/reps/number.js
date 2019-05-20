@@ -17,8 +17,8 @@ Number.propTypes = {
   object: PropTypes.oneOfType([
     PropTypes.object,
     PropTypes.number,
-    PropTypes.bool
-  ]).isRequired
+    PropTypes.bool,
+  ]).isRequired,
 };
 
 function Number(props) {
@@ -42,5 +42,5 @@ function supportsObject(object, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(Number),
-  supportsObject
+  supportsObject,
 };

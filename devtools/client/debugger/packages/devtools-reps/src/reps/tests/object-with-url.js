@@ -18,7 +18,7 @@ describe("ObjectWithURL", () => {
   it("renders with correct class name and content", () => {
     const renderedComponent = shallow(
       ObjectWithURL.rep({
-        object: stub
+        object: stub,
       })
     );
     expect(renderedComponent.text()).toBe(

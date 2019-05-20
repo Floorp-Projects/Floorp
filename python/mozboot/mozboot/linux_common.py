@@ -15,6 +15,16 @@ def is_non_x86_64():
     return os.uname()[4] != 'x86_64'
 
 
+class SccacheInstall(object):
+    def __init__(self, **kwargs):
+        pass
+
+    def ensure_sccache_packages(self, state_dir, checkout_root):
+        from mozboot import sccache
+
+        self.install_toolchain_artifact(state_dir, checkout_root, sccache.LINUX_SCCACHE)
+
+
 class StyloInstall(object):
     def __init__(self, **kwargs):
         pass

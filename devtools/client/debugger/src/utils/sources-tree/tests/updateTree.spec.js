@@ -25,16 +25,16 @@ function formatTree(tree) {
 const sources = [
   {
     id: "server1.conn13.child1/39",
-    url: "https://davidwalsh.name/"
+    url: "https://davidwalsh.name/",
   },
   {
     id: "server1.conn13.child1/37",
-    url: "https://davidwalsh.name/source1.js"
+    url: "https://davidwalsh.name/source1.js",
   },
   {
     id: "server1.conn13.child1/40",
-    url: "https://davidwalsh.name/source2.js"
-  }
+    url: "https://davidwalsh.name/source2.js",
+  },
 ];
 
 const threads = [
@@ -42,8 +42,8 @@ const threads = [
     actor: "FakeThread",
     url: "https://davidwalsh.name",
     type: 1,
-    name: "FakeThread"
-  }
+    name: "FakeThread",
+  },
 ];
 
 const debuggeeUrl = "blah";
@@ -54,7 +54,7 @@ describe("calls updateTree.js", () => {
     const { sourceTree, uncollapsedTree } = createTree({
       debuggeeUrl,
       sources: prevSources,
-      threads
+      threads,
     });
     const newTree = updateTree({
       debuggeeUrl,
@@ -62,7 +62,7 @@ describe("calls updateTree.js", () => {
       newSources: createSourcesMap([sources[0], sources[1]]),
       uncollapsedTree,
       sourceTree,
-      threads
+      threads,
     });
 
     expect(formatTree(newTree)).toMatchSnapshot();
@@ -74,7 +74,7 @@ describe("calls updateTree.js", () => {
     const { sourceTree, uncollapsedTree } = createTree({
       debuggeeUrl,
       sources: prevSources,
-      threads
+      threads,
     });
 
     const newTree = updateTree({
@@ -84,7 +84,7 @@ describe("calls updateTree.js", () => {
       uncollapsedTree,
       sourceTree,
       projectRoot: "",
-      threads
+      threads,
     });
 
     expect(formatTree(newTree)).toMatchSnapshot();
@@ -98,7 +98,7 @@ describe("calls updateTree.js", () => {
     const { sourceTree, uncollapsedTree } = createTree({
       debuggeeUrl,
       sources: prevSources,
-      threads
+      threads,
     });
 
     const newTree = updateTree({
@@ -108,7 +108,7 @@ describe("calls updateTree.js", () => {
       uncollapsedTree,
       sourceTree,
       projectRoot: "",
-      threads
+      threads,
     });
 
     expect(formatTree(newTree)).toMatchSnapshot();

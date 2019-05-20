@@ -67,7 +67,7 @@ function onFocus() {
 
         plugin.focus();
 
-        tid = setTimeout("menuTimeout()", 5000);
+        tid = setTimeout(menuTimeout, 5000);
 
         openContextMenuFor(toolbar);
     }

@@ -9,15 +9,15 @@ stubs.set("Pending", {
   class: "Promise",
   promiseState: {
     state: "pending",
-    creationTimestamp: 1477327760242.5752
+    creationTimestamp: 1477327760242.5752,
   },
   ownPropertyLength: 0,
   preview: {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("FulfilledWithNumber", {
@@ -28,15 +28,15 @@ stubs.set("FulfilledWithNumber", {
     state: "fulfilled",
     value: 42,
     creationTimestamp: 1477327760242.721,
-    timeToSettle: 0.018497000000479602
+    timeToSettle: 0.018497000000479602,
   },
   ownPropertyLength: 0,
   preview: {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("FulfilledWithString", {
@@ -47,15 +47,15 @@ stubs.set("FulfilledWithString", {
     state: "fulfilled",
     value: "foo",
     creationTimestamp: 1477327760243.2483,
-    timeToSettle: 0.0019969999998465937
+    timeToSettle: 0.0019969999998465937,
   },
   ownPropertyLength: 0,
   preview: {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("FulfilledWithObject", {
@@ -71,18 +71,18 @@ stubs.set("FulfilledWithObject", {
       extensible: true,
       frozen: false,
       sealed: false,
-      ownPropertyLength: 2
+      ownPropertyLength: 2,
     },
     creationTimestamp: 1477327760243.2214,
-    timeToSettle: 0.002035999999861815
+    timeToSettle: 0.002035999999861815,
   },
   ownPropertyLength: 0,
   preview: {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("FulfilledWithArray", {
@@ -101,19 +101,19 @@ stubs.set("FulfilledWithArray", {
       ownPropertyLength: 4,
       preview: {
         kind: "ArrayLike",
-        length: 3
-      }
+        length: 3,
+      },
     },
     creationTimestamp: 1477327760242.9597,
-    timeToSettle: 0.006158000000141328
+    timeToSettle: 0.006158000000141328,
   },
   ownPropertyLength: 0,
   preview: {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("FulfilledWithNode", {
@@ -138,21 +138,21 @@ stubs.set("FulfilledWithNode", {
         attributes: {
           id: "btn-1",
           class: "btn btn-log",
-          type: "button"
+          type: "button",
         },
-        attributesLength: 3
-      }
+        attributesLength: 3,
+      },
     },
     creationTimestamp: 1480423091620.3716,
-    timeToSettle: 0.02842400000372436
+    timeToSettle: 0.02842400000372436,
   },
   ownPropertyLength: 0,
   preview: {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 stubs.set("FulfilledWithDisconnectedNode", {
@@ -177,21 +177,21 @@ stubs.set("FulfilledWithDisconnectedNode", {
         attributes: {
           id: "btn-1",
           class: "btn btn-log",
-          type: "button"
+          type: "button",
         },
-        attributesLength: 3
-      }
+        attributesLength: 3,
+      },
     },
     creationTimestamp: 1480423091620.3716,
-    timeToSettle: 0.02842400000372436
+    timeToSettle: 0.02842400000372436,
   },
   ownPropertyLength: 0,
   preview: {
     kind: "Object",
     ownProperties: {},
     ownPropertiesLength: 0,
-    safeGetterValues: {}
-  }
+    safeGetterValues: {},
+  },
 });
 
 module.exports = stubs;

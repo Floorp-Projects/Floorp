@@ -27,7 +27,7 @@ GripRep.propTypes = {
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
   onInspectIconClick: PropTypes.func,
-  noGrip: PropTypes.bool
+  noGrip: PropTypes.bool,
 };
 
 const DEFAULT_TITLE = "Object";
@@ -37,7 +37,7 @@ function GripRep(props) {
 
   const config = {
     "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-object"
+    className: "objectBox objectBox-object",
   };
 
   if (mode === MODE.TINY) {
@@ -50,7 +50,7 @@ function GripRep(props) {
       tinyModeItems.push(
         span(
           {
-            className: "objectLeftBrace"
+            className: "objectLeftBrace",
           },
           "{"
         ),
@@ -59,14 +59,14 @@ function GripRep(props) {
               {
                 key: "more",
                 className: "more-ellipsis",
-                title: "more…"
+                title: "more…",
               },
               "…"
             )
           : null,
         span(
           {
-            className: "objectRightBrace"
+            className: "objectRightBrace",
           },
           "}"
         )
@@ -83,14 +83,14 @@ function GripRep(props) {
     getTitleElement(props, object),
     span(
       {
-        className: "objectLeftBrace"
+        className: "objectLeftBrace",
       },
       " { "
     ),
     ...interleave(propsArray, ", "),
     span(
       {
-        className: "objectRightBrace"
+        className: "objectRightBrace",
       },
       " }"
     )
@@ -100,7 +100,7 @@ function GripRep(props) {
 function getTitleElement(props, object) {
   return span(
     {
-      className: "objectTitle"
+      className: "objectTitle",
     },
     getTitle(props, object)
   );
@@ -145,8 +145,8 @@ function propIterator(props, object, max) {
       Rep({
         object: object.preview.wrappedValue,
         mode: props.mode || MODE.TINY,
-        defaultRep: Grip
-      })
+        defaultRep: Grip,
+      }),
     ];
   }
 
@@ -201,7 +201,7 @@ function propIterator(props, object, max) {
         equal: ": ",
         defaultRep: Grip,
         title: null,
-        suppressQuotes
+        suppressQuotes,
       });
     });
 
@@ -221,7 +221,7 @@ function propIterator(props, object, max) {
         {
           key: "more",
           className: "more-ellipsis",
-          title: "more…"
+          title: "more…",
         },
         "…"
       )
@@ -260,7 +260,7 @@ function getProps(componentProps, properties, indexes, suppressQuotes) {
       equal: ": ",
       defaultRep: Grip,
       title: null,
-      suppressQuotes
+      suppressQuotes,
     });
   });
 }
@@ -342,7 +342,7 @@ maxLengthMap.set(MODE.LONG, 10);
 const Grip = {
   rep: wrapRender(GripRep),
   supportsObject,
-  maxLengthMap
+  maxLengthMap,
 };
 
 // Exports from this module

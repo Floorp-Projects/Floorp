@@ -56,6 +56,9 @@ static int gRecordingPid;
 // Whether to spew record/replay messages to stderr.
 static bool gSpewEnabled;
 
+// Whether this is the main child.
+static bool gMainChild;
+
 extern "C" {
 
 MOZ_EXPORT void RecordReplayInterface_Initialize(int aArgc, char* aArgv[]) {
@@ -95,16 +98,20 @@ MOZ_EXPORT void RecordReplayInterface_Initialize(int aArgc, char* aArgv[]) {
       MOZ_CRASH("Bad ProcessKind");
   }
 
-  if (IsRecordingOrReplaying() && TestEnv("WAIT_AT_START")) {
+  if (IsRecording() && TestEnv("MOZ_RECORDING_WAIT_AT_START")) {
     BusyWait();
   }
 
-  if (IsMiddleman() && TestEnv("MIDDLEMAN_WAIT_AT_START")) {
+  if (IsReplaying() && TestEnv("MOZ_REPLAYING_WAIT_AT_START")) {
+    BusyWait();
+  }
+
+  if (IsMiddleman() && TestEnv("MOZ_MIDDLEMAN_WAIT_AT_START")) {
     BusyWait();
   }
 
   gPid = getpid();
-  if (TestEnv("RECORD_REPLAY_SPEW")) {
+  if (TestEnv("MOZ_RECORD_REPLAY_SPEW")) {
     gSpewEnabled = true;
   }
 
@@ -159,6 +166,8 @@ MOZ_EXPORT void RecordReplayInterface_Initialize(int aArgc, char* aArgv[]) {
   InitializeRewindState();
   gRecordingPid = RecordReplayValue(gPid);
 
+  gMainChild = IsRecording();
+
   gInitialized = true;
 }
 
@@ -201,25 +210,18 @@ MOZ_EXPORT void RecordReplayInterface_InternalInvalidateRecording(
 
 }  // extern "C"
 
-// How many recording endpoints have been flushed to the recording.
-static size_t gNumEndpoints;
-
 void FlushRecording() {
   MOZ_RELEASE_ASSERT(IsRecording());
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
 
-  // Save the endpoint of the recording.
-  js::ExecutionPoint endpoint = navigation::GetRecordingEndpoint();
+  // The recording can only be flushed when we are at a checkpoint.
+  // Save this endpoint to the recording.
+  size_t endpoint = GetLastCheckpoint();
   Stream* endpointStream = gRecordingFile->OpenStream(StreamName::Main, 0);
-  endpointStream->WriteScalar(++gNumEndpoints);
-  endpointStream->WriteBytes(&endpoint, sizeof(endpoint));
+  endpointStream->WriteScalar(endpoint);
 
   gRecordingFile->PreventStreamWrites();
-
   gRecordingFile->Flush();
-
-  child::NotifyFlushedRecording();
-
   gRecordingFile->AllowStreamWrites();
 }
 
@@ -246,34 +248,6 @@ static bool LoadNextRecordingIndex() {
   return found;
 }
 
-bool HitRecordingEndpoint() {
-  MOZ_RELEASE_ASSERT(IsReplaying());
-  MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
-
-  // The debugger will call this method in a loop, so we don't have to do
-  // anything fancy to try to get the most up to date endpoint. As long as we
-  // can make some progress in attempting to find a later endpoint, we can
-  // return control to the debugger.
-
-  // Check if there is a new endpoint in the endpoint data stream.
-  Stream* endpointStream = gRecordingFile->OpenStream(StreamName::Main, 0);
-  if (!endpointStream->AtEnd()) {
-    js::ExecutionPoint endpoint;
-    size_t index = endpointStream->ReadScalar();
-    endpointStream->ReadBytes(&endpoint, sizeof(endpoint));
-    navigation::SetRecordingEndpoint(index, endpoint);
-    return true;
-  }
-
-  // Check if there is more data in the recording.
-  if (LoadNextRecordingIndex()) {
-    return true;
-  }
-
-  // OK, we hit the most up to date endpoint in the recording.
-  return false;
-}
-
 void HitEndOfRecording() {
   MOZ_RELEASE_ASSERT(IsReplaying());
   MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
@@ -288,6 +262,21 @@ void HitEndOfRecording() {
     // main thread.
     Thread::Wait();
   }
+}
+
+// When replaying, the last endpoint loaded from the recording.
+static size_t gRecordingEndpoint;
+
+size_t RecordingEndpoint() {
+  MOZ_RELEASE_ASSERT(IsReplaying());
+  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
+
+  Stream* endpointStream = gRecordingFile->OpenStream(StreamName::Main, 0);
+  while (!endpointStream->AtEnd()) {
+    gRecordingEndpoint = endpointStream->ReadScalar();
+  }
+
+  return gRecordingEndpoint;
 }
 
 bool SpewEnabled() { return gSpewEnabled; }
@@ -314,6 +303,9 @@ const char* ThreadEventName(ThreadEvent aEvent) {
 }
 
 int GetRecordingPid() { return gRecordingPid; }
+
+bool IsMainChild() { return gMainChild; }
+void SetMainChild() { gMainChild = true; }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Record/Replay Assertions

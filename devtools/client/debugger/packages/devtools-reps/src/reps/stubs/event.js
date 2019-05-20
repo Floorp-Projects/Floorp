@@ -27,8 +27,8 @@ stubs.set("testEvent", {
         ownPropertyLength: 760,
         preview: {
           kind: "ObjectWithURL",
-          url: "http://example.com"
-        }
+          url: "http://example.com",
+        },
       },
       eventPhase: 2,
       bubbles: false,
@@ -45,8 +45,8 @@ stubs.set("testEvent", {
         ownPropertyLength: 760,
         preview: {
           kind: "ObjectWithURL",
-          url: "http://example.com"
-        }
+          url: "http://example.com",
+        },
       },
       explicitOriginalTarget: {
         type: "object",
@@ -58,10 +58,10 @@ stubs.set("testEvent", {
         ownPropertyLength: 760,
         preview: {
           kind: "ObjectWithURL",
-          url: "http://example.com"
-        }
+          url: "http://example.com",
+        },
       },
-      NONE: 0
+      NONE: 0,
     },
     target: {
       type: "object",
@@ -73,10 +73,10 @@ stubs.set("testEvent", {
       ownPropertyLength: 760,
       preview: {
         kind: "ObjectWithURL",
-        url: "http://example.com"
-      }
-    }
-  }
+        url: "http://example.com",
+      },
+    },
+  },
 });
 
 stubs.set("testMouseEvent", {
@@ -95,7 +95,7 @@ stubs.set("testMouseEvent", {
       clientX: 62,
       clientY: 18,
       layerX: 0,
-      layerY: 0
+      layerY: 0,
     },
     target: {
       type: "object",
@@ -111,12 +111,12 @@ stubs.set("testMouseEvent", {
         nodeName: "div",
         isConnected: true,
         attributes: {
-          id: "test"
+          id: "test",
         },
-        attributesLength: 1
-      }
-    }
-  }
+        attributesLength: 1,
+      },
+    },
+  },
 });
 
 stubs.set("testKeyboardEvent", {
@@ -133,7 +133,7 @@ stubs.set("testKeyboardEvent", {
     properties: {
       key: "Control",
       charCode: 0,
-      keyCode: 17
+      keyCode: 17,
     },
     target: {
       type: "object",
@@ -148,12 +148,12 @@ stubs.set("testKeyboardEvent", {
         nodeType: 1,
         nodeName: "body",
         attributes: {},
-        attributesLength: 0
-      }
+        attributesLength: 0,
+      },
     },
     eventKind: "key",
-    modifiers: []
-  }
+    modifiers: [],
+  },
 });
 
 stubs.set("testKeyboardEventWithModifiers", {
@@ -170,7 +170,7 @@ stubs.set("testKeyboardEventWithModifiers", {
     properties: {
       key: "M",
       charCode: 0,
-      keyCode: 77
+      keyCode: 77,
     },
     target: {
       type: "object",
@@ -185,12 +185,12 @@ stubs.set("testKeyboardEventWithModifiers", {
         nodeType: 1,
         nodeName: "body",
         attributes: {},
-        attributesLength: 0
-      }
+        attributesLength: 0,
+      },
     },
     eventKind: "key",
-    modifiers: ["Meta", "Shift"]
-  }
+    modifiers: ["Meta", "Shift"],
+  },
 });
 
 stubs.set("testMessageEvent", {
@@ -219,8 +219,8 @@ stubs.set("testMessageEvent", {
         ownPropertyLength: 760,
         preview: {
           kind: "ObjectWithURL",
-          url: ""
-        }
+          url: "",
+        },
       },
       ports: {
         type: "object",
@@ -229,7 +229,7 @@ stubs.set("testMessageEvent", {
         extensible: true,
         frozen: false,
         sealed: false,
-        ownPropertyLength: 0
+        ownPropertyLength: 0,
       },
       currentTarget: {
         type: "object",
@@ -241,12 +241,12 @@ stubs.set("testMessageEvent", {
         ownPropertyLength: 760,
         preview: {
           kind: "ObjectWithURL",
-          url: ""
-        }
+          url: "",
+        },
       },
       eventPhase: 2,
       bubbles: false,
-      cancelable: false
+      cancelable: false,
     },
     target: {
       type: "object",
@@ -258,10 +258,10 @@ stubs.set("testMessageEvent", {
       ownPropertyLength: 760,
       preview: {
         kind: "ObjectWithURL",
-        url: "http://example.com"
-      }
-    }
-  }
+        url: "http://example.com",
+      },
+    },
+  },
 });
 
 module.exports = stubs;

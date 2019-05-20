@@ -11,7 +11,7 @@ export type AstSource = {|
   id: SourceId,
   isWasm: boolean,
   text: string,
-  contentType: ?string
+  contentType: ?string,
 |};
 
 export type AstPosition = { +line: number, +column: number };

@@ -47,7 +47,7 @@ add_task(async function test_queryMultipleFolders_ids() {
   // using getNewQuery and getNewQueryOptions
   query = PlacesUtils.history.getNewQuery();
   options = PlacesUtils.history.getNewQueryOptions();
-  query.setParents(folderGuids, folderGuids.length);
+  query.setParents(folderGuids);
   options.sortingMode = options.SORT_BY_URI_ASCENDING;
   options.maxResults = maxResults;
   rootNode = PlacesUtils.history.executeQuery(query, options).root;
@@ -80,7 +80,7 @@ add_task(async function test_queryMultipleFolders_guids() {
   // using getNewQuery and getNewQueryOptions
   query = PlacesUtils.history.getNewQuery();
   options = PlacesUtils.history.getNewQueryOptions();
-  query.setParents(folderGuids, folderGuids.length);
+  query.setParents(folderGuids);
   options.sortingMode = options.SORT_BY_URI_ASCENDING;
   options.maxResults = maxResults;
   rootNode = PlacesUtils.history.executeQuery(query, options).root;

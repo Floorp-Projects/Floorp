@@ -7,11 +7,11 @@ const { shallow } = require("enzyme");
 const { lengthBubble } = require("../../shared/grip-length-bubble");
 const {
   maxLengthMap: arrayLikeMaxLengthMap,
-  getLength: getArrayLikeLength
+  getLength: getArrayLikeLength,
 } = require("../grip-array");
 const {
   maxLengthMap: mapMaxLengths,
-  getLength: getMapLength
+  getLength: getMapLength,
 } = require("../grip-map");
 const { getGripPreviewItems } = require("../rep-utils");
 const nodeConstants = require("../../shared/dom-node-constants");
@@ -75,7 +75,7 @@ function getGripLengthBubbleText(object, props) {
     object,
     maxLengthMap: arrayLikeMaxLengthMap,
     getLength: getArrayLikeLength,
-    ...props
+    ...props,
   });
 
   return component ? shallow(component).text() : "";
@@ -86,7 +86,7 @@ function getMapLengthBubbleText(object, props) {
     maxLengthMap: mapMaxLengths,
     getLength: getMapLength,
     showZeroLength: true,
-    ...props
+    ...props,
   });
 }
 
@@ -94,5 +94,5 @@ module.exports = {
   expectActorAttribute,
   getSelectableInInspectorGrips,
   getGripLengthBubbleText,
-  getMapLengthBubbleText
+  getMapLengthBubbleText,
 };

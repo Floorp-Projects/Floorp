@@ -21,7 +21,7 @@ use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGM
 use crate::prim_store::{recompute_snap_offsets};
 use crate::prim_store::image::ImageSource;
 use crate::render_backend::DataStores;
-use crate::render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree, TileBlit};
+use crate::render_task::{RenderTaskAddress, RenderTaskId, RenderTaskGraph, TileBlit};
 use crate::renderer::{BlendMode, ImageBufferKind, ShaderColorMode};
 use crate::renderer::{BLOCKS_PER_UV_RECT, MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{CacheItem, GlyphFetchResult, ImageRequest, ResourceCache, ImageProperties};
@@ -568,7 +568,7 @@ impl BatchBuilder {
         batcher: &mut AlphaBatchBuilder,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -602,7 +602,7 @@ impl BatchBuilder {
         batcher: &mut AlphaBatchBuilder,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         deferred_resolves: &mut Vec<DeferredResolve>,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -1318,7 +1318,7 @@ impl BatchBuilder {
                                             PrimitiveInstanceData::from(instance),
                                         );
                                     }
-                                    Filter::DropShadowStack(shadows) => {
+                                    Filter::DropShadows(shadows) => {
                                         // Draw an instance per shadow first, following by the content.
 
                                         // The shadows and the content get drawn as a brush image.
@@ -1327,7 +1327,7 @@ impl BatchBuilder {
                                         );
 
                                         // Gets the saved render task ID of the content, which is
-                                        // deeper in the render task tree than the direct child.
+                                        // deeper in the render task graph than the direct child.
                                         let secondary_id = picture.secondary_render_task_id.expect("no secondary!?");
                                         let saved_index = render_tasks[secondary_id].saved_index.expect("no saved index!?");
                                         debug_assert_ne!(saved_index, SavedTargetIndex::PENDING);
@@ -1364,6 +1364,7 @@ impl BatchBuilder {
 
                                             let shadow_prim_header = PrimitiveHeader {
                                                 local_rect: shadow_rect,
+                                                snap_offsets: prim_info.shadow_snap_offsets,
                                                 specific_prim_address: shadow_prim_address,
                                                 ..prim_header
                                             };
@@ -1418,106 +1419,6 @@ impl BatchBuilder {
                                             PrimitiveInstanceData::from(content_instance),
                                         );
                                     }
-                                    Filter::DropShadow(shadow) => {
-                                        // Draw an instance of the shadow first, following by the content.
-
-                                        // Both the shadow and the content get drawn as a brush image.
-                                        let kind = BatchKind::Brush(
-                                            BrushBatchKind::Image(ImageBufferKind::Texture2DArray),
-                                        );
-
-                                        // Gets the saved render task ID of the content, which is
-                                        // deeper in the render task tree than the direct child.
-                                        let secondary_id = picture.secondary_render_task_id.expect("no secondary!?");
-                                        let saved_index = render_tasks[secondary_id].saved_index.expect("no saved index!?");
-                                        debug_assert_ne!(saved_index, SavedTargetIndex::PENDING);
-
-                                        // Build BatchTextures for shadow/content
-                                        let shadow_textures = BatchTextures::render_target_cache();
-                                        let content_textures = BatchTextures {
-                                            colors: [
-                                                TextureSource::RenderTaskCache(saved_index),
-                                                TextureSource::Invalid,
-                                                TextureSource::Invalid,
-                                            ],
-                                        };
-
-                                        // Build batch keys for shadow/content
-                                        let shadow_key = BatchKey::new(kind, non_segmented_blend_mode, shadow_textures);
-                                        let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
-
-                                        // Retrieve the UV rect addresses for shadow/content.
-                                        let cache_task_id = surface.expect("bug: surface must be allocated by now");
-                                        let shadow_uv_rect_address = render_tasks[cache_task_id]
-                                            .get_texture_address(gpu_cache)
-                                            .as_int();
-                                        let content_uv_rect_address = render_tasks[secondary_id]
-                                            .get_texture_address(gpu_cache)
-                                            .as_int();
-
-                                        // Get the GPU cache address of the extra data handle.
-                                        let shadow_prim_address = gpu_cache.get_address(&picture.extra_gpu_data_handles[0]);
-
-                                        let z_id_shadow = z_id;
-                                        let z_id_content = z_generator.next();
-
-                                        let content_prim_header_index = prim_headers.push(&prim_header, z_id_content, [
-                                            ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                            RasterizationSpace::Screen as i32,
-                                            get_shader_opacity(1.0),
-                                            0,
-                                        ]);
-
-                                        let shadow_rect = prim_header.local_rect.translate(&shadow.offset);
-
-                                        let shadow_prim_header = PrimitiveHeader {
-                                            local_rect: shadow_rect,
-                                            snap_offsets: prim_info.shadow_snap_offsets,
-                                            specific_prim_address: shadow_prim_address,
-                                            ..prim_header
-                                        };
-
-                                        let shadow_prim_header_index = prim_headers.push(&shadow_prim_header, z_id_shadow, [
-                                            ShaderColorMode::Alpha as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                            RasterizationSpace::Screen as i32,
-                                            get_shader_opacity(1.0),
-                                            0,
-                                        ]);
-
-                                        let shadow_instance = BrushInstance {
-                                            prim_header_index: shadow_prim_header_index,
-                                            clip_task_address,
-                                            render_task_address,
-                                            segment_index: INVALID_SEGMENT_INDEX,
-                                            edge_flags: EdgeAaSegmentMask::empty(),
-                                            brush_flags,
-                                            user_data: shadow_uv_rect_address,
-                                        };
-
-                                        let content_instance = BrushInstance {
-                                            prim_header_index: content_prim_header_index,
-                                            clip_task_address,
-                                            render_task_address,
-                                            segment_index: INVALID_SEGMENT_INDEX,
-                                            edge_flags: EdgeAaSegmentMask::empty(),
-                                            brush_flags,
-                                            user_data: content_uv_rect_address,
-                                        };
-
-                                        batcher.current_batch_list().push_single_instance(
-                                            shadow_key,
-                                            bounding_rect,
-                                            z_id_shadow,
-                                            PrimitiveInstanceData::from(shadow_instance),
-                                        );
-
-                                        batcher.current_batch_list().push_single_instance(
-                                            content_key,
-                                            bounding_rect,
-                                            z_id_content,
-                                            PrimitiveInstanceData::from(content_instance),
-                                        );
-                                    }
                                     _ => {
                                         let filter_mode = match filter {
                                             Filter::Identity => 1, // matches `Contrast(1)`
@@ -1530,8 +1431,7 @@ impl BatchBuilder {
                                             Filter::Sepia(..) => 6,
                                             Filter::Brightness(..) => 7,
                                             Filter::Opacity(..) => 8,
-                                            Filter::DropShadow(..) |
-                                            Filter::DropShadowStack(..) => 9,
+                                            Filter::DropShadows(..) => 9,
                                             Filter::ColorMatrix(..) => 10,
                                             Filter::SrgbToLinear => 11,
                                             Filter::LinearToSrgb => 12,
@@ -1555,8 +1455,7 @@ impl BatchBuilder {
                                             }
                                             // Go through different paths
                                             Filter::Blur(..) |
-                                            Filter::DropShadowStack(..) |
-                                            Filter::DropShadow(..) => {
+                                            Filter::DropShadows(..) => {
                                                 unreachable!();
                                             }
                                             Filter::ColorMatrix(_) => {
@@ -2474,7 +2373,7 @@ impl BatchBuilder {
         alpha_blend_mode: BlendMode,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         z_id: ZBufferId,
         prim_opacity: PrimitiveOpacity,
         render_task_address: RenderTaskAddress,
@@ -2536,7 +2435,7 @@ impl BatchBuilder {
         prim_header_index: PrimitiveHeaderIndex,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
         z_id: ZBufferId,
         render_task_address: RenderTaskAddress,
         clip_task_index: ClipTaskIndex,
@@ -2805,7 +2704,7 @@ impl PrimitiveInstance {
     }
 }
 
-impl RenderTaskTree {
+impl RenderTaskGraph {
     fn resolve_surface(
         &self,
         task_id: RenderTaskId,
@@ -3273,7 +3172,7 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
         &self,
         clip_task_index: ClipTaskIndex,
         offset: i32,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
     ) -> Option<RenderTaskAddress> {
         let address = match self.scratch.clip_mask_instances[clip_task_index.0 as usize + offset as usize] {
             ClipMaskKind::Mask(task_id) => {
@@ -3295,7 +3194,7 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
     fn get_prim_clip_task_address(
         &self,
         clip_task_index: ClipTaskIndex,
-        render_tasks: &RenderTaskTree,
+        render_tasks: &RenderTaskGraph,
     ) -> Option<RenderTaskAddress> {
         self.get_clip_task_address(
             clip_task_index,

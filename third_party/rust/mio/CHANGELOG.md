@@ -1,3 +1,8 @@
+# 0.6.16 (September 5, 2018)
+
+* Add EPOLLPRI readiness to UnixReady on supported platforms (#867)
+* Reduce spurious awaken calls (#875)
+
 # 0.6.15 (July 3, 2018)
 
 * Implement `Evented` for containers (#840).

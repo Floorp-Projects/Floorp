@@ -24,7 +24,7 @@ export function selectFrame(cx: ThreadContext, frame: Frame) {
       type: "SELECT_FRAME",
       cx,
       thread: cx.thread,
-      frame
+      frame,
     });
 
     dispatch(selectLocation(cx, frame.location));

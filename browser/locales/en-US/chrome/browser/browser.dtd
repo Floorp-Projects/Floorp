@@ -248,6 +248,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY urlbar.canvasBlocked.tooltip            "You have blocked canvas data extraction for this website.">
 <!ENTITY urlbar.flashPluginBlocked.tooltip       "You have blocked this website from using the Adobe Flash plugin.">
 <!ENTITY urlbar.midiBlocked.tooltip              "You have blocked MIDI access for this website.">
+<!ENTITY urlbar.installBlocked.tooltip           "You have blocked add-on installation for this website.">
 
 <!ENTITY urlbar.openHistoryPopup.tooltip                "Show history">
 
@@ -790,6 +791,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.connectionInternal "This is a secure &brandShortName; page.">
 <!ENTITY identity.extensionPage "This page is loaded from an extension.">
 <!ENTITY identity.insecureLoginForms2 "Logins entered on this page could be compromised.">
+<!ENTITY identity.customRoot "Connection verified by a certificate issuer that is not recognized by Mozilla.">
 
 <!-- Strings for connection state warnings. -->
 <!ENTITY identity.activeBlocked "&brandShortName; has blocked parts of this page that are not secure.">
@@ -808,6 +810,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.description.passiveLoaded3 "Although &brandShortName; has blocked some content, there is still content on the page that is not secure (such as images).">
 <!ENTITY identity.description.activeLoaded "This website contains content that is not secure (such as scripts) and your connection to it is not private.">
 <!ENTITY identity.description.activeLoaded2 "Information you share with this site could be viewed by others (like passwords, messages, credit cards, etc.).">
+<!ENTITY identity.description.customRoot "Mozilla does not recognize this certificate issuer. It may have been added from your operating system or by an administrator.">
 
 <!ENTITY identity.enableMixedContentBlocking.label "Enable protection">
 <!ENTITY identity.enableMixedContentBlocking.accesskey "E">

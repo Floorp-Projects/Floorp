@@ -15,7 +15,7 @@ const { span } = dom;
  * Renders a grip object with regular expression.
  */
 RegExp.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function RegExp(props) {
@@ -24,7 +24,7 @@ function RegExp(props) {
   return span(
     {
       "data-link-actor-id": object.actor,
-      className: "objectBox objectBox-regexp regexpSource"
+      className: "objectBox objectBox-regexp regexpSource",
     },
     getSource(object)
   );
@@ -46,5 +46,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(RegExp),
-  supportsObject
+  supportsObject,
 };

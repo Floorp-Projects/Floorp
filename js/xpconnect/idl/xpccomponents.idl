@@ -669,9 +669,6 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     AUTF8String readUTF8URI(in nsIURI url);
 
-    /* Give a directive to the record/replay system. */
-    void recordReplayDirective(in long directive);
-
     /* Create a spellchecker object. */
     nsIEditorSpellCheck createSpellChecker();
 

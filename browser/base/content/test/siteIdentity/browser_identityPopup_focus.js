@@ -51,20 +51,24 @@ add_task(async function testSiteSecurityTabOrder() {
     EventUtils.sendString(" ");
     await shown;
 
-    // 3. First press of tab should focus the Back button.
-    let backButton = gIdentityHandler._identityPopup.querySelector(".subviewbutton-back");
-    // Wait for focus to move somewhere. We use focusin because focus doesn't bubble.
+    // 3. Custom root learn more info should be focused by default
+    // This is probably not present in real-world scenarios, but needs to be present in our test infrastructure.
+    let customRootLearnMore = document.getElementById("identity-popup-custom-root-learn-more");
+    is(Services.focus.focusedElement, customRootLearnMore, "learn more option for custom roots is focused");
+
+    // 4. First press of tab should move to the More Information button.
+    let moreInfoButton = document.getElementById("identity-popup-more-info");
     let focused = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "focusin");
     EventUtils.sendKey("tab");
     await focused;
-    is(Services.focus.focusedElement, backButton);
+    is(Services.focus.focusedElement, moreInfoButton, "more info button is focused");
 
-    // 4. Second press of tab should move to the More Information button.
-    let moreInfoButton = document.getElementById("identity-popup-more-info");
+    // 5. Second press of tab should focus the Back button.
+    let backButton = gIdentityHandler._identityPopup.querySelector(".subviewbutton-back");
+    // Wait for focus to move somewhere. We use focusin because focus doesn't bubble.
     focused = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "focusin");
     EventUtils.sendKey("tab");
     await focused;
-    isnot(Services.focus.focusedElement, backButton);
-    is(Services.focus.focusedElement, moreInfoButton);
+    is(Services.focus.focusedElement, backButton, "back button is focused");
   });
 });

@@ -12,7 +12,7 @@ import "./AccessibleImage.css";
 const AccessibleImage = (props: Object) => {
   props = {
     ...props,
-    className: classnames("img", props.className)
+    className: classnames("img", props.className),
   };
   return <span {...props} />;
 };

@@ -919,6 +919,7 @@ static bool ParseISOStyleDate(const CharT* s, size_t length,
   size_t tzHour = 0;
   size_t tzMin = 0;
   bool isPermissive = false;
+  bool isStrict = false;
 
 #define PEEK(ch) (i < length && s[i] == ch)
 
@@ -954,7 +955,11 @@ static bool ParseISOStyleDate(const CharT* s, size_t length,
     return false;                                      \
   }                                                    \
   if (i < pre + (n)) {                                 \
-    isPermissive = true;                               \
+    if (isStrict) {                                    \
+      return false;                                    \
+    } else {                                           \
+      isPermissive = true;                             \
+    }                                                  \
   }
 
   if (PEEK('+') || PEEK('-')) {
@@ -978,6 +983,7 @@ done_date:
       // exists
       return false;
     }
+    isStrict = true;
     i++;
   } else if (PEEK(' ')) {
     i++;

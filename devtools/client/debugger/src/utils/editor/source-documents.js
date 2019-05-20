@@ -14,7 +14,7 @@ import type {
   SourceId,
   Source,
   SourceContent,
-  SourceDocuments
+  SourceDocuments,
 } from "../../types";
 import type { SymbolDeclarations } from "../../workers/parser";
 

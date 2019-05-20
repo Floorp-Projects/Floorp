@@ -20,8 +20,8 @@ stubs.set("properties", {
       ownSymbols: [],
       ownPropertiesLength: 11,
       ownSymbolsLength: 2,
-      safeGetterValues: {}
-    }
+      safeGetterValues: {},
+    },
   },
   ownProperties: {},
   ownSymbols: [],
@@ -30,9 +30,9 @@ stubs.set("properties", {
       getterValue: 2,
       getterPrototypeLevel: 2,
       enumerable: false,
-      writable: true
-    }
-  }
+      writable: true,
+    },
+  },
 });
 
 stubs.set("11-entries", {
@@ -43,9 +43,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-0",
-          value: "value-0"
-        }
-      }
+          value: "value-0",
+        },
+      },
     },
     "1": {
       enumerable: true,
@@ -53,9 +53,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-1",
-          value: "value-1"
-        }
-      }
+          value: "value-1",
+        },
+      },
     },
     "2": {
       enumerable: true,
@@ -63,9 +63,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-2",
-          value: "value-2"
-        }
-      }
+          value: "value-2",
+        },
+      },
     },
     "3": {
       enumerable: true,
@@ -73,9 +73,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-3",
-          value: "value-3"
-        }
-      }
+          value: "value-3",
+        },
+      },
     },
     "4": {
       enumerable: true,
@@ -83,9 +83,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-4",
-          value: "value-4"
-        }
-      }
+          value: "value-4",
+        },
+      },
     },
     "5": {
       enumerable: true,
@@ -93,9 +93,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-5",
-          value: "value-5"
-        }
-      }
+          value: "value-5",
+        },
+      },
     },
     "6": {
       enumerable: true,
@@ -103,9 +103,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-6",
-          value: "value-6"
-        }
-      }
+          value: "value-6",
+        },
+      },
     },
     "7": {
       enumerable: true,
@@ -113,9 +113,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-7",
-          value: "value-7"
-        }
-      }
+          value: "value-7",
+        },
+      },
     },
     "8": {
       enumerable: true,
@@ -123,9 +123,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-8",
-          value: "value-8"
-        }
-      }
+          value: "value-8",
+        },
+      },
     },
     "9": {
       enumerable: true,
@@ -133,9 +133,9 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-9",
-          value: "value-9"
-        }
-      }
+          value: "value-9",
+        },
+      },
     },
     "10": {
       enumerable: true,
@@ -143,12 +143,12 @@ stubs.set("11-entries", {
         type: "mapEntry",
         preview: {
           key: "key-10",
-          value: "value-10"
-        }
-      }
-    }
+          value: "value-10",
+        },
+      },
+    },
   },
-  from: "server4.conn4.child19/propertyIterator54"
+  from: "server4.conn4.child19/propertyIterator54",
 });
 
 module.exports = stubs;

@@ -33,8 +33,11 @@ class DelayedProvider extends UrlbarProvider {
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
-  get sources() {
-    return [UrlbarUtils.RESULT_SOURCE.TABS];
+  isActive(context) {
+    return true;
+  }
+  isRestricting(context) {
+    return false;
   }
   async startQuery(context, add) {
     Assert.ok(context, "context is passed-in");

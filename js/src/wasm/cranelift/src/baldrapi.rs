@@ -20,6 +20,9 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
+// We need to allow dead code because the Rustc compiler complains about variants never being
+// constructed in TypeCode, which is true because these values come from C++.
+#![allow(dead_code)]
 
 use cranelift_codegen::binemit::CodeOffset;
 use cranelift_codegen::entity::EntityRef;

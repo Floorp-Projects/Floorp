@@ -18,7 +18,7 @@ use crate::glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
 use crate::resource_cache::CachedImageData;
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use crate::gpu_cache::GpuCache;
-use crate::render_task::{RenderTaskTree, RenderTaskCache};
+use crate::render_task::{RenderTaskGraph, RenderTaskCache};
 use crate::profiler::TextureCacheProfileCounters;
 use std::collections::hash_map::Entry;
 
@@ -44,7 +44,7 @@ impl GlyphRasterizer {
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
         _: &mut RenderTaskCache,
-        _: &mut RenderTaskTree,
+        _: &mut RenderTaskGraph,
     ) {
         assert!(
             self.font_contexts
@@ -139,7 +139,7 @@ impl GlyphRasterizer {
         texture_cache: &mut TextureCache,
         gpu_cache: &mut GpuCache,
         _: &mut RenderTaskCache,
-        _: &mut RenderTaskTree,
+        _: &mut RenderTaskGraph,
         _: &mut TextureCacheProfileCounters,
     ) {
         // Pull rasterized glyphs from the queue and update the caches.

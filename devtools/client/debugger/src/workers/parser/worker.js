@@ -31,5 +31,5 @@ self.onmessage = workerHandler({
   getNextStep,
   hasSyntaxError,
   mapExpression,
-  setSource
+  setSource,
 });

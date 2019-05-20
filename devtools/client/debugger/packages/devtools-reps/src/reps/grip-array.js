@@ -11,7 +11,7 @@ const {
   getGripType,
   isGrip,
   wrapRender,
-  ellipsisElement
+  ellipsisElement,
 } = require("./rep-utils");
 const { MODE } = require("./constants");
 
@@ -31,7 +31,7 @@ GripArray.propTypes = {
   provider: PropTypes.object,
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func
+  onInspectIconClick: PropTypes.func,
 };
 
 function GripArray(props) {
@@ -44,7 +44,7 @@ function GripArray(props) {
 
   const config = {
     "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-array"
+    className: "objectBox objectBox-array",
   };
 
   const title = getTitle(props, object);
@@ -63,14 +63,14 @@ function GripArray(props) {
       title,
       span(
         {
-          className: "arrayLeftBracket"
+          className: "arrayLeftBracket",
         },
         brackets.left
       ),
       isEmpty ? null : ellipsisElement,
       span(
         {
-          className: "arrayRightBracket"
+          className: "arrayRightBracket",
         },
         brackets.right
       )
@@ -84,25 +84,25 @@ function GripArray(props) {
   return span(
     {
       "data-link-actor-id": object.actor,
-      className: "objectBox objectBox-array"
+      className: "objectBox objectBox-array",
     },
     title,
     span(
       {
-        className: "arrayLeftBracket"
+        className: "arrayLeftBracket",
       },
       brackets.left
     ),
     ...interleave(items, ", "),
     span(
       {
-        className: "arrayRightBracket"
+        className: "arrayRightBracket",
       },
       brackets.right
     ),
     span({
       className: "arrayProperties",
-      role: "group"
+      role: "group",
     })
   );
 }
@@ -125,7 +125,7 @@ function getTitle(props, object) {
     object,
     mode: props.mode,
     maxLengthMap,
-    getLength
+    getLength,
   });
 
   if (props.mode === MODE.TINY) {
@@ -202,7 +202,7 @@ function arrayIterator(props, grip, max) {
           object,
           mode: MODE.TINY,
           // Do not propagate title to array items reps
-          title: undefined
+          title: undefined,
         })
       );
     }
@@ -250,5 +250,5 @@ module.exports = {
   rep: wrapRender(GripArray),
   supportsObject,
   maxLengthMap,
-  getLength
+  getLength,
 };

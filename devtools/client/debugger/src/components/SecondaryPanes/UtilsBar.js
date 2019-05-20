@@ -10,7 +10,7 @@ import "./CommandBar.css";
 
 type Props = {
   horizontal: boolean,
-  toggleShortcutsModal: () => void
+  toggleShortcutsModal: () => void,
 };
 
 class UtilsBar extends Component<Props> {
@@ -22,7 +22,7 @@ class UtilsBar extends Component<Props> {
         "active",
         L10N.getStr("shortcuts.buttonName"),
         false
-      )
+      ),
     ];
   }
 
@@ -30,7 +30,7 @@ class UtilsBar extends Component<Props> {
     return (
       <div
         className={classnames("command-bar bottom", {
-          vertical: !this.props.horizontal
+          vertical: !this.props.horizontal,
         })}
       >
         {this.renderUtilButtons()}

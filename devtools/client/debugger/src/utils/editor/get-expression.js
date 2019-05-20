@@ -9,7 +9,7 @@ import type { Position } from "../../types";
 type Token = {
   startColumn: number,
   endColumn: number,
-  type: string
+  type: string,
 };
 
 export function tokenAtTextPosition(
@@ -43,7 +43,7 @@ export function getExpressionFromCoords(cm: any, coord: Position) {
   while (startHighlight > 1 && line.charAt(startHighlight - 1) === ".") {
     const tokenBefore = tokenAtTextPosition(cm, {
       line: coord.line,
-      column: startHighlight - 2
+      column: startHighlight - 2,
     });
 
     if (!tokenBefore || !tokenBefore.type) {
@@ -61,7 +61,7 @@ export function getExpressionFromCoords(cm: any, coord: Position) {
 
   const location = {
     start: { line: lineNumber, column: startHighlight },
-    end: { line: lineNumber, column: endHighlight }
+    end: { line: lineNumber, column: endHighlight },
   };
   return { expression, location };
 }

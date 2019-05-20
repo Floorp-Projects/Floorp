@@ -162,12 +162,6 @@ static int testWasmFuzz(const uint8_t* buf, size_t size) {
         }
       }
 
-      // TODO: Cranelift is not stable for fuzzing, defer to baseline
-      if (enableWasmCranelift) {
-        enableWasmCranelift = false;
-        enableWasmBaseline = true;
-      }
-
       if (enableWasmAwaitTier2) {
         // Tier 2 needs Baseline + {Ion,Cranelift}
         enableWasmBaseline = true;

@@ -231,14 +231,14 @@ const querySwitches = [
     },
     runs: [
       function(aQuery, aQueryOptions) {
-        aQuery.setParents([], 0);
+        aQuery.setParents([]);
       },
       function(aQuery, aQueryOptions) {
-        aQuery.setParents([PlacesUtils.bookmarks.rootGuid], 1);
+        aQuery.setParents([PlacesUtils.bookmarks.rootGuid]);
       },
       function(aQuery, aQueryOptions) {
         aQuery.setParents([PlacesUtils.bookmarks.rootGuid,
-                           PlacesUtils.bookmarks.tagsGuid], 2);
+                           PlacesUtils.bookmarks.tagsGuid]);
       },
     ],
   },
@@ -318,15 +318,14 @@ const querySwitches = [
     },
     runs: [
       function(aQuery, aQueryOptions) {
-        aQuery.setTransitions([], 0);
+        aQuery.setTransitions([]);
       },
       function(aQuery, aQueryOptions) {
-        aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD],
-                              1);
+        aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_DOWNLOAD]);
       },
       function(aQuery, aQueryOptions) {
         aQuery.setTransitions([Ci.nsINavHistoryService.TRANSITION_TYPED,
-                               Ci.nsINavHistoryService.TRANSITION_BOOKMARK], 2);
+                               Ci.nsINavHistoryService.TRANSITION_BOOKMARK]);
       },
     ],
   },

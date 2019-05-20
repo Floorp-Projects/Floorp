@@ -6,14 +6,14 @@
 
 export type FulfilledValue<+T> = {|
   state: "fulfilled",
-  +value: T
+  +value: T,
 |};
 export type RejectedValue = {|
   state: "rejected",
-  value: mixed
+  value: mixed,
 |};
 export type PendingValue = {|
-  state: "pending"
+  state: "pending",
 |};
 export type SettledValue<+T> = FulfilledValue<T> | RejectedValue;
 export type AsyncValue<+T> = SettledValue<T> | PendingValue;

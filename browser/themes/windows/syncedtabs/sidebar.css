@@ -35,7 +35,7 @@
 .textbox-search-clear {
   width: 16px;
   height: 16px;
-  background-image: url(chrome://global/skin/icons/Search-close.png);
+  background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
   background-repeat: no-repeat;
 }
 

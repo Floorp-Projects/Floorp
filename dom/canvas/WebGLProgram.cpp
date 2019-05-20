@@ -476,7 +476,7 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
     const auto& fragShader = prog->FragShader();
     MOZ_RELEASE_ASSERT(fragShader);
     MOZ_RELEASE_ASSERT(fragShader->Validator());
-    const auto& handle = fragShader->Validator()->Handle();
+    const auto& handle = fragShader->Validator()->mHandle;
     const auto version = sh::GetShaderVersion(handle);
 
     const auto fnAddInfo = [&](const webgl::FragOutputInfo& x) {
@@ -743,13 +743,14 @@ void WebGLProgram::BindAttribLocation(GLuint loc, const nsAString& name) {
     return;
   }
 
-  NS_LossyConvertUTF16toASCII asciiName(name);
+  const NS_LossyConvertUTF16toASCII asciiName(name);
+  const std::string asciiNameStr(asciiName.BeginReading());
 
-  auto res = mNextLink_BoundAttribLocs.insert({asciiName, loc});
+  auto res = mNextLink_BoundAttribLocs.insert({asciiNameStr, loc});
 
-  const bool wasInserted = res.second;
+  const auto& wasInserted = res.second;
   if (!wasInserted) {
-    auto itr = res.first;
+    const auto& itr = res.first;
     itr->second = loc;
   }
 }

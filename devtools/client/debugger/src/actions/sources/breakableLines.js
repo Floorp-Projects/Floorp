@@ -45,7 +45,7 @@ export function setBreakableLines(cx: Context, sourceId: string) {
       type: "SET_BREAKABLE_LINES",
       cx,
       sourceId,
-      breakableLines
+      breakableLines,
     });
   };
 }

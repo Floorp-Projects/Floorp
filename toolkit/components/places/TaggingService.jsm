@@ -233,7 +233,7 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
-  getTagsForURI: function TS_getTagsForURI(aURI, aCount) {
+  getTagsForURI: function TS_getTagsForURI(aURI) {
     if (!aURI) {
       throw Components.Exception("Invalid uri", Cr.NS_ERROR_INVALID_ARG);
     }
@@ -264,9 +264,6 @@ TaggingService.prototype = {
     tags.sort(function(a, b) {
         return a.toLowerCase().localeCompare(b.toLowerCase());
       });
-    if (aCount) {
-      aCount.value = tags.length;
-    }
     return tags;
   },
 

@@ -70,6 +70,8 @@
 <!ENTITY ldb.dumpViews.accesskey "V">
 <!ENTITY ldb.dumpStyleSheets.label "Style Sheets">
 <!ENTITY ldb.dumpStyleSheets.accesskey "S">
+<!ENTITY ldb.dumpMatchedRules.label "Matched CSS Rules">
+<!ENTITY ldb.dumpMatchedRules.accesskey "M">
 <!ENTITY ldb.dumpComputedStyles.label "Style Contexts">
 <!ENTITY ldb.dumpComputedStyles.accesskey "x">
 <!ENTITY ldb.dumpReflowStats.label "Reflow Statistics">

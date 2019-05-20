@@ -212,8 +212,6 @@ void FontFaceSet::ParseFontShorthandForMatching(
   float stretch;
   float weight;
 
-  // FIXME(emilio): This Servo -> nsCSSValue -> Gecko conversion is stupid,
-  // Servo understands the font types.
   RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(mDocument);
   if (!ServoCSSParser::ParseFontShorthandForMatching(aFont, url, aFamilyList,
                                                      style, stretch, weight)) {

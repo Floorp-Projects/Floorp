@@ -1522,6 +1522,8 @@ DebuggerProgressListener.prototype = {
       this._targetActor._windowReady(win);
       this._knownWindowIDs.set(getWindowID(win), win);
     }
+
+    docShell.watchedByDevtools = true;
   },
 
   unwatch(docShell) {
@@ -1548,6 +1550,8 @@ DebuggerProgressListener.prototype = {
     for (const win of this._getWindowsInDocShell(docShell)) {
       this._knownWindowIDs.delete(getWindowID(win));
     }
+
+    docShell.watchedByDevtools = false;
   },
 
   _getWindowsInDocShell(docShell) {

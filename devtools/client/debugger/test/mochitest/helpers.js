@@ -1553,7 +1553,6 @@ async function assertPreviewTextValue(dbg, line, column, { text, expression }) {
   ok(previewEl.innerText.includes(text), "Preview text shown to user");
 
   const preview = dbg.selectors.getPreview();
-  is(preview.updating, false, "Preview.updating");
   is(preview.expression, expression, "Preview.expression");
 }
 
@@ -1564,7 +1563,6 @@ async function assertPreviewTooltip(dbg, line, column, { result, expression }) {
 
   const preview = dbg.selectors.getPreview();
   is(`${preview.result}`, result, "Preview.result");
-  is(preview.updating, false, "Preview.updating");
   is(preview.expression, expression, "Preview.expression");
 }
 
@@ -1589,7 +1587,6 @@ async function assertPreviewPopup(
   const preview = await hoverOnToken(dbg, line, column, "popup");
   is(`${getPreviewProperty(preview, field)}`, value, "Preview.result");
 
-  is(preview.updating, false, "Preview.updating");
   is(preview.expression, expression, "Preview.expression");
 }
 
@@ -1721,13 +1718,13 @@ async function openConsoleContextMenu(hud, element) {
   const onConsoleMenuOpened = hud.ui.wrapper.once("menu-open");
   synthesizeContextMenuEvent(element);
   await onConsoleMenuOpened;
-  const doc = hud.chromeWindow.document;
-  return doc.getElementById("webconsole-menu");
+  const toolbox = gDevTools.getToolbox(hud.target);
+  return toolbox.topDoc.getElementById("webconsole-menu");
 }
 
 function hideConsoleContextMenu(hud) {
-  const doc = hud.chromeWindow.document;
-  const popup = doc.getElementById("webconsole-menu");
+  const toolbox = gDevTools.getToolbox(hud.target);
+  const popup = toolbox.topDoc.getElementById("webconsole-menu");
   if (!popup) {
     return Promise.resolve();
   }

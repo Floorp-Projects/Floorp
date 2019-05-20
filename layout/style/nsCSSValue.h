@@ -241,57 +241,6 @@ struct GridTemplateAreasValue final {
 
 enum nsCSSUnit : uint32_t {
   eCSSUnit_Null = 0,     // (n/a) null unit, value is not specified
-  eCSSUnit_Auto = 1,     // (n/a) value is algorithmic
-  eCSSUnit_Inherit = 2,  // (n/a) value is inherited
-  eCSSUnit_Initial = 3,  // (n/a) value is default UA value
-  eCSSUnit_Unset = 4,    // (n/a) value equivalent to 'initial' if on a reset
-                         // property, 'inherit' otherwise
-  eCSSUnit_None = 5,     // (n/a) value is none
-  eCSSUnit_Normal = 6,   // (n/a) value is normal (algorithmic, different than
-                         // auto)
-  eCSSUnit_System_Font = 7,    // (n/a) value is -moz-use-system-font
-  eCSSUnit_All = 8,            // (n/a) value is all
-  eCSSUnit_Dummy = 9,          // (n/a) a fake but specified value, used
-                               //       only in temporary values
-  eCSSUnit_DummyInherit = 10,  // (n/a) a fake but specified value, used
-                               //       only in temporary values
-
-  eCSSUnit_String = 11,   // (char16_t*) a string value
-  eCSSUnit_Ident = 12,    // (char16_t*) a string value
-  eCSSUnit_Attr = 14,     // (char16_t*) a attr(string) value
-  eCSSUnit_Element = 15,  // (char16_t*) an element id
-
-  // nsCSSValue::Array* values
-  eCSSUnit_Array = 20,     // (Array*) a list of values
-  eCSSUnit_Counter = 21,   // (Array*) a counter(string,[string]) value
-  eCSSUnit_Counters = 22,  // (Array*) a counters(string,string[,string]) value
-  eCSSUnit_Cubic_Bezier = 23,  // (Array*) a list of float values
-  eCSSUnit_Steps = 24,         // (Array*) a list of (integer, enumerated)
-  eCSSUnit_Symbols = 25,       // (Array*) a symbols(enumerated, symbols) value
-  eCSSUnit_Function = 26,  // (Array*) a function with parameters. First elem of
-                           // array is name, an nsCSSKeyword as
-                           // eCSSUnit_Enumerated, the rest of the values are
-                           // arguments.
-
-  // The top level of a calc() expression is eCSSUnit_Calc.  All
-  // remaining eCSSUnit_Calc_* units only occur inside these toplevel
-  // calc values.
-
-  // eCSSUnit_Calc exists so we can distinguish calc(2em) from 2em as specified
-  // values (but we drop this distinction for nsStyleCoord when we store
-  // computed values).
-  eCSSUnit_Calc = 30,       // (Array*) calc() value -- exactly 1 elt.
-  eCSSUnit_Calc_Plus = 31,  // (Array*) + node within calc(); exactly 2 elts.
-                            // a + b + c + d is grouped as ((a + b) + c) + d
-
-  eCSSUnit_Pair = 50,        // (nsCSSValuePair*) pair of values
-  eCSSUnit_List = 53,        // (nsCSSValueList*) list of values
-  eCSSUnit_SharedList = 55,  // (nsCSSValueSharedList*) same as list
-                             //   but reference counted and shared
-  eCSSUnit_PairList = 56,    // (nsCSSValuePairList*) list of value pairs
-
-  // Atom units
-  eCSSUnit_AtomIdent = 60,  // (nsAtom*) for its string as an identifier
 
   eCSSUnit_Integer = 70,     // (int) simple value
   eCSSUnit_Enumerated = 71,  // (int) value has enumerated meaning
@@ -300,16 +249,6 @@ enum nsCSSUnit : uint32_t {
                            // something
   eCSSUnit_Number = 101,   // (float) value is numeric (usually multiplier,
                            // different behavior than percent)
-
-  // Length units - relative
-  // Viewport relative measure
-  eCSSUnit_ViewportWidth = 700,   // (float) 1% of the width of the initial
-                                  // containing block (ICB)
-  eCSSUnit_ViewportHeight = 701,  // (float) 1% of the height of the ICB
-  eCSSUnit_ViewportMin = 702,     // (float) smaller of ViewportWidth and
-                                  // ViewportHeight
-  eCSSUnit_ViewportMax = 703,     // (float) larger of ViewportWidth and
-                                  // ViewportHeight
 
   // Font relative measure
   eCSSUnit_EM = 800,       // (float) == current font size
@@ -353,18 +292,10 @@ struct nsCSSValuePairList_heap;
 
 class nsCSSValue {
  public:
-  struct Array;
-  friend struct Array;
-
-  // for valueless units only (null, auto, inherit, none, all, normal)
-  explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null) : mUnit(aUnit) {
-    MOZ_ASSERT(aUnit <= eCSSUnit_DummyInherit, "not a valueless unit");
-  }
+  explicit nsCSSValue() : mUnit(eCSSUnit_Null) {}
 
   nsCSSValue(int32_t aValue, nsCSSUnit aUnit);
   nsCSSValue(float aValue, nsCSSUnit aUnit);
-  nsCSSValue(const nsString& aValue, nsCSSUnit aUnit);
-  nsCSSValue(Array* aArray, nsCSSUnit aUnit);
   nsCSSValue(const nsCSSValue& aCopy);
   nsCSSValue(nsCSSValue&& aOther) : mUnit(aOther.mUnit), mValue(aOther.mValue) {
     aOther.mUnit = eCSSUnit_Null;
@@ -377,8 +308,6 @@ class nsCSSValue {
     mValue.mInt = static_cast<int32_t>(aValue);
   }
 
-  ~nsCSSValue() { Reset(); }
-
   nsCSSValue& operator=(const nsCSSValue& aCopy);
   nsCSSValue& operator=(nsCSSValue&& aCopy);
   bool operator==(const nsCSSValue& aOther) const;
@@ -387,10 +316,10 @@ class nsCSSValue {
 
   nsCSSUnit GetUnit() const { return mUnit; }
   bool IsLengthUnit() const {
-    return eCSSUnit_ViewportWidth <= mUnit && mUnit <= eCSSUnit_Pixel;
+    return eCSSUnit_EM <= mUnit && mUnit <= eCSSUnit_Pixel;
   }
-  bool IsLengthPercentCalcUnit() const {
-    return IsLengthUnit() || mUnit == eCSSUnit_Percent || IsCalcUnit();
+  bool IsLengthPercentUnit() const {
+    return IsLengthUnit() || mUnit == eCSSUnit_Percent;
   }
   /**
    * What the spec calls relative length units is, for us, split
@@ -422,16 +351,6 @@ class nsCSSValue {
   }
   bool IsTimeUnit() const {
     return eCSSUnit_Seconds <= mUnit && mUnit <= eCSSUnit_Milliseconds;
-  }
-  bool IsCalcUnit() const {
-    return eCSSUnit_Calc <= mUnit && mUnit <= eCSSUnit_Calc_Plus;
-  }
-
-  bool UnitHasStringValue() const {
-    return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Element;
-  }
-  bool UnitHasArrayValue() const {
-    return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Plus;
   }
 
   int32_t GetIntValue() const {
@@ -467,63 +386,10 @@ class nsCSSValue {
   // Converts any angle to degrees.
   double GetAngleValueInDegrees() const;
 
-  nsAString& GetStringValue(nsAString& aBuffer) const {
-    MOZ_ASSERT(UnitHasStringValue(), "not a string value");
-    aBuffer.Truncate();
-    uint32_t len = NS_strlen(GetBufferValue(mValue.mString));
-    mValue.mString->ToString(len, aBuffer);
-    return aBuffer;
-  }
-
-  const char16_t* GetStringBufferValue() const {
-    MOZ_ASSERT(UnitHasStringValue(), "not a string value");
-    return GetBufferValue(mValue.mString);
-  }
-
-  Array* GetArrayValue() const {
-    MOZ_ASSERT(UnitHasArrayValue(), "not an array value");
-    return mValue.mArray;
-  }
-
-  nsCSSValueSharedList* GetSharedListValue() const {
-    MOZ_ASSERT(mUnit == eCSSUnit_SharedList, "not a shared list value");
-    return mValue.mSharedList;
-  }
-
-  // bodies of these are below
-  inline nsCSSValuePair& GetPairValue();
-  inline const nsCSSValuePair& GetPairValue() const;
-
-  inline nsCSSValueList* GetListValue();
-  inline const nsCSSValueList* GetListValue() const;
-
-  inline nsCSSValuePairList* GetPairListValue();
-  inline const nsCSSValuePairList* GetPairListValue() const;
-
-  // Not making this inline because that would force us to include
-  // imgIRequest.h, which leads to REQUIRES hell, since this header is included
-  // all over.
-  imgRequestProxy* GetImageValue(mozilla::dom::Document* aDocument) const;
-
-  // Like GetImageValue, but additionally will pass the imgRequestProxy
-  // through nsContentUtils::GetStaticRequest if aPresContent is static.
-  already_AddRefed<imgRequestProxy> GetPossiblyStaticImageValue(
-      mozilla::dom::Document* aDocument, nsPresContext* aPresContext) const;
-
   nscoord GetPixelLength() const;
 
-  nsAtom* GetAtomValue() const {
-    MOZ_ASSERT(mUnit == eCSSUnit_AtomIdent);
-    return mValue.mAtom;
-  }
-
-  void Reset()  // sets to null
-  {
-    if (mUnit != eCSSUnit_Null) DoReset();
-  }
-
- private:
-  void DoReset();
+  void Reset() { mUnit = eCSSUnit_Null; }
+  ~nsCSSValue() { Reset(); }
 
  public:
   void SetIntValue(int32_t aValue, nsCSSUnit aUnit);
@@ -536,338 +402,15 @@ class nsCSSValue {
   }
   void SetPercentValue(float aValue);
   void SetFloatValue(float aValue, nsCSSUnit aUnit);
-  void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
-  void SetAtomIdentValue(already_AddRefed<nsAtom> aValue);
   // converts the nscoord to pixels
   void SetIntegerCoordValue(nscoord aCoord);
-  void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
-  void SetPairValue(const nsCSSValuePair* aPair);
-  void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
-  void SetSharedListValue(nsCSSValueSharedList* aList);
-  void SetNoneValue();
-
-  nsStyleCoord::CalcValue GetCalcValue() const;
-  void SetCalcValue(const nsStyleCoord::CalcValue&);
-
-  // These are a little different - they allocate storage for you and
-  // return a handle.
-  nsCSSValueList* SetListValue();
-  nsCSSValuePairList* SetPairListValue();
-
-  // Returns an already addrefed buffer.  Guaranteed to return non-null.
-  // (Will abort on allocation failure.)
-  static already_AddRefed<nsStringBuffer> BufferFromString(
-      const nsString& aValue);
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
- private:
-  static const char16_t* GetBufferValue(nsStringBuffer* aBuffer) {
-    return static_cast<char16_t*>(aBuffer->Data());
-  }
 
  protected:
   nsCSSUnit mUnit;
   union {
     int32_t mInt;
     float mFloat;
-    // Note: the capacity of the buffer may exceed the length of the string.
-    // If we're of a string type, mString is not null.
-    nsStringBuffer* MOZ_OWNING_REF mString;
-    nsAtom* MOZ_OWNING_REF mAtom;
-    Array* MOZ_OWNING_REF mArray;
-    nsCSSValuePair_heap* MOZ_OWNING_REF mPair;
-    nsCSSValueList_heap* MOZ_OWNING_REF mList;
-    nsCSSValueSharedList* MOZ_OWNING_REF mSharedList;
-    nsCSSValuePairList_heap* MOZ_OWNING_REF mPairList;
   } mValue;
 };
-
-struct nsCSSValue::Array final {
-  // return |Array| with reference count of zero
-  static Array* Create(size_t aItemCount) {
-    return new (aItemCount) Array(aItemCount);
-  }
-
-  nsCSSValue& operator[](size_t aIndex) {
-    MOZ_ASSERT(aIndex < mCount, "out of range");
-    return mArray[aIndex];
-  }
-
-  const nsCSSValue& operator[](size_t aIndex) const {
-    MOZ_ASSERT(aIndex < mCount, "out of range");
-    return mArray[aIndex];
-  }
-
-  nsCSSValue& Item(size_t aIndex) { return (*this)[aIndex]; }
-  const nsCSSValue& Item(size_t aIndex) const { return (*this)[aIndex]; }
-
-  size_t Count() const { return mCount; }
-
-  // callers depend on the items being contiguous
-  nsCSSValue* ItemStorage() { return this->First(); }
-
-  bool operator==(const Array& aOther) const {
-    if (mCount != aOther.mCount) return false;
-    for (size_t i = 0; i < mCount; ++i)
-      if ((*this)[i] != aOther[i]) return false;
-    return true;
-  }
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Array);
-
- private:
-  const size_t mCount;
-  // This must be the last sub-object, since we extend this array to
-  // be of size mCount; it needs to be a sub-object so it gets proper
-  // alignment.
-  nsCSSValue mArray[1];
-
-  void* operator new(size_t aSelfSize, size_t aItemCount) CPP_THROW_NEW {
-    MOZ_ASSERT(aItemCount > 0, "cannot have a 0 item count");
-    return ::operator new(aSelfSize + sizeof(nsCSSValue) * (aItemCount - 1));
-  }
-
-  void operator delete(void* aPtr) { ::operator delete(aPtr); }
-
-  nsCSSValue* First() { return mArray; }
-
-  const nsCSSValue* First() const { return mArray; }
-
-#define CSSVALUE_LIST_FOR_EXTRA_VALUES(var)                          \
-  for (nsCSSValue* var = First() + 1, *var##_end = First() + mCount; \
-       var != var##_end; ++var)
-
-  explicit Array(size_t aItemCount) : mRefCnt(0), mCount(aItemCount) {
-    CSSVALUE_LIST_FOR_EXTRA_VALUES(val) { new (val) nsCSSValue(); }
-  }
-
-  ~Array() {
-    CSSVALUE_LIST_FOR_EXTRA_VALUES(val) { val->~nsCSSValue(); }
-  }
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-#undef CSSVALUE_LIST_FOR_EXTRA_VALUES
-
- private:
-  Array(const Array& aOther) = delete;
-  Array& operator=(const Array& aOther) = delete;
-};
-
-// Prefer nsCSSValue::Array for lists of fixed size.
-struct nsCSSValueList {
-  nsCSSValueList() : mNext(nullptr) { MOZ_COUNT_CTOR(nsCSSValueList); }
-  ~nsCSSValueList();
-
-  nsCSSValueList* Clone() const;  // makes a deep copy. Infallible.
-  void CloneInto(nsCSSValueList* aList) const;  // makes a deep copy into aList
-
-  static bool Equal(const nsCSSValueList* aList1, const nsCSSValueList* aList2);
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  nsCSSValue mValue;
-  nsCSSValueList* mNext;
-
- private:
-  nsCSSValueList(const nsCSSValueList& aCopy)  // makes a shallow copy
-      : mValue(aCopy.mValue), mNext(nullptr) {
-    MOZ_COUNT_CTOR(nsCSSValueList);
-  }
-
-  // We don't want operator== or operator!= because they wouldn't be
-  // null-safe, which is generally what we need.  Use |Equal| method
-  // above instead.
-  bool operator==(nsCSSValueList const& aOther) const = delete;
-  bool operator!=(const nsCSSValueList& aOther) const = delete;
-};
-
-// nsCSSValueList_heap differs from nsCSSValueList only in being
-// refcounted.  It should not be necessary to use this class directly;
-// it's an implementation detail of nsCSSValue.
-struct nsCSSValueList_heap final : public nsCSSValueList {
-  NS_INLINE_DECL_REFCOUNTING(nsCSSValueList_heap)
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
- private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsCSSValueList_heap() {}
-};
-
-// This is a reference counted list value.  Note that the object is
-// a wrapper for the reference count and a pointer to the head of the
-// list, whereas the other list types (such as nsCSSValueList) do
-// not have such a wrapper.
-struct nsCSSValueSharedList final {
-  nsCSSValueSharedList() : mHead(nullptr) {}
-
-  // Takes ownership of aList.
-  explicit nsCSSValueSharedList(nsCSSValueList* aList) : mHead(aList) {}
-
- private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsCSSValueSharedList();
-
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsCSSValueSharedList)
-
-  bool operator==(nsCSSValueSharedList const& aOther) const;
-  bool operator!=(const nsCSSValueSharedList& aOther) const {
-    return !(*this == aOther);
-  }
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  nsCSSValueList* mHead;
-};
-
-inline nsCSSValueList* nsCSSValue::GetListValue() {
-  MOZ_DIAGNOSTIC_ASSERT(mUnit == eCSSUnit_List, "not a list value");
-  return mValue.mList;
-}
-
-inline const nsCSSValueList* nsCSSValue::GetListValue() const {
-  MOZ_DIAGNOSTIC_ASSERT(mUnit == eCSSUnit_List, "not a list value");
-  return mValue.mList;
-}
-
-struct nsCSSValuePair {
-  nsCSSValuePair() { MOZ_COUNT_CTOR(nsCSSValuePair); }
-  explicit nsCSSValuePair(nsCSSUnit aUnit) : mXValue(aUnit), mYValue(aUnit) {
-    MOZ_COUNT_CTOR(nsCSSValuePair);
-  }
-  nsCSSValuePair(const nsCSSValue& aXValue, const nsCSSValue& aYValue)
-      : mXValue(aXValue), mYValue(aYValue) {
-    MOZ_COUNT_CTOR(nsCSSValuePair);
-  }
-  nsCSSValuePair(const nsCSSValuePair& aCopy)
-      : mXValue(aCopy.mXValue), mYValue(aCopy.mYValue) {
-    MOZ_COUNT_CTOR(nsCSSValuePair);
-  }
-  ~nsCSSValuePair() { MOZ_COUNT_DTOR(nsCSSValuePair); }
-
-  nsCSSValuePair& operator=(const nsCSSValuePair& aOther) {
-    mXValue = aOther.mXValue;
-    mYValue = aOther.mYValue;
-    return *this;
-  }
-
-  bool operator==(const nsCSSValuePair& aOther) const {
-    return mXValue == aOther.mXValue && mYValue == aOther.mYValue;
-  }
-
-  bool operator!=(const nsCSSValuePair& aOther) const {
-    return mXValue != aOther.mXValue || mYValue != aOther.mYValue;
-  }
-
-  bool BothValuesEqualTo(const nsCSSValue& aValue) const {
-    return mXValue == aValue && mYValue == aValue;
-  }
-
-  void SetBothValuesTo(const nsCSSValue& aValue) {
-    mXValue = aValue;
-    mYValue = aValue;
-  }
-
-  void Reset() {
-    mXValue.Reset();
-    mYValue.Reset();
-  }
-
-  bool HasValue() const {
-    return mXValue.GetUnit() != eCSSUnit_Null ||
-           mYValue.GetUnit() != eCSSUnit_Null;
-  }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  nsCSSValue mXValue;
-  nsCSSValue mYValue;
-};
-
-// nsCSSValuePair_heap differs from nsCSSValuePair only in being
-// refcounted.  It should not be necessary to use this class directly;
-// it's an implementation detail of nsCSSValue.
-struct nsCSSValuePair_heap final : public nsCSSValuePair {
-  // forward constructor
-  nsCSSValuePair_heap(const nsCSSValue& aXValue, const nsCSSValue& aYValue)
-      : nsCSSValuePair(aXValue, aYValue) {}
-
-  NS_INLINE_DECL_REFCOUNTING(nsCSSValuePair_heap)
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
- private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsCSSValuePair_heap() {}
-};
-
-// This has to be here so that the relationship between nsCSSValuePair
-// and nsCSSValuePair_heap is visible.
-inline nsCSSValuePair& nsCSSValue::GetPairValue() {
-  MOZ_ASSERT(mUnit == eCSSUnit_Pair, "not a pair value");
-  return *mValue.mPair;
-}
-
-inline const nsCSSValuePair& nsCSSValue::GetPairValue() const {
-  MOZ_ASSERT(mUnit == eCSSUnit_Pair, "not a pair value");
-  return *mValue.mPair;
-}
-
-// Maybe should be replaced with nsCSSValueList and nsCSSValue::Array?
-struct nsCSSValuePairList {
-  nsCSSValuePairList() : mNext(nullptr) { MOZ_COUNT_CTOR(nsCSSValuePairList); }
-  ~nsCSSValuePairList();
-
-  nsCSSValuePairList* Clone() const;  // makes a deep copy. Infallible.
-
-  static bool Equal(const nsCSSValuePairList* aList1,
-                    const nsCSSValuePairList* aList2);
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  nsCSSValue mXValue;
-  nsCSSValue mYValue;
-  nsCSSValuePairList* mNext;
-
- private:
-  nsCSSValuePairList(const nsCSSValuePairList& aCopy)  // makes a shallow copy
-      : mXValue(aCopy.mXValue), mYValue(aCopy.mYValue), mNext(nullptr) {
-    MOZ_COUNT_CTOR(nsCSSValuePairList);
-  }
-
-  // We don't want operator== or operator!= because they wouldn't be
-  // null-safe, which is generally what we need.  Use |Equal| method
-  // above instead.
-  bool operator==(const nsCSSValuePairList& aOther) const = delete;
-  bool operator!=(const nsCSSValuePairList& aOther) const = delete;
-};
-
-// nsCSSValuePairList_heap differs from nsCSSValuePairList only in being
-// refcounted.  It should not be necessary to use this class directly;
-// it's an implementation detail of nsCSSValue.
-struct nsCSSValuePairList_heap final : public nsCSSValuePairList {
-  NS_INLINE_DECL_REFCOUNTING(nsCSSValuePairList_heap)
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
- private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsCSSValuePairList_heap() {}
-};
-
-// This has to be here so that the relationship between nsCSSValuePairList
-// and nsCSSValuePairList_heap is visible.
-inline nsCSSValuePairList* nsCSSValue::GetPairListValue() {
-  MOZ_DIAGNOSTIC_ASSERT(mUnit == eCSSUnit_PairList, "not a pairlist value");
-  return mValue.mPairList;
-}
-
-inline const nsCSSValuePairList* nsCSSValue::GetPairListValue() const {
-  MOZ_DIAGNOSTIC_ASSERT(mUnit == eCSSUnit_PairList, "not a pairlist value");
-  return mValue.mPairList;
-}
 
 #endif /* nsCSSValue_h___ */

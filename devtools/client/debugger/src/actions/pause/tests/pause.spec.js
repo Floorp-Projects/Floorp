@@ -11,7 +11,7 @@ import {
   waitForState,
   makeSource,
   makeOriginalSource,
-  makeFrame
+  makeFrame,
 } from "../../../utils/test-head";
 
 import { makeWhyNormal } from "../../../utils/test-mockup";
@@ -39,39 +39,39 @@ const mockThreadClient = {
         case "foo1":
           return resolve({
             source: "function foo1() {\n  return 5;\n}",
-            contentType: "text/javascript"
+            contentType: "text/javascript",
           });
         case "await":
           return resolve({
             source: "async function aWait() {\n await foo();  return 5;\n}",
-            contentType: "text/javascript"
+            contentType: "text/javascript",
           });
 
         case "foo":
           return resolve({
             source: "function foo() {\n  return -5;\n}",
-            contentType: "text/javascript"
+            contentType: "text/javascript",
           });
         case "foo-original":
           return resolve({
             source: "\n\nfunction fooOriginal() {\n  return -5;\n}",
-            contentType: "text/javascript"
+            contentType: "text/javascript",
           });
         case "foo-wasm":
           return resolve({
             source: { binary: new ArrayBuffer(0) },
-            contentType: "application/wasm"
+            contentType: "application/wasm",
           });
         case "foo-wasm/originalSource":
           return resolve({
             source: "fn fooBar() {}\nfn barZoo() { fooBar() }",
-            contentType: "text/rust"
+            contentType: "text/rust",
           });
       }
     });
   },
   getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => []
+  getBreakableLines: async () => [],
 };
 
 const mockFrameId = "1";
@@ -85,16 +85,16 @@ function createPauseInfo(
       { id: mockFrameId, sourceId: frameLocation.sourceId },
       {
         location: frameLocation,
-        ...frameOpts
+        ...frameOpts,
       }
-    )
+    ),
   ];
   return {
     thread: "FakeThread",
     frame: frames[0],
     frames,
     loadedObjects: [],
-    why: makeWhyNormal()
+    why: makeWhyNormal(),
   };
 }
 
@@ -149,7 +149,7 @@ describe("pause", () => {
       const cx = selectors.getThreadContext(getState());
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
       dispatch(actions.stepOver(cx));
-      expect(getNextStepSpy).not.toBeCalled();
+      expect(getNextStepSpy).not.toHaveBeenCalled();
       expect(isStepping(getState(), "FakeThread")).toBeTruthy();
     });
 
@@ -159,7 +159,7 @@ describe("pause", () => {
       const mockPauseInfo = createPauseInfo({
         sourceId: "await",
         line: 2,
-        column: 0
+        column: 0,
       });
 
       await dispatch(actions.newGeneratedSource(makeSource("await")));
@@ -168,20 +168,20 @@ describe("pause", () => {
       const cx = selectors.getThreadContext(getState());
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
       dispatch(actions.stepOver(cx));
-      expect(getNextStepSpy).toBeCalled();
+      expect(getNextStepSpy).toHaveBeenCalled();
       getNextStepSpy.mockRestore();
     });
 
     it("should step over when paused after an await", async () => {
       const store = createStore({
         ...mockThreadClient,
-        getBreakpointPositions: async () => ({ [2]: [1] })
+        getBreakpointPositions: async () => ({ [2]: [1] }),
       });
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo({
         sourceId: "await",
         line: 2,
-        column: 6
+        column: 6,
       });
 
       await dispatch(actions.newGeneratedSource(makeSource("await")));
@@ -190,7 +190,7 @@ describe("pause", () => {
       const cx = selectors.getThreadContext(getState());
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
       dispatch(actions.stepOver(cx));
-      expect(getNextStepSpy).toBeCalled();
+      expect(getNextStepSpy).toHaveBeenCalled();
       getNextStepSpy.mockRestore();
     });
 
@@ -198,15 +198,15 @@ describe("pause", () => {
       const generatedLocation = {
         sourceId: "foo",
         line: 1,
-        column: 0
+        column: 0,
       };
 
       const store = createStore(mockThreadClient, {});
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation, {
         scope: {
-          bindings: { variables: { b: {} }, arguments: [{ a: {} }] }
-        }
+          bindings: { variables: { b: {} }, arguments: [{ a: {} }] },
+        },
       });
 
       const source = await dispatch(
@@ -222,10 +222,10 @@ describe("pause", () => {
           location: { column: 0, line: 1, sourceId: "foo" },
           originalDisplayName: "foo",
           scope: {
-            bindings: { arguments: [{ a: {} }], variables: { b: {} } }
+            bindings: { arguments: [{ a: {} }], variables: { b: {} } },
           },
-          thread: "FakeThread"
-        }
+          thread: "FakeThread",
+        },
       ]);
 
       expect(selectors.getFrameScopes(getState(), "FakeThread")).toEqual({
@@ -233,12 +233,12 @@ describe("pause", () => {
           "1": {
             pending: false,
             scope: {
-              bindings: { arguments: [{ a: {} }], variables: { b: {} } }
-            }
-          }
+              bindings: { arguments: [{ a: {} }], variables: { b: {} } },
+            },
+          },
         },
         mappings: { "1": null },
-        original: { "1": { pending: false, scope: null } }
+        original: { "1": { pending: false, scope: null } },
       });
 
       expect(
@@ -250,13 +250,13 @@ describe("pause", () => {
       const generatedLocation = {
         sourceId: "foo",
         line: 1,
-        column: 0
+        column: 0,
       };
 
       const originalLocation = {
         sourceId: "foo-original",
         line: 3,
-        column: 0
+        column: 0,
       };
 
       const sourceMapsMock = {
@@ -264,9 +264,9 @@ describe("pause", () => {
         getOriginalLocations: async items => items,
         getOriginalSourceText: async () => ({
           text: "\n\nfunction fooOriginal() {\n  return -5;\n}",
-          contentType: "text/javascript"
+          contentType: "text/javascript",
         }),
-        getGeneratedLocation: async location => location
+        getGeneratedLocation: async location => location,
       };
 
       const store = createStore(mockThreadClient, {}, sourceMapsMock);
@@ -284,8 +284,8 @@ describe("pause", () => {
           location: { column: 0, line: 3, sourceId: "foo-original" },
           originalDisplayName: "fooOriginal",
           scope: { bindings: { arguments: [], variables: {} } },
-          thread: "FakeThread"
-        }
+          thread: "FakeThread",
+        },
       ]);
     });
 
@@ -293,30 +293,30 @@ describe("pause", () => {
       const generatedLocation = {
         sourceId: "foo-wasm",
         line: 1,
-        column: 0
+        column: 0,
       };
 
       const originalLocation = {
         sourceId: "foo-wasm/originalSource",
         line: 1,
-        column: 1
+        column: 1,
       };
       const originalLocation2 = {
         sourceId: "foo-wasm/originalSource",
         line: 2,
-        column: 14
+        column: 14,
       };
 
       const originStackFrames = [
         {
           displayName: "fooBar",
-          thread: "FakeThread"
+          thread: "FakeThread",
         },
         {
           displayName: "barZoo",
           location: originalLocation2,
-          thread: "FakeThread"
-        }
+          thread: "FakeThread",
+        },
       ];
 
       const sourceMapsMock = {
@@ -325,9 +325,9 @@ describe("pause", () => {
         getOriginalLocations: async items => items,
         getOriginalSourceText: async () => ({
           text: "fn fooBar() {}\nfn barZoo() { fooBar() }",
-          contentType: "text/rust"
+          contentType: "text/rust",
         }),
-        getGeneratedRangesForOriginal: async () => []
+        getGeneratedRangesForOriginal: async () => [],
       };
 
       const store = createStore(mockThreadClient, {}, sourceMapsMock);
@@ -353,7 +353,7 @@ describe("pause", () => {
           scope: { bindings: { arguments: [], variables: {} } },
           source: null,
           this: undefined,
-          thread: "FakeThread"
+          thread: "FakeThread",
         },
         {
           displayName: "barZoo",
@@ -365,8 +365,8 @@ describe("pause", () => {
           scope: { bindings: { arguments: [], variables: {} } },
           source: null,
           this: undefined,
-          thread: "FakeThread"
-        }
+          thread: "FakeThread",
+        },
       ]);
     });
   });

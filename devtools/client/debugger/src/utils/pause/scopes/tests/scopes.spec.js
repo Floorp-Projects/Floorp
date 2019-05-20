@@ -10,7 +10,7 @@ import {
   makeMockScope,
   makeWhyNormal,
   makeWhyThrow,
-  mockScopeAddVariable
+  mockScopeAddVariable,
 } from "../../../test-mockup";
 
 import type { Scope } from "../../../../types";
@@ -36,7 +36,7 @@ describe("scopes", () => {
       expect(scopes[0].contents[0]).toEqual({
         name: "<this>",
         path: "actor1-1/<this>",
-        contents: { value: {} }
+        contents: { value: {} },
       });
     });
 
@@ -56,7 +56,7 @@ describe("scopes", () => {
       expect(scopes[1].contents[0]).toEqual({
         name: "foo",
         path: "actor2-2/foo",
-        contents: { value: null }
+        contents: { value: null },
       });
     });
 
@@ -75,18 +75,18 @@ describe("scopes", () => {
               name: "<return>",
               path: "actor1-1/<return>",
               contents: {
-                value: "to sender"
-              }
+                value: "to sender",
+              },
             },
             {
               name: "<this>",
               path: "actor1-1/<this>",
               contents: {
-                value: {}
-              }
-            }
-          ]
-        }
+                value: {},
+              },
+            },
+          ],
+        },
       ]);
     });
 
@@ -105,18 +105,18 @@ describe("scopes", () => {
               name: "<exception>",
               path: "actor1-1/<exception>",
               contents: {
-                value: "a party"
-              }
+                value: "a party",
+              },
             },
             {
               name: "<this>",
               path: "actor1-1/<this>",
               contents: {
-                value: {}
-              }
-            }
-          ]
-        }
+                value: {},
+              },
+            },
+          ],
+        },
       ]);
     });
   });

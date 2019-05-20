@@ -17,7 +17,7 @@ var todo = window.opener.wrappedJSObject.todo;
 var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var gWbp;
 function printpreview() {
-  gWbp = window.frames[1].docShell.printPreview;
+  gWbp = window.frames[1].docShell.initOrReusePrintPreviewViewer();
   var listener = {
     onLocationChange: function(webProgress, request, location, flags) { },
     onProgressChange: function(webProgress, request, curSelfProgress, 
@@ -44,7 +44,7 @@ function printpreview() {
 }
 
 function exitprintpreview() {
-  window.frames[1].docShell.printPreview.exitPrintPreview();
+  window.frames[1].docShell.exitPrintPreview();
 }
 
 function finish() {

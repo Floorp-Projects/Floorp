@@ -30,6 +30,9 @@ class _MachCommand(object):
         'arguments',
         'argument_group_names',
 
+        # When `conditions` are met, rename this command to the following name.
+        'conditional_name',
+
         # Describes how dispatch is performed.
 
         # The Python class providing the command. This is the class type not
@@ -53,7 +56,8 @@ class _MachCommand(object):
     )
 
     def __init__(self, name=None, subcommand=None, category=None,
-                 description=None, conditions=None, parser=None):
+                 description=None, conditions=None, parser=None,
+                 conditional_name=None):
         self.name = name
         self.subcommand = subcommand
         self.category = category
@@ -62,6 +66,7 @@ class _MachCommand(object):
         self._parser = parser
         self.arguments = []
         self.argument_group_names = []
+        self.conditional_name = conditional_name
 
         self.cls = None
         self.pass_context = None

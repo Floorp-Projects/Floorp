@@ -11,7 +11,7 @@ import {
   getSource,
   getSelectedSource,
   getBreakpointPositions,
-  getBreakpointPositionsForSource
+  getBreakpointPositionsForSource,
 } from "../selectors";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
 import { getSelectedLocation } from "../utils/selected-location";
@@ -26,12 +26,12 @@ import type {
   Range,
   BreakpointPositions,
   BreakpointPosition,
-  Source
+  Source,
 } from "../types";
 
 export type ColumnBreakpoint = {|
   +location: SourceLocation,
-  +breakpoint: ?Breakpoint
+  +breakpoint: ?Breakpoint,
 |};
 
 export type ColumnBreakpoints = Array<ColumnBreakpoint>;
@@ -116,7 +116,7 @@ function formatPositions(
     const location = getSelectedLocation(position, selectedSource);
     return {
       location,
-      breakpoint: findBreakpoint(location, breakpointMap)
+      breakpoint: findBreakpoint(location, breakpointMap),
     };
   });
 }
@@ -161,9 +161,7 @@ const getVisibleBreakpointPositions = createSelector(
   (source, positions) => source && positions[source.id]
 );
 
-export const visibleColumnBreakpoints: Selector<
-  ColumnBreakpoints
-> = createSelector(
+export const visibleColumnBreakpoints: Selector<ColumnBreakpoints> = createSelector(
   getVisibleBreakpointPositions,
   getVisibleBreakpoints,
   getViewport,

@@ -18,7 +18,7 @@ describe("BigInt", () => {
     it("renders with expected text content for BigInt", () => {
       const renderedComponent = shallow(
         Rep({
-          object: stub
+          object: stub,
         })
       );
 
@@ -36,7 +36,7 @@ describe("BigInt", () => {
     it("renders with expected text content for negative BigInt", () => {
       const renderedComponent = shallow(
         Rep({
-          object: stub
+          object: stub,
         })
       );
 

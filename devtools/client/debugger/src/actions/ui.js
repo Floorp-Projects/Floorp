@@ -10,7 +10,7 @@ import {
   getQuickOpenEnabled,
   getSource,
   getFileSearchQuery,
-  getProjectDirectoryRoot
+  getProjectDirectoryRoot,
 } from "../selectors";
 import { selectSource } from "../actions/sources/select";
 import type { ThunkArgs, panelPositionType } from "./types";
@@ -21,7 +21,7 @@ import type { SourceLocation, Context } from "../types";
 import type {
   ActiveSearchType,
   OrientationType,
-  SelectedPrimaryPaneTabType
+  SelectedPrimaryPaneTabType,
 } from "../reducers/ui";
 
 export function setPrimaryPaneTab(tabName: SelectedPrimaryPaneTabType) {
@@ -31,7 +31,7 @@ export function setPrimaryPaneTab(tabName: SelectedPrimaryPaneTabType) {
 export function closeActiveSearch() {
   return {
     type: "TOGGLE_ACTIVE_SEARCH",
-    value: null
+    value: null,
   };
 }
 
@@ -48,7 +48,7 @@ export function setActiveSearch(activeSearch?: ActiveSearchType) {
 
     dispatch({
       type: "TOGGLE_ACTIVE_SEARCH",
-      value: activeSearch
+      value: activeSearch,
     });
   };
 }
@@ -68,7 +68,7 @@ export function toggleFrameworkGrouping(toggleValue: boolean) {
   return ({ dispatch, getState }: ThunkArgs) => {
     dispatch({
       type: "TOGGLE_FRAMEWORK_GROUPING",
-      value: toggleValue
+      value: toggleValue,
     });
   };
 }
@@ -84,7 +84,7 @@ export function showSource(cx: Context, sourceId: string) {
       dispatch({
         type: "TOGGLE_PANE",
         position: "start",
-        paneCollapsed: false
+        paneCollapsed: false,
       });
     }
 
@@ -109,7 +109,7 @@ export function togglePaneCollapse(
     dispatch({
       type: "TOGGLE_PANE",
       position,
-      paneCollapsed
+      paneCollapsed,
     });
   };
 }
@@ -121,18 +121,18 @@ export function togglePaneCollapse(
 export function highlightLineRange(location: {
   start: number,
   end: number,
-  sourceId: string
+  sourceId: string,
 }) {
   return {
     type: "HIGHLIGHT_LINES",
-    location
+    location,
   };
 }
 
 export function flashLineRange(location: {
   start: number,
   end: number,
-  sourceId: string
+  sourceId: string,
 }) {
   return ({ dispatch }: ThunkArgs) => {
     dispatch(highlightLineRange(location));
@@ -146,7 +146,7 @@ export function flashLineRange(location: {
  */
 export function clearHighlightLineRange() {
   return {
-    type: "CLEAR_HIGHLIGHT_LINES"
+    type: "CLEAR_HIGHLIGHT_LINES",
   };
 }
 
@@ -161,13 +161,13 @@ export function openConditionalPanel(
   return {
     type: "OPEN_CONDITIONAL_PANEL",
     location,
-    log
+    log,
   };
 }
 
 export function closeConditionalPanel() {
   return {
-    type: "CLOSE_CONDITIONAL_PANEL"
+    type: "CLOSE_CONDITIONAL_PANEL",
   };
 }
 
@@ -175,7 +175,7 @@ export function clearProjectDirectoryRoot(cx: Context) {
   return {
     type: "SET_PROJECT_DIRECTORY_ROOT",
     cx,
-    url: ""
+    url: "",
   };
 }
 
@@ -197,7 +197,7 @@ export function setProjectDirectoryRoot(cx: Context, newRoot: string) {
     dispatch({
       type: "SET_PROJECT_DIRECTORY_ROOT",
       cx,
-      url: newRoot
+      url: newRoot,
     });
   };
 }
@@ -205,7 +205,7 @@ export function setProjectDirectoryRoot(cx: Context, newRoot: string) {
 export function updateViewport() {
   return {
     type: "SET_VIEWPORT",
-    viewport: getLocationsInViewport(getEditor())
+    viewport: getLocationsInViewport(getEditor()),
   };
 }
 

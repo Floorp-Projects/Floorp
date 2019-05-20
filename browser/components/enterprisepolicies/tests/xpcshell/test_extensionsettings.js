@@ -7,7 +7,7 @@ const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.j
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "48", "48");
+AddonTestUtils.appInfo = getAppInfo();
 
 const server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 const BASE_URL = `http://example.com/data`;

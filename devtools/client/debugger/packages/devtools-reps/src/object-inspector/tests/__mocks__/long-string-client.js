@@ -7,10 +7,10 @@ function LongStringClient(grip, overrides) {
     grip,
     substring: function() {
       return Promise.resolve({
-        fullText: ""
+        fullText: "",
       });
     },
-    ...overrides
+    ...overrides,
   };
 }
 

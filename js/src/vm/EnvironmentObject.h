@@ -408,8 +408,8 @@ class ModuleEnvironmentObject : public EnvironmentObject {
 
   static ModuleEnvironmentObject* create(JSContext* cx,
                                          HandleModuleObject module);
-  ModuleObject& module();
-  IndirectBindingMap& importBindings();
+  ModuleObject& module() const;
+  IndirectBindingMap& importBindings() const;
 
   bool createImportBinding(JSContext* cx, HandleAtom importName,
                            HandleModuleObject module, HandleAtom exportName);

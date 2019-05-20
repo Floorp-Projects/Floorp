@@ -7,7 +7,7 @@
 // TODO: we would like to mock this in the local tests
 import {
   generateBreakpoint,
-  mockPendingBreakpoint
+  mockPendingBreakpoint,
 } from "./helpers/breakpoints.js";
 
 import { simpleMockThreadClient } from "./helpers/threadClient.js";
@@ -25,12 +25,12 @@ function loadInitialState(opts = {}) {
 jest.mock("../../utils/prefs", () => ({
   prefs: {
     clientSourceMapsEnabled: true,
-    expressions: []
+    expressions: [],
   },
   asyncStore: {
-    pendingBreakpoints: {}
+    pendingBreakpoints: {},
   },
-  clear: jest.fn()
+  clear: jest.fn(),
 }));
 
 import {
@@ -39,7 +39,7 @@ import {
   actions,
   makeSource,
   makeSourceURL,
-  waitForState
+  waitForState,
 } from "../../utils/test-head";
 
 import sourceMaps from "devtools-source-map";
@@ -50,7 +50,7 @@ function mockClient(bpPos = {}) {
     ...simpleMockThreadClient,
 
     getBreakpointPositions: async () => bpPos,
-    getBreakableLines: async () => []
+    getBreakableLines: async () => [],
   };
 }
 
@@ -60,12 +60,12 @@ function mockSourceMaps() {
     getOriginalSourceText: async source => ({
       id: source.id,
       text: "",
-      contentType: "text/javascript"
+      contentType: "text/javascript",
     }),
     getGeneratedRangesForOriginal: async () => [
-      { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } }
+      { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },
     ],
-    getOriginalLocations: async (sourceId, items) => items
+    getOriginalLocations: async (sourceId, items) => items,
   };
 }
 
@@ -341,7 +341,7 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
       line: 5,
       column: 2,
       sourceUrl: source.url,
-      sourceId: source.id
+      sourceId: source.id,
     });
     if (!bp) {
       throw new Error("no bp");
@@ -381,13 +381,13 @@ describe("adding sources", () => {
       getGeneratedLocation: async (location, _source) => ({
         line: location.line,
         column: location.column,
-        sourceId: _source.id
+        sourceId: _source.id,
       }),
       getOriginalLocation: async location => location,
       getGeneratedRangesForOriginal: async () => [
-        { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } }
+        { start: { line: 0, column: 0 }, end: { line: 10, column: 10 } },
       ],
-      getOriginalLocations: async (sourceId, items) => items
+      getOriginalLocations: async (sourceId, items) => items,
     });
 
     const { getState, dispatch } = store;

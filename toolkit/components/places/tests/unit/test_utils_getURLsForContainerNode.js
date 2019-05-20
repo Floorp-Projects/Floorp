@@ -35,7 +35,7 @@ add_task(async function test_getURLsForContainerNode_folder() {
   });
 
   var query = hs.getNewQuery();
-  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
   var options = hs.getNewQueryOptions();
 
   info("Check folder without uri nodes");
@@ -75,7 +75,7 @@ add_task(async function test_getURLsForContainerNode_folder_excludeItems() {
   });
 
   var query = hs.getNewQuery();
-  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
   var options = hs.getNewQueryOptions();
   options.excludeItems = true;
 
@@ -118,7 +118,7 @@ add_task(async function test_getURLsForContainerNode_query() {
   });
 
   var query = hs.getNewQuery();
-  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
   var options = hs.getNewQueryOptions();
 
   info("Check query without uri nodes");
@@ -160,7 +160,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeItems() {
   });
 
   var query = hs.getNewQuery();
-  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
   var options = hs.getNewQueryOptions();
   options.excludeItems = true;
 
@@ -203,7 +203,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeQueries() {
   });
 
   var query = hs.getNewQuery();
-  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
   var options = hs.getNewQueryOptions();
   options.expandQueries = false;
 

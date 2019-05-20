@@ -51,7 +51,7 @@ type XScopeData = {
   code_section_offset: number,
   debug_info: Array<XScopeItem>,
   idIndex: XScopeItemsIndex,
-  sources: Array<string>
+  sources: Array<string>,
 };
 
 async function getXScopes(sourceId: SourceId): Promise<?XScopeData> {
@@ -68,7 +68,7 @@ async function getXScopes(sourceId: SourceId): Promise<?XScopeData> {
     code_section_offset,
     debug_info,
     idIndex: indexLinkingNames(debug_info),
-    sources: map.sources
+    sources: map.sources,
   };
   xScopes.set(sourceId, xScope);
   return xScope;
@@ -88,7 +88,7 @@ type FoundScope = {
   id: string,
   name?: string,
   file?: number,
-  line?: number
+  line?: number,
 };
 
 function filterScopes(
@@ -106,7 +106,7 @@ function filterScopes(
         if (isInRange(item, pc)) {
           result = [
             ...result,
-            ...filterScopes(item.children, pc, lastItem, index)
+            ...filterScopes(item.children, pc, lastItem, index),
           ];
         }
         break;
@@ -115,14 +115,14 @@ function filterScopes(
       case "union_type":
         result = [
           ...result,
-          ...filterScopes(item.children, pc, lastItem, index)
+          ...filterScopes(item.children, pc, lastItem, index),
         ];
         break;
       case "subprogram":
         if (isInRange(item, pc)) {
           const s: FoundScope = {
             id: item.linkage_name,
-            name: item.name
+            name: item.name,
           };
           result = [...result, s, ...filterScopes(item.children, pc, s, index)];
         }
@@ -132,7 +132,7 @@ function filterScopes(
           const linkedItem = getIndexedItem(index, item.abstract_origin);
           const s: FoundScope = {
             id: item.abstract_origin,
-            name: linkedItem ? linkedItem.name : void 0
+            name: linkedItem ? linkedItem.name : void 0,
           };
           if (lastItem) {
             lastItem.file = item.call_file;
@@ -162,7 +162,7 @@ class XScope {
     return scopes.map(i => {
       if (!("file" in i)) {
         return {
-          displayName: i.name || ""
+          displayName: i.name || "",
         };
       }
       const sourceId = generatedToOriginalId(
@@ -173,8 +173,8 @@ class XScope {
         displayName: i.name || "",
         location: {
           line: i.line || 0,
-          sourceId
-        }
+          sourceId,
+        },
       };
     });
   }
@@ -194,5 +194,5 @@ function clearWasmXScopes() {
 
 module.exports = {
   getWasmXScopes,
-  clearWasmXScopes
+  clearWasmXScopes,
 };

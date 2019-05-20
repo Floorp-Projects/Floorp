@@ -9,7 +9,7 @@ const { MODE } = require("../../../reps/constants");
 const {
   formatObjectInspector,
   waitForDispatch,
-  waitForLoadedProperties
+  waitForLoadedProperties,
 } = require("../test-utils");
 const gripMapRepStubs = require("../../../reps/stubs/grip-map");
 const mapStubs = require("../../stubs/map");
@@ -19,15 +19,15 @@ function generateDefaults(overrides) {
   return {
     autoExpandDepth: 0,
     createObjectClient: grip => ObjectClient(grip),
-    ...overrides
+    ...overrides,
   };
 }
 
 function getEnumEntriesMock() {
   return jest.fn(() => ({
     iterator: {
-      slice: () => mapStubs.get("11-entries")
-    }
+      slice: () => mapStubs.get("11-entries"),
+    },
   }));
 }
 
@@ -35,7 +35,7 @@ function mount(props, { initialState }) {
   const enumEntries = getEnumEntriesMock();
 
   const client = {
-    createObjectClient: grip => ObjectClient(grip, { enumEntries })
+    createObjectClient: grip => ObjectClient(grip, { enumEntries }),
   };
   const obj = mountObjectInspector({
     client,
@@ -43,9 +43,9 @@ function mount(props, { initialState }) {
     initialState: {
       objectInspector: {
         ...initialState,
-        evaluations: new Map()
-      }
-    }
+        evaluations: new Map(),
+      },
+    },
   });
 
   return { ...obj, enumEntries };
@@ -61,21 +61,21 @@ describe("ObjectInspector - entries", () => {
         roots: [
           {
             path: "root",
-            contents: { value: stub }
-          }
+            contents: { value: stub },
+          },
         ],
-        mode: MODE.LONG
+        mode: MODE.LONG,
       },
       {
         initialState: {
-          loadedProperties: new Map([["root", mapStubs.get("properties")]])
-        }
+          loadedProperties: new Map([["root", mapStubs.get("properties")]]),
+        },
       }
     );
 
     await waitForLoadedProperties(store, [
       "Symbol(root/<entries>/0)",
-      "Symbol(root/<entries>/1)"
+      "Symbol(root/<entries>/1)",
     ]);
 
     wrapper.update();
@@ -97,17 +97,17 @@ describe("ObjectInspector - entries", () => {
           {
             path: "root",
             contents: {
-              value: stub
-            }
-          }
-        ]
+              value: stub,
+            },
+          },
+        ],
       },
       {
         initialState: {
           loadedProperties: new Map([
-            ["root", { ownProperties: stub.preview.entries }]
-          ])
-        }
+            ["root", { ownProperties: stub.preview.entries }],
+          ]),
+        },
       }
     );
 

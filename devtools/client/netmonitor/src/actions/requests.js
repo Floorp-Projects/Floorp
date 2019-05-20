@@ -7,8 +7,10 @@
 const {
   ADD_REQUEST,
   CLEAR_REQUESTS,
+  CLONE_REQUEST,
   CLONE_SELECTED_REQUEST,
   REMOVE_SELECTED_CUSTOM_REQUEST,
+  RIGHT_CLICK_REQUEST,
   SEND_CUSTOM_REQUEST,
   TOGGLE_RECORDING,
   UPDATE_REQUEST,
@@ -30,6 +32,27 @@ function updateRequest(id, data, batch) {
     id,
     data,
     meta: { batch },
+  };
+}
+
+/**
+ * Clone request by id. Used when cloning a request
+ * through the "Edit and Resend" option present in the context menu.
+ */
+function cloneRequest(id) {
+  return {
+    id,
+    type: CLONE_REQUEST,
+  };
+}
+
+/**
+ * Right click a request without selecting it.
+ */
+function rightClickRequest(id) {
+  return {
+    id,
+    type: RIGHT_CLICK_REQUEST,
   };
 }
 
@@ -143,7 +166,9 @@ module.exports = {
   addRequest,
   blockSelectedRequestURL,
   clearRequests,
+  cloneRequest,
   cloneSelectedRequest,
+  rightClickRequest,
   removeSelectedCustomRequest,
   sendCustomRequest,
   toggleRecording,

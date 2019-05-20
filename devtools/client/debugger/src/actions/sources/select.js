@@ -32,14 +32,14 @@ import {
   getPrettySource,
   getActiveSearch,
   getSelectedLocation,
-  getSelectedSource
+  getSelectedSource,
 } from "../../selectors";
 
 import type {
   SourceLocation,
   PartialPosition,
   Source,
-  Context
+  Context,
 } from "../../types";
 import type { ThunkArgs } from "../types";
 
@@ -51,7 +51,7 @@ export const setSelectedLocation = (
   type: "SET_SELECTED_LOCATION",
   cx,
   source,
-  location
+  location,
 });
 
 export const setPendingSelectedLocation = (
@@ -62,12 +62,12 @@ export const setPendingSelectedLocation = (
   type: "SET_PENDING_SELECTED_LOCATION",
   cx,
   url: url,
-  line: options.location ? options.location.line : null
+  line: options.location ? options.location.line : null,
 });
 
 export const clearSelectedLocation = (cx: Context) => ({
   type: "CLEAR_SELECTED_LOCATION",
-  cx
+  cx,
 });
 
 /**

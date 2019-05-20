@@ -15,8 +15,8 @@ stubs.set("html", {
     kind: "DOMNode",
     nodeType: 10,
     nodeName: "html",
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 
 stubs.set("unnamed", {
@@ -31,8 +31,8 @@ stubs.set("unnamed", {
     kind: "DOMNode",
     nodeType: 10,
     nodeName: "",
-    isConnected: true
-  }
+    isConnected: true,
+  },
 });
 
 module.exports = stubs;

@@ -13,7 +13,6 @@ import type { AstLocation, SymbolDeclarations } from "../workers/parser";
 
 import type { Source } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
-import type { Node, Grip, GripProperties } from "devtools-reps";
 
 type EmptyLinesType = number[];
 
@@ -24,29 +23,15 @@ export type EmptyLinesMap = { [k: string]: EmptyLinesType };
 export type SymbolsMap = { [k: string]: Symbols };
 
 export type SourceMetaDataType = {
-  framework: ?string
+  framework: ?string,
 };
 
 export type SourceMetaDataMap = { [k: string]: SourceMetaDataType };
-
-export type Preview = {| updating: true |} | null | PreviewValue;
-
-export type PreviewValue = {|
-  expression: string,
-  result: Grip,
-  root: Node,
-  properties: GripProperties,
-  location: AstLocation,
-  cursorPos: any,
-  tokenPos: AstLocation,
-  updating: false
-|};
 
 export type ASTState = {
   +symbols: SymbolsMap,
   +outOfScopeLocations: ?Array<AstLocation>,
   +inScopeLines: ?Array<number>,
-  +preview: Preview
 };
 
 export function initialASTState(): ASTState {
@@ -54,7 +39,6 @@ export function initialASTState(): ASTState {
     symbols: {},
     outOfScopeLocations: null,
     inScopeLines: null,
-    preview: null
   };
 }
 
@@ -65,14 +49,14 @@ function update(state: ASTState = initialASTState(), action: Action): ASTState {
       if (action.status === "start") {
         return {
           ...state,
-          symbols: { ...state.symbols, [sourceId]: { loading: true } }
+          symbols: { ...state.symbols, [sourceId]: { loading: true } },
         };
       }
 
       const value = ((action: any): DonePromiseAction).value;
       return {
         ...state,
-        symbols: { ...state.symbols, [sourceId]: value }
+        symbols: { ...state.symbols, [sourceId]: value },
       };
     }
 
@@ -82,27 +66,6 @@ function update(state: ASTState = initialASTState(), action: Action): ASTState {
 
     case "IN_SCOPE_LINES": {
       return { ...state, inScopeLines: action.lines };
-    }
-
-    case "CLEAR_SELECTION": {
-      return { ...state, preview: null };
-    }
-
-    case "SET_PREVIEW": {
-      if (action.status == "start") {
-        return { ...state, preview: { updating: true } };
-      }
-
-      if (!action.value) {
-        return { ...state, preview: null };
-      }
-
-      // NOTE: if the preview does not exist, it has been cleared
-      if (state.preview) {
-        return { ...state, preview: { ...action.value, updating: false } };
-      }
-
-      return state;
     }
 
     case "RESUME": {
@@ -159,10 +122,6 @@ export function isSymbolsLoading(state: OuterState, source: ?Source): boolean {
 
 export function getOutOfScopeLocations(state: OuterState) {
   return state.ast.outOfScopeLocations;
-}
-
-export function getPreview(state: OuterState) {
-  return state.ast.preview;
 }
 
 export function getInScopeLines(state: OuterState) {

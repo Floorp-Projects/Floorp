@@ -45,12 +45,15 @@ static bool Translate(const nsACString& source,
                       nsACString* const out_translationLog,
                       nsACString* const out_translatedSource) {
   if (!validator->ValidateAndTranslate(source.BeginReading())) {
-    validator->GetInfoLog(out_translationLog);
+    const std::string& log = sh::GetInfoLog(validator->mHandle);
+    out_translationLog->Assign(log.data(), log.length());
     return false;
   }
 
   // Success
-  validator->GetOutput(out_translatedSource);
+  const std::string& output = sh::GetObjectCode(validator->mHandle);
+  out_translatedSource->Assign(output.data(), output.length());
+
   return true;
 }
 
@@ -60,68 +63,6 @@ static bool SubstringStartsWith(const std::string& testStr, size_t offset,
   for (size_t i = 0; i < N - 1; i++) {
     if (testStr[offset + i] != refStr[i]) return false;
   }
-  return true;
-}
-
-/* On success, writes to out_translatedSource.
- * On failure, writes to out_translationLog.
- *
- * Requirements:
- *   #version is either omitted, `#version 100`, or `version 300 es`.
- */
-static bool TranslateWithoutValidation(const nsACString& sourceNS,
-                                       bool isWebGL2,
-                                       nsACString* const out_translationLog,
-                                       nsACString* const out_translatedSource) {
-  std::string source = sourceNS.BeginReading();
-
-  size_t versionStrStart = source.find("#version");
-  size_t versionStrLen;
-  uint32_t glesslVersion;
-
-  if (versionStrStart != std::string::npos) {
-    static const char versionStr100[] = "#version 100\n";
-    static const char versionStr300es[] = "#version 300 es\n";
-
-    if (isWebGL2 &&
-        SubstringStartsWith(source, versionStrStart, versionStr300es)) {
-      glesslVersion = 300;
-      versionStrLen = strlen(versionStr300es);
-
-    } else if (SubstringStartsWith(source, versionStrStart, versionStr100)) {
-      glesslVersion = 100;
-      versionStrLen = strlen(versionStr100);
-
-    } else {
-      nsPrintfCString error("#version, if declared, must be %s.",
-                            isWebGL2 ? "`100` or `300 es`" : "`100`");
-      *out_translationLog = error;
-      return false;
-    }
-  } else {
-    versionStrStart = 0;
-    versionStrLen = 0;
-    glesslVersion = 100;
-  }
-
-  std::string reversionedSource = source;
-  reversionedSource.erase(versionStrStart, versionStrLen);
-
-  switch (glesslVersion) {
-    case 100:
-      /* According to ARB_ES2_compatibility extension glsl
-       * should accept #version 100 for ES 2 shaders. */
-      reversionedSource.insert(versionStrStart, "#version 100\n");
-      break;
-    case 300:
-      reversionedSource.insert(versionStrStart, "#version 330\n");
-      break;
-    default:
-      MOZ_CRASH("GFX: Bad `glesslVersion`.");
-  }
-
-  out_translatedSource->Assign(reversionedSource.c_str(),
-                               reversionedSource.length());
   return true;
 }
 
@@ -185,6 +126,7 @@ void WebGLShader::CompileShader() {
   gl::GLContext* gl = mContext->gl;
 
   mValidator.reset(mContext->CreateShaderValidator(mType));
+  MOZ_ASSERT(mValidator);
 
   static const bool kDumpShaders = PR_GetEnv("MOZ_WEBGL_DUMP_SHADERS");
   if (MOZ_UNLIKELY(kDumpShaders)) {
@@ -192,14 +134,8 @@ void WebGLShader::CompileShader() {
     PrintLongString(mCleanSource.BeginReading(), mCleanSource.Length());
   }
 
-  bool success;
-  if (mValidator) {
-    success = Translate(mCleanSource, mValidator.get(), &mValidationLog,
+  const bool success = Translate(mCleanSource, mValidator.get(), &mValidationLog,
                         &mTranslatedSource);
-  } else {
-    success = TranslateWithoutValidation(mCleanSource, mContext->IsWebGL2(),
-                                         &mValidationLog, &mTranslatedSource);
-  }
 
   if (MOZ_UNLIKELY(kDumpShaders)) {
     printf_stderr("\n==== \\/ \\/ \\/ ====\n");
@@ -262,69 +198,72 @@ void WebGLShader::GetShaderTranslatedSource(nsAString* out) const {
 
 bool WebGLShader::CanLinkTo(const WebGLShader* prev,
                             nsCString* const out_log) const {
-  if (!mValidator) return true;
-
   return mValidator->CanLinkTo(prev->mValidator.get(), out_log);
 }
 
 size_t WebGLShader::CalcNumSamplerUniforms() const {
-  if (mValidator) return mValidator->CalcNumSamplerUniforms();
-
-  // TODO
-  return 0;
+  const auto& uniforms = *sh::GetUniforms(mValidator->mHandle);
+  size_t accum = 0;
+  for (const auto& cur : uniforms) {
+    const auto& type = cur.type;
+    if (type == LOCAL_GL_SAMPLER_2D || type == LOCAL_GL_SAMPLER_CUBE) {
+      accum += cur.getArraySizeProduct();
+    }
+  }
+  return accum;
 }
 
 size_t WebGLShader::NumAttributes() const {
-  if (mValidator) return mValidator->NumAttributes();
-
-  // TODO
-  return 0;
+  return sh::GetAttributes(mValidator->mHandle)->size();
 }
 
-void WebGLShader::BindAttribLocation(GLuint prog, const nsCString& userName,
+void WebGLShader::BindAttribLocation(GLuint prog, const std::string& userName,
                                      GLuint index) const {
-  std::string userNameStr(userName.BeginReading());
-
-  const std::string* mappedNameStr = &userNameStr;
-  if (mValidator)
-    mValidator->FindAttribMappedNameByUserName(userNameStr, &mappedNameStr);
-
-  mContext->gl->fBindAttribLocation(prog, index, mappedNameStr->c_str());
+  const auto& attribs = *sh::GetAttributes(mValidator->mHandle);
+  for (const auto& attrib : attribs) {
+    if (attrib.name == userName) {
+      mContext->gl->fBindAttribLocation(prog, index, attrib.mappedName.c_str());
+      return;
+    }
+  }
 }
 
 bool WebGLShader::FindAttribUserNameByMappedName(
     const nsACString& mappedName, nsCString* const out_userName) const {
-  if (!mValidator) return false;
-
   const std::string mappedNameStr(mappedName.BeginReading());
-  const std::string* userNameStr;
-  if (!mValidator->FindAttribUserNameByMappedName(mappedNameStr, &userNameStr))
-    return false;
 
-  *out_userName = userNameStr->c_str();
-  return true;
+  const auto& attribs = *sh::GetAttributes(mValidator->mHandle);
+  for (const auto& cur : attribs) {
+    if (cur.mappedName == mappedNameStr) {
+      *out_userName = cur.name.c_str();
+      return true;
+    }
+  }
+  return false;
 }
 
 bool WebGLShader::FindVaryingByMappedName(const nsACString& mappedName,
                                           nsCString* const out_userName,
                                           bool* const out_isArray) const {
-  if (!mValidator) return false;
-
   const std::string mappedNameStr(mappedName.BeginReading());
-  std::string userNameStr;
-  if (!mValidator->FindVaryingByMappedName(mappedNameStr, &userNameStr,
-                                           out_isArray))
-    return false;
 
-  *out_userName = userNameStr.c_str();
-  return true;
+  const auto& varyings = *sh::GetVaryings(mValidator->mHandle);
+  for (const auto& cur : varyings) {
+    const sh::ShaderVariable* found;
+    std::string userName;
+    if (!cur.findInfoByMappedName(mappedNameStr, &found, &userName)) continue;
+
+    *out_userName = userName.c_str();
+    *out_isArray = found->isArray();
+    return true;
+  }
+
+  return false;
 }
 
 bool WebGLShader::FindUniformByMappedName(const nsACString& mappedName,
                                           nsCString* const out_userName,
                                           bool* const out_isArray) const {
-  if (!mValidator) return false;
-
   const std::string mappedNameStr(mappedName.BeginReading(),
                                   mappedName.Length());
   std::string userNameStr;
@@ -338,12 +277,17 @@ bool WebGLShader::FindUniformByMappedName(const nsACString& mappedName,
 
 bool WebGLShader::UnmapUniformBlockName(
     const nsACString& baseMappedName, nsCString* const out_baseUserName) const {
-  if (!mValidator) {
-    *out_baseUserName = baseMappedName;
-    return true;
+  const auto& interfaces = *sh::GetInterfaceBlocks(mValidator->mHandle);
+  for (const auto& interface : interfaces) {
+    const nsDependentCString interfaceMappedName(interface.mappedName.data(),
+                                                 interface.mappedName.size());
+    if (baseMappedName == interfaceMappedName) {
+      *out_baseUserName = interface.name.data();
+      return true;
+    }
   }
 
-  return mValidator->UnmapUniformBlockName(baseMappedName, out_baseUserName);
+  return false;
 }
 
 void WebGLShader::MapTransformFeedbackVaryings(
@@ -355,16 +299,21 @@ void WebGLShader::MapTransformFeedbackVaryings(
   out_mappedVaryings->clear();
   out_mappedVaryings->reserve(varyings.size());
 
+  const auto& shaderVaryings = *sh::GetVaryings(mValidator->mHandle);
+
   for (const auto& wideUserName : varyings) {
     const NS_LossyConvertUTF16toASCII mozUserName(
         wideUserName);  // Don't validate here.
     const std::string userName(mozUserName.BeginReading(),
                                mozUserName.Length());
-    const std::string* pMappedName = &userName;
-    if (mValidator) {
-      mValidator->FindVaryingMappedNameByUserName(userName, &pMappedName);
+    const auto* mappedName = &userName;
+    for (const auto& shaderVarying : shaderVaryings) {
+      if (shaderVarying.name == userName) {
+        mappedName = &shaderVarying.mappedName;
+        break;
+      }
     }
-    out_mappedVaryings->push_back(*pMappedName);
+    out_mappedVaryings->push_back(*mappedName);
   }
 }
 

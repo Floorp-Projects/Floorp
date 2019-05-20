@@ -10,7 +10,7 @@ function run_test() {
   // Bug 376798
   let query = PlacesUtils.history.getNewQuery();
   let options = PlacesUtils.history.getNewQueryOptions();
-  query.setParents([PlacesUtils.bookmarks.rootGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.rootGuid]);
   Assert.equal(PlacesUtils.history.queryToQueryString(query, options),
                `place:parent=${PlacesUtils.bookmarks.rootGuid}`);
 }

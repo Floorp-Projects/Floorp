@@ -20,11 +20,11 @@ function generateDefaults(overrides) {
     selectedSource: { sourceId, get: () => false },
     editor: {
       codeMirror: {
-        setGutterMarker: jest.fn()
-      }
+        setGutterMarker: jest.fn(),
+      },
     },
     breakpoints: I.Map(matchingBreakpoints),
-    ...overrides
+    ...overrides,
   };
 }
 

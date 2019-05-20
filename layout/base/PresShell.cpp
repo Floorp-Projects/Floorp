@@ -4582,6 +4582,13 @@ nsRect PresShell::ClipListToRange(nsDisplayListBuilder* aBuilder,
 
   nsDisplayItem* i;
   while ((i = aList->RemoveBottom())) {
+    if (i->GetType() == DisplayItemType::TYPE_CONTAINER) {
+      tmpList.AppendToTop(i);
+      surfaceRect.UnionRect(
+          surfaceRect, ClipListToRange(aBuilder, i->GetChildren(), aRange));
+      continue;
+    }
+
     // itemToInsert indiciates the item that should be inserted into the
     // temporary list. If null, no item should be inserted.
     nsDisplayItem* itemToInsert = nullptr;
@@ -10933,8 +10940,7 @@ void PresShell::SetIsUnderHiddenEmbedderElement(
 
       bool embedderFrameIsHidden = true;
       if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
-        embedderFrameIsHidden =
-            !embedderFrame->StyleVisibility()->IsVisible();
+        embedderFrameIsHidden = !embedderFrame->StyleVisibility()->IsVisible();
       }
 
       if (nsIDocShell* childDocShell = child->GetDocShell()) {

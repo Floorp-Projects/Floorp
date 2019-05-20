@@ -27,7 +27,7 @@ describe("getLibraryFromUrl", () => {
         "vue.runtime.common.js",
         "vue.runtime.esm.js",
         "vue.min.js",
-        "vue.runtime.min.js"
+        "vue.runtime.min.js",
       ];
 
       buildTypeList.forEach(buildType => {
@@ -46,7 +46,7 @@ describe("getLibraryFromUrl", () => {
         "https://debugger-example.com/test.js",
         "https://debugger-react-example.com/test.js",
         "https://debugger-react-example.com/react/test.js",
-        "https://debugger-example.com/react-contextmenu.js"
+        "https://debugger-example.com/react-contextmenu.js",
       ];
       notReactUrlList.forEach(notReactUrl => {
         const frame = makeMockFrameWithURL(notReactUrl);
@@ -61,7 +61,7 @@ describe("getLibraryFromUrl", () => {
         "https://debugger-react-example.com/react.js",
         "https://debugger-react-example.com/react/react.js",
         "/node_modules/react/test.js",
-        "/node_modules/react-dom/test.js"
+        "/node_modules/react-dom/test.js",
       ];
       reactUrlList.forEach(reactUrl => {
         const frame = makeMockFrameWithURL(reactUrl);
@@ -112,7 +112,7 @@ describe("getLibraryFromUrl", () => {
         frame,
         makeMockFrameWithURL(
           "https://cdnjs.cloudflare.com/ajax/libs/angular/angular.js"
-        )
+        ),
       ];
 
       expect(getLibraryFromUrl(frame, callstack)).toEqual("Angular");

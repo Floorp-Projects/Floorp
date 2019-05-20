@@ -59,6 +59,10 @@ function createAdbMock() {
     console.log("MOCKED METHOD once");
   };
 
+  adbMock.isProcessStarted = function() {
+    console.log("MOCKED METHOD isProcessStarted");
+  };
+
   return { adb: adbMock };
 }
 /* exported createAdbMock */

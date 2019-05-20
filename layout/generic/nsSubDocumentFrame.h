@@ -122,6 +122,8 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   void PropagateIsUnderHiddenEmbedderElementToSubView(
       bool aIsUnderHiddenEmbedderElement);
 
+  void ClearDisplayItems();
+
  protected:
   friend class AsyncFrameInit;
 
@@ -137,8 +139,6 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   // runner, so that we can save and restore the presentation if we're
   // being reframed.
   void ShowViewer();
-
-  void ClearDisplayItems();
 
   /* Obtains the frame we should use for intrinsic size information if we are
    * an HTML <object> or <embed>  (a replaced element - not <iframe>)

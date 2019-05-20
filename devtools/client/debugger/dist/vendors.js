@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/react"), require("Services"), require("devtools/shared/flags"), require("devtools/client/shared/vendor/react-dom"), require("devtools/client/shared/vendor/lodash"));
+		module.exports = factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/react"), require("Services"), require("devtools/shared/flags"), require("devtools/client/shared/vendor/react-dom"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/framework/menu"), require("devtools/client/framework/menu-item"));
 	else if(typeof define === 'function' && define.amd)
-		define(["devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react-dom-factories", "devtools/client/shared/vendor/react", "Services", "devtools/shared/flags", "devtools/client/shared/vendor/react-dom", "devtools/client/shared/vendor/lodash"], factory);
+		define(["devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react-dom-factories", "devtools/client/shared/vendor/react", "Services", "devtools/shared/flags", "devtools/client/shared/vendor/react-dom", "devtools/client/shared/vendor/lodash", "devtools/client/framework/menu", "devtools/client/framework/menu-item"], factory);
 	else {
-		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/react"), require("Services"), require("devtools/shared/flags"), require("devtools/client/shared/vendor/react-dom"), require("devtools/client/shared/vendor/lodash")) : factory(root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/react"], root["Services"], root["devtools/shared/flags"], root["devtools/client/shared/vendor/react-dom"], root["devtools/client/shared/vendor/lodash"]);
+		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/react"), require("Services"), require("devtools/shared/flags"), require("devtools/client/shared/vendor/react-dom"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/framework/menu"), require("devtools/client/framework/menu-item")) : factory(root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/react"], root["Services"], root["devtools/shared/flags"], root["devtools/client/shared/vendor/react-dom"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/framework/menu"], root["devtools/client/framework/menu-item"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_37__, __WEBPACK_EXTERNAL_MODULE_103__, __WEBPACK_EXTERNAL_MODULE_112__, __WEBPACK_EXTERNAL_MODULE_417__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_37__, __WEBPACK_EXTERNAL_MODULE_103__, __WEBPACK_EXTERNAL_MODULE_112__, __WEBPACK_EXTERNAL_MODULE_417__, __WEBPACK_EXTERNAL_MODULE_490__, __WEBPACK_EXTERNAL_MODULE_491__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -164,7 +164,7 @@ module.exports = {
   Tree: _tree2.default
 }; /* This Source Code Form is subject to the terms of the Mozilla Public
     * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /***/ }),
 
@@ -1476,8 +1476,6 @@ module.exports = g;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Menu = __webpack_require__(421);
-const MenuItem = __webpack_require__(423);
 const { PrefsHelper } = __webpack_require__(424);
 const KeyShortcuts = __webpack_require__(425);
 const { ZoomKeys } = __webpack_require__(426);
@@ -1489,8 +1487,6 @@ const { getUnicodeHostname, getUnicodeUrlPath, getUnicodeUrl } = __webpack_requi
 
 module.exports = {
   KeyShortcuts,
-  Menu,
-  MenuItem,
   PrefsHelper,
   ZoomKeys,
   asyncStorage,
@@ -2529,11 +2525,12 @@ var substr = 'ab'.substr(-1) === 'b'
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Menu, MenuItem } = __webpack_require__(183);
+const Menu = __webpack_require__(490);
+const MenuItem = __webpack_require__(491);
 
 function inToolbox() {
   try {
-    return window.parent.document.documentURI == "about:devtools-toolbox";
+    return window.parent.document.documentURI.startsWith("about:devtools-toolbox");
   } catch (e) {
     // If `window` is not available, it's very likely that we are in the toolbox.
     return true;
@@ -2671,257 +2668,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 421:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _devtoolsServices = __webpack_require__(37);
-
-var _devtoolsServices2 = _interopRequireDefault(_devtoolsServices);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const { appinfo } = _devtoolsServices2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                 * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const isMacOS = appinfo.OS === "Darwin";
-
-const EventEmitter = __webpack_require__(65);
-
-/**
- * Formats key for use in tooltips
- * For macOS we use the following unicode
- *
- * cmd ⌘ = \u2318
- * shift ⇧ – \u21E7
- * option (alt) ⌥ \u2325
- *
- * For Win/Lin this replaces CommandOrControl or CmdOrCtrl with Ctrl
- *
- * @static
- */
-function formatKeyShortcut(shortcut) {
-  if (isMacOS) {
-    return shortcut.replace(/Shift\+/g, "\u21E7").replace(/Command\+|Cmd\+/g, "\u2318").replace(/CommandOrControl\+|CmdOrCtrl\+/g, "\u2318").replace(/Alt\+/g, "\u2325");
-  }
-  return shortcut.replace(/CommandOrControl\+|CmdOrCtrl\+/g, `${L10N.getStr("ctrl")}+`).replace(/Shift\+/g, "Shift+");
-}
-
-function inToolbox() {
-  try {
-    return window.parent.document.documentURI == "about:devtools-toolbox";
-  } catch (e) {
-    // If `window` is not available, it's very likely that we are in the toolbox.
-    return true;
-  }
-}
-
-/**
- * A partial implementation of the Menu API provided by electron:
- * https://github.com/electron/electron/blob/master/docs/api/menu.md.
- *
- * Extra features:
- *  - Emits an 'open' and 'close' event when the menu is opened/closed
-
- * @param String id (non standard)
- *        Needed so tests can confirm the XUL implementation is working
- */
-function Menu({ id = null } = {}) {
-  this.menuitems = [];
-  this.id = id;
-
-  Object.defineProperty(this, "items", {
-    get() {
-      return this.menuitems;
-    }
-  });
-
-  EventEmitter.decorate(this);
-}
-
-/**
- * Add an item to the end of the Menu
- *
- * @param {MenuItem} menuItem
- */
-Menu.prototype.append = function (menuItem) {
-  this.menuitems.push(menuItem);
-};
-
-/**
- * Add an item to a specified position in the menu
- *
- * @param {int} pos
- * @param {MenuItem} menuItem
- */
-Menu.prototype.insert = function (pos, menuItem) {
-  throw Error("Not implemented");
-};
-
-// Copied from m-c DevToolsUtils.
-function getTopWindow(win) {
-  return win.windowRoot ? win.windowRoot.ownerGlobal : win.top;
-}
-
-/**
- * Show the Menu at a specified location on the screen
- *
- * Missing features:
- *   - browserWindow - BrowserWindow (optional) - Default is null.
- *   - positioningItem Number - (optional) OS X
- *
- * @param {int} screenX
- * @param {int} screenY
- * @param Toolbox toolbox (non standard)
- *        Needed so we in which window to inject XUL
- */
-Menu.prototype.popup = function (screenX, screenY, doc) {
-  const win = doc.defaultView;
-  doc = getTopWindow(doc.defaultView).document;
-  let popupset = doc.querySelector("popupset");
-  if (!popupset) {
-    popupset = doc.createXULElement("popupset");
-    doc.documentElement.appendChild(popupset);
-  }
-  // See bug 1285229, on Windows, opening the same popup multiple times in a
-  // row ends up duplicating the popup. The newly inserted popup doesn't
-  // dismiss the old one. So remove any previously displayed popup before
-  // opening a new one.
-  let popup = popupset.querySelector("menupopup[menu-api=\"true\"]");
-  if (popup) {
-    popup.hidePopup();
-  }
-
-  popup = this.createPopup(doc);
-  popup.setAttribute("menu-api", "true");
-
-  if (this.id) {
-    popup.id = this.id;
-  }
-  this._createMenuItems(popup);
-  // The context menu will be created in the topmost chrome window. Hide it manually when
-  // the owner document is unloaded.
-  const onWindowUnload = () => popup.hidePopup();
-  win.addEventListener("unload", onWindowUnload);
-
-  // Remove the menu from the DOM once it's hidden.
-  popup.addEventListener("popuphidden", e => {
-    if (e.target === popup) {
-      win.removeEventListener("unload", onWindowUnload);
-      popup.remove();
-      this.emit("close", popup);
-    }
-  });
-
-  popup.addEventListener("popupshown", e => {
-    if (e.target === popup) {
-      this.emit("open", popup);
-    }
-  });
-
-  popupset.appendChild(popup);
-  popup.openPopupAtScreen(screenX, screenY, true);
-};
-
-Menu.prototype.createPopup = function (doc) {
-  const popup = doc.createXULElement("menupopup");
-  popup.setAttribute("menu-api", "true");
-  popup.setAttribute("consumeoutsideclicks", "false");
-  popup.setAttribute("incontentshell", "false");
-  return popup;
-};
-
-Menu.prototype._createMenuItems = function (parent) {
-  let doc = parent.ownerDocument;
-  this.menuitems.forEach(item => {
-    if (!item.visible) {
-      return;
-    }
-
-    if (item.submenu) {
-      let menupopup = doc.createXULElement("menupopup");
-      item.submenu._createMenuItems(menupopup);
-
-      let menuitem = doc.createXULElement("menuitem");
-      menuitem.setAttribute("label", item.label);
-      if (!inToolbox()) {
-        menuitem.textContent = item.label;
-      }
-
-      let menu = doc.createXULElement("menu");
-      menu.appendChild(menuitem);
-      menu.appendChild(menupopup);
-      if (item.disabled) {
-        menu.setAttribute("disabled", "true");
-      }
-      if (item.accesskey) {
-        menu.setAttribute("accesskey", item.accesskey);
-      }
-      if (item.id) {
-        menu.id = item.id;
-      }
-      if (item.accelerator) {
-        menuitem.setAttribute("acceltext", formatKeyShortcut(item.accelerator));
-      }
-      parent.appendChild(menu);
-    } else if (item.type === "separator") {
-      let menusep = doc.createXULElement("menuseparator");
-      parent.appendChild(menusep);
-    } else {
-      let menuitem = doc.createXULElement("menuitem");
-      menuitem.setAttribute("label", item.label);
-
-      if (!inToolbox()) {
-        menuitem.textContent = item.label;
-      }
-
-      menuitem.addEventListener("command", () => item.click());
-
-      if (item.type === "checkbox") {
-        menuitem.setAttribute("type", "checkbox");
-      }
-      if (item.type === "radio") {
-        menuitem.setAttribute("type", "radio");
-      }
-      if (item.disabled) {
-        menuitem.setAttribute("disabled", "true");
-      }
-      if (item.checked) {
-        menuitem.setAttribute("checked", "true");
-      }
-      if (item.accesskey) {
-        menuitem.setAttribute("accesskey", item.accesskey);
-      }
-      if (item.id) {
-        menuitem.id = item.id;
-      }
-      if (item.accelerator) {
-        menuitem.setAttribute("acceltext", formatKeyShortcut(item.accelerator));
-      }
-      parent.appendChild(menuitem);
-    }
-  });
-};
-
-Menu.setApplicationMenu = () => {
-  throw Error("Not implemented");
-};
-
-Menu.sendActionToFirstResponder = () => {
-  throw Error("Not implemented");
-};
-
-Menu.buildFromTemplate = () => {
-  throw Error("Not implemented");
-};
-
-module.exports = Menu;
-
-/***/ }),
-
 /***/ 422:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2957,79 +2703,6 @@ p.defer = function defer() {
 };
 
 module.exports = p;
-
-/***/ }),
-
-/***/ 423:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/**
- * A partial implementation of the MenuItem API provided by electron:
- * https://github.com/electron/electron/blob/master/docs/api/menu-item.md.
- *
- * Missing features:
- *   - id String - Unique within a single menu. If defined then it can be used
- *                 as a reference to this item by the position attribute.
- *   - role String - Define the action of the menu item; when specified the
- *                   click property will be ignored
- *   - sublabel String
- *   - icon NativeImage
- *   - position String - This field allows fine-grained definition of the
- *                       specific location within a given menu.
- *
- * Implemented features:
- *  @param Object options
- *    Function click
- *      Will be called with click(menuItem, browserWindow) when the menu item
- *       is clicked
- *    String type
- *      Can be normal, separator, submenu, checkbox or radio
- *    String label
- *    Boolean enabled
- *      If false, the menu item will be greyed out and unclickable.
- *    Boolean checked
- *      Should only be specified for checkbox or radio type menu items.
- *    Menu submenu
- *      Should be specified for submenu type menu items. If submenu is specified,
- *      the type: 'submenu' can be omitted. If the value is not a Menu then it
- *      will be automatically converted to one using Menu.buildFromTemplate.
- *    Boolean visible
- *      If false, the menu item will be entirely hidden.
- *    String accelerator
- *      If specified, will be used as accelerator text for MenuItem
- */
-function MenuItem({
-  accesskey = null,
-  checked = false,
-  click = () => {},
-  disabled = false,
-  label = "",
-  id = null,
-  submenu = null,
-  type = "normal",
-  visible = true,
-  accelerator = ""
-} = {}) {
-  this.accesskey = accesskey;
-  this.checked = checked;
-  this.click = click;
-  this.disabled = disabled;
-  this.id = id;
-  this.label = label;
-  this.submenu = submenu;
-  this.type = type;
-  this.visible = visible;
-  this.accelerator = accelerator;
-}
-
-module.exports = MenuItem;
 
 /***/ }),
 
@@ -6037,6 +5710,10 @@ function createStructuredSelector(selectors) {
 /***/ 445:
 /***/ (function(module, exports, __webpack_require__) {
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 const SplitBox = __webpack_require__(446);
 
 module.exports = SplitBox;
@@ -6416,6 +6093,20 @@ function move(array, moveIndex, toIndex) {
   }
   return array;
 }
+
+/***/ }),
+
+/***/ 490:
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_490__;
+
+/***/ }),
+
+/***/ 491:
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_491__;
 
 /***/ }),
 
@@ -7497,7 +7188,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const networkRequest = __webpack_require__(13);
 const workerUtils = __webpack_require__(14);

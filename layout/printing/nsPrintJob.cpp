@@ -38,8 +38,6 @@
 static const char sPrintSettingsServiceContractID[] =
     "@mozilla.org/gfx/printsettings-service;1";
 
-// Printing Events
-#include "nsPrintPreviewListener.h"
 #include "nsThreadUtils.h"
 
 // Printing
@@ -116,6 +114,7 @@ static const char kPrintingPromptService[] =
 #include "mozilla/dom/HTMLFrameElement.h"
 #include "nsContentList.h"
 #include "nsIChannel.h"
+#include "PrintPreviewUserEventSuppressor.h"
 #include "xpcpublic.h"
 #include "nsVariant.h"
 #include "mozilla/ServoStyleSet.h"
@@ -456,6 +455,49 @@ static void MapContentToWebShells(const UniquePtr<nsPrintObject>& aRootPO,
   }
 }
 
+/**
+ * On platforms that support it, sets the printer name stored in the
+ * nsIPrintSettings to the default printer if a printer name is not already
+ * set.
+ * XXXjwatt: Why is this necessary? Can't the code that reads the printer
+ * name later "just" use the default printer if a name isn't specified? Then
+ * we wouldn't have this inconsistency between platforms and processes.
+ */
+static nsresult EnsureSettingsHasPrinterNameSet(
+    nsIPrintSettings* aPrintSettings) {
+#if defined(XP_MACOSX) || defined(ANDROID)
+  // Mac doesn't support retrieving a printer list.
+  return NS_OK;
+#else
+#  if defined(MOZ_X11)
+  // On Linux, default printer name should be requested on the parent side.
+  // Unless we are in the parent, we ignore this function
+  if (!XRE_IsParentProcess()) {
+    return NS_OK;
+  }
+#  endif
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+  // See if aPrintSettings already has a printer
+  nsString printerName;
+  nsresult rv = aPrintSettings->GetPrinterName(printerName);
+  if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
+    return NS_OK;
+  }
+
+  // aPrintSettings doesn't have a printer set. Try to fetch the default.
+  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+      do_GetService(sPrintSettingsServiceContractID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = printSettingsService->GetDefaultPrinterName(printerName);
+  if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
+    rv = aPrintSettings->SetPrinterName(printerName);
+  }
+  return rv;
+#endif
+}
+
 //-------------------------------------------------------
 
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener, nsISupportsWeakReference,
@@ -528,8 +570,8 @@ nsresult nsPrintJob::Cancelled() {
 // some events from being processed while in PrintPreview
 //
 // No return code - if this fails, there isn't much we can do
-void nsPrintJob::InstallPrintPreviewListener() {
-  if (!mPrt->mPPEventListeners) {
+void nsPrintJob::SuppressPrintPreviewUserEvents() {
+  if (!mPrt->mPPEventSuppressor) {
     nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mContainer);
     if (!docShell) {
       return;
@@ -537,8 +579,7 @@ void nsPrintJob::InstallPrintPreviewListener() {
 
     if (nsPIDOMWindowOuter* win = docShell->GetWindow()) {
       nsCOMPtr<EventTarget> target = win->GetFrameElementInternal();
-      mPrt->mPPEventListeners = new nsPrintPreviewListener(target);
-      mPrt->mPPEventListeners->AddListeners();
+      mPrt->mPPEventSuppressor = new PrintPreviewUserEventSuppressor(target);
     }
   }
 }
@@ -642,7 +683,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = CheckForPrinters(printData->mPrintSettings);
+  rv = EnsureSettingsHasPrinterNameSet(printData->mPrintSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   printData->mPrintSettings->SetIsCancelled(false);
@@ -964,7 +1005,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     TurnScriptingOn(false);
 
     if (!notifyOnInit) {
-      InstallPrintPreviewListener();
+      SuppressPrintPreviewUserEvents();
       rv = InitPrintDocConstruction(false);
     } else {
       rv = NS_OK;
@@ -1139,44 +1180,6 @@ already_AddRefed<nsIPrintSettings> nsPrintJob::GetCurrentPrintSettings() {
 //-- Section: Pre-Reflow Methods
 //-----------------------------------------------------------------
 
-//---------------------------------------------------------------------
-// This method checks to see if there is at least one printer defined
-// and if so, it sets the first printer in the list as the default name
-// in the PrintSettings which is then used for Printer Preview
-nsresult nsPrintJob::CheckForPrinters(nsIPrintSettings* aPrintSettings) {
-#if defined(XP_MACOSX) || defined(ANDROID)
-  // Mac doesn't support retrieving a printer list.
-  return NS_OK;
-#else
-#  if defined(MOZ_X11)
-  // On Linux, default printer name should be requested on the parent side.
-  // Unless we are in the parent, we ignore this function
-  if (!XRE_IsParentProcess()) {
-    return NS_OK;
-  }
-#  endif
-  NS_ENSURE_ARG_POINTER(aPrintSettings);
-
-  // See if aPrintSettings already has a printer
-  nsString printerName;
-  nsresult rv = aPrintSettings->GetPrinterName(printerName);
-  if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
-    return NS_OK;
-  }
-
-  // aPrintSettings doesn't have a printer set. Try to fetch the default.
-  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
-      do_GetService(sPrintSettingsServiceContractID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = printSettingsService->GetDefaultPrinterName(printerName);
-  if (NS_SUCCEEDED(rv) && !printerName.IsEmpty()) {
-    rv = aPrintSettings->SetPrinterName(printerName);
-  }
-  return rv;
-#endif
-}
-
 //----------------------------------------------------------------------
 // Set up to use the "pluggable" Print Progress Dialog
 void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
@@ -1243,8 +1246,8 @@ void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
         }
 
         if (printData->mPrintProgressParams) {
-          SetDocAndURLIntoProgress(printData->mPrintObject,
-                                   printData->mPrintProgressParams);
+          SetURLAndTitleOnProgressParams(printData->mPrintObject,
+                                         printData->mPrintProgressParams);
         }
       }
     }
@@ -2486,7 +2489,7 @@ nsresult nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO) {
   RefPtr<nsPrintData> printData = mPrt;
 
   if (printData->mPrintProgressParams) {
-    SetDocAndURLIntoProgress(aPO, printData->mPrintProgressParams);
+    SetURLAndTitleOnProgressParams(aPO, printData->mPrintProgressParams);
   }
 
   {
@@ -2538,8 +2541,8 @@ nsresult nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO) {
 }
 
 //---------------------------------------------------------------------
-void nsPrintJob::SetDocAndURLIntoProgress(const UniquePtr<nsPrintObject>& aPO,
-                                          nsIPrintProgressParams* aParams) {
+void nsPrintJob::SetURLAndTitleOnProgressParams(
+    const UniquePtr<nsPrintObject>& aPO, nsIPrintProgressParams* aParams) {
   NS_ASSERTION(aPO, "Must have valid nsPrintObject");
   NS_ASSERTION(aParams, "Must have valid nsIPrintProgressParams");
 

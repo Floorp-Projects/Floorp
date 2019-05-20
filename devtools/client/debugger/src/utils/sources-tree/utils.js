@@ -86,7 +86,7 @@ export function createDirectoryNode(
     type: "directory",
     name,
     path,
-    contents
+    contents,
   };
 }
 
@@ -99,7 +99,7 @@ export function createSourceNode(
     type: "source",
     name,
     path,
-    contents
+    contents,
   };
 }
 

@@ -12,6 +12,7 @@
 #include "AudioSegment.h"
 #include "SelfRef.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/dom/AudioContext.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPtr.h"
 
@@ -322,7 +323,7 @@ struct StreamAndPromiseForOperation {
   dom::AudioContextOperationFlags mFlags;
 };
 
-enum class AsyncCubebOperation { INIT, START, STOP, SHUTDOWN };
+enum class AsyncCubebOperation { INIT, REVIVE, SHUTDOWN };
 enum class AudioInputType { Unknown, Voice };
 
 /**

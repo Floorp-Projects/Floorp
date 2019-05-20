@@ -240,7 +240,10 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
                                       ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  UniquePtr<SerializedStackHolder> stack = GetCurrentStackForNetMonitor(aCx);
+  UniquePtr<SerializedStackHolder> stack;
+  if (mWorkerPrivate->IsWatchedByDevtools()) {
+    stack = GetCurrentStackForNetMonitor(aCx);
+  }
 
   workerinternals::Load(mWorkerPrivate, std::move(stack), aScriptURLs,
                         WorkerScript, aRv);

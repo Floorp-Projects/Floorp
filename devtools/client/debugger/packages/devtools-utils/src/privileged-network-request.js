@@ -6,13 +6,13 @@
 
 function networkRequest(url: string, opts: any): Promise<*> {
   return fetch(url, {
-    cache: opts.loadFromCache ? "default" : "no-cache"
+    cache: opts.loadFromCache ? "default" : "no-cache",
   }).then(res => {
     if (res.status >= 200 && res.status < 300) {
       if (res.headers.get("Content-Type") === "application/wasm") {
         return res.arrayBuffer().then(buffer => ({
           content: buffer,
-          isDwarf: true
+          isDwarf: true,
         }));
       }
       return res.text().then(text => ({ content: text }));

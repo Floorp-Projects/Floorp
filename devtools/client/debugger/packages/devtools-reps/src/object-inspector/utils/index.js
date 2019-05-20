@@ -10,7 +10,7 @@ const selection = require("./selection");
 
 const { MODE } = require("../../reps/constants");
 const {
-  REPS: { Rep, Grip }
+  REPS: { Rep, Grip },
 } = require("../../reps/rep");
 import type { Node, Props } from "../types";
 
@@ -32,7 +32,7 @@ function renderRep(item: Node, props: Props) {
     ...props,
     object: node.getValue(item),
     mode: props.mode || MODE.TINY,
-    defaultRep: Grip
+    defaultRep: Grip,
   });
 }
 
@@ -42,5 +42,5 @@ module.exports = {
   node,
   renderRep,
   selection,
-  shouldRenderRootsInReps
+  shouldRenderRootsInReps,
 };

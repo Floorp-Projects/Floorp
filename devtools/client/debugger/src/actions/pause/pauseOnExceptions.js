@@ -21,7 +21,7 @@ export function pauseOnExceptions(
     recordEvent("pause_on_exceptions", {
       exceptions: shouldPauseOnExceptions,
       // There's no "n" in the key below (#1463117)
-      ["caught_exceptio"]: shouldPauseOnCaughtExceptions
+      ["caught_exceptio"]: shouldPauseOnCaughtExceptions,
     });
 
     return dispatch({
@@ -31,7 +31,7 @@ export function pauseOnExceptions(
       [PROMISE]: client.pauseOnExceptions(
         shouldPauseOnExceptions,
         shouldPauseOnCaughtExceptions
-      )
+      ),
     });
   };
 }

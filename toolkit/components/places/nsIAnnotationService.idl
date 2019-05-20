@@ -103,15 +103,9 @@ interface nsIAnnotationService : nsISupports
                                out unsigned short aType);
 
     /**
-     * Get the names of all annotations for this URI.
-     *
-     * example JS:
-     *   var annotations = annotator.getPageAnnotations(myURI, {});
+     * Get the names of all annotations for this item id.
      */
-    void getItemAnnotationNames(
-      in long long aItemId,
-      [optional] out unsigned long count,
-      [retval, array, size_is(count)] out nsIVariant result);
+    Array<AUTF8String> getItemAnnotationNames(in long long aItemId);
 
     /**
      * Test for annotation existence.

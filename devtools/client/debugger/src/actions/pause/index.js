@@ -16,9 +16,7 @@ export {
   stepOut,
   resume,
   rewind,
-  reverseStepIn,
   reverseStepOver,
-  reverseStepOut
 } from "./commands";
 export { fetchScopes } from "./fetchScopes";
 export { paused } from "./paused";

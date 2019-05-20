@@ -5199,6 +5199,7 @@ var gCSSProperties = {
       "url('badscheme:badurl')",
       "blur(3px) url('badscheme:badurl') grayscale(50%)",
 
+      "blur()",
       "blur(0)",
       "blur(0px)",
       "blur(0.5px)",
@@ -5210,6 +5211,7 @@ var gCSSProperties = {
       "blur(calc(5px))",
       "blur(calc(2 * 5px))",
 
+      "brightness()",
       "brightness(0)",
       "brightness(50%)",
       "brightness(1)",
@@ -5218,6 +5220,7 @@ var gCSSProperties = {
       "brightness(350%)",
       "brightness(4.567)",
 
+      "contrast()",
       "contrast(0)",
       "contrast(50%)",
       "contrast(1)",
@@ -5244,6 +5247,7 @@ var gCSSProperties = {
       "drop-shadow(calc(2px) calc(2px))",
       "drop-shadow(calc(2px) calc(2px) calc(2px))",
 
+      "grayscale()",
       "grayscale(0)",
       "grayscale(50%)",
       "grayscale(1)",
@@ -5252,6 +5256,7 @@ var gCSSProperties = {
       "grayscale(350%)",
       "grayscale(4.567)",
 
+      "hue-rotate()",
       "hue-rotate(0)",
       "hue-rotate(0deg)",
       "hue-rotate(90deg)",
@@ -5263,6 +5268,7 @@ var gCSSProperties = {
       "hue-rotate(0.5turn)",
       "hue-rotate(-2turn)",
 
+      "invert()",
       "invert(0)",
       "invert(50%)",
       "invert(1)",
@@ -5271,6 +5277,7 @@ var gCSSProperties = {
       "invert(350%)",
       "invert(4.567)",
 
+      "opacity()",
       "opacity(0)",
       "opacity(50%)",
       "opacity(1)",
@@ -5279,6 +5286,7 @@ var gCSSProperties = {
       "opacity(350%)",
       "opacity(4.567)",
 
+      "saturate()",
       "saturate(0)",
       "saturate(50%)",
       "saturate(1)",
@@ -5287,6 +5295,7 @@ var gCSSProperties = {
       "saturate(350%)",
       "saturate(4.567)",
 
+      "sepia()",
       "sepia(0)",
       "sepia(50%)",
       "sepia(1)",
@@ -5314,7 +5323,6 @@ var gCSSProperties = {
       // - Comma delimited arguments
       // - Wrong argument type
       // - Argument value out of range
-      "blur()",
       "blur(3px 5px)",
       "blur(3px,)",
       "blur(3px, 5px)",
@@ -5327,7 +5335,6 @@ var gCSSProperties = {
       "blur(calc(20px - 5%))",
       "blur(-3px)",
 
-      "brightness()",
       "brightness(0.5 0.5)",
       "brightness(0.5,)",
       "brightness(0.5, 0.5)",
@@ -5335,7 +5342,6 @@ var gCSSProperties = {
       "brightness(10px)",
       "brightness(-1)",
 
-      "contrast()",
       "contrast(0.5 0.5)",
       "contrast(0.5,)",
       "contrast(0.5, 0.5)",
@@ -5361,7 +5367,6 @@ var gCSSProperties = {
       "drop-shadow(unset, 2px 2px)",
       "drop-shadow(2px 2px, unset)",
 
-      "grayscale()",
       "grayscale(0.5 0.5)",
       "grayscale(0.5,)",
       "grayscale(0.5, 0.5)",
@@ -5369,7 +5374,6 @@ var gCSSProperties = {
       "grayscale(10px)",
       "grayscale(-1)",
 
-      "hue-rotate()",
       "hue-rotate(0.5 0.5)",
       "hue-rotate(0.5,)",
       "hue-rotate(0.5, 0.5)",
@@ -5378,7 +5382,6 @@ var gCSSProperties = {
       "hue-rotate(-1)",
       "hue-rotate(45deg,)",
 
-      "invert()",
       "invert(0.5 0.5)",
       "invert(0.5,)",
       "invert(0.5, 0.5)",
@@ -5386,7 +5389,6 @@ var gCSSProperties = {
       "invert(10px)",
       "invert(-1)",
 
-      "opacity()",
       "opacity(0.5 0.5)",
       "opacity(0.5,)",
       "opacity(0.5, 0.5)",
@@ -5394,7 +5396,6 @@ var gCSSProperties = {
       "opacity(10px)",
       "opacity(-1)",
 
-      "saturate()",
       "saturate(0.5 0.5)",
       "saturate(0.5,)",
       "saturate(0.5, 0.5)",
@@ -5402,7 +5403,6 @@ var gCSSProperties = {
       "saturate(10px)",
       "saturate(-1)",
 
-      "sepia()",
       "sepia(0.5 0.5)",
       "sepia(0.5,)",
       "sepia(0.5, 0.5)",

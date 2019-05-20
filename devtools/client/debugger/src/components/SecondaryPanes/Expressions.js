@@ -16,7 +16,7 @@ import {
   getExpressions,
   getExpressionError,
   getAutocompleteMatchset,
-  getThreadContext
+  getThreadContext,
 } from "../../selectors";
 import { getValue } from "../../utils/expressions";
 import { createObjectClient } from "../../client/firefox";
@@ -35,7 +35,7 @@ type State = {
   editing: boolean,
   editIndex: number,
   inputValue: string,
-  focused: boolean
+  focused: boolean,
 };
 
 type Props = {
@@ -55,7 +55,7 @@ type Props = {
   openLink: typeof actions.openLink,
   openElementInInspector: typeof actions.openElementInInspectorCommand,
   highlightDomElement: typeof actions.highlightDomElement,
-  unHighlightDomElement: typeof actions.unHighlightDomElement
+  unHighlightDomElement: typeof actions.unHighlightDomElement,
 };
 
 class Expressions extends Component<Props, State> {
@@ -72,7 +72,7 @@ class Expressions extends Component<Props, State> {
       editing: false,
       editIndex: -1,
       inputValue: "",
-      focused: false
+      focused: false,
     };
   }
 
@@ -109,7 +109,7 @@ class Expressions extends Component<Props, State> {
       expressions,
       expressionError,
       showInput,
-      autocompleteMatches
+      autocompleteMatches,
     } = this.props;
 
     return (
@@ -142,7 +142,7 @@ class Expressions extends Component<Props, State> {
     this.setState({
       inputValue: expression.input,
       editing: true,
-      editIndex: index
+      editIndex: index,
     });
   }
 
@@ -214,7 +214,7 @@ class Expressions extends Component<Props, State> {
     this.setState({
       editing: false,
       editIndex: -1,
-      inputValue: this.props.expressionError ? inputValue : ""
+      inputValue: this.props.expressionError ? inputValue : "",
     });
 
     if (!this.props.expressionError) {
@@ -230,7 +230,7 @@ class Expressions extends Component<Props, State> {
       openLink,
       openElementInInspector,
       highlightDomElement,
-      unHighlightDomElement
+      unHighlightDomElement,
     } = this.props;
 
     const { editing, editIndex } = this.state;
@@ -249,7 +249,7 @@ class Expressions extends Component<Props, State> {
     const root = {
       name: expression.input,
       path: input,
-      contents: { value }
+      contents: { value },
     };
 
     return (
@@ -325,7 +325,7 @@ class Expressions extends Component<Props, State> {
             value={!editing ? inputValue : ""}
             ref={c => (this._input = c)}
             {...features.autocompleteExpression && {
-              list: "autocomplete-matches"
+              list: "autocomplete-matches",
             }}
           />
           {this.renderAutoCompleteMatches()}
@@ -361,7 +361,7 @@ class Expressions extends Component<Props, State> {
             value={editing ? inputValue : expression.input}
             ref={c => (this._input = c)}
             {...features.autocompleteExpression && {
-              list: "autocomplete-matches"
+              list: "autocomplete-matches",
             }}
           />
           {this.renderAutoCompleteMatches()}
@@ -388,7 +388,7 @@ const mapStateToProps = state => {
     cx: getThreadContext(state),
     autocompleteMatches: getAutocompleteMatchset(state),
     expressions: getExpressions(state),
-    expressionError: getExpressionError(state)
+    expressionError: getExpressionError(state),
   };
 };
 
@@ -405,6 +405,6 @@ export default connect(
     openLink: actions.openLink,
     openElementInInspector: actions.openElementInInspectorCommand,
     highlightDomElement: actions.highlightDomElement,
-    unHighlightDomElement: actions.unHighlightDomElement
+    unHighlightDomElement: actions.unHighlightDomElement,
   }
 )(Expressions);

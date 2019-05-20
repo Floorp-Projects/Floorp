@@ -3738,7 +3738,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvLookUpDictionary(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvShowCanvasPermissionPrompt(
-    const nsCString& aOrigin, const bool& aHideDoorHanger) {
+    const nsCString& aFirstPartyURI, const bool& aHideDoorHanger) {
   nsCOMPtr<nsIBrowser> browser =
       mFrameElement ? mFrameElement->AsBrowser() : nullptr;
   if (!browser) {
@@ -3754,7 +3754,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvShowCanvasPermissionPrompt(
       browser,
       aHideDoorHanger ? "canvas-permissions-prompt-hide-doorhanger"
                       : "canvas-permissions-prompt",
-      NS_ConvertUTF8toUTF16(aOrigin).get());
+      NS_ConvertUTF8toUTF16(aFirstPartyURI).get());
   if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
   }

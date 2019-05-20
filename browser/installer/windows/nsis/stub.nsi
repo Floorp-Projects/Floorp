@@ -1904,10 +1904,38 @@ FunctionEnd
 
 Function GetLatestReleasedVersion
   ClearErrors
-  nsJSON::Set /tree requestConfig /value \
-    `{"Url": "https://product-details.mozilla.org/1.0/firefox_versions.json", "Async": false}`
-  IfErrors end
-  nsJSON::Set /http requestConfig
+  Push $0 ; InetBgDl::GetStats uses $0 for the HTTP error code
+  ; $1 is our return value, so don't save it
+  Push $2 ; InetBgDl::GetStats uses $2 to tell us when the transfer is done
+  Push $3 ; $3 - $5 are also set by InetBgDl::GetStats, but we don't use them
+  Push $4
+  Push $5
+  Push $6 ; This is our response timeout counter
+
+  InetBgDL::Get /RESET /END
+  InetBgDL::Get "https://product-details.mozilla.org/1.0/firefox_versions.json" \
+                "$PLUGINSDIR\firefox_versions.json" \
+                /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
+
+  ; Wait for the response, but only give it half a second since this is on the
+  ; installer startup path (we haven't even shown a window yet).
+  StrCpy $6 0
+  ${Do}
+    Sleep 100
+    InetBgDL::GetStats
+    IntOp $6 $6 + 1
+
+    ${If} $2 == 0
+      ${Break}
+    ${ElseIf} $6 >= 5
+      InetBgDL::Get /RESET /END
+      SetErrors
+      GoTo end
+    ${EndIf}
+  ${Loop}
+
+  StrCpy $1 0
+  nsJSON::Set /file "$PLUGINSDIR\firefox_versions.json"
   IfErrors end
   ${Select} ${Channel}
   ${Case} "unofficial"
@@ -1921,11 +1949,23 @@ Function GetLatestReleasedVersion
   ${Case} "release"
     StrCpy $1 "LATEST_FIREFOX_VERSION"
   ${EndSelect}
-  nsJSON::Get "Output" $1 /end
-  IfErrors end
-  Pop $1
+  nsJSON::Get $1 /end
 
   end:
+  ${If} ${Errors}
+  ${OrIf} $1 == 0
+    SetErrors
+    StrCpy $1 0
+  ${Else}
+    Pop $1
+  ${EndIf}
+
+  Pop $6
+  Pop $5
+  Pop $4
+  Pop $3
+  Pop $2
+  Pop $0
 FunctionEnd
 
 Function GetExistingInstallArch
