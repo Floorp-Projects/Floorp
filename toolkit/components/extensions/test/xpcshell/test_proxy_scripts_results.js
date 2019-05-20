@@ -56,14 +56,14 @@ async function setupProxyScript(proxy) {
 }
 
 async function testProxyResolution(test) {
-  let {proxy, expected} = test;
+  let {uri, proxy, expected} = test;
   let errorMsg;
   if (expected.error) {
     errorMsg = extension.awaitMessage("proxy-error-received");
   }
   let proxyInfo = await new Promise((resolve, reject) => {
     let channel = NetUtil.newChannel({
-      uri: "http://www.mozilla.org/",
+      uri,
       loadUsingSystemPrincipal: true,
     });
 
@@ -203,6 +203,18 @@ add_task(async function test_pac_results() {
       },
     },
     {
+      uri: "ftp://mozilla.org",
+      proxy: "PROXY 1.2.3.4:8080",
+      expected: {
+        proxyInfo: {
+          host: "1.2.3.4",
+          port: "8080",
+          type: "http",
+          failoverProxy: null,
+        },
+      },
+    },
+    {
       proxy: "   PROXY    2.3.4.5:8080      ",
       expected: {
         proxyInfo: {
@@ -329,6 +341,9 @@ add_task(async function test_pac_results() {
   ];
   for (let test of tests) {
     await setupProxyScript(test.proxy);
+    if (!test.uri) {
+      test.uri = "http://www.mozilla.org/";
+    }
     await testProxyResolution(test);
     // Our proxy script for testing is stateless, so repeating the test should
     // yield exactly the same results.

@@ -18,6 +18,7 @@
 #include "nsIProxyInfo.h"
 #include "nsIProxiedChannel.h"
 #include "nsIResumableChannel.h"
+#include "nsWeakReference.h"
 
 class nsIURI;
 using mozilla::net::ADivertableParentChannel;
@@ -28,6 +29,7 @@ class nsFtpChannel final : public nsBaseChannel,
                            public nsIResumableChannel,
                            public nsIProxiedChannel,
                            public nsIForcePendingChannel,
+                           public nsSupportsWeakReference,
                            public nsIChannelWithDivertableParentListener {
  public:
   NS_DECL_ISUPPORTS_INHERITED
