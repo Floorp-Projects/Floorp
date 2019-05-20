@@ -477,8 +477,14 @@ bool FunctionScriptEmitter::prepareForBody() {
 
   if (funbox_->function()->kind() ==
       JSFunction::FunctionKind::ClassConstructor) {
-    if (!funbox_->isDerivedClassConstructor()) {
-      if (!bce_->emitInitializeInstanceFields()) {
+    if (funbox_->isDerivedClassConstructor()) {
+      if (!bce_->emitCopyInitializersToLocalInitializers()) {
+        //          [stack]
+        return false;
+      }
+    } else {
+      if (!bce_->emitInitializeInstanceFields(
+              BytecodeEmitter::IsSuperCall::No)) {
         //          [stack]
         return false;
       }
