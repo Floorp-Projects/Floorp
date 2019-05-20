@@ -1136,7 +1136,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
                                            bool aRetainingDisplayList)
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nullptr),
-      mCurrentTableItem(nullptr),
       mCurrentActiveScrolledRoot(nullptr),
       mCurrentContainerASR(nullptr),
       mCurrentFrame(aReferenceFrame),
@@ -1398,7 +1397,6 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
                "All OOF data should have been removed");
   NS_ASSERTION(mPresShellStates.Length() == 0,
                "All presshells should have been exited");
-  NS_ASSERTION(!mCurrentTableItem, "No table item should be active");
 
   DisplayItemClipChain* c = mFirstClipChainToDestroy;
   while (c) {

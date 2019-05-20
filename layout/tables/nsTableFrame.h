@@ -70,35 +70,6 @@ class nsDisplayTableItem : public nsPaintedDisplayItem {
   bool mDrawsBackground;
 };
 
-class nsAutoPushCurrentTableItem {
- public:
-  nsAutoPushCurrentTableItem() : mBuilder(nullptr), mOldCurrentItem(nullptr) {}
-
-  void Push(nsDisplayListBuilder* aBuilder, nsDisplayTableItem* aPushItem) {
-    mBuilder = aBuilder;
-    mOldCurrentItem = aBuilder->GetCurrentTableItem();
-    aBuilder->SetCurrentTableItem(aPushItem);
-#ifdef DEBUG
-    mPushedItem = aPushItem;
-#endif
-  }
-  ~nsAutoPushCurrentTableItem() {
-    if (!mBuilder) return;
-#ifdef DEBUG
-    NS_ASSERTION(mBuilder->GetCurrentTableItem() == mPushedItem,
-                 "Someone messed with the current table item behind our back!");
-#endif
-    mBuilder->SetCurrentTableItem(mOldCurrentItem);
-  }
-
- private:
-  nsDisplayListBuilder* mBuilder;
-  nsDisplayTableItem* mOldCurrentItem;
-#ifdef DEBUG
-  nsDisplayTableItem* mPushedItem;
-#endif
-};
-
 /* ========================================================================== */
 
 enum nsTableColType {
