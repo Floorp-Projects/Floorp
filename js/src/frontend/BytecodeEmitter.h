@@ -480,7 +480,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitCreateFieldKeys(ListNode* obj);
   MOZ_MUST_USE bool emitCreateFieldInitializers(ListNode* obj);
   const FieldInitializers& findFieldInitializersForCall();
-  MOZ_MUST_USE bool emitInitializeInstanceFields();
+  MOZ_MUST_USE bool emitCopyInitializersToLocalInitializers();
+  enum class IsSuperCall : bool { No, Yes };
+  MOZ_MUST_USE bool emitInitializeInstanceFields(IsSuperCall isSuperCall);
 
   // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
   // not used to unconditionally emit JSOP_GETLOCAL. Variable access should
