@@ -25,7 +25,6 @@ job-template:
                 android-(aarch64|api-16|x86|x86_64)-(beta|release): taskcluster/taskgraph/manifests/fennec_candidates_checksums.yml
                 android-(aarch64|api-16|x86|x86_64)-nightly: taskcluster/taskgraph/manifests/fennec_nightly_checksums.yml
                 default:
-                    by-project:
+                    by-release-type:
+                        beta|release.*|esr.*: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
                         default: taskcluster/taskgraph/manifests/firefox_nightly_checksums.yml
-                        mozilla-beta: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
-                        mozilla-release: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
