@@ -56,5 +56,5 @@ promise_test(async t => {
 }, 'constructor uses a default value for the timeout when none is passed');
 
 promise_test(async t => {
-  new IdleDetector({timeout: undefined});
+  new SMSReceiver({timeout: undefined});
 }, 'constructor uses a default value for the timeout');
