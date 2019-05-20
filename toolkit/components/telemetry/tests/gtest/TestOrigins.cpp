@@ -20,26 +20,6 @@ using ::testing::_;
 using ::testing::AtLeast;
 using ::testing::StrEq;
 
-NS_NAMED_LITERAL_CSTRING(kTelemetryTest1Metric, "telemetry.test_test1");
-
-NS_NAMED_LITERAL_CSTRING(kDummyOrigin, "PAGELOAD");
-NS_NAMED_LITERAL_CSTRING(kDoubleclickOrigin, "doubleclick.net");
-NS_NAMED_LITERAL_CSTRING(kDoubleclickOriginHash,
-                         "uXNT1PzjAVau8b402OMAIGDejKbiXfQX5iXvPASfO/s=");
-NS_NAMED_LITERAL_CSTRING(kFacebookOrigin, "fb.com");
-NS_NAMED_LITERAL_CSTRING(kUnknownOrigin1,
-                         "this origin isn't known to Origin Telemetry");
-NS_NAMED_LITERAL_CSTRING(kUnknownOrigin2, "neither is this one");
-
-// Properly prepare the prio prefs
-// (Sourced from PrioEncoder.cpp from when it was being prototyped)
-NS_NAMED_LITERAL_CSTRING(
-    prioKeyA,
-    "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733");
-NS_NAMED_LITERAL_CSTRING(
-    prioKeyB,
-    "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
-
 // Test that we can properly record origin stuff using the C++ API.
 TEST_F(TelemetryTestFixture, RecordOrigin) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
@@ -47,7 +27,10 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
 
   Unused << mTelemetry->ClearOrigins();
 
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, kDummyOrigin);
+  const nsLiteralCString doubleclick("doubleclick.net");
+  const nsLiteralCString telemetryTest1("telemetry.test_test1");
+
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
 
   JS::RootedValue originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot);
@@ -57,13 +40,12 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
 
   JS::RootedValue origins(aCx);
   JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
-  ASSERT_TRUE(
-      JS_GetProperty(aCx, snapshotObj, kTelemetryTest1Metric.get(), &origins))
+  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
   JS::RootedValue count(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, originsObj, kDummyOrigin.get(), &count));
+  ASSERT_TRUE(JS_GetProperty(aCx, originsObj, doubleclick.get(), &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 1)
   << "Must have recorded the origin exactly once.";
 
@@ -82,10 +64,11 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
 
   Unused << mTelemetry->ClearOrigins();
 
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
-                          kDoubleclickOrigin);
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
-                          kDoubleclickOrigin);
+  const nsLiteralCString doubleclick("doubleclick.net");
+  const nsLiteralCString telemetryTest1("telemetry.test_test1");
+
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
 
   JS::RootedValue originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot, true /* aClear */);
@@ -95,14 +78,12 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
 
   JS::RootedValue origins(aCx);
   JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
-  ASSERT_TRUE(
-      JS_GetProperty(aCx, snapshotObj, kTelemetryTest1Metric.get(), &origins))
+  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
   JS::RootedValue count(aCx);
-  ASSERT_TRUE(
-      JS_GetProperty(aCx, originsObj, kDoubleclickOrigin.get(), &count));
+  ASSERT_TRUE(JS_GetProperty(aCx, originsObj, doubleclick.get(), &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 2)
   << "Must have recorded the origin exactly twice.";
 
@@ -121,17 +102,26 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceMixed) {
 
   Unused << mTelemetry->ClearOrigins();
 
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
-                          kDoubleclickOrigin);
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
-                          kDoubleclickOriginHash);
+  const nsLiteralCString doubleclick("doubleclick.net");
+  const nsLiteralCString doubleclickHash(
+      "uXNT1PzjAVau8b402OMAIGDejKbiXfQX5iXvPASfO/s=");
+  const nsLiteralCString telemetryTest1("telemetry.test_test1");
 
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclickHash);
+
+  // Properly prepare the prio prefs
+  // (Sourced from PrioEncoder.cpp from when it was being prototyped)
+  const nsLiteralCString prioKeyA(
+      "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733");
+  const nsLiteralCString prioKeyB(
+      "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
   Preferences::SetCString("prio.publicKeyA", prioKeyA);
   Preferences::SetCString("prio.publicKeyB", prioKeyB);
 
   nsTArray<Tuple<nsCString, nsCString>> encodedStrings;
-  GetEncodedOriginStrings(
-      aCx, kTelemetryTest1Metric + NS_LITERAL_CSTRING("-%u"), encodedStrings);
+  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-%u"),
+                          encodedStrings);
   ASSERT_EQ(2 * TelemetryOrigin::SizeOfPrioDatasPerMetric(),
             encodedStrings.Length());
 
@@ -143,14 +133,12 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceMixed) {
 
   JS::RootedValue origins(aCx);
   JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
-  ASSERT_TRUE(
-      JS_GetProperty(aCx, snapshotObj, kTelemetryTest1Metric.get(), &origins))
+  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
   JS::RootedValue count(aCx);
-  ASSERT_TRUE(
-      JS_GetProperty(aCx, originsObj, kDoubleclickOrigin.get(), &count));
+  ASSERT_TRUE(JS_GetProperty(aCx, originsObj, doubleclick.get(), &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 2)
   << "Must have recorded the origin exactly twice.";
 }
@@ -161,7 +149,11 @@ TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
 
   Unused << mTelemetry->ClearOrigins();
 
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, kUnknownOrigin1);
+  const nsLiteralCString telemetryTest1("telemetry.test_test1");
+  const nsLiteralCString unknown("this origin isn't known to Origin Telemetry");
+  const nsLiteralCString unknown2("neither is this one");
+
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown);
 
   JS::RootedValue originSnapshot(aCx);
   GetOriginSnapshot(aCx, &originSnapshot);
@@ -171,8 +163,7 @@ TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
 
   JS::RootedValue origins(aCx);
   JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
-  ASSERT_TRUE(
-      JS_GetProperty(aCx, snapshotObj, kTelemetryTest1Metric.get(), &origins))
+  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
@@ -182,7 +173,7 @@ TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
   << "Must have recorded the unknown origin exactly once.";
 
   // Record a second, different unknown origin and ensure only one is stored.
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, kUnknownOrigin2);
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown2);
 
   GetOriginSnapshot(aCx, &originSnapshot);
 
@@ -190,8 +181,7 @@ TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
   << "Origin snapshot must not be null/undefined.";
 
   JS::RootedObject snapshotObj2(aCx, &originSnapshot.toObject());
-  ASSERT_TRUE(
-      JS_GetProperty(aCx, snapshotObj2, kTelemetryTest1Metric.get(), &origins))
+  ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj2, telemetryTest1.get(), &origins))
   << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj2(aCx, &origins.toObject());
@@ -207,21 +197,30 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
 
   Unused << mTelemetry->ClearOrigins();
 
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
-                          kDoubleclickOrigin);
-  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, kUnknownOrigin1);
+  const nsLiteralCString doubleclick("doubleclick.net");
+  const nsLiteralCString unknown("this origin isn't known to Origin Telemetry");
+  const nsLiteralCString telemetryTest1("telemetry.test_test1");
 
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
+  Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown);
+
+  // Properly prepare the prio prefs
+  // (Sourced from PrioEncoder.cpp from when it was being prototyped)
+  const nsLiteralCString prioKeyA(
+      "35AC1C7576C7C6EDD7FED6BCFC337B34D48CB4EE45C86BEEFB40BD8875707733");
+  const nsLiteralCString prioKeyB(
+      "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35DD135AF50");
   Preferences::SetCString("prio.publicKeyA", prioKeyA);
   Preferences::SetCString("prio.publicKeyB", prioKeyB);
 
   nsTArray<Tuple<nsCString, nsCString>> firstStrings;
-  GetEncodedOriginStrings(
-      aCx, kTelemetryTest1Metric + NS_LITERAL_CSTRING("-%u"), firstStrings);
+  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-%u"),
+                          firstStrings);
 
   // Now snapshot a second time and ensure the encoded payloads change.
   nsTArray<Tuple<nsCString, nsCString>> secondStrings;
-  GetEncodedOriginStrings(
-      aCx, kTelemetryTest1Metric + NS_LITERAL_CSTRING("-%u"), secondStrings);
+  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-%u"),
+                          secondStrings);
 
   const auto sizeOfPrioDatasPerMetric =
       TelemetryOrigin::SizeOfPrioDatasPerMetric();
@@ -266,6 +265,8 @@ TEST_F(TelemetryTestFixture, OriginTelemetryNotifiesTopic) {
   Unused << mTelemetry->ClearOrigins();
 
   const char* kTopic = "origin-telemetry-storage-limit-reached";
+  NS_NAMED_LITERAL_CSTRING(doubleclick, "doubleclick.net");
+  NS_NAMED_LITERAL_CSTRING(fb, "fb.com");
 
   MockObserver* mo = new MockObserver();
   nsCOMPtr<nsIObserver> nsMo(mo);
@@ -279,11 +280,9 @@ TEST_F(TelemetryTestFixture, OriginTelemetryNotifiesTopic) {
   for (size_t i = 0; i < size; ++i) {
     if (i < size - 1) {
       // Let's ensure we only notify the once.
-      Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
-                              kFacebookOrigin);
+      Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, fb);
     }
-    Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1,
-                            kDoubleclickOrigin);
+    Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
   }
 
   os->RemoveObserver(nsMo, kTopic);
