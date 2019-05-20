@@ -127,9 +127,10 @@ class _BookmarkPanelHub {
       });
       recommendation.style.color = message.color;
       recommendation.style.background = `-moz-linear-gradient(-45deg, ${message.background_color_1} 0%, ${message.background_color_2} 70%)`;
-      const close = createElement("a");
+      const close = createElement("button");
       close.setAttribute("id", "cfrClose");
       close.setAttribute("aria-label", "close");
+      close.style.color = message.color;
       this._l10n.setAttributes(close, message.close_button.tooltiptext);
       close.addEventListener("click", e => {
         this.sendUserEventTelemetry("DISMISS", win);
