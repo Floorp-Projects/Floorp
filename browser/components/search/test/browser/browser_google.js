@@ -11,33 +11,7 @@ let expectedEngine = {
   name: "Google",
   alias: null,
   description: "Google Search",
-  searchForm: "https://www.google.com/search?client={code}&q=",
   hidden: false,
-  wrappedJSObject: {
-    queryCharset: "UTF-8",
-    _urls: [
-      {
-        type: "text/html",
-        method: "GET",
-        template: "https://www.google.com/search",
-        params: [
-          {
-            "name": "q",
-            "value": "{searchTerms}",
-            "purpose": undefined,
-          },
-        ],
-        mozparams: {
-        },
-      },
-      {
-        type: "application/x-suggestions+json",
-        method: "GET",
-        template: "https://www.google.com/complete/search?client=firefox&q={searchTerms}",
-        params: [],
-      },
-    ],
-  },
 };
 
 add_task(async function test() {
@@ -46,43 +20,8 @@ add_task(async function test() {
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Found Google search engine");
 
-  let region = Services.prefs.getCharPref("browser.search.region");
-  let code = "";
-  switch (region) {
-    case "US":
-      code = "firefox-b-1-d";
-      break;
-  case "DE":
-      code = "firefox-b-d";
-      break;
-    case "RU":
-      // Covered by test but doesn't use a code
-      break;
-  }
-
-  if (code) {
-    let urlParams = expectedEngine.wrappedJSObject._urls[0].params;
-    urlParams.unshift({
-      name: "client",
-      value: code,
-    });
-    expectedEngine.searchForm = expectedEngine.searchForm.replace("{code}", code);
-  }
-
-  let url;
-
-  // Test search URLs (including purposes).
-  let purposes = ["", "contextmenu", "searchbar", "homepage", "newtab", "keyword"];
-  let urlParams;
-  for (let purpose of purposes) {
-    url = engine.getSubmission("foo", null, purpose).uri.spec;
-    urlParams = new URLSearchParams(url.split("?")[1]);
-    is(urlParams.get("client"), code, "Check ${purpose} search URL for code");
-    is(urlParams.get("q"), "foo", `Check ${purpose} search URL for 'foo'`);
-  }
-
   // Check search suggestion URL.
-  url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
+  let url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
   is(url, "https://www.google.com/complete/search?client=firefox&q=foo", "Check search suggestion URL for 'foo'");
 
   // Check result parsing and alternate domains.

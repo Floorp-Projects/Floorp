@@ -162,7 +162,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "-moz-user-focus",
     "-moz-user-input",
     "-moz-user-modify",
-    "-moz-user-select",
+    "user-select",
     "vector-effect",
     "visibility",
     "white-space",

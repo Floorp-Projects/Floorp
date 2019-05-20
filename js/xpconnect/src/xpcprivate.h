@@ -2727,7 +2727,7 @@ class CompartmentPrivate {
  private:
   JSObject2WrappedJSMap* mWrappedJSMap;
 
-  // Cache holding proxy objects for Window objects (and their Location oject)
+  // Cache holding proxy objects for Window objects (and their Location object)
   // that are loaded in a different process.
   RemoteProxyMap mRemoteProxies;
 

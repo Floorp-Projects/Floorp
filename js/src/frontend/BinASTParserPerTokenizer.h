@@ -20,6 +20,7 @@
 #include "frontend/BinASTEnum.h"
 #include "frontend/BinASTParserBase.h"
 #include "frontend/BinASTToken.h"
+#include "frontend/BinASTTokenReaderContext.h"
 #include "frontend/BinASTTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
@@ -327,6 +328,7 @@ class BinASTParseContext : public ParseContext {
 
 void TraceBinASTParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
+extern template class BinASTParserPerTokenizer<BinASTTokenReaderContext>;
 extern template class BinASTParserPerTokenizer<BinASTTokenReaderMultipart>;
 
 }  // namespace frontend

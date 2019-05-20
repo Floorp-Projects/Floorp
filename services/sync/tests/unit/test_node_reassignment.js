@@ -8,6 +8,11 @@ const {RESTRequest} = ChromeUtils.import("resource://services-common/rest.js");
 const {Service} = ChromeUtils.import("resource://services-sync/service.js");
 const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 
+// Allow eval to avoid triggering the eval()-assertion through ajv-4.1.1.js
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
 
 add_task(async function setup() {
   validate_all_future_pings();
