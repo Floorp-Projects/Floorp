@@ -33,7 +33,7 @@ jobs:
     push-apk-checks-nightly/opt:
         description: Verify Nightly APKs are sane before uploading them onto Google Play Store
         attributes:
-            build_platform: android-nightly
+            release-type: nightly
         package-name: org.mozilla.fennec_aurora
         treeherder:
             symbol: pub(gpc-n)
@@ -41,7 +41,7 @@ jobs:
     push-apk-checks-beta/opt:
         description: Verify Beta APKs are sane before uploading them onto Google Play Store
         attributes:
-            build_platform: android-beta
+            release-type: beta
         package-name: org.mozilla.firefox_beta
         treeherder:
             symbol: pub(gpc-b)

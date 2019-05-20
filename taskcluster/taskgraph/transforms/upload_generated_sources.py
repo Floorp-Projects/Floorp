@@ -9,6 +9,7 @@ taskcluster/ci/upload-generated-sources/kind.yml, into an actual task descriptio
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.taskcluster import get_artifact_url
 
 
@@ -18,8 +19,7 @@ transforms = TransformSequence()
 @transforms.add
 def add_task_info(config, jobs):
     for job in jobs:
-        dep_task = job['primary-dependency']
-        del job['primary-dependency']
+        dep_task = job.pop('primary-dependency')
 
         # Add a dependency on the build task.
         job['dependencies'] = {'build': dep_task.label}
@@ -27,12 +27,11 @@ def add_task_info(config, jobs):
         job['label'] = dep_task.label.replace("build-", "upload-generated-sources-")
         # Copy over some bits of metdata from the build task.
         dep_th = dep_task.task['extra']['treeherder']
-        job.setdefault('attributes', {})
-        job['attributes']['build_platform'] = dep_task.attributes.get('build_platform')
-        if dep_task.attributes.get('nightly'):
-            job['attributes']['nightly'] = True
-        if dep_task.attributes.get('shippable'):
-            job['attributes']['shippable'] = True
+
+        attributes = copy_attributes_from_dependent_job(dep_task)
+        attributes.update(job.get('attributes', {}))
+        job['attributes'] = attributes
+
         plat = '{}/{}'.format(dep_th['machine']['platform'], dep_task.attributes.get('build_type'))
         job['treeherder']['platform'] = plat
         job['treeherder']['tier'] = dep_th['tier']

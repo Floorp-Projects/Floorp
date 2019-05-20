@@ -46,7 +46,7 @@ job-defaults:
 jobs:
     google-play-strings-nightly:
         attributes:
-            build_platform: android-nightly
+            release-type: nightly
         worker:
             env:
                 PACKAGE_NAME: org.mozilla.fennec_aurora
@@ -54,7 +54,7 @@ jobs:
             symbol: pub(gps-n)
     google-play-strings-beta:
         attributes:
-            build_platform: android-beta
+            release-type: beta
         worker:
             env:
                 PACKAGE_NAME: org.mozilla.firefox_beta
