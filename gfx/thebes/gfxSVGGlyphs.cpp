@@ -32,6 +32,7 @@
 #include "gfxFont.h"
 #include "gfxContext.h"
 #include "harfbuzz/hb.h"
+#include "zlib.h"
 
 #define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")
 #define UTF8_CHARSET NS_LITERAL_CSTRING("utf-8")
@@ -257,7 +258,44 @@ gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t* aBuffer,
                                            uint32_t aBufLen,
                                            gfxSVGGlyphs* aSVGGlyphs)
     : mOwner(aSVGGlyphs) {
-  ParseDocument(aBuffer, aBufLen);
+  if (aBufLen >= 14 && aBuffer[0] == 31 && aBuffer[1] == 139) {
+    // It's a gzip-compressed document; decompress it before parsing.
+    // The original length (modulo 2^32) is found in the last 4 bytes
+    // of the data, stored in little-endian format. We read it as
+    // individual bytes to avoid possible alignment issues.
+    // (Note that if the original length was >2^32, then origLen here
+    // will be incorrect; but then the inflate() call will not return
+    // Z_STREAM_END and we'll bail out safely.)
+    size_t origLen = (size_t(aBuffer[aBufLen - 1]) << 24) +
+                     (size_t(aBuffer[aBufLen - 2]) << 16) +
+                     (size_t(aBuffer[aBufLen - 3]) << 8) +
+                     size_t(aBuffer[aBufLen - 4]);
+    AutoTArray<uint8_t, 4096> outBuf;
+    if (outBuf.SetLength(origLen, mozilla::fallible)) {
+      z_stream s = {0};
+      s.next_in = const_cast<Byte*>(aBuffer);
+      s.avail_in = aBufLen;
+      s.next_out = outBuf.Elements();
+      s.avail_out = outBuf.Length();
+      // The magic number 16 here is the zlib flag to expect gzip format,
+      // see http://www.zlib.net/manual.html#Advanced
+      if (Z_OK == inflateInit2(&s, 16 + MAX_WBITS)) {
+        int result = inflate(&s, Z_FINISH);
+        if (Z_STREAM_END == result) {
+          MOZ_ASSERT(size_t(s.next_out - outBuf.Elements()) == origLen);
+          ParseDocument(outBuf.Elements(), outBuf.Length());
+        } else {
+          NS_WARNING("Failed to decompress SVG glyphs document");
+        }
+        inflateEnd(&s);
+      }
+    } else {
+      NS_WARNING("Failed to allocate memory for SVG glyphs document");
+    }
+  } else {
+    ParseDocument(aBuffer, aBufLen);
+  }
+
   if (!mDocument) {
     NS_WARNING("Could not parse SVG glyphs document");
     return;
