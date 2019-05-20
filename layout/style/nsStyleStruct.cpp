@@ -2985,6 +2985,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
       mTransformBox(StyleGeometryBox::BorderBox),
       mOffsetPath(StyleOffsetPath::None()),
+      mOffsetDistance(LengthPercentage::Zero()),
       mTransformOrigin{LengthPercentage::FromPercentage(0.5),
                        LengthPercentage::FromPercentage(0.5),
                        {0.}},
@@ -3053,6 +3054,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mTransformStyle(aSource.mTransformStyle),
       mTransformBox(aSource.mTransformBox),
       mOffsetPath(aSource.mOffsetPath),
+      mOffsetDistance(aSource.mOffsetDistance),
       mTransformOrigin(aSource.mTransformOrigin),
       mChildPerspective(aSource.mChildPerspective),
       mPerspectiveOrigin(aSource.mPerspectiveOrigin),
@@ -3095,18 +3097,24 @@ static inline nsChangeHint CompareTransformValues(
 }
 
 static inline nsChangeHint CompareMotionValues(
-    const StyleOffsetPath& aOffsetPath, const StyleOffsetPath& aNewOffsetPath) {
-  nsChangeHint result = nsChangeHint(0);
-
+    const StyleOffsetPath& aOffsetPath, const LengthPercentage& aOffsetDistance,
+    const StyleOffsetPath& aNewOffsetPath,
+    const LengthPercentage& aNewOffsetDistance) {
   if (aOffsetPath == aNewOffsetPath) {
-    return result;
+    if (aOffsetDistance == aNewOffsetDistance) {
+      return nsChangeHint(0);
+    }
+
+    if (aOffsetPath.IsNone()) {
+      return nsChangeHint_NeutralChange;
+    }
   }
 
   // TODO: Bug 1482737: This probably doesn't need to UpdateOverflow
   // (or UpdateTransformLayer) if there's already a transform.
   // Set the same hints as what we use for transform because motion path is
   // a kind of transform and will be combined with other transforms.
-  result |= nsChangeHint_UpdateTransformLayer;
+  nsChangeHint result = nsChangeHint_UpdateTransformLayer;
   if (!aOffsetPath.IsNone() && !aNewOffsetPath.IsNone()) {
     result |= nsChangeHint_UpdatePostTransformOverflow;
   } else {
@@ -3238,7 +3246,9 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     transformHint |= CompareTransformValues(mRotate, aNewData.mRotate);
     transformHint |= CompareTransformValues(mTranslate, aNewData.mTranslate);
     transformHint |= CompareTransformValues(mScale, aNewData.mScale);
-    transformHint |= CompareMotionValues(mOffsetPath, aNewData.mOffsetPath);
+    transformHint |=
+        CompareMotionValues(mOffsetPath, mOffsetDistance, aNewData.mOffsetPath,
+                            aNewData.mOffsetDistance);
 
     if (mTransformOrigin != aNewData.mTransformOrigin) {
       transformHint |= nsChangeHint_UpdateTransformLayer |

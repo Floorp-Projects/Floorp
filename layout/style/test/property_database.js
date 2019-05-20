@@ -8745,6 +8745,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     invalid_values: [ "path('')", "path()", "path(a)", "path('M 10 Z')" ,
                       "path('M 10-10 20')", "path('M 10 10 C 20 20 40 20')" ]
   };
+
+  gCSSProperties["offset-distance"] = {
+    domProp: "offsetDistance",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0" ],
+    other_values: [ "10px", "10%", "190%", "-280%", "calc(30px + 40%)" ],
+    invalid_values: [ "none", "45deg" ]
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
