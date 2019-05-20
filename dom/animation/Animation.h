@@ -141,6 +141,8 @@ class Animation : public DOMEventTargetHelper,
   void UpdatePlaybackRate(double aPlaybackRate);
   void Reverse(ErrorResult& aRv);
 
+  void Persist();
+
   bool IsRunningOnCompositor() const;
 
   virtual void Tick();

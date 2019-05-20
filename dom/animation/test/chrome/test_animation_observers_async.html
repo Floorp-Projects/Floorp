@@ -621,6 +621,17 @@ promise_test(async t => {
     'records after finishing'
   );
 
+  // Restore animA.
+  animA.persist();
+
+  // Wait for the MutationRecord corresponding to the re-addition of animA.
+  await waitForNextFrame();
+
+  assert_records(
+    [{ added: [animA], changed: [], removed: [] }],
+    'records after persisting'
+  );
+
   // Tidy up
   animA.cancel();
   animB.cancel();
@@ -628,7 +639,10 @@ promise_test(async t => {
   await waitForNextFrame();
 
   assert_records(
-    [{ added: [], changed: [], removed: [animB] }],
+    [
+      { added: [], changed: [], removed: [animA] },
+      { added: [], changed: [], removed: [animB] },
+    ],
     'records after tidying up end'
   );
 }, 'Animations automatically removed are reported');
