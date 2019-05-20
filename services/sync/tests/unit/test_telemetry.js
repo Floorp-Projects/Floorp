@@ -8,6 +8,13 @@ const {BookmarksEngine} = ChromeUtils.import("resource://services-sync/engines/b
 const {RotaryEngine} = ChromeUtils.import("resource://testing-common/services/sync/rotaryengine.js");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
+// Allow eval to avoid triggering the eval()-assertion through ajv-4.1.1.js
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
+
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
 }
