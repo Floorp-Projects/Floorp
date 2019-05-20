@@ -139,6 +139,17 @@ class LoginAutocompleteItem extends AutocompleteItem {
   }
 }
 
+class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
+  constructor(generatedPassword) {
+    super("generatedPassword");
+    this.value = generatedPassword;
+
+    XPCOMUtils.defineLazyGetter(this, "label", () => {
+      return getLocalizedString("useGeneratedPassword");
+    });
+  }
+}
+
 class LoginsFooterAutocompleteItem extends AutocompleteItem {
   constructor(hostname) {
     super("loginsFooter");
@@ -153,6 +164,7 @@ class LoginsFooterAutocompleteItem extends AutocompleteItem {
 
 // nsIAutoCompleteResult implementation
 function LoginAutoCompleteResult(aSearchString, matchingLogins, {
+  generatedPassword,
   isSecure,
   messageManager,
   isPasswordField,
@@ -173,7 +185,8 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
       return false;
     }
 
-    if (!matchingLogins.length && isPasswordField && formFillController.passwordPopupAutomaticallyOpened) {
+    if (!matchingLogins.length && !generatedPassword && isPasswordField
+        && formFillController.passwordPopupAutomaticallyOpened) {
       hidingFooterOnPWFieldAutoOpened = true;
       log.debug("Hiding footer: no logins and the popup was opened upon focus of the pw. field");
       return false;
@@ -205,6 +218,9 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
 
   // The footer comes last if it's enabled
   if (isFooterEnabled()) {
+    if (generatedPassword) {
+      this._rows.push(new GeneratedPasswordAutocompleteItem(generatedPassword));
+    }
     this._rows.push(new LoginsFooterAutocompleteItem(hostname));
   }
 
@@ -342,7 +358,11 @@ LoginAutoComplete.prototype = {
     let isPasswordField = aElement.type == "password";
     let hostname = aElement.ownerDocument.documentURIObject.host;
 
-    let completeSearch = (autoCompleteLookupPromise, { logins, messageManager }) => {
+    let completeSearch = (autoCompleteLookupPromise, {
+      generatedPassword,
+      logins,
+      messageManager,
+    }) => {
       // If the search was canceled before we got our
       // results, don't bother reporting them.
       if (this._autoCompleteLookupPromise !== autoCompleteLookupPromise) {
@@ -351,6 +371,7 @@ LoginAutoComplete.prototype = {
 
       this._autoCompleteLookupPromise = null;
       let results = new LoginAutoCompleteResult(aSearchString, logins, {
+        generatedPassword,
         messageManager,
         isSecure,
         isPasswordField,
