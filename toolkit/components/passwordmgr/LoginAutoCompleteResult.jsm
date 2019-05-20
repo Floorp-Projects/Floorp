@@ -147,6 +147,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
 class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
   constructor(generatedPassword) {
     super("generatedPassword");
+    this.comment = generatedPassword;
     this.value = generatedPassword;
 
     XPCOMUtils.defineLazyGetter(this, "label", () => {
