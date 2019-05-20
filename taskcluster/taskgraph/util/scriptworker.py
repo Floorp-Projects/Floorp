@@ -72,6 +72,27 @@ SIGNING_CERT_SCOPES = {
     'default': 'signing:cert:dep-signing',
 }
 
+ANDROID_SIGNING_SCOPE_ALIAS_TO_PROJECT = [[
+    '68-release-train', set([
+        'mozilla-beta',
+        'mozilla-release',
+        'mozilla-esr68',
+    ])
+]]
+
+ANDROID_SIGNING_CERT_SCOPES = {
+    '68-release-train': {
+        'nightly': 'signing:cert:nightly-signing',
+        'beta': 'signing:cert:release-signing',
+        'release': 'signing:cert:release-signing',
+    },
+    'default': {
+        'nightly': 'signing:cert:dep-signing',
+        'beta': 'signing:cert:dep-signing',
+        'release': 'signing:cert:dep-signing',
+    }
+}
+
 DEVEDITION_SIGNING_SCOPE_ALIAS_TO_PROJECT = [[
     'beta', set([
         'mozilla-beta',
@@ -168,25 +189,25 @@ BALROG_SERVER_SCOPES = {
 
 
 PUSH_APK_SCOPE_ALIAS_TO_PROJECT = [[
-    'central', set([
-        'mozilla-central',
-    ])
-], [
-    'beta', set([
+    '68-release-train', set([
         'mozilla-beta',
-    ])
-], [
-    'release', set([
         'mozilla-release',
+        'mozilla-esr68',
     ])
 ]]
 
 
 PUSH_APK_SCOPES = {
-    'central': 'googleplay:aurora',
-    'beta': 'googleplay:beta',
-    'release': 'googleplay:release',
-    'default': 'googleplay:dep',
+    '68-release-train': {
+        'nightly': 'googleplay:aurora',
+        'beta': 'googleplay:beta',
+        'release': 'googleplay:release',
+    },
+    'default': {
+        'nightly': 'googleplay:dep',
+        'beta': 'googleplay:dep',
+        'release': 'googleplay:dep',
+    }
 }
 
 
@@ -226,8 +247,8 @@ def with_scope_prefix(f):
         callable: the wrapped function
     """
     @functools.wraps(f)
-    def wrapper(config, **kwargs):
-        scope_or_scopes = f(config, **kwargs)
+    def wrapper(config, *args, **kwargs):
+        scope_or_scopes = f(config, *args, **kwargs)
         if isinstance(scope_or_scopes, list):
             return map(functools.partial(add_scope_prefix, config), scope_or_scopes)
         else:
@@ -254,6 +275,16 @@ def get_scope_from_project(config, alias_to_project_map, alias_to_scope_map):
         if config.params['project'] in projects and alias in alias_to_scope_map:
             return alias_to_scope_map[alias]
     return alias_to_scope_map['default']
+
+
+@with_scope_prefix
+def get_scope_from_project_and_release_type(
+    config, release_type, alias_to_project_map, alias_to_scope_map
+):
+    for alias, projects in alias_to_project_map:
+        if config.params['project'] in projects and alias in alias_to_scope_map:
+            return alias_to_scope_map[alias][release_type]
+    return alias_to_scope_map['default'][release_type]
 
 
 @with_scope_prefix
@@ -303,6 +334,12 @@ get_signing_cert_scope = functools.partial(
     alias_to_scope_map=SIGNING_CERT_SCOPES,
 )
 
+get_android_signing_cert_scope = functools.partial(
+    get_scope_from_project_and_release_type,
+    alias_to_project_map=ANDROID_SIGNING_SCOPE_ALIAS_TO_PROJECT,
+    alias_to_scope_map=ANDROID_SIGNING_CERT_SCOPES,
+)
+
 get_devedition_signing_cert_scope = functools.partial(
     get_scope_from_project,
     alias_to_project_map=DEVEDITION_SIGNING_SCOPE_ALIAS_TO_PROJECT,
@@ -327,7 +364,7 @@ get_balrog_server_scope = functools.partial(
 )
 
 get_push_apk_scope = functools.partial(
-    get_scope_from_project,
+    get_scope_from_project_and_release_type,
     alias_to_project_map=PUSH_APK_SCOPE_ALIAS_TO_PROJECT,
     alias_to_scope_map=PUSH_APK_SCOPES,
 )
@@ -374,7 +411,9 @@ def get_release_config(config):
     return release_config
 
 
-def get_signing_cert_scope_per_platform(build_platform, is_nightly, config):
+def get_signing_cert_scope_per_platform(build_platform, is_nightly, config, release_type=None):
+    if 'android' in build_platform and release_type is not None:
+        return get_android_signing_cert_scope(config, release_type)
     if 'devedition' in build_platform:
         return get_devedition_signing_cert_scope(config)
     elif is_nightly or build_platform in ('firefox-source', 'fennec-source', 'thunderbird-source'):
