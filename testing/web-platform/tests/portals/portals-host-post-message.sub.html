@@ -9,10 +9,10 @@
       var portal = document.createElement("portal");
       portal.src = portalSrc;
       return new Promise((resolve, reject) => {
-        portal.addEventListener("message", e => {
+        portal.onmessage = e => {
           if (e.data == "loaded")
             resolve(portal);
-        });
+        };
         document.body.appendChild(portal);
       });
     }
