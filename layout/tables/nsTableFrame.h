@@ -70,6 +70,45 @@ class nsDisplayTableItem : public nsPaintedDisplayItem {
   bool mDrawsBackground;
 };
 
+class nsDisplayTableBackgroundSet {
+ public:
+  nsDisplayList* ColGroupBackgrounds() { return &mColGroupBackgrounds; }
+
+  nsDisplayList* ColBackgrounds() { return &mColBackgrounds; }
+
+  explicit nsDisplayTableBackgroundSet(nsDisplayListBuilder* aBuilder)
+      : mBuilder(aBuilder) {
+    mPrevTableBackgroundSet = mBuilder->SetTableBackgroundSet(this);
+  }
+
+  ~nsDisplayTableBackgroundSet() {
+    mozilla::DebugOnly<nsDisplayTableBackgroundSet*> result =
+        mBuilder->SetTableBackgroundSet(mPrevTableBackgroundSet);
+    MOZ_ASSERT(result == this);
+  }
+
+  /**
+   * Move all display items in our lists to top of the corresponding lists in
+   * the destination.
+   */
+  void MoveTo(const nsDisplayListSet& aDestination) {
+    aDestination.BorderBackground()->AppendToTop(ColGroupBackgrounds());
+    aDestination.BorderBackground()->AppendToTop(ColBackgrounds());
+  }
+
+ private:
+  // This class is only used on stack, so we don't have to worry about leaking
+  // it.  Don't let us be heap-allocated!
+  void* operator new(size_t sz) CPP_THROW_NEW;
+
+ protected:
+  nsDisplayListBuilder* mBuilder;
+  nsDisplayTableBackgroundSet* mPrevTableBackgroundSet;
+
+  nsDisplayList mColGroupBackgrounds;
+  nsDisplayList mColBackgrounds;
+};
+
 /* ========================================================================== */
 
 enum nsTableColType {

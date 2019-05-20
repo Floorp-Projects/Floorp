@@ -78,7 +78,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
 
   void PaintCellBackgroundsForColumns(nsIFrame* aFrame,
                                       nsDisplayListBuilder* aBuilder,
-                                      const nsDisplayListSet& aLists,
+                                      nsDisplayList* aList,
                                       const nsTArray<uint32_t>& aColIdx,
                                       const nsPoint& aOffset);
 
