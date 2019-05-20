@@ -27,6 +27,7 @@ extern LazyLogModule gFTPLog;
 NS_IMPL_ISUPPORTS_INHERITED(nsFtpChannel, nsBaseChannel, nsIUploadChannel,
                             nsIResumableChannel, nsIFTPChannel,
                             nsIProxiedChannel, nsIForcePendingChannel,
+                            nsISupportsWeakReference,
                             nsIChannelWithDivertableParentListener)
 
 //-----------------------------------------------------------------------------
