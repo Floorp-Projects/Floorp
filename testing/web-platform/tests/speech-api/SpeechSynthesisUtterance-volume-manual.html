@@ -25,7 +25,7 @@
         await new Promise(resolve => {
           document.getElementById("volume").value = volume;
           const utterance = new SpeechSynthesisUtterance();
-          utterance.text = "hello universe";
+          utterance.text = text;
           utterance.volume = volume;
           utterance.onend = resolve;
           window.speechSynthesis.speak(utterance);
