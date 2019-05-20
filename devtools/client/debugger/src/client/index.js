@@ -15,7 +15,6 @@ import {
   bootstrapStore,
   bootstrapWorkers,
 } from "../utils/bootstrap";
-
 import { initialBreakpointsState } from "../reducers/breakpoints";
 
 import type { Panel } from "./firefox/types";
@@ -48,12 +47,7 @@ async function loadInitialState() {
 
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
 
-  return {
-    pendingBreakpoints,
-    tabs,
-    breakpoints,
-    eventListenerBreakpoints,
-  };
+  return { pendingBreakpoints, tabs, breakpoints, eventListenerBreakpoints };
 }
 
 function getClient(connection: any) {
