@@ -9,141 +9,121 @@ import classnames from "classnames";
 
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
-import { getActiveEventListeners } from "../../selectors";
+import {
+  getActiveEventListeners,
+  getEventListenerBreakpointTypes,
+  getEventListenerExpanded,
+} from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
 
-import type { EventListenerBreakpoints } from "../../types";
+import type {
+  EventListenerActiveList,
+  EventListenerCategoryList,
+  EventListenerExpandedList,
+} from "../../actions/types";
 
 import "./EventListeners.css";
 
-const CATEGORIES = {
-  Mouse: ["click", "mouseover", "dblclick"],
-  Keyboard: ["keyup", "keydown"],
-};
-
 type Props = {
-  addEventListeners: typeof actions.addEventListeners,
-  removeEventListeners: typeof actions.removeEventListeners,
-  activeEventListeners: EventListenerBreakpoints,
+  categories: EventListenerCategoryList,
+  expandedCategories: EventListenerExpandedList,
+  activeEventListeners: EventListenerActiveList,
+  addEventListeners: typeof actions.addEventListenerBreakpoints,
+  removeEventListeners: typeof actions.removeEventListenerBreakpoints,
+  addEventListenerExpanded: typeof actions.addEventListenerExpanded,
+  removeEventListenerExpanded: typeof actions.removeEventListenerExpanded,
 };
 
-type State = {
-  expandedCategories: string[],
-};
-
-function getKey(category: string, eventType: string) {
-  return `${category}:${eventType}`;
-}
-
-class EventListeners extends Component<Props, State> {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      expandedCategories: [],
-    };
-  }
-
-  onCategoryToggle(category, event) {
-    const { expandedCategories } = this.state;
+class EventListeners extends Component<Props> {
+  onCategoryToggle(category) {
+    const {
+      expandedCategories,
+      removeEventListenerExpanded,
+      addEventListenerExpanded,
+    } = this.props;
 
     if (expandedCategories.includes(category)) {
-      this.setState({
-        expandedCategories: expandedCategories.filter(
-          eventCategory => eventCategory !== category
-        ),
-      });
+      removeEventListenerExpanded(category);
     } else {
-      this.setState({
-        expandedCategories: [...expandedCategories, category],
-      });
+      addEventListenerExpanded(category);
     }
   }
 
   onCategoryClick(category, isChecked) {
     const { addEventListeners, removeEventListeners } = this.props;
-    const events = CATEGORIES[category].map(eventType =>
-      getKey(category, eventType)
-    );
+    const eventsIds = category.events.map(event => event.id);
 
     if (isChecked) {
-      addEventListeners(events);
+      addEventListeners(eventsIds);
     } else {
-      removeEventListeners(events);
+      removeEventListeners(eventsIds);
     }
   }
 
-  onEventTypeClick(eventType, isChecked) {
+  onEventTypeClick(eventId, isChecked) {
     const { addEventListeners, removeEventListeners } = this.props;
     if (isChecked) {
-      addEventListeners([eventType]);
+      addEventListeners([eventId]);
     } else {
-      removeEventListeners([eventType]);
+      removeEventListeners([eventId]);
     }
   }
 
   renderCategoryHeading(category) {
-    const { expandedCategories } = this.state;
-    const { activeEventListeners } = this.props;
+    const { activeEventListeners, expandedCategories } = this.props;
+    const { events } = category;
 
-    const eventTypes = CATEGORIES[category];
-
-    const expanded = expandedCategories.includes(category);
-    const checked = eventTypes.every(eventType =>
-      activeEventListeners.includes(getKey(category, eventType))
-    );
+    const expanded = expandedCategories.includes(category.name);
+    const checked = events.every(({ id }) => activeEventListeners.includes(id));
     const indeterminate =
-      !checked &&
-      eventTypes.some(eventType =>
-        activeEventListeners.includes(getKey(category, eventType))
-      );
+      !checked && events.some(({ id }) => activeEventListeners.includes(id));
 
     return (
       <div className="event-listener-header">
         <button
           className="event-listener-expand"
-          onClick={e => this.onCategoryToggle(category, e)}
+          onClick={() => this.onCategoryToggle(category.name)}
         >
           <AccessibleImage className={classnames("arrow", { expanded })} />
         </button>
         <label className="event-listener-label">
           <input
             type="checkbox"
-            value={category}
+            value={category.name}
             onChange={e => this.onCategoryClick(category, e.target.checked)}
             checked={checked}
             ref={el => el && (el.indeterminate = indeterminate)}
           />
-          <span className="event-listener-category">{category}</span>
+          <span className="event-listener-category">{category.name}</span>
         </label>
       </div>
     );
   }
 
   renderCategoryListing(category) {
-    const { activeEventListeners } = this.props;
-    const { expandedCategories } = this.state;
+    const { activeEventListeners, expandedCategories } = this.props;
 
-    const expanded = expandedCategories.includes(category);
+    const expanded = expandedCategories.includes(category.name);
     if (!expanded) {
       return null;
     }
 
     return (
       <ul>
-        {CATEGORIES[category].map(eventType => {
-          const key = getKey(category, eventType);
+        {category.events.map(event => {
           return (
-            <li className="event-listener-event" key={key}>
+            <li className="event-listener-event" key={event.id}>
               <label className="event-listener-label">
                 <input
                   type="checkbox"
-                  value={key}
-                  onChange={e => this.onEventTypeClick(key, e.target.checked)}
-                  checked={activeEventListeners.includes(key)}
+                  value={event.id}
+                  onChange={e =>
+                    this.onEventTypeClick(event.id, e.target.checked)
+                  }
+                  checked={activeEventListeners.includes(event.id)}
                 />
-                <span className="event-listener-name">{eventType}</span>
+                <span className="event-listener-name">{event.name}</span>
               </label>
             </li>
           );
@@ -153,12 +133,14 @@ class EventListeners extends Component<Props, State> {
   }
 
   render() {
+    const { categories } = this.props;
+
     return (
       <div className="event-listeners-content">
         <ul className="event-listeners-list">
-          {Object.keys(CATEGORIES).map(category => {
+          {categories.map((category, index) => {
             return (
-              <li className="event-listener-group" key={category}>
+              <li className="event-listener-group" key={index}>
                 {this.renderCategoryHeading(category)}
                 {this.renderCategoryListing(category)}
               </li>
@@ -170,14 +152,20 @@ class EventListeners extends Component<Props, State> {
   }
 }
 
-const mapStateToProps = state => ({
-  activeEventListeners: getActiveEventListeners(state),
-});
+const mapStateToProps = state => {
+  return {
+    activeEventListeners: getActiveEventListeners(state),
+    categories: getEventListenerBreakpointTypes(state),
+    expandedCategories: getEventListenerExpanded(state),
+  };
+};
 
 export default connect(
   mapStateToProps,
   {
-    addEventListeners: actions.addEventListeners,
-    removeEventListeners: actions.removeEventListeners,
+    addEventListeners: actions.addEventListenerBreakpoints,
+    removeEventListeners: actions.removeEventListenerBreakpoints,
+    addEventListenerExpanded: actions.addEventListenerExpanded,
+    removeEventListenerExpanded: actions.removeEventListenerExpanded,
   }
 )(EventListeners);

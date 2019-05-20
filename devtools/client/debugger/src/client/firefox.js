@@ -47,6 +47,9 @@ export async function onConnect(connection: any, actions: Object) {
     skipBreakpoints: prefs.skipPausing,
   });
 
+  // Retrieve possible event listener breakpoints
+  actions.getEventListenerBreakpointTypes();
+
   // In Firefox, we need to initially request all of the sources. This
   // usually fires off individual `newSource` notifications as the
   // debugger finds them, but there may be existing sources already in
