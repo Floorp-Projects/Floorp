@@ -173,12 +173,16 @@ void LIRGeneratorX86Shared::lowerDivI(MDiv* div) {
     if (rhs != 0 && uint32_t(1) << shift == Abs(rhs)) {
       LAllocation lhs = useRegisterAtStart(div->lhs());
       LDivPowTwoI* lir;
-      if (!div->canBeNegativeDividend()) {
+      // When truncated with maybe a non-zero remainder, we have to round the
+      // result toward 0. This requires an extra register to round up/down
+      // whether the left-hand-side is signed.
+      bool needRoundNeg = div->canBeNegativeDividend() && div->isTruncated();
+      if (!needRoundNeg) {
         // Numerator is unsigned, so does not need adjusting.
         lir = new (alloc()) LDivPowTwoI(lhs, lhs, shift, rhs < 0);
       } else {
-        // Numerator is signed, and needs adjusting, and an extra
-        // lhs copy register is needed.
+        // Numerator might be signed, and needs adjusting, and an extra lhs copy
+        // is needed to round the result of the integer division towards zero.
         lir = new (alloc())
             LDivPowTwoI(lhs, useRegister(div->lhs()), shift, rhs < 0);
       }
