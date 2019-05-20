@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Utf8.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "builtin/ModuleObject.h"
 #if defined(JS_BUILD_BINAST)
@@ -821,7 +821,7 @@ static ModuleObject* InternalParseModule(
   ModuleInfo info(cx, options);
   AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
-  ModuleCompiler<char16_t> compiler(srcBuf);
+  ModuleCompiler<Unit> compiler(srcBuf);
   ModuleObject* module = compiler.compile(info);
   if (!module) {
     return nullptr;
@@ -834,6 +834,13 @@ static ModuleObject* InternalParseModule(
 ModuleObject* frontend::ParseModule(JSContext* cx,
                                     const ReadOnlyCompileOptions& optionsInput,
                                     SourceText<char16_t>& srcBuf,
+                                    ScriptSourceObject** sourceObjectOut) {
+  return InternalParseModule(cx, optionsInput, srcBuf, sourceObjectOut);
+}
+
+ModuleObject* frontend::ParseModule(JSContext* cx,
+                                    const ReadOnlyCompileOptions& optionsInput,
+                                    SourceText<Utf8Unit>& srcBuf,
                                     ScriptSourceObject** sourceObjectOut) {
   return InternalParseModule(cx, optionsInput, srcBuf, sourceObjectOut);
 }
@@ -866,6 +873,12 @@ static ModuleObject* CreateModule(JSContext* cx,
 ModuleObject* frontend::CompileModule(JSContext* cx,
                                       const JS::ReadOnlyCompileOptions& options,
                                       SourceText<char16_t>& srcBuf) {
+  return CreateModule(cx, options, srcBuf);
+}
+
+ModuleObject* frontend::CompileModule(JSContext* cx,
+                                      const JS::ReadOnlyCompileOptions& options,
+                                      SourceText<Utf8Unit>& srcBuf) {
   return CreateModule(cx, options, srcBuf);
 }
 
