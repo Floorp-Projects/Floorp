@@ -9,11 +9,11 @@
 <!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/handling/handling.dtd">
 
 <dialog id="handling"
-        ondialogaccept="return dialog.onAccept();"
         onload="dialog.initialize();"
         style="min-width: &window.emWidth;; min-height: &window.emHeight;;"
         persist="width height screenX screenY"
         aria-describedby="description-text"
+        buttons="cancel,extra1"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mozapps/content/handling/dialog.js" type="application/javascript"/>
@@ -46,7 +46,7 @@
 
   <hbox class="dialog-button-box" pack="end">
     <button dlgtype="cancel" class="dialog-button"/>
-    <button dlgtype="accept" label="&accept;" class="dialog-button"/>
+    <button dlgtype="extra1" label="&accept;" class="dialog-button"/>
   </hbox>
 
 </dialog>
