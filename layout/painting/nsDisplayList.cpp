@@ -3764,8 +3764,8 @@ static nsIFrame* GetBackgroundComputedStyleFrame(nsIFrame* aFrame) {
 
 static void SetBackgroundClipRegion(
     DisplayListClipState::AutoSaveRestore& aClipState, nsIFrame* aFrame,
-    const nsPoint& aToReferenceFrame, const nsStyleImageLayers::Layer& aLayer,
-    const nsRect& aBackgroundRect, bool aWillPaintBorder) {
+    const nsStyleImageLayers::Layer& aLayer, const nsRect& aBackgroundRect,
+    bool aWillPaintBorder) {
   nsCSSRendering::ImageLayerClipState clip;
   nsCSSRendering::GetImageLayerClip(
       aLayer, aFrame, *aFrame->StyleBorder(), aBackgroundRect, aBackgroundRect,
@@ -3863,8 +3863,6 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   bool hasInsetShadow = effectsStyle->HasBoxShadowWithInset(true);
   bool willPaintBorder = aAllowWillPaintBorderOptimization && !isThemed &&
                          !hasInsetShadow && borderStyle->HasBorder();
-
-  nsPoint toRef = aBuilder->ToReferenceFrame(aFrame);
 
   // An auxiliary list is necessary in case we have background blending; if that
   // is the case, background items need to be wrapped by a blend container to
@@ -3969,7 +3967,7 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     if (!aBuilder->IsForEventDelivery()) {
       const nsStyleImageLayers::Layer& layer = bg->mImage.mLayers[i];
-      SetBackgroundClipRegion(clipState, aFrame, toRef, layer, bgRect,
+      SetBackgroundClipRegion(clipState, aFrame, layer, bgRect,
                               willPaintBorder);
     }
 

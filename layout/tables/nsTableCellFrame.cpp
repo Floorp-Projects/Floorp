@@ -497,16 +497,17 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       // Create backgrounds items as needed for the column and column
       // group that this cell occupies.
       nsTableColFrame* col = backgrounds->GetColForIndex(ColIndex());
+      nsTableColGroupFrame* colGroup = col->GetTableColGroupFrame();
+
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
           aBuilder, col, bgRect, backgrounds->ColBackgrounds(), false, nullptr,
-          col->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(col), this);
+          col->GetRect() + colGroup->GetPosition() +
+              backgrounds->TableToReferenceFrame(),
+          this);
 
-      nsIFrame* colGroup = col->GetParent();
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
           aBuilder, colGroup, bgRect, backgrounds->ColGroupBackgrounds(), false,
-          nullptr,
-          colGroup->GetRectRelativeToSelf() +
-              aBuilder->ToReferenceFrame(colGroup),
+          nullptr, colGroup->GetRect() + backgrounds->TableToReferenceFrame(),
           this);
     }
   }
