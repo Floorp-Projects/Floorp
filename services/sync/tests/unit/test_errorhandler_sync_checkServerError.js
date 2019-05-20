@@ -5,6 +5,12 @@ const {Service} = ChromeUtils.import("resource://services-sync/service.js");
 const {Status} = ChromeUtils.import("resource://services-sync/status.js");
 const {FakeCryptoService} = ChromeUtils.import("resource://testing-common/services/sync/fakeservices.js");
 
+// Allow eval to avoid triggering the eval()-assertion through ajv-4.1.1.js
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 var engineManager = Service.engineManager;
 
 function CatapultEngine() {

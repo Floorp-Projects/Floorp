@@ -4,6 +4,12 @@
 const {Service} = ChromeUtils.import("resource://services-sync/service.js");
 const {Status} = ChromeUtils.import("resource://services-sync/status.js");
 
+// Allow eval to avoid triggering the eval()-assertion through ajv-4.1.1.js
+Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
+});
+
 const fakeServer = new SyncServer();
 fakeServer.start();
 const fakeServerUrl = "http://localhost:" + fakeServer.port;
