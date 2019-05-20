@@ -19,8 +19,8 @@ syn = { features = ["clone-impls", "default", "derive", "extra-traits", "full", 
 log = { features = ["release_max_level_info", "release_max_level_warn", "std"],  version = "0.4.6" }
 serde = { features = ["default", "rc", "serde_derive", "std"], version = "1.0.66" }
 serde_derive = { features = ["default", "deserialize_in_place"], version = "1.0.66" }
-quote = { features = ["default", "proc-macro"], version = "0.5.2" }
-proc-macro2 = { features = ["default", "proc-macro"], version = "0.3.5" }
+quote = { features = ["default", "proc-macro"], version = "0.6.11" }
+proc-macro2 = { features = ["default", "proc-macro"], version = "0.4.27" }
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.6"
