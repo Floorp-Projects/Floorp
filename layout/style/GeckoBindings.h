@@ -533,14 +533,6 @@ void Gecko_SetToSVGPath(
     mozilla::StyleForgottenArcSlicePtr<mozilla::StylePathCommand>,
     mozilla::StyleFillRule);
 
-void Gecko_SetStyleMotion(mozilla::UniquePtr<mozilla::StyleMotion>* aMotion,
-                          mozilla::StyleMotion* aValue);
-
-mozilla::StyleMotion* Gecko_NewStyleMotion();
-
-void Gecko_CopyStyleMotions(mozilla::UniquePtr<mozilla::StyleMotion>* motion,
-                            const mozilla::StyleMotion* other);
-
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);

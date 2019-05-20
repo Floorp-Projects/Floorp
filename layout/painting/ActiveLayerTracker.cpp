@@ -265,7 +265,7 @@ static void IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame,
                                                LayerActivity* aActivity) {
   const nsStyleDisplay* display = aFrame->StyleDisplay();
   if (!display->HasTransformProperty() && !display->HasIndividualTransform() &&
-      !(display->mMotion && display->mMotion->HasPath())) {
+      display->mOffsetPath.IsNone()) {
     // The transform was removed.
     aActivity->mPreviousTransformScale = Nothing();
     IncrementMutationCount(

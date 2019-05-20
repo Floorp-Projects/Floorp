@@ -1665,27 +1665,6 @@ struct StyleShapeSource final {
   StyleGeometryBox mReferenceBox = StyleGeometryBox::NoBox;
 };
 
-struct StyleMotion final {
-  bool operator==(const StyleMotion& aOther) const {
-    return mOffsetPath == aOther.mOffsetPath;
-  }
-
-  bool operator!=(const StyleMotion& aOther) const {
-    return !(*this == aOther);
-  }
-
-  const StyleShapeSource& OffsetPath() const { return mOffsetPath; }
-
-  bool HasPath() const {
-    // Bug 1186329: We have to check other acceptable types after supporting
-    // different values of offset-path. e.g. basic-shapes, ray.
-    return mOffsetPath.GetType() == StyleShapeSourceType::Path;
-  }
-
- private:
-  StyleShapeSource mOffsetPath;
-};
-
 }  // namespace mozilla
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
@@ -1773,7 +1752,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   uint8_t mTransformStyle;
   StyleGeometryBox mTransformBox;
 
-  mozilla::UniquePtr<mozilla::StyleMotion> mMotion;
+  mozilla::StyleOffsetPath mOffsetPath;
 
   mozilla::StyleTransformOrigin mTransformOrigin;
   mozilla::StylePerspective mChildPerspective;
@@ -1997,7 +1976,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return HasTransformProperty() || HasIndividualTransform() ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
            (mWillChange.bits & mozilla::StyleWillChangeBits_TRANSFORM) ||
-           (mMotion && mMotion->HasPath());
+           !mOffsetPath.IsNone();
   }
 
   bool HasTransformProperty() const { return !mTransform._0.IsEmpty(); }
