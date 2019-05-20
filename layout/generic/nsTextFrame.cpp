@@ -1905,7 +1905,8 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
 
   const nsStyleText* textStyle2 = sc2->StyleText();
   if (textStyle1->mTextTransform != textStyle2->mTextTransform ||
-      textStyle1->EffectiveWordBreak() != textStyle2->EffectiveWordBreak()) {
+      textStyle1->EffectiveWordBreak() != textStyle2->EffectiveWordBreak() ||
+      textStyle1->mLineBreak != textStyle2->mLineBreak) {
     return false;
   }
 
@@ -2587,19 +2588,24 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     // The CSS word-break value may change within a word, so we reset it for
     // each MappedFlow. The line-breaker will flush its text if the property
     // actually changes.
-    auto wordBreak = mappedFlow->mStartFrame->StyleText()->EffectiveWordBreak();
-    switch (wordBreak) {
-      case StyleWordBreak::BreakAll:
-        mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_BreakAll);
-        break;
-      case StyleWordBreak::KeepAll:
-        mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_KeepAll);
-        break;
-      case StyleWordBreak::Normal:
-      default:
-        MOZ_ASSERT(wordBreak == StyleWordBreak::Normal);
-        mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_Normal);
-        break;
+    const auto* styleText = mappedFlow->mStartFrame->StyleText();
+    if (styleText->mLineBreak == StyleLineBreak::Anywhere) {
+        mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_Anywhere);
+    } else {
+      auto wordBreak = styleText->EffectiveWordBreak();
+      switch (wordBreak) {
+        case StyleWordBreak::BreakAll:
+          mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_BreakAll);
+          break;
+        case StyleWordBreak::KeepAll:
+          mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_KeepAll);
+          break;
+        case StyleWordBreak::Normal:
+        default:
+          MOZ_ASSERT(wordBreak == StyleWordBreak::Normal);
+          mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_Normal);
+          break;
+      }
     }
 
     uint32_t offset = iter.GetSkippedOffset();
@@ -2633,7 +2639,8 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     if (textStyle->mTextTransform.case_ == StyleTextTransformCase::Capitalize) {
       flags |= nsLineBreaker::BREAK_NEED_CAPITALIZATION;
     }
-    if (textStyle->mHyphens == StyleHyphens::Auto) {
+    if (textStyle->mHyphens == StyleHyphens::Auto &&
+        textStyle->mLineBreak != StyleLineBreak::Anywhere) {
       flags |= nsLineBreaker::BREAK_USE_AUTO_HYPHENATION;
     }
 

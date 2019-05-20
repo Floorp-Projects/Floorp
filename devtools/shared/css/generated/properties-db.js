@@ -3183,6 +3183,7 @@ exports.CSS_PROPERTIES = {
       "text-emphasis-position",
       "text-emphasis-color",
       "-moz-tab-size",
+      "line-break",
       "-webkit-text-fill-color",
       "-webkit-text-stroke-color",
       "-webkit-text-stroke-width",
@@ -7320,6 +7321,21 @@ exports.CSS_PROPERTIES = {
       "rgb",
       "rgba",
       "transparent",
+      "unset"
+    ]
+  },
+  "line-break": {
+    "isInherited": true,
+    "subproperties": [
+      "line-break"
+    ],
+    "supports": [],
+    "values": [
+      "anywhere",
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
       "unset"
     ]
   },

@@ -3661,6 +3661,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextAlignLast(aSource.mTextAlignLast),
       mTextJustify(aSource.mTextJustify),
       mWhiteSpace(aSource.mWhiteSpace),
+      mLineBreak(aSource.mLineBreak),
       mWordBreak(aSource.mWordBreak),
       mOverflowWrap(aSource.mOverflowWrap),
       mHyphens(aSource.mHyphens),
@@ -3704,6 +3705,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mTextAlignLast != aNewData.mTextAlignLast) ||
       (mTextTransform != aNewData.mTextTransform) ||
       (mWhiteSpace != aNewData.mWhiteSpace) ||
+      (mLineBreak != aNewData.mLineBreak) ||
       (mWordBreak != aNewData.mWordBreak) ||
       (mOverflowWrap != aNewData.mOverflowWrap) ||
       (mHyphens != aNewData.mHyphens) || (mRubyAlign != aNewData.mRubyAlign) ||
