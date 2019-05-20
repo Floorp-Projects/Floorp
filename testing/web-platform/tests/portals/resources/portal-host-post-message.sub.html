@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<script>
+  window.portalHost.postMessage("loaded", "*");
+  window.portalHost.addEventListener("message", e => {
+    window.portalHost.postMessage(...e.data);
+  });
+</script>
