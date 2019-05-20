@@ -81,6 +81,7 @@ class HomeFragment : Fragment(), CoroutineScope {
     private var homeMenu: HomeMenu? = null
 
     var deleteSessionJob: (suspend () -> Unit)? = null
+    var deleteCollectionJob: (suspend () -> Unit)? = null
 
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
@@ -159,9 +160,8 @@ class HomeFragment : Fragment(), CoroutineScope {
             (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
         view.toolbar.compoundDrawablePadding = roundToInt
         view.toolbar.setOnClickListener {
-            invokePendingDeleteSessionJob()
+            invokePendingDeleteJobs()
             onboarding.finish()
-
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
             Navigation.findNavController(it).navigate(directions)
 
@@ -269,10 +269,11 @@ class HomeFragment : Fragment(), CoroutineScope {
                 if ((activity as HomeActivity).browsingModeManager.isPrivate) {
                     return
                 }
+                invokePendingDeleteJobs()
                 showCollectionCreationFragment(action.selectedTabSessionId)
             }
             is TabAction.Select -> {
-                invokePendingDeleteSessionJob()
+                invokePendingDeleteJobs()
                 val session =
                     requireComponents.core.sessionManager.findSessionById(action.sessionId)
                 requireComponents.core.sessionManager.select(session!!)
@@ -291,6 +292,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                 }
             }
             is TabAction.Share -> {
+                invokePendingDeleteJobs()
                 requireComponents.core.sessionManager.findSessionById(action.sessionId)
                     ?.let { session ->
                         requireContext().share(session.url)
@@ -308,11 +310,12 @@ class HomeFragment : Fragment(), CoroutineScope {
                 )
             }
             is TabAction.Add -> {
-                invokePendingDeleteSessionJob()
+                invokePendingDeleteJobs()
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
             }
             is TabAction.ShareTabs -> {
+                invokePendingDeleteJobs()
                 val shareText = requireComponents.core.sessionManager.sessions.joinToString("\n") {
                     it.url
                 }
@@ -321,12 +324,20 @@ class HomeFragment : Fragment(), CoroutineScope {
         }
     }
 
-    private fun invokePendingDeleteSessionJob() {
+    private fun invokePendingDeleteJobs() {
         deleteSessionJob?.let {
             launch {
                 it.invoke()
             }.invokeOnCompletion {
                 deleteSessionJob = null
+            }
+        }
+
+        deleteCollectionJob?.let {
+            launch {
+                it.invoke()
+            }.invokeOnCompletion {
+                deleteCollectionJob = null
             }
         }
     }
@@ -343,9 +354,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                     .onNext(SessionControlChange.ExpansionChange(action.collection, false))
             }
             is CollectionAction.Delete -> {
-                launch(Dispatchers.IO) {
-                    requireComponents.core.tabCollectionStorage.removeCollection(action.collection)
-                }
+                removeCollectionWithUndo(action.collection)
             }
             is CollectionAction.AddTab -> {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
@@ -357,14 +366,14 @@ class HomeFragment : Fragment(), CoroutineScope {
                 )
             }
             is CollectionAction.OpenTab -> {
-                invokePendingDeleteSessionJob()
+                invokePendingDeleteJobs()
                 (activity as HomeActivity).openToBrowserAndLoad(
                     searchTermOrURL = action.tab.url,
                     newTab = true,
                     from = BrowserDirection.FromHome)
             }
             is CollectionAction.OpenTabs -> {
-                invokePendingDeleteSessionJob()
+                invokePendingDeleteJobs()
                 action.collection.tabs.forEach {
                     requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
                 }
@@ -400,21 +409,21 @@ class HomeFragment : Fragment(), CoroutineScope {
         homeMenu = HomeMenu(requireContext()) {
             when (it) {
                 HomeMenu.Item.Settings -> {
-                    invokePendingDeleteSessionJob()
+                    invokePendingDeleteJobs()
                     onboarding.finish()
                     Navigation.findNavController(homeLayout).navigate(
                         HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
                     )
                 }
                 HomeMenu.Item.Library -> {
-                    invokePendingDeleteSessionJob()
+                    invokePendingDeleteJobs()
                     onboarding.finish()
                     Navigation.findNavController(homeLayout).navigate(
                         HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
                     )
                 }
                 HomeMenu.Item.Help -> {
-                    invokePendingDeleteSessionJob()
+                    invokePendingDeleteJobs()
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getSumoURLForTopic(
                             context!!,
@@ -486,6 +495,8 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     private fun removeTabWithUndo(sessionId: String) {
         val sessionManager = requireComponents.core.sessionManager
+
+        // Update the UI with the tab removed, but don't remove it from storage yet
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.TabsChange(
                 sessionManager.sessions
@@ -524,6 +535,32 @@ class HomeFragment : Fragment(), CoroutineScope {
                 ?.let { session ->
                     sessionManager.remove(session)
                 }
+        }
+    }
+
+    private fun removeCollectionWithUndo(tabCollection: TabCollection) {
+        // Update the UI with the tab collection removed, but don't remove it from storage yet
+        val updatedCollectionList = requireComponents.core.tabCollectionStorage.cachedTabCollections.toMutableList()
+        updatedCollectionList.remove(tabCollection)
+        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(updatedCollectionList))
+
+        deleteCollectionJob = {
+            launch(Dispatchers.IO) {
+                requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
+            }
+        }
+
+        CoroutineScope(Dispatchers.Main).allowUndo(
+            view!!, getString(R.string.snackbar_collection_deleted),
+            getString(R.string.snackbar_deleted_undo), {
+                deleteCollectionJob = null
+                getManagedEmitter<SessionControlChange>().onNext(SessionControlChange
+                    .CollectionsChange(requireComponents.core.tabCollectionStorage.cachedTabCollections))
+            }
+        ) {
+            launch(Dispatchers.IO) {
+                requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
+            }
         }
     }
 
