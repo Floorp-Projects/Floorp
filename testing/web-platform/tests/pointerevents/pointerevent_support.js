@@ -286,6 +286,15 @@ function touchScrollInTarget(target, direction) {
                    .send();
 }
 
+function touchTapInTarget(target) {
+    return new test_driver.Actions()
+                   .addPointer("pointer1", "touch")
+                   .pointerMove(0, 0, {origin: target})
+                   .pointerDown()
+                   .pointerUp()
+                   .send();
+}
+
 function pointerDragInTarget(pointerType, target, direction) {
     var x_delta = 0;
     var y_delta = 0;
