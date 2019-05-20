@@ -28,31 +28,31 @@
           "name": "clid",
           "condition": "purpose",
           "purpose": "searchbar",
-          "value": "__MSG_param_searchbar"
+          "value": "__MSG_param_searchbar__"
         },
         {
           "name": "clid",
           "condition": "purpose",
           "purpose": "keyword",
-          "value": "__MSG_param_keyword"
+          "value": "__MSG_param_keyword__"
         },
         {
           "name": "clid",
           "condition": "purpose",
           "purpose": "contextmenu",
-          "value": "__MSG_param_contextmenu"
+          "value": "__MSG_param_contextmenu__"
         },
         {
           "name": "clid",
           "condition": "purpose",
           "purpose": "homepage",
-          "value": "__MSG_param_homepage"
+          "value": "__MSG_param_homepage__"
         },
         {
           "name": "clid",
           "condition": "purpose",
           "purpose": "newtab",
-          "value": "__MSG_param_newtab"
+          "value": "__MSG_param_newtab__"
         }
       ],
       "search_url_get_params": "__MSG_searchUrlGetParams__"
