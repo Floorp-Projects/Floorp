@@ -1119,6 +1119,7 @@ enum CanvasFillRule { "nonzero", "evenodd" };
 
 dictionary CanvasRenderingContext2DSettings {
   boolean alpha = true;
+  boolean desynchronized = false;
 };
 
 enum ImageSmoothingQuality { "low", "medium", "high" };
@@ -1405,7 +1406,7 @@ interface CustomElementRegistry {
   [CEReactions] void upgrade(Node root);
 };
 
-callback CustomElementConstructor = any ();
+callback CustomElementConstructor = HTMLElement ();
 
 dictionary ElementDefinitionOptions {
   DOMString extends;
