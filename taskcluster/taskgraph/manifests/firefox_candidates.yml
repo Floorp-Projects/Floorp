@@ -332,13 +332,25 @@ mapping:
         checksums_path: ${path_platform}/${locale}/Firefox Setup ${version}.msi
     target.complete.mar:
         <<: *default
-        description: "The main installer we ship our mobile products baked within"
+        description: "Complete MAR to serve as updates"
         all_locales: true
         from:
             - mar-signing
         pretty_name: firefox-${version}.complete.mar
         checksums_path: update/${path_platform}/${locale}/firefox-${version}.complete.mar
         update_balrog_manifest: true
+        destinations:
+            - ${version}-candidates/build${build_number}/update/${path_platform}
+    target.bz2.complete.mar:
+        <<: *default
+        description: "Complete MAR with bz2 compression and SHA1 signing to serve as updates"
+        all_locales: true
+        from:
+            - mar-signing
+        pretty_name: firefox-${version}.bz2.complete.mar
+        checksums_path: update/${path_platform}/${locale}/firefox-${version}.bz2.complete.mar
+        update_balrog_manifest: true
+        balrog_format: bz2
         destinations:
             - ${version}-candidates/build${build_number}/update/${path_platform}
     ${partial}:
