@@ -59,10 +59,6 @@ describe("Popover", () => {
     </Popover>
   );
 
-  const div = document.createElement("div");
-
-  const event = { currentTarget: div };
-
   beforeEach(() => {
     onMouseLeave.mockClear();
     onKeyDown.mockClear();
@@ -71,31 +67,6 @@ describe("Popover", () => {
   it("render", () => expect(popover).toMatchSnapshot());
 
   it("render (tooltip)", () => expect(tooltip).toMatchSnapshot());
-
-  it("calls mouseLeave", () => {
-    popover.find(".popover").simulate("mouseleave", event);
-    expect(onMouseLeave).toHaveBeenCalled();
-  });
-
-  it("calls mouseLeave (tooltip)", () => {
-    tooltip.find(".tooltip").simulate("mouseleave", event);
-    expect(onMouseLeave).toHaveBeenCalled();
-  });
-
-  it("no mouse leave on bracket or gap", () => {
-    popover.find(".bracket-arrow").simulate("mouseleave", event);
-    expect(onMouseLeave).not.toHaveBeenCalled();
-  });
-
-  it("calls keyDown", () => {
-    popover.find(".popover").simulate("keydown", { key: "Escape" });
-    expect(onKeyDown).toHaveBeenCalled();
-  });
-
-  it("calls keyDown (tooltip)", () => {
-    tooltip.find(".tooltip").simulate("keydown", { key: "Escape" });
-    expect(onKeyDown).toHaveBeenCalled();
-  });
 
   it("mount popover", () => {
     const mountedPopover = mount(

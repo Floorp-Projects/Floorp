@@ -124,27 +124,6 @@ Array [
 ]
 `;
 
-exports[`project text search should search a specific source 2`] = `
-Array [
-  Object {
-    "filepath": "http://localhost:8000/examples/bar",
-    "matches": Array [
-      Object {
-        "column": 9,
-        "line": 1,
-        "match": "bla",
-        "matchIndex": 9,
-        "sourceId": "bar",
-        "type": "MATCH",
-        "value": "function bla(x, y) {",
-      },
-    ],
-    "sourceId": "bar",
-    "type": "RESULT",
-  },
-]
-`;
-
 exports[`project text search should search all the loaded sources based on the query 1`] = `
 Array [
   Object {
