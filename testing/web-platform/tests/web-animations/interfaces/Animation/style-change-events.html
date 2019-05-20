@@ -160,6 +160,7 @@ const tests = {
   }),
   playState: UsePropertyTest(animation => animation.playState),
   pending: UsePropertyTest(animation => animation.pending),
+  replaceState: UsePropertyTest(animation => animation.replaceState),
   ready: UsePropertyTest(animation => animation.ready),
   finished: UsePropertyTest(animation => {
     // Get the finished Promise
@@ -171,6 +172,13 @@ const tests = {
 
     // Set the onfinish menber
     animation.onfinish = () => {};
+  }),
+  onremove: UsePropertyTest(animation => {
+    // Get the onremove member
+    animation.onremove;
+
+    // Set the onremove menber
+    animation.onremove = () => {};
   }),
   oncancel: UsePropertyTest(animation => {
     // Get the oncancel member
