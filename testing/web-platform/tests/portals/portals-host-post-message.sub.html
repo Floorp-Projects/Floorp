@@ -56,6 +56,87 @@
     }, "Message received from cross-origin portal host with target origin correctly specified");
 
     promise_test(async () => {
+      var message = {
+        prop1: "value1",
+        prop2: 2.5,
+        prop3: [1, 2, "3"],
+        prop4: {
+          prop4_1: "value4_1"
+        }
+      };
+      var {data} = await createPortalAndLoopMessage(
+        "resources/portal-host-post-message.sub.html", [message]);
+      assert_object_equals(data, message);
+      var {data} = await createPortalAndLoopMessage(crossOriginUrl,
+                                                    [message, "*"]);
+      assert_object_equals(data, message);
+    }, "postMessage with object message");
+
+    promise_test(async () => {
+      function checkPort(port) {
+        return new Promise((resolve, reject) => {
+          var channel = new MessageChannel();
+          channel.port1.onmessage = resolve;
+          port.postMessage("sending port", [channel.port2]);
+        });
+      }
+
+      var {ports} = await createPortalAndLoopMessage(
+        "resources/portal-host-post-message.sub.html",
+        {type: "message-port"});
+      await checkPort(ports[0]);
+
+      var {ports} = await createPortalAndLoopMessage(
+        crossOriginUrl,
+        {type: "message-port"});
+      await checkPort(ports[0]);
+    }, "postMessage with message ports");
+
+    promise_test(async () => {
+      var {data} = await createPortalAndLoopMessage(
+        "resources/portal-host-post-message.sub.html", {
+          type: "array-buffer-without-transfer",
+          array: [0, 1, 2, 3, 4]
+      });
+      assert_array_equals([0, 1, 2, 3, 4], new Int8Array(data.arrayBuffer));
+
+      var {data} = await createPortalAndLoopMessage(crossOriginUrl, {
+          type: "array-buffer-without-transfer",
+          array: [0, 1, 2, 3, 4]
+      });
+      assert_array_equals([0, 1, 2, 3, 4], new Int8Array(data.arrayBuffer));
+    }, "postMessage with array buffer without transfer");
+
+    promise_test(async () => {
+      var {data} = await createPortalAndLoopMessage(
+        "resources/portal-host-post-message.sub.html", {
+          type: "array-buffer-with-transfer",
+          array: [0, 1, 2, 3, 4]
+      });
+      assert_array_equals([0, 1, 2, 3, 4], new Int8Array(data.arrayBuffer));
+
+      var {data} = await createPortalAndLoopMessage(crossOriginUrl, {
+          type: "array-buffer-with-transfer",
+          array: [0, 1, 2, 3, 4]
+      });
+      assert_array_equals([0, 1, 2, 3, 4], new Int8Array(data.arrayBuffer));
+    }, "postMessage with array buffer with transfer");
+
+    promise_test(async () => {
+      var {data} = await createPortalAndLoopMessage(
+        "resources/portal-host-post-message.sub.html",
+        {type: "invalid-message"});
+      assert_equals(data.errorType, "DataCloneError");
+    }, "postMessage should throw error when serialization fails");
+
+    promise_test(async () => {
+      var {data} = await createPortalAndLoopMessage(
+        "resources/portal-host-post-message.sub.html",
+        {type: "invalid-port"});
+      assert_equals(data.errorType, "TypeError");
+    }, "postMessage with invalid transferable should throw error");
+
+    promise_test(async () => {
        var receiveMessage = new Promise((resolve, reject) => {
          var bc = new BroadcastChannel("portal-host-post-message-after-activate");
          bc.onmessage = e => { resolve(e); };
