@@ -5,8 +5,11 @@
 package org.mozilla.fenix.settings
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.IntentReceiverActivity
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.Locale
@@ -15,6 +18,8 @@ object SupportUtils {
     const val FEEDBACK_URL = "https://input.mozilla.org"
     const val RATE_APP_URL = "market://details?id=" + BuildConfig.APPLICATION_ID
     const val MOZILLA_MANIFESTO_URL = "https://www.mozilla.org/en-GB/about/manifesto/"
+    val PRIVACY_NOTICE_URL: String
+        get() = "https://www.mozilla.org/${getLanguageTag(Locale.getDefault())}/privacy/firefox/"
 
     enum class SumoTopic(
         internal val topicStr: String
@@ -37,6 +42,14 @@ object SupportUtils {
         val langTag = getLanguageTag(Locale.getDefault())
         return "https://support.mozilla.org/$langTag/kb/$escapedTopic"
     }
+
+    fun createCustomTabIntent(context: Context, url: String) = Intent(Intent.ACTION_VIEW).apply {
+        putExtra("android.support.customtabs.extra.SESSION", true)
+        setClassName(context.applicationContext, IntentReceiverActivity::class.java.name)
+        data = Uri.parse(url)
+        setPackage(context.packageName)
+    }
+
 
     private fun getEncodedTopicUTF8(topic: String): String {
         try {

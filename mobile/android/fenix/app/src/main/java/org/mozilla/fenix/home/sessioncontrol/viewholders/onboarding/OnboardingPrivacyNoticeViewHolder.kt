@@ -6,14 +6,29 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.*
+import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.*
+import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.description_text
+import kotlinx.android.synthetic.main.onboarding_privacy_notice.view.header_text
+import org.jetbrains.anko.dimen
 import org.mozilla.fenix.R
+import org.mozilla.fenix.settings.SupportUtils
 
 class OnboardingPrivacyNoticeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
+        val icon = view.context.getDrawable(R.drawable.ic_onboarding_privacy_notice)
+        val size = view.context.dimen(R.dimen.onboarding_privacy_notice_icon_height_width)
+        icon?.setBounds(0, 0, size, size)
+
+        view.header_text.setCompoundDrawables(icon, null, null, null)
+
         val appName = view.context.getString(R.string.app_name)
         view.description_text.text = view.context.getString(R.string.onboarding_privacy_notice_description, appName)
+
+        view.read_button.setOnClickListener {
+            val intent = SupportUtils.createCustomTabIntent(view.context, SupportUtils.PRIVACY_NOTICE_URL)
+            view.context.startActivity(intent)
+        }
     }
 
     companion object {
