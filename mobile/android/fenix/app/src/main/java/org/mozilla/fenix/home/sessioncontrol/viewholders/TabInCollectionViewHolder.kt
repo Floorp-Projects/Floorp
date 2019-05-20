@@ -61,6 +61,10 @@ class TabInCollectionViewHolder(
             }
         }
 
+        view.setOnClickListener {
+            actionEmitter.onNext(CollectionAction.OpenTab(tab))
+        }
+
         collection_tab_close_button.increaseTapArea(buttonIncreaseDps)
         collection_tab_close_button.setOnClickListener {
             actionEmitter.onNext(CollectionAction.RemoveTab(collection, tab))

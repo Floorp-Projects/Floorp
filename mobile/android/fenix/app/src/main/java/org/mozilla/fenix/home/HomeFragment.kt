@@ -363,6 +363,13 @@ class HomeFragment : Fragment(), CoroutineScope {
             is CollectionAction.Rename -> {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
             }
+            is CollectionAction.OpenTab -> {
+                invokePendingDeleteSessionJob()
+                (activity as HomeActivity).openToBrowserAndLoad(
+                    searchTermOrURL = action.tab.url,
+                    newTab = true,
+                    from = BrowserDirection.FromHome)
+            }
             is CollectionAction.OpenTabs -> {
                 invokePendingDeleteSessionJob()
                 action.collection.tabs.forEach {
