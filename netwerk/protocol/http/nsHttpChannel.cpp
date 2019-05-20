@@ -8613,18 +8613,18 @@ nsHttpChannel::OpenAlternativeOutputStream(const nsACString& type,
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetOriginalInputStream(nsIInputStreamReceiver* aReceiver) {
-  if (aReceiver == nullptr) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsCOMPtr<nsIInputStream> inputStream;
+nsHttpChannel::GetOriginalInputStream(nsIInputStream** aInputStream) {
+  NS_ENSURE_ARG_POINTER(aInputStream);
+
+  *aInputStream = nullptr;
 
   nsCOMPtr<nsICacheEntry> cacheEntry =
       mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
   if (cacheEntry) {
-    cacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
+    nsresult rv = cacheEntry->OpenInputStream(0, aInputStream);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  aReceiver->OnInputStreamReady(inputStream);
+
   return NS_OK;
 }
 
