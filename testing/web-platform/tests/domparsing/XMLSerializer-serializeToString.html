@@ -184,6 +184,11 @@ test(function() {
 }, 'Check if start tag serialization applied the original prefix even if it is declared in an ancestor element.');
 
 test(function() {
+  assert_equals(serialize(parse('<root xmlns:x="uri1"><table xmlns="uri1"></table></root>')),
+      '<root xmlns:x="uri1"><x:table xmlns="uri1"/></root>');
+}, 'Check if start tag serialization does NOT apply the default namespace if its namespace is declared in an ancestor.');
+
+test(function() {
   const root = parse('<root><child1/><child2/></root>');
   root.firstChild.setAttributeNS('uri1', 'attr1', 'value1');
   root.firstChild.setAttributeNS('uri2', 'attr2', 'value2');
