@@ -9,8 +9,6 @@ var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "Localization",
-                               "resource://gre/modules/Localization.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
@@ -21,7 +19,6 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 });
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
-const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 
 const PRIVILEGED_PROCESS_PREF =
   "browser.tabs.remote.separatePrivilegedContentProcess";
@@ -48,7 +45,6 @@ const convertSubjectToLogin = subject => {
 };
 
 var AboutLoginsParent = {
-  _l10n: null,
   _subscribers: new WeakSet(),
 
   // Listeners are added in BrowserGlue.jsm
@@ -78,8 +74,6 @@ var AboutLoginsParent = {
       }
       case "AboutLogins:Subscribe": {
         if (!ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length) {
-          Services.obs.addObserver(this, "passwordmgr-crypto-login");
-          Services.obs.addObserver(this, "passwordmgr-crypto-loginCanceled");
           Services.obs.addObserver(this, "passwordmgr-storage-changed");
         }
         this._subscribers.add(message.target);
@@ -112,20 +106,7 @@ var AboutLoginsParent = {
 
   observe(subject, topic, type) {
     if (!ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length) {
-      Services.obs.removeObserver(this, "passwordmgr-crypto-login");
-      Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
       Services.obs.removeObserver(this, "passwordmgr-storage-changed");
-      return;
-    }
-
-    if (topic == "passwordmgr-crypto-login") {
-      this.removeMasterPasswordLoginNotifications();
-      this.messageSubscribers("AboutLogins:AllLogins", this.getAllLogins());
-      return;
-    }
-
-    if (topic == "passwordmgr-crypto-loginCanceled") {
-      this.showMasterPasswordLoginNotifications();
       return;
     }
 
@@ -160,54 +141,7 @@ var AboutLoginsParent = {
     }
   },
 
-  async showMasterPasswordLoginNotifications() {
-    if (!this._l10n) {
-      this._l10n = new Localization(["browser/aboutLogins.ftl"]);
-    }
-
-    let messageString = await this._l10n.formatValue("master-password-notification-message");
-    for (let subscriber of this._subscriberIterator()) {
-      // If there's already an existing notification bar, don't do anything.
-      let {gBrowser} = subscriber.ownerGlobal;
-      let browser = subscriber;
-      let notificationBox = gBrowser.getNotificationBox(browser);
-      let notification = notificationBox.getNotificationWithValue(MASTER_PASSWORD_NOTIFICATION_ID);
-      if (notification) {
-        continue;
-      }
-
-      // Configure the notification bar
-      let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-      let iconURL = "chrome://browser/skin/login.svg";
-      let reloadLabel = await this._l10n.formatValue("master-password-reload-button-label");
-      let reloadKey = await this._l10n.formatValue("master-password-reload-button-accesskey");
-
-      let buttons = [{
-        label: reloadLabel,
-        accessKey: reloadKey,
-        popup: null,
-        callback() { browser.reload(); },
-      }];
-
-      notification = notificationBox.appendNotification(messageString, MASTER_PASSWORD_NOTIFICATION_ID,
-                                                        iconURL, priority, buttons);
-    }
-  },
-
-  removeMasterPasswordLoginNotifications() {
-    for (let subscriber of this._subscriberIterator()) {
-      let {gBrowser} = subscriber.ownerGlobal;
-      let browser = subscriber;
-      let notificationBox = gBrowser.getNotificationBox(browser);
-      let notification = notificationBox.getNotificationWithValue(MASTER_PASSWORD_NOTIFICATION_ID);
-      if (!notification) {
-        continue;
-      }
-      notificationBox.removeNotification(notification);
-    }
-  },
-
-  * _subscriberIterator() {
+  messageSubscribers(name, details) {
     let subscribers = ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers);
     for (let subscriber of subscribers) {
       if (subscriber.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE ||
@@ -216,12 +150,6 @@ var AboutLoginsParent = {
         this._subscribers.delete(subscriber);
         continue;
       }
-      yield subscriber;
-    }
-  },
-
-  messageSubscribers(name, details) {
-    for (let subscriber of this._subscriberIterator()) {
       try {
         subscriber.messageManager.sendAsyncMessage(name, details);
       } catch (ex) {}
