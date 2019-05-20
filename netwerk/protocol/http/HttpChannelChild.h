@@ -146,6 +146,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const NetAddr& peerAddr, const int16_t& redirectCount,
       const uint32_t& cacheKey, const nsCString& altDataType,
       const int64_t& altDataLen, const bool& deliveringAltData,
+      const Maybe<IPCStream>& originalCacheInputStream,
       const bool& aApplyConversion, const bool& aIsResolvedByTRR,
       const ResourceTimingStruct& aTiming) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
@@ -176,9 +177,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   mozilla::ipc::IPCResult RecvCancelDiversion() override;
 
   mozilla::ipc::IPCResult RecvCancelRedirected() override;
-
-  mozilla::ipc::IPCResult RecvOriginalCacheInputStreamAvailable(
-      const Maybe<IPCStream>& aStream) override;
 
   mozilla::ipc::IPCResult RecvAltDataCacheInputStreamAvailable(
       const Maybe<IPCStream>& aStream) override;
@@ -350,7 +348,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   nsCOMPtr<nsICacheInfoChannel> mSynthesizedCacheInfo;
   RefPtr<ChannelEventQueue> mEventQ;
 
-  nsCOMPtr<nsIInputStreamReceiver> mOriginalInputStreamReceiver;
+  nsCOMPtr<nsIInputStream> mOriginalCacheInputStream;
   nsCOMPtr<nsIInputStreamReceiver> mAltDataInputStreamReceiver;
 
   // Used to ensure atomicity of mBgChild and mBgInitFailCallback
@@ -478,8 +476,10 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsCString& securityInfoSerialization, const NetAddr& selfAddr,
       const NetAddr& peerAddr, const uint32_t& cacheKey,
       const nsCString& altDataType, const int64_t& altDataLen,
-      const bool& deliveringAltData, const bool& aApplyConversion,
-      const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming);
+      const bool& deliveringAltData,
+      already_AddRefed<nsIInputStream> originalCacheInputStream,
+      const bool& aApplyConversion, const bool& aIsResolvedByTRR,
+      const ResourceTimingStruct& aTiming);
   void MaybeDivertOnData(const nsCString& data, const uint64_t& offset,
                          const uint32_t& count);
   void OnTransportAndData(const nsresult& channelStatus, const nsresult& status,
