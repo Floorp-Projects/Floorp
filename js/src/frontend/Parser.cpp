@@ -7335,7 +7335,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   // Create the function object.
-  RootedFunction fun(cx_, newFunction(propAtom, FunctionSyntaxKind::Expression,
+  RootedFunction fun(cx_, newFunction(nullptr, FunctionSyntaxKind::Expression,
                                       GeneratorKind::NotGenerator,
                                       FunctionAsyncKind::SyncFunction));
   if (!fun) {
