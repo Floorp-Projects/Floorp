@@ -473,8 +473,9 @@ JS_FRIEND_API void NukeCrossCompartmentWrapperIfExists(JSContext* cx,
 
 void RemapWrapper(JSContext* cx, JSObject* wobj, JSObject* newTarget);
 
-JS_FRIEND_API bool RemapAllWrappersForObject(JSContext* cx, JSObject* oldTarget,
-                                             JSObject* newTarget);
+JS_FRIEND_API bool RemapAllWrappersForObject(JSContext* cx,
+                                             HandleObject oldTarget,
+                                             HandleObject newTarget);
 
 // API to recompute all cross-compartment wrappers whose source and target
 // match the given filters.
