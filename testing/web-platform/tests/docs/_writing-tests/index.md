@@ -34,7 +34,7 @@ expectations:
   everything else. They are built with the testharness.js unit testing
   framework, and consist of assertions written in JavaScript.
 
-* WebDriver tests are written in Python using
+* [wdspec][] tests are written in Python using
   [pytest](https://docs.pytest.org/en/latest/) and test [the WebDriver browser
   automation protocol](https://w3c.github.io/webdriver/)
 
@@ -70,3 +70,4 @@ make sure you run the [`lint` script][lint-tool] before opening a pull request!
 [manual]: {{ site.baseurl }}{% link _writing-tests/manual.md %}
 [submission-process]: {{ site.baseurl }}{% link _writing-tests/submission-process.md %}
 [lint-tool]: {{ site.baseurl }}{% link _writing-tests/lint-tool.md %}
+[wdspec]: {{ site.baseurl }}{% link _writing-tests/wdspec.md %}
