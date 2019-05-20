@@ -22,7 +22,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/bookmarks_empty_message"
-        android:visibility="gone"
-        android:textColor="?primaryText"/>
+        android:textColor="?secondaryText"
+        android:textSize="16sp"
+        android:visibility="gone" />
 
 </FrameLayout>

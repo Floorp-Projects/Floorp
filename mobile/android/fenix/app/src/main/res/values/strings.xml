@@ -315,6 +315,8 @@
     <string name="history_this_month">This month</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Older</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">No history here</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->

@@ -7,17 +7,20 @@ package org.mozilla.fenix.library.history
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.appcompat.widget.Toolbar
 import android.widget.ImageButton
-import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
+import kotlinx.android.synthetic.main.component_history.*
 import kotlinx.android.synthetic.main.component_history.view.*
+import kotlinx.android.synthetic.main.delete_history_button.*
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
@@ -42,7 +45,7 @@ class HistoryUIView(
 
     fun getSelected(): List<HistoryItem> = historyAdapter.selected
 
-    override val view: LinearLayout = LayoutInflater.from(container.context)
+    override val view: FrameLayout = LayoutInflater.from(container.context)
         .inflate(R.layout.component_history, container, true)
         .findViewById(R.id.history_wrapper)
 
@@ -63,7 +66,7 @@ class HistoryUIView(
 
         items = it.items
         when (val modeCopy = mode) {
-            is HistoryState.Mode.Normal -> setUIForNormalMode()
+            is HistoryState.Mode.Normal -> setUIForNormalMode(items.isEmpty())
             is HistoryState.Mode.Editing -> setUIForSelectingMode(modeCopy)
         }
     }
@@ -79,8 +82,10 @@ class HistoryUIView(
         )
     }
 
-    private fun setUIForNormalMode() {
+    private fun setUIForNormalMode(isEmpty: Boolean) {
         (activity as? AppCompatActivity)?.title = context.getString(R.string.library_history)
+        delete_history_button?.visibility = if (isEmpty) View.GONE else View.VISIBLE
+        history_empty_view.visibility = if (isEmpty) View.VISIBLE else View.GONE
         setToolbarColors(
             R.attr.primaryText.getColorIntFromAttr(context!!),
             R.attr.foundation.getColorIntFromAttr(context)
@@ -127,7 +132,7 @@ class HistoryUIView(
             mode is HistoryState.Mode.Editing -> {
                 mode = HistoryState.Mode.Normal
                 historyAdapter.updateData(items, mode)
-                setUIForNormalMode()
+                setUIForNormalMode(items.isEmpty())
                 actionEmitter.onNext(HistoryAction.SwitchMode)
                 true
             }

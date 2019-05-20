@@ -62,6 +62,8 @@ private class HistoryList(val history: List<HistoryItem>) {
         items.addAll(groups.adapterItemsForRange(Range.ThisWeek))
         items.addAll(groups.adapterItemsForRange(Range.ThisMonth))
         items.addAll(groups.adapterItemsForRange(Range.Older))
+        // No history only the delete button, so let's clear the list to show the empty text
+        if (items.size == 1) items.clear()
         this.items = items
     }
 
