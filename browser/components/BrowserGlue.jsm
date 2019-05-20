@@ -3370,16 +3370,16 @@ var DefaultBrowserCheck = {
 
   _createPopup(win, notNowStrings, neverStrings) {
     let doc = win.document;
-    let popup = doc.createElement("menupopup");
+    let popup = doc.createXULElement("menupopup");
     popup.id = this.OPTIONPOPUP;
 
-    let notNowItem = doc.createElement("menuitem");
+    let notNowItem = doc.createXULElement("menuitem");
     notNowItem.id = "defaultBrowserNotNow";
     notNowItem.setAttribute("label", notNowStrings.label);
     notNowItem.setAttribute("accesskey", notNowStrings.accesskey);
     popup.appendChild(notNowItem);
 
-    let neverItem = doc.createElement("menuitem");
+    let neverItem = doc.createXULElement("menuitem");
     neverItem.id = "defaultBrowserNever";
     neverItem.setAttribute("label", neverStrings.label);
     neverItem.setAttribute("accesskey", neverStrings.accesskey);

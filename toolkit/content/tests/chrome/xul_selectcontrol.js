@@ -84,7 +84,7 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix) {
   is(element.getIndexOfItem(firstitem), 0, testid + "getIndexOfItem - first item at index 0");
   is(element.getIndexOfItem(seconditem), 1, testid + "getIndexOfItem - second item at index 1");
 
-  var otheritem = element.ownerDocument.createElement(childtag);
+  var otheritem = element.ownerDocument.createXULElement(childtag);
   is(element.getIndexOfItem(otheritem), -1, testid + "getIndexOfItem - other item not found");
 
   // 'getItemAtIndex' - check if getItemAtIndex returns the right item

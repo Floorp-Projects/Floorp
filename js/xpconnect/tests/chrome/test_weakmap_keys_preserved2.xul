@@ -27,12 +27,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
 
   let wrappers_as_keys_test = function () {
     let e = new MessageEvent("foo", { bubbles: false, cancellable: false,
-                                      data: { dummy: document.createElement("foo") }});
+                                      data: { dummy: document.createXULElement("foo") }});
     window.eeeevent = e;
 
     let live_dom = e.data.dummy;
-    let dead_dom = document.createElement("div");
-    let dead_child = document.createElement("div");
+    let dead_dom = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+    let dead_child = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
     dead_dom.appendChild(dead_child);
     is(dead_dom.children.length, 1, "children have wrong length");
     let wrappee = new Object();

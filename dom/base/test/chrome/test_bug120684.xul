@@ -45,7 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=120684
   is(list[1], undefined);
 
   // Removing element which isn't in the list shouldn't do anything.
-  list.remove(document.createElement("foo"));
+  list.remove(document.createXULElement("foo"));
   is(list.length, 1, "Length should be 1.");
   is(list[0], document.documentElement);
 
@@ -53,9 +53,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=120684
   is(list.length, 0, "Length should be 0.");
   is(list[0], undefined);
 
-  var e1 = document.createElement("foo");
-  var e2 = document.createElement("foo");
-  var e3 = document.createElement("foo");
+  var e1 = document.createXULElement("foo");
+  var e2 = document.createXULElement("foo");
+  var e3 = document.createXULElement("foo");
 
   list.append(e1);
   list.append(e2);

@@ -73,7 +73,7 @@ function nextTest()
     // add some more menuitems so that scrolling will be necessary
     var moreItemCount = Math.round(screen.height / popup.firstChild.getBoundingClientRect().height);
     for (var t = 1; t <= moreItemCount; t++) {
-      var menu = document.createElement("menuitem");
+      var menu = document.createXULElement("menuitem");
       menu.setAttribute("label", "More" + t);
       popup.appendChild(menu);
     }
@@ -299,7 +299,7 @@ function nextContextMenuTest(desiredHeight)
     var height = popup.getBoundingClientRect().height;
     var itemheight = document.getElementById("firstitem").getBoundingClientRect().height;
     while (height < desiredHeight) {
-      var menu = document.createElement("menuitem");
+      var menu = document.createXULElement("menuitem");
       menu.setAttribute("label", "Item");
       popup.appendChild(menu);
       height += itemheight;

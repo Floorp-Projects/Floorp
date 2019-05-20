@@ -124,7 +124,7 @@ CssProperties.prototype = {
   isValidOnClient(name, value, doc) {
     let dummyElement = this._dummyElements.get(doc);
     if (!dummyElement) {
-      dummyElement = doc.createElement("div");
+      dummyElement = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
       this._dummyElements.set(doc, dummyElement);
     }
 

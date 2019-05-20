@@ -38,7 +38,7 @@ var gFrame;
 // matters when these tests fail (produces better error messages).
 var tests = [
   function testInheritFromParent(cb) {
-    gFrame = document.createElement("iframe");
+    gFrame = document.createXULElement("iframe");
     loadListener(gFrame, function () {
       is(window.inheritedFromParent, true, "load in type=content iframe inherited principal of same type parent");
       cb();
@@ -63,7 +63,7 @@ var tests = [
                     '<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>';
     let newWin = window.openDialog(xulWinURL, "chrome_window", "chrome");
     loadListener(newWin, function () {
-      let frame = newWin.document.createElement("iframe");
+      let frame = newWin.document.createXULElement("iframe");
       frame.setAttribute("type", "content");
       frame.setAttribute("src", "javascript:'1';");
       loadListener(frame, function () {

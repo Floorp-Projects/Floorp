@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=846906
   var document = webNavigation.document;
   ok(document, "Should be able to get document");
 
-  var iframe = document.createElement("iframe");
+  var iframe = document.createXULElement("iframe");
   ok(iframe, "Should be able to create iframe");
 
   iframe.onload = function () {
