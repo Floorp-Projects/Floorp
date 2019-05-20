@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Animation.h"
+
 #include "AnimationUtils.h"
+#include "mozAutoDocUpdate.h"
 #include "mozilla/dom/AnimationBinding.h"
 #include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "mozilla/dom/Document.h"
@@ -14,10 +16,13 @@
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/Maybe.h"          // For Maybe
-#include "mozilla/TypeTraits.h"     // For std::forward<>
-#include "nsAnimationManager.h"     // For CSSAnimation
-#include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
+#include "mozilla/DeclarationBlock.h"
+#include "mozilla/Maybe.h"       // For Maybe
+#include "mozilla/TypeTraits.h"  // For std::forward<>
+#include "nsAnimationManager.h"  // For CSSAnimation
+#include "nsComputedDOMStyle.h"
+#include "nsDOMMutationObserver.h"    // For nsAutoAnimationMutationBatch
+#include "nsDOMCSSAttrDeclaration.h"  // For nsDOMCSSAttributeDeclaration
 #include "nsThreadUtils.h"  // For nsRunnableMethod and nsRevocableEventPtr
 #include "nsTransitionManager.h"      // For CSSTransition
 #include "PendingAnimationTracker.h"  // For PendingAnimationTracker
@@ -611,6 +616,103 @@ void Animation::Persist() {
     UpdateEffect(PostRestyleMode::IfNeeded);
     PostUpdate();
   }
+}
+
+// https://drafts.csswg.org/web-animations/#dom-animation-commitstyles
+void Animation::CommitStyles(ErrorResult& aRv) {
+  if (!mEffect) {
+    return;
+  }
+
+  // Take an owning reference to the keyframe effect. This will ensure that
+  // this Animation and the target element remain alive after flushing style.
+  RefPtr<KeyframeEffect> keyframeEffect = mEffect->AsKeyframeEffect();
+  if (!keyframeEffect) {
+    return;
+  }
+
+  Maybe<NonOwningAnimationTarget> target = keyframeEffect->GetTarget();
+  if (!target) {
+    return;
+  }
+
+  if (target->mPseudoType != PseudoStyleType::NotPseudo) {
+    aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
+  }
+
+  // Check it is an element with a style attribute
+  nsCOMPtr<nsStyledElement> styledElement = do_QueryInterface(target->mElement);
+  if (!styledElement) {
+    aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
+    return;
+  }
+
+  // Flush style before checking if the target element is rendered since the
+  // result could depend on pending style changes.
+  if (Document* doc = target->mElement->GetComposedDoc()) {
+    doc->FlushPendingNotifications(FlushType::Style);
+  }
+  if (!target->mElement->IsRendered()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  nsPresContext* presContext =
+      nsContentUtils::GetContextForContent(target->mElement);
+  if (!presContext) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  // Get the computed animation values
+  UniquePtr<RawServoAnimationValueMap> animationValues =
+      Servo_AnimationValueMap_Create().Consume();
+  if (!presContext->EffectCompositor()->ComposeServoAnimationRuleForEffect(
+          *keyframeEffect, CascadeLevel(), animationValues.get())) {
+    NS_WARNING("Failed to compose animation style to commit");
+    return;
+  }
+
+  // Calling SetCSSDeclaration will trigger attribute setting code.
+  // Start the update now so that the old rule doesn't get used
+  // between when we mutate the declaration and when we set the new
+  // rule.
+  mozAutoDocUpdate autoUpdate(target->mElement->OwnerDoc(), true);
+
+  // Get the inline style to append to
+  RefPtr<DeclarationBlock> declarationBlock;
+  if (auto* existing = target->mElement->GetInlineStyleDeclaration()) {
+    declarationBlock = existing->EnsureMutable();
+  } else {
+    declarationBlock = new DeclarationBlock();
+    declarationBlock->SetDirty();
+  }
+
+  // Set the animated styles
+  bool changed = false;
+  nsCSSPropertyIDSet properties = keyframeEffect->GetPropertySet();
+  for (nsCSSPropertyID property : properties) {
+    RefPtr<RawServoAnimationValue> computedValue =
+        Servo_AnimationValueMap_GetValue(animationValues.get(), property)
+            .Consume();
+    if (computedValue) {
+      changed |= Servo_DeclarationBlock_SetPropertyToAnimationValue(
+          declarationBlock->Raw(), computedValue);
+    }
+  }
+
+  if (!changed) {
+    return;
+  }
+
+  // Update inline style declaration
+  MutationClosureData closureData;
+  closureData.mClosure = nsDOMCSSAttributeDeclaration::MutationClosureFunction;
+  closureData.mElement = target->mElement;
+
+  target->mElement->InlineStyleDeclarationWillChange(closureData);
+  target->mElement->SetInlineStyleDeclaration(*declarationBlock, closureData);
 }
 
 // ---------------------------------------------------------------------------
