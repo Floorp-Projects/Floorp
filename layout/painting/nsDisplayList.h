@@ -4465,7 +4465,9 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
       bool aAllowWillPaintBorderOptimization = true,
       mozilla::ComputedStyle* aComputedStyle = nullptr,
       const nsRect& aBackgroundOriginRect = nsRect(),
-      nsIFrame* aSecondaryReferenceFrame = nullptr);
+      nsIFrame* aSecondaryReferenceFrame = nullptr,
+      mozilla::Maybe<nsDisplayListBuilder::AutoBuildingDisplayList>*
+          aAutoBuildingDisplayList = nullptr);
 
   LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,

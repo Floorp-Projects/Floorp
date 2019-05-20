@@ -499,16 +499,18 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       nsTableColFrame* col = backgrounds->GetColForIndex(ColIndex());
       nsTableColGroupFrame* colGroup = col->GetTableColGroupFrame();
 
+      Maybe<nsDisplayListBuilder::AutoBuildingDisplayList> buildingForColGroup;
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+          aBuilder, colGroup, bgRect, backgrounds->ColGroupBackgrounds(), false,
+          nullptr, colGroup->GetRect() + backgrounds->TableToReferenceFrame(),
+          this, &buildingForColGroup);
+
+      Maybe<nsDisplayListBuilder::AutoBuildingDisplayList> buildingForCol;
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
           aBuilder, col, bgRect, backgrounds->ColBackgrounds(), false, nullptr,
           col->GetRect() + colGroup->GetPosition() +
               backgrounds->TableToReferenceFrame(),
-          this);
-
-      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-          aBuilder, colGroup, bgRect, backgrounds->ColGroupBackgrounds(), false,
-          nullptr, colGroup->GetRect() + backgrounds->TableToReferenceFrame(),
-          this);
+          this, &buildingForCol);
     }
   }
 

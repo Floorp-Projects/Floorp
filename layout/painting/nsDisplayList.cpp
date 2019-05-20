@@ -3817,7 +3817,9 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const nsRect& aBackgroundRect, nsDisplayList* aList,
     bool aAllowWillPaintBorderOptimization, ComputedStyle* aComputedStyle,
-    const nsRect& aBackgroundOriginRect, nsIFrame* aSecondaryReferenceFrame) {
+    const nsRect& aBackgroundOriginRect, nsIFrame* aSecondaryReferenceFrame,
+    Maybe<nsDisplayListBuilder::AutoBuildingDisplayList>*
+        aAutoBuildingDisplayList) {
   ComputedStyle* bgSC = aComputedStyle;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect;
@@ -3872,6 +3874,9 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   // need to create an item for hit testing.
   if ((drawBackgroundColor && color != NS_RGBA(0, 0, 0, 0)) ||
       aBuilder->IsForEventDelivery()) {
+    if (aAutoBuildingDisplayList && !*aAutoBuildingDisplayList) {
+      aAutoBuildingDisplayList->emplace(aBuilder, aFrame);
+    }
     Maybe<DisplayListClipState::AutoSaveRestore> clipState;
     nsRect bgColorRect = bgRect;
     if (bg && !aBuilder->IsForEventDelivery()) {
@@ -3958,6 +3963,10 @@ bool nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, bg->mImage) {
     if (bg->mImage.mLayers[i].mImage.IsEmpty()) {
       continue;
+    }
+
+    if (aAutoBuildingDisplayList && !*aAutoBuildingDisplayList) {
+      aAutoBuildingDisplayList->emplace(aBuilder, aFrame);
     }
 
     if (bg->mImage.mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
