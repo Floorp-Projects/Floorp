@@ -19,7 +19,7 @@ import { getIndentation } from "../../utils/indentation";
 import { showMenu } from "devtools-contextmenu";
 import {
   createBreakpointItems,
-  breakpointItemActions
+  breakpointItemActions,
 } from "./menus/breakpoints";
 
 import { continueToHereItem, editorItemActions } from "./menus/editor";
@@ -36,7 +36,7 @@ import {
   getIsPaused,
   getCurrentThread,
   getThreadContext,
-  getSkipPausing
+  getSkipPausing,
 } from "../../selectors";
 
 // Redux actions
@@ -69,7 +69,7 @@ import {
   hasDocument,
   onMouseOver,
   startOperation,
-  endOperation
+  endOperation,
 } from "../../utils/editor";
 
 import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
@@ -83,11 +83,11 @@ import type { SymbolDeclarations } from "../../workers/parser";
 import type {
   SourceLocation,
   SourceWithContent,
-  ThreadContext
+  ThreadContext,
 } from "../../types";
 
 const cssVars = {
-  searchbarHeight: "var(--editor-searchbar-height)"
+  searchbarHeight: "var(--editor-searchbar-height)",
 };
 
 export type Props = {
@@ -113,12 +113,12 @@ export type Props = {
   updateViewport: typeof actions.updateViewport,
   closeTab: typeof actions.closeTab,
   breakpointActions: BreakpointItemActions,
-  editorActions: EditorItemActions
+  editorActions: EditorItemActions,
 };
 
 type State = {
   editor: SourceEditor,
-  contextMenu: ?MouseEvent
+  contextMenu: ?MouseEvent,
 };
 
 class Editor extends PureComponent<Props, State> {
@@ -129,7 +129,7 @@ class Editor extends PureComponent<Props, State> {
     this.state = {
       highlightedLineRange: null,
       editor: (null: any),
-      contextMenu: null
+      contextMenu: null,
     };
   }
 
@@ -331,7 +331,7 @@ class Editor extends PureComponent<Props, State> {
       selectedSourceWithContent,
       breakpointActions,
       editorActions,
-      isPaused
+      isPaused,
     } = this.props;
     const { editor } = this.state;
     if (!selectedSourceWithContent || !editor) {
@@ -352,7 +352,7 @@ class Editor extends PureComponent<Props, State> {
       return showMenu(event, [
         ...createBreakpointItems(cx, location, breakpointActions),
         { type: "separator" },
-        continueToHereItem(cx, location, isPaused, editorActions)
+        continueToHereItem(cx, location, isPaused, editorActions),
       ]);
     }
 
@@ -379,7 +379,7 @@ class Editor extends PureComponent<Props, State> {
       conditionalPanelLocation,
       closeConditionalPanel,
       addBreakpointAtLine,
-      continueToHere
+      continueToHere,
     } = this.props;
 
     // ignore right clicks in the gutter
@@ -435,7 +435,7 @@ class Editor extends PureComponent<Props, State> {
       conditionalPanelLocation,
       closeConditionalPanel,
       openConditionalPanel,
-      selectedSourceWithContent
+      selectedSourceWithContent,
     } = this.props;
 
     if (conditionalPanelLocation) {
@@ -450,7 +450,7 @@ class Editor extends PureComponent<Props, State> {
       {
         line: line,
         sourceId: selectedSourceWithContent.source.id,
-        sourceUrl: selectedSourceWithContent.source.url
+        sourceUrl: selectedSourceWithContent.source.url,
       },
       log
     );
@@ -565,12 +565,12 @@ class Editor extends PureComponent<Props, State> {
 
     if (searchOn) {
       return {
-        height: `calc(100% - ${cssVars.searchbarHeight})`
+        height: `calc(100% - ${cssVars.searchbarHeight})`,
       };
     }
 
     return {
-      height: "100%"
+      height: "100%",
     };
   }
 
@@ -578,7 +578,7 @@ class Editor extends PureComponent<Props, State> {
     const {
       cx,
       selectedSourceWithContent,
-      conditionalPanelLocation
+      conditionalPanelLocation,
     } = this.props;
     const { editor, contextMenu } = this.state;
 
@@ -632,7 +632,7 @@ class Editor extends PureComponent<Props, State> {
           blackboxed:
             selectedSourceWithContent &&
             selectedSourceWithContent.source.isBlackBoxed,
-          "skip-pausing": skipPausing
+          "skip-pausing": skipPausing,
         })}
         ref={c => (this.$editorWrapper = c)}
       >
@@ -648,7 +648,7 @@ class Editor extends PureComponent<Props, State> {
 }
 
 Editor.contextTypes = {
-  shortcuts: PropTypes.object
+  shortcuts: PropTypes.object,
 };
 
 const mapStateToProps = state => {
@@ -665,7 +665,7 @@ const mapStateToProps = state => {
       selectedSourceWithContent ? selectedSourceWithContent.source : null
     ),
     isPaused: getIsPaused(state, getCurrentThread(state)),
-    skipPausing: getSkipPausing(state)
+    skipPausing: getSkipPausing(state),
   };
 };
 
@@ -680,12 +680,12 @@ const mapDispatchToProps = dispatch => ({
       jumpToMappedLocation: actions.jumpToMappedLocation,
       traverseResults: actions.traverseResults,
       updateViewport: actions.updateViewport,
-      closeTab: actions.closeTab
+      closeTab: actions.closeTab,
     },
     dispatch
   ),
   breakpointActions: breakpointItemActions(dispatch),
-  editorActions: editorItemActions(dispatch)
+  editorActions: editorItemActions(dispatch),
 });
 
 export default connect(

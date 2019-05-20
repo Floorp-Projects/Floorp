@@ -10,7 +10,7 @@ import Group from "../Group.js";
 import {
   makeMockFrame,
   makeMockSource,
-  mockthreadcx
+  mockthreadcx,
 } from "../../../../utils/test-mockup";
 
 import FrameMenu from "../FrameMenu";
@@ -29,12 +29,12 @@ function render(overrides = {}) {
     toggleBlackBox: jest.fn(),
     disableContextMenu: false,
     displayFullUrl: false,
-    selectable: true
+    selectable: true,
   };
 
   const props = { ...defaultProps, ...overrides };
   const component = shallow(<Group {...props} />, {
-    context: { l10n: L10N }
+    context: { l10n: L10N },
   });
   return { component, props };
 }
@@ -51,16 +51,16 @@ describe("Group", () => {
     const group = [
       {
         ...makeMockFrame("1", mahscripts, undefined, 55, "renderFoo"),
-        library: "Back"
+        library: "Back",
       },
       {
         ...makeMockFrame("2", back, undefined, 55, "a"),
-        library: "Back"
+        library: "Back",
       },
       {
         ...makeMockFrame("3", back, undefined, 55, "b"),
-        library: "Back"
-      }
+        library: "Back",
+      },
     ];
     const getFrameTitle = () => {};
     const { component } = render({ group, getFrameTitle });
@@ -81,16 +81,16 @@ describe("Group", () => {
     const group = [
       {
         ...makeMockFrame("1", mahscripts, undefined, 55),
-        library: "Back"
+        library: "Back",
       },
       {
         ...makeMockFrame("2", back, undefined, 55),
-        library: "Back"
+        library: "Back",
       },
       {
         ...makeMockFrame("3", back, undefined, 55),
-        library: "Back"
-      }
+        library: "Back",
+      },
     ];
 
     const { component } = render({ group });
@@ -102,7 +102,7 @@ describe("Group", () => {
   describe("mouse events", () => {
     it("does not call FrameMenu when disableContextMenu is true", () => {
       const { component } = render({
-        disableContextMenu: true
+        disableContextMenu: true,
       });
 
       const mockEvent = "mockEvent";
@@ -123,7 +123,7 @@ describe("Group", () => {
         {
           copyStackTrace,
           toggleFrameworkGrouping,
-          toggleBlackBox
+          toggleBlackBox,
         },
         mockEvent
       );

@@ -163,8 +163,9 @@ nsresult GetOriginFromPrincipal(nsIPrincipal* aPrincipal, nsACString& aOrigin) {
   // changes the suffix being hashed.
   attrs.mPrivateBrowsingId = 0;
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   attrs.CreateSuffix(suffix);
   aOrigin.Append(suffix);
@@ -184,8 +185,9 @@ nsresult GetPrincipalFromOrigin(const nsACString& aOrigin,
   // changes the suffix being hashed.
   attrs.mPrivateBrowsingId = 0;
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
@@ -276,8 +278,9 @@ already_AddRefed<nsIPrincipal> GetNextSubDomainPrincipal(
   // Copy the attributes over
   mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID);
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   nsCOMPtr<nsIPrincipal> principal =
       mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);
@@ -1572,58 +1575,8 @@ nsresult nsPermissionManager::InitDB(bool aRemoveFile) {
         // fall through to the next upgrade
         MOZ_FALLTHROUGH;
 
-      // Version 10 removes appId from moz_hosts. SQLite doesn't support the
-      // dropping of columns from existing tables. We need to create a temporary
-      // table, copy the data, drop the old table, rename the new one.
       case 9: {
-        rv = mDBConn->BeginTransaction();
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        bool tableExists = false;
-        mDBConn->TableExists(NS_LITERAL_CSTRING("moz_hosts_v9"), &tableExists);
-        if (tableExists) {
-          NS_WARNING(
-              "The temporary database moz_hosts_v9 already exists, dropping "
-              "it.");
-          rv = mDBConn->ExecuteSimpleSQL(
-              NS_LITERAL_CSTRING("DROP TABLE moz_hosts_v9"));
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-
-        rv = mDBConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("CREATE TABLE moz_hosts_v9 ("
-                               " id INTEGER PRIMARY KEY"
-                               ",host TEXT"
-                               ",type TEXT"
-                               ",permission INTEGER"
-                               ",expireType INTEGER"
-                               ",expireTime INTEGER"
-                               ",modificationTime INTEGER"
-                               ",isInBrowserElement INTEGER"
-                               ")"));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "INSERT INTO moz_hosts_v9 "
-            "(id, host, type, permission, expireType, "
-            "expireTime, modificationTime, isInBrowserElement) "
-            "SELECT id, host, type, permission, expireType, expireTime, "
-            "modificationTime, isInBrowserElement FROM moz_hosts WHERE appId = "
-            "0"));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mDBConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("DROP TABLE moz_hosts"));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mDBConn->ExecuteSimpleSQL(
-            NS_LITERAL_CSTRING("ALTER TABLE moz_hosts_v9 RENAME TO moz_hosts"));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mDBConn->SetSchemaVersion(10);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mDBConn->CommitTransaction();
+        rv = mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -3328,8 +3281,9 @@ void nsPermissionManager::GetKeyForOrigin(const nsACString& aOrigin,
   // changes the suffix being hashed.
   attrs.mPrivateBrowsingId = 0;
 
-  // Disable userContext for permissions.
-  attrs.StripAttributes(OriginAttributes::STRIP_USER_CONTEXT_ID);
+  // Disable userContext and firstParty isolation for permissions.
+  attrs.StripAttributes(OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
 #ifdef DEBUG
   // Parse the origin string into a principal, and extract some useful

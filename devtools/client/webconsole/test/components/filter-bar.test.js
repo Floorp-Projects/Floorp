@@ -139,11 +139,6 @@ describe("FilterBar component:", () => {
       "console.error('error message');",
     ]);
 
-    store.dispatch(actions.filterToggle(FILTERS.ERROR));
-    store.dispatch(actions.filterToggle(FILTERS.WARN));
-    store.dispatch(actions.filterToggle(FILTERS.LOG));
-    store.dispatch(actions.filterToggle(FILTERS.INFO));
-    store.dispatch(actions.filterToggle(FILTERS.DEBUG));
     store.dispatch(actions.filterTextSet("qwerty"));
 
     const wrapper = mount(Provider({store}, getFilterBar()));

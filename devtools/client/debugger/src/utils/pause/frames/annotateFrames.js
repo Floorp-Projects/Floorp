@@ -13,7 +13,7 @@ import { getLibraryFromUrl } from "./getLibraryFromUrl";
 type AnnotatedFrame =
   | {|
       ...Frame,
-      library: string
+      library: string,
     |}
   | Frame;
 
@@ -35,9 +35,8 @@ function annotateBabelAsyncFrames(frames: Frame[]) {
   const babelFrameIndexes = getBabelFrameIndexes(frames);
   const isBabelFrame = frameIndex => babelFrameIndexes.includes(frameIndex);
 
-  return frames.map(
-    (frame, frameIndex) =>
-      isBabelFrame(frameIndex) ? { ...frame, library: "Babel" } : frame
+  return frames.map((frame, frameIndex) =>
+    isBabelFrame(frameIndex) ? { ...frame, library: "Babel" } : frame
   );
 }
 

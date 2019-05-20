@@ -14,7 +14,7 @@ describe("createNode", () => {
       createNode({
         name: "name",
         path: "path",
-        contents: null
+        contents: null,
       })
     ).not.toBe(null);
   });
@@ -23,13 +23,13 @@ describe("createNode", () => {
     const node = createNode({
       name: "name",
       path: "path",
-      contents: "contents"
+      contents: "contents",
     });
     expect(node).toEqual({
       name: "name",
       path: node.path,
       contents: "contents",
-      type: NODE_TYPES.GRIP
+      type: NODE_TYPES.GRIP,
     });
   });
 
@@ -39,7 +39,7 @@ describe("createNode", () => {
       parent: root,
       name: "name",
       path: "path",
-      contents: "contents"
+      contents: "contents",
     });
     expect(child.parent).toEqual(root);
   });
@@ -51,7 +51,7 @@ describe("createNode", () => {
       name: "name",
       path: "path",
       contents: "contents",
-      type: NODE_TYPES.BUCKET
+      type: NODE_TYPES.BUCKET,
     });
 
     expect(child.type).toEqual(NODE_TYPES.BUCKET);
@@ -68,7 +68,7 @@ describe("createNode", () => {
       createNode({
         name: "name",
         path: "path",
-        contents: "contents"
+        contents: "contents",
       }).path.toString()
     ).toBe("Symbol(path)");
   });
@@ -80,7 +80,7 @@ describe("createNode", () => {
         parent: root,
         name: "name",
         path: "path",
-        contents: "contents"
+        contents: "contents",
       }).path.toString()
     ).toBe("Symbol(root/path)");
   });

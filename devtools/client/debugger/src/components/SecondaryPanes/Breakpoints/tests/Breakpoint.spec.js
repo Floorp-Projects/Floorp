@@ -10,7 +10,7 @@ import { shallow } from "enzyme";
 import Breakpoint from "../Breakpoint";
 import {
   createSourceObject,
-  createOriginalSourceObject
+  createOriginalSourceObject,
 } from "../../../../utils/test-head";
 
 describe("Breakpoint", () => {
@@ -26,7 +26,7 @@ describe("Breakpoint", () => {
 
   it("paused at a generatedLocation", () => {
     const { component } = render({
-      frame: { selectedLocation: generatedLocation }
+      frame: { selectedLocation: generatedLocation },
     });
     expect(component).toMatchSnapshot();
   });
@@ -38,7 +38,7 @@ describe("Breakpoint", () => {
     const { component } = render(
       {
         selectedSource: origSource,
-        frame: { selectedLocation: location }
+        frame: { selectedLocation: location },
       },
       { location, options: {} }
     );
@@ -48,7 +48,7 @@ describe("Breakpoint", () => {
 
   it("paused at a different", () => {
     const { component } = render({
-      frame: { selectedLocation: { ...generatedLocation, line: 14 } }
+      frame: { selectedLocation: { ...generatedLocation, line: 14 } },
     });
     expect(component).toMatchSnapshot();
   });
@@ -74,7 +74,7 @@ function makeBreakpoint(overrides = {}) {
     disabled: false,
     options: {},
     ...overrides,
-    id: 1
+    id: 1,
   };
 }
 
@@ -91,9 +91,9 @@ function generateDefaults(overrides = {}, breakpointOverrides = {}) {
       CodeMirror: {
         runMode: function() {
           return "";
-        }
-      }
+        },
+      },
     },
-    ...overrides
+    ...overrides,
   };
 }

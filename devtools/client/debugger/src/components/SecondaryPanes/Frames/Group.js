@@ -51,11 +51,11 @@ type Props = {
   displayFullUrl: boolean,
   getFrameTitle?: string => string,
   disableContextMenu: boolean,
-  selectable: boolean
+  selectable: boolean,
 };
 
 type State = {
-  expanded: boolean
+  expanded: boolean,
 };
 
 export default class Group extends Component<Props, State> {
@@ -72,7 +72,7 @@ export default class Group extends Component<Props, State> {
       copyStackTrace,
       toggleFrameworkGrouping,
       toggleBlackBox,
-      frameworkGroupingOn
+      frameworkGroupingOn,
     } = this.props;
     const frame = group[0];
     FrameMenu(
@@ -101,7 +101,7 @@ export default class Group extends Component<Props, State> {
       displayFullUrl,
       getFrameTitle,
       disableContextMenu,
-      selectable
+      selectable,
     } = this.props;
 
     const { expanded } = this.state;

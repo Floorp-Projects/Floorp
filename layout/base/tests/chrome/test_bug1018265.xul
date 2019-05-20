@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
 
   function done() {
     ok(true, "done");
-    setTimeout("SimpleTest.finish()", 0);
+    setTimeout(function() { SimpleTest.finish(); }, 0);
   }
   ]]>
   </script>

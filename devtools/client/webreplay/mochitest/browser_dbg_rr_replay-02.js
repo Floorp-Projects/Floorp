@@ -45,9 +45,14 @@ add_task(async function() {
   target = rplyTab.target;
   client = toolbox.threadClient;
   await client.interrupt();
+
+  // The recording does not actually end at the point where we saved it, but
+  // will do at the next checkpoint. Rewind to the point we are interested in.
+  bp = await setBreakpoint(client, "doc_rr_continuous.html", 14);
+  await rewindToLine(client, 14);
+
   await checkEvaluateInTopFrame(target, "number", lastNumberValue);
   await reverseStepOverToLine(client, 13);
-  bp = await setBreakpoint(client, "doc_rr_continuous.html", 14);
   await rewindToLine(client, 14);
   await checkEvaluateInTopFrame(target, "number", lastNumberValue - 1);
   await resumeToLine(client, 14);

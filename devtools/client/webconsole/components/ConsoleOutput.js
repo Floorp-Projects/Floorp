@@ -22,8 +22,8 @@ const {
 } = require("devtools/client/webconsole/selectors/messages");
 
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
-loader.lazyRequireGetter(this, "sortBy", "devtools/client/shared/vendor/lodash", true);
 loader.lazyRequireGetter(this, "MessageContainer", "devtools/client/webconsole/components/MessageContainer", true);
+ChromeUtils.defineModuleGetter(this, "pointPrecedes", "resource://devtools/shared/execution-point-utils.js");
 
 const {
   MESSAGE_TYPE,
@@ -37,13 +37,18 @@ function getClosestMessage(visibleMessages, messages, executionPoint) {
     return null;
   }
 
-  const { progress } = executionPoint;
-  const getProgress = m => m && m.executionPoint && m.executionPoint.progress;
-
-  return sortBy(
-    visibleMessages.map(id => messages.get(id)),
-    m => Math.abs(progress - getProgress(m))
-  )[0];
+  const messageList = visibleMessages.map(id => messages.get(id));
+  const precedingMessages = messageList.filter(m => {
+    return m && m.executionPoint && pointPrecedes(m.executionPoint, executionPoint);
+  });
+  if (precedingMessages.length != 0) {
+    return precedingMessages.sort((a, b) => {
+      return pointPrecedes(a.executionPoint, b.executionPoint);
+    })[0];
+  }
+  return messageList.filter(m => m && m.executionPoint).sort((a, b) => {
+    return pointPrecedes(b.executionPoint, a.executionPoint);
+  })[0];
 }
 
 class ConsoleOutput extends Component {

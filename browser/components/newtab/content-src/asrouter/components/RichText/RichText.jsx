@@ -24,7 +24,8 @@ export function convertLinks(links, sendClick, doNotAutoBlock, openNewWindow = f
       // Setting the value to false will not include the attribute in the anchor
       const url = action ? false : safeURI(links[linkTag].url);
 
-      acc[linkTag] = (<a href={url}
+      acc[linkTag] = (<a href={url} // eslint-disable-line jsx-a11y/anchor-has-content
+        // eslint was getting a false positive caused by the dynamic injection of content.
         target={openNewWindow ? "_blank" : ""}
         data-metric={links[linkTag].metric}
         data-action={action}

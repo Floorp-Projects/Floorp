@@ -9,14 +9,10 @@
 }
 
 // Note: lineHeight and fontSize should be unitless but can be derived from pixel values
+// Bug 1550624 to clean up / remove this mixin that no longer limits lines
 @mixin limit-visibile-lines($line-count, $line-height, $font-size) {
-  -webkit-box-orient: vertical;
-  display: -webkit-box;
   font-size: $font-size * 1px;
-  -webkit-line-clamp: $line-count;
   line-height: $line-height * 1px;
-  max-height: 1em * $line-count * $line-height / $font-size;
-  overflow: hidden;
 }
 
 @mixin dark-theme-only {
@@ -45,8 +41,8 @@
   border-bottom: 1px solid $grey-30;
 }
 
-@mixin ds-fade-in {
-  box-shadow: 0 0 0 1px $blue-50 inset, 0 0 0 1px $blue-50, 0 0 0 5px $blue-50-30;
+@mixin ds-fade-in($halo-color: $blue-50-30) {
+  box-shadow: 0 0 0 5px $halo-color;
   transition: box-shadow 150ms;
   border-radius: 4px;
   outline: none;

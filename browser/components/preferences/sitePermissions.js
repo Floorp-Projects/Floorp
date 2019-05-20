@@ -374,11 +374,13 @@ var gSitePermissionsManager = {
     this.uninit();
 
     for (let p of this._permissionsToChange.values()) {
-      SitePermissions.setForPrincipal(p.principal, p.type, p.capability);
+      let uri = Services.io.newURI(p.origin);
+      SitePermissions.set(uri, p.type, p.capability);
     }
 
     for (let p of this._permissionsToDelete.values()) {
-      SitePermissions.removeFromPrincipal(p.principal, p.type);
+      let uri = Services.io.newURI(p.origin);
+      SitePermissions.remove(uri, p.type);
     }
 
     if (this._checkbox.checked) {

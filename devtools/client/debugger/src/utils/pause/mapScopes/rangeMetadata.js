@@ -16,7 +16,7 @@ import type { PartialPosition, Frame, Source } from "../../../types";
 type SourceOriginalRange = {
   line: number,
   columnStart: number,
-  columnEnd: number
+  columnEnd: number,
 };
 
 // * match - Range contains a single identifier with matching start location
@@ -29,7 +29,7 @@ export type MappedOriginalRange = {
   singleDeclaration: boolean,
   line: number,
   columnStart: number,
-  columnEnd: number
+  columnEnd: number,
 };
 
 export async function loadRangeMetadata(
@@ -38,9 +38,10 @@ export async function loadRangeMetadata(
   originalAstScopes: Array<SourceScope>,
   sourceMaps: SourceMaps
 ): Promise<Array<MappedOriginalRange>> {
-  const originalRanges: Array<
-    SourceOriginalRange
-  > = await sourceMaps.getOriginalRanges(frame.location.sourceId, source.url);
+  const originalRanges: Array<SourceOriginalRange> = await sourceMaps.getOriginalRanges(
+    frame.location.sourceId,
+    source.url
+  );
 
   const sortedOriginalAstBindings = [];
   for (const item of originalAstScopes) {
@@ -113,7 +114,7 @@ export async function loadRangeMetadata(
     return {
       type,
       singleDeclaration,
-      ...range
+      ...range,
     };
   });
 }

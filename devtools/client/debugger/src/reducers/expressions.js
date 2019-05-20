@@ -25,14 +25,14 @@ export type ExpressionState = {
   expressions: List<Expression>,
   expressionError: boolean,
   autocompleteMatches: Map<string, List<string>>,
-  currentAutocompleteInput: string | null
+  currentAutocompleteInput: string | null,
 };
 
 export const createExpressionState: () => Record<ExpressionState> = makeRecord({
   expressions: List(restoreExpressions()),
   expressionError: false,
   autocompleteMatches: Map({}),
-  currentAutocompleteInput: null
+  currentAutocompleteInput: null,
 });
 
 function update(
@@ -47,7 +47,7 @@ function update(
       return appendExpressionToList(state, {
         input: action.input,
         value: null,
-        updating: true
+        updating: true,
       });
 
     case "UPDATE_EXPRESSION":
@@ -55,14 +55,14 @@ function update(
       return updateExpressionInList(state, key, {
         input: action.input,
         value: null,
-        updating: true
+        updating: true,
       }).set("expressionError", !!action.expressionError);
 
     case "EVALUATE_EXPRESSION":
       return updateExpressionInList(state, action.input, {
         input: action.input,
         value: action.value,
-        updating: false
+        updating: false,
       });
 
     case "EVALUATE_EXPRESSIONS":
@@ -73,7 +73,7 @@ function update(
           updateExpressionInList(newState, input, {
             input: input,
             value: result,
-            updating: false
+            updating: false,
           }),
         state
       );

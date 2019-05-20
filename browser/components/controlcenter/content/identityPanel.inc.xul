@@ -29,7 +29,7 @@
             <label class="identity-popup-headline">&identity.connection;</label>
           </label>
           <description class="identity-popup-connection-not-secure"
-                       when-connection="not-secure secure-cert-user-overridden">&identity.connectionNotSecure;</description>
+                       when-connection="not-secure secure-cert-user-overridden secure-custom-root">&identity.connectionNotSecure;</description>
           <description class="identity-popup-connection-secure"
                        when-connection="secure secure-ev">&identity.connectionSecure;</description>
           <description when-connection="chrome">&identity.connectionInternal;</description>
@@ -39,6 +39,9 @@
           <vbox id="identity-popup-security-descriptions">
             <description class="identity-popup-warning-gray"
                          when-mixedcontent="active-blocked">&identity.activeBlocked;</description>
+           <description  id="identity-popup-security-decription-custom-root"
+                         class="identity-popup-warning-gray"
+                         when-customroot="true">&identity.customRoot;</description>
             <description class="identity-popup-warning-yellow"
                          when-mixedcontent="passive-loaded">&identity.passiveLoaded;</description>
             <description when-mixedcontent="active-loaded">&identity.activeLoaded;</description>
@@ -183,6 +186,9 @@
                      when-connection="secure-ev"/>
         <description id="identity-popup-content-verifier"
                      when-connection="secure secure-ev secure-cert-user-overridden"/>
+        <description id="identity-popup-content-verifier-unknown"
+                     class="identity-popup-warning-gray"
+                     when-customroot="true">&identity.description.customRoot; <label id="identity-popup-custom-root-learn-more" is="text-link" class="plain" value="&identity.learnMore;"/></description>
 
         <!-- Remove Certificate Exception -->
         <button when-connection="secure-cert-user-overridden"

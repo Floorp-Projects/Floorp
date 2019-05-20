@@ -305,6 +305,12 @@ var BrowserUtils = {
           elt instanceof win.HTMLObjectElement ||
           elt instanceof win.HTMLEmbedElement)
         return false;
+
+      if (elt instanceof win.HTMLIFrameElement && elt.mozbrowser) {
+        // If we're targeting a mozbrowser iframe, it should be allowed to
+        // handle FastFind itself.
+        return false;
+      }
     }
 
     return true;

@@ -689,11 +689,6 @@ add_task(async function test_missing_children() {
         url: "http://example.com/c",
       }],
     }, "Menu children should be (C)");
-    deepEqual(await buf.fetchRemoteOrphans(), {
-      missingChildren: ["bookmarkBBBB", "bookmarkDDDD", "bookmarkEEEE"],
-      missingParents: [],
-      parentsWithGaps: [],
-    }, "Should report (B D E) as missing");
     await storeChangesInMirror(buf, changesToUpload);
   }
 
@@ -745,11 +740,6 @@ add_task(async function test_missing_children() {
         url: "http://example.com/e",
       }],
     }, "Menu children should be (C B E)");
-    deepEqual(await buf.fetchRemoteOrphans(), {
-      missingChildren: [],
-      missingParents: ["bookmarkBBBB", "bookmarkEEEE"],
-      parentsWithGaps: [],
-    }, "Should report missing parents for (B E)");
     await storeChangesInMirror(buf, changesToUpload);
   }
 
@@ -801,11 +791,6 @@ add_task(async function test_missing_children() {
         url: "http://example.com/d",
       }],
     }, "Menu children should be (C B E D)");
-    deepEqual(await buf.fetchRemoteOrphans(), {
-      missingChildren: [],
-      missingParents: ["bookmarkDDDD"],
-      parentsWithGaps: [],
-    }, "Should report missing parent for D");
     await storeChangesInMirror(buf, changesToUpload);
   }
 
@@ -2219,12 +2204,6 @@ add_task(async function test_invalid_guid() {
     },
   }, "Should reupload menu with new child GUID for C");
 
-  deepEqual(await buf.fetchRemoteOrphans(), {
-    missingChildren: [],
-    missingParents: [],
-    parentsWithGaps: [],
-  }, "Should not report problems");
-
   await assertLocalTree(PlacesUtils.bookmarks.menuGuid, {
     guid: PlacesUtils.bookmarks.menuGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -2278,12 +2257,6 @@ add_task(async function test_sync_status_mismatches() {
 
   await storeChangesInMirror(buf, initialChangesToUpload);
 
-  deepEqual(await buf.fetchSyncStatusMismatches(), {
-    missingLocal: [],
-    missingRemote: [],
-    wrongSyncStatus: [],
-  }, "Should not report mismatches after first merge");
-
   info("Make local changes");
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
@@ -2332,12 +2305,6 @@ add_task(async function test_sync_status_mismatches() {
     bmkUri: "http://example.com/c",
     title: "C",
   }], { needsMerge: false });
-
-  deepEqual(await buf.fetchSyncStatusMismatches(), {
-    missingLocal: ["bookmarkCCCC"],
-    missingRemote: ["bookmarkAAAA"],
-    wrongSyncStatus: ["bookmarkBBBB"],
-  }, "Should report sync status mismatches");
 
   info("Apply mirror");
   let changesToUpload = await buf.apply();
@@ -2458,12 +2425,6 @@ add_task(async function test_sync_status_mismatches() {
   }, "Should parent C correctly");
 
   await storeChangesInMirror(buf, changesToUpload);
-
-  deepEqual(await buf.fetchSyncStatusMismatches(), {
-    missingLocal: [],
-    missingRemote: [],
-    wrongSyncStatus: [],
-  }, "Applying and storing new changes in mirror should fix inconsistencies");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

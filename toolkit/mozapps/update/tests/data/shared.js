@@ -21,6 +21,7 @@ ChromeUtils.defineModuleGetter(this, "UpdateUtils",
 const PREF_APP_UPDATE_AUTO                 = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
+const PREF_APP_UPDATE_BADGEWAITTIME        = "app.update.badgeWaitTime";
 const PREF_APP_UPDATE_BITS_ENABLED         = "app.update.BITS.enabled";
 const PREF_APP_UPDATE_CANCELATIONS         = "app.update.cancelations";
 const PREF_APP_UPDATE_CHANNEL              = "app.update.channel";

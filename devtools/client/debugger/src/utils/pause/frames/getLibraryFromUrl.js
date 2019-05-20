@@ -10,97 +10,97 @@ import { getFrameUrl } from "./getFrameUrl";
 const libraryMap = [
   {
     label: "Backbone",
-    pattern: /backbone/i
+    pattern: /backbone/i,
   },
   {
     label: "jQuery",
-    pattern: /jquery/i
+    pattern: /jquery/i,
   },
   {
     label: "Preact",
-    pattern: /preact/i
+    pattern: /preact/i,
   },
   {
     label: "React",
-    pattern: /(node_modules\/(?:react|react-dom)\/)|(react(\.[a-z]+)*\.js$)/
+    pattern: /(node_modules\/(?:react|react-dom)\/)|(react(\.[a-z]+)*\.js$)/,
   },
   {
     label: "Immutable",
-    pattern: /immutable/i
+    pattern: /immutable/i,
   },
   {
     label: "Webpack",
-    pattern: /webpack\/bootstrap/i
+    pattern: /webpack\/bootstrap/i,
   },
   {
     label: "Express",
-    pattern: /node_modules\/express/
+    pattern: /node_modules\/express/,
   },
   {
     label: "Pug",
-    pattern: /node_modules\/pug/
+    pattern: /node_modules\/pug/,
   },
   {
     label: "ExtJS",
-    pattern: /\/ext-all[\.\-]/
+    pattern: /\/ext-all[\.\-]/,
   },
   {
     label: "MobX",
-    pattern: /mobx/i
+    pattern: /mobx/i,
   },
   {
     label: "Underscore",
-    pattern: /underscore/i
+    pattern: /underscore/i,
   },
   {
     label: "Lodash",
-    pattern: /lodash/i
+    pattern: /lodash/i,
   },
   {
     label: "Ember",
-    pattern: /ember/i
+    pattern: /ember/i,
   },
   {
     label: "Choo",
-    pattern: /choo/i
+    pattern: /choo/i,
   },
   {
     label: "VueJS",
-    pattern: /vue(?:\.[a-z]+)*\.js/i
+    pattern: /vue(?:\.[a-z]+)*\.js/i,
   },
   {
     label: "RxJS",
-    pattern: /rxjs/i
+    pattern: /rxjs/i,
   },
   {
     label: "Angular",
     pattern: /angular(?!.*\/app\/)/i,
-    contextPattern: /(zone\.js)/
+    contextPattern: /(zone\.js)/,
   },
   {
     label: "Redux",
-    pattern: /redux/i
+    pattern: /redux/i,
   },
   {
     label: "Dojo",
-    pattern: /dojo/i
+    pattern: /dojo/i,
   },
   {
     label: "Marko",
-    pattern: /marko/i
+    pattern: /marko/i,
   },
   {
     label: "NuxtJS",
-    pattern: /[\._]nuxt/i
+    pattern: /[\._]nuxt/i,
   },
   {
     label: "Aframe",
-    pattern: /aframe/i
+    pattern: /aframe/i,
   },
   {
     label: "NextJS",
-    pattern: /[\._]next/i
-  }
+    pattern: /[\._]next/i,
+  },
 ];
 
 export function getLibraryFromUrl(frame: Frame, callStack: Array<Frame> = []) {

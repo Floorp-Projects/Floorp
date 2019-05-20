@@ -262,18 +262,26 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     // and the stack is available from the content process.
     // Fetch it lazily from here via the message manager.
     if (stacktrace && typeof stacktrace == "boolean") {
+      let id;
+      if (this._cause.type == "websocket") {
+        // Convert to a websocket URL, as in onNetworkEvent.
+        id = this._request.url.replace(/^http/, "ws");
+      } else {
+        id = this._channelId;
+      }
+
       const messageManager = this.netMonitorActor.messageManager;
       stacktrace = await new Promise(resolve => {
         const onMessage = ({ data }) => {
           const { channelId, stack } = data;
-          if (channelId == this._channelId) {
+          if (channelId == id) {
             messageManager.removeMessageListener("debug:request-stack:response",
               onMessage);
             resolve(stack);
           }
         };
         messageManager.addMessageListener("debug:request-stack:response", onMessage);
-        messageManager.sendAsyncMessage("debug:request-stack:request", this._channelId);
+        messageManager.sendAsyncMessage("debug:request-stack:request", id);
       });
       this._stackTrace = stacktrace;
     }

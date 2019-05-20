@@ -12,13 +12,10 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
-const ExtensionDebugSetting = createFactory(require("./ExtensionDebugSetting"));
 
 const Actions = require("../actions/index");
 const { RUNTIMES } = require("../constants");
 const Types = require("../types/index");
-
-const { isExtensionDebugSettingNeeded } = require("../modules/debug-target-support");
 
 class RuntimeActions extends PureComponent {
   static get propTypes() {
@@ -45,17 +42,6 @@ class RuntimeActions extends PureComponent {
              : null;
   }
 
-  renderExtensionDebugSetting() {
-    const { dispatch, runtimeDetails } = this.props;
-    const { extensionDebugEnabled, info } = runtimeDetails;
-    return isExtensionDebugSettingNeeded(info.type)
-             ? ExtensionDebugSetting({
-                 dispatch,
-                 extensionDebugEnabled,
-             })
-             : null;
-  }
-
   renderProfileButton() {
     const { runtimeId } = this.props;
 
@@ -77,15 +63,11 @@ class RuntimeActions extends PureComponent {
 
   render() {
     return dom.div(
-      {},
-      dom.div(
-        {
-          className: "runtime-actions__toolbar",
-        },
-        this.renderProfileButton(),
-        this.renderConnectionPromptSetting(),
-      ),
-      this.renderExtensionDebugSetting(),
+      {
+        className: "runtime-actions__toolbar",
+      },
+      this.renderProfileButton(),
+      this.renderConnectionPromptSetting(),
     );
   }
 }

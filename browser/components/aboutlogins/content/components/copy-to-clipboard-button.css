@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  --success-color: #00c100;
+}
+
+@supports -moz-bool-pref("browser.in-content.dark-mode") {
+@media (prefers-color-scheme: dark) {
+  :host {
+    --success-color: #86DE74;
+  }
+}
+}
+
+:host(:not([copied])) .copied-button-text,
+:host([copied]) .copy-button-text {
+  display: none;
+}
+
+:host([copied]) {
+  color: var(--success-color);
+}
+
+:host([copied]) button {
+  background-color: transparent;
+  opacity: 1; /* override common.css fading out disabled buttons */
+}

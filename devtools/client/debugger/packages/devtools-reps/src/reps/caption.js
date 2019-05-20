@@ -14,7 +14,7 @@ const { wrapRender } = require("./rep-utils");
  * that needs to distinguish between a simple text/value and a label.
  */
 Caption.propTypes = {
-  object: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired
+  object: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
 };
 
 function Caption(props) {

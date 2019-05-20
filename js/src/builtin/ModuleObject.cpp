@@ -1043,8 +1043,11 @@ bool ModuleObject::execute(JSContext* cx, HandleModuleObject self,
   RootedScript script(cx, self->script());
 
   // The top-level script if a module is only ever executed once. Clear the
-  // reference to prevent us keeping this alive unnecessarily.
-  self->setReservedSlot(ScriptSlot, UndefinedValue());
+  // reference at exit to prevent us keeping this alive unnecessarily. This is
+  // kept while executing so it is available to the debugger.
+  auto guardA = mozilla::MakeScopeExit([&] {
+      self->setReservedSlot(ScriptSlot, UndefinedValue());
+    });
 
   RootedModuleEnvironmentObject scope(cx, self->environment());
   if (!scope) {

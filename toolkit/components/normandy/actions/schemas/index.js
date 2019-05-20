@@ -167,7 +167,107 @@ const ActionSchemas = {
     },
   },
 
-  "preference-experiment": {
+  "multiple-preference-experiment": {
+    $schema: "http://json-schema.org/draft-04/schema#",
+    title: "Run a feature experiment activated by a set of preferences.",
+    type: "object",
+    required: [
+      "slug",
+      "userFacingName",
+      "userFacingDescription",
+      "branches",
+    ],
+    properties: {
+      slug: {
+        description: "Unique identifier for this experiment",
+        type: "string",
+        pattern: "^[A-Za-z0-9\\-_]+$",
+      },
+      userFacingName: {
+        description: "User-facing name of the experiment",
+        type: "string",
+        minLength: 1,
+      },
+      userFacingDescription: {
+        description: "User-facing description of the experiment",
+        type: "string",
+        minLength: 1,
+      },
+      experimentDocumentUrl: {
+        description: "URL of a document describing the experiment",
+        type: "string",
+        format: "uri",
+        default: "",
+      },
+      isHighPopulation: {
+        description: "Marks the preference experiment as a high population experiment, that should be excluded from certain types of telemetry",
+        type: "boolean",
+        default: "false",
+      },
+      isEnrollmentPaused: {
+        description: "If true, new users will not be enrolled in the study.",
+        type: "boolean",
+        default: false,
+      },
+      branches: {
+        description: "List of experimental branches",
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "object",
+          required: [
+            "slug",
+            "ratio",
+            "preferences",
+          ],
+          properties: {
+            slug: {
+              description: "Unique identifier for this branch of the experiment",
+              type: "string",
+              pattern: "^[A-Za-z0-9\\-_]+$",
+            },
+            ratio: {
+              description: "Ratio of users who should be grouped into this branch",
+              type: "integer",
+              minimum: 1,
+            },
+            preferences: {
+              description: "The set of preferences to be set if this branch is chosen",
+              type: "object",
+              patternProperties: {
+                ".*": {
+                  type: "object",
+                  properties: {
+                    preferenceType: {
+                      description: "Data type of the preference that controls this experiment",
+                      type: "string",
+                      enum: ["string", "integer", "boolean"],
+                    },
+                    preferenceBranchType: {
+                      description: "Controls whether the default or user value of the preference is modified",
+                      type: "string",
+                      enum: ["user", "default"],
+                      default: "default",
+                    },
+                    preferenceValue: {
+                      description: "Value for this preference when this branch is chosen",
+                      type: ["string", "number", "boolean"],
+                    },
+                  },
+                  required: [
+                    "preferenceType",
+                    "preferenceValue",
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+
+  "single-preference-experiment": {
     $schema: "http://json-schema.org/draft-04/schema#",
     title: "Run a feature experiment activated by a preference.",
     type: "object",

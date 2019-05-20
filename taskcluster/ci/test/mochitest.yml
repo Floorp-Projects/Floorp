@@ -64,8 +64,8 @@ mochitest:
             default: virtual
     chunks:
         by-test-platform:
-            android-em-4.3-arm7-api-16/debug: 60
-            android-em-4.*: 24
+            android-em-4.*\/debug: 60
+            android-em-4.*\/(?:opt|pgo)?: 24
             android-em-7.*: 4
             linux.*/debug: 16
             linux64-asan/opt: 10
@@ -187,9 +187,9 @@ mochitest-chrome:
             default: default
     chunks:
         by-test-platform:
-            android-em-4.3-arm7-api-16/debug: 8
-            android-em-7.0-x86/opt: 1
-            android-em.*: 4
+            android-em-4.*\/debug: 8
+            android-em.4.*\/(?:opt|pgo)?: 4
+            android-em-7.*: 1
             default: 3
     max-run-time:
         by-test-platform:
@@ -249,6 +249,8 @@ mochitest-devtools-webreplay:
     max-run-time: 900
     mozharness:
         mochitest-flavor: chrome
+        extra-options:
+            - --mochitest-suite=mochitest-devtools-chrome-webreplay
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:

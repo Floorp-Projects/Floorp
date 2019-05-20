@@ -17,7 +17,7 @@ import { CloseButton } from "../../shared/Button";
 import {
   getLocationWithoutColumn,
   getSelectedText,
-  makeBreakpointId
+  makeBreakpointId,
 } from "../../../utils/breakpoint";
 import { getSelectedLocation } from "../../../utils/selected-location";
 import { features } from "../../../utils/prefs";
@@ -27,12 +27,12 @@ import type {
   Frame,
   Source,
   SourceLocation,
-  Context
+  Context,
 } from "../../../types";
 import type SourceEditor from "../../../utils/editor/source-editor";
 
 type FormattedFrame = Frame & {
-  selectedLocation: SourceLocation
+  selectedLocation: SourceLocation,
 };
 
 import {
@@ -40,7 +40,7 @@ import {
   getSelectedFrame,
   getSelectedSource,
   getCurrentThread,
-  getContext
+  getContext,
 } from "../../../selectors";
 
 type Props = {
@@ -61,7 +61,7 @@ type Props = {
   toggleBreakpoints: typeof actions.toggleBreakpoints,
   toggleDisabledBreakpoint: typeof actions.toggleDisabledBreakpoint,
   openConditionalPanel: typeof actions.openConditionalPanel,
-  selectSpecificLocation: typeof actions.selectSpecificLocation
+  selectSpecificLocation: typeof actions.selectSpecificLocation,
 };
 
 class Breakpoint extends PureComponent<Props> {
@@ -159,7 +159,7 @@ class Breakpoint extends PureComponent<Props> {
           paused: this.isCurrentlyPausedAtBreakpoint(),
           disabled: breakpoint.disabled,
           "is-conditional": !!breakpoint.options.condition,
-          "is-log": !!breakpoint.options.logValue
+          "is-log": !!breakpoint.options.logValue,
         })}
         onClick={this.selectBreakpoint}
         onDoubleClick={this.onDoubleClick}
@@ -206,7 +206,7 @@ const getFormattedFrame = createSelector(
 
     return {
       ...frame,
-      selectedLocation: getSelectedLocation(frame, selectedSource)
+      selectedLocation: getSelectedLocation(frame, selectedSource),
     };
   }
 );
@@ -214,7 +214,7 @@ const getFormattedFrame = createSelector(
 const mapStateToProps = state => ({
   cx: getContext(state),
   breakpoints: getBreakpointsList(state),
-  frame: getFormattedFrame(state, getCurrentThread(state))
+  frame: getFormattedFrame(state, getCurrentThread(state)),
 });
 
 export default connect(
@@ -230,6 +230,6 @@ export default connect(
     toggleAllBreakpoints: actions.toggleAllBreakpoints,
     toggleBreakpoints: actions.toggleBreakpoints,
     toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
-    openConditionalPanel: actions.openConditionalPanel
+    openConditionalPanel: actions.openConditionalPanel,
   }
 )(Breakpoint);

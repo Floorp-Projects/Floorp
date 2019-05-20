@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
     is(treeOwner.primaryContentShell, null,
        "There shouldn't be primaryContentShell because no browser has primary=true.");
 
-    opener.setTimeout("done()", 0);
+    opener.setTimeout(function() { this.done(); }, 0);
     window.close();
   }
 

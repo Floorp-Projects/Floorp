@@ -65,8 +65,7 @@ add_task(async function test_replaceFaviconData_validHistoryURI() {
 
   let favicon = createFavicon("favicon1.png");
 
-  iconsvc.replaceFaviconData(favicon.uri, favicon.data, favicon.data.length,
-    favicon.mimetype);
+  iconsvc.replaceFaviconData(favicon.uri, favicon.data, favicon.mimetype);
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(pageURI, favicon.uri, true,
@@ -96,8 +95,7 @@ add_task(async function test_replaceFaviconData_overrideDefaultFavicon() {
   let secondFavicon = createFavicon("favicon3.png");
 
   iconsvc.replaceFaviconData(
-    firstFavicon.uri, secondFavicon.data, secondFavicon.data.length,
-    secondFavicon.mimetype);
+    firstFavicon.uri, secondFavicon.data, secondFavicon.mimetype);
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(
@@ -137,8 +135,7 @@ add_task(async function test_replaceFaviconData_replaceExisting() {
           pageURI, firstFavicon.mimetype, firstFavicon.data,
           function test_replaceFaviconData_overrideDefaultFavicon_firstCallback() {
             iconsvc.replaceFaviconData(
-              firstFavicon.uri, secondFavicon.data, secondFavicon.data.length,
-              secondFavicon.mimetype);
+              firstFavicon.uri, secondFavicon.data, secondFavicon.mimetype);
             PlacesTestUtils.promiseAsyncUpdates().then(() => {
               checkFaviconDataForPage(
                 pageURI, secondFavicon.mimetype, secondFavicon.data,
@@ -165,8 +162,7 @@ add_task(async function test_replaceFaviconData_unrelatedReplace() {
   let unrelatedFavicon = createFavicon("favicon7.png");
 
   iconsvc.replaceFaviconData(
-    unrelatedFavicon.uri, unrelatedFavicon.data, unrelatedFavicon.data.length,
-    unrelatedFavicon.mimetype);
+    unrelatedFavicon.uri, unrelatedFavicon.data, unrelatedFavicon.mimetype);
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(
@@ -192,17 +188,20 @@ add_task(async function test_replaceFaviconData_badInputs() {
   let icon = createFavicon("favicon8.png");
 
   Assert.throws(
-    () => iconsvc.replaceFaviconData(icon.uri, icon.data, icon.data.length, ""),
+    () => iconsvc.replaceFaviconData(icon.uri, icon.data, ""),
     /NS_ERROR_ILLEGAL_VALUE/);
   Assert.throws(
-    () => iconsvc.replaceFaviconData(icon.uri, icon.data, icon.data.length, "not-an-image"),
+    () => iconsvc.replaceFaviconData(icon.uri, icon.data, "not-an-image"),
     /NS_ERROR_ILLEGAL_VALUE/);
   Assert.throws(
-    () => iconsvc.replaceFaviconData(null, icon.data, icon.data.length, icon.mimetype),
+    () => iconsvc.replaceFaviconData(null, icon.data, icon.mimetype),
     /NS_ERROR_ILLEGAL_VALUE/);
   Assert.throws(
-    () => iconsvc.replaceFaviconData(icon.uri, null, 0, icon.mimetype),
+    () => iconsvc.replaceFaviconData(icon.uri, [], icon.mimetype),
     /NS_ERROR_ILLEGAL_VALUE/);
+  Assert.throws(
+    () => iconsvc.replaceFaviconData(icon.uri, null, icon.mimetype),
+    /NS_ERROR_XPC_CANT_CONVERT_PRIMITIVE_TO_ARRAY/);
 
   icon.file.remove(false);
   await PlacesUtils.history.clear();
@@ -218,11 +217,9 @@ add_task(async function test_replaceFaviconData_twiceReplace() {
   let secondFavicon = createFavicon("favicon10.png");
 
   iconsvc.replaceFaviconData(
-    firstFavicon.uri, firstFavicon.data, firstFavicon.data.length,
-    firstFavicon.mimetype);
+    firstFavicon.uri, firstFavicon.data, firstFavicon.mimetype);
   iconsvc.replaceFaviconData(
-    firstFavicon.uri, secondFavicon.data, secondFavicon.data.length,
-    secondFavicon.mimetype);
+    firstFavicon.uri, secondFavicon.data, secondFavicon.mimetype);
 
   await new Promise(resolve => {
     iconsvc.setAndFetchFaviconForPage(
@@ -261,14 +258,12 @@ add_task(async function test_replaceFaviconData_rootOverwrite() {
   await PlacesTestUtils.addVisits(pageURI);
 
   let icon = createFavicon("favicon9.png");
-  PlacesUtils.favicons.replaceFaviconData(iconURI, icon.data, icon.data.length,
-                                          icon.mimetype);
+  PlacesUtils.favicons.replaceFaviconData(iconURI, icon.data, icon.mimetype);
   await PlacesTestUtils.addFavicons(new Map([[PAGE_URL, ICON_URL]]));
 
   Assert.equal(await getRootValue(ICON_URL), 1, "Check root == 1");
   let icon2 = createFavicon("favicon10.png");
-  PlacesUtils.favicons.replaceFaviconData(iconURI, icon2.data, icon2.data.length,
-                                          icon2.mimetype);
+  PlacesUtils.favicons.replaceFaviconData(iconURI, icon2.data, icon2.mimetype);
   // replaceFaviconData doesn't have a callback, but we must wait its updated.
   await PlacesTestUtils.promiseAsyncUpdates();
   Assert.equal(await getRootValue(ICON_URL), 1, "Check root did not change");

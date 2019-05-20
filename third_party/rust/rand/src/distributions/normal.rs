@@ -1,49 +1,50 @@
-// Copyright 2013 The Rust Project Developers. See the COPYRIGHT
-// file at the top-level directory of this distribution and at
-// http://rust-lang.org/COPYRIGHT.
+// Copyright 2018 Developers of the Rand project.
+// Copyright 2013 The Rust Project Developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
 //! The normal and derived distributions.
 
-use {Rng, Rand, Open01};
-use distributions::{ziggurat, ziggurat_tables, Sample, IndependentSample};
+use Rng;
+use distributions::{ziggurat_tables, Distribution, Open01};
+use distributions::utils::ziggurat;
 
-/// A wrapper around an `f64` to generate N(0, 1) random numbers
-/// (a.k.a.  a standard normal, or Gaussian).
+/// Samples floating-point numbers according to the normal distribution
+/// `N(0, 1)` (a.k.a. a standard normal, or Gaussian). This is equivalent to
+/// `Normal::new(0.0, 1.0)` but faster.
 ///
 /// See `Normal` for the general normal distribution.
 ///
-/// Implemented via the ZIGNOR variant[1] of the Ziggurat method.
+/// Implemented via the ZIGNOR variant[^1] of the Ziggurat method.
 ///
-/// [1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
-/// Generate Normal Random
-/// Samples*](http://www.doornik.com/research/ziggurat.pdf). Nuffield
-/// College, Oxford
+/// [^1]: Jurgen A. Doornik (2005). [*An Improved Ziggurat Method to
+///       Generate Normal Random Samples*](
+///       https://www.doornik.com/research/ziggurat.pdf).
+///       Nuffield College, Oxford
 ///
 /// # Example
+/// ```
+/// use rand::prelude::*;
+/// use rand::distributions::StandardNormal;
 ///
-/// ```rust
-/// use rand::distributions::normal::StandardNormal;
-///
-/// let StandardNormal(x) = rand::random();
-/// println!("{}", x);
+/// let val: f64 = SmallRng::from_entropy().sample(StandardNormal);
+/// println!("{}", val);
 /// ```
 #[derive(Clone, Copy, Debug)]
-pub struct StandardNormal(pub f64);
+pub struct StandardNormal;
 
-impl Rand for StandardNormal {
-    fn rand<R:Rng>(rng: &mut R) -> StandardNormal {
+impl Distribution<f64> for StandardNormal {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
         #[inline]
         fn pdf(x: f64) -> f64 {
             (-x*x/2.0).exp()
         }
         #[inline]
-        fn zero_case<R:Rng>(rng: &mut R, u: f64) -> f64 {
+        fn zero_case<R: Rng + ?Sized>(rng: &mut R, u: f64) -> f64 {
             // compute a random number in the tail by hand
 
             // strange initial conditions, because the loop is not
@@ -54,8 +55,8 @@ impl Rand for StandardNormal {
             let mut y = 0.0f64;
 
             while -2.0 * y < x * x {
-                let Open01(x_) = rng.gen::<Open01<f64>>();
-                let Open01(y_) = rng.gen::<Open01<f64>>();
+                let x_: f64 = rng.sample(Open01);
+                let y_: f64 = rng.sample(Open01);
 
                 x = x_.ln() / ziggurat_tables::ZIG_NORM_R;
                 y = y_.ln();
@@ -64,30 +65,33 @@ impl Rand for StandardNormal {
             if u < 0.0 { x - ziggurat_tables::ZIG_NORM_R } else { ziggurat_tables::ZIG_NORM_R - x }
         }
 
-        StandardNormal(ziggurat(
-            rng,
-            true, // this is symmetric
-            &ziggurat_tables::ZIG_NORM_X,
-            &ziggurat_tables::ZIG_NORM_F,
-            pdf, zero_case))
+        ziggurat(rng, true, // this is symmetric
+                 &ziggurat_tables::ZIG_NORM_X,
+                 &ziggurat_tables::ZIG_NORM_F,
+                 pdf, zero_case)
     }
 }
 
 /// The normal distribution `N(mean, std_dev**2)`.
 ///
-/// This uses the ZIGNOR variant of the Ziggurat method, see
-/// `StandardNormal` for more details.
+/// This uses the ZIGNOR variant of the Ziggurat method, see [`StandardNormal`]
+/// for more details.
+/// 
+/// Note that [`StandardNormal`] is an optimised implementation for mean 0, and
+/// standard deviation 1.
 ///
 /// # Example
 ///
-/// ```rust
-/// use rand::distributions::{Normal, IndependentSample};
+/// ```
+/// use rand::distributions::{Normal, Distribution};
 ///
 /// // mean 2, standard deviation 3
 /// let normal = Normal::new(2.0, 3.0);
-/// let v = normal.ind_sample(&mut rand::thread_rng());
+/// let v = normal.sample(&mut rand::thread_rng());
 /// println!("{} is from a N(2, 9) distribution", v)
 /// ```
+///
+/// [`StandardNormal`]: crate::distributions::StandardNormal
 #[derive(Clone, Copy, Debug)]
 pub struct Normal {
     mean: f64,
@@ -105,17 +109,14 @@ impl Normal {
     pub fn new(mean: f64, std_dev: f64) -> Normal {
         assert!(std_dev >= 0.0, "Normal::new called with `std_dev` < 0");
         Normal {
-            mean: mean,
-            std_dev: std_dev
+            mean,
+            std_dev
         }
     }
 }
-impl Sample<f64> for Normal {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-impl IndependentSample<f64> for Normal {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        let StandardNormal(n) = rng.gen::<StandardNormal>();
+impl Distribution<f64> for Normal {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        let n = rng.sample(StandardNormal);
         self.mean + self.std_dev * n
     }
 }
@@ -123,17 +124,17 @@ impl IndependentSample<f64> for Normal {
 
 /// The log-normal distribution `ln N(mean, std_dev**2)`.
 ///
-/// If `X` is log-normal distributed, then `ln(X)` is `N(mean,
-/// std_dev**2)` distributed.
+/// If `X` is log-normal distributed, then `ln(X)` is `N(mean, std_dev**2)`
+/// distributed.
 ///
 /// # Example
 ///
-/// ```rust
-/// use rand::distributions::{LogNormal, IndependentSample};
+/// ```
+/// use rand::distributions::{LogNormal, Distribution};
 ///
 /// // mean 2, standard deviation 3
 /// let log_normal = LogNormal::new(2.0, 3.0);
-/// let v = log_normal.ind_sample(&mut rand::thread_rng());
+/// let v = log_normal.sample(&mut rand::thread_rng());
 /// println!("{} is from an ln N(2, 9) distribution", v)
 /// ```
 #[derive(Clone, Copy, Debug)]
@@ -154,27 +155,23 @@ impl LogNormal {
         LogNormal { norm: Normal::new(mean, std_dev) }
     }
 }
-impl Sample<f64> for LogNormal {
-    fn sample<R: Rng>(&mut self, rng: &mut R) -> f64 { self.ind_sample(rng) }
-}
-impl IndependentSample<f64> for LogNormal {
-    fn ind_sample<R: Rng>(&self, rng: &mut R) -> f64 {
-        self.norm.ind_sample(rng).exp()
+impl Distribution<f64> for LogNormal {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> f64 {
+        self.norm.sample(rng).exp()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use distributions::{Sample, IndependentSample};
+    use distributions::Distribution;
     use super::{Normal, LogNormal};
 
     #[test]
     fn test_normal() {
-        let mut norm = Normal::new(10.0, 10.0);
-        let mut rng = ::test::rng();
+        let norm = Normal::new(10.0, 10.0);
+        let mut rng = ::test::rng(210);
         for _ in 0..1000 {
             norm.sample(&mut rng);
-            norm.ind_sample(&mut rng);
         }
     }
     #[test]
@@ -186,11 +183,10 @@ mod tests {
 
     #[test]
     fn test_log_normal() {
-        let mut lnorm = LogNormal::new(10.0, 10.0);
-        let mut rng = ::test::rng();
+        let lnorm = LogNormal::new(10.0, 10.0);
+        let mut rng = ::test::rng(211);
         for _ in 0..1000 {
             lnorm.sample(&mut rng);
-            lnorm.ind_sample(&mut rng);
         }
     }
     #[test]

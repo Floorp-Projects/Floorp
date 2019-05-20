@@ -18,8 +18,8 @@ function getTestContent() {
         { value: 2 },
         { value: 3 },
         { value: 4 },
-        { value: 5 }
-      ]
+        { value: 5 },
+      ],
     },
     b: {
       value: "BAR",
@@ -28,10 +28,10 @@ function getTestContent() {
         { value: "B" },
         { value: "C" },
         { value: "D" },
-        { value: "E" }
-      ]
+        { value: "E" },
+      ],
     },
-    c: { value: "BAZ" }
+    c: { value: "BAZ" },
   };
   const renderItem = item => <div>{item.value ? item.value : item}</div>;
   const onFocus = jest.fn();
@@ -60,8 +60,8 @@ function getTestContent() {
       renderItem,
       onFocus,
       onExpand,
-      onCollapse
-    }
+      onCollapse,
+    },
   };
 }
 
@@ -74,7 +74,7 @@ describe("ManagedTree", () => {
     const { props, testTree } = getTestContent();
     const wrapper = shallow(<ManagedTree {...props} />);
     wrapper.setProps({
-      listItems: testTree.b.children
+      listItems: testTree.b.children,
     });
     expect(wrapper).toMatchSnapshot();
   });
@@ -82,7 +82,7 @@ describe("ManagedTree", () => {
     const { props, testTree } = getTestContent();
     const wrapper = shallow(<ManagedTree {...props} />);
     wrapper.setProps({
-      highlightItems: testTree.a.children
+      highlightItems: testTree.a.children,
     });
     expect(wrapper).toMatchSnapshot();
   });

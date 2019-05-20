@@ -15,7 +15,7 @@ class Draggable extends Component {
       onStart: PropTypes.func,
       onStop: PropTypes.func,
       style: PropTypes.object,
-      className: PropTypes.string
+      className: PropTypes.string,
     };
   }
 
@@ -59,7 +59,7 @@ class Draggable extends Component {
     return dom.div({
       style: this.props.style,
       className: this.props.className,
-      onMouseDown: this.startDragging
+      onMouseDown: this.startDragging,
     });
   }
 }

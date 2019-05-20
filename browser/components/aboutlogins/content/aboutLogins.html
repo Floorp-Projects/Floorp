@@ -10,17 +10,19 @@
     <title data-l10n-id="about-logins-page-title"></title>
     <link rel="localization" href="browser/aboutLogins.ftl">
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/reflected-fluent-element.js"></script>
+    <script defer="defer" src="chrome://browser/content/aboutlogins/components/copy-to-clipboard-button.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/components/modal-input.js"></script>
     <script defer="defer" src="chrome://browser/content/aboutlogins/aboutLogins.js"></script>
-    <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
-    <link rel="stylesheet" type="text/css" href="chrome://browser/content/aboutlogins/aboutLogins.css">
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" href="chrome://browser/content/aboutlogins/aboutLogins.css">
   </head>
   <body>
     <header>
+      <img id="branding-logo" src="chrome://branding/content/aboutlogins.svg" alt=""/>
       <login-filter data-l10n-id="login-filter"
                     data-l10n-attrs="placeholder"></login-filter>
     </header>
@@ -30,10 +32,15 @@
     <login-item data-l10n-id="login-item"
                 data-l10n-args='{"timeCreated": 0, "timeChanged": 0, "timeUsed": 0}'
                 data-l10n-attrs="cancel-button,
+                                 copy-password-button,
+                                 copy-username-button,
+                                 copied-password-button,
+                                 copied-username-button,
                                  delete-button,
                                  edit-button,
                                  hostname-label,
-                                 modal-input-reveal-button,
+                                 modal-input-reveal-checkbox-hide,
+                                 modal-input-reveal-checkbox-show,
                                  open-site-button,
                                  password-label,
                                  save-changes-button,
@@ -43,7 +50,7 @@
                                  username-label"></login-item>
 
     <template id="login-list-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list.css">
       <div class="meta">
         <span class="count"></span>
@@ -53,14 +60,14 @@
     </template>
 
     <template id="login-list-item-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-list-item.css">
       <span class="hostname"></span>
       <span class="username"></span>
     </template>
 
     <template id="login-item-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
       <div class="header">
         <h2 class="title"></h2>
@@ -79,12 +86,14 @@
           <span class="username-label field-label"></span>
           <modal-input name="username"/>
         </label>
+        <copy-to-clipboard-button class="copy-username-button"></copy-to-clipboard-button>
       </div>
       <div class="detail-row">
         <label>
           <span class="password-label field-label"></span>
           <modal-input type="password" name="password"/>
         </label>
+        <copy-to-clipboard-button class="copy-password-button"></copy-to-clipboard-button>
       </div>
       <p class="time-created meta-info"></p>
       <p class="time-changed meta-info"></p>
@@ -94,17 +103,26 @@
     </template>
 
     <template id="login-filter-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-filter.css">
       <input type="text"/>
     </template>
 
     <template id="modal-input-template">
-      <link rel="stylesheet" type="text/css" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/modal-input.css">
       <span class="locked-value"></span>
       <input type="text" class="unlocked-value"/>
-      <button class="reveal-button"/>
+      <input type="checkbox" class="reveal-checkbox"/>
+    </template>
+
+    <template id="copy-to-clipboard-button-template">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/copy-to-clipboard-button.css">
+      <button class="copy-button">
+        <span class="copied-button-text"></span>
+        <span class="copy-button-text"></span>
+      </button>
     </template>
   </body>
 </html>

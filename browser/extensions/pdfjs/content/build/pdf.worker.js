@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.167';
-const pdfjsBuild = 'ca2fee3d';
+const pdfjsVersion = '2.2.177';
+const pdfjsBuild = '1421b2f2';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -378,7 +378,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.167';
+    let workerVersion = '2.2.177';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -3638,6 +3638,8 @@ class Catalog {
     } else if (this.catDict.has('Dests')) {
       return this.catDict.get('Dests');
     }
+
+    return undefined;
   }
 
   get pageLabels() {
@@ -4983,7 +4985,7 @@ var XRef = function XRefClosure() {
       }
 
       if (recoveryMode) {
-        return;
+        return undefined;
       }
 
       throw new _core_utils.XRefParseException();
@@ -12942,6 +12944,7 @@ var JpegImage = function JpegImageClosure() {
       }
 
       this.numComponents = this.components.length;
+      return undefined;
     },
 
     _getLinearizedBlockData(width, height, isSourcePDF = false) {
@@ -18195,7 +18198,7 @@ class AnnotationFactory {
     let dict = xref.fetchIfRef(ref);
 
     if (!(0, _primitives.isDict)(dict)) {
-      return;
+      return undefined;
     }
 
     let id = (0, _primitives.isRef)(ref) ? ref.toString() : `annot_${idFactory.createObjId()}`;
@@ -18204,7 +18207,6 @@ class AnnotationFactory {
     let parameters = {
       xref,
       dict,
-      ref: (0, _primitives.isRef)(ref) ? ref : null,
       subtype,
       id,
       pdfManager
@@ -18491,7 +18493,7 @@ class Annotation {
   loadResources(keys) {
     return this.appearance.dict.getAsync('Resources').then(resources => {
       if (!resources) {
-        return;
+        return undefined;
       }
 
       let objectLoader = new _obj.ObjectLoader(resources, keys, resources.xref);
@@ -19200,6 +19202,8 @@ var QueueOptimizer = function QueueOptimizerClosure() {
       case 3:
         return fnArray[i] === _util.OPS.restore;
     }
+
+    throw new Error(`iterateInlineImageGroup - invalid pos: ${pos}`);
   }, function foundInlineImageGroup(context, i) {
     var MIN_IMAGES_IN_INLINE_IMAGES_BLOCK = 10;
     var MAX_IMAGES_IN_INLINE_IMAGES_BLOCK = 200;
@@ -19306,6 +19310,8 @@ var QueueOptimizer = function QueueOptimizerClosure() {
       case 3:
         return fnArray[i] === _util.OPS.restore;
     }
+
+    throw new Error(`iterateImageMaskGroup - invalid pos: ${pos}`);
   }, function foundImageMaskGroup(context, i) {
     var MIN_IMAGES_IN_MASKS_BLOCK = 10;
     var MAX_IMAGES_IN_MASKS_BLOCK = 100;
@@ -19388,7 +19394,7 @@ var QueueOptimizer = function QueueOptimizerClosure() {
     var argsArray = context.argsArray;
     var iFirstTransform = context.iCurr - 2;
     return argsArray[iFirstTransform][1] === 0 && argsArray[iFirstTransform][2] === 0;
-  }, function (context, i) {
+  }, function iterateImageGroup(context, i) {
     var fnArray = context.fnArray,
         argsArray = context.argsArray;
     var iFirstSave = context.iCurr - 3;
@@ -19430,6 +19436,8 @@ var QueueOptimizer = function QueueOptimizerClosure() {
       case 3:
         return fnArray[i] === _util.OPS.restore;
     }
+
+    throw new Error(`iterateImageGroup - invalid pos: ${pos}`);
   }, function (context, i) {
     var MIN_IMAGES_IN_BLOCK = 3;
     var MAX_IMAGES_IN_BLOCK = 1000;
@@ -19462,7 +19470,7 @@ var QueueOptimizer = function QueueOptimizerClosure() {
     argsArray.splice(iFirstSave, count * 4, args);
     return iFirstSave + 1;
   });
-  addState(InitialState, [_util.OPS.beginText, _util.OPS.setFont, _util.OPS.setTextMatrix, _util.OPS.showText, _util.OPS.endText], null, function (context, i) {
+  addState(InitialState, [_util.OPS.beginText, _util.OPS.setFont, _util.OPS.setTextMatrix, _util.OPS.showText, _util.OPS.endText], null, function iterateShowTextGroup(context, i) {
     var fnArray = context.fnArray,
         argsArray = context.argsArray;
     var iFirstSave = context.iCurr - 4;
@@ -19496,6 +19504,8 @@ var QueueOptimizer = function QueueOptimizerClosure() {
       case 4:
         return fnArray[i] === _util.OPS.endText;
     }
+
+    throw new Error(`iterateShowTextGroup - invalid pos: ${pos}`);
   }, function (context, i) {
     var MIN_CHARS_IN_BLOCK = 3;
     var MAX_CHARS_IN_BLOCK = 1000;
@@ -20123,14 +20133,14 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
       if (!(w && (0, _util.isNum)(w)) || !(h && (0, _util.isNum)(h))) {
         (0, _util.warn)('Image dimensions are missing, or not numbers.');
-        return;
+        return undefined;
       }
 
       var maxImageSize = this.options.maxImageSize;
 
       if (maxImageSize !== -1 && w * h > maxImageSize) {
         (0, _util.warn)('Image exceeded maximum allowed size and was removed.');
-        return;
+        return undefined;
       }
 
       var imageMask = dict.get('ImageMask', 'IM') || false;
@@ -20160,7 +20170,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           };
         }
 
-        return;
+        return undefined;
       }
 
       var softMask = dict.get('SMask', 'SM') || false;
@@ -20177,7 +20187,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         });
         imgData = imageObj.createImageData(true);
         operatorList.addOp(_util.OPS.paintInlineImageXObject, [imgData]);
-        return;
+        return undefined;
       }
 
       const nativeImageDecoderSupport = forceDisableNativeImageDecoder ? _util.NativeImageDecoding.NONE : this.options.nativeImageDecoderSupport;
@@ -20245,6 +20255,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
 
         this.handler.send('obj', [objId, this.pageIndex, 'Image', imgData], [imgData.data.buffer]);
+        return undefined;
       }).catch(reason => {
         (0, _util.warn)('Unable to decode image: ' + reason);
 
@@ -20253,6 +20264,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
 
         this.handler.send('obj', [objId, this.pageIndex, 'Image', null]);
+        return undefined;
       });
 
       if (this.parsingType3Font) {
@@ -20267,6 +20279,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           args
         };
       }
+
+      return undefined;
     },
 
     handleSMask: function PartialEvaluator_handleSmask(smask, resources, operatorList, task, stateManager) {
@@ -21605,7 +21619,8 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     },
 
     extractDataStructures: function PartialEvaluator_extractDataStructures(dict, baseDict, properties) {
-      var xref = this.xref;
+      let xref = this.xref,
+          cidToGidBytes;
       var toUnicode = dict.get('ToUnicode') || baseDict.get('ToUnicode');
       var toUnicodePromise = toUnicode ? this.readToUnicode(toUnicode) : Promise.resolve(undefined);
 
@@ -21623,7 +21638,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         var cidToGidMap = dict.get('CIDToGIDMap');
 
         if ((0, _primitives.isStream)(cidToGidMap)) {
-          properties.cidToGidMap = this.readCidToGidMap(cidToGidMap);
+          cidToGidBytes = cidToGidMap.getBytes();
         }
       }
 
@@ -21698,8 +21713,13 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       return toUnicodePromise.then(toUnicode => {
         properties.toUnicode = toUnicode;
         return this.buildToUnicode(properties);
-      }).then(function (toUnicode) {
+      }).then(toUnicode => {
         properties.toUnicode = toUnicode;
+
+        if (cidToGidBytes) {
+          properties.cidToGidMap = this.readCidToGidMap(cidToGidBytes, toUnicode);
+        }
+
         return properties;
       });
     },
@@ -21883,23 +21903,24 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
       return Promise.resolve(null);
     },
-    readCidToGidMap: function PartialEvaluator_readCidToGidMap(cidToGidStream) {
-      var glyphsData = cidToGidStream.getBytes();
+
+    readCidToGidMap(glyphsData, toUnicode) {
       var result = [];
 
       for (var j = 0, jj = glyphsData.length; j < jj; j++) {
         var glyphID = glyphsData[j++] << 8 | glyphsData[j];
+        const code = j >> 1;
 
-        if (glyphID === 0) {
+        if (glyphID === 0 && !toUnicode.has(code)) {
           continue;
         }
 
-        var code = j >> 1;
         result[code] = glyphID;
       }
 
       return result;
     },
+
     extractWidths: function PartialEvaluator_extractWidths(dict, descriptor, properties) {
       var xref = this.xref;
       var glyphsWidths = [];
@@ -25355,7 +25376,7 @@ var Font = function FontClosure() {
         };
       }
 
-      function sanitizeMetrics(font, header, metrics, numGlyphs) {
+      function sanitizeMetrics(font, header, metrics, numGlyphs, dupFirstEntry) {
         if (!header) {
           if (metrics) {
             metrics.data = null;
@@ -25393,6 +25414,12 @@ var Font = function FontClosure() {
         if (numMissing > 0) {
           var entries = new Uint8Array(metrics.length + numMissing * 2);
           entries.set(metrics.data);
+
+          if (dupFirstEntry) {
+            entries[metrics.length] = metrics.data[2];
+            entries[metrics.length + 1] = metrics.data[3];
+          }
+
           metrics.data = entries;
         }
       }
@@ -26148,7 +26175,7 @@ var Font = function FontClosure() {
         delete tables['cvt '];
       }
 
-      sanitizeMetrics(font, tables['hhea'], tables['hmtx'], numGlyphsOut);
+      sanitizeMetrics(font, tables['hhea'], tables['hmtx'], numGlyphsOut, dupFirstEntry);
 
       if (!tables['head']) {
         throw new _util.FormatError('Required "head" table is not found');
@@ -44576,7 +44603,7 @@ var _util = __w_pdfjs_require__(2);
 
 async function resolveCall(fn, args, thisArg = null) {
   if (!fn) {
-    return;
+    return undefined;
   }
 
   return fn.apply(thisArg, args);

@@ -103,7 +103,8 @@ a {
   padding: 10px 30px;
   white-space: nowrap;
 
-  &:hover:not(.dismiss) {
+  &:hover:not(.dismiss),
+  &:focus:not(.dismiss) {
     box-shadow: $shadow-primary;
     transition: box-shadow 150ms;
   }
@@ -132,7 +133,17 @@ input {
   }
 }
 
+// These styles are needed for -webkit-line-clamp to work correctly, so reuse
+// this class name while separately setting a clamp value via CSS or JS.
+.clamp {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  overflow: hidden;
+  word-break: break-word;
+}
+
 // Components
+@import '../components/A11yLinkButton/A11yLinkButton';
 @import '../components/Base/Base';
 @import '../components/ErrorBoundary/ErrorBoundary';
 @import '../components/TopSites/TopSites';

@@ -8,12 +8,17 @@ var EXPORTED_SYMBOLS = ["AboutLoginsChild"];
 
 const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 const {LoginHelper} = ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+                               "resource://gre/modules/AppConstants.jsm");
 
 class AboutLoginsChild extends ActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "AboutLoginsInit": {
         this.mm.sendAsyncMessage("AboutLogins:Subscribe");
+
+        let documentElement = this.content.document.documentElement;
+        documentElement.classList.toggle("official-branding", AppConstants.MOZILLA_OFFICIAL);
 
         let waivedContent = Cu.waiveXrays(this.content);
         let AboutLoginsUtils = {

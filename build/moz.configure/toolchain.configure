@@ -1910,10 +1910,17 @@ def rust_compile_flags(opt_level, debug_rust, debug_symbols):
 # Rust incremental compilation
 # ==============================================================
 
+js_option('--disable-cargo-incremental',
+          help='Disable incremental rust compilation.')
 
-@depends(rustc_opt_level, debug_rust, 'MOZ_AUTOMATION', code_coverage)
-def cargo_incremental(opt_level, debug_rust, automation, code_coverage):
+@depends(rustc_opt_level, debug_rust, 'MOZ_AUTOMATION', code_coverage,
+         '--disable-cargo-incremental')
+def cargo_incremental(opt_level, debug_rust, automation, code_coverage,
+                      enabled):
     """Return a value for the CARGO_INCREMENTAL environment variable."""
+
+    if not enabled:
+        return '0'
 
     # We never want to use incremental compilation in automation.  sccache
     # handles our automation use case much better than incremental compilation

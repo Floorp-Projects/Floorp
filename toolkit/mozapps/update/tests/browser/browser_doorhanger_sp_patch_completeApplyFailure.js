@@ -8,10 +8,9 @@ add_task(async function doorhanger_sp_patch_completeApplyFailure() {
   let patches = getLocalPatchString(patchProps);
   let updateProps = {checkInterval: "1"};
   let updates = getLocalUpdateString(updateProps, patches);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 
-  let updateParams = "";
-  await runDoorhangerUpdateTest(updateParams, 0, [
+  let params = {updates};
+  await runDoorhangerUpdateTest(params, [
     {
       // If the update process is unable to install the update show the manual
       // update doorhanger.

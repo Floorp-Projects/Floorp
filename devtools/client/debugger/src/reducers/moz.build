@@ -18,6 +18,7 @@ CompiledModules(
     'index.js',
     'pause.js',
     'pending-breakpoints.js',
+    'preview.js',
     'project-text-search.js',
     'quick-open.js',
     'source-actors.js',

@@ -20,7 +20,7 @@ module.exports = {
     tabTarget,
     debuggerClient,
     workers,
-    panel
+    panel,
   }: any) =>
     onConnect(
       {
@@ -28,8 +28,8 @@ module.exports = {
         tabConnection: {
           tabTarget,
           threadClient,
-          debuggerClient
-        }
+          debuggerClient,
+        },
       },
       workers,
       panel
@@ -38,5 +38,5 @@ module.exports = {
     unmountRoot();
     sourceQueue.clear();
     teardownWorkers();
-  }
+  },
 };

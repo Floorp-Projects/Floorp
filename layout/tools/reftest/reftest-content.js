@@ -219,7 +219,7 @@ function setupPrintMode() {
    ps.footerStrLeft = "";
    ps.footerStrCenter = "";
    ps.footerStrRight = "";
-   docShell.contentViewer.setPageMode(true, ps);
+   docShell.contentViewer.setPageModeForTesting(/* aPageMode */ true, ps);
 }
 
 // Prints current page to a PDF file and calls callback when sucessfully

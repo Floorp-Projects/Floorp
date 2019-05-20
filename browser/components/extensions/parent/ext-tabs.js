@@ -1100,7 +1100,7 @@ this.tabs = class extends ExtensionAPI {
           } = activeTab.ownerGlobal;
 
           return new Promise((resolve, reject) => {
-            let ppBrowser = PrintUtils._shouldSimplify ?
+            let ppBrowser = PrintUtils.shouldSimplify ?
               PrintPreviewListener.getSimplifiedPrintPreviewBrowser() :
               PrintPreviewListener.getPrintPreviewBrowser();
 

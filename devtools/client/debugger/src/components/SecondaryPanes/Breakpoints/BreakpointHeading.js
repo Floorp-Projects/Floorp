@@ -10,12 +10,12 @@ import {
   getTruncatedFileName,
   getDisplayPath,
   getSourceQueryString,
-  getFileURL
+  getFileURL,
 } from "../../../utils/source";
 import {
   getHasSiblingOfSameName,
   getBreakpointsForSource,
-  getContext
+  getContext,
 } from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
@@ -32,7 +32,7 @@ type Props = {
   disableBreakpointsInSource: typeof actions.disableBreakpointsInSource,
   enableBreakpointsInSource: typeof actions.enableBreakpointsInSource,
   removeBreakpointsInSource: typeof actions.removeBreakpointsInSource,
-  selectSource: typeof actions.selectSource
+  selectSource: typeof actions.selectSource,
 };
 
 class BreakpointHeading extends PureComponent<Props> {
@@ -46,7 +46,7 @@ class BreakpointHeading extends PureComponent<Props> {
       sources,
       source,
       hasSiblingOfSameName,
-      selectSource
+      selectSource,
     } = this.props;
 
     const path = getDisplayPath(source, sources);
@@ -75,7 +75,7 @@ class BreakpointHeading extends PureComponent<Props> {
 const mapStateToProps = (state, { source }) => ({
   cx: getContext(state),
   hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
-  breakpointsForSource: getBreakpointsForSource(state, source.id)
+  breakpointsForSource: getBreakpointsForSource(state, source.id),
 });
 
 export default connect(
@@ -84,6 +84,6 @@ export default connect(
     selectSource: actions.selectSource,
     enableBreakpointsInSource: actions.enableBreakpointsInSource,
     disableBreakpointsInSource: actions.disableBreakpointsInSource,
-    removeBreakpointsInSource: actions.removeBreakpointsInSource
+    removeBreakpointsInSource: actions.removeBreakpointsInSource,
   }
 )(BreakpointHeading);

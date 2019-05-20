@@ -374,11 +374,7 @@ function ParamSubstitution(paramValue, searchTerms, engine) {
 const ENGINE_ALIASES = new Map([
   ["google", ["@google"]],
   ["amazondotcom", ["@amazon"]],
-  ["amazondotcom-de", ["@amazon"]],
-  ["amazon-en-GB", ["@amazon"]],
-  ["amazon-france", ["@amazon"]],
-  ["amazon-jp", ["@amazon"]],
-  ["amazon-it", ["@amazon"]],
+  ["amazon", ["@amazon"]],
   ["twitter", ["@twitter"]],
   ["wikipedia", ["@wikipedia"]],
   ["ebay", ["@ebay"]],
@@ -393,7 +389,7 @@ function getInternalAliases(engine) {
     return [];
   }
   for (let [name, aliases] of ENGINE_ALIASES) {
-    if (engine._shortName.startsWith(name)) {
+    if (engine._shortName == name) {
       return aliases;
     }
   }

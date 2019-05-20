@@ -14,11 +14,11 @@ import "../../../utils/editor";
 const SearchBarComponent = SearchBar.WrappedComponent;
 
 jest.mock("../../../workers/search", () => ({
-  getMatches: () => Promise.resolve(["result"])
+  getMatches: () => Promise.resolve(["result"]),
 }));
 
 jest.mock("../../../utils/editor", () => ({
-  find: () => ({ ch: "1", line: "1" })
+  find: () => ({ ch: "1", line: "1" }),
 }));
 
 function generateDefaults() {
@@ -30,18 +30,22 @@ function generateDefaults() {
     searchResults: {},
     selectedSymbolType: "functions",
     selectedSource: {
-      text: " text text query text"
+      text: " text text query text",
     },
     selectedContentLoaded: true,
     setFileSearchQuery: msg => msg,
     symbolSearchResults: [],
     modifiers: {
       get: jest.fn(),
-      toJS: () => ({ caseSensitive: true, wholeWord: false, regexMatch: false })
+      toJS: () => ({
+        caseSensitive: true,
+        wholeWord: false,
+        regexMatch: false,
+      }),
     },
     selectedResultIndex: 0,
     updateSearchResults: jest.fn(),
-    doSearch: jest.fn()
+    doSearch: jest.fn(),
   };
 }
 
@@ -49,7 +53,7 @@ function render(overrides = {}) {
   const defaults = generateDefaults();
   const props = { ...defaults, ...overrides };
   const component = shallow(<SearchBarComponent {...props} />, {
-    disableLifecycleMethods: true
+    disableLifecycleMethods: true,
   });
   return { component, props };
 }
@@ -78,8 +82,8 @@ describe("showErrorEmoji", () => {
     const { component } = render({
       query: "test",
       searchResults: {
-        count: 0
-      }
+        count: 0,
+      },
     });
     expect(component).toMatchSnapshot();
   });
@@ -88,8 +92,8 @@ describe("showErrorEmoji", () => {
     const { component } = render({
       query: "",
       searchResults: {
-        count: 0
-      }
+        count: 0,
+      },
     });
     expect(component).toMatchSnapshot();
   });
@@ -98,8 +102,8 @@ describe("showErrorEmoji", () => {
     const { component } = render({
       query: "test",
       searchResults: {
-        count: 10
-      }
+        count: 10,
+      },
     });
     expect(component).toMatchSnapshot();
   });

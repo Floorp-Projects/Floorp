@@ -17,7 +17,7 @@ type VarAndBindingsPairs = Array<VarAndBindingsPair>;
 // Scope's bindings field which holds variables and arguments
 type ScopeBindingsWrapper = {
   variables: ScopeBindings,
-  arguments: BindingContents[]
+  arguments: BindingContents[],
 };
 
 // Create the tree nodes representing all the variables and arguments
@@ -42,7 +42,7 @@ export function getBindingVariables(
     return {
       name,
       path: `${parentName}/${name}`,
-      contents
+      contents,
     };
   });
 }

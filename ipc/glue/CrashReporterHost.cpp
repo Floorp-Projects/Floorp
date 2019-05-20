@@ -74,33 +74,36 @@ bool CrashReporterHost::GenerateCrashReport(base::ProcessId aPid) {
 
 RefPtr<nsIFile> CrashReporterHost::TakeCrashedChildMinidump(
     base::ProcessId aPid, uint32_t* aOutSequence) {
+  CrashReporter::AnnotationTable annotations;
   MOZ_ASSERT(!HasMinidump());
 
   RefPtr<nsIFile> crashDump;
-  if (!XRE_TakeMinidumpForChild(aPid, getter_AddRefs(crashDump),
-                                aOutSequence)) {
+  if (!CrashReporter::TakeMinidumpForChild(aPid, getter_AddRefs(crashDump),
+                                           annotations, aOutSequence)) {
     return nullptr;
   }
-  if (!AdoptMinidump(crashDump)) {
+  if (!AdoptMinidump(crashDump, annotations)) {
     return nullptr;
   }
-  return crashDump.get();
+  return crashDump;
 }
 
-bool CrashReporterHost::AdoptMinidump(nsIFile* aFile) {
-  return CrashReporter::GetIDFromMinidump(aFile, mDumpID);
+bool CrashReporterHost::AdoptMinidump(nsIFile* aFile,
+                                      const AnnotationTable& aAnnotations) {
+  if (!CrashReporter::GetIDFromMinidump(aFile, mDumpID)) {
+    return false;
+  }
+
+  MergeCrashAnnotations(mExtraAnnotations, aAnnotations);
+  return true;
 }
 
-int32_t CrashReporterHost::GetCrashType(
-    const CrashReporter::AnnotationTable& aAnnotations) {
-  // RecordReplayHang is set in the middleman content process, so check
-  // aAnnotations.
-  if (aAnnotations[CrashReporter::Annotation::RecordReplayHang].EqualsLiteral(
-          "1")) {
+int32_t CrashReporterHost::GetCrashType() {
+  if (mExtraAnnotations[CrashReporter::Annotation::RecordReplayHang]
+          .EqualsLiteral("1")) {
     return nsICrashService::CRASH_TYPE_HANG;
   }
 
-  // PluginHang is set in the parent process, so check mExtraAnnotations.
   if (mExtraAnnotations[CrashReporter::Annotation::PluginHang].EqualsLiteral(
           "1")) {
     return nsICrashService::CRASH_TYPE_HANG;
@@ -148,10 +151,11 @@ bool CrashReporterHost::FinalizeCrashReport() {
   if (mShmem.IsReadable()) {
     CrashReporterMetadataShmem::ReadAppNotes(mShmem, annotations);
   }
-  CrashReporter::AppendExtraData(mDumpID, mExtraAnnotations);
-  CrashReporter::AppendExtraData(mDumpID, annotations);
 
-  int32_t crashType = GetCrashType(annotations);
+  MergeCrashAnnotations(mExtraAnnotations, annotations);
+  CrashReporter::WriteExtraFile(mDumpID, mExtraAnnotations);
+
+  int32_t crashType = GetCrashType();
   NotifyCrashService(mProcessType, crashType, mDumpID);
 
   mFinalized = true;

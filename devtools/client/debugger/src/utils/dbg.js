@@ -26,7 +26,7 @@ function sendPacket(dbg: any, packet: any) {
 function sendPacketToThread(dbg: Object, packet: any) {
   return sendPacket(dbg, {
     to: dbg.connection.tabConnection.threadClient.actor,
-    ...packet
+    ...packet,
   });
 }
 
@@ -51,7 +51,7 @@ function formatMappedLocation(mappedLocation) {
   const { location, generatedLocation } = mappedLocation;
   return {
     original: `(${location.line}, ${location.column})`,
-    generated: `(${generatedLocation.line}, ${generatedLocation.column})`
+    generated: `(${generatedLocation.line}, ${generatedLocation.column})`,
   };
 }
 
@@ -89,16 +89,16 @@ export function setupHelper(obj: Object) {
       sendPacketToThread: packet => sendPacketToThread(dbg, packet),
       sendPacket: packet => sendPacket(dbg, packet),
       dumpThread: () => sendPacketToThread(dbg, { type: "dumpThread" }),
-      getDocument: url => getDocumentForUrl(dbg, url)
+      getDocument: url => getDocumentForUrl(dbg, url),
     },
     formatters: {
       mappedLocations: locations => formatMappedLocations(locations),
       mappedLocation: location => formatMappedLocation(location),
-      selectedColumnBreakpoints: () => formatSelectedColumnBreakpoints(dbg)
+      selectedColumnBreakpoints: () => formatSelectedColumnBreakpoints(dbg),
     },
     _telemetry: {
-      events: {}
-    }
+      events: {},
+    },
   };
 
   window.dbg = dbg;

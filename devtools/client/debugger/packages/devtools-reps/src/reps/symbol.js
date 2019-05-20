@@ -17,7 +17,7 @@ const MAX_STRING_LENGTH = 50;
  * Renders a symbol.
  */
 SymbolRep.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function SymbolRep(props) {
@@ -30,14 +30,14 @@ function SymbolRep(props) {
       object: symbolText,
       shouldCrop: true,
       cropLimit: MAX_STRING_LENGTH,
-      useQuotes: false
+      useQuotes: false,
     });
   }
 
   return span(
     {
       className,
-      "data-link-actor-id": object.actor
+      "data-link-actor-id": object.actor,
     },
     "Symbol(",
     symbolText,
@@ -52,5 +52,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(SymbolRep),
-  supportsObject
+  supportsObject,
 };

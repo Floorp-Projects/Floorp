@@ -8,6 +8,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PreferenceRollbackAction: "resource://normandy/actions/PreferenceRollbackAction.jsm",
   PreferenceRolloutAction: "resource://normandy/actions/PreferenceRolloutAction.jsm",
   ShowHeartbeatAction: "resource://normandy/actions/ShowHeartbeatAction.jsm",
+  SinglePreferenceExperimentAction: "resource://normandy/actions/SinglePreferenceExperimentAction.jsm",
   Uptake: "resource://normandy/lib/Uptake.jsm",
 });
 
@@ -23,14 +24,18 @@ class ActionsManager {
     this.finalized = false;
 
     const addonStudyAction = new AddonStudyAction();
+    const singlePreferenceExperimentAction = new SinglePreferenceExperimentAction();
 
     this.localActions = {
       "addon-study": addonStudyAction,
       "console-log": new ConsoleLogAction(),
       "opt-out-study": addonStudyAction, // Legacy name used for addon-study on Normandy server
-      "preference-experiment": new PreferenceExperimentAction(),
+      "multi-preference-experiment": new PreferenceExperimentAction(),
+      // Historically, this name meant SinglePreferenceExperimentAction.
+      "preference-experiment": singlePreferenceExperimentAction,
       "preference-rollback": new PreferenceRollbackAction(),
       "preference-rollout": new PreferenceRolloutAction(),
+      "single-preference-experiment": singlePreferenceExperimentAction,
       "show-heartbeat": new ShowHeartbeatAction(),
     };
   }

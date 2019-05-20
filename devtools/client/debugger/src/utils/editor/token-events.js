@@ -67,7 +67,7 @@ export function onMouseOver(codeMirror: any) {
   function addMouseLeave(target) {
     target.addEventListener("mouseleave", onMouseLeave, {
       capture: true,
-      once: true
+      once: true,
     });
   }
 
@@ -86,7 +86,7 @@ export function onMouseOver(codeMirror: any) {
       dispatch(codeMirror, "tokenenter", {
         event: enterEvent,
         target,
-        tokenPos
+        tokenPos,
       });
       prevTokenPos = tokenPos;
     }

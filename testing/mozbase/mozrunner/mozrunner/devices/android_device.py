@@ -332,7 +332,7 @@ def get_adb_path(build_obj):
     return _find_sdk_exe(build_obj.substs, 'adb', False)
 
 
-def run_firefox_for_android(build_obj, params):
+def run_firefox_for_android(build_obj, params, **kwargs):
     """
        Launch Firefox for Android on the connected device.
        Optional 'params' allow parameters to be passed to Firefox.
@@ -348,14 +348,17 @@ def run_firefox_for_android(build_obj, params):
         #   --es args "<params>"
         #
         app = build_obj.substs['ANDROID_PACKAGE_NAME']
-        url = None
+
+        msg = "URL specified as '{}'; dropping URL-like parameter '{}'"
         if params:
             for p in params:
                 if urlparse.urlparse(p).scheme != "":
-                    url = p
                     params.remove(p)
-                    break
-        device.launch_fennec(app, extra_args=params, url=url)
+                    if kwargs.get('url'):
+                        _log_warning(msg.format(kwargs['url'], p))
+                    else:
+                        kwargs['url'] = p
+        device.launch_fennec(app, extra_args=params, **kwargs)
     except Exception:
         _log_warning("unable to launch Firefox for Android")
         return 1

@@ -1417,7 +1417,7 @@ pub struct PrimitiveInstance {
     #[cfg(debug_assertions)]
     pub id: PrimitiveDebugId,
 
-    /// The last frame ID (of the `RenderTaskTree`) this primitive
+    /// The last frame ID (of the `RenderTaskGraph`) this primitive
     /// was prepared for rendering in.
     #[cfg(debug_assertions)]
     pub prepared_frame_id: FrameId,
@@ -1881,8 +1881,7 @@ impl PrimitiveStore {
                         Some(ref rc) => match rc.composite_mode {
                             // If we have a drop shadow filter, we also need to include the shadow in
                             // our local rect for the purpose of calculating the size of the picture.
-                            PictureCompositeMode::Filter(Filter::DropShadow(shadow)) => pic.snapped_local_rect.translate(&shadow.offset),
-                            PictureCompositeMode::Filter(Filter::DropShadowStack(ref shadows)) => {
+                            PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
                                 let mut rect = LayoutRect::zero();
                                 for shadow in shadows {
                                     rect = rect.union(&pic.snapped_local_rect.translate(&shadow.offset));
@@ -2172,10 +2171,7 @@ impl PrimitiveStore {
             // This inflaction factor is to be applied to the surface itself.
             let inflation_size = match raster_config.composite_mode {
                 PictureCompositeMode::Filter(Filter::Blur(_)) => surface.inflation_factor,
-                PictureCompositeMode::Filter(Filter::DropShadow(shadow)) => {
-                    (shadow.blur_radius * BLUR_SAMPLE_SCALE).ceil()
-                }
-                PictureCompositeMode::Filter(Filter::DropShadowStack(ref shadows)) => {
+                PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
                     let mut max = 0.0;
                     for shadow in shadows {
                         max = f32::max(max, shadow.blur_radius * BLUR_SAMPLE_SCALE);
@@ -2191,9 +2187,7 @@ impl PrimitiveStore {
             let pic_local_rect = surface_rect * TypedScale::new(1.0);
             if pic.snapped_local_rect != pic_local_rect {
                 match raster_config.composite_mode {
-                    PictureCompositeMode::Filter(Filter::DropShadow(..)) 
-                    | PictureCompositeMode::Filter(Filter::DropShadowStack(..))
-                    => {
+                    PictureCompositeMode::Filter(Filter::DropShadows(..)) => {
                         for handle in &pic.extra_gpu_data_handles {
                             frame_state.gpu_cache.invalidate(handle);
                         }
@@ -2682,7 +2676,7 @@ impl PrimitiveStore {
                         // It does intersect the overall dirty rect, so it *might* be visible.
                         // Store this reduced rect here, which is used for clip mask and other
                         // render task size calculations. In future, we may consider creating multiple
-                        // render task trees, one per dirty region.
+                        // render task graphs, one per dirty region.
                         visibility_info.clipped_world_rect = rect;
 
                         // If there is more than one dirty region, it's possible that this primitive

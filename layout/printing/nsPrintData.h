@@ -18,10 +18,12 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 
-// Classes
 class nsPrintObject;
-class nsPrintPreviewListener;
 class nsIWebProgressListener;
+
+namespace mozilla {
+class PrintPreviewUserEventSuppressor;
+}  // namespace mozilla
 
 //------------------------------------------------------------------------
 // nsPrintData Class
@@ -38,6 +40,9 @@ class nsIWebProgressListener;
 //
 //------------------------------------------------------------------------
 class nsPrintData {
+  typedef mozilla::PrintPreviewUserEventSuppressor
+      PrintPreviewUserEventSuppressor;
+
  public:
   typedef enum { eIsPrinting, eIsPrintPreview } ePrintDataType;
 
@@ -82,7 +87,7 @@ class nsPrintData {
   float mShrinkRatio;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  nsPrintPreviewListener* mPPEventListeners;
+  RefPtr<PrintPreviewUserEventSuppressor> mPPEventSuppressor;
 
   nsString mBrandName;  //  needed as a substitute name for a document
 

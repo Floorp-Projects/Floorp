@@ -12,7 +12,7 @@ const ObjectClient = require("../__mocks__/object-client");
 function generateDefaults(overrides) {
   return {
     autoExpandDepth: 1,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -21,7 +21,7 @@ function mount(props) {
 
   return mountObjectInspector({
     client,
-    props: generateDefaults(props)
+    props: generateDefaults(props),
   });
 }
 
@@ -32,9 +32,9 @@ describe("ObjectInspector - functions", () => {
       roots: [
         createNode({
           name: "fn",
-          contents: { value: stub }
-        })
-      ]
+          contents: { value: stub },
+        }),
+      ],
     });
 
     const nodes = wrapper.find(".node");
@@ -48,9 +48,9 @@ describe("ObjectInspector - functions", () => {
       roots: [
         createNode({
           name: "fn",
-          contents: { value: stub }
-        })
-      ]
+          contents: { value: stub },
+        }),
+      ],
     });
 
     const nodes = wrapper.find(".node");
@@ -67,10 +67,10 @@ describe("ObjectInspector - functions", () => {
         {
           path: "root",
           name: "x",
-          contents: { value: stub }
-        }
+          contents: { value: stub },
+        },
       ],
-      mode: MODE.LONG
+      mode: MODE.LONG,
     });
 
     const nodes = wrapper.find(".node");

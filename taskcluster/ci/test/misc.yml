@@ -18,9 +18,8 @@ geckoview-junit:
     chunks:
         by-test-platform:
             android-em-4.3-arm7-api-16-ccov/debug: 8
-            android-em-4.3-arm7-api-16/debug: 8
-            android-em-4.3-arm7-api-16/opt: 3
-            android-em-4.3-arm7-api-16/pgo: 3
+            android-em-4.3-arm7-api-16.*\/debug: 8
+            android-em-4.*\/(?:opt|pgo)?: 3
             default: 1
     run-on-projects:
         by-test-platform:
@@ -48,8 +47,7 @@ robocop:
         by-test-platform:
             # android-em-4.3-arm7-api-16/debug -- not run
             android-em-4.3-arm7-api-16-ccov/debug: 8
-            android-em-4.3-arm7-api-16/opt: 4
-            android-em-4.3-arm7-api-16/pgo: 4
+            android-em-4.*\/(?:opt|pgo)?: 4
     loopback-video: true
     e10s: false
     run-on-projects:

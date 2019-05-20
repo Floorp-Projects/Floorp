@@ -3021,13 +3021,6 @@ class nsLayoutUtils {
                                 mozilla::LookAndFeel::FontID aFontID,
                                 const nsFont* aDefaultVariableFont);
 
-  static void ComputeFontFeatures(const nsCSSValuePairList* aFeaturesList,
-                                  nsTArray<gfxFontFeature>& aFeatureSettings);
-
-  static void ComputeFontVariations(
-      const nsCSSValuePairList* aVariationsList,
-      nsTArray<gfxFontVariation>& aVariationSettings);
-
   static uint32_t ParseFontLanguageOverride(const nsAString& aLangTag);
 
   /**

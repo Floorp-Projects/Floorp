@@ -442,20 +442,17 @@ AsyncCubebTask::Run() {
       mDriver->CompleteAudioContextOperations(mOperation);
       break;
     }
-    case AsyncCubebOperation::START: {
-      LOG(LogLevel::Debug, ("%p: AsyncCubebOperation::START driver=%p",
+    case AsyncCubebOperation::REVIVE: {
+      LOG(LogLevel::Debug, ("%p: AsyncCubebOperation::REVIVE driver=%p",
                             mDriver->GraphImpl(), mDriver.get()));
+      if (mDriver->IsStarted()) {
+        mDriver->Stop();
+      }
       if (!mDriver->StartStream()) {
         LOG(LogLevel::Warning,
             ("%p: AsyncCubebOperation couldn't start the driver=%p.",
              mDriver->GraphImpl(), mDriver.get()));
       }
-      break;
-    }
-    case AsyncCubebOperation::STOP: {
-      LOG(LogLevel::Debug, ("%p: AsyncCubebOperation::STOP driver=%p",
-                            mDriver->GraphImpl(), mDriver.get()));
-      mDriver->Stop();
       break;
     }
     case AsyncCubebOperation::SHUTDOWN: {
@@ -745,19 +742,9 @@ void AudioCallbackDriver::Revive() {
   if (NextDriver()) {
     SwitchToNextDriver();
   } else {
-    LOG(LogLevel::Debug,
-        ("Starting audio threads for MediaStreamGraph %p from a new thread.",
-         mGraphImpl.get()));
-    if (IsStarted()) {
-      RefPtr<AsyncCubebTask> stopEvent =
-          new AsyncCubebTask(this, AsyncCubebOperation::STOP);
-      // This dispatches to a thread pool with a maximum of one thread thus it
-      // is guaranteed to be executed before the start event, right below.
-      stopEvent->Dispatch();
-    }
-    RefPtr<AsyncCubebTask> startEvent =
-        new AsyncCubebTask(this, AsyncCubebOperation::START);
-    startEvent->Dispatch();
+    RefPtr<AsyncCubebTask> reviveEvent =
+        new AsyncCubebTask(this, AsyncCubebOperation::REVIVE);
+    reviveEvent->Dispatch();
   }
 }
 
@@ -985,9 +972,20 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   return aFrames;
 }
 
+static const char* StateToString(cubeb_state aState) {
+  switch (aState) {
+    case CUBEB_STATE_STARTED: return "STARTED";
+    case CUBEB_STATE_STOPPED: return "STOPPED";
+    case CUBEB_STATE_DRAINED: return "DRAINED";
+    case CUBEB_STATE_ERROR: return "ERROR";
+    default:
+      MOZ_CRASH("Unexpected state!");
+  }
+}
+
 void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   MOZ_ASSERT(!OnGraphThread());
-  LOG(LogLevel::Debug, ("AudioCallbackDriver State: %d", aState));
+  LOG(LogLevel::Debug, ("AudioCallbackDriver State: %s", StateToString(aState)));
 
   // Clear the flag for the not running
   // states: stopped, drained, error.

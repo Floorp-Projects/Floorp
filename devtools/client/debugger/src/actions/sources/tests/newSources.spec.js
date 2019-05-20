@@ -10,13 +10,13 @@ import {
   createStore,
   makeSource,
   makeSourceURL,
-  waitForState
+  waitForState,
 } from "../../../utils/test-head";
 const {
   getSource,
   getSourceCount,
   getSelectedSource,
-  getSourceByURL
+  getSourceByURL,
 } = selectors;
 import sourceQueue from "../../../utils/source-queue";
 
@@ -65,7 +65,7 @@ describe("sources - new sources", () => {
       {},
       {
         getOriginalURLs: async () => ["magic.js"],
-        getOriginalLocations: async items => items
+        getOriginalLocations: async items => items,
       }
     );
 
@@ -86,7 +86,7 @@ describe("sources - new sources", () => {
       {},
       {
         getOriginalURLs,
-        getOriginalLocations: async items => items
+        getOriginalLocations: async items => items,
       }
     );
 
@@ -101,7 +101,7 @@ describe("sources - new sources", () => {
       {},
       {
         getOriginalURLs: async () => new Promise(_ => {}),
-        getOriginalLocations: async items => items
+        getOriginalLocations: async items => items,
       }
     );
     await dispatch(
@@ -129,7 +129,7 @@ describe("sources - new sources", () => {
           return [source.id.replace(".js", ".cljs")];
         },
         getOriginalLocations: async items => items,
-        getGeneratedLocation: location => location
+        getGeneratedLocation: location => location,
       }
     );
     const { dispatch, getState } = dbg;
@@ -137,7 +137,7 @@ describe("sources - new sources", () => {
       actions.newGeneratedSources([
         makeSource("foo.js", { sourceMapURL: "foo.js.map" }),
         makeSource("bar.js", { sourceMapURL: "bar.js.map" }),
-        makeSource("bazz.js", { sourceMapURL: "bazz.js.map" })
+        makeSource("bazz.js", { sourceMapURL: "bazz.js.map" }),
       ])
     );
     await sourceQueue.flush();

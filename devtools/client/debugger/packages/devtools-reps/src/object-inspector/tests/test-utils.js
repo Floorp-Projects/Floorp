@@ -14,7 +14,7 @@ const { combineReducers } = require("redux");
 
 const { thunk } = require("../../shared/redux/middleware/thunk");
 const {
-  waitUntilService
+  waitUntilService,
 } = require("../../shared/redux/middleware/waitUntilService");
 
 /**
@@ -29,13 +29,13 @@ const {
   getLoadedProperties,
   getLoadedPropertyKeys,
   getExpandedPaths,
-  getExpandedPathKeys
+  getExpandedPathKeys,
 } = require("../reducer");
 
 const ObjectInspector = createFactory(objectInspector.ObjectInspector);
 
 const {
-  WAIT_UNTIL_TYPE
+  WAIT_UNTIL_TYPE,
 } = require("../../shared/redux/middleware/waitUntilService");
 
 /*
@@ -115,7 +115,7 @@ function waitForDispatch(
       predicate: action => action.type === type,
       run: (dispatch, getState, action) => {
         resolve(action);
-      }
+      },
     });
   });
 }
@@ -209,7 +209,7 @@ function storeHasExactExpandedPaths(store: Store, expectedKeys: Array<string>) {
 function createOiStore(client: any, initialState: any = {}) {
   const reducers = { objectInspector: objectInspector.reducer.default };
   return configureStore({
-    thunkArgs: args => ({ ...args, client })
+    thunkArgs: args => ({ ...args, client }),
   })(combineReducers(reducers), initialState);
 }
 
@@ -224,7 +224,7 @@ function mountObjectInspector({ props, client, initialState = {} }) {
       expandedPaths: new Set(),
       loadedProperties: new Map(),
       actors: new Set(),
-      ...initialState.objectInspector
+      ...initialState.objectInspector,
     };
   }
   const store = createOiStore(client, initialState);
@@ -249,5 +249,5 @@ module.exports = {
   waitForDispatch,
   waitForLoadedProperties,
   mountObjectInspector,
-  createStore: createOiStore
+  createStore: createOiStore,
 };

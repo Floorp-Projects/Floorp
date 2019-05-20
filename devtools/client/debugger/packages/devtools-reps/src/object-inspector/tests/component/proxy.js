@@ -17,20 +17,20 @@ function generateDefaults(overrides) {
     roots: [
       {
         path: "root",
-        contents: { value: stub }
-      }
+        contents: { value: stub },
+      },
     ],
     autoExpandDepth: 1,
     mode: MODE.LONG,
-    ...overrides
+    ...overrides,
   };
 }
 
 function getEnumPropertiesMock() {
   return jest.fn(() => ({
     iterator: {
-      slice: () => ({})
-    }
+      slice: () => ({}),
+    },
   }));
 }
 
@@ -44,13 +44,13 @@ function mount(props, { initialState } = {}) {
 
   const client = {
     createObjectClient: grip =>
-      ObjectClient(grip, { enumProperties, getProxySlots })
+      ObjectClient(grip, { enumProperties, getProxySlots }),
   };
 
   const obj = mountObjectInspector({
     client,
     props: generateDefaults(props),
-    initialState
+    initialState,
   });
 
   return { ...obj, enumProperties, getProxySlots };
@@ -66,9 +66,9 @@ describe("ObjectInspector - Proxy", () => {
             // Have the prototype already loaded so the component does not call
             // enumProperties for the root's properties.
             loadedProperties: new Map([["root", proxySlots]]),
-            evaluations: new Map()
-          }
-        }
+            evaluations: new Map(),
+          },
+        },
       }
     );
 
@@ -90,9 +90,9 @@ describe("ObjectInspector - Proxy", () => {
             // Have the prototype already loaded so the component does not call
             // enumProperties for the root's properties.
             loadedProperties: new Map([["root", proxySlots]]),
-            evaluations: new Map()
-          }
-        }
+            evaluations: new Map(),
+          },
+        },
       }
     );
 
@@ -106,10 +106,10 @@ describe("ObjectInspector - Proxy", () => {
     // to get both non-indexed and indexed properties.
     expect(enumProperties.mock.calls).toHaveLength(2);
     expect(enumProperties.mock.calls[0][0]).toEqual({
-      ignoreNonIndexedProperties: true
+      ignoreNonIndexedProperties: true,
     });
     expect(enumProperties.mock.calls[1][0]).toEqual({
-      ignoreIndexedProperties: true
+      ignoreIndexedProperties: true,
     });
 
     handlerNode.simulate("click");
@@ -117,10 +117,10 @@ describe("ObjectInspector - Proxy", () => {
     // to get  both non-indexed and indexed properties.
     expect(enumProperties.mock.calls).toHaveLength(4);
     expect(enumProperties.mock.calls[2][0]).toEqual({
-      ignoreNonIndexedProperties: true
+      ignoreNonIndexedProperties: true,
     });
     expect(enumProperties.mock.calls[3][0]).toEqual({
-      ignoreIndexedProperties: true
+      ignoreIndexedProperties: true,
     });
   });
 });

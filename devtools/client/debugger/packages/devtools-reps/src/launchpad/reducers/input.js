@@ -8,7 +8,7 @@ const Immutable = require("immutable");
 const initialState = Immutable.Map({
   currentValue: "",
   currentNavigationKey: null,
-  history: Immutable.OrderedMap()
+  history: Immutable.OrderedMap(),
 });
 
 function update(state = initialState, action) {

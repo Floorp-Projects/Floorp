@@ -45,7 +45,7 @@ add_task(async function() {
 
 async function test_query(opts, expectedRootCc, expectedFolderCc, expectedQueryCc) {
   let query = PlacesUtils.history.getNewQuery();
-  query.setParents([PlacesUtils.bookmarks.unfiledGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.unfiledGuid]);
   let options = PlacesUtils.history.getNewQueryOptions();
   for (const [o, v] of Object.entries(opts)) {
     info(`Setting ${o} to ${v}`);

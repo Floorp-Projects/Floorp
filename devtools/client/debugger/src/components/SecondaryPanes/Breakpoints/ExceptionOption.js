@@ -10,14 +10,14 @@ type ExceptionOptionProps = {
   className: string,
   isChecked: boolean,
   label: string,
-  onChange: Function
+  onChange: Function,
 };
 
 export default function ExceptionOption({
   className,
   isChecked = false,
   label,
-  onChange
+  onChange,
 }: ExceptionOptionProps) {
   return (
     <div className={className} onClick={onChange}>

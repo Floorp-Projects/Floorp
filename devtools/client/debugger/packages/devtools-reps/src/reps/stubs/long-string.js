@@ -14,7 +14,7 @@ stubs.set("testMultiline", {
   type: "longString",
   initial: initialText,
   length: fullTextLength,
-  actor: "server1.conn1.child1/longString58"
+  actor: "server1.conn1.child1/longString58",
 });
 
 stubs.set("testUnloadedFullText", {
@@ -23,7 +23,7 @@ stubs.set("testUnloadedFullText", {
     .fill("a")
     .join(""),
   length: 20000,
-  actor: "server1.conn1.child1/longString58"
+  actor: "server1.conn1.child1/longString58",
 });
 
 stubs.set("testLoadedFullText", {
@@ -31,7 +31,7 @@ stubs.set("testLoadedFullText", {
   fullText: multilineFullText,
   initial: initialText,
   length: fullTextLength,
-  actor: "server1.conn1.child1/longString58"
+  actor: "server1.conn1.child1/longString58",
 });
 
 module.exports = stubs;

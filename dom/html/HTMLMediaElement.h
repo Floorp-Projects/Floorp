@@ -729,6 +729,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // that we can start AudioContext if it was not allowed to start.
   RefPtr<GenericNonExclusivePromise> GetAllowedToPlayPromise();
 
+  bool GetShowPosterFlag() const { return mShowPoster; }
+
  protected:
   virtual ~HTMLMediaElement();
 

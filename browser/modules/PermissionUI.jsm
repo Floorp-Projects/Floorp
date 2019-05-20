@@ -364,9 +364,9 @@ var PermissionPromptPrototype = {
       // If we're reading and setting permissions, then we need
       // to check to see if we already have a permission setting
       // for this particular principal.
-      let {state} = SitePermissions.getForPrincipal(this.principal,
-                                                    this.permissionKey,
-                                                    this.browser);
+      let {state} = SitePermissions.get(requestingURI,
+                                        this.permissionKey,
+                                        this.browser);
 
       if (state == SitePermissions.BLOCK) {
         // If this block was done based on a global user setting, we want to show
@@ -439,19 +439,19 @@ var PermissionPromptPrototype = {
               if (PrivateBrowsingUtils.isBrowserPrivate(this.browser)) {
                 scope = SitePermissions.SCOPE_SESSION;
               }
-              SitePermissions.setForPrincipal(this.principal,
-                                              this.permissionKey,
-                                              promptAction.action,
-                                              scope);
+              SitePermissions.set(this.principal.URI,
+                                  this.permissionKey,
+                                  promptAction.action,
+                                  scope);
             } else if (promptAction.action == SitePermissions.BLOCK) {
               // Temporarily store BLOCK permissions only
               // SitePermissions does not consider subframes when storing temporary
               // permissions on a tab, thus storing ALLOW could be exploited.
-              SitePermissions.setForPrincipal(this.principal,
-                                              this.permissionKey,
-                                              promptAction.action,
-                                              SitePermissions.SCOPE_TEMPORARY,
-                                              this.browser);
+              SitePermissions.set(this.principal.URI,
+                                  this.permissionKey,
+                                  promptAction.action,
+                                  SitePermissions.SCOPE_TEMPORARY,
+                                  this.browser);
             }
 
             // Grant permission if action is ALLOW.

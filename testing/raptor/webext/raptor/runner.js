@@ -68,15 +68,18 @@ var geckoThreads = [];
 var debugMode = 0;
 var screenCapture = false;
 
-var results = {"name": "",
-               "page": "",
-               "type": "",
-               "browser_cycle": 0,
-               "expected_browser_cycles": 0,
-               "cold": false,
-               "lower_is_better": true,
-               "alert_threshold": 2.0,
-               "measurements": {}};
+var results = {
+  "name": "",
+  "page": "",
+  "type": "",
+  "browser_cycle": 0,
+  "expected_browser_cycles": 0,
+  "cold": false,
+  "lower_is_better": true,
+  "alert_change_type": "relative",
+  "alert_threshold": 2.0,
+  "measurements": {},
+};
 
 function getTestSettings() {
   console.log("getting test settings from control server");
@@ -108,17 +111,18 @@ function getTestSettings() {
 
         console.log(`testURL: ${testURL}`);
 
+        results.alert_change_type = settings.alert_change_type;
+        results.alert_threshold = settings.alert_threshold;
+        results.browser_cycle = browserCycle;
+        results.cold = settings.cold;
+        results.expected_browser_cycles = settings.expected_browser_cycles;
+        results.lower_is_better = settings.lower_is_better === true;
+        results.name = testName;
         results.page = testURL;
         results.type = testType;
-        results.name = testName;
-        results.browser_cycle = browserCycle;
-        results.expected_browser_cycles = settings.expected_browser_cycles;
-        results.cold = settings.cold;
         results.unit = settings.unit;
         results.subtest_unit = settings.subtest_unit;
-        results.lower_is_better = settings.lower_is_better === true;
         results.subtest_lower_is_better = settings.subtest_lower_is_better === true;
-        results.alert_threshold = settings.alert_threshold;
 
         if (settings.gecko_profile === true) {
           results.extra_options = ["gecko_profile"];

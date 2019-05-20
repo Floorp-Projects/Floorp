@@ -64,7 +64,7 @@ scripts:
 # lint: Run eslint and sass-lint
   lint:
     eslint: esw --ext=.js,.jsm,.json,.jsx .
-    jsx-a11y: esw --config=.eslintrc.jsx-a11y.js --ext=.jsx content-src/asrouter/components/ModalOverlay content-src/asrouter/templates/OnboardingMessage content-src/asrouter/templates/Trailhead
+    jsx-a11y: esw --config=.eslintrc.jsx-a11y.js --ext=.jsx content-src/asrouter content-src/components/ASRouterAdmin content-src/components/TopSites
     sasslint: sass-lint -v -q
 
 # strings-import: Replace local strings with those from l10n-central
@@ -75,10 +75,6 @@ scripts:
 
 # tdd: Run content tests continuously
   tdd: =>tddmc
-
-  # This is just to make sure we don't make commits with failing tests
-  # or uncompiled yamscripts.yml. Run automatically with husky.
-  prepush: =>lint && =>yamscripts
 
   # Utility scripts for use when vendoring in Node packages
   vendor:

@@ -44,7 +44,7 @@ export class ParserDispatcher extends WorkerDispatcher {
       id: sourceId,
       text: content.type === "wasm" ? "" : content.value,
       contentType: content.contentType || null,
-      isWasm: content.type === "wasm"
+      isWasm: content.type === "wasm",
     };
 
     return this.invoke("setSource", astSource);
@@ -57,7 +57,7 @@ export class ParserDispatcher extends WorkerDispatcher {
   async mapExpression(
     expression: string,
     mappings: {
-      [string]: string | null
+      [string]: string | null,
     } | null,
     bindings: string[],
     shouldMapBindings?: boolean,
@@ -85,7 +85,7 @@ export type {
   BindingLocationType,
   BindingDeclarationLocation,
   BindingMetaValue,
-  BindingType
+  BindingType,
 } from "./getScopes";
 
 export type { AstLocation, AstPosition } from "./types";
@@ -95,5 +95,5 @@ export type {
   SymbolDeclaration,
   SymbolDeclarations,
   IdentifierDeclaration,
-  FunctionDeclaration
+  FunctionDeclaration,
 } from "./getSymbols";

@@ -7,7 +7,7 @@
 import {
   getSources,
   getSelectedSource,
-  getSourceInSources
+  getSourceInSources,
 } from "../reducers/sources";
 import { getCurrentThreadFrames } from "../reducers/pause";
 import { annotateFrames } from "../utils/pause/frames";
@@ -41,7 +41,7 @@ function appendSource(
   return {
     ...frame,
     location: getLocation(frame, isGeneratedSource),
-    source: getSourceForFrame(sources, frame, isGeneratedSource)
+    source: getSourceForFrame(sources, frame, isGeneratedSource),
   };
 }
 

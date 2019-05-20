@@ -21,7 +21,7 @@ const FOCUSABLE_SELECTOR = [
   "input:not([disabled]):not([tabindex='-1'])",
   "select:not([disabled]):not([tabindex='-1'])",
   "textarea:not([disabled]):not([tabindex='-1'])",
-  "[tabindex]:not([tabindex='-1'])"
+  "[tabindex]:not([tabindex='-1'])",
 ].join(", ");
 
 /**
@@ -31,7 +31,7 @@ const FOCUSABLE_SELECTOR = [
 class ArrowExpander extends Component {
   static get propTypes() {
     return {
-      expanded: PropTypes.bool
+      expanded: PropTypes.bool,
     };
   }
 
@@ -47,7 +47,7 @@ class ArrowExpander extends Component {
       classNames.push("expanded");
     }
     return dom.button({
-      className: classNames.join(" ")
+      className: classNames.join(" "),
     });
   }
 }
@@ -71,7 +71,7 @@ class TreeNode extends Component {
       isExpandable: PropTypes.bool.isRequired,
       onClick: PropTypes.func,
       shouldItemUpdate: PropTypes.func,
-      renderItem: PropTypes.func.isRequired
+      renderItem: PropTypes.func.isRequired,
     };
   }
 
@@ -176,13 +176,13 @@ class TreeNode extends Component {
       active,
       expanded,
       renderItem,
-      isExpandable
+      isExpandable,
     } = this.props;
 
     const arrow = isExpandable
       ? ArrowExpanderFactory({
           item,
-          expanded
+          expanded,
         })
       : null;
 
@@ -194,12 +194,12 @@ class TreeNode extends Component {
       ariaExpanded = true;
     }
 
-    const indents = Array.from({length: depth}, (_, i) => {
+    const indents = Array.from({ length: depth }, (_, i) => {
       if (i == depth - 1) {
         return treeLastIndent;
       }
       return treeIndent;
-    })
+    });
 
     const items = indents.concat(
       renderItem(item, depth, focused, arrow, expanded)
@@ -217,7 +217,7 @@ class TreeNode extends Component {
         ref: this.treeNodeRef,
         "aria-level": depth + 1,
         "aria-expanded": ariaExpanded,
-        "data-expandable": this.props.isExpandable
+        "data-expandable": this.props.isExpandable,
       },
       ...items
     );
@@ -473,14 +473,14 @@ class Tree extends Component {
       // style object to be applied to the root element.
       style: PropTypes.object,
       // Prevents blur when Tree loses focus
-      preventBlur: PropTypes.bool
+      preventBlur: PropTypes.bool,
     };
   }
 
   static get defaultProps() {
     return {
       autoExpandDepth: AUTO_EXPAND_DEPTH,
-      autoExpandAll: true
+      autoExpandAll: true,
     };
   }
 
@@ -488,7 +488,7 @@ class Tree extends Component {
     super(props);
 
     this.state = {
-      seen: new Set()
+      seen: new Set(),
     };
 
     this.treeRef = React.createRef();
@@ -977,7 +977,7 @@ class Tree extends Component {
 
           // Focus should always remain on the tree container itself.
           this.treeRef.current.focus();
-        }
+        },
       });
     });
 
@@ -1012,7 +1012,7 @@ class Tree extends Component {
         "aria-label": this.props.label,
         "aria-labelledby": this.props.labelledby,
         "aria-activedescendant": focused && this.props.getKey(focused),
-        style
+        style,
       },
       nodes
     );

@@ -9,7 +9,9 @@ export class CardGrid extends React.PureComponent {
 
     for (let index = 0; index < this.props.items; index++) {
       const rec = recs[index];
-      cards.push(rec ? (
+      cards.push(!rec || rec.placeholder ? (
+        <PlaceholderDSCard key={`dscard-${index}`} />
+      ) : (
         <DSCard
           key={`dscard-${index}`}
           pos={rec.pos}
@@ -26,8 +28,6 @@ export class CardGrid extends React.PureComponent {
           source={rec.domain}
           pocket_id={rec.pocket_id}
           bookmarkGuid={rec.bookmarkGuid} />
-      ) : (
-        <PlaceholderDSCard key={`dscard-${index}`} />
       ));
     }
 

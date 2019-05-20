@@ -19,8 +19,8 @@ describe("shouldRenderRootsInReps", () => {
     expect(
       shouldRenderRootsInReps([
         {
-          contents: { value: "Hello" }
-        }
+          contents: { value: "Hello" },
+        },
       ])
     ).toBeTruthy();
   });
@@ -29,8 +29,8 @@ describe("shouldRenderRootsInReps", () => {
     expect(
       shouldRenderRootsInReps([
         {
-          contents: { value: numberStubs.get("Int") }
-        }
+          contents: { value: numberStubs.get("Int") },
+        },
       ])
     ).toBeTruthy();
   });
@@ -39,8 +39,8 @@ describe("shouldRenderRootsInReps", () => {
     expect(
       shouldRenderRootsInReps([
         {
-          contents: { value: bigIntStubs.get("1n") }
-        }
+          contents: { value: bigIntStubs.get("1n") },
+        },
       ])
     ).toBeTruthy();
   });
@@ -49,8 +49,8 @@ describe("shouldRenderRootsInReps", () => {
     expect(
       shouldRenderRootsInReps([
         {
-          contents: { value: undefinedStubs.get("Undefined") }
-        }
+          contents: { value: undefinedStubs.get("Undefined") },
+        },
       ])
     ).toBeTruthy();
   });
@@ -59,8 +59,8 @@ describe("shouldRenderRootsInReps", () => {
     expect(
       shouldRenderRootsInReps([
         {
-          contents: { value: nullStubs.get("Null") }
-        }
+          contents: { value: nullStubs.get("Null") },
+        },
       ])
     ).toBeTruthy();
   });
@@ -69,8 +69,8 @@ describe("shouldRenderRootsInReps", () => {
     expect(
       shouldRenderRootsInReps([
         {
-          contents: { value: symbolStubs.get("Symbol") }
-        }
+          contents: { value: symbolStubs.get("Symbol") },
+        },
       ])
     ).toBeTruthy();
   });
@@ -79,8 +79,8 @@ describe("shouldRenderRootsInReps", () => {
     expect(
       shouldRenderRootsInReps([
         {
-          contents: { value: errorStubs.get("MultilineStackError") }
-        }
+          contents: { value: errorStubs.get("MultilineStackError") },
+        },
       ])
     ).toBeTruthy();
   });
@@ -89,11 +89,11 @@ describe("shouldRenderRootsInReps", () => {
     expect(
       shouldRenderRootsInReps([
         {
-          contents: { value: "Hello" }
+          contents: { value: "Hello" },
         },
         {
-          contents: { value: 42 }
-        }
+          contents: { value: 42 },
+        },
       ])
     ).toBeFalsy();
   });
@@ -103,8 +103,8 @@ describe("shouldRenderRootsInReps", () => {
       shouldRenderRootsInReps([
         {
           name: "label",
-          contents: { value: 42 }
-        }
+          contents: { value: 42 },
+        },
       ])
     ).toBeFalsy();
   });
@@ -114,8 +114,8 @@ describe("shouldRenderRootsInReps", () => {
       shouldRenderRootsInReps([
         {
           name: "label",
-          contents: { value: gripStubs.get("testMaxProps") }
-        }
+          contents: { value: gripStubs.get("testMaxProps") },
+        },
       ])
     ).toBeFalsy();
   });
@@ -125,8 +125,8 @@ describe("shouldRenderRootsInReps", () => {
       shouldRenderRootsInReps([
         {
           name: "label",
-          contents: { value: gripArrayStubs.get("testMaxProps") }
-        }
+          contents: { value: gripArrayStubs.get("testMaxProps") },
+        },
       ])
     ).toBeFalsy();
   });

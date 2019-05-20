@@ -30,8 +30,9 @@ browser.jar:
         content/browser/browser.js                    (content/browser.js)
 #ifdef MOZ_BROWSER_XHTML
 *       content/browser/browser.xhtml                 (content/browser.xhtml)
-#endif
+#else
 *       content/browser/browser.xul                   (content/browser.xul)
+#endif
         content/browser/browser-addons.js             (content/browser-addons.js)
         content/browser/browser-allTabsMenu.js        (content/browser-allTabsMenu.js)
         content/browser/browser-captivePortal.js      (content/browser-captivePortal.js)

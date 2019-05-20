@@ -31,7 +31,7 @@ add_task(async function test_get_child_index() {
 
   let hs = PlacesUtils.history;
   let query = hs.getNewQuery();
-  query.setParents([PlacesUtils.bookmarks.menuGuid], 1);
+  query.setParents([PlacesUtils.bookmarks.menuGuid]);
   let options = hs.getNewQueryOptions();
   options.queryType = options.QUERY_TYPE_BOOKMARKS;
   let root = hs.executeQuery(query, options).root;
@@ -58,7 +58,7 @@ add_task(async function test_get_child_index() {
 function getNodeAt(aFolderGuid, aIndex) {
   let hs = PlacesUtils.history;
   let query = hs.getNewQuery();
-  query.setParents([aFolderGuid], 1);
+  query.setParents([aFolderGuid]);
   let options = hs.getNewQueryOptions();
   options.queryType = options.QUERY_TYPE_BOOKMARKS;
   let root = hs.executeQuery(query, options).root;

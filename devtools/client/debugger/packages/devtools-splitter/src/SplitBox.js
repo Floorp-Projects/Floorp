@@ -47,7 +47,7 @@ class SplitBox extends Component {
       // Optional style properties passed into the splitbox
       style: PropTypes.object,
       // Optional callback when splitbox resize stops
-      onResizeEnd: PropTypes.func
+      onResizeEnd: PropTypes.func,
     };
   }
 
@@ -57,7 +57,7 @@ class SplitBox extends Component {
       vert: true,
       endPanelControl: false,
       endPanelCollapsed: false,
-      startPanelCollapsed: false
+      startPanelCollapsed: false,
     };
   }
 
@@ -68,7 +68,7 @@ class SplitBox extends Component {
       vert: props.vert,
       // We use integers for these properties
       width: parseInt(props.initialWidth || props.initialSize, 10),
-      height: parseInt(props.initialHeight || props.initialSize, 10)
+      height: parseInt(props.initialHeight || props.initialSize, 10),
     };
 
     this.onStartMove = this.onStartMove.bind(this);
@@ -88,7 +88,7 @@ class SplitBox extends Component {
     ) {
       this.setState({
         width: parseInt(nextProps.initialWidth || nextProps.initialSize, 10),
-        height: parseInt(nextProps.initialHeight || nextProps.initialSize, 10)
+        height: parseInt(nextProps.initialHeight || nextProps.initialSize, 10),
       });
     }
   }
@@ -112,7 +112,7 @@ class SplitBox extends Component {
     document.dispatchEvent(new CustomEvent("drag:start"));
 
     this.setState({
-      defaultCursor: defaultCursor
+      defaultCursor: defaultCursor,
     });
   }
 
@@ -156,11 +156,11 @@ class SplitBox extends Component {
       }
 
       this.setState((state, props) => ({
-        width: state.width + movementX
+        width: state.width + movementX,
       }));
     } else {
       this.setState((state, props) => ({
-        height: state.height + movementY
+        height: state.height + movementY,
       }));
     }
   }
@@ -173,7 +173,7 @@ class SplitBox extends Component {
       maxSize,
       startPanelCollapsed,
       endPanelControl,
-      endPanelCollapsed
+      endPanelCollapsed,
     } = this.props;
     let leftPanelStyle, rightPanelStyle;
 
@@ -185,12 +185,12 @@ class SplitBox extends Component {
       leftPanelStyle = {
         maxWidth: endPanelControl ? null : maxSize,
         minWidth: endPanelControl ? null : minSize,
-        width: startPanelCollapsed ? 0 : startWidth
+        width: startPanelCollapsed ? 0 : startWidth,
       };
       rightPanelStyle = {
         maxWidth: endPanelControl ? maxSize : null,
         minWidth: endPanelControl ? minSize : null,
-        width: endPanelCollapsed ? 0 : endWidth
+        width: endPanelCollapsed ? 0 : endWidth,
       };
     } else {
       const startHeight = endPanelControl ? null : this.state.height,
@@ -199,12 +199,12 @@ class SplitBox extends Component {
       leftPanelStyle = {
         maxHeight: endPanelControl ? null : maxSize,
         minHeight: endPanelControl ? null : minSize,
-        height: endPanelCollapsed ? maxSize : startHeight
+        height: endPanelCollapsed ? maxSize : startHeight,
       };
       rightPanelStyle = {
         maxHeight: endPanelControl ? maxSize : null,
         minHeight: endPanelControl ? minSize : null,
-        height: startPanelCollapsed ? maxSize : endHeight
+        height: startPanelCollapsed ? maxSize : endHeight,
       };
     }
 
@@ -219,7 +219,7 @@ class SplitBox extends Component {
       endPanel,
       endPanelControl,
       splitterSize,
-      endPanelCollapsed
+      endPanelCollapsed,
     } = this.props;
 
     const style = Object.assign({}, this.props.style);
@@ -235,19 +235,19 @@ class SplitBox extends Component {
 
     // Calculate splitter size
     const splitterStyle = {
-      flex: `0 0 ${splitterSize}px`
+      flex: `0 0 ${splitterSize}px`,
     };
 
     return dom.div(
       {
         className: classNames.join(" "),
-        style: style
+        style: style,
       },
       !startPanelCollapsed
         ? dom.div(
             {
               className: endPanelControl ? "uncontrolled" : "controlled",
-              style: leftPanelStyle
+              style: leftPanelStyle,
             },
             startPanel
           )
@@ -257,13 +257,13 @@ class SplitBox extends Component {
         style: splitterStyle,
         onStart: this.onStartMove,
         onStop: this.onStopMove,
-        onMove: this.onMove
+        onMove: this.onMove,
       }),
       !endPanelCollapsed
         ? dom.div(
             {
               className: endPanelControl ? "controlled" : "uncontrolled",
-              style: rightPanelStyle
+              style: rightPanelStyle,
             },
             endPanel
           )

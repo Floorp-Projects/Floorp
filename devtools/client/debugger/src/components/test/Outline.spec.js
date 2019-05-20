@@ -28,10 +28,10 @@ function generateDefaults(overrides) {
     isHidden: false,
     symbols: {},
     selectedLocation: {
-      sourceId: sourceId
+      sourceId: sourceId,
     },
     onAlphabetizeClick: jest.fn(),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -53,8 +53,8 @@ describe("Outline", () => {
     const symbols = {
       functions: [
         makeSymbolDeclaration("my_example_function1", 21),
-        makeSymbolDeclaration("my_example_function2", 22)
-      ]
+        makeSymbolDeclaration("my_example_function2", 22),
+      ],
     };
 
     const { component } = render({ symbols });
@@ -64,7 +64,7 @@ describe("Outline", () => {
   it("selects a line of code in the current file on click", async () => {
     const startLine = 12;
     const symbols = {
-      functions: [makeSymbolDeclaration("my_example_function", startLine)]
+      functions: [makeSymbolDeclaration("my_example_function", startLine)],
     };
 
     const { component, props } = render({ symbols });
@@ -74,7 +74,7 @@ describe("Outline", () => {
     listItem.simulate("click");
     expect(selectLocation).toHaveBeenCalledWith(mockcx, {
       line: startLine,
-      sourceId
+      sourceId,
     });
   });
 
@@ -82,7 +82,7 @@ describe("Outline", () => {
     describe("renders loading", () => {
       it("if symbols is not defined", () => {
         const { component } = render({
-          symbols: (null: any)
+          symbols: (null: any),
         });
         expect(component).toMatchSnapshot();
       });
@@ -90,8 +90,8 @@ describe("Outline", () => {
       it("if symbols are loading", () => {
         const { component } = render({
           symbols: {
-            loading: true
-          }
+            loading: true,
+          },
         });
         expect(component).toMatchSnapshot();
       });
@@ -101,8 +101,8 @@ describe("Outline", () => {
       const symbols = {
         functions: [
           makeSymbolDeclaration("my_example_function1", 21),
-          makeSymbolDeclaration("anonymous", 25)
-        ]
+          makeSymbolDeclaration("anonymous", 25),
+        ],
       };
 
       const { component } = render({ symbols });
@@ -111,7 +111,7 @@ describe("Outline", () => {
     describe("renders placeholder", () => {
       it("`No File Selected` if selectedSource is not defined", async () => {
         const { component } = render({
-          selectedSource: (null: any)
+          selectedSource: (null: any),
         });
         expect(component).toMatchSnapshot();
       });
@@ -120,8 +120,8 @@ describe("Outline", () => {
         const symbols = {
           functions: [
             makeSymbolDeclaration("anonymous", 25),
-            makeSymbolDeclaration("anonymous", 30)
-          ]
+            makeSymbolDeclaration("anonymous", 30),
+          ],
         };
 
         const { component } = render({ symbols });
@@ -130,7 +130,7 @@ describe("Outline", () => {
 
       it("`No functions` if symbols has no func", async () => {
         const symbols = {
-          functions: []
+          functions: [],
         };
         const { component } = render({ symbols });
         expect(component).toMatchSnapshot();
@@ -142,20 +142,20 @@ describe("Outline", () => {
         functions: [
           makeSymbolDeclaration("c_function", 25),
           makeSymbolDeclaration("x_function", 30),
-          makeSymbolDeclaration("a_function", 70)
-        ]
+          makeSymbolDeclaration("a_function", 70),
+        ],
       };
 
       const { component } = render({
         symbols: symbols,
-        alphabetizeOutline: true
+        alphabetizeOutline: true,
       });
       expect(component).toMatchSnapshot();
     });
 
     it("calls onAlphabetizeClick when sort button is clicked", async () => {
       const symbols = {
-        functions: [makeSymbolDeclaration("example_function", 25)]
+        functions: [makeSymbolDeclaration("example_function", 25)],
       };
 
       const { component, props } = render({ symbols });
@@ -173,12 +173,12 @@ describe("Outline", () => {
         functions: [
           makeSymbolDeclaration("x_function", 25, 26, "x_klass"),
           makeSymbolDeclaration("a2_function", 30, 31, "a_klass"),
-          makeSymbolDeclaration("a1_function", 70, 71, "a_klass")
+          makeSymbolDeclaration("a1_function", 70, 71, "a_klass"),
         ],
         classes: [
           makeSymbolDeclaration("x_klass", 24, 27),
-          makeSymbolDeclaration("a_klass", 29, 72)
-        ]
+          makeSymbolDeclaration("a_klass", 29, 72),
+        ],
       };
 
       const { component } = render({ symbols: symbols });
@@ -190,17 +190,17 @@ describe("Outline", () => {
         functions: [
           makeSymbolDeclaration("x_function", 25, 26, "x_klass"),
           makeSymbolDeclaration("a2_function", 30, 31, "a_klass"),
-          makeSymbolDeclaration("a1_function", 70, 71, "a_klass")
+          makeSymbolDeclaration("a1_function", 70, 71, "a_klass"),
         ],
         classes: [
           makeSymbolDeclaration("x_klass", 24, 27),
-          makeSymbolDeclaration("a_klass", 29, 72)
-        ]
+          makeSymbolDeclaration("a_klass", 29, 72),
+        ],
       };
 
       const { component } = render({
         symbols: symbols,
-        alphabetizeOutline: true
+        alphabetizeOutline: true,
       });
       expect(component).toMatchSnapshot();
     });
@@ -208,7 +208,7 @@ describe("Outline", () => {
     it("selects class on click on class headline", async () => {
       const symbols = {
         functions: [makeSymbolDeclaration("x_function", 25, 26, "x_klass")],
-        classes: [makeSymbolDeclaration("x_klass", 24, 27)]
+        classes: [makeSymbolDeclaration("x_klass", 24, 27)],
       };
 
       const { component, props } = render({ symbols: symbols });
@@ -217,7 +217,7 @@ describe("Outline", () => {
 
       expect(props.selectLocation).toHaveBeenCalledWith(mockcx, {
         line: 24,
-        sourceId: sourceId
+        sourceId: sourceId,
       });
     });
 
@@ -233,7 +233,7 @@ describe("Outline", () => {
       const event = { event: "oncontextmenu" };
       const fn = makeSymbolDeclaration("exmple_function", 2);
       const symbols = {
-        functions: [fn]
+        functions: [fn],
       };
 
       const { component, instance } = render({ symbols });
@@ -248,10 +248,10 @@ describe("Outline", () => {
     it("does not show menu with no selected source", async () => {
       const mockEvent = {
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       const { instance } = render({
-        selectedSource: (null: any)
+        selectedSource: (null: any),
       });
       await instance.onContextMenu(mockEvent, {});
       expect(mockEvent.preventDefault).toHaveBeenCalled();
@@ -268,11 +268,11 @@ describe("Outline", () => {
         endLine
       );
       const symbols = {
-        functions: [func]
+        functions: [func],
       };
       const mockEvent = {
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       const { instance, props } = render({ symbols });
       await instance.onContextMenu(mockEvent, func);
@@ -286,8 +286,8 @@ describe("Outline", () => {
           click: expect.any(Function),
           disabled: false,
           id: "node-menu-copy-function",
-          label: "Copy function"
-        }
+          label: "Copy function",
+        },
       ];
       expect(props.getFunctionText).toHaveBeenCalledWith(12);
       expect(showMenu).toHaveBeenCalledWith(mockEvent, expectedMenuOptions);
@@ -297,7 +297,7 @@ describe("Outline", () => {
       expect(props.flashLineRange).toHaveBeenCalledWith({
         end: endLine,
         sourceId: sourceId,
-        start: startLine
+        start: startLine,
       });
     });
   });

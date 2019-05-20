@@ -27,7 +27,7 @@ ElementNode.propTypes = {
   onDOMNodeClick: PropTypes.func,
   onDOMNodeMouseOver: PropTypes.func,
   onDOMNodeMouseOut: PropTypes.func,
-  onInspectIconClick: PropTypes.func
+  onInspectIconClick: PropTypes.func,
 };
 
 function ElementNode(props) {
@@ -38,7 +38,7 @@ function ElementNode(props) {
     onDOMNodeClick,
     onDOMNodeMouseOver,
     onDOMNodeMouseOut,
-    onInspectIconClick
+    onInspectIconClick,
   } = props;
   const elements = getElements(object, mode);
 
@@ -46,26 +46,26 @@ function ElementNode(props) {
 
   const baseConfig = {
     "data-link-actor-id": object.actor,
-    className: "objectBox objectBox-node"
+    className: "objectBox objectBox-node",
   };
   let inspectIcon;
   if (isInTree) {
     if (onDOMNodeClick) {
       Object.assign(baseConfig, {
         onClick: _ => onDOMNodeClick(object),
-        className: `${baseConfig.className} clickable`
+        className: `${baseConfig.className} clickable`,
       });
     }
 
     if (onDOMNodeMouseOver) {
       Object.assign(baseConfig, {
-        onMouseOver: _ => onDOMNodeMouseOver(object)
+        onMouseOver: _ => onDOMNodeMouseOver(object),
       });
     }
 
     if (onDOMNodeMouseOut) {
       Object.assign(baseConfig, {
-        onMouseOut: onDOMNodeMouseOut
+        onMouseOut: onDOMNodeMouseOut,
       });
     }
 
@@ -80,7 +80,7 @@ function ElementNode(props) {
           }
 
           onInspectIconClick(object, e);
-        }
+        },
       });
     }
   }
@@ -94,11 +94,11 @@ function getElements(grip, mode) {
     nodeName,
     isAfterPseudoElement,
     isBeforePseudoElement,
-    isMarkerPseudoElement
+    isMarkerPseudoElement,
   } = grip.preview;
   const nodeNameElement = span(
     {
-      className: "tag-name"
+      className: "tag-name",
     },
     nodeName
   );
@@ -160,7 +160,7 @@ function getElements(grip, mode) {
         className: "attrValue",
         object: value,
         cropLimit: MAX_ATTRIBUTE_LENGTH,
-        title
+        title,
       })
     );
 
@@ -171,7 +171,7 @@ function getElements(grip, mode) {
     span({ className: "angleBracket" }, "<"),
     nodeNameElement,
     ...attributeElements,
-    span({ className: "angleBracket" }, ">")
+    span({ className: "angleBracket" }, ">"),
   ];
 }
 
@@ -189,5 +189,5 @@ function supportsObject(object, noGrip = false) {
 module.exports = {
   rep: wrapRender(ElementNode),
   supportsObject,
-  MAX_ATTRIBUTE_LENGTH
+  MAX_ATTRIBUTE_LENGTH,
 };

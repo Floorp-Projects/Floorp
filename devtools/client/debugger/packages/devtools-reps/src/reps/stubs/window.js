@@ -13,8 +13,8 @@ stubs.set("Window", {
   ownPropertyLength: 887,
   preview: {
     kind: "ObjectWithURL",
-    url: "about:newtab"
-  }
+    url: "about:newtab",
+  },
 });
 
 module.exports = stubs;

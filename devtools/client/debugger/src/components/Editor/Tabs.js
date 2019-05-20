@@ -12,7 +12,7 @@ import {
   getSourcesForTabs,
   getIsPaused,
   getCurrentThread,
-  getContext
+  getContext,
 } from "../../selectors";
 import { isVisible } from "../../utils/ui";
 
@@ -45,12 +45,12 @@ type Props = {
   togglePaneCollapse: typeof actions.togglePaneCollapse,
   showSource: typeof actions.showSource,
   selectSource: typeof actions.selectSource,
-  isPaused: boolean
+  isPaused: boolean,
 };
 
 type State = {
   dropdownShown: boolean,
-  hiddenTabs: SourcesList
+  hiddenTabs: SourcesList,
 };
 
 class Tabs extends PureComponent<Props, State> {
@@ -69,7 +69,7 @@ class Tabs extends PureComponent<Props, State> {
     super(props);
     this.state = {
       dropdownShown: false,
-      hiddenTabs: []
+      hiddenTabs: [],
     };
 
     this.onResize = debounce(() => {
@@ -123,7 +123,7 @@ class Tabs extends PureComponent<Props, State> {
 
   toggleSourcesDropdown(e) {
     this.setState(prevState => ({
-      dropdownShown: !prevState.dropdownShown
+      dropdownShown: !prevState.dropdownShown,
     }));
   }
 
@@ -231,7 +231,7 @@ const mapStateToProps = state => ({
   cx: getContext(state),
   selectedSource: getSelectedSource(state),
   tabSources: getSourcesForTabs(state),
-  isPaused: getIsPaused(state, getCurrentThread(state))
+  isPaused: getIsPaused(state, getCurrentThread(state)),
 });
 
 export default connect(
@@ -241,6 +241,6 @@ export default connect(
     moveTab: actions.moveTab,
     closeTab: actions.closeTab,
     togglePaneCollapse: actions.togglePaneCollapse,
-    showSource: actions.showSource
+    showSource: actions.showSource,
   }
 )(Tabs);

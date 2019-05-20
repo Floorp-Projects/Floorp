@@ -109,6 +109,11 @@ const LIO: usize   = 0b100000;
 #[cfg(not(any(target_os = "freebsd")))]
 const LIO: usize   = 0b000000;
 
+
+#[cfg(any(target_os = "linux", target_os = "android", target_os = "solaris"))]
+const PRI: usize = ::libc::EPOLLPRI as usize;
+
+
 // Export to support `Ready::all`
 pub const READY_ALL: usize = ERROR | HUP | AIO | LIO;
 
@@ -219,6 +224,28 @@ impl UnixReady {
         UnixReady(ready_from_usize(LIO))
     }
 
+    /// Returns a `Ready` representing priority (`EPOLLPRI`) readiness
+    ///
+    /// See [`Poll`] for more documentation on polling.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mio::unix::UnixReady;
+    ///
+    /// let ready = UnixReady::priority();
+    ///
+    /// assert!(ready.is_priority());
+    /// ```
+    ///
+    /// [`Poll`]: struct.Poll.html
+    #[inline]
+    #[cfg(any(target_os = "linux",
+        target_os = "android", target_os = "solaris"))]
+    pub fn priority() -> UnixReady {
+        UnixReady(ready_from_usize(PRI))
+    }
+
     /// Returns true if `Ready` contains AIO readiness
     ///
     /// See [`Poll`] for more documentation on polling.
@@ -323,6 +350,28 @@ impl UnixReady {
     pub fn is_lio(&self) -> bool {
         self.contains(ready_from_usize(LIO))
     }
+
+    /// Returns true if `Ready` contains priority (`EPOLLPRI`) readiness
+    ///
+    /// See [`Poll`] for more documentation on polling.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use mio::unix::UnixReady;
+    ///
+    /// let ready = UnixReady::priority();
+    ///
+    /// assert!(ready.is_priority());
+    /// ```
+    ///
+    /// [`Poll`]: struct.Poll.html
+    #[inline]
+    #[cfg(any(target_os = "linux",
+        target_os = "android", target_os = "solaris"))]
+    pub fn is_priority(&self) -> bool {
+        self.contains(ready_from_usize(PRI))
+    }
 }
 
 impl From<Ready> for UnixReady {
@@ -408,7 +457,11 @@ impl fmt::Debug for UnixReady {
             (UnixReady::error(), "Error"),
             (UnixReady::hup(), "Hup"),
             #[allow(deprecated)]
-            (UnixReady::aio(), "Aio")];
+            (UnixReady::aio(), "Aio"),
+            #[cfg(any(target_os = "linux",
+                target_os = "android", target_os = "solaris"))]
+            (UnixReady::priority(), "Priority"),
+        ];
 
         for &(flag, msg) in &flags {
             if self.contains(flag) {

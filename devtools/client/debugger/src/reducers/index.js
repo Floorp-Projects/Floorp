@@ -20,6 +20,7 @@ import pause from "./pause";
 import ui from "./ui";
 import fileSearch from "./file-search";
 import ast from "./ast";
+import preview from "./preview";
 import projectTextSearch from "./project-text-search";
 import quickOpen from "./quick-open";
 import sourceTree from "./source-tree";
@@ -46,5 +47,6 @@ export default {
   sourceTree,
   debuggee,
   objectInspector: objectInspector.reducer.default,
-  eventListenerBreakpoints
+  eventListenerBreakpoints,
+  preview,
 };

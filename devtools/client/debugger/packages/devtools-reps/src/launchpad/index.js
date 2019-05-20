@@ -24,7 +24,7 @@ function onConnect(connection) {
   const client = {
     clientCommands: {
       evaluate: input =>
-        connection.tabConnection.tabTarget.activeConsole.evaluateJSAsync(input)
+        connection.tabConnection.tabTarget.activeConsole.evaluateJSAsync(input),
     },
 
     createObjectClient: function(grip) {
@@ -35,12 +35,12 @@ function onConnect(connection) {
     },
     releaseActor: function(actor) {
       return connection.tabConnection.debuggerClient.release(actor);
-    }
+    },
   };
 
   const store = configureStore({
     makeThunkArgs: (args, state) => ({ ...args, client }),
-    client
+    client,
   });
   renderRoot(React, ReactDOM, RepsConsole, store);
 }

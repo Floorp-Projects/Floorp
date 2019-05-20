@@ -2611,12 +2611,18 @@ int32_t RecordContentFrameTime(
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
     const TimeStamp& aRecordingStart) {
   mCompositionRecorder.reset(new CompositionRecorder(aRecordingStart));
-  mLayerManager->SetCompositionRecorder(mCompositionRecorder.get());
+
+  if (mLayerManager) {
+    mLayerManager->SetCompositionRecorder(mCompositionRecorder.get());
+  }
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording() {
-  mLayerManager->SetCompositionRecorder(nullptr);
+  if (mLayerManager) {
+    mLayerManager->SetCompositionRecorder(nullptr);
+  }
   mCompositionRecorder->WriteCollectedFrames();
   mCompositionRecorder.reset(nullptr);
   return IPC_OK();

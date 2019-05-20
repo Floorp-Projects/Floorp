@@ -7,7 +7,7 @@
 import {
   toServerLocation,
   fromServerLocation,
-  createLoadedObject
+  createLoadedObject,
 } from "./create";
 
 import type { SourceLocation } from "../../types";
@@ -15,7 +15,7 @@ import type { ServerLocation, Agents } from "./types";
 
 type setBreakpointResponseType = {
   breakpointId: string,
-  serverLocation?: ServerLocation
+  serverLocation?: ServerLocation,
 };
 
 let debuggerAgent;
@@ -64,24 +64,24 @@ function sourceContents(sourceId: string) {
     .getScriptSource({ scriptId: sourceId })
     .then(({ scriptSource }) => ({
       source: scriptSource,
-      contentType: null
+      contentType: null,
     }));
 }
 
 async function setBreakpoint(location: SourceLocation, condition: string) {
   const {
     breakpointId,
-    serverLocation
+    serverLocation,
   }: setBreakpointResponseType = await debuggerAgent.setBreakpoint({
     location: toServerLocation(location),
-    columnNumber: location.column
+    columnNumber: location.column,
   });
 
   const actualLocation = fromServerLocation(serverLocation) || location;
 
   return {
     id: breakpointId,
-    actualLocation: actualLocation
+    actualLocation: actualLocation,
   };
 }
 
@@ -91,7 +91,7 @@ function removeBreakpoint(breakpointId: string) {
 
 async function getProperties(object: any) {
   const { result } = await runtimeAgent.getProperties({
-    objectId: object.objectId
+    objectId: object.objectId,
   });
 
   const loadedObjects = result.map(createLoadedObject);
@@ -135,7 +135,7 @@ const clientCommands = {
   getBreakpointByLocation,
   getFrameScopes,
   evaluateInFrame,
-  evaluateExpressions
+  evaluateExpressions,
 };
 
 export { setupCommands, clientCommands };

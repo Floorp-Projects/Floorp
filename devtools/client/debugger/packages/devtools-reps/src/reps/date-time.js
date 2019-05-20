@@ -15,7 +15,7 @@ const { span } = dom;
  * Used to render JS built-in Date() object.
  */
 DateTime.propTypes = {
-  object: PropTypes.object.isRequired
+  object: PropTypes.object.isRequired,
 };
 
 function DateTime(props) {
@@ -30,7 +30,7 @@ function DateTime(props) {
     date = span(
       {
         "data-link-actor-id": grip.actor,
-        className: "objectBox"
+        className: "objectBox",
       },
       getTitle(grip),
       span({ className: "Date" }, dateObject.toString())
@@ -45,7 +45,7 @@ function DateTime(props) {
 function getTitle(grip) {
   return span(
     {
-      className: "objectTitle"
+      className: "objectTitle",
     },
     `${grip.class} `
   );
@@ -63,5 +63,5 @@ function supportsObject(grip, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(DateTime),
-  supportsObject
+  supportsObject,
 };

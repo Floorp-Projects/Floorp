@@ -79,6 +79,8 @@ It is augmented as it progresses through the system, with various information:
     results; // {array} list of UrlbarResult objects.
     tokens; // {array} tokens extracted from the searchString, each token is an
             // object in the form {type, value, lowerCaseValue}.
+    acceptableSources; // {array} list of UrlbarUtils.RESULT_SOURCE that the
+                       // model will accept for this context.
   }
 
 
@@ -156,46 +158,60 @@ implementation details may vary deeply among different providers.
 
   class UrlbarProvider {
     /**
-    * Unique name for the provider, used by the context to filter on providers.
-    * Not using a unique name will cause the newest registration to win.
-    * @abstract
-    */
+     * Unique name for the provider, used by the context to filter on providers.
+     * Not using a unique name will cause the newest registration to win.
+     * @abstract
+     */
     get name() {
       return "UrlbarProviderBase";
     }
     /**
-    * The type of the provider, must be one of UrlbarUtils.PROVIDER_TYPE.
-    * @abstract
-    */
+     * The type of the provider, must be one of UrlbarUtils.PROVIDER_TYPE.
+     * @abstract
+     */
     get type() {
       throw new Error("Trying to access the base class, must be overridden");
     }
     /**
-    * List of UrlbarUtils.RESULT_SOURCE, representing the data sources used by
-    * the provider.
-    * @abstract
-    */
-    get sources() {
+     * Whether this provider should be invoked for the given context.
+     * If this method returns false, the providers manager won't start a query
+     * with this provider, to save on resources.
+     * @param {UrlbarQueryContext} queryContext The query context object
+     * @returns {boolean} Whether this provider should be invoked for the search.
+     * @abstract
+     */
+    isActive(queryContext) {
       throw new Error("Trying to access the base class, must be overridden");
     }
     /**
-    * Starts querying.
-    * @param {UrlbarQueryContext} queryContext The query context object
-    * @param {function} addCallback Callback invoked by the provider to add a new
-    *        result. A UrlbarResult should be passed to it.
-    * @note Extended classes should return a Promise resolved when the provider
-    *       is done searching AND returning results.
-    * @abstract
-    */
+     * Whether this provider wants to restrict results to just itself.
+     * Other providers won't be invoked, unless this provider doesn't
+     * support the current query.
+     * @param {UrlbarQueryContext} queryContext The query context object
+     * @returns {boolean} Whether this provider wants to restrict results.
+     * @abstract
+     */
+    isRestricting(queryContext) {
+      throw new Error("Trying to access the base class, must be overridden");
+    }
+    /**
+     * Starts querying.
+     * @param {UrlbarQueryContext} queryContext The query context object
+     * @param {function} addCallback Callback invoked by the provider to add a new
+     *        result. A UrlbarResult should be passed to it.
+     * @note Extended classes should return a Promise resolved when the provider
+     *       is done searching AND returning results.
+     * @abstract
+     */
     startQuery(queryContext, addCallback) {
       throw new Error("Trying to access the base class, must be overridden");
     }
     /**
-    * Cancels a running query,
-    * @param {UrlbarQueryContext} queryContext The query context object to cancel
-    *        query for.
-    * @abstract
-    */
+     * Cancels a running query,
+     * @param {UrlbarQueryContext} queryContext The query context object to cancel
+     *        query for.
+     * @abstract
+     */
     cancelQuery(queryContext) {
       throw new Error("Trying to access the base class, must be overridden");
     }
@@ -218,18 +234,18 @@ indicated by the UrlbarQueryContext.muxer property.
 
   class UrlbarMuxer {
     /**
-    * Unique name for the muxer, used by the context to sort results.
-    * Not using a unique name will cause the newest registration to win.
-    * @abstract
-    */
+     * Unique name for the muxer, used by the context to sort results.
+     * Not using a unique name will cause the newest registration to win.
+     * @abstract
+     */
     get name() {
       return "UrlbarMuxerBase";
     }
     /**
-    * Sorts UrlbarQueryContext results in-place.
-    * @param {UrlbarQueryContext} queryContext the context to sort results for.
-    * @abstract
-    */
+     * Sorts UrlbarQueryContext results in-place.
+     * @param {UrlbarQueryContext} queryContext the context to sort results for.
+     * @abstract
+     */
     sort(queryContext) {
       throw new Error("Trying to access the base class, must be overridden");
     }

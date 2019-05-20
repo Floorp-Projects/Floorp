@@ -10,11 +10,11 @@ import {
   watchForState,
   createStore,
   makeOriginalSource,
-  makeSource
+  makeSource,
 } from "../../../utils/test-head";
 import {
   createSource,
-  sourceThreadClient
+  sourceThreadClient,
 } from "../../tests/helpers/threadClient.js";
 import { getBreakpointsList } from "../../../selectors";
 import { isFulfilled, isRejected } from "../../../utils/async-value";
@@ -32,8 +32,8 @@ describe("loadSourceText", () => {
     const foo1Content = selectors.getSourceContent(getState(), foo1Source.id);
     expect(
       foo1Content &&
-      isFulfilled(foo1Content) &&
-      foo1Content.value.type === "text"
+        isFulfilled(foo1Content) &&
+        foo1Content.value.type === "text"
         ? foo1Content.value.value.indexOf("return foo1")
         : -1
     ).not.toBe(-1);
@@ -46,8 +46,8 @@ describe("loadSourceText", () => {
     const foo2Content = selectors.getSourceContent(getState(), foo2Source.id);
     expect(
       foo2Content &&
-      isFulfilled(foo2Content) &&
-      foo2Content.value.type === "text"
+        isFulfilled(foo2Content) &&
+        foo2Content.value.type === "text"
         ? foo2Content.value.value.indexOf("return foo2")
         : -1
     ).not.toBe(-1);
@@ -62,12 +62,12 @@ describe("loadSourceText", () => {
         ...sourceThreadClient,
         sourceContents: async () => fooGenContent,
         getBreakpointPositions: async () => ({ "1": [0] }),
-        getBreakableLines: async () => []
+        getBreakableLines: async () => [],
       },
       {},
       {
         getGeneratedRangesForOriginal: async () => [
-          { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } }
+          { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } },
         ],
         getOriginalLocations: async (sourceId, items) =>
           items.map(item => ({
@@ -75,12 +75,12 @@ describe("loadSourceText", () => {
             sourceId:
               item.sourceId === fooGenSource1.id
                 ? fooOrigSource1.id
-                : fooOrigSource2.id
+                : fooOrigSource2.id,
           })),
         getOriginalSourceText: async s => ({
           text: fooOrigContent.source,
-          contentType: fooOrigContent.contentType
-        })
+          contentType: fooOrigContent.contentType,
+        }),
       }
     );
     const { cx, dispatch, getState } = store;
@@ -106,7 +106,7 @@ describe("loadSourceText", () => {
         {
           sourceId: fooOrigSource1.id,
           line: 1,
-          column: 0
+          column: 0,
         },
         {}
       )
@@ -130,7 +130,7 @@ describe("loadSourceText", () => {
         {
           sourceId: fooGenSource2.id,
           line: 1,
-          column: 0
+          column: 0,
         },
         {}
       )
@@ -157,7 +157,7 @@ describe("loadSourceText", () => {
           resolve = r;
         }),
       getBreakpointPositions: async () => ({}),
-      getBreakableLines: async () => []
+      getBreakableLines: async () => [],
     });
     const id = "foo";
 
@@ -195,7 +195,7 @@ describe("loadSourceText", () => {
           resolve = r;
         }),
       getBreakpointPositions: async () => ({}),
-      getBreakableLines: async () => []
+      getBreakableLines: async () => [],
     });
     const id = "foo";
 

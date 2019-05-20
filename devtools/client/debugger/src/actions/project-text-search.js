@@ -15,14 +15,14 @@ import {
   getSource,
   hasPrettySource,
   getSourceList,
-  getSourceContent
+  getSourceContent,
 } from "../selectors";
 import { isThirdParty } from "../utils/source";
 import { loadSourceText } from "./sources/loadSourceText";
 import {
   statusType,
   getTextSearchOperation,
-  getTextSearchStatus
+  getTextSearchStatus,
 } from "../reducers/project-text-search";
 
 import type { Action, ThunkArgs } from "./types";
@@ -49,7 +49,7 @@ export function addSearchResult(
   return {
     type: "ADD_SEARCH_RESULT",
     cx,
-    result: { sourceId, filepath, matches }
+    result: { sourceId, filepath, matches },
   };
 }
 

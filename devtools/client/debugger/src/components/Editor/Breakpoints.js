@@ -17,7 +17,7 @@ import type { EditorItemActions } from "./menus/editor";
 import type {
   Breakpoint as BreakpointType,
   Source,
-  ThreadContext
+  ThreadContext,
 } from "../../types";
 
 type Props = {
@@ -26,7 +26,7 @@ type Props = {
   breakpoints: BreakpointType[],
   editor: Object,
   breakpointActions: BreakpointItemActions,
-  editorActions: EditorItemActions
+  editorActions: EditorItemActions,
 };
 
 class Breakpoints extends Component<Props> {
@@ -37,7 +37,7 @@ class Breakpoints extends Component<Props> {
       selectedSource,
       editor,
       breakpointActions,
-      editorActions
+      editorActions,
     } = this.props;
 
     if (!breakpoints || selectedSource.isBlackBoxed) {
@@ -69,10 +69,10 @@ export default connect(
     // Retrieves only the first breakpoint per line so that the
     // breakpoint marker represents only the first breakpoint
     breakpoints: getFirstVisibleBreakpoints(state),
-    selectedSource: getSelectedSource(state)
+    selectedSource: getSelectedSource(state),
   }),
   dispatch => ({
     breakpointActions: breakpointItemActions(dispatch),
-    editorActions: editorItemActions(dispatch)
+    editorActions: editorItemActions(dispatch),
   })
 )(Breakpoints);

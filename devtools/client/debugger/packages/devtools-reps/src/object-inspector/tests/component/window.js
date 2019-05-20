@@ -9,7 +9,7 @@ const gripWindowStubs = require("../../../reps/stubs/window");
 const ObjectClient = require("../__mocks__/object-client");
 const windowNode = createNode({
   name: "window",
-  contents: { value: gripWindowStubs.get("Window") }
+  contents: { value: gripWindowStubs.get("Window") },
 });
 
 const client = { createObjectClient: grip => ObjectClient(grip) };
@@ -18,14 +18,14 @@ function generateDefaults(overrides) {
   return {
     autoExpandDepth: 0,
     roots: [windowNode],
-    ...overrides
+    ...overrides,
   };
 }
 
 describe("ObjectInspector - dimTopLevelWindow", () => {
   it("renders window as expected when dimTopLevelWindow is true", async () => {
     const props = generateDefaults({
-      dimTopLevelWindow: true
+      dimTopLevelWindow: true,
     });
 
     const { wrapper, store } = mountObjectInspector({ client, props });
@@ -60,13 +60,13 @@ describe("ObjectInspector - dimTopLevelWindow", () => {
     // top level.
     const root = createNode({
       name: "root",
-      contents: [windowNode]
+      contents: [windowNode],
     });
 
     const props = generateDefaults({
       roots: [root],
       dimTopLevelWindow: true,
-      injectWaitService: true
+      injectWaitService: true,
     });
     const { wrapper, store } = mountObjectInspector({ client, props });
 

@@ -52,15 +52,18 @@
       "run_at": "document_end"
     },
     {
-      "matches": ["*://*/Speedometer/index.html*",
-                  "*://*/StyleBench/*",
-                  "*://*/MotionMark/*",
-                  "*://*/SunSpider/*",
-                  "*://*/webaudio/*",
-                  "*://*/unity-webgl/index.html*",
-                  "*://*/wasm-misc/index.html*",
-                  "*://*/wasm-godot/index.html*",
-                  "*://*/assorted-dom/assorted/results.html*"],
+      "matches": [
+        "*://*/Speedometer/index.html*",
+        "*://*/StyleBench/*",
+        "*://*/MotionMark/*",
+        "*://*/SunSpider/*",
+        "*://*/webaudio/*",
+        "*://*/unity-webgl/index.html*",
+        "*://*/wasm-misc/index.html*",
+        "*://*/wasm-godot/index.html*",
+        "*://*/assorted-dom/assorted/results.html*",
+        "*://*.mozaws.net/*"
+      ],
       "js": ["benchmark.js"],
       "run_at": "document_end"
     }

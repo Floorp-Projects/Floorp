@@ -7,8 +7,8 @@ stubs.set("A → 0", {
   type: "mapEntry",
   preview: {
     key: "A",
-    value: 0
-  }
+    value: 0,
+  },
 });
 
 module.exports = stubs;

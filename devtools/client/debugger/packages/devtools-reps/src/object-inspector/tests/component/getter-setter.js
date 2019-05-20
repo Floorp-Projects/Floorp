@@ -6,7 +6,7 @@ const { MODE } = require("../../../reps/constants");
 const {
   formatObjectInspector,
   waitForLoadedProperties,
-  mountObjectInspector
+  mountObjectInspector,
 } = require("../test-utils");
 
 const { makeNodesForProperties } = require("../../utils/node");
@@ -18,7 +18,7 @@ function generateDefaults(overrides) {
     autoExpandDepth: 1,
     createObjectClient: grip => ObjectClient(grip),
     mode: MODE.LONG,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -29,8 +29,8 @@ function mount(stub, propsOverride = {}) {
   const nodes = makeNodesForProperties(
     {
       ownProperties: {
-        x: stub
-      }
+        x: stub,
+      },
     },
     root
   );
@@ -38,7 +38,7 @@ function mount(stub, propsOverride = {}) {
 
   return mountObjectInspector({
     client,
-    props: generateDefaults({ roots: [root], ...propsOverride })
+    props: generateDefaults({ roots: [root], ...propsOverride }),
   });
 }
 
@@ -70,7 +70,7 @@ describe("ObjectInspector - getters & setters", () => {
   it("onInvokeGetterButtonClick + getter", async () => {
     const onInvokeGetterButtonClick = jest.fn();
     const { store, wrapper } = mount(accessorStubs.get("getter"), {
-      onInvokeGetterButtonClick
+      onInvokeGetterButtonClick,
     });
     await waitForLoadedProperties(store, ["root"]);
     wrapper.update();
@@ -81,7 +81,7 @@ describe("ObjectInspector - getters & setters", () => {
   it("onInvokeGetterButtonClick + setter", async () => {
     const onInvokeGetterButtonClick = jest.fn();
     const { store, wrapper } = mount(accessorStubs.get("setter"), {
-      onInvokeGetterButtonClick
+      onInvokeGetterButtonClick,
     });
     await waitForLoadedProperties(store, ["root"]);
     wrapper.update();
@@ -92,7 +92,7 @@ describe("ObjectInspector - getters & setters", () => {
   it("onInvokeGetterButtonClick + getter & setter", async () => {
     const onInvokeGetterButtonClick = jest.fn();
     const { store, wrapper } = mount(accessorStubs.get("getter setter"), {
-      onInvokeGetterButtonClick
+      onInvokeGetterButtonClick,
     });
     await waitForLoadedProperties(store, ["root"]);
     wrapper.update();

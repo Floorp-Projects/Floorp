@@ -66,6 +66,7 @@ namespace dom {
 
 class DOMString;
 class XMLHttpRequestUpload;
+class SerializedStackHolder;
 struct OriginAttributesDictionary;
 
 // A helper for building up an ArrayBuffer object's data
@@ -391,6 +392,8 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   virtual void SetMozBackgroundRequest(bool aMozBackgroundRequest,
                                        ErrorResult& aRv) override;
+
+  void SetOriginStack(UniquePtr<SerializedStackHolder> aOriginStack);
 
   virtual uint16_t ErrorCode() const override {
     return static_cast<uint16_t>(mErrorLoad);
@@ -723,6 +726,10 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   RefPtr<XMLHttpRequestDoneNotifier> mDelayedDoneNotifier;
   void DisconnectDoneNotifier();
+
+  // Any stack information for the point the XHR was opened. This is deleted
+  // after the XHR is opened, to avoid retaining references to the worker.
+  UniquePtr<SerializedStackHolder> mOriginStack;
 
   static bool sDontWarnAboutSyncXHR;
 };

@@ -17,7 +17,7 @@ export function findFunctionText(
   const func = findClosestFunction(symbols, {
     sourceId: source.id,
     line,
-    column: Infinity
+    column: Infinity,
   });
 
   if (
@@ -31,7 +31,7 @@ export function findFunctionText(
   }
 
   const {
-    location: { start, end }
+    location: { start, end },
   } = func;
   const lines = content.value.value.split("\n");
   const firstLine = lines[start.line - 1].slice(start.column);

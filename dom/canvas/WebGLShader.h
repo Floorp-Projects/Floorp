@@ -67,7 +67,7 @@ class WebGLShader final : public nsWrapperCache,
   const auto& TranslatedSource() const { return mTranslatedSource; }
 
  private:
-  void BindAttribLocation(GLuint prog, const nsCString& userName,
+  void BindAttribLocation(GLuint prog, const std::string& userName,
                           GLuint index) const;
   void MapTransformFeedbackVaryings(
       const std::vector<nsString>& varyings,

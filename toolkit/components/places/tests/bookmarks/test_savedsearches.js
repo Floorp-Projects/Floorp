@@ -41,7 +41,7 @@ add_task(async function test_savedsearches_bookmarks() {
     let options = PlacesUtils.history.getNewQueryOptions();
     options.expandQueries = 0;
     let query = PlacesUtils.history.getNewQuery();
-    query.setParents([testRoot.guid], 1);
+    query.setParents([testRoot.guid]);
     let result = PlacesUtils.history.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
@@ -67,7 +67,7 @@ add_task(async function test_savedsearches_bookmarks() {
     let options = PlacesUtils.history.getNewQueryOptions();
     options.expandQueries = 1;
     let query = PlacesUtils.history.getNewQuery();
-    query.setParents([testRoot.guid], 1);
+    query.setParents([testRoot.guid]);
     let result = PlacesUtils.history.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
@@ -143,7 +143,7 @@ add_task(async function test_savedsearches_history() {
     var options = PlacesUtils.history.getNewQueryOptions();
     options.expandQueries = 1;
     var query = PlacesUtils.history.getNewQuery();
-    query.setParents([testRoot.guid], 1);
+    query.setParents([testRoot.guid]);
     var result = PlacesUtils.history.executeQuery(query, options);
     var rootNode = result.root;
     rootNode.containerOpen = true;

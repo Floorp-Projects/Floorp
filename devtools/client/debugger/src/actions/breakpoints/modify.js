@@ -7,7 +7,7 @@
 import {
   makeBreakpointLocation,
   makeBreakpointId,
-  getASTLocation
+  getASTLocation,
 } from "../../utils/breakpoint";
 
 import {
@@ -18,7 +18,7 @@ import {
   getSource,
   getSourceContent,
   getBreakpointsList,
-  getPendingBreakpointList
+  getPendingBreakpointList,
 } from "../../selectors";
 
 import { setBreakpointPositions } from "./breakpointPositions";
@@ -33,7 +33,7 @@ import type {
   BreakpointOptions,
   BreakpointPosition,
   SourceLocation,
-  Context
+  Context,
 } from "../../types";
 
 // This file has the primitive operations used to modify individual breakpoints
@@ -90,7 +90,7 @@ export function enableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
     dispatch({
       type: "SET_BREAKPOINT",
       cx,
-      breakpoint: { ...breakpoint, disabled: false }
+      breakpoint: { ...breakpoint, disabled: false },
     });
 
     return dispatch(clientSetBreakpoint(breakpoint));
@@ -154,7 +154,7 @@ export function addBreakpoint(
       astLocation,
       generatedLocation,
       text,
-      originalText
+      originalText,
     };
 
     if (shouldCancel()) {
@@ -191,7 +191,7 @@ export function removeBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
     dispatch({
       type: "REMOVE_BREAKPOINT",
       cx,
-      location: breakpoint.location
+      location: breakpoint.location,
     });
 
     // If the breakpoint is disabled then it is not installed in the server.
@@ -225,7 +225,7 @@ export function removeBreakpointAtGeneratedLocation(
         dispatch({
           type: "REMOVE_BREAKPOINT",
           cx,
-          location
+          location,
         });
       }
     }
@@ -240,7 +240,7 @@ export function removeBreakpointAtGeneratedLocation(
         dispatch({
           type: "REMOVE_PENDING_BREAKPOINT",
           cx,
-          location
+          location,
         });
       }
     }
@@ -266,7 +266,7 @@ export function disableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
     dispatch({
       type: "SET_BREAKPOINT",
       cx,
-      breakpoint: { ...breakpoint, disabled: true }
+      breakpoint: { ...breakpoint, disabled: true },
     });
 
     return dispatch(clientRemoveBreakpoint(breakpoint.generatedLocation));
@@ -301,7 +301,7 @@ export function setBreakpointOptions(
     dispatch({
       type: "SET_BREAKPOINT",
       cx,
-      breakpoint
+      breakpoint,
     });
 
     return dispatch(clientSetBreakpoint(breakpoint));

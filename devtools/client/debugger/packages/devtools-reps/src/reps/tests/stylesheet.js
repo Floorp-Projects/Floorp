@@ -18,7 +18,7 @@ describe("Test StyleSheet", () => {
   it("renders with the expected text content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: stub
+        object: stub,
       })
     );
 

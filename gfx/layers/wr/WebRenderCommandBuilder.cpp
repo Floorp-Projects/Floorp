@@ -236,6 +236,7 @@ struct Grouper {
 static bool IsContainerLayerItem(nsDisplayItem* aItem) {
   switch (aItem->GetType()) {
     case DisplayItemType::TYPE_WRAP_LIST:
+    case DisplayItemType::TYPE_CONTAINER:
     case DisplayItemType::TYPE_TRANSFORM:
     case DisplayItemType::TYPE_OPACITY:
     case DisplayItemType::TYPE_FILTER:
@@ -1155,6 +1156,7 @@ static bool IsItemProbablyActive(nsDisplayItem* aItem,
              HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_WRAP_LIST:
+    case DisplayItemType::TYPE_CONTAINER:
     case DisplayItemType::TYPE_PERSPECTIVE: {
       if (aItem->GetChildren()) {
         return HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);
@@ -1913,7 +1915,8 @@ bool BuildLayer(nsDisplayItem* aItem, BlobItemData* aData,
   bool isInvalidated = false;
 
   ContainerLayerParameters param(aScale.width, aScale.height);
-  RefPtr<Layer> root = aItem->BuildLayer(aDisplayListBuilder, blm, param);
+  RefPtr<Layer> root = aItem->AsPaintedDisplayItem()->BuildLayer(
+      aDisplayListBuilder, blm, param);
 
   if (root) {
     blm->SetRoot(root);
@@ -1954,7 +1957,8 @@ static bool PaintByLayer(nsDisplayItem* aItem,
   bool isInvalidated = false;
 
   ContainerLayerParameters param(aScale.width, aScale.height);
-  RefPtr<Layer> root = aItem->BuildLayer(aDisplayListBuilder, aManager, param);
+  RefPtr<Layer> root = aItem->AsPaintedDisplayItem()->BuildLayer(
+      aDisplayListBuilder, aManager, param);
 
   if (root) {
     aManager->SetRoot(root);

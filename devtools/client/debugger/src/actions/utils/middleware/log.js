@@ -21,7 +21,7 @@ const blacklist = [
   "NODE_PROPERTIES_LOADED",
   "SET_FOCUSED_SOURCE_ITEM",
   "NODE_EXPAND",
-  "IN_SCOPE_LINES"
+  "IN_SCOPE_LINES",
 ];
 
 function cloneAction(action: any) {
@@ -66,7 +66,7 @@ function formatPause(pause) {
     pauseInfo: { why: pause.why },
     scopes: [],
     frames: pause.frames.map(formatFrame),
-    loadedObjects: []
+    loadedObjects: [],
   };
 }
 

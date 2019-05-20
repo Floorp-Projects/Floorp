@@ -32,8 +32,8 @@ class HttpTrafficAnalyzer final {
   };
 
   static HttpTrafficCategory CreateTrafficCategory(
-      bool aIsPrivateMode, bool aIsThirdParty, ClassOfService aClassOfService,
-      TrackingClassification aClassification);
+      bool aIsPrivateMode, bool aIsSystemPrincipal, bool aIsThirdParty,
+      ClassOfService aClassOfService, TrackingClassification aClassification);
 
   nsresult IncrementHttpTransaction(HttpTrafficCategory aCategory);
   nsresult IncrementHttpConnection(HttpTrafficCategory aCategory);

@@ -93,8 +93,6 @@
 
 .urlbarView-type-icon,
 .urlbarView-favicon {
-  display: inline-block;
-  vertical-align: middle;
   min-width: 16px;
   height: 16px;
   margin-inline-end: @urlbarViewIconMarginEnd@;
@@ -120,8 +118,6 @@
 }
 
 .urlbarView-title {
-  display: inline-block;
-  vertical-align: text-bottom;
   overflow: hidden;
   white-space: nowrap;
   /* We prioritize the title over the url, so it can grow freely, but it should
@@ -141,7 +137,7 @@
 }
 
 .urlbarView-tags,
-.urlbarView-secondary {
+.urlbarView-title:not(:empty) ~ .urlbarView-secondary {
   font-size: .85em;
 }
 
@@ -152,7 +148,6 @@
 }
 
 .urlbarView-secondary {
-  display: inline-block;
   color: var(--urlbar-popup-action-color);
 }
 
@@ -177,7 +172,6 @@
 }
 
 .urlbarView-tags {
-  display: inline-block;
   overflow: hidden;
 }
 

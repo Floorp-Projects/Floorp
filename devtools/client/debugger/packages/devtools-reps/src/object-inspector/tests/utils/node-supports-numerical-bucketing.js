@@ -5,13 +5,13 @@
 const {
   createNode,
   makeNodesForEntries,
-  nodeSupportsNumericalBucketing
+  nodeSupportsNumericalBucketing,
 } = require("../../utils/node");
 
 const createRootNode = stub =>
   createNode({
     name: "root",
-    contents: { value: stub }
+    contents: { value: stub },
   });
 
 const gripArrayStubs = require("../../../reps/stubs/grip-array");

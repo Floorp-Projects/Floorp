@@ -79,11 +79,6 @@ add_task(async function testGetAllByURI() {
   SitePermissions.remove(uri, "desktop-notification");
   Assert.deepEqual(SitePermissions.getAllByURI(uri), []);
 
-  // XXX Bug 1303108 - Control Center should only show non-default permissions
-  SitePermissions.set(uri, "addon", SitePermissions.BLOCK);
-  Assert.deepEqual(SitePermissions.getAllByURI(uri), []);
-  SitePermissions.remove(uri, "addon");
-
   Assert.equal(Services.prefs.getIntPref("permissions.default.shortcuts"), 0);
   SitePermissions.set(uri, "shortcuts", SitePermissions.BLOCK);
 

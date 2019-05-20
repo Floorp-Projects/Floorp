@@ -8,7 +8,7 @@ import {
   actions,
   selectors,
   createStore,
-  makeSource
+  makeSource,
 } from "../../../utils/test-head";
 const { getSourcesUrlsInSources } = selectors;
 

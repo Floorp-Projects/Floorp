@@ -14,7 +14,7 @@ describe("getNextStep", () => {
       const pausePosition = { line: 8, column: 2, sourceId: source.id };
       expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
-        line: 9
+        line: 9,
       });
     });
 
@@ -24,7 +24,7 @@ describe("getNextStep", () => {
       expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
         line: 9,
-        column: 2
+        column: 2,
       });
     });
 
@@ -47,7 +47,7 @@ describe("getNextStep", () => {
       const pausePosition = { line: 2, column: 2, sourceId: source.id };
       expect(getNextStep(source.id, pausePosition)).toEqual({
         ...pausePosition,
-        line: 3
+        line: 3,
       });
     });
 

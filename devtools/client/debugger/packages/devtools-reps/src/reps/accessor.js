@@ -15,7 +15,7 @@ const { span } = dom;
  */
 Accessor.propTypes = {
   object: PropTypes.object.isRequired,
-  mode: PropTypes.oneOf(Object.values(MODE))
+  mode: PropTypes.oneOf(Object.values(MODE)),
 };
 
 function Accessor(props) {
@@ -25,13 +25,13 @@ function Accessor(props) {
     const { Rep, Grip } = require("./rep");
     return span(
       {
-        className: "objectBox objectBox-accessor objectTitle"
+        className: "objectBox objectBox-accessor objectTitle",
       },
       Rep({
         ...props,
         object: evaluation.getterValue,
         mode: props.mode || MODE.TINY,
-        defaultRep: Grip
+        defaultRep: Grip,
       })
     );
   }
@@ -43,7 +43,7 @@ function Accessor(props) {
       onClick: event => {
         onInvokeGetterButtonClick();
         event.stopPropagation();
-      }
+      },
     });
   }
 
@@ -81,5 +81,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(Accessor),
-  supportsObject
+  supportsObject,
 };

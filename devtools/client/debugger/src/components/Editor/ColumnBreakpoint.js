@@ -16,7 +16,7 @@ import type { BreakpointItemActions } from "./menus/breakpoints";
 import type { Source, Context } from "../../types";
 
 type Bookmark = {
-  clear: Function
+  clear: Function,
 };
 
 type Props = {
@@ -24,7 +24,7 @@ type Props = {
   editor: Object,
   source: Source,
   columnBreakpoint: ColumnBreakpointType,
-  breakpointActions: BreakpointItemActions
+  breakpointActions: BreakpointItemActions,
 };
 
 const breakpointButton = document.createElement("button");
@@ -43,7 +43,7 @@ function makeBookmark({ breakpoint }, { onClick, onContextMenu }) {
     "has-condition": condition,
     "has-log": logValue,
     active: isActive,
-    disabled: isDisabled
+    disabled: isDisabled,
   });
 
   bp.setAttribute("title", logValue || condition || "");
@@ -71,7 +71,7 @@ export default class ColumnBreakpoint extends PureComponent<Props> {
     const { line, column } = columnBreakpoint.location;
     const widget = makeBookmark(columnBreakpoint, {
       onClick: this.onClick,
-      onContextMenu: this.onContextMenu
+      onContextMenu: this.onContextMenu,
     });
 
     this.bookmark = doc.setBookmark({ line: line - 1, ch: column }, { widget });
@@ -101,7 +101,7 @@ export default class ColumnBreakpoint extends PureComponent<Props> {
     const {
       cx,
       columnBreakpoint: { breakpoint, location },
-      breakpointActions
+      breakpointActions,
     } = this.props;
 
     const items = breakpoint

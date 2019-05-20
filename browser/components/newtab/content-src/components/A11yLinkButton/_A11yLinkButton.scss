@@ -1,0 +1,13 @@
+
+.a11y-link-button {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: unset;
+  color: var(--newtab-link-primary-color);
+
+  &:hover,
+  &:focus {
+    text-decoration: underline;
+  }
+}

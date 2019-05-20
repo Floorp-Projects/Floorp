@@ -80,9 +80,7 @@ namespace recordreplay {
                             (aData, aSize)) Macro(InternalRegisterThing,       \
                                                   (void* aThing), (aThing))    \
                           Macro(InternalUnregisterThing, (void* aThing),       \
-                                (aThing)) Macro(InternalRecordReplayDirective, \
-                                                (long aDirective),             \
-                                                (aDirective))                  \
+                                (aThing))                                      \
                               Macro(BeginContentParse,                         \
                                     (const void* aToken, const char* aURL,     \
                                      const char* aContentType),                \

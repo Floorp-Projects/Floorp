@@ -22,7 +22,7 @@ describe("Object with text - CSSStyleRule", () => {
   it("renders with the correct text content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: gripStub
+        object: gripStub,
       })
     );
 
@@ -43,7 +43,7 @@ describe("Object with text - CSSMediaRule", () => {
   it("renders with the correct text content", () => {
     const renderedComponent = shallow(
       Rep({
-        object: gripStub
+        object: gripStub,
       })
     );
 

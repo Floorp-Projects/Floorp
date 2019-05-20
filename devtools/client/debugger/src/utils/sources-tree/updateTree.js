@@ -32,19 +32,19 @@ type UpdateTreeParams = {
   prevSources: SourcesMapByThread,
   uncollapsedTree: TreeDirectory,
   debuggeeUrl: string,
-  threads: Thread[]
+  threads: Thread[],
 };
 
 type CreateTreeParams = {
   sources: SourcesMapByThread,
   debuggeeUrl: string,
-  threads: Thread[]
+  threads: Thread[],
 };
 
 export function createTree({
   debuggeeUrl,
   sources,
-  threads
+  threads,
 }: CreateTreeParams) {
   const uncollapsedTree = createDirectoryNode("root", "", []);
 
@@ -53,7 +53,7 @@ export function createTree({
     newSources: sources,
     prevSources: {},
     threads,
-    uncollapsedTree
+    uncollapsedTree,
   });
 }
 
@@ -62,7 +62,7 @@ export function updateTree({
   prevSources,
   debuggeeUrl,
   uncollapsedTree,
-  threads
+  threads,
 }: UpdateTreeParams) {
   const debuggeeHost = getDomain(debuggeeUrl);
   const contexts = (Object.keys(newSources): any);
@@ -88,6 +88,6 @@ export function updateTree({
   return {
     uncollapsedTree,
     sourceTree: newSourceTree,
-    parentMap: createParentMap(newSourceTree)
+    parentMap: createParentMap(newSourceTree),
   };
 }

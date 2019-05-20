@@ -11,8 +11,9 @@ add_task(async function doorhanger_bc_check_malformedXML() {
     ],
   });
 
-  let updateParams = "&xmlMalformed=1";
-  await runDoorhangerUpdateTest(updateParams, maxBackgroundErrors, [
+  let params = {checkAttempts: maxBackgroundErrors,
+                queryString: "&xmlMalformed=1"};
+  await runDoorhangerUpdateTest(params, [
     {
       // If the update check fails 10 consecutive attempts then the manual
       // update doorhanger.

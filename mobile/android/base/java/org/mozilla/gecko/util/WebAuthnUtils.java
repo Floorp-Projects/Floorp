@@ -8,7 +8,9 @@ package org.mozilla.gecko.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.ActivityHandlerHelper;
+import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.WebAuthnTokenManager;
 import org.mozilla.gecko.GeckoActivityMonitor;
 import org.mozilla.gecko.util.ActivityResultHandler;
@@ -24,6 +26,7 @@ import android.util.Base64;
 import com.google.android.gms.fido.Fido;
 import com.google.android.gms.fido.common.Transport;
 import com.google.android.gms.fido.fido2.Fido2PendingIntent;
+import com.google.android.gms.fido.fido2.Fido2ApiClient;
 import com.google.android.gms.fido.fido2.Fido2PrivilegedApiClient;
 import com.google.android.gms.fido.fido2.api.common.Algorithm;
 import com.google.android.gms.fido.fido2.api.common.Attachment;
@@ -73,9 +76,9 @@ public class WebAuthnUtils
         return result;
     }
 
-    public static void makeCredential(final String rpId, final GeckoBundle identifiers,
+    @ReflectionTarget
+    public static void makeCredential(final GeckoBundle credentialBundle,
                                       final byte[] userId, final byte[] challenge,
-                                      final long timeoutMs, final String originStr,
                                       final WebAuthnTokenManager.WebAuthnPublicCredential[] excludeList,
                                       final GeckoBundle authenticatorSelection,
                                       final GeckoBundle extensions,
@@ -88,11 +91,14 @@ public class WebAuthnUtils
             return;
         }
 
+        if (!credentialBundle.containsKey("isWebAuthn")) {
+            // FIDO U2F not supported by Android (for us anyway) at this time
+            handler.onFailure("NOT_SUPPORTED_ERR");
+            return;
+        }
+
         PublicKeyCredentialCreationOptions.Builder requestBuilder =
             new PublicKeyCredentialCreationOptions.Builder();
-
-        Fido2PrivilegedApiClient fidoClient = // Only works in released builds
-            Fido.getFido2PrivilegedApiClient(currentActivity.getApplicationContext());
 
         List<PublicKeyCredentialParameters> params =
             new ArrayList<PublicKeyCredentialParameters>();
@@ -111,9 +117,9 @@ public class WebAuthnUtils
 
         PublicKeyCredentialUserEntity user =
             new PublicKeyCredentialUserEntity(userId,
-                    identifiers.getString("userName", ""),
-                    identifiers.getString("userIcon", ""),
-                    identifiers.getString("userDisplayName", ""));
+                    credentialBundle.getString("userName", ""),
+                    credentialBundle.getString("userIcon", ""),
+                    credentialBundle.getString("userDisplayName", ""));
 
         AttestationConveyancePreference pref =
             AttestationConveyancePreference.NONE;
@@ -158,9 +164,10 @@ public class WebAuthnUtils
         }
 
         PublicKeyCredentialRpEntity rp =
-            new PublicKeyCredentialRpEntity(rpId,
-                    identifiers.getString("rpName", ""),
-                    identifiers.getString("rpIcon", ""));
+            new PublicKeyCredentialRpEntity(
+                    credentialBundle.getString("rpId"),
+                    credentialBundle.getString("rpName", ""),
+                    credentialBundle.getString("rpIcon", ""));
 
         PublicKeyCredentialCreationOptions requestOptions =
             requestBuilder
@@ -171,11 +178,11 @@ public class WebAuthnUtils
                 .setChallenge(challenge)
                 .setRp(rp)
                 .setParameters(params)
-                .setTimeoutSeconds(timeoutMs / 1000.0)
+                .setTimeoutSeconds(credentialBundle.getLong("timeoutMS") / 1000.0)
                 .setExcludeList(excludedList)
                 .build();
 
-        Uri origin = Uri.parse(originStr);
+        Uri origin = Uri.parse(credentialBundle.getString("origin"));
 
         BrowserPublicKeyCredentialCreationOptions browserOptions =
             new BrowserPublicKeyCredentialCreationOptions.Builder()
@@ -183,7 +190,28 @@ public class WebAuthnUtils
                 .setOrigin(origin)
                 .build();
 
-        Task<Fido2PendingIntent> result = fidoClient.getRegisterIntent(browserOptions);
+        Task<Fido2PendingIntent> result;
+
+        if (AppConstants.MOZILLA_OFFICIAL) {
+            // The privileged API only works in released builds, signed by
+            // Mozilla infrastructure. This permits setting the origin to a
+            // webpage one.
+            Fido2PrivilegedApiClient fidoClient =
+                Fido.getFido2PrivilegedApiClient(currentActivity.getApplicationContext());
+
+            result = fidoClient.getRegisterIntent(browserOptions);
+        } else {
+            // For non-official builds, websites have to opt-in to permit the
+            // particular version of Gecko to perform WebAuthn operations on
+            // them. See https://developers.google.com/digital-asset-links
+            // for the general form, and Step 1 of
+            // https://developers.google.com/identity/fido/android/native-apps
+            // for details about doing this correctly for the FIDO2 API.
+            Fido2ApiClient fidoClient =
+                Fido.getFido2ApiClient(currentActivity.getApplicationContext());
+
+            result = fidoClient.getRegisterIntent(requestOptions);
+        }
 
         result.addOnSuccessListener(new OnSuccessListener<Fido2PendingIntent>() {
             @Override
@@ -260,9 +288,10 @@ public class WebAuthnUtils
         }
     }
 
-    public static void getAssertion(final String rpId, final byte[] challenge,
-                                    final long timeoutMs, final String originStr,
+    @ReflectionTarget
+    public static void getAssertion(final byte[] challenge,
                                     final WebAuthnTokenManager.WebAuthnPublicCredential[] allowList,
+                                    final GeckoBundle assertionBundle,
                                     final GeckoBundle extensions,
                                     WebAuthnTokenManager.WebAuthnGetAssertionResponse handler) {
         final Activity currentActivity =
@@ -270,6 +299,12 @@ public class WebAuthnUtils
 
         if (currentActivity == null) {
             handler.onFailure("UNKNOWN_ERR");
+            return;
+        }
+
+        if (!assertionBundle.containsKey("isWebAuthn")) {
+            // FIDO U2F not supported by Android (for us anyway) at this time
+            handler.onFailure("NOT_SUPPORTED_ERR");
             return;
         }
 
@@ -283,9 +318,6 @@ public class WebAuthnUtils
                                     getTransportsForByte(cred.mTransports)));
         }
 
-        Fido2PrivilegedApiClient fidoClient = // Only works in released builds
-            Fido.getFido2PrivilegedApiClient(currentActivity.getApplicationContext());
-
         AuthenticationExtensions.Builder extBuilder =
             new AuthenticationExtensions.Builder();
         if (extensions.containsKey("fidoAppId")) {
@@ -298,19 +330,33 @@ public class WebAuthnUtils
             new PublicKeyCredentialRequestOptions.Builder()
                 .setChallenge(challenge)
                 .setAllowList(allowedList)
-                .setTimeoutSeconds(timeoutMs / 1000.0)
-                .setRpId(rpId)
+                .setTimeoutSeconds(assertionBundle.getLong("timeoutMS") / 1000.0)
+                .setRpId(assertionBundle.getString("rpId"))
                 .setAuthenticationExtensions(ext)
                 .build();
 
-        Uri origin = Uri.parse(originStr);
+        Uri origin = Uri.parse(assertionBundle.getString("origin"));
         BrowserPublicKeyCredentialRequestOptions browserOptions =
             new BrowserPublicKeyCredentialRequestOptions.Builder()
                 .setPublicKeyCredentialRequestOptions(requestOptions)
                 .setOrigin(origin)
                 .build();
 
-        Task<Fido2PendingIntent> result = fidoClient.getSignIntent(browserOptions);
+
+        Task<Fido2PendingIntent> result;
+        // See the makeCredential method for documentation about this
+        // conditional.
+        if (AppConstants.MOZILLA_OFFICIAL) {
+            Fido2PrivilegedApiClient fidoClient =
+                Fido.getFido2PrivilegedApiClient(currentActivity.getApplicationContext());
+
+            result = fidoClient.getSignIntent(browserOptions);
+        } else {
+            Fido2ApiClient fidoClient =
+                Fido.getFido2ApiClient(currentActivity.getApplicationContext());
+
+            result = fidoClient.getSignIntent(requestOptions);
+        }
 
         result.addOnSuccessListener(new OnSuccessListener<Fido2PendingIntent>() {
             @Override

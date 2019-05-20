@@ -107,7 +107,7 @@ add_task(async function testChangeAutoUpdates() {
   await extension.unload();
 });
 
-async function setupExtensionWithUpdate(id) {
+async function setupExtensionWithUpdate(id, {releaseNotes} = {}) {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.checkUpdateSecurity", false]],
   });
@@ -132,14 +132,33 @@ async function setupExtensionWithUpdate(id) {
       version: "2",
     },
   });
+
+  let releaseNotesExtra = {};
+  if (releaseNotes) {
+    let notesPath = "/notes.txt";
+    server.registerPathHandler(notesPath, (request, response) => {
+      if (releaseNotes == "ERROR") {
+        response.setStatusLine(null, 404, "Not Found");
+      } else {
+        response.setStatusLine(null, 200, "OK");
+        response.write(releaseNotes);
+      }
+      response.processAsync();
+      response.finish();
+    });
+    releaseNotesExtra.update_info_url = serverHost + notesPath;
+  }
+
   let xpiFilename = `/update-${id}.xpi`;
   server.registerFile(xpiFilename, updateXpi);
   AddonTestUtils.registerJSON(server, updatesPath, {
     addons: {
       [id]: {
-        updates: [
-          {version: "2", update_link: serverHost + xpiFilename},
-        ],
+        updates: [{
+          version: "2",
+          update_link: serverHost + xpiFilename,
+          ...releaseNotesExtra,
+        }],
       },
     },
   });
@@ -184,7 +203,9 @@ function installUpdate(card, expected) {
   return Promise.all([updateInstalled, updated]);
 }
 
-function assertUpdateState({card, shown, expanded = true}) {
+function assertUpdateState({
+  card, shown, expanded = true, releaseNotes = false,
+}) {
   let menuButton = card.querySelector(".more-options-button");
   ok(menuButton.classList.contains("more-options-button-badged") == shown,
      "The menu button is badged");
@@ -195,6 +216,12 @@ function assertUpdateState({card, shown, expanded = true}) {
     let updateCheckButton = card.querySelector('button[action="update-check"]');
     ok(updateCheckButton.hidden == shown,
       `The update check button is ${shown ? "hidden" : "shown"}`);
+
+    let {tabGroup} = card.details;
+    is(tabGroup.hidden, false, "The tab group is shown");
+    let notesBtn = tabGroup.querySelector('[name="release-notes"]');
+    is(notesBtn.hidden, !releaseNotes,
+       `The release notes button is ${releaseNotes ? "shown" : "hidden"}`);
   }
 }
 
@@ -231,6 +258,157 @@ add_task(async function testUpdateAvailable() {
 
   // Check for updates again, there shouldn't be an update.
   await checkForUpdate(card, "no-update");
+
+  await closeView(win);
+  await extension.unload();
+});
+
+add_task(async function testReleaseNotesLoad() {
+  let id = "update-with-notes@mochi.test";
+  let extension = await setupExtensionWithUpdate(id, {
+    releaseNotes: `
+      <html xmlns="http://www.w3.org/1999/xhtml">
+        <head><link rel="stylesheet" href="remove-me.css"/></head>
+        <body>
+          <script src="no-scripts.js"></script>
+          <h1>My release notes</h1>
+          <img src="http://example.com/tracker.png"/>
+          <ul>
+            <li onclick="alert('hi')">A thing</li>
+          </ul>
+          <a href="http://example.com/">Go somewhere</a>
+        </body>
+      </html>
+    `,
+  });
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  await loadDetailView(win, id);
+
+  let card = doc.querySelector("addon-card");
+  let {deck, tabGroup} = card.details;
+
+  // Disable updates and then check.
+  disableAutoUpdates(card);
+  await checkForUpdate(card, "update-found");
+
+  // There should now be an update.
+  assertUpdateState({card, shown: true, releaseNotes: true});
+
+  info("Check release notes");
+  let notesBtn = tabGroup.querySelector('[name="release-notes"]');
+  let notes = card.querySelector("update-release-notes");
+  let loading = BrowserTestUtils.waitForEvent(notes, "release-notes-loading");
+  let loaded = BrowserTestUtils.waitForEvent(notes, "release-notes-loaded");
+  // Don't use notesBtn.click() since it causes an assertion to fail.
+  // See bug 1551621 for more info.
+  EventUtils.synthesizeMouseAtCenter(notesBtn, {}, win);
+  await loading;
+  is(doc.l10n.getAttributes(notes.firstElementChild).id,
+     "release-notes-loading", "The loading message is shown");
+  await loaded;
+  info("Checking HTML release notes");
+  let [h1, ul, a] = notes.children;
+  is(h1.tagName, "H1", "There's a heading");
+  is(h1.textContent, "My release notes", "The heading has content");
+  is(ul.tagName, "UL", "There's a list");
+  is(ul.children.length, 1, "There's one item in the list");
+  let [li] = ul.children;
+  is(li.tagName, "LI", "There's a list item");
+  is(li.textContent, "A thing", "The text is set");
+  ok(!li.hasAttribute("onclick"), "The onclick was removed");
+  ok(!notes.querySelector("link"), "The link tag was removed");
+  ok(!notes.querySelector("script"), "The script tag was removed");
+  is(a.textContent, "Go somewhere", "The link text is preserved");
+  is(a.href, "http://example.com/", "The link href is preserved");
+
+  info("Verify the link opened in a new tab");
+  let tabOpened = BrowserTestUtils.waitForNewTab(gBrowser, a.href);
+  a.click();
+  let tab = await tabOpened;
+  BrowserTestUtils.removeTab(tab);
+
+  let originalContent = notes.innerHTML;
+
+  info("Switch away and back to release notes");
+  // Load details view.
+  let detailsBtn = tabGroup.firstElementChild;
+  let viewChanged = BrowserTestUtils.waitForEvent(deck, "view-changed");
+  detailsBtn.click();
+  await viewChanged;
+
+  // Load release notes again, verify they weren't loaded.
+  viewChanged = BrowserTestUtils.waitForEvent(deck, "view-changed");
+  let notesCached = BrowserTestUtils.waitForEvent(
+    notes, "release-notes-cached");
+  notesBtn.click();
+  await viewChanged;
+  await notesCached;
+  is(notes.innerHTML, originalContent, "The content didn't change");
+
+  info("Install the update to clean it up");
+  await installUpdate(card, "update-installed");
+
+  // There's no more update but release notes are still shown.
+  assertUpdateState({card, shown: false, releaseNotes: true});
+
+  await closeView(win);
+  await extension.unload();
+});
+
+add_task(async function testReleaseNotesError() {
+  let id = "update-with-notes-error@mochi.test";
+  let extension = await setupExtensionWithUpdate(id, {releaseNotes: "ERROR"});
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  await loadDetailView(win, id);
+
+  let card = doc.querySelector("addon-card");
+  let {deck, tabGroup} = card.details;
+
+  // Disable updates and then check.
+  disableAutoUpdates(card);
+  await checkForUpdate(card, "update-found");
+
+  // There should now be an update.
+  assertUpdateState({card, shown: true, releaseNotes: true});
+
+  info("Check release notes");
+  let notesBtn = tabGroup.querySelector('[name="release-notes"]');
+  let notes = card.querySelector("update-release-notes");
+  let loading = BrowserTestUtils.waitForEvent(notes, "release-notes-loading");
+  let errored = BrowserTestUtils.waitForEvent(notes, "release-notes-error");
+  // Don't use notesBtn.click() since it causes an assertion to fail.
+  // See bug 1551621 for more info.
+  EventUtils.synthesizeMouseAtCenter(notesBtn, {}, win);
+  await loading;
+  is(doc.l10n.getAttributes(notes.firstElementChild).id,
+     "release-notes-loading", "The loading message is shown");
+  await errored;
+  is(doc.l10n.getAttributes(notes.firstElementChild).id,
+     "release-notes-error", "The error message is shown");
+
+  info("Switch away and back to release notes");
+  // Load details view.
+  let detailsBtn = tabGroup.firstElementChild;
+  let viewChanged = BrowserTestUtils.waitForEvent(deck, "view-changed");
+  detailsBtn.click();
+  await viewChanged;
+
+  // Load release notes again, verify they weren't loaded.
+  viewChanged = BrowserTestUtils.waitForEvent(deck, "view-changed");
+  let notesCached = BrowserTestUtils.waitForEvent(
+    notes, "release-notes-cached");
+  notesBtn.click();
+  await viewChanged;
+  await notesCached;
+
+  info("Install the update to clean it up");
+  await installUpdate(card, "update-installed");
 
   await closeView(win);
   await extension.unload();

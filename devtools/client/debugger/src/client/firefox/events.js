@@ -10,7 +10,7 @@ import type {
   PausedPacket,
   ThreadClient,
   Actions,
-  TabTarget
+  TabTarget,
 } from "./types";
 
 import { createPause, prepareSourcePayload } from "./create";
@@ -21,7 +21,7 @@ const CALL_STACK_PAGE_SIZE = 1000;
 type Dependencies = {
   threadClient: ThreadClient,
   tabTarget: TabTarget,
-  actions: Actions
+  actions: Actions,
 };
 
 let actions: Actions;
@@ -101,7 +101,7 @@ function newSource(
 ) {
   sourceQueue.queue({
     type: "generated",
-    data: prepareSourcePayload(threadClient, source)
+    data: prepareSourcePayload(threadClient, source),
   });
 }
 
@@ -112,7 +112,7 @@ function workerListChanged() {
 const clientEvents = {
   paused,
   resumed,
-  newSource
+  newSource,
 };
 
 export { setupEvents, clientEvents, addThreadEventListeners };

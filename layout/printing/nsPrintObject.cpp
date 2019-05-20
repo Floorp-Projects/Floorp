@@ -22,7 +22,9 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 
+using mozilla::PresShell;
 using mozilla::dom::BrowsingContext;
+using mozilla::dom::Document;
 using mozilla::dom::Element;
 
 //---------------------------------------------------

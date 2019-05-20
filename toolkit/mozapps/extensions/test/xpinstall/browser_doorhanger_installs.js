@@ -301,6 +301,57 @@ async function test_blockedInstall() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 },
 
+async function test_permaBlockInstall() {
+  let notificationPromise = waitForNotification("addon-install-blocked");
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "amosigned.xpi",
+  }));
+  let target = TESTROOT + "installtrigger.html?" + triggers;
+
+  BrowserTestUtils.openNewForegroundTab(gBrowser, target);
+  let notification = (await notificationPromise).firstElementChild;
+  let neverAllowBtn = notification.menupopup.firstElementChild;
+
+  neverAllowBtn.click();
+
+  await TestUtils.waitForCondition(() => !PopupNotifications.isPanelOpen, "Waiting for notification to close");
+
+  let installs = await AddonManager.getAllInstalls();
+  is(installs.length, 0, "Should be no pending installs");
+
+  let installPerm = Services.perms.testPermission(gBrowser.currentURI, "install");
+  is(installPerm, Ci.nsIPermissionManager.DENY_ACTION, "Addon installation should be blocked for site");
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  SitePermissions.remove(NetUtil.newURI(target), "install");
+},
+
+async function test_permaBlockedInstallNoPrompt() {
+  let triggers = encodeURIComponent(JSON.stringify({
+    "XPI": "amosigned.xpi",
+  }));
+  let target = TESTROOT + "installtrigger.html?" + triggers;
+
+  SitePermissions.set(NetUtil.newURI(target), "install", SitePermissions.BLOCK);
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, target);
+
+  let panelOpened;
+  try {
+    panelOpened = await TestUtils.waitForCondition(() => PopupNotifications.isPanelOpen, 100, 10);
+  } catch (ex) {
+    panelOpened = false;
+  }
+  is(panelOpened, false, "Addon prompt should not open");
+
+  let installs = await AddonManager.getAllInstalls();
+  is(installs.length, 0, "Should be no pending installs");
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  SitePermissions.remove(NetUtil.newURI(target), "install");
+},
+
 async function test_whitelistedInstall() {
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
   let originalTab = gBrowser.selectedTab;

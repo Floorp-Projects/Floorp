@@ -19,7 +19,7 @@ function done()
 {
   // because we are cancelling the fullscreen event, it
   // takes a bit for the fullScreen property to be set
-  setTimeout("complete()", 0);
+  setTimeout(function() { this.complete(); }, 0);
 }
 
 function complete()

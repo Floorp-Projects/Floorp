@@ -19,7 +19,7 @@ class _BookmarkPanelHub {
     this._handleMessageRequest = null;
     this._addImpression = null;
     this._dispatch = null;
-    this._initalized = false;
+    this._initialized = false;
     this._response = null;
     this._l10n = null;
 
@@ -42,12 +42,12 @@ class _BookmarkPanelHub {
       "browser/branding/sync-brand.ftl",
       "browser/newtab/asrouter.ftl",
     ]);
-    this._initalized = true;
+    this._initialized = true;
   }
 
   uninit() {
     this._l10n = null;
-    this._initalized = false;
+    this._initialized = false;
     this._handleMessageRequest = null;
     this._addImpression = null;
     this._dispatch = null;
@@ -64,6 +64,10 @@ class _BookmarkPanelHub {
    * @returns {obj|null} response object or null if no messages matched
    */
   async messageRequest(target, win) {
+    if (!this._initialized) {
+      return false;
+    }
+
     if (this._response && this._response.win === win && this._response.url === target.url && this._response.content) {
       this.showMessage(this._response.content, target, win);
       return true;

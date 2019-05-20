@@ -9,7 +9,7 @@ function initialState() {
     expandedPaths: new Set(),
     loadedProperties: new Map(),
     evaluations: new Map(),
-    actors: new Set()
+    actors: new Set(),
   };
 }
 
@@ -23,7 +23,7 @@ function reducer(
 
   if (type === "NODE_EXPAND") {
     return cloneState({
-      expandedPaths: new Set(state.expandedPaths).add(data.node.path)
+      expandedPaths: new Set(state.expandedPaths).add(data.node.path),
     });
   }
 
@@ -41,7 +41,7 @@ function reducer(
       loadedProperties: new Map(state.loadedProperties).set(
         data.node.path,
         action.data.properties
-      )
+      ),
     });
   }
 
@@ -58,8 +58,8 @@ function reducer(
         getterValue:
           data.result &&
           data.result.value &&
-          (data.result.value.return || data.result.value.throw)
-      })
+          (data.result.value.return || data.result.value.throw),
+      }),
     });
   }
 
@@ -106,11 +106,11 @@ const selectors = {
   getExpandedPathKeys,
   getExpandedPaths,
   getLoadedProperties,
-  getLoadedPropertyKeys
+  getLoadedPropertyKeys,
 };
 
 Object.defineProperty(module.exports, "__esModule", {
-  value: true
+  value: true,
 });
 module.exports = selectors;
 module.exports.default = reducer;

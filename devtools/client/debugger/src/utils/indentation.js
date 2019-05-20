@@ -25,7 +25,7 @@ function getMaxIndentation(lines) {
   const indentations = [
     getIndentation(firstLine),
     getIndentation(secondLine),
-    getIndentation(lastLine)
+    getIndentation(lastLine),
   ];
 
   return Math.max(...indentations);

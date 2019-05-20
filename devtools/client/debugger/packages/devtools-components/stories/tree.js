@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this file,
-* You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
 const { Component, createFactory, createElement } = React;
@@ -35,37 +35,45 @@ storiesOf("Tree", module)
     return renderTree({
       focused: "W",
       getRoots: () => ["A", "W"],
-      expanded: new Set(["A"])
+      expanded: new Set(["A"]),
     });
   })
   .add("variable height nodes", () => {
-    const nodes = Array.from({length: 10})
-      .map((_, i) => `item ${i + 1} - `.repeat(10 + Math.random() * 50));
-    return renderTree({
-      getRoots: () => ["ROOT"],
-      expanded: new Set(["ROOT"])
-    }, {
-      children: {"ROOT": nodes}
-    });
+    const nodes = Array.from({ length: 10 }).map((_, i) =>
+      `item ${i + 1} - `.repeat(10 + Math.random() * 50)
+    );
+    return renderTree(
+      {
+        getRoots: () => ["ROOT"],
+        expanded: new Set(["ROOT"]),
+      },
+      {
+        children: { ROOT: nodes },
+      }
+    );
   })
   .add("scrollable tree", () => {
-    const nodes = Array.from({length: 500}).map((_, i) => (i + 1).toString());
+    const nodes = Array.from({ length: 500 }).map((_, i) => (i + 1).toString());
 
     class container extends Component {
       constructor(props) {
         super(props);
         const state = {
           expanded: new Set(),
-          focused: null
+          focused: null,
         };
         this.state = state;
       }
 
       render() {
-        return createElement("div", {},
-          createElement("label", {
-            style: {position: "fixed", right: 0},
-          },
+        return createElement(
+          "div",
+          {},
+          createElement(
+            "label",
+            {
+              style: { position: "fixed", right: 0 },
+            },
             "Enter node number to set focus on: ",
             createElement("input", {
               type: "number",
@@ -76,44 +84,55 @@ storiesOf("Tree", module)
                 // callback is called.
                 const value = e.target.value.toString();
                 this.setState(previousState => {
-                  return {focused: value};
+                  return { focused: value };
                 });
-              }
-            }),
+              },
+            })
           ),
-          createTreeElement({getRoots: () => nodes}, this, {})
+          createTreeElement({ getRoots: () => nodes }, this, {})
         );
       }
     }
     return createFactory(container)();
   })
   .add("scrollable tree with focused node", () => {
-    const nodes = Array.from({length: 500}).map((_, i) => `item ${i + 1}`);
-    return renderTree({
-      focused: "item 250",
-      getRoots: () => nodes,
-    }, {});
+    const nodes = Array.from({ length: 500 }).map((_, i) => `item ${i + 1}`);
+    return renderTree(
+      {
+        focused: "item 250",
+        getRoots: () => nodes,
+      },
+      {}
+    );
   })
   .add("1000 items tree", () => {
-    const nodes = Array.from({length: 1000}).map((_, i) => `item-${i + 1}`);
-    return renderTree({
-      getRoots: () => ["ROOT"],
-      expanded: new Set()
-    }, {
-      children: {"ROOT": nodes}
-    });
+    const nodes = Array.from({ length: 1000 }).map((_, i) => `item-${i + 1}`);
+    return renderTree(
+      {
+        getRoots: () => ["ROOT"],
+        expanded: new Set(),
+      },
+      {
+        children: { ROOT: nodes },
+      }
+    );
   })
   .add("30,000 items tree", () => {
-    const nodes = Array.from({length: 1000}).map((_, i) => `item-${i + 1}`);
-    return renderTree({
-      getRoots: () => nodes,
-      expanded: new Set(Array.from({length: 2000}).map((_, i) => `item-${i + 1}`))
-    }, {
-      children: Array.from({length: 2000}).reduce((res, _, i) => {
-        res[`item-${i + 1}`] = [`item-${i + 1001}`];
-        return res;
-      }, {})
-    });
+    const nodes = Array.from({ length: 1000 }).map((_, i) => `item-${i + 1}`);
+    return renderTree(
+      {
+        getRoots: () => nodes,
+        expanded: new Set(
+          Array.from({ length: 2000 }).map((_, i) => `item-${i + 1}`)
+        ),
+      },
+      {
+        children: Array.from({ length: 2000 }).reduce((res, _, i) => {
+          res[`item-${i + 1}`] = [`item-${i + 1001}`];
+          return res;
+        }, {}),
+      }
+    );
   });
 
 // Encoding of the following tree/forest:
@@ -197,7 +216,7 @@ function renderTree(props, tree = TEST_TREE) {
       super(props2);
       const state = {
         expanded: props2.expanded || new Set(),
-        focused: props2.focused
+        focused: props2.focused,
       };
       delete props2.focused;
       this.state = state;
@@ -211,34 +230,38 @@ function renderTree(props, tree = TEST_TREE) {
 }
 
 function createTreeElement(props, context, tree) {
-  return Tree(Object.assign({
-    getParent: x => tree.parent && tree.parent[x],
-    getChildren: x => tree.children && tree.children[x]
-      ? tree.children[x]
-      : [],
-    renderItem: (x, depth, focused, arrow, expanded) => [arrow, x],
-    getRoots: () => ["A"],
-    getKey: x => "key-" + x,
-    onFocus: x => {
-      context.setState(previousState => {
-        return {focused: x};
-      });
-    },
-    onExpand: x => {
-      context.setState(previousState => {
-        const expanded = new Set(previousState.expanded);
-        expanded.add(x);
-        return {expanded};
-      });
-    },
-    onCollapse: x => {
-      context.setState(previousState => {
-        const expanded = new Set(previousState.expanded);
-        expanded.delete(x);
-        return {expanded};
-      });
-    },
-    isExpanded: x => context.state && context.state.expanded.has(x),
-    focused: context.state.focused,
-  }, props));
+  return Tree(
+    Object.assign(
+      {
+        getParent: x => tree.parent && tree.parent[x],
+        getChildren: x =>
+          tree.children && tree.children[x] ? tree.children[x] : [],
+        renderItem: (x, depth, focused, arrow, expanded) => [arrow, x],
+        getRoots: () => ["A"],
+        getKey: x => `key-${x}`,
+        onFocus: x => {
+          context.setState(previousState => {
+            return { focused: x };
+          });
+        },
+        onExpand: x => {
+          context.setState(previousState => {
+            const expanded = new Set(previousState.expanded);
+            expanded.add(x);
+            return { expanded };
+          });
+        },
+        onCollapse: x => {
+          context.setState(previousState => {
+            const expanded = new Set(previousState.expanded);
+            expanded.delete(x);
+            return { expanded };
+          });
+        },
+        isExpanded: x => context.state && context.state.expanded.has(x),
+        focused: context.state.focused,
+      },
+      props
+    )
+  );
 }

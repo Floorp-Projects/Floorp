@@ -2006,4 +2006,27 @@ void nsContainerFrame::List(FILE* out, const char* aPrefix,
     fprintf_stderr(out, "%s<>\n", str.get());
   }
 }
+
+void nsContainerFrame::ListWithMatchedRules(FILE* out,
+                                            const char* aPrefix) const {
+  fprintf_stderr(out, "%s%s\n", aPrefix, ListTag().get());
+
+  nsCString rulePrefix;
+  rulePrefix += aPrefix;
+  rulePrefix += "    ";
+  ListMatchedRules(out, rulePrefix.get());
+
+  nsCString childPrefix;
+  childPrefix += aPrefix;
+  childPrefix += "  ";
+
+  ChildListIterator lists(this);
+  for (; !lists.IsDone(); lists.Next()) {
+    nsFrameList::Enumerator childFrames(lists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* kid = childFrames.get();
+      kid->ListWithMatchedRules(out, childPrefix.get());
+    }
+  }
+}
 #endif

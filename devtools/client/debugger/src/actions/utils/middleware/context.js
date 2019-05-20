@@ -6,7 +6,7 @@
 
 import {
   validateNavigateContext,
-  validateContext
+  validateContext,
 } from "../../../utils/context";
 
 import type { ThunkArgs } from "../../types";

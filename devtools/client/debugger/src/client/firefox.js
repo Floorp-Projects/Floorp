@@ -16,7 +16,7 @@ function createObjectClient(grip: Grip) {
 
 export async function onConnect(connection: any, actions: Object) {
   const {
-    tabConnection: { tabTarget, threadClient, debuggerClient }
+    tabConnection: { tabTarget, threadClient, debuggerClient },
   } = connection;
 
   DebuggerClient = debuggerClient;
@@ -32,7 +32,7 @@ export async function onConnect(connection: any, actions: Object) {
     threadClient,
     tabTarget,
     debuggerClient,
-    supportsWasm
+    supportsWasm,
   });
 
   setupEvents({ threadClient, tabTarget, actions, supportsWasm });
@@ -44,7 +44,7 @@ export async function onConnect(connection: any, actions: Object) {
     observeAsmJS: true,
     pauseWorkersUntilAttach: true,
     wasmBinarySource: supportsWasm,
-    skipBreakpoints: prefs.skipPausing
+    skipBreakpoints: prefs.skipPausing,
   });
 
   // In Firefox, we need to initially request all of the sources. This
@@ -58,7 +58,8 @@ export async function onConnect(connection: any, actions: Object) {
   await actions.connect(
     tabTarget.url,
     threadClient.actor,
-    traits && traits.canRewind
+    traits && traits.canRewind,
+    tabTarget.isWebExtension
   );
   await actions.newGeneratedSources(sourceInfo);
 

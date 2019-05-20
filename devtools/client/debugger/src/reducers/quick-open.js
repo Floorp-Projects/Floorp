@@ -19,13 +19,13 @@ export type QuickOpenType = "sources" | "functions" | "goto" | "gotoSource";
 export type QuickOpenState = {
   enabled: boolean,
   query: string,
-  searchType: QuickOpenType
+  searchType: QuickOpenType,
 };
 
 export const createQuickOpenState: () => Record<QuickOpenState> = makeRecord({
   enabled: false,
   query: "",
-  searchType: "sources"
+  searchType: "sources",
 });
 
 export default function update(
@@ -38,7 +38,7 @@ export default function update(
         return state.merge({
           enabled: true,
           query: action.query,
-          searchType: parseQuickOpenQuery(action.query)
+          searchType: parseQuickOpenQuery(action.query),
         });
       }
       return state.set("enabled", true);
@@ -47,7 +47,7 @@ export default function update(
     case "SET_QUICK_OPEN_QUERY":
       return state.merge({
         query: action.query,
-        searchType: parseQuickOpenQuery(action.query)
+        searchType: parseQuickOpenQuery(action.query),
       });
     default:
       return state;
@@ -55,7 +55,7 @@ export default function update(
 }
 
 type OuterState = {
-  quickOpen: Record<QuickOpenState>
+  quickOpen: Record<QuickOpenState>,
 };
 
 export function getQuickOpenEnabled(state: OuterState): boolean {

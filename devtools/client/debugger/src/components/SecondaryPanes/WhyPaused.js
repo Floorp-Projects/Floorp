@@ -11,7 +11,7 @@ import { getPauseReason } from "../../utils/pause";
 import {
   getCurrentThread,
   getPaneCollapse,
-  getPauseReason as getWhy
+  getPauseReason as getWhy,
 } from "../../selectors";
 import type { Grip, ExceptionReason } from "../../types";
 
@@ -20,11 +20,11 @@ import "./WhyPaused.css";
 type Props = {
   endPanelCollapsed: boolean,
   delay: ?number,
-  why: ExceptionReason
+  why: ExceptionReason,
 };
 
 type State = {
-  hideWhyPaused: string
+  hideWhyPaused: string,
 };
 
 class WhyPaused extends PureComponent<Props, State> {
@@ -103,7 +103,7 @@ const mapStateToProps = state => {
   const thread = getCurrentThread(state);
   return {
     endPanelCollapsed: getPaneCollapse(state, "end"),
-    why: getWhy(state, thread)
+    why: getWhy(state, thread),
   };
 };
 

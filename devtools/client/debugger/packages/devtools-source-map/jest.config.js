@@ -12,5 +12,5 @@ module.exports = {
   transformIgnorePatterns: ["node_modules/(?!devtools-)"],
   setupFiles: [],
   testURL: "http://localhost/",
-  moduleNameMapper: {}
+  moduleNameMapper: {},
 };

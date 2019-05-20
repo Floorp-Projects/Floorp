@@ -16,7 +16,7 @@ import type { Cancellable } from "../types";
 export type Search = {
   +sourceId: string,
   +filepath: string,
-  +matches: any[]
+  +matches: any[],
 };
 
 export type SearchOperation = Cancellable;
@@ -32,7 +32,7 @@ export const statusType = {
   fetching: "FETCHING",
   cancelled: "CANCELLED",
   done: "DONE",
-  error: "ERROR"
+  error: "ERROR",
 };
 
 export type ResultList = Search[];
@@ -40,7 +40,7 @@ export type ProjectTextSearchState = {
   +query: string,
   +ongoingSearch: ?SearchOperation,
   +results: ResultList,
-  +status: string
+  +status: string,
 };
 
 export function initialProjectTextSearchState(): ProjectTextSearchState {
@@ -48,7 +48,7 @@ export function initialProjectTextSearchState(): ProjectTextSearchState {
     query: "",
     results: [],
     ongoingSearch: null,
-    status: statusType.initial
+    status: statusType.initial,
   };
 }
 
@@ -69,7 +69,7 @@ function update(
       const result = {
         type: "RESULT",
         ...action.result,
-        matches: action.result.matches.map(m => ({ type: "MATCH", ...m }))
+        matches: action.result.matches.map(m => ({ type: "MATCH", ...m })),
       };
       return { ...state, results: [...results, result] };
 

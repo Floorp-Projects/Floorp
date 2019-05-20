@@ -1245,6 +1245,9 @@ class nsDocShell final : public nsDocLoader,
   // docshell is destroyed, the browsing context will not be detached. This is
   // for cases where we want to preserve the BC for future use.
   bool mSkipBrowsingContextDetachOnDestroy : 1;
+
+  // Set when activity in this docshell is being watched by the developer tools.
+  bool mWatchedByDevtools : 1;
 };
 
 #endif /* nsDocShell_h__ */

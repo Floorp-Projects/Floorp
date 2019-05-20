@@ -20,7 +20,7 @@ export type GeneratedDescriptor = {
   // or if there was a mismatch between client and generated scopes.
   desc: ?BindingContents,
 
-  expression: string
+  expression: string,
 };
 
 /**
@@ -130,7 +130,7 @@ export async function findGeneratedImportDeclaration(
       result = {
         name: binding.name,
         desc: namespaceDesc,
-        expression: binding.name
+        expression: binding.name,
       };
       continue;
     }
@@ -142,7 +142,7 @@ export async function findGeneratedImportDeclaration(
       result = {
         name: binding.name,
         desc,
-        expression
+        expression,
       };
       break;
     }
@@ -159,7 +159,7 @@ async function mapBindingReferenceToDescriptor({
   binding,
   range,
   firstInRange,
-  firstOnLine
+  firstOnLine,
 }: ApplicableBinding): Promise<GeneratedDescriptor | null> {
   // Allow the mapping to point anywhere within the generated binding
   // location to allow for less than perfect sourcemaps. Since you also
@@ -179,7 +179,7 @@ async function mapBindingReferenceToDescriptor({
     return {
       name: binding.name,
       desc: await binding.desc(),
-      expression: binding.name
+      expression: binding.name,
     };
   }
 
@@ -193,7 +193,7 @@ async function mapBindingReferenceToDescriptor({
  */
 async function mapImportReferenceToDescriptor({
   binding,
-  range
+  range,
 }: ApplicableBinding): Promise<GeneratedDescriptor | null> {
   if (binding.loc.type !== "ref") {
     return null;
@@ -281,7 +281,7 @@ async function mapImportReferenceToDescriptor({
     ? {
         name: binding.name,
         desc,
-        expression
+        expression,
       }
     : null;
 }
@@ -313,8 +313,8 @@ async function readDescriptorProperty(
     // as the value.
     return {
       value: {
-        type: "undefined"
-      }
+        type: "undefined",
+      },
     };
   }
 

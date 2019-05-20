@@ -14,10 +14,10 @@ stubs.set("BodyNode", {
     nodeName: "body",
     attributes: {
       class: "body-class",
-      id: "body-id"
+      id: "body-id",
     },
-    attributesLength: 2
-  }
+    attributesLength: 2,
+  },
 });
 
 stubs.set("DocumentElement", {
@@ -31,10 +31,10 @@ stubs.set("DocumentElement", {
     nodeName: "html",
     attributes: {
       dir: "ltr",
-      lang: "en-US"
+      lang: "en-US",
     },
-    attributesLength: 2
-  }
+    attributesLength: 2,
+  },
 });
 
 stubs.set("Node", {
@@ -56,10 +56,10 @@ stubs.set("Node", {
       title: "Customize your New Tab page",
       class: "bar baz",
       value: "foo",
-      type: "button"
+      type: "button",
     },
-    attributesLength: 6
-  }
+    attributesLength: 6,
+  },
 });
 
 stubs.set("DisconnectedNode", {
@@ -81,10 +81,10 @@ stubs.set("DisconnectedNode", {
       title: "Customize your New Tab page",
       class: "bar baz",
       value: "foo",
-      type: "button"
+      type: "button",
     },
-    attributesLength: 6
-  }
+    attributesLength: 6,
+  },
 });
 
 stubs.set("NodeWithLeadingAndTrailingSpacesClassName", {
@@ -101,10 +101,10 @@ stubs.set("NodeWithLeadingAndTrailingSpacesClassName", {
     nodeName: "body",
     attributes: {
       id: "nightly-whatsnew",
-      class: "  html-ltr    "
+      class: "  html-ltr    ",
     },
-    attributesLength: 2
-  }
+    attributesLength: 2,
+  },
 });
 
 stubs.set("NodeWithSpacesInClassName", {
@@ -120,10 +120,10 @@ stubs.set("NodeWithSpacesInClassName", {
     nodeType: 1,
     nodeName: "body",
     attributes: {
-      class: "a  b   c"
+      class: "a  b   c",
     },
-    attributesLength: 1
-  }
+    attributesLength: 1,
+  },
 });
 
 stubs.set("NodeWithoutAttributes", {
@@ -136,8 +136,8 @@ stubs.set("NodeWithoutAttributes", {
     nodeType: 1,
     nodeName: "p",
     attributes: {},
-    attributesLength: 1
-  }
+    attributesLength: 1,
+  },
 });
 
 stubs.set("LotsOfAttributes", {
@@ -164,10 +164,10 @@ stubs.set("LotsOfAttributes", {
       k: "",
       l: "",
       m: "",
-      n: ""
+      n: "",
     },
-    attributesLength: 15
-  }
+    attributesLength: 15,
+  },
 });
 
 stubs.set("SvgNode", {
@@ -181,10 +181,10 @@ stubs.set("SvgNode", {
     nodeName: "clipPath",
     attributes: {
       id: "clip",
-      class: "svg-element"
+      class: "svg-element",
     },
-    attributesLength: 0
-  }
+    attributesLength: 0,
+  },
 });
 
 stubs.set("SvgNodeInXHTML", {
@@ -200,10 +200,10 @@ stubs.set("SvgNodeInXHTML", {
       class: "svg-element",
       cx: "0",
       cy: "0",
-      r: "5"
+      r: "5",
     },
-    attributesLength: 3
-  }
+    attributesLength: 3,
+  },
 });
 
 stubs.set("NodeWithLongAttribute", {
@@ -216,10 +216,10 @@ stubs.set("NodeWithLongAttribute", {
     nodeType: 1,
     nodeName: "p",
     attributes: {
-      "data-test": "a".repeat(100)
+      "data-test": "a".repeat(100),
     },
-    attributesLength: 1
-  }
+    attributesLength: 1,
+  },
 });
 
 const initialText = "a".repeat(1000);
@@ -241,11 +241,11 @@ stubs.set("NodeWithLongStringAttribute", {
         type: "longString",
         initial: initialText,
         length: 50000,
-        actor: "server1.conn1.child1/longString29"
-      }
+        actor: "server1.conn1.child1/longString29",
+      },
     },
-    attributesLength: 1
-  }
+    attributesLength: 1,
+  },
 });
 
 stubs.set("MarkerPseudoElement", {
@@ -257,8 +257,8 @@ stubs.set("MarkerPseudoElement", {
     nodeName: "_moz_generated_content_marker",
     attributes: {},
     attributesLength: 0,
-    isMarkerPseudoElement: true
-  }
+    isMarkerPseudoElement: true,
+  },
 });
 
 stubs.set("BeforePseudoElement", {
@@ -270,8 +270,8 @@ stubs.set("BeforePseudoElement", {
     nodeName: "_moz_generated_content_before",
     attributes: {},
     attributesLength: 0,
-    isBeforePseudoElement: true
-  }
+    isBeforePseudoElement: true,
+  },
 });
 
 stubs.set("AfterPseudoElement", {
@@ -283,8 +283,8 @@ stubs.set("AfterPseudoElement", {
     nodeName: "_moz_generated_content_after",
     attributes: {},
     attributesLength: 0,
-    isAfterPseudoElement: true
-  }
+    isAfterPseudoElement: true,
+  },
 });
 
 module.exports = stubs;

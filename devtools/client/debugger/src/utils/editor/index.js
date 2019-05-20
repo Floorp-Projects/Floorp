@@ -22,7 +22,7 @@ import type {
   SearchModifiers,
   Source,
   SourceContent,
-  SourceLocation
+  SourceLocation,
 } from "../../types";
 type Editor = Object;
 
@@ -104,7 +104,7 @@ export function fromEditorLine(sourceId: string, line: number): number {
 export function toEditorPosition(location: SourceLocation): EditorPosition {
   return {
     line: toEditorLine(location.sourceId, location.line),
-    column: isWasm(location.sourceId) || !location.column ? 0 : location.column
+    column: isWasm(location.sourceId) || !location.column ? 0 : location.column,
   };
 }
 
@@ -115,7 +115,7 @@ export function toEditorRange(
   const { start, end } = location;
   return {
     start: toEditorPosition({ ...start, sourceId }),
-    end: toEditorPosition({ ...end, sourceId })
+    end: toEditorPosition({ ...end, sourceId }),
   };
 }
 
@@ -168,7 +168,7 @@ export function getLocationsInViewport({ codeMirror }: Object) {
   if (!codeMirror) {
     return {
       start: { line: 0, column: 0 },
-      end: { line: 0, column: 0 }
+      end: { line: 0, column: 0 },
     };
   }
   const charWidth = codeMirror.defaultCharWidth();
@@ -185,12 +185,12 @@ export function getLocationsInViewport({ codeMirror }: Object) {
   return {
     start: {
       line: topVisibleLine,
-      column: leftColumn
+      column: leftColumn,
     },
     end: {
       line: bottomVisibleLine,
-      column: rightCharacter
-    }
+      column: rightCharacter,
+    },
   };
 }
 
@@ -222,13 +222,13 @@ export function getSourceLocationFromMouseEvent(
 ) {
   const { line, ch } = codeMirror.coordsChar({
     left: e.clientX,
-    top: e.clientY
+    top: e.clientY,
   });
 
   return {
     sourceId: source.id,
     line: line + 1,
-    column: ch + 1
+    column: ch + 1,
   };
 }
 
@@ -263,7 +263,7 @@ export function getCursorLine(codeMirror: Object): number {
 export function getTokenEnd(codeMirror: Object, line: number, column: number) {
   const token = codeMirror.getTokenAt({
     line: line,
-    ch: column + 1
+    ch: column + 1,
   });
 
   return token.end;

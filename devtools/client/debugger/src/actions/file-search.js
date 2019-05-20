@@ -10,7 +10,7 @@ import {
   findNext,
   findPrev,
   removeOverlay,
-  searchSourceForHighlight
+  searchSourceForHighlight,
 } from "../utils/editor";
 import { renderWasmText } from "../utils/wasm";
 import { getMatches } from "../workers/search";
@@ -21,13 +21,13 @@ import {
   getSelectedSourceWithContent,
   getFileSearchModifiers,
   getFileSearchQuery,
-  getFileSearchResults
+  getFileSearchResults,
 } from "../selectors";
 
 import {
   closeActiveSearch,
   clearHighlightLineRange,
-  setActiveSearch
+  setActiveSearch,
 } from "./ui";
 import { isFulfilled } from "../utils/async-value";
 type Editor = Object;
@@ -64,7 +64,7 @@ export function setFileSearchQuery(cx: Context, query: string): Action {
   return {
     type: "UPDATE_FILE_SEARCH_QUERY",
     cx,
-    query
+    query,
   };
 }
 
@@ -92,8 +92,8 @@ export function updateSearchResults(
       matches,
       matchIndex,
       count: matches.length,
-      index: characterIndex
-    }
+      index: characterIndex,
+    },
   };
 }
 

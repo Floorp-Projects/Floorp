@@ -12,17 +12,37 @@ ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
 ChromeUtils.import("resource://normandy/actions/PreferenceExperimentAction.jsm", this);
 
-function argumentsFactory(args) {
-  return {
-    slug: "test",
-    preferenceName: "fake.preference",
+function branchFactory(opts = {}) {
+  const defaultPreferences = {
+    "fake.preference": {},
+  };
+  const defaultPrefInfo = {
     preferenceType: "string",
     preferenceBranchType: "default",
-    branches: [
-      { slug: "test", value: "foo", ratio: 1 },
-    ],
+    preferenceValue: "foo",
+  };
+  const preferences = {};
+  for (const [prefName, prefInfo] of Object.entries(opts.preferences || defaultPreferences)) {
+    preferences[prefName] = { ...defaultPrefInfo, ...prefInfo };
+  }
+  return {
+    slug: "test",
+    ratio: 1,
+    ...opts,
+    preferences,
+  };
+}
+
+function argumentsFactory(args) {
+  const defaultBranches = (args && args.branches) || [{}];
+  const branches = defaultBranches.map(branchFactory);
+  return {
+    slug: "test",
+    userFacingName: "Super Cool Test Experiment",
+    userFacingDescription: "Test experiment from browser_actions_PreferenceExperimentAction.",
     isHighPopulation: false,
     ...args,
+    branches,
   };
 }
 
@@ -81,11 +101,27 @@ decorate_task(
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
       slug: "test",
-      preferenceName: "fake.preference",
-      preferenceBranchType: "user",
       branches: [
-        { slug: "branch1", value: "branch1", ratio: 1 },
-        { slug: "branch2", value: "branch2", ratio: 1 },
+        {
+          slug: "branch1",
+          preferences: {
+            "fake.preference": {
+              preferenceBranchType: "user",
+              preferenceValue: "branch1",
+            },
+          },
+          ratio: 1,
+        },
+        {
+          slug: "branch2",
+          preferences: {
+            "fake.preference": {
+              preferenceBranchType: "user",
+              preferenceValue: "branch2",
+            },
+          },
+          ratio: 1,
+        },
       ],
     });
     sinon.stub(action, "chooseBranch").callsFake(async function(slug, branches) {
@@ -98,10 +134,13 @@ decorate_task(
     Assert.deepEqual(startStub.args, [[{
       name: "test",
       branch: "branch1",
-      preferenceName: "fake.preference",
-      preferenceValue: "branch1",
-      preferenceBranchType: "user",
-      preferenceType: "string",
+      preferences: {
+        "fake.preference": {
+          preferenceValue: "branch1",
+          preferenceBranchType: "user",
+          preferenceType: "string",
+        },
+      },
       experimentType: "exp",
     }]]);
   }
@@ -180,7 +219,9 @@ decorate_task(
   PreferenceExperiments.withMockExperiments([
     {
       name: "conflict",
-      preferenceName: "conflict.pref",
+      preferences: {
+        "conflict.pref": {},
+      },
       expired: false,
     },
   ]),
@@ -188,7 +229,11 @@ decorate_task(
     const action = new PreferenceExperimentAction();
     const recipe = preferenceExperimentFactory({
       slug: "new",
-      preferenceName: "conflict.pref",
+      branches: [
+        {
+          preferences: {"conflict.pref": {}},
+        },
+      ],
     });
     action.chooseBranch = sinon.stub().callsFake(async function(slug, branches) {
       return branches[0];
@@ -242,8 +287,22 @@ decorate_task(
     ratioSampleStub.returns(Promise.resolve(1));
     const action = new PreferenceExperimentAction();
     const branches = [
-      { value: "branch0", ratio: 1 },
-      { value: "branch1", ratio: 2 },
+      {
+        preferences: {
+          "fake.preference": {
+            preferenceValue: "branch0",
+          },
+        },
+        ratio: 1,
+      },
+      {
+        preferences: {
+          "fake.preference": {
+            preferenceValue: "branch1",
+          },
+        },
+        ratio: 2,
+      },
     ];
     const sandbox = sinon.createSandbox();
     let result;

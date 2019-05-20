@@ -38,8 +38,9 @@ add_task(async function doorhanger_bc_downloadOptIn_bgWin() {
   let extraWindow = await BrowserTestUtils.openNewBrowserWindow();
   await SimpleTest.promiseFocus(extraWindow);
 
-  let updateParams = "&promptWaitTime=0";
-  await runDoorhangerUpdateTest(updateParams, 1, [
+  let params = {checkAttempts: 1,
+                queryString: "&promptWaitTime=0"};
+  await runDoorhangerUpdateTest(params, [
     getBackgroundWindowHandler(),
     {
       notificationId: "update-restart",

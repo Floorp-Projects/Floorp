@@ -27,7 +27,7 @@ describe("long StringRep", () => {
     const stub = stubs.get("testMultiline");
     const renderedComponent = shallow(
       StringRep.rep({
-        object: stub
+        object: stub,
       })
     );
 
@@ -45,7 +45,7 @@ describe("long StringRep", () => {
       const renderedComponent = shallow(
         StringRep.rep({
           object: stub,
-          cropLimit: 20
+          cropLimit: 20,
         })
       );
 
@@ -61,7 +61,7 @@ describe("long StringRep", () => {
       StringRep.rep({
         object: stub,
         member: { open: true },
-        cropLimit: 20
+        cropLimit: 20,
       })
     );
 
@@ -79,7 +79,7 @@ describe("long StringRep", () => {
         StringRep.rep({
           object: stub,
           member: { open: true },
-          cropLimit: 20
+          cropLimit: 20,
         })
       );
 
@@ -97,7 +97,7 @@ describe("long StringRep", () => {
       const renderedComponent = shallow(
         StringRep.rep({
           object: stub,
-          cropLimit: 20
+          cropLimit: 20,
         })
       );
 
@@ -113,7 +113,7 @@ describe("long StringRep", () => {
       StringRep.rep({
         object: stub,
         cropLimit: 20,
-        useQuotes: false
+        useQuotes: false,
       })
     );
 

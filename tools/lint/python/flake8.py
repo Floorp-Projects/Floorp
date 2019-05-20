@@ -127,7 +127,7 @@ def lint(paths, config, **lintargs):
 
     app.make_file_checker_manager = wrap_make_file_checker_manager.__get__(app, Application)
 
-    # Make sure to run from repository root so exlusions are joined to the
+    # Make sure to run from repository root so exclusions are joined to the
     # repository root and not the current working directory.
     oldcwd = os.getcwd()
     os.chdir(root)

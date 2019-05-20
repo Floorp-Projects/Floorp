@@ -11,7 +11,7 @@ import type {
   FramesResponse,
   FramePacket,
   SourcePayload,
-  ThreadClient
+  ThreadClient,
 } from "./types";
 
 import { clientCommands } from "./commands";
@@ -37,7 +37,7 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   const location = {
     sourceId: clientCommands.getSourceForActor(frame.where.actor),
     line: frame.where.line,
-    column: frame.where.column
+    column: frame.where.column,
   };
 
   return {
@@ -48,7 +48,7 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
     generatedLocation: location,
     this: frame.this,
     source: null,
-    scope: frame.environment
+    scope: frame.environment,
   };
 }
 
@@ -68,7 +68,7 @@ export function createPause(
     ...packet,
     thread,
     frame: createFrame(thread, frame),
-    frames: response.frames.map(createFrame.bind(null, thread))
+    frames: response.frames.map(createFrame.bind(null, thread)),
   };
 }
 
@@ -78,6 +78,6 @@ export function createWorker(actor: string, url: string) {
     url,
     // Ci.nsIWorkerDebugger.TYPE_DEDICATED
     type: 0,
-    name: ""
+    name: "",
   };
 }

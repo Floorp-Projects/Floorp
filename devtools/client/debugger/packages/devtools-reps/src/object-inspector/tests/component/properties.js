@@ -14,15 +14,15 @@ function generateDefaults(overrides) {
   return {
     autoExpandDepth: 0,
     createObjectClient: grip => ObjectClient(grip),
-    ...overrides
+    ...overrides,
   };
 }
 
 function getEnumPropertiesMock() {
   return jest.fn(() => ({
     iterator: {
-      slice: () => ({})
-    }
+      slice: () => ({}),
+    },
   }));
 }
 
@@ -30,13 +30,13 @@ function mount(props, { initialState } = {}) {
   const enumProperties = getEnumPropertiesMock();
 
   const client = {
-    createObjectClient: grip => ObjectClient(grip, { enumProperties })
+    createObjectClient: grip => ObjectClient(grip, { enumProperties }),
   };
 
   const obj = mountObjectInspector({
     client,
     props: generateDefaults(props),
-    initialState
+    initialState,
   });
 
   return { ...obj, enumProperties };
@@ -52,20 +52,20 @@ describe("ObjectInspector - properties", () => {
           {
             path: "root",
             contents: {
-              value: stub
-            }
-          }
-        ]
+              value: stub,
+            },
+          },
+        ],
       },
       {
         initialState: {
           objectInspector: {
             loadedProperties: new Map([
-              ["root", { ownProperties: stub.preview.ownProperties }]
+              ["root", { ownProperties: stub.preview.ownProperties }],
             ]),
-            evaluations: new Map()
-          }
-        }
+            evaluations: new Map(),
+          },
+        },
       }
     );
 
@@ -79,11 +79,11 @@ describe("ObjectInspector - properties", () => {
         {
           path: "root",
           contents: {
-            value: stub
-          }
-        }
+            value: stub,
+          },
+        },
       ],
-      createObjectClient: grip => ObjectClient(grip, { enumProperties })
+      createObjectClient: grip => ObjectClient(grip, { enumProperties }),
     });
 
     const node = wrapper.find(".node");
@@ -92,10 +92,10 @@ describe("ObjectInspector - properties", () => {
     // The function is called twice, to get both non-indexed and indexed props.
     expect(enumProperties.mock.calls).toHaveLength(2);
     expect(enumProperties.mock.calls[0][0]).toEqual({
-      ignoreNonIndexedProperties: true
+      ignoreNonIndexedProperties: true,
     });
     expect(enumProperties.mock.calls[1][0]).toEqual({
-      ignoreIndexedProperties: true
+      ignoreIndexedProperties: true,
     });
   });
 
@@ -107,11 +107,11 @@ describe("ObjectInspector - properties", () => {
           path: "root/someFoo",
           contents: {
             value: {
-              uninitialized: true
-            }
-          }
-        }
-      ]
+              uninitialized: true,
+            },
+          },
+        },
+      ],
     });
 
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
@@ -125,11 +125,11 @@ describe("ObjectInspector - properties", () => {
           path: "root/someFoo",
           contents: {
             value: {
-              unmapped: true
-            }
-          }
-        }
-      ]
+              unmapped: true,
+            },
+          },
+        },
+      ],
     });
 
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();
@@ -143,11 +143,11 @@ describe("ObjectInspector - properties", () => {
           path: "root/someFoo",
           contents: {
             value: {
-              unscoped: true
-            }
-          }
-        }
-      ]
+              unscoped: true,
+            },
+          },
+        },
+      ],
     });
 
     expect(formatObjectInspector(wrapper)).toMatchSnapshot();

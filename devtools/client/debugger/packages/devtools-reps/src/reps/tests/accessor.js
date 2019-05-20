@@ -69,7 +69,7 @@ describe("Accessor - Invoke getter", () => {
     const node = renderedComponent.find(".invoke-getter");
     node.simulate("click", {
       type: "click",
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     });
 
     expect(node.exists()).toBeTruthy();
@@ -98,7 +98,7 @@ describe("Accessor - Invoke getter", () => {
     const node = renderedComponent.find(".invoke-getter");
     node.simulate("click", {
       type: "click",
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     });
 
     expect(node.exists()).toBeTruthy();
@@ -112,7 +112,7 @@ describe("Accessor - Invoke getter", () => {
       Rep({
         object,
         onInvokeGetterButtonClick,
-        evaluation: { getterValue: "hello" }
+        evaluation: { getterValue: "hello" },
       })
     );
     expect(renderedComponent.text()).toMatchSnapshot();

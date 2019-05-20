@@ -926,7 +926,7 @@ macro_rules! define_string_types {
 
         impl From<Box<[$char_t]>> for $String {
             fn from(s: Box<[$char_t]>) -> $String {
-                s.to_vec().into()
+                s.into_vec().into()
             }
         }
 

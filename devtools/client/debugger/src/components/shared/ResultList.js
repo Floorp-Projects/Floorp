@@ -19,7 +19,7 @@ type Props = {
     index: number
   ) => void,
   size: string,
-  role: string
+  role: string,
 };
 
 export default class ResultList extends Component<Props> {
@@ -27,7 +27,7 @@ export default class ResultList extends Component<Props> {
 
   static defaultProps = {
     size: "small",
-    role: "listbox"
+    role: "listbox",
   };
 
   renderListItem = (item: any, index: number) => {
@@ -45,8 +45,8 @@ export default class ResultList extends Component<Props> {
       "aria-describedby": `${item.id}-subtitle`,
       role: "option",
       className: classnames("result-item", {
-        selected: index === selected
-      })
+        selected: index === selected,
+      }),
     };
 
     return (

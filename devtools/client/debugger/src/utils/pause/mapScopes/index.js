@@ -9,14 +9,14 @@ import typeof SourceMaps from "devtools-source-map";
 import {
   type SourceScope,
   type BindingData,
-  type BindingLocation
+  type BindingLocation,
 } from "../../../workers/parser";
 import type { RenderableScope } from "../scopes/getScope";
 import { locColumn } from "./locColumn";
 import {
   loadRangeMetadata,
   findMatchingRange,
-  type MappedOriginalRange
+  type MappedOriginalRange,
 } from "./rangeMetadata";
 
 // eslint-disable-next-line max-len
@@ -24,15 +24,15 @@ import {
   findGeneratedReference,
   findGeneratedImportReference,
   findGeneratedImportDeclaration,
-  type GeneratedDescriptor
+  type GeneratedDescriptor,
 } from "./findGeneratedBindingFromPosition";
 import {
   buildGeneratedBindingList,
-  type GeneratedBindingLocation
+  type GeneratedBindingLocation,
 } from "./buildGeneratedBindingList";
 import {
   originalRangeStartsInside,
-  getApplicableBindingsForOriginalPosition
+  getApplicableBindingsForOriginalPosition,
 } from "./getApplicableBindingsForOriginalPosition";
 
 import { log } from "../../log";
@@ -45,7 +45,7 @@ import type {
   Source,
   SourceContent,
   BindingContents,
-  ScopeBindings
+  ScopeBindings,
 } from "../../../types";
 
 export type OriginalScope = RenderableScope;
@@ -58,9 +58,9 @@ export async function buildMappedScopes(
   { client, parser, sourceMaps }: ThunkArgs
 ): Promise<?{
   mappings: {
-    [string]: string
+    [string]: string,
   },
-  scope: OriginalScope
+  scope: OriginalScope,
 }> {
   const originalAstScopes = await parser.getScopes(frame.location);
   const generatedAstScopes = await parser.getScopes(frame.generatedLocation);
@@ -88,7 +88,7 @@ export async function buildMappedScopes(
 
   const {
     mappedOriginalScopes,
-    expressionLookup
+    expressionLookup,
   } = await mapOriginalBindingsToGenerated(
     source,
     content,
@@ -160,13 +160,13 @@ async function mapOriginalBindingsToGenerated(
 
     mappedOriginalScopes.push({
       ...item,
-      generatedBindings
+      generatedBindings,
     });
   }
 
   return {
     mappedOriginalScopes,
-    expressionLookup
+    expressionLookup,
   };
 }
 
@@ -258,7 +258,7 @@ function batchScopeMappings(
         return sourceMaps.getGeneratedLocation(pos, s);
       }
       return precalculatedLocations.get(key);
-    }
+    },
   };
 }
 function buildLocationKey(loc: PartialPosition): string {
@@ -303,22 +303,22 @@ function generateClientScope(
         type: orig.type,
         bindings: {
           arguments: [],
-          variables
+          variables,
         },
         ...(orig.type === "function"
           ? {
               function: {
-                displayName: orig.displayName
-              }
+                displayName: orig.displayName,
+              },
             }
           : null),
         ...(orig.type === "block"
           ? {
               block: {
-                displayName: orig.displayName
-              }
+                displayName: orig.displayName,
+              },
             }
-          : null)
+          : null),
       };
     }, globalLexicalScope);
 
@@ -354,7 +354,7 @@ async function findGeneratedBinding(
   generatedAstBindings: Array<GeneratedBindingLocation>
 ): Promise<?{
   grip: BindingContents,
-  expression: string | null
+  expression: string | null,
 }> {
   // If there are no references to the implicits, then we have no way to
   // even attempt to map it back to the original since there is no location
@@ -474,7 +474,7 @@ async function findGeneratedBinding(
   if (genContent && genContent.desc) {
     return {
       grip: genContent.desc,
-      expression: genContent.expression
+      expression: genContent.expression,
     };
   } else if (genContent) {
     // If there is no descriptor for 'this', then this is not the top-level
@@ -497,10 +497,10 @@ async function findGeneratedBinding(
 
           // HACK: Until support for "unscoped" lands in devtools-reps,
           // this will make these show as (unavailable).
-          missingArguments: true
-        }
+          missingArguments: true,
+        },
       },
-      expression: null
+      expression: null,
     };
   } else if (!hadApplicableBindings && name !== "this") {
     // If there were no applicable bindings to consider while searching for
@@ -514,8 +514,8 @@ async function findGeneratedBinding(
         writable: false,
         value: {
           type: "null",
-          optimizedOut: true
-        }
+          optimizedOut: true,
+        },
       },
       expression: `
         (() => {
@@ -523,7 +523,7 @@ async function findGeneratedBinding(
             name
           )} + '" has been optimized out.');
         })()
-      `
+      `,
     };
   }
 
@@ -542,9 +542,9 @@ async function findGeneratedBinding(
 
         // HACK: Until support for "unmapped" lands in devtools-reps,
         // this will make these show as (unavailable).
-        missingArguments: true
-      }
+        missingArguments: true,
+      },
     },
-    expression: null
+    expression: null,
   };
 }

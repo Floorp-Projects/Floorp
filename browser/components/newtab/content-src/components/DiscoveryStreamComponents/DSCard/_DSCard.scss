@@ -23,25 +23,6 @@ $excerpt-line-height: 20;
     }
   }
 
-  &:hover {
-    header {
-      @include dark-theme-only {
-        color: $blue-40;
-      }
-
-      color: $blue-60;
-    }
-  }
-
-  &:active {
-    header {
-      @include dark-theme-only {
-        color: $blue-50;
-      }
-
-      color: $blue-70;
-    }
-  }
 
   .img-wrapper {
     width: 100%;
@@ -65,6 +46,39 @@ $excerpt-line-height: 20;
 
     &:focus {
       @include ds-fade-in;
+
+      @include dark-theme-only {
+        @include ds-fade-in($blue-40-40);
+      }
+    }
+
+    &:hover {
+      @include ds-fade-in($grey-30);
+
+      @include dark-theme-only {
+        @include ds-fade-in($grey-60);
+      }
+    }
+
+    &:focus,
+    &:hover {
+      header {
+        @include dark-theme-only {
+          color: $blue-40;
+        }
+
+        color: $blue-60;
+      }
+    }
+
+    &:active {
+      header {
+        @include dark-theme-only {
+          color: $blue-50;
+        }
+
+        color: $blue-70;
+      }
     }
   }
 

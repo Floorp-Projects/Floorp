@@ -11,7 +11,7 @@ stubs.set("RegExp", {
   frozen: false,
   sealed: false,
   ownPropertyLength: 1,
-  displayString: "/ab+c/i"
+  displayString: "/ab+c/i",
 });
 
 module.exports = stubs;

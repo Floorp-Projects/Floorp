@@ -869,6 +869,53 @@ function queryTelemetryEvents(query) {
   return filtersChangedEvents.map(event => event[5]);
 }
 
+function validateRequests(requests, monitor) {
+  const { document, store, windowRequire } = monitor.panelWin;
+
+  const {
+    getDisplayedRequests,
+  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+
+  requests.forEach((spec, i) => {
+    const { method, url, causeType, causeUri, stack } = spec;
+
+    const requestItem = getSortedRequests(store.getState()).get(i);
+    verifyRequestItemTarget(
+      document,
+      getDisplayedRequests(store.getState()),
+      requestItem,
+      method,
+      url,
+      { cause: { type: causeType, loadingDocumentUri: causeUri } }
+    );
+
+    const stacktrace = requestItem.stacktrace;
+    const stackLen = stacktrace ? stacktrace.length : 0;
+
+    if (stack) {
+      ok(stacktrace, `Request #${i} has a stacktrace`);
+      ok(stackLen > 0,
+        `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`);
+
+      // if "stack" is array, check the details about the top stack frames
+      if (Array.isArray(stack)) {
+        stack.forEach((frame, j) => {
+          is(stacktrace[j].functionName, frame.fn,
+            `Request #${i} has the correct function on JS stack frame #${j}`);
+          is(stacktrace[j].filename.split("/").pop(), frame.file,
+            `Request #${i} has the correct file on JS stack frame #${j}`);
+          is(stacktrace[j].lineNumber, frame.line,
+            `Request #${i} has the correct line number on JS stack frame #${j}`);
+          is(stacktrace[j].asyncCause, frame.asyncCause,
+            `Request #${i} has the correct async cause on JS stack frame #${j}`);
+        });
+      }
+    } else {
+      is(stackLen, 0, `Request #${i} (${causeType}) has an empty stacktrace`);
+    }
+  });
+}
+
 /**
  * Retrieve the context menu element corresponding to the provided id, for the provided
  * netmonitor instance.

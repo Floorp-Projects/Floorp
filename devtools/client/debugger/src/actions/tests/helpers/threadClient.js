@@ -7,14 +7,14 @@
 import type {
   SourceActor,
   SourceActorLocation,
-  BreakpointOptions
+  BreakpointOptions,
 } from "../../../types";
 
 export function createSource(name: string, code?: string) {
   name = name.replace(/\..*$/, "");
   return {
     source: code || `function ${name}() {\n  return ${name} \n}`,
-    contentType: "text/javascript"
+    contentType: "text/javascript",
   };
 }
 
@@ -33,7 +33,7 @@ const sources = [
   "bar.js",
   "base.js",
   "bazz.js",
-  "jquery.js"
+  "jquery.js",
 ];
 
 export const simpleMockThreadClient = {
@@ -50,7 +50,7 @@ export const simpleMockThreadClient = {
     _noSliding: boolean
   ) => Promise.resolve({ sourceId: "a", line: 5 }),
   sourceContents: ({
-    source
+    source,
   }: SourceActor): Promise<{| source: any, contentType: ?string |}> =>
     new Promise((resolve, reject) => {
       if (sources.includes(source)) {
@@ -58,13 +58,13 @@ export const simpleMockThreadClient = {
       }
 
       reject(`unknown source: ${source}`);
-    })
+    }),
 };
 
 // sources and tabs
 export const sourceThreadClient = {
   sourceContents: function({
-    source
+    source,
   }: SourceActor): Promise<{| source: any, contentType: ?string |}> {
     return new Promise((resolve, reject) => {
       if (sources.includes(source)) {
@@ -79,5 +79,5 @@ export const sourceThreadClient = {
   getFrameScopes: async () => {},
   evaluateExpressions: async () => {},
   getBreakpointPositions: async () => ({}),
-  getBreakableLines: async () => []
+  getBreakableLines: async () => [],
 };

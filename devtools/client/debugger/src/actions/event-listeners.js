@@ -13,7 +13,7 @@ export function addEventListeners(events: EventListenerBreakpoints) {
   return async ({ dispatch, client }: ThunkArgs) => {
     await dispatch({
       type: "ADD_EVENT_LISTENERS",
-      events
+      events,
     });
     const newList = await asyncStore.eventListenerBreakpoints;
     client.setEventListenerBreakpoints(newList);
@@ -24,7 +24,7 @@ export function removeEventListeners(events: EventListenerBreakpoints) {
   return async ({ dispatch, client }: ThunkArgs) => {
     await dispatch({
       type: "REMOVE_EVENT_LISTENERS",
-      events
+      events,
     });
     const newList = await asyncStore.eventListenerBreakpoints;
     client.setEventListenerBreakpoints(newList);

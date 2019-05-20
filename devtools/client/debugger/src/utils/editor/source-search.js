@@ -58,7 +58,7 @@ function searchOverlay(query, modifiers) {
   const regexQuery = buildQuery(query, modifiers, {
     ignoreSpaces: true,
     // regex must be global for the overlay
-    isGlobal: true
+    isGlobal: true,
   });
 
   return {
@@ -80,7 +80,7 @@ function searchOverlay(query, modifiers) {
         // if we have no matches in this line, skip to the end of the line
         stream.skipToEnd();
       }
-    }
+    },
   };
 }
 

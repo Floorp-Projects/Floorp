@@ -8,7 +8,7 @@ fuzzy-if(webrender&&winWidget,0-27,0-4) == unit-rem-iframe.html unit-rem-ref-ifr
 == unit-rem.svg unit-rem-ref.svg
 == unit-vh-vw.html unit-vh-vw-ref.html
 == unit-vh-vw-zoom.html unit-vh-vw-zoom-ref.html
-skip-if(gtkWidget||cocoaWidget) == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto-ref.html
+fuzzy(0-1,0-4) == unit-vh-vw-overflow-auto.html unit-vh-vw-overflow-auto-ref.html # fuzzy due to anti-aliasing pixels in scrollbar redendering
 
 # These tests should probably be removed, see bug 1393603.
 fails-if(!Android) == unit-vh-vw-overflow-scroll.html unit-vh-vw-overflow-scroll-ref.html

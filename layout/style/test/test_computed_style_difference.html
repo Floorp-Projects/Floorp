@@ -1,0 +1,104 @@
+<!doctype html>
+<title>Test that the difference of the computed style of an element is always correctly propagated</title>
+<!--
+  There are CSS property changes that don't have an effect in computed style.
+
+  It's relatively easy to return `nsChangeHint(0)` for the case where the
+  property changes but it should have no rendering difference.
+
+  That's however incorrect, since if it's an inherited property, or a
+  descendant explicitly inherits it, we should still propagate the change
+  downwards.
+
+  This test tests that computed style diffing is correct.
+-->
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="property_database.js"></script>
+<div id="outer">
+  <div id="inner"></div>
+</div>
+<script>
+// We need to skip checking for properties for which the value returned by
+// getComputedStyle depends on the parent.
+//
+// TODO(emilio): We could test a subset of these, see below.
+const kWhitelist = [
+  // Could test display values that don't force blockification of children.
+  "display",
+
+  // Could avoid testing only the ones that have percentages.
+  "transform",
+  "transform-origin",
+  "perspective-origin",
+
+  "padding-bottom",
+  "padding-left",
+  "padding-right",
+  "padding-top",
+  "padding-inline-end",
+  "padding-inline-start",
+  "padding-block-end",
+  "padding-block-start",
+
+  "margin-bottom",
+  "margin-left",
+  "margin-right",
+  "margin-top",
+  "margin-inline-end",
+  "margin-inline-start",
+  "margin-block-end",
+  "margin-block-start",
+
+  "width",
+  "height",
+  "block-size",
+  "inline-size",
+
+  "min-height",
+  "min-width",
+  "min-block-size",
+  "min-inline-size",
+];
+
+const outer = document.getElementById("outer");
+const inner = document.getElementById("inner");
+
+function testValue(prop, value) {
+  outer.style.setProperty(prop, value);
+  const computed = getComputedStyle(outer).getPropertyValue(prop);
+  assert_equals(
+    getComputedStyle(inner).getPropertyValue(prop), computed,
+    "Didn't handle the inherited change correctly?"
+  )
+}
+
+// Note that we intentionally ignore the "prerequisites" here, since that's
+// the most likely place where the diffing could potentially go wrong.
+function testProperty(prop, info) {
+  // We only care about longhands, changing shorthands is not that interesting,
+  // since we're interested of changing as little as possible, and changing
+  // them would be equivalent to changing all the longhands at the same time.
+  if (info.type !== CSS_TYPE_LONGHAND)
+    return;
+  if (kWhitelist.includes(prop))
+    return;
+
+  inner.style.setProperty(prop, "inherit");
+  for (const v of info.initial_values)
+    testValue(prop, v);
+  for (const v of info.other_values)
+    testValue(prop, v);
+  // Test again the first value so that we test changing to it, not just from
+  // it.
+  //
+  // TODO(emilio): We could test every value against every-value if we wanted,
+  // might be worth it.
+  testValue(prop, info.initial_values[0]);
+
+  inner.style.removeProperty(prop);
+}
+
+for (let prop in gCSSProperties)
+  test(() => testProperty(prop, gCSSProperties[prop]), "Diffing for " + prop);
+</script>

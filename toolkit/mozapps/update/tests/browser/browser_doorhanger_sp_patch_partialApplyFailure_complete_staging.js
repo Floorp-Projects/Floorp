@@ -18,10 +18,9 @@ add_task(async function doorhanger_sp_patch_partialApplyFailure_complete_staging
   let updateProps = {isCompleteUpdate: "false",
                      promptWaitTime: "0"};
   let updates = getLocalUpdateString(updateProps, patches);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
 
-  let updateParams = "";
-  await runDoorhangerUpdateTest(updateParams, 0, [
+  let params = {updates};
+  await runDoorhangerUpdateTest(params, [
     {
       notificationId: "update-restart",
       button: "secondaryButton",

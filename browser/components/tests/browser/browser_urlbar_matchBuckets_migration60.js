@@ -111,8 +111,15 @@ add_task(async function installStudyPrefWithSpacesAndMigrate() {
   await sanityCheckInitialState();
 
   // Install the study.  It should set the pref.
-  let preferenceValue = " suggestion : 4, general : 5 ";
-  await PreferenceExperiments.start(newExperimentOpts({ preferenceValue }));
+  const preferenceValue = " suggestion : 4, general : 5 ";
+  const experiment = newExperimentOpts({
+    preferences: {
+      [PREF_NAME]: {
+        preferenceValue,
+      },
+    },
+  });
+  await PreferenceExperiments.start(experiment);
   Assert.ok(await PreferenceExperiments.has(STUDY_NAME),
             "Study installed");
   Assert.equal(Services.prefs.getCharPref(PREF_NAME, ""), preferenceValue,
@@ -138,7 +145,14 @@ add_task(async function installStudyMinorityPrefAndMigrate() {
 
   // Install the study.  It should set the pref.
   let preferenceValue = "general:3,suggestion:6";
-  await PreferenceExperiments.start(newExperimentOpts({ preferenceValue }));
+  const experiment = newExperimentOpts({
+    preferences: {
+      [PREF_NAME]: {
+        preferenceValue,
+      },
+    },
+  });
+  await PreferenceExperiments.start(experiment);
   Assert.ok(await PreferenceExperiments.has(STUDY_NAME),
             "Study installed");
   Assert.equal(Services.prefs.getCharPref(PREF_NAME, ""), preferenceValue,
@@ -210,15 +224,26 @@ function promiseMigration() {
   return donePromise;
 }
 
-function newExperimentOpts(opts) {
-  return Object.assign({
-    name: STUDY_NAME,
-    branch: "branch",
-    preferenceName: PREF_NAME,
+function newExperimentOpts(opts = {}) {
+  const defaultPref = {
+    [PREF_NAME]: {},
+  };
+  const defaultPrefInfo = {
     preferenceValue: PREF_VALUE_SUGGESTIONS_FIRST,
     preferenceBranchType: "default",
     preferenceType: "string",
-  }, opts);
+  };
+  const preferences = {};
+  for (const [prefName, prefInfo] of Object.entries(opts.preferences || defaultPref)) {
+    preferences[prefName] = { ...defaultPrefInfo, ...prefInfo };
+  }
+
+  return Object.assign({
+    name: STUDY_NAME,
+    branch: "branch",
+  }, opts, {
+    preferences,
+  });
 }
 
 async function getNonExpiredExperiment() {

@@ -10,9 +10,9 @@
 #include "nsIServiceManager.h"
 #include "nsIWidget.h"
 #include "nsPrintObject.h"
-#include "nsPrintPreviewListener.h"
 #include "nsIWebProgressListener.h"
 #include "mozilla/Services.h"
+#include "PrintPreviewUserEventSuppressor.h"
 
 //-----------------------------------------------------
 // PR LOGGING
@@ -38,8 +38,7 @@ nsPrintData::nsPrintData(ePrintDataType aType)
       mPrintFrameType(nsIPrintSettings::kFramesAsIs),
       mNumPrintablePages(0),
       mNumPagesPrinted(0),
-      mShrinkRatio(1.0),
-      mPPEventListeners(nullptr) {
+      mShrinkRatio(1.0) {
   nsCOMPtr<nsIStringBundle> brandBundle;
   nsCOMPtr<nsIStringBundleService> svc =
       mozilla::services::GetStringBundleService();
@@ -57,10 +56,9 @@ nsPrintData::nsPrintData(ePrintDataType aType)
 }
 
 nsPrintData::~nsPrintData() {
-  // remove the event listeners
-  if (mPPEventListeners) {
-    mPPEventListeners->RemoveListeners();
-    NS_RELEASE(mPPEventListeners);
+  if (mPPEventSuppressor) {
+    mPPEventSuppressor->StopSuppressing();
+    mPPEventSuppressor = nullptr;
   }
 
   // Only Send an OnEndPrinting if we have started printing

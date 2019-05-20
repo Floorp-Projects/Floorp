@@ -9,7 +9,7 @@ declare var expect: (value: any) => any;
 
 import {
   getBreakpointsForSource,
-  initialBreakpointsState
+  initialBreakpointsState,
 } from "../breakpoints";
 
 import { makeMockBreakpoint, makeMockSource } from "../../utils/test-mockup";
@@ -24,16 +24,16 @@ describe("Breakpoints Selectors", () => {
   it("it gets a breakpoint for an original source", () => {
     const sourceId = "server1.conn1.child1/source1/originalSource";
     const matchingBreakpoints = {
-      id1: makeMockBreakpoint(makeMockSource(undefined, sourceId), 1)
+      id1: makeMockBreakpoint(makeMockSource(undefined, sourceId), 1),
     };
 
     const otherBreakpoints = {
-      id2: makeMockBreakpoint(makeMockSource(undefined, "not-this-source"), 1)
+      id2: makeMockBreakpoint(makeMockSource(undefined, "not-this-source"), 1),
     };
 
     const data = {
       ...matchingBreakpoints,
-      ...otherBreakpoints
+      ...otherBreakpoints,
     };
 
     const breakpoints = initializeStateWith(data);
@@ -52,20 +52,20 @@ describe("Breakpoints Selectors", () => {
     const matchingBreakpoints = {
       id1: {
         ...makeMockBreakpoint(makeMockSource(undefined, generatedSourceId), 1),
-        location: { line: 1, sourceId: "original-source-id-1" }
-      }
+        location: { line: 1, sourceId: "original-source-id-1" },
+      },
     };
 
     const otherBreakpoints = {
       id2: {
         ...makeMockBreakpoint(makeMockSource(undefined, "not-this-source"), 1),
-        location: { line: 1, sourceId: "original-source-id-2" }
-      }
+        location: { line: 1, sourceId: "original-source-id-2" },
+      },
     };
 
     const data = {
       ...matchingBreakpoints,
-      ...otherBreakpoints
+      ...otherBreakpoints,
     };
 
     const breakpoints = initializeStateWith(data);

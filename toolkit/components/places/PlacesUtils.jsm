@@ -1172,7 +1172,7 @@ var PlacesUtils = {
       throw new Error("aFolderGuid should be a valid GUID.");
     }
     var query = this.history.getNewQuery();
-    query.setParents([aFolderGuid], 1);
+    query.setParents([aFolderGuid]);
     var options = this.history.getNewQueryOptions();
     options.excludeItems = aExcludeItems;
     options.expandQueries = aExpandQueries;

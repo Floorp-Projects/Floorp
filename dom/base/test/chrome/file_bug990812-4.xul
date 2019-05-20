@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
       messageManager.broadcastAsyncMessage("test");
 
       Promise.all([promise1, promise2]).then(function () {
-        opener.setTimeout("next()");
+        opener.setTimeout(function() { this.next(); });
         window.close();
       });
     }

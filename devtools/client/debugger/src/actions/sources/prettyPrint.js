@@ -14,7 +14,7 @@ import { prettyPrint } from "../../workers/pretty-print";
 import {
   getPrettySourceURL,
   isGenerated,
-  isJavaScript
+  isJavaScript,
 } from "../../utils/source";
 import { loadSourceText } from "./loadSourceText";
 import { mapFrames } from "../pause";
@@ -25,7 +25,7 @@ import {
   getSourceFromId,
   getSourceByURL,
   getSelectedLocation,
-  getThreadContext
+  getThreadContext,
 } from "../../selectors";
 
 import type { Action, ThunkArgs } from "../types";
@@ -45,7 +45,7 @@ export async function prettyPrintSource(
   const url = getPrettySourceURL(generatedSource.url);
   const { code, mappings } = await prettyPrint({
     text: content.value,
-    url: url
+    url: url,
   });
   await sourceMaps.applySourceMap(generatedSource.id, url, code, mappings);
 
@@ -56,7 +56,7 @@ export async function prettyPrintSource(
   }
   return {
     text: code,
-    contentType: "text/javascript"
+    contentType: "text/javascript",
   };
 }
 
@@ -75,7 +75,7 @@ export function createPrettySource(cx: Context, sourceId: string) {
       isWasm: false,
       introductionUrl: null,
       introductionType: undefined,
-      isExtension: false
+      isExtension: false,
     };
 
     dispatch(({ type: "ADD_SOURCE", cx, source: prettySource }: Action));

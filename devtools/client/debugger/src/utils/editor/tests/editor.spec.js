@@ -19,7 +19,7 @@ import {
   removeLineClass,
   clearLineClass,
   getTextForLine,
-  getCursorLine
+  getCursorLine,
 } from "../index";
 
 import { makeMockSource, makeMockSourceAndContent } from "../../test-mockup";
@@ -43,7 +43,7 @@ describe("traverseResults", () => {
   const modifiers = {
     caseSensitive: false,
     regexMatch: false,
-    wholeWord: false
+    wholeWord: false,
   };
   it("traverses next", () => {
     traverseResults(e, ctx, query, "next", modifiers);
@@ -75,7 +75,7 @@ describe("toEditorPosition", () => {
     const loc = { sourceId: "source", line: 100, column: 25 };
     expect(toEditorPosition(loc)).toEqual({
       line: 99,
-      column: 25
+      column: 25,
     });
   });
 });
@@ -85,11 +85,11 @@ describe("toEditorRange", () => {
     const testId = "test-123";
     const loc = {
       start: { line: 100, column: 25 },
-      end: { line: 200, column: 0 }
+      end: { line: 200, column: 0 },
     };
     expect(toEditorRange(testId, loc)).toEqual({
       start: { line: 99, column: 25 },
-      end: { line: 199, column: 0 }
+      end: { line: 199, column: 0 },
     });
   });
 });
@@ -104,14 +104,14 @@ describe("toSourceLine", () => {
 
 const codeMirror = {
   doc: {
-    iter: jest.fn((_, __, cb) => cb())
+    iter: jest.fn((_, __, cb) => cb()),
   },
   lineCount: jest.fn(() => 100),
   getLine: jest.fn(() => "something"),
   getCursor: jest.fn(() => ({ line: 3 })),
   getScrollerElement: jest.fn(() => ({
     offsetWidth: 100,
-    offsetHeight: 100
+    offsetHeight: 100,
   })),
   getScrollInfo: () => ({
     top: 0,
@@ -119,7 +119,7 @@ const codeMirror = {
     bottom: 0,
     left: 0,
     clientHeight: 100,
-    clientWidth: 100
+    clientWidth: 100,
   }),
   removeLineClass: jest.fn(),
   operation: jest.fn(cb => cb()),
@@ -127,14 +127,14 @@ const codeMirror = {
     top: 100,
     right: 50,
     bottom: 100,
-    left: 50
+    left: 50,
   })),
   coordsChar: jest.fn(() => ({ line: 6, ch: 30 })),
   lineAtHeight: jest.fn(() => 300),
   markText: jest.fn(),
   scrollTo: jest.fn(),
   defaultCharWidth: jest.fn(() => 8),
-  defaultTextHeight: jest.fn(() => 16)
+  defaultTextHeight: jest.fn(() => 16),
 };
 
 const editor = { codeMirror };
@@ -154,7 +154,7 @@ describe("markText", () => {
   it("calls codemirror API markText & returns marker", () => {
     const loc = {
       start: { line: 10, column: 0 },
-      end: { line: 30, column: 50 }
+      end: { line: 30, column: 50 },
     };
     markText(editor, "test-123", loc);
     expect(codeMirror.markText).toHaveBeenCalledWith(
@@ -180,11 +180,11 @@ describe("getSourceLocationFromMouseEvent", () => {
     expect(getSourceLocationFromMouseEvent(editor, source, e)).toEqual({
       sourceId: "test-123",
       line: 7,
-      column: 31
+      column: 31,
     });
     expect(editor.codeMirror.coordsChar).toHaveBeenCalledWith({
       left: 30,
-      top: 60
+      top: 60,
     });
   });
 });

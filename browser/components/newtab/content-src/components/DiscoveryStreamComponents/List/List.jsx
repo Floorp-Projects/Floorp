@@ -1,4 +1,5 @@
 import {actionCreators as ac} from "common/Actions.jsm";
+import {clampTotalLines} from "content-src/lib/clamp-total-lines";
 import {connect} from "react-redux";
 import {DSEmptyState} from "../DSEmptyState/DSEmptyState.jsx";
 import {DSImage} from "../DSImage/DSImage.jsx";
@@ -43,9 +44,10 @@ export class ListItem extends React.PureComponent {
           onLinkClick={!this.props.placeholder ? this.onLinkClick : undefined}
           url={this.props.url}>
           <div className="ds-list-item-text">
-            <div>
-              <div className="ds-list-item-title">{this.props.title}</div>
-              {this.props.excerpt && <div className="ds-list-item-excerpt">{this.props.excerpt}</div>}
+            <div data-total-lines="4"
+              ref={clampTotalLines}>
+              <div className="ds-list-item-title clamp">{this.props.title}</div>
+              {this.props.excerpt && <div className="ds-list-item-excerpt clamp">{this.props.excerpt}</div>}
             </div>
             <p>
               {this.props.context && (
@@ -54,7 +56,7 @@ export class ListItem extends React.PureComponent {
                   <br />
                 </span>
               )}
-              <span className="ds-list-item-info">{this.props.domain}</span>
+              <span className="ds-list-item-info clamp">{this.props.domain}</span>
             </p>
           </div>
           <DSImage extraClassNames="ds-list-image" source={this.props.image_src} rawSource={this.props.raw_image_src} />
@@ -92,7 +94,9 @@ export function _List(props) {
 
     for (let index = 0; index < props.items; index++) {
       const rec = recs[index];
-      recMarkup.push(rec ? (
+      recMarkup.push(!rec || rec.placeholder ? (
+        <PlaceholderListItem key={`ds-list-item-${index}`} />
+      ) : (
         <ListItem key={`ds-list-item-${index}`}
         dispatch={props.dispatch}
         campaignId={rec.campaign_id}
@@ -108,8 +112,6 @@ export function _List(props) {
         url={rec.url}
         pocket_id={rec.pocket_id}
         bookmarkGuid={rec.bookmarkGuid} />
-      ) : (
-        <PlaceholderListItem key={`ds-list-item-${index}`} />
       ));
     }
 

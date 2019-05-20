@@ -26,5 +26,5 @@ async function getDwarfToWasmData(): Promise<ArrayBuffer> {
 
 module.exports = {
   setAssetRootURL,
-  getDwarfToWasmData
+  getDwarfToWasmData,
 };

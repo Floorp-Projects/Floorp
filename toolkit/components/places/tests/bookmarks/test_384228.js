@@ -79,7 +79,7 @@ add_task(async function search_bookmark_in_folder() {
   let query = hs.getNewQuery();
   query.searchTerms = "title";
   options.queryType = options.QUERY_TYPE_BOOKMARKS;
-  query.setParents([testFolder1.guid, testFolder2.guid], 2);
+  query.setParents([testFolder1.guid, testFolder2.guid]);
   let rootNode = hs.executeQuery(query, options).root;
   rootNode.containerOpen = true;
 

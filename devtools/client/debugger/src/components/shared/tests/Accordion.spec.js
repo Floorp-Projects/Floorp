@@ -16,7 +16,7 @@ describe("Accordion", () => {
       className: "accordion-item-1",
       component: <div />,
       opened: false,
-      onToggle: jest.fn()
+      onToggle: jest.fn(),
     },
     {
       header: "Test Accordion Item 2",
@@ -24,15 +24,15 @@ describe("Accordion", () => {
       component: <div />,
       buttons: <button />,
       opened: false,
-      onToggle: jest.fn()
+      onToggle: jest.fn(),
     },
     {
       header: "Test Accordion Item 3",
       className: "accordion-item-3",
       component: <div />,
       opened: true,
-      onToggle: jest.fn()
-    }
+      onToggle: jest.fn(),
+    },
   ];
   const wrapper = shallow(<Accordion items={testItems} />);
   it("basic render", () => expect(wrapper).toMatchSnapshot());

@@ -60,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816340
         testElement(elems[i], true, false);
       }
       ok(true, "done");
-      opener.setTimeout("done()", 0);
+      opener.setTimeout(function() { this.done(); }, 0);
       window.close();
     }
 

@@ -18,7 +18,7 @@ function defer() {
   return {
     resolve,
     reject,
-    promise
+    promise,
   };
 }
 
@@ -56,5 +56,5 @@ module.exports = {
   defer,
   executeSoon,
   filterByKey,
-  generateKey
+  generateKey,
 };

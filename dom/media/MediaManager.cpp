@@ -322,8 +322,9 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
    * the weak reference to the associated window listener.
    * This will also tell the window listener to remove its hard reference to
    * this SourceListener, so any caller will need to keep its own hard ref.
+   * We enforce this by requiring a reference to a hard ref.
    */
-  void Stop();
+  void Stop(const RefPtr<SourceListener>& self);
 
   /**
    * Posts a task to stop the device associated with aTrackID and notifies the
@@ -331,8 +332,9 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
    * Should this track be the last live one to be stopped, we'll also call Stop.
    * This might tell the window listener to remove its hard reference to this
    * SourceListener, so any caller will need to keep its own hard ref.
+   * We enforce this by requiring a reference to a hard ref.
    */
-  void StopTrack(TrackID aTrackID);
+  void StopTrack(const RefPtr<SourceListener>& self, TrackID aTrackID);
 
   /**
    * Gets the main thread MediaTrackSettings from the MediaEngineSource
@@ -553,7 +555,7 @@ class GetUserMediaWindowListener {
 
     LOG("GUMWindowListener %p stopping SourceListener %p.", this,
         aListener.get());
-    aListener->Stop();
+    aListener->Stop(aListener);
 
     if (MediaDevice* removedDevice = aListener->GetVideoDevice()) {
       bool revokeVideoPermission = true;
@@ -1167,8 +1169,7 @@ class GetUserMediaStreamRunnable : public Runnable {
 
         void Stop() override {
           if (mListener) {
-            RefPtr<SourceListener> deathGrip(mListener);
-            deathGrip->StopTrack(mTrackID);
+            mListener->StopTrack(RefPtr<SourceListener>(mListener), mTrackID);
             mListener = nullptr;
           }
         }
@@ -4191,7 +4192,7 @@ SourceListener::InitializeAsync() {
           });
 }
 
-void SourceListener::Stop() {
+void SourceListener::Stop(const RefPtr<SourceListener>& self) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
   // StopSharing() has some special logic, at least for audio capture.
@@ -4208,13 +4209,13 @@ void SourceListener::Stop() {
   if (mAudioDeviceState) {
     mAudioDeviceState->mDisableTimer->Cancel();
     if (!mAudioDeviceState->mStopped) {
-      StopTrack(kAudioTrack);
+      StopTrack(self, kAudioTrack);
     }
   }
   if (mVideoDeviceState) {
     mVideoDeviceState->mDisableTimer->Cancel();
     if (!mVideoDeviceState->mStopped) {
-      StopTrack(kVideoTrack);
+      StopTrack(self, kVideoTrack);
     }
   }
 
@@ -4222,7 +4223,8 @@ void SourceListener::Stop() {
   mWindowListener = nullptr;
 }
 
-void SourceListener::StopTrack(TrackID aTrackID) {
+void SourceListener::StopTrack(const RefPtr<SourceListener>& self,
+                               TrackID aTrackID) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
   MOZ_ASSERT(Activated(), "No device to stop");
   MOZ_ASSERT(aTrackID == kAudioTrack || aTrackID == kVideoTrack,
@@ -4251,7 +4253,7 @@ void SourceListener::StopTrack(TrackID aTrackID) {
   if ((!mAudioDeviceState || mAudioDeviceState->mStopped) &&
       (!mVideoDeviceState || mVideoDeviceState->mStopped)) {
     LOG("SourceListener %p this was the last track stopped", this);
-    Stop();
+    Stop(self);
   }
 }
 
@@ -4389,7 +4391,7 @@ void SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable) {
                 // Starting the device failed. Stopping the track here will make
                 // the MediaStreamTrack end after a pass through the
                 // MediaStreamGraph.
-                StopTrack(aTrackID);
+                StopTrack(self, aTrackID);
               } else {
                 // Stopping the device failed. This is odd, but not fatal.
                 MOZ_ASSERT_UNREACHABLE("The device should be stoppable");
@@ -4433,6 +4435,7 @@ void SourceListener::StopSharing() {
   MOZ_RELEASE_ASSERT(mWindowListener);
   LOG("SourceListener %p StopSharing", this);
 
+  RefPtr<SourceListener> self(this);
   if (mVideoDeviceState && (mVideoDeviceState->mDevice->GetMediaSource() ==
                                 MediaSourceEnum::Screen ||
                             mVideoDeviceState->mDevice->GetMediaSource() ==
@@ -4440,7 +4443,7 @@ void SourceListener::StopSharing() {
     // We want to stop the whole stream if there's no audio;
     // just the video track if we have both.
     // StopTrack figures this out for us.
-    StopTrack(kVideoTrack);
+    StopTrack(self, kVideoTrack);
   }
   if (mAudioDeviceState && mAudioDeviceState->mDevice->GetMediaSource() ==
                                MediaSourceEnum::AudioCapture) {
@@ -4614,7 +4617,7 @@ void GetUserMediaWindowListener::StopRawID(const nsString& removedDeviceID) {
     }
   }
   for (auto& pair : matches) {
-    pair.first()->StopTrack(pair.second());
+    pair.first()->StopTrack(pair.first(), pair.second());
   }
 }
 

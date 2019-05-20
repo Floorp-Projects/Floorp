@@ -9,7 +9,7 @@ const {
   getPrototype,
   enumSymbols,
   getFullText,
-  getProxySlots
+  getProxySlots,
 } = require("./client");
 
 const {
@@ -26,7 +26,7 @@ const {
   nodeIsPrimitive,
   nodeIsProxy,
   nodeNeedsNumericalBuckets,
-  nodeIsLongString
+  nodeIsLongString,
 } = require("./node");
 
 import type {
@@ -34,7 +34,7 @@ import type {
   CreateObjectClient,
   GripProperties,
   LoadedProperties,
-  Node
+  Node,
 } from "../types";
 
 function loadItemProperties(
@@ -231,5 +231,5 @@ module.exports = {
   shouldLoadItemPrototype,
   shouldLoadItemSymbols,
   shouldLoadItemFullText,
-  shouldLoadItemProxySlots
+  shouldLoadItemProxySlots,
 };

@@ -16,8 +16,8 @@ stubs.set("Named", {
   displayName: "testName",
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("UserNamed", {
@@ -34,8 +34,8 @@ stubs.set("UserNamed", {
   displayName: "testName",
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("VarNamed", {
@@ -50,8 +50,8 @@ stubs.set("VarNamed", {
   displayName: "testVarName",
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("Anon", {
@@ -65,8 +65,8 @@ stubs.set("Anon", {
   isGenerator: false,
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("LongName", {
@@ -86,8 +86,8 @@ stubs.set("LongName", {
     "oooooooooooooooooooooooooooooooooooooooooong",
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("AsyncFunction", {
@@ -103,8 +103,8 @@ stubs.set("AsyncFunction", {
   displayName: "waitUntil2017",
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("AnonAsyncFunction", {
@@ -118,8 +118,8 @@ stubs.set("AnonAsyncFunction", {
   isGenerator: false,
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("GeneratorFunction", {
@@ -135,8 +135,8 @@ stubs.set("GeneratorFunction", {
   displayName: "fib",
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("AnonGeneratorFunction", {
@@ -150,8 +150,8 @@ stubs.set("AnonGeneratorFunction", {
   isGenerator: true,
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("getRandom", {
@@ -166,8 +166,8 @@ stubs.set("getRandom", {
   displayName: "getRandom",
   location: {
     url: "https://nchevobbe.github.io/demo/console-test-app.html",
-    line: 314
-  }
+    line: 314,
+  },
 });
 
 stubs.set("EvaledInDebuggerFunction", {
@@ -182,8 +182,8 @@ stubs.set("EvaledInDebuggerFunction", {
   displayName: "evaledInDebugger",
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 stubs.set("ObjectProperty", {
@@ -199,8 +199,8 @@ stubs.set("ObjectProperty", {
   displayName: "jQuery",
   location: {
     url: "debugger eval code",
-    line: 1
-  }
+    line: 1,
+  },
 });
 
 module.exports = stubs;

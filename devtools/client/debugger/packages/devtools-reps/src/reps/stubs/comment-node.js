@@ -16,8 +16,8 @@ stubs.set("Comment", {
     nodeType: 8,
     nodeName: "#comment",
     textContent:
-      "test\nand test\nand test\nand test\nand test\nand test\nand test"
-  }
+      "test\nand test\nand test\nand test\nand test\nand test\nand test",
+  },
 });
 
 module.exports = stubs;

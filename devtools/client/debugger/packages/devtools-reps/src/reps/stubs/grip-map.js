@@ -18,8 +18,8 @@ stubs.set("testEmptyMap", {
   preview: {
     kind: "MapLike",
     size: 0,
-    entries: []
-  }
+    entries: [],
+  },
 });
 
 stubs.set("testSymbolKeyedMap", {
@@ -37,19 +37,19 @@ stubs.set("testSymbolKeyedMap", {
       [
         {
           type: "symbol",
-          name: "a"
+          name: "a",
         },
-        "value-a"
+        "value-a",
       ],
       [
         {
           type: "symbol",
-          name: "b"
+          name: "b",
         },
-        "value-b"
-      ]
-    ]
-  }
+        "value-b",
+      ],
+    ],
+  },
 });
 
 stubs.set("testWeakMap", {
@@ -72,12 +72,12 @@ stubs.set("testWeakMap", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 1
+          ownPropertyLength: 1,
         },
-        "value-a"
-      ]
-    ]
-  }
+        "value-a",
+      ],
+    ],
+  },
 });
 
 stubs.set("testMaxEntries", {
@@ -91,8 +91,8 @@ stubs.set("testMaxEntries", {
   preview: {
     kind: "MapLike",
     size: 3,
-    entries: [["key-a", "value-a"], ["key-b", "value-b"], ["key-c", "value-c"]]
-  }
+    entries: [["key-a", "value-a"], ["key-b", "value-b"], ["key-c", "value-c"]],
+  },
 });
 
 stubs.set("testMoreThanMaxEntries", {
@@ -108,8 +108,8 @@ stubs.set("testMoreThanMaxEntries", {
     size: maxLengthMap.get(MODE.LONG) + 1,
     entries: Array.from({ length: 10 }).map((_, i) => {
       return [`key-${i}`, `value-${i}`];
-    })
-  }
+    }),
+  },
 });
 
 stubs.set("testUninterestingEntries", {
@@ -127,19 +127,19 @@ stubs.set("testUninterestingEntries", {
       [
         "key-a",
         {
-          type: "null"
-        }
+          type: "null",
+        },
       ],
       [
         "key-b",
         {
-          type: "undefined"
-        }
+          type: "undefined",
+        },
       ],
       ["key-c", "value-c"],
-      ["key-d", 4]
-    ]
-  }
+      ["key-d", 4],
+    ],
+  },
 });
 
 stubs.set("testDisconnectedNodeValuedMap", {
@@ -169,11 +169,11 @@ stubs.set("testDisconnectedNodeValuedMap", {
             attributes: {
               id: "btn-1",
               class: "btn btn-log",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
+            attributesLength: 3,
+          },
+        },
       ],
       [
         "item-1",
@@ -193,11 +193,11 @@ stubs.set("testDisconnectedNodeValuedMap", {
             attributes: {
               id: "btn-2",
               class: "btn btn-err",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
+            attributesLength: 3,
+          },
+        },
       ],
       [
         "item-2",
@@ -217,14 +217,14 @@ stubs.set("testDisconnectedNodeValuedMap", {
             attributes: {
               id: "btn-3",
               class: "btn btn-count",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
-      ]
-    ]
-  }
+            attributesLength: 3,
+          },
+        },
+      ],
+    ],
+  },
 });
 
 stubs.set("testNodeValuedMap", {
@@ -254,11 +254,11 @@ stubs.set("testNodeValuedMap", {
             attributes: {
               id: "btn-1",
               class: "btn btn-log",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
+            attributesLength: 3,
+          },
+        },
       ],
       [
         "item-1",
@@ -278,11 +278,11 @@ stubs.set("testNodeValuedMap", {
             attributes: {
               id: "btn-2",
               class: "btn btn-err",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
+            attributesLength: 3,
+          },
+        },
       ],
       [
         "item-2",
@@ -302,14 +302,14 @@ stubs.set("testNodeValuedMap", {
             attributes: {
               id: "btn-3",
               class: "btn btn-count",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
-        }
-      ]
-    ]
-  }
+            attributesLength: 3,
+          },
+        },
+      ],
+    ],
+  },
 });
 
 stubs.set("testNodeKeyedMap", {
@@ -338,12 +338,12 @@ stubs.set("testNodeKeyedMap", {
             attributes: {
               id: "btn-1",
               class: "btn btn-log",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
+            attributesLength: 3,
+          },
         },
-        "item-0"
+        "item-0",
       ],
       [
         {
@@ -362,12 +362,12 @@ stubs.set("testNodeKeyedMap", {
             attributes: {
               id: "btn-3",
               class: "btn btn-count",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
+            attributesLength: 3,
+          },
         },
-        "item-2"
+        "item-2",
       ],
       [
         {
@@ -386,15 +386,15 @@ stubs.set("testNodeKeyedMap", {
             attributes: {
               id: "btn-2",
               class: "btn btn-err",
-              type: "button"
+              type: "button",
             },
-            attributesLength: 3
-          }
+            attributesLength: 3,
+          },
         },
-        "item-1"
-      ]
-    ]
-  }
+        "item-1",
+      ],
+    ],
+  },
 });
 
 stubs.set("20-entries Map", {
@@ -417,12 +417,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "1"
-        }
+          name: "1",
+        },
       ],
       [
         {
@@ -432,12 +432,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "2"
-        }
+          name: "2",
+        },
       ],
       [
         {
@@ -447,12 +447,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "3"
-        }
+          name: "3",
+        },
       ],
       [
         {
@@ -462,12 +462,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "4"
-        }
+          name: "4",
+        },
       ],
       [
         {
@@ -477,12 +477,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "5"
-        }
+          name: "5",
+        },
       ],
       [
         {
@@ -492,12 +492,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "6"
-        }
+          name: "6",
+        },
       ],
       [
         {
@@ -507,12 +507,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "7"
-        }
+          name: "7",
+        },
       ],
       [
         {
@@ -522,12 +522,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "8"
-        }
+          name: "8",
+        },
       ],
       [
         {
@@ -537,12 +537,12 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "9"
-        }
+          name: "9",
+        },
       ],
       [
         {
@@ -552,15 +552,15 @@ stubs.set("20-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "10"
-        }
-      ]
-    ]
-  }
+          name: "10",
+        },
+      ],
+    ],
+  },
 });
 
 stubs.set("234-entries Map", {
@@ -583,12 +583,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "1"
-        }
+          name: "1",
+        },
       ],
       [
         {
@@ -598,12 +598,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "2"
-        }
+          name: "2",
+        },
       ],
       [
         {
@@ -613,12 +613,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "3"
-        }
+          name: "3",
+        },
       ],
       [
         {
@@ -628,12 +628,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "4"
-        }
+          name: "4",
+        },
       ],
       [
         {
@@ -643,12 +643,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "5"
-        }
+          name: "5",
+        },
       ],
       [
         {
@@ -658,12 +658,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "6"
-        }
+          name: "6",
+        },
       ],
       [
         {
@@ -673,12 +673,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "7"
-        }
+          name: "7",
+        },
       ],
       [
         {
@@ -688,12 +688,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "8"
-        }
+          name: "8",
+        },
       ],
       [
         {
@@ -703,12 +703,12 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "9"
-        }
+          name: "9",
+        },
       ],
       [
         {
@@ -718,15 +718,15 @@ stubs.set("234-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "10"
-        }
-      ]
-    ]
-  }
+          name: "10",
+        },
+      ],
+    ],
+  },
 });
 
 stubs.set("23456-entries Map", {
@@ -749,12 +749,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "1"
-        }
+          name: "1",
+        },
       ],
       [
         {
@@ -764,12 +764,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "2"
-        }
+          name: "2",
+        },
       ],
       [
         {
@@ -779,12 +779,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "3"
-        }
+          name: "3",
+        },
       ],
       [
         {
@@ -794,12 +794,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "4"
-        }
+          name: "4",
+        },
       ],
       [
         {
@@ -809,12 +809,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "5"
-        }
+          name: "5",
+        },
       ],
       [
         {
@@ -824,12 +824,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "6"
-        }
+          name: "6",
+        },
       ],
       [
         {
@@ -839,12 +839,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "7"
-        }
+          name: "7",
+        },
       ],
       [
         {
@@ -854,12 +854,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "8"
-        }
+          name: "8",
+        },
       ],
       [
         {
@@ -869,12 +869,12 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "9"
-        }
+          name: "9",
+        },
       ],
       [
         {
@@ -884,15 +884,15 @@ stubs.set("23456-entries Map", {
           extensible: true,
           frozen: false,
           sealed: false,
-          ownPropertyLength: 2
+          ownPropertyLength: 2,
         },
         {
           type: "symbol",
-          name: "10"
-        }
-      ]
-    ]
-  }
+          name: "10",
+        },
+      ],
+    ],
+  },
 });
 
 module.exports = stubs;

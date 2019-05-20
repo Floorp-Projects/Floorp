@@ -19,17 +19,17 @@ import "./EventListeners.css";
 
 const CATEGORIES = {
   Mouse: ["click", "mouseover", "dblclick"],
-  Keyboard: ["keyup", "keydown"]
+  Keyboard: ["keyup", "keydown"],
 };
 
 type Props = {
   addEventListeners: typeof actions.addEventListeners,
   removeEventListeners: typeof actions.removeEventListeners,
-  activeEventListeners: EventListenerBreakpoints
+  activeEventListeners: EventListenerBreakpoints,
 };
 
 type State = {
-  expandedCategories: string[]
+  expandedCategories: string[],
 };
 
 function getKey(category: string, eventType: string) {
@@ -41,7 +41,7 @@ class EventListeners extends Component<Props, State> {
     super(props);
 
     this.state = {
-      expandedCategories: []
+      expandedCategories: [],
     };
   }
 
@@ -52,11 +52,11 @@ class EventListeners extends Component<Props, State> {
       this.setState({
         expandedCategories: expandedCategories.filter(
           eventCategory => eventCategory !== category
-        )
+        ),
       });
     } else {
       this.setState({
-        expandedCategories: [...expandedCategories, category]
+        expandedCategories: [...expandedCategories, category],
       });
     }
   }
@@ -171,13 +171,13 @@ class EventListeners extends Component<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  activeEventListeners: getActiveEventListeners(state)
+  activeEventListeners: getActiveEventListeners(state),
 });
 
 export default connect(
   mapStateToProps,
   {
     addEventListeners: actions.addEventListeners,
-    removeEventListeners: actions.removeEventListeners
+    removeEventListeners: actions.removeEventListeners,
   }
 )(EventListeners);

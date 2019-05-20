@@ -12,5 +12,5 @@ function documentHasSelection(): boolean {
 }
 
 module.exports = {
-  documentHasSelection
+  documentHasSelection,
 };

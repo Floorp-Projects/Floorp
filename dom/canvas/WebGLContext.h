@@ -1491,8 +1491,6 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
   mutable GLenum mWebGLError;
 
-  bool mBypassShaderValidation;
-
   webgl::ShaderValidator* CreateShaderValidator(GLenum shaderType) const;
 
   // some GL constants

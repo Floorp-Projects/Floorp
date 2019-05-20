@@ -12,7 +12,7 @@ import {
   type Id,
   type ResourceState,
   type ResourceValues,
-  type ResourceIdentity
+  type ResourceIdentity,
 } from "./core";
 import { arrayShallowEqual } from "./compare";
 
@@ -31,11 +31,11 @@ export type QueryMap<R: ResourceBound, Args, Mapped> =
   | QueryMapWithArgs<R, Args, Mapped>;
 export type QueryMapNoArgs<R: ResourceBound, Mapped> = {
   +needsArgs?: false,
-  (R, ResourceIdentity): Mapped
+  (R, ResourceIdentity): Mapped,
 };
 export type QueryMapWithArgs<R: ResourceBound, Args, Mapped> = {
   +needsArgs: true,
-  (R, ResourceIdentity, Args): Mapped
+  (R, ResourceIdentity, Args): Mapped,
 };
 
 export type QueryReduce<R: ResourceBound, Args, Mapped, Reduced> = (
@@ -46,11 +46,11 @@ export type QueryReduce<R: ResourceBound, Args, Mapped, Reduced> = (
 
 export type QueryContext<Args> = {
   args: Args,
-  identMap: WeakMap<ResourceIdentity, ResourceIdentity>
+  identMap: WeakMap<ResourceIdentity, ResourceIdentity>,
 };
 export type QueryResult<Mapped, Reduced> = {
   mapped: Array<Mapped>,
-  reduced: Reduced
+  reduced: Reduced,
 };
 export type QueryResultCompare<Reduced> = (Reduced, Reduced) => boolean;
 
@@ -77,13 +77,13 @@ export function makeResourceQuery<R: ResourceBound, Args, Mapped, Reduced>({
   filter,
   map,
   reduce,
-  resultCompare
+  resultCompare,
 }: {|
   cache: QueryCache<R, Args, Mapped, Reduced>,
   filter: QueryFilter<R, Args>,
   map: QueryMap<R, Args, Mapped>,
   reduce: QueryReduce<R, Args, Mapped, Reduced>,
-  resultCompare: QueryResultCompare<Reduced>
+  resultCompare: QueryResultCompare<Reduced>,
 |}): ResourceQuery<R, Args, Reduced> {
   const loadResource = makeResourceMapper(map);
 

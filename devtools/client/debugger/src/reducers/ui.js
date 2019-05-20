@@ -37,10 +37,10 @@ export type UIState = {
   highlightedLineRange?: {
     start?: number,
     end?: number,
-    sourceId?: number
+    sourceId?: number,
   },
   conditionalPanelLocation: null | SourceLocation,
-  isLogPoint: boolean
+  isLogPoint: boolean,
 };
 
 export const createUIState: () => Record<UIState> = makeRecord({
@@ -54,7 +54,7 @@ export const createUIState: () => Record<UIState> = makeRecord({
   conditionalPanelLocation: null,
   isLogPoint: false,
   orientation: "horizontal",
-  viewport: null
+  viewport: null,
 });
 
 function update(

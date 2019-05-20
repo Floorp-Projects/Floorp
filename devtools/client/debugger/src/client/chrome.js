@@ -10,7 +10,7 @@ import { setupEvents, clientEvents, pageEvents } from "./chrome/events";
 export async function onConnect(connection: any, actions: Object): Object {
   const {
     tabConnection,
-    connTarget: { type }
+    connTarget: { type },
   } = connection;
   const { Debugger, Runtime, Page } = tabConnection;
 

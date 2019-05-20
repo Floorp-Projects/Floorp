@@ -2819,6 +2819,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void ReleaseIOThreadObjects() override;
 
+  void OnStorageInitFailed() override;
+
   void AbortOperations(const nsACString& aOrigin) override;
 
   void AbortOperationsForProcess(ContentParentId aContentParentId) override;
@@ -2964,7 +2966,7 @@ void InitUsageForOrigin(const nsACString& aOrigin, int64_t aUsage) {
     gUsages = new UsageHashtable();
   }
 
-  MOZ_ASSERT(!gUsages->Contains(aOrigin));
+  MOZ_DIAGNOSTIC_ASSERT(!gUsages->Contains(aOrigin));
   gUsages->Put(aOrigin, aUsage);
 }
 
@@ -7042,7 +7044,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   }
 
   if (hasDataForMigration) {
-    MOZ_ASSERT(mUsage == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mUsage == 0);
 
     rv = AttachArchiveDatabase(quotaManager->GetStoragePath(), connection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8803,6 +8805,14 @@ void QuotaClient::ReleaseIOThreadObjects() {
   // storage directory including ls-archive.sqlite.
 
   gArchivedOrigins = nullptr;
+}
+
+void QuotaClient::OnStorageInitFailed() {
+  AssertIsOnIOThread();
+  MOZ_DIAGNOSTIC_ASSERT(QuotaManager::Get());
+  MOZ_DIAGNOSTIC_ASSERT(!QuotaManager::Get()->IsTemporaryStorageInitialized());
+
+  gUsages = nullptr;
 }
 
 void QuotaClient::AbortOperations(const nsACString& aOrigin) {

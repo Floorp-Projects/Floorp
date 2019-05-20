@@ -8,27 +8,27 @@ function ObjectClient(grip, overrides) {
     enumEntries: function() {
       return Promise.resolve({
         iterator: this.getIterator({
-          ownProperties: {}
-        })
+          ownProperties: {},
+        }),
       });
     },
     enumProperties: function(options) {
       return Promise.resolve({
         iterator: this.getIterator({
-          ownProperties: {}
-        })
+          ownProperties: {},
+        }),
       });
     },
     enumSymbols: function() {
       return Promise.resolve({
         iterator: this.getIterator({
-          ownSymbols: []
-        })
+          ownSymbols: [],
+        }),
       });
     },
     getPrototype: function() {
       return Promise.resolve({
-        prototype: {}
+        prototype: {},
       });
     },
     // Declared here so we can override it.
@@ -36,10 +36,10 @@ function ObjectClient(grip, overrides) {
       return {
         slice: function(start, count) {
           return Promise.resolve(res);
-        }
+        },
       };
     },
-    ...overrides
+    ...overrides,
   };
 }
 

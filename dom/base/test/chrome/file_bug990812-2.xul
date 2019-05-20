@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
       browser.messageManager.loadFrameScript(FRAME_SCRIPT, true);
 
       Promise.all([global, window, group]).then(function () {
-        opener.setTimeout("next()");
+        opener.setTimeout(function() { this.next(); });
         self.close();
       });
     }

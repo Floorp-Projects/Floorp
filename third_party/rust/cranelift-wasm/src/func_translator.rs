@@ -5,10 +5,11 @@
 //! WebAssembly module and the runtime environment.
 
 use crate::code_translator::translate_operator;
-use crate::environ::{FuncEnvironment, ReturnMode, WasmResult};
+use crate::environ::{FuncEnvironment, ReturnMode, WasmError, WasmResult};
 use crate::state::TranslationState;
+use crate::translation_utils::get_vmctx_value_label;
 use cranelift_codegen::entity::EntityRef;
-use cranelift_codegen::ir::{self, Ebb, InstBuilder};
+use cranelift_codegen::ir::{self, Ebb, InstBuilder, ValueLabel};
 use cranelift_codegen::timing;
 use cranelift_frontend::{FunctionBuilder, FunctionBuilderContext, Variable};
 use log::info;
@@ -84,6 +85,7 @@ impl FuncTranslator {
 
         // This clears the `FunctionBuilderContext`.
         let mut builder = FunctionBuilder::new(func, &mut self.func_ctx);
+        builder.set_srcloc(cur_srcloc(&reader));
         let entry_block = builder.create_ebb();
         builder.append_ebb_params_for_function_params(entry_block);
         builder.switch_to_block(entry_block); // This also creates values for the arguments.
@@ -127,6 +129,10 @@ fn declare_wasm_parameters(builder: &mut FunctionBuilder, entry_block: Ebb) -> u
             let param_value = builder.ebb_params(entry_block)[i];
             builder.def_var(local, param_value);
         }
+        if param_type.purpose == ir::ArgumentPurpose::VMContext {
+            let param_value = builder.ebb_params(entry_block)[i];
+            builder.set_val_label(param_value, get_vmctx_value_label());
+        }
     }
 
     next_local
@@ -147,7 +153,7 @@ fn parse_local_decls(
     for _ in 0..local_count {
         builder.set_srcloc(cur_srcloc(reader));
         let (count, ty) = reader.read_local_decl(&mut locals_total)?;
-        declare_locals(builder, count, ty, &mut next_local);
+        declare_locals(builder, count, ty, &mut next_local)?;
     }
 
     Ok(())
@@ -161,7 +167,7 @@ fn declare_locals(
     count: u32,
     wasm_type: wasmparser::Type,
     next_local: &mut usize,
-) {
+) -> WasmResult<()> {
     // All locals are initialized to 0.
     use wasmparser::Type::*;
     let zeroval = match wasm_type {
@@ -169,7 +175,7 @@ fn declare_locals(
         I64 => builder.ins().iconst(ir::types::I64, 0),
         F32 => builder.ins().f32const(ir::immediates::Ieee32::with_bits(0)),
         F64 => builder.ins().f64const(ir::immediates::Ieee64::with_bits(0)),
-        _ => panic!("invalid local type"),
+        _ => return Err(WasmError::Unsupported("unsupported local type")),
     };
 
     let ty = builder.func.dfg.value_type(zeroval);
@@ -177,8 +183,10 @@ fn declare_locals(
         let local = Variable::new(*next_local);
         builder.declare_var(local, ty);
         builder.def_var(local, zeroval);
+        builder.set_val_label(zeroval, ValueLabel::new(*next_local));
         *next_local += 1;
     }
+    Ok(())
 }
 
 /// Parse the function body in `reader`.
@@ -264,6 +272,7 @@ mod tests {
                 pointer_width: PointerWidth::U64,
             },
             ReturnMode::NormalReturns,
+            false,
         );
 
         let mut ctx = Context::new();
@@ -303,6 +312,7 @@ mod tests {
                 pointer_width: PointerWidth::U64,
             },
             ReturnMode::NormalReturns,
+            false,
         );
         let mut ctx = Context::new();
 
@@ -350,6 +360,7 @@ mod tests {
                 pointer_width: PointerWidth::U64,
             },
             ReturnMode::NormalReturns,
+            false,
         );
         let mut ctx = Context::new();
 

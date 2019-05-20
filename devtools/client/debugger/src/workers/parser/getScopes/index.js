@@ -14,7 +14,7 @@ import {
   type BindingLocation,
   type BindingLocationType,
   type BindingMetaValue,
-  type BindingType
+  type BindingType,
 } from "./visitor";
 
 export type {
@@ -24,7 +24,7 @@ export type {
   BindingLocation,
   BindingLocationType,
   BindingMetaValue,
-  BindingType
+  BindingType,
 };
 
 import type { SourceLocation } from "../../../types";
@@ -80,7 +80,7 @@ function findScopes(
       displayName: i.displayName,
       start: i.start,
       end: i.end,
-      bindings: i.bindings
+      bindings: i.bindings,
     };
   });
 }

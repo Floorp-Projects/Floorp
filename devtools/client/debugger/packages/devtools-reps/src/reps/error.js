@@ -22,7 +22,7 @@ ErrorRep.propTypes = {
   // @TODO Change this to Object.values when supported in Node's version of V8
   mode: PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
   // An optional function that will be used to render the Error stacktrace.
-  renderStacktrace: PropTypes.func
+  renderStacktrace: PropTypes.func,
 };
 
 function ErrorRep(props) {
@@ -63,7 +63,7 @@ function ErrorRep(props) {
   return span(
     {
       "data-link-actor-id": object.actor,
-      className: "objectBox-stackTrace"
+      className: "objectBox-stackTrace",
     },
     content
   );
@@ -98,7 +98,7 @@ function getStacktraceElements(props, preview) {
       lineNumber,
       columnNumber,
       functionName,
-      location
+      location,
     } = frame;
 
     if (
@@ -111,7 +111,7 @@ function getStacktraceElements(props, preview) {
         props.onViewSourceInDebugger({
           url: filename,
           line: lineNumber,
-          column: columnNumber
+          column: columnNumber,
         });
       };
     }
@@ -121,7 +121,7 @@ function getStacktraceElements(props, preview) {
       span(
         {
           key: `fn${index}`,
-          className: "objectBox-stackTrace-fn"
+          className: "objectBox-stackTrace-fn",
         },
         cleanFunctionName(functionName)
       ),
@@ -133,7 +133,7 @@ function getStacktraceElements(props, preview) {
           onClick: onLocationClick,
           title: onLocationClick
             ? `View source in debugger → ${location}`
-            : undefined
+            : undefined,
         },
         location
       ),
@@ -144,7 +144,7 @@ function getStacktraceElements(props, preview) {
   return span(
     {
       key: "stack",
-      className: "objectBox-stackTrace-grid"
+      className: "objectBox-stackTrace-grid",
     },
     stack
   );
@@ -222,7 +222,7 @@ function parseStackString(stack) {
         functionName,
         location,
         columnNumber: Number(column),
-        lineNumber: Number(line)
+        lineNumber: Number(line),
       });
     }
   });
@@ -244,5 +244,5 @@ function supportsObject(object, noGrip = false) {
 // Exports from this module
 module.exports = {
   rep: wrapRender(ErrorRep),
-  supportsObject
+  supportsObject,
 };

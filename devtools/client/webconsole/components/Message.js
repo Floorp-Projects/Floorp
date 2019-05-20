@@ -20,6 +20,7 @@ loader.lazyRequireGetter(this, "CollapseButton", "devtools/client/webconsole/com
 loader.lazyRequireGetter(this, "MessageRepeat", "devtools/client/webconsole/components/MessageRepeat");
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 loader.lazyRequireGetter(this, "SmartTrace", "devtools/client/shared/components/SmartTrace");
+ChromeUtils.defineModuleGetter(this, "pointPrecedes", "resource://devtools/shared/execution-point-utils.js");
 
 class Message extends Component {
   static get propTypes() {
@@ -40,12 +41,8 @@ class Message extends Component {
       attachment: PropTypes.any,
       stacktrace: PropTypes.any,
       messageId: PropTypes.string,
-      executionPoint: PropTypes.shape({
-        progress: PropTypes.number,
-      }),
-      pausedExecutionPoint: PropTypes.shape({
-        progress: PropTypes.number,
-      }),
+      executionPoint: PropTypes.object,
+      pausedExecutionPoint: PropTypes.object,
       scrollToMessage: PropTypes.bool,
       exceptionDocURL: PropTypes.string,
       request: PropTypes.object,
@@ -195,7 +192,7 @@ class Message extends Component {
 
       if (pausedExecutionPoint
         && executionPoint
-        && pausedExecutionPoint.progress < executionPoint.progress) {
+        && !pointPrecedes(executionPoint, pausedExecutionPoint)) {
         topLevelClasses.push("paused-before");
       }
     }
