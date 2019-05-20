@@ -71,8 +71,8 @@
       element = document.getElementById("xul2");
       checkElement(element, HTML_NS, false, "parsed XUL as HTML");
 
-      element = document.createElement("test-xul-element");
-      checkElement(element, XUL_NS, true, "document.createElement(XUL)");
+      element = document.createXULElement("test-xul-element");
+      checkElement(element, XUL_NS, true, "document.createXULElement(XUL)");
 
       element = document.createXULElement("test-xul-element");
       checkElement(element, XUL_NS, true, "document.createXULElement(XUL)");
@@ -101,8 +101,8 @@
       element = document.getElementById("html4");
       checkElement(element, HTML_NS, true, "parsed HTML as HTML");
 
-      element = document.createElement("test-html-element");
-      checkElement(element, XUL_NS, false, "document.createElement(HTML)");
+      element = document.createXULElement("test-html-element");
+      checkElement(element, XUL_NS, false, "document.createXULElement(HTML)");
 
       element = document.createXULElement("test-html-element");
       checkElement(element, XUL_NS, false, "document.createXULElement(HTML)");

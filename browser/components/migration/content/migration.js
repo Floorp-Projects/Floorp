@@ -217,7 +217,7 @@ var MigrationWizard = { /* exported MigrationWizard */
       var sourceProfiles = this.spinResolve(this._migrator.getSourceProfiles());
 
       for (let profile of sourceProfiles) {
-        var item = document.createElement("radio");
+        var item = document.createXULElement("radio");
         item.id = profile.id;
         item.setAttribute("label", profile.name);
         profiles.appendChild(item);
@@ -258,7 +258,7 @@ var MigrationWizard = { /* exported MigrationWizard */
     for (var i = 0; i < 16; ++i) {
       var itemID = (items >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
-        var checkbox = document.createElement("checkbox");
+        var checkbox = document.createXULElement("checkbox");
         checkbox.id = itemID;
         checkbox.setAttribute("label",
           MigrationUtils.getLocalizedString(itemID + "_" + this._source));
@@ -344,7 +344,7 @@ var MigrationWizard = { /* exported MigrationWizard */
     for (var i = 0; i < 16; ++i) {
       itemID = (this._itemsFlags >> i) & 0x1 ? Math.pow(2, i) : 0;
       if (itemID > 0) {
-        var label = document.createElement("label");
+        var label = document.createXULElement("label");
         label.id = itemID + "_migrated";
         try {
           label.setAttribute("value",

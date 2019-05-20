@@ -85,7 +85,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
         self.marionette.timeout.implicit = 4
         self.marionette.execute_script("""
             window.setTimeout(function () {
-              var b = window.document.createElement('button');
+              var b = window.document.createXULElement('button');
               b.id = 'myid';
               document.getElementById('things').appendChild(b);
             }, 1000); """)

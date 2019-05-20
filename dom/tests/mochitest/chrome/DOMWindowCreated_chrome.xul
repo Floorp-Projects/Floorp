@@ -25,7 +25,7 @@ document.addEventListener("DOMWindowCreated", function(e) {
 }, false);
 
 var root = getRootDirectory(window.location.href);
-var el = document.createElement("iframe");
+var el = document.createXULElement("iframe");
 el.setAttribute('type', 'content');
 el.setAttribute('src', root + 'DOMWindowCreated_content.html');
 document.documentElement.appendChild(el);

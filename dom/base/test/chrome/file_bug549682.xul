@@ -173,7 +173,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     messageManager.removeDelayedFrameScript(toBeRemovedScript);
 
     var oldValue = globalListenerCallCount;
-    var b = document.createElement("browser");
+    var b = document.createXULElement("browser");
     b.setAttribute("type", "content");
     document.documentElement.appendChild(b);
     is(globalListenerCallCount, oldValue + 1,

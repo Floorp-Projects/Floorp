@@ -43,7 +43,7 @@ var test = function (isContent) {
         // The following code creates a new div for each event in eventDefs,
         // attaches a listener to listen for the event, and then generates
         // a fake event at the center of the div.
-        let div = document.createElement("div");
+        let div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
         div.style.width = "10px";
         div.style.height = "10px";
         div.style.backgroundColor = "red";

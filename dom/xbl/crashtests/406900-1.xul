@@ -22,7 +22,7 @@ function boom()
   var anon = document.getAnonymousNodes(x)[0];
   document.documentElement.removeChild(x);
   document.documentElement.appendChild(x);
-  var hbox = document.createElement('hbox');
+  var hbox = document.createXULElement('hbox');
   anon.appendChild(hbox);
 }
 

@@ -336,7 +336,7 @@ function test_emitLatchedEvents(eventPrefix, initialDelta, cmd) {
 }
 
 function test_addCommand(prefName, id) {
-  let cmd = test_commandset.appendChild(document.createElement("command"));
+  let cmd = test_commandset.appendChild(document.createXULElement("command"));
   cmd.setAttribute("id", id);
   cmd.setAttribute("oncommand", "this.callCount++;");
 
