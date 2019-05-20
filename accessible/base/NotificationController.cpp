@@ -751,8 +751,8 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       MOZ_ASSERT(mDocument->AccessibleOrTrueContainer(containerNode),
                  "Text node having rendered text hasn't accessible document!");
 
-      Accessible* container = mDocument->AccessibleOrTrueContainer(
-          containerNode, DocAccessible::eNoContainerIfARIAHidden);
+      Accessible* container =
+          mDocument->AccessibleOrTrueContainer(containerNode, true);
       if (container) {
         nsTArray<nsCOMPtr<nsIContent>>* list =
             mContentInsertions.LookupOrAdd(container);
