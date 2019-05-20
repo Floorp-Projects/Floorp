@@ -394,10 +394,8 @@ LoginAutoComplete.prototype = {
       previousResult = null;
     }
 
-    let rect = BrowserUtils.getElementBoundingScreenRect(aElement);
     let acLookupPromise = this._autoCompleteLookupPromise =
-      LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult,
-                                                   aElement, rect);
+      LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult, aElement);
     acLookupPromise.then(completeSearch.bind(this, acLookupPromise)).catch(log.error);
   },
 
