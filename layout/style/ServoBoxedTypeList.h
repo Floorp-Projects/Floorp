@@ -24,6 +24,7 @@
 // to just generate the forward declaration.
 
 SERVO_BOXED_TYPE(StyleSet, RawServoStyleSet)
+SERVO_BOXED_TYPE(AnimationValueMap, RawServoAnimationValueMap)
 SERVO_BOXED_TYPE(AuthorStyles, RawServoAuthorStyles)
 SERVO_BOXED_TYPE(SelectorList, RawServoSelectorList)
 SERVO_BOXED_TYPE(SharedMemoryBuilder, RawServoSharedMemoryBuilder)
