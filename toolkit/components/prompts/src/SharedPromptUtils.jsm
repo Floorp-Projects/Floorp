@@ -64,6 +64,9 @@ var EnableDelayHelper = function({enableDialog, disableDialog, focusTarget}) {
 
     this.focusTarget.addEventListener("blur", this);
     this.focusTarget.addEventListener("focus", this);
+    // While the user key-repeats, we want to renew the timer until keyup:
+    this.focusTarget.addEventListener("keyup", this, true);
+    this.focusTarget.addEventListener("keydown", this, true);
     this.focusTarget.document.addEventListener("unload", this);
 
     this.startOnFocusDelay();
@@ -75,11 +78,29 @@ this.EnableDelayHelper.prototype = {
     },
 
     handleEvent(event) {
-        if (event.target != this.focusTarget &&
+        if (!event.type.startsWith("key") &&
+            event.target != this.focusTarget &&
             event.target != this.focusTarget.document)
             return;
 
         switch (event.type) {
+            case "keyup":
+                // As soon as any key goes up, we can stop treating keypresses
+                // as indicative of key-repeating that should prolong the timer.
+                this.focusTarget.removeEventListener("keyup", this, true);
+                this.focusTarget.removeEventListener("keydown", this, true);
+                break;
+
+            case "keydown":
+                // Renew timer for repeating keydowns:
+                if (this._focusTimer) {
+                    this._focusTimer.cancel();
+                    this._focusTimer = null;
+                    this.startOnFocusDelay();
+                    event.preventDefault();
+                }
+                break;
+
             case "blur":
                 this.onBlur();
                 break;
@@ -111,6 +132,8 @@ this.EnableDelayHelper.prototype = {
     onUnload() {
         this.focusTarget.removeEventListener("blur", this);
         this.focusTarget.removeEventListener("focus", this);
+        this.focusTarget.removeEventListener("keyup", this, true);
+        this.focusTarget.removeEventListener("keydown", this, true);
         this.focusTarget.document.removeEventListener("unload", this);
 
         if (this._focusTimer) {
