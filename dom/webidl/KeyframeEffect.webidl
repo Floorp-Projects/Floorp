@@ -24,18 +24,18 @@ dictionary KeyframeEffectOptions : EffectTiming {
 // processing on the `keyframes` object.
 [Func="Document::IsWebAnimationsEnabled",
  RunConstructorInCallerCompartment,
- Constructor ((Element or CSSPseudoElement)? target,
-              object? keyframes,
-              optional (unrestricted double or KeyframeEffectOptions) options),
- Constructor (KeyframeEffect source)]
+ Constructor((Element or CSSPseudoElement)? target,
+             object? keyframes,
+             optional (unrestricted double or KeyframeEffectOptions) options),
+ Constructor(KeyframeEffect source)]
 interface KeyframeEffect : AnimationEffect {
   attribute (Element or CSSPseudoElement)?  target;
   [Pref="dom.animations-api.compositing.enabled"]
   attribute IterationCompositeOperation     iterationComposite;
   [Pref="dom.animations-api.compositing.enabled"]
   attribute CompositeOperation              composite;
-  [Throws] sequence<object> getKeyframes ();
-  [Throws] void             setKeyframes (object? keyframes);
+  [Throws] sequence<object> getKeyframes();
+  [Throws] void             setKeyframes(object? keyframes);
 };
 
 // Non-standard extensions

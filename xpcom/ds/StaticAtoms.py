@@ -864,6 +864,7 @@ STATIC_ATOMS = [
     Atom("onRadioStateChange", "onRadioStateChange"),
     Atom("onreadystatechange", "onreadystatechange"),
     Atom("onrejectionhandled", "onrejectionhandled"),
+    Atom("onremove", "onremove"),
     Atom("onrequestprogress", "onrequestprogress"),
     Atom("onresourcetimingbufferfull", "onresourcetimingbufferfull"),
     Atom("onresponseprogress", "onresponseprogress"),

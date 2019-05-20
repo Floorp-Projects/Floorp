@@ -8,8 +8,6 @@
 
 #include "nsIPKCS11ModuleDB.h"
 
-#include "nsString.h"
-
 namespace mozilla {
 namespace psm {
 
@@ -30,9 +28,6 @@ class PKCS11ModuleDB : public nsIPKCS11ModuleDB {
  protected:
   virtual ~PKCS11ModuleDB() {}
 };
-
-void GetModuleNameForTelemetry(/*in*/ const SECMODModule* module,
-                               /*out*/ nsString& result);
 
 }  // namespace psm
 }  // namespace mozilla

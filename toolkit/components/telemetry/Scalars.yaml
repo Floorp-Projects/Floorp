@@ -449,22 +449,6 @@ identity.fxaccounts:
       - main
 
 security:
-  pkcs11_modules_loaded:
-    bug_numbers:
-      - 1369911
-      - 1445961
-    description: >
-      A keyed boolean indicating the library names of the PKCS#11 modules that
-      have been loaded by the browser.
-    expires: "69"
-    kind: boolean
-    keyed: true
-    notification_emails:
-      - seceng-telemetry@mozilla.com
-      - dkeeler@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - main
   webauthn_used:
     bug_numbers:
       - 1265472
@@ -1441,6 +1425,21 @@ devtools.inspector:
     description: >
       Number of times the element picker is used to select an element from the page.
     expires: "70"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  node_selection_count:
+    bug_numbers:
+      - 1550794
+    description: >
+      Number of times a different node is marked as selected in the Inspector regardless
+      of the cause: context menu, manual selection in markup view, etc.
+    expires: "never"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org

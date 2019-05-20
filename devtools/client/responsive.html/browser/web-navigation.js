@@ -9,9 +9,6 @@ const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const { E10SUtils } = require("resource://gre/modules/E10SUtils.jsm");
-const Telemetry = require("devtools/client/shared/telemetry");
-
-const telemetry = new Telemetry();
 
 function readInputStreamToString(stream) {
   return NetUtil.readInputStreamToString(stream, stream.available());
@@ -85,7 +82,6 @@ BrowserElementWebNavigation.prototype = {
       triggeringPrincipal: E10SUtils.serializePrincipal(
                            triggeringPrincipal ||
                            Services.scriptSecurityManager.createNullPrincipal({})),
-      requestTime: telemetry.msSystemNow(),
     });
   },
 

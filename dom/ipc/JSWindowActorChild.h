@@ -51,6 +51,7 @@ class JSWindowActorChild final : public JSWindowActor {
   void AfterDestroy();
   Document* GetDocument(ErrorResult& aRv);
   BrowsingContext* GetBrowsingContext(ErrorResult& aRv);
+  nsIDocShell* GetDocShell(ErrorResult& aRv);
   Nullable<WindowProxyHolder> GetContentWindow(ErrorResult& aRv);
 
  protected:

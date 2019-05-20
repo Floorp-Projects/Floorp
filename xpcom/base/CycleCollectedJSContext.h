@@ -118,7 +118,7 @@ class CycleCollectedJSContext
                                         JS::HandleObject aIncumbentGlobal,
                                         void* aData);
   static void PromiseRejectionTrackerCallback(
-      JSContext* aCx, JS::HandleObject aPromise,
+      JSContext* aCx, bool aMutedErrors, JS::HandleObject aPromise,
       JS::PromiseRejectionHandlingState state, void* aData);
 
   void AfterProcessMicrotasks();

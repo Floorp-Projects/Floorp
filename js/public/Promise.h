@@ -260,7 +260,7 @@ class MOZ_RAII JS_PUBLIC_API AutoDebuggerJobQueueInterruption {
 enum class PromiseRejectionHandlingState { Unhandled, Handled };
 
 typedef void (*PromiseRejectionTrackerCallback)(
-    JSContext* cx, JS::HandleObject promise,
+    JSContext* cx, bool mutedErrors, JS::HandleObject promise,
     JS::PromiseRejectionHandlingState state, void* data);
 
 /**
