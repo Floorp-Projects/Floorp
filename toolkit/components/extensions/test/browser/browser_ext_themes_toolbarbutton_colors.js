@@ -32,7 +32,7 @@ add_task(async function test_button_background_properties() {
   await extension.startup();
 
   let toolbarButton = document.querySelector("#home-button");
-  let toolbarButtonIcon = document.getAnonymousElementByAttribute(toolbarButton, "class", "toolbarbutton-icon");
+  let toolbarButtonIcon = toolbarButton.icon;
   let toolbarButtonIconCS = window.getComputedStyle(toolbarButtonIcon);
 
   InspectorUtils.addPseudoClassLock(toolbarButton, ":hover");
