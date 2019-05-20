@@ -128,11 +128,17 @@ VARCACHE_PREF(
 //---------------------------------------------------------------------------
 
 // Is support for automatically removing replaced filling animations enabled?
+#ifdef RELEASE_OR_BETA
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
 VARCACHE_PREF(
   "dom.animations-api.autoremove.enabled",
    dom_animations_api_autoremove_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 // Is support for composite operations from the Web Animations API enabled?
 #ifdef RELEASE_OR_BETA
