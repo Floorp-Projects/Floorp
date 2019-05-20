@@ -352,17 +352,7 @@ void nsTableColGroupFrame::Reflow(nsPresContext* aPresContext,
 
 void nsTableColGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                             const nsDisplayListSet& aLists) {
-  if (IsVisibleForPainting()) {
-    // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
-    // just because we're visible?  Or should it depend on the cell visibility
-    // when we're not the whole table?
-
-    // Paint the outset box-shadows for the table frames
-    if (StyleEffects()->mBoxShadow) {
-      aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(
-          aBuilder, this);
-    }
-  }
+  DisplayOutsetBoxShadow(aBuilder, aLists.BorderBackground());
 
   // Collecting column index.
   AutoTArray<uint32_t, 1> colIdx;
@@ -388,17 +378,7 @@ void nsTableColGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  if (IsVisibleForPainting()) {
-    // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
-    // just because we're visible?  Or should it depend on the cell visibility
-    // when we're not the whole table?
-
-    // Paint the inset box-shadows for the table frames
-    if (StyleEffects()->mBoxShadow) {
-      aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(
-          aBuilder, this);
-    }
-  }
+  DisplayInsetBoxShadow(aBuilder, aLists.BorderBackground());
 
   DisplayOutline(aBuilder, aLists);
 

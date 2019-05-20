@@ -531,6 +531,32 @@ class nsFrame : public nsBox {
                       const nsDisplayListSet& aLists);
 
   /**
+   * Add a display item for CSS inset box shadows. Does not check visibility.
+   */
+  void DisplayInsetBoxShadowUnconditional(nsDisplayListBuilder* aBuilder,
+                                          nsDisplayList* aList);
+
+  /**
+   * Add a display item for CSS inset box shadow, after calling
+   * IsVisibleForPainting to confirm we are visible.
+   */
+  void DisplayInsetBoxShadow(nsDisplayListBuilder* aBuilder,
+                             nsDisplayList* aList);
+
+  /**
+   * Add a display item for CSS outset box shadows. Does not check visibility.
+   */
+  void DisplayOutsetBoxShadowUnconditional(nsDisplayListBuilder* aBuilder,
+                                           nsDisplayList* aList);
+
+  /**
+   * Add a display item for CSS outset box shadow, after calling
+   * IsVisibleForPainting to confirm we are visible.
+   */
+  void DisplayOutsetBoxShadow(nsDisplayListBuilder* aBuilder,
+                              nsDisplayList* aList);
+
+  /**
    * Adjust the given parent frame to the right ComputedStyle parent frame for
    * the child, given the pseudo-type of the prospective child.  This handles
    * things like walking out of table pseudos and so forth.
