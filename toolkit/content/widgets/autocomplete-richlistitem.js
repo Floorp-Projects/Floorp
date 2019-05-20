@@ -1001,7 +1001,7 @@ class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocomplet
   }
 }
 
-class MozAutocompleteRichlistitemLoginWithOrigin extends MozElements.MozRichlistitem {
+class MozAutocompleteTwoLineRichlistitem extends MozElements.MozRichlistitem {
   connectedCallback() {
     if (this.delayConnectedCallback()) {
       return;
@@ -1016,7 +1016,10 @@ class MozAutocompleteRichlistitemLoginWithOrigin extends MozElements.MozRichlist
 
   static get inheritedAttributes() {
     return {
-      ".login-username": "text=ac-value",
+      // getLabelAt:
+      ".line1-label": "text=ac-value",
+      // getCommentAt:
+      ".line2-label": "text=ac-label",
     };
   }
 
@@ -1024,11 +1027,11 @@ class MozAutocompleteRichlistitemLoginWithOrigin extends MozElements.MozRichlist
     return `
       <div xmlns="http://www.w3.org/1999/xhtml"
            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-           class="login-wrapper">
+           class="two-line-wrapper">
         <xul:image class="ac-site-icon"></xul:image>
-        <div class="login-text">
-          <div class="login-row login-username"></div>
-          <div class="login-row login-origin"></div>
+        <div class="labels-wrapper">
+          <div class="label-row line1-label"></div>
+          <div class="label-row line2-label"></div>
         </div>
       </div>
     `;
@@ -1040,16 +1043,6 @@ class MozAutocompleteRichlistitemLoginWithOrigin extends MozElements.MozRichlist
     // Make item fit in popup as XUL box could not constrain
     // item's width
     this.firstElementChild.style.width = outerBoxRect.width + "px";
-
-    let data = JSON.parse(this.getAttribute("ac-label"));
-    let originElement = this.querySelector(".login-origin");
-    try {
-      let uri = Services.io.newURI(data.loginOrigin);
-      // Fallback to handle file: URIs
-      originElement.textContent = uri.displayHostPort || data.loginOrigin;
-    } catch (ex) {
-      originElement.textContent = data.loginOrigin;
-    }
   }
 
   _onOverflow() {}
@@ -1071,7 +1064,7 @@ customElements.define("autocomplete-richlistitem-logins-footer", MozAutocomplete
   extends: "richlistitem",
 });
 
-customElements.define("autocomplete-richlistitem-login-with-origin", MozAutocompleteRichlistitemLoginWithOrigin, {
+customElements.define("autocomplete-two-line-richlistitem", MozAutocompleteTwoLineRichlistitem, {
   extends: "richlistitem",
 });
 }
