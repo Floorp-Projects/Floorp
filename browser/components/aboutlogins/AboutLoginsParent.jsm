@@ -9,6 +9,8 @@ var EXPORTED_SYMBOLS = ["AboutLoginsParent"];
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "Localization",
+                               "resource://gre/modules/Localization.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
@@ -46,6 +48,7 @@ const convertSubjectToLogin = subject => {
 };
 
 var AboutLoginsParent = {
+  _l10n: null,
   _subscribers: new WeakSet(),
 
   // Listeners are added in BrowserGlue.jsm
@@ -157,8 +160,12 @@ var AboutLoginsParent = {
     }
   },
 
-  showMasterPasswordLoginNotifications() {
-    let messageString = "You must enter your Master Password to view saved logins"; // TODO
+  async showMasterPasswordLoginNotifications() {
+    if (!this._l10n) {
+      this._l10n = new Localization(["browser/aboutLogins.ftl"]);
+    }
+
+    let messageString = await this._l10n.formatValue("master-password-notification-message");
     for (let subscriber of this._subscriberIterator()) {
       // If there's already an existing notification bar, don't do anything.
       let {gBrowser} = subscriber.ownerGlobal;
@@ -172,8 +179,8 @@ var AboutLoginsParent = {
       // Configure the notification bar
       let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
       let iconURL = "chrome://browser/skin/login.svg";
-      let reloadLabel = "Log in"; // TODO
-      let reloadKey   = "L"; // TODO
+      let reloadLabel = await this._l10n.formatValue("master-password-reload-button-label");
+      let reloadKey = await this._l10n.formatValue("master-password-reload-button-accesskey");
 
       let buttons = [{
         label: reloadLabel,
