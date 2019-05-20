@@ -4,11 +4,9 @@
 
 use cow_rc_str::CowRcStr;
 use smallvec::SmallVec;
-use std::ops::Range;
-#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::ops::BitOr;
-use tokenizer::{Token, Tokenizer, SourcePosition, SourceLocation};
-
+use std::ops::Range;
+use tokenizer::{SourceLocation, SourcePosition, Token, Tokenizer};
 
 /// A capture of the internal state of a `Parser` (including the position within the input),
 /// obtained from the `Parser::position` method.
@@ -114,7 +112,10 @@ pub enum ParseErrorKind<'i, T: 'i> {
 
 impl<'i, T> ParseErrorKind<'i, T> {
     /// Like `std::convert::Into::into`
-    pub fn into<U>(self) -> ParseErrorKind<'i, U> where T: Into<U> {
+    pub fn into<U>(self) -> ParseErrorKind<'i, U>
+    where
+        T: Into<U>,
+    {
         match self {
             ParseErrorKind::Basic(basic) => ParseErrorKind::Basic(basic),
             ParseErrorKind::Custom(custom) => ParseErrorKind::Custom(custom.into()),
@@ -144,7 +145,10 @@ impl<'i, T> ParseError<'i, T> {
     }
 
     /// Like `std::convert::Into::into`
-    pub fn into<U>(self) -> ParseError<'i, U> where T: Into<U> {
+    pub fn into<U>(self) -> ParseError<'i, U>
+    where
+        T: Into<U>,
+    {
         ParseError {
             kind: self.kind.into(),
             location: self.location,
@@ -199,7 +203,6 @@ pub struct Parser<'i: 't, 't> {
     stop_before: Delimiters,
 }
 
-
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub(crate) enum BlockType {
     Parenthesis,
@@ -207,15 +210,13 @@ pub(crate) enum BlockType {
     CurlyBracket,
 }
 
-
 impl BlockType {
     fn opening(token: &Token) -> Option<BlockType> {
         match *token {
-            Token::Function(_) |
-            Token::ParenthesisBlock => Some(BlockType::Parenthesis),
+            Token::Function(_) | Token::ParenthesisBlock => Some(BlockType::Parenthesis),
             Token::SquareBracketBlock => Some(BlockType::SquareBracket),
             Token::CurlyBracketBlock => Some(BlockType::CurlyBracket),
-            _ => None
+            _ => None,
         }
     }
 
@@ -224,11 +225,10 @@ impl BlockType {
             Token::CloseParenthesis => Some(BlockType::Parenthesis),
             Token::CloseSquareBracket => Some(BlockType::SquareBracket),
             Token::CloseCurlyBracket => Some(BlockType::CurlyBracket),
-            _ => None
+            _ => None,
         }
     }
 }
-
 
 /// A set of characters, to be used with the `Parser::parse_until*` methods.
 ///
@@ -273,7 +273,9 @@ impl BitOr<Delimiters> for Delimiters {
 
     #[inline]
     fn bitor(self, other: Delimiters) -> Delimiters {
-        Delimiters { bits: self.bits | other.bits }
+        Delimiters {
+            bits: self.bits | other.bits,
+        }
     }
 }
 
@@ -338,16 +340,21 @@ impl<'i: 't, 't> Parser<'i, 't> {
     }
 
     /// Check whether the input is exhausted. That is, if `.next()` would return a token.
-    /// Return a `Result` so that the `try!` macro can be used: `try!(input.expect_exhausted())`
+    /// Return a `Result` so that the `?` operator can be used: `input.expect_exhausted()?`
     ///
     /// This ignores whitespace and comments.
     #[inline]
     pub fn expect_exhausted(&mut self) -> Result<(), BasicParseError<'i>> {
         let start = self.state();
         let result = match self.next() {
-            Err(BasicParseError { kind: BasicParseErrorKind::EndOfInput, .. }) => Ok(()),
+            Err(BasicParseError {
+                kind: BasicParseErrorKind::EndOfInput,
+                ..
+            }) => Ok(()),
             Err(e) => unreachable!("Unexpected error encountered: {:?}", e),
-            Ok(t) => Err(start.source_location().new_basic_unexpected_token_error(t.clone())),
+            Ok(t) => Err(start
+                .source_location()
+                .new_basic_unexpected_token_error(t.clone())),
         };
         self.reset(&start);
         result
@@ -426,7 +433,7 @@ impl<'i: 't, 't> Parser<'i, 't> {
     pub fn new_error_for_next_token<E>(&mut self) -> ParseError<'i, E> {
         let token = match self.next() {
             Ok(token) => token.clone(),
-            Err(e) => return e.into()
+            Err(e) => return e.into(),
         };
         self.new_error(BasicParseErrorKind::UnexpectedToken(token))
     }
@@ -438,7 +445,7 @@ impl<'i: 't, 't> Parser<'i, 't> {
     pub fn state(&self) -> ParserState {
         ParserState {
             at_start_of: self.at_start_of,
-            .. self.input.tokenizer.state()
+            ..self.input.tokenizer.state()
         }
     }
 
@@ -465,7 +472,7 @@ impl<'i: 't, 't> Parser<'i, 't> {
     pub(crate) fn next_byte(&self) -> Option<u8> {
         let byte = self.input.tokenizer.next_byte();
         if self.stop_before.contains(Delimiters::from_byte(byte)) {
-            return None
+            return None;
         }
         byte
     }
@@ -495,13 +502,24 @@ impl<'i: 't, 't> Parser<'i, 't> {
         self.input.tokenizer.seen_var_or_env_functions()
     }
 
+    /// The old name of `try_parse`, which requires raw identifiers in the Rust 2018 edition.
+    #[inline]
+    pub fn try<F, T, E>(&mut self, thing: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Parser<'i, 't>) -> Result<T, E>,
+    {
+        self.try_parse(thing)
+    }
+
     /// Execute the given closure, passing it the parser.
     /// If the result (returned unchanged) is `Err`,
     /// the internal state of the parser  (including position within the input)
     /// is restored to what it was before the call.
     #[inline]
-    pub fn try<F, T, E>(&mut self, thing: F) -> Result<T, E>
-    where F: FnOnce(&mut Parser<'i, 't>) -> Result<T, E> {
+    pub fn try_parse<F, T, E>(&mut self, thing: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut Parser<'i, 't>) -> Result<T, E>,
+    {
         let start = self.state();
         let result = thing(self);
         if result.is_err() {
@@ -543,8 +561,8 @@ impl<'i: 't, 't> Parser<'i, 't> {
         loop {
             match self.next_including_whitespace_and_comments() {
                 Err(e) => return Err(e),
-                Ok(&Token::Comment(_)) => {},
-                _ => break
+                Ok(&Token::Comment(_)) => {}
+                _ => break,
             }
         }
         Ok(self.input.cached_token_ref())
@@ -556,39 +574,47 @@ impl<'i: 't, 't> Parser<'i, 't> {
     /// where comments are preserved.
     /// When parsing higher-level values, per the CSS Syntax specification,
     /// comments should always be ignored between tokens.
-    pub fn next_including_whitespace_and_comments(&mut self) -> Result<&Token<'i>, BasicParseError<'i>> {
+    pub fn next_including_whitespace_and_comments(
+        &mut self,
+    ) -> Result<&Token<'i>, BasicParseError<'i>> {
         if let Some(block_type) = self.at_start_of.take() {
             consume_until_end_of_block(block_type, &mut self.input.tokenizer);
         }
 
         let byte = self.input.tokenizer.next_byte();
         if self.stop_before.contains(Delimiters::from_byte(byte)) {
-            return Err(self.new_basic_error(BasicParseErrorKind::EndOfInput))
+            return Err(self.new_basic_error(BasicParseErrorKind::EndOfInput));
         }
 
         let token_start_position = self.input.tokenizer.position();
-        let token;
-        match self.input.cached_token {
-            Some(ref cached_token)
-            if cached_token.start_position == token_start_position => {
-                self.input.tokenizer.reset(&cached_token.end_state);
-                match cached_token.token {
-                    Token::Function(ref name) => self.input.tokenizer.see_function(name),
-                    _ => {}
-                }
-                token = &cached_token.token
+        let using_cached_token = self
+            .input
+            .cached_token
+            .as_ref()
+            .map_or(false, |cached_token| {
+                cached_token.start_position == token_start_position
+            });
+        let token = if using_cached_token {
+            let cached_token = self.input.cached_token.as_ref().unwrap();
+            self.input.tokenizer.reset(&cached_token.end_state);
+            match cached_token.token {
+                Token::Function(ref name) => self.input.tokenizer.see_function(name),
+                _ => {}
             }
-            _ => {
-                let new_token = self.input.tokenizer.next()
-                    .map_err(|()| self.new_basic_error(BasicParseErrorKind::EndOfInput))?;
-                self.input.cached_token = Some(CachedToken {
-                    token: new_token,
-                    start_position: token_start_position,
-                    end_state: self.input.tokenizer.state(),
-                });
-                token = self.input.cached_token_ref()
-            }
-        }
+            &cached_token.token
+        } else {
+            let new_token = self
+                .input
+                .tokenizer
+                .next()
+                .map_err(|()| self.new_basic_error(BasicParseErrorKind::EndOfInput))?;
+            self.input.cached_token = Some(CachedToken {
+                token: new_token,
+                start_position: token_start_position,
+                end_state: self.input.tokenizer.state(),
+            });
+            self.input.cached_token_ref()
+        };
 
         if let Some(block_type) = BlockType::opening(token) {
             self.at_start_of = Some(block_type);
@@ -602,7 +628,9 @@ impl<'i: 't, 't> Parser<'i, 't> {
     /// This can help tell e.g. `color: green;` from `color: green 4px;`
     #[inline]
     pub fn parse_entirely<F, T, E>(&mut self, parse: F) -> Result<T, ParseError<'i, E>>
-    where F: FnOnce(&mut Parser<'i, 't>) -> Result<T, ParseError<'i, E>> {
+    where
+        F: FnOnce(&mut Parser<'i, 't>) -> Result<T, ParseError<'i, E>>,
+    {
         let result = parse(self)?;
         self.expect_exhausted()?;
         Ok(result)
@@ -619,15 +647,20 @@ impl<'i: 't, 't> Parser<'i, 't> {
     /// This method retuns `Err(())` the first time that a closure call does,
     /// or if a closure call leaves some input before the next comma or the end of the input.
     #[inline]
-    pub fn parse_comma_separated<F, T, E>(&mut self, mut parse_one: F) -> Result<Vec<T>, ParseError<'i, E>>
-    where F: for<'tt> FnMut(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
+    pub fn parse_comma_separated<F, T, E>(
+        &mut self,
+        mut parse_one: F,
+    ) -> Result<Vec<T>, ParseError<'i, E>>
+    where
+        F: for<'tt> FnMut(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+    {
         // Vec grows from 0 to 4 by default on first push().  So allocate with
         // capacity 1, so in the somewhat common case of only one item we don't
         // way overallocate.  Note that we always push at least one item if
         // parsing succeeds.
         let mut values = Vec::with_capacity(1);
         loop {
-            self.skip_whitespace();  // Unnecessary for correctness, but may help try() in parse_one rewind less.
+            self.skip_whitespace(); // Unnecessary for correctness, but may help try() in parse_one rewind less.
             values.push(self.parse_until_before(Delimiter::Comma, &mut parse_one)?);
             match self.next() {
                 Err(_) => return Ok(values),
@@ -649,8 +682,10 @@ impl<'i: 't, 't> Parser<'i, 't> {
     ///
     /// The result is overridden to `Err(())` if the closure leaves some input before that point.
     #[inline]
-    pub fn parse_nested_block<F, T, E>(&mut self, parse: F) -> Result <T, ParseError<'i, E>>
-    where F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
+    pub fn parse_nested_block<F, T, E>(&mut self, parse: F) -> Result<T, ParseError<'i, E>>
+    where
+        F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+    {
         parse_nested_block(self, parse)
     }
 
@@ -663,9 +698,14 @@ impl<'i: 't, 't> Parser<'i, 't> {
     ///
     /// The result is overridden to `Err(())` if the closure leaves some input before that point.
     #[inline]
-    pub fn parse_until_before<F, T, E>(&mut self, delimiters: Delimiters, parse: F)
-                                    -> Result <T, ParseError<'i, E>>
-    where F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
+    pub fn parse_until_before<F, T, E>(
+        &mut self,
+        delimiters: Delimiters,
+        parse: F,
+    ) -> Result<T, ParseError<'i, E>>
+    where
+        F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+    {
         parse_until_before(self, delimiters, parse)
     }
 
@@ -675,9 +715,14 @@ impl<'i: 't, 't> Parser<'i, 't> {
     /// (e.g. if these is only one in the given set)
     /// or if it was there at all (as opposed to reaching the end of the input).
     #[inline]
-    pub fn parse_until_after<F, T, E>(&mut self, delimiters: Delimiters, parse: F)
-                                   -> Result <T, ParseError<'i, E>>
-    where F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
+    pub fn parse_until_after<F, T, E>(
+        &mut self,
+        delimiters: Delimiters,
+        parse: F,
+    ) -> Result<T, ParseError<'i, E>>
+    where
+        F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+    {
         parse_until_after(self, delimiters, parse)
     }
 
@@ -687,7 +732,7 @@ impl<'i: 't, 't> Parser<'i, 't> {
         let start_location = self.current_source_location();
         match *self.next_including_whitespace()? {
             Token::WhiteSpace(value) => Ok(value),
-            ref t => Err(start_location.new_basic_unexpected_token_error(t.clone()))
+            ref t => Err(start_location.new_basic_unexpected_token_error(t.clone())),
         }
     }
 
@@ -707,7 +752,10 @@ impl<'i: 't, 't> Parser<'i, 't> {
 
     /// Parse a <ident-token> whose unescaped value is an ASCII-insensitive match for the given value.
     #[inline]
-    pub fn expect_ident_matching(&mut self, expected_value: &str) -> Result<(), BasicParseError<'i>> {
+    pub fn expect_ident_matching(
+        &mut self,
+        expected_value: &str,
+    ) -> Result<(), BasicParseError<'i>> {
         expect! {self,
             Token::Ident(ref value) if value.eq_ignore_ascii_case(expected_value) => Ok(()),
         }
@@ -744,8 +792,10 @@ impl<'i: 't, 't> Parser<'i, 't> {
             Token::UnquotedUrl(ref value) => return Ok(value.clone()),
             Token::Function(ref name) if name.eq_ignore_ascii_case("url") => {}
         }
-        self.parse_nested_block(|input| input.expect_string().map_err(Into::into).map(|s| s.clone()))
-            .map_err(ParseError::<()>::basic)
+        self.parse_nested_block(|input| {
+            input.expect_string().map_err(Into::into).map(|s| s.clone())
+        })
+        .map_err(ParseError::<()>::basic)
     }
 
     /// Parse either a <url-token> or a <string-token>, and return the unescaped value.
@@ -757,8 +807,10 @@ impl<'i: 't, 't> Parser<'i, 't> {
             Token::QuotedString(ref value) => return Ok(value.clone()),
             Token::Function(ref name) if name.eq_ignore_ascii_case("url") => {}
         }
-        self.parse_nested_block(|input| input.expect_string().map_err(Into::into).map(|s| s.clone()))
-            .map_err(ParseError::<()>::basic)
+        self.parse_nested_block(|input| {
+            input.expect_string().map_err(Into::into).map(|s| s.clone())
+        })
+        .map_err(ParseError::<()>::basic)
     }
 
     /// Parse a <number-token> and return the integer value.
@@ -862,7 +914,10 @@ impl<'i: 't, 't> Parser<'i, 't> {
     ///
     /// If the result is `Ok`, you can then call the `Parser::parse_nested_block` method.
     #[inline]
-    pub fn expect_function_matching(&mut self, expected_name: &str) -> Result<(), BasicParseError<'i>> {
+    pub fn expect_function_matching(
+        &mut self,
+        expected_name: &str,
+    ) -> Result<(), BasicParseError<'i>> {
         expect! {self,
             Token::Function(ref name) if name.eq_ignore_ascii_case(expected_name) => Ok(()),
         }
@@ -877,21 +932,22 @@ impl<'i: 't, 't> Parser<'i, 't> {
         let token;
         loop {
             match self.next_including_whitespace_and_comments() {
-                Ok(&Token::Function(_)) |
-                Ok(&Token::ParenthesisBlock) |
-                Ok(&Token::SquareBracketBlock) |
-                Ok(&Token::CurlyBracketBlock) => {}
+                Ok(&Token::Function(_))
+                | Ok(&Token::ParenthesisBlock)
+                | Ok(&Token::SquareBracketBlock)
+                | Ok(&Token::CurlyBracketBlock) => {}
                 Ok(t) => {
                     if t.is_parse_error() {
                         token = t.clone();
-                        break
+                        break;
                     }
-                    continue
+                    continue;
                 }
-                Err(_) => return Ok(())
+                Err(_) => return Ok(()),
             }
-            let result = self.parse_nested_block(|input| input.expect_no_error_token()
-                                                 .map_err(|e| Into::into(e)));
+            let result = self.parse_nested_block(|input| {
+                input.expect_no_error_token().map_err(|e| Into::into(e))
+            });
             result.map_err(ParseError::<()>::basic)?
         }
         // FIXME: maybe these should be separate variants of BasicParseError instead?
@@ -899,11 +955,14 @@ impl<'i: 't, 't> Parser<'i, 't> {
     }
 }
 
-pub fn parse_until_before<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>,
-                                               delimiters: Delimiters,
-                                               parse: F)
-                                               -> Result <T, ParseError<'i, E>>
-    where F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
+pub fn parse_until_before<'i: 't, 't, F, T, E>(
+    parser: &mut Parser<'i, 't>,
+    delimiters: Delimiters,
+    parse: F,
+) -> Result<T, ParseError<'i, E>>
+where
+    F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+{
     let delimiters = parser.stop_before | delimiters;
     let result;
     // Introduce a new scope to limit duration of nested_parser’s borrow
@@ -921,27 +980,34 @@ pub fn parse_until_before<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>,
     // FIXME: have a special-purpose tokenizer method for this that does less work.
     loop {
         if delimiters.contains(Delimiters::from_byte(parser.input.tokenizer.next_byte())) {
-            break
+            break;
         }
         if let Ok(token) = parser.input.tokenizer.next() {
             if let Some(block_type) = BlockType::opening(&token) {
                 consume_until_end_of_block(block_type, &mut parser.input.tokenizer);
             }
         } else {
-            break
+            break;
         }
     }
     result
 }
 
-pub fn parse_until_after<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>,
-                                              delimiters: Delimiters,
-                                              parse: F)
-                                              -> Result <T, ParseError<'i, E>>
-    where F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
+pub fn parse_until_after<'i: 't, 't, F, T, E>(
+    parser: &mut Parser<'i, 't>,
+    delimiters: Delimiters,
+    parse: F,
+) -> Result<T, ParseError<'i, E>>
+where
+    F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+{
     let result = parser.parse_until_before(delimiters, parse);
     let next_byte = parser.input.tokenizer.next_byte();
-    if next_byte.is_some() && !parser.stop_before.contains(Delimiters::from_byte(next_byte)) {
+    if next_byte.is_some()
+        && !parser
+            .stop_before
+            .contains(Delimiters::from_byte(next_byte))
+    {
         debug_assert!(delimiters.contains(Delimiters::from_byte(next_byte)));
         // We know this byte is ASCII.
         parser.input.tokenizer.advance(1);
@@ -952,14 +1018,20 @@ pub fn parse_until_after<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>,
     result
 }
 
-pub fn parse_nested_block<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>, parse: F)
-                                               -> Result <T, ParseError<'i, E>>
-    where F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
-    let block_type = parser.at_start_of.take().expect("\
-        A nested parser can only be created when a Function, \
-        ParenthesisBlock, SquareBracketBlock, or CurlyBracketBlock \
-        token was just consumed.\
-        ");
+pub fn parse_nested_block<'i: 't, 't, F, T, E>(
+    parser: &mut Parser<'i, 't>,
+    parse: F,
+) -> Result<T, ParseError<'i, E>>
+where
+    F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>>,
+{
+    let block_type = parser.at_start_of.take().expect(
+        "\
+         A nested parser can only be created when a Function, \
+         ParenthesisBlock, SquareBracketBlock, or CurlyBracketBlock \
+         token was just consumed.\
+         ",
+    );
     let closing_delimiter = match block_type {
         BlockType::CurlyBracket => ClosingDelimiter::CloseCurlyBracket,
         BlockType::SquareBracket => ClosingDelimiter::CloseSquareBracket,

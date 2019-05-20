@@ -4,10 +4,10 @@
 
 //! https://drafts.csswg.org/css-syntax/#urange
 
-use {Parser, ToCss, BasicParseError};
 use std::char;
 use std::fmt;
 use tokenizer::Token;
+use {BasicParseError, Parser, ToCss};
 
 /// One contiguous range of code points.
 ///
@@ -44,7 +44,10 @@ impl UnicodeRange {
 
         let range = match parse_concatenated(concatenated_tokens.as_bytes()) {
             Ok(range) => range,
-            Err(()) => return Err(input.new_basic_unexpected_token_error(Token::Ident(concatenated_tokens.into()))),
+            Err(()) => {
+                return Err(input
+                    .new_basic_unexpected_token_error(Token::Ident(concatenated_tokens.into())))
+            }
         };
         if range.end > char::MAX as u32 || range.start > range.end {
             Err(input.new_basic_unexpected_token_error(Token::Ident(concatenated_tokens.into())))
@@ -61,23 +64,21 @@ fn parse_tokens<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), BasicParseErro
             match input.next_including_whitespace()?.clone() {
                 Token::Ident(_) => {}
                 Token::Delim('?') => {}
-                t => return Err(input.new_basic_unexpected_token_error(t))
+                t => return Err(input.new_basic_unexpected_token_error(t)),
             }
             parse_question_marks(input)
         }
-        Token::Dimension { .. } => {
-            parse_question_marks(input)
-        }
+        Token::Dimension { .. } => parse_question_marks(input),
         Token::Number { .. } => {
             let after_number = input.state();
             match input.next_including_whitespace() {
                 Ok(&Token::Delim('?')) => parse_question_marks(input),
                 Ok(&Token::Dimension { .. }) => {}
                 Ok(&Token::Number { .. }) => {}
-                _ => input.reset(&after_number)
+                _ => input.reset(&after_number),
             }
         }
-        t => return Err(input.new_basic_unexpected_token_error(t))
+        t => return Err(input.new_basic_unexpected_token_error(t)),
     }
     Ok(())
 }
@@ -90,7 +91,7 @@ fn parse_question_marks(input: &mut Parser) {
             Ok(&Token::Delim('?')) => {}
             _ => {
                 input.reset(&start);
-                return
+                return;
             }
         }
     }
@@ -99,13 +100,13 @@ fn parse_question_marks(input: &mut Parser) {
 fn parse_concatenated(text: &[u8]) -> Result<UnicodeRange, ()> {
     let mut text = match text.split_first() {
         Some((&b'+', text)) => text,
-        _ => return Err(())
+        _ => return Err(()),
     };
     let (first_hex_value, hex_digit_count) = consume_hex(&mut text);
     let question_marks = consume_question_marks(&mut text);
     let consumed = hex_digit_count + question_marks;
     if consumed == 0 || consumed > 6 {
-        return Err(())
+        return Err(());
     }
 
     if question_marks > 0 {
@@ -113,13 +114,13 @@ fn parse_concatenated(text: &[u8]) -> Result<UnicodeRange, ()> {
             return Ok(UnicodeRange {
                 start: first_hex_value << (question_marks * 4),
                 end: ((first_hex_value + 1) << (question_marks * 4)) - 1,
-            })
+            });
         }
     } else if text.is_empty() {
         return Ok(UnicodeRange {
             start: first_hex_value,
             end: first_hex_value,
-        })
+        });
     } else {
         if let Some((&b'-', mut text)) = text.split_first() {
             let (second_hex_value, hex_digit_count) = consume_hex(&mut text);
@@ -127,7 +128,7 @@ fn parse_concatenated(text: &[u8]) -> Result<UnicodeRange, ()> {
                 return Ok(UnicodeRange {
                     start: first_hex_value,
                     end: second_hex_value,
-                })
+                });
             }
         }
     }
@@ -143,7 +144,7 @@ fn consume_hex(text: &mut &[u8]) -> (u32, usize) {
             digits += 1;
             *text = rest
         } else {
-            break
+            break;
         }
     }
     (value, digits)
@@ -165,7 +166,10 @@ impl fmt::Debug for UnicodeRange {
 }
 
 impl ToCss for UnicodeRange {
-    fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
         write!(dest, "U+{:X}", self.start)?;
         if self.end != self.start {
             write!(dest, "-{:X}", self.end)?;

@@ -17,12 +17,19 @@ define_proc_macros! {
     }
 }
 
+fn input_to_string(input: &str) -> String {
+    if let Ok(s) = syn::parse_str::<syn::LitStr>(input) {
+        return s.value();
+    }
+    if let Ok(i) = syn::parse_str::<syn::Ident>(input) {
+        return i.to_string();
+    }
+    panic!("expected a string literal or an identifier, got {}", input)
+}
+
 fn build_bytes(input: &str) -> String {
-    let s = match syn::parse_str::<syn::LitStr>(input) {
-        Ok(s) => s,
-        _ => panic!("expected a string literal, got {}", input)
-    };
-    let cstr = match CString::new(s.value()) {
+    let s = input_to_string(input);
+    let cstr = match CString::new(s.as_bytes()) {
         Ok(s) => s,
         _ => panic!("literal must not contain NUL byte")
     };
@@ -54,6 +61,7 @@ mod tests {
         assert_eq!(build_bytes!("\t\n\r\"\\'"), result!(b"\t\n\r\"\\\'\0"));
         assert_eq!(build_bytes!("\x01\x02 \x7f"), result!(b"\x01\x02 \x7f\0"));
         assert_eq!(build_bytes!("你好"), result!(b"\xe4\xbd\xa0\xe5\xa5\xbd\0"));
+        assert_eq!(build_bytes!(foobar), result!(b"foobar\0"));
     }
 
     #[test]
