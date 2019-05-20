@@ -43,14 +43,6 @@
   cursor: default;
 }
 
-.textbox-search-clear:not([disabled]):hover {
-  background-position: -16px 0;
-}
-
-.textbox-search-clear:not([disabled]):hover:active {
-  background-position: -32px 0;
-}
-
 .client .item.tab > .item-title-container {
   padding-inline-start: 26px;
 }
