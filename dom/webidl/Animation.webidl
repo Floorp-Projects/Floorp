@@ -52,6 +52,8 @@ interface Animation : EventTarget {
   void updatePlaybackRate (double playbackRate);
   [Throws]
   void reverse ();
+  [Pref="dom.animations-api.autoremove.enabled"]
+  void persist ();
 };
 
 // Non-standard extensions
