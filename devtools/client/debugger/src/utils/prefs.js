@@ -12,7 +12,7 @@ import { asyncStoreHelper } from "./asyncStoreHelper";
 // Schema version to bump when the async store format has changed incompatibly
 // and old stores should be cleared. This needs to match the prefs schema
 // version in devtools/client/preferences/debugger.js.
-const prefsSchemaVersion = "1.0.9";
+const prefsSchemaVersion = "1.0.10";
 const pref = Services.pref;
 
 if (isDevelopment()) {
@@ -134,7 +134,7 @@ export const asyncStore = asyncStoreHelper("debugger", {
   pendingBreakpoints: ["pending-breakpoints", {}],
   tabs: ["tabs", []],
   xhrBreakpoints: ["xhr-breakpoints", []],
-  eventListenerBreakpoints: ["event-listener-breakpoints", []],
+  eventListenerBreakpoints: ["event-listener-breakpoints", undefined],
 });
 
 export function verifyPrefSchema() {
@@ -143,6 +143,7 @@ export function verifyPrefSchema() {
     asyncStore.pendingBreakpoints = {};
     asyncStore.tabs = [];
     asyncStore.xhrBreakpoints = [];
+    asyncStore.eventListenerBreakpoints = undefined;
     prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
   }
 }

@@ -25,6 +25,8 @@ import type {
   Range,
 } from "../../types";
 
+import type { EventListenerCategoryList } from "../../actions/types";
+
 type URL = string;
 
 /**
@@ -369,7 +371,10 @@ export type ThreadClient = {
   actor: ActorId,
   request: (payload: Object) => Promise<*>,
   url: string,
-  setEventListenerBreakpoints: (string[]) => void,
+  setActiveEventBreakpoints: (string[]) => void,
+  getAvailableEventBreakpoints: () => Promise<{|
+    value: EventListenerCategoryList,
+  |}>,
   skipBreakpoints: boolean => Promise<{| skip: boolean |}>,
 };
 

@@ -159,6 +159,30 @@ export type {
 
 export type { panelPositionType } from "./UIAction";
 
+export type { ASTAction } from "./ASTAction";
+
+type ActiveEventListener = string;
+type EventListenerEvent = { name: string, id: ActiveEventListener };
+type EventListenerCategory = { name: string, events: EventListenerEvent[] };
+
+export type EventListenerActiveList = ActiveEventListener[];
+export type EventListenerCategoryList = EventListenerCategory[];
+export type EventListenerExpandedList = string[];
+
+export type EventListenerAction =
+  | {|
+      +type: "UPDATE_EVENT_LISTENERS",
+      +active: EventListenerActiveList,
+    |}
+  | {|
+      +type: "RECEIVE_EVENT_LISTENER_TYPES",
+      +categories: EventListenerCategoryList,
+    |}
+  | {|
+      +type: "UPDATE_EVENT_LISTENER_EXPANDED",
+      +expanded: EventListenerExpandedList,
+    |};
+
 /**
  * Actions: Source, Breakpoint, and Navigation
  *
@@ -180,4 +204,5 @@ export type Action =
   | FileTextSearchAction
   | ProjectTextSearchAction
   | DebuggeeAction
-  | SourceTreeAction;
+  | SourceTreeAction
+  | EventListenerAction;
