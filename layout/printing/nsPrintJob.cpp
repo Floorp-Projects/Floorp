@@ -2911,90 +2911,35 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
   PR_PL(("----\n"));
 
-  // This tells us that the "Frame" UI has turned off,
-  // so therefore there are no FrameSets/Frames/IFrames to be printed
-  //
-  // This means there are not FrameSets,
-  // but the document could contain an IFrame
-  if (!printData->mIsParentAFrameSet ||
-      printRangeType == nsIPrintSettings::kRangeSelection) {
-    // Print all the pages or a sub range of pages
-    if (printRangeType == nsIPrintSettings::kRangeAllPages ||
-        printRangeType == nsIPrintSettings::kRangeSpecifiedPageRange) {
-      SetPrintPO(printData->mPrintObject.get(), true);
+  bool treatAsNonFrameset = !printData->mIsParentAFrameSet ||
+                            printRangeType == nsIPrintSettings::kRangeSelection;
 
-      // Set the children so they are PrinAsIs
-      // In this case, the children are probably IFrames
-      if (printData->mPrintObject->mKids.Length() > 0) {
-        for (const UniquePtr<nsPrintObject>& po :
-             printData->mPrintObject->mKids) {
-          NS_ASSERTION(po, "nsPrintObject can't be null!");
-          SetPrintAsIs(po.get());
-        }
+  if (treatAsNonFrameset &&
+      (printRangeType == nsIPrintSettings::kRangeAllPages ||
+       printRangeType == nsIPrintSettings::kRangeSpecifiedPageRange)) {
+    SetPrintPO(printData->mPrintObject.get(), true);
 
-        // ***** Another override *****
-        printData->mPrintFrameType = nsIPrintSettings::kFramesAsIs;
+    // Set the children so they are PrinAsIs
+    // In this case, the children are probably IFrames
+    if (printData->mPrintObject->mKids.Length() > 0) {
+      for (const UniquePtr<nsPrintObject>& po :
+           printData->mPrintObject->mKids) {
+        NS_ASSERTION(po, "nsPrintObject can't be null!");
+        SetPrintAsIs(po.get());
       }
-      PR_PL(("PrintFrameType:     %s \n",
-             gPrintFrameTypeStr[printData->mPrintFrameType]));
-      PR_PL(
-          ("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]));
-      PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
-      return NS_OK;
+
+      // ***** Another override *****
+      printData->mPrintFrameType = nsIPrintSettings::kFramesAsIs;
     }
-
-    // This means we are either printed a selected IFrame or
-    // we are printing the current selection
-    if (printRangeType == nsIPrintSettings::kRangeSelection) {
-      // If the currentFocusDOMWin can'r be null if something is selected
-      if (printData->mCurrentFocusWin) {
-        // Find the selected IFrame
-        nsPrintObject* po = FindPrintObjectByDOMWin(
-            printData->mPrintObject.get(), printData->mCurrentFocusWin);
-        if (po) {
-          // Makes sure all of its children are be printed "AsIs"
-          SetPrintAsIs(po);
-
-          // Now, only enable this POs (the selected PO) and all of its children
-          SetPrintPO(po, true);
-
-          // check to see if we have a range selection,
-          // as oppose to a insert selection
-          // this means if the user just clicked on the IFrame then
-          // there will not be a selection so we want the entire page to print
-          //
-          // XXX this is sort of a hack right here to make the page
-          // not try to reposition itself when printing selection
-          nsPIDOMWindowOuter* domWin =
-              po->mDocument->GetOriginalDocument()->GetWindow();
-          if (!IsThereARangeSelection(domWin)) {
-            printRangeType = nsIPrintSettings::kRangeAllPages;
-            printData->mPrintSettings->SetPrintRange(printRangeType);
-          }
-          PR_PL(("PrintFrameType:     %s \n",
-                 gPrintFrameTypeStr[printData->mPrintFrameType]));
-          PR_PL(("HowToEnableFrameUI: %s \n",
-                 gFrameHowToEnableStr[printHowEnable]));
-          PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
-          return NS_OK;
-        }
-      } else {
-        for (uint32_t i = 0; i < printData->mPrintDocList.Length(); i++) {
-          nsPrintObject* po = printData->mPrintDocList.ElementAt(i);
-          NS_ASSERTION(po, "nsPrintObject can't be null!");
-          nsCOMPtr<nsPIDOMWindowOuter> domWin = po->mDocShell->GetWindow();
-          if (IsThereARangeSelection(domWin)) {
-            printData->mCurrentFocusWin = domWin.forget();
-            SetPrintPO(po, true);
-            break;
-          }
-        }
-        return NS_OK;
-      }
-    }
+    PR_PL(("PrintFrameType:     %s \n",
+           gPrintFrameTypeStr[printData->mPrintFrameType]));
+    PR_PL(("HowToEnableFrameUI: %s \n", gFrameHowToEnableStr[printHowEnable]));
+    PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
+    return NS_OK;
   }
 
-  // check to see if there is a selection when a FrameSet is present
+  // This means we are either printed a selected IFrame or
+  // we are printing the current selection
   if (printRangeType == nsIPrintSettings::kRangeSelection) {
     // If the currentFocusDOMWin can'r be null if something is selected
     if (printData->mCurrentFocusWin) {
@@ -3015,7 +2960,7 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
         //
         // XXX this is sort of a hack right here to make the page
         // not try to reposition itself when printing selection
-        nsCOMPtr<nsPIDOMWindowOuter> domWin =
+        nsPIDOMWindowOuter* domWin =
             po->mDocument->GetOriginalDocument()->GetWindow();
         if (!IsThereARangeSelection(domWin)) {
           printRangeType = nsIPrintSettings::kRangeAllPages;
@@ -3028,6 +2973,18 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
         PR_PL(("PrintRange:         %s \n", gPrintRangeStr[printRangeType]));
         return NS_OK;
       }
+    } else if (treatAsNonFrameset) {
+      for (uint32_t i = 0; i < printData->mPrintDocList.Length(); i++) {
+        nsPrintObject* po = printData->mPrintDocList.ElementAt(i);
+        NS_ASSERTION(po, "nsPrintObject can't be null!");
+        nsCOMPtr<nsPIDOMWindowOuter> domWin = po->mDocShell->GetWindow();
+        if (IsThereARangeSelection(domWin)) {
+          printData->mCurrentFocusWin = domWin.forget();
+          SetPrintPO(po, true);
+          break;
+        }
+      }
+      return NS_OK;
     }
   }
 
