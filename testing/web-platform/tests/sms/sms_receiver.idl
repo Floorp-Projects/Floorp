@@ -1,7 +1,6 @@
 [
   SecureContext,
-  Exposed=(Window,DedicatedWorker),
-  RuntimeEnabled=SmsRetrieval]
+  Exposed=(Window,DedicatedWorker)]
 interface SMS {
   readonly attribute DOMString content;
 };
