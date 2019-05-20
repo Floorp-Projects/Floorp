@@ -44,6 +44,18 @@ config = {
                 "win64",
             ],
         },
+        "complete-mar-bz2": {
+            "product-name": "Firefox-%(version)s-Complete-bz2",
+            "check_uptake": True,
+            "platforms": [
+                "linux",
+                "linux64",
+                "osx",
+                "win",
+                "win64",
+                "win64-aarch64",
+            ],
+        },
     },
     "partials": {
         "releases-dir": {
