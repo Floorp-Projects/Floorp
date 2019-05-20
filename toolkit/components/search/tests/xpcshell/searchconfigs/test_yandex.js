@@ -24,38 +24,67 @@ const test = new SearchConfigTest({
       },
     }],
   },
-  domains: {
-    "yandex.az": {
-      included: [{
-        locales: { matches: ["az"] },
-      }],
+  details: [{
+    included: [{locales: { matches: ["az"] }}],
+    domain: "yandex.az",
+    codes: {
+      "searchbar": "clid=2186618",
+      "keyword": "clid=2186621",
+      "contextmenu": "clid=2186623",
+      "homepage": "clid=2186617",
+      "newtab": "clid=2186620",
     },
-    "yandex.com": {
-      included: [{
-        locales: { startsWith: ["en"] },
-      }],
+  }, {
+    included: [{locales: { startsWith: ["en"] }}],
+    domain: "yandex.com",
+    codes: {
+      "searchbar": "clid=2186618",
+      "keyword": "clid=2186621",
+      "contextmenu": "clid=2186623",
+      "homepage": "clid=2186617",
+      "newtab": "clid=2186620",
     },
-    "yandex.ru": {
-      included: [{
-        locales: { matches: ["ru"] },
-      }],
+  }, {
+    included: [{locales: { matches: ["ru"] }}],
+    domain: "yandex.ru",
+    codes: {
+      "searchbar": "clid=2186618",
+      "keyword": "clid=2186621",
+      "contextmenu": "clid=2186623",
+      "homepage": "clid=2186617",
+      "newtab": "clid=2186620",
     },
-    "yandex.by": {
-      included: [{
-        locales: { matches: ["be"] },
-      }],
+  }, {
+    included: [{locales: { matches: ["be"] }}],
+    domain: "yandex.by",
+    codes: {
+      "searchbar": "clid=2186618",
+      "keyword": "clid=2186621",
+      "contextmenu": "clid=2186623",
+      "homepage": "clid=2186617",
+      "newtab": "clid=2186620",
     },
-    "yandex.kz": {
-      included: [{
-        locales: { matches: ["kk"] },
-      }],
+  }, {
+    included: [{locales: { matches: ["kk"] }}],
+    domain: "yandex.kz",
+    codes: {
+      "searchbar": "clid=2186618",
+      "keyword": "clid=2186621",
+      "contextmenu": "clid=2186623",
+      "homepage": "clid=2186617",
+      "newtab": "clid=2186620",
     },
-    "yandex.com.tr": {
-      included: [{
-        locales: { matches: ["tr"] },
-      }],
+  }, {
+    included: [{locales: { matches: ["tr"] }}],
+    domain: "yandex.com.tr",
+    codes: {
+      "searchbar": "clid=2186618",
+      "keyword": "clid=2186621",
+      "contextmenu": "clid=2186623",
+      "homepage": "clid=2186617",
+      "newtab": "clid=2186620",
     },
-  },
+  }],
 });
 
 add_task(async function setup() {
