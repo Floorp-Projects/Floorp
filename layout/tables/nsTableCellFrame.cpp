@@ -474,6 +474,41 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       aLists.BorderBackground()->AppendNewToTop<nsDisplayTableCellSelection>(
           aBuilder, this);
     }
+
+    // This can be null if display list building initiated in the middle
+    // of the table, which can happen with background-clip:text and
+    // -moz-element.
+    nsDisplayTableBackgroundSet* backgrounds =
+        aBuilder->GetTableBackgroundSet();
+    if (backgrounds) {
+      // Compute bgRect relative to reference frame, but using the
+      // normal (without position:relative offsets) positions for the
+      // cell, row and row group.
+      bgRect = GetRectRelativeToSelf() + GetNormalPosition();
+
+      nsTableRowFrame* row = GetTableRowFrame();
+      bgRect += row->GetNormalPosition();
+
+      nsTableRowGroupFrame* rowGroup = row->GetTableRowGroupFrame();
+      bgRect += rowGroup->GetNormalPosition();
+
+      bgRect += backgrounds->TableToReferenceFrame();
+
+      // Create backgrounds items as needed for the column and column
+      // group that this cell occupies.
+      nsTableColFrame* col = backgrounds->GetColForIndex(ColIndex());
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+          aBuilder, col, bgRect, backgrounds->ColBackgrounds(), false, nullptr,
+          col->GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(col), this);
+
+      nsIFrame* colGroup = col->GetParent();
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+          aBuilder, colGroup, bgRect, backgrounds->ColGroupBackgrounds(), false,
+          nullptr,
+          colGroup->GetRectRelativeToSelf() +
+              aBuilder->ToReferenceFrame(colGroup),
+          this);
+    }
   }
 
   // the 'empty-cells' property has no effect on 'outline'
