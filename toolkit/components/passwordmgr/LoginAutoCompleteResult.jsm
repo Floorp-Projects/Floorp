@@ -84,18 +84,45 @@ class AutocompleteItem {
 class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
   constructor() {
     super("insecureWarning");
+
+    XPCOMUtils.defineLazyGetter(this, "label", () => {
+      let learnMoreString = getLocalizedString("insecureFieldWarningLearnMore");
+      return getLocalizedString("insecureFieldWarningDescription2", [learnMoreString]);
+    });
   }
 }
 
 class LoginAutocompleteItem extends AutocompleteItem {
-  constructor(login) {
+  constructor(login, dateAndTimeFormatter, duplicateUsernames) {
     super(SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
+
+    XPCOMUtils.defineLazyGetter(this, "label", () => {
+      let username = login.username;
+      // If login is empty or duplicated we want to append a modification date to it.
+      if (!username || duplicateUsernames.has(username)) {
+        if (!username) {
+          username = getLocalizedString("noUsername");
+        }
+        let meta = login.QueryInterface(Ci.nsILoginMetaInfo);
+        let time = dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
+        username = getLocalizedString("loginHostAge", [username, time]);
+      }
+
+      return username;
+    });
   }
 }
 
 class LoginsFooterAutocompleteItem extends AutocompleteItem {
-  constructor() {
+  constructor(hostname) {
     super("loginsFooter");
+
+    XPCOMUtils.defineLazyGetter(this, "label", () => {
+      return JSON.stringify({
+        label: getLocalizedString("viewSavedLogins.label"),
+        hostname,
+      });
+    });
   }
 }
 
@@ -137,12 +164,11 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   this.logins = matchingLogins.sort(loginSort);
   this.searchString = aSearchString;
   this._messageManager = messageManager;
-  this._dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+  let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
   this._isPasswordField = isPasswordField;
-  this._hostname = hostname;
 
-  this._duplicateUsernames = findDuplicates(matchingLogins);
+  let duplicateUsernames = findDuplicates(matchingLogins);
 
   // Build up the results array
   this.results = [];
@@ -151,11 +177,11 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   }
 
   for (let login of this.logins) {
-    this.results.push(new LoginAutocompleteItem(login));
+    this.results.push(new LoginAutocompleteItem(login, dateAndTimeFormatter, duplicateUsernames));
   }
 
   if (this._showAutoCompleteFooter) {
-    this.results.push(new LoginsFooterAutocompleteItem());
+    this.results.push(new LoginsFooterAutocompleteItem(hostname));
   }
 
 
@@ -214,30 +240,7 @@ LoginAutoCompleteResult.prototype = {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
-
-    if (this._showInsecureFieldWarning && index === 0) {
-      let learnMoreString = getLocalizedString("insecureFieldWarningLearnMore");
-      return getLocalizedString("insecureFieldWarningDescription2", [learnMoreString]);
-    } else if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
-      return JSON.stringify({
-        label: getLocalizedString("viewSavedLogins.label"),
-        hostname: this._hostname,
-      });
-    }
-
-    let login = this.logins[index - this._showInsecureFieldWarning];
-    let username = login.username;
-    // If login is empty or duplicated we want to append a modification date to it.
-    if (!username || this._duplicateUsernames.has(username)) {
-      if (!username) {
-        username = getLocalizedString("noUsername");
-      }
-      let meta = login.QueryInterface(Ci.nsILoginMetaInfo);
-      let time = this._dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
-      username = getLocalizedString("loginHostAge", [username, time]);
-    }
-
-    return username;
+    return this.results[index].label;
   },
 
   getCommentAt(index) {
