@@ -76,6 +76,11 @@ class nsTableRowFrame : public nsContainerFrame {
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
+  void PaintCellBackgroundsForFrame(nsIFrame* aFrame,
+                                    nsDisplayListBuilder* aBuilder,
+                                    const nsDisplayListSet& aLists,
+                                    const nsPoint& aOffset = nsPoint());
+
   // Implemented in nsTableCellFrame.h, because it needs to know about the
   // nsTableCellFrame class, but we can't include nsTableCellFrame.h here.
   inline nsTableCellFrame* GetFirstCell() const;
