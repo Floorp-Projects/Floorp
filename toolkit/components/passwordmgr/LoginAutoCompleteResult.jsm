@@ -81,6 +81,8 @@ class AutocompleteItem {
     this.style = style;
     this.value = "";
   }
+
+  removeFromStorage() { /* Do nothing by default */ }
 }
 
 class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
@@ -95,8 +97,10 @@ class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
 }
 
 class LoginAutocompleteItem extends AutocompleteItem {
-  constructor(login, isPasswordField, dateAndTimeFormatter, duplicateUsernames) {
+  constructor(login, isPasswordField, dateAndTimeFormatter, duplicateUsernames, messageManager) {
     super(SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
+    this._login = login;
+    this._messageManager = messageManager;
 
     XPCOMUtils.defineLazyGetter(this, "label", () => {
       let username = login.username;
@@ -122,6 +126,16 @@ class LoginAutocompleteItem extends AutocompleteItem {
         loginOrigin: login.hostname,
       });
     });
+  }
+
+  removeFromStorage() {
+    if (this._messageManager) {
+      let vanilla = LoginHelper.loginToVanillaObject(this._login);
+      this._messageManager.sendAsyncMessage("PasswordManager:removeLogin",
+                                            { login: vanilla });
+    } else {
+      Services.logins.removeLogin(this._login);
+    }
   }
 }
 
@@ -173,9 +187,8 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
   this._showAutoCompleteFooter = isFooterEnabled() ? 1 : 0;
 
-  this.logins = matchingLogins.sort(loginSort);
+  let logins = matchingLogins.sort(loginSort);
   this.searchString = aSearchString;
-  this._messageManager = messageManager;
   let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
   let duplicateUsernames = findDuplicates(matchingLogins);
@@ -186,8 +199,10 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
     this.results.push(new InsecureLoginFormAutocompleteItem());
   }
 
-  for (let login of this.logins) {
-    this.results.push(new LoginAutocompleteItem(login, isPasswordField, dateAndTimeFormatter, duplicateUsernames));
+  for (let login of logins) {
+    let item = new LoginAutocompleteItem(login, isPasswordField, dateAndTimeFormatter,
+                                         duplicateUsernames, messageManager);
+    this.results.push(item);
   }
 
   if (this._showAutoCompleteFooter) {
@@ -211,7 +226,11 @@ LoginAutoCompleteResult.prototype = {
                                           Ci.nsISupportsWeakReference]),
 
   // private
-  logins: null,
+  get logins() {
+    return this.results.filter(item => {
+      return item.constructor === LoginAutocompleteItem;
+    }).map(item => item._login);
+  },
 
   // Allow autoCompleteSearch to get at the JS object so it can
   // modify some readonly properties for internal use.
@@ -266,35 +285,14 @@ LoginAutoCompleteResult.prototype = {
       throw new Error("Index out of range.");
     }
 
-    if (this._showInsecureFieldWarning && index === 0) {
-      // Ignore the warning message item.
-      return;
-    }
+    let [removedItem] = this.results.splice(index, 1);
 
-    if (this._showInsecureFieldWarning) {
-      index--;
-    }
-
-    // The user cannot delete the autocomplete footer.
-    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
-      return;
-    }
-
-    let [removedLogin] = this.logins.splice(index, 1);
-
-    this.matchCount--;
-    if (this.defaultIndex > this.logins.length) {
+    if (this.defaultIndex > this.results.length) {
       this.defaultIndex--;
     }
 
     if (removeFromDB) {
-      if (this._messageManager) {
-        let vanilla = LoginHelper.loginToVanillaObject(removedLogin);
-        this._messageManager.sendAsyncMessage("PasswordManager:removeLogin",
-                                              { login: vanilla });
-      } else {
-        Services.logins.removeLogin(removedLogin);
-      }
+      removedItem.removeFromStorage();
     }
   },
 };
