@@ -73,7 +73,7 @@ job-template:
                     - repackage/win64_signed.py
     package-formats:
         by-release-type:
-            esr60:
+            esr(60|68):
                 by-build-platform:
                     linux.*: [mar, mar-bz2]
                     linux4\b.*: [mar, mar-bz2]
