@@ -346,9 +346,9 @@ static nsresult PutToClipboard(
   return rv;
 }
 
-nsresult nsCopySupport::HTMLCopy(Selection* aSel, Document* aDoc,
-                                 int16_t aClipboardID,
-                                 bool aWithRubyAnnotation) {
+nsresult nsCopySupport::EncodeDocumentWithContextAndPutToClipboard(
+    Selection* aSel, Document* aDoc, int16_t aClipboardID,
+    bool aWithRubyAnnotation) {
   NS_ENSURE_TRUE(aDoc, NS_ERROR_NULL_POINTER);
 
   uint32_t additionalFlags = nsIDocumentEncoder::SkipInvisibleContent;
@@ -915,8 +915,8 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
       // selection is inside a same ruby container. But we really should
       // expose the full functionality in browser. See bug 1130891.
       bool withRubyAnnotation = IsSelectionInsideRuby(sel);
-      // call the copy code
-      nsresult rv = HTMLCopy(sel, doc, aClipboardType, withRubyAnnotation);
+      nsresult rv = EncodeDocumentWithContextAndPutToClipboard(
+          sel, doc, aClipboardType, withRubyAnnotation);
       if (NS_FAILED(rv)) {
         return false;
       }
