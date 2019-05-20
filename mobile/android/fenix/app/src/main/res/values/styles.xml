@@ -14,6 +14,9 @@
         <item name="android:colorAccent">@color/primary_text_normal_theme</item>
         <item name="android:textColorPrimary">@color/primary_text_normal_theme</item>
         <item name="android:textColorSecondary">@color/secondary_text_normal_theme</item>
+        <item name="alertDialogStyle">@style/DialogStyle</item>
+        <item name="alertDialogTheme">@style/DialogStyle</item>
+
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="android:colorControlActivated">@color/accent_high_contrast_normal_theme</item>
         <!-- Inactive thumb color -->
@@ -64,6 +67,9 @@
         <item name="android:colorControlActivated">@color/accent_high_contrast_private_theme</item>
         <item name="android:textColorPrimary">@color/primary_text_private_theme</item>
         <item name="android:textColorSecondary">@color/secondary_text_private_theme</item>
+        <item name="alertDialogStyle">@style/DialogStyle</item>
+        <item name="alertDialogTheme">@style/DialogStyle</item>
+
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>
         <!-- Inactive track color(30% transparency) -->

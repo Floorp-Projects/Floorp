@@ -127,11 +127,11 @@ class SearchFragment : Fragment(), BackHandler {
                                 )
                             )
                             setMessage(spannable)
-                            setNegativeButton("DENY") { dialog: DialogInterface, _ ->
+                            setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
                                 requireComponents.analytics.metrics.track(Event.QRScannerNavigationDenied)
                                 dialog.cancel()
                             }
-                            setPositiveButton("ALLOW") { dialog: DialogInterface, _ ->
+                            setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
                                 requireComponents.analytics.metrics.track(Event.QRScannerNavigationAllowed)
                                 (activity as HomeActivity)
                                     .openToBrowserAndLoad(

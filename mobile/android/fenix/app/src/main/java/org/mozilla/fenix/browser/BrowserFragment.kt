@@ -237,6 +237,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             feature = PromptFeature(
                 fragment = this,
                 sessionManager = sessionManager,
+                sessionId = customTabSessionId,
                 fragmentManager = requireFragmentManager(),
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
