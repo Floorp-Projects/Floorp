@@ -22,13 +22,15 @@ sealed class SaveCollectionStep {
     object SelectTabs : SaveCollectionStep()
     object SelectCollection : SaveCollectionStep()
     object NameCollection : SaveCollectionStep()
+    object RenameCollection : SaveCollectionStep()
 }
 
 data class CollectionCreationState(
     val tabs: List<Tab> = listOf(),
     val selectedTabs: Set<Tab> = setOf(),
     val saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs,
-    val tabCollections: List<TabCollection> = listOf()
+    val tabCollections: List<TabCollection> = listOf(),
+    val selectedTabCollection: TabCollection?
 ) : ViewState
 
 sealed class CollectionCreationChange : Change {
@@ -37,6 +39,7 @@ sealed class CollectionCreationChange : Change {
     data class TabAdded(val tab: Tab) : CollectionCreationChange()
     data class TabRemoved(val tab: Tab) : CollectionCreationChange()
     data class StepChanged(val saveCollectionStep: SaveCollectionStep) : CollectionCreationChange()
+    data class CollectionSelected(val collection: TabCollection) : CollectionCreationChange()
 }
 
 sealed class CollectionCreationAction : Action {
@@ -49,7 +52,8 @@ sealed class CollectionCreationAction : Action {
     data class BackPressed(val backPressFrom: SaveCollectionStep) : CollectionCreationAction()
     data class SaveCollectionName(val tabs: List<Tab>, val name: String) :
         CollectionCreationAction()
-
+    data class RenameCollection(val collection: TabCollection, val name: String) :
+        CollectionCreationAction()
     data class SelectCollection(val collection: TabCollection) :
         CollectionCreationAction()
 }
@@ -102,6 +106,9 @@ class CollectionCreationViewModel(
                     }
                     is CollectionCreationChange.StepChanged -> {
                         state.copy(saveCollectionStep = change.saveCollectionStep)
+                    }
+                    is CollectionCreationChange.CollectionSelected -> {
+                        state.copy(selectedTabCollection = change.collection)
                     }
                 }
             }

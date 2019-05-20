@@ -351,7 +351,10 @@ class HomeFragment : Fragment(), CoroutineScope {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
             }
             is CollectionAction.Rename -> {
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
+                showCollectionCreationFragment(
+                    selectedTabCollection = action.collection,
+                    step = SaveCollectionStep.RenameCollection
+                )
             }
             is CollectionAction.OpenTab -> {
                 invokePendingDeleteSessionJob()
@@ -546,7 +549,11 @@ class HomeFragment : Fragment(), CoroutineScope {
         )
     }
 
-    private fun showCollectionCreationFragment(selectedTabId: String?) {
+    private fun showCollectionCreationFragment(
+        selectedTabId: String? = null,
+        selectedTabCollection: TabCollection? = null,
+        step: SaveCollectionStep = SaveCollectionStep.SelectTabs
+    ) {
         val tabs = requireComponents.core.sessionManager.sessions.filter { !it.private }
             .map { Tab(it.id, it.url, it.url.urlToTrimmedHost(), it.title) }
 
@@ -557,8 +564,9 @@ class HomeFragment : Fragment(), CoroutineScope {
         val selectedTabs = tabs.find { tab -> tab.sessionId == selectedTabId }
         val selectedSet = if (selectedTabs == null) mutableSetOf() else mutableSetOf(selectedTabs)
         viewModel?.selectedTabs = selectedSet
-        viewModel?.saveCollectionStep = SaveCollectionStep.SelectTabs
+        viewModel?.saveCollectionStep = step
         viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
+        viewModel?.selectedTabCollection = selectedTabCollection
 
         view?.let {
             val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()

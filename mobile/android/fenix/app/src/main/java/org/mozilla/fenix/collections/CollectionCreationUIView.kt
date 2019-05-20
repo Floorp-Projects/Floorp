@@ -21,11 +21,14 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.component_collection_creation.*
 import kotlinx.android.synthetic.main.component_collection_creation.view.*
+import kotlinx.android.synthetic.main.sign_in_preference.*
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.Tab
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.UIView
 
 class CollectionCreationUIView(
@@ -45,6 +48,7 @@ class CollectionCreationUIView(
 
     private val collectionCreationTabListAdapter = CollectionCreationTabListAdapter(actionEmitter)
     private val collectionSaveListAdapter = SaveCollectionListAdapter(actionEmitter)
+    private var selectedCollection: TabCollection? = null
     private var selectedTabs: Set<Tab> = setOf()
     private val selectTabsConstraints = ConstraintSet()
     private val selectCollectionConstraints = ConstraintSet()
@@ -77,12 +81,21 @@ class CollectionCreationUIView(
 
         view.name_collection_edittext.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE && !v.text.toString().isEmpty()) {
-                actionEmitter.onNext(
-                    CollectionCreationAction.SaveCollectionName(
-                        selectedTabs.toList(),
-                        v.text.toString()
-                    )
-                )
+                when (step) {
+                    is SaveCollectionStep.NameCollection -> {
+                        actionEmitter.onNext(
+                            CollectionCreationAction.SaveCollectionName(
+                                selectedTabs.toList(),
+                                v.text.toString()
+                            )
+                        )
+                    }
+                    is SaveCollectionStep.RenameCollection -> {
+                        selectedCollection?.let {
+                            actionEmitter.onNext(CollectionCreationAction.RenameCollection(it, v.text.toString()))
+                        }
+                    }
+                }
             }
             false
         }
@@ -197,6 +210,52 @@ class CollectionCreationUIView(
                 back_button.text =
                     view.context.getString(R.string.create_collection_name_collection)
             }
+            is SaveCollectionStep.RenameCollection -> {
+                it.selectedTabCollection?.let { tabCollection ->
+                    selectedCollection = tabCollection
+                    tabCollection.tabs.map { tab ->
+                        Tab(
+                            tab.id.toString(),
+                            tab.url,
+                            tab.url.urlToTrimmedHost(),
+                            tab.title
+                        )
+                    }.let { tabs ->
+                        collectionCreationTabListAdapter.updateData(tabs, setOf(), true)
+                    }
+                }
+
+                back_button.setOnClickListener {
+                    name_collection_edittext.hideKeyboard()
+                    val handler = Handler()
+                    handler.postDelayed({
+                        actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.RenameCollection))
+                    }, TRANSITION_DURATION)
+                }
+                transition.addListener(object : Transition.TransitionListener {
+                    override fun onTransitionStart(transition: Transition) {
+                    }
+
+                    override fun onTransitionEnd(transition: Transition) {
+                        view.name_collection_edittext.showKeyboard()
+                        transition.removeListener(this)
+                    }
+
+                    override fun onTransitionCancel(transition: Transition) {}
+                    override fun onTransitionPause(transition: Transition) {}
+                    override fun onTransitionResume(transition: Transition) {}
+                })
+                TransitionManager.beginDelayedTransition(
+                    view.collection_constraint_layout,
+                    transition
+                )
+                val constraint = nameCollectionConstraints
+                constraint.applyTo(view.collection_constraint_layout)
+                name_collection_edittext.setText(it.selectedTabCollection?.title)
+                name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
+                back_button.text =
+                    view.context.getString(R.string.create_collection_name_collection)
+            }
         }
 
         collectionSaveListAdapter.reloadData(it.tabCollections)
@@ -219,6 +278,9 @@ class CollectionCreationUIView(
                 }
                 SaveCollectionStep.NameCollection -> {
                     actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.NameCollection))
+                }
+                SaveCollectionStep.RenameCollection -> {
+                    actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.RenameCollection))
                 }
             }
             return true

@@ -66,7 +66,8 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     viewModel.tabs,
                     viewModel.selectedTabs,
                     viewModel.saveCollectionStep,
-                    viewModel.tabCollections
+                    viewModel.tabCollections,
+                    viewModel.selectedTabCollection
                 ))
             }
         )
@@ -138,6 +139,24 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                         }
                     }
                 }
+                is CollectionCreationAction.RenameCollection -> {
+                    showRenamedSnackbar()
+                    dismiss()
+                    launch(Dispatchers.IO) {
+                        requireComponents.core.tabCollectionStorage.renameCollection(it.collection, it.name)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showRenamedSnackbar() {
+        context?.let { context: Context ->
+            val rootView = context.getRootView()
+            rootView?.let { view: View ->
+                val string = context.getString(R.string.snackbar_collection_renamed)
+                FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
+                    .show()
             }
         }
     }
@@ -166,6 +185,7 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     CollectionCreationChange.StepChanged(SaveCollectionStep.SelectCollection)
                 )
             }
+            SaveCollectionStep.RenameCollection -> { dismiss() }
         }
     }
 }

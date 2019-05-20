@@ -13,4 +13,5 @@ class CreateCollectionViewModel : ViewModel() {
     var tabs = listOf<Tab>()
     var saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs
     var tabCollections = listOf<TabCollection>()
+    var selectedTabCollection: TabCollection? = null
 }
