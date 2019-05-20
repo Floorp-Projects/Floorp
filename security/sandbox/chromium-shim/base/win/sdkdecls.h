@@ -211,6 +211,17 @@ typedef struct _PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY {
 #define PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON_ALLOW_OPT_OUT  (0x00000003uLL << 36)
 
 //
+// Define Control Flow Guard (CFG) mitigation policy options.  Control Flow
+// Guard allows indirect control transfers to be checked at runtime.
+//
+
+#define PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_MASK                        (0x00000003uLL << 40)
+#define PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_DEFER                       (0x00000000uLL << 40)
+#define PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_ON                   (0x00000001uLL << 40)
+#define PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_OFF                  (0x00000002uLL << 40)
+#define PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_EXPORT_SUPPRESSION          (0x00000003uLL << 40)
+
+//
 // Define module signature options.  When enabled, this option will
 // block mapping of non-microsoft binaries.
 //

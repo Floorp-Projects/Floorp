@@ -354,6 +354,11 @@ void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
         PROCESS_CREATION_MITIGATION_POLICY_PROHIBIT_DYNAMIC_CODE_ALWAYS_ON;
   }
 
+  if (flags & MITIGATION_CONTROL_FLOW_GUARD_DISABLE) {
+    *policy_flags |=
+        PROCESS_CREATION_MITIGATION_POLICY_CONTROL_FLOW_GUARD_ALWAYS_OFF;
+  }
+
   if (version < base::win::VERSION_WIN10)
     return;
 
