@@ -57,7 +57,7 @@ jobs:
                         - releases/bouncer_firefox_beta.py
                     release:
                         - releases/bouncer_firefox_release.py
-                    esr60:
+                    esr.*:
                         - releases/bouncer_firefox_esr.py
                     default:
                         - releases/bouncer_firefox_beta.py
