@@ -237,9 +237,8 @@ static void DisplayRows(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
 }
 
 void nsTableRowGroupFrame::PaintCellBackgroundsForColumns(
-    nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
-    const nsDisplayListSet& aLists, const nsTArray<uint32_t>& aColIdx,
-    const nsPoint& aOffset) {
+    nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
+    const nsTArray<uint32_t>& aColIdx, const nsPoint& aOffset) {
   MOZ_DIAGNOSTIC_ASSERT(!aColIdx.IsEmpty(),
                         "Must be painting backgrounds for something");
 
@@ -269,7 +268,7 @@ void nsTableRowGroupFrame::PaintCellBackgroundsForColumns(
         continue;
       }
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-          aBuilder, aFrame, cellRect, aLists.BorderBackground(), false, nullptr,
+          aBuilder, aFrame, cellRect, aList, false, nullptr,
           aFrame->GetRectRelativeToSelf(), cell);
     }
   }

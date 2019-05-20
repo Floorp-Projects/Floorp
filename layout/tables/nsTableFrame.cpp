@@ -1292,6 +1292,9 @@ void nsTableFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
+  nsDisplayTableBackgroundSet tableBGs(aBuilder);
+  nsDisplayListCollection lists(aBuilder);
+
   // This is similar to what
   // nsContainerFrame::BuildDisplayListForNonBlockChildren does, except that we
   // allow the children's background and borders to go in our BorderBackground
@@ -1302,12 +1305,15 @@ void nsTableFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // borders though; this lets us get cell borders into the nsTableFrame's
   // BorderBackground list.
   for (nsIFrame* kid : GetChildList(kColGroupList)) {
-    BuildDisplayListForChild(aBuilder, kid, aLists);
+    BuildDisplayListForChild(aBuilder, kid, lists);
   }
 
   for (nsIFrame* kid : PrincipalChildList()) {
-    BuildDisplayListForChild(aBuilder, kid, aLists);
+    BuildDisplayListForChild(aBuilder, kid, lists);
   }
+
+  tableBGs.MoveTo(aLists);
+  lists.MoveTo(aLists);
 
   if (IsVisibleForPainting()) {
     // In the collapsed border model, overlay all collapsed borders.
