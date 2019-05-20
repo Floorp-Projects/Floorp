@@ -1208,13 +1208,22 @@ void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
       // rounded result when the numerator is negative. See 10-1
       // "Signed Division by a Known Power of 2" in Henry
       // S. Warren, Jr.'s Hacker's Delight.
-      if (mir->canBeNegativeDividend()) {
+      if (mir->canBeNegativeDividend() && mir->isTruncated()) {
+        // Note: There is no need to execute this code, which handles how to
+        // round the signed integer division towards 0, if we previously bailed
+        // due to a non-zero remainder.
         Register lhsCopy = ToRegister(ins->numeratorCopy());
         MOZ_ASSERT(lhsCopy != lhs);
         if (shift > 1) {
+          // Copy the sign bit of the numerator. (= (2^32 - 1) or 0)
           masm.sarl(Imm32(31), lhs);
         }
+        // Divide by 2^(32 - shift)
+        // i.e. (= (2^32 - 1) / 2^(32 - shift) or 0)
+        // i.e. (= (2^shift - 1) or 0)
         masm.shrl(Imm32(32 - shift), lhs);
+        // If signed, make any 1 bit below the shifted bits to bubble up, such
+        // that once shifted the value would be rounded towards 0.
         masm.addl(lhsCopy, lhs);
       }
       masm.sarl(Imm32(shift), lhs);
