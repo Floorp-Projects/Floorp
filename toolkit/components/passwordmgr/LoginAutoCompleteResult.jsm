@@ -36,6 +36,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "SHOULD_SHOW_ORIGIN",
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("LoginAutoCompleteResult");
 });
+XPCOMUtils.defineLazyGetter(this, "passwordMgrBundle", () => {
+  return Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
+});
 
 function loginSort(a, b) {
   let userA = a.username.toLowerCase();
@@ -62,6 +65,13 @@ function findDuplicates(loginList) {
     seen.add(login.username);
   }
   return duplicates;
+}
+
+function getLocalizedString(key, formatArgs = null) {
+  if (formatArgs) {
+    return passwordMgrBundle.formatStringFromName(key, formatArgs, formatArgs.length);
+  }
+  return passwordMgrBundle.GetStringFromName(key);
 }
 
 // nsIAutoCompleteResult implementation
@@ -102,7 +112,6 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {
   this.logins = matchingLogins.sort(loginSort);
   this.matchCount = matchingLogins.length + this._showInsecureFieldWarning + this._showAutoCompleteFooter;
   this._messageManager = messageManager;
-  this._stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
   this._dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
   this._isPasswordField = isPasswordField;
@@ -163,13 +172,6 @@ LoginAutoCompleteResult.prototype = {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
-
-    let getLocalizedString = (key, formatArgs = null) => {
-      if (formatArgs) {
-        return this._stringBundle.formatStringFromName(key, formatArgs, formatArgs.length);
-      }
-      return this._stringBundle.GetStringFromName(key);
-    };
 
     if (this._showInsecureFieldWarning && index === 0) {
       let learnMoreString = getLocalizedString("insecureFieldWarningLearnMore");
