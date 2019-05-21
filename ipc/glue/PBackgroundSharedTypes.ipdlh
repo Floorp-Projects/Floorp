@@ -32,8 +32,6 @@ struct ContentPrincipalInfo
 
   nsCString? domain;
 
-  ContentSecurityPolicy[] securityPolicies;
-
   // Like originNoSuffix, baseDomain is used out of the main-thread.
   nsCString baseDomain;
 };
@@ -59,6 +57,22 @@ union PrincipalInfo
   SystemPrincipalInfo;
   NullPrincipalInfo;
   ExpandedPrincipalInfo;
+};
+
+struct PolicyInfo
+{
+  nsCString policy;
+  bool reportOnly;
+  bool deliveredViaMetaTag;
+};
+
+struct CSPInfo
+{
+  PolicyInfo[] policyInfos;
+  PrincipalInfo requestPrincipalInfo;
+  nsCString selfURISpec;
+  nsString referrer;
+  uint64_t innerWindowID;
 };
 
 } // namespace ipc

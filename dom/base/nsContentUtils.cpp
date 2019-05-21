@@ -5058,12 +5058,8 @@ void nsContentUtils::TriggerLink(nsIContent* aContent,
       fileName.SetIsVoid(true);  // No actionable download attribute was found.
     }
 
-    // Currently we query the CSP from the triggeringPrincipal, which is
-    // aContent->NodePrincipal(). After Bug 965637 we can query the CSP
-    // directly from the doc instead (aContent->OwnerDoc()).
     nsCOMPtr<nsIPrincipal> triggeringPrincipal = aContent->NodePrincipal();
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    triggeringPrincipal->GetCsp(getter_AddRefs(csp));
+    nsCOMPtr<nsIContentSecurityPolicy> csp = aContent->GetCsp();
 
     handler->OnLinkClick(
         aContent, aLinkURI, fileName.IsVoid() ? aTargetSpec : EmptyString(),
@@ -9795,15 +9791,7 @@ bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo->TriggeringPrincipal();
-
-  // Currently we query the CSP from the triggeringPrincipal within the
-  // loadInfo. After Bug 965637, we can query the CSP from the loadInfo, which
-  // internally queries the CSP from the Client.
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  if (triggeringPrincipal) {
-    rv = triggeringPrincipal->GetCsp(getter_AddRefs(csp));
-    NS_ENSURE_SUCCESS(rv, false);
-  }
+  nsCOMPtr<nsIContentSecurityPolicy> csp = loadInfo->GetCsp();
 
   // Get the channel's load flags, and use them to generate nsIWebNavigation
   // load flags. We want to make sure to propagate the refresh and cache busting

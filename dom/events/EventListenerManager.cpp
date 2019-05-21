@@ -785,10 +785,7 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
     }
 
     // Perform CSP check
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
     unsigned lineNum = 0;
     unsigned columnNum = 0;
 

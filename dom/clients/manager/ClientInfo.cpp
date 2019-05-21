@@ -20,7 +20,9 @@ ClientInfo::ClientInfo(const nsID& aId, ClientType aType,
                        const TimeStamp& aCreationTime)
     : mData(MakeUnique<IPCClientInfo>(aId, aType, aPrincipalInfo, aCreationTime,
                                       EmptyCString(),
-                                      mozilla::dom::FrameType::None)) {}
+                                      mozilla::dom::FrameType::None,
+                                      mozilla::Nothing(), mozilla::Nothing())) {
+}
 
 ClientInfo::ClientInfo(const IPCClientInfo& aData)
     : mData(MakeUnique<IPCClientInfo>(aData)) {}
@@ -95,6 +97,23 @@ nsCOMPtr<nsIPrincipal> ClientInfo::GetPrincipal() const {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(PrincipalInfo());
   return ref;
+}
+
+const Maybe<mozilla::ipc::CSPInfo>& ClientInfo::GetCspInfo() const {
+  return mData->cspInfo();
+}
+
+void ClientInfo::SetCspInfo(const mozilla::ipc::CSPInfo& aCSPInfo) {
+  mData->cspInfo() = Some(aCSPInfo);
+}
+
+const Maybe<mozilla::ipc::CSPInfo>& ClientInfo::GetPreloadCspInfo() const {
+  return mData->preloadCspInfo();
+}
+
+void ClientInfo::SetPreloadCspInfo(
+    const mozilla::ipc::CSPInfo& aPreloadCSPInfo) {
+  mData->preloadCspInfo() = Some(aPreloadCSPInfo);
 }
 
 }  // namespace dom

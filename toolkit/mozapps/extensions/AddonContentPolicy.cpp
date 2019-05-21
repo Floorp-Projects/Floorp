@@ -6,7 +6,7 @@
 
 #include "AddonContentPolicy.h"
 
-#include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/nsCSPContext.h"
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentTypeParser.h"
@@ -397,10 +397,12 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
   RefPtr<BasePrincipal> principal =
       BasePrincipal::CreateCodebasePrincipal(NS_ConvertUTF16toUTF8(url));
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->EnsureCSP(nullptr, getter_AddRefs(csp));
+  nsCOMPtr<nsIURI> selfURI;
+  principal->GetURI(getter_AddRefs(selfURI));
+  RefPtr<nsCSPContext> csp = new nsCSPContext();
+  rv =
+      csp->SetRequestContextWithPrincipal(principal, selfURI, EmptyString(), 0);
   NS_ENSURE_SUCCESS(rv, rv);
-
   csp->AppendPolicy(aPolicyString, false, false);
 
   const nsCSPPolicy* policy = csp->GetPolicy(0);

@@ -780,8 +780,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
              aLoadInfo->GetInitialSecurityCheckDone() ? "true" : "false"));
 
     // Log CSPrequestPrincipal
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    requestPrincipal->GetCsp(getter_AddRefs(csp));
+    nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadInfo->GetCsp();
     if (csp) {
       nsAutoString parsedPolicyStr;
       uint32_t count = 0;

@@ -322,6 +322,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController()
       const override;
 
+  void SetCsp(nsIContentSecurityPolicy* aCsp);
+  void SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCsp);
+  nsIContentSecurityPolicy* GetCsp();
+
   virtual RefPtr<mozilla::dom::ServiceWorker> GetOrCreateServiceWorker(
       const mozilla::dom::ServiceWorkerDescriptor& aDescriptor) override;
 
@@ -1301,8 +1305,11 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   RefPtr<mozilla::dom::VisualViewport> mVisualViewport;
 
+  // The document's principals and CSP are only stored if
+  // FreeInnerObjects has been called.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIPrincipal> mDocumentStoragePrincipal;
+  nsCOMPtr<nsIContentSecurityPolicy> mDocumentCsp;
 
   // mBrowserChild is only ever populated in the content process.
   nsCOMPtr<nsIBrowserChild> mBrowserChild;

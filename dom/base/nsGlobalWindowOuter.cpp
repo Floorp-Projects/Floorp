@@ -1548,7 +1548,8 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
   return false;
 }
 
-void nsGlobalWindowOuter::SetInitialPrincipalToSubject() {
+void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
+    nsIContentSecurityPolicy* aCSP) {
   // First, grab the subject principal.
   nsCOMPtr<nsIPrincipal> newWindowPrincipal =
       nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
@@ -1581,7 +1582,7 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject() {
 #endif
   }
 
-  GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal);
+  GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal, aCSP);
 
   if (mDoc) {
     mDoc->SetIsInitialDocument(true);

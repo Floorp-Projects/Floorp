@@ -486,7 +486,9 @@ class nsDocShell final : public nsDocLoader,
 
   // aPrincipal can be passed in if the caller wants. If null is
   // passed in, the about:blank principal will end up being used.
+  // aCSP, if any, will be used for the new about:blank load.
   nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
+                                         nsIContentSecurityPolicy* aCSP,
                                          nsIURI* aBaseURI,
                                          bool aTryToSaveOldPresentation = true,
                                          bool aCheckPermitUnload = true);

@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nscore.h"
 
+class nsIContentSecurityPolicy;
 class nsILoadInfo;
 class nsIPrincipal;
 class nsIRedirectHistoryEntry;
@@ -56,6 +57,7 @@ class RedirectHistoryEntryInfo;
 namespace ipc {
 
 class ContentSecurityPolicy;
+class CSPInfo;
 class PrincipalInfo;
 
 /**
@@ -67,14 +69,6 @@ already_AddRefed<nsIPrincipal> PrincipalInfoToPrincipal(
     const PrincipalInfo& aPrincipalInfo, nsresult* aOptionalResult = nullptr);
 
 /**
- * Populate an array of ContentSecurityPolicy objects from a CSP object.
- *
- * MUST be called on the main thread only.
- */
-nsresult PopulateContentSecurityPolicies(
-    nsIContentSecurityPolicy* aCSP, nsTArray<ContentSecurityPolicy>& aPolicies);
-
-/**
  * Convert an nsIPrincipal to a PrincipalInfo.
  *
  * MUST be called on the main thread only.
@@ -82,6 +76,27 @@ nsresult PopulateContentSecurityPolicies(
 nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
                                   PrincipalInfo* aPrincipalInfo,
                                   bool aSkipBaseDomain = false);
+
+/**
+ * Convert a CSPInfo to an nsIContentSecurityPolicy.
+ *
+ * MUST be called on the main thread only.
+ *
+ * If possible, provide a requesting doc, so policy violation events can
+ * be dispatched correctly. If aRequestingDoc is null, then the CSPInfo holds
+ * the necessary fallback information, like a serialized requestPrincipal,
+ * to generate a valid nsIContentSecurityPolicy.
+ */
+already_AddRefed<nsIContentSecurityPolicy> CSPInfoToCSP(
+    const CSPInfo& aCSPInfo, mozilla::dom::Document* aRequestingDoc,
+    nsresult* aOptionalResult = nullptr);
+
+/**
+ * Convert an nsIContentSecurityPolicy to a CSPInfo.
+ *
+ * MUST be called on the main thread only.
+ */
+nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo);
 
 /**
  * Return true if this PrincipalInfo is a content principal and it has
