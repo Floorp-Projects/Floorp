@@ -80,16 +80,8 @@ EditorCommand::DoCommandParams(const char* aCommandName,
   if (NS_WARN_IF(!editor)) {
     return NS_ERROR_INVALID_ARG;
   }
-  Command command;
   nsCommandParams* params = aParams ? aParams->AsCommandParams() : nullptr;
-  if (params) {
-    nsAutoString value;
-    params->GetString(aCommandName, value);
-    command = GetInternalCommand(aCommandName, value);
-  } else {
-    command = GetInternalCommand(aCommandName);
-  }
-
+  Command command = GetInternalCommand(aCommandName, params);
   EditorCommandParamType paramType = EditorCommand::GetParamType(command);
   if (paramType == EditorCommandParamType::None) {
     nsresult rv =

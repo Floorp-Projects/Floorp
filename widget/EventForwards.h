@@ -11,6 +11,8 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
+class nsCommandParams;
+
 /**
  * XXX Following enums should be in BasicEvents.h.  However, currently, it's
  *     impossible to use foward delearation for enum.
@@ -220,21 +222,18 @@ const char* ToChar(Command aCommand);
 
 /**
  * Return a command value for aCommandName.
- * NOTE: We use overloads instead of default constructor with EmptyString()
- *       because using it here requires to include another header file but
- *       this header file shouldn't include other header files as far as
- *       possible to avoid making rebuild time of them longer.
  * XXX: Is there a better place to put `Command` related methods instead of
  *      global scope in `mozilla` namespace?
  *
- * @param aCommandName  Should be a XUL command name like "cmd_bold" (case
- *                      sensitive).
- * @param aValue        Additional parameter value of aCommandName.
- *                      It depends on the command whethere it's case sensitive
- *                      or not.
+ * @param aCommandName          Should be a XUL command name like "cmd_bold"
+ *                              (case sensitive).
+ * @param aCommandparams        Additional parameter value of aCommandName.
+ *                              Can be nullptr, but if aCommandName requires
+ *                              additional parameter and sets this to nullptr,
+ *                              will return Command::DoNothing with warning.
  */
-Command GetInternalCommand(const char* aCommandName);
-Command GetInternalCommand(const char* aCommandName, const nsAString& aValue);
+Command GetInternalCommand(const char* aCommandName,
+                           const nsCommandParams* aCommandParams = nullptr);
 
 }  // namespace mozilla
 
