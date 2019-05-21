@@ -13,9 +13,12 @@
 namespace mozilla {
 namespace net {
 
+NS_NAMED_LITERAL_CSTRING(kInvalidCategory, "INVALID_CATEGORY");
+
 #define DEFINE_CATEGORY(_name, _idx) NS_LITERAL_CSTRING("Y" #_idx "_" #_name),
 static const nsCString gKeyName[] = {
 #include "HttpTrafficAnalyzer.inc"
+    kInvalidCategory,
 };
 #undef DEFINE_CATEGORY
 
@@ -214,18 +217,32 @@ nsresult HttpTrafficAnalyzer::IncrementHttpConnection(
        categories.Length(), this));
 
   // divide categories into 4 parts:
-  //   1) normal 1st-party (Y = 0)
-  //   2) normal 3rd-party (0 < Y < 11)
-  //   3) private 1st-party (Y = 11)
-  //   4) private 3rd-party (11 < Y < 22)
+  //   1) normal 1st-party (Y in {0, 1})
+  //   2) normal 3rd-party (1 < Y < 12)
+  //   3) private 1st-party (Y in {12, 13})
+  //   4) private 3rd-party (13 < Y < 24)
   // Normal and private transaction should not share the same connection,
   // and we choose 3rd-party prior than 1st-party.
   HttpTrafficCategory best = categories[0];
-  if ((best == 0 || best == 11) && categories.Length() > 1) {
-    best = categories[1];
-  }
-  Unused << IncrementHttpConnection(best);
+  for (auto category : categories) {
+    MOZ_ASSERT(category != HttpTrafficCategory::eInvalid, "invalid category");
 
+    if (category == 0 || category == 1 || category == 12 || category == 13) {
+      // first party
+      MOZ_ASSERT(gKeyName[category].EqualsLiteral("Y0_N1Sys") ||
+                 gKeyName[category].EqualsLiteral("Y1_N1") ||
+                 gKeyName[category].EqualsLiteral("Y12_P1Sys") ||
+                 gKeyName[category].EqualsLiteral("Y13_P1"));
+      continue;
+    }
+    // third party
+    MOZ_ASSERT(gKeyName[24].Equals(kInvalidCategory),
+               "category definition isn't consistent");
+    best = category;
+    break;
+  }
+
+  Unused << IncrementHttpConnection(best);
   return NS_OK;
 }
 
