@@ -108,7 +108,7 @@ sealed class Event {
     // Interaction Events
     data class LibrarySelectedItem(val item: String) : Event() {
         override val extras: Map<String, String>?
-            get() = mapOf("source" to item)
+            get() = mapOf("item" to item)
     }
 
     data class ErrorPageVisited(val errorType: ErrorType) : Event() {
