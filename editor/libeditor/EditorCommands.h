@@ -229,6 +229,44 @@ class EditorCommand : public nsIControllerCommand {
       // RemoveListCommand
       case Command::FormatRemoveList:
         return EditorCommandParamType::None;
+      // ParagraphStateCommand
+      case Command::FormatBlock:
+        return EditorCommandParamType::CString |
+               EditorCommandParamType::String |
+               EditorCommandParamType::StateAttribute;
+      // FontFaceStateCommand
+      case Command::FormatFontName:
+        return EditorCommandParamType::CString |
+               EditorCommandParamType::String |
+               EditorCommandParamType::StateAttribute;
+      // FontSizeStateCommand
+      case Command::FormatFontSize:
+        return EditorCommandParamType::CString |
+               EditorCommandParamType::String |
+               EditorCommandParamType::StateAttribute;
+      // FontColorStateCommand
+      case Command::FormatFontColor:
+        return EditorCommandParamType::CString |
+               EditorCommandParamType::String |
+               EditorCommandParamType::StateAttribute;
+      // BackgroundColorStateCommand
+      case Command::FormatDocumentBackgroundColor:
+        return EditorCommandParamType::CString |
+               EditorCommandParamType::String |
+               EditorCommandParamType::StateAttribute;
+      // HighlightColorStateCommand
+      case Command::FormatBackColor:
+        return EditorCommandParamType::CString |
+               EditorCommandParamType::String |
+               EditorCommandParamType::StateAttribute;
+      // AlignCommand:
+      case Command::FormatJustifyLeft:
+      case Command::FormatJustifyRight:
+      case Command::FormatJustifyCenter:
+      case Command::FormatJustifyFull:
+        return EditorCommandParamType::CString |
+               EditorCommandParamType::String |
+               EditorCommandParamType::StateAttribute;
       // RemoveStylesCommand
       case Command::FormatRemove:
         return EditorCommandParamType::None;
@@ -676,7 +714,7 @@ class MultiStateCommandBase : public EditorCommand {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MultiStateCommandBase, EditorCommand)
 
   NS_DECL_EDITOR_COMMAND_COMMON_METHODS
-  NS_DECL_DO_COMMAND_PARAMS
+  NS_DECL_DO_COMMAND_PARAM_FOR_STRING_PARAM
 
  protected:
   MultiStateCommandBase() = default;
@@ -687,7 +725,7 @@ class MultiStateCommandBase : public EditorCommand {
                                    nsCommandParams& aParams) const = 0;
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult SetState(HTMLEditor* aHTMLEditor,
-                            const nsString& newState) const = 0;
+                            const nsAString& aNewState) const = 0;
 };
 
 class ParagraphStateCommand final : public MultiStateCommandBase {
@@ -703,7 +741,7 @@ class ParagraphStateCommand final : public MultiStateCommandBase {
                            nsCommandParams& aParams) const final;
   MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor,
-                    const nsString& newState) const final;
+                    const nsAString& aNewState) const final;
 };
 
 class FontFaceStateCommand final : public MultiStateCommandBase {
@@ -719,7 +757,7 @@ class FontFaceStateCommand final : public MultiStateCommandBase {
                            nsCommandParams& aParams) const final;
   MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor,
-                    const nsString& newState) const final;
+                    const nsAString& aNewState) const final;
 };
 
 class FontSizeStateCommand final : public MultiStateCommandBase {
@@ -735,7 +773,7 @@ class FontSizeStateCommand final : public MultiStateCommandBase {
                            nsCommandParams& aParams) const final;
   MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor,
-                    const nsString& newState) const final;
+                    const nsAString& aNewState) const final;
 };
 
 class HighlightColorStateCommand final : public MultiStateCommandBase {
@@ -751,7 +789,7 @@ class HighlightColorStateCommand final : public MultiStateCommandBase {
                            nsCommandParams& aParams) const final;
   MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor,
-                    const nsString& newState) const final;
+                    const nsAString& aNewState) const final;
 };
 
 class FontColorStateCommand final : public MultiStateCommandBase {
@@ -767,7 +805,7 @@ class FontColorStateCommand final : public MultiStateCommandBase {
                            nsCommandParams& aParams) const final;
   MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor,
-                    const nsString& newState) const final;
+                    const nsAString& aNewState) const final;
 };
 
 class AlignCommand final : public MultiStateCommandBase {
@@ -783,7 +821,7 @@ class AlignCommand final : public MultiStateCommandBase {
                            nsCommandParams& aParams) const final;
   MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor,
-                    const nsString& newState) const final;
+                    const nsAString& aNewState) const final;
 };
 
 class BackgroundColorStateCommand final : public MultiStateCommandBase {
@@ -799,7 +837,7 @@ class BackgroundColorStateCommand final : public MultiStateCommandBase {
                            nsCommandParams& aParams) const final;
   MOZ_CAN_RUN_SCRIPT
   nsresult SetState(HTMLEditor* aHTMLEditor,
-                    const nsString& newState) const final;
+                    const nsAString& aNewState) const final;
 };
 
 class AbsolutePositioningCommand final : public StateUpdatingCommandBase {
