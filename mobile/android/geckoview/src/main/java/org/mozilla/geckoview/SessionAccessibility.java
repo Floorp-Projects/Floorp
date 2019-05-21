@@ -168,10 +168,24 @@ public class SessionAccessibility {
                     mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityLongPress", null);
                     return true;
                 case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
-                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollForward", null);
+                    if (virtualViewId == View.NO_ID) {
+                        // Scroll the viewport forwards by approximately 80%.
+                        mSession.getPanZoomController().scrollBy(
+                                ScreenLength.zero(), ScreenLength.fromViewportHeight(0.8),
+                                PanZoomController.SCROLL_BEHAVIOR_AUTO);
+                    } else {
+                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollForward", null);
+                    }
                     return true;
                 case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
-                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollBackward", null);
+                    if (virtualViewId == View.NO_ID) {
+                        // Scroll the viewport backwards by approximately 80%.
+                        mSession.getPanZoomController().scrollBy(
+                                ScreenLength.zero(), ScreenLength.fromViewportHeight(-0.8),
+                                PanZoomController.SCROLL_BEHAVIOR_AUTO);
+                    } else {
+                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollBackward", null);
+                    }
                     return true;
                 case AccessibilityNodeInfo.ACTION_SELECT:
                     nativeProvider.click(virtualViewId);
