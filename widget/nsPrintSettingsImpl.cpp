@@ -20,8 +20,6 @@ nsPrintSettings::nsPrintSettings()
       mScaling(1.0),
       mPrintBGColors(false),
       mPrintBGImages(false),
-      mPrintFrameType(kFramesAsIs),
-      mHowToEnableFrameUI(kFrameEnableNone),
       mIsCancelled(false),
       mSaveOnCancel(true),
       mPrintSilent(false),
@@ -536,16 +534,6 @@ NS_IMETHODIMP nsPrintSettings::SetFooterStrRight(const nsAString& aTitle) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetPrintFrameType(int16_t* aPrintFrameType) {
-  NS_ENSURE_ARG_POINTER(aPrintFrameType);
-  *aPrintFrameType = (int32_t)mPrintFrameType;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPrintFrameType(int16_t aPrintFrameType) {
-  mPrintFrameType = aPrintFrameType;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrintSettings::GetPrintSilent(bool* aPrintSilent) {
   NS_ENSURE_ARG_POINTER(aPrintSilent);
   *aPrintSilent = mPrintSilent;
@@ -582,18 +570,6 @@ NS_IMETHODIMP nsPrintSettings::GetPaperName(nsAString& aPaperName) {
 }
 NS_IMETHODIMP nsPrintSettings::SetPaperName(const nsAString& aPaperName) {
   mPaperName = aPaperName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsPrintSettings::GetHowToEnableFrameUI(
-    int16_t* aHowToEnableFrameUI) {
-  NS_ENSURE_ARG_POINTER(aHowToEnableFrameUI);
-  *aHowToEnableFrameUI = mHowToEnableFrameUI;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetHowToEnableFrameUI(
-    int16_t aHowToEnableFrameUI) {
-  mHowToEnableFrameUI = aHowToEnableFrameUI;
   return NS_OK;
 }
 
@@ -784,9 +760,7 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mPrintRange = rhs.mPrintRange;
   mTitle = rhs.mTitle;
   mURL = rhs.mURL;
-  mHowToEnableFrameUI = rhs.mHowToEnableFrameUI;
   mIsCancelled = rhs.mIsCancelled;
-  mPrintFrameType = rhs.mPrintFrameType;
   mPrintSilent = rhs.mPrintSilent;
   mShrinkToFit = rhs.mShrinkToFit;
   mShowPrintProgress = rhs.mShowPrintProgress;

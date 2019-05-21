@@ -95,21 +95,6 @@ interface nsIPrintSettings : nsISupports
   const short kLandscapeOrientation = 1;
 
   /**
-   * Print Frame Constants
-   */
-  const short kNoFrames      = 0;
-  const short kFramesAsIs    = 1;
-  const short kSelectedFrame = 2;
-  const short kEachFrameSep  = 3;
-
-  /**
-   * How to Enable Frame Set Printing Constants
-   */
-  const short kFrameEnableNone        = 0;
-  const short kFrameEnableAll         = 1;
-  const short kFrameEnableAsIsAndEach = 2;
-
-  /**
    * Output file format
    */
   const short kOutputFormatNative = 0;
@@ -205,10 +190,8 @@ interface nsIPrintSettings : nsISupports
   attribute AString footerStrCenter;
   attribute AString footerStrRight;
 
-  attribute short   howToEnableFrameUI;  /* indicates how to enable the frameset UI            */
   attribute boolean isCancelled;         /* indicates whether the print job has been cancelled */
   readonly attribute boolean saveOnCancel;        /* indicates whether the print settings should be saved after a cancel */
-  attribute short   printFrameType;
   attribute boolean printSilent;         /* print without putting up the dialog */
   attribute boolean shrinkToFit;         /* shrinks content to fit on page      */
   attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */

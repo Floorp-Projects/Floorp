@@ -181,8 +181,6 @@ class nsPrintJob final : public nsIObserver,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult ReflowPrintObject(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
-  void CheckForChildFrameSets(const mozilla::UniquePtr<nsPrintObject>& aPO);
-
   void CalcNumPrintablePages(int32_t& aNumPages);
   void ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify);
   nsresult CleanupOnFailure(nsresult aResult, bool aIsPrinting);
