@@ -8351,6 +8351,40 @@ end:
 !macroend
 
 /**
+ * Convert a number of dialog units to a number of pixels.
+ *
+ * _DU    Number of dialog units to convert
+ * _AXIS  Which axis you want to convert a value along, X or Y
+ * _RV    Register or variable to return the number of pixels in
+ */
+!macro _DialogUnitsToPixels _DU _AXIS _RV
+  Push $0
+  Push $1
+
+  ; The dialog units value might be a string ending with a 'u',
+  ; so convert it to a number.
+  IntOp $0 "${_DU}" + 0
+
+  !if ${_AXIS} == 'Y'
+    System::Call '*(i 0, i 0, i 0, i r0) i .r1'
+    System::Call 'user32::MapDialogRect(p $HWNDPARENT, p r1)'
+    System::Call '*$1(i, i, i, i . r0)'
+  !else if ${_AXIS} == 'X'
+    System::Call '*(i 0, i 0, i r0, i 0) i .r1'
+    System::Call 'user32::MapDialogRect(p $HWNDPARENT, p r1)'
+    System::Call '*$1(i, i, i . r0, i)'
+  !else
+    !error "Invalid axis ${_AXIS} passed to DialogUnitsToPixels; please use X or Y"
+  !endif
+  System::Free $1
+
+  Pop $1
+  Exch $0
+  Pop ${_RV}
+!macroend
+!define DialogUnitsToPixels "!insertmacro _DialogUnitsToPixels"
+
+/**
  * Gets the elapsed time in seconds between two values in milliseconds stored as
  * an int64. The caller will typically get the millisecond values using
  * GetTickCount with a long return value as follows.
