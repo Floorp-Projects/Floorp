@@ -20,7 +20,6 @@ const {
   getSourceCount,
   getSelectedSource,
   getSourceTabs,
-  getOutOfScopeLocations,
   getSelectedLocation,
 } = selectors;
 
@@ -67,10 +66,6 @@ describe("sources", () => {
       throw new Error("bad source");
     }
     expect(source.id).toEqual("foo1");
-
-    await waitForState(store, state => getOutOfScopeLocations(state));
-    const locations = getOutOfScopeLocations(getState());
-    expect(locations).toHaveLength(1);
   });
 
   it("should select next tab on tab closed if no previous tab", async () => {

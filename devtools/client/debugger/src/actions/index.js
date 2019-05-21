@@ -4,6 +4,7 @@
 
 // @flow
 
+import * as ast from "./ast";
 import * as breakpoints from "./breakpoints";
 import * as expressions from "./expressions";
 import * as eventListeners from "./event-listeners";
@@ -11,7 +12,6 @@ import * as pause from "./pause";
 import * as navigation from "./navigation";
 import * as ui from "./ui";
 import * as fileSearch from "./file-search";
-import * as ast from "./ast";
 import * as projectTextSearch from "./project-text-search";
 import * as quickOpen from "./quick-open";
 import * as sourceTree from "./source-tree";
@@ -23,6 +23,7 @@ import * as toolbox from "./toolbox";
 import * as preview from "./preview";
 
 export default {
+  ...ast,
   ...navigation,
   ...breakpoints,
   ...expressions,
@@ -33,7 +34,6 @@ export default {
   ...pause,
   ...ui,
   ...fileSearch,
-  ...ast,
   ...projectTextSearch,
   ...quickOpen,
   ...sourceTree,
