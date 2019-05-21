@@ -1636,6 +1636,25 @@ raptor-youtube-playback-firefox:
         extra-options:
             - --test=raptor-youtube-playback
 
+raptor-youtube-playback-geckoview:
+    description: "Raptor YouTube Playback on GeckoView"
+    try-name: raptor-youtube-playback-geckoview
+    treeherder-symbol: Rap(ytp)
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-g5.*/pgo: ['try', 'mozilla-central']
+            default: ['try']
+    target: geckoview_example.apk
+    max-run-time: 3600
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback
+            - --app=geckoview
+            - --binary=org.mozilla.geckoview_example
+            - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+
 raptor-tp6-1-firefox-cold:
     description: "Raptor tp6-1 cold page-load on Firefox"
     try-name: raptor-tp6-1-firefox-cold
