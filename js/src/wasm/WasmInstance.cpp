@@ -998,7 +998,8 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                                         gc::Cell** location) {
   MOZ_ASSERT(SASigPostBarrier.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(location);
-  TlsContext.get()->runtime()->gc.storeBuffer().putCell(location);
+  TlsContext.get()->runtime()->gc.storeBuffer().putCell(
+      reinterpret_cast<JSObject**>(location));
 }
 
 /* static */ void Instance::postBarrierFiltering(Instance* instance,
@@ -1008,7 +1009,8 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   if (*location == nullptr || !gc::IsInsideNursery(*location)) {
     return;
   }
-  TlsContext.get()->runtime()->gc.storeBuffer().putCell(location);
+  TlsContext.get()->runtime()->gc.storeBuffer().putCell(
+      reinterpret_cast<JSObject**>(location));
 }
 
 // The typeIndex is an index into the structTypeDescrs_ table in the instance.

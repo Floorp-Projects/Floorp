@@ -2638,14 +2638,29 @@ void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(TenuringTracer& mover) {
   }
 }
 
+template <typename T>
+template <typename CellType>
+void js::gc::StoreBuffer::MonoTypeBuffer<T>::traceTyped(TenuringTracer& mover) {
+  mozilla::ReentrancyGuard g(*owner_);
+  MOZ_ASSERT(owner_->isEnabled());
+  if (last_) {
+    last_.template traceTyped<CellType>(mover);
+  }
+  for (typename StoreSet::Range r = stores_.all(); !r.empty(); r.popFront()) {
+    r.front().template traceTyped<CellType>(mover);
+  }
+}
+
 namespace js {
 namespace gc {
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>::trace(
     TenuringTracer&);
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>::trace(
     TenuringTracer&);
-template void StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>::trace(
-    TenuringTracer&);
+template void StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>::traceTyped<
+    JSString>(TenuringTracer&);
+template void StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>::traceTyped<
+    JSObject>(TenuringTracer&);
 }  // namespace gc
 }  // namespace js
 
@@ -2742,7 +2757,8 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover) {
   head_ = nullptr;
 }
 
-void js::gc::StoreBuffer::CellPtrEdge::trace(TenuringTracer& mover) const {
+template <typename CellType>
+void js::gc::StoreBuffer::CellPtrEdge::traceTyped(TenuringTracer& mover) const {
   if (!*edge) {
     return;
   }
@@ -2753,6 +2769,8 @@ void js::gc::StoreBuffer::CellPtrEdge::trace(TenuringTracer& mover) const {
   auto traceKind = (*edge)->getTraceKind();
   MOZ_ASSERT(traceKind == JS::TraceKind::Object ||
              traceKind == JS::TraceKind::String);
+  MOZ_ASSERT(traceKind == JS::MapTypeToTraceKind<CellType>::kind,
+             "traceKind mismatch.");
 #endif
 
   // Bug 1376646: Make separate store buffers for strings and objects, and
@@ -2762,11 +2780,7 @@ void js::gc::StoreBuffer::CellPtrEdge::trace(TenuringTracer& mover) const {
     return;
   }
 
-  if ((*edge)->nurseryCellIsString()) {
-    mover.traverse(reinterpret_cast<JSString**>(edge));
-  } else {
-    mover.traverse(reinterpret_cast<JSObject**>(edge));
-  }
+  mover.traverse(reinterpret_cast<CellType**>(edge));
 }
 
 void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {

@@ -1429,7 +1429,7 @@ class NativeObject : public JSObject {
     MOZ_ASSERT(*cellp);
     gc::StoreBuffer* storeBuffer = (*cellp)->storeBuffer();
     if (storeBuffer) {
-      storeBuffer->putCell(cellp);
+      storeBuffer->putCell(reinterpret_cast<JSObject**>(cellp));
     }
   }
 
