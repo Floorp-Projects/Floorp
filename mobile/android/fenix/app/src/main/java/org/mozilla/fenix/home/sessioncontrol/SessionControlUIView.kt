@@ -14,7 +14,6 @@ import io.reactivex.functions.Consumer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.UIView
 import androidx.recyclerview.widget.ItemTouchHelper
-import org.mozilla.fenix.BuildConfig
 
 private fun normalModeAdapterItems(
     tabs: List<Tab>,
@@ -26,9 +25,7 @@ private fun normalModeAdapterItems(
 
     if (tabs.isNotEmpty()) {
         items.addAll(tabs.reversed().map(AdapterItem::TabItem))
-        if (BuildConfig.COLLECTIONS_ENABLED) {
-            items.add(AdapterItem.SaveTabGroup)
-        }
+        items.add(AdapterItem.SaveTabGroup)
     } else {
         items.add(AdapterItem.NoTabMessage)
     }

@@ -133,8 +133,6 @@ android.applicationVariants.all { variant ->
     def releaseChannels = ["nightly", "beta", "release"]
     def isReleased = releaseChannels.contains(buildType)
 
-    buildConfigField 'Boolean', 'COLLECTIONS_ENABLED', (!isReleased).toString()
-
     if (isReleased) {
         versionCode = generatedVersionCode
 
