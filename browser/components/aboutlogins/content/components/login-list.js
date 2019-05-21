@@ -83,6 +83,14 @@ class LoginList extends ReflectedFluentElement {
     return this.reflectedFluentIDs;
   }
 
+  clearSelection() {
+    if (!this._selectedItem) {
+      return;
+    }
+    this._selectedItem.classList.remove("selected");
+    this._selectedItem = null;
+  }
+
   setLogins(logins) {
     this._logins = logins;
     this.render();

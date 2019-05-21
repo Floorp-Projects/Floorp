@@ -74,6 +74,16 @@ var AboutLoginsParent = {
     }
 
     switch (message.name) {
+      case "AboutLogins:CreateLogin": {
+        let newLogin = message.data.login;
+        Object.assign(newLogin, {
+          formSubmitURL: "",
+          usernameField: "",
+          passwordField: "",
+        });
+        Services.logins.addLogin(LoginHelper.vanillaObjectToLogin(newLogin));
+        break;
+      }
       case "AboutLogins:DeleteLogin": {
         let login = LoginHelper.vanillaObjectToLogin(message.data.login);
         Services.logins.removeLogin(login);
