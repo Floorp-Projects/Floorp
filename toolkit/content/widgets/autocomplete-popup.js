@@ -410,7 +410,7 @@ MozElements.MozAutocompleteRichlistboxPopup = class MozAutocompleteRichlistboxPo
             options = { is: "autocomplete-richlistitem-logins-footer" };
             break;
           case "loginWithOrigin":
-            options = { is: "autocomplete-richlistitem-login-with-origin" };
+            options = { is: "autocomplete-two-line-richlistitem" };
             break;
           default:
             options = { is: "autocomplete-richlistitem" };
