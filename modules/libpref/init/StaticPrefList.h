@@ -576,17 +576,16 @@ VARCACHE_PREF(
   int32_t, 0
 )
 
-// IMPORTANT: Keep this in condition in sync with all.js. The value
-// of MOZILLA_OFFICIAL is different between full and artifact builds, so without
-// it being specified there, dump is disabled in artifact builds (see Bug 1490412).
-#ifdef MOZILLA_OFFICIAL
+// Is support for compiling DOM worker scripts directly from UTF-8 (without ever
+// inflating to UTF-16) enabled?
+#ifdef RELEASE_OR_BETA
 # define PREF_VALUE false
 #else
 # define PREF_VALUE true
 #endif
 VARCACHE_PREF(
-  "browser.dom.window.dump.enabled",
-   browser_dom_window_dump_enabled,
+  "dom.worker.script_loader.utf8_parsing.enabled",
+   dom_worker_script_loader_utf8_parsing_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -602,6 +601,22 @@ VARCACHE_PREF(
    dom_worker_use_medium_high_event_queue,
   RelaxedAtomicBool, true
 )
+
+// IMPORTANT: Keep this condition in sync with all.js. The value of
+// MOZILLA_OFFICIAL is different between full and artifact builds, so without
+// it being specified there, dump is disabled in artifact builds.  See
+// bug 1490412.
+#ifdef MOZILLA_OFFICIAL
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "browser.dom.window.dump.enabled",
+   browser_dom_window_dump_enabled,
+  RelaxedAtomicBool, PREF_VALUE
+)
+#undef PREF_VALUE
 
 // Enable content type normalization of XHR uploads via MIME Sniffing standard
 VARCACHE_PREF(
