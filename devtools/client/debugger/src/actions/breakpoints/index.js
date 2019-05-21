@@ -15,7 +15,6 @@ import {
   getXHRBreakpoints,
   getSelectedSource,
   getBreakpointAtLocation,
-  getConditionalPanelLocation,
   getBreakpointsForSource,
   getBreakpointsAtLine,
 } from "../../selectors";
@@ -27,7 +26,6 @@ import {
   disableBreakpoint,
 } from "./modify";
 import remapLocations from "./remapLocations";
-import { closeConditionalPanel } from "../ui";
 
 // this will need to be changed so that addCLientBreakpoint is removed
 
@@ -119,10 +117,11 @@ export function toggleBreakpoints(
   breakpoints: Breakpoint[]
 ) {
   return async ({ dispatch }: ThunkArgs) => {
-    const promises = breakpoints.map(breakpoint =>
-      shouldDisableBreakpoints
-        ? dispatch(disableBreakpoint(cx, breakpoint))
-        : dispatch(enableBreakpoint(cx, breakpoint))
+    const promises = breakpoints.map(
+      breakpoint =>
+        shouldDisableBreakpoints
+          ? dispatch(disableBreakpoint(cx, breakpoint))
+          : dispatch(enableBreakpoint(cx, breakpoint))
     );
 
     await Promise.all(promises);
@@ -216,10 +215,6 @@ export function toggleBreakpointAtLine(cx: Context, line: number) {
 
     if (!selectedSource) {
       return;
-    }
-
-    if (getConditionalPanelLocation(getState())) {
-      dispatch(closeConditionalPanel());
     }
 
     const bp = getBreakpointAtLocation(state, { line, column: undefined });
