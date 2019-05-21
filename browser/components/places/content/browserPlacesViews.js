@@ -1519,7 +1519,7 @@ PlacesToolbar.prototype = {
 
       // If the menu is open, close it.
       if (draggedElt.open) {
-        draggedElt.menupopup.hidePopup();
+        draggedElt.lastElementChild.hidePopup();
         draggedElt.open = false;
       }
     }

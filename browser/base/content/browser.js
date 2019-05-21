@@ -568,7 +568,7 @@ function UpdateBackForwardCommands(aWebNavigation) {
 
 /**
  * Click-and-Hold implementation for the Back and Forward buttons
- * XXXmano: should this live in toolbarbutton.js?
+ * XXXmano: should this live in toolbarbutton.xml?
  */
 function SetClickAndHoldHandlers() {
   // Bug 414797: Clone the back/forward buttons' context menu into both buttons.
@@ -579,13 +579,13 @@ function SetClickAndHoldHandlers() {
 
   let backButton = document.getElementById("back-button");
   backButton.setAttribute("type", "menu");
-  backButton.prepend(popup);
+  backButton.appendChild(popup);
   gClickAndHoldListenersOnElement.add(backButton);
 
   let forwardButton = document.getElementById("forward-button");
   popup = popup.cloneNode(true);
   forwardButton.setAttribute("type", "menu");
-  forwardButton.prepend(popup);
+  forwardButton.appendChild(popup);
   gClickAndHoldListenersOnElement.add(forwardButton);
 }
 
@@ -600,7 +600,7 @@ const gClickAndHoldListenersOnElement = {
       return;
 
     // Prevent the menupopup from opening immediately
-    aEvent.currentTarget.menupopup.hidden = true;
+    aEvent.currentTarget.firstElementChild.hidden = true;
 
     aEvent.currentTarget.addEventListener("mouseout", this);
     aEvent.currentTarget.addEventListener("mouseup", this);
@@ -8423,7 +8423,8 @@ var PanicButtonNotifier = {
       popup.addEventListener("popuphidden", removeListeners);
 
       let widget = CustomizableUI.getWidget("panic-button").forWindow(window);
-      let anchor = widget.anchor.icon;
+      let anchor = widget.anchor;
+      anchor = document.getAnonymousElementByAttribute(anchor, "class", "toolbarbutton-icon");
       popup.openPopup(anchor, popup.getAttribute("position"));
     } catch (ex) {
       Cu.reportError(ex);

@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<bindings id="toolbarbuttonBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="toolbarbutton"
+           extends="chrome://global/content/bindings/button.xml#button-base">
+    <implementation>
+      <property name="multilineLabel"
+        onget="return document.getAnonymousElementByAttribute(this, 'class', 'toolbarbutton-multiline-text');" />
+    </implementation>
+    <content>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,type,consumeanchor,triggeringprincipal=iconloadingprincipal"/>
+      <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,dragover-top,wrap"/>
+      <xul:label class="toolbarbutton-multiline-text" flex="1"
+                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
+      <children includes="box"/>
+      <xul:dropmarker anonid="dropmarker" type="menu"
+                      class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
+    </content>
+  </binding>
+
+  <binding id="toolbarbutton-badged"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
+      <xul:stack class="toolbarbutton-badge-stack">
+        <children/>
+        <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
+        <xul:label class="toolbarbutton-badge" xbl:inherits="value=badge,style=badgeStyle" top="0" end="0" crop="none"/>
+      </xul:stack>
+      <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,wrap"/>
+      <xul:label class="toolbarbutton-multiline-text" flex="1"
+                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
+      <xul:dropmarker anonid="dropmarker" type="menu"
+                      class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
+    </content>
+  </binding>
+</bindings>
