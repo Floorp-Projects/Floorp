@@ -158,7 +158,7 @@ class RemoteWebProgressManager {
     // It shouldn't go through the same processing as all the forwarded
     // webprogresslistener messages.
     if (aMessage.name == "Content:LoadURIResult") {
-      this._browser.inLoadURI = false;
+      this._browser.isNavigating = false;
       return;
     }
 
@@ -193,8 +193,8 @@ class RemoteWebProgressManager {
       if (json.documentContentType !== null) {
         this._browser._documentContentType = json.documentContentType;
       }
-      if (typeof json.inLoadURI != "undefined") {
-        this._browser.inLoadURI = json.inLoadURI;
+      if (typeof json.isNavigating != "undefined") {
+        this._browser.isNavigating = json.isNavigating;
       }
       if (json.charset) {
         this._browser._characterSet = json.charset;

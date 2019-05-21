@@ -25,8 +25,6 @@ class WebProgressChild {
   constructor(mm) {
     this.mm = mm;
 
-    this.inLoadURI = false;
-
     // NOTIFY_PROGRESS, NOTIFY_STATUS, NOTIFY_REFRESH, and
     // NOTIFY_CONTENT_BLOCKING are handled by PBrowser.
     let notifyCode = Ci.nsIWebProgress.NOTIFY_ALL &
@@ -115,7 +113,7 @@ class WebProgressChild {
       json.documentURI = this.mm.content.document.documentURIObject.spec;
       json.charset = this.mm.content.document.characterSet;
       json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
-      json.inLoadURI = this.inLoadURI;
+      json.isNavigating = this.mm.docShell.isNavigating;
     }
 
     this._send("Content:StateChange", json);
@@ -141,7 +139,7 @@ class WebProgressChild {
       let csp = this.mm.content.document.csp;
       json.csp = E10SUtils.serializeCSP(csp);
       json.synthetic = this.mm.content.document.mozSyntheticDocument;
-      json.inLoadURI = this.inLoadURI;
+      json.isNavigating = this.mm.docShell.isNavigating;
       json.requestContextID = this.mm.content.document.documentLoadGroup
         ? this.mm.content.document.documentLoadGroup.requestContextID
         : null;

@@ -51,11 +51,9 @@ class WebNavigationChild extends ActorChild {
   }
 
   _wrapURIChangeCall(fn) {
-    this.mm.WebProgress.inLoadURI = true;
     try {
       fn();
     } finally {
-      this.mm.WebProgress.inLoadURI = false;
       this.mm.WebProgress.sendLoadCallResult();
     }
   }
