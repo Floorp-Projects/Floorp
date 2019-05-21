@@ -30,6 +30,10 @@ def run_decision_task(job, params, root):
     if 'rebuild-kinds' in job:
         for kind in job['rebuild-kinds']:
             arguments.append('--rebuild-kind={}'.format(kind))
+    if job.get('android-release-type') is not None:
+        arguments.append('--android-release-type={}'.format(
+            str(job['android-release-type']).lower(),
+        ))
     return [
         make_decision_task(
             params,
