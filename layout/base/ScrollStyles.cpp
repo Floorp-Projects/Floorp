@@ -53,11 +53,7 @@ ScrollStyles::ScrollStyles(WritingMode aWritingMode, StyleOverflow aH,
       mVertical(aV),
       mScrollBehavior(aDisplay->mScrollBehavior),
       mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
-      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY),
-      mScrollSnapPointsX(aDisplay->mScrollSnapPointsX),
-      mScrollSnapPointsY(aDisplay->mScrollSnapPointsY),
-      mScrollSnapDestinationX(aDisplay->mScrollSnapDestination.horizontal),
-      mScrollSnapDestinationY(aDisplay->mScrollSnapDestination.vertical) {
+      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {
   InitializeScrollSnapType(aWritingMode, aDisplay);
 }
 
@@ -67,11 +63,7 @@ ScrollStyles::ScrollStyles(WritingMode aWritingMode,
       mVertical(aDisplay->mOverflowY),
       mScrollBehavior(aDisplay->mScrollBehavior),
       mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
-      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY),
-      mScrollSnapPointsX(aDisplay->mScrollSnapPointsX),
-      mScrollSnapPointsY(aDisplay->mScrollSnapPointsY),
-      mScrollSnapDestinationX(aDisplay->mScrollSnapDestination.horizontal),
-      mScrollSnapDestinationY(aDisplay->mScrollSnapDestination.vertical) {
+      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {
   InitializeScrollSnapType(aWritingMode, aDisplay);
 }
 
