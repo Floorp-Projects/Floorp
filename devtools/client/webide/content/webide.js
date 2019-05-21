@@ -115,8 +115,9 @@ var UI = {
     this.contentViewer = window.docShell.contentViewer;
     this.contentViewer.fullZoom = Services.prefs.getCharPref("devtools.webide.zoom");
 
-    // Show a deprecation message to encourage users to open the new Remote Debugging
-    if (Services.prefs.getBoolPref("devtools.webide.showDeprecationMessage", false)) {
+    // If the new about:debugging is enabled, show a deprecation message to encourage
+    // users to open the new Remote Debugging
+    if (Services.prefs.getBoolPref("devtools.aboutdebugging.new-enabled", false)) {
       this.showDeprecationMessage();
     }
 
