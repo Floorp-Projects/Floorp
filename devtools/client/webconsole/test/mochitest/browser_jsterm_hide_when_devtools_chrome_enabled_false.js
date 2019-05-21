@@ -42,13 +42,13 @@ async function performTests() {
   Services.prefs.setBoolPref("devtools.chrome.enabled", true);
 
   browserConsole = await HUDService.toggleBrowserConsole();
-  objInspector = await getObjectInspector(browserConsole);
+  objInspector = await logObject(browserConsole);
   testJSTermIsVisible(browserConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
 
   const browserTab = await addTab("data:text/html;charset=utf8,hello world");
   webConsole = await openConsole(browserTab);
-  objInspector = await getObjectInspector(webConsole);
+  objInspector = await logObject(webConsole);
   testJSTermIsVisible(webConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
   await closeConsole(browserTab);
@@ -57,11 +57,11 @@ async function performTests() {
   Services.prefs.setBoolPref("devtools.chrome.enabled", false);
 
   browserConsole = await HUDService.toggleBrowserConsole();
-  objInspector = await getObjectInspector(browserConsole);
+  objInspector = await logObject(browserConsole);
   testJSTermIsNotVisible(browserConsole);
 
   webConsole = await openConsole(browserTab);
-  objInspector = await getObjectInspector(webConsole);
+  objInspector = await logObject(webConsole);
   testJSTermIsVisible(webConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
 
@@ -70,25 +70,13 @@ async function performTests() {
   await HUDService.toggleBrowserConsole();
 }
 
-/**
- * Returns either the Variables View or Object Inspector depending on which is
- * currently in use.
- */
-async function getObjectInspector(hud) {
-  const { ui, jsterm } = hud;
-
-  // Filter out other messages to ensure ours stays visible.
-  ui.filterBox.value = "browser_console_hide_jsterm_test";
-
-  hud.ui.clearOutput();
-  jsterm.execute("new Object({ browser_console_hide_jsterm_test: true })");
-
-  const message = await waitFor(
-    () => findMessage(hud, "Object { browser_console_hide_jsterm_test: true }")
-  );
-
-  const objInspector = message.querySelector(".tree");
-  return objInspector;
+async function logObject(hud) {
+  const { jsterm } = hud;
+  const prop = "browser_console_hide_jsterm_test";
+  const onMessage = waitForMessage(hud, prop, ".result");
+  jsterm.execute(`new Object({ ${prop}: true })`);
+  const {node} = await onMessage;
+  return node.querySelector(".tree");
 }
 
 function testJSTermIsVisible(hud) {

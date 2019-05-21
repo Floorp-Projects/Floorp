@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getAllFilters } = require("devtools/client/webconsole/selectors/filters");
@@ -19,6 +19,7 @@ const {
 
 const FilterButton = require("devtools/client/webconsole/components/FilterButton");
 const FilterCheckbox = require("devtools/client/webconsole/components/FilterCheckbox");
+const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 
@@ -49,23 +50,11 @@ class FilterBar extends Component {
     super(props);
     this.onClickMessagesClear = this.onClickMessagesClear.bind(this);
     this.onClickRemoveAllFilters = this.onClickRemoveAllFilters.bind(this);
-    this.onClickRemoveTextFilter = this.onClickRemoveTextFilter.bind(this);
-    this.onSearchInput = this.onSearchInput.bind(this);
+    this.onSearchBoxChange = this.onSearchBoxChange.bind(this);
     this.onChangePersistToggle = this.onChangePersistToggle.bind(this);
     this.onChangeShowContent = this.onChangeShowContent.bind(this);
     this.renderFiltersConfigBar = this.renderFiltersConfigBar.bind(this);
     this.renderFilteredMessagesBar = this.renderFilteredMessagesBar.bind(this);
-  }
-
-  componentDidMount() {
-    this.props.attachRefToWebConsoleUI(
-      "filterBox",
-      this.wrapperNode.querySelector(".text-filter")
-    );
-    this.props.attachRefToWebConsoleUI(
-      "clearButton",
-      this.wrapperNode.querySelector(".clear-button")
-    );
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -111,12 +100,8 @@ class FilterBar extends Component {
     this.props.dispatch(actions.defaultFiltersReset());
   }
 
-  onClickRemoveTextFilter() {
-    this.props.dispatch(actions.filterTextSet(""));
-  }
-
-  onSearchInput(e) {
-    this.props.dispatch(actions.filterTextSet(e.target.value));
+  onSearchBoxChange(text) {
+    this.props.dispatch(actions.filterTextSet(text));
   }
 
   onChangePersistToggle() {
@@ -242,7 +227,6 @@ class FilterBar extends Component {
 
   render() {
     const {
-      filter,
       persistLogs,
       filteredMessagesCount,
       hidePersistLogsCheckbox,
@@ -264,21 +248,11 @@ class FilterBar extends Component {
         dom.div({
           className: "devtools-separator",
         }),
-        dom.div(
-          { className: "devtools-searchbox" },
-          dom.input({
-            className: "devtools-filterinput text-filter",
-            type: "search",
-            value: filter.text,
-            placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
-            onInput: this.onSearchInput,
-          }),
-          dom.button({
-            className: "devtools-searchinput-clear clear-button",
-            hidden: filter.text == "",
-            onClick: this.onClickRemoveTextFilter,
-          }),
-        ),
+        SearchBox({
+          placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
+          keyShortcut: l10n.getStr("webconsole.find.key"),
+          onChange: this.onSearchBoxChange,
+        }),
         !hidePersistLogsCheckbox && FilterCheckbox({
           label: l10n.getStr("webconsole.enablePersistentLogs.label"),
           title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),

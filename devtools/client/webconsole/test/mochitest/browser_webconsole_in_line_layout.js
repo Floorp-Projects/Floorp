@@ -72,9 +72,7 @@ async function performTests() {
   info("Show the hidden messages label");
   const onHiddenMessagesLabelVisible = waitFor(() =>
     document.querySelector(".webconsole-filterbar-filtered-messages"));
-  ui.filterBox.focus();
-  ui.filterBox.select();
-  EventUtils.sendString("message-");
+  setFilterState(hud, {text: "message-"});
   await onHiddenMessagesLabelVisible;
 
   info("Shrink the window so the label is on its own line");

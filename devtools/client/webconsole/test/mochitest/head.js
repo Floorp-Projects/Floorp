@@ -938,6 +938,16 @@ async function getFilterState(hud) {
 }
 
 /**
+ * Return the filter input element.
+ *
+ * @param {Object} hud
+ * @return {HTMLInputElement}
+ */
+function getFilterInput(hud) {
+  return hud.ui.outputNode.querySelector(".devtools-searchbox input");
+}
+
+/**
  * Set the state of a console filter.
  *
  * @param {Object} hud
@@ -959,23 +969,36 @@ async function setFilterState(hud, settings) {
   const filterBar = outputNode.querySelector(".webconsole-filterbar-secondary");
 
   for (const category in settings) {
-    const setActive = settings[category];
+    const value = settings[category];
     const button = filterBar.querySelector(`.${category}`);
+
+    if (category === "text") {
+      const filterInput = getFilterInput(hud);
+      filterInput.focus();
+      filterInput.select();
+      if (!value) {
+        EventUtils.synthesizeKey("KEY_Delete");
+      } else {
+        EventUtils.sendString(value);
+      }
+      await waitFor(() => filterInput.value === value);
+      continue;
+    }
 
     if (!button) {
       ok(false, `setFilterState() called with a category of ${category}, ` +
                 `which doesn't exist.`);
     }
 
-    info(`Setting the ${category} category to ${setActive ? "checked" : "disabled"}`);
+    info(`Setting the ${category} category to ${value ? "checked" : "disabled"}`);
 
     const isChecked = button.classList.contains("checked");
 
-    if (setActive !== isChecked) {
+    if (value !== isChecked) {
       button.click();
 
       await waitFor(() => {
-        return button.classList.contains("checked") === setActive;
+        return button.classList.contains("checked") === value;
       });
     }
   }
