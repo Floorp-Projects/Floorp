@@ -42,7 +42,6 @@ import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import java.net.MalformedURLException
 import java.net.URL
 import kotlin.coroutines.CoroutineContext
@@ -184,7 +183,12 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                 val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
                 when {
                     selectedHistory.size == 1 -> context?.share(selectedHistory.first().url)
-                    selectedHistory.size > 1 -> ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "2377")
+                    selectedHistory.size > 1 -> {
+                        val shareText = selectedHistory.joinToString("\n") {
+                            it.url
+                        }
+                        requireContext().share(shareText)
+                    }
                 }
                 true
             }
