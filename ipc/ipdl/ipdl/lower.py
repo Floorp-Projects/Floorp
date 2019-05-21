@@ -3631,13 +3631,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 routeif = StmtIf(ExprBinary(
                     ExprVar('MSG_ROUTING_CONTROL'), '!=', routevar))
                 routedvar = ExprVar('routed__')
-                failif = StmtIf(ExprPrefixUnop(routedvar, '!'))
-                failif.ifb.addstmt(StmtReturn(_Result.RouteError))
+
+                actorgone = StmtIf(ExprPrefixUnop(routedvar, '!'))
+                actorgone.ifb.addstmts([
+                    self.logMessage(None, ExprAddrOf(msgvar),
+                                    'Ignored message for dead actor'),
+                    StmtReturn(_Result.Processed),
+                ])
 
                 routeif.ifb.addstmts([
                     StmtDecl(Decl(Type('IProtocol', ptr=True), routedvar.name),
                              _lookupListener(routevar)),
-                    failif,
+                    actorgone,
                     StmtDecl(Decl(_refptr(_cxxLifecycleProxyType()), proxyvar.name),
                              init=_callGetLifecycleProxy(routedvar)),
                     StmtReturn(ExprCall(
