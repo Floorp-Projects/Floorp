@@ -3750,27 +3750,19 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
     if (value > imgDimension) value = imgDimension;
     mSlice.Side(s) = value;
 
-    nsStyleCoord coord = aStyleBorder.mBorderImageWidth.Get(s);
-    switch (coord.GetUnit()) {
-      case eStyleUnit_Coord:  // absolute dimension
-        value = coord.GetCoordValue();
+    const auto& width = aStyleBorder.mBorderImageWidth.Get(s);
+    switch (width.tag) {
+      case StyleBorderImageSideWidth::Tag::LengthPercentage:
+        value = std::max(0, width.AsLengthPercentage().Resolve(borderDimension));
         break;
-      case eStyleUnit_Percent:
-        value = coord.GetPercentValue() * borderDimension;
+      case StyleBorderImageSideWidth::Tag::Number:
+        value = width.AsNumber() * borderWidths.Side(s);
         break;
-      case eStyleUnit_Factor:
-        value = coord.GetFactorValue() * borderWidths.Side(s);
-        break;
-      case eStyleUnit_Auto:  // same as the slice value, in CSS pixels
+      case StyleBorderImageSideWidth::Tag::Auto:
         value = mSlice.Side(s);
         break;
-      case eStyleUnit_Calc:
-        value = std::max(0, coord.ComputeComputedCalc(borderDimension));
-        break;
       default:
-        MOZ_ASSERT_UNREACHABLE(
-            "unexpected CSS unit for border image area "
-            "division");
+        MOZ_ASSERT_UNREACHABLE("unexpected CSS unit for border image area");
         value = 0;
         break;
     }

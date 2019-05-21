@@ -495,7 +495,8 @@ cbindgen-types = [
     { gecko = "StyleGenericScale", servo = "values::generics::transform::Scale" },
     { gecko = "StyleGenericRotate", servo = "values::generics::transform::Rotate" },
     { gecko = "StyleGenericTranslate", servo = "values::generics::transform::Translate" },
-    { gecko = "StyleAngle", servo = "values::computed::Angle" }
+    { gecko = "StyleAngle", servo = "values::computed::Angle" },
+    { gecko = "StyleGenericBorderImageSideWidth", servo = "values::generics::border::BorderImageSideWidth" },
 ]
 
 mapped-generic-types = [
