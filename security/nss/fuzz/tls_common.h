@@ -7,6 +7,7 @@
 
 #include "prinit.h"
 
+void FixTime(PRFileDesc* fd);
 PRStatus EnableAllProtocolVersions();
 void EnableAllCipherSuites(PRFileDesc* fd);
 void DoHandshake(PRFileDesc* fd, bool isServer);

@@ -1008,12 +1008,12 @@ PK11_DigestFinal(PK11Context *context, unsigned char *data,
     }
     PK11_ExitContextMonitor(context);
 
-    *outLen = (unsigned int)len;
     context->init = PR_FALSE; /* allow Begin to start up again */
 
     if (crv != CKR_OK) {
         PORT_SetError(PK11_MapError(crv));
         return SECFailure;
     }
+    *outLen = (unsigned int)len;
     return SECSuccess;
 }

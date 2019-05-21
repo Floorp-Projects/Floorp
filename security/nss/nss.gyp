@@ -192,6 +192,7 @@
             'cmd/tstclnt/tstclnt.gyp:tstclnt',
             'cmd/vfychain/vfychain.gyp:vfychain',
             'cmd/vfyserv/vfyserv.gyp:vfyserv',
+            'cmd/mpitests/mpitests.gyp:mpi_tests',
             'gtests/certhigh_gtest/certhigh_gtest.gyp:certhigh_gtest',
             'gtests/cryptohi_gtest/cryptohi_gtest.gyp:cryptohi_gtest',
             'gtests/der_gtest/der_gtest.gyp:der_gtest',
@@ -221,12 +222,6 @@
             [ 'disable_libpkix==0', {
               'dependencies': [
                 'cmd/pkix-errcodes/pkix-errcodes.gyp:pkix-errcodes',
-              ],
-            }],
-            [ 'test_build==1', {
-              'dependencies': [
-                'cmd/mpitests/mpitests.gyp:mpi_tests',
-                'gtests/freebl_gtest/freebl_gtest.gyp:freebl_gtest',
               ],
             }],
             [ 'disable_fips==0', {

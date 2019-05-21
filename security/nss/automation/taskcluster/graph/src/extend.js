@@ -103,15 +103,6 @@ queue.filter(task => {
     return false;
   }
 
-  if (task.group == "Test") {
-    // Don't run test builds on old make platforms, and not for fips gyp.
-    // Disable on aarch64, see bug 1488331.
-    if (task.collection == "make" || task.collection == "fips"
-        || task.platform == "aarch64") {
-      return false;
-    }
-  }
-
   // Don't run all additional hardware tests on ARM.
   if (task.group == "Cipher" && task.platform == "aarch64" && task.env &&
       (task.env.NSS_DISABLE_PCLMUL == "1" || task.env.NSS_DISABLE_HW_AES == "1"
@@ -139,7 +130,8 @@ queue.map(task => {
   }
 
   // Windows is slow.
-  if (task.platform == "windows2012-64" && task.tests == "chains") {
+  if ((task.platform == "windows2012-32" || task.platform == "windows2012-64") &&
+      task.tests == "chains") {
     task.maxRunTime = 7200;
   }
 
@@ -325,7 +317,7 @@ async function scheduleMac(name, base, args = "") {
     command: [
       MAC_CHECKOUT_CMD,
       ["bash", "-c",
-       "nss/automation/taskcluster/scripts/build_gyp.sh", args]
+       "nss/automation/taskcluster/scripts/build_gyp.sh " + args]
     ],
     provisioner: "localprovisioner",
     workerType: "nss-macos-10-12",
@@ -527,8 +519,6 @@ async function scheduleLinux(name, overrides, args = "") {
     ],
     symbol: "modular"
   }));
-
-  await scheduleTestBuilds(name + " Test", merge(base, {group: "Test"}), args);
 
   return queue.submit();
 }
@@ -763,71 +753,6 @@ async function scheduleFuzzing32() {
 
 /*****************************************************************************/
 
-async function scheduleTestBuilds(name, base, args = "") {
-  // Build base definition.
-  let build = merge(base, {
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --test --ct-verif " + args
-    ],
-    artifacts: {
-      public: {
-        expires: 24 * 7,
-        type: "directory",
-        path: "/home/worker/artifacts"
-      }
-    },
-    kind: "build",
-    symbol: "B",
-    name: `${name} build`,
-  });
-
-  // On linux we have a specialized build image for building.
-  if (build.platform === "linux32" || build.platform === "linux64") {
-    build = merge(build, {
-      image: LINUX_BUILDS_IMAGE,
-    });
-  }
-
-  // The task that builds NSPR+NSS.
-  let task_build = queue.scheduleTask(build);
-
-  // Schedule tests.
-  queue.scheduleTask(merge(base, {
-    parent: task_build,
-    name: `${name} mpi tests`,
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
-    ],
-    tests: "mpi",
-    cycle: "standard",
-    symbol: "mpi",
-    kind: "test"
-  }));
-  queue.scheduleTask(merge(base, {
-    parent: task_build,
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
-    ],
-    name: `${name} gtests`,
-    symbol: "Gtest",
-    tests: "gtests",
-    cycle: "standard",
-    kind: "test"
-  }));
-
-  return queue.submit();
-}
-
-
-/*****************************************************************************/
-
 async function scheduleWindows(name, base, build_script) {
   base = merge(base, {
     workerType: "nss-win2012r2",
@@ -950,6 +875,9 @@ function scheduleTests(task_build, task_cert, test_base) {
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "tlsfuzzer tests", symbol: "tlsfuzzer", tests: "tlsfuzzer", cycle: "standard"
+  }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "MPI tests", symbol: "MPI", tests: "mpi", cycle: "standard"
   }));
   queue.scheduleTask(merge(cert_base, {
     name: "Chains tests", symbol: "Chains", tests: "chains"

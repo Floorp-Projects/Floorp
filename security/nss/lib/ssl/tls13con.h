@@ -117,8 +117,8 @@ PRBool tls13_ShouldRequestClientAuth(sslSocket *ss);
 PRBool tls13_IsReplay(const sslSocket *ss, const sslSessionID *sid);
 void tls13_AntiReplayRollover(PRTime now);
 
-SECStatus SSLExp_SetupAntiReplay(PRTime window, unsigned int k,
-                                 unsigned int bits);
+SECStatus SSLExp_InitAntiReplay(PRTime now, PRTime window, unsigned int k,
+                                unsigned int bits);
 
 SECStatus SSLExp_HelloRetryRequestCallback(PRFileDesc *fd,
                                            SSLHelloRetryRequestCallback cb,

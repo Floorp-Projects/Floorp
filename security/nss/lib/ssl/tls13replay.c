@@ -109,7 +109,7 @@ loser:
  * memory barrier between the setup and use of this function.
  */
 SECStatus
-SSLExp_SetupAntiReplay(PRTime window, unsigned int k, unsigned int bits)
+SSLExp_InitAntiReplay(PRTime now, PRTime window, unsigned int k, unsigned int bits)
 {
     SECStatus rv;
 
@@ -153,7 +153,7 @@ SSLExp_SetupAntiReplay(PRTime window, unsigned int k, unsigned int bits)
     sslBloom_Fill(&ssl_anti_replay.filters[1]);
 
     ssl_anti_replay.current = 0;
-    ssl_anti_replay.nextUpdate = ssl_TimeUsec() + window;
+    ssl_anti_replay.nextUpdate = now + window;
     ssl_anti_replay.window = window;
     return SECSuccess;
 
@@ -162,29 +162,15 @@ loser:
     return SECFailure;
 }
 
-/* This is exposed to tests.  Though it could, this doesn't take the lock on the
- * basis that those tests use thread confinement. */
-void
-tls13_AntiReplayRollover(PRTime now)
-{
-    ssl_anti_replay.current ^= 1;
-    ssl_anti_replay.nextUpdate = now + ssl_anti_replay.window;
-    sslBloom_Zero(ssl_anti_replay.filters + ssl_anti_replay.current);
-}
-
 static void
-tls13_AntiReplayUpdate()
+tls13_AntiReplayUpdate(PRTime now)
 {
-    PRTime now;
-
     PR_ASSERT_CURRENT_THREAD_IN_MONITOR(ssl_anti_replay.lock);
-
-    now = ssl_TimeUsec();
-    if (now < ssl_anti_replay.nextUpdate) {
-        return;
+    if (now >= ssl_anti_replay.nextUpdate) {
+        ssl_anti_replay.current ^= 1;
+        ssl_anti_replay.nextUpdate = now + ssl_anti_replay.window;
+        sslBloom_Zero(ssl_anti_replay.filters + ssl_anti_replay.current);
     }
-
-    tls13_AntiReplayRollover(now);
 }
 
 PRBool
@@ -197,7 +183,7 @@ tls13_InWindow(const sslSocket *ss, const sslSessionID *sid)
      * calculate.  The result should be close to zero.  timeDelta is signed to
      * make the comparisons below easier. */
     timeDelta = ss->xtnData.ticketAge -
-                ((ssl_TimeUsec() - sid->creationTime) / PR_USEC_PER_MSEC);
+                ((ssl_Time(ss) - sid->creationTime) / PR_USEC_PER_MSEC);
 
     /* Only allow the time delta to be at most half of our window.  This is
      * symmetrical, though it doesn't need to be; this assumes that clock errors
@@ -221,7 +207,7 @@ tls13_InWindow(const sslSocket *ss, const sslSessionID *sid)
      * prevent the same 0-RTT attempt from being accepted during window 1 and
      * later window 3.
      */
-    return PR_ABS(timeDelta) < (ssl_anti_replay.window / 2);
+    return PR_ABS(timeDelta) < (ssl_anti_replay.window / (PR_USEC_PER_MSEC * 2));
 }
 
 /* Checks for a duplicate in the two filters we have.  Performs maintenance on
@@ -262,13 +248,12 @@ tls13_IsReplay(const sslSocket *ss, const sslSessionID *sid)
     }
 
     PZ_EnterMonitor(ssl_anti_replay.lock);
-    tls13_AntiReplayUpdate();
+    tls13_AntiReplayUpdate(ssl_Time(ss));
 
     index = ssl_anti_replay.current;
     replay = sslBloom_Add(&ssl_anti_replay.filters[index], buf);
     if (!replay) {
-        replay = sslBloom_Check(&ssl_anti_replay.filters[index ^ 1],
-                                buf);
+        replay = sslBloom_Check(&ssl_anti_replay.filters[index ^ 1], buf);
     }
 
     PZ_ExitMonitor(ssl_anti_replay.lock);

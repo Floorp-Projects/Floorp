@@ -325,14 +325,17 @@ TEST_P(TlsConnectGeneric, ConnectResumeClientBothTicketServerTicketForget) {
   SendReceive();
 }
 
+// Tickets last two days maximum; this is a time longer than that.
+static const PRTime kLongerThanTicketLifetime =
+    3LL * 24 * 60 * 60 * PR_USEC_PER_SEC;
+
 TEST_P(TlsConnectGenericResumption, ConnectWithExpiredTicketAtClient) {
-  SSLInt_SetTicketLifetime(1);  // one second
   // This causes a ticket resumption.
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   Connect();
   SendReceive();
 
-  WAIT_(false, 1000);
+  AdvanceTime(kLongerThanTicketLifetime);
 
   Reset();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
@@ -354,7 +357,6 @@ TEST_P(TlsConnectGenericResumption, ConnectWithExpiredTicketAtClient) {
 }
 
 TEST_P(TlsConnectGeneric, ConnectWithExpiredTicketAtServer) {
-  SSLInt_SetTicketLifetime(1);  // one second
   // This causes a ticket resumption.
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   Connect();
@@ -373,7 +375,7 @@ TEST_P(TlsConnectGeneric, ConnectWithExpiredTicketAtServer) {
   EXPECT_TRUE(capture->captured());
   EXPECT_LT(0U, capture->extension().len());
 
-  WAIT_(false, 1000);  // Let the ticket expire on the server.
+  AdvanceTime(kLongerThanTicketLifetime);
 
   Handshake();
   CheckConnected();
@@ -1109,7 +1111,7 @@ TEST_P(TlsConnectGenericResumption, ReConnectAgainTicket) {
                       ssl_auth_rsa_sign, ssl_sig_rsa_pss_rsae_sha256);
 }
 
-void CheckGetInfoResult(uint32_t alpnSize, uint32_t earlyDataSize,
+void CheckGetInfoResult(PRTime now, uint32_t alpnSize, uint32_t earlyDataSize,
                         ScopedCERTCertificate& cert,
                         ScopedSSLResumptionTokenInfo& token) {
   ASSERT_TRUE(cert);
@@ -1125,7 +1127,7 @@ void CheckGetInfoResult(uint32_t alpnSize, uint32_t earlyDataSize,
 
   ASSERT_EQ(earlyDataSize, token->maxEarlyDataSize);
 
-  ASSERT_LT(ssl_TimeUsec(), token->expirationTime);
+  ASSERT_LT(now, token->expirationTime);
 }
 
 // The client should generate a new, randomized session_id
@@ -1175,12 +1177,62 @@ TEST_P(TlsConnectGenericResumptionToken, ConnectResumeGetInfo) {
   ScopedCERTCertificate cert(
       PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
 
-  CheckGetInfoResult(0, 0, cert, token);
+  CheckGetInfoResult(now(), 0, 0, cert, token);
 
   Handshake();
   CheckConnected();
 
   SendReceive();
+}
+
+TEST_P(TlsConnectGenericResumptionToken, RefuseExpiredTicketClient) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
+  SendReceive();
+
+  // Move the clock to the expiration time of the ticket.
+  SSLResumptionTokenInfo tokenInfo = {0};
+  ScopedSSLResumptionTokenInfo token(&tokenInfo);
+  client_->GetTokenInfo(token);
+  AdvanceTime(token->expirationTime - now());
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_TICKET);
+
+  StartConnect();
+  ASSERT_EQ(SECFailure,
+            SSL_SetResumptionToken(client_->ssl_fd(),
+                                   client_->GetResumptionToken().data(),
+                                   client_->GetResumptionToken().size()));
+  EXPECT_EQ(SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR, PORT_GetError());
+}
+
+TEST_P(TlsConnectGenericResumptionToken, RefuseExpiredTicketServer) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  Connect();
+  SendReceive();
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
+  ExpectResumption(RESUME_NONE);
+
+  // Start the handshake and send the ClientHello.
+  StartConnect();
+  ASSERT_EQ(SECSuccess,
+            SSL_SetResumptionToken(client_->ssl_fd(),
+                                   client_->GetResumptionToken().data(),
+                                   client_->GetResumptionToken().size()));
+  client_->Handshake();
+
+  // Move the clock to the expiration time of the ticket.
+  SSLResumptionTokenInfo tokenInfo = {0};
+  ScopedSSLResumptionTokenInfo token(&tokenInfo);
+  client_->GetTokenInfo(token);
+  AdvanceTime(token->expirationTime - now());
+
+  Handshake();
+  CheckConnected();
 }
 
 TEST_P(TlsConnectGenericResumptionToken, ConnectResumeGetInfoAlpn) {
@@ -1205,7 +1257,7 @@ TEST_P(TlsConnectGenericResumptionToken, ConnectResumeGetInfoAlpn) {
   ScopedCERTCertificate cert(
       PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
 
-  CheckGetInfoResult(1, 0, cert, token);
+  CheckGetInfoResult(now(), 1, 0, cert, token);
 
   Handshake();
   CheckConnected();
@@ -1216,7 +1268,7 @@ TEST_P(TlsConnectGenericResumptionToken, ConnectResumeGetInfoAlpn) {
 
 TEST_P(TlsConnectTls13ResumptionToken, ConnectResumeGetInfoZeroRtt) {
   EnableAlpn();
-  SSLInt_RolloverAntiReplay();
+  RolloverAntiReplay();
   ConfigureSessionCache(RESUME_BOTH, RESUME_BOTH);
   server_->Set0RttEnabled(true);
   Connect();
@@ -1240,7 +1292,7 @@ TEST_P(TlsConnectTls13ResumptionToken, ConnectResumeGetInfoZeroRtt) {
   ScopedCERTCertificate cert(
       PK11_FindCertFromNickname(server_->name().c_str(), nullptr));
 
-  CheckGetInfoResult(1, 1024, cert, token);
+  CheckGetInfoResult(now(), 1, 1024, cert, token);
 
   ZeroRttSendReceive(true, true);
   Handshake();
