@@ -21,23 +21,6 @@
 namespace mozilla {
 namespace net {
 
-class SimpleChannel : public nsBaseChannel {
- public:
-  explicit SimpleChannel(UniquePtr<SimpleChannelCallbacks>&& aCallbacks);
-
- protected:
-  virtual ~SimpleChannel() = default;
-
-  virtual nsresult OpenContentStream(bool async, nsIInputStream** streamOut,
-                                     nsIChannel** channel) override;
-
-  virtual nsresult BeginAsyncRead(nsIStreamListener* listener,
-                                  nsIRequest** request) override;
-
- private:
-  UniquePtr<SimpleChannelCallbacks> mCallbacks;
-};
-
 SimpleChannel::SimpleChannel(UniquePtr<SimpleChannelCallbacks>&& aCallbacks)
     : mCallbacks(std::move(aCallbacks)) {
   EnableSynthesizedProgressEvents(true);
@@ -72,31 +55,11 @@ nsresult SimpleChannel::BeginAsyncRead(nsIStreamListener* listener,
   return NS_OK;
 }
 
-class SimpleChannelChild final : public SimpleChannel,
-                                 public nsIChildChannel,
-                                 public PSimpleChannelChild {
- public:
-  explicit SimpleChannelChild(UniquePtr<SimpleChannelCallbacks>&& aCallbacks);
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSICHILDCHANNEL
-
- protected:
-  virtual void ActorDestroy(ActorDestroyReason why) override;
-
- private:
-  virtual ~SimpleChannelChild() = default;
-
-  void AddIPDLReference();
-
-  RefPtr<SimpleChannelChild> mIPDLRef;
-};
-
 NS_IMPL_ISUPPORTS_INHERITED(SimpleChannelChild, SimpleChannel, nsIChildChannel)
 
 SimpleChannelChild::SimpleChannelChild(
     UniquePtr<SimpleChannelCallbacks>&& aCallbacks)
-    : SimpleChannel(std::move(aCallbacks)), mIPDLRef(nullptr) {}
+    : SimpleChannel(std::move(aCallbacks)) {}
 
 NS_IMETHODIMP
 SimpleChannelChild::ConnectParent(uint32_t aId) {
@@ -107,19 +70,19 @@ SimpleChannelChild::ConnectParent(uint32_t aId) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!gNeckoChild->SendPSimpleChannelConstructor(this, aId)) {
+  // Reference freed in DeallocPSimpleChannelChild.
+  if (!gNeckoChild->SendPSimpleChannelConstructor(do_AddRef(this).take(),
+                                                  aId)) {
     return NS_ERROR_FAILURE;
   }
 
-  // IPC now has a ref to us.
-  mIPDLRef = this;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 SimpleChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
                                           nsISupports* aContext) {
-  if (mIPDLRef) {
+  if (CanSend()) {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
@@ -130,15 +93,10 @@ SimpleChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
     return rv;
   }
 
-  if (mIPDLRef) {
+  if (CanSend()) {
     Unused << Send__delete__(this);
   }
   return NS_OK;
-}
-
-void SimpleChannelChild::ActorDestroy(ActorDestroyReason why) {
-  MOZ_ASSERT(mIPDLRef);
-  mIPDLRef = nullptr;
 }
 
 already_AddRefed<nsIChannel> NS_NewSimpleChannelInternal(

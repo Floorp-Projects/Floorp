@@ -8,8 +8,13 @@ with Files('**'):
     BUG_COMPONENT = ('Core', 'Networking: File')
 
 EXPORTS.mozilla.net += [
+    'FileChannelChild.h',
     'FileChannelParent.h',
     'nsFileProtocolHandler.h',
+]
+
+EXPORTS += [
+    'nsFileChannel.h',
 ]
 
 XPIDL_SOURCES += [
