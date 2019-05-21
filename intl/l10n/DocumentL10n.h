@@ -19,14 +19,18 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/l10n/Mutations.h"
+#include "mozilla/dom/DOMOverlaysBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-class Document;
-class Element;
+namespace l10n {
+class Mutations;
+}
 struct L10nKey;
 
 class PromiseResolver final : public PromiseNativeHandler {
@@ -71,7 +75,6 @@ class DocumentL10n final : public nsIObserver,
  public:
   explicit DocumentL10n(Document* aDocument);
   bool Init(nsTArray<nsString>& aResourceIds);
-  void Destroy();
 
  protected:
   virtual ~DocumentL10n();
@@ -81,9 +84,11 @@ class DocumentL10n final : public nsIObserver,
   DocumentL10nState mState;
   nsCOMPtr<mozIDOMLocalization> mDOMLocalization;
   nsCOMPtr<nsIContentSink> mContentSink;
+  RefPtr<l10n::Mutations> mMutations;
 
   already_AddRefed<Promise> MaybeWrapPromise(Promise* aPromise);
   void RegisterObservers();
+  void DisconnectMutations();
 
  public:
   Document* GetParentObject() const { return mDocument; };
@@ -121,13 +126,19 @@ class DocumentL10n final : public nsIObserver,
   void GetAttributes(JSContext* aCx, Element& aElement, L10nKey& aResult,
                      ErrorResult& aRv);
 
-  already_AddRefed<Promise> TranslateFragment(JSContext* aCx, nsINode& aNode,
-                                              ErrorResult& aRv);
+  already_AddRefed<Promise> TranslateFragment(nsINode& aNode, ErrorResult& aRv);
+
+  void GetTranslatables(nsINode& aNode,
+                        Sequence<OwningNonNull<Element>>& aElements,
+                        ErrorResult& aRv);
+
   already_AddRefed<Promise> TranslateElements(
       const Sequence<OwningNonNull<Element>>& aElements, ErrorResult& aRv);
 
   void PauseObserving(ErrorResult& aRv);
   void ResumeObserving(ErrorResult& aRv);
+  static void ReportDOMOverlaysErrors(
+      Document* aDocument, nsTArray<mozilla::dom::DOMOverlaysError>& aErrors);
 
   Promise* Ready();
 
@@ -136,6 +147,9 @@ class DocumentL10n final : public nsIObserver,
   void InitialDocumentTranslationCompleted();
 
   Document* GetDocument() { return mDocument; };
+
+  void OnChange();
+ protected:
 };
 
 }  // namespace dom
