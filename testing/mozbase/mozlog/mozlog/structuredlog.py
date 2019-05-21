@@ -230,7 +230,8 @@ class StructuredLogger(object):
         action = raw_data["action"]
         converted_data = convertor_registry[action].convert_known(**raw_data)
         for k, v in six.iteritems(raw_data):
-            if k not in converted_data:
+            if (k not in converted_data and
+                    k not in convertor_registry[action].optional_args):
                 converted_data[k] = v
 
         data = self._make_log_data(action, converted_data)
@@ -354,7 +355,9 @@ class StructuredLogger(object):
                 SubStatus("expected", default="PASS"),
                 Unicode("message", default=None, optional=True),
                 Unicode("stack", default=None, optional=True),
-                Dict(Any, "extra", default=None, optional=True))
+                Dict(Any, "extra", default=None, optional=True),
+                List(SubStatus, "expected_intermittent", default=None,
+                     optional=True))
     def test_status(self, data):
         """
         Log a test_status message indicating a subtest result. Tests that
@@ -385,7 +388,9 @@ class StructuredLogger(object):
                 Status("expected", default="OK"),
                 Unicode("message", default=None, optional=True),
                 Unicode("stack", default=None, optional=True),
-                Dict(Any, "extra", default=None, optional=True))
+                Dict(Any, "extra", default=None, optional=True),
+                List(Status, "expected_intermittent", default=None,
+                     optional=True))
     def test_end(self, data):
         """
         Log a test_end message indicating that a test completed. For tests

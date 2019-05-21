@@ -9,9 +9,11 @@
  * @module reducers/ast
  */
 
-import type { AstLocation, SymbolDeclarations } from "../workers/parser";
+import { makeBreakpointId } from "../utils/breakpoint";
 
-import type { Source } from "../types";
+import type { SymbolDeclarations } from "../workers/parser";
+
+import type { Source, SourceLocation } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
 
 type EmptyLinesType = number[];
@@ -30,15 +32,13 @@ export type SourceMetaDataMap = { [k: string]: SourceMetaDataType };
 
 export type ASTState = {
   +symbols: SymbolsMap,
-  +outOfScopeLocations: ?Array<AstLocation>,
-  +inScopeLines: ?Array<number>,
+  +inScopeLines: { [string]: Array<number> },
 };
 
 export function initialASTState(): ASTState {
   return {
     symbols: {},
-    outOfScopeLocations: null,
-    inScopeLines: null,
+    inScopeLines: {},
   };
 }
 
@@ -60,16 +60,18 @@ function update(state: ASTState = initialASTState(), action: Action): ASTState {
       };
     }
 
-    case "OUT_OF_SCOPE_LOCATIONS": {
-      return { ...state, outOfScopeLocations: action.locations };
-    }
-
     case "IN_SCOPE_LINES": {
-      return { ...state, inScopeLines: action.lines };
+      return {
+        ...state,
+        inScopeLines: {
+          ...state.inScopeLines,
+          [makeBreakpointId(action.location)]: action.lines,
+        },
+      };
     }
 
     case "RESUME": {
-      return { ...state, outOfScopeLocations: null };
+      return { ...state, inScopeLines: {} };
     }
 
     case "NAVIGATE": {
@@ -120,17 +122,13 @@ export function isSymbolsLoading(state: OuterState, source: ?Source): boolean {
   return symbols.loading;
 }
 
-export function getOutOfScopeLocations(state: OuterState) {
-  return state.ast.outOfScopeLocations;
+export function getInScopeLines(state: OuterState, location: SourceLocation) {
+  const inScopeLines = state.ast.inScopeLines;
+  return inScopeLines[makeBreakpointId(location)];
 }
 
-export function getInScopeLines(state: OuterState) {
-  return state.ast.inScopeLines;
-}
-
-export function isLineInScope(state: OuterState, line: number) {
-  const linesInScope = state.ast.inScopeLines;
-  return linesInScope && linesInScope.includes(line);
+export function hasInScopeLines(state: OuterState, location: SourceLocation) {
+  return !!getInScopeLines(state, location);
 }
 
 export default update;

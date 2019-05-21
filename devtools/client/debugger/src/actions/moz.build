@@ -12,7 +12,6 @@ DIRS += [
 ]
 
 CompiledModules(
-    'ast.js',
     'debuggee.js',
     'event-listeners.js',
     'expressions.js',

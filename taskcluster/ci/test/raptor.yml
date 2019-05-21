@@ -1155,7 +1155,7 @@ raptor-scn-power-idle-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw.*/pgo: ['try', 'trunk', 'mozilla-central']
+            android-hw.*/pgo: ['try', 'trunk', 'mozilla-beta', 'mozilla-central']
             default: ['try']
     tier: 3
     max-run-time: 1800

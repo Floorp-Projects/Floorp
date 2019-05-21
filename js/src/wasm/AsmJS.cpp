@@ -572,12 +572,9 @@ static ParseNode* ElemIndex(ParseNode* pn) {
   return &pn->as<PropertyByValue>().key();
 }
 
-static inline JSFunction* FunctionObject(FunctionNode* funNode) {
-  return funNode->funbox()->function();
-}
 
 static inline PropertyName* FunctionName(FunctionNode* funNode) {
-  if (JSAtom* name = FunctionObject(funNode)->explicitName()) {
+  if (JSAtom* name = funNode->funbox()->explicitName()) {
     return name->asPropertyName();
   }
   return nullptr;
@@ -6037,7 +6034,7 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
   if (!funbox) {
     return false;
   }
-  funbox->initWithEnclosingParseContext(outerpc, FunctionSyntaxKind::Statement);
+  funbox->initWithEnclosingParseContext(outerpc, fun, FunctionSyntaxKind::Statement);
 
   Directives newDirectives = directives;
   SourceParseContext funpc(&m.parser(), funbox, &newDirectives);

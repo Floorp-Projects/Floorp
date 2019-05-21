@@ -10,8 +10,8 @@
 
 namespace IPC {
 
-void ParamTraits<nsIReferrerInfo>::Write(Message* aMsg,
-                                         nsIReferrerInfo* aParam) {
+void ParamTraits<nsIReferrerInfo*>::Write(Message* aMsg,
+                                          nsIReferrerInfo* aParam) {
   bool isNull = !aParam;
   WriteParam(aMsg, isNull);
   if (isNull) {
@@ -26,9 +26,9 @@ void ParamTraits<nsIReferrerInfo>::Write(Message* aMsg,
   WriteParam(aMsg, infoString);
 }
 
-bool ParamTraits<nsIReferrerInfo>::Read(const Message* aMsg,
-                                        PickleIterator* aIter,
-                                        RefPtr<nsIReferrerInfo>* aResult) {
+bool ParamTraits<nsIReferrerInfo*>::Read(const Message* aMsg,
+                                         PickleIterator* aIter,
+                                         RefPtr<nsIReferrerInfo>* aResult) {
   bool isNull;
   if (!ReadParam(aMsg, aIter, &isNull)) {
     return false;

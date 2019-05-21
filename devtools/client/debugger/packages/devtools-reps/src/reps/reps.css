@@ -268,17 +268,25 @@ button.open-inspector {
 /* Jump to definition button */
 
 button.jump-definition {
-  mask: url(resource://devtools/client/shared/components/reps/images/jump-definition.svg)
-    no-repeat;
   display: inline-block;
-  background-color: var(--theme-icon-color);
   height: 16px;
   margin-left: 0.25em;
   vertical-align: middle;
+  background: 0% 50%
+    url("resource://devtools/client/shared/components/reps/images/jump-definition.svg")
+    no-repeat;
+  border-color: transparent;
+  stroke: var(--theme-icon-color);
+  -moz-context-properties: stroke;
+  cursor: pointer;
 }
 
 .jump-definition:hover {
-  background-color: var(--theme-icon-checked-color);
+  stroke: var(--theme-icon-checked-color);
+}
+
+.tree-node.focused .jump-definition {
+  stroke: currentColor;
 }
 
 /******************************************************************************/

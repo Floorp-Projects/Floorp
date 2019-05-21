@@ -48,10 +48,11 @@ export const getVisibleSelectedFrame: Selector<?{
       return null;
     }
 
-    const { id } = selectedFrame;
+    const { id, displayName } = selectedFrame;
 
     return {
       id,
+      displayName,
       location: _getSelectedLocation(selectedFrame, selectedLocation),
     };
   }

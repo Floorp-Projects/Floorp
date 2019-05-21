@@ -11,20 +11,11 @@ import {
   actions,
   makeSource,
   makeOriginalSource,
-  makeFrame,
   waitForState,
 } from "../../utils/test-head";
 
 import readFixture from "./helpers/readFixture";
-const {
-  getSymbols,
-  getOutOfScopeLocations,
-  getInScopeLines,
-  isSymbolsLoading,
-  getFramework,
-} = selectors;
-
-import { prefs } from "../../utils/prefs";
+const { getSymbols, isSymbolsLoading, getFramework } = selectors;
 
 const threadClient = {
   sourceContents: async ({ source }) => ({
@@ -52,7 +43,6 @@ const sourceMaps = {
 const sourceTexts = {
   "base.js": "function base(boo) {}",
   "foo.js": "function base(boo) { return this.bazz; } outOfScope",
-  "scopes.js": readFixture("scopes.js"),
   "reactComponent.js/originalSource": readFixture("reactComponent.js"),
   "reactFuncComponent.js/originalSource": readFixture("reactFuncComponent.js"),
 };
@@ -133,66 +123,6 @@ describe("ast", () => {
 
         expect(getFramework(getState(), base)).toBe(undefined);
       });
-    });
-  });
-
-  describe("getOutOfScopeLocations", () => {
-    beforeEach(async () => {
-      prefs.autoPrettyPrint = false;
-    });
-
-    it("with selected line", async () => {
-      const store = createStore(threadClient);
-      const { dispatch, getState, cx } = store;
-      const source = await dispatch(
-        actions.newGeneratedSource(makeSource("scopes.js"))
-      );
-
-      await dispatch(
-        actions.selectLocation(cx, { sourceId: "scopes.js", line: 5 })
-      );
-
-      // Make sure the state has finished updating before pausing.
-      await waitForState(store, state => {
-        const symbols = getSymbols(state, source);
-        return symbols && !symbols.loading && getOutOfScopeLocations(state);
-      });
-
-      const frame = makeFrame({ id: "1", sourceId: "scopes.js" });
-      await dispatch(
-        actions.paused({
-          thread: "FakeThread",
-          why: { type: "debuggerStatement" },
-          frame,
-          frames: [frame],
-        })
-      );
-
-      const ncx = selectors.getThreadContext(getState());
-      await dispatch(actions.setOutOfScopeLocations(ncx));
-
-      await waitForState(store, state => getOutOfScopeLocations(state));
-
-      const locations = getOutOfScopeLocations(getState());
-      const lines = getInScopeLines(getState());
-
-      expect(locations).toMatchSnapshot();
-      expect(lines).toMatchSnapshot();
-    });
-
-    it("without a selected line", async () => {
-      const { dispatch, getState, cx } = createStore(threadClient);
-      await dispatch(actions.newGeneratedSource(makeSource("base.js")));
-      await dispatch(actions.selectSource(cx, "base.js"));
-
-      const locations = getOutOfScopeLocations(getState());
-      // const lines = getInScopeLines(getState());
-
-      expect(locations).toEqual(null);
-
-      // This check is disabled as locations that are in/out of scope may not
-      // have completed yet when the selectSource promise finishes.
-      // expect(lines).toEqual([1]);
     });
   });
 });

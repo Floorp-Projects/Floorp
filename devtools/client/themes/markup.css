@@ -3,18 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --markup-hidden-attr-name-color: #BA89B8;
-  --markup-hidden-attr-value-color: #5C6D87;
-  --markup-hidden-punctuation-color: #909090;
+  --markup-hidden-attr-name-color: var(--grey-43);
+  --markup-hidden-attr-value-color: var(--grey-55);
+  --markup-hidden-punctuation-color: var(--grey-43);
   --markup-pseudoclass-disk-color: var(--yellow-60);
-  --markup-hidden-tag-color: #97A4B3;
+  --markup-hidden-tag-color: var(--grey-50);
   --markup-outline: var(--theme-splitter-color);
 }
 
 .theme-dark:root {
-  --markup-hidden-attr-name-color: #B07EB3;
-  --markup-hidden-attr-value-color: #9893A3;
-  --markup-hidden-punctuation-color: #909090;
+  --markup-hidden-attr-name-color: #787878;
+  --markup-hidden-attr-value-color: #a4a4a4;
+  --markup-hidden-punctuation-color: #787878;
   --markup-hidden-tag-color: #AFB5BF;
   --markup-outline: var(--theme-selection-background);
 }

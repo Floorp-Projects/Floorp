@@ -68,7 +68,7 @@ class ProfilerParent final : public PProfilerParent {
 
   void Init();
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
-  void DeallocPProfilerParent() override;
+  void ActorDealloc() override;
 
   RefPtr<ProfilerParent> mSelfRef;
   nsTArray<MozPromiseHolder<SingleProcessProfilePromise>>

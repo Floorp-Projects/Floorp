@@ -24,7 +24,7 @@ already_AddRefed<nsIURI> DeserializeURI(const URIParams& aParams);
 already_AddRefed<nsIURI> DeserializeURI(const Maybe<URIParams>& aParams);
 
 template <>
-struct IPDLParamTraits<nsIURI> {
+struct IPDLParamTraits<nsIURI*> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor, nsIURI* aParam) {
     Maybe<URIParams> params;
     SerializeURI(aParam, params);

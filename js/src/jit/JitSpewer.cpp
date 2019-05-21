@@ -382,6 +382,7 @@ static void PrintHelpAndExit(int status = 0) {
       "  trackopts-ext Encoding information about optimization tracking\n"
       "  dump-mir-expr Dump the MIR expressions\n"
       "  cfg           Control flow graph generation\n"
+      "  scriptstats   Tracelogger summary stats\n"
       "  all           Everything\n"
       "\n"
       "  bl-aborts     Baseline compiler abort messages\n"
@@ -485,6 +486,8 @@ void jit::CheckLogging() {
       EnableChannel(JitSpew_MIRExpressions);
     } else if (IsFlag(found, "cfg")) {
       EnableChannel(JitSpew_CFG);
+    } else if (IsFlag(found, "scriptstats")) {
+      EnableChannel(JitSpew_ScriptStats);
     } else if (IsFlag(found, "all")) {
       LoggingBits = uint64_t(-1);
     } else if (IsFlag(found, "bl-aborts")) {

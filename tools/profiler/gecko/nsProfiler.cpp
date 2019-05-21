@@ -104,10 +104,21 @@ nsProfiler::CanProfile(bool* aCanProfile) {
   return NS_OK;
 }
 
+static nsresult FillVectorFromStringArray(Vector<const char*>& aVector,
+                                          const nsTArray<nsCString>& aArray) {
+  if (NS_WARN_IF(!aVector.reserve(aArray.Length()))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  for (auto& entry : aArray) {
+    aVector.infallibleAppend(entry.get());
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
-                          const char** aFeatures, uint32_t aFeatureCount,
-                          const char** aFilters, uint32_t aFilterCount,
+                          const nsTArray<nsCString>& aFeatures,
+                          const nsTArray<nsCString>& aFilters,
                           double aDuration) {
   if (mLockedForPrivateBrowsing) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -115,10 +126,22 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
 
   ResetGathering();
 
-  uint32_t features = ParseFeaturesFromStringArray(aFeatures, aFeatureCount);
+  Vector<const char*> featureStringVector;
+  nsresult rv = FillVectorFromStringArray(featureStringVector, aFeatures);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  uint32_t features = ParseFeaturesFromStringArray(
+      featureStringVector.begin(), featureStringVector.length());
   Maybe<double> duration = aDuration > 0.0 ? Some(aDuration) : Nothing();
-  profiler_start(aEntries, aInterval, features, aFilters, aFilterCount,
-                 duration);
+
+  Vector<const char*> filterStringVector;
+  rv = FillVectorFromStringArray(filterStringVector, aFilters);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  profiler_start(aEntries, aInterval, features, filterStringVector.begin(),
+                 filterStringVector.length(), duration);
 
   return NS_OK;
 }
@@ -476,8 +499,8 @@ nsProfiler::IsActive(bool* aIsActive) {
   return NS_OK;
 }
 
-static void GetArrayOfStringsForFeatures(uint32_t aFeatures, uint32_t* aCount,
-                                         char*** aFeatureList) {
+static void GetArrayOfStringsForFeatures(uint32_t aFeatures,
+                                         nsTArray<nsCString>& aFeatureList) {
 #define COUNT_IF_SET(n_, str_, Name_, desc_)    \
   if (ProfilerFeature::Has##Name_(aFeatures)) { \
     len++;                                      \
@@ -489,34 +512,29 @@ static void GetArrayOfStringsForFeatures(uint32_t aFeatures, uint32_t* aCount,
 
 #undef COUNT_IF_SET
 
-  auto featureList = static_cast<char**>(moz_xmalloc(len * sizeof(char*)));
+  aFeatureList.SetCapacity(len);
 
 #define DUP_IF_SET(n_, str_, Name_, desc_)      \
   if (ProfilerFeature::Has##Name_(aFeatures)) { \
-    featureList[i] = moz_xstrdup(str_);         \
-    i++;                                        \
+    aFeatureList.AppendElement(str_);           \
   }
 
   // Insert the strings for the features in use.
-  size_t i = 0;
   PROFILER_FOR_EACH_FEATURE(DUP_IF_SET)
 
 #undef DUP_IF_SET
-
-  *aFeatureList = featureList;
-  *aCount = len;
 }
 
 NS_IMETHODIMP
-nsProfiler::GetFeatures(uint32_t* aCount, char*** aFeatureList) {
+nsProfiler::GetFeatures(nsTArray<nsCString>& aFeatureList) {
   uint32_t features = profiler_get_available_features();
-  GetArrayOfStringsForFeatures(features, aCount, aFeatureList);
+  GetArrayOfStringsForFeatures(features, aFeatureList);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsProfiler::GetAllFeatures(uint32_t* aCount, char*** aFeatureList) {
-  GetArrayOfStringsForFeatures((uint32_t)-1, aCount, aFeatureList);
+nsProfiler::GetAllFeatures(nsTArray<nsCString>& aFeatureList) {
+  GetArrayOfStringsForFeatures((uint32_t)-1, aFeatureList);
   return NS_OK;
 }
 

@@ -214,7 +214,7 @@ void ImageBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-void ImageBridgeChild::DeallocPImageBridgeChild() { this->Release(); }
+void ImageBridgeChild::ActorDealloc() { this->Release(); }
 
 void ImageBridgeChild::CreateImageClientSync(SynchronousTask* aTask,
                                              RefPtr<ImageClient>* result,

@@ -56,10 +56,7 @@ crashtest:
             android-em-4.*\/(?:opt|pgo)?: 4
             android-em-7.*: 1
             default: 1
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     max-run-time:
         by-test-platform:
             android-em.*: 7200
@@ -88,7 +85,6 @@ jsreftest:
             linux64-ccov/.*: 5
             linux64-qr/opt: 4
             linux64-qr/debug: 5
-            linux32/debug: 5
             linux64/debug: 5
             macosx.*64-ccov/debug: 5
             default: 3
@@ -124,10 +120,7 @@ reftest:
             windows.*/debug: 4
             windows10-64-ccov/debug: 6
             default: 8
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     max-run-time:
         by-test-platform:
             android-em.*: 7200

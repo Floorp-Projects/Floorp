@@ -48,7 +48,7 @@ class VideoDecoderManagerParent final : public PVideoDecoderManagerParent {
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
-  void DeallocPVideoDecoderManagerParent() override;
+  void ActorDealloc() override;
 
  private:
   explicit VideoDecoderManagerParent(

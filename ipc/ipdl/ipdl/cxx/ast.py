@@ -13,6 +13,13 @@ class Visitor:
     def visitWhitespace(self, ws):
         pass
 
+    def visitVerbatimNode(self, verb):
+        pass
+
+    def visitGroupNode(self, group):
+        for node in group.nodes:
+            node.accept(self)
+
     def visitFile(self, f):
         for thing in f.stuff:
             thing.accept(self)
@@ -239,6 +246,28 @@ class Whitespace(Node):
 Whitespace.NL = Whitespace('\n')
 
 
+class VerbatimNode(Node):
+    # A block of text to be written verbatim to the output file.
+    #
+    # NOTE: This node is usually created by `code`. See `code.py` for details.
+    # FIXME: Merge Whitespace and VerbatimNode? They're identical.
+    def __init__(self, text, indent=0):
+        Node.__init__(self)
+        self.text = text
+        self.indent = indent
+
+
+class GroupNode(Node):
+    # A group of nodes to be treated as a single node. These nodes have an
+    # optional indentation level which should be applied when generating them.
+    #
+    # NOTE: This node is usually created by `code`. See `code.py` for details.
+    def __init__(self, nodes, offset=0):
+        Node.__init__(self)
+        self.nodes = nodes
+        self.offset = offset
+
+
 class File(Node):
     def __init__(self, filename):
         Node.__init__(self)
@@ -266,6 +295,10 @@ class File(Node):
         for s in stmts:
             self.addstmt(s)
 
+    def addcode(self, tmpl, **context):
+        from ipdl.cxx.code import StmtCode
+        self.addstmt(StmtCode(tmpl, **context))
+
 
 class CppDirective(Node):
     '''represents |#[directive] [rest]|, where |rest| is any string'''
@@ -289,6 +322,10 @@ class Block(Node):
     def addstmts(self, stmts):
         for s in stmts:
             self.addstmt(s)
+
+    def addcode(self, tmpl, **context):
+        from ipdl.cxx.code import StmtCode
+        self.addstmt(StmtCode(tmpl, **context))
 
 # ------------------------------
 # type and decl thingies
@@ -875,9 +912,13 @@ class StmtSwitch(Block):
         assert (isinstance(block, StmtBreak)
                 or isinstance(block, StmtReturn)
                 or isinstance(block, StmtSwitch)
+                or isinstance(block, GroupNode)
+                or isinstance(block, VerbatimNode)
                 or (hasattr(block, 'stmts')
                     and (isinstance(block.stmts[-1], StmtBreak)
-                         or isinstance(block.stmts[-1], StmtReturn))))
+                         or isinstance(block.stmts[-1], StmtReturn)
+                         or isinstance(block.stmts[-1], GroupNode)
+                         or isinstance(block.stmts[-1], VerbatimNode))))
         self.addstmt(case)
         self.addstmt(block)
         self.nr_cases += 1
