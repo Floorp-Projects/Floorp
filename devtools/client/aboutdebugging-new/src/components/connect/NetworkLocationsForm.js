@@ -83,7 +83,12 @@ class NetworkLocationsForm extends PureComponent {
           id: errorMessageId,
           "$host-value": errorHostValue,
         },
-        dom.p({}, errorMessageId)
+        dom.p(
+          {
+          className: "technical-text",
+          },
+          errorMessageId
+        )
       ),
     );
   }
