@@ -103,17 +103,7 @@ this.withMockNormandyApi = function(testFunction) {
     const mockApi = {actions: [], recipes: [], implementations: {}, extensionDetails: {}};
 
     // Use callsFake instead of resolves so that the current values in mockApi are used.
-    mockApi.fetchActions = sinon.stub(NormandyApi, "fetchActions").callsFake(async () => mockApi.actions);
     mockApi.fetchRecipes = sinon.stub(NormandyApi, "fetchRecipes").callsFake(async () => mockApi.recipes);
-    mockApi.fetchImplementation = sinon.stub(NormandyApi, "fetchImplementation").callsFake(
-      async action => {
-        const impl = mockApi.implementations[action.name];
-        if (!impl) {
-          throw new Error(`Missing implementation for ${action.name}`);
-        }
-        return impl;
-      }
-    );
     mockApi.fetchExtensionDetails = sinon.stub(NormandyApi, "fetchExtensionDetails").callsFake(
       async extensionId => {
         const details = mockApi.extensionDetails[extensionId];
@@ -127,9 +117,7 @@ this.withMockNormandyApi = function(testFunction) {
     try {
       await testFunction(mockApi, ...args);
     } finally {
-      mockApi.fetchActions.restore();
       mockApi.fetchRecipes.restore();
-      mockApi.fetchImplementation.restore();
       mockApi.fetchExtensionDetails.restore();
     }
   };
