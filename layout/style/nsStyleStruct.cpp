@@ -273,6 +273,8 @@ static inline BorderRadius ZeroBorderRadius() {
 
 nsStyleBorder::nsStyleBorder(const Document& aDocument)
     : mBorderRadius(ZeroBorderRadius()),
+      mBorderImageWidth(
+          StyleRectWithAllSides(StyleBorderImageSideWidth::Number(1.))),
       mBorderImageOutset(
           StyleRectWithAllSides(StyleNonNegativeLengthOrNumber::Number(0.))),
       mBorderImageSlice(
@@ -292,7 +294,6 @@ nsStyleBorder::nsStyleBorder(const Document& aDocument)
 
   nscoord medium = kMediumBorderWidth;
   NS_FOR_CSS_SIDES(side) {
-    mBorderImageWidth.Set(side, nsStyleCoord(1.0f, eStyleUnit_Factor));
     mBorder.Side(side) = medium;
     mBorderStyle[side] = StyleBorderStyle::None;
   }
@@ -930,7 +931,8 @@ void StyleShapeSource::DoCopy(const StyleShapeSource& aOther) {
       break;
 
     case StyleShapeSourceType::Shape: {
-      UniquePtr<StyleBasicShape> shape(Servo_CloneBasicShape(&aOther.BasicShape()));
+      UniquePtr<StyleBasicShape> shape(
+          Servo_CloneBasicShape(&aOther.BasicShape()));
       // TODO(emilio): This could be a copy-ctor call like above if we teach
       // cbindgen to generate copy-constructors for tagged unions.
       SetBasicShape(std::move(shape), aOther.GetReferenceBox());
@@ -2459,7 +2461,6 @@ static bool AnyLayerIsElementImage(const nsStyleImageLayers& aLayers) {
 
 nsChangeHint nsStyleImageLayers::CalcDifference(
     const nsStyleImageLayers& aNewLayers, LayerType aType) const {
-
   nsChangeHint hint = nsChangeHint(0);
 
   // If the number of visible images changes, then it's easy-peasy.
@@ -2486,8 +2487,8 @@ nsChangeHint nsStyleImageLayers::CalcDifference(
           moreLayersLayer.CalcDifference(lessLayersLayer);
       if (layerDifference && (IsElementImage(moreLayersLayer) ||
                               IsElementImage(lessLayersLayer))) {
-        layerDifference |= nsChangeHint_UpdateEffects |
-                           nsChangeHint_RepaintFrame;
+        layerDifference |=
+            nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
       }
       hint |= layerDifference;
       continue;
@@ -3085,9 +3086,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   MOZ_COUNT_CTOR(nsStyleDisplay);
 }
 
-nsStyleDisplay::~nsStyleDisplay() {
-  MOZ_COUNT_DTOR(nsStyleDisplay);
-}
+nsStyleDisplay::~nsStyleDisplay() { MOZ_COUNT_DTOR(nsStyleDisplay); }
 
 void nsStyleDisplay::TriggerImageLoads(Document& aDocument,
                                        const nsStyleDisplay* aOldStyle) {
@@ -3966,9 +3965,7 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
-nsStyleUIReset::~nsStyleUIReset() {
-  MOZ_COUNT_DTOR(nsStyleUIReset);
-}
+nsStyleUIReset::~nsStyleUIReset() { MOZ_COUNT_DTOR(nsStyleUIReset); }
 
 nsChangeHint nsStyleUIReset::CalcDifference(
     const nsStyleUIReset& aNewData) const {
