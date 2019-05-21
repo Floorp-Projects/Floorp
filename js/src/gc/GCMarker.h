@@ -255,10 +255,6 @@ class GCMarker : public JSTracer {
     traverseEdge(source, target);
   }
 
-  // Notes a weak graph edge for later sweeping.
-  template <typename T>
-  void noteWeakEdge(T* edge);
-
   /*
    * Care must be taken changing the mark color from gray to black. The cycle
    * collector depends on the invariant that there are no black to gray edges

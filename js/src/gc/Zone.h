@@ -389,16 +389,6 @@ class Zone : public JS::shadow::Zone,
  public:
   GrayRootVector& gcGrayRoots() { return gcGrayRoots_.ref(); }
 
-  // This zone's weak edges found via graph traversal during marking,
-  // preserved for re-scanning during sweeping.
-  using WeakEdges = js::Vector<js::gc::TenuredCell**, 0, js::SystemAllocPolicy>;
-
- private:
-  js::ZoneOrGCTaskData<WeakEdges> gcWeakRefs_;
-
- public:
-  WeakEdges& gcWeakRefs() { return gcWeakRefs_.ref(); }
-
  private:
   // List of non-ephemeron weak containers to sweep during
   // beginSweepingSweepGroup.

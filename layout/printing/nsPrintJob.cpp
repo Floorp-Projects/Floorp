@@ -534,16 +534,21 @@ void nsPrintJob::DestroyPrintingData() { mPrt = nullptr; }
 
 //--------------------------------------------------------
 nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
-                                nsIDocShell* aContainer, Document* aDocument,
+                                nsIDocShell* aDocShell, Document* aOriginalDoc,
                                 float aScreenDPI) {
   NS_ENSURE_ARG_POINTER(aDocViewerPrint);
-  NS_ENSURE_ARG_POINTER(aContainer);
-  NS_ENSURE_ARG_POINTER(aDocument);
+  NS_ENSURE_ARG_POINTER(aDocShell);
+  NS_ENSURE_ARG_POINTER(aOriginalDoc);
 
   mDocViewerPrint = aDocViewerPrint;
-  mContainer = do_GetWeakReference(aContainer);
-  mDocument = aDocument;
+  mDocShell = do_GetWeakReference(aDocShell);
   mScreenDPI = aScreenDPI;
+
+  // XXX We should not be storing this.  The original document that the user
+  // selected to print can be mutated while print preview is open.  Anything
+  // we need to know about the original document should be checked and stored
+  // here instead.
+  mOriginalDoc = aOriginalDoc;
 
   return NS_OK;
 }
@@ -572,7 +577,7 @@ nsresult nsPrintJob::Cancelled() {
 // No return code - if this fails, there isn't much we can do
 void nsPrintJob::SuppressPrintPreviewUserEvents() {
   if (!mPrt->mPPEventSuppressor) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mContainer);
+    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShell);
     if (!docShell) {
       return;
     }
@@ -625,14 +630,14 @@ static void DumpLayoutData(const char* aTitleStr, const char* aURLStr,
 nsresult nsPrintJob::CommonPrint(bool aIsPrintPreview,
                                  nsIPrintSettings* aPrintSettings,
                                  nsIWebProgressListener* aWebProgressListener,
-                                 Document* aDoc) {
+                                 Document* aSourceDoc) {
   // Callers must hold a strong reference to |this| to ensure that we stay
   // alive for the duration of this method, because our main owning reference
   // (on nsDocumentViewer) might be cleared during this function (if we cause
   // script to run and it cancels the print operation).
 
   nsresult rv = DoCommonPrint(aIsPrintPreview, aPrintSettings,
-                              aWebProgressListener, aDoc);
+                              aWebProgressListener, aSourceDoc);
   if (NS_FAILED(rv)) {
     if (aIsPrintPreview) {
       mIsCreatingPrintPreview = false;
@@ -653,7 +658,7 @@ nsresult nsPrintJob::CommonPrint(bool aIsPrintPreview,
 nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
                                    nsIPrintSettings* aPrintSettings,
                                    nsIWebProgressListener* aWebProgressListener,
-                                   Document* aDoc) {
+                                   Document* aSourceDoc) {
   nsresult rv;
 
   if (aIsPrintPreview) {
@@ -738,13 +743,13 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   bool isSelection = IsThereARangeSelection(printData->mCurrentFocusWin);
 
   // Get the docshell for this documentviewer
-  nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer, &rv));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
     if (aIsPrintPreview) {
       nsCOMPtr<nsIContentViewer> viewer;
-      webContainer->GetContentViewer(getter_AddRefs(viewer));
+      docShell->GetContentViewer(getter_AddRefs(viewer));
       if (viewer && viewer->GetDocument() &&
           viewer->GetDocument()->IsShowing()) {
         viewer->GetDocument()->OnPageHide(false, nullptr);
@@ -753,14 +758,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
-    rv = printData->mPrintObject->Init(webContainer, aDoc, aIsPrintPreview);
+    rv = printData->mPrintObject->Init(docShell, aSourceDoc, aIsPrintPreview);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(
         printData->mPrintDocList.AppendElement(printData->mPrintObject.get()),
         NS_ERROR_OUT_OF_MEMORY);
 
-    printData->mIsParentAFrameSet = IsParentAFrameSet(webContainer);
+    printData->mIsParentAFrameSet = IsParentAFrameSet(docShell);
     printData->mPrintObject->mFrameType =
         printData->mIsParentAFrameSet ? eFrameSet : eDoc;
 
@@ -791,7 +796,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   MapContentToWebShells(printData->mPrintObject, printData->mPrintObject);
 
   printData->mIsIFrameSelected = IsThereAnIFrameSelected(
-      webContainer, printData->mCurrentFocusWin, printData->mIsParentAFrameSet);
+      docShell, printData->mCurrentFocusWin, printData->mIsParentAFrameSet);
 
   // Setup print options for UI
   if (printData->mIsParentAFrameSet) {
@@ -847,7 +852,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
         nsPIDOMWindowOuter* domWin = nullptr;
         // We leave domWin as nullptr to indicate a call for print preview.
         if (!aIsPrintPreview) {
-          domWin = mDocument->GetWindow();
+          domWin = mOriginalDoc->GetWindow();
           NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
         }
 
@@ -1035,17 +1040,17 @@ nsresult nsPrintJob::Print(nsIPrintSettings* aPrintSettings,
   // as in print preview.
   Document* doc = mPrtPreview && mPrtPreview->mPrintObject
                       ? mPrtPreview->mPrintObject->mDocument
-                      : mDocument;
+                      : mOriginalDoc;
 
   return CommonPrint(false, aPrintSettings, aWebProgressListener, doc);
 }
 
 nsresult nsPrintJob::PrintPreview(
-    nsIPrintSettings* aPrintSettings, mozIDOMWindowProxy* aChildDOMWin,
+    Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
     nsIWebProgressListener* aWebProgressListener) {
   // Get the DocShell and see if it is busy
   // (We can't Print Preview this document if it is still busy)
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   NS_ENSURE_STATE(docShell);
 
   auto busyFlags = docShell->GetBusyFlags();
@@ -1055,34 +1060,28 @@ nsresult nsPrintJob::PrintPreview(
     return NS_ERROR_FAILURE;
   }
 
-  auto* window = nsPIDOMWindowOuter::From(aChildDOMWin);
-  NS_ENSURE_STATE(window);
-  nsCOMPtr<Document> doc = window->GetDoc();
-  NS_ENSURE_STATE(doc);
-
   // Document is not busy -- go ahead with the Print Preview
-  return CommonPrint(true, aPrintSettings, aWebProgressListener, doc);
+  return CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
 }
 
 //----------------------------------------------------------------------------------
 bool nsPrintJob::IsFramesetDocument() const {
-  nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer));
-  return IsParentAFrameSet(webContainer);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
+  return IsParentAFrameSet(docShell);
 }
 
 //----------------------------------------------------------------------------------
 bool nsPrintJob::IsIFrameSelected() {
   // Get the docshell for this documentviewer
-  nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   // Get the currently focused window
   nsCOMPtr<nsPIDOMWindowOuter> currentFocusWin = FindFocusedDOMWindow();
-  if (currentFocusWin && webContainer) {
+  if (currentFocusWin && docShell) {
     // Get whether the doc contains a frameset
     // Also, check to see if the currently focus docshell
     // is a child of this docshell
     bool isParentFrameSet;
-    return IsThereAnIFrameSelected(webContainer, currentFocusWin,
-                                   isParentFrameSet);
+    return IsThereAnIFrameSelected(docShell, currentFocusWin, isParentFrameSet);
   }
   return false;
 }
@@ -1215,7 +1214,7 @@ void nsPrintJob::ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify) {
     nsCOMPtr<nsIPrintingPromptService> printPromptService(
         do_GetService(kPrintingPromptService));
     if (printPromptService) {
-      nsPIDOMWindowOuter* domWin = mDocument->GetWindow();
+      nsPIDOMWindowOuter* domWin = mOriginalDoc->GetWindow();
       if (!domWin) return;
 
       nsCOMPtr<nsIDocShell> docShell = domWin->GetDocShell();
@@ -2617,14 +2616,14 @@ static bool DocHasPrintCallbackCanvas(Document* aDoc) {
  * https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement#Properties
  */
 bool nsPrintJob::HasPrintCallbackCanvas() {
-  if (!mDocument) {
+  if (!mOriginalDoc) {
     return false;
   }
-  // First check this mDocument.
+  // First check this mOriginalDoc.
   bool result = false;
-  DocHasPrintCallbackCanvas(mDocument, static_cast<void*>(&result));
+  DocHasPrintCallbackCanvas(mOriginalDoc, static_cast<void*>(&result));
   // Also check the sub documents.
-  return result || DocHasPrintCallbackCanvas(mDocument);
+  return result || DocHasPrintCallbackCanvas(mOriginalDoc);
 }
 
 //-------------------------------------------------------
@@ -2823,7 +2822,7 @@ already_AddRefed<nsPIDOMWindowOuter> nsPrintJob::FindFocusedDOMWindow() const {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, nullptr);
 
-  nsPIDOMWindowOuter* window = mDocument->GetWindow();
+  nsPIDOMWindowOuter* window = mOriginalDoc->GetWindow();
   NS_ENSURE_TRUE(window, nullptr);
 
   nsCOMPtr<nsPIDOMWindowOuter> rootWindow = window->GetPrivateRoot();
@@ -2852,7 +2851,7 @@ bool nsPrintJob::IsWindowsInOurSubTree(nsPIDOMWindowOuter* window) const {
 
     if (docShell) {
       // get this DocViewer docshell
-      nsCOMPtr<nsIDocShell> thisDVDocShell(do_QueryReferent(mContainer));
+      nsCOMPtr<nsIDocShell> thisDVDocShell(do_QueryReferent(mDocShell));
       while (!found) {
         if (docShell) {
           if (docShell == thisDVDocShell) {
@@ -3170,7 +3169,6 @@ void nsPrintJob::TurnScriptingOn(bool aDoTurnOn) {
     return;
   }
 
-  NS_ASSERTION(mDocument, "We MUST have a document.");
   // First, get the script global object from the document...
 
   for (uint32_t i = 0; i < printData->mPrintDocList.Length(); i++) {
