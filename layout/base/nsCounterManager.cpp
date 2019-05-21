@@ -25,33 +25,45 @@ bool nsCounterUseNode::InitTextFrame(nsGenConList* aList,
                                      nsIFrame* aTextFrame) {
   nsCounterNode::InitTextFrame(aList, aPseudoFrame, aTextFrame);
 
-  nsCounterList* counterList = static_cast<nsCounterList*>(aList);
+  auto* counterList = static_cast<nsCounterList*>(aList);
   counterList->Insert(this);
   aPseudoFrame->AddStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE);
-  bool dirty = counterList->IsDirty();
-  if (!dirty) {
-    if (counterList->IsLast(this)) {
-      Calc(counterList);
-      nsAutoString contentString;
-      GetText(contentString);
-      aTextFrame->GetContent()->AsText()->SetText(contentString, false);
-    } else {
-      // In all other cases (list already dirty or node not at the end),
-      // just start with an empty string for now and when we recalculate
-      // the list we'll change the value to the right one.
-      counterList->SetDirty();
-      return true;
-    }
+  // If the list is already dirty, or the node is not at the end, just start
+  // with an empty string for now and when we recalculate the list we'll change
+  // the value to the right one.
+  if (counterList->IsDirty()) {
+    return false;
   }
-
+  if (!counterList->IsLast(this)) {
+    counterList->SetDirty();
+    return true;
+  }
+  Calc(counterList, /* aNotify = */ false);
   return false;
+}
+
+bool nsCounterUseNode::InitBullet(nsGenConList* aList, nsIFrame* aBullet) {
+  MOZ_ASSERT(aBullet->IsBulletFrame());
+  MOZ_ASSERT(aBullet->Style()->GetPseudoType() == PseudoStyleType::marker);
+  MOZ_ASSERT(mForLegacyBullet);
+  return InitTextFrame(aList, aBullet, nullptr);
 }
 
 // assign the correct |mValueAfter| value to a node that has been inserted
 // Should be called immediately after calling |Insert|.
-void nsCounterUseNode::Calc(nsCounterList* aList) {
+void nsCounterUseNode::Calc(nsCounterList* aList, bool aNotify) {
   NS_ASSERTION(!aList->IsDirty(), "Why are we calculating with a dirty list?");
   mValueAfter = nsCounterList::ValueBefore(this);
+  if (mText) {
+    nsAutoString contentString;
+    GetText(contentString);
+    mText->SetText(contentString, aNotify);
+  } else if (mForLegacyBullet) {
+    MOZ_ASSERT_IF(mPseudoFrame, mPseudoFrame->IsBulletFrame());
+    if (nsBulletFrame* f = do_QueryFrame(mPseudoFrame)) {
+      f->SetOrdinal(mValueAfter, aNotify);
+    }
+  }
 }
 
 // assign the correct |mValueAfter| value to a node that has been inserted
@@ -173,28 +185,7 @@ void nsCounterList::RecalcAll() {
   }
 
   for (nsCounterNode* node = First(); node; node = Next(node)) {
-    auto oldValue = node->mValueAfter;
-    node->Calc(this);
-
-    if (node->mType == nsCounterNode::USE) {
-      nsCounterUseNode* useNode = node->UseNode();
-      // Null-check mText, since if the frame constructor isn't
-      // batching, we could end up here while the node is being
-      // constructed.
-      if (useNode->mText) {
-        nsAutoString text;
-        useNode->GetText(text);
-        useNode->mText->SetData(text, IgnoreErrors());
-      }
-    }
-
-    if (oldValue != node->mValueAfter && node->mPseudoFrame &&
-        node->mPseudoFrame->StyleDisplay()->mDisplay ==
-            StyleDisplay::ListItem) {
-      auto* shell = node->mPseudoFrame->PresShell();
-      shell->FrameNeedsReflow(node->mPseudoFrame, IntrinsicDirty::StyleChange,
-                              NS_FRAME_IS_DIRTY);
-    }
+    node->Calc(this, /* aNotify = */ true);
   }
 }
 

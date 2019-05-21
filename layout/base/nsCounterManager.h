@@ -30,7 +30,7 @@ struct nsCounterNode : public nsGenConNode {
   Type mType;
 
   // Counter value after this node
-  int32_t mValueAfter;
+  int32_t mValueAfter = 0;
 
   // mScopeStart points to the node (usually a RESET, but not in the
   // case of an implied 'counter-reset') that created the scope for
@@ -41,7 +41,7 @@ struct nsCounterNode : public nsGenConNode {
   // Being null for a non-RESET means that it is an implied
   // 'counter-reset'.  Being null for a RESET means it has no outer
   // scope.
-  nsCounterNode* mScopeStart;
+  nsCounterNode* mScopeStart = nullptr;
 
   // mScopePrev points to the previous node that is in the same scope,
   // or for a RESET, the previous node in the scope outside of the
@@ -52,7 +52,7 @@ struct nsCounterNode : public nsGenConNode {
   // mScopeStart.  Being null for a non-RESET means that it is an
   // implied 'counter-reset'.  Being null for a RESET means it has no
   // outer scope.
-  nsCounterNode* mScopePrev;
+  nsCounterNode* mScopePrev = nullptr;
 
   inline nsCounterUseNode* UseNode();
   inline nsCounterChangeNode* ChangeNode();
@@ -64,14 +64,10 @@ struct nsCounterNode : public nsGenConNode {
   // that (reset, increment, set, use) sort in that order.
   // (This slight weirdness allows sharing a lot of code with 'quotes'.)
   nsCounterNode(int32_t aContentIndex, Type aType)
-      : nsGenConNode(aContentIndex),
-        mType(aType),
-        mValueAfter(0),
-        mScopeStart(nullptr),
-        mScopePrev(nullptr) {}
+      : nsGenConNode(aContentIndex), mType(aType) {}
 
   // to avoid virtual function calls in the common case
-  inline void Calc(nsCounterList* aList);
+  inline void Calc(nsCounterList* aList, bool aNotify);
 
   // Is this a <ol reversed> RESET node?
   inline bool IsContentBasedReset();
@@ -82,7 +78,15 @@ struct nsCounterUseNode : public nsCounterNode {
   nsString mSeparator;
 
   // false for counter(), true for counters()
-  bool mAllCounters;
+  bool mAllCounters = false;
+
+  bool mForLegacyBullet = false;
+
+  enum ForLegacyBullet { ForLegacyBullet };
+  explicit nsCounterUseNode(enum ForLegacyBullet)
+      : nsCounterNode(0, USE), mForLegacyBullet(true) {
+    mCounterStyle = nsGkAtoms::list_item;
+  }
 
   // args go directly to member variables here and of nsGenConNode
   nsCounterUseNode(nsStyleContentData::CounterFunction* aCounterFunction,
@@ -97,9 +101,12 @@ struct nsCounterUseNode : public nsCounterNode {
   virtual bool InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,
                              nsIFrame* aTextFrame) override;
 
-  // assign the correct |mValueAfter| value to a node that has been inserted
+  bool InitBullet(nsGenConList* aList, nsIFrame* aBulletFrame);
+
+  // assign the correct |mValueAfter| value to a node that has been inserted,
+  // and update the value of the text node, notifying if `aNotify` is true.
   // Should be called immediately after calling |Insert|.
-  void Calc(nsCounterList* aList);
+  void Calc(nsCounterList* aList, bool aNotify);
 
   // The text that should be displayed for this counter.
   void GetText(nsString& aResult);
@@ -114,8 +121,7 @@ struct nsCounterChangeNode : public nsCounterNode {
   // |aPropIndex| is the index of the value within the list in the
   // 'counter-increment', 'counter-reset' or 'counter-set' property.
   nsCounterChangeNode(nsIFrame* aPseudoFrame, nsCounterNode::Type aChangeType,
-                      int32_t aChangeValue,
-                      int32_t aPropIndex)
+                      int32_t aChangeValue, int32_t aPropIndex)
       : nsCounterNode(  // Fake a content index for resets, increments and sets
                         // that comes before all the real content, with
                         // the resets first, in order, and then the increments
@@ -149,9 +155,9 @@ inline nsCounterChangeNode* nsCounterNode::ChangeNode() {
   return static_cast<nsCounterChangeNode*>(this);
 }
 
-inline void nsCounterNode::Calc(nsCounterList* aList) {
+inline void nsCounterNode::Calc(nsCounterList* aList, bool aNotify) {
   if (mType == USE)
-    UseNode()->Calc(aList);
+    UseNode()->Calc(aList, aNotify);
   else
     ChangeNode()->Calc(aList);
 }
