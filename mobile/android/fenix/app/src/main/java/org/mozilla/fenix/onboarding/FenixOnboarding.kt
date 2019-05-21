@@ -18,21 +18,11 @@ class FenixOnboarding(private val context: Context) {
         get() = getInt(OnboardingKeys.LAST_VERSION.key, 0)
         set(version) { edit().putInt(OnboardingKeys.LAST_VERSION.key, version).apply() }
 
-    // Temporary variable to keep track for building purposes only
-    private var tempFinish = false
-
     fun finish() {
-        if (BuildConfig.DEBUG) {
-            tempFinish = true
-            return
-        }
-
         onboardingPrefs.onboardedVersion = CURRENT_ONBOARDING_VERSION
     }
 
     fun userHasBeenOnboarded(): Boolean {
-        if (!BuildConfig.DEBUG || tempFinish || !ENABLED) return true
-
         return onboardingPrefs.onboardedVersion == CURRENT_ONBOARDING_VERSION
     }
 
@@ -43,6 +33,5 @@ class FenixOnboarding(private val context: Context) {
 
     companion object {
         private const val CURRENT_ONBOARDING_VERSION = 1
-        private const val ENABLED = false
     }
 }
