@@ -6597,6 +6597,12 @@ class FactoryOp
     return mDatabaseFilePath;
   }
 
+  void StringifyPersistenceType(nsCString& aResult) const;
+
+  void GetSanitizedOrigin(nsCString& aResult) const;
+
+  void StringifyState(nsCString& aResult) const;
+
  protected:
   FactoryOp(Factory* aFactory, already_AddRefed<ContentParent> aContentParent,
             const CommonFactoryRequestParams& aCommonParams, bool aDeleting);
@@ -8946,6 +8952,23 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
   }
 
   return NS_OK;
+}
+
+void SanitizeString(nsACString& aOrigin) {
+  char* iter = aOrigin.BeginWriting();
+  char* end = aOrigin.EndWriting();
+
+  while (iter != end) {
+    char c = *iter;
+
+    if (IsAsciiAlpha(c)) {
+      *iter = 'a';
+    } else if (IsAsciiDigit(c)) {
+      *iter = 'D';
+    }
+
+    ++iter;
+  }
 }
 
 /*******************************************************************************
@@ -16309,7 +16332,43 @@ void QuotaClient::ShutdownTimedOut() {
   if (gFactoryOps && !gFactoryOps->IsEmpty()) {
     data.Append("gFactoryOps: ");
     data.AppendInt(static_cast<uint32_t>(gFactoryOps->Length()));
-    data.Append("\n");
+
+    nsTHashtable<nsCStringHashKey> ids;
+    for (uint32_t index = 0; index < gFactoryOps->Length(); index++) {
+      CheckedUnsafePtr<FactoryOp>& factoryOp = (*gFactoryOps)[index];
+
+      nsCString persistenceType;
+      factoryOp->StringifyPersistenceType(persistenceType);
+
+      nsCString origin;
+      factoryOp->GetSanitizedOrigin(origin);
+
+      nsCString state;
+      factoryOp->StringifyState(state);
+
+      NS_NAMED_LITERAL_CSTRING(delimiter, "*");
+
+      nsCString id = persistenceType + delimiter + origin + delimiter + state;
+
+      ids.PutEntry(id);
+    }
+
+    data.Append(" (");
+
+    bool first = true;
+    for (auto iter = ids.ConstIter(); !iter.Done(); iter.Next()) {
+      if (first) {
+        first = false;
+      } else {
+        data.Append(", ");
+      }
+
+      const nsACString& id = iter.Get()->GetKey();
+
+      data.Append(id);
+    }
+
+    data.Append(")\n");
   }
 
   if (gLiveDatabaseHashtable && gLiveDatabaseHashtable->Count()) {
@@ -19078,6 +19137,98 @@ FactoryOp::FactoryOp(Factory* aFactory,
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aFactory);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+}
+
+void FactoryOp::StringifyPersistenceType(nsCString& aResult) const {
+  AssertIsOnOwningThread();
+
+  PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
+
+  PersistenceTypeToText(persistenceType, aResult);
+}
+
+void FactoryOp::GetSanitizedOrigin(nsCString& aResult) const {
+  AssertIsOnOwningThread();
+
+  int32_t colonPos = mOrigin.FindChar(':');
+  if (colonPos >= 0) {
+    const nsACString& prefix = Substring(mOrigin, 0, colonPos);
+
+    nsCString normSuffix(Substring(mOrigin, colonPos));
+    SanitizeString(normSuffix);
+
+    aResult = prefix + normSuffix;
+  } else {
+    nsCString origin(mOrigin);
+    SanitizeString(origin);
+
+    aResult = origin;
+  }
+}
+
+void FactoryOp::StringifyState(nsCString& aResult) const {
+  AssertIsOnOwningThread();
+
+  switch (mState) {
+    case State::Initial:
+      aResult.AssignLiteral("Initial");
+      return;
+
+    case State::PermissionChallenge:
+      aResult.AssignLiteral("PermissionChallenge");
+      return;
+
+    case State::PermissionRetry:
+      aResult.AssignLiteral("PermissionRetry");
+      return;
+
+    case State::FinishOpen:
+      aResult.AssignLiteral("FinishOpen");
+      return;
+
+    case State::QuotaManagerPending:
+      aResult.AssignLiteral("QuotaManagerPending");
+      return;
+
+    case State::DirectoryOpenPending:
+      aResult.AssignLiteral("DirectoryOpenPending");
+      return;
+
+    case State::DatabaseOpenPending:
+      aResult.AssignLiteral("DatabaseOpenPending");
+      return;
+
+    case State::DatabaseWorkOpen:
+      aResult.AssignLiteral("DatabaseWorkOpen");
+      return;
+
+    case State::BeginVersionChange:
+      aResult.AssignLiteral("BeginVersionChange");
+      return;
+
+    case State::WaitingForOtherDatabasesToClose:
+      aResult.AssignLiteral("WaitingForOtherDatabasesToClose");
+      return;
+
+    case State::WaitingForTransactionsToComplete:
+      aResult.AssignLiteral("WaitingForTransactionsToComplete");
+      return;
+
+    case State::DatabaseWorkVersionChange:
+      aResult.AssignLiteral("DatabaseWorkVersionChange");
+      return;
+
+    case State::SendingResults:
+      aResult.AssignLiteral("SendingResults");
+      return;
+
+    case State::Completed:
+      aResult.AssignLiteral("Completed");
+      return;
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
 }
 
 nsresult FactoryOp::Open() {
