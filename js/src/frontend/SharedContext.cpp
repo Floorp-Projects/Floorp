@@ -183,7 +183,7 @@ void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   } else {
     enclosingScope_ = nullptr;
   }
-  initWithEnclosingScope(enclosingScope_);
+  initWithEnclosingScope(enclosingScope_, fun);
 }
 
 void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
@@ -249,10 +249,11 @@ void FunctionBox::initFieldInitializer(ParseContext* enclosing, JSFunction* fun,
   needsThisTDZChecks_ = hasHeritage == HasHeritage::Yes;
 }
 
-void FunctionBox::initWithEnclosingScope(Scope* enclosingScope) {
+void FunctionBox::initWithEnclosingScope(Scope* enclosingScope,
+                                         JSFunction* fun) {
   if (!isArrow()) {
     allowNewTarget_ = true;
-    allowSuperProperty_ = function()->allowSuperProperty();
+    allowSuperProperty_ = fun->allowSuperProperty();
 
     if (isDerivedClassConstructor()) {
       setDerivedClassConstructor();

@@ -304,7 +304,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // has expressions.
   VarScope::Data* extraVarScopeBindings_;
 
-  void initWithEnclosingScope(Scope* enclosingScope);
+  void initWithEnclosingScope(Scope* enclosingScope, JSFunction* fun);
 
  public:
   // Back pointer used by asm.js for error messages.
