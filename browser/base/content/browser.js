@@ -2599,19 +2599,6 @@ function loadURI(uri, referrerInfo, postData, allowThirdPartyFixup,
     throw new Error("Must load with a triggering Principal");
   }
 
-  // After Bug 965637 we can remove that Error because the CSP will not
-  // hang off the Principal anymore. Please note that the SystemPrincipal
-  // can not hold a CSP!
-  if (AppConstants.EARLY_BETA_OR_EARLIER) {
-    // Please note that the backend will still query the CSP from the Principal in
-    // release versions of Firefox. We use this error just to annotate all the
-    // callsites to explicitly pass a CSP before we can remove the CSP from
-    // the Principal within Bug 965637.
-    if (!triggeringPrincipal.isSystemPrincipal && triggeringPrincipal.csp && !csp) {
-      throw new Error("If Principal has CSP then we need an explicit CSP");
-    }
-  }
-
   try {
     openLinkIn(uri, "current",
                { referrerInfo,
@@ -5802,19 +5789,6 @@ nsBrowserAccess.prototype = {
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    // After Bug 965637 we can remove that Error because the CSP will not
-    // hang off the Principal anymore. Please note that the SystemPrincipal
-    // can not hold a CSP!
-    if (AppConstants.EARLY_BETA_OR_EARLIER) {
-      // Please note that the backend will still query the CSP from the Principal in
-      // release versions of Firefox. We use this error just to annotate all the
-      // callsites to explicitly pass a CSP before we can remove the CSP from
-      // the Principal within Bug 965637.
-      if (!aTriggeringPrincipal.isSystemPrincipal && aTriggeringPrincipal.csp && !aCsp) {
-        throw new Error("If Principal has CSP then we need an explicit CSP");
-      }
-    }
-
     var newWindow = null;
     var isExternal = !!(aFlags & Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
@@ -6507,9 +6481,6 @@ function handleLinkClick(event, href, linkNode) {
     !BrowserUtils.linkHasNoReferrer(linkNode),
     referrerURI);
 
-  // Bug 965637, query the CSP from the doc instead of the Principal
-  let csp = doc.nodePrincipal.csp;
-
   urlSecurityCheck(href, doc.nodePrincipal);
   let params = {
     charset: doc.characterSet,
@@ -6517,7 +6488,7 @@ function handleLinkClick(event, href, linkNode) {
     referrerInfo,
     originPrincipal: doc.nodePrincipal,
     triggeringPrincipal: doc.nodePrincipal,
-    csp,
+    csp: doc.csp,
     frameOuterWindowID,
   };
 

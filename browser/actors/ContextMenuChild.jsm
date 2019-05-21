@@ -781,8 +781,7 @@ class ContextMenuChild extends ActorChild {
     context.target = node;
 
     context.principal = context.target.ownerDocument.nodePrincipal;
-    // Bug 965637, query the CSP from the doc instead of the Principal
-    context.csp = E10SUtils.serializeCSP(context.target.ownerDocument.nodePrincipal.csp);
+    context.csp = E10SUtils.serializeCSP(context.target.ownerDocument.csp);
 
     context.frameOuterWindowID = WebNavigationFrames.getFrameId(context.target.ownerGlobal);
 
