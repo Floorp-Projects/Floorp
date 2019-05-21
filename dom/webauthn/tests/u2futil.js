@@ -17,6 +17,8 @@ const cose_crv_P256 = 1;
 const cose_crv_x = -2;
 const cose_crv_y = -3;
 
+var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+
 function handleEventMessage(event) {
   if ("test" in event.data) {
     let summary = event.data.test + ": " + event.data.msg;
