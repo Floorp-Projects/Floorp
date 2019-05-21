@@ -190,16 +190,16 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [[
 ], [
     'release', set([
         'mozilla-release',
+        'comm-esr60',
+        'comm-esr68',
     ])
 ], [
     'esr60', set([
         'mozilla-esr60',
-        'comm-esr60',
     ])
 ], [
     'esr68', set([
         'mozilla-esr68',
-        'comm-esr68',
     ])
 ]]
 
