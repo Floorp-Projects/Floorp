@@ -7,50 +7,52 @@
 </head>
 <body>
 <script type="text/javascript">
-  SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
-    function() {
-      var video = document.createElement("video");
 
-      // Check if adding a text track manually sets the TextTrackList correctly.
+function runTest() {
+  var video = document.createElement("video");
 
-      // HTMLTrackElement.textTrackList is an extension available only to
-      // privileged code, so we need to access it through the SpecialPowers
-      // object.
-      video.addTextTrack("subtitles", "", "");
-      is(SpecialPowers.unwrap(SpecialPowers.wrap(video.textTracks[0]).textTrackList),
-          video.textTracks,
-          "The Track's TextTrackList should be the Video's TextTrackList.");
+  // Check if adding a text track manually sets the TextTrackList correctly.
+
+  // HTMLTrackElement.textTrackList is an extension available only to
+  // privileged code, so we need to access it through the SpecialPowers
+  // object.
+  video.addTextTrack("subtitles", "", "");
+  is(SpecialPowers.unwrap(SpecialPowers.wrap(video.textTracks[0]).textTrackList),
+      video.textTracks,
+      "The Track's TextTrackList should be the Video's TextTrackList.");
 
 
-      // Check if loading a Track via a TrackElement sets the TextTrackList correctly.
-      video.src = "seek.webm";
-      video.preload = "auto";
+  // Check if loading a Track via a TrackElement sets the TextTrackList correctly.
+  video.src = "seek.webm";
+  video.preload = "auto";
 
-      var trackElement = document.createElement("track");
-      trackElement.src = "basic.vtt";
-      trackElement.kind = "subtitles";
+  var trackElement = document.createElement("track");
+  trackElement.src = "basic.vtt";
+  trackElement.kind = "subtitles";
 
-      video.appendChild(trackElement);
-      document.appendChild(video);
+  video.appendChild(trackElement);
+  document.appendChild(video);
 
-      video.addEventListener("loadedmetadata", function run_tests() {
-        // Re-que run_tests() at the end of the event loop until the track
-        // element has loaded its data.
-        if (trackElement.readyState == HTMLTrackElement.LOADING) {
-          setTimeout(run_tests, 0);
-          return;
-        }
-        is(trackElement.readyState, HTMLTrackElement.LOADED,
-            "Track::ReadyState should be set to LOADED.");
-        is(SpecialPowers.unwrap(SpecialPowers.wrap(trackElement.track).textTrackList),
-           video.textTracks,
-           "TrackElement's Track's TextTrackList should be the Video's TextTrackList.");
-
-        SimpleTest.finish();
-      });
+  video.addEventListener("loadedmetadata", function run_tests() {
+    // Re-que run_tests() at the end of the event loop until the track
+    // element has loaded its data.
+    if (trackElement.readyState == HTMLTrackElement.LOADING) {
+      setTimeout(run_tests, 0);
+      return;
     }
-  );
+    is(trackElement.readyState, HTMLTrackElement.LOADED,
+        "Track::ReadyState should be set to LOADED.");
+    is(SpecialPowers.unwrap(SpecialPowers.wrap(trackElement.track).textTrackList),
+       video.textTracks,
+       "TrackElement's Track's TextTrackList should be the Video's TextTrackList.");
+
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = runTest;
+
 </script>
 </body>
 </html>
