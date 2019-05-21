@@ -122,9 +122,10 @@ nsresult SetDocumentStateCommand::DoCommandParam(
   }
 }
 
-nsresult SetDocumentStateCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  if (NS_WARN_IF(!aParams)) {
+nsresult SetDocumentStateCommand::DoCommandParam(
+    Command aCommand, const nsACString& aCStringParam,
+    TextEditor& aTextEditor) const {
+  if (NS_WARN_IF(aCStringParam.IsVoid())) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -134,32 +135,26 @@ nsresult SetDocumentStateCommand::DoCommandParams(
 
   switch (aCommand) {
     case Command::SetDocumentDefaultParagraphSeparator: {
-      HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-      if (NS_WARN_IF(!htmlEditor)) {
-        return NS_ERROR_INVALID_ARG;
-      }
-
-      nsAutoCString newValue;
-      nsresult rv = aParams->GetCString(STATE_ATTRIBUTE, newValue);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      if (newValue.LowerCaseEqualsLiteral("div")) {
-        htmlEditor->SetDefaultParagraphSeparator(ParagraphSeparator::div);
+      if (aCStringParam.LowerCaseEqualsLiteral("div")) {
+        aTextEditor.AsHTMLEditor()->SetDefaultParagraphSeparator(
+            ParagraphSeparator::div);
         return NS_OK;
       }
-      if (newValue.LowerCaseEqualsLiteral("p")) {
-        htmlEditor->SetDefaultParagraphSeparator(ParagraphSeparator::p);
+      if (aCStringParam.LowerCaseEqualsLiteral("p")) {
+        aTextEditor.AsHTMLEditor()->SetDefaultParagraphSeparator(
+            ParagraphSeparator::p);
         return NS_OK;
       }
-      if (newValue.LowerCaseEqualsLiteral("br")) {
+      if (aCStringParam.LowerCaseEqualsLiteral("br")) {
         // Mozilla extension for backwards compatibility
-        htmlEditor->SetDefaultParagraphSeparator(ParagraphSeparator::br);
+        aTextEditor.AsHTMLEditor()->SetDefaultParagraphSeparator(
+            ParagraphSeparator::br);
         return NS_OK;
       }
 
       // This should not be reachable from nsHTMLDocument::ExecCommand
+      // XXX Shouldn't return error in this case because Chrome does not throw
+      //     exception in this case.
       NS_WARNING("Invalid default paragraph separator");
       return NS_ERROR_UNEXPECTED;
     }
