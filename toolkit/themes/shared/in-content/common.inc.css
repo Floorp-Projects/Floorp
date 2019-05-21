@@ -433,6 +433,7 @@ xul|menulist > xul|menupopup xul|menuseparator {
 html|input[type="email"],
 html|input[type="tel"],
 html|input[type="text"],
+html|input[type="password"],
 html|input[type="number"],
 html|textarea,
 xul|textbox {
@@ -454,6 +455,7 @@ xul|textbox {
 html|input[type="email"],
 html|input[type="tel"],
 html|input[type="text"],
+html|input[type="password"],
 html|input[type="number"],
 html|textarea {
   font-family: inherit;
@@ -464,6 +466,7 @@ html|textarea {
 html|input[type="email"]:enabled:not(:focus):hover,
 html|input[type="tel"]:enabled:not(:focus):hover,
 html|input[type="text"]:enabled:not(:focus):hover,
+html|input[type="password"]:enabled:not(:focus):hover,
 html|input[type="number"]:enabled:not(:focus):hover,
 html|textarea:enabled:not(:focus):hover,
 xul|textbox:not([disabled="true"]):not([focused]):hover {
@@ -473,6 +476,7 @@ xul|textbox:not([disabled="true"]):not([focused]):hover {
 html|input[type="email"]:focus,
 html|input[type="tel"]:focus,
 html|input[type="text"]:focus,
+html|input[type="password"]:focus,
 html|input[type="number"]:focus,
 html|textarea:focus,
 xul|textbox[focused] {
@@ -484,6 +488,7 @@ xul|textbox[focused] {
 html|input[type="email"]:-moz-ui-invalid,
 html|input[type="tel"]:-moz-ui-invalid,
 html|input[type="text"]:-moz-ui-invalid,
+html|input[type="password"]:-moz-ui-invalid,
 html|input[type="number"]:-moz-ui-invalid,
 html|textarea:-moz-ui-invalid {
   border-color: var(--in-content-border-invalid);
@@ -495,6 +500,7 @@ html|textarea:-moz-ui-invalid {
 html|input[type="email"]:-moz-ui-invalid:focus,
 html|input[type="tel"]:-moz-ui-invalid:focus,
 html|input[type="text"]:-moz-ui-invalid:focus,
+html|input[type="password"]:-moz-ui-invalid:focus,
 html|input[type="number"]:-moz-ui-invalid:focus,
 html|textarea:-moz-ui-invalid:focus {
   box-shadow: 0 0 0 3px var(--in-content-border-invalid-shadow);
@@ -503,6 +509,7 @@ html|textarea:-moz-ui-invalid:focus {
 html|input[type="email"]:disabled,
 html|input[type="tel"]:disabled,
 html|input[type="text"]:disabled,
+html|input[type="password"]:disabled,
 html|input[type="number"]:disabled,
 html|textarea:disabled,
 xul|textbox[disabled="true"] {
