@@ -27,20 +27,12 @@ struct IPDLParamTraits {
   // IPDLParamTraits.
   template <typename R>
   static inline void Write(IPC::Message* aMsg, IProtocol*, R&& aParam) {
-    static_assert(
-        IsSame<P, typename IPC::ParamTraitsSelector<R>::Type>::value,
-        "IPDLParamTraits::Write only forwards calls which work via WriteParam");
-
     IPC::ParamTraits<P>::Write(aMsg, std::forward<R>(aParam));
   }
 
   template <typename R>
   static inline bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                           IProtocol*, R* aResult) {
-    static_assert(
-        IsSame<P, typename IPC::ParamTraitsSelector<R>::Type>::value,
-        "IPDLParamTraits::Read only forwards calls which work via ReadParam");
-
     return IPC::ParamTraits<P>::Read(aMsg, aIter, aResult);
   }
 };
@@ -58,16 +50,15 @@ struct IPDLParamTraits {
 template <typename P>
 static MOZ_NEVER_INLINE void WriteIPDLParam(IPC::Message* aMsg,
                                             IProtocol* aActor, P&& aParam) {
-  IPDLParamTraits<typename IPC::ParamTraitsSelector<P>::Type>::Write(
-      aMsg, aActor, std::forward<P>(aParam));
+  IPDLParamTraits<typename Decay<P>::Type>::Write(aMsg, aActor,
+                                                  std::forward<P>(aParam));
 }
 
 template <typename P>
 static MOZ_NEVER_INLINE bool ReadIPDLParam(const IPC::Message* aMsg,
                                            PickleIterator* aIter,
                                            IProtocol* aActor, P* aResult) {
-  return IPDLParamTraits<typename IPC::ParamTraitsSelector<P>::Type>::Read(
-      aMsg, aIter, aActor, aResult);
+  return IPDLParamTraits<P>::Read(aMsg, aIter, aActor, aResult);
 }
 
 constexpr void WriteIPDLParamList(IPC::Message*, IProtocol*) {}
@@ -90,6 +81,44 @@ static bool ReadIPDLParamList(const IPC::Message* aMsg, PickleIterator* aIter,
   return ReadIPDLParam(aMsg, aIter, aActor, aResult) &&
          ReadIPDLParamList(aMsg, aIter, aActor, aResults...);
 }
+
+// When being passed `RefPtr<T>` or `nsCOMPtr<T>`, forward to a specialization
+// for the underlying target type. The parameter type will be passed as `T*`,
+// and result as `RefPtr<T>*`.
+//
+// This is done explicitly to ensure that the deleted `&&` overload for
+// `operator T*` is not selected in generic contexts, and to support
+// deserializing into `nsCOMPtr<T>`.
+template <typename T>
+struct IPDLParamTraits<RefPtr<T>> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const RefPtr<T>& aParam) {
+    IPDLParamTraits<T*>::Write(aMsg, aActor, aParam.get());
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, RefPtr<T>* aResult) {
+    return IPDLParamTraits<T*>::Read(aMsg, aIter, aActor, aResult);
+  }
+};
+
+template <typename T>
+struct IPDLParamTraits<nsCOMPtr<T>> {
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const nsCOMPtr<T>& aParam) {
+    IPDLParamTraits<T*>::Write(aMsg, aActor, aParam.get());
+  }
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, nsCOMPtr<T>* aResult) {
+    RefPtr<T> refptr;
+    if (!IPDLParamTraits<T*>::Read(aMsg, aIter, aActor, &refptr)) {
+      return false;
+    }
+    *aResult = refptr.forget();
+    return true;
+  }
+};
 
 // nsTArray support for IPDLParamTraits
 template <typename T>

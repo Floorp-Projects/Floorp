@@ -447,9 +447,9 @@ Maybe<IPCStream>& AutoIPCStream::TakeOptionalValue() {
   return *mOptionalValue;
 }
 
-void IPDLParamTraits<nsIInputStream>::Write(IPC::Message* aMsg,
-                                            IProtocol* aActor,
-                                            nsIInputStream* aParam) {
+void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
+                                             IProtocol* aActor,
+                                             nsIInputStream* aParam) {
   mozilla::ipc::AutoIPCStream autoStream;
   bool ok = false;
   bool found = false;
@@ -497,10 +497,10 @@ void IPDLParamTraits<nsIInputStream>::Write(IPC::Message* aMsg,
   WriteIPDLParam(aMsg, aActor, autoStream.TakeOptionalValue());
 }
 
-bool IPDLParamTraits<nsIInputStream>::Read(const IPC::Message* aMsg,
-                                           PickleIterator* aIter,
-                                           IProtocol* aActor,
-                                           RefPtr<nsIInputStream>* aResult) {
+bool IPDLParamTraits<nsIInputStream*>::Read(const IPC::Message* aMsg,
+                                            PickleIterator* aIter,
+                                            IProtocol* aActor,
+                                            RefPtr<nsIInputStream>* aResult) {
   mozilla::Maybe<mozilla::ipc::IPCStream> ipcStream;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &ipcStream)) {
     return false;
