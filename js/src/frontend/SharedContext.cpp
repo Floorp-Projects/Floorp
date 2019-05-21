@@ -196,12 +196,10 @@ void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
   thisBinding_ = ThisBinding::Function;
 }
 
-void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
+void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing, JSFunction* fun,
                                                 FunctionSyntaxKind kind) {
   SharedContext* sc = enclosing->sc();
   useAsm = sc->isFunctionBox() && sc->asFunctionBox()->useAsmOrInsideUseAsm();
-
-  JSFunction* fun = function();
 
   // Arrow functions don't have their own `this` binding.
   if (fun->isArrow()) {
@@ -242,9 +240,9 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
   }
 }
 
-void FunctionBox::initFieldInitializer(ParseContext* enclosing,
+void FunctionBox::initFieldInitializer(ParseContext* enclosing, JSFunction* fun,
                                        HasHeritage hasHeritage) {
-  this->initWithEnclosingParseContext(enclosing,
+  this->initWithEnclosingParseContext(enclosing, fun,
                                       FunctionSyntaxKind::Expression);
   allowSuperProperty_ = false;
   allowSuperCall_ = false;

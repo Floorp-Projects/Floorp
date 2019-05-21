@@ -2669,7 +2669,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     if (!funbox) {
       return false;
     }
-    funbox->initWithEnclosingParseContext(pc_, kind);
+    funbox->initWithEnclosingParseContext(pc_, fun, kind);
 
     SyntaxParseHandler::Node syntaxNode =
         syntaxParser->innerFunctionForFunctionBox(
@@ -2798,7 +2798,7 @@ GeneralParser<ParseHandler, Unit>::innerFunction(
   if (!funbox) {
     return null();
   }
-  funbox->initWithEnclosingParseContext(outerpc, kind);
+  funbox->initWithEnclosingParseContext(outerpc, fun, kind);
 
   FunctionNodeType innerFunc = innerFunctionForFunctionBox(
       funNode, outerpc, funbox, inHandling, yieldHandling, kind, newDirectives);
@@ -7164,7 +7164,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   if (!funbox) {
     return null();
   }
-  funbox->initWithEnclosingParseContext(pc_, functionSyntaxKind);
+  funbox->initWithEnclosingParseContext(pc_, fun, functionSyntaxKind);
   handler_.setFunctionBox(funNode, funbox);
   setFunctionEndFromCurrentToken(funbox);
 
@@ -7346,7 +7346,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   if (!funbox) {
     return null();
   }
-  funbox->initFieldInitializer(pc_, hasHeritage);
+  funbox->initFieldInitializer(pc_, fun, hasHeritage);
   handler_.setFunctionBox(funNode, funbox);
 
   // We can't use setFunctionStartAtCurrentToken because that uses pos().begin,
