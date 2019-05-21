@@ -134,6 +134,8 @@ class DocumentL10n final : public nsIObserver,
   void TriggerInitialDocumentTranslation();
 
   void InitialDocumentTranslationCompleted();
+
+  Document* GetDocument() { return mDocument; };
 };
 
 }  // namespace dom
