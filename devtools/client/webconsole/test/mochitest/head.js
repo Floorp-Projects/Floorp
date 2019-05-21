@@ -961,7 +961,8 @@ function getFilterInput(hud) {
  *            debug: true,
  *            css: false,
  *            netxhr: false,
- *            net: false
+ *            net: false,
+ *            text: ""
  *          }
  */
 async function setFilterState(hud, settings) {

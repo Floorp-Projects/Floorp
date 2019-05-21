@@ -891,6 +891,7 @@ function isUnfilterable(message) {
     MESSAGE_TYPE.RESULT,
     MESSAGE_TYPE.START_GROUP,
     MESSAGE_TYPE.START_GROUP_COLLAPSED,
+    MESSAGE_TYPE.NAVIGATION_MARKER,
   ].includes(message.type);
 }
 
