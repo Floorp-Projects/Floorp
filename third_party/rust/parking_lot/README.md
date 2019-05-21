@@ -68,6 +68,9 @@ in the Rust standard library:
     can be enabled via the `deadlock_detection` feature.
 17. `RwLock` supports atomically upgrading an "upgradable" read lock into a
     write lock.
+18. Optional support for [serde](https://docs.serde.rs/serde/).  Enable via the
+    feature `serde`.  **NOTE!** this support is for `Mutex`, `ReentrantMutex`,
+    and `RwLock` only; `Condvar` and `Once` are not currently supported.
 
 ## The parking lot
 
@@ -99,7 +102,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-parking_lot = "0.6"
+parking_lot = "0.8"
 ```
 
 and this to your crate root:
@@ -112,7 +115,7 @@ To enable nightly-only features, add this to your `Cargo.toml` instead:
 
 ```toml
 [dependencies]
-parking_lot = {version = "0.6", features = ["nightly"]}
+parking_lot = {version = "0.8", features = ["nightly"]}
 ```
 
 The experimental deadlock detector can be enabled with the
@@ -121,6 +124,11 @@ The experimental deadlock detector can be enabled with the
 The core parking lot API is provided by the `parking_lot_core` crate. It is
 separate from the synchronization primitives in the `parking_lot` crate so that
 changes to the core API do not cause breaking changes for users of `parking_lot`.
+
+## Minimum Rust version
+
+The current minimum required Rust version is 1.31. Any change to this is
+considered a breaking change and will require a major version bump.
 
 ## License
 

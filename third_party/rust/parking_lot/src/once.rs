@@ -5,21 +5,21 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use std::sync::atomic::{fence, Ordering};
-#[cfg(feature = "nightly")]
-use std::sync::atomic::{ATOMIC_U8_INIT, AtomicU8};
-#[cfg(feature = "nightly")]
-type U8 = u8;
-#[cfg(not(feature = "nightly"))]
-use std::sync::atomic::AtomicUsize as AtomicU8;
-#[cfg(not(feature = "nightly"))]
-use std::sync::atomic::ATOMIC_USIZE_INIT as ATOMIC_U8_INIT;
-#[cfg(not(feature = "nightly"))]
-type U8 = usize;
+use crate::util::UncheckedOptionExt;
+#[cfg(has_sized_atomics)]
+use core::sync::atomic::AtomicU8;
+#[cfg(not(has_sized_atomics))]
+use core::sync::atomic::AtomicUsize as AtomicU8;
+use core::{
+    fmt, mem,
+    sync::atomic::{fence, Ordering},
+};
 use parking_lot_core::{self, SpinWait, DEFAULT_PARK_TOKEN, DEFAULT_UNPARK_TOKEN};
-use std::fmt;
-use std::mem;
-use util::UncheckedOptionExt;
+
+#[cfg(has_sized_atomics)]
+type U8 = u8;
+#[cfg(not(has_sized_atomics))]
+type U8 = usize;
 
 const DONE_BIT: U8 = 1;
 const POISON_BIT: U8 = 2;
@@ -38,14 +38,14 @@ pub enum OnceState {
     /// A thread is currently executing a closure.
     InProgress,
 
-    /// A closure has completed sucessfully.
+    /// A closure has completed successfully.
     Done,
 }
 
 impl OnceState {
     /// Returns whether the associated `Once` has been poisoned.
     ///
-    /// Once an initalization routine for a `Once` has panicked it will forever
+    /// Once an initialization routine for a `Once` has panicked it will forever
     /// indicate to future forced initialization routines that it is poisoned.
     #[inline]
     pub fn poisoned(&self) -> bool {
@@ -55,7 +55,7 @@ impl OnceState {
         }
     }
 
-    /// Returns whether the associated `Once` has successfullly executed a
+    /// Returns whether the associated `Once` has successfully executed a
     /// closure.
     #[inline]
     pub fn done(&self) -> bool {
@@ -81,9 +81,9 @@ impl OnceState {
 /// # Examples
 ///
 /// ```
-/// use parking_lot::{Once, ONCE_INIT};
+/// use parking_lot::Once;
 ///
-/// static START: Once = ONCE_INIT;
+/// static START: Once = Once::new();
 ///
 /// START.call_once(|| {
 ///     // run initialization here
@@ -91,22 +91,11 @@ impl OnceState {
 /// ```
 pub struct Once(AtomicU8);
 
-/// Initialization value for static `Once` values.
-pub const ONCE_INIT: Once = Once(ATOMIC_U8_INIT);
-
 impl Once {
     /// Creates a new `Once` value.
-    #[cfg(feature = "nightly")]
     #[inline]
     pub const fn new() -> Once {
-        Once(ATOMIC_U8_INIT)
-    }
-
-    /// Creates a new `Once` value.
-    #[cfg(not(feature = "nightly"))]
-    #[inline]
-    pub fn new() -> Once {
-        Once(ATOMIC_U8_INIT)
+        Once(AtomicU8::new(0))
     }
 
     /// Returns the current state of this `Once`.
@@ -141,10 +130,10 @@ impl Once {
     /// # Examples
     ///
     /// ```
-    /// use parking_lot::{Once, ONCE_INIT};
+    /// use parking_lot::Once;
     ///
     /// static mut VAL: usize = 0;
-    /// static INIT: Once = ONCE_INIT;
+    /// static INIT: Once = Once::new();
     ///
     /// // Accessing a `static mut` is unsafe much of the time, but if we do so
     /// // in a synchronized fashion (e.g. write once or read all) then we're
@@ -223,7 +212,7 @@ impl Once {
     // without some allocation overhead.
     #[cold]
     #[inline(never)]
-    fn call_once_slow(&self, ignore_poison: bool, f: &mut FnMut(OnceState)) {
+    fn call_once_slow(&self, ignore_poison: bool, f: &mut dyn FnMut(OnceState)) {
         let mut spinwait = SpinWait::new();
         let mut state = self.0.load(Ordering::Relaxed);
         loop {
@@ -344,7 +333,7 @@ impl Default for Once {
 }
 
 impl fmt::Debug for Once {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Once")
             .field("state", &self.state())
             .finish()
@@ -353,15 +342,14 @@ impl fmt::Debug for Once {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "nightly")]
+    use crate::Once;
     use std::panic;
     use std::sync::mpsc::channel;
     use std::thread;
-    use {Once, ONCE_INIT};
 
     #[test]
     fn smoke_once() {
-        static O: Once = ONCE_INIT;
+        static O: Once = Once::new();
         let mut a = 0;
         O.call_once(|| a += 1);
         assert_eq!(a, 1);
@@ -371,7 +359,7 @@ mod tests {
 
     #[test]
     fn stampede_once() {
-        static O: Once = ONCE_INIT;
+        static O: Once = Once::new();
         static mut RUN: bool = false;
 
         let (tx, rx) = channel();
@@ -405,10 +393,9 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "nightly")]
     #[test]
     fn poison_bad() {
-        static O: Once = ONCE_INIT;
+        static O: Once = Once::new();
 
         // poison the once
         let t = panic::catch_unwind(|| {
@@ -434,10 +421,9 @@ mod tests {
         O.call_once(|| {});
     }
 
-    #[cfg(feature = "nightly")]
     #[test]
     fn wait_for_force_to_finish() {
-        static O: Once = ONCE_INIT;
+        static O: Once = Once::new();
 
         // poison the once
         let t = panic::catch_unwind(|| {
@@ -475,14 +461,8 @@ mod tests {
 
     #[test]
     fn test_once_debug() {
-        static O: Once = ONCE_INIT;
+        static O: Once = Once::new();
 
         assert_eq!(format!("{:?}", O), "Once { state: New }");
-        assert_eq!(
-            format!("{:#?}", O),
-            "Once {
-    state: New
-}"
-        );
     }
 }

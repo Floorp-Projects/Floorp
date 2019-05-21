@@ -5,8 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use crate::raw_rwlock::RawRwLock;
 use lock_api;
-use raw_rwlock::RawRwLock;
 
 /// A reader-writer lock
 ///
@@ -116,19 +116,20 @@ pub type MappedRwLockWriteGuard<'a, T> = lock_api::MappedRwLockWriteGuard<'a, Ra
 
 /// RAII structure used to release the upgradable read access of a lock when
 /// dropped.
-pub type RwLockUpgradableReadGuard<'a, T> =
-    lock_api::RwLockUpgradableReadGuard<'a, RawRwLock, T>;
+pub type RwLockUpgradableReadGuard<'a, T> = lock_api::RwLockUpgradableReadGuard<'a, RawRwLock, T>;
 
 #[cfg(test)]
 mod tests {
-    extern crate rand;
-    use self::rand::Rng;
+    use crate::{RwLock, RwLockUpgradableReadGuard, RwLockWriteGuard};
+    use rand::Rng;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::mpsc::channel;
     use std::sync::Arc;
     use std::thread;
     use std::time::Duration;
-    use {RwLock, RwLockUpgradableReadGuard, RwLockWriteGuard};
+
+    #[cfg(feature = "serde")]
+    use bincode::{deserialize, serialize};
 
     #[derive(Eq, PartialEq, Debug)]
     struct NonCopy(i32);
@@ -178,7 +179,8 @@ mod tests {
         let _: Result<(), _> = thread::spawn(move || {
             let _lock = arc2.write();
             panic!();
-        }).join();
+        })
+        .join();
         let lock = arc.read();
         assert_eq!(*lock, 1);
     }
@@ -190,7 +192,8 @@ mod tests {
         let _: Result<(), _> = thread::spawn(move || {
             let _lock = arc2.write();
             panic!();
-        }).join();
+        })
+        .join();
         let lock = arc.write();
         assert_eq!(*lock, 1);
     }
@@ -202,7 +205,8 @@ mod tests {
         let _: Result<(), _> = thread::spawn(move || {
             let _lock = arc2.read();
             panic!();
-        }).join();
+        })
+        .join();
         let lock = arc.read();
         assert_eq!(*lock, 1);
     }
@@ -214,7 +218,8 @@ mod tests {
         let _: Result<(), _> = thread::spawn(move || {
             let _lock = arc2.read();
             panic!()
-        }).join();
+        })
+        .join();
         let lock = arc.write();
         assert_eq!(*lock, 1);
     }
@@ -329,7 +334,8 @@ mod tests {
             }
             let _u = Unwinder { i: arc2 };
             panic!();
-        }).join();
+        })
+        .join();
         let lock = arc.read();
         assert_eq!(*lock, 2);
     }
@@ -530,7 +536,15 @@ mod tests {
         thread::spawn(move || {
             let _lock = arc2.write();
         });
-        thread::sleep(Duration::from_millis(100));
+
+        if cfg!(not(all(target_env = "sgx", target_vendor = "fortanix"))) {
+            thread::sleep(Duration::from_millis(100));
+        } else {
+            // FIXME: https://github.com/fortanix/rust-sgx/issues/31
+            for _ in 0..100 {
+                thread::yield_now();
+            }
+        }
 
         // A normal read would block here since there is a pending writer
         let _lock2 = arc.read_recursive();
@@ -541,17 +555,8 @@ mod tests {
         let x = RwLock::new(vec![0u8, 10]);
 
         assert_eq!(format!("{:?}", x), "RwLock { data: [0, 10] }");
-        assert_eq!(
-            format!("{:#?}", x),
-            "RwLock {
-    data: [
-        0,
-        10
-    ]
-}"
-        );
         let _lock = x.write();
-        assert_eq!(format!("{:?}", x), "RwLock { <locked> }");
+        assert_eq!(format!("{:?}", x), "RwLock { data: <locked> }");
     }
 
     #[test]
@@ -560,5 +565,18 @@ mod tests {
         let a = rwlock.read_recursive();
         let b = a.clone();
         assert_eq!(Arc::strong_count(&b), 2);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        let contents: Vec<u8> = vec![0, 1, 2];
+        let mutex = RwLock::new(contents.clone());
+
+        let serialized = serialize(&mutex).unwrap();
+        let deserialized: RwLock<Vec<u8>> = deserialize(&serialized).unwrap();
+
+        assert_eq!(*(mutex.read()), *(deserialized.read()));
+        assert_eq!(contents, *(deserialized.read()));
     }
 }
