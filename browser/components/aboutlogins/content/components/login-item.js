@@ -110,8 +110,7 @@ class LoginItem extends ReflectedFluentElement {
       timeUsed: this._login.timeLastUsed || "",
     };
     document.l10n.setAttributes(this, "login-item", l10nArgs);
-    let hostnameNoScheme = this._login.hostname && new URL(this._login.hostname).hostname;
-    this.shadowRoot.querySelector(".title").textContent = hostnameNoScheme || "";
+    this.shadowRoot.querySelector(".title").textContent = this._login.title || "";
     this.shadowRoot.querySelector(".hostname").textContent = this._login.hostname || "";
     this.shadowRoot.querySelector("modal-input[name='username']").setAttribute("value", this._login.username || "");
     this.shadowRoot.querySelector("modal-input[name='password']").setAttribute("value", this._login.password || "");
