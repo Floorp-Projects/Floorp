@@ -1202,23 +1202,26 @@ void VectorImage::RecoverFromLossOfSurfaces() {
 }
 
 NS_IMETHODIMP
-VectorImage::StartDecoding(uint32_t aFlags) {
+VectorImage::StartDecoding(uint32_t aFlags, uint32_t aWhichFrame) {
   // Nothing to do for SVG images
   return NS_OK;
 }
 
-bool VectorImage::StartDecodingWithResult(uint32_t aFlags) {
+bool VectorImage::StartDecodingWithResult(uint32_t aFlags,
+                                          uint32_t aWhichFrame) {
   // SVG images are ready to draw when they are loaded
   return mIsFullyLoaded;
 }
 
-bool VectorImage::RequestDecodeWithResult(uint32_t aFlags) {
+bool VectorImage::RequestDecodeWithResult(uint32_t aFlags,
+                                          uint32_t aWhichFrame) {
   // SVG images are ready to draw when they are loaded
   return mIsFullyLoaded;
 }
 
 NS_IMETHODIMP
-VectorImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags) {
+VectorImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags,
+                                  uint32_t aWhichFrame) {
   // Nothing to do for SVG images, though in theory we could rasterize to the
   // provided size ahead of time if we supported off-main-thread SVG
   // rasterization...
