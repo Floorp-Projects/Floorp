@@ -39,12 +39,26 @@ const isValidLogin = login => {
 };
 
 const convertSubjectToLogin = subject => {
-    subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
-    const login = LoginHelper.loginToVanillaObject(subject);
-    if (!isValidLogin(login)) {
-      return null;
-    }
-    return login;
+  subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
+  const login = LoginHelper.loginToVanillaObject(subject);
+  if (!isValidLogin(login)) {
+    return null;
+  }
+  return augmentVanillaLoginObject(login);
+};
+
+const augmentVanillaLoginObject = login => {
+  let title;
+  try {
+    title = (new URL(login.hostname)).host;
+  } catch (ex) {
+    title = login.hostname;
+  }
+  title = title.replace(/^http(s)?:\/\//, "").
+                replace(/^www\d*\./, "");
+  return Object.assign({}, login, {
+    title,
+  });
 };
 
 var AboutLoginsParent = {
@@ -232,6 +246,7 @@ var AboutLoginsParent = {
     return Services.logins
                    .getAllLogins()
                    .filter(isValidLogin)
-                   .map(LoginHelper.loginToVanillaObject);
+                   .map(LoginHelper.loginToVanillaObject)
+                   .map(augmentVanillaLoginObject);
   },
 };
