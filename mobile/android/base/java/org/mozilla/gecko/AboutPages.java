@@ -87,6 +87,7 @@ public class AboutPages {
             ADDONS,
             CONFIG,
             DOWNLOADS,
+            LOGINS,
             FIREFOX
     ));
 
