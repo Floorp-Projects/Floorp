@@ -106,6 +106,10 @@ class EditorCommand : public nsIControllerCommand {
       case Command::DeleteToBeginningOfLine:
       case Command::DeleteToEndOfLine:
         return EditorCommandParamType::None;
+      // InsertPlaintextCommand
+      case Command::InsertText:
+        return EditorCommandParamType::String |
+               EditorCommandParamType::StateData;
       // InsertParagraphCommand
       case Command::InsertParagraph:
         return EditorCommandParamType::None;
@@ -234,6 +238,15 @@ class EditorCommand : public nsIControllerCommand {
       // DecreaseFontSizeCommand
       case Command::FormatDecreaseFontSize:
         return EditorCommandParamType::None;
+      // InsertHTMLCommand
+      case Command::InsertHTML:
+        return EditorCommandParamType::String |
+               EditorCommandParamType::StateData;
+      // InsertTagCommand
+      case Command::InsertLink:
+      case Command::InsertImage:
+        return EditorCommandParamType::String |
+               EditorCommandParamType::StateAttribute;
       case Command::InsertHorizontalRule:
         return EditorCommandParamType::None;
       // AbsolutePositioningCommand
@@ -333,6 +346,19 @@ class EditorCommand : public nsIControllerCommand {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  /**
+   * Called only when the result of EditorCommand::GetParamType(aCommand)
+   * includes EditorCommandParamType::String.  If aStringParam is void, it
+   * means that given param was nullptr.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  virtual nsresult DoCommandParam(Command aCommand,
+                                  const nsAString& aStringParam,
+                                  TextEditor& aTextEditor) const {
+    MOZ_ASSERT_UNREACHABLE("Wrong overload is called");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
  protected:
   EditorCommand() = default;
   virtual ~EditorCommand() = default;
@@ -381,6 +407,13 @@ class EditorCommand : public nsIControllerCommand {
   MOZ_CAN_RUN_SCRIPT                                               \
   virtual nsresult DoCommandParam(Command aCommand,                \
                                   const nsACString& aCStringParam, \
+                                  TextEditor& aTextEditor) const final;
+
+#define NS_DECL_DO_COMMAND_PARAM_FOR_STRING_PARAM                \
+ public:                                                         \
+  MOZ_CAN_RUN_SCRIPT                                             \
+  virtual nsresult DoCommandParam(Command aCommand,              \
+                                  const nsAString& aStringParam, \
                                   TextEditor& aTextEditor) const final;
 
 #define NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
@@ -441,6 +474,17 @@ class EditorCommand : public nsIControllerCommand {
     virtual ~_cmd() = default;                         \
   };
 
+#define NS_DECL_EDITOR_COMMAND_FOR_STRING_PARAM(_cmd)  \
+  class _cmd final : public EditorCommand {            \
+    NS_DECL_EDITOR_COMMAND_COMMON_METHODS              \
+    NS_DECL_DO_COMMAND_PARAM_FOR_STRING_PARAM          \
+    NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
+                                                       \
+   protected:                                          \
+    _cmd() = default;                                  \
+    virtual ~_cmd() = default;                         \
+  };
+
 // basic editor commands
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(UndoCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(RedoCommand)
@@ -458,7 +502,7 @@ NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(SelectAllCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(SelectionMoveCommands)
 
 // Insert content commands
-NS_DECL_EDITOR_COMMAND(InsertPlaintextCommand)
+NS_DECL_EDITOR_COMMAND_FOR_STRING_PARAM(InsertPlaintextCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(InsertParagraphCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(InsertLineBreakCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(PasteQuotationCommand)
@@ -569,7 +613,7 @@ class InsertTagCommand final : public EditorCommand {
 
   NS_DECL_EDITOR_COMMAND_COMMON_METHODS
   NS_DECL_DO_COMMAND_PARAM_DELEGATE_TO_DO_COMMAND
-  NS_DECL_DO_COMMAND_PARAMS
+  NS_DECL_DO_COMMAND_PARAM_FOR_STRING_PARAM
   NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(InsertTagCommand)
 
  protected:
@@ -809,17 +853,19 @@ NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(IncreaseFontSizeCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(DecreaseFontSizeCommand)
 
 // Insert content commands
-NS_DECL_EDITOR_COMMAND(InsertHTMLCommand)
+NS_DECL_EDITOR_COMMAND_FOR_STRING_PARAM(InsertHTMLCommand)
 
 #undef NS_DECL_EDITOR_COMMAND
 #undef NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE
 #undef NS_DECL_EDITOR_COMMAND_FOR_BOOL_PARAM
 #undef NS_DECL_EDITOR_COMMAND_FOR_CSTRING_PARAM
+#undef NS_DECL_EDITOR_COMMAND_FOR_STRING_PARAM
 #undef NS_DECL_EDITOR_COMMAND_COMMON_METHODS
 #undef NS_DECL_DO_COMMAND_PARAMS
 #undef NS_DECL_DO_COMMAND_PARAM_DELEGATE_TO_DO_COMMAND
 #undef NS_DECL_DO_COMMAND_PARAM_FOR_BOOL_PARAM
 #undef NS_DECL_DO_COMMAND_PARAM_FOR_CSTRING_PARAM
+#undef NS_DECL_DO_COMMAND_PARAM_FOR_STRING_PARAM
 #undef NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON
 
 }  // namespace mozilla
