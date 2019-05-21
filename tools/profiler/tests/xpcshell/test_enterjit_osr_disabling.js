@@ -6,7 +6,7 @@ function run_test() {
 
   Assert.ok(!Services.profiler.IsActive());
 
-  Services.profiler.StartProfiler(100, 10, ["js"], 1);
+  Services.profiler.StartProfiler(100, 10, ["js"]);
   // The function is entered with the profiler enabled
   (function() {
     Services.profiler.StopProfiler();

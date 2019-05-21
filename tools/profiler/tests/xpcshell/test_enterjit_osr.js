@@ -12,7 +12,7 @@ function run_test() {
     Assert.ok(!Services.profiler.IsActive());
 
     const ms = 5;
-    Services.profiler.StartProfiler(10000, ms, ["js"], 1);
+    Services.profiler.StartProfiler(10000, ms, ["js"]);
 
     function has_arbitrary_name_in_stack() {
         // A frame for |arbitrary_name| has been pushed.  Do a sequence of

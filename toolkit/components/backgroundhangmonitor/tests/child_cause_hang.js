@@ -11,7 +11,7 @@ function ensureProfilerInitialized() {
     return false;
   }
   let features = ["stackwalk"];
-  Services.profiler.StartProfiler(1000, 10, features, features.length);
+  Services.profiler.StartProfiler(1000, 10, features);
   Services.profiler.StopProfiler();
   return true;
 }
