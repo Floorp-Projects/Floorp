@@ -11,6 +11,8 @@
 
 #include "nsIDocumentEncoder.h"
 
+#include <utility>
+
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
@@ -43,12 +45,120 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Text.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 enum nsRangeIterationDirection { kDirectionOut = -1, kDirectionIn = 1 };
+
+class TextStreamer {
+ public:
+  /**
+   * @param aStream Will be kept alive by the TextStreamer.
+   * @param aUnicodeEncoder Needs to be non-nullptr.
+   */
+  TextStreamer(nsIOutputStream& aStream, UniquePtr<Encoder> aUnicodeEncoder,
+               bool aIsPlainText);
+
+  /**
+   * @param aString Will be truncated if aString is written to stream.
+   */
+  nsresult FlushIfStringLongEnough(nsAString& aString);
+
+  /**
+   * @param aString Will be truncated.
+   */
+  nsresult ForceFlush(nsAString& aString);
+
+ private:
+  const static uint32_t kMaxLengthBeforeFlush = 1024;
+
+  nsresult ConvertAndWrite(const nsAString& aString);
+
+  nsresult ConvertAndWriteAndTruncate(nsAString& aString);
+
+  const nsCOMPtr<nsIOutputStream> mStream;
+  const UniquePtr<Encoder> mUnicodeEncoder;
+  const bool mIsPlainText;
+};
+
+TextStreamer::TextStreamer(nsIOutputStream& aStream,
+                           UniquePtr<Encoder> aUnicodeEncoder,
+                           bool aIsPlainText)
+    : mStream{&aStream},
+      mUnicodeEncoder(std::move(aUnicodeEncoder)),
+      mIsPlainText(aIsPlainText) {
+  MOZ_ASSERT(mUnicodeEncoder);
+}
+
+nsresult TextStreamer::FlushIfStringLongEnough(nsAString& aString) {
+  nsresult rv = NS_OK;
+
+  if (aString.Length() > kMaxLengthBeforeFlush) {
+    rv = ConvertAndWriteAndTruncate(aString);
+  }
+
+  return rv;
+}
+
+nsresult TextStreamer::ForceFlush(nsAString& aString) {
+  return ConvertAndWriteAndTruncate(aString);
+}
+
+nsresult TextStreamer::ConvertAndWrite(const nsAString& aString) {
+  if (!aString.Length()) {
+    return NS_OK;
+  }
+
+  // TODO(mbrodesser): add constant.
+  uint8_t buffer[4096];
+  auto src = MakeSpan(aString);
+  auto bufferSpan = MakeSpan(buffer);
+  // Reserve space for terminator
+  auto dst = bufferSpan.To(bufferSpan.Length() - 1);
+  for (;;) {
+    uint32_t result;
+    size_t read;
+    size_t written;
+    bool hadErrors;
+    if (mIsPlainText) {
+      Tie(result, read, written) =
+          mUnicodeEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
+      if (result != kInputEmpty && result != kOutputFull) {
+        // There's always room for one byte in the case of
+        // an unmappable character, because otherwise
+        // we'd have gotten `kOutputFull`.
+        dst[written++] = '?';
+      }
+    } else {
+      Tie(result, read, written, hadErrors) =
+          mUnicodeEncoder->EncodeFromUTF16(src, dst, false);
+    }
+    Unused << hadErrors;
+    src = src.From(read);
+    // Sadly, we still have test cases that implement nsIOutputStream in JS, so
+    // the buffer needs to be zero-terminated for XPConnect to do its thing.
+    // See bug 170416.
+    bufferSpan[written] = 0;
+    uint32_t streamWritten;
+    nsresult rv = mStream->Write(reinterpret_cast<char*>(dst.Elements()),
+                                 written, &streamWritten);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (result == kInputEmpty) {
+      return NS_OK;
+    }
+  }
+}
+
+nsresult TextStreamer::ConvertAndWriteAndTruncate(nsAString& aString) {
+  const nsresult rv = ConvertAndWrite(aString);
+  aString.Truncate();
+  return rv;
+}
 
 class nsDocumentEncoder : public nsIDocumentEncoder {
  public:
@@ -82,8 +192,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
       const nsTArray<nsINode*>& aAncestorArray) {
     return -1;
   }
-
-  nsresult FlushText(nsAString& aString, bool aForce);
 
   bool IsInvisibleNodeAndShouldBeSkipped(nsINode& aNode) const {
     if (mFlags & SkipInvisibleContent) {
@@ -150,9 +258,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   RefPtr<Selection> mSelection;
   RefPtr<nsRange> mRange;
   nsCOMPtr<nsINode> mNode;
-  nsCOMPtr<nsIOutputStream> mStream;
   nsCOMPtr<nsIContentSerializer> mSerializer;
-  UniquePtr<Encoder> mUnicodeEncoder;
+  Maybe<TextStreamer> mTextStreamer;
   nsCOMPtr<nsINode> mCommonParent;
   nsCOMPtr<nsIDocumentEncoderNodeFixup> mNodeFixup;
 
@@ -180,7 +287,6 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   bool mDisableContextSerialize;
   bool mIsCopying;  // Set to true only while copying
   bool mNodeIsContainer;
-  bool mIsPlainText;
   nsStringBuffer* mCachedBuffer;
 };
 
@@ -212,7 +318,6 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer) {
   mHaltRangeHint = false;
   mDisableContextSerialize = false;
   mNodeIsContainer = false;
-  mIsPlainText = false;
   if (aClearCachedSerializer) {
     mSerializer = nullptr;
   }
@@ -478,7 +583,11 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return FlushText(aStr, false);
+  if (mTextStreamer) {
+    rv = mTextStreamer->FlushIfStringLongEnough(aStr);
+  }
+
+  return rv;
 }
 
 nsresult nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
@@ -513,71 +622,6 @@ nsresult nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
   }
 
   return NS_OK;
-}
-
-static nsresult ConvertAndWrite(const nsAString& aString,
-                                nsIOutputStream* aStream, Encoder* aEncoder,
-                                bool aIsPlainText) {
-  NS_ENSURE_ARG_POINTER(aStream);
-  NS_ENSURE_ARG_POINTER(aEncoder);
-
-  if (!aString.Length()) {
-    return NS_OK;
-  }
-
-  uint8_t buffer[4096];
-  auto src = MakeSpan(aString);
-  auto bufferSpan = MakeSpan(buffer);
-  // Reserve space for terminator
-  auto dst = bufferSpan.To(bufferSpan.Length() - 1);
-  for (;;) {
-    uint32_t result;
-    size_t read;
-    size_t written;
-    bool hadErrors;
-    if (aIsPlainText) {
-      Tie(result, read, written) =
-          aEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
-      if (result != kInputEmpty && result != kOutputFull) {
-        // There's always room for one byte in the case of
-        // an unmappable character, because otherwise
-        // we'd have gotten `kOutputFull`.
-        dst[written++] = '?';
-      }
-    } else {
-      Tie(result, read, written, hadErrors) =
-          aEncoder->EncodeFromUTF16(src, dst, false);
-    }
-    Unused << hadErrors;
-    src = src.From(read);
-    // Sadly, we still have test cases that implement nsIOutputStream in JS, so
-    // the buffer needs to be zero-terminated for XPConnect to do its thing.
-    // See bug 170416.
-    bufferSpan[written] = 0;
-    uint32_t streamWritten;
-    nsresult rv = aStream->Write(reinterpret_cast<char*>(dst.Elements()),
-                                 written, &streamWritten);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (result == kInputEmpty) {
-      return NS_OK;
-    }
-  }
-}
-
-nsresult nsDocumentEncoder::FlushText(nsAString& aString, bool aForce) {
-  if (!mStream) return NS_OK;
-
-  nsresult rv = NS_OK;
-
-  if (aString.Length() > 1024 || aForce) {
-    rv = ConvertAndWrite(aString, mStream, mUnicodeEncoder.get(), mIsPlainText);
-
-    aString.Truncate();
-  }
-
-  return rv;
 }
 
 static bool IsTextNode(nsINode* aNode) { return aNode && aNode->IsText(); }
@@ -959,7 +1003,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
 
     mRange = nullptr;
   } else if (mNode) {
-    if (!mNodeFixup && !(mFlags & SkipInvisibleContent) && !mStream &&
+    if (!mNodeFixup && !(mFlags & SkipInvisibleContent) && !mTextStreamer &&
         mNodeIsContainer) {
       rv = SerializeToStringIterative(mNode, output);
     } else {
@@ -1006,6 +1050,8 @@ NS_IMETHODIMP
 nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream) {
   MOZ_ASSERT(mRangeContexts.IsEmpty(), "Re-entrant call to nsDocumentEncoder.");
   auto rangeContextGuard = MakeScopeExit([&] { mRangeContexts.Clear(); });
+  NS_ENSURE_ARG_POINTER(aStream);
+
   nsresult rv = NS_OK;
 
   if (!mDocument) return NS_ERROR_NOT_INITIALIZED;
@@ -1014,21 +1060,17 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream) {
     return NS_ERROR_UCONV_NOCONV;
   }
 
-  mUnicodeEncoder = mEncoding->NewEncoder();
-
-  mIsPlainText = (mMimeType.LowerCaseEqualsLiteral("text/plain"));
-
-  mStream = aStream;
-
+  const bool isPlainText = mMimeType.LowerCaseEqualsLiteral(kTextMime);
+  mTextStreamer.emplace(*aStream, mEncoding->NewEncoder(), isPlainText);
   nsAutoString buf;
 
   rv = EncodeToString(buf);
 
   // Force a flush of the last chunk of data.
-  FlushText(buf, true);
+  rv = mTextStreamer->ForceFlush(buf);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  mStream = nullptr;
-  mUnicodeEncoder = nullptr;
+  mTextStreamer.reset();
 
   return rv;
 }
