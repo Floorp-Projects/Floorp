@@ -165,8 +165,7 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
   }
 
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
-
-  if (!owner || !owner->OwnerDoc()) {
+  if (!owner) {
     return IPC_OK();
   }
 
