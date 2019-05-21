@@ -1126,21 +1126,22 @@ bool InsertHTMLCommand::IsCommandEnabled(Command aCommand,
 
 nsresult InsertHTMLCommand::DoCommand(Command aCommand,
                                       TextEditor& aTextEditor) const {
-  // If nsInsertHTMLCommand is called with no parameters, it was probably called
+  // If InsertHTMLCommand is called with no parameters, it was probably called
   // with an empty string parameter ''. In this case, it should act the same as
   // the delete command
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsAutoString html;
-  return MOZ_KnownLive(htmlEditor)->InsertHTML(html);
+  nsresult rv = MOZ_KnownLive(htmlEditor)->InsertHTML(EmptyString());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertHTML() failed");
+  return rv;
 }
 
-nsresult InsertHTMLCommand::DoCommandParams(Command aCommand,
-                                            nsCommandParams* aParams,
-                                            TextEditor& aTextEditor) const {
-  if (NS_WARN_IF(!aParams)) {
+nsresult InsertHTMLCommand::DoCommandParam(Command aCommand,
+                                           const nsAString& aStringParam,
+                                           TextEditor& aTextEditor) const {
+  if (NS_WARN_IF(aStringParam.IsVoid())) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1148,14 +1149,9 @@ nsresult InsertHTMLCommand::DoCommandParams(Command aCommand,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-
-  // Get HTML source string to insert from command params
-  nsAutoString html;
-  nsresult rv = aParams->GetString(STATE_DATA, html);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return MOZ_KnownLive(htmlEditor)->InsertHTML(html);
+  nsresult rv = MOZ_KnownLive(htmlEditor)->InsertHTML(aStringParam);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertHTML() failed");
+  return rv;
 }
 
 nsresult InsertHTMLCommand::GetCommandStateParams(
@@ -1208,12 +1204,12 @@ nsresult InsertTagCommand::DoCommand(Command aCommand,
   return rv;
 }
 
-nsresult InsertTagCommand::DoCommandParams(Command aCommand,
-                                           nsCommandParams* aParams,
-                                           TextEditor& aTextEditor) const {
+nsresult InsertTagCommand::DoCommandParam(Command aCommand,
+                                          const nsAString& aStringParam,
+                                          TextEditor& aTextEditor) const {
   MOZ_ASSERT(aCommand != Command::InsertHorizontalRule);
 
-  if (NS_WARN_IF(!aParams)) {
+  if (NS_WARN_IF(aStringParam.IsEmpty())) {
     return NS_ERROR_INVALID_ARG;
   }
   nsAtom* tagName = GetTagName(aCommand);
@@ -1224,18 +1220,6 @@ nsresult InsertTagCommand::DoCommandParams(Command aCommand,
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
-  }
-
-  // Don't use nsAutoString here because nsCommandParams stores string member
-  // with nsString*.  Therefore, nsAutoString always needs to copy the storage
-  // but nsString may avoid it.
-  nsString value;
-  nsresult rv = aParams->GetString(STATE_ATTRIBUTE, value);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  if (NS_WARN_IF(value.IsEmpty())) {
-    return NS_ERROR_INVALID_ARG;
   }
 
   // filter out tags we don't know how to insert
@@ -1256,25 +1240,24 @@ nsresult InsertTagCommand::DoCommandParams(Command aCommand,
   }
 
   ErrorResult err;
-  newElement->SetAttr(attribute, value, err);
+  newElement->SetAttr(attribute, aStringParam, err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
 
   // do actual insertion
   if (tagName == nsGkAtoms::a) {
-    rv = MOZ_KnownLive(htmlEditor)->InsertLinkAroundSelection(newElement);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
-  }
-
-  rv = MOZ_KnownLive(htmlEditor)->InsertElementAtSelection(newElement, true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+    nsresult rv =
+        MOZ_KnownLive(htmlEditor)->InsertLinkAroundSelection(newElement);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "InsertLinkAroundSelection() failed");
     return rv;
   }
-  return NS_OK;
+
+  nsresult rv =
+      MOZ_KnownLive(htmlEditor)->InsertElementAtSelection(newElement, true);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertElementAtSelection() failed");
+  return rv;
 }
 
 nsresult InsertTagCommand::GetCommandStateParams(

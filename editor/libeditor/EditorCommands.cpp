@@ -147,6 +147,38 @@ EditorCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  if (Any(paramType & EditorCommandParamType::String)) {
+    if (!params) {
+      nsresult rv = DoCommandParam(command, VoidString(),
+                                   MOZ_KnownLive(*editor->AsTextEditor()));
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "Failed to do command from nsIControllerCommand::DoCommandParams()");
+      return rv;
+    }
+    nsString stringParam;
+    if (Any(paramType & EditorCommandParamType::StateAttribute)) {
+      nsresult rv = params->GetString(STATE_ATTRIBUTE, stringParam);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else if (Any(paramType & EditorCommandParamType::StateData)) {
+      nsresult rv = params->GetString(STATE_DATA, stringParam);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unexpected state for String");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    nsresult rv = DoCommandParam(command, stringParam,
+                                 MOZ_KnownLive(*editor->AsTextEditor()));
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "Failed to do command from nsIControllerCommand::DoCommandParams()");
+    return rv;
+  }
+
   nsresult rv = DoCommandParams(command, MOZ_KnownLive(params),
                                 MOZ_KnownLive(*editor->AsTextEditor()));
   NS_WARNING_ASSERTION(
@@ -735,17 +767,11 @@ nsresult InsertPlaintextCommand::DoCommand(Command aCommand,
   return NS_OK;
 }
 
-nsresult InsertPlaintextCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  if (NS_WARN_IF(!aParams)) {
+nsresult InsertPlaintextCommand::DoCommandParam(Command aCommand,
+                                                const nsAString& aStringParam,
+                                                TextEditor& aTextEditor) const {
+  if (NS_WARN_IF(aStringParam.IsVoid())) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  // Get text to insert from command params
-  nsAutoString text;
-  nsresult rv = aParams->GetString(STATE_DATA, text);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   // XXX InsertTextAsAction() is not same as OnInputText().  However, other
@@ -754,7 +780,7 @@ nsresult InsertPlaintextCommand::DoCommandParams(
   //     better, however, this may not cause two or more placeholder
   //     transactions to the top transaction since its name may not be
   //     nsGkAtoms::TypingTxnName.
-  rv = aTextEditor.InsertTextAsAction(text);
+  DebugOnly<nsresult> rv = aTextEditor.InsertTextAsAction(aStringParam);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the text");
   return NS_OK;
 }
