@@ -84,10 +84,14 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
   }
   MOZ_ASSERT(masm.framePushed() == func.framePushed);
 
+  // Copy the machine code; handle jump tables and other read-only data below.
   uint32_t funcBase = masm.currentOffset();
   if (!masm.appendRawCode(func.code, func.codeSize)) {
     return false;
   }
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+  uint32_t codeEnd = masm.currentOffset();
+#endif
 
   // Cranelift isn't aware of pinned registers in general, so we need to reload
   // both TLS and pinned regs from the stack.
@@ -97,6 +101,46 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
   masm.loadWasmPinnedRegsFromTls();
 
   wasm::GenerateFunctionEpilogue(masm, func.framePushed, offsets);
+
+  if (func.numRodataRelocs > 0) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+    constexpr size_t jumptableElementSize = 4;
+
+    MOZ_ASSERT(func.jumptablesSize % jumptableElementSize == 0);
+
+    // Align the jump tables properly.
+    masm.haltingAlign(jumptableElementSize);
+
+    // Copy over the tables and read-only data.
+    uint32_t rodataBase = masm.currentOffset();
+    if (!masm.appendRawCode(func.code + func.codeSize,
+                            func.totalSize - func.codeSize)) {
+      return false;
+    }
+
+    uint32_t numElem = func.jumptablesSize / jumptableElementSize;
+    uint32_t bias = rodataBase - codeEnd;
+
+    // Bias the jump table(s).  The table values are negative values
+    // representing backward jumps.  By shifting the table down we increase the
+    // distance and so we add a negative value to reflect the larger distance.
+    //
+    // Note addToPCRel4() works from the end of the instruction, hence the loop
+    // bounds.
+    for (uint32_t i = 1; i <= numElem; i++) {
+      masm.addToPCRel4(rodataBase + (i * jumptableElementSize), -bias);
+    }
+
+    // Patch up the code locations.  These represent forward distances that also
+    // become greater, so we add a positive value.
+    for (uint32_t i = 0; i < func.numRodataRelocs; i++) {
+      MOZ_ASSERT(func.rodataRelocs[i] < func.codeSize);
+      masm.addToPCRel4(funcBase + func.rodataRelocs[i], bias);
+    }
+#else
+    MOZ_CRASH("No jump table support on this platform");
+#endif
+  }
 
   masm.flush();
   if (masm.oom()) {
