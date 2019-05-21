@@ -2871,7 +2871,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   if (!funbox) {
     return null();
   }
-  funbox->initFromLazyFunction();
+  funbox->initFromLazyFunction(fun);
 
   Directives newDirectives = directives;
   SourceParseContext funpc(this, funbox, &newDirectives);
