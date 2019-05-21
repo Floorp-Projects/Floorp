@@ -33,16 +33,17 @@ def get_contents(path):
     return contents
 
 
-def get_version(product_dir='browser'):
-    version_path = os.path.join(GECKO, product_dir, 'config',
-                                'version_display.txt')
+def get_version(version_dir='browser/config'):
+    return _get_version(version_dir, 'version_display.txt')
+
+
+def get_app_version(version_dir='browser/config'):
+    return _get_version(version_dir, 'version.txt')
+
+
+def _get_version(version_dir, version_file):
+    version_path = os.path.join(GECKO, version_dir, version_file)
     return get_contents(version_path)
-
-
-def get_app_version(product_dir='browser'):
-    app_version_path = os.path.join(GECKO, product_dir, 'config',
-                                    'version.txt')
-    return get_contents(app_version_path)
 
 
 # Please keep this list sorted and in sync with taskcluster/docs/parameters.rst

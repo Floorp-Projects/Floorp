@@ -76,6 +76,8 @@ graph_config_schema = Schema({
             optionally_keyed_by('release-product', 'release-level', 'release-type',
                                 Any(basestring, None)),
     },
+    Required('version-directory'): optionally_keyed_by('release-product', 'android-release-type',
+                                                       basestring),
     Required('workers'): {
         Required('aliases'): {
             text_type: {
@@ -96,6 +98,9 @@ class GraphConfig(object):
 
     def __getitem__(self, name):
         return self._config[name]
+
+    def get(self, *args, **kwargs):
+        return self._config.get(*args, **kwargs)
 
     @property
     def taskcluster_yml(self):

@@ -272,6 +272,13 @@ task-priority:
         'mozilla-inbound': 'low'
         'default': 'very-low'
 
+version-directory:
+    by-android-release-type:
+        nightly: mobile/android/config/version-files/nightly/
+        beta: mobile/android/config/version-files/beta/
+        release: mobile/android/config/version-files/release/
+        default: browser/config/
+
 workers:
     aliases:
         b-android:

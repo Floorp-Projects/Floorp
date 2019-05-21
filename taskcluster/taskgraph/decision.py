@@ -22,6 +22,7 @@ from .parameters import Parameters, get_version, get_app_version
 from .taskgraph import TaskGraph
 from .try_option_syntax import parse_message
 from .util.hg import get_hg_revision_branch, get_hg_commit_message
+from .util.keyed_by import evaluate_keyed_by
 from .util.partials import populate_release_history
 from .util.schema import validate_schema, Schema
 from .util.taskcluster import get_artifact
@@ -247,8 +248,6 @@ def get_decision_parameters(config, options):
     parameters['existing_tasks'] = {}
     parameters['do_not_optimize'] = []
     parameters['build_number'] = 1
-    parameters['version'] = get_version(product_dir)
-    parameters['app_version'] = get_app_version(product_dir)
     parameters['message'] = try_syntax_from_message(commit_message)
     parameters['hg_branch'] = get_hg_revision_branch(GECKO, revision=parameters['head_rev'])
     parameters['next_version'] = None
@@ -320,6 +319,14 @@ def get_decision_parameters(config, options):
     if options.get('optimize_target_tasks') is not None:
         parameters['optimize_target_tasks'] = options['optimize_target_tasks']
 
+    version_directory = evaluate_keyed_by(
+        config.get('version-directory'),
+        'version-directory',
+        {'android-release-type': options.get('android_release_type')}
+    )
+
+    parameters['version'] = get_version(version_directory)
+    parameters['app_version'] = get_app_version(version_directory)
     result = Parameters(**parameters)
     result.check()
     return result
