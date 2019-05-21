@@ -3,7 +3,7 @@
 
 #include "jit/JitOptions.h"               // js::jit::JitOptions
 #include "js/CallArgs.h"                  // JS::CallArgs, JS::CallArgsFromVp
-#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
+#include "js/CompilationAndEvaluation.h"  // JS::EvaluateDontInflate
 #include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/RootingAPI.h"                // JS::Rooted
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
@@ -64,7 +64,7 @@ FRAGMENT(unwind, simple) {
   }
 
   JS::Rooted<JS::Value> rval(cx);
-  JS::Evaluate(cx, opts, srcBuf, &rval);
+  JS::EvaluateDontInflate(cx, opts, srcBuf, &rval);
 
   js::jit::JitOptions.baselineWarmUpThreshold = saveThreshold;
 }

@@ -377,6 +377,7 @@ MozElements.MozAutocompleteRichlistboxPopup = class MozAutocompleteRichlistboxPo
           "autofill-footer",
           "autofill-clear-button",
           "autofill-insecureWarning",
+          "generatedPassword",
           "insecureWarning",
           "loginsFooter",
           "loginWithOrigin",
@@ -409,8 +410,9 @@ MozElements.MozAutocompleteRichlistboxPopup = class MozAutocompleteRichlistboxPo
           case "loginsFooter":
             options = { is: "autocomplete-richlistitem-logins-footer" };
             break;
+          case "generatedPassword":
           case "loginWithOrigin":
-            options = { is: "autocomplete-richlistitem-login-with-origin" };
+            options = { is: "autocomplete-two-line-richlistitem" };
             break;
           default:
             options = { is: "autocomplete-richlistitem" };
