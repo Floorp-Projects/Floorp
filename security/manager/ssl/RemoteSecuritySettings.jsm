@@ -6,7 +6,9 @@
 const EXPORTED_SYMBOLS = ["RemoteSecuritySettings"];
 
 const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
+ChromeUtils.defineModuleGetter(this, "BlocklistClients", "resource://services-common/blocklist-clients.js");
 
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {X509} = ChromeUtils.import("resource://gre/modules/psm/X509.jsm", null);
@@ -93,6 +95,19 @@ class CertInfo {
 CertInfo.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsICertInfo]);
 
 this.RemoteSecuritySettings = class RemoteSecuritySettings {
+    /**
+     * Initialize the clients (cheap instantiation) and setup their sync event.
+     * This static method is called from BrowserGlue.jsm soon after startup.
+     */
+    static init() {
+      // In Bug 1543598, the OneCRL and Pinning clients will be moved in this module.
+      BlocklistClients.initialize();
+
+      if (AppConstants.MOZ_NEW_CERT_STORAGE) {
+        new RemoteSecuritySettings();
+      }
+    }
+
     constructor() {
         this.client = RemoteSettings(Services.prefs.getCharPref(INTERMEDIATES_COLLECTION_PREF), {
           bucketNamePref: INTERMEDIATES_BUCKET_PREF,
