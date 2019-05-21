@@ -36,6 +36,11 @@ permalink: /changelog/
 * **lib-crash**
   * Crash reports sent to Sentry now contain additional tags about the used Android Components version and setup (prefixed with "ac.").
 
+* **browser-awesomebar**, **feature-awesomebar**
+  * Fixed an issue where `SuggestionProvider.onInputChanged()` was called before `SuggestionProvider.onInputStarted()`.
+  * Added ability for `SuggestionProvider` to return an initial list of suggestions from `onInputStarted()`.
+  * Modified `ClipboardSuggestionProvider` to already return a suggestions from `onInputStarted()` if the clipboard contains a URL.
+
 # 0.53.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.52.0...v0.53.0)

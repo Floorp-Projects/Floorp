@@ -167,6 +167,8 @@ class BrowserAwesomeBarTest {
 
             awesomeBar.onInputStarted()
 
+            awesomeBar.job!!.join()
+
             // Confirm that only provider2's suggestions were removed
             verify(adapter, never()).removeSuggestions(provider1)
             verify(adapter).removeSuggestions(provider2)

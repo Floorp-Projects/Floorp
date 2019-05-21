@@ -138,8 +138,11 @@ interface AwesomeBar {
 
         /**
          * Fired when the user starts interacting with the awesome bar by entering text in the toolbar.
+         *
+         * The provider has the option to return an initial list of suggestions that will be displayed before the
+         * user has entered/modified any of the text.
          */
-        fun onInputStarted() = Unit
+        fun onInputStarted(): List<Suggestion> = emptyList()
 
         /**
          * Fired whenever the user changes their input, after they have started interacting with the awesome bar.

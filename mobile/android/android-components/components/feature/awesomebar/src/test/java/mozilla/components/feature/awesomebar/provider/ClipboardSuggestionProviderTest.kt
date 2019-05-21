@@ -90,16 +90,19 @@ class ClipboardSuggestionProviderTest {
         assertClipboardYieldsUrl("My IP is 192.168.0.1.", "192.168.0.1")
     }
 
-    private fun getInt() = 1
-
-    internal var foo = {
-        val someInteger = getInt()
-        someInteger / 5
-    }()
-
     @Test
-    fun `print foo`() {
-        println(foo)
+    fun `provider return suggestion on input start`() {
+        clipboardManager.primaryClip = ClipData.newPlainText("Test label", "https://www.mozilla.org")
+
+        val provider = ClipboardSuggestionProvider(context, mock())
+        val suggestions = runBlocking { provider.onInputStarted() }
+
+        assertEquals(1, suggestions.size)
+
+        val suggestion = suggestions.firstOrNull()
+        assertNotNull(suggestion!!)
+
+        assertEquals("https://www.mozilla.org", suggestion.description)
     }
 
     @Test

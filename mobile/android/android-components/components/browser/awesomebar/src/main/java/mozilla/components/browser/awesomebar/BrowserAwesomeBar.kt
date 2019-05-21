@@ -15,8 +15,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.awesomebar.layout.SuggestionLayout
 import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -114,19 +114,23 @@ class BrowserAwesomeBar @JvmOverloads constructor(
 
     @Synchronized
     override fun onInputStarted() {
-        providers.forEach { provider -> provider.onInputStarted() }
+        queryProvidersForSuggestions { onInputStarted() }
     }
 
     @Synchronized
     override fun onInputChanged(text: String) {
+        queryProvidersForSuggestions { onInputChanged(text) }
+    }
+
+    private fun queryProvidersForSuggestions(
+        block: suspend AwesomeBar.SuggestionProvider.() -> List<AwesomeBar.Suggestion>
+    ) {
         job?.cancel()
 
-        suggestionsAdapter.optionallyClearSuggestions()
-
-        job = scope.launch {
+        job = scope.launch() {
             providers.forEach { provider ->
                 launch {
-                    val suggestions = async(jobDispatcher) { provider.onInputChanged(text) }.await()
+                    val suggestions = withContext(jobDispatcher) { provider.block() }
                     val processedSuggestions = processProviderSuggestions(suggestions)
                     suggestionsAdapter.addSuggestions(
                         provider,
@@ -135,6 +139,8 @@ class BrowserAwesomeBar @JvmOverloads constructor(
                 }
             }
         }
+
+        suggestionsAdapter.optionallyClearSuggestions()
     }
 
     internal fun processProviderSuggestions(suggestions: List<AwesomeBar.Suggestion>): List<AwesomeBar.Suggestion> {

@@ -30,27 +30,17 @@ class AwesomeBarFeature(
     private val toolbar: Toolbar,
     private val engineView: EngineView? = null,
     private val icons: BrowserIcons? = null,
-    private val onEditStart: (() -> Unit)? = null,
-    private val onEditComplete: (() -> Unit)? = null
+    onEditStart: (() -> Unit)? = null,
+    onEditComplete: (() -> Unit)? = null
 ) {
     init {
-        toolbar.setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
-            override fun onTextChanged(text: String) = awesomeBar.onInputChanged(text)
-
-            override fun onStartEditing() {
-                onEditStart?.invoke() ?: showAwesomeBar()
-                awesomeBar.onInputStarted()
-            }
-
-            override fun onStopEditing() {
-                onEditComplete?.invoke() ?: hideAwesomeBar()
-                awesomeBar.onInputCancelled()
-            }
-
-            override fun onCancelEditing(): Boolean {
-                return true
-            }
-        })
+        toolbar.setOnEditListener(ToolbarEditListener(
+            awesomeBar,
+            onEditStart,
+            onEditComplete,
+            ::showAwesomeBar,
+            ::hideAwesomeBar
+        ))
 
         awesomeBar.setOnStopListener { toolbar.displayMode() }
     }
@@ -108,5 +98,37 @@ class AwesomeBarFeature(
     private fun hideAwesomeBar() {
         awesomeBar.asView().visibility = View.GONE
         engineView?.asView()?.visibility = View.VISIBLE
+    }
+}
+
+internal class ToolbarEditListener(
+    private val awesomeBar: AwesomeBar,
+    private val onEditStart: (() -> Unit)? = null,
+    private val onEditComplete: (() -> Unit)? = null,
+    private val showAwesomeBar: () -> Unit,
+    private val hideAwesomeBar: () -> Unit
+) : Toolbar.OnEditListener {
+    private var inputStarted = false
+
+    override fun onTextChanged(text: String) {
+        if (inputStarted) {
+            awesomeBar.onInputChanged(text)
+        }
+    }
+
+    override fun onStartEditing() {
+        onEditStart?.invoke() ?: showAwesomeBar()
+        awesomeBar.onInputStarted()
+        inputStarted = true
+    }
+
+    override fun onStopEditing() {
+        onEditComplete?.invoke() ?: hideAwesomeBar()
+        awesomeBar.onInputCancelled()
+        inputStarted = false
+    }
+
+    override fun onCancelEditing(): Boolean {
+        return true
     }
 }

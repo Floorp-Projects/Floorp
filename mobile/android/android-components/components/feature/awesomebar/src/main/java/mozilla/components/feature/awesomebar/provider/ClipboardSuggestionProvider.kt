@@ -32,7 +32,11 @@ class ClipboardSuggestionProvider(
 
     private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
-    override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
+    override fun onInputStarted(): List<AwesomeBar.Suggestion> = createClipboardSuggestion()
+
+    override suspend fun onInputChanged(text: String) = createClipboardSuggestion()
+
+    private fun createClipboardSuggestion(): List<AwesomeBar.Suggestion> {
         val url = getTextFromClipboard(clipboardManager)?.let {
             findUrl(it)
         } ?: return emptyList()
