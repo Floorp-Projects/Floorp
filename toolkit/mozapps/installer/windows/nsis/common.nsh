@@ -8178,40 +8178,34 @@ end:
 !macroend
 
 /**
- * Gets the number of dialog units from the top of a dialog to the bottom of a
- * control
+ * Gets the number of pixels from the top of a dialog to the bottom of a control
  *
- * _DIALOG the handle of the dialog
  * _CONTROL the handle of the control
- * _RES_DU return value - dialog units from the top of the dialog to the bottom
- *         of the control
+ * _RES_PX  return value - pixels from the top of the dialog to the bottom
+ *          of the control
  */
-!macro GetDlgItemBottomDUCall _DIALOG _CONTROL _RES_DU
-  Push "${_DIALOG}"
+!macro GetDlgItemBottomPXCall _CONTROL _RES_PX
   Push "${_CONTROL}"
-  ${CallArtificialFunction} GetDlgItemBottomDU_
-  Pop ${_RES_DU}
+  ${CallArtificialFunction} GetDlgItemBottomPX_
+  Pop ${_RES_PX}
 !macroend
 
-!define GetDlgItemBottomDU "!insertmacro GetDlgItemBottomDUCall"
-!define un.GetDlgItemBottomDU "!insertmacro GetDlgItemBottomDUCall"
+!define GetDlgItemBottomPX "!insertmacro GetDlgItemBottomPXCall"
+!define un.GetDlgItemBottomPX "!insertmacro GetDlgItemBottomPXCall"
 
-!macro GetDlgItemBottomDU_
+!macro GetDlgItemBottomPX_
   Exch $0 ; handle of the control
-  Exch $1 ; handle of the dialog
+  Push $1
   Push $2
-  Push $3
 
   ; #32770 is the dialog class
-  FindWindow $2 "#32770" "" $HWNDPARENT
-  System::Call '*(i, i, i, i) i .r3'
-  System::Call 'user32::GetWindowRect(i r0, i r3)'
-  System::Call 'user32::MapWindowPoints(i 0, i r2, i r3, i 2)'
-  System::Call 'user32::MapDialogRect(i r1, i r3)'
-  System::Call '*$3(i, i, i, i .r0)'
-  System::Free $3
+  FindWindow $1 "#32770" "" $HWNDPARENT
+  System::Call '*(i, i, i, i) i .r2'
+  System::Call 'user32::GetWindowRect(i r0, i r2)'
+  System::Call 'user32::MapWindowPoints(i 0, i r1, i r2, i 2)'
+  System::Call '*$2(i, i, i, i .r0)'
+  System::Free $2
 
-  Pop $3
   Pop $2
   Pop $1
   Exch $0 ; pixels from the top of the dialog to the bottom of the control
@@ -8219,17 +8213,17 @@ end:
 
 /**
  * Gets the width and height for sizing a control that has the specified text.
- * If the text has embedded newlines then the width and height will be
- * determined without trying to optimize the control's width and height. If the
- * text doesn't contain newlines the control's height and width will be
- * dynamically determined using a minimum of 3 lines (incrementing the
- * number of lines if necessary) for the height and the maximum width specified.
+ * The control's height and width will be dynamically determined for the maximum
+ * width specified.
  *
  * _TEXT       the text
  * _FONT       the font to use when getting the width and height
- * _MAX_WIDTH  the maximum width for the control
- * _RES_WIDTH  return value - control width for the text
- * _RES_HEIGHT return value - control height for the text
+ * _MAX_WIDTH  the maximum width for the control in pixels
+ * _RES_WIDTH  return value - control width for the text in pixels.
+ *             This might be larger than _MAX_WIDTH if that constraint couldn't
+ *             be satisfied, e.g. a single word that couldn't be broken up is
+ *             longer than _MAX_WIDTH by itself.
+ * _RES_HEIGHT return value - control height for the text in pixels
  */
 !macro GetTextWidthHeight
 
@@ -8245,25 +8239,25 @@ end:
     !define ${_MOZFUNC_UN}GetTextWidthHeight "!insertmacro ${_MOZFUNC_UN}GetTextWidthHeightCall"
 
     Function ${_MOZFUNC_UN}GetTextWidthHeight
-      Exch $0  ; maximum width use to calculate the control's width and height
-      Exch 1
-      Exch $1  ; font
-      Exch 2
-      Exch $2  ; text
-      Push $3
-      Push $4
-      Push $5
-      Push $6
-      Push $7
-      Push $8
-      Push $9
-      Push $R0
-      Push $R1
-      Push $R2
+      ; Stack contents after each instruction (top of the stack on the left):
+      ;          _MAX_WIDTH _FONT _TEXT
+      Exch $0  ; $0 _FONT _TEXT
+      Exch 1   ; _FONT $0 _TEXT
+      Exch $1  ; $1 $0 _TEXT
+      Exch 2   ; _TEXT $0 $1
+      Exch $2  ; $2 $0 $1
+      ; That's all the parameters, now save our scratch registers.
+      Push $3  ; handle to a temporary control for drawing the text into
+      Push $4  ; DC handle
+      Push $5  ; string length of the text argument
+      Push $6  ; RECT struct to call DrawText with
+      Push $7  ; width returned from DrawText
+      Push $8  ; height returned from DrawText
+      Push $9  ; flags to pass to DrawText
 
-      StrCpy $R2 "${DT_NOCLIP}|${DT_CALCRECT}"
+      StrCpy $9 "${DT_NOCLIP}|${DT_CALCRECT}|${DT_WORDBREAK}"
       !ifdef ${AB_CD}_rtl
-        StrCpy $R2 "$R2|${DT_RTLREADING}"
+        StrCpy $9 "$9|${DT_RTLREADING}"
       !endif
 
       ; Reuse the existing NSIS control which is used for BrandingText instead
@@ -8274,56 +8268,18 @@ end:
       System::Call 'gdi32::SelectObject(i r4, i r1)'
 
       StrLen $5 "$2" ; text length
-      System::Call '*(i, i, i, i) i .r6'
+      System::Call '*(i, i, i r0, i) i .r6'
 
-      ClearErrors
-      ${${_MOZFUNC_UN}WordFind} "$2" "$\n" "E#" $R0
-      ${If} ${Errors}
-        ; When there aren't newlines in the text calculate the size of the
-        ; rectangle needed for the text with a minimum of three lines of text.
-        ClearErrors
-        System::Call 'user32::DrawTextW(i r4, t $\"$2$\", i r5, i r6, \
-                                        i $R2|${DT_SINGLELINE})'
-        System::Call '*$6(i, i, i .r8, i .r7)'
-        System::Free $6
+      System::Call 'user32::DrawTextW(i r4, t $\"$2$\", i r5, i r6, i r9)'
+      System::Call '*$6(i, i, i .r7, i .r8)'
+      System::Free $6
 
-        ; Get the approximate number height needed to display the text starting
-        ; with a minimum of 3 lines of text.
-        StrCpy $9 $8
-        StrCpy $R1 2 ; set the number of lines initially to 2
-        ${Do}
-          IntOp $R1 $R1 + 1 ; increment the number of lines
-          IntOp $9 $8 / $R1
-        ${LoopUntil} $9 < $0
-        IntOp $7 $7 * $R1
-
-        StrCpy $R0 $9
-        ${Do}
-          IntOp $R0 $R0 + 20
-          System::Call '*(i, i, i R0, i r7) i .r6'
-          System::Call 'user32::DrawTextW(i r4, t $\"$2$\", i r5, i r6, \
-                                          i $R2|${DT_WORDBREAK}) i .R1'
-          System::Call '*$6(i, i, i .r8, i .r9)'
-          System::Free $6
-        ${LoopUntil} $7 >= $R1
-      ${Else}
-        ; When there are newlines in the text just return the size of the
-        ; rectangle for the text.
-        System::Call 'user32::DrawTextW(i r4, t $\"$2$\", i r5, i r6, i $R2)'
-        System::Call '*$6(i, i, i .r8, i .r9)'
-        System::Free $6
-      ${EndIf}
-
-      ; Reselect the original DC
-      System::Call 'gdi32::SelectObject(i r4, i r1)'
       System::Call 'user32::ReleaseDC(i r3, i r4)'
 
-      StrCpy $1 $9
-      StrCpy $0 $8
+      StrCpy $1 $8
+      StrCpy $0 $7
 
-      Pop $R2
-      Pop $R1
-      Pop $R0
+      ; Restore the values that were in our scratch registers.
       Pop $9
       Pop $8
       Pop $7
@@ -8331,11 +8287,14 @@ end:
       Pop $5
       Pop $4
       Pop $3
-      Exch $2
-      Exch 2
-      Exch $1 ; return height
-      Exch 1
-      Exch $0 ; return width
+      ; Restore our parameter registers and return our results.
+      ; Stack contents after each instruction (top of the stack on the left):
+      ;         $2 $0 $1
+      Pop $2  ; $0 $1
+      Exch 1  ; $1 $0
+      Exch $1 ; _RES_HEIGHT $0
+      Exch 1  ; $0 _RES_HEIGHT
+      Exch $0 ; _RES_WIDTH _RES_HEIGHT
     FunctionEnd
 
     !verbose pop
