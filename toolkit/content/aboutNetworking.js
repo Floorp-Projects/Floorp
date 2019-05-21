@@ -317,7 +317,7 @@ function updateLogModules() {
       }
     } catch (e) {}
 
-    let children = Services.prefs.getBranch("logging.").getChildList("", {});
+    let children = Services.prefs.getBranch("logging.").getChildList("");
 
     for (let pref of children) {
       if (pref.startsWith("config.")) {
@@ -349,7 +349,7 @@ function setLogFile() {
 
 function clearLogModules() {
   // Turn off all the modules.
-  let children = Services.prefs.getBranch("logging.").getChildList("", {});
+  let children = Services.prefs.getBranch("logging.").getChildList("");
   for (let pref of children) {
     if (!pref.startsWith("config.")) {
       Services.prefs.clearUserPref(`logging.${pref}`);

@@ -61,7 +61,7 @@ function test_importfromPrefs() {
   PermissionsUtils.importFromPrefs(PREF_ROOT, TEST_PERM);
 
   // Get list of preferences to check
-  let preferences = Services.prefs.getChildList(PREF_ROOT, {});
+  let preferences = Services.prefs.getChildList(PREF_ROOT);
 
   // Check preferences were emptied
   for (let pref of preferences) {
