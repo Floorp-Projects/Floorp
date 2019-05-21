@@ -19,9 +19,9 @@
         SimpleTest.waitForExplicitFinish();
 
         async function testWithMessageDisabled() {
-          info("Open WebIDE with the showDeprecationMessage preference set to FALSE");
+          info("Open WebIDE with the newAboutDebugging preference set to FALSE");
           const win = await openWebIDE({
-            showDeprecationMessage: false,
+            newAboutDebugging: false,
           });
 
           const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
@@ -37,9 +37,9 @@
         }
 
         async function testWithMessageEnabled() {
-          info("Open WebIDE with the showDeprecationMessage preference set to TRUE");
+          info("Open WebIDE with the newAboutDebugging preference set to TRUE");
           const win = await openWebIDE({
-            showDeprecationMessage: true,
+            newAboutDebugging: true,
           });
 
           const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
