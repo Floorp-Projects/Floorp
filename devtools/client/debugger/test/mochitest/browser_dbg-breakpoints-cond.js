@@ -63,7 +63,6 @@ async function waitForConditionalPanelFocus(dbg) {
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
   await pushPref("devtools.debugger.features.column-breakpoints", true);
-  await pushPref("devtools.debugger.features.log-points", true);
 
   await selectSource(dbg, "simple2");
   await waitForSelectedSource(dbg, "simple2");
@@ -130,10 +129,10 @@ add_task(async function() {
     "TEXTAREA",
     "The textarea of conditional breakpoint panel is focused"
   );
-  
+
   info("Click the conditional breakpoint in secondary pane");
   await clickElement(dbg, "conditionalBreakpointInSecPane");
-  let conditonalPanel = findElement(dbg, "conditionalPanel");
+  const conditonalPanel = findElement(dbg, "conditionalPanel");
   is(conditonalPanel, null, "The conditional breakpoint panel is closed");
 
   rightClickElement(dbg, "breakpointItem", 2);
@@ -162,9 +161,9 @@ add_task(async function() {
     "TEXTAREA",
     "The textarea of logpoint panel is focused"
   );
-  
+
   info("Click the logpoint in secondary pane");
   await clickElement(dbg, "logPointInSecPane");
-  let logPointPanel = findElement(dbg, "logPointPanel");
+  const logPointPanel = findElement(dbg, "logPointPanel");
   is(logPointPanel, null, "The logpoint panel is closed");
 });

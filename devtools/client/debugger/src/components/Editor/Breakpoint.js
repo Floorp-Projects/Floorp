@@ -106,10 +106,15 @@ class Breakpoint extends PureComponent<Props> {
   };
 
   onContextMenu = (event: MouseEvent) => {
-    const { cx, breakpoint, breakpointActions } = this.props;
+    const { cx, breakpoint, selectedSource, breakpointActions } = this.props;
     event.stopPropagation();
     event.preventDefault();
-    showMenu(event, breakpointItems(cx, breakpoint, breakpointActions));
+    const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
+
+    showMenu(
+      event,
+      breakpointItems(cx, breakpoint, selectedLocation, breakpointActions)
+    );
   };
 
   addBreakpoint(props: Props) {

@@ -42,6 +42,7 @@
 
     // Globals introduced in debugger-specific head.js
     "getContext": false,
+    "getEditorLineGutter": false,
     "getCM": false,
     "getDebuggerSplitConsole": false,
     "hasConsoleMessage": false,
@@ -111,6 +112,7 @@
     "clickElement": false,
     "clickElementWithSelector": false,
     "clickDOMElement": false,
+    "dblClickElement": false,
     "altClickElement": false,
     "rightClickElement": false,
     "rightClickEl": false,
