@@ -220,15 +220,13 @@ uint32_t ResizeObserver::BroadcastActiveObservations() {
 
   for (auto& observation : mActiveTargets) {
     Element* target = observation->Target();
-    RefPtr<ResizeObserverEntry> entry = new ResizeObserverEntry(this, *target);
 
     nsSize borderBoxSize =
         GetTargetSize(target, ResizeObserverBoxOptions::Border_box);
-    entry->SetBorderBoxSize(borderBoxSize);
-
     nsSize contentBoxSize =
         GetTargetSize(target, ResizeObserverBoxOptions::Content_box);
-    entry->SetContentRectAndSize(contentBoxSize);
+    RefPtr<ResizeObserverEntry> entry =
+        new ResizeObserverEntry(this, *target, borderBoxSize, contentBoxSize);
 
     if (!entries.AppendElement(entry.forget(), fallible)) {
       // Out of memory.
