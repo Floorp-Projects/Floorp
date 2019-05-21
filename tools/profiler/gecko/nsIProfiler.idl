@@ -35,11 +35,9 @@ interface nsIProfiler : nsISupports
 {
   boolean CanProfile();
   void StartProfiler(in uint32_t aEntries, in double aInterval,
-                      [array, size_is(aFeatureCount)] in string aFeatures,
-                      in uint32_t aFeatureCount,
-                      [array, size_is(aFilterCount), optional] in string aFilters,
-                      [optional] in uint32_t aFilterCount,
-                      [optional] in double aDuration);
+                     in Array<AUTF8String> aFeatures,
+                     [optional] in Array<AUTF8String> aFilters,
+                     [optional] in double aDuration);
   void StopProfiler();
   boolean IsPaused();
   void PauseSampling();
