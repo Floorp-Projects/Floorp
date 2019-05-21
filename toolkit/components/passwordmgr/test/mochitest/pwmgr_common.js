@@ -67,6 +67,17 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
 }
 
 /**
+ * Check for expected username/password in form.
+ * @see `checkForm` below for a similar function.
+ */
+function checkLoginForm(usernameField, expectedUsername, passwordField, expectedPassword) {
+  let formID = usernameField.parentNode.id;
+  is(usernameField.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
+  is(passwordField.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
+}
+
+
+/**
  * Check a form for expected values. If an argument is null, a field's
  * expected value will be the default value.
  *
@@ -209,7 +220,7 @@ function logoutMasterPassword() {
 }
 
 /**
- * Resolves when a specified number of forms have been processed.
+ * Resolves when a specified number of forms have been processed for (potential) filling.
  */
 function promiseFormsProcessed(expectedCount = 1) {
   var processedCount = 0;
@@ -395,9 +406,3 @@ this.LoginManager = new Proxy({}, {
   },
 });
 
-// Check for expected username/password in form.
-function checkLoginForm(usernameField, expectedUsername, passwordField, expectedPassword) {
-  let formID = usernameField.parentNode.id;
-  is(usernameField.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
-  is(passwordField.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
-}
