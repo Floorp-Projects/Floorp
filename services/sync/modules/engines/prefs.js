@@ -98,7 +98,7 @@ PrefStore.prototype = {
 
   _getSyncPrefs() {
     let syncPrefs = Services.prefs.getBranch(PREF_SYNC_PREFS_PREFIX)
-                                  .getChildList("", {})
+                                  .getChildList("")
                                   .filter(pref => !isUnsyncableURLPref(pref));
     // Also sync preferences that determine which prefs get synced.
     let controlPrefs = syncPrefs.map(pref => PREF_SYNC_PREFS_PREFIX + pref);
