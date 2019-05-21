@@ -3702,6 +3702,12 @@ class BaseAssembler : public GenericAssembler {
     return m_formatter.append(code, numBytes);
   }
 
+  // `offset` is the instruction offset at the end of the instruction.
+  void addToPCRel4(uint32_t offset, int32_t bias) {
+    unsigned char* code = m_formatter.data();
+    SetInt32(code + offset, GetInt32(code + offset) + bias);
+  }
+
  protected:
   static bool CAN_SIGN_EXTEND_8_32(int32_t value) {
     return value == (int32_t)(int8_t)value;
