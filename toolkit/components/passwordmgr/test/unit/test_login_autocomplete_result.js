@@ -73,6 +73,7 @@ let expectedResults = [
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
       style: "insecureWarning",
+      comment: "",
     }, {
       value: "",
       label: "View Saved Logins",
@@ -89,6 +90,7 @@ let expectedResults = [
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
       style: "insecureWarning",
+      comment: "",
     }, {
       value: "",
       label: LABEL_NO_USERNAME,
@@ -167,6 +169,7 @@ let expectedResults = [
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
       style: "insecureWarning",
+      comment: "",
     }, {
       value: "emptypass1",
       label: LABEL_NO_USERNAME,
@@ -393,6 +396,7 @@ let expectedResults = [
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
       style: "insecureWarning",
+      comment: "",
     }, {
       value: "",
       label: LABEL_NO_USERNAME,
@@ -471,6 +475,7 @@ let expectedResults = [
       value: "",
       label: "This connection is not secure. Logins entered here could be compromised. Learn More",
       style: "insecureWarning",
+      comment: "",
     }, {
       value: "emptypass1",
       label: LABEL_NO_USERNAME,
@@ -706,6 +711,7 @@ let expectedResults = [
       value: "9ljgfd4shyktb45",
       label: "Use Generated Password",
       style: "generatedPassword",
+      comment: "9ljgfd4shyktb45",
     }, {
       value: "",
       label: "View Saved Logins",
@@ -744,7 +750,7 @@ add_task(async function test_all_patterns() {
       equal(actual.getValueAt(index), item.value, `Value ${index}`);
       equal(actual.getLabelAt(index), item.label, `Label ${index}`);
       equal(actual.getStyleAt(index), item.style, `Style ${index}`);
-      equal(actual.getCommentAt(index), item.comment || "", `Comment ${index}`);
+      equal(actual.getCommentAt(index), item.comment, `Comment ${index}`);
     });
 
     if (pattern.items.length != 0) {
