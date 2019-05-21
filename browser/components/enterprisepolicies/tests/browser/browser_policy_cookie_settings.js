@@ -87,15 +87,15 @@ async function test_cookie_settings({
      "Cookie lifetime pref lock status should be what is expected");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+  await tab.linkedBrowser.contentWindow.gotoPref("panePrivacy");
   // eslint-disable-next-line no-shadow
   await ContentTask.spawn(tab.linkedBrowser, {cookiesEnabled, cookieSettingsLocked}, async function({cookiesEnabled, cookieSettingsLocked}) {
-    content.setTimeout(() => {
-      let deleteOnCloseCheckbox = content.document.getElementById("deleteOnClose");
+    let deleteOnCloseCheckbox = content.document.getElementById("deleteOnClose");
+    isnot(deleteOnCloseCheckbox, null, "deleteOnCloseCheckbox should not be null.");
 
-      let expectControlsDisabled = !cookiesEnabled || cookieSettingsLocked;
-      is(deleteOnCloseCheckbox.disabled, expectControlsDisabled,
-         "\"Delete cookies when Firefox is closed\" checkbox disabled status should match expected");
-    }, 0);
+    let expectControlsDisabled = !cookiesEnabled || cookieSettingsLocked;
+    is(deleteOnCloseCheckbox.disabled, expectControlsDisabled,
+        "\"Delete cookies when Firefox is closed\" checkbox disabled status should match expected");
   });
   BrowserTestUtils.removeTab(tab);
 
