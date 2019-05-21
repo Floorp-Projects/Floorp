@@ -65,11 +65,23 @@
             android:layout_height="@dimen/quicksettings_item_height"
             android:gravity="top"
             android:paddingStart="48dp"
+            android:text="@string/preferences_tracking_protection_turned_off_globally"
+            android:textColor="?accentBright"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/report_site_issue_action"
+            app:layout_constraintTop_toBottomOf="@id/tracking_protection" />
+
+        <TextView
+            android:id="@+id/report_site_issue_action"
+            style="@style/QuickSettingsText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/quicksettings_item_height"
+            android:gravity="top"
+            android:paddingStart="48dp"
             android:text="@string/browser_menu_report_issue"
             android:textColor="?accentBright"
-            android:textSize="12sp"
             app:layout_constraintBottom_toTopOf="@id/line_divider"
-            app:layout_constraintTop_toBottomOf="@id/tracking_protection" />
+            app:layout_constraintTop_toBottomOf="@id/tracking_protection_action" />
 
         <View
             android:id="@+id/line_divider"

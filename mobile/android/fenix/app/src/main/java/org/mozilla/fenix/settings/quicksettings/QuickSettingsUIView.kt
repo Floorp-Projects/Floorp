@@ -44,6 +44,7 @@ class QuickSettingsUIView(
     private val urlLabel: TextView
     private val trackingProtectionSwitch: Switch
     private val trackingProtectionAction: TextView
+    private val reportSiteIssueAction: TextView
     private val cameraActionLabel: TextView
     private val cameraLabel: TextView
     private val microphoneActionLabel: TextView
@@ -61,6 +62,7 @@ class QuickSettingsUIView(
         securityInfoLabel = view.findViewById<AppCompatTextView>(R.id.security_info)
         trackingProtectionSwitch = view.findViewById(R.id.tracking_protection)
         trackingProtectionAction = view.findViewById(R.id.tracking_protection_action)
+        reportSiteIssueAction = view.findViewById(R.id.report_site_issue_action)
         cameraActionLabel = view.findViewById<AppCompatTextView>(R.id.camera_action_label)
         cameraLabel = view.findViewById<AppCompatTextView>(R.id.camera_icon)
         microphoneActionLabel = view.findViewById<AppCompatTextView>(R.id.microphone_action_label)
@@ -76,7 +78,8 @@ class QuickSettingsUIView(
             is QuickSettingsState.Mode.Normal -> {
                 bindUrl(state.mode.url)
                 bindSecurityInfo(state.mode.isSecured)
-                bindTrackingProtectionAction(state.mode.url)
+                bindReportSiteIssueAction(state.mode.url)
+                bindTrackingProtectionAction()
                 bindTrackingProtectionInfo(state.mode.isTrackingProtectionOn)
                 bindPhoneFeatureItem(CAMERA, state.mode.sitePermissions)
                 bindPhoneFeatureItem(MICROPHONE, state.mode.sitePermissions)
@@ -115,22 +118,21 @@ class QuickSettingsUIView(
         }
     }
 
-    private fun bindTrackingProtectionAction(url: String) {
+    private fun bindTrackingProtectionAction() {
         val globalTPSetting = Settings.getInstance(context).shouldUseTrackingProtection
-        trackingProtectionAction.text =
-            if (globalTPSetting)
-                context.getString(R.string.browser_menu_report_issue) else
-                context.getString(R.string.preferences_tracking_protection_turned_off_globally)
+        trackingProtectionAction.visibility = if (globalTPSetting) View.GONE else View.VISIBLE
         trackingProtectionAction.setOnClickListener {
-            if (globalTPSetting) {
-                actionEmitter.onNext(
-                    QuickSettingsAction.SelectReportProblem(url)
-                )
-            } else {
-                actionEmitter.onNext(
-                    QuickSettingsAction.SelectTrackingProtectionSettings
-                )
-            }
+            actionEmitter.onNext(
+                QuickSettingsAction.SelectTrackingProtectionSettings
+            )
+        }
+    }
+
+    private fun bindReportSiteIssueAction(url: String) {
+        reportSiteIssueAction.setOnClickListener {
+            actionEmitter.onNext(
+                QuickSettingsAction.SelectReportProblem(url)
+            )
         }
     }
 
