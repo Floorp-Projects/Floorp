@@ -59,7 +59,7 @@ RemoteController.prototype = {
       "ControllerCommands:DoWithParams", cmd);
   },
 
-  getSupportedCommands(aCount, aCommands) {
+  getSupportedCommands() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 

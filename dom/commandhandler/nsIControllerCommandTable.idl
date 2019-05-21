@@ -89,8 +89,7 @@ interface nsIControllerCommandTable : nsISupports
 
 	void    getCommandState(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
 
-  void getSupportedCommands(out unsigned long count,
-                            [array, size_is(count), retval] out string commands);
+  Array<ACString> getSupportedCommands();
 
 %{C++
   /**
