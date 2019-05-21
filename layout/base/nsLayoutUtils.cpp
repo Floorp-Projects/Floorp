@@ -1713,42 +1713,34 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
   int32_t index1 = parent->ComputeIndexOf(content1Ancestor);
   int32_t index2 = parent->ComputeIndexOf(content2Ancestor);
 
-  // If either of the nodes are anonymous, then handle the relative ordering.
-  // We consider all anonymous content to be behind regular siblings, with the
-  // exception of ::after.
-  if (index1 < 0) {
-    if (content1Ancestor->IsContent() &&
-        content1Ancestor->AsContent()->IsGeneratedContentContainerForAfter()) {
-      // If content1 is ::after, then it must be after content2.
-      MOZ_ASSERT(!content2Ancestor->IsContent() ||
-                 !content2Ancestor->AsContent()
-                      ->IsGeneratedContentContainerForAfter());
-      return 1;
-    }
-    if (index2 >= 0 || (content2Ancestor->IsContent() &&
-                        content2Ancestor->AsContent()
-                            ->IsGeneratedContentContainerForAfter())) {
-      // content1 is anonymous, so if content2 is a regular sibling or ::after,
-      // then we must be before it.
-      return -1;
-    }
-    // Both nodes are anonymous, so no relative ordering.
-    return 0;
-  }
-  if (index2 < 0) {
-    // content1 is a regular sibling, so if content2 is ::after, then
-    // content1 comes first.
-    if (content2Ancestor->IsContent() &&
-        content2Ancestor->AsContent()->IsGeneratedContentContainerForAfter()) {
-      MOZ_ASSERT(!content1Ancestor->IsContent() ||
-                 !content1Ancestor->AsContent()
-                      ->IsGeneratedContentContainerForAfter());
-      return -1;
-    }
-    return 1;
+  // None of the nodes are anonymous, just do a regular comparison.
+  if (index1 >= 0 && index2 >= 0) {
+    return index1 - index2;
   }
 
-  return index1 - index2;
+  // Otherwise handle pseudo-element and anonymous content ordering.
+  //
+  // ::marker -> ::before -> anon siblings -> regular siblings -> ::after
+  auto PseudoIndex = [](const nsINode* aNode, int32_t aNodeIndex) -> int32_t {
+    if (aNodeIndex >= 0) {
+      return 1;  // Not a pseudo.
+    }
+    if (aNode->IsContent()) {
+      if (aNode->AsContent()->IsGeneratedContentContainerForMarker()) {
+        return -2;
+      }
+      if (aNode->AsContent()->IsGeneratedContentContainerForBefore()) {
+        return -1;
+      }
+      if (aNode->AsContent()->IsGeneratedContentContainerForAfter()) {
+        return 2;
+      }
+    }
+    return 0;
+  };
+
+  return PseudoIndex(content1Ancestor, index1) -
+         PseudoIndex(content2Ancestor, index2);
 }
 
 // static
