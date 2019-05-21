@@ -2469,6 +2469,9 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
       }
 
       for (ParseNode* item : memberList->contents()) {
+        if (item->is<LexicalScopeNode>()) {
+          item = item->as<LexicalScopeNode>().scopeBody();
+        }
         if (item->is<ClassField>()) {
           ClassField* field = &item->as<ClassField>();
           MOZ_ASSERT(memberList->pn_pos.encloses(field->pn_pos));
