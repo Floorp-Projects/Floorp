@@ -130,7 +130,31 @@ struct ActorHandle {
 // What happens if Interrupt calls race?
 enum RacyInterruptPolicy { RIPError, RIPChildWins, RIPParentWins };
 
+enum class LinkStatus : uint8_t {
+  // The actor has not established a link yet, or the actor is no longer in use
+  // by IPC, and its 'Dealloc' method has been called or is being called.
+  //
+  // NOTE: This state is used instead of an explicit `Freed` state when IPC no
+  // longer holds references to the current actor as we currently re-open
+  // existing actors. Once we fix these poorly behaved actors, this loopback
+  // state can be split to have the final state not be the same as the initial
+  // state.
+  Inactive,
+
+  // A live link is connected to the other side of this actor.
+  Connected,
+
+  // The link has begun being destroyed. Messages may still be received, but
+  // cannot be sent. (exception: sync/intr replies may be sent while Doomed).
+  Doomed,
+
+  // The link has been destroyed, and messages will no longer be sent or
+  // received.
+  Destroyed,
+};
+
 class IToplevelProtocol;
+class ActorLifecycleProxy;
 
 class IProtocol : public HasResultCodes {
 #ifdef FUZZING
@@ -255,6 +279,7 @@ class IProtocol : public HasResultCodes {
   void Unregister(int32_t aId) { return mState->Unregister(aId); }
 
   virtual void RemoveManagee(int32_t, IProtocol*) = 0;
+  virtual void DeallocManagee(int32_t, IProtocol*) = 0;
 
   Shmem::SharedMemory* CreateSharedMemory(size_t aSize,
                                           SharedMemory::SharedMemoryType aType,
@@ -285,6 +310,12 @@ class IProtocol : public HasResultCodes {
   // XXX odd ducks, acknowledged
   virtual ProcessId OtherPid() const;
   Side GetSide() const { return mSide; }
+
+  bool CanSend() const { return mLinkStatus == LinkStatus::Connected; }
+  bool CanRecv() const {
+    return mLinkStatus == LinkStatus::Connected ||
+           mLinkStatus == LinkStatus::Doomed;
+  }
 
   void FatalError(const char* const aErrorMsg) const;
   virtual void HandleFatalError(const char* aErrorMsg) const;
@@ -330,14 +361,24 @@ class IProtocol : public HasResultCodes {
   nsIEventTarget* GetActorEventTarget();
   already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor);
 
+  ActorLifecycleProxy* GetLifecycleProxy() { return mLifecycleProxy; }
+
  protected:
   IProtocol(Side aSide, UniquePtr<ProtocolState> aState)
-      : mId(0), mSide(aSide), mManager(nullptr), mState(std::move(aState)) {}
+      : mId(0),
+        mSide(aSide),
+        mLinkStatus(LinkStatus::Inactive),
+        mLifecycleProxy(nullptr),
+        mManager(nullptr),
+        mState(std::move(aState)) {}
+
+  virtual ~IProtocol();
 
   friend class IToplevelProtocol;
+  friend class ActorLifecycleProxy;
 
-  void SetId(int32_t aId) { mId = aId; }
-  void ResetManager() { mManager = nullptr; }
+  void SetId(int32_t aId);
+
   // We have separate functions because the accessibility code manually
   // calls SetManager.
   void SetManager(IProtocol* aManager);
@@ -348,12 +389,45 @@ class IProtocol : public HasResultCodes {
   void SetManagerAndRegister(IProtocol* aManager);
   void SetManagerAndRegister(IProtocol* aManager, int32_t aId);
 
+  // Collect all actors managed by this object in an array. To make this safer
+  // to iterate, `ActorLifecycleProxy` references are returned rather than raw
+  // actor pointers.
+  virtual void AllManagedActors(
+      nsTArray<RefPtr<ActorLifecycleProxy>>& aActors) const = 0;
+
+  // Internal method called when the actor becomes connected.
+  void ActorConnected();
+
+  // Called immediately before setting the actor state to doomed, and triggering
+  // async actor destruction. Messages may be sent from this callback, but no
+  // later.
+  // FIXME(nika): This is currently unused!
+  virtual void ActorDoom() {}
+  void DoomSubtree();
+
+  // Called when the actor has been destroyed due to an error, a __delete__
+  // message, or a __doom__ reply.
+  virtual void ActorDestroy(ActorDestroyReason aWhy) {}
+  void DestroySubtree(ActorDestroyReason aWhy);
+
+  // Called when IPC has released its final reference to the actor. It will call
+  // the dealloc method, causing the actor to be actually freed.
+  //
+  // The actor has been freed after this method returns.
+  virtual void ActorDealloc() {
+    if (Manager()) {
+      Manager()->DeallocManagee(GetProtocolTypeId(), this);
+    }
+  }
+
   static const int32_t kNullActorId = 0;
   static const int32_t kFreedActorId = 1;
 
  private:
   int32_t mId;
   Side mSide;
+  LinkStatus mLinkStatus;
+  ActorLifecycleProxy* mLifecycleProxy;
   IProtocol* mManager;
   UniquePtr<ProtocolState> mState;
 };
@@ -562,7 +636,10 @@ class IToplevelProtocol : public IProtocol {
   virtual void OnChannelReceivedMessage(const Message& aMsg) {}
 
   bool IsMainThreadProtocol() const { return mIsMainThreadProtocol; }
-  void SetIsMainThreadProtocol() { mIsMainThreadProtocol = NS_IsMainThread(); }
+  void OnIPCChannelOpened() {
+    mIsMainThreadProtocol = NS_IsMainThread();
+    ActorConnected();
+  }
 
   already_AddRefed<nsIEventTarget> GetMessageEventTarget(const Message& aMsg) {
     return DowncastState()->GetMessageEventTarget(aMsg);
@@ -930,6 +1007,46 @@ class ManagedEndpoint {
 
   // XXX(nika): Might be nice to have other info for assertions?
   // e.g. mManagerId, mManagerType, etc.
+};
+
+// The ActorLifecycleProxy is a helper type used internally by IPC to maintain a
+// maybe-owning reference to an IProtocol object. For well-behaved actors
+// which are not freed until after their `Dealloc` method is called, a
+// reference to an actor's `ActorLifecycleProxy` object is an owning one, as the
+// `Dealloc` method will only be called when all references to the
+// `ActorLifecycleProxy` are released.
+//
+// Unfortunately, some actors may be destroyed before their `Dealloc` method
+// is called. For these actors, `ActorLifecycleProxy` acts as a weak pointer,
+// and will begin to return `nullptr` from its `Get()` method once the
+// corresponding actor object has been destroyed.
+//
+// When calling a `Recv` method, IPC will hold a `ActorLifecycleProxy` reference
+// to the target actor, meaning that well-behaved actors can behave as though a
+// strong reference is being held.
+//
+// Generic IPC code MUST treat ActorLifecycleProxy references as weak
+// references!
+class ActorLifecycleProxy {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(ActorLifecycleProxy)
+
+  IProtocol* Get() { return mActor; }
+
+ private:
+  friend class IProtocol;
+
+  explicit ActorLifecycleProxy(IProtocol* aActor);
+  ~ActorLifecycleProxy();
+
+  ActorLifecycleProxy(const ActorLifecycleProxy&) = delete;
+  ActorLifecycleProxy& operator=(const ActorLifecycleProxy&) = delete;
+
+  IProtocol* MOZ_NON_OWNING_REF mActor;
+
+  // Hold a reference to the actor's manager's ActorLifecycleProxy to help
+  // prevent it from dying while we're still alive!
+  RefPtr<ActorLifecycleProxy> mManager;
 };
 
 void TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
