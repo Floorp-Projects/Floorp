@@ -15,7 +15,6 @@ import java.net.URLEncoder
 import java.util.Locale
 
 object SupportUtils {
-    const val FEEDBACK_URL = "https://input.mozilla.org"
     const val RATE_APP_URL = "market://details?id=" + BuildConfig.APPLICATION_ID
     const val MOZILLA_MANIFESTO_URL = "https://www.mozilla.org/en-GB/about/manifesto/"
     val PRIVACY_NOTICE_URL: String

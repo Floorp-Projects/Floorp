@@ -33,7 +33,6 @@ import org.mozilla.fenix.R.string.pref_key_accessibility
 import org.mozilla.fenix.R.string.pref_key_account
 import org.mozilla.fenix.R.string.pref_key_account_category
 import org.mozilla.fenix.R.string.pref_key_data_choices
-import org.mozilla.fenix.R.string.pref_key_feedback
 import org.mozilla.fenix.R.string.pref_key_help
 import org.mozilla.fenix.R.string.pref_key_language
 import org.mozilla.fenix.R.string.pref_key_leakcanary
@@ -151,13 +150,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             }
             resources.getString(pref_key_rate) -> {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.RATE_APP_URL)))
-            }
-            resources.getString(pref_key_feedback) -> {
-                (activity as HomeActivity).openToBrowserAndLoad(
-                    searchTermOrURL = SupportUtils.FEEDBACK_URL,
-                    newTab = true,
-                    from = BrowserDirection.FromSettings
-                )
             }
             resources.getString(pref_key_about) -> {
                 navigateToAbout()
