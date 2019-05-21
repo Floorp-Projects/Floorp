@@ -784,20 +784,6 @@ bool DuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
  */
 void AnnotateSystemError();
 
-enum class LivenessState { Dead, Null, Start = Null };
-
-bool StateTransition(bool aIsDelete, LivenessState* aNext);
-
-enum class ReEntrantDeleteLivenessState {
-  Dead,
-  Null,
-  Dying,
-  Start = Null,
-};
-
-bool ReEntrantDeleteStateTransition(bool aIsDelete, bool aIsDeleteReply,
-                                    ReEntrantDeleteLivenessState* aNext);
-
 /**
  * An endpoint represents one end of a partially initialized IPDL channel. To
  * set up a new top-level protocol:

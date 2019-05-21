@@ -100,33 +100,6 @@ parent:
     sync Test18(nsIntRegion[] ops);
 
     sync Dummy(ShmemUnion su) returns (ShmemUnion rsu);
-
-/*
-state CONSTRUCTING:
-    send PTestDataStructuresSub goto CONSTRUCTING;
-    send Start goto TEST1;
-state TEST1:   recv Test1 goto TEST2;
-state TEST2:   recv Test2 goto TEST3;
-state TEST3:   recv Test3 goto TEST4;
-state TEST4:   recv Test4 goto TEST5;
-state TEST5:   recv Test5 goto TEST6;
-state TEST6:   recv Test6 goto TEST7;
-state TEST7:   recv Test7 goto TEST8;
-state TEST8:   recv Test8 goto TEST9;
-state TEST9:   recv Test9 goto TEST10;
-state TEST10:  recv Test10 goto TEST11;
-state TEST11:  recv Test11 goto TEST12;
-state TEST12:  recv Test12 goto TEST13;
-state TEST13:  recv Test13 goto TEST14;
-state TEST14:  recv Test14 goto TEST15;
-state TEST15:  recv Test15 goto TEST16;
-state TEST16:  recv Test16 goto TEST17;
-state TEST17:  recv Test17 goto TEST18;
-state TEST18:  recv Test18 goto DEAD;
-
-state DEAD:
-    recv __delete__;
-*/
 };
 
 } // namespace _ipdltest

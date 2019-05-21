@@ -151,10 +151,6 @@ def _actorHId(actorhandle):
     return ExprSelect(actorhandle, '.', 'mId')
 
 
-def _actorState(actor):
-    return ExprSelect(actor, '->', 'mLivenessState')
-
-
 def _backstagePass():
     return ExprCall(ExprVar('mozilla::ipc::PrivateIPDLInterface'))
 
@@ -549,8 +545,6 @@ class _ConvertToCxxType(TypeVisitor):
     def visitMessageType(self, m): assert 0
 
     def visitVoidType(self, v): assert 0
-
-    def visitStateType(self, st): assert 0
 
 
 def _cxxBareType(ipdltype, side, fq=False):
@@ -1195,18 +1189,6 @@ def _subtreeUsesShmem(p):
     return False
 
 
-def _stateType(hasReentrantDelete):
-    if hasReentrantDelete:
-        return Type('mozilla::ipc::ReEntrantDeleteLivenessState')
-    else:
-        return Type('mozilla::ipc::LivenessState')
-
-
-def _startState(hasReentrantDelete):
-    pfx = _stateType(hasReentrantDelete).name + '::'
-    return ExprVar(pfx + 'Start')
-
-
 class Protocol(ipdl.ast.Protocol):
     def cxxTypedefs(self):
         return self.decl.cxxtypedefs
@@ -1286,24 +1268,6 @@ class Protocol(ipdl.ast.Protocol):
         if actorThis is not None:
             return ExprCall(ExprSelect(actorThis, '->', 'Id'))
         return ExprCall(ExprVar('Id'))
-
-    def stateVar(self):
-        return ExprVar('mLivenessState')
-
-    def fqStateType(self):
-        return _stateType(self.decl.type.hasReentrantDelete)
-
-    def startState(self):
-        return _startState(self.decl.type.hasReentrantDelete)
-
-    def deadState(self):
-        pfx = self.fqStateType().name + '::'
-        return ExprVar(pfx + 'Dead')
-
-    def dyingState(self):
-        assert self.decl.type.hasReentrantDelete
-        pfx = self.fqStateType().name + '::'
-        return ExprVar(pfx + 'Dying')
 
     def managerVar(self, thisexpr=None):
         assert thisexpr is not None or not self.decl.type.isToplevel()
@@ -2373,8 +2337,6 @@ before this struct.  Some types generate multiple kinds.'''
     def visitMessageType(self, v): assert 0
 
     def visitProtocolType(self, v): assert 0
-
-    def visitStateType(self, v): assert 0
 
 
 def _fieldStaticAssertions(sd):
@@ -3452,15 +3414,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             name = ExprLiteral.String(_actorName(p.name, self.side))
             ctor.memberinits = [
                 ExprMemberInit(ExprVar('mozilla::ipc::IToplevelProtocol'),
-                               [name, _protocolId(ptype), side]),
-                ExprMemberInit(p.stateVar(),
-                               [p.startState()])
+                               [name, _protocolId(ptype), side])
             ]
         else:
             ctor.memberinits = [
-                ExprMemberInit(ExprVar('mozilla::ipc::IProtocol'), [side]),
-                ExprMemberInit(p.stateVar(),
-                               [p.deadState()])
+                ExprMemberInit(ExprVar('mozilla::ipc::IProtocol'), [side])
             ]
 
         ctor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_CTOR'),
@@ -3653,24 +3611,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 method.addstmts([routedecl, routeif, Whitespace.NL])
 
-            # in the event of an Interrupt delete message, we want to loudly complain about
-            # messages that are received that are not a reply to the original message
-            if ptype.hasReentrantDelete:
-                msgVar = ExprVar(params[0].name)
-                ifdying = StmtIf(ExprBinary(
-                    ExprBinary(ExprVar('mLivenessState'), '==', self.protocol.dyingState()),
-                    '&&',
-                    ExprBinary(
-                        ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_reply')),
-                                   '!=', ExprLiteral.TRUE),
-                        '||',
-                        ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_interrupt')),
-                                   '!=', ExprLiteral.TRUE))))
-                ifdying.addifstmts([
-                    _fatalError('incoming message racing with actor deletion'),
-                    StmtReturn(_Result.Processed)])
-                method.addstmt(ifdying)
-
             # bug 509581: don't generate the switch stmt if there
             # is only the default case; MSVC doesn't like that
             if switch.nr_cases > 1:
@@ -3784,9 +3724,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # don't release our own IPC reference: either the manager will do it,
         # or we're toplevel
         self.cls.addstmts([clearsubtree, Whitespace.NL])
-
-        # private members
-        self.cls.addstmt(StmtDecl(Decl(self.protocol.fqStateType(), p.stateVar().name)))
 
         for managed in ptype.manages:
             self.cls.addstmts([
@@ -4174,9 +4111,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             # mManagedPFoo.PutEntry(actor);
             StmtExpr(_callInsertManagedActor(
                 self.protocol.managedVar(actorproto, self.side), actorvar)),
-            # actor->mLivenessState = START;
-            StmtExpr(ExprAssn(_actorState(actorvar),
-                              _startState(actorproto.hasReentrantDelete))),
         ]
 
     def genHelperCtor(self, md):
@@ -4243,9 +4177,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                              StmtExpr(ExprAssn(sendok, ExprLiteral.FALSE, '&='))])
 
         method.addstmt(ifsendok)
-
-        if self.protocol.decl.type.hasReentrantDelete:
-            method.addstmts(self.transition(md, actor.var(), reply=True, errorfn=errfnUnreachable))
 
         method.addstmts(
             self.dtorEpilogue(md, actor.var())
@@ -4393,7 +4324,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md, errorfn=errfnRecv)
             + [StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns]
             # alloc the actor, register it under the foreign ID
@@ -4423,7 +4353,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md, errorfn=errfnRecv)
             + [StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns]
             + self.invokeRecvHandler(md, implicit=False)
@@ -4453,7 +4382,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             declstmts = self.makeResolver(md, errfnRecv, routingId=idvar)
         case.addstmts(
             stmts
-            + self.transition(md, errorfn=errfnRecv)
             + saveIdStmts
             + declstmts
             + self.invokeRecvHandler(md)
@@ -4530,16 +4458,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ifactorisdead.addifstmts([
             _printWarningMessage("Not resolving response because actor is dead."),
             StmtReturn()])
-        ifactorisdestroyed = StmtIf(ExprBinary(self.protocol.stateVar(), '==',
-                                               self.protocol.deadState()))
-        ifactorisdestroyed.addifstmts([
-            _printWarningMessage("Not resolving response because actor is destroyed."),
-            StmtReturn()])
-        returnifactorisdead = [ifactorisdead,
-                               ifactorisdestroyed]
         resolverfn = ExprLambda([ExprVar.THIS, selfvar, routingId, seqno],
                                 [resolvedecl])
-        resolverfn.addstmts(returnifactorisdead
+        resolverfn.addstmts([ifactorisdead]
                             + [StmtDecl(Decl(Type.BOOL, resolve.name),
                                         init=ExprLiteral.TRUE)]
                             + [StmtDecl(Decl(p.bareType(self.side), p.var().name))
@@ -4779,7 +4700,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         stmts = [Whitespace.NL,
                  self.logMessage(md, msgexpr, 'Sending ', actor),
-                 self.profilerLabel(md)] + self.transition(md, actor, errorfn=errfnUnreachable)
+                 self.profilerLabel(md)]
         stmts.append(Whitespace.NL)
 
         # Generate the actual call expression.
@@ -4804,7 +4725,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ([Whitespace.NL,
               self.logMessage(md, msgexpr, 'Sending ', actor),
               self.profilerLabel(md)]
-             + self.transition(md, actor, errorfn=errfnUnreachable)
              + [Whitespace.NL,
                 StmtDecl(Decl(Type.BOOL, sendok.name)),
                 StmtBlock([
@@ -4968,30 +4888,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             saveIdStmts = []
         return idvar, saveIdStmts
-
-    def transition(self, md, actor=None, reply=False, errorfn=None):
-        msgid = md.msgId() if not reply else md.replyId()
-        args = [
-            ExprVar('true' if _deleteId().name == msgid else 'false'),
-        ]
-        if self.protocol.decl.type.hasReentrantDelete:
-            function = 'ReEntrantDeleteStateTransition'
-            args.append(
-                ExprVar('true' if _deleteReplyId().name == msgid else 'false'),
-            )
-        else:
-            function = 'StateTransition'
-
-        if actor is not None:
-            stateexpr = _actorState(actor)
-        else:
-            stateexpr = self.protocol.stateVar()
-
-        args.append(ExprAddrOf(stateexpr))
-
-        ifstmt = StmtIf(ExprNot(ExprCall(ExprVar(function), args=args)))
-        ifstmt.addifstmts(errorfn('Transition error'))
-        return [ifstmt]
 
     def endRead(self, msgexpr, iterexpr):
         msgtype = ExprCall(ExprSelect(msgexpr, '.', 'type'), [])

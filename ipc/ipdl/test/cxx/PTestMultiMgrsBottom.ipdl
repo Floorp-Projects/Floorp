@@ -9,11 +9,6 @@ protocol PTestMultiMgrsBottom {
 
 child:
     async __delete__();
-
-/*
-state DOA:
-    send __delete__;
-*/
 };
 
 } // namespace _ipdltest
