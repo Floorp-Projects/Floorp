@@ -26,6 +26,8 @@ dependencies {
 
     implementation Dependencies.kotlin_stdlib
 
+    testImplementation project(":support-test")
+
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
