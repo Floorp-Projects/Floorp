@@ -568,8 +568,7 @@ void BrowserParent::AddWindowListeners() {
 }
 
 void BrowserParent::RemoveWindowListeners() {
-  if (mFrameElement && mFrameElement->OwnerDoc() &&
-      mFrameElement->OwnerDoc()->GetWindow()) {
+  if (mFrameElement && mFrameElement->OwnerDoc()->GetWindow()) {
     nsCOMPtr<nsPIDOMWindowOuter> window =
         mFrameElement->OwnerDoc()->GetWindow();
     nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
@@ -2132,7 +2131,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(const bool& aCanRaise) {
     return IPC_OK();
   }
 
-  if (!mFrameElement || !mFrameElement->OwnerDoc()) {
+  if (!mFrameElement) {
     return IPC_OK();
   }
 
