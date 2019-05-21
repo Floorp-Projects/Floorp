@@ -37,7 +37,7 @@ load 331292.html
 load 334105-1.xhtml
 load 334107-1.xhtml
 load 334147-1.xhtml
-asserts(1-11) load 334148-1.xhtml # XBL interacts poorly with CSS counters.
+asserts(1-18) load 334148-1.xhtml # XBL interacts poorly with CSS counters.
 load 334602-1.html
 load 337412-1.html
 load 337883-1.html
