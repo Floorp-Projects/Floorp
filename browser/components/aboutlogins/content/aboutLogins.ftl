@@ -10,7 +10,9 @@
 ### need to be applied to the composed node where they can be moved to the proper
 ### descendant after translation.
 
-about-logins-page-title = Login Manager
+about-logins-page-title = Logins & Passwords
+
+create-login-button = New Login
 
 login-filter =
   .placeholder = Search Logins
@@ -24,20 +26,21 @@ login-list =
 
 login-item =
   .cancel-button = Cancel
+  .copied-password-button = ✓ Copied!
+  .copied-username-button = ✓ Copied!
+  .copy-password-button = Copy
+  .copy-username-button = Copy
   .delete-button = Delete
   .edit-button = Edit
   .hostname-label = Website Address
   .modal-input-reveal-checkbox-hide = Hide password
   .modal-input-reveal-checkbox-show = Show password
-  .copied-password-button = ✓ Copied!
-  .copied-username-button = ✓ Copied!
-  .copy-password-button = Copy
-  .copy-username-button = Copy
+  .new-login-title = New Entry
   .open-site-button = Launch
   .password-label = Password
   .save-changes-button = Save Changes
   .time-created = Created: { DATETIME($timeCreated, day: "numeric", month: "long", year: "numeric") }
-  .time-changed = Last changed: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
+  .time-changed = Last modified: { DATETIME($timeChanged, day: "numeric", month: "long", year: "numeric") }
   .time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
   .username-label = Username
 
