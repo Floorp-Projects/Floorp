@@ -8,6 +8,7 @@
         <attr name="findInPageQueryHintTextColor" format="reference|color"/>
         <attr name="findInPageQueryTextSize" format="dimension"/>
         <attr name="findInPageResultCountTextColor" format="reference|color"/>
+        <attr name="findInPageNoMatchesTextColor" format="reference|color"/>
         <attr name="findInPageResultCountTextSize" format="dimension"/>
         <attr name="findInPageButtonsTint" format="reference|color"/>
     </declare-styleable>

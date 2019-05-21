@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-findinpage**
+   * Find in Page Bar now displays 0/0 for no matches found with new attr findInPageNoMatchesTextColor
+
 # 0.53.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.52.0...v0.53.0)

@@ -3,33 +3,33 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".BrowserActivity">
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".BrowserActivity">
 
     <com.google.android.material.appbar.AppBarLayout
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <mozilla.components.browser.toolbar.BrowserToolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:background="#aaaaaa"
-                app:browserToolbarSecureColor="@color/photonGreen50" />
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="#aaaaaa"
+            app:browserToolbarSecureColor="@color/photonGreen50" />
 
         <mozilla.components.feature.findinpage.view.FindInPageBar
-                android:id="@+id/findInPage"
-                android:layout_width="match_parent"
-                android:background="#FFFFFFFF"
-                android:elevation="10dp"
-                android:layout_height="56dp"
-                android:visibility="gone"
-                android:padding="4dp" />
+            android:id="@+id/findInPage"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="#FFFFFFFF"
+            android:elevation="10dp"
+            android:padding="4dp"
+            android:visibility="gone"
+            app:findInPageNoMatchesTextColor="@color/photonRed50" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -52,24 +52,24 @@
 
         <mozilla.components.feature.readerview.view.ReaderViewControlsBar
             android:id="@+id/readerViewBar"
-            android:background="#FFFFFFFF"
-            android:elevation="10dp"
-            android:visibility="gone"
-            android:layout_gravity="bottom"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="55dp" />
+            android:layout_gravity="bottom"
+            android:background="#FFFFFFFF"
+            android:elevation="10dp"
+            android:paddingBottom="55dp"
+            android:visibility="gone" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/readerViewAppearanceButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
-            android:src="@drawable/mozac_ic_font"
-            android:visibility="gone"
-            android:layout_marginRight="16dp"
             android:layout_marginLeft="16dp"
-            android:layout_marginBottom="72dp" />
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="72dp"
+            android:src="@drawable/mozac_ic_font"
+            android:visibility="gone" />
 
     </FrameLayout>
 

@@ -37,10 +37,12 @@ class FindInPageBar @JvmOverloads constructor(
     @VisibleForTesting
     internal val resultsCountTextView: TextView
 
-    @VisibleForTesting internal val resultFormat: String =
+    @VisibleForTesting
+    internal val resultFormat: String =
         context.getString(R.string.mozac_feature_findindpage_result)
 
-    @VisibleForTesting internal val accessibilityFormat: String =
+    @VisibleForTesting
+    internal val accessibilityFormat: String =
         context.getString(R.string.mozac_feature_findindpage_accessibility_result)
 
     override var listener: FindInPageView.Listener? = null
@@ -82,22 +84,22 @@ class FindInPageBar @JvmOverloads constructor(
 
     override fun displayResult(result: Session.FindResult) {
         with(result) {
-            if (numberOfMatches > 0) {
-                // We don't want the presentation of the activeMatchOrdinal to be zero indexed. So let's
-                // increment it by one.
-                val ordinal = activeMatchOrdinal + 1
-                resultsCountTextView.text = String.format(resultFormat, ordinal, numberOfMatches)
-                val accessibilityLabel = String.format(accessibilityFormat, ordinal, numberOfMatches)
-                resultsCountTextView.contentDescription = accessibilityLabel
-                announceForAccessibility(accessibilityLabel)
-            } else {
-                resultsCountTextView.text = ""
-                resultsCountTextView.contentDescription = ""
-            }
+            val ordinal = if (numberOfMatches > 0) activeMatchOrdinal + 1 else activeMatchOrdinal
+            resultsCountTextView.text = String.format(resultFormat, ordinal, numberOfMatches)
+            resultsCountTextView.setTextColorIfNotDefaultValue(
+                if (numberOfMatches > 0) styling.resultCountTextColor else styling.resultNoMatchesTextColor
+            )
+            val accessibilityLabel = String.format(accessibilityFormat, ordinal, numberOfMatches)
+            resultsCountTextView.contentDescription = accessibilityLabel
+            announceForAccessibility(accessibilityLabel)
         }
     }
 
-    private fun createStyling(context: Context, attrs: AttributeSet?, defStyleAttr: Int): FindInPageBarStyling {
+    private fun createStyling(
+        context: Context,
+        attrs: AttributeSet?,
+        defStyleAttr: Int
+    ): FindInPageBarStyling {
         val attr = context.obtainStyledAttributes(attrs, R.styleable.FindInPageBar, defStyleAttr, 0)
 
         with(attr) {
@@ -116,6 +118,10 @@ class FindInPageBar @JvmOverloads constructor(
                 ),
                 getColor(
                     R.styleable.FindInPageBar_findInPageResultCountTextColor,
+                    DEFAULT_VALUE
+                ),
+                getColor(
+                    R.styleable.FindInPageBar_findInPageNoMatchesTextColor,
                     DEFAULT_VALUE
                 ),
                 getDimensionPixelSize(
@@ -161,9 +167,19 @@ class FindInPageBar @JvmOverloads constructor(
 
             addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) = Unit
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) = Unit
 
-                override fun onTextChanged(newCharacter: CharSequence?, start: Int, before: Int, count: Int) {
+                override fun onTextChanged(
+                    newCharacter: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int
+                ) {
                     val newQuery = newCharacter?.toString() ?: return
                     onQueryChange(newQuery)
                 }
@@ -177,6 +193,7 @@ internal data class FindInPageBarStyling(
     val queryHintTextColor: Int,
     val queryTextSize: Int,
     val resultCountTextColor: Int,
+    val resultNoMatchesTextColor: Int,
     val resultCountTextSize: Int,
     val buttonsTint: ColorStateList?
 )

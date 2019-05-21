@@ -103,12 +103,16 @@ class FindInPageBarTest {
     }
 
     @Test
-    fun `displayResult with no matches will clear views`() {
-        val view = FindInPageBar(context)
+    fun `displayResult with no matches will update views`() {
+        val view = spy(FindInPageBar(context))
 
         view.displayResult(Session.FindResult(0, 0, false))
 
-        assertEquals("", view.resultsCountTextView.text)
-        assertEquals("", view.resultsCountTextView.contentDescription)
+        val textCorrectValue = view.resultFormat.format(0, 0)
+        val contentDesCorrectValue = view.accessibilityFormat.format(0, 0)
+
+        assertEquals(textCorrectValue, view.resultsCountTextView.text)
+        assertEquals(contentDesCorrectValue, view.resultsCountTextView.contentDescription)
+        verify(view).announceForAccessibility(contentDesCorrectValue)
     }
 }

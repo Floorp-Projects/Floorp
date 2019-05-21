@@ -36,6 +36,7 @@ These are the properties that you can customize of this widget.
 <attr name="findInPageResultCountTextColor" format="reference|color"/>
 <attr name="findInPageResultCountTextSize" format="dimension"/>
 <attr name="findInPageButtonsTint" format="reference|color"/>
+<attr name="findInPageNoMatchesTextColor" format="reference|color"/>
 ```
 
 **2. Add the `FindInPageFeature` to your activity/fragment:**
