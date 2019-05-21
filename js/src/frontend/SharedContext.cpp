@@ -171,8 +171,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
   MOZ_ASSERT(fun->isTenured());
 }
 
-void FunctionBox::initFromLazyFunction() {
-  JSFunction* fun = function();
+void FunctionBox::initFromLazyFunction(JSFunction* fun) {
   if (fun->lazyScript()->isDerivedClassConstructor()) {
     setDerivedClassConstructor();
   }
