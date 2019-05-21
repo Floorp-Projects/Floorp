@@ -92,7 +92,7 @@ class FileSystem(object):
                                                 extras=[".git/"],
                                                 cache=self.ignore_cache)
         git = GitHasher(root)
-        if git is not None:
+        if git.git is not None:
             self.hash_cache = git.hash_cache()
         else:
             self.hash_cache = {}
