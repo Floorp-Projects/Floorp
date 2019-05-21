@@ -198,7 +198,7 @@ const ProfilerManager = (function() {
      * @return {object}
      */
     getFeatures: function() {
-      return { features: Services.profiler.GetFeatures([]) };
+      return { features: Services.profiler.GetFeatures() };
     },
 
     /**
