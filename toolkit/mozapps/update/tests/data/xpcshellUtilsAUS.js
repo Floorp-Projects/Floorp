@@ -2882,10 +2882,10 @@ function checkUpdateLogContents(aCompareLogFile, aStaged = false,
     // when there are files still in use. The following will remove the
     // additional entries from the log file when this happens so the log check
     // passes.
-    let re = new RegExp("\n" + ERR_RENAME_FILE + "[^\n]*\n" +
+    let re = new RegExp(ERR_RENAME_FILE + "[^\n]*\n" +
                         "PerformReplaceRequest: destDir rename[^\n]*\n" +
                         "rename_file: proceeding to rename the directory\n", "g");
-    updateLogContents = updateLogContents.replace(re, "\n");
+    updateLogContents = updateLogContents.replace(re, "");
   }
 
   // Replace error codes since they are different on each platform.
