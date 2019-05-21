@@ -180,9 +180,13 @@ adb shell am start -n org.mozilla.samples.glean/mozilla.components.service.glean
   --es tagPings test-metrics-ping
 ```
 
-### Important GleanDebugActivity note!
+### Important GleanDebugActivity notes!
 
-Options that are set using the adb flags are not immediately reset and will persist until the application is closed or manually reset.
+- Options that are set using the adb flags are not immediately reset and will persist until the application is closed or manually reset.
+
+- There are a couple different ways in which to send pings through the GleanDebugActivity.
+    1. You can use the `GleanDebugActivity` in order to tag pings and trigger them manually using the UI.  This should always produce a ping with all required fields.
+    2. You can use the `GleanDebugActivity` to tag _and_ send pings.  This has the side effect of potentially sending a ping which does not include all fields because `sendPings` triggers pings to be sent before certain application behaviors can occur which would record that information.  For example, `duration` is not calculated or included in a baseline ping sent with `sendPing` because it forces the ping to be sent before the `duration` metric has been recorded.
 
 ## Data documentation
 
