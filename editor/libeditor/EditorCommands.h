@@ -181,8 +181,8 @@ class EditorCommand : public nsIControllerCommand {
         return EditorCommandParamType::Bool |
                EditorCommandParamType::StateAttribute;
       case Command::SetDocumentDefaultParagraphSeparator:
-        // XXX Treat as Unknown for now
-        return EditorCommandParamType::Transferable;
+        return EditorCommandParamType::CString |
+               EditorCommandParamType::StateAttribute;
       case Command::ToggleObjectResizers:
       case Command::ToggleInlineTableEditor:
       case Command::ToggleAbsolutePositionEditor:
@@ -320,6 +320,19 @@ class EditorCommand : public nsIControllerCommand {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  /**
+   * Called only when the result of EditorCommand::GetParamType(aCommand)
+   * includes EditorCommandParamType::CString.  If aCStringParam is void, it
+   * means that given param was nullptr.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  virtual nsresult DoCommandParam(Command aCommand,
+                                  const nsACString& aCStringParam,
+                                  TextEditor& aTextEditor) const {
+    MOZ_ASSERT_UNREACHABLE("Wrong overload is called");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
  protected:
   EditorCommand() = default;
   virtual ~EditorCommand() = default;
@@ -363,6 +376,13 @@ class EditorCommand : public nsIControllerCommand {
                                   const Maybe<bool>& aBoolParam, \
                                   TextEditor& aTextEditor) const final;
 
+#define NS_DECL_DO_COMMAND_PARAM_FOR_CSTRING_PARAM                 \
+ public:                                                           \
+  MOZ_CAN_RUN_SCRIPT                                               \
+  virtual nsresult DoCommandParam(Command aCommand,                \
+                                  const nsACString& aCStringParam, \
+                                  TextEditor& aTextEditor) const final;
+
 #define NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
  public:                                                   \
   static _cmd* GetInstance() {                             \
@@ -403,6 +423,17 @@ class EditorCommand : public nsIControllerCommand {
   class _cmd final : public EditorCommand {            \
     NS_DECL_EDITOR_COMMAND_COMMON_METHODS              \
     NS_DECL_DO_COMMAND_PARAM_FOR_BOOL_PARAM            \
+    NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
+                                                       \
+   protected:                                          \
+    _cmd() = default;                                  \
+    virtual ~_cmd() = default;                         \
+  };
+
+#define NS_DECL_EDITOR_COMMAND_FOR_CSTRING_PARAM(_cmd) \
+  class _cmd final : public EditorCommand {            \
+    NS_DECL_EDITOR_COMMAND_COMMON_METHODS              \
+    NS_DECL_DO_COMMAND_PARAM_FOR_CSTRING_PARAM         \
     NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
                                                        \
    protected:                                          \
@@ -751,8 +782,8 @@ class SetDocumentStateCommand final : public EditorCommand {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(SetDocumentStateCommand, EditorCommand)
 
   NS_DECL_EDITOR_COMMAND_COMMON_METHODS
-  NS_DECL_DO_COMMAND_PARAMS
   NS_DECL_DO_COMMAND_PARAM_FOR_BOOL_PARAM
+  NS_DECL_DO_COMMAND_PARAM_FOR_CSTRING_PARAM
   NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(SetDocumentStateCommand)
 
  private:
@@ -783,10 +814,12 @@ NS_DECL_EDITOR_COMMAND(InsertHTMLCommand)
 #undef NS_DECL_EDITOR_COMMAND
 #undef NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE
 #undef NS_DECL_EDITOR_COMMAND_FOR_BOOL_PARAM
+#undef NS_DECL_EDITOR_COMMAND_FOR_CSTRING_PARAM
 #undef NS_DECL_EDITOR_COMMAND_COMMON_METHODS
 #undef NS_DECL_DO_COMMAND_PARAMS
 #undef NS_DECL_DO_COMMAND_PARAM_DELEGATE_TO_DO_COMMAND
 #undef NS_DECL_DO_COMMAND_PARAM_FOR_BOOL_PARAM
+#undef NS_DECL_DO_COMMAND_PARAM_FOR_CSTRING_PARAM
 #undef NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON
 
 }  // namespace mozilla
