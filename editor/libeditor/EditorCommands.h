@@ -18,6 +18,7 @@ class nsAtom;
 class nsCommandParams;
 class nsICommandParams;
 class nsIEditingSession;
+class nsITransferable;
 
 namespace mozilla {
 
@@ -94,6 +95,8 @@ class EditorCommand : public nsIControllerCommand {
       // PasteCommand
       case Command::Paste:
         return EditorCommandParamType::None;
+      case Command::PasteTransferable:
+        return EditorCommandParamType::Transferable;
       // SwitchTextDirectionCommand
       case Command::FormatSetBlockTextDirection:
         return EditorCommandParamType::None;
@@ -298,8 +301,8 @@ class EditorCommand : public nsIControllerCommand {
         return EditorCommandParamType::None;
 
       default:
-        // XXX Treat as Unknown for now
-        return EditorCommandParamType::Transferable;
+        MOZ_ASSERT_UNREACHABLE("Unknown Command");
+        return EditorCommandParamType::None;
     }
   }
 
@@ -327,12 +330,6 @@ class EditorCommand : public nsIControllerCommand {
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult DoCommand(Command aCommand,
                              TextEditor& aTextEditor) const = 0;
-  MOZ_CAN_RUN_SCRIPT
-  virtual nsresult DoCommandParams(Command aCommand, nsCommandParams* aParams,
-                                   TextEditor& aTextEditor) const {
-    MOZ_ASSERT_UNREACHABLE("Wrong method is called");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   /**
    * @param aTextEditor         If the context is an editor, should be set to
@@ -397,6 +394,19 @@ class EditorCommand : public nsIControllerCommand {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  /**
+   * Called only when the result of EditorCommand::GetParamType(aCommand) is
+   * EditorCommandParamType::Transferable.  If aTransferableParam may be
+   * nullptr.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  virtual nsresult DoCommandParam(Command aCommand,
+                                  nsITransferable* aTransferableParam,
+                                  TextEditor& aTextEditor) const {
+    MOZ_ASSERT_UNREACHABLE("Wrong overload is called");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
  protected:
   EditorCommand() = default;
   virtual ~EditorCommand() = default;
@@ -454,6 +464,13 @@ class EditorCommand : public nsIControllerCommand {
                                   const nsAString& aStringParam, \
                                   TextEditor& aTextEditor) const final;
 
+#define NS_DECL_DO_COMMAND_PARAM_FOR_TRANSFERABLE_PARAM                \
+ public:                                                               \
+  MOZ_CAN_RUN_SCRIPT                                                   \
+  virtual nsresult DoCommandParam(Command aCommand,                    \
+                                  nsITransferable* aTransferableParam, \
+                                  TextEditor& aTextEditor) const final;
+
 #define NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
  public:                                                   \
   static _cmd* GetInstance() {                             \
@@ -467,17 +484,6 @@ class EditorCommand : public nsIControllerCommand {
                                                            \
  private:                                                  \
   static StaticRefPtr<_cmd> sInstance;
-
-#define NS_DECL_EDITOR_COMMAND(_cmd)                   \
-  class _cmd final : public EditorCommand {            \
-    NS_DECL_EDITOR_COMMAND_COMMON_METHODS              \
-    NS_DECL_DO_COMMAND_PARAMS                          \
-    NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd) \
-                                                       \
-   protected:                                          \
-    _cmd() = default;                                  \
-    virtual ~_cmd() = default;                         \
-  };
 
 #define NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(_cmd) \
   class _cmd final : public EditorCommand {                     \
@@ -523,6 +529,17 @@ class EditorCommand : public nsIControllerCommand {
     virtual ~_cmd() = default;                         \
   };
 
+#define NS_DECL_EDITOR_COMMAND_FOR_TRANSFERABLE_PARAM(_cmd) \
+  class _cmd final : public EditorCommand {                 \
+    NS_DECL_EDITOR_COMMAND_COMMON_METHODS                   \
+    NS_DECL_DO_COMMAND_PARAM_FOR_TRANSFERABLE_PARAM         \
+    NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(_cmd)      \
+                                                            \
+   protected:                                               \
+    _cmd() = default;                                       \
+    virtual ~_cmd() = default;                              \
+  };
+
 // basic editor commands
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(UndoCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(RedoCommand)
@@ -532,7 +549,7 @@ NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(CutOrDeleteCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(CopyCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(CopyOrDeleteCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(PasteCommand)
-NS_DECL_EDITOR_COMMAND(PasteTransferableCommand)
+NS_DECL_EDITOR_COMMAND_FOR_TRANSFERABLE_PARAM(PasteTransferableCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(SwitchTextDirectionCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(DeleteCommand)
 NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(SelectAllCommand)
@@ -893,17 +910,18 @@ NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE(DecreaseFontSizeCommand)
 // Insert content commands
 NS_DECL_EDITOR_COMMAND_FOR_STRING_PARAM(InsertHTMLCommand)
 
-#undef NS_DECL_EDITOR_COMMAND
 #undef NS_DECL_EDITOR_COMMAND_FOR_NO_PARAM_WITH_DELEGATE
 #undef NS_DECL_EDITOR_COMMAND_FOR_BOOL_PARAM
 #undef NS_DECL_EDITOR_COMMAND_FOR_CSTRING_PARAM
 #undef NS_DECL_EDITOR_COMMAND_FOR_STRING_PARAM
+#undef NS_DECL_EDITOR_COMMAND_FOR_TRANSFERABLE_PARAM
 #undef NS_DECL_EDITOR_COMMAND_COMMON_METHODS
 #undef NS_DECL_DO_COMMAND_PARAMS
 #undef NS_DECL_DO_COMMAND_PARAM_DELEGATE_TO_DO_COMMAND
 #undef NS_DECL_DO_COMMAND_PARAM_FOR_BOOL_PARAM
 #undef NS_DECL_DO_COMMAND_PARAM_FOR_CSTRING_PARAM
 #undef NS_DECL_DO_COMMAND_PARAM_FOR_STRING_PARAM
+#undef NS_DECL_DO_COMMAND_PARAM_FOR_TRANSFERABLE_PARAM
 #undef NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON
 
 }  // namespace mozilla
