@@ -259,7 +259,7 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None,
     found_stdout_logger = False
     if args is None:
         args = {}
-    if not hasattr(args, 'iteritems'):
+    if not isinstance(args, dict):
         args = vars(args)
 
     if defaults is None:
