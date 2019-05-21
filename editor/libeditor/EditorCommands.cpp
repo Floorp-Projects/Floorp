@@ -121,6 +121,32 @@ EditorCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  if (Any(paramType & EditorCommandParamType::CString)) {
+    if (!params) {
+      nsresult rv = DoCommandParam(command, VoidCString(),
+                                   MOZ_KnownLive(*editor->AsTextEditor()));
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "Failed to do command from nsIControllerCommand::DoCommandParams()");
+      return rv;
+    }
+    if (Any(paramType & EditorCommandParamType::StateAttribute)) {
+      nsCString cStringParam;
+      nsresult rv = params->GetCString(STATE_ATTRIBUTE, cStringParam);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      rv = DoCommandParam(command, cStringParam,
+                          MOZ_KnownLive(*editor->AsTextEditor()));
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "Failed to do command from nsIControllerCommand::DoCommandParams()");
+      return rv;
+    }
+    MOZ_ASSERT_UNREACHABLE("Unexpected state for CString");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   nsresult rv = DoCommandParams(command, MOZ_KnownLive(params),
                                 MOZ_KnownLive(*editor->AsTextEditor()));
   NS_WARNING_ASSERTION(
