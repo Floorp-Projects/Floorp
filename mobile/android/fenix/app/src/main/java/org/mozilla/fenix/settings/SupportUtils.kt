@@ -50,7 +50,6 @@ object SupportUtils {
         setPackage(context.packageName)
     }
 
-
     private fun getEncodedTopicUTF8(topic: String): String {
         try {
             return URLEncoder.encode(topic, "UTF-8")

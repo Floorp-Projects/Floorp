@@ -14,8 +14,6 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_private_browsing.view.*
 import org.mozilla.fenix.R
 
-
-
 class OnboardingPrivateBrowsingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
