@@ -97,7 +97,7 @@ class CompositorManagerChild : public PCompositorManagerChild {
 
   virtual ~CompositorManagerChild() = default;
 
-  void DeallocPCompositorManagerChild() override;
+  void ActorDealloc() override;
 
   already_AddRefed<nsIEventTarget> GetSpecificMessageEventTarget(
       const Message& aMsg) override;

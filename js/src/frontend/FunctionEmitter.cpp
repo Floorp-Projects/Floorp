@@ -475,16 +475,10 @@ bool FunctionScriptEmitter::prepareForBody() {
     }
   }
 
-  if (funbox_->function()->kind() ==
+  if (funbox_->kind() ==
       JSFunction::FunctionKind::ClassConstructor) {
-    if (funbox_->isDerivedClassConstructor()) {
-      if (!bce_->emitCopyInitializersToLocalInitializers()) {
-        //          [stack]
-        return false;
-      }
-    } else {
-      if (!bce_->emitInitializeInstanceFields(
-              BytecodeEmitter::IsSuperCall::No)) {
+    if (!funbox_->isDerivedClassConstructor()) {
+      if (!bce_->emitInitializeInstanceFields()) {
         //          [stack]
         return false;
       }

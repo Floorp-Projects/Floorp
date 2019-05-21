@@ -25,14 +25,6 @@ mv ${TOOLS_DIR}/wrench-deps/{vendor,.cargo} "${GECKO_PATH}/gfx/wr/"
 # to make this cross-compile properly.
 
 pushd "${TOOLS_DIR}/cctools/bin"
-# Link all the tools from x86_64-darwin11-* to x86_64-apple-darwin-* because
-# x86_64-apple-darwin is the Official Rust Triple (TM) and so that's the prefix
-# we run configure with, and the toolchain configure/make will look for.
-# We can't just rename the files because e.g. the ar tool invokes the ranlib
-# tool with the old prefix hard-coded. So we symlink instead.
-for TOOL in x86_64-darwin11-*; do
-    ln -s "${TOOL}" "${TOOL/x86_64-darwin11/${TARGET_TRIPLE}}"
-done
 
 # Add a pkg-config cross-compile wrapper. Without this, the configure script
 # will use pkg-config from the host, which will find host libraries that are

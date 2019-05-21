@@ -300,7 +300,6 @@ class ProtocolType(IPDLType):
         self.managers = []           # ProtocolType
         self.manages = []
         self.hasDelete = False
-        self.hasReentrantDelete = False
 
     def isProtocol(self): return True
 
@@ -991,9 +990,6 @@ class GatherDecls(TcheckVisitor):
                 p.loc,
                 "destructor declaration `%s(...)' required for managed protocol `%s'",
                 _DELETE_MSG, p.name)
-
-        p.decl.type.hasReentrantDelete = p.decl.type.hasDelete and self.symtab.lookup(
-            _DELETE_MSG).type.isInterrupt()
 
         # FIXME/cjones declare all the little C++ thingies that will
         # be generated.  they're not relevant to IPDL itself, but

@@ -13,8 +13,8 @@ import { isOriginalId } from "devtools-source-map";
 
 import { getSourceFromId, getSourceWithContent } from "../../reducers/sources";
 import { getSourcesForTabs } from "../../reducers/tabs";
-import { setOutOfScopeLocations } from "../ast";
 import { setSymbols } from "./symbols";
+import { setInScopeLines } from "../ast";
 import { closeActiveSearch, updateActiveFileSearch } from "../ui";
 import { isFulfilled } from "../../utils/async-value";
 import { togglePrettyPrint } from "./prettyPrint";
@@ -189,7 +189,7 @@ export function selectLocation(
     }
 
     dispatch(setSymbols({ cx, source: loadedSource }));
-    dispatch(setOutOfScopeLocations(cx));
+    dispatch(setInScopeLines(cx));
 
     // If a new source is selected update the file search results
     const newSource = getSelectedSource(getState());

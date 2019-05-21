@@ -41,10 +41,6 @@ add_task(async function() {
     "times2.js",
     "opts.js"
   );
-  const {
-    selectors: { getSelectedSource },
-    getState
-  } = dbg;
 
   await selectSource(dbg, "times2");
   await addBreakpoint(dbg, "times2", 2);
@@ -55,14 +51,14 @@ add_task(async function() {
 
   info("Test previewing in the original location");
   await assertPreviews(dbg, [
-    { line: 2, column: 10, result: 4, expression: "x" }
+    { line: 2, column: 10, result: 4, expression: "x" },
   ]);
 
   info("Test previewing in the generated location");
   await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await waitForSelectedSource(dbg, "bundle.js");
   await assertPreviews(dbg, [
-    { line: 70, column: 11, result: 4, expression: "x" }
+    { line: 70, column: 11, result: 4, expression: "x" },
   ]);
 
   info("Test that you can not preview in another original file");

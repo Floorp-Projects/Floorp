@@ -38,7 +38,7 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mClosed = true;
 }
 
-void VideoBridgeParent::DeallocPVideoBridgeParent() {
+void VideoBridgeParent::ActorDealloc() {
   mCompositorThreadRef = nullptr;
   mSelfRef = nullptr;
 }

@@ -10,14 +10,6 @@ protocol PTestSelfManageRoot {
 child:
     async PTestSelfManage();
     async __delete__();
-
-/*
-state LIVE:
-    send PTestSelfManage goto DEAD;
-
-state DEAD:
-    send __delete__;
-*/
 };
 
 

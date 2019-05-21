@@ -10,6 +10,7 @@ import itertools
 import ipdl.ast
 import ipdl.builtin
 from ipdl.cxx.ast import *
+from ipdl.cxx.code import *
 from ipdl.direct_call import VIRTUAL_CALL_CLASSES, DIRECT_CALL_OVERRIDES
 from ipdl.type import ActorType, UnionType, TypeVisitor, builtinHeaderIncludes
 
@@ -149,10 +150,6 @@ def _actorId(actor=None):
 
 def _actorHId(actorhandle):
     return ExprSelect(actorhandle, '.', 'mId')
-
-
-def _actorState(actor):
-    return ExprSelect(actor, '->', 'mLivenessState')
 
 
 def _backstagePass():
@@ -311,6 +308,10 @@ def _cxxManagedContainerType(basetype, const=False, ref=False):
                 const=const, ref=ref, hasimplicitcopyctor=False)
 
 
+def _cxxLifecycleProxyType(ptr=False):
+    return Type('mozilla::ipc::ActorLifecycleProxy', ptr=ptr)
+
+
 def _callInsertManagedActor(managees, actor):
     return ExprCall(ExprSelect(managees, '.', 'PutEntry'),
                     args=[actor])
@@ -329,6 +330,20 @@ def _callHasManagedActor(managees, actor):
     return ExprCall(ExprSelect(managees, '.', 'Contains'), args=[actor])
 
 
+def _callGetLifecycleProxy(actor=ExprVar.THIS):
+    return ExprCall(ExprSelect(actor, '->', 'GetLifecycleProxy'))
+
+
+def _releaseLifecycleProxy(actor=None):
+    return StmtCode(
+        '''
+        mozilla::ipc::ActorLifecycleProxy* proxy =
+            (${actor})->GetLifecycleProxy();
+        NS_IF_RELEASE(proxy);
+        ''',
+        actor=actor or ExprVar.THIS)
+
+
 def _otherSide(side):
     if side == 'child':
         return 'parent'
@@ -338,10 +353,14 @@ def _otherSide(side):
 
 
 def _ifLogging(topLevelProtocol, stmts):
-    iflogging = StmtIf(ExprCall(ExprVar('mozilla::ipc::LoggingEnabledFor'),
-                                args=[topLevelProtocol]))
-    iflogging.addifstmts(stmts)
-    return iflogging
+    return StmtCode(
+        '''
+        if (mozilla::ipc::LoggingEnabledFor(${proto})) {
+            $*{stmts}
+        }
+        ''',
+        proto=topLevelProtocol,
+        stmts=stmts)
 
 # XXX we need to remove these and install proper error handling
 
@@ -533,8 +552,6 @@ class _ConvertToCxxType(TypeVisitor):
     def visitMessageType(self, m): assert 0
 
     def visitVoidType(self, v): assert 0
-
-    def visitStateType(self, st): assert 0
 
 
 def _cxxBareType(ipdltype, side, fq=False):
@@ -1179,18 +1196,6 @@ def _subtreeUsesShmem(p):
     return False
 
 
-def _stateType(hasReentrantDelete):
-    if hasReentrantDelete:
-        return Type('mozilla::ipc::ReEntrantDeleteLivenessState')
-    else:
-        return Type('mozilla::ipc::LivenessState')
-
-
-def _startState(hasReentrantDelete):
-    pfx = _stateType(hasReentrantDelete).name + '::'
-    return ExprVar(pfx + 'Start')
-
-
 class Protocol(ipdl.ast.Protocol):
     def cxxTypedefs(self):
         return self.decl.cxxtypedefs
@@ -1218,6 +1223,9 @@ class Protocol(ipdl.ast.Protocol):
 
     def removeManageeMethod(self):
         return ExprVar('RemoveManagee')
+
+    def deallocManageeMethod(self):
+        return ExprVar('DeallocManagee')
 
     def otherPidMethod(self):
         return ExprVar('OtherPid')
@@ -1267,24 +1275,6 @@ class Protocol(ipdl.ast.Protocol):
         if actorThis is not None:
             return ExprCall(ExprSelect(actorThis, '->', 'Id'))
         return ExprCall(ExprVar('Id'))
-
-    def stateVar(self):
-        return ExprVar('mLivenessState')
-
-    def fqStateType(self):
-        return _stateType(self.decl.type.hasReentrantDelete)
-
-    def startState(self):
-        return _startState(self.decl.type.hasReentrantDelete)
-
-    def deadState(self):
-        pfx = self.fqStateType().name + '::'
-        return ExprVar(pfx + 'Dead')
-
-    def dyingState(self):
-        assert self.decl.type.hasReentrantDelete
-        pfx = self.fqStateType().name + '::'
-        return ExprVar(pfx + 'Dying')
 
     def managerVar(self, thisexpr=None):
         assert thisexpr is not None or not self.decl.type.isToplevel()
@@ -1720,28 +1710,23 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         p = self.protocol.decl.type
         tparent = _cxxBareType(ActorType(p), 'Parent', fq=True)
         tchild = _cxxBareType(ActorType(p), 'Child', fq=True)
-        methodvar = ExprVar('CreateEndpoints')
-        rettype = Type.NSRESULT
-        parentpidvar = ExprVar('aParentDestPid')
-        childpidvar = ExprVar('aChildDestPid')
-        parentvar = ExprVar('aParent')
-        childvar = ExprVar('aChild')
 
         openfunc = MethodDefn(MethodDecl(
-            methodvar.name,
-            params=[Decl(Type('base::ProcessId'), parentpidvar.name),
-                    Decl(Type('base::ProcessId'), childpidvar.name),
+            'CreateEndpoints',
+            params=[Decl(Type('base::ProcessId'), 'aParentDestPid'),
+                    Decl(Type('base::ProcessId'), 'aChildDestPid'),
                     Decl(Type('mozilla::ipc::Endpoint<' + tparent.name + '>', ptr=True),
-                         parentvar.name),
+                         'aParent'),
                     Decl(Type('mozilla::ipc::Endpoint<' + tchild.name + '>', ptr=True),
-                         childvar.name)],
-            ret=rettype))
-        openfunc.addstmt(StmtReturn(ExprCall(
-            ExprVar('mozilla::ipc::CreateEndpoints'),
-            args=[_backstagePass(),
-                  parentpidvar, childpidvar,
-                  parentvar, childvar
-                  ])))
+                         'aChild')],
+            ret=Type.NSRESULT))
+        openfunc.addcode(
+            '''
+            return mozilla::ipc::CreateEndpoints(
+                mozilla::ipc::PrivateIPDLInterface(),
+                aParentDestPid, aChildDestPid,
+                aParent, aChild);
+            ''')
         return openfunc
 
 
@@ -1861,8 +1846,8 @@ class _ParamTraits():
 
     @classmethod
     def fatalError(cls, reason):
-        return StmtExpr(ExprCall(ExprSelect(cls.actor, '->', 'FatalError'),
-                                 args=[ExprLiteral.String(reason)]))
+        return StmtCode('aActor->FatalError(${reason});',
+                        reason=ExprLiteral.String(reason))
 
     @classmethod
     def writeSentinel(cls, msgvar, sentinelKey):
@@ -1992,12 +1977,12 @@ class _ParamTraits():
 
     @classmethod
     def generateDecl(cls, fortype, write, read, constin=True):
-        # IPDLParamTraits impls are selected ignoring constness, references,
-        # and pointers.
+        # IPDLParamTraits impls are selected ignoring constness, and references.
         pt = Class('IPDLParamTraits',
                    specializes=Type(fortype.name,
                                     T=fortype.T,
-                                    inner=fortype.inner),
+                                    inner=fortype.inner,
+                                    ptr=fortype.ptr),
                    struct=True)
 
         # typedef T paramType;
@@ -2050,70 +2035,50 @@ class _ParamTraits():
         Write and read callers will perform nullability validation."""
 
         cxxtype = _cxxBareType(actortype, side, fq=True)
-        idvar = ExprVar('id')
 
-        # void Write(..) impl
-        write = [
-            # id_t id;
-            StmtDecl(Decl(_actorIdType(), idvar.name)),
-        ]
+        write = StmtCode(
+            '''
+            int32_t id;
+            if (!${var}) {
+                id = 0;  // kNullActorId
+            } else {
+                id = ${var}->Id();
+                if (id == 1) {  // kFreedActorId
+                    ${var}->FatalError("Actor has been |delete|d");
+                }
+                MOZ_ASSERT(
+                    ${actor}->GetIPCChannel() == ${var}->GetIPCChannel(),
+                    "Actor must be from the same channel as the"
+                    " actor it's being sent over");
+            }
 
-        # if (!var) id = NULL_ID
-        ifnull = StmtIf(ExprNot(cls.var))
-        ifnull.addifstmt(StmtExpr(ExprAssn(idvar, _NULL_ACTOR_ID)))
-
-        # else
-        #   id = var->mId
-        ifnull.addelsestmt(StmtExpr(ExprAssn(idvar, _actorId(cls.var))))
-        #   if (id == FREED_ID)
-        #     abort()
-        iffreed = StmtIf(ExprBinary(_FREED_ACTOR_ID, '==', idvar))
-        iffreed.addifstmt(cls.fatalError("actor has been |delete|d"))
-        ifnull.addelsestmt(iffreed)
-        #   MOZ_ASSERT(aActor->GetIPCChannel() == var->GetIPCChannel(), "...")
-        ifnull.addelsestmt(
-            StmtExpr(ExprCall(ExprVar("MOZ_ASSERT"), args=[
-                ExprBinary(
-                    ExprCall(ExprSelect(cls.actor, '->', 'GetIPCChannel')),
-                    '==',
-                    ExprCall(ExprSelect(cls.var, '->', 'GetIPCChannel'))
-                ),
-                ExprLiteral.String("Actor must be from the same channel as the"
-                                   " actor it's being sent over"),
-            ]))
-        )
-
-        # IPC::WriteIPDLParam(..)
-        write += [ifnull,
-                  StmtExpr(cls.write(idvar, cls.msgvar, cls.actor))]
+            ${write};
+            ''',
+            var=cls.var,
+            actor=cls.actor,
+            write=cls.write(ExprVar('id'), cls.msgvar, cls.actor))
 
         # bool Read(..) impl
-        actorvar = ExprVar('actor')
-        read = [
-            StmtDecl(Decl(Type('mozilla::Maybe', T=Type('mozilla::ipc::IProtocol',
-                                                        ptr=True)), actorvar.name),
-                     init=ExprCall(ExprSelect(cls.actor, '->', 'ReadActor'),
-                                   args=[cls.msgvar,
-                                         cls.itervar,
-                                         ExprLiteral.TRUE,  # XXX(nika): Do we still need this arg?
-                                         ExprLiteral.String(actortype.name()),
-                                         _protocolId(actortype)])),
-        ]
+        read = StmtCode(
+            '''
+            mozilla::Maybe<mozilla::ipc::IProtocol*> actor =
+                ${actor}->ReadActor(${msgvar}, ${itervar}, true, ${actortype}, ${protocolid});
+            if (actor.isNothing()) {
+                return false;
+            }
 
-        # if (actor.isNothing())
-        #   return false
-        ifnothing = StmtIf(ExprCall(ExprSelect(actorvar, '.', 'isNothing')))
-        ifnothing.addifstmts([StmtReturn.FALSE])
-        read += [
-            ifnothing,
-            Whitespace.NL,
-            StmtExpr(ExprAssn(ExprDeref(cls.var),
-                              ExprCast(ExprCall(ExprSelect(actorvar, '.', 'value')),
-                                       cxxtype, static=True))),
-            StmtReturn.TRUE,
-        ]
+            *${var} = static_cast<${cxxtype}>(actor.value());
+            return true;
+            ''',
+            actor=cls.actor,
+            msgvar=cls.msgvar,
+            itervar=cls.itervar,
+            actortype=ExprLiteral.String(actortype.name()),
+            protocolid=_protocolId(actortype),
+            var=cls.var,
+            cxxtype=cxxtype)
 
-        return cls.generateDecl(cxxtype, write, read)
+        return cls.generateDecl(cxxtype, [write], [read])
 
     @classmethod
     def structPickling(cls, structtype):
@@ -2355,8 +2320,6 @@ before this struct.  Some types generate multiple kinds.'''
 
     def visitProtocolType(self, v): assert 0
 
-    def visitStateType(self, v): assert 0
-
 
 def _fieldStaticAssertions(sd):
     staticasserts = []
@@ -2369,22 +2332,16 @@ def _fieldStaticAssertions(sd):
         if len(fields) == 1:
             continue
 
-        # If we get here, we have a list of fields of some certain size that we
-        # would like to assume are laid out consecutively in memory with no
-        # padding between fields.  The types of the fields (integers, booleans,
-        # and floats) are such that we don't have to worry about internal
-        # padding in the fields themselves.  We check our assumptions via
-        # static_assert.
-        start_offset = ExprCall(ExprVar('offsetof'),
-                                args=[ExprVar(sd.name), fields[0].memberVar()])
-        end_offset = ExprCall(ExprVar('offsetof'),
-                              args=[ExprVar(sd.name), fields[-1].memberVar()])
-        diff = ExprBinary(end_offset, '-', start_offset)
-        eqcheck = ExprBinary(diff, '==', ExprLiteral.Int(size * (len(fields) - 1)))
-        assert_ = ExprCall(ExprVar('static_assert'),
-                           args=[eqcheck,
-                                 ExprLiteral.String("Bad assumptions about field layout!")])
-        staticasserts.append(StmtExpr(assert_))
+        staticasserts.append(StmtCode(
+            '''
+            static_assert(
+                (offsetof(${struct}, ${last}) - offsetof(${struct}, ${first})) == ${expected},
+                "Bad assumptions about field layout!");
+            ''',
+            struct=sd.name,
+            first=fields[0].memberVar(),
+            last=fields[-1].memberVar(),
+            expected=ExprLiteral.Int(size * (len(fields) - 1))))
 
     return staticasserts
 
@@ -3239,26 +3196,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 _actorName(ip.decl.shortname, _otherSide(self.side).title())))
 
     def visitProtocol(self, p):
-        self.hdrfile.addthings([
-            CppDirective('ifdef', 'DEBUG'),
-            CppDirective('include', '"prenv.h"'),
-            CppDirective('endif', '// DEBUG')
-        ])
+        self.hdrfile.addcode(
+            '''
+            #ifdef DEBUG
+            #include "prenv.h"
+            #endif  // DEBUG
+
+            #include "base/id_map.h"
+            #include "mozilla/ipc/MessageChannel.h"
+            #include "mozilla/ipc/ProtocolUtils.h"
+            ''')
 
         self.protocol = p
         ptype = p.decl.type
         toplevel = p.decl.type.toplevel()
-
-        # FIXME: all actors impl Iface for now
-        if ptype.isManager() or 1:
-            self.hdrfile.addthing(CppDirective('include', '"base/id_map.h"'))
-
-        self.hdrfile.addthings([
-            CppDirective('include', '"mozilla/ipc/MessageChannel.h"'),
-            Whitespace.NL])
-        self.hdrfile.addthings([
-            CppDirective('include', '"mozilla/ipc/ProtocolUtils.h"'),
-            Whitespace.NL])
 
         hasAsyncReturns = False
         for md in p.messageDecls:
@@ -3356,7 +3307,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 if isctor or isdtor:
                     defaultRecv = MethodDefn(recvDecl)
-                    defaultRecv.addstmt(StmtReturn(ExprCall(ExprVar('IPC_OK'))))
+                    defaultRecv.addcode('return IPC_OK();\n')
                     self.cls.addstmt(defaultRecv)
                 elif (self.protocol.name, self.side) in VIRTUAL_CALL_CLASSES:
                     # If we're using virtual calls, we need the methods to be
@@ -3389,21 +3340,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     params=[Decl(p.managedCxxType(managed, self.side), 'aActor')],
                     ret=Type.BOOL, methodspec=MethodSpec.PURE)))
 
-        # ActorDestroy() method; default is no-op
-        if self.side == 'parent':
-            methodspec = MethodSpec.PURE
-        else:
-            methodspec = MethodSpec.VIRTUAL
-
-        self.cls.addstmts([
-            Whitespace.NL,
-            MethodDefn(MethodDecl(
-                _destroyMethod().name,
-                params=[Decl(_DestroyReason.Type(), 'aWhy')],
-                ret=Type.VOID, methodspec=methodspec)),
-            Whitespace.NL
-        ])
-
         if ptype.isToplevel():
             # void ProcessingError(code); default to no-op
             processingerror = MethodDefn(
@@ -3416,7 +3352,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             shouldcontinue = MethodDefn(
                 MethodDecl(p.shouldContinueFromTimeoutVar().name,
                            ret=Type.BOOL, methodspec=MethodSpec.OVERRIDE))
-            shouldcontinue.addstmt(StmtReturn.TRUE)
+            shouldcontinue.addcode('return true;\n')
 
             # void Entered*()/Exited*(); default to no-op
             entered = MethodDefn(
@@ -3448,26 +3384,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             name = ExprLiteral.String(_actorName(p.name, self.side))
             ctor.memberinits = [
                 ExprMemberInit(ExprVar('mozilla::ipc::IToplevelProtocol'),
-                               [name, _protocolId(ptype), side]),
-                ExprMemberInit(p.stateVar(),
-                               [p.startState()])
+                               [name, _protocolId(ptype), side])
             ]
         else:
             ctor.memberinits = [
-                ExprMemberInit(ExprVar('mozilla::ipc::IProtocol'), [side]),
-                ExprMemberInit(p.stateVar(),
-                               [p.deadState()])
+                ExprMemberInit(ExprVar('mozilla::ipc::IProtocol'), [side])
             ]
 
-        ctor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_CTOR'),
-                                       [ExprVar(self.clsname)])))
+        ctor.addcode('MOZ_COUNT_CTOR(${clsname});\n', clsname=self.clsname)
         self.cls.addstmts([ctor, Whitespace.NL])
 
         # ~Actor()
         dtor = DestructorDefn(
             DestructorDecl(self.clsname, methodspec=MethodSpec.VIRTUAL))
-        dtor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_DTOR'),
-                                       [ExprVar(self.clsname)])))
+        dtor.addcode('MOZ_COUNT_DTOR(${clsname});\n', clsname=self.clsname)
 
         self.cls.addstmts([dtor, Whitespace.NL])
 
@@ -3477,45 +3407,85 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 managertype = p.managerActorType(self.side, ptr=True)
                 managermeth = MethodDefn(MethodDecl(
                     'Manager', ret=managertype, const=True))
-                managerexp = ExprCall(ExprVar('IProtocol::Manager'), args=[])
-                managermeth.addstmt(StmtReturn(
-                    ExprCast(managerexp, managertype, static=True)))
+                managermeth.addcode(
+                    '''
+                    return static_cast<${type}>(IProtocol::Manager());
+                    ''',
+                    type=managertype)
 
                 self.cls.addstmts([managermeth, Whitespace.NL])
 
         def actorFromIter(itervar):
-            return ExprCall(ExprSelect(ExprCall(ExprSelect(itervar, '.', 'Get')),
-                                       '->', 'GetKey'))
+            return ExprCode('${iter}.Get()->GetKey()', iter=itervar)
 
         def forLoopOverHashtable(hashtable, itervar, const=False):
+            itermeth = 'ConstIter' if const else 'Iter'
             return StmtFor(
-                init=Param(Type.AUTO, itervar.name,
-                           ExprCall(ExprSelect(hashtable, '.', 'ConstIter' if const else 'Iter'))),
-                cond=ExprNot(ExprCall(ExprSelect(itervar, '.', 'Done'))),
-                update=ExprCall(ExprSelect(itervar, '.', 'Next')))
+                init=ExprCode('auto ${itervar} = ${hashtable}.${itermeth}()',
+                              itervar=itervar,
+                              hashtable=hashtable,
+                              itermeth=itermeth),
+                cond=ExprCode('!${itervar}.Done()', itervar=itervar),
+                update=ExprCode('${itervar}.Next()', itervar=itervar))
 
         # Managed[T](Array& inout) const
         # const Array<T>& Managed() const
         for managed in ptype.manages:
-            arrvar = ExprVar('aArr')
+            container = p.managedVar(managed, self.side)
+
             meth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
                 params=[Decl(_cxxArrayType(p.managedCxxType(managed, self.side), ref=True),
-                              arrvar.name)],
+                              'aArr')],
                 const=True))
-            meth.addstmt(StmtExpr(
-                ExprCall(ExprSelect(p.managedVar(managed, self.side),
-                                    '.', 'ToArray'),
-                         args=[arrvar])))
+            meth.addcode('${container}.ToArray(aArr);\n', container=container)
 
             refmeth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
                 params=[],
                 ret=p.managedVarType(managed, self.side, const=True, ref=True),
                 const=True))
-            refmeth.addstmt(StmtReturn(p.managedVar(managed, self.side)))
+            refmeth.addcode('return ${container};\n', container=container)
 
             self.cls.addstmts([meth, refmeth, Whitespace.NL])
+
+        # AllManagedActors(Array& inout) const
+        arrvar = ExprVar('arr__')
+        managedmeth = MethodDefn(MethodDecl(
+            'AllManagedActors',
+            params=[Decl(_cxxArrayType(_refptr(_cxxLifecycleProxyType()), ref=True),
+                         arrvar.name)],
+            methodspec=MethodSpec.OVERRIDE,
+            const=True))
+
+        # Count the number of managed actors, and allocate space in the output array.
+        managedmeth.addcode(
+            '''
+            uint32_t total = 0;
+            ''')
+        for managed in ptype.manages:
+            managedmeth.addcode(
+                '''
+                total += ${container}.Count();
+                ''',
+                container=p.managedVar(managed, self.side))
+        managedmeth.addcode(
+            '''
+            arr__.SetCapacity(total);
+
+            ''')
+
+        for managed in ptype.manages:
+            managedmeth.addcode(
+                '''
+                for (auto it = ${container}.ConstIter(); !it.Done(); it.Next()) {
+                    arr__.AppendElement(it.Get()->GetKey()->GetLifecycleProxy());
+                }
+
+                ''',
+                container=p.managedVar(managed, self.side))
+
+        self.cls.addstmts([managedmeth, Whitespace.NL])
 
         # OpenPEndpoint(...)/BindPEndpoint(...)
         for managed in ptype.manages:
@@ -3538,7 +3508,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         handlevar = ExprVar('handle__')
         self.handlevar = handlevar
 
-        msgtype = ExprCall(ExprSelect(msgvar, '.', 'type'), [])
+        msgtype = ExprCode('msg__.type()')
         self.asyncSwitch = StmtSwitch(msgtype)
         self.syncSwitch = None
         self.interruptSwitch = None
@@ -3553,19 +3523,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.visitMessageDecl(md)
 
         # add default cases
-        default = StmtBlock()
-        default.addstmt(StmtReturn(_Result.NotKnown))
+        default = StmtCode(
+            '''
+            return MsgNotKnown;
+            ''')
         self.asyncSwitch.addcase(DefaultLabel(), default)
         if toplevel.isSync() or toplevel.isInterrupt():
             self.syncSwitch.addcase(DefaultLabel(), default)
             if toplevel.isInterrupt():
                 self.interruptSwitch.addcase(DefaultLabel(), default)
 
-        # FIXME/bug 535053: only manager protocols and non-manager
-        # protocols with union types need Lookup().  we'll give it to
-        # all for the time being (simpler)
-        if 1 or ptype.isManager():
-            self.cls.addstmts(self.implementManagerIface())
+        self.cls.addstmts(self.implementManagerIface())
 
         def makeHandlerMethod(name, switch, hasReply, dispatches=False):
             params = [Decl(Type('Message', const=True, ref=True), msgvar.name)]
@@ -3577,52 +3545,35 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                            params=params, ret=_Result.Type()))
 
             if not switch:
-                crash = StmtExpr(ExprCall(
-                    ExprVar('MOZ_ASSERT_UNREACHABLE'),
-                    args=[ExprLiteral.String('message protocol not supported')]))
-                method.addstmts([crash, StmtReturn(_Result.NotKnown)])
+                method.addcode(
+                    '''
+                    MOZ_ASSERT_UNREACHABLE("message protocol not supported");
+                    return MsgNotKnown;
+                    ''')
                 return method
 
             if dispatches:
-                routevar = ExprVar('route__')
-                routedecl = StmtDecl(
-                    Decl(_actorIdType(), routevar.name),
-                    init=ExprCall(ExprSelect(msgvar, '.', 'routing_id')))
+                method.addcode(
+                    '''
+                    int32_t route__ = ${msgvar}.routing_id();
+                    if (MSG_ROUTING_CONTROL != route__) {
+                        IProtocol* routed__ = Lookup(route__);
+                        if (!routed__ || !routed__->GetLifecycleProxy()) {
+                            ${logignored}
+                            return MsgProcessed;
+                        }
 
-                routeif = StmtIf(ExprBinary(
-                    ExprVar('MSG_ROUTING_CONTROL'), '!=', routevar))
-                routedvar = ExprVar('routed__')
-                routeif.ifb.addstmt(
-                    StmtDecl(Decl(Type('IProtocol', ptr=True),
-                                  routedvar.name),
-                             _lookupListener(routevar)))
-                failif = StmtIf(ExprPrefixUnop(routedvar, '!'))
-                failif.ifb.addstmt(StmtReturn(_Result.RouteError))
-                routeif.ifb.addstmt(failif)
+                        RefPtr<mozilla::ipc::ActorLifecycleProxy> proxy__ =
+                            routed__->GetLifecycleProxy();
+                        return proxy__->Get()->${name}($,{args});
+                    }
 
-                routeif.ifb.addstmt(StmtReturn(ExprCall(
-                    ExprSelect(routedvar, '->', name),
-                    args=[ExprVar(p.name) for p in params])))
-
-                method.addstmts([routedecl, routeif, Whitespace.NL])
-
-            # in the event of an Interrupt delete message, we want to loudly complain about
-            # messages that are received that are not a reply to the original message
-            if ptype.hasReentrantDelete:
-                msgVar = ExprVar(params[0].name)
-                ifdying = StmtIf(ExprBinary(
-                    ExprBinary(ExprVar('mLivenessState'), '==', self.protocol.dyingState()),
-                    '&&',
-                    ExprBinary(
-                        ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_reply')),
-                                   '!=', ExprLiteral.TRUE),
-                        '||',
-                        ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_interrupt')),
-                                   '!=', ExprLiteral.TRUE))))
-                ifdying.addifstmts([
-                    _fatalError('incoming message racing with actor deletion'),
-                    StmtReturn(_Result.Processed)])
-                method.addstmt(ifdying)
+                    ''',
+                    msgvar=msgvar,
+                    logignored=self.logMessage(None, ExprAddrOf(msgvar),
+                                               'Ignored message for dead actor'),
+                    name=name,
+                    args=[p.name for p in params])
 
             # bug 509581: don't generate the switch stmt if there
             # is only the default case; MSVC doesn't like that
@@ -3650,10 +3601,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL
         ])
 
-        destroysubtreevar = ExprVar('DestroySubtree')
-        deallocsubtreevar = ExprVar('DeallocSubtree')
-        deallocshmemvar = ExprVar('DeallocShmems')
-        deallocselfvar = ExprVar('Dealloc' + _actorName(ptype.name(), self.side))
+        clearsubtreevar = ExprVar('ClearSubtree')
 
         # int32_t GetProtocolTypeId() { return PFoo; }
         gettypetag = MethodDefn(
@@ -3666,172 +3614,69 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             # OnChannelClose()
             onclose = MethodDefn(MethodDecl('OnChannelClose',
                                             methodspec=MethodSpec.OVERRIDE))
-            onclose.addstmts([
-                StmtExpr(ExprCall(destroysubtreevar,
-                                  args=[_DestroyReason.NormalShutdown])),
-                StmtExpr(ExprCall(deallocsubtreevar)),
-                StmtExpr(ExprCall(deallocshmemvar)),
-                StmtExpr(ExprCall(deallocselfvar))
-            ])
+            onclose.addcode(
+                '''
+                DestroySubtree(NormalShutdown);
+                ClearSubtree();
+                DeallocShmems();
+                if (GetLifecycleProxy()) {
+                    GetLifecycleProxy()->Release();
+                }
+                ''')
             self.cls.addstmts([onclose, Whitespace.NL])
 
             # OnChannelError()
             onerror = MethodDefn(MethodDecl('OnChannelError',
                                             methodspec=MethodSpec.OVERRIDE))
-            onerror.addstmts([
-                StmtExpr(ExprCall(destroysubtreevar,
-                                  args=[_DestroyReason.AbnormalShutdown])),
-                StmtExpr(ExprCall(deallocsubtreevar)),
-                StmtExpr(ExprCall(deallocshmemvar)),
-                StmtExpr(ExprCall(deallocselfvar))
-            ])
+            onerror.addcode(
+                '''
+                DestroySubtree(AbnormalShutdown);
+                ClearSubtree();
+                DeallocShmems();
+                if (GetLifecycleProxy()) {
+                    GetLifecycleProxy()->Release();
+                }
+                ''')
             self.cls.addstmts([onerror, Whitespace.NL])
 
         if (ptype.isToplevel() and ptype.isInterrupt()):
-
             processnative = MethodDefn(
                 MethodDecl('ProcessNativeEventsInInterruptCall', ret=Type.VOID))
-
-            processnative.addstmts([
-                CppDirective('ifdef', 'OS_WIN'),
-                StmtExpr(ExprCall(
-                    ExprSelect(ExprCall(ExprSelect(ExprCall(ExprVar('DowncastState')),
-                                                   '->',
-                                                   'GetIPCChannel')),
-                               '->',
-                               'ProcessNativeEventsInInterruptCall'))),
-                CppDirective('else'),
-                _fatalError('This method is Windows-only'),
-                CppDirective('endif'),
-            ])
+            processnative.addcode(
+                '''
+                #ifdef OS_WIN
+                DowncastState()->GetIPCChannel()->ProcessNativeEventsInInterruptCall();
+                #else
+                FatalError("This method is Windows-only");
+                #endif
+                ''')
 
             self.cls.addstmts([processnative, Whitespace.NL])
 
         # private methods
         self.cls.addstmt(Label.PRIVATE)
 
-        # DestroySubtree(bool normal)
-        whyvar = ExprVar('why')
-        subtreewhyvar = ExprVar('subtreewhy')
-        kidsvar = ExprVar('kids')
-        itervar = ExprVar('iter')
-
-        destroysubtree = MethodDefn(MethodDecl(
-            destroysubtreevar.name,
-            params=[Decl(_DestroyReason.Type(), whyvar.name)]))
-
-        if ptype.isManaged():
-            destroysubtree.addstmt(
-                Whitespace('// Unregister from our manager.\n', indent=True))
-            destroysubtree.addstmts(self.unregisterActor())
-            destroysubtree.addstmt(Whitespace.NL)
-
-        if ptype.isManager():
-            # only declare this for managers to avoid unused var warnings
-            destroysubtree.addstmts([
-                StmtDecl(
-                    Decl(_DestroyReason.Type(), subtreewhyvar.name),
-                    init=ExprConditional(
-                        ExprBinary(
-                            ExprBinary(whyvar, '==',
-                                       _DestroyReason.Deletion),
-                            '||',
-                            ExprBinary(whyvar, '==',
-                                       _DestroyReason.FailedConstructor)),
-                        _DestroyReason.AncestorDeletion, whyvar)),
-                Whitespace.NL
-            ])
-
+        # ClearSubtree()
+        clearsubtree = MethodDefn(MethodDecl(clearsubtreevar.name))
         for managed in ptype.manages:
-            managedVar = p.managedVar(managed, self.side)
-            kidvar = ExprVar('kid')
+            clearsubtree.addcode(
+                '''
+                for (auto it = ${container}.Iter(); !it.Done(); it.Next()) {
+                    it.Get()->GetKey()->ClearSubtree();
+                }
+                for (auto it = ${container}.Iter(); !it.Done(); it.Next()) {
+                    // Recursively releasing ${container} kids.
+                    auto* proxy = it.Get()->GetKey()->GetLifecycleProxy();
+                    NS_IF_RELEASE(proxy);
+                }
+                ${container}.Clear();
 
-            foreachdestroy = StmtRangedFor(kidvar, kidsvar)
+                ''',
+                container=p.managedVar(managed, self.side))
 
-            foreachdestroy.addstmt(
-                Whitespace('// Guarding against a child removing a sibling from the list during the iteration.\n', indent=True))  # NOQA: E501
-            ifhas = StmtIf(_callHasManagedActor(managedVar, kidvar))
-            ifhas.addifstmt(StmtExpr(ExprCall(
-                ExprSelect(kidvar, '->', destroysubtreevar.name),
-                args=[subtreewhyvar])))
-            foreachdestroy.addstmt(ifhas)
-
-            block = StmtBlock()
-            block.addstmts([
-                Whitespace(
-                    '// Recursively shutting down %s kids\n' % (managed.name()),
-                    indent=True),
-                StmtDecl(
-                    Decl(_cxxArrayType(p.managedCxxType(managed, self.side)), kidsvar.name)),
-                Whitespace(
-                    '// Accumulate kids into a stable structure to iterate over\n',
-                    indent=True),
-                StmtExpr(ExprCall(p.managedMethod(managed, self.side),
-                                  args=[kidsvar])),
-                foreachdestroy,
-            ])
-            destroysubtree.addstmt(block)
-
-        if len(ptype.manages):
-            destroysubtree.addstmt(Whitespace.NL)
-
-        # Reject pending responses for actor before calling ActorDestroy().
-        rejectPendingResponsesMethod = ExprSelect(self.protocol.callGetChannel(),
-                                                  '->',
-                                                  'RejectPendingResponsesForActor')
-        destroysubtree.addstmts([Whitespace('// Reject owning pending responses.\n',
-                                            indent=True),
-                                 StmtExpr(ExprCall(rejectPendingResponsesMethod,
-                                                   args=[ExprVar('this')])),
-                                 Whitespace.NL
-                                 ])
-
-        destroysubtree.addstmts([Whitespace('// Finally, destroy "us".\n',
-                                            indent=True),
-                                 StmtExpr(ExprCall(_destroyMethod(),
-                                                   args=[whyvar]))
-                                 ])
-
-        self.cls.addstmts([destroysubtree, Whitespace.NL])
-
-        # DeallocSubtree()
-        deallocsubtree = MethodDefn(MethodDecl(deallocsubtreevar.name))
-        for managed in ptype.manages:
-            managedVar = p.managedVar(managed, self.side)
-
-            foreachrecurse = forLoopOverHashtable(managedVar, itervar)
-            foreachrecurse.addstmt(StmtExpr(ExprCall(
-                ExprSelect(actorFromIter(itervar), '->', deallocsubtreevar.name))))
-
-            foreachdealloc = forLoopOverHashtable(managedVar, itervar)
-            foreachdealloc.addstmts([
-                StmtExpr(self.thisCall(_deallocMethod(managed, self.side),
-                                       [actorFromIter(itervar)]))
-            ])
-
-            block = StmtBlock()
-            block.addstmts([
-                Whitespace(
-                    '// Recursively deleting %s kids\n' % (managed.name()),
-                    indent=True),
-                foreachrecurse,
-                Whitespace.NL,
-                foreachdealloc,
-                StmtExpr(_callClearManagedActors(managedVar)),
-
-            ])
-            deallocsubtree.addstmt(block)
-        # don't delete outselves: either the manager will do it, or
-        # we're toplevel
-        self.cls.addstmts([deallocsubtree, Whitespace.NL])
-
-        if ptype.isToplevel():
-            deallocself = MethodDefn(MethodDecl(
-                deallocselfvar.name, methodspec=MethodSpec.VIRTUAL))
-            self.cls.addstmts([deallocself, Whitespace.NL])
-
-        # private members
-        self.cls.addstmt(StmtDecl(Decl(self.protocol.fqStateType(), p.stateVar().name)))
+        # don't release our own IPC reference: either the manager will do it,
+        # or we're toplevel
+        self.cls.addstmts([clearsubtree, Whitespace.NL])
 
         for managed in ptype.manages:
             self.cls.addstmts([
@@ -3845,20 +3690,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                                      _otherSide(self.side))
 
         actor = _HybridDecl(ipdl.type.ActorType(managed), 'aActor')
-        eprouteid = ExprCall(ExprSelect(ExprVar('aEndpoint'), '.', 'ActorId'))
 
         # ManagedEndpoint<PThere> OpenPEndpoint(PHere* aActor)
         openmeth = MethodDefn(MethodDecl(
             'Open%sEndpoint' % managed.name(),
             params=[Decl(self.protocol.managedCxxType(managed, self.side), actor.name)],
             ret=Type(thereEp)))
-        openmeth.addstmts(self.bindManagedActor(actor, errfn=ExprCall(ExprVar(thereEp))))
-        openmeth.addstmts([
-            Whitespace.NL,
-            StmtReturn(ExprCall(ExprVar(thereEp),
-                                args=[_backstagePass(),
-                                      ExprCall(ExprSelect(actor.var(), '->', 'Id'))])),
-        ])
+        openmeth.addcode(
+            '''
+            $*{bind}
+            return ${thereEp}(mozilla::ipc::PrivateIPDLInterface(), aActor->Id());
+            ''',
+            bind=self.bindManagedActor(actor, errfn=ExprCall(ExprVar(thereEp))),
+            thereEp=thereEp)
 
         # void BindPEndpoint(ManagedEndpoint<PHere>&& aEndpoint, PHere* aActor)
         bindmeth = MethodDefn(MethodDecl(
@@ -3867,10 +3711,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     Decl(self.protocol.managedCxxType(managed, self.side),
                          actor.name)],
             ret=Type.BOOL))
-        bindmeth.addstmt(_abortIfFalse(eprouteid, "Invalid Endpoint!"))
-        bindmeth.addstmts(self.bindManagedActor(actor, errfn=ExprLiteral.FALSE,
-                                                idexpr=ExprDeref(eprouteid)))
-        bindmeth.addstmts([Whitespace.NL, StmtReturn.TRUE])
+        bindmeth.addcode(
+            '''
+            MOZ_RELEASE_ASSERT(aEndpoint.ActorId(), "Invalid Endpoint!");
+            $*{bind}
+            return true;
+            ''',
+            bind=self.bindManagedActor(actor, errfn=ExprLiteral.FALSE,
+                                       idexpr=ExprCode('*aEndpoint.ActorId()')))
 
         self.cls.addstmts([openmeth, bindmeth, Whitespace.NL])
 
@@ -3921,73 +3769,110 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             methodspec=MethodSpec.OVERRIDE))
 
         if not len(p.managesStmts):
-            removemanagee.addstmts([_fatalError('unreached'), StmtReturn()])
+            removemanagee.addcode(
+                '''
+                FatalError("unreached");
+                return;
+                ''')
         else:
             switchontype = StmtSwitch(pvar)
             for managee in p.managesStmts:
-                case = StmtBlock()
-                actorvar = ExprVar('actor')
                 manageeipdltype = managee.decl.type
                 manageecxxtype = _cxxBareType(ipdl.type.ActorType(manageeipdltype),
                                               self.side)
-                manageearray = p.managedVar(manageeipdltype, self.side)
-                containervar = ExprVar('container')
+                case = ExprCode(
+                    '''
+                    {
+                        ${manageecxxtype} actor = static_cast<${manageecxxtype}>(aListener);
+                        auto& container = ${container};
 
-                case.addstmts([
-                    StmtDecl(Decl(manageecxxtype, actorvar.name),
-                             ExprCast(listenervar, manageecxxtype, static=True)),
-                    # Use a temporary variable here so all the assertion expressions
-                    # in the _abortIfFalse call below are textually identical; the
-                    # linker can then merge the strings from the assertion macro(s).
-                    StmtDecl(Decl(Type('auto', ref=True), containervar.name),
-                             manageearray),
-                    _abortIfFalse(
-                        _callHasManagedActor(containervar, actorvar),
-                        "actor not managed by this!"),
-                    Whitespace.NL,
-                    StmtExpr(_callRemoveManagedActor(containervar, actorvar)),
-                    StmtExpr(self.thisCall(_deallocMethod(manageeipdltype, self.side),
-                                           [actorvar])),
-                    StmtReturn()
-                ])
+                        // Use a temporary variable here so all the assertion expressions
+                        // in the MOZ_RELEASE_ASSERT call below are textually identical;
+                        // the linker can then merge the strings from the assertion macro(s).
+                        MOZ_RELEASE_ASSERT(container.Contains(actor),
+                            "actor not managed by this!");
+                        container.RemoveEntry(actor);
+
+                        auto* proxy = actor->GetLifecycleProxy();
+                        NS_IF_RELEASE(proxy);
+                        return;
+                    }
+                    ''',
+                    manageecxxtype=manageecxxtype,
+                    container=p.managedVar(manageeipdltype, self.side))
                 switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name),
                                      case)
-            default = StmtBlock()
-            default.addstmts([_fatalError('unreached'), StmtReturn()])
-            switchontype.addcase(DefaultLabel(), default)
+            switchontype.addcase(DefaultLabel(), ExprCode(
+                '''
+                FatalError("unreached");
+                return;
+                '''))
             removemanagee.addstmt(switchontype)
 
-        return methods + [removemanagee, Whitespace.NL]
+        # The `DeallocManagee` method is called for managed actors to trigger
+        # deallocation when ActorLifecycleProxy is freed.
+        deallocmanagee = MethodDefn(MethodDecl(
+            p.deallocManageeMethod().name,
+            params=[Decl(_protocolIdType(), pvar.name),
+                    Decl(protocolbase, listenervar.name)],
+            methodspec=MethodSpec.OVERRIDE))
+
+        if not len(p.managesStmts):
+            deallocmanagee.addcode(
+                '''
+                FatalError("unreached");
+                return;
+                ''')
+        else:
+            switchontype = StmtSwitch(pvar)
+            for managee in p.managesStmts:
+                manageeipdltype = managee.decl.type
+                case = StmtCode(
+                    '''
+                    ${concrete}->${dealloc}(static_cast<${type}>(aListener));
+                    return;
+                    ''',
+                    concrete=self.concreteThis(),
+                    dealloc=_deallocMethod(manageeipdltype, self.side),
+                    type=_cxxBareType(ipdl.type.ActorType(manageeipdltype), self.side))
+                switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name),
+                                     case)
+            switchontype.addcase(DefaultLabel(), StmtCode(
+                '''
+                FatalError("unreached");
+                return;
+                '''))
+            deallocmanagee.addstmt(switchontype)
+
+        return methods + [removemanagee, deallocmanagee, Whitespace.NL]
 
     def genShmemCreatedHandler(self):
-        p = self.protocol
-        assert p.decl.type.isToplevel()
+        assert self.protocol.decl.type.isToplevel()
 
-        case = StmtBlock()
-
-        ifstmt = StmtIf(ExprNot(ExprCall(ExprVar('ShmemCreated'), args=[self.msgvar])))
-        case.addstmts([
-            ifstmt,
-            StmtReturn(_Result.Processed)
-        ])
-        ifstmt.addifstmt(StmtReturn(_Result.PayloadError))
-
-        return case
+        return StmtCode(
+            '''
+            {
+                if (!ShmemCreated(${msgvar})) {
+                    return MsgPayloadError;
+                }
+                return MsgProcessed;
+            }
+            ''',
+            msgvar=self.msgvar)
 
     def genShmemDestroyedHandler(self):
-        p = self.protocol
-        assert p.decl.type.isToplevel()
+        assert self.protocol.decl.type.isToplevel()
 
-        case = StmtBlock()
-
-        ifstmt = StmtIf(ExprNot(ExprCall(ExprVar('ShmemDestroyed'), args=[self.msgvar])))
-        case.addstmts([
-            ifstmt,
-            StmtReturn(_Result.Processed)
-        ])
-        ifstmt.addifstmt(StmtReturn(_Result.PayloadError))
-
-        return case
+        return StmtCode(
+            '''
+            {
+                if (!ShmemDestroyed(${msgvar})) {
+                    return MsgPayloadError;
+                }
+                return MsgProcessed;
+            }
+            ''',
+            msgvar=self.msgvar)
 
     # -------------------------------------------------------------------------
     # The next few functions are the crux of the IPDL code generator.
@@ -3996,25 +3881,21 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     # received messages.
     ##
 
-    def thisCall(self, function, args):
-        # If we're a direct call type, we cast `this` to the derived class
-        # before performing the call. Otherwise just emit the virtual call.
+    def concreteThis(self):
         if (self.protocol.name, self.side) in VIRTUAL_CALL_CLASSES:
-            return ExprCall(ExprVar(function), args=args)
+            return ExprVar.THIS
 
         if (self.protocol.name, self.side) in DIRECT_CALL_OVERRIDES:
             (class_name, _) = DIRECT_CALL_OVERRIDES[self.protocol.name, self.side]
         else:
             assert self.protocol.name.startswith("P")
             class_name = "{}{}".format(self.protocol.name[1:], self.side.capitalize())
-        return ExprCall(
-            ExprSelect(
-                ExprCast(ExprVar("this"), Type(class_name, ptr=True), static=True),
-                "->",
-                ExprVar(function)
-            ),
-            args=args
-        )
+
+        return ExprCode('static_cast<${class_name}*>(this)', class_name=class_name)
+
+    def thisCall(self, function, args):
+        return ExprCall(ExprSelect(self.concreteThis(), '->', function),
+                        args=args)
 
     def visitMessageDecl(self, md):
         isctor = md.decl.type.isCtor()
@@ -4170,30 +4051,28 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return method
 
     def bindManagedActor(self, actordecl, errfn=ExprLiteral.NULL, idexpr=None):
-        actorvar = actordecl.var()
         actorproto = actordecl.ipdltype.protocol
-        actortype = ipdl.type.ActorType(actorproto)
 
         if idexpr is None:
             setManagerArgs = [ExprVar.THIS]
         else:
             setManagerArgs = [ExprVar.THIS, idexpr]
-        setmanager = ExprCall(ExprSelect(actorvar, '->', 'SetManagerAndRegister'),
-                              args=setManagerArgs)
 
-        return [
-            # if (!actor) { return $errReturn; }
-            self.failIfNullActor(actorvar, errfn, msg="Error constructing actor %s" %
-                                 actortype.name() + self.side.capitalize()),
-            # actor->SetManagerAndRegister(this[, id]);
-            StmtExpr(setmanager),
-            # mManagedPFoo.PutEntry(actor);
-            StmtExpr(_callInsertManagedActor(
-                self.protocol.managedVar(actorproto, self.side), actorvar)),
-            # actor->mLivenessState = START;
-            StmtExpr(ExprAssn(_actorState(actorvar),
-                              _startState(actorproto.hasReentrantDelete))),
-        ]
+        return [StmtCode(
+            '''
+            if (!${actor}) {
+                NS_WARNING("Error constructing actor ${actorname}");
+                return ${errfn};
+            }
+
+            ${actor}->SetManagerAndRegister($,{setManagerArgs});
+            ${container}.PutEntry(${actor});
+            ''',
+            actor=actordecl.var(),
+            actorname=actorproto.name() + self.side.capitalize(),
+            errfn=errfn,
+            setManagerArgs=setManagerArgs,
+            container=self.protocol.managedVar(actorproto, self.side))]
 
     def genHelperCtor(self, md):
         helperdecl = self.makeSendMethodDecl(md)
@@ -4260,9 +4139,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         method.addstmt(ifsendok)
 
-        if self.protocol.decl.type.hasReentrantDelete:
-            method.addstmts(self.transition(md, actor.var(), reply=True, errorfn=errfnUnreachable))
-
         method.addstmts(
             self.dtorEpilogue(md, actor.var())
             + [Whitespace.NL, StmtReturn(sendok)])
@@ -4274,16 +4150,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             destroyedType = md.decl.type.constructedType()
         else:
             destroyedType = self.protocol.decl.type
-        managervar = ExprVar('mgr')
-        return ([StmtDecl(Decl(Type('IProtocol', ptr=True), managervar.name),
-                          init=self.protocol.managerVar(actorexpr)),
-                 StmtExpr(self.callActorDestroy(actorexpr, why)),
-                 StmtExpr(self.callDeallocSubtree(md, actorexpr)),
-                 StmtExpr(self.callRemoveActor(
-                     actorexpr,
-                     manager=managervar,
-                     ipdltype=destroyedType))
-                 ])
+
+        return [StmtCode(
+            '''
+            IProtocol* mgr = ${actor}->Manager();
+            ${actor}->DestroySubtree(${why});
+            ${actor}->ClearSubtree();
+            mgr->RemoveManagee(${protoId}, ${actor});
+            ''',
+            actor=actorexpr,
+            why=why,
+            protoId=_protocolId(destroyedType))]
 
     def dtorPrologue(self, actorexpr):
         return [self.failIfNullActor(actorexpr), Whitespace.NL]
@@ -4296,9 +4173,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         case = StmtBlock()
         resolve, reason, prologue, desrej, desstmts = self.deserializeAsyncReply(
             md, self.side, errfnRecv, errfnSentinel(_Result.ValuError))
-        ifnocallback = StmtIf(ExprNot(ExprVar('callback')))
-        ifnocallback.addifstmts(errfnRecv("Error unknown callback",
-                                          _Result.ProcessingError))
 
         if len(md.returns) > 1:
             resolvetype = _tuple([d.bareType(self.side) for d in md.returns])
@@ -4308,38 +4182,38 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             resolvetype = md.returns[0].bareType(self.side)
             resolvearg = ExprMove(md.returns[0].var())
 
-        untypedcallback = Type("MessageChannel::UntypedCallbackHolder")
-        callbackptr = Type("MessageChannel::CallbackHolder", T=resolvetype)
-        callbackptr.ptr = True
-        callback = ExprVar('callback')
+        case.addcode(
+            '''
+            $*{prologue}
 
-        getcallback = [Whitespace.NL,
-                       # Get the untyped callback object by calling PopCallback()
-                       StmtDecl(Decl(_uniqueptr(untypedcallback), 'untypedCallback'),
-                                init=ExprCall(ExprSelect(self.protocol.callGetChannel(),
-                                                         '->', 'PopCallback'),
-                                              args=[self.msgvar])),
-                       # Cast the untyped callback pointer to the correct poiner type
-                       StmtDecl(Decl(callbackptr, callback.name),
-                                init=ExprCast(ExprCall(ExprSelect(ExprVar('untypedCallback'),
-                                                                  '.', 'get')),
-                                              callbackptr,
-                                              static=True)),
-                       ifnocallback]
+            UniquePtr<MessageChannel::UntypedCallbackHolder> untypedCallback =
+                GetIPCChannel()->PopCallback(${msgvar});
 
-        resolvecallback = [StmtExpr(ExprCall(ExprSelect(callback, '->', 'Resolve'),
-                                             args=[resolvearg]))]
-        rejectcallback = [StmtExpr(ExprCall(ExprSelect(callback, '->', 'Reject'),
-                                            args=[ExprMove(reason)]))]
-        ifresolve = StmtIf(resolve)
-        ifresolve.addifstmts(desstmts)
-        ifresolve.addifstmts(resolvecallback)
-        ifresolve.addelsestmts(desrej)
-        ifresolve.addelsestmts(rejectcallback)
-        case.addstmts(prologue)
-        case.addstmts(getcallback)
-        case.addstmt(ifresolve)
-        case.addstmt(StmtReturn(_Result.Processed))
+            typedef MessageChannel::CallbackHolder<${resolvetype}> CallbackHolder;
+            auto* callback = static_cast<CallbackHolder*>(untypedCallback.get());
+            if (!callback) {
+                FatalError("Error unknown callback");
+                return MsgProcessingError;
+            }
+
+            if (${resolve}) {
+                $*{desstmts}
+                callback->Resolve(${resolvearg});
+            } else {
+                $*{desrej}
+                callback->Reject(std::move(${reason}));
+            }
+            return MsgProcessed;
+            ''',
+            prologue=prologue,
+            msgvar=self.msgvar,
+            resolve=resolve,
+            resolvetype=resolvetype,
+            desstmts=desstmts,
+            resolvearg=resolvearg,
+            desrej=desrej,
+            reason=reason)
+
         return (lbl, case)
 
     def genAsyncSendMethod(self, md):
@@ -4409,7 +4283,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md, errorfn=errfnRecv)
             + [StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns]
             # alloc the actor, register it under the foreign ID
@@ -4439,7 +4312,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
-            + self.transition(md, errorfn=errfnRecv)
             + [StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns]
             + self.invokeRecvHandler(md, implicit=False)
@@ -4469,7 +4341,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             declstmts = self.makeResolver(md, errfnRecv, routingId=idvar)
         case.addstmts(
             stmts
-            + self.transition(md, errorfn=errfnRecv)
             + saveIdStmts
             + declstmts
             + self.invokeRecvHandler(md)
@@ -4489,10 +4360,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             failif.addifstmt(_printWarningMessage(msg))
         failif.addifstmt(StmtReturn(retOnNull))
         return failif
-
-    def unregisterActor(self):
-        return [StmtExpr(ExprCall(self.protocol.unregisterMethod(),
-                                  args=[_actorId()]))]
 
     def makeMessage(self, md, errfn, fromActor=None):
         msgvar = self.msgvar
@@ -4527,10 +4394,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendmsg = (self.setMessageFlags(md, self.replyvar, seqno=seqno)
                    + [self.logMessage(md, self.replyvar, 'Sending reply '),
                        StmtDecl(Decl(Type.BOOL, sendok.name),
-                                init=ExprCall(
-                                    ExprSelect(self.protocol.callGetChannel(),
-                                               '->', 'Send'),
-                                    args=[self.replyvar])),
+                                init=ExprCall(ExprVar('ChannelSend'),
+                                              args=[self.replyvar])),
                        failifsendok])
         if len(md.returns) > 1:
             resolvedecl = Decl(_tuple([p.moveType(self.side) for p in md.returns],
@@ -4546,16 +4411,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ifactorisdead.addifstmts([
             _printWarningMessage("Not resolving response because actor is dead."),
             StmtReturn()])
-        ifactorisdestroyed = StmtIf(ExprBinary(self.protocol.stateVar(), '==',
-                                               self.protocol.deadState()))
-        ifactorisdestroyed.addifstmts([
-            _printWarningMessage("Not resolving response because actor is destroyed."),
-            StmtReturn()])
-        returnifactorisdead = [ifactorisdead,
-                               ifactorisdestroyed]
         resolverfn = ExprLambda([ExprVar.THIS, selfvar, routingId, seqno],
                                 [resolvedecl])
-        resolverfn.addstmts(returnifactorisdead
+        resolverfn.addstmts([ifactorisdead]
                             + [StmtDecl(Decl(Type.BOOL, resolve.name),
                                         init=ExprLiteral.TRUE)]
                             + [StmtDecl(Decl(p.bareType(self.side), p.var().name))
@@ -4795,14 +4653,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         stmts = [Whitespace.NL,
                  self.logMessage(md, msgexpr, 'Sending ', actor),
-                 self.profilerLabel(md)] + self.transition(md, actor, errorfn=errfnUnreachable)
+                 self.profilerLabel(md)]
         stmts.append(Whitespace.NL)
 
         # Generate the actual call expression.
-        send = ExprSelect(self.protocol.callGetChannel(actor), '->', 'Send')
+        send = ExprVar('ChannelSend')
+        if actor is not None:
+            send = ExprSelect(actor, '->', send.name)
         if md.returns:
             stmts.append(StmtExpr(ExprCall(send, args=[msgexpr,
-                                                       ExprVar('this'),
                                                        ExprMove(resolvefn),
                                                        ExprMove(rejectfn)])))
             retvar = None
@@ -4814,13 +4673,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return (retvar, stmts)
 
     def sendBlocking(self, md, msgexpr, replyexpr, actor=None):
+        send = ExprVar('ChannelSend')
+        if md.decl.type.isInterrupt():
+            send = ExprVar('ChannelCall')
+        if actor is not None:
+            send = ExprSelect(actor, '->', send.name)
+
         sendok = ExprVar('sendok__')
         return (
             sendok,
             ([Whitespace.NL,
               self.logMessage(md, msgexpr, 'Sending ', actor),
               self.profilerLabel(md)]
-             + self.transition(md, actor, errorfn=errfnUnreachable)
              + [Whitespace.NL,
                 StmtDecl(Decl(Type.BOOL, sendok.name)),
                 StmtBlock([
@@ -4829,81 +4693,54 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                        ExprLiteral.String(self.protocol.name + "::" +
                                                           md.prettyMsgName()),
                                        ExprVar('OTHER')])),
-                    StmtExpr(ExprAssn(sendok,
-                                      ExprCall(
-                                          ExprSelect(self.protocol.callGetChannel(actor),
-                                                     '->',
-                                                     _sendPrefix(md.decl.type)),
-                                          args=[msgexpr, ExprAddrOf(replyexpr)]))),
+                    StmtExpr(ExprAssn(sendok, ExprCall(send,
+                                                       args=[msgexpr,
+                                                             ExprAddrOf(replyexpr)]))),
                 ])
                 ])
         )
 
     def sendAsyncWithPromise(self, md):
         # Create a new promise, and forward to the callback send overload.
-        retpromise = ExprVar('promise__')
         promise = _makePromise(md.returns, self.side, resolver=True)
-        stmts = [Whitespace.NL,
-                 StmtDecl(Decl(_refptr(promise), retpromise.name),
-                          init=ExprNew(promise, args=[ExprVar('__func__')]))]
 
         if len(md.returns) > 1:
             resolvetype = _tuple([d.bareType(self.side) for d in md.returns])
         else:
             resolvetype = md.returns[0].bareType(self.side)
-        resolvetype.rvalref = True
 
-        resolvefn = ExprLambda([retpromise],
-                               [Decl(resolvetype, "aValue")])
-        resolvefn.addstmts([
-            StmtExpr(ExprCall(ExprSelect(retpromise, '->', 'Resolve'),
-                              args=[ExprMove(ExprVar('aValue')),
-                                    ExprVar('__func__')])),
-        ])
+        resolve = ExprCode(
+            '''
+            [promise__](${resolvetype}&& aValue) {
+                promise__->Resolve(std::move(aValue), __func__);
+            }
+            ''',
+            resolvetype=resolvetype)
+        reject = ExprCode(
+            '''
+            [promise__](ResponseRejectReason&& aReason) {
+                promise__->Reject(std::move(aReason), __func__);
+            }
+            ''',
+            resolvetype=resolvetype)
 
-        rejecttype = _ResponseRejectReason.Type()
-        rejecttype.rvalref = True
-        rejectfn = ExprLambda([retpromise],
-                              [Decl(rejecttype, "aReason")])
-        rejectfn.addstmts([
-            StmtExpr(ExprCall(ExprSelect(retpromise, '->', 'Reject'),
-                              args=[ExprMove(ExprVar('aReason')),
-                                    ExprVar('__func__')])),
-        ])
-
-        args = [p.var() for p in md.params] + [resolvefn, rejectfn]
-        stmts += [Whitespace.NL,
-                  StmtExpr(ExprCall(ExprVar(md.sendMethod()), args=args)),
-                  StmtReturn(retpromise)]
-        return stmts
+        args = [p.var() for p in md.params] + [resolve, reject]
+        stmt = StmtCode(
+            '''
+            RefPtr<${promise}> promise__ = new ${promise}(__func__);
+            ${send}($,{args});
+            return promise__;
+            ''',
+            promise=promise,
+            send=md.sendMethod(),
+            args=args)
+        return [stmt]
 
     def callAllocActor(self, md, retsems, side):
         return self.thisCall(
             _allocMethod(md.decl.type.constructedType(), side),
             args=md.makeCxxArgs(retsems=retsems, retcallsems='out',
                                 implicit=False))
-
-    def callActorDestroy(self, actorexpr, why=_DestroyReason.Deletion):
-        return ExprCall(ExprSelect(actorexpr, '->', 'DestroySubtree'),
-                        args=[why])
-
-    def callRemoveActor(self, actorexpr, manager=None, ipdltype=None):
-        if ipdltype is None:
-            ipdltype = self.protocol.decl.type
-
-        if not ipdltype.isManaged():
-            return Whitespace('// unmanaged protocol')
-
-        removefunc = self.protocol.removeManageeMethod()
-        if manager is not None:
-            removefunc = ExprSelect(manager, '->', removefunc.name)
-
-        return ExprCall(removefunc,
-                        args=[_protocolId(ipdltype),
-                              actorexpr])
-
-    def callDeallocSubtree(self, md, actorexpr):
-        return ExprCall(ExprSelect(actorexpr, '->', 'DeallocSubtree'))
 
     def invokeRecvHandler(self, md, implicit=True):
         retsems = 'in'
@@ -4956,23 +4793,30 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def logMessage(self, md, msgptr, pfx, actor=None, receiving=False):
         actorname = _actorName(self.protocol.name, self.side)
-
-        return _ifLogging(ExprLiteral.String(actorname),
-                          [StmtExpr(ExprCall(
-                              ExprVar('mozilla::ipc::LogMessageForProtocol'),
-                              args=[ExprLiteral.String(actorname),
-                                    self.protocol.callOtherPid(actor),
-                                    ExprLiteral.String(pfx),
-                                    ExprCall(ExprSelect(msgptr, '->', 'type')),
-                                    ExprVar('mozilla::ipc::MessageDirection::eReceiving'
-                                            if receiving
-                                            else 'mozilla::ipc::MessageDirection::eSending')]))])
+        return StmtCode(
+            '''
+            if (mozilla::ipc::LoggingEnabledFor(${actorname})) {
+                mozilla::ipc::LogMessageForProtocol(
+                    ${actorname},
+                    ${otherpid},
+                    ${pfx},
+                    ${msgptr}->type(),
+                    mozilla::ipc::MessageDirection::${direction});
+            }
+            ''',
+            actorname=ExprLiteral.String(actorname),
+            otherpid=self.protocol.callOtherPid(actor),
+            pfx=ExprLiteral.String(pfx),
+            msgptr=msgptr,
+            direction='eReceiving' if receiving else 'eSending')
 
     def profilerLabel(self, md):
-        labelStr = self.protocol.name + '::' + md.prettyMsgName()
-        return StmtExpr(ExprCall(ExprVar('AUTO_PROFILER_LABEL'),
-                                 [ExprLiteral.String(labelStr),
-                                  ExprVar('OTHER')]))
+        return StmtCode(
+            '''
+            AUTO_PROFILER_LABEL("${name}::${msgname}", OTHER);
+            ''',
+            name=self.protocol.name,
+            msgname=md.prettyMsgName())
 
     def saveActorId(self, md):
         idvar = ExprVar('id__')
@@ -4985,34 +4829,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             saveIdStmts = []
         return idvar, saveIdStmts
 
-    def transition(self, md, actor=None, reply=False, errorfn=None):
-        msgid = md.msgId() if not reply else md.replyId()
-        args = [
-            ExprVar('true' if _deleteId().name == msgid else 'false'),
-        ]
-        if self.protocol.decl.type.hasReentrantDelete:
-            function = 'ReEntrantDeleteStateTransition'
-            args.append(
-                ExprVar('true' if _deleteReplyId().name == msgid else 'false'),
-            )
-        else:
-            function = 'StateTransition'
-
-        if actor is not None:
-            stateexpr = _actorState(actor)
-        else:
-            stateexpr = self.protocol.stateVar()
-
-        args.append(ExprAddrOf(stateexpr))
-
-        ifstmt = StmtIf(ExprNot(ExprCall(ExprVar(function), args=args)))
-        ifstmt.addifstmts(errorfn('Transition error'))
-        return [ifstmt]
-
     def endRead(self, msgexpr, iterexpr):
-        msgtype = ExprCall(ExprSelect(msgexpr, '.', 'type'), [])
-        return StmtExpr(ExprCall(ExprSelect(msgexpr, '.', 'EndRead'),
-                                 args=[iterexpr, msgtype]))
+        return StmtCode(
+            '''
+            ${msg}.EndRead(${iter}, ${msg}.type());
+            ''',
+            msg=msgexpr,
+            iter=iterexpr)
 
 
 class _GenerateProtocolParentCode(_GenerateProtocolActorCode):

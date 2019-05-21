@@ -79,13 +79,11 @@ this.geckoProfiler = class extends ExtensionAPI {
           Services.prefs.setBoolPref(PREF_ASYNC_STACK, false);
           if (threads) {
             Services.profiler.StartProfiler(bufferSize, interval,
-                                            features, features.length,
-                                            threads, threads.length,
+                                            features, threads,
                                             windowLength);
           } else {
             Services.profiler.StartProfiler(bufferSize, interval,
-                                            features, features.length,
-                                            [], 0,
+                                            features, [],
                                             windowLength);
           }
         },

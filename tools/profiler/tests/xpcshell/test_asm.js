@@ -15,7 +15,7 @@ function run_test() {
         return;
 
     const ms = 10;
-    Services.profiler.StartProfiler(10000, ms, ["js"], 1);
+    Services.profiler.StartProfiler(10000, ms, ["js"]);
 
     let stack = null;
     function ffi_function() {

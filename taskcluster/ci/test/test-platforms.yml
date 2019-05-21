@@ -19,20 +19,10 @@
 ##
 # Linux platforms (matching /linux.*/)
 
-linux32/debug:
-    build-platform: linux/debug
-    test-sets:
-        - linux32-tests
 linux32-shippable/opt:
     build-platform: linux-shippable/opt
     test-sets:
         - linux32-tests
-        - linux32-opt-tests
-linux32-devedition/opt:
-    build-platform: linux-devedition-nightly/opt
-    test-sets:
-        - linux32-tests
-        - linux32-opt-tests
 
 linux64/debug:
     build-platform: linux64/debug

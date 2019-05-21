@@ -131,9 +131,7 @@ void RemoteDecoderManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
   mCanSend = false;
 }
 
-void RemoteDecoderManagerChild::DeallocPRemoteDecoderManagerChild() {
-  mIPDLSelfRef = nullptr;
-}
+void RemoteDecoderManagerChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
 
 bool RemoteDecoderManagerChild::CanSend() {
   MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());

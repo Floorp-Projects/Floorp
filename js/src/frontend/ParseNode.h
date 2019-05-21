@@ -2081,20 +2081,19 @@ class ClassNode : public TernaryNode {
   ClassNames* names() const {
     return kid1() ? &kid1()->as<ClassNames>() : nullptr;
   }
+
   ParseNode* heritage() const { return kid2(); }
+
   ListNode* memberList() const {
     ListNode* list =
         &kid3()->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
     MOZ_ASSERT(list->isKind(ParseNodeKind::ClassMemberList));
     return list;
   }
-  bool isEmptyScope() const {
-    ParseNode* scope = kid3();
-    return scope->as<LexicalScopeNode>().isEmptyScope();
-  }
-  Handle<LexicalScope::Data*> scopeBindings() const {
-    ParseNode* scope = kid3();
-    return scope->as<LexicalScopeNode>().scopeBindings();
+
+  LexicalScopeNode* scopeBindings() const {
+    LexicalScopeNode* scope = &kid3()->as<LexicalScopeNode>();
+    return scope->isEmptyScope() ? nullptr : scope;
   }
 };
 

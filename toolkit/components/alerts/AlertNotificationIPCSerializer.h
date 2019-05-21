@@ -19,7 +19,7 @@ namespace mozilla {
 namespace ipc {
 
 template <>
-struct IPDLParamTraits<nsIAlertNotification> {
+struct IPDLParamTraits<nsIAlertNotification*> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     nsIAlertNotification* aParam) {
     bool isNull = !aParam;

@@ -204,13 +204,13 @@ nsresult StartupCache::Init() {
 nsresult StartupCache::LoadArchive() {
   if (gIgnoreDiskCache) return NS_ERROR_FAILURE;
 
-  bool exists;
-  mArchive = nullptr;
-  nsresult rv = mFile->Exists(&exists);
-  if (NS_FAILED(rv) || !exists) return NS_ERROR_FILE_NOT_FOUND;
-
   mArchive = new nsZipArchive();
-  rv = mArchive->OpenArchive(mFile);
+  nsresult rv = mArchive->OpenArchive(mFile);
+
+  if (NS_FAILED(rv)) {
+    mArchive = nullptr;
+  }
+
   return rv;
 }
 

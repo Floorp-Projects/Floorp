@@ -109,8 +109,8 @@ TalosPowersService.prototype = {
   profilerBegin(data) {
     Services.profiler
             .StartProfiler(data.entries, data.interval,
-                           ["js", "leaf", "stackwalk", "threads"], 4,
-                           data.threadsArray, data.threadsArray.length);
+                           ["js", "leaf", "stackwalk", "threads"],
+                           data.threadsArray);
 
     Services.profiler.PauseSampling();
   },

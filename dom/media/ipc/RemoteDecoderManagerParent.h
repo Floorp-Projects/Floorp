@@ -34,7 +34,7 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
-  void DeallocPRemoteDecoderManagerParent() override;
+  void ActorDealloc() override;
 
  private:
   explicit RemoteDecoderManagerParent(

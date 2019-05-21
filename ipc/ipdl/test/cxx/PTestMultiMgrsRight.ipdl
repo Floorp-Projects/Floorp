@@ -12,14 +12,6 @@ protocol PTestMultiMgrsRight {
 child:
     async PTestMultiMgrsBottom();
     async __delete__();
-
-/*
-state START:
-    send PTestMultiMgrsBottom goto DONE;
-
-state DONE:
-    send __delete__;
-*/
 };
 
 } // namespace _ipdltest

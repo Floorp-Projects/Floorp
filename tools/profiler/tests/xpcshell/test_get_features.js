@@ -7,6 +7,6 @@ function run_test() {
     return;
   }
 
-  var profilerFeatures = Services.profiler.GetFeatures([]);
+  var profilerFeatures = Services.profiler.GetFeatures();
   Assert.ok(profilerFeatures != null);
 }
