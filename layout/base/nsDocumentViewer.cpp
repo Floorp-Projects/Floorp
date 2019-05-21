@@ -3624,8 +3624,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
     PR_PL(("PrintPreview: found mozdisallowselectionprint"));
     printJob->SetDisallowSelectionPrint(true);
   }
-  rv = printJob->PrintPreview(aPrintSettings, aChildDOMWin,
-                              aWebProgressListener);
+  rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener);
   mPrintPreviewZoomed = false;
   if (NS_FAILED(rv)) {
     OnDonePrinting();
