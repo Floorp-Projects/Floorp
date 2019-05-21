@@ -219,12 +219,22 @@ EditorCommand::DoCommandParams(const char* aCommandName,
     return rv;
   }
 
-  nsresult rv = DoCommandParams(command, MOZ_KnownLive(params),
-                                MOZ_KnownLive(*editor->AsTextEditor()));
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "Failed to do command from nsIControllerCommand::DoCommandParams()");
-  return rv;
+  if (Any(paramType & EditorCommandParamType::Transferable)) {
+    nsCOMPtr<nsITransferable> transferable;
+    if (params) {
+      nsCOMPtr<nsISupports> supports = params->GetISupports("transferable");
+      transferable = do_QueryInterface(supports);
+    }
+    nsresult rv = DoCommandParam(command, transferable,
+                                 MOZ_KnownLive(*editor->AsTextEditor()));
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "Failed to do command from nsIControllerCommand::DoCommandParams()");
+    return rv;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unexpected param type");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -474,29 +484,15 @@ nsresult PasteTransferableCommand::DoCommand(Command aCommand,
   return NS_ERROR_FAILURE;
 }
 
-nsresult PasteTransferableCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  if (NS_WARN_IF(!aParams)) {
+nsresult PasteTransferableCommand::DoCommandParam(
+    Command aCommand, nsITransferable* aTransferableParam,
+    TextEditor& aTextEditor) const {
+  if (NS_WARN_IF(!aTransferableParam)) {
     return NS_ERROR_INVALID_ARG;
   }
-
-  nsCOMPtr<nsISupports> supports = aParams->GetISupports("transferable");
-  if (NS_WARN_IF(!supports)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsITransferable> trans = do_QueryInterface(supports);
-  if (NS_WARN_IF(!trans)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // We know textEditor is known-live here because we are holding a ref to it
-  // via "editor".
-  nsresult rv = aTextEditor.PasteTransferable(trans);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  nsresult rv = aTextEditor.PasteTransferable(aTransferableParam);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "PasteTransferable() failed");
+  return rv;
 }
 
 nsresult PasteTransferableCommand::GetCommandStateParams(
