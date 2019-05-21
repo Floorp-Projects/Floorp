@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Name for one of the font options available to use -->
-    <string name="mozac_feature_readerview_sans_serif_font">산스 세리프</string>
+    <string name="mozac_feature_readerview_sans_serif_font">산세리프</string>
     <!-- Accessible description for the font option -->
-    <string name="mozac_feature_readerview_sans_serif_font_desc">산스 세리프 글꼴</string>
+    <string name="mozac_feature_readerview_sans_serif_font_desc">산세리프 글꼴</string>
     <!-- Name for one of the font options available to use -->
     <string name="mozac_feature_readerview_serif_font">세리프</string>
     <!-- Accessible description for the font option -->
