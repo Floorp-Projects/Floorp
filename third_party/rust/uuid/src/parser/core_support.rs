@@ -12,12 +12,6 @@
 use core::fmt;
 use parser;
 
-impl From<parser::ParseError> for ::Error {
-    fn from(err: parser::ParseError) -> Self {
-        ::Error::Parse(err)
-    }
-}
-
 impl<'a> fmt::Display for parser::Expected {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -39,9 +33,13 @@ impl fmt::Display for parser::ParseError {
                 expected,
                 found,
                 index,
-            } => {
-                write!(f, "expected {}, found {} at {}", expected, found, index)
-            }
+            } => write!(
+                f,
+                "expected {:?}, found {} at {}",
+                expected.chars(),
+                found,
+                index
+            ),
             parser::ParseError::InvalidGroupCount {
                 ref expected,
                 found,
