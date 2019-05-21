@@ -20,7 +20,7 @@ MINIDUMP_STACKWALK=minidump_stackwalk
 case "$1" in
 macosx64)
     TOOLCHAINS="cctools rustc clang"
-    echo ac_add_options --target=x86_64-apple-darwin11 >> .mozconfig
+    echo ac_add_options --target=x86_64-apple-darwin >> .mozconfig
     echo ac_add_options --with-macos-sdk=$WORKSPACE/build/src/MacOSX10.11.sdk >> .mozconfig
     ;;
 mingw32)
