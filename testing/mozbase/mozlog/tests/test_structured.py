@@ -239,6 +239,19 @@ class TestStructuredLog(BaseStructuredTest):
         self.logger.test_end("test1", "OK")
         self.logger.suite_end()
 
+    def test_status_expected_intermittent(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "subtest name", "fail", expected_intermittent=["FAIL"])
+        self.assert_log_equals({"action": "test_status",
+                                "subtest": "subtest name",
+                                "status": "FAIL",
+                                "expected": "PASS",
+                                "expected_intermittent": ["FAIL"],
+                                "test": "test1"})
+        self.logger.test_end("test1", "OK")
+        self.logger.suite_end()
+
     def test_status_not_started(self):
         self.logger.test_status("test_UNKNOWN", "subtest", "PASS")
         self.assertTrue(self.pop_last_item()["message"].startswith(
@@ -561,7 +574,7 @@ class TestTypeConversions(BaseStructuredTest):
         self.assertRaises(TypeError, self.logger.test_status, subtest="subtest2",
                           status="FAIL", expected="PASS")
         self.assertRaises(TypeError, self.logger.test_status, "test1", "subtest1",
-                          "PASS", "FAIL", "message", "stack", {}, "unexpected")
+                          "PASS", "FAIL", "message", "stack", {}, [], "unexpected")
         self.assertRaises(TypeError, self.logger.test_status,
                           "test1", test="test2")
         self.logger.suite_end()

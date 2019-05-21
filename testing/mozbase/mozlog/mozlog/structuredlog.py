@@ -354,7 +354,9 @@ class StructuredLogger(object):
                 SubStatus("expected", default="PASS"),
                 Unicode("message", default=None, optional=True),
                 Unicode("stack", default=None, optional=True),
-                Dict(Any, "extra", default=None, optional=True))
+                Dict(Any, "extra", default=None, optional=True),
+                List(SubStatus, "expected_intermittent", default=None,
+                     optional=True))
     def test_status(self, data):
         """
         Log a test_status message indicating a subtest result. Tests that
@@ -385,7 +387,9 @@ class StructuredLogger(object):
                 Status("expected", default="OK"),
                 Unicode("message", default=None, optional=True),
                 Unicode("stack", default=None, optional=True),
-                Dict(Any, "extra", default=None, optional=True))
+                Dict(Any, "extra", default=None, optional=True),
+                List(Status, "expected_intermittent", default=None,
+                     optional=True))
     def test_end(self, data):
         """
         Log a test_end message indicating that a test completed. For tests
