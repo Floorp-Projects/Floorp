@@ -89,6 +89,10 @@ class MacroAssemblerX86Shared : public Assembler {
     return masm.appendRawCode(code, numBytes);
   }
 
+  void addToPCRel4(uint32_t offset, int32_t bias) {
+    return masm.addToPCRel4(offset, bias);
+  }
+
   // Evaluate srcDest = minmax<isMax>{Float32,Double}(srcDest, second).
   // Checks for NaN if canBeNaN is true.
   void minMaxDouble(FloatRegister srcDest, FloatRegister second, bool canBeNaN,
