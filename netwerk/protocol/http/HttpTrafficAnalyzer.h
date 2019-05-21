@@ -12,7 +12,7 @@ namespace net {
 #define DEFINE_CATEGORY(_name, _idx) e##_name = _idx##u,
 enum HttpTrafficCategory : uint8_t {
 #include "HttpTrafficAnalyzer.inc"
-  eInvalid = 255,
+  eInvalid,
 };
 #undef DEFINE_CATEGORY
 
