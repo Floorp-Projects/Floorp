@@ -3093,6 +3093,7 @@ exports.CSS_PROPERTIES = {
       "scale",
       "translate",
       "offset-path",
+      "offset-distance",
       "scroll-behavior",
       "scroll-snap-align",
       "scroll-snap-type",
@@ -3183,6 +3184,7 @@ exports.CSS_PROPERTIES = {
       "text-emphasis-position",
       "text-emphasis-color",
       "-moz-tab-size",
+      "line-break",
       "-webkit-text-fill-color",
       "-webkit-text-stroke-color",
       "-webkit-text-stroke-width",
@@ -7323,6 +7325,24 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "line-break": {
+    "isInherited": true,
+    "subproperties": [
+      "line-break"
+    ],
+    "supports": [],
+    "values": [
+      "anywhere",
+      "auto",
+      "inherit",
+      "initial",
+      "loose",
+      "normal",
+      "revert",
+      "strict",
+      "unset"
+    ]
+  },
   "line-height": {
     "isInherited": true,
     "subproperties": [
@@ -8229,6 +8249,19 @@ exports.CSS_PROPERTIES = {
       "revert",
       "right",
       "top",
+      "unset"
+    ]
+  },
+  "offset-distance": {
+    "isInherited": false,
+    "subproperties": [
+      "offset-distance"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
       "unset"
     ]
   },
@@ -10597,6 +10630,10 @@ exports.PREFERENCES = [
   [
     "translate",
     "layout.css.individual-transform.enabled"
+  ],
+  [
+    "offset-distance",
+    "layout.css.motion-path.enabled"
   ],
   [
     "scroll-snap-points-x",

@@ -2933,7 +2933,24 @@ bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
 // nsStyleDisplay
 //
 nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
-    : mDisplay(StyleDisplay::Inline),
+    : mTransitions(
+          nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT),
+      mTransitionTimingFunctionCount(1),
+      mTransitionDurationCount(1),
+      mTransitionDelayCount(1),
+      mTransitionPropertyCount(1),
+      mAnimations(
+          nsStyleAutoArray<StyleAnimation>::WITH_SINGLE_INITIAL_ELEMENT),
+      mAnimationTimingFunctionCount(1),
+      mAnimationDurationCount(1),
+      mAnimationDelayCount(1),
+      mAnimationNameCount(1),
+      mAnimationDirectionCount(1),
+      mAnimationFillModeCount(1),
+      mAnimationPlayStateCount(1),
+      mAnimationIterationCountCount(1),
+      mWillChange{{}, {0}},
+      mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
       mContain(StyleContain_NONE),
       mAppearance(StyleAppearance::None),
@@ -2952,7 +2969,6 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOrient(StyleOrient::Inline),
       mIsolation(NS_STYLE_ISOLATION_AUTO),
       mTopLayer(NS_STYLE_TOP_LAYER_NONE),
-      mWillChange{{}, {0}},
       mTouchAction(StyleTouchAction_AUTO),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
@@ -2960,14 +2976,16 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOverflowAnchor(StyleOverflowAnchor::Auto),
       mScrollSnapType(
           {StyleScrollSnapAxis::Both, StyleScrollSnapStrictness::None}),
+      mLineClamp(0),
       mScrollSnapPointsX(eStyleUnit_None),
       mScrollSnapPointsY(eStyleUnit_None),
       mScrollSnapDestination(
           {LengthPercentage::Zero(), LengthPercentage::Zero()}),
-      mLineClamp(0),
       mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
       mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
       mTransformBox(StyleGeometryBox::BorderBox),
+      mOffsetPath(StyleOffsetPath::None()),
+      mOffsetDistance(LengthPercentage::Zero()),
       mTransformOrigin{LengthPercentage::FromPercentage(0.5),
                        LengthPercentage::FromPercentage(0.5),
                        {0.}},
@@ -2975,22 +2993,6 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mPerspectiveOrigin(Position::FromPercentage(0.5f)),
       mVerticalAlign(
           StyleVerticalAlign::Keyword(StyleVerticalAlignKeyword::Baseline)),
-      mTransitions(
-          nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT),
-      mTransitionTimingFunctionCount(1),
-      mTransitionDurationCount(1),
-      mTransitionDelayCount(1),
-      mTransitionPropertyCount(1),
-      mAnimations(
-          nsStyleAutoArray<StyleAnimation>::WITH_SINGLE_INITIAL_ELEMENT),
-      mAnimationTimingFunctionCount(1),
-      mAnimationDurationCount(1),
-      mAnimationDelayCount(1),
-      mAnimationNameCount(1),
-      mAnimationDirectionCount(1),
-      mAnimationFillModeCount(1),
-      mAnimationPlayStateCount(1),
-      mAnimationIterationCountCount(1),
       mShapeMargin(LengthPercentage::Zero()) {
   MOZ_COUNT_CTOR(nsStyleDisplay);
 
@@ -3000,6 +3002,21 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
     : mBinding(aSource.mBinding),
+      mTransitions(aSource.mTransitions),
+      mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount),
+      mTransitionDurationCount(aSource.mTransitionDurationCount),
+      mTransitionDelayCount(aSource.mTransitionDelayCount),
+      mTransitionPropertyCount(aSource.mTransitionPropertyCount),
+      mAnimations(aSource.mAnimations),
+      mAnimationTimingFunctionCount(aSource.mAnimationTimingFunctionCount),
+      mAnimationDurationCount(aSource.mAnimationDurationCount),
+      mAnimationDelayCount(aSource.mAnimationDelayCount),
+      mAnimationNameCount(aSource.mAnimationNameCount),
+      mAnimationDirectionCount(aSource.mAnimationDirectionCount),
+      mAnimationFillModeCount(aSource.mAnimationFillModeCount),
+      mAnimationPlayStateCount(aSource.mAnimationPlayStateCount),
+      mAnimationIterationCountCount(aSource.mAnimationIterationCountCount),
+      mWillChange(aSource.mWillChange),
       mDisplay(aSource.mDisplay),
       mOriginalDisplay(aSource.mOriginalDisplay),
       mContain(aSource.mContain),
@@ -3019,47 +3036,29 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOrient(aSource.mOrient),
       mIsolation(aSource.mIsolation),
       mTopLayer(aSource.mTopLayer),
-      mWillChange(aSource.mWillChange),
       mTouchAction(aSource.mTouchAction),
       mScrollBehavior(aSource.mScrollBehavior),
       mOverscrollBehaviorX(aSource.mOverscrollBehaviorX),
       mOverscrollBehaviorY(aSource.mOverscrollBehaviorY),
       mScrollSnapType(aSource.mScrollSnapType),
+      mLineClamp(aSource.mLineClamp),
       mScrollSnapPointsX(aSource.mScrollSnapPointsX),
       mScrollSnapPointsY(aSource.mScrollSnapPointsY),
       mScrollSnapDestination(aSource.mScrollSnapDestination),
       mScrollSnapCoordinate(aSource.mScrollSnapCoordinate),
-      mLineClamp(aSource.mLineClamp),
-      mBackfaceVisibility(aSource.mBackfaceVisibility),
-      mTransformStyle(aSource.mTransformStyle),
-      mTransformBox(aSource.mTransformBox),
       mTransform(aSource.mTransform),
       mRotate(aSource.mRotate),
       mTranslate(aSource.mTranslate),
       mScale(aSource.mScale),
-      // We intentionally leave mIndividualTransform as null, is the caller's
-      // responsibility to call GenerateCombinedIndividualTransform when
-      // appropriate.
-      mMotion(aSource.mMotion ? MakeUnique<StyleMotion>(*aSource.mMotion)
-                              : nullptr),
+      mBackfaceVisibility(aSource.mBackfaceVisibility),
+      mTransformStyle(aSource.mTransformStyle),
+      mTransformBox(aSource.mTransformBox),
+      mOffsetPath(aSource.mOffsetPath),
+      mOffsetDistance(aSource.mOffsetDistance),
       mTransformOrigin(aSource.mTransformOrigin),
       mChildPerspective(aSource.mChildPerspective),
       mPerspectiveOrigin(aSource.mPerspectiveOrigin),
       mVerticalAlign(aSource.mVerticalAlign),
-      mTransitions(aSource.mTransitions),
-      mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount),
-      mTransitionDurationCount(aSource.mTransitionDurationCount),
-      mTransitionDelayCount(aSource.mTransitionDelayCount),
-      mTransitionPropertyCount(aSource.mTransitionPropertyCount),
-      mAnimations(aSource.mAnimations),
-      mAnimationTimingFunctionCount(aSource.mAnimationTimingFunctionCount),
-      mAnimationDurationCount(aSource.mAnimationDurationCount),
-      mAnimationDelayCount(aSource.mAnimationDelayCount),
-      mAnimationNameCount(aSource.mAnimationNameCount),
-      mAnimationDirectionCount(aSource.mAnimationDirectionCount),
-      mAnimationFillModeCount(aSource.mAnimationFillModeCount),
-      mAnimationPlayStateCount(aSource.mAnimationPlayStateCount),
-      mAnimationIterationCountCount(aSource.mAnimationIterationCountCount),
       mShapeImageThreshold(aSource.mShapeImageThreshold),
       mShapeMargin(aSource.mShapeMargin),
       mShapeOutside(aSource.mShapeOutside) {
@@ -3097,22 +3096,29 @@ static inline nsChangeHint CompareTransformValues(
   return result;
 }
 
-static inline nsChangeHint CompareMotionValues(const StyleMotion* aMotion,
-                                               const StyleMotion* aNewMotion) {
-  nsChangeHint result = nsChangeHint(0);
+static inline nsChangeHint CompareMotionValues(
+    const StyleOffsetPath& aOffsetPath, const LengthPercentage& aOffsetDistance,
+    const StyleOffsetPath& aNewOffsetPath,
+    const LengthPercentage& aNewOffsetDistance) {
+  if (aOffsetPath == aNewOffsetPath) {
+    if (aOffsetDistance == aNewOffsetDistance) {
+      return nsChangeHint(0);
+    }
+
+    if (aOffsetPath.IsNone()) {
+      return nsChangeHint_NeutralChange;
+    }
+  }
 
   // TODO: Bug 1482737: This probably doesn't need to UpdateOverflow
   // (or UpdateTransformLayer) if there's already a transform.
-  if (!aMotion != !aNewMotion || (aMotion && *aMotion != *aNewMotion)) {
-    // Set the same hints as what we use for transform because motion path is
-    // a kind of transform and will be combined with other transforms.
-    result |= nsChangeHint_UpdateTransformLayer;
-    if ((aMotion && aMotion->HasPath()) &&
-        (aNewMotion && aNewMotion->HasPath())) {
-      result |= nsChangeHint_UpdatePostTransformOverflow;
-    } else {
-      result |= nsChangeHint_UpdateOverflow;
-    }
+  // Set the same hints as what we use for transform because motion path is
+  // a kind of transform and will be combined with other transforms.
+  nsChangeHint result = nsChangeHint_UpdateTransformLayer;
+  if (!aOffsetPath.IsNone() && !aNewOffsetPath.IsNone()) {
+    result |= nsChangeHint_UpdatePostTransformOverflow;
+  } else {
+    result |= nsChangeHint_UpdateOverflow;
   }
   return result;
 }
@@ -3240,7 +3246,9 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     transformHint |= CompareTransformValues(mRotate, aNewData.mRotate);
     transformHint |= CompareTransformValues(mTranslate, aNewData.mTranslate);
     transformHint |= CompareTransformValues(mScale, aNewData.mScale);
-    transformHint |= CompareMotionValues(mMotion.get(), aNewData.mMotion.get());
+    transformHint |=
+        CompareMotionValues(mOffsetPath, mOffsetDistance, aNewData.mOffsetPath,
+                            aNewData.mOffsetDistance);
 
     if (mTransformOrigin != aNewData.mTransformOrigin) {
       transformHint |= nsChangeHint_UpdateTransformLayer |
@@ -3661,6 +3669,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextAlignLast(aSource.mTextAlignLast),
       mTextJustify(aSource.mTextJustify),
       mWhiteSpace(aSource.mWhiteSpace),
+      mLineBreak(aSource.mLineBreak),
       mWordBreak(aSource.mWordBreak),
       mOverflowWrap(aSource.mOverflowWrap),
       mHyphens(aSource.mHyphens),
@@ -3704,6 +3713,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mTextAlignLast != aNewData.mTextAlignLast) ||
       (mTextTransform != aNewData.mTextTransform) ||
       (mWhiteSpace != aNewData.mWhiteSpace) ||
+      (mLineBreak != aNewData.mLineBreak) ||
       (mWordBreak != aNewData.mWordBreak) ||
       (mOverflowWrap != aNewData.mOverflowWrap) ||
       (mHyphens != aNewData.mHyphens) || (mRubyAlign != aNewData.mRubyAlign) ||

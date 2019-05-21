@@ -16,7 +16,7 @@
     function start()
 	{
 	   var row = document.getElementById("row");
-	   var text = document.createElement("text");
+	   var text = document.createXULElement("text");
 	   text.setAttribute("value", "foo");
 	   row.appendChild(text);
 	}

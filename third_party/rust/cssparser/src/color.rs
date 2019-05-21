@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::fmt;
 use std::f32::consts::PI;
+use std::fmt;
 
-use super::{Token, Parser, ToCss, ParseError, BasicParseError};
+use super::{BasicParseError, ParseError, Parser, ToCss, Token};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -47,7 +47,12 @@ impl RGBA {
     /// Same thing, but with `u8` values instead of floats in the 0 to 1 range.
     #[inline]
     pub fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
-        RGBA { red: red, green: green, blue: blue, alpha: alpha }
+        RGBA {
+            red: red,
+            green: green,
+            blue: blue,
+            alpha: alpha,
+        }
     }
 
     /// Returns the red channel in a floating point number form, from 0 to 1.
@@ -78,7 +83,8 @@ impl RGBA {
 #[cfg(feature = "serde")]
 impl Serialize for RGBA {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         (self.red, self.green, self.blue, self.alpha).serialize(serializer)
     }
@@ -87,7 +93,8 @@ impl Serialize for RGBA {
 #[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for RGBA {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         let (r, g, b, a) = Deserialize::deserialize(deserializer)?;
         Ok(RGBA::new(r, g, b, a))
@@ -99,7 +106,8 @@ known_heap_size!(0, RGBA);
 
 impl ToCss for RGBA {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
-        where W: fmt::Write,
+    where
+        W: fmt::Write,
     {
         let serialize_alpha = self.alpha != 255;
 
@@ -137,7 +145,10 @@ pub enum Color {
 known_heap_size!(0, Color);
 
 impl ToCss for Color {
-    fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
         match *self {
             Color::CurrentColor => dest.write_str("currentcolor"),
             Color::RGBA(ref rgba) => rgba.to_css(dest),
@@ -210,7 +221,9 @@ pub trait ColorComponentParser<'i> {
         let location = input.current_source_location();
         Ok(match *input.next()? {
             Token::Number { value, .. } => AngleOrNumber::Number { value },
-            Token::Dimension { value: v, ref unit, .. } => {
+            Token::Dimension {
+                value: v, ref unit, ..
+            } => {
                 let degrees = match_ignore_ascii_case! { &*unit,
                     "deg" => v,
                     "grad" => v * 360. / 400.,
@@ -221,7 +234,7 @@ pub trait ColorComponentParser<'i> {
 
                 AngleOrNumber::Angle { degrees }
             }
-            ref t => return Err(location.new_unexpected_token_error(t.clone()))
+            ref t => return Err(location.new_unexpected_token_error(t.clone())),
         })
     }
 
@@ -252,7 +265,7 @@ pub trait ColorComponentParser<'i> {
         Ok(match *input.next()? {
             Token::Number { value, .. } => NumberOrPercentage::Number { value },
             Token::Percentage { unit_value, .. } => NumberOrPercentage::Percentage { unit_value },
-            ref t => return Err(location.new_unexpected_token_error(t.clone()))
+            ref t => return Err(location.new_unexpected_token_error(t.clone())),
         })
     }
 }
@@ -279,21 +292,20 @@ impl Color {
         match token {
             Token::Hash(ref value) | Token::IDHash(ref value) => {
                 Color::parse_hash(value.as_bytes())
-            },
+            }
             Token::Ident(ref value) => parse_color_keyword(&*value),
             Token::Function(ref name) => {
                 return input.parse_nested_block(|arguments| {
                     parse_color_function(component_parser, &*name, arguments)
                 })
             }
-            _ => Err(())
-        }.map_err(|()| location.new_unexpected_token_error(token))
+            _ => Err(()),
+        }
+        .map_err(|()| location.new_unexpected_token_error(token))
     }
 
     /// Parse a <color> value, per CSS Color Module Level 3.
-    pub fn parse<'i, 't>(
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Color, BasicParseError<'i>> {
+    pub fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Color, BasicParseError<'i>> {
         let component_parser = DefaultComponentParser;
         Self::parse_with(&component_parser, input).map_err(ParseError::basic)
     }
@@ -306,25 +318,25 @@ impl Color {
                 from_hex(value[0])? * 16 + from_hex(value[1])?,
                 from_hex(value[2])? * 16 + from_hex(value[3])?,
                 from_hex(value[4])? * 16 + from_hex(value[5])?,
-                from_hex(value[6])? * 16 + from_hex(value[7])?),
-            ),
+                from_hex(value[6])? * 16 + from_hex(value[7])?,
+            )),
             6 => Ok(rgb(
                 from_hex(value[0])? * 16 + from_hex(value[1])?,
                 from_hex(value[2])? * 16 + from_hex(value[3])?,
-                from_hex(value[4])? * 16 + from_hex(value[5])?),
-            ),
+                from_hex(value[4])? * 16 + from_hex(value[5])?,
+            )),
             4 => Ok(rgba(
                 from_hex(value[0])? * 17,
                 from_hex(value[1])? * 17,
                 from_hex(value[2])? * 17,
-                from_hex(value[3])? * 17),
-            ),
+                from_hex(value[3])? * 17,
+            )),
             3 => Ok(rgb(
                 from_hex(value[0])? * 17,
                 from_hex(value[1])? * 17,
-                from_hex(value[2])? * 17),
-            ),
-            _ => Err(())
+                from_hex(value[2])? * 17,
+            )),
+            _ => Err(()),
         }
     }
 }
@@ -338,7 +350,6 @@ fn rgb(red: u8, green: u8, blue: u8) -> Color {
 fn rgba(red: u8, green: u8, blue: u8, alpha: u8) -> Color {
     Color::RGBA(RGBA::new(red, green, blue, alpha))
 }
-
 
 /// Return the named color with the given name.
 ///
@@ -355,7 +366,7 @@ pub fn parse_color_keyword(ident: &str) -> Result<Color, ()> {
                 blue: $blue,
                 alpha: 255,
             })
-        }
+        };
     }
     ascii_case_insensitive_phf_map! {
         keyword -> Color = {
@@ -516,14 +527,13 @@ pub fn parse_color_keyword(ident: &str) -> Result<Color, ()> {
     keyword(ident).cloned().ok_or(())
 }
 
-
 #[inline]
 fn from_hex(c: u8) -> Result<u8, ()> {
     match c {
-        b'0' ... b'9' => Ok(c - b'0'),
-        b'a' ... b'f' => Ok(c - b'a' + 10),
-        b'A' ... b'F' => Ok(c - b'A' + 10),
-        _ => Err(())
+        b'0'...b'9' => Ok(c - b'0'),
+        b'a'...b'f' => Ok(c - b'a' + 10),
+        b'A'...b'F' => Ok(c - b'A' + 10),
+        _ => Err(()),
     }
 }
 
@@ -553,7 +563,7 @@ fn clamp_floor_256_f32(val: f32) -> u8 {
 fn parse_color_function<'i, 't, ComponentParser>(
     component_parser: &ComponentParser,
     name: &str,
-    arguments: &mut Parser<'i, 't>
+    arguments: &mut Parser<'i, 't>,
 ) -> Result<Color, ParseError<'i, ComponentParser::Error>>
 where
     ComponentParser: ColorComponentParser<'i>,
@@ -570,7 +580,11 @@ where
         } else {
             arguments.expect_delim('/')?;
         };
-        clamp_unit_f32(component_parser.parse_number_or_percentage(arguments)?.unit_value())
+        clamp_unit_f32(
+            component_parser
+                .parse_number_or_percentage(arguments)?
+                .unit_value(),
+        )
     } else {
         255
     };
@@ -579,11 +593,10 @@ where
     Ok(rgba(red, green, blue, alpha))
 }
 
-
 #[inline]
 fn parse_rgb_components_rgb<'i, 't, ComponentParser>(
     component_parser: &ComponentParser,
-    arguments: &mut Parser<'i, 't>
+    arguments: &mut Parser<'i, 't>,
 ) -> Result<(u8, u8, u8, bool), ParseError<'i, ComponentParser::Error>>
 where
     ComponentParser: ColorComponentParser<'i>,
@@ -591,15 +604,11 @@ where
     // Either integers or percentages, but all the same type.
     // https://drafts.csswg.org/css-color/#rgb-functions
     let (red, is_number) = match component_parser.parse_number_or_percentage(arguments)? {
-        NumberOrPercentage::Number { value } => {
-            (clamp_floor_256_f32(value), true)
-        }
-        NumberOrPercentage::Percentage { unit_value } => {
-            (clamp_unit_f32(unit_value), false)
-        }
+        NumberOrPercentage::Number { value } => (clamp_floor_256_f32(value), true),
+        NumberOrPercentage::Percentage { unit_value } => (clamp_unit_f32(unit_value), false),
     };
 
-    let uses_commas = arguments.try(|i| i.expect_comma()).is_ok();
+    let uses_commas = arguments.try_parse(|i| i.expect_comma()).is_ok();
 
     let green;
     let blue;
@@ -623,7 +632,7 @@ where
 #[inline]
 fn parse_rgb_components_hsl<'i, 't, ComponentParser>(
     component_parser: &ComponentParser,
-    arguments: &mut Parser<'i, 't>
+    arguments: &mut Parser<'i, 't>,
 ) -> Result<(u8, u8, u8, bool), ParseError<'i, ComponentParser::Error>>
 where
     ComponentParser: ColorComponentParser<'i>,
@@ -638,7 +647,7 @@ where
 
     // Saturation and lightness are clamped to 0% ... 100%
     // https://drafts.csswg.org/css-color/#the-hsl-notation
-    let uses_commas = arguments.try(|i| i.expect_comma()).is_ok();
+    let uses_commas = arguments.try_parse(|i| i.expect_comma()).is_ok();
 
     let saturation = component_parser.parse_percentage(arguments)?;
     let saturation = saturation.max(0.).min(1.);
@@ -653,16 +662,28 @@ where
     // https://drafts.csswg.org/css-color/#hsl-color
     // except with h pre-multiplied by 3, to avoid some rounding errors.
     fn hue_to_rgb(m1: f32, m2: f32, mut h3: f32) -> f32 {
-        if h3 < 0. { h3 += 3. }
-        if h3 > 3. { h3 -= 3. }
+        if h3 < 0. {
+            h3 += 3.
+        }
+        if h3 > 3. {
+            h3 -= 3.
+        }
 
-        if h3 * 2. < 1. { m1 + (m2 - m1) * h3 * 2. }
-        else if h3 * 2. < 3. { m2 }
-        else if h3 < 2. { m1 + (m2 - m1) * (2. - h3) * 2. }
-        else { m1 }
+        if h3 * 2. < 1. {
+            m1 + (m2 - m1) * h3 * 2.
+        } else if h3 * 2. < 3. {
+            m2
+        } else if h3 < 2. {
+            m1 + (m2 - m1) * (2. - h3) * 2.
+        } else {
+            m1
+        }
     }
-    let m2 = if lightness <= 0.5 { lightness * (saturation + 1.) }
-             else { lightness + saturation - lightness * saturation };
+    let m2 = if lightness <= 0.5 {
+        lightness * (saturation + 1.)
+    } else {
+        lightness + saturation - lightness * saturation
+    };
     let m1 = lightness * 2. - m2;
     let hue_times_3 = hue * 3.;
     let red = clamp_unit_f32(hue_to_rgb(m1, m2, hue_times_3 + 1.));

@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyGetter(this, "require", function() {
 // "verbose".
 const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
 
+const DEBUG_SCREENSHOTS = env.get("DEBUG_DEVTOOLS_SCREENSHOTS");
+
 // Maximum time spent in one test, in milliseconds
 const TEST_TIMEOUT = 5 * 60000;
 
@@ -110,6 +112,26 @@ Damp.prototype = {
     this.TalosParentProfiler = await getTalosParentProfiler();
   },
 
+  // Take a screenshot of the whole browser window and open it in a background tab
+  async screenshot(label) {
+    const win = this._win;
+    const canvas = win.document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "html:canvas"
+    );
+    const context = canvas.getContext("2d");
+    canvas.width = win.innerWidth;
+    canvas.height = win.innerHeight;
+    context.drawWindow(win, 0, 0, canvas.width, canvas.height, "white");
+    const imgURL = canvas.toDataURL();
+    const url = `data:text/html,<title>${label}</title>
+      <h1>${label}</h1>
+      <img width="100%" height="100%" src="${imgURL}"/>`;
+    this._win.gBrowser.addTab(url, {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+  },
+
   /**
    * Helper to tell when a test start and when it is finished.
    * It helps recording its duration, but also put markers for profiler.firefox.com
@@ -163,6 +185,9 @@ Damp.prototype = {
           });
         } else if (DEBUG_ALLOCATIONS == "verbose") {
           this.allocationTracker.logAllocationSites();
+        }
+        if (DEBUG_SCREENSHOTS) {
+          this.screenshot(label);
         }
       },
     };
@@ -311,6 +336,13 @@ Damp.prototype = {
       }
     }
     this._log("\n" + out);
+
+    if (DEBUG_SCREENSHOTS) {
+      // When we are printing screenshots, we don't want to want to exit firefox
+      // so that we have time to view them.
+      dump("All tests are finished, please review the screenshots and close the browser manually.\n");
+      return;
+    }
 
     if (this.testDone) {
       this.testDone({testResults, testNames});

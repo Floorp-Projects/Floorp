@@ -2025,7 +2025,8 @@ nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver) {
 }
 
 NS_IMETHODIMP
-nsNavHistory::GetObservers(nsTArray<RefPtr<nsINavHistoryObserver>>& aObservers) {
+nsNavHistory::GetObservers(
+    nsTArray<RefPtr<nsINavHistoryObserver>>& aObservers) {
   aObservers.Clear();
 
   // Clear any cached value, cause it's very likely the consumer has made
@@ -3439,11 +3440,12 @@ nsresult nsNavHistory::UpdateFrecency(int64_t aPlaceId) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  mozIStorageBaseStatement* stmts[] = {updateFrecencyStmt.get(),
-                                       updateHiddenStmt.get()};
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      updateFrecencyStmt.forget(),
+      updateHiddenStmt.forget(),
+  };
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), nullptr,
-                          getter_AddRefs(ps));
+  rv = conn->ExecuteAsync(stmts, nullptr, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Trigger frecency updates for all affected origins.

@@ -2,7 +2,7 @@
 // event.clipboardData.
 
 add_task(async function() {
-  var textbox = document.createElement("textbox");
+  var textbox = document.createXULElement("textbox");
   document.documentElement.appendChild(textbox);
 
   textbox.focus();

@@ -175,9 +175,9 @@ class nsLineBreaker {
 
   /*
    * Set word-break mode for linebreaker.  This is set by word-break property.
-   * @param aMode is LineBreaker::kWordBreak_* value.
+   * @param aMode is LineBreaker::WordBreak::* value.
    */
-  void SetWordBreak(uint8_t aMode) {
+  void SetWordBreak(mozilla::intl::LineBreaker::WordBreak aMode) {
     // If current word is non-empty and mode is changing, flush the breaker.
     if (aMode != mWordBreak && !mCurrentWord.IsEmpty()) {
       nsresult rv = FlushCurrentWord();
@@ -187,11 +187,30 @@ class nsLineBreaker {
       // If previous mode was break-all, we should allow a break here.
       // XXX (jfkthame) css-text spec seems unclear on this, raised question in
       // https://github.com/w3c/csswg-drafts/issues/3897
-      if (mWordBreak == mozilla::intl::LineBreaker::kWordBreak_BreakAll) {
+      if (mWordBreak == mozilla::intl::LineBreaker::WordBreak::BreakAll) {
         mBreakHere = true;
       }
     }
     mWordBreak = aMode;
+  }
+
+  /*
+   * Set line-break rule strictness mode for linebreaker.  This is set by the
+   * line-break property.
+   * @param aMode is LineBreaker::Strictness::* value.
+   */
+  void SetStrictness(mozilla::intl::LineBreaker::Strictness aMode) {
+    if (aMode != mStrictness && !mCurrentWord.IsEmpty()) {
+      nsresult rv = FlushCurrentWord();
+      if (NS_FAILED(rv)) {
+        NS_WARNING("FlushCurrentWord failed, line-breaks may be wrong");
+      }
+      // If previous mode was anywhere, we should allow a break here.
+      if (mStrictness == mozilla::intl::LineBreaker::Strictness::Anywhere) {
+        mBreakHere = true;
+      }
+    }
+    mStrictness = aMode;
   }
 
  private:
@@ -232,6 +251,7 @@ class nsLineBreaker {
   nsAtom* mCurrentWordLanguage;
   bool mCurrentWordContainsMixedLang;
   bool mCurrentWordContainsComplexChar;
+  bool mScriptIsChineseOrJapanese;
 
   // True if the previous character was breakable whitespace
   bool mAfterBreakableSpace;
@@ -239,7 +259,9 @@ class nsLineBreaker {
   // a run of breakable whitespace ends here
   bool mBreakHere;
   // line break mode by "word-break" style
-  uint8_t mWordBreak;
+  mozilla::intl::LineBreaker::WordBreak mWordBreak;
+  // strictness of break rules, from line-break property
+  mozilla::intl::LineBreaker::Strictness mStrictness;
 };
 
 #endif /*NSLINEBREAKER_H_*/

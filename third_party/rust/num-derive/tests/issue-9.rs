@@ -7,7 +7,7 @@ use num::ToPrimitive;
 
 #[derive(FromPrimitive, ToPrimitive)]
 pub enum SomeEnum {
-    A = 1
+    A = 1,
 }
 
 #[test]

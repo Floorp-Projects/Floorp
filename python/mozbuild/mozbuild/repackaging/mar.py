@@ -31,15 +31,15 @@ def repackage_mar(topsrcdir, package, mar, output, mar_format='lzma', arch=None)
     ensureParentDir(output)
     tmpdir = tempfile.mkdtemp()
     try:
-        if zipfile.is_zipfile(package):
-            z = zipfile.ZipFile(package)
-            z.extractall(tmpdir)
-            filelist = z.namelist()
-            z.close()
-        else:
+        if tarfile.is_tarfile(package):
             z = tarfile.open(package)
             z.extractall(tmpdir)
             filelist = z.getnames()
+            z.close()
+        else:
+            z = zipfile.ZipFile(package)
+            z.extractall(tmpdir)
+            filelist = z.namelist()
             z.close()
 
         toplevel_dirs = set([mozpath.split(f)[0] for f in filelist])

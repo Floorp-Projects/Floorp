@@ -3996,6 +3996,14 @@ var gCSSProperties = {
     invalid_values: [],
     quirks_values: { "5": "5px" },
   },
+  "line-break": {
+    domProp: "lineBreak",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "loose", "normal", "strict", "anywhere" ],
+    invalid_values: []
+  },
   "line-height": {
     domProp: "lineHeight",
     inherited: true,
@@ -8736,6 +8744,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     ],
     invalid_values: [ "path('')", "path()", "path(a)", "path('M 10 Z')" ,
                       "path('M 10-10 20')", "path('M 10 10 C 20 20 40 20')" ]
+  };
+
+  gCSSProperties["offset-distance"] = {
+    domProp: "offsetDistance",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "0" ],
+    other_values: [ "10px", "10%", "190%", "-280%", "calc(30px + 40%)" ],
+    invalid_values: [ "none", "45deg" ]
   };
 }
 

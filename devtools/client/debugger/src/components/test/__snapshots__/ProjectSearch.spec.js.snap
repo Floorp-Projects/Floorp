@@ -337,7 +337,7 @@ exports[`ProjectSearch found search results 1`] = `
                   role="treeitem"
                 >
                   <span
-                    className="tree-indent"
+                    className="tree-indent tree-last-indent"
                   >
                     ​
                   </span>
@@ -405,7 +405,7 @@ exports[`ProjectSearch found search results 1`] = `
                   role="treeitem"
                 >
                   <span
-                    className="tree-indent"
+                    className="tree-indent tree-last-indent"
                   >
                     ​
                   </span>
@@ -473,7 +473,7 @@ exports[`ProjectSearch found search results 1`] = `
                   role="treeitem"
                 >
                   <span
-                    className="tree-indent"
+                    className="tree-indent tree-last-indent"
                   >
                     ​
                   </span>
@@ -613,7 +613,7 @@ exports[`ProjectSearch found search results 1`] = `
                   role="treeitem"
                 >
                   <span
-                    className="tree-indent"
+                    className="tree-indent tree-last-indent"
                   >
                     ​
                   </span>
@@ -681,7 +681,7 @@ exports[`ProjectSearch found search results 1`] = `
                   role="treeitem"
                 >
                   <span
-                    className="tree-indent"
+                    className="tree-indent tree-last-indent"
                   >
                     ​
                   </span>

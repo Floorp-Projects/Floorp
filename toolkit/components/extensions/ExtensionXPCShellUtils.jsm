@@ -151,7 +151,7 @@ class ContentPage {
 
     let chromeDoc = await promiseDocumentLoaded(chromeShell.document);
 
-    let browser = chromeDoc.createElement("browser");
+    let browser = chromeDoc.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
     if (this.userContextId) {

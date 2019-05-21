@@ -450,8 +450,6 @@ android-x86_64-opt-tests:
     - crashtest
     # geckoview-junit perma-fail on opt and debug; bug 1521195
     # - geckoview-junit
-    - web-platform-tests
-    - web-platform-tests-reftests
 
 android-x86_64-tests:
     - gtest
@@ -462,6 +460,8 @@ android-x86_64-tests:
     - mochitest-gpu
     # various reftest (plain) failures; bug 1501582
     # - reftest
+    - web-platform-tests
+    - web-platform-tests-reftests
     - xpcshell
 
 android-x86-tests:

@@ -6,6 +6,7 @@
 // Tests that the markup localization works properly.
 
 const { localizeMarkup, LocalizationHelper } = require("devtools/shared/l10n");
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 add_task(async function() {
   info("Check that the strings used for this test are still valid");
@@ -19,38 +20,38 @@ add_task(async function() {
   ok(str1 && str2 && str3, "If this failed, strings should be updated in the test");
 
   info("Create the test markup");
-  const div = document.createElement("div");
+  const div = document.createElementNS(HTML_NS, "div");
   div.setAttribute("data-localization-bundle",
                    "devtools/client/locales/startup.properties");
-  const div0 = document.createElement("div");
+  const div0 = document.createElementNS(HTML_NS, "div");
   div0.setAttribute("id", "d0");
   div0.setAttribute("data-localization", "content=inspector.someInvalidKey");
   div.appendChild(div0);
-  const div1 = document.createElement("div");
+  const div1 = document.createElementNS(HTML_NS, "div");
   div1.setAttribute("id", "d1");
   div1.setAttribute("data-localization", "content=inspector.label");
   div.appendChild(div1);
   div1.append("Text will disappear");
-  const div2 = document.createElement("div");
+  const div2 = document.createElementNS(HTML_NS, "div");
   div2.setAttribute("id", "d2");
   div2.setAttribute("data-localization",
                     "content=inspector.label;title=inspector.accesskey");
   div.appendChild(div2);
-  const div3 = document.createElement("div");
+  const div3 = document.createElementNS(HTML_NS, "div");
   div3.setAttribute("id", "d3");
   div3.setAttribute("data-localization",
                     "content=inspector.label;title=inspector.accesskey");
   div.appendChild(div3);
-  const div4 = document.createElement("div");
+  const div4 = document.createElementNS(HTML_NS, "div");
   div4.setAttribute("id", "d4");
   div4.setAttribute("data-localization", "aria-label=inspector.label");
   div.appendChild(div4);
   div4.append("Some content");
-  const toolboxDiv = document.createElement("div");
+  const toolboxDiv = document.createElementNS(HTML_NS, "div");
   toolboxDiv.setAttribute("data-localization-bundle",
                           "devtools/client/locales/toolbox.properties");
   div.appendChild(toolboxDiv);
-  const div5 = document.createElement("div");
+  const div5 = document.createElementNS(HTML_NS, "div");
   div5.setAttribute("id", "d5");
   div5.setAttribute("data-localization", "content=toolbox.defaultTitle");
   toolboxDiv.appendChild(div5);

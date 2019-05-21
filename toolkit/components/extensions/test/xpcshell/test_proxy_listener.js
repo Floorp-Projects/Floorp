@@ -158,7 +158,6 @@ async function getExtension(expectedProxyInfo) {
     browser.proxy.onRequest.addListener(details => {
       return proxyInfo;
     }, {urls: ["<all_urls>"]});
-    browser.test.sendMessage("ready");
   }
   let extensionData = {
     manifest: {
@@ -168,7 +167,6 @@ async function getExtension(expectedProxyInfo) {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
-  await extension.awaitMessage("ready");
   return extension;
 }
 
@@ -188,4 +186,16 @@ add_task(async function test_passthrough() {
   proxyInfo = await getProxyInfo();
   equal(proxyInfo, null, `expected no proxy`);
   await ext1.unload();
+});
+
+add_task(async function test_ftp() {
+  let extension = await getExtension({host: "1.2.3.4", port: 8888, type: "http"});
+
+  let proxyInfo = await getProxyInfo("ftp://somewhere.mozilla.org/");
+
+  equal(proxyInfo.host, "1.2.3.4", `proxy host correct`);
+  equal(proxyInfo.port, "8888", `proxy port correct`);
+  equal(proxyInfo.type, "http", `proxy type correct`);
+
+  await extension.unload();
 });

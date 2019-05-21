@@ -291,7 +291,7 @@ class PageAction {
   }
 
   _createElementAndAppend({type, id}, parent) {
-    let element = this.window.document.createElement(type);
+    let element = this.window.document.createXULElement(type);
     if (id) {
       element.setAttribute("id", id);
     }
@@ -397,12 +397,12 @@ class PageAction {
         stepsContainer.remove();
         stepsContainer = stepsContainer.cloneNode(false);
       } else {
-        stepsContainer = this.window.document.createElement("vbox");
+        stepsContainer = this.window.document.createXULElement("vbox");
         stepsContainer.setAttribute("id", stepsContainerId);
       }
       footerText.parentNode.appendChild(stepsContainer);
       for (let step of content.descriptionDetails.steps) {
-        const li = this.window.document.createElement("li");
+        const li = this.window.document.createXULElement("li");
         this._l10n.setAttributes(li, step.string_id);
         stepsContainer.appendChild(li);
       }

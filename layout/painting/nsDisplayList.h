@@ -63,6 +63,7 @@ class nsIScrollableFrame;
 class nsSubDocumentFrame;
 class nsDisplayCompositorHitTestInfo;
 class nsDisplayScrollInfoLayer;
+class nsDisplayTableBackgroundSet;
 class nsCaret;
 enum class nsDisplayOwnLayerFlags;
 struct WrFiltersHolder;
@@ -874,6 +875,16 @@ class nsDisplayListBuilder {
     mSyncDecodeImages = aSyncDecodeImages;
   }
 
+  nsDisplayTableBackgroundSet* SetTableBackgroundSet(
+      nsDisplayTableBackgroundSet* aTableSet) {
+    nsDisplayTableBackgroundSet* old = mTableBackgroundSet;
+    mTableBackgroundSet = aTableSet;
+    return old;
+  }
+  nsDisplayTableBackgroundSet* GetTableBackgroundSet() const {
+    return mTableBackgroundSet;
+  }
+
   void FreeClipChains();
 
   /*
@@ -1487,13 +1498,6 @@ class nsDisplayListBuilder {
     return mPreserves3DCtx.mAccumulatedRectLevels;
   }
 
-  // Helpers for tables
-  nsDisplayTableItem* GetCurrentTableItem() { return mCurrentTableItem; }
-
-  void SetCurrentTableItem(nsDisplayTableItem* aTableItem) {
-    mCurrentTableItem = aTableItem;
-  }
-
   struct OutOfFlowDisplayData {
     OutOfFlowDisplayData(
         const DisplayItemClipChain* aContainingBlockClipChain,
@@ -1866,7 +1870,6 @@ class nsDisplayListBuilder {
   AutoTArray<nsIFrame*, 20> mFramesWithOOFData;
   nsClassHashtable<nsPtrHashKey<nsDisplayItem>, nsTArray<ThemeGeometry>>
       mThemeGeometries;
-  nsDisplayTableItem* mCurrentTableItem;
   DisplayListClipState mClipState;
   const ActiveScrolledRoot* mCurrentActiveScrolledRoot;
   const ActiveScrolledRoot* mCurrentContainerASR;
@@ -1932,6 +1935,7 @@ class nsDisplayListBuilder {
   nsTArray<nsDisplayItem*> mTemporaryItems;
   const ActiveScrolledRoot* mActiveScrolledRootForRootScrollframe;
   nsDisplayListBuilderMode mMode;
+  nsDisplayTableBackgroundSet* mTableBackgroundSet;
   ViewID mCurrentScrollParentId;
   ViewID mCurrentScrollbarTarget;
   MaybeScrollDirection mCurrentScrollbarDirection;
@@ -4461,7 +4465,9 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
       bool aAllowWillPaintBorderOptimization = true,
       mozilla::ComputedStyle* aComputedStyle = nullptr,
       const nsRect& aBackgroundOriginRect = nsRect(),
-      nsIFrame* aSecondaryReferenceFrame = nullptr);
+      nsIFrame* aSecondaryReferenceFrame = nullptr,
+      mozilla::Maybe<nsDisplayListBuilder::AutoBuildingDisplayList>*
+          aAutoBuildingDisplayList = nullptr);
 
   LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,

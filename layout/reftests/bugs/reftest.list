@@ -1328,7 +1328,7 @@ fails-if(Android) == 481024-1c.html 481024-1-ref.html
 == 481024-1e.html 481024-1-ref.html
 != 481948-1.html 481948-1-ref.html
 != 481948-2.html 481948-2-ref.html
-fails-if(Android||gtkWidget) random-if(winWidget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
+fails-if(Android||gtkWidget) random-if(winWidget||cocoaWidget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
 == 482398-1.html 482398-1-ref.html
 random-if(d2d) == 482592-1a.xhtml 482592-1-ref.html # bug 586771
 random-if(d2d) == 482592-1b.xhtml 482592-1-ref.html # bug 586771
@@ -1425,7 +1425,7 @@ fuzzy-if(Android,0-5,0-1656) fuzzy-if(skiaContent,0-1,0-1200) == 512410.html 512
 == 512631-1.html 512631-1-ref.html
 == 513153-1a.html 513153-1-ref.html
 == 513153-1b.html 513153-1-ref.html
-fuzzy-if(webrender&&winWidget,82-82,76-76) == 513153-2a.html 513153-2-ref.html
+fuzzy-if(webrender&&winWidget,82-82,76-76) fuzzy-if(webrender&&cocoaWidget,0-34,0-103) == 513153-2a.html 513153-2-ref.html
 fuzzy-if(webrender&&cocoaWidget,34-34,103-103) == 513153-2b.html 513153-2-ref.html
 == 513318-1.xul 513318-1-ref.xul
 fails-if(Android&&(!asyncPan)) != 513318-2.xul 513318-2-ref.xul
