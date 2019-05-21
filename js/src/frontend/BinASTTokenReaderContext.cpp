@@ -8,7 +8,7 @@
 
 #include "mozilla/Result.h"  // MOZ_TRY*
 
-#include <string.h>  // memcmp, memmove
+#include <string.h>  // memcmp
 
 #include "frontend/BinAST-macros.h"  // BINJS_TRY*, BINJS_MOZ_TRY*
 #include "vm/JSScript.h"             // ScriptSource
@@ -43,72 +43,6 @@ BinASTTokenReaderContext::~BinASTTokenReaderContext() {
   if (metadata_ && metadataOwned_ == MetadataOwnership::Owned) {
     UniqueBinASTSourceMetadataPtr ptr(metadata_);
   }
-  if (decoder_) {
-    BrotliDecoderDestroyInstance(decoder_);
-  }
-}
-
-template <>
-JS::Result<Ok>
-BinASTTokenReaderContext::readBuf<BinASTTokenReaderContext::Compression::No>(
-    uint8_t* bytes, uint32_t len) {
-  return Base::readBuf(bytes, len);
-}
-
-template <>
-JS::Result<Ok>
-BinASTTokenReaderContext::readBuf<BinASTTokenReaderContext::Compression::Yes>(
-    uint8_t* bytes, uint32_t len) {
-  while (availableDecodedLength() < len) {
-    if (availableDecodedLength()) {
-      memmove(bytes, decodedBufferBegin(), availableDecodedLength());
-      bytes += availableDecodedLength();
-      len -= availableDecodedLength();
-    }
-
-    if (isEOF()) {
-      return raiseError("Unexpected end of file");
-    }
-
-    // We have exhausted the in-memory buffer. Start from the beginning.
-    decodedBegin_ = 0;
-
-    size_t inSize = stop_ - current_;
-    size_t outSize = DECODED_BUFFER_SIZE;
-    uint8_t* out = decodedBuffer_;
-
-    BrotliDecoderResult result;
-    result = BrotliDecoderDecompressStream(decoder_, &inSize, &current_,
-                                           &outSize, &out,
-                                           /* total_out = */ nullptr);
-    if (result == BROTLI_DECODER_RESULT_ERROR) {
-      return raiseError("Failed to decompress brotli stream");
-    }
-
-    decodedEnd_ = out - decodedBuffer_;
-  }
-
-  memmove(bytes, decodedBufferBegin(), len);
-  decodedBegin_ += len;
-  return Ok();
-}
-
-bool BinASTTokenReaderContext::isEOF() const {
-  return BrotliDecoderIsFinished(decoder_);
-}
-
-template <>
-JS::Result<uint8_t> BinASTTokenReaderContext::readByte<
-    BinASTTokenReaderContext::Compression::No>() {
-  return Base::readByte();
-}
-
-template <>
-JS::Result<uint8_t> BinASTTokenReaderContext::readByte<
-    BinASTTokenReaderContext::Compression::Yes>() {
-  uint8_t buf;
-  MOZ_TRY(readBuf<Compression::Yes>(&buf, 1));
-  return buf;
 }
 
 BinASTSourceMetadata* BinASTTokenReaderContext::takeMetadata() {
@@ -131,20 +65,13 @@ JS::Result<Ok> BinASTTokenReaderContext::readHeader() {
 
   // Read global headers.
   MOZ_TRY(readConst(CX_MAGIC_HEADER));
-  BINJS_MOZ_TRY_DECL(version, readVarU32<Compression::No>());
+  BINJS_MOZ_TRY_DECL(version, readVarU32());
 
   if (version != MAGIC_FORMAT_VERSION) {
     return raiseError("Format version not implemented");
   }
 
-  decoder_ = BrotliDecoderCreateInstance(/* alloc_func = */ nullptr,
-                                         /* free_func = */ nullptr,
-                                         /* opaque = */ nullptr);
-  if (!decoder_) {
-    return raiseError("Failed to create brotli decoder");
-  }
-
-  // TODO: handle strings and models here.
+  // TODO: handle `LinkToSharedDictionary` and remaining things here.
 
   return raiseError("Not Yet Implemented");
 }
@@ -242,14 +169,13 @@ JS::Result<Ok> BinASTTokenReaderContext::AutoList::done() {
 //
 // Encoded as variable length number.
 
-template <BinASTTokenReaderContext::Compression compression>
-JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
+MOZ_MUST_USE JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
   uint32_t result = 0;
   uint32_t shift = 0;
   while (true) {
     MOZ_ASSERT(shift < 32);
     uint32_t byte;
-    MOZ_TRY_VAR(byte, readByte<compression>());
+    MOZ_TRY_VAR(byte, readByte());
 
     const uint32_t newResult = result | (byte & 0x7f) << shift;
     if (newResult < result) {
@@ -267,10 +193,6 @@ JS::Result<uint32_t> BinASTTokenReaderContext::readVarU32() {
       return raiseError("Overflow during readVarU32");
     }
   }
-}
-
-JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(const Context&) {
-  return readVarU32<Compression::Yes>();
 }
 
 BinASTTokenReaderContext::AutoTaggedTuple::AutoTaggedTuple(
