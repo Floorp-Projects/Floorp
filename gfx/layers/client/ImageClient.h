@@ -71,7 +71,8 @@ class ImageClient : public CompositableClient {
   virtual ImageClientSingle* AsImageClientSingle() { return nullptr; }
 
   static already_AddRefed<TextureClient> CreateTextureClientForImage(
-      Image* aImage, KnowsCompositor* aForwarder);
+      Image* aImage, KnowsCompositor* aForwarder,
+      ImageContainer* aContainer = nullptr);
 
   uint32_t GetLastUpdateGenerationCounter() {
     return mLastUpdateGenerationCounter;
