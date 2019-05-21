@@ -87,10 +87,9 @@ extern JS_PUBLIC_API bool FinishDynamicModuleImport(
  * Parse the given source buffer as a module in the scope of the current global
  * of cx and return a source text module record.
  */
-extern JS_PUBLIC_API bool CompileModule(JSContext* cx,
-                                        const ReadOnlyCompileOptions& options,
-                                        SourceText<char16_t>& srcBuf,
-                                        MutableHandle<JSObject*> moduleRecord);
+extern JS_PUBLIC_API JSObject* CompileModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf);
 
 /**
  * Set a private value associated with a source text module record.

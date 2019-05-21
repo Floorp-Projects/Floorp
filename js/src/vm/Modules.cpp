@@ -80,16 +80,14 @@ JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
                                        promise);
 }
 
-JS_PUBLIC_API bool JS::CompileModule(JSContext* cx,
-                                     const ReadOnlyCompileOptions& options,
-                                     SourceText<char16_t>& srcBuf,
-                                     MutableHandle<JSObject*> module) {
+JS_PUBLIC_API JSObject* JS::CompileModule(JSContext* cx,
+                                          const ReadOnlyCompileOptions& options,
+                                          SourceText<char16_t>& srcBuf) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  module.set(js::frontend::CompileModule(cx, options, srcBuf));
-  return !!module;
+  return js::frontend::CompileModule(cx, options, srcBuf);
 }
 
 JS_PUBLIC_API void JS::SetModulePrivate(JSObject* module, const Value& value) {
