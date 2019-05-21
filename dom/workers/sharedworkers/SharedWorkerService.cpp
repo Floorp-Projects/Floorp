@@ -25,51 +25,6 @@ StaticMutex sSharedWorkerMutex;
 // via SharedWorkerManagerHolder.
 SharedWorkerService* MOZ_NON_OWNING_REF sSharedWorkerService;
 
-nsresult PopulateContentSecurityPolicy(
-    nsIContentSecurityPolicy* aCSP,
-    const nsTArray<ContentSecurityPolicy>& aPolicies) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCSP);
-  MOZ_ASSERT(!aPolicies.IsEmpty());
-
-  for (const ContentSecurityPolicy& policy : aPolicies) {
-    nsresult rv = aCSP->AppendPolicy(policy.policy(), policy.reportOnlyFlag(),
-                                     policy.deliveredViaMetaTagFlag());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult PopulatePrincipalContentSecurityPolicy(
-    nsIPrincipal* aPrincipal, const nsTArray<ContentSecurityPolicy>& aPolicies,
-    const nsTArray<ContentSecurityPolicy>& aPreloadPolicies) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPrincipal);
-
-  if (!aPolicies.IsEmpty()) {
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    aPrincipal->EnsureCSP(nullptr, getter_AddRefs(csp));
-    nsresult rv = PopulateContentSecurityPolicy(csp, aPolicies);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  if (!aPreloadPolicies.IsEmpty()) {
-    nsCOMPtr<nsIContentSecurityPolicy> preloadCsp;
-    aPrincipal->EnsurePreloadCSP(nullptr, getter_AddRefs(preloadCsp));
-    nsresult rv = PopulateContentSecurityPolicy(preloadCsp, aPreloadPolicies);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
-}
-
 class GetOrCreateWorkerManagerRunnable final : public Runnable {
  public:
   GetOrCreateWorkerManagerRunnable(SharedWorkerService* aService,
@@ -232,14 +187,6 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   nsCOMPtr<nsIPrincipal> loadingPrincipal =
       PrincipalInfoToPrincipal(aData.loadingPrincipalInfo(), &rv);
   if (NS_WARN_IF(!loadingPrincipal)) {
-    ErrorPropagationOnMainThread(aBackgroundEventTarget, aActor, rv);
-    return;
-  }
-
-  rv = PopulatePrincipalContentSecurityPolicy(
-      loadingPrincipal, aData.loadingPrincipalCsp(),
-      aData.loadingPrincipalPreloadCsp());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
     ErrorPropagationOnMainThread(aBackgroundEventTarget, aActor, rv);
     return;
   }

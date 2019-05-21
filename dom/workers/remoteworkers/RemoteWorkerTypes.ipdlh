@@ -31,16 +31,8 @@ struct RemoteWorkerData
   nsString name;
 
   PrincipalInfo loadingPrincipalInfo;
-  ContentSecurityPolicy[] loadingPrincipalCsp;
-  ContentSecurityPolicy[] loadingPrincipalPreloadCsp;
-
   PrincipalInfo principalInfo;
-  ContentSecurityPolicy[] principalCsp;
-  ContentSecurityPolicy[] principalPreloadCsp;
-
   PrincipalInfo storagePrincipalInfo;
-  ContentSecurityPolicy[] storagePrincipalCsp;
-  ContentSecurityPolicy[] storagePrincipalPreloadCsp;
 
   nsCString domain;
 

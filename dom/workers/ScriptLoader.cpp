@@ -1182,7 +1182,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       // URL must exactly match the final worker script URL in order to
       // properly set the referrer header on fetch/xhr requests.  If bug 1340694
       // is ever fixed this can be removed.
-      rv = mWorkerPrivate->SetPrincipalsFromChannel(channel);
+      rv = mWorkerPrivate->SetPrincipalsAndCSPFromChannel(channel);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerPrivate->GetCSP();
@@ -1277,7 +1277,9 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       MOZ_DIAGNOSTIC_ASSERT(equal);
 
       nsCOMPtr<nsIContentSecurityPolicy> csp;
-      MOZ_ALWAYS_SUCCEEDS(responsePrincipal->GetCsp(getter_AddRefs(csp)));
+      if (parentDoc) {
+        csp = parentDoc->GetCsp();
+      }
       MOZ_DIAGNOSTIC_ASSERT(!csp);
 #endif
 
@@ -1294,8 +1296,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       // XXX: force the storagePrincipal to be equal to the response one. This
       // is OK for now because we don't want to expose storagePrincipal
       // functionality in ServiceWorkers yet.
-      rv = mWorkerPrivate->SetPrincipalsOnMainThread(
-          responsePrincipal, responsePrincipal, loadGroup);
+      rv = mWorkerPrivate->SetPrincipalsAndCSPOnMainThread(
+          responsePrincipal, responsePrincipal, loadGroup, nullptr);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
       rv = mWorkerPrivate->SetCSPFromHeaderValues(aCSPHeaderValue,
@@ -1839,7 +1841,7 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
         getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(mResult, true);
 
-    mResult = mLoadInfo.SetPrincipalsFromChannel(channel);
+    mResult = mLoadInfo.SetPrincipalsAndCSPFromChannel(channel);
     NS_ENSURE_SUCCESS(mResult, true);
 
     mLoadInfo.mChannel = channel.forget();
@@ -1885,6 +1887,10 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
 
   MOZ_ASSERT(mFirstIndex == 0);
   MOZ_ASSERT(!mScriptLoader.mRv.Failed());
+
+  // Move the CSP from the workerLoadInfo in the corresponding Client
+  // where the CSP code expects it!
+  aWorkerPrivate->StoreCSPOnClient();
 
   AutoJSAPI jsapi;
   jsapi.Init();
