@@ -37,9 +37,12 @@ Var HwndBgBitmapControl
 Var CurrentBlurbIdx
 Var CheckboxCleanupProfile
 
+Var FontFamilyName
 Var FontInstalling
+Var FontHeader
 Var FontBlurb
 Var FontFooter
+Var FontButton
 Var FontCheckbox
 
 Var CanWriteToInstallDir
@@ -55,6 +58,7 @@ Var CanSetAsDefault
 Var InstallCounterStep
 Var InstallTotalSteps
 Var ProgressCompleted
+Var UsingHighContrastMode
 
 Var ExitCode
 Var FirefoxLaunchCode
@@ -449,32 +453,46 @@ Function .onInit
   StrCpy $CheckboxInstallMaintSvc "0"
 !endif
 
-  StrCpy $0 ""
+  StrCpy $FontFamilyName ""
 !ifdef FONT_FILE1
   ${If} ${FileExists} "$FONTS\${FONT_FILE1}"
-    StrCpy $0 "${FONT_NAME1}"
+    StrCpy $FontFamilyName "${FONT_NAME1}"
   ${EndIf}
 !endif
 
 !ifdef FONT_FILE2
-  ${If} $0 == ""
+  ${If} $FontFamilyName == ""
   ${AndIf} ${FileExists} "$FONTS\${FONT_FILE2}"
-    StrCpy $0 "${FONT_NAME2}"
+    StrCpy $FontFamilyName "${FONT_NAME2}"
   ${EndIf}
 !endif
 
-  ${If} $0 == ""
-    StrCpy $0 "$(^Font)"
+  ${If} $FontFamilyName == ""
+    StrCpy $FontFamilyName "$(^Font)"
   ${EndIf}
 
-  CreateFont $FontInstalling "$0" "28" "400"
-  CreateFont $FontBlurb      "$0" "15" "400"
-  CreateFont $FontFooter     "$0" "13" "400"
-  CreateFont $FontCheckbox   "$0" "10" "400"
+  CreateFont $FontHeader     "$FontFamilyName" "${INSTALL_HEADER_FONT_SIZE}" \
+                                               "${INSTALL_HEADER_FONT_WEIGHT}"
+  CreateFont $FontInstalling "$FontFamilyName" "${INSTALL_INSTALLING_FONT_SIZE}" \
+                                               "${INSTALL_INSTALLING_FONT_WEIGHT}"
+  CreateFont $FontButton     "$FontFamilyName" "10" "500"
+  CreateFont $FontBlurb      "$FontFamilyName" "15" "400"
+  CreateFont $FontFooter     "$FontFamilyName" "13" "400"
+  CreateFont $FontCheckbox   "$FontFamilyName" "10" "400"
 
   InitPluginsDir
   File /oname=$PLUGINSDIR\bgstub.jpg "bgstub.jpg"
   File /oname=$PLUGINSDIR\bgstub_2x.jpg "bgstub_2x.jpg"
+
+  ; Detect whether the machine is running with a high contrast theme.
+  ; We'll hide our background images in that case, both because they don't
+  ; always render properly and also to improve the contrast.
+  System::Call '*(i 12, i 0, p 0) p . r0'
+  ; 0x42 == SPI_GETHIGHCONTRAST
+  System::Call 'user32::SystemParametersInfoW(i 0x42, i 0, p r0, i 0)'
+  System::Call '*$0(i, i . r1, p)'
+  System::Free $0
+  IntOp $UsingHighContrastMode $1 & 1
 
   SetShellVarContext all ; Set SHCTX to All Users
   ; If the user doesn't have write access to the installation directory set
@@ -605,7 +623,7 @@ Function DrawBackgroundImage
   ${EndIf}
 
   ; transparent bg on control prevents flicker on redraw
-  SetCtlColors $HwndBgBitmapControl ${INSTALL_BLURB_TEXT_COLOR} transparent
+  SetCtlColors $HwndBgBitmapControl ${COMMON_TEXT_COLOR} transparent
 FunctionEnd
 
 Function createProfileCleanup
@@ -615,21 +633,21 @@ Function createProfileCleanup
     StrCpy $CheckboxCleanupProfile 0
     Abort ; Skip this page
   ${Case} 1
-    StrCpy $ProfileCleanupHeaderString $(STUB_CLEANUP_REINSTALL_HEADER)
+    StrCpy $ProfileCleanupHeaderString $(STUB_CLEANUP_REINSTALL_HEADER2)
     StrCpy $ProfileCleanupButtonString $(STUB_CLEANUP_REINSTALL_BUTTON)
   ${Case} 2
-    StrCpy $ProfileCleanupHeaderString $(STUB_CLEANUP_PAVEOVER_HEADER)
+    StrCpy $ProfileCleanupHeaderString $(STUB_CLEANUP_PAVEOVER_HEADER2)
     StrCpy $ProfileCleanupButtonString $(STUB_CLEANUP_PAVEOVER_BUTTON)
   ${EndSelect}
 
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
 
-  SetCtlColors $HWNDPARENT ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
+  SetCtlColors $HWNDPARENT ${COMMON_TEXT_COLOR} ${COMMON_BACKGROUND_COLOR}
 
   ; Since the text color for controls is set in this Dialog the foreground and
   ; background colors of the Dialog must also be hardcoded.
-  SetCtlColors $Dialog ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
+  SetCtlColors $Dialog ${COMMON_TEXT_COLOR} ${COMMON_BACKGROUND_COLOR}
 
   FindWindow $7 "#32770" "" $HWNDPARENT
   ${GetDlgItemWidthHeight} $HWNDPARENT $8 $9
@@ -659,66 +677,97 @@ Function createProfileCleanup
   ShowWindow $0 ${SW_HIDE}
   EnableWindow $0 0
 
-  ${GetDlgItemWidthHeight} $HWNDPARENT $R1 $R2
-  ${GetTextWidthHeight} $ProfileCleanupHeaderString $FontInstalling $R1 $R1 $R2
-  ${NSD_CreateLabelCenter} 0 ${PROFILE_CLEANUP_LABEL_TOP_DU} 100% $R2 \
-    $ProfileCleanupHeaderString
-  Pop $0
-  SendMessage $0 ${WM_SETFONT} $FontInstalling 0
-  SetCtlColors $0 ${INSTALL_BLURB_TEXT_COLOR} transparent
+  ; Draw the main prompt header label.
+  !if ${PROFILE_CLEANUP_LABEL_WIDTH} == "100%"
+    ${GetDlgItemWidthHeight} $HWNDPARENT $0 $1
+    ; Allow for some padding around the dialog edges.
+    IntOp $1 $0 * 90
+    IntOp $1 $1 / 100
 
-  ${GetDlgItemBottomDU} $Dialog $0 $1
-  IntOp $1 $1 + 10 ; add a bit of padding between the header and the button
-  ${GetTextExtent} $ProfileCleanupButtonString $FontFooter $R1 $R2
-  ; Add some padding to both dimensions of the button.
-  IntOp $R1 $R1 + 100
-  IntOp $R2 $R2 + 10
-  ; Now that we know the size and the Y coordinate for the button, we can find
-  ; the correct X coordinate to get it properly centered.
-  ${GetDlgItemWidthHeight} $HWNDPARENT $R3 $R4
-  IntOp $R5 $R1 / 2
-  IntOp $R3 $R3 / 2
-  IntOp $R3 $R3 - $R5
-  ; We need a custom button because the default ones get drawn underneath the
-  ; background image we're about to insert.
-  ${NSD_CreateButton} $R3 $1 $R1 $R2 $ProfileCleanupButtonString
+    ; Center the text in the dialog.
+    IntOp $R1 $1 / 2
+    IntOp $0 $0 / 2
+    IntOp $9 $0 - $R1
+    ${GetTextWidthHeight} $ProfileCleanupHeaderString $FontHeader $1 $R1 $R2
+  !else
+    ${DialogUnitsToPixels} ${PROFILE_CLEANUP_LABEL_WIDTH} X $1
+    ${GetTextWidthHeight} $ProfileCleanupHeaderString $FontHeader $1 $1 $R2
+    ${ConvertLeftCoordForRTL} ${PROFILE_CLEANUP_LABEL_LEFT} $1 $9
+  !endif
+  ; If this text is over the maximum height, drop the font size until it fits.
+  StrCpy $4 $FontHeader
+  !ifdef PROFILE_CLEANUP_LABEL_HEIGHT
+    ${DialogUnitsToPixels} ${PROFILE_CLEANUP_LABEL_HEIGHT} Y $2
+    StrCpy $3 ${INSTALL_HEADER_FONT_SIZE}
+    ${While} $R2 > $2
+      IntOp $3 $3 - 2
+      CreateFont $4 "$FontFamilyName" $3 ${INSTALL_HEADER_FONT_WEIGHT}
+      ${GetTextWidthHeight} $ProfileCleanupHeaderString $4 $1 $R1 $R2
+    ${EndWhile}
+  !endif
+  ${NSD_CreateLabel} $9 ${PROFILE_CLEANUP_LABEL_TOP} $1 $R2 \
+    "$ProfileCleanupHeaderString"
   Pop $0
-  SendMessage $0 ${WM_SETFONT} $FontFooter 0
-  ${NSD_OnClick} $0 gotoInstallPage
-  ${NSD_SetFocus} $0
+  !if ${PROFILE_CLEANUP_LABEL_ALIGN} == "center"
+    ${NSD_AddStyle} $0 ${SS_CENTER}
+  !endif
+  SendMessage $0 ${WM_SETFONT} $4 0
+  SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
 
-  ; For the checkbox, first we need to know the width of the checkbox itself,
-  ; since it can vary with the display scaling and the theme.
-  System::Call 'User32::GetSystemMetrics(i 71) i .r1' ; 71 == SM_CXMENUCHECK
-  ; Now get the width of the label test, if it were all on one line.
-  ${GetTextExtent} $(STUB_CLEANUP_CHECKBOX_LABEL) $FontCheckbox $R1 $R2
-  ${GetDlgItemWidthHeight} $HWNDPARENT $R3 $R4
-  ; Add the checkbox width to the text width, then figure out how many lines
-  ; we're going to need in order to display that text in our dialog.
-  IntOp $R1 $R1 + $1
-  IntOp $R1 $R1 + 5
-  StrCpy $R5 $R1
-  StrCpy $R6 $R2
-  IntOp $R3 $R3 - 150 ; leave some padding on the sides of the dialog
-  ${While} $R1 > $R3
-    StrCpy $R5 $R3
-    IntOp $R2 $R2 + $R6
-    IntOp $R1 $R1 - $R3
-  ${EndWhile}
-  ${GetDlgItemBottomDU} $Dialog $0 $1
-  ; Now that we know the size for the checkbox, center it in the dialog.
-  ${GetDlgItemWidthHeight} $HWNDPARENT $R3 $R4
-  IntOp $R6 $R5 / 2
-  IntOp $R3 $R3 / 2
-  IntOp $R3 $R3 - $R6
-  IntOp $1 $1 + 20 ; add a bit of padding between the button and the checkbox
-  ${NSD_CreateCheckbox} $R3 $1 $R5 $R2 $(STUB_CLEANUP_CHECKBOX_LABEL)
+  ; For the checkbox, first find how much height we're going to need for the
+  ; label text.
+  ${If} ${PROFILE_CLEANUP_CHECKBOX_WIDTH} == "100%"
+    ${GetDlgItemWidthHeight} $HWNDPARENT $R1 $R2
+  ${Else}
+    ${DialogUnitsToPixels} ${PROFILE_CLEANUP_CHECKBOX_WIDTH} X $R1
+  ${EndIf}
+  ; Subtract out the width of the checkbox itself and any padding/border so that
+  ; PROFILE_CLEANUP_CHECKBOX_WIDTH can be the width of the entire control and
+  ; doesn't have to guess. We used a fixed (but DPI-adjusted) 25 pixels to
+  ; represent all the things we need to subtract. Using a fixed number of pixels
+  ; for this seems dubious, but the obvious method of using SM_CXMENUCHECK
+  ; seems to be not quite enough by a pixel or two in certain situations for
+  ; mysterious reasons, and this method was taken from what the WinForms
+  ; checkbox control does according to the .NET Framework 4.8 reference source.
+  ; Get the DPI for the monitor this window is on.
+  System::Call 'user32::GetWindowDC(i $HWNDPARENT) i .R8'
+  System::Call 'gdi32::GetDeviceCaps(i $R8, i 88) i .R9' ; 88 = LOGPIXELSX
+  System::Call 'user32::ReleaseDC(i $HWNDPARENT, i $R8)'
+  ; Divide the DPI by 96 to get the scaling factor, and multiply the scaling
+  ; factor by 25 (but backwards to avoid truncating the scale factor).
+  IntOp $1 $R9 * 25
+  IntOp $1 $1 / 96
+  ; Subtract out the converted 25 pixels from the width available for the text.
+  IntOp $R2 $R1 - $1
+  ${GetTextWidthHeight} "$(STUB_CLEANUP_CHECKBOX_LABEL)" $FontCheckbox $R2 \
+    $R3 $R2
+  ; Now that we know the size for the checkbox, position it in the dialog.
+  ${If} ${PROFILE_CLEANUP_CHECKBOX_LEFT} == "center"
+    ${GetDlgItemWidthHeight} $HWNDPARENT $R4 $R5
+    IntOp $R5 $R3 + $1
+    IntOp $R6 $R5 / 2
+    IntOp $R3 $R4 / 2
+    IntOp $R3 $R3 - $R6
+  ${Else}
+    StrCpy $R3 ${PROFILE_CLEANUP_CHECKBOX_LEFT}
+  ${EndIf}
+  ${GetDlgItemBottomPX} $0 $1
+  ; Add a bit of margin above the checkbox.
+  ${DialogUnitsToPixels} ${PROFILE_CLEANUP_CHECKBOX_TOP_MARGIN} Y $2
+  IntOp $1 $1 + $2
+  ClearErrors
+  ${WordFind} "${PROFILE_CLEANUP_CHECKBOX_WIDTH}" "%" "E#" $9
+  ${If} ${Errors}
+    ${ConvertLeftCoordForRTL} $R3 ${PROFILE_CLEANUP_CHECKBOX_WIDTH} $R3
+  ${EndIf}
+  ${NSD_CreateCheckbox} $R3 $1 ${PROFILE_CLEANUP_CHECKBOX_WIDTH} $R2 \
+    $(STUB_CLEANUP_CHECKBOX_LABEL)
   Pop $CheckboxCleanupProfile
   SendMessage $CheckboxCleanupProfile ${WM_SETFONT} $FontCheckbox 0
   ; The uxtheme must be disabled on checkboxes in order to override the system
   ; colors and have a transparent background.
   System::Call 'uxtheme::SetWindowTheme(i $CheckboxCleanupProfile, w " ", w " ")'
-  SetCtlColors $CheckboxCleanupProfile ${INSTALL_BLURB_TEXT_COLOR} transparent
+  SetCtlColors $CheckboxCleanupProfile ${COMMON_TEXT_COLOR} transparent
   ; Setting the background color to transparent isn't enough to actually make a
   ; checkbox background transparent, you also have to set the right style.
   ${NSD_AddExStyle} $CheckboxCleanupProfile ${WS_EX_TRANSPARENT}
@@ -730,27 +779,64 @@ Function createProfileCleanup
   ${NSD_OnClick} $CheckboxCleanupProfile RedrawWindow
   ${NSD_Check} $CheckboxCleanupProfile
 
-  ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
-    ${INSTALL_FOOTER_WIDTH_DU} $R1 $R2
-  !ifdef ${AB_CD}_rtl
-    nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY} \
-      ${WS_EX_TRANSPARENT} 30u ${INSTALL_FOOTER_TOP_DU} ${INSTALL_FOOTER_WIDTH_DU} \
-       "$R2u" "$(STUB_BLURB_FOOTER2)"
-  !else
-    nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY}|${SS_RIGHT} \
-      ${WS_EX_TRANSPARENT} 175u ${INSTALL_FOOTER_TOP_DU} ${INSTALL_FOOTER_WIDTH_DU} \
-      "$R2u" "$(STUB_BLURB_FOOTER2)"
-  !endif
+  ; Time to draw the continue button. Compute its height based on the top and
+  ; height of the checkbox, since GetDlgItemBottomPX returns nonsense for the
+  ; checkbox for some reason.
+  IntOp $1 $1 + $R2
+  ; Also add some margin above the button.
+  ${DialogUnitsToPixels} ${PROFILE_CLEANUP_BUTTON_TOP_MARGIN} Y $2
+  IntOp $1 $1 + $2
+  ; Determine the size of the button.
+  ${GetTextExtent} $ProfileCleanupButtonString $FontFooter $R1 $R2
+  ; Add some padding around the text for both dimensions.
+  ${DialogUnitsToPixels} ${PROFILE_CLEANUP_BUTTON_X_PADDING} X $2
+  IntOp $R1 $R1 + $2
+  ${DialogUnitsToPixels} ${PROFILE_CLEANUP_BUTTON_Y_PADDING} Y $2
+  IntOp $R2 $R2 + $2
+  ${If} ${PROFILE_CLEANUP_BUTTON_LEFT} == "center"
+    ${GetDlgItemWidthHeight} $HWNDPARENT $R3 $R4
+    IntOp $R5 $R1 / 2
+    IntOp $R3 $R3 / 2
+    IntOp $R3 $R3 - $R5
+  ${Else}
+    ${ConvertLeftCoordForRTL} ${PROFILE_CLEANUP_BUTTON_LEFT} $R1 $R3
+  ${EndIf}
+  ; We need a custom button because the default ones get drawn underneath the
+  ; background image we're about to insert.
+  ${NSD_CreateButton} $R3 $1 $R1 $R2 "$ProfileCleanupButtonString"
   Pop $0
-  SendMessage $0 ${WM_SETFONT} $FontFooter 0
-  SetCtlColors $0 ${INSTALL_FOOTER_TEXT_COLOR} transparent
+  SendMessage $0 ${WM_SETFONT} $FontButton 0
+  ${NSD_OnClick} $0 gotoInstallPage
+  ${NSD_SetFocus} $0
 
-  Call DrawBackgroundImage
+  ; Draw the footer text.
+  !ifdef INSTALL_FOOTER_WIDTH
+    ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
+      ${INSTALL_FOOTER_WIDTH} $R1 $R2
+    !ifdef ${AB_CD}_rtl
+      nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY} \
+        ${WS_EX_TRANSPARENT} 30u ${INSTALL_FOOTER_TOP} ${INSTALL_FOOTER_WIDTH} \
+        "$R2" "$(STUB_BLURB_FOOTER2)"
+    !else
+      nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY}|${SS_RIGHT} \
+        ${WS_EX_TRANSPARENT} 175u ${INSTALL_FOOTER_TOP} ${INSTALL_FOOTER_WIDTH} \
+        "$R2" "$(STUB_BLURB_FOOTER2)"
+    !endif
+    Pop $0
+    SendMessage $0 ${WM_SETFONT} $FontFooter 0
+    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
+  !endif
+
+  ${If} $UsingHighContrastMode == 0
+    Call DrawBackgroundImage
+  ${EndIf}
 
   LockWindow off
   nsDialogs::Show
 
-  ${NSD_FreeImage} $BgBitmapImage
+  ${If} $UsingHighContrastMode == 0
+    ${NSD_FreeImage} $BgBitmapImage
+  ${EndIf}
 FunctionEnd
 
 Function RedrawWindow
@@ -776,11 +862,11 @@ Function createInstall
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
 
-  SetCtlColors $HWNDPARENT ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
+  SetCtlColors $HWNDPARENT ${COMMON_TEXT_COLOR} ${COMMON_BACKGROUND_COLOR}
 
   ; Since the text color for controls is set in this Dialog the foreground and
   ; background colors of the Dialog must also be hardcoded.
-  SetCtlColors $Dialog ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
+  SetCtlColors $Dialog ${COMMON_TEXT_COLOR} ${COMMON_BACKGROUND_COLOR}
 
   FindWindow $7 "#32770" "" $HWNDPARENT
   ${GetDlgItemWidthHeight} $HWNDPARENT $8 $9
@@ -788,42 +874,104 @@ Function createInstall
   ; Resize the Dialog to fill the entire window
   System::Call 'user32::MoveWindow(i$Dialog,i0,i0,i $8,i $9,i0)'
 
-  ; The header string may need more than half the width of the window, but it's
-  ; currently not close to needing multiple lines in any localization.
-  ${NSD_CreateLabelCenter} 0% ${NOW_INSTALLING_TOP_DU} 100% 47u "$(STUB_INSTALLING_LABEL2)"
+  !ifdef INSTALL_HEADER_WIDTH
+    ; Draw the header text.
+    ${DialogUnitsToPixels} ${INSTALL_HEADER_WIDTH} X $0
+    ${GetTextWidthHeight} "$(STUB_INSTALLING_HEADLINE)" $FontHeader $0 $R1 $R2
+    ${ConvertLeftCoordForRTL} ${INSTALL_HEADER_LEFT} $0 $9
+    ${NSD_CreateLabel} $9 ${INSTALL_HEADER_TOP} $0 $R2 \
+      "$(STUB_INSTALLING_HEADLINE)"
+    Pop $0
+    SendMessage $0 ${WM_SETFONT} $FontHeader 0
+    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
+  !endif
+
+  !ifdef INSTALL_BODY_WIDTH
+    ; Draw the body text the same way as the header, but we also need to work
+    ; out where to put it based on where the bottom of the header is.
+    ${GetDlgItemBottomPX} $0 $1
+    ; Add a bit of padding above this text.
+    ${DialogUnitsToPixels} ${INSTALL_BODY_TOP_MARGIN} Y $2
+    IntOp $1 $1 + $2
+    ${DialogUnitsToPixels} ${INSTALL_BODY_WIDTH} X $0
+    ${GetTextWidthHeight} "$(STUB_INSTALLING_BODY)" $FontCheckbox $0 $R1 $R2
+    ${ConvertLeftCoordForRTL} ${INSTALL_BODY_LEFT} $0 $9
+    ${NSD_CreateLabel} $9 $1 ${INSTALL_BODY_WIDTH} $R2 "$(STUB_INSTALLING_BODY)"
+    Pop $0
+    SendMessage $0 ${WM_SETFONT} $FontCheckbox 0
+    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
+  !endif
+
+  ; Draw the "Now installing" text
+  !if ${INSTALL_INSTALLING_WIDTH} == "100%"
+    ${GetDlgItemWidthHeight} $HWNDPARENT $0 $1
+  !else
+    ${DialogUnitsToPixels} ${INSTALL_INSTALLING_WIDTH} X $0
+  !endif
+  ${GetTextWidthHeight} "$(STUB_INSTALLING_LABEL2)" $FontInstalling $0 $R1 $R2
+  ${ConvertLeftCoordForRTL} ${INSTALL_INSTALLING_LEFT} $0 $9
+  ${NSD_CreateLabelCenter} $9 ${INSTALL_INSTALLING_TOP} \
+    ${INSTALL_INSTALLING_WIDTH} $R2 "$(STUB_INSTALLING_LABEL2)"
   Pop $0
   SendMessage $0 ${WM_SETFONT} $FontInstalling 0
-  SetCtlColors $0 ${INSTALL_BLURB_TEXT_COLOR} transparent
+  ${If} $UsingHighContrastMode == 0
+    SetCtlColors $0 ${INSTALL_INSTALLING_TEXT_COLOR} transparent
+  ${Else}
+    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
+  ${EndIf}
 
-  ${NSD_CreateLabelCenter} 0% ${INSTALL_BLURB_TOP_DU} 100% 60u "$(STUB_BLURB_FIRST1)"
-  Pop $LabelBlurb
-  SendMessage $LabelBlurb ${WM_SETFONT} $FontBlurb 0
-  SetCtlColors $LabelBlurb ${INSTALL_BLURB_TEXT_COLOR} transparent
-
+  ; Initialize these variables even if we won't use them to silence warnings.
   StrCpy $CurrentBlurbIdx "0"
-
-  ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
-    ${INSTALL_FOOTER_WIDTH_DU} $R1 $R2
-  !ifdef ${AB_CD}_rtl
-    nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY} \
-      ${WS_EX_TRANSPARENT} 30u ${INSTALL_FOOTER_TOP_DU} ${INSTALL_FOOTER_WIDTH_DU} "$R2u" \
-      "$(STUB_BLURB_FOOTER2)"
-  !else
-    nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY}|${SS_RIGHT} \
-      ${WS_EX_TRANSPARENT} 175u ${INSTALL_FOOTER_TOP_DU} ${INSTALL_FOOTER_WIDTH_DU} "$R2u" \
-      "$(STUB_BLURB_FOOTER2)"
+  StrCpy $LabelBlurb "0"
+  !ifdef INSTALL_BLURB_WIDTH
+    ${NSD_CreateLabelCenter} 0% ${INSTALL_BLURB_TOP} 100% ${INSTALL_BLURB_WIDTH} \
+      "$(STUB_BLURB_FIRST1)"
+    Pop $LabelBlurb
+    SendMessage $LabelBlurb ${WM_SETFONT} $FontBlurb 0
+    SetCtlColors $LabelBlurb ${COMMON_TEXT_COLOR} transparent
+    ${NSD_CreateTimer} ClearBlurb ${BlurbDisplayMS}
   !endif
-  Pop $0
-  SendMessage $0 ${WM_SETFONT} $FontFooter 0
-  SetCtlColors $0 ${INSTALL_FOOTER_TEXT_COLOR} transparent
 
-  ${NSD_CreateProgressBar} 20% ${PROGRESS_BAR_TOP_DU} 60% 12u ""
+  !ifdef INSTALL_FOOTER_WIDTH
+    ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
+      ${INSTALL_FOOTER_WIDTH} $R1 $R2
+    !ifdef ${AB_CD}_rtl
+      nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY} \
+        ${WS_EX_TRANSPARENT} 30u ${INSTALL_FOOTER_TOP} \
+        ${INSTALL_FOOTER_WIDTH} "$R2u" "$(STUB_BLURB_FOOTER2)"
+    !else
+      nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY}|${SS_RIGHT} \
+        ${WS_EX_TRANSPARENT} 175u ${INSTALL_FOOTER_TOP} \
+        ${INSTALL_FOOTER_WIDTH} "$R2u" "$(STUB_BLURB_FOOTER2)"
+    !endif
+    Pop $0
+    SendMessage $0 ${WM_SETFONT} $FontFooter 0
+    SetCtlColors $0 ${COMMON_TEXT_COLOR} transparent
+  !endif
+
+  ; And now draw the progress bar.
+  ClearErrors
+  ${WordFind} "${INSTALL_PROGRESS_BAR_WIDTH}" "%" "E#" $9
+  ${If} ${Errors}
+    ${ConvertLeftCoordForRTL} ${INSTALL_PROGRESS_BAR_LEFT} ${INSTALL_PROGRESS_BAR_WIDTH} $9
+  ${Else}
+    StrCpy $9 "${INSTALL_PROGRESS_BAR_LEFT}"
+  ${EndIf}
+  ${NSD_CreateProgressBar} $9 ${INSTALL_PROGRESS_BAR_TOP} \
+    ${INSTALL_PROGRESS_BAR_WIDTH} ${INSTALL_PROGRESS_BAR_HEIGHT} ""
   Pop $Progressbar
+  !ifdef PROGRESS_BAR_BACKGROUND_COLOR
+    ; The uxtheme must be disabled so we can change the color.
+    System::Call 'uxtheme::SetWindowTheme(i $Progressbar, w " ", w " ")'
+    SendMessage $Progressbar ${PBM_SETBARCOLOR} 0 ${PROGRESS_BAR_BACKGROUND_COLOR}
+  !endif
   ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
   SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
               $ProgressbarMarqueeIntervalMS ; start=1|stop=0 interval(ms)=+N
 
-  Call DrawBackgroundImage
+  ${If} $UsingHighContrastMode == 0
+    Call DrawBackgroundImage
+  ${EndIf}
 
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
   EnableWindow $0 0
@@ -898,12 +1046,12 @@ Function createInstall
   Delete "$PLUGINSDIR\download.exe"
   ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
 
-  ${NSD_CreateTimer} ClearBlurb ${BlurbDisplayMS}
-
   LockWindow off
   nsDialogs::Show
 
-  ${NSD_FreeImage} $BgBitmapImage
+  ${If} $UsingHighContrastMode == 0
+    ${NSD_FreeImage} $BgBitmapImage
+  ${EndIf}
 FunctionEnd
 
 Function StartDownload

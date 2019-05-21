@@ -8385,6 +8385,65 @@ end:
 !define DialogUnitsToPixels "!insertmacro _DialogUnitsToPixels"
 
 /**
+ * Convert a given left coordinate for a dialog control to flip the control to
+ * the other side of the dialog if we're using an RTL locale.
+ *
+ * _LEFT_DU   Number of dialog units to convert
+ * _WIDTH     Width of the control in either pixels or DU's
+ *            If the string has a 'u' on the end, it will be interpreted as
+ *            dialog units, otherwise it will be interpreted as pixels.
+ * _RV        Register or variable to return converted coordinate, in pixels
+ */
+!macro _ConvertLeftCoordForRTLCall _LEFT_DU _WIDTH _RV
+  Push "${_LEFT_DU}"
+  Push "${_WIDTH}"
+  ${CallArtificialFunction} _ConvertLeftCoordForRTL
+  Pop ${_RV}
+!macroend
+
+!define ConvertLeftCoordForRTL "!insertmacro _ConvertLeftCoordForRTLCall"
+!define un.ConvertLeftCoordForRTL "!insertmacro _ConvertLeftCoordForRTLCall"
+
+!macro _ConvertLeftCoordForRTL
+  ; Stack contents after each instruction (top of the stack on the left):
+  ;         _WIDTH _LEFT_DU
+  Exch $0 ; $0 _LEFT_DU
+  Exch 1  ; _LEFT_DU $0
+  Exch $1 ; $1 $0
+  ; That's all the parameters, now save our scratch registers.
+  Push $2 ; width of the entire dialog, in pixels
+  Push $3 ; _LEFT_DU converted to pixels
+  Push $4 ; temp string search result
+
+  !ifndef ${AB_CD}_rtl
+    StrCpy $0 "$1"
+  !else
+    ${GetDlgItemWidthHeight} $HWNDPARENT $2 $3
+    ${DialogUnitsToPixels} $1 X $3
+
+    ClearErrors
+    ${${_MOZFUNC_UN}WordFind} "$0" "u" "E+1{" $4
+    ${IfNot} ${Errors}
+      ${DialogUnitsToPixels} $4 X $0
+    ${EndIf}
+
+    IntOp $1 $2 - $3
+    IntOp $1 $1 - $0
+    StrCpy $0 $1
+  !endif
+
+  ; Restore the values that were in our scratch registers.
+  Pop $4
+  Pop $3
+  Pop $2
+  ; Restore our parameter registers and return our result.
+  ; Stack contents after each instruction (top of the stack on the left):
+  ;         $1 $0
+  Pop $1  ; $0
+  Exch $0 ; _RV
+!macroend
+
+/**
  * Gets the elapsed time in seconds between two values in milliseconds stored as
  * an int64. The caller will typically get the millisecond values using
  * GetTickCount with a long return value as follows.
