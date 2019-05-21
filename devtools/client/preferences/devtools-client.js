@@ -347,8 +347,13 @@ pref("devtools.responsive.showUserAgentInput", true);
 pref("devtools.responsive.showUserAgentInput", false);
 #endif
 
-// Enable new about:debugging.
+// Enable new about:debugging in Nightly and DevEdition only.
+// Should ride the trains in Firefox 69. See Bug 1553042.
+#if defined(RELEASE_OR_BETA)
+pref("devtools.aboutdebugging.new-enabled", false);
+#else
 pref("devtools.aboutdebugging.new-enabled", true);
+#endif
 
 // Show tab debug targets for This Firefox (on by default for local builds).
 #ifdef MOZILLA_OFFICIAL
