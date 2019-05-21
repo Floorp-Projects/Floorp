@@ -287,6 +287,10 @@ class BrowserParent final : public PBrowserParent,
       const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData, const uint32_t& aEvent);
 
+  bool GetWebProgressListener(nsIBrowser** aOutBrowser,
+                              nsIWebProgress** aOutManager,
+                              nsIWebProgressListener** aOutManagerAsListener);
+
   void ReconstructWebProgressAndRequest(
       nsIWebProgress* aManager, const Maybe<WebProgressData>& aWebProgressData,
       const RequestData& aRequestData,
