@@ -887,7 +887,6 @@ MOZ_MUST_USE bool SetProperty(JSContext* cx, HandleObject obj,
 
 MOZ_MUST_USE bool InterruptCheck(JSContext* cx);
 
-void* MallocWrapper(JS::Zone* zone, size_t nbytes);
 JSObject* NewCallObject(JSContext* cx, HandleShape shape,
                         HandleObjectGroup group);
 JSObject* NewStringObject(JSContext* cx, HandleString str);
