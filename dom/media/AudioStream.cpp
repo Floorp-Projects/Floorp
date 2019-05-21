@@ -129,7 +129,6 @@ AudioStream::AudioStream(DataSource& aSource)
       mChannels(0),
       mOutChannels(0),
       mTimeStretcher(nullptr),
-      mDumpFile(nullptr),
       mState(INITIALIZED),
       mDataSource(aSource),
       mPrefillQuirk(false) {
@@ -144,9 +143,6 @@ AudioStream::~AudioStream() {
   LOG("deleted, state %d", mState);
   MOZ_ASSERT(mState == SHUTDOWN && !mCubebStream,
              "Should've called Shutdown() before deleting an AudioStream");
-  if (mDumpFile) {
-    fclose(mDumpFile);
-  }
   if (mTimeStretcher) {
     soundtouch::destroySoundTouchObj(mTimeStretcher);
   }
@@ -235,79 +231,6 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch) {
   return NS_OK;
 }
 
-static void SetUint16LE(uint8_t* aDest, uint16_t aValue) {
-  aDest[0] = aValue & 0xFF;
-  aDest[1] = aValue >> 8;
-}
-
-static void SetUint32LE(uint8_t* aDest, uint32_t aValue) {
-  SetUint16LE(aDest, aValue & 0xFFFF);
-  SetUint16LE(aDest + 2, aValue >> 16);
-}
-
-static FILE* OpenDumpFile(uint32_t aChannels, uint32_t aRate) {
-  /**
-   * When MOZ_DUMP_AUDIO is set in the environment (to anything),
-   * we'll drop a series of files in the current working directory named
-   * dumped-audio-<nnn>.wav, one per AudioStream created, containing
-   * the audio for the stream including any skips due to underruns.
-   */
-  static Atomic<int> gDumpedAudioCount(0);
-
-  if (!getenv("MOZ_DUMP_AUDIO")) return nullptr;
-  char buf[100];
-  SprintfLiteral(buf, "dumped-audio-%d.wav", ++gDumpedAudioCount);
-  FILE* f = fopen(buf, "wb");
-  if (!f) return nullptr;
-
-  uint8_t header[] = {
-      // RIFF header
-      0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x41, 0x56, 0x45,
-      // fmt chunk. We always write 16-bit samples.
-      0x66, 0x6d, 0x74, 0x20, 0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x10, 0x00,
-      // data chunk
-      0x64, 0x61, 0x74, 0x61, 0xFE, 0xFF, 0xFF, 0x7F};
-  static const int CHANNEL_OFFSET = 22;
-  static const int SAMPLE_RATE_OFFSET = 24;
-  static const int BLOCK_ALIGN_OFFSET = 32;
-  SetUint16LE(header + CHANNEL_OFFSET, aChannels);
-  SetUint32LE(header + SAMPLE_RATE_OFFSET, aRate);
-  SetUint16LE(header + BLOCK_ALIGN_OFFSET, aChannels * 2);
-  Unused << fwrite(header, sizeof(header), 1, f);
-
-  return f;
-}
-
-template <typename T>
-typename EnableIf<IsSame<T, int16_t>::value, void>::Type WriteDumpFileHelper(
-    T* aInput, size_t aSamples, FILE* aFile) {
-  Unused << fwrite(aInput, sizeof(T), aSamples, aFile);
-}
-
-template <typename T>
-typename EnableIf<IsSame<T, float>::value, void>::Type WriteDumpFileHelper(
-    T* aInput, size_t aSamples, FILE* aFile) {
-  AutoTArray<uint8_t, 1024 * 2> buf;
-  buf.SetLength(aSamples * 2);
-  uint8_t* output = buf.Elements();
-  for (uint32_t i = 0; i < aSamples; ++i) {
-    SetUint16LE(output + i * 2, int16_t(aInput[i] * 32767.0f));
-  }
-  Unused << fwrite(output, 2, aSamples, aFile);
-  fflush(aFile);
-}
-
-static void WriteDumpFile(FILE* aDumpFile, AudioStream* aStream,
-                          uint32_t aFrames, void* aBuffer) {
-  if (!aDumpFile) return;
-
-  uint32_t samples = aStream->GetOutChannels() * aFrames;
-
-  using SampleT = AudioSampleTraits<AUDIO_OUTPUT_FORMAT>::Type;
-  WriteDumpFileHelper(reinterpret_cast<SampleT*>(aBuffer), samples, aDumpFile);
-}
-
 template <AudioSampleFormat N>
 struct ToCubebFormat {
   static const cubeb_sample_format value = CUBEB_SAMPLE_FLOAT32NE;
@@ -333,8 +256,6 @@ nsresult AudioStream::Init(uint32_t aNumChannels,
   mChannels = aNumChannels;
   mOutChannels = aNumChannels;
 
-  mDumpFile = OpenDumpFile(aNumChannels, aRate);
-
   mSinkInfo = aSinkInfo;
 
   cubeb_stream_params params;
@@ -343,6 +264,9 @@ nsresult AudioStream::Init(uint32_t aNumChannels,
   params.layout = static_cast<uint32_t>(aChannelMap);
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   params.prefs = CubebUtils::GetDefaultStreamPrefs();
+
+  // This is noop if MOZ_DUMP_AUDIO is not set.
+  mDumpFile.Open("AudioStream", mOutChannels, aRate);
 
   mAudioClock.Init(aRate);
 
@@ -668,7 +592,8 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), 0);
   }
 
-  WriteDumpFile(mDumpFile, this, aFrames, aBuffer);
+  mDumpFile.Write(static_cast<const AudioDataValue*>(aBuffer),
+                  aFrames * mOutChannels);
 
   return aFrames - writer.Available();
 }
