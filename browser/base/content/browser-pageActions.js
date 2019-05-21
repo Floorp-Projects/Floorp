@@ -240,7 +240,7 @@ var BrowserPageActions = {
       "pageAction-panel-button"
     );
     if (action.isBadged) {
-      buttonNode.classList.add("badged-button");
+      buttonNode.setAttribute("badged", "true");
     }
     buttonNode.setAttribute("actionid", action.id);
     buttonNode.addEventListener("command", event => {

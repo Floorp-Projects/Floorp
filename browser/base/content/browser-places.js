@@ -1136,8 +1136,7 @@ var LibraryUI = {
 
     let animatableBox = document.getElementById("library-animatable-box");
     let navBar = document.getElementById("nav-bar");
-    let libraryIcon = document.getAnonymousElementByAttribute(libraryButton, "class", "toolbarbutton-icon");
-    let iconBounds = window.windowUtils.getBoundsWithoutFlushing(libraryIcon);
+    let iconBounds = window.windowUtils.getBoundsWithoutFlushing(libraryButton.icon);
     let libraryBounds = window.windowUtils.getBoundsWithoutFlushing(libraryButton);
 
     animatableBox.style.setProperty("--library-button-height", libraryBounds.height + "px");
@@ -1197,8 +1196,7 @@ var LibraryUI = {
       }
 
       let animatableBox = document.getElementById("library-animatable-box");
-      let libraryIcon = document.getAnonymousElementByAttribute(libraryButton, "class", "toolbarbutton-icon");
-      let iconBounds = window.windowUtils.getBoundsWithoutFlushing(libraryIcon);
+      let iconBounds = window.windowUtils.getBoundsWithoutFlushing(libraryButton.icon);
 
       // Resizing the window will only have the ability to change the X offset of the
       // library button.
