@@ -54,21 +54,6 @@ static void Driver_HandleXMLDeclaration(void* aUserData,
   }
 }
 
-static void Driver_HandleStartElement(void* aUserData, const XML_Char* aName,
-                                      const XML_Char** aAtts) {
-  NS_ASSERTION(aUserData, "expat driver should exist");
-  if (aUserData) {
-    static_cast<nsExpatDriver*>(aUserData)->HandleStartElement(aName, aAtts);
-  }
-}
-
-static void Driver_HandleEndElement(void* aUserData, const XML_Char* aName) {
-  NS_ASSERTION(aUserData, "expat driver should exist");
-  if (aUserData) {
-    static_cast<nsExpatDriver*>(aUserData)->HandleEndElement(aName);
-  }
-}
-
 static void Driver_HandleCharacterData(void* aUserData, const XML_Char* aData,
                                        int aLength) {
   NS_ASSERTION(aUserData, "expat driver should exist");
@@ -267,41 +252,89 @@ nsExpatDriver::~nsExpatDriver() {
   }
 }
 
-nsresult nsExpatDriver::HandleStartElement(const char16_t* aValue,
-                                           const char16_t** aAtts) {
-  NS_ASSERTION(mSink, "content sink not found!");
+/* static */
+void nsExpatDriver::HandleStartElement(void* aUserData, const char16_t* aName,
+                                       const char16_t** aAtts) {
+  nsExpatDriver* self = static_cast<nsExpatDriver*>(aUserData);
+
+  NS_ASSERTION(self->mSink, "content sink not found!");
 
   // Calculate the total number of elements in aAtts.
   // XML_GetSpecifiedAttributeCount will only give us the number of specified
   // attrs (twice that number, actually), so we have to check for default attrs
   // ourselves.
   uint32_t attrArrayLength;
-  for (attrArrayLength = XML_GetSpecifiedAttributeCount(mExpatParser);
+  for (attrArrayLength = XML_GetSpecifiedAttributeCount(self->mExpatParser);
        aAtts[attrArrayLength]; attrArrayLength += 2) {
     // Just looping till we find out what the length is
   }
 
-  if (mSink) {
-    nsresult rv = mSink->HandleStartElement(
-        aValue, aAtts, attrArrayLength, XML_GetCurrentLineNumber(mExpatParser),
-        XML_GetCurrentColumnNumber(mExpatParser));
-    MaybeStopParser(rv);
+  if (self->mSink) {
+    nsresult rv = self->mSink->HandleStartElement(
+        aName, aAtts, attrArrayLength,
+        XML_GetCurrentLineNumber(self->mExpatParser),
+        XML_GetCurrentColumnNumber(self->mExpatParser));
+    self->MaybeStopParser(rv);
   }
-
-  return NS_OK;
 }
 
-nsresult nsExpatDriver::HandleEndElement(const char16_t* aValue) {
-  NS_ASSERTION(mSink, "content sink not found!");
-  NS_ASSERTION(mInternalState != NS_ERROR_HTMLPARSER_BLOCK,
+/* static */
+void nsExpatDriver::HandleStartElementForSystemPrincipal(
+    void* aUserData, const char16_t* aName, const char16_t** aAtts) {
+  nsExpatDriver* self = static_cast<nsExpatDriver*>(aUserData);
+
+  if (!MOZ_XML_ProcessingEntityValue(self->mExpatParser)) {
+    HandleStartElement(aUserData, aName, aAtts);
+  } else {
+    nsCOMPtr<Document> doc =
+        do_QueryInterface(self->mOriginalSink->GetTarget());
+
+    // Adjust the column number so that it is one based rather than zero based.
+    uint32_t colNumber = XML_GetCurrentColumnNumber(self->mExpatParser) + 1;
+    uint32_t lineNumber = XML_GetCurrentLineNumber(self->mExpatParser);
+
+    int32_t nameSpaceID;
+    RefPtr<nsAtom> prefix, localName;
+    nsContentUtils::SplitExpatName(aName, getter_AddRefs(prefix),
+                                   getter_AddRefs(localName), &nameSpaceID);
+
+    nsAutoString error;
+    error.AppendLiteral("Ignoring element <");
+    if (prefix) {
+      error.Append(prefix->GetUTF16String());
+      error.Append(':');
+    }
+    error.Append(localName->GetUTF16String());
+    error.AppendLiteral("> created from entity value.");
+
+    nsContentUtils::ReportToConsoleNonLocalized(
+        error, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("XML Document"),
+        doc, nullptr, EmptyString(), lineNumber, colNumber);
+  }
+}
+
+/* static */
+void nsExpatDriver::HandleEndElement(void* aUserData, const char16_t* aName) {
+  nsExpatDriver* self = static_cast<nsExpatDriver*>(aUserData);
+
+  NS_ASSERTION(self->mSink, "content sink not found!");
+  NS_ASSERTION(self->mInternalState != NS_ERROR_HTMLPARSER_BLOCK,
                "Shouldn't block from HandleStartElement.");
 
-  if (mSink && mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
-    nsresult rv = mSink->HandleEndElement(aValue);
-    MaybeStopParser(rv);
+  if (self->mSink && self->mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
+    nsresult rv = self->mSink->HandleEndElement(aName);
+    self->MaybeStopParser(rv);
   }
+}
 
-  return NS_OK;
+/* static */
+void nsExpatDriver::HandleEndElementForSystemPrincipal(void* aUserData,
+                                                       const char16_t* aName) {
+  nsExpatDriver* self = static_cast<nsExpatDriver*>(aUserData);
+
+  if (!MOZ_XML_ProcessingEntityValue(self->mExpatParser)) {
+    HandleEndElement(aUserData, aName);
+  }
 }
 
 nsresult nsExpatDriver::HandleCharacterData(const char16_t* aValue,
@@ -1041,8 +1074,12 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 
   // Set up the callbacks
   XML_SetXmlDeclHandler(mExpatParser, Driver_HandleXMLDeclaration);
-  XML_SetElementHandler(mExpatParser, Driver_HandleStartElement,
-                        Driver_HandleEndElement);
+  if (doc && doc->NodePrincipal()->IsSystemPrincipal()) {
+    XML_SetElementHandler(mExpatParser, HandleStartElementForSystemPrincipal,
+                          HandleEndElementForSystemPrincipal);
+  } else {
+    XML_SetElementHandler(mExpatParser, HandleStartElement, HandleEndElement);
+  }
   XML_SetCharacterDataHandler(mExpatParser, Driver_HandleCharacterData);
   XML_SetProcessingInstructionHandler(mExpatParser,
                                       Driver_HandleProcessingInstruction);
