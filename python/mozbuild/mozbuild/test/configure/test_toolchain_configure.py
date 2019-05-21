@@ -206,9 +206,9 @@ DEFAULT_CLANGXX = CLANGXX_3_6
 def CLANG_PLATFORM(gcc_platform):
     base = {
         '--target=x86_64-linux-gnu': GCC_PLATFORM_X86_64_LINUX[None],
-        '--target=x86_64-darwin11.2.0': GCC_PLATFORM_X86_64_OSX[None],
+        '--target=x86_64-apple-darwin11.2.0': GCC_PLATFORM_X86_64_OSX[None],
         '--target=i686-linux-gnu': GCC_PLATFORM_X86_LINUX[None],
-        '--target=i686-darwin11.2.0': GCC_PLATFORM_X86_OSX[None],
+        '--target=i686-apple-darwin11.2.0': GCC_PLATFORM_X86_OSX[None],
         '--target=arm-linux-gnu': GCC_PLATFORM_ARM_LINUX[None],
     }
     undo_gcc_platform = {
@@ -1332,10 +1332,10 @@ class OSXCrossToolchainTest(BaseToolchainTest):
     def test_osx_cross(self):
         self.do_toolchain_test(self.PATHS, {
             'c_compiler': self.DEFAULT_CLANG_RESULT + {
-                'flags': ['--target=i686-darwin11.2.0'],
+                'flags': ['--target=i686-apple-darwin11.2.0'],
             },
             'cxx_compiler': self.DEFAULT_CLANGXX_RESULT + {
-                'flags': ['--target=i686-darwin11.2.0'],
+                'flags': ['--target=i686-apple-darwin11.2.0'],
             },
             'host_c_compiler': self.DEFAULT_CLANG_RESULT,
             'host_cxx_compiler': self.DEFAULT_CLANGXX_RESULT,

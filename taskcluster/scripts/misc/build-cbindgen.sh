@@ -38,7 +38,7 @@ if [ "$TARGET" == "x86_64-apple-darwin" ]; then
   export PATH="$PWD/cctools/bin:$PATH"
   cat >cross-linker <<EOF
 exec $PWD/clang/bin/clang -v \
-  -fuse-ld=$PWD/cctools/bin/x86_64-darwin11-ld \
+  -fuse-ld=$PWD/cctools/bin/x86_64-apple-darwin-ld \
   -mmacosx-version-min=10.11 \
   -target $TARGET \
   -B $PWD/cctools/bin \
