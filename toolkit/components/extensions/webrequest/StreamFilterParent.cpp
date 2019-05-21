@@ -699,7 +699,7 @@ void StreamFilterParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-void StreamFilterParent::DeallocPStreamFilterParent() {
+void StreamFilterParent::ActorDealloc() {
   RefPtr<StreamFilterParent> self = dont_AddRef(this);
 }
 

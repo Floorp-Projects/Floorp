@@ -120,12 +120,12 @@ void InProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
   InProcessParent::Shutdown();
 }
 
-void InProcessParent::DeallocPInProcessParent() {
+void InProcessParent::ActorDealloc() {
   MOZ_ASSERT(!InProcessParent::sSingleton);
   Release();  // Release the reference taken in InProcessParent::Startup.
 }
 
-void InProcessChild::DeallocPInProcessChild() {
+void InProcessChild::ActorDealloc() {
   MOZ_ASSERT(!InProcessChild::sSingleton);
   Release();  // Release the reference taken in InProcessParent::Startup.
 }

@@ -67,7 +67,7 @@ class VideoDecoderManagerChild final : public PVideoDecoderManagerChild,
   void InitIPDL();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  void DeallocPVideoDecoderManagerChild() override;
+  void ActorDealloc() override;
 
   void HandleFatalError(const char* aMsg) const override;
 

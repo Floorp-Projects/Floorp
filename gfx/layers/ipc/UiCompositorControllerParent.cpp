@@ -213,7 +213,7 @@ UiCompositorControllerParent::RecvToolbarPixelsToCompositor(
 
 void UiCompositorControllerParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
-void UiCompositorControllerParent::DeallocPUiCompositorControllerParent() {
+void UiCompositorControllerParent::ActorDealloc() {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   Shutdown();
   Release();  // For AddRef in Initialize()

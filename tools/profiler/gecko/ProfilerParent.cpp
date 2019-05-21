@@ -246,6 +246,6 @@ void ProfilerParent::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   mDestroyed = true;
 }
 
-void ProfilerParent::DeallocPProfilerParent() { mSelfRef = nullptr; }
+void ProfilerParent::ActorDealloc() { mSelfRef = nullptr; }
 
 }  // namespace mozilla
