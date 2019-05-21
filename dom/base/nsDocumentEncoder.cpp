@@ -75,9 +75,11 @@ class TextStreamer {
  private:
   const static uint32_t kMaxLengthBeforeFlush = 1024;
 
-  nsresult ConvertAndWrite(const nsAString& aString);
+  const static uint32_t kEncoderBufferSizeInBytes = 4096;
 
-  nsresult ConvertAndWriteAndTruncate(nsAString& aString);
+  nsresult EncodeAndWrite(const nsAString& aString);
+
+  nsresult EncodeAndWriteAndTruncate(nsAString& aString);
 
   const nsCOMPtr<nsIOutputStream> mStream;
   const UniquePtr<Encoder> mUnicodeEncoder;
@@ -97,23 +99,22 @@ nsresult TextStreamer::FlushIfStringLongEnough(nsAString& aString) {
   nsresult rv = NS_OK;
 
   if (aString.Length() > kMaxLengthBeforeFlush) {
-    rv = ConvertAndWriteAndTruncate(aString);
+    rv = EncodeAndWriteAndTruncate(aString);
   }
 
   return rv;
 }
 
 nsresult TextStreamer::ForceFlush(nsAString& aString) {
-  return ConvertAndWriteAndTruncate(aString);
+  return EncodeAndWriteAndTruncate(aString);
 }
 
-nsresult TextStreamer::ConvertAndWrite(const nsAString& aString) {
-  if (!aString.Length()) {
+nsresult TextStreamer::EncodeAndWrite(const nsAString& aString) {
+  if (aString.IsEmpty()) {
     return NS_OK;
   }
 
-  // TODO(mbrodesser): add constant.
-  uint8_t buffer[4096];
+  uint8_t buffer[kEncoderBufferSizeInBytes];
   auto src = MakeSpan(aString);
   auto bufferSpan = MakeSpan(buffer);
   // Reserve space for terminator
@@ -154,8 +155,8 @@ nsresult TextStreamer::ConvertAndWrite(const nsAString& aString) {
   }
 }
 
-nsresult TextStreamer::ConvertAndWriteAndTruncate(nsAString& aString) {
-  const nsresult rv = ConvertAndWrite(aString);
+nsresult TextStreamer::EncodeAndWriteAndTruncate(nsAString& aString) {
+  const nsresult rv = EncodeAndWrite(aString);
   aString.Truncate();
   return rv;
 }
