@@ -428,6 +428,11 @@ class IntervalSet {
   SelfType& Intersection(const SelfType& aOther) {
     ContainerType intersection;
 
+    // Ensure the intersection has enough capacity to store the upper bound on
+    // the intersection size. This ensures that we don't spend time reallocating
+    // the storage as we append, at the expense of extra memory.
+    intersection.SetCapacity(std::min(aOther.Length(), mIntervals.Length()));
+
     const ContainerType& other = aOther.mIntervals;
     IndexType i = 0, j = 0;
     for (; i < mIntervals.Length() && j < other.Length();) {
@@ -440,8 +445,7 @@ class IntervalSet {
         j++;
       }
     }
-    mIntervals.Clear();
-    mIntervals.AppendElements(std::move(intersection));
+    mIntervals = std::move(intersection);
     return *this;
   }
 
