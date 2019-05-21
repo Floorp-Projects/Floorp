@@ -223,9 +223,7 @@ void VideoDecoderManagerParent::Open(
   AddRef();
 }
 
-void VideoDecoderManagerParent::DeallocPVideoDecoderManagerParent() {
-  Release();
-}
+void VideoDecoderManagerParent::ActorDealloc() { Release(); }
 
 mozilla::ipc::IPCResult VideoDecoderManagerParent::RecvReadback(
     const SurfaceDescriptorGPUVideo& aSD, SurfaceDescriptor* aResult) {

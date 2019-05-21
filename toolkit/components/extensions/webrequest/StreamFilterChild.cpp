@@ -512,7 +512,7 @@ void StreamFilterChild::ActorDestroy(ActorDestroyReason aWhy) {
   mStreamFilter = nullptr;
 }
 
-void StreamFilterChild::DeallocPStreamFilterChild() {
+void StreamFilterChild::ActorDealloc() {
   RefPtr<StreamFilterChild> self = dont_AddRef(this);
 }
 
