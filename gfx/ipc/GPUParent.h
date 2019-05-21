@@ -77,6 +77,11 @@ class GPUParent final : public PGPUParent {
       const Maybe<ipc::FileDescriptor>& DMDFile);
   mozilla::ipc::IPCResult RecvShutdownVR();
 
+  mozilla::ipc::IPCResult RecvUpdatePerfStatsCollectionMask(
+      const uint64_t& aMask);
+  mozilla::ipc::IPCResult RecvCollectPerfStatsJSON(
+      CollectPerfStatsJSONResolver&& aResolver);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
