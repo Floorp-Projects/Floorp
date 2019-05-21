@@ -726,7 +726,7 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
   // mode).
   bool mCreatingExtraFrames;
 
-  nsCOMArray<nsIContent> mGeneratedTextNodesWithInitializer;
+  nsTArray<RefPtr<nsIContent>> mGeneratedContentWithInitializer;
 
   // Constructor
   // Use the passed-in history state.
@@ -944,10 +944,8 @@ nsFrameConstructorState::nsFrameConstructorState(
 nsFrameConstructorState::~nsFrameConstructorState() {
   MOZ_COUNT_DTOR(nsFrameConstructorState);
   ProcessFrameInsertionsForAllLists();
-  for (int32_t i = mGeneratedTextNodesWithInitializer.Count() - 1; i >= 0;
-       --i) {
-    mGeneratedTextNodesWithInitializer[i]->DeleteProperty(
-        nsGkAtoms::genConInitializerProperty);
+  for (auto& content : Reversed(mGeneratedContentWithInitializer)) {
+    content->DeleteProperty(nsGkAtoms::genConInitializerProperty);
   }
   if (!mPendingBindings.isEmpty()) {
     nsBindingManager* bindingManager =
@@ -1543,27 +1541,26 @@ void nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame) {
 }
 
 struct nsGenConInitializer {
-  nsAutoPtr<nsGenConNode> mNode;
+  UniquePtr<nsGenConNode> mNode;
   nsGenConList* mList;
   void (nsCSSFrameConstructor::*mDirtyAll)();
 
-  nsGenConInitializer(nsGenConNode* aNode, nsGenConList* aList,
+  nsGenConInitializer(UniquePtr<nsGenConNode> aNode, nsGenConList* aList,
                       void (nsCSSFrameConstructor::*aDirtyAll)())
-      : mNode(aNode), mList(aList), mDirtyAll(aDirtyAll) {}
+      : mNode(std::move(aNode)), mList(aList), mDirtyAll(aDirtyAll) {}
 };
 
 already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGenConTextNode(
     nsFrameConstructorState& aState, const nsString& aString,
-    RefPtr<nsTextNode>* aText, nsGenConInitializer* aInitializer) {
+    UniquePtr<nsGenConInitializer> aInitializer) {
   RefPtr<nsTextNode> content = new nsTextNode(mDocument->NodeInfoManager());
   content->SetText(aString, false);
-  if (aText) {
-    *aText = content;
-  }
   if (aInitializer) {
-    content->SetProperty(nsGkAtoms::genConInitializerProperty, aInitializer,
+    aInitializer->mNode->mText = content;
+    content->SetProperty(nsGkAtoms::genConInitializerProperty,
+                         aInitializer.release(),
                          nsINode::DeleteProperty<nsGenConInitializer>);
-    aState.mGeneratedTextNodesWithInitializer.AppendObject(content);
+    aState.mGeneratedContentWithInitializer.AppendElement(content);
   }
   return content.forget();
 }
@@ -1582,7 +1579,7 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
 
     case StyleContentType::String:
       return CreateGenConTextNode(aState, nsDependentString(data.GetString()),
-                                  nullptr, nullptr);
+                                  nullptr);
 
     case StyleContentType::Attr: {
       const nsStyleContentAttr* attr = data.GetAttr();
@@ -1610,25 +1607,24 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
       nsCounterList* counterList =
           mCounterManager.CounterListFor(counters->mIdent);
 
-      nsCounterUseNode* node = new nsCounterUseNode(
+      auto node = MakeUnique<nsCounterUseNode>(
           counters, aContentIndex, type == StyleContentType::Counters);
 
-      nsGenConInitializer* initializer = new nsGenConInitializer(
-          node, counterList, &nsCSSFrameConstructor::CountersDirty);
-      return CreateGenConTextNode(aState, EmptyString(), &node->mText,
-                                  initializer);
+      auto initializer = MakeUnique<nsGenConInitializer>(
+          std::move(node), counterList, &nsCSSFrameConstructor::CountersDirty);
+      return CreateGenConTextNode(aState, EmptyString(),
+                                  std::move(initializer));
     }
 
     case StyleContentType::OpenQuote:
     case StyleContentType::CloseQuote:
     case StyleContentType::NoOpenQuote:
     case StyleContentType::NoCloseQuote: {
-      nsQuoteNode* node = new nsQuoteNode(type, aContentIndex);
-
-      nsGenConInitializer* initializer = new nsGenConInitializer(
-          node, &mQuoteList, &nsCSSFrameConstructor::QuotesDirty);
-      return CreateGenConTextNode(aState, EmptyString(), &node->mText,
-                                  initializer);
+      auto node = MakeUnique<nsQuoteNode>(type, aContentIndex);
+      auto initializer = MakeUnique<nsGenConInitializer>(
+          std::move(node), &mQuoteList, &nsCSSFrameConstructor::QuotesDirty);
+      return CreateGenConTextNode(aState, EmptyString(),
+                                  std::move(initializer));
     }
 
     case StyleContentType::AltContent: {
@@ -1656,7 +1652,7 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
         nsAutoString temp;
         nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                            "Submit", temp);
-        return CreateGenConTextNode(aState, temp, nullptr, nullptr);
+        return CreateGenConTextNode(aState, temp, nullptr);
       }
 
       break;
@@ -3220,12 +3216,11 @@ void nsCSSFrameConstructor::ConstructTextFrame(
         static_cast<nsGenConInitializer*>(
             aContent->UnsetProperty(nsGkAtoms::genConInitializerProperty)));
     if (initializer) {
-      if (initializer->mNode->InitTextFrame(
+      if (initializer->mNode.release()->InitTextFrame(
               initializer->mList,
               FindAncestorWithGeneratedContentPseudo(newFrame), newFrame)) {
         (this->*(initializer->mDirtyAll))();
       }
-      initializer->mNode.forget();
     }
   }
 

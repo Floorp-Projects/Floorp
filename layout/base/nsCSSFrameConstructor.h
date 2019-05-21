@@ -433,7 +433,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    */
   already_AddRefed<nsIContent> CreateGenConTextNode(
       nsFrameConstructorState& aState, const nsString& aString,
-      RefPtr<nsTextNode>* aText, nsGenConInitializer* aInitializer);
+      mozilla::UniquePtr<nsGenConInitializer> aInitializer);
 
   /**
    * Create a content node for the given generated content style.
