@@ -82,13 +82,7 @@ class CollectionViewHolder(
     }
 
     private fun updateCollectionUI() {
-        val title = if (collection.title.length > maxTitleLength) {
-            collection.title.substring(0, maxTitleLength) + "..."
-        } else {
-            collection.title
-        }
-
-        view.collection_title.text = title
+        view.collection_title.text = collection.title
 
         var hostNameList = listOf<String>()
 
@@ -116,12 +110,22 @@ class CollectionViewHolder(
             collection_title.setPadding(0, 0, 0, EXPANDED_PADDING)
             view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_top_corners)
             view.collection_description.visibility = View.GONE
-            view.expand_button.setImageDrawable(ContextCompat.getDrawable(view.context, R.drawable.ic_chevron_up))
+
+            view.collection_title.setCompoundDrawablesWithIntrinsicBounds(
+                null,
+                null,
+                ContextCompat.getDrawable(view.context, R.drawable.ic_chevron_up),
+                null)
         } else {
             (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = COLLAPSED_MARGIN
             view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_all_corners)
             view.collection_description.visibility = View.VISIBLE
-            view.expand_button.setImageDrawable(ContextCompat.getDrawable(view.context, R.drawable.ic_chevron_down))
+
+            view.collection_title.setCompoundDrawablesWithIntrinsicBounds(
+                null,
+                null,
+                ContextCompat.getDrawable(view.context, R.drawable.ic_chevron_down),
+                null)
         }
 
         view.collection_icon.setColorFilter(

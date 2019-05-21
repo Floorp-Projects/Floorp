@@ -5,7 +5,7 @@
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/item_collection"
+        xmlns:tools="http://schemas.android.com/tools" android:id="@+id/item_collection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
@@ -32,28 +32,21 @@
                 app:layout_constraintTop_toTopOf="parent"/>
 
         <TextView
-                android:id="@+id/collection_title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="17dp"
-                android:layout_marginStart="12dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:minLines="1"
-                android:textAppearance="@style/Header16TextStyle"
-                app:layout_constraintStart_toEndOf="@id/collection_icon"
-                app:layout_constraintTop_toTopOf="parent"/>
-
-        <ImageView
-                android:id="@+id/expand_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="26dp"
-                android:layout_marginEnd="8dp"
-                android:src="@drawable/ic_chevron_down"
-                app:layout_constraintStart_toEndOf="@id/collection_title"
-                app:layout_constraintTop_toTopOf="parent"/>
+            android:id="@+id/collection_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="17dp"
+            android:layout_marginStart="12dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:minLines="1"
+            android:textAppearance="@style/Header16TextStyle"
+            android:drawableEnd="@drawable/ic_chevron_down"
+            android:drawablePadding="8dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintStart_toEndOf="@id/collection_icon"
+            app:layout_constraintEnd_toStartOf="@id/collection_share_button"
+            app:layout_constraintTop_toTopOf="parent" android:text="The quick brown fox jumps over the lazy dog"/>
 
         <TextView
                 android:id="@+id/collection_description"
@@ -74,6 +67,7 @@
                 android:id="@+id/collection_share_button"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
+                android:layout_marginStart="16dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/tab_menu"
                 android:src="@drawable/ic_hollow_share"
