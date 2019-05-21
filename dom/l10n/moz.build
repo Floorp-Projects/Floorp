@@ -9,10 +9,12 @@ with Files("**"):
 
 EXPORTS.mozilla.dom.l10n += [
     'DOMOverlays.h',
+    'Mutations.h',
 ]
 
 UNIFIED_SOURCES += [
     'DOMOverlays.cpp',
+    'Mutations.cpp',
 ]
 
 LOCAL_INCLUDES += [
