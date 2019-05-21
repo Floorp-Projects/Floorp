@@ -1,21 +1,12 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=883173
--->
 <head>
-  <meta charset='utf-8'>
   <title>Test for Bug 883173 - TextTrackCue(List) Sorting</title>
-  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<p id="display"></p>
-<div id="content">
-</div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
+<script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
 var video = document.createElement("video");
@@ -26,7 +17,7 @@ var trackElement = document.createElement("track");
 trackElement.src = "bug883173.vtt";
 trackElement.kind = "subtitles";
 
-document.getElementById("content").appendChild(video);
+document.appendChild(video);
 video.appendChild(trackElement);
 video.addEventListener("loadedmetadata",
   function run_tests() {
@@ -54,6 +45,5 @@ video.addEventListener("loadedmetadata",
   }
 );
 </script>
-</pre>
 </body>
 </html>

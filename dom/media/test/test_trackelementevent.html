@@ -2,16 +2,11 @@
 <html>
 <head>
   <title>Test for Bug 882677 - Implement the 'sourcing out of band text tracks' algorithm</title>
-  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<p id="display"></p>
-<div id="content" style="display: none">
-</div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
+<script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
   function() {
@@ -56,14 +51,12 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
     trackThree.addEventListener("load", shouldNotBeCalled);
     trackThree.addEventListener("error", trackThreeEvent);
 
-    document.getElementById("content").appendChild(video);
+    document.appendChild(video);
     video.appendChild(trackOne);
     video.appendChild(trackTwo);
     video.appendChild(trackThree);
   }
 );
 </script>
-</pre>
 </body>
 </html>
-
