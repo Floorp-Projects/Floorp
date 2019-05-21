@@ -10,7 +10,7 @@
 
 namespace IPC {
 
-void ParamTraits<nsIContentSecurityPolicy>::Write(
+void ParamTraits<nsIContentSecurityPolicy*>::Write(
     Message* aMsg, nsIContentSecurityPolicy* aParam) {
   bool isNull = !aParam;
   WriteParam(aMsg, isNull);
@@ -28,7 +28,7 @@ void ParamTraits<nsIContentSecurityPolicy>::Write(
   WriteParam(aMsg, cspString);
 }
 
-bool ParamTraits<nsIContentSecurityPolicy>::Read(
+bool ParamTraits<nsIContentSecurityPolicy*>::Read(
     const Message* aMsg, PickleIterator* aIter,
     RefPtr<nsIContentSecurityPolicy>* aResult) {
   bool isNull;

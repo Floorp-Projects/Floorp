@@ -15,7 +15,7 @@ namespace mozilla {
 namespace ipc {
 
 template <>
-struct IPDLParamTraits<nsDocShellLoadState> {
+struct IPDLParamTraits<nsDocShellLoadState*> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     nsDocShellLoadState* aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,

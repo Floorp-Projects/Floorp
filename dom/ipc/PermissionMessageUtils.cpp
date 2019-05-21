@@ -11,8 +11,9 @@
 namespace mozilla {
 namespace ipc {
 
-void IPDLParamTraits<nsIPrincipal>::Write(IPC::Message* aMsg, IProtocol* aActor,
-                                          nsIPrincipal* aParam) {
+void IPDLParamTraits<nsIPrincipal*>::Write(IPC::Message* aMsg,
+                                           IProtocol* aActor,
+                                           nsIPrincipal* aParam) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
   Maybe<PrincipalInfo> info;
@@ -25,10 +26,10 @@ void IPDLParamTraits<nsIPrincipal>::Write(IPC::Message* aMsg, IProtocol* aActor,
   WriteIPDLParam(aMsg, aActor, info);
 }
 
-bool IPDLParamTraits<nsIPrincipal>::Read(const IPC::Message* aMsg,
-                                         PickleIterator* aIter,
-                                         IProtocol* aActor,
-                                         RefPtr<nsIPrincipal>* aResult) {
+bool IPDLParamTraits<nsIPrincipal*>::Read(const IPC::Message* aMsg,
+                                          PickleIterator* aIter,
+                                          IProtocol* aActor,
+                                          RefPtr<nsIPrincipal>* aResult) {
   Maybe<PrincipalInfo> info;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &info)) {
     return false;

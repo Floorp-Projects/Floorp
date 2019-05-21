@@ -110,48 +110,20 @@ class MessageIterator {
 template <class P>
 struct ParamTraits;
 
-// When WriteParam or ReadParam is passed a pointer type like RefPtr<T> or T*,
-// we want to invoke Write() on ParamTraits<T>, as the intype is often T*, while
-// the ReadParam type may be RefPtr<T>.
-namespace detail {
-template <typename T>
-struct StripPointers {
-  typedef T Type;
-};
-template <typename T>
-struct StripPointers<T*> {
-  typedef T Type;
-};
-template <typename T>
-struct StripPointers<RefPtr<T>> {
-  typedef T Type;
-};
-template <typename T>
-struct StripPointers<nsCOMPtr<T>> {
-  typedef T Type;
-};
-}  // namespace detail
-
-// NOTE: This helper is also used in IPDLParamTraits.h
-template <typename T>
-struct ParamTraitsSelector
-    : public detail::StripPointers<typename mozilla::Decay<T>::Type> {};
-
 template <typename P>
 static inline void WriteParam(Message* m, P&& p) {
-  ParamTraits<typename ParamTraitsSelector<P>::Type>::Write(m,
-                                                            std::forward<P>(p));
+  ParamTraits<typename mozilla::Decay<P>::Type>::Write(m, std::forward<P>(p));
 }
 
 template <typename P>
 static inline bool WARN_UNUSED_RESULT ReadParam(const Message* m,
                                                 PickleIterator* iter, P* p) {
-  return ParamTraits<typename ParamTraitsSelector<P>::Type>::Read(m, iter, p);
+  return ParamTraits<P>::Read(m, iter, p);
 }
 
 template <typename P>
 static inline void LogParam(const P& p, std::wstring* l) {
-  ParamTraits<typename ParamTraitsSelector<P>::Type>::Log(p, l);
+  ParamTraits<P>::Log(p, l);
 }
 
 // Fundamental types.
@@ -374,10 +346,8 @@ template <class P>
 struct ParamTraitsWindows : ParamTraitsStd<P> {};
 
 #if defined(OS_WIN)
-// NOTE: HANDLE is a pointer, which we need to strip off, otherwise we won't
-// find this specialization.
 template <>
-struct ParamTraitsWindows<detail::StripPointers<HANDLE>::Type> {
+struct ParamTraitsWindows<HANDLE> {
   static_assert(sizeof(HANDLE) == sizeof(intptr_t), "Wrong size for HANDLE?");
 
   static void Write(Message* m, HANDLE p) {
@@ -391,10 +361,8 @@ struct ParamTraitsWindows<detail::StripPointers<HANDLE>::Type> {
   }
 };
 
-// NOTE: HWND is a pointer, which we need to strip off, otherwise we won't find
-// this specialization.
 template <>
-struct ParamTraitsWindows<detail::StripPointers<HWND>::Type> {
+struct ParamTraitsWindows<HWND> {
   static_assert(sizeof(HWND) == sizeof(intptr_t), "Wrong size for HWND?");
 
   static void Write(Message* m, HWND p) {
@@ -481,6 +449,35 @@ struct ParamTraitsMozilla<nsresult> {
   }
   static void Log(const param_type& p, std::wstring* l) {
     l->append(StringPrintf(L"%u", static_cast<uint32_t>(p)));
+  }
+};
+
+// See comments for the IPDLParamTraits specializations for RefPtr<T> and
+// nsCOMPtr<T> for more details.
+template <class T>
+struct ParamTraitsMozilla<RefPtr<T>> {
+  static void Write(Message* m, const RefPtr<T>& p) {
+    ParamTraits<T*>::Write(m, p.get());
+  }
+
+  static bool Read(const Message* m, PickleIterator* iter, RefPtr<T>* r) {
+    return ParamTraits<T*>::Read(m, iter, r);
+  }
+};
+
+template <class T>
+struct ParamTraitsMozilla<nsCOMPtr<T>> {
+  static void Write(Message* m, const nsCOMPtr<T>& p) {
+    ParamTraits<T*>::Write(m, p.get());
+  }
+
+  static bool Read(const Message* m, PickleIterator* iter, nsCOMPtr<T>* r) {
+    RefPtr<T> refptr;
+    if (!ParamTraits<T*>::Read(m, iter, &refptr)) {
+      return false;
+    }
+    *r = refptr.forget();
+    return true;
   }
 };
 

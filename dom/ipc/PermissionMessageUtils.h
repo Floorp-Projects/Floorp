@@ -42,7 +42,7 @@ namespace mozilla {
 namespace ipc {
 
 template <>
-struct IPDLParamTraits<nsIPrincipal> {
+struct IPDLParamTraits<nsIPrincipal*> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     nsIPrincipal* aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
