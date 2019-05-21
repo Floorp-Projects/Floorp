@@ -186,7 +186,8 @@ class HomeFragment : Fragment(), CoroutineScope {
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         savedInstanceState?.apply {
             layoutManagerSate = getParcelable(KEY_LAYOUT_MANAGER_STATE)
-            homeLayout.progress = getFloat(KEY_MOTION_LAYOUT_PROGRESS)
+            val progress = getFloat(KEY_MOTION_LAYOUT_PROGRESS)
+            homeLayout.progress = if (progress > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
         }
 
         super.onViewStateRestored(savedInstanceState)
@@ -544,5 +545,6 @@ class HomeFragment : Fragment(), CoroutineScope {
         private const val toolbarPaddingDp = 12f
         private const val KEY_MOTION_LAYOUT_PROGRESS = "motionLayout.progress"
         private const val KEY_LAYOUT_MANAGER_STATE = "layoutManager.state"
+        private const val MOTION_LAYOUT_PROGRESS_ROUND_POINT = 0.25f
     }
 }
