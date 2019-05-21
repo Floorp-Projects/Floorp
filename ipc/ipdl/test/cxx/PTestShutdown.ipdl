@@ -20,18 +20,6 @@ parent:
     sync Sync();
 
     async __delete__();
-
-/*
-state START:
-    send Start goto TESTING;
-
-state TESTING:
-    recv PTestShutdownSub goto TESTING;
-    recv Sync goto DYING;
-
-state DYING:
-    recv __delete__;
-*/
 };
 
 } // namespace _ipdltest
