@@ -4,13 +4,13 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/onboarding_header"
+    xmlns:tools="http://schemas.android.com/tools" android:id="@+id/onboarding_header"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp">
     <TextView
-        android:id="@+id/section_header_text"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="@style/HeaderTextStyle" />
+            android:id="@+id/section_header_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/HeaderTextStyle" tools:text="@tools:sample/lorem"/>
 </FrameLayout>

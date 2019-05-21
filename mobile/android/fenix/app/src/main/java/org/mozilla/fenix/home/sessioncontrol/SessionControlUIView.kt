@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observable
@@ -13,7 +14,18 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.UIView
-import androidx.recyclerview.widget.ItemTouchHelper
+
+val noTabMessage = AdapterItem.NoContentMessage(
+    R.drawable.ic_tabs,
+    R.string.no_open_tabs_header,
+    R.string.no_open_tabs_description
+)
+
+val noCollectionMessage = AdapterItem.NoContentMessage(
+    R.drawable.ic_tab_collection,
+    R.string.no_collections_header,
+    R.string.no_collections_description
+)
 
 private fun normalModeAdapterItems(
     tabs: List<Tab>,
@@ -27,21 +39,23 @@ private fun normalModeAdapterItems(
         items.addAll(tabs.reversed().map(AdapterItem::TabItem))
         items.add(AdapterItem.SaveTabGroup)
     } else {
-        items.add(AdapterItem.NoTabMessage)
+        items.add(noTabMessage)
     }
 
     items.add(AdapterItem.CollectionHeader)
     if (collections.isNotEmpty()) {
 
         // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
-        collections.map(AdapterItem::CollectionItem).forEach {
+        collections.map {
+            AdapterItem.CollectionItem(it, expandedCollections.contains(it.id))
+        }.forEach {
             items.add(it)
-            if (it.collection.isExpanded(expandedCollections)) {
+            if (it.expanded) {
                 items.addAll(collectionTabItems(it.collection))
             }
         }
     } else {
-        items.add(AdapterItem.NoCollectionMessage)
+        items.add(noCollectionMessage)
     }
 
     return items
@@ -104,10 +118,6 @@ private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapI
         AdapterItem.TabInCollectionItem(collection, tab, index == collection.tabs.lastIndex)
 }
 
-private fun TabCollection.isExpanded(expandedCollections: Set<Long>): Boolean {
-    return expandedCollections.contains(this.id)
-}
-
 class SessionControlUIView(
     container: ViewGroup,
     actionEmitter: Observer<SessionControlAction>,
@@ -129,6 +139,7 @@ class SessionControlUIView(
         view.apply {
             adapter = sessionControlAdapter
             layoutManager = LinearLayoutManager(container.context)
+            itemAnimator = null // TODO #2785: Remove this line
             val itemTouchHelper =
                 ItemTouchHelper(
                     SwipeToDeleteCallback(
@@ -140,7 +151,7 @@ class SessionControlUIView(
     }
 
     override fun updateView() = Consumer<SessionControlState> {
-        sessionControlAdapter.reloadData(it.toAdapterList(), it.expandedCollections)
+        sessionControlAdapter.submitList(it.toAdapterList())
         actionEmitter.onNext(SessionControlAction.ReloadData)
     }
 }

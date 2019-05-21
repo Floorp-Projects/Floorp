@@ -84,11 +84,7 @@ class CollectionViewHolder(
     private fun updateCollectionUI() {
         view.collection_title.text = collection.title
 
-        var hostNameList = listOf<String>()
-
-        collection.tabs.forEach {
-            hostNameList += it.url.urlToTrimmedHost().capitalize()
-        }
+        val hostNameList = collection.tabs.map { it.url.urlToTrimmedHost().capitalize() }
 
         var tabsDisplayed = 0
         val tabTitlesList = hostNameList.joinToString(", ") {

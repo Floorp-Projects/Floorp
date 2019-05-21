@@ -205,8 +205,10 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 BrowsingModeManager.Mode.Private -> BrowsingModeManager.Mode.Normal
             }
 
-            val mode = if (newMode == BrowsingModeManager.Mode.Private) Mode.Private else Mode.Normal
-            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+            if (onboarding.userHasBeenOnboarded()) {
+                val mode = if (newMode == BrowsingModeManager.Mode.Private) Mode.Private else Mode.Normal
+                getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+            }
 
             browsingModeManager.mode = newMode
         }

@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/no_tabs_wrapper"
+        xmlns:tools="http://schemas.android.com/tools" android:id="@+id/no_content_wrapper"
         android:background="@drawable/empty_session_control_background"
         android:layout_marginBottom="12dp"
         android:padding="16dp"
@@ -13,23 +13,23 @@
         android:layout_height="wrap_content">
 
     <TextView
-            android:id="@+id/no_collection_header"
+            android:id="@+id/no_content_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:drawableEnd="@drawable/ic_tab_collection"
             android:drawableTint="?primaryText"
             android:drawablePadding="8dp"
-            android:text="@string/no_collections_header"
+            tools:text="@tools:sample/lorem"
             android:textAppearance="@style/HeaderTextStyle"
             android:textSize="16sp" />
 
     <TextView
-            android:id="@+id/no_collection_description"
+            android:id="@+id/no_content_description"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="@string/no_collections_description"
+            tools:text="@tools:sample/lorem"
             android:textColor="?primaryText"
             android:textSize="14sp"
             android:textStyle="normal" />
+
 </LinearLayout>
