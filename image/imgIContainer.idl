@@ -467,8 +467,15 @@ interface imgIContainer : nsISupports
    *
    * @param aFlags Flags of the FLAG_* variety. Only FLAG_ASYNC_NOTIFY
    *               is accepted; all others are ignored.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
    */
-  [noscript] void startDecoding(in uint32_t aFlags);
+  [noscript] void startDecoding(in uint32_t aFlags, in uint32_t aWhichFrame);
+
+%{C++
+  nsresult StartDecoding(uint32_t aFlags) {
+    return StartDecoding(aFlags, FRAME_CURRENT);
+  }
+%}
 
   /*
    * Exactly like startDecoding above except returns whether the current frame
@@ -476,8 +483,15 @@ interface imgIContainer : nsISupports
    *
    * @param aFlags Flags of the FLAG_* variety. Only FLAG_ASYNC_NOTIFY
    *               is accepted; all others are ignored.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
    */
-  [noscript, notxpcom] boolean startDecodingWithResult(in uint32_t aFlags);
+  [noscript, notxpcom] boolean startDecodingWithResult(in uint32_t aFlags, in uint32_t aWhichFrame);
+
+%{C++
+  bool StartDecodingWithResult(uint32_t aFlags) {
+    return StartDecodingWithResult(aFlags, FRAME_CURRENT);
+  }
+%}
 
   /*
    * This method triggers decoding for an image, but unlike startDecoding() it
@@ -485,10 +499,17 @@ interface imgIContainer : nsISupports
    * request.
    *
    * @param aFlags Flags of the FLAG_* variety.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @return True there is a surface that satisfies the request and it is
    *         fully decoded, else false.
    */
-  [noscript, notxpcom] boolean requestDecodeWithResult(in uint32_t aFlags);
+  [noscript, notxpcom] boolean requestDecodeWithResult(in uint32_t aFlags, in uint32_t aWhichFrame);
+
+%{C++
+  bool RequestDecodeWithResult(uint32_t aFlags) {
+    return RequestDecodeWithResult(aFlags, FRAME_CURRENT);
+  }
+%}
 
   /*
    * This method triggers decoding for an image, but unlike startDecoding() it
@@ -499,9 +520,17 @@ interface imgIContainer : nsISupports
    *              if possible. If the image cannot be scaled to this size while
    *              being decoded, it will be decoded at its intrinsic size.
    * @param aFlags Flags of the FLAG_* variety.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
    */
   [noscript] void requestDecodeForSize([const] in nsIntSize aSize,
-                                       in uint32_t aFlags);
+                                       in uint32_t aFlags,
+                                       in uint32_t aWhichFrame);
+
+%{C++
+  nsresult RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags) {
+    return RequestDecodeForSize(aSize, aFlags, FRAME_CURRENT);
+  }
+%}
 
   /**
     * Increments the lock count on the image. An image will not be discarded
