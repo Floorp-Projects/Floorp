@@ -206,7 +206,7 @@ inline bool IsDataTransferAvailableOnHTMLEditor(EditorInputType aInputType) {
 #define NS_DEFINE_COMMAND_WITH_PARAM(aName, aCommandStr, aParam) , aName
 #define NS_DEFINE_COMMAND_NO_EXEC_COMMAND(aName) , aName
 
-typedef int8_t CommandInt;
+typedef uint8_t CommandInt;
 enum class Command : CommandInt {
   DoNothing
 

@@ -84,6 +84,17 @@ EditorCommand::DoCommandParams(const char* aCommandName,
   } else {
     command = GetInternalCommand(aCommandName);
   }
+
+  EditorCommandParamType paramType = EditorCommand::GetParamType(command);
+  if (paramType == EditorCommandParamType::None) {
+    nsresult rv =
+        DoCommandParam(command, MOZ_KnownLive(*editor->AsTextEditor()));
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "Failed to do command from nsIControllerCommand::DoCommandParams()");
+    return rv;
+  }
+
   nsresult rv = DoCommandParams(command, MOZ_KnownLive(params),
                                 MOZ_KnownLive(*editor->AsTextEditor()));
   NS_WARNING_ASSERTION(
@@ -137,12 +148,6 @@ nsresult UndoCommand::DoCommand(Command aCommand,
   return aTextEditor.Undo(1);
 }
 
-nsresult UndoCommand::DoCommandParams(Command aCommand,
-                                      nsCommandParams* aParams,
-                                      TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult UndoCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -169,12 +174,6 @@ nsresult RedoCommand::DoCommand(Command aCommand,
   return aTextEditor.Redo(1);
 }
 
-nsresult RedoCommand::DoCommandParams(Command aCommand,
-                                      nsCommandParams* aParams,
-                                      TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult RedoCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -199,11 +198,6 @@ bool CutCommand::IsCommandEnabled(Command aCommand,
 nsresult CutCommand::DoCommand(Command aCommand,
                                TextEditor& aTextEditor) const {
   return aTextEditor.Cut();
-}
-
-nsresult CutCommand::DoCommandParams(Command aCommand, nsCommandParams* aParams,
-                                     TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult CutCommand::GetCommandStateParams(
@@ -241,12 +235,6 @@ nsresult CutOrDeleteCommand::DoCommand(Command aCommand,
   return aTextEditor.Cut();
 }
 
-nsresult CutOrDeleteCommand::DoCommandParams(Command aCommand,
-                                             nsCommandParams* aParams,
-                                             TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult CutOrDeleteCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -271,12 +259,6 @@ bool CopyCommand::IsCommandEnabled(Command aCommand,
 nsresult CopyCommand::DoCommand(Command aCommand,
                                 TextEditor& aTextEditor) const {
   return aTextEditor.Copy();
-}
-
-nsresult CopyCommand::DoCommandParams(Command aCommand,
-                                      nsCommandParams* aParams,
-                                      TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult CopyCommand::GetCommandStateParams(
@@ -314,12 +296,6 @@ nsresult CopyOrDeleteCommand::DoCommand(Command aCommand,
   return aTextEditor.Copy();
 }
 
-nsresult CopyOrDeleteCommand::DoCommandParams(Command aCommand,
-                                              nsCommandParams* aParams,
-                                              TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult CopyOrDeleteCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -345,12 +321,6 @@ bool PasteCommand::IsCommandEnabled(Command aCommand,
 nsresult PasteCommand::DoCommand(Command aCommand,
                                  TextEditor& aTextEditor) const {
   return aTextEditor.PasteAsAction(nsIClipboard::kGlobalClipboard, true);
-}
-
-nsresult PasteCommand::DoCommandParams(Command aCommand,
-                                       nsCommandParams* aParams,
-                                       TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult PasteCommand::GetCommandStateParams(
@@ -446,11 +416,6 @@ nsresult SwitchTextDirectionCommand::DoCommand(Command aCommand,
   return aTextEditor.ToggleTextDirection();
 }
 
-nsresult SwitchTextDirectionCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult SwitchTextDirectionCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -519,12 +484,6 @@ nsresult DeleteCommand::DoCommand(Command aCommand,
   return NS_OK;
 }
 
-nsresult DeleteCommand::DoCommandParams(Command aCommand,
-                                        nsCommandParams* aParams,
-                                        TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult DeleteCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -557,12 +516,6 @@ bool SelectAllCommand::IsCommandEnabled(Command aCommand,
 nsresult SelectAllCommand::DoCommand(Command aCommand,
                                      TextEditor& aTextEditor) const {
   return aTextEditor.SelectAll();
-}
-
-nsresult SelectAllCommand::DoCommandParams(Command aCommand,
-                                           nsCommandParams* aParams,
-                                           TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult SelectAllCommand::GetCommandStateParams(
@@ -696,12 +649,6 @@ nsresult SelectionMoveCommands::DoCommand(Command aCommand,
   return NS_ERROR_FAILURE;
 }
 
-nsresult SelectionMoveCommands::DoCommandParams(Command aCommand,
-                                                nsCommandParams* aParams,
-                                                TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult SelectionMoveCommands::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -790,11 +737,6 @@ nsresult InsertParagraphCommand::DoCommand(Command aCommand,
   return htmlEditor->InsertParagraphSeparatorAsAction();
 }
 
-nsresult InsertParagraphCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult InsertParagraphCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -823,11 +765,6 @@ nsresult InsertLineBreakCommand::DoCommand(Command aCommand,
     return NS_ERROR_FAILURE;
   }
   return MOZ_KnownLive(htmlEditor)->InsertLineBreakAsAction();
-}
-
-nsresult InsertLineBreakCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult InsertLineBreakCommand::GetCommandStateParams(
@@ -860,12 +797,6 @@ nsresult PasteQuotationCommand::DoCommand(Command aCommand,
     return rv;
   }
   return NS_OK;
-}
-
-nsresult PasteQuotationCommand::DoCommandParams(Command aCommand,
-                                                nsCommandParams* aParams,
-                                                TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult PasteQuotationCommand::GetCommandStateParams(
