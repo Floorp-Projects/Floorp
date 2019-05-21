@@ -128,6 +128,7 @@ PhaseKindGraphRoots = [
             PhaseKind("SWEEP_BREAKPOINT", "Sweep Breakpoints", 27),
             PhaseKind("SWEEP_REGEXP", "Sweep Regexps", 28),
             PhaseKind("SWEEP_COMPRESSION", "Sweep Compression Tasks", 62),
+            PhaseKind("SWEEP_LAZYSCRIPTS", "Sweep LazyScripts", 71),
             PhaseKind("SWEEP_WEAKMAPS", "Sweep WeakMaps", 63),
             PhaseKind("SWEEP_UNIQUEIDS", "Sweep Unique IDs", 64),
             PhaseKind("SWEEP_JIT_DATA", "Sweep JIT Data", 65),

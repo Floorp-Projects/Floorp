@@ -69,6 +69,7 @@ class AutoKeepTypeScripts;
 class AutoSweepTypeScript;
 class BreakpointSite;
 class Debugger;
+class GCParallelTask;
 class LazyScript;
 class ModuleObject;
 class RegExpObject;
@@ -81,6 +82,10 @@ struct BytecodeEmitter;
 class FunctionBox;
 class ModuleSharedContext;
 }  // namespace frontend
+
+namespace gc {
+void SweepLazyScripts(GCParallelTask* task);
+} // namespace gc
 
 namespace detail {
 
@@ -3025,6 +3030,7 @@ class LazyScript : public gc::TenuredCell {
   // pointer to the result. This is a weak pointer: after relazification, we
   // can collect the script if there are no other pointers to it.
   WeakHeapPtrScript script_;
+  friend void js::gc::SweepLazyScripts(GCParallelTask* task);
 
   // Original function with which the lazy script is associated.
   GCPtrFunction function_;
