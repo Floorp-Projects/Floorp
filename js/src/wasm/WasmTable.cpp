@@ -82,8 +82,7 @@ void Table::tracePrivate(JSTracer* trc) {
   // If this table has a WasmTableObject, then this method is only called by
   // WasmTableObject's trace hook so maybeObject_ must already be marked.
   // TraceEdge is called so that the pointer can be updated during a moving
-  // GC. TraceWeakEdge may sound better, but it is less efficient given that
-  // we know object_ is already marked.
+  // GC.
   if (maybeObject_) {
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&maybeObject_));
     TraceEdge(trc, &maybeObject_, "wasm table object");

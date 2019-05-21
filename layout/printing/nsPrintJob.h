@@ -59,12 +59,57 @@ class nsPrintJob final : public nsIObserver,
 
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-  // Our nsIWebBrowserPrint implementation defers to these methods.
+  /**
+   * Initialize for printing, or for creating a print preview document.
+   *
+   * aDocViewerPrint owns us.
+   *
+   * When called in preparation for printing, aOriginalDoc is aDocViewerPrint's
+   * document.  The document/viewer may be for a sub-document (an iframe).
+   *
+   * When called in preparation for print preview, aOriginalDoc belongs to a
+   * different docViewer, in a different docShell, in a different TabGroup.
+   * In this case our aDocViewerPrint is the docViewer for the about:blank
+   * document in a new tab that the Firefox frontend code has created in
+   * preparation for PrintPreview to generate a print preview document in it.
+   *
+   * NOTE: In the case we're called for print preview, aOriginalDoc actually
+   * may not be the original document that the user selected to print.  It
+   * is not the actual original document in the case when the user chooses to
+   * display a simplified version of a print preview document.  In that
+   * instance the Firefox frontend code creates a second print preview tab,
+   * with a new docViewer and nsPrintJob, and passes the previous print preview
+   * document as aOriginalDoc (it doesn't want to pass the actual original
+   * document since it may have mutated)!
+   */
+  nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
+                      nsIDocShell* aDocShell,
+                      mozilla::dom::Document* aOriginalDoc, float aScreenDPI);
+
+  // Our nsIWebBrowserPrint implementation (nsDocumentViewer) defers to the
+  // following methods.
+
+  /**
+   * May be called immediately after initialization, or after one or more
+   * PrintPreview calls.
+   */
   nsresult Print(nsIPrintSettings* aPrintSettings,
                  nsIWebProgressListener* aWebProgressListener);
-  nsresult PrintPreview(nsIPrintSettings* aPrintSettings,
-                        mozIDOMWindowProxy* aChildDOMWin,
+
+  /**
+   * Generates a new print preview document and replaces our docViewer's
+   * document with it.  (Note that this breaks the normal invariant that a
+   * Document and its nsDocumentViewer have an unchanging 1:1 relationship.)
+   *
+   * This may be called multiple times on the same instance in order to
+   * recreate the print preview document to take account of settings that the
+   * user has changed in the print preview interface.  In this case aSourceDoc
+   * is actually our docViewer's current document!
+   */
+  nsresult PrintPreview(mozilla::dom::Document* aSourceDoc,
+                        nsIPrintSettings* aPrintSettings,
                         nsIWebProgressListener* aWebProgressListener);
+
   bool IsDoingPrint() const { return mIsDoingPrinting; }
   bool IsDoingPrintPreview() const { return mIsDoingPrintPreview; }
   bool IsFramesetDocument() const;
@@ -83,10 +128,6 @@ class nsPrintJob final : public nsIObserver,
 
   void Destroy();
   void DestroyPrintingData();
-
-  nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
-                      nsIDocShell* aContainer,
-                      mozilla::dom::Document* aDocument, float aScreenDPI);
 
   nsresult GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, int32_t& aCount);
 
@@ -196,11 +237,11 @@ class nsPrintJob final : public nsIObserver,
 
   nsresult CommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
                        nsIWebProgressListener* aWebProgressListener,
-                       mozilla::dom::Document* aDoc);
+                       mozilla::dom::Document* aSourceDoc);
 
   nsresult DoCommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
                          nsIWebProgressListener* aWebProgressListener,
-                         mozilla::dom::Document* aDoc);
+                         mozilla::dom::Document* aSourceDoc);
 
   void FirePrintCompletionEvent();
 
@@ -231,10 +272,17 @@ class nsPrintJob final : public nsIObserver,
 
   void PageDone(nsresult aResult);
 
-  RefPtr<mozilla::dom::Document> mDocument;
-  nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
+  // The document that we were originally created for in order to print it or
+  // create a print preview of it.  This may belong to mDocViewerPrint or may
+  // belong to a different docViewer in a different docShell.  In reality, this
+  // also may not be the original document that the user selected to print (see
+  // the comment documenting Initialize() above).
+  RefPtr<mozilla::dom::Document> mOriginalDoc;
 
-  nsWeakPtr mContainer;
+  // The docViewer that owns us, and its docShell.
+  nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
+  nsWeakPtr mDocShell;
+
   WeakFrame mPageSeqFrame;
 
   // We are the primary owner of our nsPrintData member vars.  These vars

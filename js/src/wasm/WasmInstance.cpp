@@ -1412,8 +1412,7 @@ bool Instance::memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const {
 void Instance::tracePrivate(JSTracer* trc) {
   // This method is only called from WasmInstanceObject so the only reason why
   // TraceEdge is called is so that the pointer can be updated during a moving
-  // GC. TraceWeakEdge may sound better, but it is less efficient given that
-  // we know object_ is already marked.
+  // GC.
   MOZ_ASSERT(!gc::IsAboutToBeFinalized(&object_));
   TraceEdge(trc, &object_, "wasm instance object");
 
