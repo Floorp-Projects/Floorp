@@ -14,9 +14,12 @@
  *         The wait period
  * @param {Object} scope
  *         The scope to use for func
+ * @param {Boolean} immediate
+ *         Whether to execute the method immediately on the first call.
+ *         Optional. Default `false`.
  * @return {Function} The debounced function
  */
-exports.debounce = function(func, wait, scope) {
+exports.debounce = function(func, wait, scope, immediate = false) {
   let timer = null;
 
   return function() {
@@ -29,5 +32,10 @@ exports.debounce = function(func, wait, scope) {
       timer = null;
       func.apply(scope, args);
     }, wait);
+
+    if (immediate) {
+      immediate = false;
+      func.apply(scope, args);
+    }
   };
 };
