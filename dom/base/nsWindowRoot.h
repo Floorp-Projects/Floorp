@@ -92,7 +92,7 @@ class nsWindowRoot final : public nsPIWindowRoot {
 
   void GetEnabledDisabledCommandsForControllers(
       nsIControllers* aControllers,
-      nsTHashtable<nsCharPtrHashKey>& aCommandsHandled,
+      nsTHashtable<nsCStringHashKey>& aCommandsHandled,
       nsTArray<nsCString>& aEnabledCommands,
       nsTArray<nsCString>& aDisabledCommands);
 

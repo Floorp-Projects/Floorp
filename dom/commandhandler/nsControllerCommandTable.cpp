@@ -170,16 +170,11 @@ nsControllerCommandTable::GetCommandState(const char* aCommandName,
 }
 
 NS_IMETHODIMP
-nsControllerCommandTable::GetSupportedCommands(uint32_t* aCount,
-                                               char*** aCommands) {
-  char** commands =
-      static_cast<char**>(moz_xmalloc(sizeof(char*) * mCommandsTable.Count()));
-  *aCount = mCommandsTable.Count();
-  *aCommands = commands;
+nsControllerCommandTable::GetSupportedCommands(nsTArray<nsCString>& aCommands) {
+  aCommands.SetCapacity(mCommandsTable.Count());
 
   for (auto iter = mCommandsTable.Iter(); !iter.Done(); iter.Next()) {
-    *commands = ToNewCString(iter.Key());
-    commands++;
+    aCommands.AppendElement(iter.Key());
   }
   return NS_OK;
 }

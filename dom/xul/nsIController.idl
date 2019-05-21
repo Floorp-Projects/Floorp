@@ -35,6 +35,5 @@ interface nsICommandController : nsISupports
   [can_run_script]
   void        doCommandWithParams(in string command, in nsICommandParams aCommandParams);
 
-  void getSupportedCommands(out unsigned long count,
-                            [array, size_is(count), retval] out string commands);
+  Array<ACString> getSupportedCommands();
 };
