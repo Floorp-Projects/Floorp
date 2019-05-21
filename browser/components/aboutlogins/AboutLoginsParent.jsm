@@ -82,8 +82,8 @@ var AboutLoginsParent = {
       case "AboutLogins:OpenSite": {
         let guid = message.data.login.guid;
         let logins = LoginHelper.searchLoginsWithObject({guid});
-        if (!logins || logins.length != 1) {
-          log.warn(`AboutLogins:OpenSite: expected to find a login for guid: ${guid} but found ${(logins || []).length}`);
+        if (logins.length != 1) {
+          log.warn(`AboutLogins:OpenSite: expected to find a login for guid: ${guid} but found ${logins.length}`);
           return;
         }
 
@@ -105,8 +105,8 @@ var AboutLoginsParent = {
       case "AboutLogins:UpdateLogin": {
         let loginUpdates = message.data.login;
         let logins = LoginHelper.searchLoginsWithObject({guid: loginUpdates.guid});
-        if (!logins || logins.length != 1) {
-          log.warn(`AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${(logins || []).length}`);
+        if (logins.length != 1) {
+          log.warn(`AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${logins.length}`);
           return;
         }
 
