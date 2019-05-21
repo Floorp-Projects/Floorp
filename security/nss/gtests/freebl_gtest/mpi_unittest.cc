@@ -148,6 +148,41 @@ TEST_F(MPITest, MpiCmpUnalignedTest) {
 }
 #endif
 
+// The two follow tests ensure very similar mp_set_* functions are ok.
+TEST_F(MPITest, MpiSetUlong) {
+  mp_int a, b, c;
+  MP_DIGITS(&a) = 0;
+  MP_DIGITS(&b) = 0;
+  MP_DIGITS(&c) = 0;
+  ASSERT_EQ(MP_OKAY, mp_init(&a));
+  ASSERT_EQ(MP_OKAY, mp_init(&b));
+  ASSERT_EQ(MP_OKAY, mp_init(&c));
+  EXPECT_EQ(MP_OKAY, mp_set_ulong(&a, 1));
+  EXPECT_EQ(MP_OKAY, mp_set_ulong(&b, 0));
+  EXPECT_EQ(MP_OKAY, mp_set_ulong(&c, -1));
+
+  mp_clear(&a);
+  mp_clear(&b);
+  mp_clear(&c);
+}
+
+TEST_F(MPITest, MpiSetInt) {
+  mp_int a, b, c;
+  MP_DIGITS(&a) = 0;
+  MP_DIGITS(&b) = 0;
+  MP_DIGITS(&c) = 0;
+  ASSERT_EQ(MP_OKAY, mp_init(&a));
+  ASSERT_EQ(MP_OKAY, mp_init(&b));
+  ASSERT_EQ(MP_OKAY, mp_init(&c));
+  EXPECT_EQ(MP_OKAY, mp_set_int(&a, 1));
+  EXPECT_EQ(MP_OKAY, mp_set_int(&b, 0));
+  EXPECT_EQ(MP_OKAY, mp_set_int(&c, -1));
+
+  mp_clear(&a);
+  mp_clear(&b);
+  mp_clear(&c);
+}
+
 TEST_F(MPITest, MpiFixlenOctetsZero) {
   std::vector<uint8_t> zero = {0};
   TestToFixedOctets(zero, 1);

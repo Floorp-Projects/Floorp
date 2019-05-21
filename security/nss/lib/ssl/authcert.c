@@ -20,12 +20,12 @@
 #include "sslimpl.h"
 
 /*
- * This callback used by SSL to pull client sertificate upon
+ * This callback used by SSL to pull client certificate upon
  * server request
  */
 SECStatus
 NSS_GetClientAuthData(void *arg,
-                      PRFileDesc *socket,
+                      PRFileDesc *fd,
                       struct CERTDistNamesStr *caNames,
                       struct CERTCertificateStr **pRetCert,
                       struct SECKEYPrivateKeyStr **pRetKey)
@@ -33,10 +33,14 @@ NSS_GetClientAuthData(void *arg,
     CERTCertificate *cert = NULL;
     SECKEYPrivateKey *privkey = NULL;
     char *chosenNickName = (char *)arg; /* CONST */
-    void *proto_win = NULL;
     SECStatus rv = SECFailure;
 
-    proto_win = SSL_RevealPinArg(socket);
+    sslSocket *ss = ssl_FindSocket(fd);
+    if (!ss) {
+        return SECFailure;
+    }
+    void *proto_win = SSL_RevealPinArg(fd);
+    PRTime now = ssl_Time(ss);
 
     if (chosenNickName) {
         cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(),
@@ -64,7 +68,7 @@ NSS_GetClientAuthData(void *arg,
                 if (!cert)
                     continue;
                 /* Only check unexpired certs */
-                if (CERT_CheckCertValidTimes(cert, ssl_TimeUsec(), PR_TRUE) !=
+                if (CERT_CheckCertValidTimes(cert, now, PR_TRUE) !=
                     secCertTimeValid) {
                     CERT_DestroyCertificate(cert);
                     continue;

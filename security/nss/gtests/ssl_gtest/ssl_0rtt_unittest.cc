@@ -46,7 +46,7 @@ TEST_P(TlsConnectTls13, ZeroRttServerRejectByOption) {
 }
 
 TEST_P(TlsConnectTls13, ZeroRttApparentReplayAfterRestart) {
-  // The test fixtures call SSL_SetupAntiReplay() in SetUp().  This results in
+  // The test fixtures call SSL_InitAntiReplay() in SetUp().  This results in
   // 0-RTT being rejected until at least one window passes.  SetupFor0Rtt()
   // forces a rollover of the anti-replay filters, which clears this state.
   // Here, we do the setup manually here without that forced rollover.
@@ -106,7 +106,7 @@ class TlsZeroRttReplayTest : public TlsConnectTls13 {
     SendReceive();
 
     if (rollover) {
-      SSLInt_RolloverAntiReplay();
+      RolloverAntiReplay();
     }
 
     // Now replay that packet against the server.
@@ -184,20 +184,21 @@ TEST_P(TlsConnectTls13, ZeroRttServerOnly) {
   CheckKeys();
 }
 
-// A small sleep after sending the ClientHello means that the ticket age that
-// arrives at the server is too low.  With a small tolerance for variation in
-// ticket age (which is determined by the |window| parameter that is passed to
-// SSL_SetupAntiReplay()), the server then rejects early data.
+// Advancing time after sending the ClientHello means that the ticket age that
+// arrives at the server is too low.  The server then rejects early data if this
+// delay exceeds half the anti-replay window.
 TEST_P(TlsConnectTls13, ZeroRttRejectOldTicket) {
+  static const PRTime kWindow = 10 * PR_USEC_PER_SEC;
+  EXPECT_EQ(SECSuccess, SSL_InitAntiReplay(now(), kWindow, 1, 3));
   SetupForZeroRtt();
+
+  Reset();
+  StartConnect();
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
-  EXPECT_EQ(SECSuccess, SSL_SetupAntiReplay(1, 1, 3));
-  SSLInt_RolloverAntiReplay();  // Make sure to flush replay state.
-  SSLInt_RolloverAntiReplay();
   ExpectResumption(RESUME_TICKET);
-  ZeroRttSendReceive(true, false, []() {
-    PR_Sleep(PR_MillisecondsToInterval(10));
+  ZeroRttSendReceive(true, false, [this]() {
+    AdvanceTime(1 + kWindow / 2);
     return true;
   });
   Handshake();
@@ -212,13 +213,15 @@ TEST_P(TlsConnectTls13, ZeroRttRejectOldTicket) {
 // small tolerance for variation in ticket age and the ticket will appear to
 // arrive prematurely, causing the server to reject early data.
 TEST_P(TlsConnectTls13, ZeroRttRejectPrematureTicket) {
+  static const PRTime kWindow = 10 * PR_USEC_PER_SEC;
+  EXPECT_EQ(SECSuccess, SSL_InitAntiReplay(now(), kWindow, 1, 3));
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
   server_->Set0RttEnabled(true);
   StartConnect();
   client_->Handshake();  // ClientHello
   server_->Handshake();  // ServerHello
-  PR_Sleep(PR_MillisecondsToInterval(10));
+  AdvanceTime(1 + kWindow / 2);
   Handshake();  // Remainder of handshake
   CheckConnected();
   SendReceive();
@@ -227,9 +230,6 @@ TEST_P(TlsConnectTls13, ZeroRttRejectPrematureTicket) {
   Reset();
   client_->Set0RttEnabled(true);
   server_->Set0RttEnabled(true);
-  EXPECT_EQ(SECSuccess, SSL_SetupAntiReplay(1, 1, 3));
-  SSLInt_RolloverAntiReplay();  // Make sure to flush replay state.
-  SSLInt_RolloverAntiReplay();
   ExpectResumption(RESUME_TICKET);
   ExpectEarlyDataAccepted(false);
   StartConnect();
@@ -867,6 +867,59 @@ TEST_F(TlsConnectDatagram13, ZeroRttShortReadDtls) {
 
   Handshake();  // Complete the handshake.
   ExpectEarlyDataAccepted(true);
+  CheckConnected();
+}
+
+// There are few ways in which TLS uses the clock and most of those operate on
+// timescales that would be ridiculous to wait for in a test.  This is the one
+// test we have that uses the real clock.  It tests that time passes by checking
+// that a small sleep results in rejection of early data. 0-RTT has a
+// configurable timer, which makes it ideal for this.
+TEST_F(TlsConnectStreamTls13, TimePassesByDefault) {
+  // Set a tiny anti-replay window.  This has to be at least 2 milliseconds to
+  // have any chance of being relevant as that is the smallest window that we
+  // can detect.  Anything smaller rounds to zero.
+  static const unsigned int kTinyWindowMs = 5;
+  EXPECT_EQ(SECSuccess, SSL_InitAntiReplay(
+                            PR_Now(), kTinyWindowMs * PR_USEC_PER_MSEC, 1, 5));
+
+  // Calling EnsureTlsSetup() replaces the time function on client and server,
+  // which we don't want, so initialize each directly.
+  client_->EnsureTlsSetup();
+  server_->EnsureTlsSetup();
+  client_->StartConnect();  // Also avoid StartConnect().
+  server_->StartConnect();
+
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  ConfigureVersion(SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->Set0RttEnabled(true);
+  Handshake();
+  CheckConnected();
+  SendReceive();  // Absorb a session ticket.
+  CheckKeys();
+
+  // Clear the first window.
+  PR_Sleep(PR_MillisecondsToInterval(kTinyWindowMs));
+
+  Reset();
+  client_->EnsureTlsSetup();
+  server_->EnsureTlsSetup();
+  client_->StartConnect();
+  server_->StartConnect();
+
+  // Early data is rejected by the server only if time passes for it as well.
+  client_->Set0RttEnabled(true);
+  server_->Set0RttEnabled(true);
+  ExpectResumption(RESUME_TICKET);
+  ZeroRttSendReceive(true, false, []() {
+    // Sleep long enough that we minimize the risk of our RTT estimation being
+    // duped by stutters in test execution.  This is very long to allow for
+    // flaky and low-end hardware, especially what our CI runs on.
+    PR_Sleep(PR_MillisecondsToInterval(1000));
+    return true;
+  });
+  Handshake();
+  ExpectEarlyDataAccepted(false);
   CheckConnected();
 }
 

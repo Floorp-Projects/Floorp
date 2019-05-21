@@ -118,6 +118,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len) {
   PRFileDesc* ssl_fd = ImportFD(model.get(), fd.get());
   assert(ssl_fd == fd.get());
 
+  FixTime(ssl_fd);
   SetSocketOptions(ssl_fd, config);
   DoHandshake(ssl_fd, true);
 

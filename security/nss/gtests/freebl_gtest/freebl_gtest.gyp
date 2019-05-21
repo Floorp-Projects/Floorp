@@ -85,7 +85,7 @@
     'defines': [
       'NSS_USE_STATIC_LIBS',
     ],
-    # For test builds we have to set MPI defines.
+    # For static builds we have to set MPI defines.
     'conditions': [
       [ 'ct_verif==1', {
         'defines': [
