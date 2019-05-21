@@ -29,6 +29,9 @@ with Files("lint/**"):
 with Files("profiler/**"):
     BUG_COMPONENT = ("Core", "Gecko Profiler")
 
+with Files("performance/**"):
+    BUG_COMPONENT = ("Core", "Gecko Profiler")
+
 with Files("quitter/**"):
     BUG_COMPONENT = ("Testing", "General")
 

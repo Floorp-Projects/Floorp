@@ -140,6 +140,11 @@ class ChromeUtils {
   static already_AddRefed<Promise> RequestPerformanceMetrics(
       GlobalObject& aGlobal, ErrorResult& aRv);
 
+  static void SetPerfStatsCollectionMask(GlobalObject& aGlobal, uint64_t aMask);
+
+  static already_AddRefed<Promise> CollectPerfStats(GlobalObject& aGlobal,
+                                                    ErrorResult& aRv);
+
   static already_AddRefed<Promise> RequestProcInfo(GlobalObject& aGlobal,
                                                    ErrorResult& aRv);
 
