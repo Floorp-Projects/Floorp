@@ -22,8 +22,7 @@ def module_definitions():
     build_config = read_build_config()
     return [{
         'name': name,
-        'artifact': 'public/build/{}.maven.zip'.format(name),
-        'path': '{}/build/target.maven.zip'.format(os.path.abspath(project['path'])),
+        'path': project['path'],
         'shouldPublish': project['publish']
     } for (name, project) in build_config['projects'].items()]
 

@@ -218,8 +218,8 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     return gradle_tasks + ' ' + module_name + ':publish' + ' ' + module_name + ':zipMavenArtifacts'
 
 
-def release(artifacts_info, version, is_snapshot, is_staging):
-    version = components_version() if version is None else version
+def release(artifacts_info, is_snapshot, is_staging):
+    version = components_version()
 
     build_tasks = {}
     wait_on_builds_tasks = {}
@@ -234,6 +234,7 @@ def release(artifacts_info, version, is_snapshot, is_staging):
             module_name=module_name,
             gradle_tasks=_get_release_gradle_tasks(module_name, is_snapshot),
             subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
+            version=version,
             run_coverage=False,
             is_snapshot=is_snapshot,
             artifact_info=artifact_info
@@ -263,10 +264,6 @@ if __name__ == "__main__":
     release_parser = subparsers.add_parser('release')
 
     release_parser.add_argument(
-        '--version', action='store', help='git tag to build from',
-        default=None
-    )
-    release_parser.add_argument(
         '--snapshot', action='store_true', dest='is_snapshot',
         help='Create snapshot artifacts and upload them onto the snapshot repository'
     )
@@ -294,7 +291,7 @@ if __name__ == "__main__":
         ordered_groups_of_tasks = push(artifacts_info)
     elif command == 'release':
         ordered_groups_of_tasks = release(
-            artifacts_info, result.version, result.is_snapshot, result.is_staging
+            artifacts_info, result.is_snapshot, result.is_staging
         )
     else:
         raise Exception('Unsupported command "{}"'.format(command))
