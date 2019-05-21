@@ -21,6 +21,7 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.Companion.SAFE_BROWSING_ALL
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.session.HistoryDelegate
@@ -152,17 +153,13 @@ class Core(private val context: Context) {
         normalMode: Boolean = Settings.getInstance(context).shouldUseTrackingProtection,
         privateMode: Boolean = true
     ): TrackingProtectionPolicy {
-        val trackingProtectionPolicy = TrackingProtectionPolicy.select(
-            TrackingProtectionPolicy.AD,
-            TrackingProtectionPolicy.ANALYTICS,
-            TrackingProtectionPolicy.SOCIAL
-        )
+        val trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
 
         return when {
             normalMode && privateMode -> trackingProtectionPolicy
             normalMode && !privateMode -> trackingProtectionPolicy.forRegularSessionsOnly()
             !normalMode && privateMode -> trackingProtectionPolicy.forPrivateSessionsOnly()
-            else -> TrackingProtectionPolicy.none()
+            else -> TrackingProtectionPolicy.select(SAFE_BROWSING_ALL)
         }
     }
 
