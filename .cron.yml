@@ -75,6 +75,7 @@ jobs:
           treeherder-symbol: Na
           target-tasks-method: nightly_fennec
           include-push-tasks: true
+          android-release-type: nightly
       run-on-projects:
           - mozilla-central
           - mozilla-beta

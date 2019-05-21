@@ -190,6 +190,13 @@ class MachCommands(MachCommandBase):
                      action='append',
                      default=argparse.SUPPRESS,
                      help='Kinds that should not be re-used from the on-push graph.')
+    @CommandArgument('--android-release-type',
+                     choices=('nightly', 'beta', 'release'),
+                     default=None,
+                     nargs='?',
+                     help='If specified, this indicates whether we intend to '
+                          'either a Fennec Nightly, a Fennec beta or a Fennec'
+                          'Release.')
     def taskgraph_decision(self, **options):
         """Run the decision task: generate a task graph and submit to
         TaskCluster.  This is only meant to be called within decision tasks,
