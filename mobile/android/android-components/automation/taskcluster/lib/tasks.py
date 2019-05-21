@@ -30,21 +30,8 @@ class TaskBuilder(object):
     def craft_build_task(self, module_name, gradle_tasks, subtitle='', version=None, run_coverage=False, is_snapshot=False, artifact_info=None):
         artifacts = {}
         if artifact_info is not None:
-            files = ('.aar', '.pom', '-sources.jar')
-            extensions = ('', '.sha1', '.md5')
-            # FIXME: use cartesian product
-            for f in files:
-                for e in extensions:
-                    artifact_filename = '{}-{}{}{}'.format(
-                            artifact_info['name'], version, f, e)
-                    artifacts['public/build/{}'.format(artifact_filename)] = {
-                        'type': 'file',
-                        'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
-                        'path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
-                                    os.path.abspath(artifact_info['path']),
-                                    artifact_info['name'],
-                                    version, artifact_filename)
-                    }
+            _get_release_gradle_tasks(artifact_info, version)
+            # TODO: redo build payload here
 
         scopes = [
             "secrets:get:project/mobile/android-components/public-tokens"

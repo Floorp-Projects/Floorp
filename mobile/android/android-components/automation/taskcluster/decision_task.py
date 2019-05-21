@@ -218,6 +218,25 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     return gradle_tasks + ' ' + module_name + ':publish' + ' ' + module_name + ':zipMavenArtifacts'
 
 
+def _get_release_artifacts(artifact_info, version):
+    files = ('.aar', '.pom', '-sources.jar')
+    extensions = ('', '.sha1', '.md5')
+    # FIXME: use cartesian product
+    # TODO: potentially reorganize this code as PR/push will most likely fail?
+    for f in files:
+        for e in extensions:
+            artifact_filename = '{}-{}{}{}'.format(
+                    artifact_info['name'], version, f, e)
+            artifacts['public/build/{}'.format(artifact_filename)] = {
+                'type': 'file',
+                'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
+                'path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
+                            os.path.abspath(artifact_info['path']),
+                            artifact_info['name'],
+                            version, artifact_filename)
+            }
+
+
 def release(artifacts_info, is_snapshot, is_staging):
     version = components_version()
 
@@ -228,6 +247,8 @@ def release(artifacts_info, is_snapshot, is_staging):
     wait_on_builds_task_id = taskcluster.slugId()
 
     for artifact_info in artifacts_info:
+        #FIXME: from here
+
         build_task_id = taskcluster.slugId()
         module_name = _get_gradle_module_name(artifact_info)
         build_tasks[build_task_id] = BUILDER.craft_build_task(
@@ -239,6 +260,8 @@ def release(artifacts_info, is_snapshot, is_staging):
             is_snapshot=is_snapshot,
             artifact_info=artifact_info
         )
+
+        # TODO: add signing tasks as well
 
         # beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
             # build_task_id, wait_on_builds_task_id, version, artifact_info['artifact'],
