@@ -11,14 +11,14 @@ add_task(withMockApiServer(async function test_get(serverUrl) {
   // Test that NormandyApi can fetch from the test server.
   const response = await NormandyApi.get(`${serverUrl}/api/v1/`);
   const data = await response.json();
-  equal(data["recipe-list"], "/api/v1/recipe/", "Expected data in response");
+  equal(data["recipe-signed"], "/api/v1/recipe/signed/", "Expected data in response");
 }));
 
 add_task(withMockApiServer(async function test_getApiUrl(serverUrl) {
   const apiBase = `${serverUrl}/api/v1`;
   // Test that NormandyApi can use the self-describing API's index
-  const recipeListUrl = await NormandyApi.getApiUrl("action-list");
-  equal(recipeListUrl, `${apiBase}/action/`, "Can retrieve action-list URL from API");
+  const recipeListUrl = await NormandyApi.getApiUrl("extension-list");
+  equal(recipeListUrl, `${apiBase}/extension/`, "Can retrieve extension-list URL from API");
 }));
 
 add_task(withMockApiServer(async function test_getApiUrlSlashes(serverUrl, preferences) {
@@ -134,16 +134,6 @@ add_task(withMockApiServer(async function test_classifyClient() {
   });
 }));
 
-add_task(withMockApiServer(async function test_fetchActions() {
-  const actions = await NormandyApi.fetchActions();
-  equal(actions.length, 4);
-  const actionNames = actions.map(a => a.name);
-  ok(actionNames.includes("console-log"));
-  ok(actionNames.includes("opt-out-study"));
-  ok(actionNames.includes("show-heartbeat"));
-  ok(actionNames.includes("preference-experiment"));
-}));
-
 add_task(withMockApiServer(async function test_fetchExtensionDetails() {
   const extensionDetails = await NormandyApi.fetchExtensionDetails(1);
   deepEqual(extensionDetails, {
@@ -183,31 +173,3 @@ add_task(withScriptServer("query_server.sjs", async function test_postData(serve
     "NormandyApi sent an incorrect query string."
   );
 }));
-
-add_task(withMockApiServer(async function test_fetchImplementation_itWorksWithRealData() {
-  const [action] = await NormandyApi.fetchActions();
-  const implementation = await NormandyApi.fetchImplementation(action);
-
-  const decoder = new TextDecoder();
-  const relativePath = `mock_api${action.implementation_url}`;
-  const file = do_get_file(relativePath);
-  const expected = decoder.decode(await OS.File.read(file.path));
-
-  equal(implementation, expected);
-}));
-
-add_task(withScriptServer(
-  "echo_server.sjs",
-  async function test_fetchImplementationFail(serverUrl) {
-    const action = {
-      implementation_url: `${serverUrl}?status=500&body=servererror`,
-    };
-
-    try {
-      await NormandyApi.fetchImplementation(action);
-      ok(false, "fetchImplementation throws for non-200 response status codes");
-    } catch (err) {
-      // pass
-    }
-  },
-));
