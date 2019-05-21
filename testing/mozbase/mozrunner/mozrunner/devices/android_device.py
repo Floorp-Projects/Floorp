@@ -511,8 +511,9 @@ class AndroidEmulator(object):
         if self.gpu:
             command += ['-gpu', 'swiftshader_indirect']
         if self.avd_info.extra_args:
-            # -enable-kvm option is not valid on OSX
-            if _get_host_platform() == 'macosx64' and '-enable-kvm' in self.avd_info.extra_args:
+            # -enable-kvm option is not valid on OSX and Windows
+            if _get_host_platform() in ('macosx64', 'win32') and \
+               '-enable-kvm' in self.avd_info.extra_args:
                 self.avd_info.extra_args.remove('-enable-kvm')
             command += self.avd_info.extra_args
         log_path = os.path.join(EMULATOR_HOME_DIR, 'emulator.log')
@@ -840,6 +841,8 @@ def _get_host_platform():
     plat = None
     if 'darwin' in str(sys.platform).lower():
         plat = 'macosx64'
+    elif 'win32' in str(sys.platform).lower():
+        plat = 'win32'
     elif 'linux' in str(sys.platform).lower():
         if '64' in platform.architecture()[0]:
             plat = 'linux64'
