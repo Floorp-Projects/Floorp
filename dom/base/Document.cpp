@@ -24,6 +24,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/RestyleManager.h"
@@ -69,6 +70,7 @@
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FeaturePolicy.h"
@@ -2697,7 +2699,8 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
   // XFO needs to be checked after CSP because it is ignored if
   // the CSP defines frame-ancestors.
-  if (!FramingChecker::CheckFrameOptions(aChannel, docShell, NodePrincipal())) {
+  nsCOMPtr<nsIContentSecurityPolicy> cspForFA = mCSP;
+  if (!FramingChecker::CheckFrameOptions(aChannel, docShell, cspForFA)) {
     MOZ_LOG(gCspPRLog, LogLevel::Debug,
             ("XFO doesn't like frame's ancestry, not loading."));
     // stop!  ERROR page!
@@ -2719,6 +2722,29 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   return NS_OK;
 }
 
+nsIContentSecurityPolicy* Document::GetCsp() const { return mCSP; }
+
+void Document::SetCsp(nsIContentSecurityPolicy* aCSP) { mCSP = aCSP; }
+
+nsIContentSecurityPolicy* Document::GetPreloadCsp() const {
+  return mPreloadCSP;
+}
+
+void Document::SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP) {
+  mPreloadCSP = aPreloadCSP;
+}
+
+void Document::GetCspJSON(nsString& aJSON) {
+  aJSON.Truncate();
+
+  if (!mCSP) {
+    dom::CSPPolicies jsonPolicies;
+    jsonPolicies.ToJSON(aJSON);
+    return;
+  }
+  mCSP->ToJSON(aJSON);
+}
+
 void Document::SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages) {
   for (uint32_t i = 0; i < aMessages.Length(); ++i) {
     nsAutoString messageTag;
@@ -2738,14 +2764,11 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
   nsresult rv = NS_OK;
   if (!aSpeculative) {
     // 1) apply settings from regular CSP
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
-    NS_ENSURE_SUCCESS_VOID(rv);
-    if (csp) {
+    if (mCSP) {
       // Set up 'block-all-mixed-content' if not already inherited
       // from the parent context or set by any other CSP.
       if (!mBlockAllMixedContent) {
-        rv = csp->GetBlockAllMixedContent(&mBlockAllMixedContent);
+        rv = mCSP->GetBlockAllMixedContent(&mBlockAllMixedContent);
         NS_ENSURE_SUCCESS_VOID(rv);
       }
       if (!mBlockAllMixedContentPreloads) {
@@ -2755,7 +2778,7 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
       // Set up 'upgrade-insecure-requests' if not already inherited
       // from the parent context or set by any other CSP.
       if (!mUpgradeInsecureRequests) {
-        rv = csp->GetUpgradeInsecureRequests(&mUpgradeInsecureRequests);
+        rv = mCSP->GetUpgradeInsecureRequests(&mUpgradeInsecureRequests);
         NS_ENSURE_SUCCESS_VOID(rv);
       }
       if (!mUpgradeInsecurePreloads) {
@@ -2766,16 +2789,13 @@ void Document::ApplySettingsFromCSP(bool aSpeculative) {
   }
 
   // 2) apply settings from speculative csp
-  nsCOMPtr<nsIContentSecurityPolicy> preloadCsp;
-  rv = NodePrincipal()->GetPreloadCsp(getter_AddRefs(preloadCsp));
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (preloadCsp) {
+  if (mPreloadCSP) {
     if (!mBlockAllMixedContentPreloads) {
-      rv = preloadCsp->GetBlockAllMixedContent(&mBlockAllMixedContentPreloads);
+      rv = mPreloadCSP->GetBlockAllMixedContent(&mBlockAllMixedContentPreloads);
       NS_ENSURE_SUCCESS_VOID(rv);
     }
     if (!mUpgradeInsecurePreloads) {
-      rv = preloadCsp->GetUpgradeInsecureRequests(&mUpgradeInsecurePreloads);
+      rv = mPreloadCSP->GetUpgradeInsecureRequests(&mUpgradeInsecurePreloads);
       NS_ENSURE_SUCCESS_VOID(rv);
     }
   }
@@ -2795,10 +2815,41 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     return NS_OK;
   }
 
+  // If this is a system privileged document - do not apply a CSP.
+  // After Bug 1496418 we can remove the early return and apply
+  // a CSP even when loading using a SystemPrincipal.
+  if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(!mCSP, "where did mCSP get set if not here?");
+
+  // If there is a CSP that needs to be inherited either from the
+  // embedding doc or from the opening doc, then we query it here
+  // from the loadinfo because the docshell temporarily stored it
+  // on the loadinfo so we can set it here.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  mCSP = static_cast<net::LoadInfo*>(loadInfo.get())->GetCSPToInherit();
+
+  // If there is no CSP to inherit, then we create a new CSP here so
+  // that history entries always have the right reference in case a
+  // Meta CSP gets dynamically added after the history entry has
+  // already been created.
+  if (!mCSP) {
+    mCSP = new nsCSPContext();
+  }
+
+  // Always overwrite the requesting context of the CSP so that any new
+  // 'self' keyword added to an inherited CSP translates correctly.
+  nsresult rv = mCSP->SetRequestContextWithDocument(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   nsAutoCString tCspHeaderValue, tCspROHeaderValue;
 
   nsCOMPtr<nsIHttpChannel> httpChannel;
-  nsresult rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2817,20 +2868,6 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   // Check if this is a document from a WebExtension.
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   auto addonPolicy = BasePrincipal::Cast(principal)->AddonPolicy();
-
-  // Unless the NodePrincipal is a SystemPrincipal, which currently can not
-  // hold a CSP, we always call EnsureCSP() on the Principal. We do this
-  // so that a Meta CSP does not have to create a new CSP object. This is
-  // important because history entries hold a reference to the CSP object,
-  // which then gets dynamically updated in case a meta CSP is present.
-  // Note that after Bug 965637 we can remove that carve out, because the
-  // CSP will hang off the Client/Document and not the Principal anymore.
-  if (principal->IsSystemPrincipal()) {
-    return NS_OK;
-  }
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->EnsureCSP(this, getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // If there's no CSP to apply, go ahead and return early
   if (!addonPolicy && cspHeaderValue.IsEmpty() && cspROHeaderValue.IsEmpty()) {
@@ -2853,20 +2890,28 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   if (addonPolicy) {
     nsAutoString addonCSP;
     Unused << ExtensionPolicyService::GetSingleton().GetBaseCSP(addonCSP);
-    csp->AppendPolicy(addonCSP, false, false);
+    mCSP->AppendPolicy(addonCSP, false, false);
 
-    csp->AppendPolicy(addonPolicy->ContentSecurityPolicy(), false, false);
+    mCSP->AppendPolicy(addonPolicy->ContentSecurityPolicy(), false, false);
+    // Bug 1548468: Move CSP off ExpandedPrincipal
+    // Currently the LoadInfo holds the source of truth for every resource load
+    // because LoadInfo::GetCSP() queries the CSP from an ExpandedPrincipal
+    // (and not from the Client) if the load was triggered by an extension.
+    auto* basePrin = BasePrincipal::Cast(principal);
+    if (basePrin->Is<ExpandedPrincipal>()) {
+      basePrin->As<ExpandedPrincipal>()->SetCsp(mCSP);
+    }
   }
 
   // ----- if there's a full-strength CSP header, apply it.
   if (!cspHeaderValue.IsEmpty()) {
-    rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
+    rv = CSP_AppendCSPFromHeader(mCSP, cspHeaderValue, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // ----- if there's a report-only CSP header, apply it.
   if (!cspROHeaderValue.IsEmpty()) {
-    rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
+    rv = CSP_AppendCSPFromHeader(mCSP, cspROHeaderValue, true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2876,7 +2921,7 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   // directive, intersect the CSP sandbox flags with the existing flags. This
   // corresponds to the _least_ permissive policy.
   uint32_t cspSandboxFlags = SANDBOXED_NONE;
-  rv = csp->GetCSPSandboxFlags(&cspSandboxFlags);
+  rv = mCSP->GetCSPSandboxFlags(&cspSandboxFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Probably the iframe sandbox attribute already caused the creation of a
@@ -2889,7 +2934,6 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 
   if (needNewNullPrincipal) {
     principal = NullPrincipal::CreateWithInheritedAttributes(principal);
-    principal->SetCsp(csp);
     SetPrincipals(principal, principal);
   }
 
@@ -2899,7 +2943,7 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     bool safeAncestry = false;
 
     // PermitsAncestry sends violation reports when necessary
-    rv = csp->PermitsAncestry(docShell, &safeAncestry);
+    rv = mCSP->PermitsAncestry(docShell, &safeAncestry);
 
     if (NS_FAILED(rv) || !safeAncestry) {
       MOZ_LOG(gCspPRLog, LogLevel::Debug,
@@ -4733,10 +4777,8 @@ void Document::SetScriptGlobalObject(
   // Now that we know what our window is, we can flush the CSP errors to the
   // Web Console. We are flushing all messages that occured and were stored
   // in the queue prior to this point.
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  if (csp) {
-    static_cast<nsCSPContext*>(csp.get())->flushConsoleMessages();
+  if (mCSP) {
+    static_cast<nsCSPContext*>(mCSP.get())->flushConsoleMessages();
   }
 
   nsCOMPtr<nsIHttpChannelInternal> internalChannel =
@@ -5112,12 +5154,11 @@ void Document::DispatchContentLoadedEvents() {
 // the CSP allows precisely the resources that need to be loaded; but it
 // should at least be as strong as:
 // <meta http-equiv="Content-Security-Policy" content="default-src chrome:"/>
-static void AssertAboutPageHasCSP(nsIURI* aDocumentURI,
-                                  nsIPrincipal* aPrincipal) {
+static void AssertAboutPageHasCSP(Document* aDocument) {
   // Check if we are loading an about: URI at all
+  nsCOMPtr<nsIURI> documentURI = aDocument->GetDocumentURI();
   bool isAboutURI =
-      (NS_SUCCEEDED(aDocumentURI->SchemeIs("about", &isAboutURI)) &&
-       isAboutURI);
+      (NS_SUCCEEDED(documentURI->SchemeIs("about", &isAboutURI)) && isAboutURI);
 
   if (!isAboutURI ||
       Preferences::GetBool("csp.skip_about_page_has_csp_assert")) {
@@ -5145,7 +5186,7 @@ static void AssertAboutPageHasCSP(nsIURI* aDocumentURI,
 
   // Check if the about URI is whitelisted
   nsAutoCString aboutSpec;
-  aDocumentURI->GetSpec(aboutSpec);
+  documentURI->GetSpec(aboutSpec);
   ToLowerCase(aboutSpec);
   for (auto& legacyPageEntry : *sLegacyAboutPagesWithNoCSP) {
     // please note that we perform a substring match here on purpose,
@@ -5156,8 +5197,7 @@ static void AssertAboutPageHasCSP(nsIURI* aDocumentURI,
     }
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  aPrincipal->GetCsp(getter_AddRefs(csp));
+  nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
   bool foundDefaultSrc = false;
   if (csp) {
     uint32_t policyCount = 0;
@@ -5185,7 +5225,7 @@ void Document::EndLoad() {
   // only assert if nothing stopped the load on purpose
   // TODO: we probably also want to check XUL documents here too
   if (!mParserAborted && !IsXULDocument()) {
-    AssertAboutPageHasCSP(mDocumentURI, NodePrincipal());
+    AssertAboutPageHasCSP(this);
   }
 #endif
 
@@ -11687,12 +11727,9 @@ bool Document::HasScriptsBlockedBySandbox() {
 bool Document::InlineScriptAllowedByCSP() {
   // this function assumes the inline script is parser created
   //  (e.g., before setting attribute(!) event handlers)
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, true);
   bool allowsInlineScript = true;
-  if (csp) {
-    nsresult rv = csp->GetAllowsInline(
+  if (mCSP) {
+    nsresult rv = mCSP->GetAllowsInline(
         nsIContentPolicy::TYPE_SCRIPT,
         EmptyString(),  // aNonce
         true,           // aParserCreated

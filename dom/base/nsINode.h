@@ -40,6 +40,7 @@ class nsAttrChildContentList;
 class nsDOMAttributeMap;
 class nsIAnimationObserver;
 class nsIContent;
+class nsIContentSecurityPolicy;
 class nsIFrame;
 class nsIHTMLCollection;
 class nsIMutationObserver;
@@ -853,6 +854,11 @@ class nsINode : public mozilla::dom::EventTarget {
   nsIPrincipal* NodePrincipal() const {
     return mNodeInfo->NodeInfoManager()->DocumentPrincipal();
   }
+
+  /**
+   * Return the CSP of this node's document, if any.
+   */
+  nsIContentSecurityPolicy* GetCsp() const;
 
   /**
    * Get the parent nsIContent for this node.

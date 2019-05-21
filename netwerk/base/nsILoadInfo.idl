@@ -8,6 +8,7 @@
 #include "nsIContentPolicy.idl"
 
 interface nsIChannel;
+interface nsIContentSecurityPolicy;
 interface nsICookieSettings;
 interface nsICSPEventListener;
 interface nsINode;
@@ -49,6 +50,7 @@ native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_MaybeServiceWorkerDescriptorRef(const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>);
 [ptr] native PerformanceStoragePtr(mozilla::dom::PerformanceStorage);
       native LoadTainting(mozilla::LoadTainting);
+      native CSPRef(already_AddRefed<nsIContentSecurityPolicy>);
 
 typedef unsigned long nsSecurityFlags;
 
@@ -1023,6 +1025,13 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, nostdcall, notxpcom]
   PerformanceStoragePtr GetPerformanceStorage();
+
+  /**
+   * Query the CSP (or Preload CSP for preloads) which should be
+   * enforced for the channel this loadinfo belongs to.
+   */
+  [notxpcom,nostdcall] CSPRef GetCsp();
+  [notxpcom,nostdcall] CSPRef GetPreloadCsp();
 
   /**
     * The service worker and fetch specifications require returning the

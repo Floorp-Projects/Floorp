@@ -7,11 +7,13 @@
 #ifndef mozilla_LoadInfo_h
 #define mozilla_LoadInfo_h
 
+#include "nsIContentSecurityPolicy.h"
 #include "nsIContentPolicy.h"
 #include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
 #include "nsIWeakReferenceUtils.h"  // for nsWeakPtr
 #include "nsIURI.h"
+#include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -88,6 +90,23 @@ class LoadInfo final : public nsILoadInfo {
   void SetBrowserWouldUpgradeInsecureRequests();
   void SetIsFromProcessingFrameAttributes();
 
+  // Hands off from the cspToInherit functionality!
+  // The only place that knows that a new document load needs to inherit the
+  // CSP is the docshell. At that point neither the document nor the client
+  // are available yet. Since we need a way to transfer the CSP from the
+  // docshell to the document, we temporarily store the CSP that needs to
+  // be inherited within the Loadinfo. In other words, those two functions
+  // build the bridge to transfer the CSP from the docshell into the doc.
+  void SetCSPToInherit(nsIContentSecurityPolicy* aCspToInherit) {
+    mCspToInherit = aCspToInherit;
+  }
+  // Certain schemes need to inherit the CSP. If needed, we temporarily
+  // store the CSP from the embedding/opening document here which then
+  // gets propagated to the new doc within Document::InitCSP(). This
+  // member is only ever non-null if the new doc actually needs to
+  // inherit the CSP from the embedding/opening document.
+  nsIContentSecurityPolicy* GetCSPToInherit() { return mCspToInherit; }
+
  private:
   // private constructor that is only allowed to be called from within
   // HttpChannelParent and FTPChannelParent declared as friends undeneath.
@@ -99,6 +118,7 @@ class LoadInfo final : public nsILoadInfo {
            nsIPrincipal* aTopLevelPrincipal,
            nsIPrincipal* aTopLevelStorageAreaPrincipal,
            nsIURI* aResultPrincipalURI, nsICookieSettings* aCookieSettings,
+           nsIContentSecurityPolicy* aCspToInherit,
            const Maybe<mozilla::dom::ClientInfo>& aClientInfo,
            const Maybe<mozilla::dom::ClientInfo>& aReservedClientInfo,
            const Maybe<mozilla::dom::ClientInfo>& aInitialClientInfo,
@@ -157,6 +177,7 @@ class LoadInfo final : public nsILoadInfo {
   nsCOMPtr<nsIURI> mResultPrincipalURI;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   nsCOMPtr<nsICookieSettings> mCookieSettings;
+  nsCOMPtr<nsIContentSecurityPolicy> mCspToInherit;
 
   Maybe<mozilla::dom::ClientInfo> mClientInfo;
   UniquePtr<mozilla::dom::ClientSource> mReservedClientSource;

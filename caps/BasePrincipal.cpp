@@ -7,7 +7,6 @@
 #include "mozilla/BasePrincipal.h"
 
 #include "nsDocShell.h"
-#include "nsIContentSecurityPolicy.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIStandardURL.h"
@@ -22,8 +21,6 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/ChromeUtils.h"
-#include "mozilla/dom/CSPDictionariesBinding.h"
-#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ToJSValue.h"
 
 namespace mozilla {
@@ -163,88 +160,6 @@ BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aReport,
   }
 
   return NS_ERROR_DOM_BAD_URI;
-}
-
-NS_IMETHODIMP
-BasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp) {
-  NS_IF_ADDREF(*aCsp = mCSP);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp) {
-  // Never destroy an existing CSP on the principal.
-  // This method should only be called in rare cases.
-
-  MOZ_ASSERT(!mCSP, "do not destroy an existing CSP");
-  if (mCSP) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  mCSP = aCsp;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasePrincipal::EnsureCSP(dom::Document* aDocument,
-                         nsIContentSecurityPolicy** aCSP) {
-  if (mCSP) {
-    // if there is a CSP already associated with this principal
-    // then just return that - do not overwrite it!!!
-    NS_IF_ADDREF(*aCSP = mCSP);
-    return NS_OK;
-  }
-
-  nsresult rv = NS_OK;
-  mCSP = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Store the request context for violation reports
-  rv = aDocument ? mCSP->SetRequestContext(aDocument, nullptr)
-                 : mCSP->SetRequestContext(nullptr, this);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_IF_ADDREF(*aCSP = mCSP);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasePrincipal::GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) {
-  NS_IF_ADDREF(*aPreloadCSP = mPreloadCSP);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasePrincipal::EnsurePreloadCSP(dom::Document* aDocument,
-                                nsIContentSecurityPolicy** aPreloadCSP) {
-  if (mPreloadCSP) {
-    // if there is a speculative CSP already associated with this principal
-    // then just return that - do not overwrite it!!!
-    NS_IF_ADDREF(*aPreloadCSP = mPreloadCSP);
-    return NS_OK;
-  }
-
-  nsresult rv = NS_OK;
-  mPreloadCSP = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Store the request context for violation reports
-  rv = aDocument ? mPreloadCSP->SetRequestContext(aDocument, nullptr)
-                 : mPreloadCSP->SetRequestContext(nullptr, this);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_IF_ADDREF(*aPreloadCSP = mPreloadCSP);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BasePrincipal::GetCspJSON(nsAString& outCSPinJSON) {
-  outCSPinJSON.Truncate();
-  dom::CSPPolicies jsonPolicies;
-
-  if (!mCSP) {
-    jsonPolicies.ToJSON(outCSPinJSON);
-    return NS_OK;
-  }
-  return mCSP->ToJSON(outCSPinJSON);
 }
 
 NS_IMETHODIMP
@@ -509,20 +424,6 @@ void BasePrincipal::FinishInit(BasePrincipal* aOther,
 
   mOriginNoSuffix = aOther->mOriginNoSuffix;
   mHasExplicitDomain = aOther->mHasExplicitDomain;
-
-  if (aOther->mPreloadCSP) {
-    mPreloadCSP = do_CreateInstance("@mozilla.org/cspcontext;1");
-    nsCSPContext* preloadCSP = static_cast<nsCSPContext*>(mPreloadCSP.get());
-    preloadCSP->InitFromOther(
-        static_cast<nsCSPContext*>(aOther->mPreloadCSP.get()), nullptr, this);
-  }
-
-  if (aOther->mCSP) {
-    mCSP = do_CreateInstance("@mozilla.org/cspcontext;1");
-    nsCSPContext* csp = static_cast<nsCSPContext*>(mCSP.get());
-    csp->InitFromOther(static_cast<nsCSPContext*>(aOther->mCSP.get()), nullptr,
-                       this);
-  }
 }
 
 bool SiteIdentifier::Equals(const SiteIdentifier& aOther) const {

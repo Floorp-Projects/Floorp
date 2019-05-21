@@ -73,6 +73,7 @@
 #include "BrowserParent.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/NullPrincipal.h"
@@ -405,10 +406,7 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
   if (isSrcdoc) {
     src.AssignLiteral("about:srcdoc");
     principal = mOwnerContent->NodePrincipal();
-    // Currently the NodePrincipal holds the CSP for a document. After
-    // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
-    // instead of mOwnerContent->NodePrincipal().
-    mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+    csp = mOwnerContent->GetCsp();
   } else {
     GetURL(src, getter_AddRefs(principal), getter_AddRefs(csp));
 
@@ -425,10 +423,7 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
       }
       src.AssignLiteral("about:blank");
       principal = mOwnerContent->NodePrincipal();
-      // Currently the NodePrincipal holds the CSP for a document. After
-      // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
-      // instead of mOwnerContent->NodePrincipal().
-      mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+      csp = mOwnerContent->GetCsp();
     }
   }
 
@@ -520,8 +515,7 @@ void nsFrameLoader::ResumeLoad(uint64_t aPendingSwitchID) {
   mURIToLoad = nullptr;
   mPendingSwitchID = aPendingSwitchID;
   mTriggeringPrincipal = mOwnerContent->NodePrincipal();
-  // NOTE: This can be gotten off of the document after bug 965637.
-  mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(mCsp));
+  mCsp = mOwnerContent->GetCsp();
 
   nsresult rv = doc->InitializeFrameLoader(this);
   if (NS_FAILED(rv)) {
@@ -627,18 +621,14 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
   }
 
   // If we have an explicit CSP, we set it. If not, we only query it from
-  // the NodePrincipal in case there was no explicit triggeringPrincipal.
+  // the document in case there was no explicit triggeringPrincipal.
   // Otherwise it's possible that the original triggeringPrincipal did not
   // have a CSP which causes the CSP on the Principal and explicit CSP
   // to be out of sync.
   if (mCsp) {
     loadState->SetCsp(mCsp);
   } else if (!mTriggeringPrincipal) {
-    // Currently the NodePrincipal holds the CSP for a document. After
-    // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
-    // instead of mOwnerContent->NodePrincipal().
-    nsCOMPtr<nsIContentSecurityPolicy> csp;
-    mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+    nsCOMPtr<nsIContentSecurityPolicy> csp = mOwnerContent->GetCsp();
     loadState->SetCsp(csp);
   }
 
@@ -2343,16 +2333,12 @@ void nsFrameLoader::GetURL(nsString& aURI, nsIPrincipal** aTriggeringPrincipal,
                            nsIContentSecurityPolicy** aCsp) {
   aURI.Truncate();
   // Within this function we default to using the NodePrincipal as the
-  // triggeringPrincipal and the CSP of the document, currently stored
-  // on the NodePrincipal. After Bug 965637 we can query the CSP from
-  // mOwnerContent->OwnerDoc() instead of mOwnerContent->NodePrincipal().
+  // triggeringPrincipal and the CSP of the document.
   // Expanded Principals however override the CSP of the document, hence
   // if frame->GetSrcTriggeringPrincipal() returns a valid principal, we
-  // have to query the CSP from that Principal. Note that even after
-  // Bug 965637, Expanded Principals will hold their own CSP.
+  // have to query the CSP from that Principal.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = mOwnerContent->NodePrincipal();
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  nsCOMPtr<nsIContentSecurityPolicy> csp = mOwnerContent->GetCsp();
 
   if (mOwnerContent->IsHTMLElement(nsGkAtoms::object)) {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, aURI);
@@ -2363,7 +2349,11 @@ void nsFrameLoader::GetURL(nsString& aURI, nsIPrincipal** aTriggeringPrincipal,
       nsCOMPtr<nsIPrincipal> srcPrincipal = frame->GetSrcTriggeringPrincipal();
       if (srcPrincipal) {
         triggeringPrincipal = srcPrincipal;
-        triggeringPrincipal->GetCsp(getter_AddRefs(csp));
+        nsCOMPtr<nsIExpandedPrincipal> ep =
+            do_QueryInterface(triggeringPrincipal);
+        if (ep) {
+          csp = ep->GetCsp();
+        }
       }
     }
   }

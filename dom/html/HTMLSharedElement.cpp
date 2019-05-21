@@ -148,14 +148,8 @@ static void SetBaseURIUsingFirstBaseWithHref(Document* aDocument,
           aDocument->GetFallbackBaseURI());
 
       // Check if CSP allows this base-uri
-      nsCOMPtr<nsIContentSecurityPolicy> csp;
-      nsresult rv = aDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Getting CSP Failed");
-      // For all the different error cases we assign a nullptr to
-      // newBaseURI, so we basically call aDocument->SetBaseURI(nullptr);
-      if (NS_FAILED(rv)) {
-        newBaseURI = nullptr;
-      }
+      nsresult rv = NS_OK;
+      nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
       if (csp && newBaseURI) {
         // base-uri is only enforced if explicitly defined in the
         // policy - do *not* consult default-src, see:

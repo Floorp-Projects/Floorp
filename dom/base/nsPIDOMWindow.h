@@ -31,6 +31,7 @@ class nsGlobalWindowOuter;
 class nsIArray;
 class nsIChannel;
 class nsIContent;
+class nsIContentSecurityPolicy;
 class nsICSSDeclaration;
 class nsIDocShell;
 class nsDocShellLoadState;
@@ -325,6 +326,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const;
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
+
+  void SetCsp(nsIContentSecurityPolicy* aCsp);
+  void SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCsp);
+  nsIContentSecurityPolicy* GetCsp();
 
   void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
 
@@ -821,8 +826,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   }
 
   // Set the window up with an about:blank document with the current subject
-  // principal.
-  virtual void SetInitialPrincipalToSubject() = 0;
+  // principal and potentially a CSP.
+  virtual void SetInitialPrincipalToSubject(nsIContentSecurityPolicy* aCSP) = 0;
 
   // Returns an object containing the window's state.  This also suspends
   // all running timeouts in the window.

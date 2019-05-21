@@ -116,21 +116,8 @@ bool StoragePrincipalHelper::VerifyValidStoragePrincipalInfoForPrincipalInfo(
     if (!spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs()) ||
         spInfo.originNoSuffix() != pInfo.originNoSuffix() ||
         spInfo.spec() != pInfo.spec() || spInfo.domain() != pInfo.domain() ||
-        spInfo.baseDomain() != pInfo.baseDomain() ||
-        spInfo.securityPolicies().Length() !=
-            pInfo.securityPolicies().Length()) {
+        spInfo.baseDomain() != pInfo.baseDomain()) {
       return false;
-    }
-
-    for (uint32_t i = 0; i < spInfo.securityPolicies().Length(); ++i) {
-      if (spInfo.securityPolicies()[i].policy() !=
-              pInfo.securityPolicies()[i].policy() ||
-          spInfo.securityPolicies()[i].reportOnlyFlag() !=
-              pInfo.securityPolicies()[i].reportOnlyFlag() ||
-          spInfo.securityPolicies()[i].deliveredViaMetaTagFlag() !=
-              pInfo.securityPolicies()[i].deliveredViaMetaTagFlag()) {
-        return false;
-      }
     }
 
     return true;
