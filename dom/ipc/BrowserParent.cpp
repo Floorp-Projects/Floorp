@@ -112,6 +112,7 @@
 #include "IHistory.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "MMPrinter.h"
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetParent.h"
@@ -137,6 +138,8 @@ using namespace mozilla::jsipc;
 using namespace mozilla::gfx;
 
 using mozilla::Unused;
+using mozilla::LazyLogModule;
+using mozilla::StaticAutoPtr;
 
 LazyLogModule gBrowserFocusLog("BrowserFocus");
 
