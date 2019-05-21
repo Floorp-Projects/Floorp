@@ -121,6 +121,46 @@ EditorCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  // Special case for MultiStateCommandBase.  It allows both CString and String
+  // in STATE_ATTRIBUTE and CString is preferred.
+  if (Any(paramType & EditorCommandParamType::CString) &&
+      Any(paramType & EditorCommandParamType::String)) {
+    if (!params) {
+      nsresult rv = DoCommandParam(command, VoidString(),
+                                   MOZ_KnownLive(*editor->AsTextEditor()));
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "Failed to do command from "
+                           "nsIControllerCommand::DoCommandParams()");
+      return rv;
+    }
+    if (Any(paramType & EditorCommandParamType::StateAttribute)) {
+      nsCString cStringParam;
+      nsresult rv = params->GetCString(STATE_ATTRIBUTE, cStringParam);
+      if (NS_SUCCEEDED(rv)) {
+        NS_ConvertUTF8toUTF16 stringParam(cStringParam);
+        nsresult rv = DoCommandParam(command, stringParam,
+                                     MOZ_KnownLive(*editor->AsTextEditor()));
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "Failed to do command from "
+                             "nsIControllerCommand::DoCommandParams()");
+        return rv;
+      }
+      nsString stringParam;
+      DebugOnly<nsresult> rvIgnored =
+          params->GetString(STATE_ATTRIBUTE, stringParam);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "Failed to get string from STATE_ATTRIBUTE");
+      rv = DoCommandParam(command, stringParam,
+                          MOZ_KnownLive(*editor->AsTextEditor()));
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "Failed to do command from "
+                           "nsIControllerCommand::DoCommandParams()");
+      return rv;
+    }
+    MOZ_ASSERT_UNREACHABLE("Unexpected state for CString/String");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   if (Any(paramType & EditorCommandParamType::CString)) {
     if (!params) {
       nsresult rv = DoCommandParam(command, VoidCString(),
