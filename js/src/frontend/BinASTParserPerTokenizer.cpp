@@ -379,7 +379,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
 
   funbox->functionScopeBindings().set(*bindings);
 
-  if (funbox->function()->isNamedLambda()) {
+  if (funbox->isNamedLambda()) {
     BINJS_TRY_DECL(
         recursiveBinding,
         NewLexicalScopeData(cx_, pc_->namedLambdaScope(), alloc_, pc_));
@@ -417,9 +417,9 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::addScopeName(
 template <typename Tok>
 void BinASTParserPerTokenizer<Tok>::captureFunctionName() {
   MOZ_ASSERT(pc_->isFunctionBox());
-  MOZ_ASSERT(pc_->functionBox()->function()->isNamedLambda());
+  MOZ_ASSERT(pc_->functionBox()->isNamedLambda());
 
-  RootedAtom funName(cx_, pc_->functionBox()->function()->explicitName());
+  RootedAtom funName(cx_, pc_->functionBox()->explicitName());
   MOZ_ASSERT(funName);
 
   auto ptr = pc_->namedLambdaScope().lookupDeclaredName(funName);
@@ -626,7 +626,7 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::checkFunctionClosedVars() {
 
   MOZ_TRY(checkClosedVars(*pc_->innermostScope()));
   MOZ_TRY(checkClosedVars(pc_->functionScope()));
-  if (pc_->functionBox()->function()->isNamedLambda()) {
+  if (pc_->functionBox()->isNamedLambda()) {
     MOZ_TRY(checkClosedVars(pc_->namedLambdaScope()));
   }
 

@@ -1606,7 +1606,7 @@ bool PerHandlerParser<ParseHandler>::finishFunctionScopes(
     }
   }
 
-  if (funbox->function()->isNamedLambda() && !isStandaloneFunction) {
+  if (funbox->isNamedLambda() && !isStandaloneFunction) {
     if (!propagateFreeNamesAndMarkClosedOverBindings(pc_->namedLambdaScope())) {
       return false;
     }
@@ -1643,7 +1643,7 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
     funbox->functionScopeBindings().set(*bindings);
   }
 
-  if (funbox->function()->isNamedLambda() && !isStandaloneFunction) {
+  if (funbox->isNamedLambda() && !isStandaloneFunction) {
     Maybe<LexicalScope::Data*> bindings =
         newLexicalScopeData(pc_->namedLambdaScope());
     if (!bindings) {
@@ -4845,7 +4845,7 @@ inline bool GeneralParser<ParseHandler, Unit>::checkExportedNameForClause(
 template <typename Unit>
 bool Parser<FullParseHandler, Unit>::checkExportedNameForFunction(
     FunctionNode* funNode) {
-  return checkExportedName(funNode->funbox()->function()->explicitName());
+  return checkExportedName(funNode->funbox()->explicitName());
 }
 
 template <typename Unit>

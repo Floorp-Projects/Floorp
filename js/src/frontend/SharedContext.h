@@ -394,6 +394,17 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // Whether this function has nested functions.
   bool hasInnerFunctions_ : 1;
 
+  // Whether this function is an arrow function
+  bool isArrow_ : 1;
+
+  bool isNamedLambda_ : 1;
+  bool isGetter_ : 1;
+  bool isSetter_ : 1;
+  bool isMethod_ : 1;
+
+  JSFunction::FunctionKind kind_;
+  JSAtom* explicitName_;
+
   FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
               uint32_t toStringStart, Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
@@ -497,7 +508,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool needsIteratorResult() const { return isGenerator() && !isAsync(); }
   bool needsPromiseResult() const { return isAsync() && !isGenerator(); }
 
-  bool isArrow() const { return function()->isArrow(); }
+  bool isArrow() const { return isArrow_; }
 
   bool hasRest() const { return hasRest_; }
   void setHasRest() { hasRest_ = true; }
@@ -515,6 +526,14 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool needsHomeObject() const { return needsHomeObject_; }
   bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
   bool hasInnerFunctions() const { return hasInnerFunctions_; }
+  bool isNamedLambda() const { return isNamedLambda_; }
+  bool isGetter() const { return isGetter_; }
+  bool isSetter() const { return isSetter_; }
+  bool isMethod() const { return isMethod_; }
+
+  JSFunction::FunctionKind kind() { return kind_; }
+
+  JSAtom* explicitName() const { return function()->explicitName(); }
 
   void setHasExtensibleScope() { hasExtensibleScope_ = true; }
   void setHasThisBinding() { hasThisBinding_ = true; }

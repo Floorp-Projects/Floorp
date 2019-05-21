@@ -475,7 +475,7 @@ bool FunctionScriptEmitter::prepareForBody() {
     }
   }
 
-  if (funbox_->function()->kind() ==
+  if (funbox_->kind() ==
       JSFunction::FunctionKind::ClassConstructor) {
     if (funbox_->isDerivedClassConstructor()) {
       if (!bce_->emitCopyInitializersToLocalInitializers()) {
