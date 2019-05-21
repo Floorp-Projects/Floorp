@@ -39,7 +39,6 @@ const isMacOS = Services.appinfo.OS === "Darwin";
 class App extends Component {
   static get propTypes() {
     return {
-      attachRefToWebConsoleUI: PropTypes.func.isRequired,
       dispatch: PropTypes.func.isRequired,
       webConsoleUI: PropTypes.object.isRequired,
       notifications: PropTypes.object,
@@ -195,7 +194,6 @@ class App extends Component {
 
   render() {
     const {
-      attachRefToWebConsoleUI,
       webConsoleUI,
       notifications,
       onFirstMeaningfulPaint,
@@ -236,7 +234,6 @@ class App extends Component {
           FilterBar({
             hidePersistLogsCheckbox: webConsoleUI.isBrowserConsole,
             hideShowContentMessagesCheckbox,
-            attachRefToWebConsoleUI,
             closeSplitConsole,
           }),
           ConsoleOutput({

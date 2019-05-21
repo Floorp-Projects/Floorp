@@ -67,9 +67,7 @@ add_task(async function() {
 });
 
 async function setFilterInput(hud, value, lastMessage) {
-  hud.ui.filterBox.focus();
-  hud.ui.filterBox.select();
-  EventUtils.sendString(value);
+  await setFilterState(hud, {text: value});
   await waitFor(() => findMessage(hud, lastMessage), null, 200);
 }
 

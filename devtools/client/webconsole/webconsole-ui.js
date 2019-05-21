@@ -259,12 +259,6 @@ class WebConsoleUI {
       window: this.window,
     });
 
-    shortcuts.on(l10n.getStr("webconsole.find.key"),
-                 event => {
-                   this.filterBox.focus();
-                   event.preventDefault();
-                 });
-
     let clearShortcut;
     if (AppConstants.platform === "macosx") {
       const alternativaClearShortcut = l10n.getStr("webconsole.clear.alternativeKeyOSX");

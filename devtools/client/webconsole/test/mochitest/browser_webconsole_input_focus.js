@@ -52,6 +52,6 @@ function waitForBlurredInput(hud) {
     node.addEventListener("focusout", lostFocus, { once: true });
 
     // The 'focusout' event fires if we focus e.g. the filter box.
-    node.ownerDocument.querySelector("input.text-filter").focus();
+    getFilterInput(hud).focus();
   });
 }

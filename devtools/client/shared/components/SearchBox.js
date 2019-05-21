@@ -79,16 +79,16 @@ class SearchBox extends PureComponent {
     }
   }
 
-  onChange() {
-    if (this.state.value !== this.inputRef.current.value) {
+  onChange(inputValue = "") {
+    if (this.state.value !== inputValue) {
       this.setState({
         focused: true,
-        value: this.inputRef.current.value,
+        value: inputValue,
       });
     }
 
     if (!this.props.delay) {
-      this.props.onChange(this.state.value);
+      this.props.onChange(inputValue);
       return;
     }
 
@@ -106,8 +106,7 @@ class SearchBox extends PureComponent {
   }
 
   onClearButtonClick() {
-    this.setState({ value: "" });
-    this.onChange();
+    this.onChange("");
   }
 
   onFocus() {
@@ -186,12 +185,13 @@ class SearchBox extends PureComponent {
       dom.input({
         className: inputClassList.join(" "),
         onBlur: this.onBlur,
-        onChange: this.onChange,
+        onChange: e => this.onChange(e.target.value),
         onFocus: this.onFocus,
         onKeyDown: this.onKeyDown,
         placeholder,
         ref: this.inputRef,
         value,
+        type,
       }),
       showLearnMoreLink && MDNLink({
         title: learnMoreTitle,
@@ -205,10 +205,7 @@ class SearchBox extends PureComponent {
       showAutocomplete && AutocompletePopup({
         autocompleteProvider,
         filter: value,
-        onItemSelected: (itemValue) => {
-          this.setState({ value: itemValue });
-          this.onChange();
-        },
+        onItemSelected: itemValue => this.onChange(itemValue),
         ref: this.autocompleteRef,
       })
     );

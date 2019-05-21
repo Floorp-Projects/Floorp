@@ -46,9 +46,7 @@ add_task(async function() {
   });
 
   info("Filter the output using the text filter input");
-  hud.ui.filterBox.focus();
-  hud.ui.filterBox.select();
-  EventUtils.sendString("no match");
+  await setFilterState(hud, {text: "no match"});
 
   checkTelemetryEvent({
     trigger: "text",
