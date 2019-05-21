@@ -988,21 +988,16 @@ class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocomplet
         return;
       }
 
+      // ac-label gets populated from getCommentAt despite the attribute name.
+      // The "comment" is used to populate additional visible text.
+      let formHostname = this.getAttribute("ac-label");
       LoginHelper.openPasswordManager(this.ownerGlobal, {
-        filterString: this._data.hostname,
+        filterString: formHostname,
         entryPoint: "autocomplete",
       });
     }
 
     this.addEventListener("click", handleEvent);
-  }
-
-  get _data() {
-    return JSON.parse(this.getAttribute("ac-value"));
-  }
-
-  _adjustAcItem() {
-    this._titleText.textContent = this._data.label;
   }
 }
 
