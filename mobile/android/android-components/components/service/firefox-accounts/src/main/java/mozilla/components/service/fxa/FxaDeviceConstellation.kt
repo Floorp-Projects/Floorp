@@ -83,9 +83,9 @@ class FxaDeviceConstellation(
         return CompletableDeferred(false)
     }
 
-    override fun ensureCapabilitiesAsync(): Deferred<Unit> {
+    override fun ensureCapabilitiesAsync(capabilities: List<DeviceCapability>): Deferred<Unit> {
         return scope.async {
-            account.ensureCapabilities()
+            account.ensureCapabilities(capabilities.map { it.into() }.toSet())
         }
     }
 

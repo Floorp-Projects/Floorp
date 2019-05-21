@@ -384,7 +384,7 @@ open class FxaAccountManager(
                         account.registerPersistenceCallback(statePersistenceCallback)
                         account.deviceConstellation().register(deviceEventsIntegration)
 
-                        account.deviceConstellation().ensureCapabilitiesAsync().await()
+                        account.deviceConstellation().ensureCapabilitiesAsync(deviceTuple.capabilities).await()
                         account.deviceConstellation().startPeriodicRefresh()
 
                         notifyObservers { onAuthenticated(account) }

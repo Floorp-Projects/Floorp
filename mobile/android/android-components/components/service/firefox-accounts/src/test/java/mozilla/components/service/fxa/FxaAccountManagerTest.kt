@@ -11,6 +11,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.AccessTokenInfo
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
@@ -23,6 +24,7 @@ import mozilla.components.service.fxa.manager.FailedToLoadAccountException
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -50,8 +52,9 @@ class TestableFxaAccountManager(
     config: Config,
     scopes: Array<String>,
     private val storage: AccountStorage,
+    capabilities: List<DeviceCapability> = listOf(),
     val block: () -> OAuthAccount = { mock() }
-) : FxaAccountManager(context, config, scopes, DeviceTuple("test", DeviceType.UNKNOWN, listOf()), null) {
+) : FxaAccountManager(context, config, scopes, DeviceTuple("test", DeviceType.UNKNOWN, capabilities), null) {
     override fun createAccount(config: Config): OAuthAccount {
         return block()
     }
@@ -131,12 +134,13 @@ class FxaAccountManagerTest {
         val account = StatePersistenceTestableAccount(profile, constellation)
 
         val manager = TestableFxaAccountManager(
-            context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage
+            context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
+            listOf(DeviceCapability.SEND_TAB)
         ) {
             account
         }
 
-        `when`(constellation.ensureCapabilitiesAsync()).thenReturn(unitCompletedDeferrable())
+        `when`(constellation.ensureCapabilitiesAsync(any())).thenReturn(unitCompletedDeferrable())
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(account)
 
@@ -147,7 +151,7 @@ class FxaAccountManagerTest {
         assertNotNull(account.persistenceCallback)
 
         // Assert that ensureCapabilities fired, but not the device initialization (since we're restoring).
-        verify(constellation).ensureCapabilitiesAsync()
+        verify(constellation).ensureCapabilitiesAsync(listOf(DeviceCapability.SEND_TAB))
         verify(constellation, never()).initDeviceAsync(any(), any(), any())
 
         // Assert that periodic account refresh started.
@@ -171,7 +175,8 @@ class FxaAccountManagerTest {
                 context,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
-                accountStorage
+                accountStorage,
+                listOf(DeviceCapability.SEND_TAB)
         ) {
             account
         }
@@ -209,8 +214,8 @@ class FxaAccountManagerTest {
         verify(constellation).startPeriodicRefresh()
 
         // Assert that initDevice fired, but not ensureCapabilities (since we're initing a new account).
-        verify(constellation).initDeviceAsync(any(), any(), any())
-        verify(constellation, never()).ensureCapabilitiesAsync()
+        verify(constellation).initDeviceAsync(any(), any(), eq(listOf(DeviceCapability.SEND_TAB)))
+        verify(constellation, never()).ensureCapabilitiesAsync(any())
 
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
@@ -355,13 +360,14 @@ class FxaAccountManagerTest {
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(mockAccount)
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
-        `when`(constellation.ensureCapabilitiesAsync()).thenReturn(unitCompletedDeferrable())
+        `when`(constellation.ensureCapabilitiesAsync(any())).thenReturn(unitCompletedDeferrable())
 
         val manager = TestableFxaAccountManager(
                 context,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile"),
-                accountStorage
+                accountStorage,
+                emptyList()
         )
 
         val accountObserver: AccountObserver = mock()

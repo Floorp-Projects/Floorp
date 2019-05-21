@@ -36,11 +36,14 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     fun destroyCurrentDeviceAsync(): Deferred<Boolean>
 
     /**
-     * Ensure that all initialized [DeviceCapability], such as [DeviceCapability.SEND_TAB], are configured.
+     * Ensure that all passed in [capabilities] are configured.
      * This may involve backend service registration, or other work involving network/disc access.
+     * @param capabilities A list of capabilities to configure. This is expected to be the same or
+     * longer list than what was passed into [initDeviceAsync]. Removing capabilities is currently
+     * not supported.
      * @return A [Deferred] that will be resolved once operation is complete.
      */
-    fun ensureCapabilitiesAsync(): Deferred<Unit>
+    fun ensureCapabilitiesAsync(capabilities: List<DeviceCapability>): Deferred<Unit>
 
     /**
      * Current state of the constellation. May be missing if state was never queried.
