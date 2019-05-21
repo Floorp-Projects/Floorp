@@ -257,6 +257,26 @@ class TestStructuredLog(BaseStructuredTest):
         self.assertTrue(self.pop_last_item()["message"].startswith(
             "test_status for test_UNKNOWN logged while not in progress. Logged with data: {"))
 
+    def test_remove_optional_defaults(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "subtest name", "fail", message=None, stack=None)
+        self.assert_log_equals({"action": "test_status",
+                                "subtest": "subtest name",
+                                "status": "FAIL",
+                                "expected": "PASS",
+                                "test": "test1"})
+        self.logger.test_end("test1", "OK")
+        self.logger.suite_end()
+
+    def test_remove_optional_defaults_raw_log(self):
+        self.logger.log_raw({"action": "suite_start",
+                             "tests": [1],
+                             "name": None})
+        self.assert_log_equals({"action": "suite_start",
+                                "tests": {"default": ["1"]}})
+        self.logger.suite_end()
+
     def test_end(self):
         self.logger.suite_start([])
         self.logger.test_start("test1")
