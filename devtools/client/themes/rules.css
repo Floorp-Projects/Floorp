@@ -365,8 +365,12 @@
   display: inline-block;
   width: 12px;
   height: 12px;
-  background-image: url(chrome://devtools/skin/images/alert.svg);
   background-size: cover;
+}
+
+.ruleview-warning {
+  background-image: url(chrome://devtools/skin/images/alert.svg);
+  background-position: 0.73px 0.4px;
   -moz-context-properties: fill;
   fill: var(--yellow-60);
 }
