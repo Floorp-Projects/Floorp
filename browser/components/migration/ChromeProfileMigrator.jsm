@@ -288,9 +288,24 @@ async function GetCookiesResource(aProfileFolder) {
     type: MigrationUtils.resourceTypes.COOKIES,
 
     async migrate(aCallback) {
+      // Get columns names and set is_sceure, is_httponly fields accordingly.
+      let columns = await MigrationUtils.getRowsFromDBWithoutLocks(cookiesPath, "Chrome cookies",
+        `PRAGMA table_info(cookies)`).catch(ex => {
+          Cu.reportError(ex);
+          aCallback(false);
+        });
+      // If the promise was rejected we will have already called aCallback,
+      // so we can just return here.
+      if (!columns) {
+        return;
+      }
+      columns = columns.map(c => c.getResultByName("name"));
+      let isHttponly = columns.includes("is_httponly") ? "is_httponly" : "httponly";
+      let isSecure = columns.includes("is_secure") ? "is_secure" : "secure";
+
       // We don't support decrypting cookies yet so only import plaintext ones.
       let rows = await MigrationUtils.getRowsFromDBWithoutLocks(cookiesPath, "Chrome cookies",
-       `SELECT host_key, name, value, path, expires_utc, secure, httponly, encrypted_value
+       `SELECT host_key, name, value, path, expires_utc, ${isSecure}, ${isHttponly}, encrypted_value
         FROM cookies
         WHERE length(encrypted_value) = 0`).catch(ex => {
           Cu.reportError(ex);
@@ -316,8 +331,8 @@ async function GetCookiesResource(aProfileFolder) {
                                row.getResultByName("path"),
                                row.getResultByName("name"),
                                row.getResultByName("value"),
-                               row.getResultByName("secure"),
-                               row.getResultByName("httponly"),
+                               row.getResultByName(isSecure),
+                               row.getResultByName(isHttponly),
                                false,
                                parseInt(expiresUtc),
                                {},
