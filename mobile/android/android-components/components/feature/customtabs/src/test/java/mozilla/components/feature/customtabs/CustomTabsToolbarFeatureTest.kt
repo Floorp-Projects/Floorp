@@ -279,7 +279,7 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
-    fun `initialize calls addMenuItems`() {
+    fun `initialize calls addMenuItems when config has items`() {
         val session: Session = mock()
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
         val customTabConfig: CustomTabConfig = mock()
@@ -297,6 +297,58 @@ class CustomTabsToolbarFeatureTest {
         feature.initialize(session)
 
         verify(feature).addMenuItems(any(), anyList(), anyInt())
+    }
+
+    @Test
+    fun `initialize calls addMenuItems when menuBuilder has items`() {
+        val session: Session = mock()
+        val menuBuilder: BrowserMenuBuilder = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val customTabConfig: CustomTabConfig = mock()
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+        `when`(customTabConfig.menuItems).thenReturn(emptyList())
+        `when`(menuBuilder.items).thenReturn(listOf(mock(), mock()))
+
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", menuBuilder) {})
+
+        feature.initialize(session)
+
+        verify(feature).addMenuItems(any(), anyList(), anyInt())
+    }
+
+    @Test
+    fun `initialize never calls addMenuItems when no config or builder items available`() {
+        val session: Session = mock()
+        val menuBuilder: BrowserMenuBuilder = mock()
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val customTabConfig: CustomTabConfig = mock()
+        `when`(session.customTabConfig).thenReturn(customTabConfig)
+
+        // With NO config or builder.
+        var feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
+
+        feature.initialize(session)
+
+        verify(feature, never()).addMenuItems(any(), anyList(), anyInt())
+
+        // With only builder but NO items.
+        feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", menuBuilder) {})
+
+        feature.initialize(session)
+
+        // With only builder and items.
+        `when`(menuBuilder.items).thenReturn(listOf())
+
+        feature.initialize(session)
+
+        verify(feature, never()).addMenuItems(any(), anyList(), anyInt())
+
+        // With config with NO items and builder with items.
+        `when`(customTabConfig.menuItems).thenReturn(emptyList())
+
+        feature.initialize(session)
+
+        verify(feature, never()).addMenuItems(any(), anyList(), anyInt())
     }
 
     @Test

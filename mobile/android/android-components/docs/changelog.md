@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-findinpage**
   * Find in Page Bar now displays 0/0 for no matches found with new attr findInPageNoMatchesTextColor
 
+* **feature-customtabs**
+  * Fixed a bug where menu actions would not work for all Custom Tab sessions.
+
 * **support-test**
   * Added `testContext` property for retrieving application context from tests.
 
@@ -61,7 +64,7 @@ permalink: /changelog/
 
 * ℹ️ **Upgraded Gradle to 5.3.1**
   * ⚠️ This requires using the 1.3.30 Kotlin gradle plugin or higher.
-  
+
 * **feature-tab-collections**
   * 🆕 New component: Feature implementation for saving, restoring and organizing collections of tabs.
 
@@ -184,10 +187,10 @@ permalink: /changelog/
   accountManager.register(accountObserver, owner = this, autoPause = true)
   accountManager.registerForDeviceEvents(deviceEventsObserver, owner = this, autoPause = true)
   ```
-  
+
 * **feature-prompts**
   * ⚠️ **This is a breaking API change**:
-  * `PromptFeature` constructor adds an optional `sessionId`. This should use the custom tab session id if available. 
+  * `PromptFeature` constructor adds an optional `sessionId`. This should use the custom tab session id if available.
 
 
 * **browser-session**

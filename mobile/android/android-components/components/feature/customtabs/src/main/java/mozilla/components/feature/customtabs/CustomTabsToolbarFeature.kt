@@ -58,20 +58,30 @@ class CustomTabsToolbarFeature(
         session.customTabConfig?.let { config ->
             // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
             toolbar.onUrlClicked = { false }
+
             // If it's available, hold on to the readable colour for other assets.
             config.toolbarColor?.let {
                 readableColor = getReadableTextColor(it)
             }
+
             // Change the toolbar colour
             updateToolbarColor(config.toolbarColor)
+
             // Add navigation close action
             addCloseButton(session, config.closeButtonIcon)
+
             // Add action button
             addActionButton(session, config.actionButtonConfig)
+
             // Show share button
-            if (config.showShareMenuItem) addShareButton(session)
+            if (config.showShareMenuItem) {
+                addShareButton(session)
+            }
+
             // Add menu items
-            if (config.menuItems.isNotEmpty()) addMenuItems(session, config.menuItems, menuItemIndex)
+            if (config.menuItems.isNotEmpty() || menuBuilder?.items?.isNotEmpty() == true) {
+                addMenuItems(session, config.menuItems, menuItemIndex)
+            }
 
             return true
         }
