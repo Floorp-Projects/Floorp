@@ -3780,19 +3780,6 @@ nsDocumentViewer::EnumerateDocumentNames(uint32_t* aCount,
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::GetIsFramesetFrameSelected(bool* aIsFramesetFrameSelected) {
-#  ifdef NS_PRINTING
-  *aIsFramesetFrameSelected = false;
-  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-
-  *aIsFramesetFrameSelected = mPrintJob->IsFramesetFrameSelected();
-  return NS_OK;
-#  else
-  return NS_ERROR_FAILURE;
-#  endif
-}
-
-NS_IMETHODIMP
 nsDocumentViewer::GetPrintPreviewNumPages(int32_t* aPrintPreviewNumPages) {
 #  ifdef NS_PRINTING
   NS_ENSURE_ARG_POINTER(aPrintPreviewNumPages);
@@ -3800,19 +3787,6 @@ nsDocumentViewer::GetPrintPreviewNumPages(int32_t* aPrintPreviewNumPages) {
 
   *aPrintPreviewNumPages = mPrintJob->GetPrintPreviewNumPages();
   return *aPrintPreviewNumPages > 0 ? NS_OK : NS_ERROR_FAILURE;
-#  else
-  return NS_ERROR_FAILURE;
-#  endif
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::GetIsFramesetDocument(bool* aIsFramesetDocument) {
-#  ifdef NS_PRINTING
-  *aIsFramesetDocument = false;
-  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-
-  *aIsFramesetDocument = mPrintJob->IsFramesetDocument();
-  return NS_OK;
 #  else
   return NS_ERROR_FAILURE;
 #  endif
