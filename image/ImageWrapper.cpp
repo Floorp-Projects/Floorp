@@ -193,21 +193,24 @@ ImageWrapper::Draw(gfxContext* aContext, const nsIntSize& aSize,
 }
 
 NS_IMETHODIMP
-ImageWrapper::StartDecoding(uint32_t aFlags) {
-  return mInnerImage->StartDecoding(aFlags);
+ImageWrapper::StartDecoding(uint32_t aFlags, uint32_t aWhichFrame) {
+  return mInnerImage->StartDecoding(aFlags, aWhichFrame);
 }
 
-bool ImageWrapper::StartDecodingWithResult(uint32_t aFlags) {
-  return mInnerImage->StartDecodingWithResult(aFlags);
+bool ImageWrapper::StartDecodingWithResult(uint32_t aFlags,
+                                           uint32_t aWhichFrame) {
+  return mInnerImage->StartDecodingWithResult(aFlags, aWhichFrame);
 }
 
-bool ImageWrapper::RequestDecodeWithResult(uint32_t aFlags) {
-  return mInnerImage->RequestDecodeWithResult(aFlags);
+bool ImageWrapper::RequestDecodeWithResult(uint32_t aFlags,
+                                           uint32_t aWhichFrame) {
+  return mInnerImage->RequestDecodeWithResult(aFlags, aWhichFrame);
 }
 
 NS_IMETHODIMP
-ImageWrapper::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags) {
-  return mInnerImage->RequestDecodeForSize(aSize, aFlags);
+ImageWrapper::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags,
+                                   uint32_t aWhichFrame) {
+  return mInnerImage->RequestDecodeForSize(aSize, aFlags, aWhichFrame);
 }
 
 NS_IMETHODIMP

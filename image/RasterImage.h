@@ -452,7 +452,8 @@ class RasterImage final : public ImageResource,
   bool IsOpaque();
 
   DrawableSurface RequestDecodeForSizeInternal(const gfx::IntSize& aSize,
-                                               uint32_t aFlags);
+                                               uint32_t aFlags,
+                                               uint32_t aWhichFrame);
 
  protected:
   explicit RasterImage(nsIURI* aURI = nullptr);
