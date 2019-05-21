@@ -3795,6 +3795,16 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
     }
   }
 
+  if (computedStyle->GetPseudoType() == PseudoStyleType::marker &&
+      newFrame->IsBulletFrame()) {
+    MOZ_ASSERT(!computedStyle->StyleContent()->ContentCount());
+    auto* node = new nsCounterUseNode(nsCounterUseNode::ForLegacyBullet);
+    auto* list = mCounterManager.CounterListFor(nsGkAtoms::list_item);
+    if (node->InitBullet(list, newFrame)) {
+      CountersDirty();
+    }
+  }
+
   NS_ASSERTION(newFrame->IsFrameOfType(nsIFrame::eLineParticipant) ==
                    ((bits & FCDATA_IS_LINE_PARTICIPANT) != 0),
                "Incorrectly set FCDATA_IS_LINE_PARTICIPANT bits");
