@@ -206,17 +206,12 @@ ContentAreaDropListener.prototype =
     if (sourceNode &&
         (sourceNode.localName !== "browser" ||
          sourceNode.namespaceURI !== "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")) {
-      // Use sourceNode's principal only if the sourceNode is not browser.
+      // Use sourceNode's csp only if the sourceNode is not browser.
       //
-      // If sourceNode is browser, the actual triggering principal may be
-      // differ than sourceNode's principal, since sourceNode's principal is
-      // top level document's one and the drag may be triggered from a frame
-      // with different principal.
-      if (sourceNode.nodePrincipal) {
-        // Currently we query the CSP from the nodePrincipal. After Bug 965637 we can
-        // query the CSP directly from the sourceNode.
-        return sourceNode.nodePrincipal.csp;
-      }
+      // If sourceNode is browser, the actual triggering csp may be differ than sourceNode's csp,
+      // since sourceNode's csp is top level document's one and the drag may be triggered from a
+      // frame with different csp.
+      return sourceNode.csp;
     }
     return null;
   },
