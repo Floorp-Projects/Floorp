@@ -289,7 +289,7 @@ function getNodeForToolbarItem(itemGuid, validator) {
       // Don't search in queries, they could contain our item in a
       // different position.  Search only folders
       if (PlacesUtils.nodeIsFolder(child._placesNode)) {
-        var popup = child.lastElementChild;
+        var popup = child.menupopup;
         popup.openPopup();
         var foundNode = findNode(popup);
         popup.hidePopup();

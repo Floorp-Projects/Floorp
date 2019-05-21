@@ -129,8 +129,7 @@ async function runTests(options) {
     is(button.getAttribute("disabled") == "true", !details.enabled, "disabled state is correct");
 
     if (details.badge) {
-      let badge = button.ownerDocument.getAnonymousElementByAttribute(
-        button, "class", "toolbarbutton-badge");
+      let badge = button.badgeLabel;
       let style = window.getComputedStyle(badge);
       let expected = {
         backgroundColor: serializeColor(details.badgeBackgroundColor),
@@ -426,7 +425,7 @@ add_task(async function testBadgeColorPersistence() {
 
   function getBadgeForWindow(win) {
     const widget = getBrowserActionWidget(extension).forWindow(win).node;
-    return document.getAnonymousElementByAttribute(widget, "class", "toolbarbutton-badge");
+    return widget.badgeLabel;
   }
 
   let badge = getBadgeForWindow(window);
