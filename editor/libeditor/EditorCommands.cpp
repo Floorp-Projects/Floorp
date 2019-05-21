@@ -8,6 +8,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/MozPromise.h"  // for mozilla::detail::Any
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Selection.h"
@@ -22,9 +24,12 @@
 class nsISupports;
 
 #define STATE_ENABLED "state_enabled"
+#define STATE_ATTRIBUTE "state_attribute"
 #define STATE_DATA "state_data"
 
 namespace mozilla {
+
+using namespace detail;
 
 /******************************************************************************
  * mozilla::EditorCommand
@@ -76,7 +81,7 @@ EditorCommand::DoCommandParams(const char* aCommandName,
     return NS_ERROR_INVALID_ARG;
   }
   Command command;
-  nsCommandParams* params = aParams->AsCommandParams();
+  nsCommandParams* params = aParams ? aParams->AsCommandParams() : nullptr;
   if (params) {
     nsAutoString value;
     params->GetString(aCommandName, value);
@@ -93,6 +98,27 @@ EditorCommand::DoCommandParams(const char* aCommandName,
         NS_SUCCEEDED(rv),
         "Failed to do command from nsIControllerCommand::DoCommandParams()");
     return rv;
+  }
+
+  if (Any(paramType & EditorCommandParamType::Bool)) {
+    if (Any(paramType & EditorCommandParamType::StateAttribute)) {
+      Maybe<bool> boolParam = Nothing();
+      if (params) {
+        ErrorResult error;
+        boolParam = Some(params->GetBool(STATE_ATTRIBUTE, error));
+        if (NS_WARN_IF(error.Failed())) {
+          return error.StealNSResult();
+        }
+      }
+      nsresult rv = DoCommandParam(command, boolParam,
+                                   MOZ_KnownLive(*editor->AsTextEditor()));
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "Failed to do command from nsIControllerCommand::DoCommandParams()");
+      return rv;
+    }
+    MOZ_ASSERT_UNREACHABLE("Unexpected state for bool");
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   nsresult rv = DoCommandParams(command, MOZ_KnownLive(params),
