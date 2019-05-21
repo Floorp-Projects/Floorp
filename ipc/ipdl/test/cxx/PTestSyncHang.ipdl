@@ -6,8 +6,6 @@ namespace _ipdltest {
 protocol PTestSyncHang {
 
 child:
-    // Add this unused message so we don't get compiler errors
-    // complaining that mLivenessState is an unused private field.
     async UnusedMessage();
 };
 

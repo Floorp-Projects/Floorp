@@ -302,42 +302,6 @@ void SentinelReadError(const char* aClassName) {
   MOZ_CRASH_UNSAFE_PRINTF("incorrect sentinel when reading %s", aClassName);
 }
 
-bool StateTransition(bool aIsDelete, LivenessState* aNext) {
-  switch (*aNext) {
-    case LivenessState::Null:
-      if (aIsDelete) {
-        *aNext = LivenessState::Dead;
-      }
-      break;
-    case LivenessState::Dead:
-      return false;
-    default:
-      return false;
-  }
-  return true;
-}
-
-bool ReEntrantDeleteStateTransition(bool aIsDelete, bool aIsDeleteReply,
-                                    ReEntrantDeleteLivenessState* aNext) {
-  switch (*aNext) {
-    case ReEntrantDeleteLivenessState::Null:
-      if (aIsDelete) {
-        *aNext = ReEntrantDeleteLivenessState::Dying;
-      }
-      break;
-    case ReEntrantDeleteLivenessState::Dead:
-      return false;
-    case ReEntrantDeleteLivenessState::Dying:
-      if (aIsDeleteReply) {
-        *aNext = ReEntrantDeleteLivenessState::Dead;
-      }
-      break;
-    default:
-      return false;
-  }
-  return true;
-}
-
 void TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
                   nsTArray<void*>& aArray) {
   uint32_t i = 0;

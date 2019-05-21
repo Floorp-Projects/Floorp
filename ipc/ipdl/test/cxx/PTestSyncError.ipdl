@@ -11,17 +11,6 @@ child:
 parent:
     sync Error();
     async __delete__();
-
-/*
-state START:
-    send Start goto SYNC_ERROR;
-
-state SYNC_ERROR:
-    recv Error goto DEAD;
-
-state DEAD:
-    recv __delete__;
-*/
 };
 
 

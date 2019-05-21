@@ -8,15 +8,6 @@ child:
 parent:
     async Take(Shmem mem, Shmem unsafe, uint32_t expectedSize);
     async __delete__();
-
-/*
-state GIVING:
-    send Give goto TAKING;
-
-state TAKING:
-    recv Take goto TAKING;
-    recv __delete__;
-*/
 };
 
 }
