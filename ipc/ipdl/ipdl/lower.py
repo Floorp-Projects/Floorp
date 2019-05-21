@@ -311,6 +311,10 @@ def _cxxManagedContainerType(basetype, const=False, ref=False):
                 const=const, ref=ref, hasimplicitcopyctor=False)
 
 
+def _cxxLifecycleProxyType(ptr=False):
+    return Type('mozilla::ipc::ActorLifecycleProxy', ptr=ptr)
+
+
 def _callInsertManagedActor(managees, actor):
     return ExprCall(ExprSelect(managees, '.', 'PutEntry'),
                     args=[actor])
@@ -327,6 +331,18 @@ def _callClearManagedActors(managees):
 
 def _callHasManagedActor(managees, actor):
     return ExprCall(ExprSelect(managees, '.', 'Contains'), args=[actor])
+
+
+def _callGetLifecycleProxy(actor=ExprVar.THIS):
+    return ExprCall(ExprSelect(actor, '->', 'GetLifecycleProxy'))
+
+
+def _releaseLifecycleProxy(actor=ExprVar.THIS):
+    ifstmt = StmtIf(_callGetLifecycleProxy(actor))
+    ifstmt.addifstmt(
+        StmtExpr(ExprCall(ExprSelect(_callGetLifecycleProxy(actor),
+                                     '->', 'Release'))))
+    return ifstmt
 
 
 def _otherSide(side):
@@ -1218,6 +1234,9 @@ class Protocol(ipdl.ast.Protocol):
 
     def removeManageeMethod(self):
         return ExprVar('RemoveManagee')
+
+    def deallocManageeMethod(self):
+        return ExprVar('DeallocManagee')
 
     def otherPidMethod(self):
         return ExprVar('OtherPid')
@@ -3389,21 +3408,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     params=[Decl(p.managedCxxType(managed, self.side), 'aActor')],
                     ret=Type.BOOL, methodspec=MethodSpec.PURE)))
 
-        # ActorDestroy() method; default is no-op
-        if self.side == 'parent':
-            methodspec = MethodSpec.PURE
-        else:
-            methodspec = MethodSpec.VIRTUAL
-
-        self.cls.addstmts([
-            Whitespace.NL,
-            MethodDefn(MethodDecl(
-                _destroyMethod().name,
-                params=[Decl(_DestroyReason.Type(), 'aWhy')],
-                ret=Type.VOID, methodspec=methodspec)),
-            Whitespace.NL
-        ])
-
         if ptype.isToplevel():
             # void ProcessingError(code); default to no-op
             processingerror = MethodDefn(
@@ -3517,6 +3521,40 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             self.cls.addstmts([meth, refmeth, Whitespace.NL])
 
+        # AllManagedActors(Array& inout) const
+        arrvar = ExprVar('arr__')
+        managedmeth = MethodDefn(MethodDecl(
+            'AllManagedActors',
+            params=[Decl(_cxxArrayType(_refptr(_cxxLifecycleProxyType()), ref=True),
+                         arrvar.name)],
+            methodspec=MethodSpec.OVERRIDE,
+            const=True))
+
+        # Count the number of managed actors, and allocate space in the output array.
+        total = ExprLiteral.ZERO
+        for managed in ptype.manages:
+            managedVar = p.managedVar(managed, self.side)
+            total = ExprBinary(ExprCall(ExprSelect(managedVar, '.', 'Count')),
+                               '+', total)
+        managedmeth.addstmts([
+            StmtExpr(ExprCall(ExprSelect(arrvar, '.', 'SetCapacity'),
+                              args=[total])),
+            Whitespace.NL,
+        ])
+
+        # Iterate over each managed actor, and add them into our array.
+        itervar = ExprVar('iter__')
+        for managed in ptype.manages:
+            managedVar = p.managedVar(managed, self.side)
+            proxy = _callGetLifecycleProxy(actorFromIter(itervar))
+            foreachappend = forLoopOverHashtable(managedVar, itervar, const=True)
+            foreachappend.addstmt(
+                StmtExpr(ExprCall(ExprSelect(arrvar, '.', 'AppendElement'),
+                                  args=[proxy])))
+            managedmeth.addstmt(foreachappend)
+
+        self.cls.addstmts([managedmeth, Whitespace.NL])
+
         # OpenPEndpoint(...)/BindPEndpoint(...)
         for managed in ptype.manages:
             self.genManagedEndpoint(managed)
@@ -3585,6 +3623,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             if dispatches:
                 routevar = ExprVar('route__')
+                proxyvar = ExprVar('proxy__')
                 routedecl = StmtDecl(
                     Decl(_actorIdType(), routevar.name),
                     init=ExprCall(ExprSelect(msgvar, '.', 'routing_id')))
@@ -3592,17 +3631,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 routeif = StmtIf(ExprBinary(
                     ExprVar('MSG_ROUTING_CONTROL'), '!=', routevar))
                 routedvar = ExprVar('routed__')
-                routeif.ifb.addstmt(
-                    StmtDecl(Decl(Type('IProtocol', ptr=True),
-                                  routedvar.name),
-                             _lookupListener(routevar)))
                 failif = StmtIf(ExprPrefixUnop(routedvar, '!'))
                 failif.ifb.addstmt(StmtReturn(_Result.RouteError))
-                routeif.ifb.addstmt(failif)
 
-                routeif.ifb.addstmt(StmtReturn(ExprCall(
-                    ExprSelect(routedvar, '->', name),
-                    args=[ExprVar(p.name) for p in params])))
+                routeif.ifb.addstmts([
+                    StmtDecl(Decl(Type('IProtocol', ptr=True), routedvar.name),
+                             _lookupListener(routevar)),
+                    failif,
+                    StmtDecl(Decl(_refptr(_cxxLifecycleProxyType()), proxyvar.name),
+                             init=_callGetLifecycleProxy(routedvar)),
+                    StmtReturn(ExprCall(
+                        ExprSelect(ExprCall(ExprSelect(proxyvar, '->', 'Get')),
+                                   '->', name),
+                        args=[ExprVar(p.name) for p in params])),
+                ])
 
                 method.addstmts([routedecl, routeif, Whitespace.NL])
 
@@ -3651,9 +3693,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ])
 
         destroysubtreevar = ExprVar('DestroySubtree')
-        deallocsubtreevar = ExprVar('DeallocSubtree')
+        clearsubtreevar = ExprVar('ClearSubtree')
         deallocshmemvar = ExprVar('DeallocShmems')
-        deallocselfvar = ExprVar('Dealloc' + _actorName(ptype.name(), self.side))
 
         # int32_t GetProtocolTypeId() { return PFoo; }
         gettypetag = MethodDefn(
@@ -3669,9 +3710,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             onclose.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[_DestroyReason.NormalShutdown])),
-                StmtExpr(ExprCall(deallocsubtreevar)),
+                StmtExpr(ExprCall(clearsubtreevar)),
                 StmtExpr(ExprCall(deallocshmemvar)),
-                StmtExpr(ExprCall(deallocselfvar))
+                _releaseLifecycleProxy(),
             ])
             self.cls.addstmts([onclose, Whitespace.NL])
 
@@ -3681,9 +3722,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             onerror.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[_DestroyReason.AbnormalShutdown])),
-                StmtExpr(ExprCall(deallocsubtreevar)),
+                StmtExpr(ExprCall(clearsubtreevar)),
                 StmtExpr(ExprCall(deallocshmemvar)),
-                StmtExpr(ExprCall(deallocselfvar))
+                _releaseLifecycleProxy(),
             ])
             self.cls.addstmts([onerror, Whitespace.NL])
 
@@ -3710,125 +3751,34 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # private methods
         self.cls.addstmt(Label.PRIVATE)
 
-        # DestroySubtree(bool normal)
-        whyvar = ExprVar('why')
-        subtreewhyvar = ExprVar('subtreewhy')
-        kidsvar = ExprVar('kids')
-        itervar = ExprVar('iter')
-
-        destroysubtree = MethodDefn(MethodDecl(
-            destroysubtreevar.name,
-            params=[Decl(_DestroyReason.Type(), whyvar.name)]))
-
-        if ptype.isManaged():
-            destroysubtree.addstmt(
-                Whitespace('// Unregister from our manager.\n', indent=True))
-            destroysubtree.addstmts(self.unregisterActor())
-            destroysubtree.addstmt(Whitespace.NL)
-
-        if ptype.isManager():
-            # only declare this for managers to avoid unused var warnings
-            destroysubtree.addstmts([
-                StmtDecl(
-                    Decl(_DestroyReason.Type(), subtreewhyvar.name),
-                    init=ExprConditional(
-                        ExprBinary(
-                            ExprBinary(whyvar, '==',
-                                       _DestroyReason.Deletion),
-                            '||',
-                            ExprBinary(whyvar, '==',
-                                       _DestroyReason.FailedConstructor)),
-                        _DestroyReason.AncestorDeletion, whyvar)),
-                Whitespace.NL
-            ])
-
-        for managed in ptype.manages:
-            managedVar = p.managedVar(managed, self.side)
-            kidvar = ExprVar('kid')
-
-            foreachdestroy = StmtRangedFor(kidvar, kidsvar)
-
-            foreachdestroy.addstmt(
-                Whitespace('// Guarding against a child removing a sibling from the list during the iteration.\n', indent=True))  # NOQA: E501
-            ifhas = StmtIf(_callHasManagedActor(managedVar, kidvar))
-            ifhas.addifstmt(StmtExpr(ExprCall(
-                ExprSelect(kidvar, '->', destroysubtreevar.name),
-                args=[subtreewhyvar])))
-            foreachdestroy.addstmt(ifhas)
-
-            block = StmtBlock()
-            block.addstmts([
-                Whitespace(
-                    '// Recursively shutting down %s kids\n' % (managed.name()),
-                    indent=True),
-                StmtDecl(
-                    Decl(_cxxArrayType(p.managedCxxType(managed, self.side)), kidsvar.name)),
-                Whitespace(
-                    '// Accumulate kids into a stable structure to iterate over\n',
-                    indent=True),
-                StmtExpr(ExprCall(p.managedMethod(managed, self.side),
-                                  args=[kidsvar])),
-                foreachdestroy,
-            ])
-            destroysubtree.addstmt(block)
-
-        if len(ptype.manages):
-            destroysubtree.addstmt(Whitespace.NL)
-
-        # Reject pending responses for actor before calling ActorDestroy().
-        rejectPendingResponsesMethod = ExprSelect(self.protocol.callGetChannel(),
-                                                  '->',
-                                                  'RejectPendingResponsesForActor')
-        destroysubtree.addstmts([Whitespace('// Reject owning pending responses.\n',
-                                            indent=True),
-                                 StmtExpr(ExprCall(rejectPendingResponsesMethod,
-                                                   args=[ExprVar('this')])),
-                                 Whitespace.NL
-                                 ])
-
-        destroysubtree.addstmts([Whitespace('// Finally, destroy "us".\n',
-                                            indent=True),
-                                 StmtExpr(ExprCall(_destroyMethod(),
-                                                   args=[whyvar]))
-                                 ])
-
-        self.cls.addstmts([destroysubtree, Whitespace.NL])
-
-        # DeallocSubtree()
-        deallocsubtree = MethodDefn(MethodDecl(deallocsubtreevar.name))
+        # ClearSubtree()
+        clearsubtree = MethodDefn(MethodDecl(clearsubtreevar.name))
         for managed in ptype.manages:
             managedVar = p.managedVar(managed, self.side)
 
             foreachrecurse = forLoopOverHashtable(managedVar, itervar)
             foreachrecurse.addstmt(StmtExpr(ExprCall(
-                ExprSelect(actorFromIter(itervar), '->', deallocsubtreevar.name))))
+                ExprSelect(actorFromIter(itervar), '->', clearsubtreevar.name))))
 
-            foreachdealloc = forLoopOverHashtable(managedVar, itervar)
-            foreachdealloc.addstmts([
-                StmtExpr(self.thisCall(_deallocMethod(managed, self.side),
-                                       [actorFromIter(itervar)]))
-            ])
+            # Release reference taken by IPC for actors
+            foreachrelease = forLoopOverHashtable(managedVar, itervar)
+            foreachrelease.addstmt(_releaseLifecycleProxy(actorFromIter(itervar)))
 
             block = StmtBlock()
             block.addstmts([
                 Whitespace(
-                    '// Recursively deleting %s kids\n' % (managed.name()),
+                    '// Recursively releasing %s kids\n' % (managed.name()),
                     indent=True),
                 foreachrecurse,
                 Whitespace.NL,
-                foreachdealloc,
+                foreachrelease,
                 StmtExpr(_callClearManagedActors(managedVar)),
 
             ])
-            deallocsubtree.addstmt(block)
-        # don't delete outselves: either the manager will do it, or
-        # we're toplevel
-        self.cls.addstmts([deallocsubtree, Whitespace.NL])
-
-        if ptype.isToplevel():
-            deallocself = MethodDefn(MethodDecl(
-                deallocselfvar.name, methodspec=MethodSpec.VIRTUAL))
-            self.cls.addstmts([deallocself, Whitespace.NL])
+            clearsubtree.addstmt(block)
+        # don't release our own IPC reference: either the manager will do it,
+        # or we're toplevel
+        self.cls.addstmts([clearsubtree, Whitespace.NL])
 
         # private members
         self.cls.addstmt(StmtDecl(Decl(self.protocol.fqStateType(), p.stateVar().name)))
@@ -3946,8 +3896,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         "actor not managed by this!"),
                     Whitespace.NL,
                     StmtExpr(_callRemoveManagedActor(containervar, actorvar)),
-                    StmtExpr(self.thisCall(_deallocMethod(manageeipdltype, self.side),
-                                           [actorvar])),
+                    _releaseLifecycleProxy(actorvar),
                     StmtReturn()
                 ])
                 switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name),
@@ -3957,7 +3906,37 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             switchontype.addcase(DefaultLabel(), default)
             removemanagee.addstmt(switchontype)
 
-        return methods + [removemanagee, Whitespace.NL]
+        # The `DeallocManagee` method is called for managed actors to trigger
+        # deallocation when ActorLifecycleProxy is freed.
+        deallocmanagee = MethodDefn(MethodDecl(
+            p.deallocManageeMethod().name,
+            params=[Decl(_protocolIdType(), pvar.name),
+                    Decl(protocolbase, listenervar.name)],
+            methodspec=MethodSpec.OVERRIDE))
+
+        if not len(p.managesStmts):
+            deallocmanagee.addstmts([_fatalError('unreached'), StmtReturn()])
+        else:
+            switchontype = StmtSwitch(pvar)
+            for managee in p.managesStmts:
+                case = StmtBlock()
+                manageeipdltype = managee.decl.type
+                manageecxxtype = _cxxBareType(ipdl.type.ActorType(manageeipdltype),
+                                              self.side)
+
+                case.addstmts([
+                    StmtExpr(self.thisCall(_deallocMethod(manageeipdltype, self.side),
+                                           [ExprCast(listenervar, manageecxxtype, static=True)])),
+                    StmtReturn()
+                ])
+                switchontype.addcase(CaseLabel(_protocolId(manageeipdltype).name),
+                                     case)
+            default = StmtBlock()
+            default.addstmts([_fatalError('unreached'), StmtReturn()])
+            switchontype.addcase(DefaultLabel(), default)
+            deallocmanagee.addstmt(switchontype)
+
+        return methods + [removemanagee, deallocmanagee, Whitespace.NL]
 
     def genShmemCreatedHandler(self):
         p = self.protocol
@@ -4278,7 +4257,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return ([StmtDecl(Decl(Type('IProtocol', ptr=True), managervar.name),
                           init=self.protocol.managerVar(actorexpr)),
                  StmtExpr(self.callActorDestroy(actorexpr, why)),
-                 StmtExpr(self.callDeallocSubtree(md, actorexpr)),
+                 StmtExpr(self.callClearSubtree(md, actorexpr)),
                  StmtExpr(self.callRemoveActor(
                      actorexpr,
                      manager=managervar,
@@ -4902,8 +4881,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         args=[_protocolId(ipdltype),
                               actorexpr])
 
-    def callDeallocSubtree(self, md, actorexpr):
-        return ExprCall(ExprSelect(actorexpr, '->', 'DeallocSubtree'))
+    def callClearSubtree(self, md, actorexpr):
+        return ExprCall(ExprSelect(actorexpr, '->', 'ClearSubtree'))
 
     def invokeRecvHandler(self, md, implicit=True):
         retsems = 'in'

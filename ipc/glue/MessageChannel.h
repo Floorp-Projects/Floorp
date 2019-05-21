@@ -38,6 +38,7 @@ namespace ipc {
 
 class MessageChannel;
 class IToplevelProtocol;
+class ActorLifecycleProxy;
 
 class RefCountedMonitor : public Monitor {
  public:
@@ -393,11 +394,11 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
 
   // DispatchMessage will route to one of these functions depending on the
   // protocol type of the message.
-  void DispatchSyncMessage(const Message& aMsg, Message*& aReply);
-  void DispatchUrgentMessage(const Message& aMsg);
-  void DispatchAsyncMessage(const Message& aMsg);
-  void DispatchRPCMessage(const Message& aMsg);
-  void DispatchInterruptMessage(Message&& aMsg, size_t aStackDepth);
+  void DispatchSyncMessage(ActorLifecycleProxy* aProxy, const Message& aMsg,
+                           Message*& aReply);
+  void DispatchAsyncMessage(ActorLifecycleProxy* aProxy, const Message& aMsg);
+  void DispatchInterruptMessage(ActorLifecycleProxy* aProxy, Message&& aMsg,
+                                size_t aStackDepth);
 
   // Return true if the wait ended because a notification was received.
   //
