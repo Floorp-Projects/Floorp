@@ -21,7 +21,7 @@
  * parser functionality directly in compiled code tests.
  * All the tests (except the fuzzy tests at the end) follow the same schemata:
  *   a) create an nsIContentSecurityPolicy object
- *   b) set the selfURI in SetRequestContext
+ *   b) set the selfURI in SetRequestContextWithPrincipal
  *   c) append one or more policies by calling AppendPolicy
  *   d) check if the policy count is correct by calling GetPolicyCount
  *   e) compare the result of the policy with the expected output
@@ -90,7 +90,8 @@ nsresult runTest(
 
   // for testing the parser we only need to set a principal which is needed
   // to translate the keyword 'self' into an actual URI.
-  rv = csp->SetRequestContext(nullptr, selfURIPrincipal);
+  rv = csp->SetRequestContextWithPrincipal(selfURIPrincipal, selfURI,
+                                           EmptyString(), 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // append a policy
