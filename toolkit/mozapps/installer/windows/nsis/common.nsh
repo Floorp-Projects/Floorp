@@ -4990,6 +4990,7 @@ end:
       Var BrandFullName
       Var BrandFullNameDA
       Var BrandShortName
+      Var BrandProductName
     !endif
 
     !verbose push
@@ -5001,28 +5002,37 @@ end:
       Push $R8
       Push $R7
       Push $R6
+      Push $R5
 
       StrCpy $R8 "${BrandFullName}"
       StrCpy $R7 "${BrandShortName}"
+      StrCpy $R6 "${BrandProductName}"
 
       IfFileExists "$R9" +1 finish
 
       ClearErrors
-      ReadINIStr $R6 $R9 "Branding" "BrandFullName"
+      ReadINIStr $R5 $R9 "Branding" "BrandFullName"
       IfErrors +2 +1
-      StrCpy $R8 "$R6"
+      StrCpy $R8 "$R5"
 
       ClearErrors
-      ReadINIStr $R6 $R9 "Branding" "BrandShortName"
+      ReadINIStr $R5 $R9 "Branding" "BrandShortName"
       IfErrors +2 +1
-      StrCpy $R7 "$R6"
+      StrCpy $R7 "$R5"
+
+      ClearErrors
+      ReadINIStr $R5 $R9 "Branding" "BrandProductName"
+      IfErrors +2 +1
+      StrCpy $R6 "$R5"
 
       finish:
       StrCpy $BrandFullName "$R8"
       ${${_MOZFUNC_UN}WordReplace} "$R8" "&" "&&" "+" $R8
       StrCpy $BrandFullNameDA "$R8"
       StrCpy $BrandShortName "$R7"
+      StrCpy $BrandProductName "$R6"
 
+      Pop $R5
       Pop $R6
       Pop $R7
       Pop $R8
