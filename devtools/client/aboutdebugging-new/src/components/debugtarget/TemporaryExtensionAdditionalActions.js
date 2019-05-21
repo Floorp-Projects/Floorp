@@ -13,6 +13,8 @@ const Localized = createFactory(FluentReact.Localized);
 
 const Actions = require("../../actions/index");
 const Types = require("../../types/index");
+
+const DetailsLog = createFactory(require("../shared/DetailsLog"));
 const Message = createFactory(require("../shared/Message"));
 const { MESSAGE_LEVEL } = require("../../constants");
 
@@ -50,7 +52,17 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
         level: MESSAGE_LEVEL.ERROR,
         key: "reload-error",
       },
-      dom.p({ className: "technical-text" }, reloadError),
+      DetailsLog(
+        {
+          type: MESSAGE_LEVEL.ERROR,
+        },
+        dom.p(
+          {
+            className: "technical-text",
+          },
+          reloadError
+        ),
+      )
     );
   }
 

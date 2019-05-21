@@ -11,6 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const DetailsLog = createFactory(require("../shared/DetailsLog"));
 const FieldPair = createFactory(require("./FieldPair"));
 const Message = createFactory(require("../shared/Message"));
 
@@ -48,11 +49,16 @@ class ExtensionDetail extends PureComponent {
             isCloseable: true,
             key: `warning-${index}`,
           },
-          dom.p(
+          DetailsLog(
             {
-              className: "technical-text",
+              type: MESSAGE_LEVEL.WARNING,
             },
-            warning
+            dom.p(
+              {
+                className: "technical-text",
+              },
+              warning
+            ),
           )
         );
       })
