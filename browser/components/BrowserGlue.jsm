@@ -450,6 +450,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  RemoteSecuritySettings: "resource://gre/modules/psm/RemoteSecuritySettings.jsm",
   RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",
@@ -1821,6 +1822,10 @@ BrowserGlue.prototype = {
 
     Services.tm.idleDispatchToMainThread(() => {
       RemoteSettings.init();
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      RemoteSecuritySettings.init();
     });
   },
 
