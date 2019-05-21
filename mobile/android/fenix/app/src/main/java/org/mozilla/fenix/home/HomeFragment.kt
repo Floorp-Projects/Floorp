@@ -83,6 +83,7 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     var deleteSessionJob: (suspend () -> Unit)? = null
     private var layoutManagerState: Parcelable? = null
+    private var motionLayoutProgress = 0F
 
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
@@ -197,19 +198,15 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         savedInstanceState?.apply {
             layoutManagerState = getParcelable(KEY_LAYOUT_MANAGER_STATE)
-            val progress = getFloat(KEY_MOTION_LAYOUT_PROGRESS)
-            homeLayout.progress = if (progress > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
+            motionLayoutProgress = getFloat(KEY_MOTION_LAYOUT_PROGRESS)
+            homeLayout.progress = if (motionLayoutProgress > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-
-        sessionControlComponent.view.layoutManager!!.onSaveInstanceState()!!.apply {
-            outState.putParcelable(KEY_LAYOUT_MANAGER_STATE, this)
-        }
-
-        outState.putFloat(KEY_MOTION_LAYOUT_PROGRESS, homeLayout.progress)
+        outState.putParcelable(KEY_LAYOUT_MANAGER_STATE, layoutManagerState)
+        outState.putFloat(KEY_MOTION_LAYOUT_PROGRESS, motionLayoutProgress)
     }
 
     override fun onDestroyView() {
@@ -220,6 +217,10 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+        layoutManagerState?.also { parcelable ->
+            sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
+        }
+        homeLayout?.progress = if (motionLayoutProgress > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
         (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
@@ -392,6 +393,8 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     override fun onPause() {
         super.onPause()
+        layoutManagerState = sessionControlComponent.view.layoutManager?.onSaveInstanceState()
+        motionLayoutProgress = homeLayout?.progress ?: 0F
         sessionObserver?.let {
             requireComponents.core.sessionManager.unregister(it)
         }
