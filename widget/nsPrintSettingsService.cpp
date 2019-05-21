@@ -173,8 +173,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   // data->deviceName() default-initializes
   data->printableWidthInInches() = 0;
   data->printableHeightInInches() = 0;
-  data->isFramesetDocument() = false;
-  data->isFramesetFrameSelected() = false;
   data->isIFrameSelected() = false;
   data->isRangeSelection() = false;
   // data->GTKPrintSettings() default-initializes
