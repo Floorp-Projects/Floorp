@@ -40,7 +40,7 @@ function $_(formNum, name) {
 
 /**
  * Check autocomplete popup results to ensure that expected
- * values are being shown correctly as items in the popup.
+ * *labels* are being shown correctly as items in the popup.
  */
 function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
   if (hostname !== null) {
@@ -48,8 +48,7 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
 
     // Check the footer first.
     let footerResult = actualValues[actualValues.length - 1];
-    ok(footerResult.includes("View Saved Logins"), "the footer text is shown correctly");
-    ok(footerResult.includes(hostname), "the footer has the correct hostname attribute");
+    is(footerResult, "View Saved Logins", "the footer text is shown correctly");
   }
 
   if (hostname === null) {
