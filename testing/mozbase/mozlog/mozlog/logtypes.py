@@ -21,6 +21,7 @@ class log_action(object):
 
         self.args_no_default = []
         self.args_with_default = []
+        self.optional_args = set()
 
         # These are the required fields in a log message that usually aren't
         # supplied by the caller, but can be in the case of log_raw
@@ -37,6 +38,9 @@ class log_action(object):
                 self.args_no_default.append(arg.name)
             else:
                 self.args_with_default.append(arg.name)
+
+            if arg.optional:
+                self.optional_args.add(arg.name)
 
             if arg.name in self.args:
                 raise ValueError("Repeated argument name %s" % arg.name)
@@ -94,7 +98,11 @@ class log_action(object):
             if key in self.args:
                 out_value = self.args[key](value)
                 if out_value is not missing:
-                    data[key] = out_value
+                    if (key in self.optional_args and
+                            value == self.args[key].default):
+                        pass
+                    else:
+                        data[key] = out_value
             else:
                 raise TypeError("Unrecognised argument %s" % key)
 
