@@ -5,11 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.net += [
+    'DataChannelChild.h',
     'DataChannelParent.h',
 ]
 
 EXPORTS += [
-  'nsDataHandler.h',
+    'nsDataChannel.h',
+    'nsDataHandler.h',
 ]
 
 UNIFIED_SOURCES += [

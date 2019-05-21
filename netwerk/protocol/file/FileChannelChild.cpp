@@ -53,14 +53,13 @@ FileChannelChild::CompleteRedirectSetup(nsIStreamListener* listener,
 }
 
 void FileChannelChild::AddIPDLReference() {
-  AddRef();
+  AddRef();  // Released in NeckoChild::DeallocPFileChannelChild.
   mIPCOpen = true;
 }
 
 void FileChannelChild::ActorDestroy(ActorDestroyReason why) {
   MOZ_ASSERT(mIPCOpen);
   mIPCOpen = false;
-  Release();
 }
 
 }  // namespace net
