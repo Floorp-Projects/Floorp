@@ -42,9 +42,7 @@ struct PrintData {
   nsString footerStrCenter;
   nsString footerStrRight;
 
-  short  howToEnableFrameUI;
   bool isCancelled;
-  short  printFrameType;
   bool printSilent;
   bool shrinkToFit;
   bool showPrintProgress;
