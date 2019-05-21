@@ -389,6 +389,23 @@ class IProtocol : public HasResultCodes {
   void SetManagerAndRegister(IProtocol* aManager);
   void SetManagerAndRegister(IProtocol* aManager, int32_t aId);
 
+  // Helpers for calling `Send` on our underlying IPC channel.
+  bool ChannelSend(IPC::Message* aMsg);
+  bool ChannelSend(IPC::Message* aMsg, IPC::Message* aReply);
+  bool ChannelCall(IPC::Message* aMsg, IPC::Message* aReply);
+  template <typename Value>
+  void ChannelSend(IPC::Message* aMsg, ResolveCallback<Value>&& aResolve,
+                   RejectCallback&& aReject) {
+    UniquePtr<IPC::Message> msg(aMsg);
+    if (CanSend()) {
+      GetIPCChannel()->Send(msg.release(), this, std::move(aResolve),
+                            std::move(aReject));
+    } else {
+      NS_WARNING("IPC message discarded: actor cannot send");
+      aReject(ResponseRejectReason::SendError);
+    }
+  }
+
   // Collect all actors managed by this object in an array. To make this safer
   // to iterate, `ActorLifecycleProxy` references are returned rather than raw
   // actor pointers.

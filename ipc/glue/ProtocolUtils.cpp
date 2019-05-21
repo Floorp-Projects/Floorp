@@ -599,6 +599,36 @@ already_AddRefed<nsIEventTarget> IProtocol::ManagedState::GetActorEventTarget(
   return mProtocol->Manager()->GetActorEventTarget(aActor);
 }
 
+bool IProtocol::ChannelSend(IPC::Message* aMsg) {
+  UniquePtr<IPC::Message> msg(aMsg);
+  if (CanSend()) {
+    return GetIPCChannel()->Send(msg.release());
+  }
+
+  NS_WARNING("IPC message discarded: actor cannot send");
+  return false;
+}
+
+bool IProtocol::ChannelSend(IPC::Message* aMsg, IPC::Message* aReply) {
+  UniquePtr<IPC::Message> msg(aMsg);
+  if (CanSend()) {
+    return GetIPCChannel()->Send(msg.release(), aReply);
+  }
+
+  NS_WARNING("IPC message discarded: actor cannot send");
+  return false;
+}
+
+bool IProtocol::ChannelCall(IPC::Message* aMsg, IPC::Message* aReply) {
+  UniquePtr<IPC::Message> msg(aMsg);
+  if (CanSend()) {
+    return GetIPCChannel()->Call(msg.release(), aReply);
+  }
+
+  NS_WARNING("IPC message discarded: actor cannot send");
+  return false;
+}
+
 void IProtocol::ActorConnected() {
   if (mLinkStatus != LinkStatus::Inactive) {
     return;
