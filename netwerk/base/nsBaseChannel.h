@@ -25,7 +25,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "PrivateBrowsingChannel.h"
+#include "mozilla/net/PrivateBrowsingChannel.h"
 #include "nsThreadUtils.h"
 
 class nsIInputStream;
