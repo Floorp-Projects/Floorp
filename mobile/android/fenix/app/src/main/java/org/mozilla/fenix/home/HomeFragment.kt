@@ -155,6 +155,8 @@ class HomeFragment : Fragment(), CoroutineScope {
         view.toolbar.compoundDrawablePadding = roundToInt
         view.toolbar.setOnClickListener {
             invokePendingDeleteSessionJob()
+            onboarding.finish()
+
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
             Navigation.findNavController(it).navigate(directions)
 
@@ -377,12 +379,14 @@ class HomeFragment : Fragment(), CoroutineScope {
             when (it) {
                 HomeMenu.Item.Settings -> {
                     invokePendingDeleteSessionJob()
+                    onboarding.finish()
                     Navigation.findNavController(homeLayout).navigate(
                         HomeFragmentDirections.actionHomeFragmentToSettingsFragment()
                     )
                 }
                 HomeMenu.Item.Library -> {
                     invokePendingDeleteSessionJob()
+                    onboarding.finish()
                     Navigation.findNavController(homeLayout).navigate(
                         HomeFragmentDirections.actionHomeFragmentToLibraryFragment()
                     )
