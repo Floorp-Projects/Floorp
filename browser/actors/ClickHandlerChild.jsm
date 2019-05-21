@@ -61,8 +61,7 @@ class ClickHandlerChild extends ActorChild {
       }
     }
 
-    // Bug 965637, query the CSP from the doc instead of the Principal
-    let csp = ownerDoc.nodePrincipal.csp;
+    let csp = ownerDoc.csp;
     if (csp) {
       csp = E10SUtils.serializeCSP(csp);
     }

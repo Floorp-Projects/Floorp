@@ -220,8 +220,8 @@ this.windows = class extends ExtensionAPI {
           args.appendElement(context.principal); // originPrincipal - not important.
           args.appendElement(principal); // triggeringPrincipal
           args.appendElement(Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool)); // allowInheritPrincipal
-          // Bug 965637, query the CSP from the doc instead of the Principal
-          args.appendElement(principal.csp); // csp
+          // There is no CSP associated with this extension, hence we explicitly pass null as the CSP argument.
+          args.appendElement(null); // csp
 
           let features = ["chrome"];
 
