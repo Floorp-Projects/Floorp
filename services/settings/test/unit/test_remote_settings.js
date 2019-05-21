@@ -51,39 +51,12 @@ function run_test() {
   clientWithDump = RemoteSettings("language-dictionaries");
   clientWithDump.verifySignature = false;
 
-  // Setup server fake responses.
-  function handleResponse(request, response) {
-    try {
-      const sample = getSampleResponse(request, server.identity.primaryPort);
-      if (!sample) {
-        do_throw(`unexpected ${request.method} request for ${request.path}?${request.queryString}`);
-      }
-
-      response.setStatusLine(null, sample.status.status,
-                             sample.status.statusText);
-      // send the headers
-      for (let headerLine of sample.sampleHeaders) {
-        let headerElements = headerLine.split(":");
-        response.setHeader(headerElements[0], headerElements[1].trimLeft());
-      }
-      response.setHeader("Date", (new Date()).toUTCString());
-
-      const body = typeof sample.responseBody == "string" ? sample.responseBody
-                                                          : JSON.stringify(sample.responseBody);
-      response.write(body);
-      response.finish();
-    } catch (e) {
-      info(e);
-    }
-  }
-  const configPath = "/v1/";
-  const changesPath = "/v1/buckets/monitor/collections/changes/records";
-  const metadataPath = "/v1/buckets/main/collections/password-fields";
-  const recordsPath  = "/v1/buckets/main/collections/password-fields/records";
-  server.registerPathHandler(configPath, handleResponse);
-  server.registerPathHandler(changesPath, handleResponse);
-  server.registerPathHandler(metadataPath, handleResponse);
-  server.registerPathHandler(recordsPath, handleResponse);
+  server.registerPathHandler("/v1/", handleResponse);
+  server.registerPathHandler("/v1/buckets/monitor/collections/changes/records", handleResponse);
+  server.registerPathHandler("/v1/buckets/main/collections/password-fields", handleResponse);
+  server.registerPathHandler("/v1/buckets/main/collections/password-fields/records", handleResponse);
+  server.registerPathHandler("/v1/buckets/main/collections/language-dictionaries", handleResponse);
+  server.registerPathHandler("/v1/buckets/main/collections/language-dictionaries/records", handleResponse);
   server.registerPathHandler("/fake-x5u", handleResponse);
 
   run_next_test();
@@ -101,6 +74,26 @@ add_task(async function test_records_obtained_from_server_are_stored_in_db() {
   // Our test data has a single record; it should be in the local collection
   const list = await client.get();
   equal(list.length, 1);
+});
+add_task(clear_state);
+
+add_task(async function test_records_from_dump_are_listed_as_created_in_event() {
+  if (IS_ANDROID) {
+    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+    return;
+  }
+  let received;
+  clientWithDump.on("sync", ({ data }) => received = data);
+  // Use a timestamp superior to latest record in dump.
+  const timestamp = 5000000000000; // Fri Jun 11 2128
+
+  await clientWithDump.maybeSync(timestamp);
+
+  const list = await clientWithDump.get();
+  ok(list.length > 20, "The dump was loaded");
+  equal(received.created[received.created.length - 1].id, "xx", "Last record comes from the sync.");
+  equal(received.created.length, list.length, "The list of created records contains the dump");
+  equal(received.current.length, received.created.length);
 });
 add_task(clear_state);
 
@@ -487,7 +480,30 @@ add_task(async function test_inspect_changes_the_list_when_bucket_pref_is_change
 });
 add_task(clear_state);
 
-// get a response for a given request from sample data
+function handleResponse(request, response) {
+  try {
+    const sample = getSampleResponse(request, server.identity.primaryPort);
+    if (!sample) {
+      do_throw(`unexpected ${request.method} request for ${request.path}?${request.queryString}`);
+    }
+
+    response.setStatusLine(null, sample.status.status, sample.status.statusText);
+    // send the headers
+    for (let headerLine of sample.sampleHeaders) {
+      let headerElements = headerLine.split(":");
+      response.setHeader(headerElements[0], headerElements[1].trimLeft());
+    }
+    response.setHeader("Date", (new Date()).toUTCString());
+
+    const body = typeof sample.responseBody == "string" ? sample.responseBody
+      : JSON.stringify(sample.responseBody);
+    response.write(body);
+    response.finish();
+  } catch (e) {
+    info(e);
+  }
+}
+
 function getSampleResponse(req, port) {
   const responses = {
     "OPTIONS": {
@@ -738,6 +754,43 @@ wNuvFqc=
           "last_modified": 3000,
           "website": "https://some-website.com",
           "selector": "#webpage[field-pwd]",
+        }],
+      },
+    },
+    "GET:/v1/buckets/main/collections/language-dictionaries": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"1234\"",
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": JSON.stringify({
+        "data": {
+          "id": "language-dictionaries",
+          "last_modified": 1234,
+          "signature": {
+            "signature": "xyz",
+            "x5u": `http://localhost:${port}/fake-x5u`,
+          },
+        },
+      }),
+    },
+    "GET:/v1/buckets/main/collections/language-dictionaries/records": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"5000000000000\"",
+      ],
+      "status": { status: 200, statusText: "OK" },
+      "responseBody": {
+        "data": [{
+          "id": "xx",
+          "last_modified": 5000000000000,
+          "dictionaries": ["xx-XX@dictionaries.addons.mozilla.org"],
         }],
       },
     },
