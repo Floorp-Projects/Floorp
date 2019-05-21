@@ -10732,10 +10732,6 @@ exports.PREFERENCES = [
     "layout.css.individual-transform.enabled"
   ],
   [
-    "offset-distance",
-    "layout.css.motion-path.enabled"
-  ],
-  [
     "scroll-snap-points-x",
     "layout.css.scroll-snap.enabled"
   ],
@@ -10750,6 +10746,10 @@ exports.PREFERENCES = [
   [
     "-moz-binding",
     "layout.css.moz-binding.content.enabled"
+  ],
+  [
+    "offset-distance",
+    "layout.css.motion-path.enabled"
   ],
   [
     "scroll-margin-block-end",
