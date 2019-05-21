@@ -10,6 +10,7 @@
 #include "nsCSPUtils.h"
 #include "nsDebug.h"
 #include "nsIConsoleService.h"
+#include "nsIChannel.h"
 #include "nsICryptoHash.h"
 #include "nsIScriptError.h"
 #include "nsIServiceManager.h"
@@ -82,6 +83,38 @@ void CSP_PercentDecodeStr(const nsAString& aEncStr, nsAString& outDecStr) {
     // increment 'cur' to after the second hexDig
     cur = ++hexDig2;
   }
+}
+
+// The Content Security Policy should be inherited for
+// local schemes like: "about", "blob", "data", or "filesystem".
+// see: https://w3c.github.io/webappsec-csp/#initialize-document-csp
+bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel) {
+  if (!aChannel) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool isAbout = (NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout);
+  if (isAbout) {
+    nsAutoCString aboutSpec;
+    rv = uri->GetSpec(aboutSpec);
+    NS_ENSURE_SUCCESS(rv, false);
+    // also allow about:blank#foo
+    if (StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:blank")) ||
+        StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:srcdoc"))) {
+      return true;
+    }
+  }
+
+  bool isBlob = (NS_SUCCEEDED(uri->SchemeIs("blob", &isBlob)) && isBlob);
+  bool isData = (NS_SUCCEEDED(uri->SchemeIs("data", &isData)) && isData);
+  bool isFS = (NS_SUCCEEDED(uri->SchemeIs("filesystem", &isFS)) && isFS);
+  bool isJS = (NS_SUCCEEDED(uri->SchemeIs("javascript", &isJS)) && isJS);
+
+  return isBlob || isData || isFS || isJS;
 }
 
 void CSP_GetLocalizedStr(const char* aName, const char16_t** aParams,

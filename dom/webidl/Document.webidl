@@ -15,6 +15,7 @@
  * https://wicg.github.io/feature-policy/#policy
  */
 
+interface ContentSecurityPolicy;
 interface Principal;
 interface WindowProxy;
 interface nsISupports;
@@ -542,6 +543,14 @@ partial interface Document {
 partial interface Document {
   [Func="IsChromeOrXBL"] readonly attribute boolean hasScriptsBlockedBySandbox;
   [Func="IsChromeOrXBL"] readonly attribute boolean inlineScriptAllowedByCSP;
+};
+
+// Allows frontend code to query a CSP which needs to be passed for a
+// new load into docshell. Further, allows to query the CSP in JSON
+// format for testing purposes.
+partial interface Document {
+  [ChromeOnly] readonly attribute ContentSecurityPolicy? csp;
+  [ChromeOnly] readonly attribute DOMString cspJSON;
 };
 
 // For more information on Flash classification, see

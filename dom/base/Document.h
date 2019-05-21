@@ -98,6 +98,7 @@ class nsAtom;
 class nsIBFCacheEntry;
 class nsIChannel;
 class nsIContent;
+class nsIContentSecurityPolicy;
 class nsIContentSink;
 class nsIDocShell;
 class nsIDocShellTreeItem;
@@ -695,6 +696,24 @@ class Document : public nsINode,
    * chrome privileged script.
    */
   void SetChromeXHRDocBaseURI(nsIURI* aURI) { mChromeXHRDocBaseURI = aURI; }
+
+  /**
+   * The CSP in general is stored in the ClientInfo, but we also cache
+   * the CSP on the document so subresources loaded within a document
+   * can query that cached CSP instead of having to deserialize the CSP
+   * from the Client.
+   *
+   * Please note that at the time of CSP parsing the Client is not
+   * available yet, hence we sync CSP of document and Client when the
+   * Client becomes available within nsGlobalWindowInner::EnsureClientSource().
+   */
+  nsIContentSecurityPolicy* GetCsp() const;
+  void SetCsp(nsIContentSecurityPolicy* aCSP);
+
+  nsIContentSecurityPolicy* GetPreloadCsp() const;
+  void SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP);
+
+  void GetCspJSON(nsString& aJSON);
 
   /**
    * Set referrer policy and upgrade-insecure-requests flags
@@ -4414,6 +4433,12 @@ class Document : public nsINode,
 
   // The channel that got passed to Document::StartDocumentLoad(), if any.
   nsCOMPtr<nsIChannel> mChannel;
+
+  // The CSP for every load lives in the Client within the LoadInfo. For all
+  // document-initiated subresource loads we can use that cached version of the
+  // CSP so we do not have to deserialize the CSP from the Client all the time.
+  nsCOMPtr<nsIContentSecurityPolicy> mCSP;
+  nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
 
  private:
   nsCString mContentType;

@@ -810,10 +810,7 @@ static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
   nsCOMPtr<Document> doc = opener->GetDoc();
   NS_ADDREF(*aTriggeringPrincipal = doc->NodePrincipal());
 
-  // Currently we query the CSP from the doc->NodePrincipal(). After
-  // Bug 965637 we can query the CSP from the doc directly.
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
   if (csp) {
     csp.forget(aCsp);
   }

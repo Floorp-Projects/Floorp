@@ -123,12 +123,7 @@ nsresult CSPEvalChecker::CheckForWindow(JSContext* aCx,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    *aAllowEval = false;
-    return rv;
-  }
+  nsresult rv = NS_OK;
 
   // Get the calling location.
   uint32_t lineNum = 0;
@@ -139,6 +134,7 @@ nsresult CSPEvalChecker::CheckForWindow(JSContext* aCx,
     fileNameString.AssignLiteral("unknown");
   }
 
+  nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
   rv = CheckInternal(csp, nullptr /* no CSPEventListener for window */,
                      doc->NodePrincipal(), aExpression, fileNameString, lineNum,
                      columnNum, aAllowEval);

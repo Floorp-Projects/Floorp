@@ -23,14 +23,19 @@
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
+
+#include "mozilla/ipc/BackgroundUtils.h"
 
 namespace mozilla {
 namespace dom {
 
 using mozilla::dom::ipc::StructuredCloneData;
+using mozilla::ipc::CSPInfo;
+using mozilla::ipc::CSPToCSPInfo;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::PrincipalInfoToPrincipal;
 
@@ -656,6 +661,44 @@ nsresult ClientSource::SnapshotState(ClientState* aStateOut) {
 }
 
 nsISerialEventTarget* ClientSource::EventTarget() const { return mEventTarget; }
+
+void ClientSource::SetCsp(nsIContentSecurityPolicy* aCsp) {
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+  if (!aCsp) {
+    return;
+  }
+
+  CSPInfo cspInfo;
+  nsresult rv = CSPToCSPInfo(aCsp, &cspInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+  mClientInfo.SetCspInfo(cspInfo);
+}
+
+void ClientSource::SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCsp) {
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+  if (!aPreloadCsp) {
+    return;
+  }
+
+  CSPInfo cspPreloadInfo;
+  nsresult rv = CSPToCSPInfo(aPreloadCsp, &cspPreloadInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+  mClientInfo.SetPreloadCspInfo(cspPreloadInfo);
+}
+
+void ClientSource::SetCspInfo(const CSPInfo& aCSPInfo) {
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+  mClientInfo.SetCspInfo(aCSPInfo);
+}
+
+const Maybe<mozilla::ipc::CSPInfo>& ClientSource::GetCspInfo() {
+  NS_ASSERT_OWNINGTHREAD(ClientSource);
+  return mClientInfo.GetCspInfo();
+}
 
 void ClientSource::Traverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName, uint32_t aFlags) {

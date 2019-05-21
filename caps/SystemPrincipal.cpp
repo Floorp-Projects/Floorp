@@ -52,40 +52,6 @@ SystemPrincipal::GetURI(nsIURI** aURI) {
 }
 
 NS_IMETHODIMP
-SystemPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp) {
-  *aCsp = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SystemPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp) {
-  // Never destroy an existing CSP on the principal.
-  // This method should only be called in rare cases.
-
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-SystemPrincipal::EnsureCSP(dom::Document* aDocument,
-                           nsIContentSecurityPolicy** aCSP) {
-  // CSP on a system principal makes no sense
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-SystemPrincipal::GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) {
-  *aPreloadCSP = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SystemPrincipal::EnsurePreloadCSP(dom::Document* aDocument,
-                                  nsIContentSecurityPolicy** aPreloadCSP) {
-  // CSP on a system principal makes no sense
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 SystemPrincipal::GetDomain(nsIURI** aDomain) {
   *aDomain = nullptr;
   return NS_OK;

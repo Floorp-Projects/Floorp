@@ -43,6 +43,7 @@ class ClientSource;
 interface nsIURI;
 interface nsIChannel;
 interface nsIContentViewer;
+interface nsIContentSecurityPolicy;
 interface nsIDocShellLoadInfo;
 interface nsIEditor;
 interface nsIEditingSession;
@@ -606,8 +607,10 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Create a new about:blank document and content viewer.
    * @param aPrincipal the principal to use for the new document.
+   * @param aCsp the CSP to use for the new document.
    */
-  void createAboutBlankContentViewer(in nsIPrincipal aPrincipal);
+  void createAboutBlankContentViewer(in nsIPrincipal aPrincipal,
+                                     [optional] in nsIContentSecurityPolicy aCSP);
 
   /**
    * Upon getting, returns the canonical encoding label of the document

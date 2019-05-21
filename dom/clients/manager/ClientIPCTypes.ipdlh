@@ -32,6 +32,8 @@ struct IPCClientInfo
   TimeStamp creationTime;
   nsCString url;
   FrameType frameType;
+  CSPInfo? cspInfo;
+  CSPInfo? preloadCspInfo;
 };
 
 struct IPCClientWindowState

@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/ScriptLoader.h"
+#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPService.h"
 
 #include "GeckoProfiler.h"
@@ -1068,11 +1069,13 @@ void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsIPrincipal* principal = mDocument->NodePrincipal();
-  nsCOMPtr<nsIContentSecurityPolicy> preloadCsp;
-  nsresult rv =
-      principal->EnsurePreloadCSP(mDocument, getter_AddRefs(preloadCsp));
-  NS_ENSURE_SUCCESS_VOID(rv);
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIContentSecurityPolicy> preloadCsp = mDocument->GetPreloadCsp();
+  if (!preloadCsp) {
+    preloadCsp = new nsCSPContext();
+    rv = preloadCsp->SetRequestContextWithDocument(mDocument);
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
 
   // please note that meta CSPs and CSPs delivered through a header need
   // to be joined together.
@@ -1082,6 +1085,10 @@ void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
       true);  // delivered through the meta tag
   NS_ENSURE_SUCCESS_VOID(rv);
 
+  nsPIDOMWindowInner* inner = mDocument->GetInnerWindow();
+  if (inner) {
+    inner->SetPreloadCsp(preloadCsp);
+  }
   mDocument->ApplySettingsFromCSP(true);
 }
 

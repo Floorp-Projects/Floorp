@@ -27,6 +27,7 @@ struct nsCSSValueList;
 namespace mozilla {
 class FontSlantStyle;
 namespace dom {
+class Document;
 class Element;
 }
 }  // namespace mozilla
@@ -127,7 +128,7 @@ class nsStyleUtil {
   static bool ObjectPropsMightCauseOverflow(const nsStylePosition* aStylePos);
 
   /*
-   *  Does this principal have a CSP that blocks the application of
+   *  Does the document have a CSP that blocks the application of
    *  inline styles? Returns false if application of the style should
    *  be blocked.
    *
@@ -136,15 +137,11 @@ class nsStyleUtil {
    *      Included to check the nonce attribute if one is provided. Allowed to
    *      be null, if this is for something other than a <style> element (in
    *      which case nonces won't be checked).
-   *  @param aPrincipal
-   *      The principal of the of the document (*not* of the style sheet).
-   *      The document's principal is where any Content Security Policy that
-   *      should be used to block or allow inline styles will be located.
+   *  @param aDocument
+   *      The document containing the inline style (for querying the CSP);
    *  @param aTriggeringPrincipal
    *      The principal of the scripted caller which added the inline
    *      stylesheet, or null if no scripted caller can be identified.
-   *  @param aSourceURI
-   *      URI of document containing inline style (for reporting violations)
    *  @param aLineNumber
    *      Line number of inline style element in the containing document (for
    *      reporting violations)
@@ -159,10 +156,9 @@ class nsStyleUtil {
    *      Does CSP allow application of the specified inline style?
    */
   static bool CSPAllowsInlineStyle(mozilla::dom::Element* aContent,
-                                   nsIPrincipal* aPrincipal,
+                                   mozilla::dom::Document* aDocument,
                                    nsIPrincipal* aTriggeringPrincipal,
-                                   nsIURI* aSourceURI, uint32_t aLineNumber,
-                                   uint32_t aColumnNumber,
+                                   uint32_t aLineNumber, uint32_t aColumnNumber,
                                    const nsAString& aStyleText, nsresult* aRv);
 
   template <size_t N>

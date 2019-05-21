@@ -16,7 +16,6 @@
 #include "nsJSPrincipals.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsCOMPtr.h"
-#include "nsIContentSecurityPolicy.h"
 
 #include "mozilla/BasePrincipal.h"
 
@@ -48,7 +47,6 @@ class NullPrincipal final : public BasePrincipal {
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
   uint32_t GetHashValue() override;
-  NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;

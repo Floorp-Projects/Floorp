@@ -145,8 +145,8 @@ nsresult nsJSThunk::EvaluateScript(
   nsCOMPtr<nsISupports> owner;
   aChannel->GetOwner(getter_AddRefs(owner));
   nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (!principal) {
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     if (loadInfo->GetForceInheritPrincipal()) {
       principal = loadInfo->FindPrincipalToInherit(aChannel);
     } else {
@@ -161,9 +161,7 @@ nsresult nsJSThunk::EvaluateScript(
 
   // CSP check: javascript: URIs disabled unless "inline" scripts are
   // allowed.
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIContentSecurityPolicy> csp = loadInfo->GetCsp();
   if (csp) {
     bool allowsInlineScript = true;
     rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
@@ -176,6 +174,29 @@ nsresult nsJSThunk::EvaluateScript(
                               0,              // aColumnNumber
                               &allowsInlineScript);
 
+    // return early if inline scripts are not allowed
+    if (!allowsInlineScript) {
+      return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
+  }
+
+  // for document navigations we need to check the CSP of the previous document.
+  csp = nullptr;
+  mozilla::dom::Document* prevDoc = aOriginalInnerWindow->GetExtantDoc();
+  if (prevDoc) {
+    csp = prevDoc->GetCsp();
+  }
+  if (csp) {
+    bool allowsInlineScript = true;
+    rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
+                              EmptyString(),  // aNonce
+                              true,           // aParserCreated
+                              nullptr,        // aElement,
+                              nullptr,        // nsICSPEventListener
+                              EmptyString(),  // aContent
+                              0,              // aLineNumber
+                              0,              // aColumnNumber
+                              &allowsInlineScript);
     // return early if inline scripts are not allowed
     if (!allowsInlineScript) {
       return NS_ERROR_DOM_RETVAL_UNDEFINED;

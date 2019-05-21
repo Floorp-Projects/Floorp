@@ -12,14 +12,14 @@ class nsIChannel;
 class nsIHttpChannel;
 class nsIDocShellTreeItem;
 class nsIURI;
-class nsIPrincipal;
+class nsIContentSecurityPolicy;
 
 class FramingChecker {
  public:
   // Determine if X-Frame-Options allows content to be framed
   // as a subdocument
   static bool CheckFrameOptions(nsIChannel* aChannel, nsIDocShell* aDocShell,
-                                nsIPrincipal* aPrincipal);
+                                nsIContentSecurityPolicy* aCSP);
 
  protected:
   enum XFOHeader { eDENY, eSAMEORIGIN, eALLOWFROM };
