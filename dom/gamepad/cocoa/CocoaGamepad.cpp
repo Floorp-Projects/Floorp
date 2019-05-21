@@ -599,5 +599,11 @@ void StopGamepadMonitoring() {
   gService->Shutdown();
 }
 
+void SetGamepadLightIndicatorColor(uint32_t aControllerIdx, uint32_t aLightColorIndex,
+    uint8_t aRed, uint8_t aGreen, uint8_t aBlue) {
+  // TODO: Bug 1523353.
+  NS_WARNING("Mac OS doesn't support gamepad light indicator.");
+}
+
 }  // namespace dom
 }  // namespace mozilla
