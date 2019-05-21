@@ -4,8 +4,6 @@
 
 package mozilla.components.ui.autocomplete
 
-import android.content.Context
-import android.text.Spanned
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.util.AttributeSet
 import android.view.KeyEvent
@@ -13,26 +11,25 @@ import android.view.ViewParent
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
+import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.Companion.AUTOCOMPLETE_SPAN
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
-
-import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.Companion.AUTOCOMPLETE_SPAN
-import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
-import org.junit.Assert.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 class InlineAutocompleteEditTextTest {
-    private val context: Context = RuntimeEnvironment.application
-    private val attributes: AttributeSet = mock(AttributeSet::class.java)
+
+    private val attributes = mock(AttributeSet::class.java)
 
     @Test
     fun autoCompleteResult() {
@@ -44,7 +41,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun getNonAutocompleteText() {
-        val et = InlineAutocompleteEditText(context)
+        val et = InlineAutocompleteEditText(testContext)
         et.setText("Test")
         assertEquals("Test", et.nonAutocompleteText)
 
@@ -57,7 +54,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun getOriginalText() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         et.setText("Test")
         assertEquals("Test", et.originalText)
 
@@ -70,7 +67,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onFocusChange() {
-        val et = InlineAutocompleteEditText(context, attributes, R.attr.editTextStyle)
+        val et = InlineAutocompleteEditText(testContext, attributes, R.attr.editTextStyle)
         val searchStates = mutableListOf<Boolean>()
 
         et.setOnSearchStateChangeListener { b: Boolean -> searchStates.add(searchStates.size, b) }
@@ -90,7 +87,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun sendAccessibilityEventUnchecked() {
-        val et = spy(InlineAutocompleteEditText(context, attributes))
+        val et = spy(InlineAutocompleteEditText(testContext, attributes))
         doReturn(false).`when`(et).isShown
         doReturn(mock(ViewParent::class.java)).`when`(et).parent
 
@@ -105,7 +102,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onAutocompleteSetsEmptyResult() {
-        val et = spy(InlineAutocompleteEditText(context, attributes))
+        val et = spy(InlineAutocompleteEditText(testContext, attributes))
 
         doReturn(false).`when`(et).isEnabled
         et.applyAutocompleteResult(AutocompleteResult("text", "source", 1))
@@ -114,7 +111,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onAutocompleteDiscardsStaleResult() {
-        val et = spy(InlineAutocompleteEditText(context, attributes))
+        val et = spy(InlineAutocompleteEditText(testContext, attributes))
         doReturn(true).`when`(et).isEnabled
         et.setText("text")
 
@@ -128,7 +125,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onAutocompleteReplacesExistingAutocompleteText() {
-        val et = spy(InlineAutocompleteEditText(context, attributes))
+        val et = spy(InlineAutocompleteEditText(testContext, attributes))
         doReturn(true).`when`(et).isEnabled
 
         et.setText("text")
@@ -139,7 +136,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onAutocompleteAppendsExistingText() {
-        val et = spy(InlineAutocompleteEditText(context, attributes))
+        val et = spy(InlineAutocompleteEditText(testContext, attributes))
         doReturn(true).`when`(et).isEnabled
 
         et.setText("text")
@@ -149,7 +146,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onAutocompleteSetsSpan() {
-        val et = spy(InlineAutocompleteEditText(context, attributes))
+        val et = spy(InlineAutocompleteEditText(testContext, attributes))
         doReturn(true).`when`(et).isEnabled
 
         et.setText("text")
@@ -157,12 +154,12 @@ class InlineAutocompleteEditTextTest {
 
         assertEquals(4, et.text.getSpanStart(AUTOCOMPLETE_SPAN))
         assertEquals(14, et.text.getSpanEnd(AUTOCOMPLETE_SPAN))
-        assertEquals(Spanned.SPAN_EXCLUSIVE_EXCLUSIVE, et.text.getSpanFlags(AUTOCOMPLETE_SPAN))
+        assertEquals(SPAN_EXCLUSIVE_EXCLUSIVE, et.text.getSpanFlags(AUTOCOMPLETE_SPAN))
     }
 
     @Test
     fun onKeyPreImeListenerInvocation() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         var invokedWithParams: List<Any>? = null
         et.setOnKeyPreImeListener { p1, p2, p3 ->
             invokedWithParams = listOf(p1, p2, p3)
@@ -175,7 +172,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onSelectionChangedListenerInvocation() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         var invokedWithParams: List<Any>? = null
         et.setOnSelectionChangedListener { p1, p2 ->
             invokedWithParams = listOf(p1, p2)
@@ -186,7 +183,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onSelectionChangedCommitsResult() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         et.onAttachedToWindow()
 
         et.setText("text")
@@ -199,7 +196,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onWindowFocusChangedListenerInvocation() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         var invokedWithParams: List<Any>? = null
         et.setOnWindowsFocusChangeListener { p1 ->
             invokedWithParams = listOf(p1)
@@ -210,8 +207,8 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onCommitListenerInvocation() {
-        val et = InlineAutocompleteEditText(context, attributes)
-        var invoked: Boolean = false
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        var invoked = false
         et.setOnCommitListener { invoked = true }
         et.onAttachedToWindow()
 
@@ -221,7 +218,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onTextChangeListenerInvocation() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         var invokedWithParams: List<Any>? = null
         et.setOnTextChangeListener { p1, p2 ->
             invokedWithParams = listOf(p1, p2)
@@ -234,7 +231,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onSearchStateChangeListenerInvocation() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         et.onAttachedToWindow()
 
         var invokedWithParams: List<Any>? = null
@@ -251,7 +248,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onFilterListenerInvocation() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         et.onAttachedToWindow()
 
         var lastInvokedWithText: String? = null
@@ -286,7 +283,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun onCreateInputConnection() {
-        val et = spy(InlineAutocompleteEditText(context, attributes))
+        val et = spy(InlineAutocompleteEditText(testContext, attributes))
         val icw = et.onCreateInputConnection(mock(EditorInfo::class.java))
         doReturn(true).`when`(et).isEnabled
 
@@ -317,7 +314,7 @@ class InlineAutocompleteEditTextTest {
 
     @Test
     fun removeAutocompleteOnComposing() {
-        val et = InlineAutocompleteEditText(context, attributes)
+        val et = InlineAutocompleteEditText(testContext, attributes)
         val ic = et.onCreateInputConnection(mock(EditorInfo::class.java))
 
         ic?.setComposingText("text", 1)

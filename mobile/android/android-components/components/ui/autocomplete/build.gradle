@@ -28,6 +28,8 @@ dependencies {
 
     implementation Dependencies.androidx_appcompat
 
+    testImplementation project(":support-test")
+
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
