@@ -104,10 +104,21 @@ nsProfiler::CanProfile(bool* aCanProfile) {
   return NS_OK;
 }
 
+static nsresult FillVectorFromStringArray(Vector<const char*>& aVector,
+                                          const nsTArray<nsCString>& aArray) {
+  if (NS_WARN_IF(!aVector.reserve(aArray.Length()))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  for (auto& entry : aArray) {
+    aVector.infallibleAppend(entry.get());
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
-                          const char** aFeatures, uint32_t aFeatureCount,
-                          const char** aFilters, uint32_t aFilterCount,
+                          const nsTArray<nsCString>& aFeatures,
+                          const nsTArray<nsCString>& aFilters,
                           double aDuration) {
   if (mLockedForPrivateBrowsing) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -115,10 +126,22 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
 
   ResetGathering();
 
-  uint32_t features = ParseFeaturesFromStringArray(aFeatures, aFeatureCount);
+  Vector<const char*> featureStringVector;
+  nsresult rv = FillVectorFromStringArray(featureStringVector, aFeatures);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  uint32_t features = ParseFeaturesFromStringArray(
+      featureStringVector.begin(), featureStringVector.length());
   Maybe<double> duration = aDuration > 0.0 ? Some(aDuration) : Nothing();
-  profiler_start(aEntries, aInterval, features, aFilters, aFilterCount,
-                 duration);
+
+  Vector<const char*> filterStringVector;
+  rv = FillVectorFromStringArray(filterStringVector, aFilters);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  profiler_start(aEntries, aInterval, features, filterStringVector.begin(),
+                 filterStringVector.length(), duration);
 
   return NS_OK;
 }

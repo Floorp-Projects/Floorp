@@ -91,8 +91,8 @@ var Profiler;
       currentTest = testName;
       if (_profiler && enabled) {
         _profiler.StartProfiler(profiler_entries, profiler_interval,
-                                ["js", "leaf", "stackwalk", "threads"], 4,
-                                profiler_threadsArray, profiler_threadsArray.length);
+                                ["js", "leaf", "stackwalk", "threads"],
+                                profiler_threadsArray);
         if (_profiler.PauseSampling) {
           _profiler.PauseSampling();
         }
