@@ -1154,6 +1154,11 @@ function isVisible(outerEl, innerEl) {
   return visible;
 }
 
+async function getEditorLineGutter(dbg, line) {
+  const lineEl = await getEditorLineEl(dbg, line);
+  return lineEl.firstChild;
+}
+
 async function getEditorLineEl(dbg, line) {
   let el = await codeMirrorGutterElement(dbg, line);
   while (el && !el.matches(".CodeMirror-code > div")) {
