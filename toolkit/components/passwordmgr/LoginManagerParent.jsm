@@ -328,6 +328,13 @@ var LoginManagerParent = {
     });
   },
 
+  /**
+   * Expose `BrowsingContext` so we can stub it in tests.
+   */
+  get _browsingContextGlobal() {
+    return BrowsingContext;
+  },
+
   getGeneratedPassword(browsingContextId) {
     if (!LoginHelper.enabled || !LoginHelper.generationAvailable || !LoginHelper.generationEnabled) {
       return null;
