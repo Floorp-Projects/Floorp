@@ -461,7 +461,8 @@ void nsMenuPopupFrame::UpdateWidgetProperties() {
 }
 
 void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
-                                   nsIFrame* aParentMenu, bool aSizedToPopup) {
+                                   nsIFrame* aParentMenu, nsIFrame* aAnchor,
+                                   bool aSizedToPopup) {
   if (IsLeaf()) {
     return;
   }
@@ -516,7 +517,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
 
   bool needCallback = false;
   if (shouldPosition) {
-    SetPopupPosition(aParentMenu, false, aSizedToPopup,
+    SetPopupPosition(aAnchor, false, aSizedToPopup,
                      mPopupState == ePopupPositioning);
     needCallback = true;
   }
@@ -543,7 +544,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   }
 
   if (rePosition) {
-    SetPopupPosition(aParentMenu, false, aSizedToPopup, false);
+    SetPopupPosition(aAnchor, false, aSizedToPopup, false);
   }
 
   nsPresContext* pc = PresContext();
@@ -603,7 +604,7 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
 
   if (needCallback && !mReflowCallbackData.mPosted) {
     pc->PresShell()->PostReflowCallback(this);
-    mReflowCallbackData.MarkPosted(aParentMenu, aSizedToPopup, openChanged);
+    mReflowCallbackData.MarkPosted(aAnchor, aSizedToPopup, openChanged);
   }
 }
 

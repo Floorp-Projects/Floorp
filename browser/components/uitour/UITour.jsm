@@ -87,7 +87,9 @@ var UITour = {
 
         // Otherwise use the sync setup icon.
         let statusButton = aDocument.getElementById("appMenu-fxa-label");
-        return statusButton.icon;
+        return aDocument.getAnonymousElementByAttribute(statusButton,
+                                                        "class",
+                                                        "toolbarbutton-icon");
       },
       // This is a fake widgetName starting with the "appMenu-" prefix so we know
       // to automatically open the appMenu when annotating this target.
