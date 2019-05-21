@@ -123,8 +123,8 @@ class nsBulletFrame final : public nsFrame {
   }
   void SetFontSizeInflation(float aInflation);
 
-  // aDebugFromA11y should not be used
-  int32_t Ordinal(bool aDebugFromA11y = false) const;
+  int32_t Ordinal() const { return mOrdinal; }
+  void SetOrdinal(int32_t aOrdinal, bool aNotify);
 
   already_AddRefed<imgIContainer> GetImage() const;
 
@@ -152,6 +152,9 @@ class nsBulletFrame final : public nsFrame {
   nscoord GetListStyleAscent() const;
   void RegisterImageRequest(bool aKnownToBeAnimated);
   void DeregisterAndCancelImageRequest();
+
+  // Requires being set via SetOrdinal.
+  int32_t mOrdinal = 0;
 
   // This is a boolean flag indicating whether or not the current image request
   // has been registered with the refresh driver.
