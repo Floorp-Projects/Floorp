@@ -293,7 +293,11 @@ var LoginManagerContent = {
         let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
         let messageManager = msg.target;
         let request = this._takeRequest(msg);
-        request.promise.resolve({ logins: loginsFound, messageManager });
+        request.promise.resolve({
+          generatedPassword: msg.data.generatedPassword,
+          logins: loginsFound,
+          messageManager,
+        });
         break;
       }
 
