@@ -100,7 +100,6 @@ case $cmd in
 
     ${MKDIR} -p ${tgtpath}/modules
     cp -pPR \
-        ${TOPSRCDIR}/modules/brotli \
         ${TOPSRCDIR}/modules/fdlibm \
         ${TOPSRCDIR}/modules/zlib \
         ${tgtpath}/modules/
