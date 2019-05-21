@@ -218,26 +218,28 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     return gradle_tasks + ' ' + module_name + ':publish' + ' ' + module_name + ':zipMavenArtifacts'
 
 
-def _get_release_artifacts(artifact_info, version):
+def _get_release_artifacts(module_definition, version):
     files = ('.aar', '.pom', '-sources.jar')
     extensions = ('', '.sha1', '.md5')
     # FIXME: use cartesian product
-    # TODO: potentially reorganize this code as PR/push will most likely fail?
+
+    artifacts = []
     for f in files:
         for e in extensions:
             artifact_filename = '{}-{}{}{}'.format(
-                    artifact_info['name'], version, f, e)
-            artifacts['public/build/{}'.format(artifact_filename)] = {
-                'type': 'file',
-                'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
-                'path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
-                            os.path.abspath(artifact_info['path']),
-                            artifact_info['name'],
-                            version, artifact_filename)
-            }
+                module_definition['name'], version, f, e)
+            artifacts.append({
+                'taskcluster_path': 'public/build/{}'.format(artifact_filename),
+                'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
+                    os.path.abspath(module_definition['path']),
+                    module_definition['name'],
+                    version, artifact_filename)
+            })
+
+    return artifacts
 
 
-def release(artifacts_info, is_snapshot, is_staging):
+def release(module_definitions, is_snapshot, is_staging):
     version = components_version()
 
     build_tasks = {}
@@ -246,19 +248,19 @@ def release(artifacts_info, is_snapshot, is_staging):
     other_tasks = {}
     wait_on_builds_task_id = taskcluster.slugId()
 
-    for artifact_info in artifacts_info:
-        #FIXME: from here
+    for module_definition in module_definitions:
+        artifacts = _get_release_artifacts(module_definition, version)
 
         build_task_id = taskcluster.slugId()
-        module_name = _get_gradle_module_name(artifact_info)
+        module_name = _get_gradle_module_name(module_definition)
         build_tasks[build_task_id] = BUILDER.craft_build_task(
             module_name=module_name,
             gradle_tasks=_get_release_gradle_tasks(module_name, is_snapshot),
             subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
-            version=version,
             run_coverage=False,
             is_snapshot=is_snapshot,
-            artifact_info=artifact_info
+            module_definition=module_definition,
+            artifacts=artifacts
         )
 
         # TODO: add signing tasks as well
@@ -300,11 +302,11 @@ if __name__ == "__main__":
 
     command = result.command
 
-    artifacts_info = module_definitions()
+    module_definitions = module_definitions()
     if command == 'release':
-        artifacts_info = [info for info in artifacts_info if info['shouldPublish']]
+        module_definitions = [info for info in module_definitions if info['shouldPublish']]
 
-    if len(artifacts_info) == 0:
+    if len(module_definitions) == 0:
         print("Could not get module names from gradle")
         sys.exit(2)
 
@@ -314,7 +316,7 @@ if __name__ == "__main__":
         ordered_groups_of_tasks = push(artifacts_info)
     elif command == 'release':
         ordered_groups_of_tasks = release(
-            artifacts_info, result.is_snapshot, result.is_staging
+            module_definitions, result.is_snapshot, result.is_staging
         )
     else:
         raise Exception('Unsupported command "{}"'.format(command))

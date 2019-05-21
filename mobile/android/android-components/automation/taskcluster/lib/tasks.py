@@ -27,11 +27,18 @@ class TaskBuilder(object):
         self.beetmover_worker_type = beetmover_worker_type
         self.tasks_priority = tasks_priority
 
-    def craft_build_task(self, module_name, gradle_tasks, subtitle='', version=None, run_coverage=False, is_snapshot=False, artifact_info=None):
-        artifacts = {}
-        if artifact_info is not None:
-            _get_release_gradle_tasks(artifact_info, version)
-            # TODO: redo build payload here
+    def craft_build_task(self, module_name, gradle_tasks, subtitle='', run_coverage=False,
+                         is_snapshot=False, module_definition=None, artifacts=None):
+        taskcluster_artifacts = {}
+        # component is not None when this is a release build, in which case artifacts is defined too
+        if module_definition is not None:
+            taskcluster_artifacts = {
+                artifact['taskcluster_path']: {
+                    'type': 'file',
+                    'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
+                    'path': artifact['build_fs_path'],
+                } for artifact in artifacts
+            }
 
         scopes = [
             "secrets:get:project/mobile/android-components/public-tokens"
@@ -47,12 +54,18 @@ class TaskBuilder(object):
 
         command = ' && '.join(cmd for cmd in (gradle_command, post_gradle_command) if cmd)
 
+        features = {}
+        if module_definition is not None:
+            features['chainOfTrust'] = True
+        elif any(scope.startswith('secrets:') for scope in scopes):
+            features['taskclusterProxy'] = True
+
         return self._craft_build_ish_task(
             name='Android Components - Module {} {}'.format(module_name, subtitle),
             description='Execute Gradle tasks for module {}'.format(module_name),
             command=command,
             scopes=scopes,
-            artifacts=artifacts
+            artifacts=taskcluster_artifacts
         )
 
     def craft_wait_on_builds_task(self, dependencies):
@@ -181,7 +194,7 @@ class TaskBuilder(object):
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
         features = {} if features is None else features
-        env_vars = {} if env_vars is None else env_vars 
+        env_vars = {} if env_vars is None else env_vars
 
         checkout_command = (
             "git fetch {} {} --tags && "
@@ -200,7 +213,7 @@ class TaskBuilder(object):
 
         payload = {
             "features": features,
-            "env": env_vars, 
+            "env": env_vars,
             "maxRunTime": 7200,
             "image": "mozillamobile/android-components:1.19",
             "command": [
