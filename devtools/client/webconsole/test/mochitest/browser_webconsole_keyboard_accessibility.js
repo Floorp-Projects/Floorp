@@ -85,11 +85,11 @@ async function performTests() {
   info("try ctrl-f to focus filter");
   synthesizeKeyShortcut(WCUL10n.getStr("webconsole.find.key"));
   ok(!isInputFocused(hud), "input is not focused");
-  ok(hasFocus(hud.ui.filterBox), "filter input is focused");
+  ok(hasFocus(getFilterInput(hud)), "filter input is focused");
 
   info("try ctrl-f when filter is already focused");
   synthesizeKeyShortcut(WCUL10n.getStr("webconsole.find.key"));
   ok(!isInputFocused(hud), "input is not focused");
-  is(hud.ui.filterBox, outputScroller.ownerDocument.activeElement,
+  is(getFilterInput(hud), outputScroller.ownerDocument.activeElement,
     "filter input is focused");
 }

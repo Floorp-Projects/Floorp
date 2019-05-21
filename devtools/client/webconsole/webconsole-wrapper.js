@@ -367,7 +367,6 @@ class WebConsoleWrapper {
       const autocomplete = prefs.autocomplete;
 
       const app = App({
-        attachRefToWebConsoleUI,
         serviceContainer,
         webConsoleUI,
         onFirstMeaningfulPaint: resolve,

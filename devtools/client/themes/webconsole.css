@@ -96,7 +96,7 @@ a {
  *   -----------------  <-- Red
  *
  * The exact stacking order is:
- * 
+ *
  *   - z-index: 3 = Navigation and Paused markers
  *   - z-index: 2 = Errors and warnings
  *   - z-index: 1 = Other (console.log, console.info, requests, etc.)
@@ -684,6 +684,14 @@ a.learn-more-link.webconsole-learn-more-link {
   background-image: url(chrome://devtools/skin/images/close.svg);
 }
 
+/* set to prevent the filter height from devtools-searchbox */
+.webconsole-filterbar-primary .devtools-searchbox {
+  align-self: stretch;
+  height: unset;
+  flex: 1 1 100%;
+  margin-inline-start: 1px;
+}
+
 .webconsole-filterbar-primary .filter-checkbox {
   flex-shrink: 0;
   margin: 0 3px;
@@ -1118,12 +1126,4 @@ body {
   left: -9999px;
   width: 0;
   height: 0;
-}
-
-/* set to prevent the filter height from devtools-searchbox */
-.webconsole-filterbar-primary .devtools-searchbox {
-  align-self: stretch;
-  height: unset;
-  flex: 1 1 100%;
-  margin-inline-start: 1px;
 }

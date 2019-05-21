@@ -58,15 +58,14 @@ describe("FilterBar component:", () => {
 
     // Text filter input
     const textFilter = textInput.children().eq(0);
-    expect(textFilter.attr("class")).toBe("devtools-filterinput text-filter");
+    expect(textFilter.attr("class")).toBe("devtools-searchinput");
     expect(textFilter.attr("placeholder")).toBe("Filter output");
     expect(textFilter.attr("type")).toBe("search");
     expect(textFilter.attr("value")).toBe("");
 
     // Text filter input clear button
     const textFilterClearButton = textInput.children().eq(1);
-    expect(textFilterClearButton.attr("class"))
-      .toBe("devtools-searchinput-clear clear-button");
+    expect(textFilterClearButton.attr("class")).toBe("devtools-searchinput-clear");
 
     // "Persist logs" checkbox
     expect(wrapper.find(".filter-checkbox input").length).toBe(1);
@@ -252,7 +251,8 @@ describe("FilterBar component:", () => {
     const store = setupStore();
 
     const wrapper = mount(Provider({store}, getFilterBar()));
-    wrapper.find(".devtools-filterinput").simulate("input", { target: { value: "a" } });
+    const input = wrapper.find(".devtools-searchinput");
+    input.simulate("change", { target: { value: "a" } });
     expect(store.getState().filters.text).toBe("a");
   });
 
