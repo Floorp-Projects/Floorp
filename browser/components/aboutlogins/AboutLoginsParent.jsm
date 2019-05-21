@@ -141,7 +141,7 @@ var AboutLoginsParent = {
     }
   },
 
-  messageSubscribers(name, details) {
+  * _subscriberIterator() {
     let subscribers = ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers);
     for (let subscriber of subscribers) {
       if (subscriber.remoteType != EXPECTED_ABOUTLOGINS_REMOTE_TYPE ||
@@ -150,6 +150,12 @@ var AboutLoginsParent = {
         this._subscribers.delete(subscriber);
         continue;
       }
+      yield subscriber;
+    }
+  },
+
+  messageSubscribers(name, details) {
+    for (let subscriber of this._subscriberIterator()) {
       try {
         subscriber.messageManager.sendAsyncMessage(name, details);
       } catch (ex) {}
