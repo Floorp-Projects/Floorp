@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_DocumentL10n_h
 #define mozilla_dom_DocumentL10n_h
 
-#include "mozIDOMLocalization.h"
+#include "mozILocalization.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContentSink.h"
 #include "nsINode.h"
@@ -60,7 +60,7 @@ enum class DocumentL10nState {
  * resource is added to the document.
  *
  * Once initialized, DocumentL10n relays all API methods to an
- * instance of mozIDOMLocalization and maintains a single promise
+ * instance of mozILocalization and maintains a single promise
  * which gets resolved the first time the document gets translated.
  */
 class DocumentL10n final : public nsIObserver,
@@ -82,10 +82,10 @@ class DocumentL10n final : public nsIObserver,
   RefPtr<Document> mDocument;
   RefPtr<Promise> mReady;
   DocumentL10nState mState;
-  nsCOMPtr<mozIDOMLocalization> mDOMLocalization;
+  nsCOMPtr<mozILocalization> mLocalization;
   nsCOMPtr<nsIContentSink> mContentSink;
   RefPtr<l10n::Mutations> mMutations;
-  nsTHashtable<nsRefPtrHashKey<nsINode>> mRoots;
+  nsTHashtable<nsRefPtrHashKey<Element>> mRoots;
 
   already_AddRefed<Promise> MaybeWrapPromise(Promise* aPromise);
   void RegisterObservers();
@@ -147,13 +147,13 @@ class DocumentL10n final : public nsIObserver,
    * Add node to nodes observed for localization
    * related changes.
    */
-  void ConnectRoot(nsINode* aNode);
+  void ConnectRoot(Element* aNode);
 
   /**
    * Remove node from nodes observed for localization
    * related changes.
    */
-  void DisconnectRoot(nsINode* aNode);
+  void DisconnectRoot(Element* aNode);
 
   void TriggerInitialDocumentTranslation();
 
@@ -162,8 +162,11 @@ class DocumentL10n final : public nsIObserver,
   Document* GetDocument() { return mDocument; };
 
   void OnChange();
+  static void SetRootInfo(Element* aElement);
+
  protected:
   void DisconnectRoots();
+  void TranslateRoots();
 };
 
 }  // namespace dom
