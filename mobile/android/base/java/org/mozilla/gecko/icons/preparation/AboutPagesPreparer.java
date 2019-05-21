@@ -10,7 +10,6 @@ import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.util.GeckoJarReader;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,12 +25,17 @@ public class AboutPagesPreparer implements Preparer {
 
     @Override
     public void prepare(IconRequest request) {
-        if (aboutUrls.contains(request.getPageUrl())) {
-            final String iconUrl = GeckoJarReader.getJarURL(request.getContext(), "chrome/geckoview/content/branding/favicon64.png");
+        final String requestPageUrl = request.getPageUrl();
+        if (requestPageUrl != null) {
+            for (String aboutUrl : aboutUrls) {
+                if (requestPageUrl.startsWith(aboutUrl)) {
+                    final String iconUrl = GeckoJarReader.getJarURL(request.getContext(), "chrome/geckoview/content/branding/favicon64.png");
 
-            request.modify()
-                    .icon(IconDescriptor.createLookupIcon(iconUrl))
-                    .deferBuild();
+                    request.modify()
+                            .icon(IconDescriptor.createLookupIcon(iconUrl))
+                            .deferBuild();
+                }
+            }
         }
     }
 }
