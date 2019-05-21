@@ -1163,7 +1163,6 @@ this.tabs = class extends ExtensionAPI {
                 printSettings.printSilent = true;
                 printSettings.showPrintProgress = false;
 
-                printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
                 printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
 
                 if (pageSettings.paperSizeUnit !== null) {
