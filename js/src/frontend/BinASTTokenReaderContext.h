@@ -12,6 +12,8 @@
 
 #include "mozilla/Maybe.h"  // mozilla::Maybe
 
+#include <brotli/decode.h>  // BrotliDecoderState
+
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
 
@@ -48,6 +50,8 @@ class ErrorReporter;
  * - the reader does not support lookahead or pushback.
  */
 class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
+  using Base = BinASTTokenReaderBase;
+
  public:
   class AutoList;
   class AutoTaggedTuple;
@@ -82,6 +86,51 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
 
   ~BinASTTokenReaderContext();
 
+ private:
+  // {readByte, readBuf, readVarU32} are implemented both for uncompressed
+  // stream and brotli-compressed stream.
+  //
+  // Uncompressed variant is for reading the magic header, and compressed
+  // variant is for reading the remaining part.
+  //
+  // Once compressed variant is called, the underlying uncompressed stream is
+  // buffered and uncompressed variant cannot be called.
+  enum class Compression { No, Yes };
+
+  // Buffer that holds already brotli-decoded but not yet used data.
+  // decodedBuffer[decodedBegin, decodedEnd) holds the data.
+  static const size_t DECODED_BUFFER_SIZE = 128;
+  uint8_t decodedBuffer_[DECODED_BUFFER_SIZE];
+  size_t decodedBegin_ = 0;
+  size_t decodedEnd_ = 0;
+
+  // The number of already decoded bytes.
+  size_t availableDecodedLength() const { return decodedEnd_ - decodedBegin_; }
+
+  // The beginning of decoded buffer.
+  const uint8_t* decodedBufferBegin() const {
+    return decodedBuffer_ + decodedBegin_;
+  }
+
+  // Returns true if the brotli stream finished.
+  bool isEOF() const;
+
+  /**
+   * Read a single byte.
+   */
+  template <Compression compression>
+  MOZ_MUST_USE JS::Result<uint8_t> readByte();
+
+  /**
+   * Read several bytes.
+   *
+   * If there is not enough data, or if the tokenizer has previously been
+   * poisoned, return an error.
+   */
+  template <Compression compression>
+  MOZ_MUST_USE JS::Result<Ok> readBuf(uint8_t* bytes, uint32_t len);
+
+ public:
   /**
    * Read the header of the file.
    */
@@ -196,14 +245,13 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   /**
    * Read a single unsigned long.
    */
-  MOZ_MUST_USE JS::Result<uint32_t> readUnsignedLong(const Context&) {
-    return readVarU32();
-  }
+  MOZ_MUST_USE JS::Result<uint32_t> readUnsignedLong(const Context&);
 
  private:
   /**
    * Read a single uint32_t.
    */
+  template <Compression compression>
   MOZ_MUST_USE JS::Result<uint32_t> readVarU32();
 
  private:
@@ -218,6 +266,8 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   BinASTSourceMetadata* metadata_;
 
   const uint8_t* posBeforeTree_;
+
+  BrotliDecoderState* decoder_ = nullptr;
 
  public:
   BinASTTokenReaderContext(const BinASTTokenReaderContext&) = delete;
