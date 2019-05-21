@@ -500,6 +500,7 @@ var View = {
 
 var Control = {
   _openItems: new Set(),
+  _sortOrder: "",
   _removeSubtree(row) {
     while (row.nextSibling &&
            row.nextSibling.firstChild.classList.contains("indent")) {
@@ -583,6 +584,20 @@ var Control = {
       if (!document.hidden) {
         this._updateDisplay(true);
       }
+    });
+
+    document.getElementById("dispatch-thead").addEventListener("click", async (event) => {
+      const columnId = event.target.getAttribute("data-l10n-id");
+      if (columnId == "column-type")
+        this._sortOrder = this._sortOrder == "type_asc" ? "type_desc" : "type_asc";
+      else if (columnId == "column-energy-impact")
+        this._sortOrder = this._sortOrder == "cpu_desc" ? "cpu_asc" : "cpu_desc";
+      else if (columnId == "column-memory")
+        this._sortOrder = this._sortOrder == "memory_desc" ? "memory_asc" : "memory_desc";
+      else if (columnId == "column-name")
+        this._sortOrder = this._sortOrder == "name_asc" ? "name_desc" : "name_asc";
+
+      await this._updateDisplay(true);
     });
   },
   _lastMouseEvent: 0,
@@ -727,12 +742,50 @@ var Control = {
     // Keep only 2 digits after the decimal point.
     return Math.ceil(energyImpact * 100) / 100;
   },
+  _getTypeWeight(type) {
+    let weights = {
+      tab: 3,
+      addon: 2,
+      "system-addon": 1,
+    };
+    return weights[type] || 0;
+  },
   _sortCounters(counters) {
     return counters.sort((a, b) => {
       // Force 'Recently Closed Tabs' to be always at the bottom, because it'll
       // never be actionable.
       if (a.name.id && a.name.id == "ghost-windows")
         return 1;
+
+      if (this._sortOrder) {
+        let res;
+        let [column, order] = this._sortOrder.split("_");
+        switch (column) {
+          case "memory":
+            res = a.memory - b.memory;
+            break;
+          case "type":
+            if (a.type != b.type)
+              res = this._getTypeWeight(b.type) - this._getTypeWeight(a.type);
+            else
+              res = String.prototype.localeCompare.call(a.name, b.name);
+            break;
+          case "name":
+            res = String.prototype.localeCompare.call(a.name, b.name);
+            break;
+          case "cpu":
+            res = this._computeEnergyImpact(a.dispatchesSincePrevious,
+                                            a.durationSincePrevious) -
+              this._computeEnergyImpact(b.dispatchesSincePrevious,
+                                        b.durationSincePrevious);
+            break;
+          default:
+            res = String.prototype.localeCompare.call(a.name, b.name);
+        }
+        if (order == "desc")
+          res = -1 * res;
+        return res;
+      }
 
       // Note: _computeEnergyImpact uses UPDATE_INTERVAL_MS which doesn't match
       // the time between the most recent sample and the start of the buffer,
