@@ -3325,7 +3325,6 @@ bool ASTSerializer::identifier(NameNode* id, MutableHandleValue dst) {
 bool ASTSerializer::function(FunctionNode* funNode, ASTType type,
                              MutableHandleValue dst) {
   FunctionBox* funbox = funNode->funbox();
-  RootedFunction func(cx, funbox->function());
 
   GeneratorStyle generatorStyle =
       funbox->isGenerator() ? GeneratorStyle::ES6 : GeneratorStyle::None;
@@ -3334,7 +3333,7 @@ bool ASTSerializer::function(FunctionNode* funNode, ASTType type,
   bool isExpression = funbox->hasExprBody();
 
   RootedValue id(cx);
-  RootedAtom funcAtom(cx, func->explicitName());
+  RootedAtom funcAtom(cx, funbox->explicitName());
   if (!optIdentifier(funcAtom, nullptr, &id)) {
     return false;
   }
