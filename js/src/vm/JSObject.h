@@ -742,14 +742,14 @@ struct JSObject_Slots16 : JSObject {
     if (prev && prev->storeBuffer()) {
       return;
     }
-    buffer->putCell(static_cast<js::gc::Cell**>(cellp));
+    buffer->putCell(static_cast<JSObject**>(cellp));
     return;
   }
 
   // Remove the prev entry if the new value does not need it. There will only
   // be a prev entry if the prev value was in the nursery.
   if (prev && (buffer = prev->storeBuffer())) {
-    buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
+    buffer->unputCell(static_cast<JSObject**>(cellp));
   }
 }
 
