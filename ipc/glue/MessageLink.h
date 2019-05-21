@@ -32,7 +32,7 @@ struct HasResultCodes {
   };
 };
 
-enum Side { ParentSide, ChildSide, UnknownSide };
+enum Side : uint8_t { ParentSide, ChildSide, UnknownSide };
 
 class MessageLink {
  public:

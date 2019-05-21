@@ -348,6 +348,75 @@ void TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
   }
 }
 
+ActorLifecycleProxy::ActorLifecycleProxy(IProtocol* aActor) : mActor(aActor) {
+  MOZ_ASSERT(mActor);
+  MOZ_ASSERT(mActor->CanSend(),
+             "Cannot create LifecycleProxy for non-connected actor!");
+
+  // Take a reference to our manager's lifecycle proxy to try to hold it &
+  // ensure it doesn't die before us.
+  if (mActor->mManager) {
+    mManager = mActor->mManager->mLifecycleProxy;
+  }
+}
+
+ActorLifecycleProxy::~ActorLifecycleProxy() {
+  // When the LifecycleProxy's lifetime has come to an end, it means that the
+  // actor should have its `Dealloc` method called on it. In a well-behaved
+  // actor, this will release the IPC-held reference to the actor.
+  //
+  // If the actor has already died before the `LifecycleProxy`, the `IProtocol`
+  // destructor below will clear our reference to it, preventing us from
+  // performing a use-after-free here.
+  if (!mActor) {
+    return;
+  }
+
+  // Clear our actor's state back to inactive, and then invoke ActorDealloc.
+  MOZ_ASSERT(mActor->mLinkStatus == LinkStatus::Destroyed,
+             "Deallocating non-destroyed actor!");
+  mActor->mLifecycleProxy = nullptr;
+  mActor->mLinkStatus = LinkStatus::Inactive;
+  mActor->ActorDealloc();
+  mActor = nullptr;
+}
+
+IProtocol::~IProtocol() {
+  // If the actor still has a lifecycle proxy when it is being torn down, it
+  // means that IPC was not given control over the lifecycle of the actor
+  // correctly. Usually this means that the actor was destroyed while IPC is
+  // calling a message handler for it, and the actor incorrectly frees itself
+  // during that operation.
+  //
+  // As this happens unfortunately frequently, due to many odd protocols in
+  // Gecko, simply emit a warning and clear the weak backreference from our
+  // LifecycleProxy back to us.
+  if (mLifecycleProxy) {
+    // FIXME: It would be nice to have this print out the name of the
+    // misbehaving actor, to help people notice it's their fault!
+    NS_WARNING(
+        "Actor destructor called before IPC lifecycle complete!\n"
+        "References to this actor may unexpectedly dangle!");
+
+    mLifecycleProxy->mActor = nullptr;
+
+    // If we are somehow being destroyed while active, make sure that the
+    // existing IPC reference has been freed. If the status of the actor is
+    // `Destroyed`, the reference has already been freed, and we shouldn't free
+    // it a second time.
+    MOZ_ASSERT(mLinkStatus != LinkStatus::Inactive);
+    if (mLinkStatus != LinkStatus::Destroyed) {
+      NS_IF_RELEASE(mLifecycleProxy);
+    }
+    mLifecycleProxy = nullptr;
+  }
+}
+
+void IProtocol::SetId(int32_t aId) {
+  MOZ_ASSERT(mId == aId || mLinkStatus == LinkStatus::Inactive);
+  mId = aId;
+}
+
 Maybe<IProtocol*> IProtocol::ReadActor(const IPC::Message* aMessage,
                                        PickleIterator* aIter, bool aNullable,
                                        const char* aActorDescription,
@@ -566,6 +635,77 @@ already_AddRefed<nsIEventTarget> IProtocol::ManagedState::GetActorEventTarget(
   return mProtocol->Manager()->GetActorEventTarget(aActor);
 }
 
+void IProtocol::ActorConnected() {
+  if (mLinkStatus != LinkStatus::Inactive) {
+    return;
+  }
+
+  mLinkStatus = LinkStatus::Connected;
+
+  MOZ_ASSERT(!mLifecycleProxy, "double-connecting live actor");
+  mLifecycleProxy = new ActorLifecycleProxy(this);
+  NS_ADDREF(mLifecycleProxy);  // Reference freed in DestroySubtree();
+}
+
+void IProtocol::DoomSubtree() {
+  MOZ_ASSERT(CanSend(), "dooming non-connected actor");
+  MOZ_ASSERT(mLifecycleProxy, "dooming zombie actor");
+
+  nsTArray<RefPtr<ActorLifecycleProxy>> managed;
+  AllManagedActors(managed);
+  for (ActorLifecycleProxy* proxy : managed) {
+    // Guard against actor being disconnected or destroyed during previous Doom
+    IProtocol* actor = proxy->Get();
+    if (actor && actor->CanSend()) {
+      actor->DoomSubtree();
+    }
+  }
+
+  // ActorDoom is called immediately before changing state, this allows messages
+  // to be sent during ActorDoom immediately before the channel is closed and
+  // sending messages is disabled.
+  ActorDoom();
+  mLinkStatus = LinkStatus::Doomed;
+}
+
+void IProtocol::DestroySubtree(ActorDestroyReason aWhy) {
+  MOZ_ASSERT(CanRecv(), "destroying non-connected actor");
+  MOZ_ASSERT(mLifecycleProxy, "destroying zombie actor");
+
+  // If we're a managed actor, unregister from our manager
+  if (Manager()) {
+    Unregister(Id());
+  }
+
+  // Destroy subtree
+  ActorDestroyReason subtreeWhy = aWhy;
+  if (aWhy == Deletion || aWhy == FailedConstructor) {
+    subtreeWhy = AncestorDeletion;
+  }
+
+  nsTArray<RefPtr<ActorLifecycleProxy>> managed;
+  AllManagedActors(managed);
+  for (ActorLifecycleProxy* proxy : managed) {
+    // Guard against actor being disconnected or destroyed during previous
+    // Destroy
+    IProtocol* actor = proxy->Get();
+    if (actor && actor->CanRecv()) {
+      actor->DestroySubtree(subtreeWhy);
+    }
+  }
+
+  // Ensure that we don't send any messages while we're calling `ActorDestroy`
+  // by setting our state to `Doomed`.
+  mLinkStatus = LinkStatus::Doomed;
+
+  // The actor is being destroyed, reject any pending responses, invoke
+  // `ActorDestroy` to destroy it, and then clear our status to
+  // `LinkStatus::Destroyed`.
+  GetIPCChannel()->RejectPendingResponsesForActor(this);
+  ActorDestroy(aWhy);
+  mLinkStatus = LinkStatus::Destroyed;
+}
+
 IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,
                                      Side aSide)
     : IProtocol(aSide, MakeUnique<ToplevelState>(aName, this, aSide)),
@@ -672,9 +812,7 @@ int32_t IToplevelProtocol::ToplevelState::Register(IProtocol* aRouted) {
     // If there's already an ID, just return that.
     return aRouted->Id();
   }
-  int32_t id = NextId();
-  mActorMap.AddWithID(aRouted, id);
-  aRouted->SetId(id);
+  int32_t id = RegisterID(aRouted, NextId());
 
   // Inherit our event target from our manager.
   if (IProtocol* manager = aRouted->Manager()) {
@@ -690,8 +828,9 @@ int32_t IToplevelProtocol::ToplevelState::Register(IProtocol* aRouted) {
 
 int32_t IToplevelProtocol::ToplevelState::RegisterID(IProtocol* aRouted,
                                                      int32_t aId) {
-  mActorMap.AddWithID(aRouted, aId);
   aRouted->SetId(aId);
+  aRouted->ActorConnected();
+  mActorMap.AddWithID(aRouted, aId);
   return aId;
 }
 
