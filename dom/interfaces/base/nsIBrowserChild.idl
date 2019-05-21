@@ -40,13 +40,5 @@ interface nsIBrowserChild : nsISupports
 
   [noscript, notxpcom] void beforeUnloadAdded();
   [noscript, notxpcom] void beforeUnloadRemoved();
-
-  /**
-   * Tell the nsIBrowserChild that it should begin sending its nsIWebProgress
-   * events to its nsIBrowserParent.
-   *
-   * This should be called once the frame script for the nsIBrowserChild has
-   * loaded.
-   */
-  void beginSendingWebProgressEventsToParent();
 };
+
