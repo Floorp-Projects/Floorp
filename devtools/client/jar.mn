@@ -76,6 +76,7 @@ devtools.jar:
     skin/images/checkbox.svg (themes/images/checkbox.svg)
     skin/images/filter-swatch.svg (themes/images/filter-swatch.svg)
     skin/images/aboutdebugging-connect-icon.svg (themes/images/aboutdebugging-connect-icon.svg)
+    skin/images/aboutdebugging-error.svg (themes/images/aboutdebugging-error.svg)
     skin/images/aboutdebugging-fenix-nightly.svg (themes/images/aboutdebugging-fenix-nightly.svg)
     skin/images/aboutdebugging-fenix.svg (themes/images/aboutdebugging-fenix.svg)
     skin/images/aboutdebugging-firefox-aurora.svg (themes/images/aboutdebugging-firefox-aurora.svg)
