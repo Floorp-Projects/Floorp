@@ -998,7 +998,7 @@ struct JSContext : public JS::RootingContext,
 #ifdef JS_STRUCTURED_SPEW
  private:
   // Spewer for this thread
-  js::ThreadData<js::StructuredSpewer> structuredSpewer_;
+  js::UnprotectedData<js::StructuredSpewer> structuredSpewer_;
 
  public:
   js::StructuredSpewer& spewer() { return structuredSpewer_.ref(); }

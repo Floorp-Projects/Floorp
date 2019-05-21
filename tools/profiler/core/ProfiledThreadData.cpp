@@ -113,6 +113,8 @@ void ProfiledThreadData::StreamTraceLoggerJSON(
   aWriter.StartObjectProperty("jsTracerEvents");
   {
     JS::AutoTraceLoggerLockGuard lockGuard;
+    JS::SpewTraceLoggerThread(aCx);
+
     uint32_t length = 0;
 
     // Collect Event Ids
