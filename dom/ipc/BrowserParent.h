@@ -778,7 +778,7 @@ class BrowserParent final : public PBrowserParent,
   // The root browsing context loaded in this BrowserParent.
   RefPtr<CanonicalBrowsingContext> mBrowsingContext;
   nsCOMPtr<nsILoadContext> mLoadContext;
-  nsCOMPtr<Element> mFrameElement;
+  RefPtr<Element> mFrameElement;
   nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
   // We keep a strong reference to the frameloader after we've sent the
   // Destroy message and before we've received __delete__. This allows us to
