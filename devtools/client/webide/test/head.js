@@ -35,14 +35,14 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.busyTimeout");
   Services.prefs.clearUserPref("devtools.webide.lastSelectedProject");
   Services.prefs.clearUserPref("devtools.webide.lastConnectedRuntime");
-  Services.prefs.clearUserPref("devtools.webide.showDeprecationMessage");
+  Services.prefs.clearUserPref("devtools.aboutdebugging.new-enabled");
 });
 
-var openWebIDE = async function({ autoInstallAddons, showDeprecationMessage } = {}) {
+var openWebIDE = async function({ autoInstallAddons, newAboutDebugging } = {}) {
   info("opening WebIDE");
 
   Services.prefs.setBoolPref("devtools.webide.autoinstallADBExtension", !!autoInstallAddons);
-  Services.prefs.setBoolPref("devtools.webide.showDeprecationMessage", !!showDeprecationMessage);
+  Services.prefs.setBoolPref("devtools.aboutdebugging.new-enabled", !!newAboutDebugging);
 
   const win = Services.ww.openWindow(null, "chrome://webide/content/", "webide",
                                    "chrome,centerscreen,resizable", null);
