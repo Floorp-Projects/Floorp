@@ -6,10 +6,11 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
+<video id="v">
 <script type="text/javascript">
 
 function runTest() {
-  var video = document.createElement("video");
+  var video = document.getElementById("v");
 
   isnot(video.textTracks, undefined, "HTMLMediaElement::TextTrack() property should be available.")
 
@@ -69,8 +70,6 @@ function runTest() {
 
   video.src = "seek.webm";
   video.preload = "metadata";
-
-  document.appendChild(video);
 
   video.addEventListener("loadedmetadata", function run_tests() {
     // Re-que run_tests() at the end of the event loop until the track
