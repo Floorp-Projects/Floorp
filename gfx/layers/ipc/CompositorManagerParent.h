@@ -74,7 +74,7 @@ class CompositorManagerParent final : public PCompositorManagerParent {
 
   void Bind(Endpoint<PCompositorManagerParent>&& aEndpoint, bool aIsRoot);
 
-  void DeallocPCompositorManagerParent() override;
+  void ActorDealloc() override;
 
   void DeferredDestroy();
 

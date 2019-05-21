@@ -54,7 +54,7 @@ class UiCompositorControllerParent final
   mozilla::ipc::IPCResult RecvToolbarPixelsToCompositor(
       Shmem&& aMem, const ScreenIntSize& aSize);
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  void DeallocPUiCompositorControllerParent() override;
+  void ActorDealloc() override;
 
   // Class specific functions
 #if defined(MOZ_WIDGET_ANDROID)

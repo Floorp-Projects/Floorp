@@ -56,7 +56,7 @@ class VideoBridgeParent final : public PVideoBridgeParent,
   void DeallocShmem(ipc::Shmem& aShmem) override;
 
  private:
-  void DeallocPVideoBridgeParent() override;
+  void ActorDealloc() override;
 
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.

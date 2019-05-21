@@ -158,7 +158,7 @@ void CompositorManagerParent::ActorDestroy(ActorDestroyReason aReason) {
   }
 }
 
-void CompositorManagerParent::DeallocPCompositorManagerParent() {
+void CompositorManagerParent::ActorDealloc() {
   MessageLoop::current()->PostTask(
       NewRunnableMethod("layers::CompositorManagerParent::DeferredDestroy",
                         this, &CompositorManagerParent::DeferredDestroy));
