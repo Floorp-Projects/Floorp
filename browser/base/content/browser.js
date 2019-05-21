@@ -1229,7 +1229,7 @@ function _loadURI(browser, uri, params = {}) {
 
   // !requiredRemoteType means we're loading in the parent/this process.
   if (!requiredRemoteType) {
-    browser.inLoadURI = true;
+    browser.isNavigating = true;
   }
   let loadURIOptions = {
     triggeringPrincipal,
@@ -1299,7 +1299,7 @@ function _loadURI(browser, uri, params = {}) {
     }
   } finally {
     if (!requiredRemoteType) {
-      browser.inLoadURI = false;
+      browser.isNavigating = false;
     }
   }
 }
