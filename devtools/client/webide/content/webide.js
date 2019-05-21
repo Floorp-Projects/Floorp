@@ -318,7 +318,15 @@ var UI = {
   },
 
   showDeprecationMessage: function() {
-    const text = Strings.GetStringFromName("error_webIDEDeprecated");
+    let text;
+    try {
+      text = Strings.GetStringFromName("error_webIDEDeprecated2");
+    } catch (e) {
+      // The string error_webIDEDeprecated2 should be upflited to Beta 68. In this
+      // situation, some language packs might not be updated and provide the new string
+      // immediately. Fallback to the previous string in this case.
+      text = Strings.GetStringFromName("error_webIDEDeprecated");
+    }
     const buttons = [{
       label: Strings.GetStringFromName("notification_openAboutDebugging.label"),
       accessKey: Strings.GetStringFromName("notification_openAboutDebugging.accesskey"),
