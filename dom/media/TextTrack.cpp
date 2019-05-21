@@ -197,6 +197,14 @@ void TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv) {
   }
 }
 
+void TextTrack::ClearAllCues() {
+  WEBVTT_LOG("ClearAllCues");
+  ErrorResult dummy;
+  while (!mCueList->IsEmpty()) {
+    RemoveCue(*(*mCueList)[0], dummy);
+  }
+}
+
 void TextTrack::SetCuesDirty() {
   for (uint32_t i = 0; i < mCueList->Length(); i++) {
     ((*mCueList)[i])->Reset();
