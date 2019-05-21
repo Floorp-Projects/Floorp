@@ -5034,8 +5034,8 @@ class TabProgressListener {
 
           this.mBrowser.userTypedValue = null;
 
-          let inLoadURI = this.mBrowser.inLoadURI;
-          if (this.mTab.selected && gURLBar && !inLoadURI) {
+          let isNavigating = this.mBrowser.isNavigating;
+          if (this.mTab.selected && gURLBar && !isNavigating) {
             URLBarSetURI();
           }
         } else if (isSuccessful) {
@@ -5108,7 +5108,7 @@ class TabProgressListener {
       // and the user cleared the URL manually.
       if (this.mBrowser.didStartLoadSinceLastUserTyping() ||
           (isErrorPage && aLocation.spec != "about:blank") ||
-          (isSameDocument && this.mBrowser.inLoadURI) ||
+          (isSameDocument && this.mBrowser.isNavigating) ||
           (isSameDocument && !this.mBrowser.userTypedValue)) {
         this.mBrowser.userTypedValue = null;
       }
