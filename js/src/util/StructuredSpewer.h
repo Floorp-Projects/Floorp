@@ -66,7 +66,9 @@ class JSScript;
 
 namespace js {
 
-#  define STRUCTURED_CHANNEL_LIST(_) _(BaselineICStats)
+#  define STRUCTURED_CHANNEL_LIST(_) \
+    _(BaselineICStats)               \
+    _(ScriptStats)
 
 // Structured spew channels
 enum class SpewChannel {

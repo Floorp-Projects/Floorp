@@ -10714,6 +10714,16 @@ static MOZ_MUST_USE bool ReportUnhandledRejections(JSContext* cx) {
 }
 
 static int Shell(JSContext* cx, OptionParser* op, char** envp) {
+  if (JS::TraceLoggerSupported()) {
+    JS::StartTraceLogger(cx);
+  }
+  auto stopTraceLogger = MakeScopeExit([&] {
+    if (JS::TraceLoggerSupported()) {
+      JS::SpewTraceLoggerForCurrentProcess();
+      JS::StopTraceLogger(cx);
+    }
+  });
+
   if (op->getBoolOption("wasm-compile-and-serialize")) {
     if (!WasmCompileAndSerialize(cx)) {
       // Errors have been printed directly to stderr.
