@@ -34,6 +34,7 @@
 #include "js/experimental/SourceHook.h"  // js::SourceHook
 #include "js/GCVector.h"
 #include "js/HashTable.h"
+#include "js/Modules.h"  // JS::Module{DynamicImport,Metadata,Resolve}Hook
 #ifdef DEBUG
 #  include "js/Proxy.h"  // For AutoEnterPolicy
 #endif
