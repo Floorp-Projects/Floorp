@@ -1186,7 +1186,20 @@ interface nsIDocShell : nsIDocShellTreeItem
   [notxpcom, nostdcall] readonly attribute boolean isAttemptingToNavigate;
 
   /**
+<<<<<<< dest
    * Whether developer tools are watching activity in this docshell.
    */
   [infallible] attribute boolean watchedByDevtools;
+
+   * Whether or not this docshell is executing a nsIWebNavigation navigation
+   * method.
+   *
+   * This will be true when the following methods are executing:
+   *   nsIWebNavigation.binaryLoadURI
+   *   nsIWebNavigation.goBack
+   *   nsIWebNavigation.goForward
+   *   nsIWebNavigation.gotoIndex
+   *   nsIWebNavigation.loadURI
+   */
+  [infallible] readonly attribute boolean isNavigating;
 };
