@@ -2647,7 +2647,7 @@ bool ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst) {
   switch (pn->getKind()) {
     case ParseNodeKind::Function: {
       FunctionNode* funNode = &pn->as<FunctionNode>();
-      ASTType type = funNode->funbox()->function()->isArrow() ? AST_ARROW_EXPR
+      ASTType type = funNode->funbox()->isArrow() ? AST_ARROW_EXPR
                                                               : AST_FUNC_EXPR;
       return function(funNode, type, dst);
     }
@@ -3142,7 +3142,7 @@ bool ASTSerializer::property(ParseNode* pn, MutableHandleValue dst) {
 
   bool isShorthand = node->isKind(ParseNodeKind::Shorthand);
   bool isMethod = valNode->is<FunctionNode>() &&
-                  valNode->as<FunctionNode>().funbox()->function()->kind() ==
+                  valNode->as<FunctionNode>().funbox()->kind() ==
                       JSFunction::Method;
   RootedValue key(cx), val(cx);
   return propertyName(keyNode, &key) && expression(valNode, &val) &&

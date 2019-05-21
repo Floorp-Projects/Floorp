@@ -2216,7 +2216,7 @@ bool BytecodeEmitter::isRunOnceLambda() {
 
   FunctionBox* funbox = sc->asFunctionBox();
   return !funbox->argumentsHasLocalBinding() && !funbox->isGenerator() &&
-         !funbox->isAsync() && !funbox->function()->explicitName();
+         !funbox->isAsync() && !funbox->explicitName();
 }
 
 bool BytecodeEmitter::allocateResumeIndex(ptrdiff_t offset,
@@ -2478,7 +2478,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
                                 parser->errorReporter(), funbox);
 
   MOZ_ASSERT((fieldInitializers_.valid) ==
-             (funbox->function()->kind() ==
+             (funbox->kind() ==
               JSFunction::FunctionKind::ClassConstructor));
 
   setScriptStartOffsetIfUnset(paramsBody->pn_pos.begin);
@@ -5632,7 +5632,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
   RootedFunction fun(cx, funbox->function());
 
   MOZ_ASSERT((classContentsIfConstructor != nullptr) ==
-             (funbox->function()->kind() ==
+             (funbox->kind() ==
               JSFunction::FunctionKind::ClassConstructor));
 
   //                [stack]
@@ -8076,7 +8076,7 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   for (BytecodeEmitter* current = this; current; current = current->parent) {
     if (current->sc->isFunctionBox()) {
       FunctionBox* box = current->sc->asFunctionBox();
-      if (box->function()->kind() ==
+      if (box->kind() ==
           JSFunction::FunctionKind::ClassConstructor) {
         const FieldInitializers& fieldInitializers =
             current->getFieldInitializers();
