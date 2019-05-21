@@ -988,20 +988,25 @@ class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocomplet
         return;
       }
 
-      // ac-label gets populated from getCommentAt despite the attribute name.
-      // The "comment" is used to populate additional visible text.
-      let formHostname = this.getAttribute("ac-label");
       LoginHelper.openPasswordManager(this.ownerGlobal, {
-        filterString: formHostname,
+        filterString: this._data.hostname,
         entryPoint: "autocomplete",
       });
     }
 
     this.addEventListener("click", handleEvent);
   }
+
+  get _data() {
+    return JSON.parse(this.getAttribute("ac-value"));
+  }
+
+  _adjustAcItem() {
+    this._titleText.textContent = this._data.label;
+  }
 }
 
-class MozAutocompleteTwoLineRichlistitem extends MozElements.MozRichlistitem {
+class MozAutocompleteRichlistitemLoginWithOrigin extends MozElements.MozRichlistitem {
   connectedCallback() {
     if (this.delayConnectedCallback()) {
       return;
@@ -1016,10 +1021,7 @@ class MozAutocompleteTwoLineRichlistitem extends MozElements.MozRichlistitem {
 
   static get inheritedAttributes() {
     return {
-      // getLabelAt:
-      ".line1-label": "text=ac-value",
-      // getCommentAt:
-      ".line2-label": "text=ac-label",
+      ".login-username": "text=ac-value",
     };
   }
 
@@ -1027,11 +1029,11 @@ class MozAutocompleteTwoLineRichlistitem extends MozElements.MozRichlistitem {
     return `
       <div xmlns="http://www.w3.org/1999/xhtml"
            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-           class="two-line-wrapper">
+           class="login-wrapper">
         <xul:image class="ac-site-icon"></xul:image>
-        <div class="labels-wrapper">
-          <div class="label-row line1-label"></div>
-          <div class="label-row line2-label"></div>
+        <div class="login-text">
+          <div class="login-row login-username"></div>
+          <div class="login-row login-origin"></div>
         </div>
       </div>
     `;
@@ -1043,6 +1045,16 @@ class MozAutocompleteTwoLineRichlistitem extends MozElements.MozRichlistitem {
     // Make item fit in popup as XUL box could not constrain
     // item's width
     this.firstElementChild.style.width = outerBoxRect.width + "px";
+
+    let data = JSON.parse(this.getAttribute("ac-label"));
+    let originElement = this.querySelector(".login-origin");
+    try {
+      let uri = Services.io.newURI(data.loginOrigin);
+      // Fallback to handle file: URIs
+      originElement.textContent = uri.displayHostPort || data.loginOrigin;
+    } catch (ex) {
+      originElement.textContent = data.loginOrigin;
+    }
   }
 
   _onOverflow() {}
@@ -1064,7 +1076,7 @@ customElements.define("autocomplete-richlistitem-logins-footer", MozAutocomplete
   extends: "richlistitem",
 });
 
-customElements.define("autocomplete-two-line-richlistitem", MozAutocompleteTwoLineRichlistitem, {
+customElements.define("autocomplete-richlistitem-login-with-origin", MozAutocompleteRichlistitemLoginWithOrigin, {
   extends: "richlistitem",
 });
 }
