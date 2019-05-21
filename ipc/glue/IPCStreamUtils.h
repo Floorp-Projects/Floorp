@@ -181,7 +181,7 @@ class AutoIPCStream final {
 };
 
 template <>
-struct IPDLParamTraits<nsIInputStream> {
+struct IPDLParamTraits<nsIInputStream*> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor,
                     nsIInputStream* aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
