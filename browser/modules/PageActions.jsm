@@ -455,9 +455,6 @@ var PageActions = {
  *        some reason.  You can also pass an object that maps pixel sizes to
  *        URLs, like { 16: url16, 32: url32 }.  The best size for the user's
  *        screen will be used.
- * @param isBadged (bool, optional)
- *        If true, the toolbarbutton for this action will get the
- *        "badged-button" class.
  * @param onBeforePlacedInWindow (function, optional)
  *        Called before the action is placed in the window:
  *        onBeforePlacedInWindow(window)
@@ -540,7 +537,6 @@ function Action(options) {
     disabled: false,
     extensionID: false,
     iconURL: false,
-    isBadged: false,
     labelForHistogram: false,
     onBeforePlacedInWindow: false,
     onCommand: false,
@@ -818,10 +814,6 @@ Action.prototype = {
    */
   get wantsIframe() {
     return this._wantsIframe || false;
-  },
-
-  get isBadged() {
-    return this._isBadged || false;
   },
 
   get labelForHistogram() {
@@ -1192,7 +1184,6 @@ var gBuiltInActions = [
     id: "addSearchEngine",
     // The title is set in browser-pageActions.js.
     title: "",
-    isBadged: true,
     _transient: true,
     onShowingInPanel(buttonNode) {
       browserPageActions(buttonNode).addSearchEngine.onShowingInPanel();

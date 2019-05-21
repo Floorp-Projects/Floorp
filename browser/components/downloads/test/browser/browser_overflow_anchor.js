@@ -47,7 +47,8 @@ add_task(async function test_overflow_anchor() {
   EventUtils.sendMouseEvent({ type: "mousedown", button: 0 }, button.node);
   await promise;
 
-  let downloadsAnchor = button.node.badgeStack;
+  let downloadsAnchor = document.getAnonymousElementByAttribute(button.node, "class",
+                                                               "toolbarbutton-badge-stack");
   is(panel.anchorNode, downloadsAnchor);
 
   DownloadsPanel.hidePanel();

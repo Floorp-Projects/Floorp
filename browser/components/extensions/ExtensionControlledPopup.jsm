@@ -275,7 +275,8 @@ class ExtensionControlledPopup {
       // Anchor to a toolbar browserAction if found, otherwise use the menu button.
       anchorButton = action || doc.getElementById("PanelUI-menu-button");
     }
-    let anchor = anchorButton.icon;
+    let anchor = doc.getAnonymousElementByAttribute(
+      anchorButton, "class", "toolbarbutton-icon");
     panel.hidden = false;
     popupnotification.show();
     panel.openPopup(anchor);

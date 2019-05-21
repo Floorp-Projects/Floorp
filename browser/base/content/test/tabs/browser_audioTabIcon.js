@@ -167,7 +167,8 @@ async function test_playing_icon_on_hidden_tab(tab) {
   ];
   let tabContainer = tab.parentNode;
   let alltabsButton = document.getElementById("alltabs-button");
-  let alltabsBadge = alltabsButton.badgeLabel;
+  let alltabsBadge = document.getAnonymousElementByAttribute(
+    alltabsButton, "class", "toolbarbutton-badge");
 
   function assertIconShowing() {
     is(getComputedStyle(alltabsBadge).backgroundImage,
