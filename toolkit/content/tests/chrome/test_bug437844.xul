@@ -63,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
       let cleanupFunc = createManifestTemporarily(tempProfileDir, manifest);
 
       // Load about:plugins in an iframe
-      let frame = document.createElement("iframe");
+      let frame = document.createXULElement("iframe");
       frame.setAttribute("src", "about:plugins");
       frame.addEventListener("load", function () {
           frame.removeEventListener("load", arguments.callee, false);
@@ -74,7 +74,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
                                       QueryInterface(Ci.nsIProperties);
           let tmpd = gDirSvc.get("ProfD", Ci.nsIFile);
 
-          frame = document.createElement("iframe");
+          frame = document.createXULElement("iframe");
           frame.setAttribute("src", "file://" + tmpd.path); // a file:// URI, bug 348233
           frame.addEventListener("load", function () {
               frame.removeEventListener("load", arguments.callee, false);

@@ -532,9 +532,42 @@ nscoord nsTableRowFrame::CalcBSize(const ReflowInput& aReflowInput) {
   return GetInitialBSize();
 }
 
+void nsTableRowFrame::PaintCellBackgroundsForFrame(
+    nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
+    const nsDisplayListSet& aLists, const nsPoint& aOffset) {
+  // Compute background rect by iterating all cell frame.
+  const nsPoint toReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
+  for (nsTableCellFrame* cell = GetFirstCell(); cell;
+       cell = cell->GetNextCell()) {
+    if (!cell->ShouldPaintBackground(aBuilder)) {
+      continue;
+    }
+
+    auto cellRect =
+        cell->GetRectRelativeToSelf() + cell->GetNormalPosition() + aOffset;
+    if (!aBuilder->GetDirtyRect().Intersects(cellRect)) {
+      continue;
+    }
+    cellRect += toReferenceFrame;
+    nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+        aBuilder, aFrame, cellRect, aLists.BorderBackground(), true, nullptr,
+        aFrame->GetRectRelativeToSelf() + toReferenceFrame, cell);
+  }
+}
+
 void nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                        const nsDisplayListSet& aLists) {
-  nsTableFrame::DisplayGenericTablePart(aBuilder, this, aLists);
+  DisplayOutsetBoxShadow(aBuilder, aLists.BorderBackground());
+
+  PaintCellBackgroundsForFrame(this, aBuilder, aLists);
+
+  DisplayInsetBoxShadow(aBuilder, aLists.BorderBackground());
+
+  DisplayOutline(aBuilder, aLists);
+
+  for (nsIFrame* kid : PrincipalChildList()) {
+    BuildDisplayListForChild(aBuilder, kid, aLists);
+  }
 }
 
 nsIFrame::LogicalSides nsTableRowFrame::GetLogicalSkipSides(

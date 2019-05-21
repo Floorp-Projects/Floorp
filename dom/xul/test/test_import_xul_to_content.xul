@@ -55,7 +55,7 @@
     });
 
     // We add some XUL to a content document. This should generate a warning.
-    var elt = document.createElement("label");
+    var elt = document.createXULElement("label");
     var newElt = doc.importNode(elt, false);
     expectWarning(true, "appending XUL", function() {
       doc.documentElement.appendChild(newElt);

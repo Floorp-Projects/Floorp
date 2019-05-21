@@ -37,14 +37,14 @@ function getTemplatesJSON() {
     const templatelistNode = document.querySelector("#templatelist");
     templatelistNode.innerHTML = "";
     for (const template of list) {
-      const richlistitemNode = document.createElement("richlistitem");
-      const imageNode = document.createElement("image");
+      const richlistitemNode = document.createXULElement("richlistitem");
+      const imageNode = document.createXULElement("image");
       imageNode.setAttribute("src", template.icon);
-      const labelNode = document.createElement("label");
+      const labelNode = document.createXULElement("label");
       labelNode.setAttribute("value", template.name);
-      const descriptionNode = document.createElement("description");
+      const descriptionNode = document.createXULElement("description");
       descriptionNode.textContent = template.description;
-      const vboxNode = document.createElement("vbox");
+      const vboxNode = document.createXULElement("vbox");
       vboxNode.setAttribute("flex", "1");
       richlistitemNode.appendChild(imageNode);
       vboxNode.appendChild(labelNode);

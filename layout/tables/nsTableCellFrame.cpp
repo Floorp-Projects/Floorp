@@ -450,12 +450,14 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           aBuilder, this);
     }
 
+    nsRect bgRect = GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+
     // display background if we need to.
     if (aBuilder->IsForEventDelivery() ||
         !StyleBackground()->IsTransparent(this) ||
         StyleDisplay()->HasAppearance()) {
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-          aBuilder, this, GetRectRelativeToSelf(), aLists.BorderBackground());
+          aBuilder, this, bgRect, aLists.BorderBackground());
     }
 
     // display inset box-shadows if we need to.
@@ -472,15 +474,48 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       aLists.BorderBackground()->AppendNewToTop<nsDisplayTableCellSelection>(
           aBuilder, this);
     }
+
+    // This can be null if display list building initiated in the middle
+    // of the table, which can happen with background-clip:text and
+    // -moz-element.
+    nsDisplayTableBackgroundSet* backgrounds =
+        aBuilder->GetTableBackgroundSet();
+    if (backgrounds) {
+      // Compute bgRect relative to reference frame, but using the
+      // normal (without position:relative offsets) positions for the
+      // cell, row and row group.
+      bgRect = GetRectRelativeToSelf() + GetNormalPosition();
+
+      nsTableRowFrame* row = GetTableRowFrame();
+      bgRect += row->GetNormalPosition();
+
+      nsTableRowGroupFrame* rowGroup = row->GetTableRowGroupFrame();
+      bgRect += rowGroup->GetNormalPosition();
+
+      bgRect += backgrounds->TableToReferenceFrame();
+
+      // Create backgrounds items as needed for the column and column
+      // group that this cell occupies.
+      nsTableColFrame* col = backgrounds->GetColForIndex(ColIndex());
+      nsTableColGroupFrame* colGroup = col->GetTableColGroupFrame();
+
+      Maybe<nsDisplayListBuilder::AutoBuildingDisplayList> buildingForColGroup;
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+          aBuilder, colGroup, bgRect, backgrounds->ColGroupBackgrounds(), false,
+          nullptr, colGroup->GetRect() + backgrounds->TableToReferenceFrame(),
+          this, &buildingForColGroup);
+
+      Maybe<nsDisplayListBuilder::AutoBuildingDisplayList> buildingForCol;
+      nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
+          aBuilder, col, bgRect, backgrounds->ColBackgrounds(), false, nullptr,
+          col->GetRect() + colGroup->GetPosition() +
+              backgrounds->TableToReferenceFrame(),
+          this, &buildingForCol);
+    }
   }
 
   // the 'empty-cells' property has no effect on 'outline'
   DisplayOutline(aBuilder, aLists);
-
-  // Push a null 'current table item' so that descendant tables can't
-  // accidentally mess with our table
-  nsAutoPushCurrentTableItem pushTableItem;
-  pushTableItem.Push(aBuilder, nullptr);
 
   nsIFrame* kid = mFrames.FirstChild();
   NS_ASSERTION(kid && !kid->GetNextSibling(),

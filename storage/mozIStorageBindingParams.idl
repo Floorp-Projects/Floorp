@@ -8,7 +8,9 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(2d09f42f-966e-4663-b4b3-b0c8676bf2bf)]
+[ptr] native octetPtr(uint8_t);
+
+[scriptable, builtinclass, uuid(2d09f42f-966e-4663-b4b3-b0c8676bf2bf)]
 interface mozIStorageBindingParams : nsISupports {
   /**
    * Binds aValue to the parameter with the name aName.
@@ -31,9 +33,16 @@ interface mozIStorageBindingParams : nsISupports {
    [noscript] void bindInt64ByName(in AUTF8String aName,
                                    in long long aValue);
    [noscript] void bindNullByName(in AUTF8String aName);
-   void bindBlobByName(in AUTF8String aName,
-                       [array, const, size_is(aValueSize)] in octet aValue,
-                       in unsigned long aValueSize);
+
+   // The noscript version of bindBlobByName can be used with any (const
+   // uint8_t*, length) pair.  The scriptable version is meant for use with
+   // nsTArray<uint8_t>, which is what xpconnect has to work with.
+   [noscript, binaryname(BindBlobByName)]
+   void bindBlobByNameNoscript(in AUTF8String aName,
+                               [const] in octetPtr aValue,
+                               in unsigned long aValueSize);
+   [binaryname(BindBlobArrayByName)]
+   void bindBlobByName(in AUTF8String aName, in Array<octet> aValue);
 
    // Convenience routines for storing strings as blobs.
    void bindStringAsBlobByName(in AUTF8String aName, in AString aValue);
@@ -44,7 +53,7 @@ interface mozIStorageBindingParams : nsISupports {
    // underlying pointer.
    [noscript]
    void bindAdoptedBlobByName(in AUTF8String aName,
-                              [array, size_is(aValueSize)] in octet aValue,
+                              in octetPtr aValue,
                               in unsigned long aValueSize);
 
    /**
@@ -68,9 +77,17 @@ interface mozIStorageBindingParams : nsISupports {
    [noscript] void bindInt64ByIndex(in unsigned long aIndex,
                                     in long long aValue);
    [noscript] void bindNullByIndex(in unsigned long aIndex);
+
+   // The noscript version of bindBlobByIndex can be used with any (const
+   // uint8_t*, length) pair.  The scriptable version is meant for use with
+   // nsTArray<uint8_t>, which is what xpconnect has to work with.
+   [noscript, binaryname(BindBlobByIndex)]
+   void bindBlobByIndexNoscript(in unsigned long aIndex,
+                                [const] in octetPtr aValue,
+                                in unsigned long aValueSize);
+   [binaryname(BindBlobArrayByIndex)]
    void bindBlobByIndex(in unsigned long aIndex,
-                        [array, const, size_is(aValueSize)] in octet aValue,
-                        in unsigned long aValueSize);
+                        in Array<octet> aValue);
 
    // Convenience routines for storing strings as blobs.
    void bindStringAsBlobByIndex(in unsigned long aIndex, in AString aValue);
@@ -81,6 +98,6 @@ interface mozIStorageBindingParams : nsISupports {
    // underlying pointer.
    [noscript]
    void bindAdoptedBlobByIndex(in unsigned long aIndex,
-                               [array, size_is(aValueSize)] in octet aValue,
+                               in octetPtr aValue,
                                in unsigned long aValueSize);
 };

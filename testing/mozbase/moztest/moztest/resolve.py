@@ -144,6 +144,12 @@ TEST_SUITES = {
         'mach_command': 'python-test',
         'kwargs': {'tests': None},
     },
+    'telemetry-tests-client': {
+        'aliases': ('ttc',),
+        'mach_command': 'telemetry-tests-client',
+        'kwargs': {},
+        'task_regex': ['telemetry-tests-client($|.*(-1|[^0-9])$)'],
+    },
     'reftest': {
         'aliases': ('rr',),
         'mach_command': 'reftest',
@@ -224,6 +230,7 @@ _test_flavors = {
     'python': 'python',
     'reftest': 'reftest',
     'steeplechase': '',
+    'telemetry-tests-client': 'telemetry-tests-client',
     'web-platform-tests': 'web-platform-tests',
     'xpcshell': 'xpcshell',
 }

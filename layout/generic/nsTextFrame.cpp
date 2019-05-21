@@ -1905,7 +1905,8 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
 
   const nsStyleText* textStyle2 = sc2->StyleText();
   if (textStyle1->mTextTransform != textStyle2->mTextTransform ||
-      textStyle1->EffectiveWordBreak() != textStyle2->EffectiveWordBreak()) {
+      textStyle1->EffectiveWordBreak() != textStyle2->EffectiveWordBreak() ||
+      textStyle1->mLineBreak != textStyle2->mLineBreak) {
     return false;
   }
 
@@ -2587,18 +2588,36 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     // The CSS word-break value may change within a word, so we reset it for
     // each MappedFlow. The line-breaker will flush its text if the property
     // actually changes.
-    auto wordBreak = mappedFlow->mStartFrame->StyleText()->EffectiveWordBreak();
+    const auto* styleText = mappedFlow->mStartFrame->StyleText();
+    auto wordBreak = styleText->EffectiveWordBreak();
     switch (wordBreak) {
       case StyleWordBreak::BreakAll:
-        mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_BreakAll);
+        mLineBreaker.SetWordBreak(LineBreaker::WordBreak::BreakAll);
         break;
       case StyleWordBreak::KeepAll:
-        mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_KeepAll);
+        mLineBreaker.SetWordBreak(LineBreaker::WordBreak::KeepAll);
         break;
       case StyleWordBreak::Normal:
       default:
         MOZ_ASSERT(wordBreak == StyleWordBreak::Normal);
-        mLineBreaker.SetWordBreak(LineBreaker::kWordBreak_Normal);
+        mLineBreaker.SetWordBreak(LineBreaker::WordBreak::Normal);
+        break;
+    }
+    switch (styleText->mLineBreak) {
+      case StyleLineBreak::Auto:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Auto);
+        break;
+      case StyleLineBreak::Normal:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Normal);
+        break;
+      case StyleLineBreak::Loose:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Loose);
+        break;
+      case StyleLineBreak::Strict:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Strict);
+        break;
+      case StyleLineBreak::Anywhere:
+        mLineBreaker.SetStrictness(LineBreaker::Strictness::Anywhere);
         break;
     }
 
@@ -2633,7 +2652,8 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     if (textStyle->mTextTransform.case_ == StyleTextTransformCase::Capitalize) {
       flags |= nsLineBreaker::BREAK_NEED_CAPITALIZATION;
     }
-    if (textStyle->mHyphens == StyleHyphens::Auto) {
+    if (textStyle->mHyphens == StyleHyphens::Auto &&
+        textStyle->mLineBreak != StyleLineBreak::Anywhere) {
       flags |= nsLineBreaker::BREAK_USE_AUTO_HYPHENATION;
     }
 

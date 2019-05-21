@@ -4,15 +4,13 @@
 
 // https://drafts.csswg.org/css-syntax/#tokenization
 
-use std::ops::Range;
 use std::char;
-#[allow(unused_imports)] use std::ascii::AsciiExt;
 use std::i32;
+use std::ops::Range;
 
-use parser::ParserState;
-use cow_rc_str::CowRcStr;
 use self::Token::*;
-
+use cow_rc_str::CowRcStr;
+use parser::ParserState;
 
 /// One of the pieces the CSS input is broken into.
 ///
@@ -20,7 +18,6 @@ use self::Token::*;
 /// and avoid allocating/copying when possible.
 #[derive(PartialEq, Debug, Clone)]
 pub enum Token<'a> {
-
     /// A [`<ident-token>`](https://drafts.csswg.org/css-syntax/#ident-token-diagram)
     Ident(CowRcStr<'a>),
 
@@ -37,7 +34,7 @@ pub enum Token<'a> {
     /// A [`<hash-token>`](https://drafts.csswg.org/css-syntax/#hash-token-diagram) with the type flag set to "id"
     ///
     /// The value does not include the `#` marker.
-    IDHash(CowRcStr<'a>),  // Hash that is a valid ID selector.
+    IDHash(CowRcStr<'a>), // Hash that is a valid ID selector.
 
     /// A [`<string-token>`](https://drafts.csswg.org/css-syntax/#string-token-diagram)
     ///
@@ -94,7 +91,7 @@ pub enum Token<'a> {
         int_value: Option<i32>,
 
         /// The unit, e.g. "px" in `12px`
-        unit: CowRcStr<'a>
+        unit: CowRcStr<'a>,
     },
 
     /// A [`<whitespace-token>`](https://drafts.csswg.org/css-syntax/#whitespace-token-diagram)
@@ -109,13 +106,13 @@ pub enum Token<'a> {
     Comment(&'a str),
 
     /// A `:` `<colon-token>`
-    Colon,  // :
+    Colon, // :
 
     /// A `;` `<semicolon-token>`
-    Semicolon,  // ;
+    Semicolon, // ;
 
     /// A `,` `<comma-token>`
-    Comma,  // ,
+    Comma, // ,
 
     /// A `~=` [`<include-match-token>`](https://drafts.csswg.org/css-syntax/#include-match-token-diagram)
     IncludeMatch,
@@ -181,7 +178,6 @@ pub enum Token<'a> {
     CloseCurlyBracket,
 }
 
-
 impl<'a> Token<'a> {
     /// Return whether this token represents a parse error.
     ///
@@ -196,7 +192,6 @@ impl<'a> Token<'a> {
         )
     }
 }
-
 
 #[derive(Clone)]
 pub struct Tokenizer<'a> {
@@ -219,7 +214,6 @@ enum SeenStatus {
     LookingForThem,
     SeenAtLeastOne,
 }
-
 
 impl<'a> Tokenizer<'a> {
     #[inline]
@@ -255,9 +249,7 @@ impl<'a> Tokenizer<'a> {
     #[inline]
     pub fn see_function(&mut self, name: &str) {
         if self.var_or_env_functions == SeenStatus::LookingForThem {
-            if name.eq_ignore_ascii_case("var") ||
-                name.eq_ignore_ascii_case("env")
-            {
+            if name.eq_ignore_ascii_case("var") || name.eq_ignore_ascii_case("env") {
                 self.var_or_env_functions = SeenStatus::SeenAtLeastOne;
             }
         }
@@ -340,12 +332,16 @@ impl<'a> Tokenizer<'a> {
 
     // If false, `tokenizer.next_char()` will not panic.
     #[inline]
-    fn is_eof(&self) -> bool { !self.has_at_least(0) }
+    fn is_eof(&self) -> bool {
+        !self.has_at_least(0)
+    }
 
     // If true, the input has at least `n` bytes left *after* the current one.
     // That is, `tokenizer.char_at(n)` will not panic.
     #[inline]
-    fn has_at_least(&self, n: usize) -> bool { self.position + n < self.input.len() }
+    fn has_at_least(&self, n: usize) -> bool {
+        self.position + n < self.input.len()
+    }
 
     // Advance over N bytes in the input.  This function can advance
     // over ASCII bytes (excluding newlines), or UTF-8 sequence
@@ -367,7 +363,9 @@ impl<'a> Tokenizer<'a> {
 
     // Assumes non-EOF
     #[inline]
-    fn next_byte_unchecked(&self) -> u8 { self.byte_at(0) }
+    fn next_byte_unchecked(&self) -> u8 {
+        self.byte_at(0)
+    }
 
     #[inline]
     fn byte_at(&self, offset: usize) -> u8 {
@@ -435,8 +433,8 @@ impl<'a> Tokenizer<'a> {
 
     #[inline]
     fn has_newline_at(&self, offset: usize) -> bool {
-        self.position + offset < self.input.len() &&
-        matches!(self.byte_at(offset), b'\n' | b'\r' | b'\x0C')
+        self.position + offset < self.input.len()
+            && matches!(self.byte_at(offset), b'\n' | b'\r' | b'\x0C')
     }
 
     #[inline]
@@ -446,7 +444,9 @@ impl<'a> Tokenizer<'a> {
         self.position += len_utf8;
         // Note that due to the special case for the 4-byte sequence
         // intro, we must use wrapping add here.
-        self.current_line_start_position = self.current_line_start_position.wrapping_add(len_utf8 - c.len_utf16());
+        self.current_line_start_position = self
+            .current_line_start_position
+            .wrapping_add(len_utf8 - c.len_utf16());
         c
     }
 
@@ -520,7 +520,6 @@ impl<'a> Tokenizer<'a> {
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
 pub struct SourcePosition(pub(crate) usize);
 
-
 /// The line and column number for a given position within the input.
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 pub struct SourceLocation {
@@ -532,10 +531,9 @@ pub struct SourceLocation {
     pub column: u32,
 }
 
-
 fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
     if tokenizer.is_eof() {
-        return Err(())
+        return Err(());
     }
     let b = tokenizer.next_byte_unchecked();
     let token = match_byte! { b,
@@ -671,7 +669,6 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
     Ok(token)
 }
 
-
 fn consume_whitespace<'a>(tokenizer: &mut Tokenizer<'a>, newline: bool) -> Token<'a> {
     let start_position = tokenizer.position();
     if newline {
@@ -696,7 +693,6 @@ fn consume_whitespace<'a>(tokenizer: &mut Tokenizer<'a>, newline: bool) -> Token
     WhiteSpace(tokenizer.slice_from(start_position))
 }
 
-
 // Check for sourceMappingURL or sourceURL comments and update the
 // tokenizer appropriately.
 fn check_for_source_map<'a>(tokenizer: &mut Tokenizer<'a>, contents: &'a str) {
@@ -706,9 +702,9 @@ fn check_for_source_map<'a>(tokenizer: &mut Tokenizer<'a>, contents: &'a str) {
     // If there is a source map directive, extract the URL.
     if contents.starts_with(directive) || contents.starts_with(directive_old) {
         let contents = &contents[directive.len()..];
-        tokenizer.source_map_url = contents.split(|c| {
-            c == ' ' || c == '\t' || c == '\x0C' || c == '\r' || c == '\n'
-        }).next()
+        tokenizer.source_map_url = contents
+            .split(|c| c == ' ' || c == '\t' || c == '\x0C' || c == '\r' || c == '\n')
+            .next()
     }
 
     let directive = "# sourceURL=";
@@ -717,14 +713,14 @@ fn check_for_source_map<'a>(tokenizer: &mut Tokenizer<'a>, contents: &'a str) {
     // If there is a source map directive, extract the URL.
     if contents.starts_with(directive) || contents.starts_with(directive_old) {
         let contents = &contents[directive.len()..];
-        tokenizer.source_url = contents.split(|c| {
-            c == ' ' || c == '\t' || c == '\x0C' || c == '\r' || c == '\n'
-        }).next()
+        tokenizer.source_url = contents
+            .split(|c| c == ' ' || c == '\t' || c == '\x0C' || c == '\r' || c == '\n')
+            .next()
     }
 }
 
 fn consume_comment<'a>(tokenizer: &mut Tokenizer<'a>) -> &'a str {
-    tokenizer.advance(2);  // consume "/*"
+    tokenizer.advance(2); // consume "/*"
     let start_position = tokenizer.position();
     while !tokenizer.is_eof() {
         match_byte! { tokenizer.next_byte_unchecked(),
@@ -757,21 +753,22 @@ fn consume_comment<'a>(tokenizer: &mut Tokenizer<'a>) -> &'a str {
 fn consume_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool) -> Token<'a> {
     match consume_quoted_string(tokenizer, single_quote) {
         Ok(value) => QuotedString(value),
-        Err(value) => BadString(value)
+        Err(value) => BadString(value),
     }
 }
 
-
 /// Return `Err(())` on syntax error (ie. unescaped newline)
-fn consume_quoted_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool)
-                             -> Result<CowRcStr<'a>, CowRcStr<'a>> {
-    tokenizer.advance(1);  // Skip the initial quote
-    // start_pos is at code point boundary, after " or '
+fn consume_quoted_string<'a>(
+    tokenizer: &mut Tokenizer<'a>,
+    single_quote: bool,
+) -> Result<CowRcStr<'a>, CowRcStr<'a>> {
+    tokenizer.advance(1); // Skip the initial quote
+                          // start_pos is at code point boundary, after " or '
     let start_pos = tokenizer.position();
     let mut string_bytes;
     loop {
         if tokenizer.is_eof() {
-            return Ok(tokenizer.slice_from(start_pos).into())
+            return Ok(tokenizer.slice_from(start_pos).into());
         }
         match_byte! { tokenizer.next_byte_unchecked(),
             b'"' => {
@@ -869,29 +866,28 @@ fn consume_quoted_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool)
 
     Ok(
         // string_bytes is well-formed UTF-8, see other comments.
-        unsafe { from_utf8_release_unchecked(string_bytes) }.into()
+        unsafe { from_utf8_release_unchecked(string_bytes) }.into(),
     )
 }
 
-
 #[inline]
 fn is_ident_start(tokenizer: &mut Tokenizer) -> bool {
-    !tokenizer.is_eof() && match_byte! { tokenizer.next_byte_unchecked(),
-        b'a'...b'z' | b'A'...b'Z' | b'_' | b'\0' => { true },
-        b'-' => {
-            tokenizer.has_at_least(1) && match_byte! { tokenizer.byte_at(1),
-                b'a'...b'z' | b'A'...b'Z' | b'-' | b'_' | b'\0' => {
-                    true
+    !tokenizer.is_eof()
+        && match_byte! { tokenizer.next_byte_unchecked(),
+            b'a'...b'z' | b'A'...b'Z' | b'_' | b'\0' => { true },
+            b'-' => {
+                tokenizer.has_at_least(1) && match_byte! { tokenizer.byte_at(1),
+                    b'a'...b'z' | b'A'...b'Z' | b'-' | b'_' | b'\0' => {
+                        true
+                    }
+                    b'\\' => { !tokenizer.has_newline_at(1) }
+                    b => { !b.is_ascii() },
                 }
-                b'\\' => { !tokenizer.has_newline_at(1) }
-                b => { !b.is_ascii() },
-            }
-        },
-        b'\\' => { !tokenizer.has_newline_at(1) },
-        b => { !b.is_ascii() },
-    }
+            },
+            b'\\' => { !tokenizer.has_newline_at(1) },
+            b => { !b.is_ascii() },
+        }
 }
-
 
 fn consume_ident_like<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
     let value = consume_name(tokenizer);
@@ -914,7 +910,7 @@ fn consume_name<'a>(tokenizer: &mut Tokenizer<'a>) -> CowRcStr<'a> {
     let mut value_bytes;
     loop {
         if tokenizer.is_eof() {
-            return tokenizer.slice_from(start_pos).into()
+            return tokenizer.slice_from(start_pos).into();
         }
         match_byte! { tokenizer.next_byte_unchecked(),
             b'a'...b'z' | b'A'...b'Z' | b'0'...b'9' | b'_' | b'-' => { tokenizer.advance(1) },
@@ -1019,37 +1015,37 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
         integral_part = integral_part * 10. + digit as f64;
         tokenizer.advance(1);
         if tokenizer.is_eof() {
-            break
+            break;
         }
     }
 
     let mut is_integer = true;
 
     let mut fractional_part: f64 = 0.;
-    if tokenizer.has_at_least(1) && tokenizer.next_byte_unchecked() == b'.'
-            && matches!(tokenizer.byte_at(1), b'0'...b'9') {
+    if tokenizer.has_at_least(1)
+        && tokenizer.next_byte_unchecked() == b'.'
+        && matches!(tokenizer.byte_at(1), b'0'...b'9')
+    {
         is_integer = false;
-        tokenizer.advance(1);  // Consume '.'
+        tokenizer.advance(1); // Consume '.'
         let mut factor = 0.1;
         while let Some(digit) = byte_to_decimal_digit(tokenizer.next_byte_unchecked()) {
             fractional_part += digit as f64 * factor;
             factor *= 0.1;
             tokenizer.advance(1);
             if tokenizer.is_eof() {
-                break
+                break;
             }
         }
     }
 
     let mut value = sign * (integral_part + fractional_part);
 
-    if tokenizer.has_at_least(1)
-       && matches!(tokenizer.next_byte_unchecked(), b'e' | b'E') {
-
-        if matches!(tokenizer.byte_at(1), b'0'...b'9') ||
-           (tokenizer.has_at_least(2)
-            && matches!(tokenizer.byte_at(1), b'+' | b'-')
-            && matches!(tokenizer.byte_at(2), b'0'...b'9'))
+    if tokenizer.has_at_least(1) && matches!(tokenizer.next_byte_unchecked(), b'e' | b'E') {
+        if matches!(tokenizer.byte_at(1), b'0'...b'9')
+            || (tokenizer.has_at_least(2)
+                && matches!(tokenizer.byte_at(1), b'+' | b'-')
+                && matches!(tokenizer.byte_at(2), b'0'...b'9'))
         {
             is_integer = false;
             tokenizer.advance(1);
@@ -1066,7 +1062,7 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
                 exponent = exponent * 10. + digit as f64;
                 tokenizer.advance(1);
                 if tokenizer.is_eof() {
-                    break
+                    break;
                 }
             }
             value *= f64::powf(10., sign * exponent);
@@ -1091,7 +1087,7 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
             unit_value: (value / 100.) as f32,
             int_value: int_value,
             has_sign: has_sign,
-        }
+        };
     }
     let value = value as f32;
     if is_ident_start(tokenizer) {
@@ -1110,7 +1106,6 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
         }
     }
 }
-
 
 #[inline]
 unsafe fn from_utf8_release_unchecked(string_bytes: Vec<u8>) -> String {
@@ -1134,7 +1129,7 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
             Some(item) => item,
             None => {
                 tokenizer.position = tokenizer.input.len();
-                break
+                break;
             }
         };
         match_byte! { b,
@@ -1176,9 +1171,9 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
     if found_printable_char {
         // This function only consumed ASCII (whitespace) bytes,
         // so the current position is a code point boundary.
-        return Ok(consume_unquoted_url_internal(tokenizer))
+        return Ok(consume_unquoted_url_internal(tokenizer));
     } else {
-        return Ok(UnquotedUrl("".into()))
+        return Ok(UnquotedUrl("".into()));
     }
 
     fn consume_unquoted_url_internal<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
@@ -1187,7 +1182,7 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
         let mut string_bytes: Vec<u8>;
         loop {
             if tokenizer.is_eof() {
-                return UnquotedUrl(tokenizer.slice_from(start_pos).into())
+                return UnquotedUrl(tokenizer.slice_from(start_pos).into());
             }
             match_byte! { tokenizer.next_byte_unchecked(),
                 b' ' | b'\t' | b'\n' | b'\r' | b'\x0C' => {
@@ -1274,14 +1269,15 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
         }
         UnquotedUrl(
             // string_bytes is well-formed UTF-8, see other comments.
-            unsafe { from_utf8_release_unchecked(string_bytes) }.into()
+            unsafe { from_utf8_release_unchecked(string_bytes) }.into(),
         )
     }
 
-    fn consume_url_end<'a>(tokenizer: &mut Tokenizer<'a>,
-                           start_pos: SourcePosition,
-                           string: CowRcStr<'a>)
-                           -> Token<'a> {
+    fn consume_url_end<'a>(
+        tokenizer: &mut Tokenizer<'a>,
+        start_pos: SourcePosition,
+        string: CowRcStr<'a>,
+    ) -> Token<'a> {
         while !tokenizer.is_eof() {
             match_byte! { tokenizer.next_byte_unchecked(),
                 b')' => {
@@ -1339,24 +1335,29 @@ fn consume_hex_digits<'a>(tokenizer: &mut Tokenizer<'a>) -> (u32, u32) {
                 digits += 1;
                 tokenizer.advance(1);
             }
-            None => break
+            None => break,
         }
     }
     (value, digits)
 }
 
-
 // Same constraints as consume_escape except it writes into `bytes` the result
 // instead of returning it.
 fn consume_escape_and_write(tokenizer: &mut Tokenizer, bytes: &mut Vec<u8>) {
-    bytes.extend(consume_escape(tokenizer).encode_utf8(&mut [0; 4]).as_bytes())
+    bytes.extend(
+        consume_escape(tokenizer)
+            .encode_utf8(&mut [0; 4])
+            .as_bytes(),
+    )
 }
 
 // Assumes that the U+005C REVERSE SOLIDUS (\) has already been consumed
 // and that the next input character has already been verified
 // to not be a newline.
 fn consume_escape(tokenizer: &mut Tokenizer) -> char {
-    if tokenizer.is_eof() { return '\u{FFFD}' }  // Escaped EOF
+    if tokenizer.is_eof() {
+        return '\u{FFFD}';
+    } // Escaped EOF
     match_byte! { tokenizer.next_byte_unchecked(),
         b'0'...b'9' | b'A'...b'F' | b'a'...b'f' => {
             let (c, _) = consume_hex_digits(tokenizer);

@@ -199,7 +199,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
                                           this.level));
     }
 
-    const targetNode = document.createElement("hbox");
+    const targetNode = document.createXULElement("hbox");
     targetNode.className = "call-tree-item";
     targetNode.setAttribute("origin", frameInfo.isContent ? "content" : "chrome");
     targetNode.setAttribute("category", frameInfo.categoryData.abbrev || "");
@@ -243,7 +243,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
    * Invoked by `_displaySelf`.
    */
   _createCell: function(doc, value, type) {
-    const cell = doc.createElement("description");
+    const cell = doc.createXULElement("description");
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", type);
     cell.setAttribute("crop", "end");
@@ -253,7 +253,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
   },
 
   _createFunctionCell: function(doc, arrowNode, frameName, frameInfo, frameLevel) {
-    const cell = doc.createElement("hbox");
+    const cell = doc.createXULElement("hbox");
     cell.className = "call-tree-cell";
     cell.style.marginInlineStart = (frameLevel * CALL_TREE_INDENTATION) + "px";
     cell.setAttribute("type", "function");
@@ -262,7 +262,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
     // Render optimization hint if this frame has opt data.
     if (this.root.showOptimizationHint && frameInfo.hasOptimizations &&
         !frameInfo.isMetaCategory) {
-      const icon = doc.createElement("description");
+      const icon = doc.createXULElement("description");
       icon.setAttribute("tooltiptext", VIEW_OPTIMIZATIONS_TOOLTIP);
       icon.className = "opt-icon";
       cell.appendChild(icon);
@@ -271,7 +271,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
     // Don't render a name label node if there's no function name. A different
     // location label node will be rendered instead.
     if (frameName) {
-      const nameNode = doc.createElement("description");
+      const nameNode = doc.createXULElement("description");
       nameNode.className = "plain call-tree-name";
       nameNode.textContent = frameName;
       cell.appendChild(nameNode);
@@ -304,7 +304,7 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
 
   _appendFunctionDetailsCells: function(doc, cell, frameInfo) {
     if (frameInfo.fileName) {
-      const urlNode = doc.createElement("description");
+      const urlNode = doc.createXULElement("description");
       urlNode.className = "plain call-tree-url";
       urlNode.textContent = frameInfo.fileName;
       urlNode.setAttribute("tooltiptext", URL_LABEL_TOOLTIP + " → " + frameInfo.url);
@@ -313,28 +313,28 @@ CallView.prototype = extend(AbstractTreeItem.prototype, {
     }
 
     if (frameInfo.line) {
-      const lineNode = doc.createElement("description");
+      const lineNode = doc.createXULElement("description");
       lineNode.className = "plain call-tree-line";
       lineNode.textContent = ":" + frameInfo.line;
       cell.appendChild(lineNode);
     }
 
     if (frameInfo.column) {
-      const columnNode = doc.createElement("description");
+      const columnNode = doc.createXULElement("description");
       columnNode.className = "plain call-tree-column";
       columnNode.textContent = ":" + frameInfo.column;
       cell.appendChild(columnNode);
     }
 
     if (frameInfo.host) {
-      const hostNode = doc.createElement("description");
+      const hostNode = doc.createXULElement("description");
       hostNode.className = "plain call-tree-host";
       hostNode.textContent = frameInfo.host;
       cell.appendChild(hostNode);
     }
 
     if (frameInfo.categoryData.label) {
-      const categoryNode = doc.createElement("description");
+      const categoryNode = doc.createXULElement("description");
       categoryNode.className = "plain call-tree-category";
       categoryNode.style.color = frameInfo.categoryData.color;
       categoryNode.textContent = frameInfo.categoryData.label;

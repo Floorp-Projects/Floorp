@@ -16,7 +16,7 @@ import {
 
 import { makeWhyNormal } from "../../../utils/test-mockup";
 
-import * as parser from "../../../workers/parser/index";
+import { parserWorker } from "../../../test/tests-setup";
 
 const { isStepping } = selectors;
 
@@ -147,7 +147,7 @@ describe("pause", () => {
       await dispatch(actions.newGeneratedSource(makeSource("foo1")));
       await dispatch(actions.paused(mockPauseInfo));
       const cx = selectors.getThreadContext(getState());
-      const getNextStepSpy = jest.spyOn(parser, "getNextStep");
+      const getNextStepSpy = jest.spyOn(parserWorker, "getNextStep");
       dispatch(actions.stepOver(cx));
       expect(getNextStepSpy).not.toHaveBeenCalled();
       expect(isStepping(getState(), "FakeThread")).toBeTruthy();
@@ -166,7 +166,7 @@ describe("pause", () => {
 
       await dispatch(actions.paused(mockPauseInfo));
       const cx = selectors.getThreadContext(getState());
-      const getNextStepSpy = jest.spyOn(parser, "getNextStep");
+      const getNextStepSpy = jest.spyOn(parserWorker, "getNextStep");
       dispatch(actions.stepOver(cx));
       expect(getNextStepSpy).toHaveBeenCalled();
       getNextStepSpy.mockRestore();
@@ -188,7 +188,7 @@ describe("pause", () => {
 
       await dispatch(actions.paused(mockPauseInfo));
       const cx = selectors.getThreadContext(getState());
-      const getNextStepSpy = jest.spyOn(parser, "getNextStep");
+      const getNextStepSpy = jest.spyOn(parserWorker, "getNextStep");
       dispatch(actions.stepOver(cx));
       expect(getNextStepSpy).toHaveBeenCalled();
       getNextStepSpy.mockRestore();

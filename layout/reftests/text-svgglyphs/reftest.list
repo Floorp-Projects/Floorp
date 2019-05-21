@@ -21,3 +21,4 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(skiaContent,0-15,
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paint-server.svg svg-glyph-paint-server-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-transform.svg svg-glyph-transform-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-extents.html svg-glyph-extents-ref.html
+pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-compressed.html svg-glyph-compressed-ref.html

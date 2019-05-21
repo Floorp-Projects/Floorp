@@ -165,8 +165,6 @@ interface mozIStorageAsyncConnection : nsISupports {
    * @param aStatements
    *        The array of statements to execute asynchronously, in the order they
    *        are given in the array.
-   * @param aNumStatements
-   *        The number of statements in aStatements.
    * @param aCallback [optional]
    *        The callback object that will be notified of progress, errors, and
    *        completion.
@@ -176,8 +174,7 @@ interface mozIStorageAsyncConnection : nsISupports {
    *        re-entrant since they can be called on multiple threads.
    */
   mozIStoragePendingStatement executeAsync(
-    [array, size_is(aNumStatements)] in mozIStorageBaseStatement aStatements,
-    in unsigned long aNumStatements,
+    in Array<mozIStorageBaseStatement> aStatements,
     [optional] in mozIStorageStatementCallback aCallback
   );
 

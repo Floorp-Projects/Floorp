@@ -170,11 +170,11 @@ class OrderedListBox {
   }
 
   createItem({id, label, value}) {
-    let listitem = document.createElement("richlistitem");
+    let listitem = document.createXULElement("richlistitem");
     listitem.id = id;
     listitem.setAttribute("value", value);
 
-    let labelEl = document.createElement("label");
+    let labelEl = document.createXULElement("label");
     labelEl.textContent = label;
     listitem.appendChild(labelEl);
 
@@ -249,7 +249,7 @@ class SortedItemSelectList {
   }
 
   createItem({label, value, className, disabled}) {
-    let item = document.createElement("menuitem");
+    let item = document.createXULElement("menuitem");
     item.setAttribute("label", label);
     if (value)
       item.value = value;

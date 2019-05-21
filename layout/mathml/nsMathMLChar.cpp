@@ -1837,7 +1837,8 @@ void nsMathMLChar::Display(nsDisplayListBuilder* aBuilder, nsIFrame* aForFrame,
         NS_GET_A(computedStyle->StyleBackground()->BackgroundColor(
             computedStyle)) > 0) {
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-          aBuilder, aForFrame, mRect, aLists.BorderBackground(),
+          aBuilder, aForFrame, mRect + aBuilder->ToReferenceFrame(aForFrame),
+          aLists.BorderBackground(),
           /* aAllowWillPaintBorderOptimization */ true, computedStyle);
     }
     // else

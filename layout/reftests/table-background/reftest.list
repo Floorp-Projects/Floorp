@@ -64,3 +64,6 @@ fuzzy-if(OSX,0-1,0-113) fuzzy-if(winWidget,0-1,0-12) fuzzy-if(winWidget&&!layers
 == hidden-cells-1.html about:blank
 == hidden-cells-2.html about:blank
 == hidden-cells-3.html hidden-cells-3-ref.html
+
+== table-col-overlapping.html table-col-overlapping-ref.html
+== table-col-span-1.html table-col-span-1-ref.html

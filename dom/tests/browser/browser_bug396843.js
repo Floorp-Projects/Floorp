@@ -6,7 +6,7 @@ function testInDocument(doc, documentID) {
 
     // HTML
     function HTML_TAG(name) {
-        allNodes.push(doc.createElement(name));
+        allNodes.push(doc.createElementNS("http://www.w3.org/1999/xhtml", name));
     }
 
     /* List copy/pasted from nsHTMLTagList.h */

@@ -278,6 +278,12 @@ BindingParams::BindBlobByName(const nsACString& aName, const uint8_t* aValue,
 }
 
 NS_IMETHODIMP
+BindingParams::BindBlobArrayByName(const nsACString& aName,
+                                   const nsTArray<uint8_t>& aValue) {
+  return BindBlobByName(aName, aValue.Elements(), aValue.Length());
+}
+
+NS_IMETHODIMP
 BindingParams::BindStringAsBlobByName(const nsACString& aName,
                                       const nsAString& aValue) {
   return DoBindStringAsBlobByName(this, aName, aValue);
@@ -395,6 +401,12 @@ BindingParams::BindBlobByIndex(uint32_t aIndex, const uint8_t* aValue,
   NS_ENSURE_TRUE(value, NS_ERROR_OUT_OF_MEMORY);
 
   return BindByIndex(aIndex, value);
+}
+
+NS_IMETHODIMP
+BindingParams::BindBlobArrayByIndex(uint32_t aIndex,
+                                    const nsTArray<uint8_t>& aValue) {
+  return BindBlobByIndex(aIndex, aValue.Elements(), aValue.Length());
 }
 
 NS_IMETHODIMP

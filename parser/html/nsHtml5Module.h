@@ -5,17 +5,15 @@
 #ifndef nsHtml5Module_h
 #define nsHtml5Module_h
 
-#include "nsIParser.h"
 #include "nsIThread.h"
+
+class nsHtml5Parser;
 
 class nsHtml5Module {
  public:
   static void InitializeStatics();
   static void ReleaseStatics();
-  static already_AddRefed<nsIParser> NewHtml5Parser();
-  static nsresult Initialize(nsIParser* aParser, mozilla::dom::Document* aDoc,
-                             nsIURI* aURI, nsISupports* aContainer,
-                             nsIChannel* aChannel);
+  static already_AddRefed<nsHtml5Parser> NewHtml5Parser();
   static nsIThread* GetStreamParserThread();
 
  private:

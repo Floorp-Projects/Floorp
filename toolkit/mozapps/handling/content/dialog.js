@@ -157,7 +157,7 @@ var dialog = {
     var preferredHandler = this._handlerInfo.preferredApplicationHandler;
     for (let i = possibleHandlers.length - 1; i >= 0; --i) {
       let app = possibleHandlers.queryElementAt(i, Ci.nsIHandlerApp);
-      let elm = document.createElement("richlistitem", {is: "mozapps-handler"});
+      let elm = document.createXULElement("richlistitem", {is: "mozapps-handler"});
       elm.setAttribute("name", app.name);
       elm.obj = app;
 
@@ -205,7 +205,7 @@ var dialog = {
     }
 
     if (this._handlerInfo.hasDefaultHandler) {
-      let elm = document.createElement("richlistitem", {is: "mozapps-handler"});
+      let elm = document.createXULElement("richlistitem", {is: "mozapps-handler"});
       elm.id = "os-default-handler";
       elm.setAttribute("name", this._handlerInfo.defaultDescription);
 
@@ -236,7 +236,7 @@ var dialog = {
           }
         }
         if (!appAlreadyInHandlers) {
-          let elm = document.createElement("richlistitem", {is: "mozapps-handler"});
+          let elm = document.createXULElement("richlistitem", {is: "mozapps-handler"});
           elm.setAttribute("name", handler.name);
           elm.obj = handler;
           items.insertBefore(elm, this._itemChoose);
@@ -277,7 +277,7 @@ var dialog = {
           }
         }
 
-        let elm = document.createElement("richlistitem", {is: "mozapps-handler"});
+        let elm = document.createXULElement("richlistitem", {is: "mozapps-handler"});
         elm.setAttribute("name", fp.file.leafName);
         elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
         elm.obj = handlerApp;

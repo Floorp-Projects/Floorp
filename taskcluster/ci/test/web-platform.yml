@@ -6,7 +6,10 @@ job-defaults:
     suite:
         category: web-platform-tests
     instance-size: xlarge
-    max-run-time: 5400
+    max-run-time:
+        by-test-platform:
+            android-em-7.0-x86_64/debug: 7200
+            default: 5400
     variants:
         by-test-platform:
             linux64/debug: ['serviceworker']
@@ -32,6 +35,7 @@ job-defaults:
     target:
         by-test-platform:
             android-em-7.0-x86_64/opt: geckoview-androidTest.apk
+            android-em-7.0-x86_64/debug: geckoview-androidTest.apk
             default: null
 
 web-platform-tests:
@@ -63,7 +67,6 @@ web-platform-tests:
             default: built-projects
     tier:
         by-test-platform:
-            android-em-7.0-x86_64/opt: 3
             android.*: 2
             linux64-asan/opt: 2
             windows10-aarch64.*: 2
@@ -127,7 +130,6 @@ web-platform-tests-reftests:
             default: built-projects
     tier:
         by-test-platform:
-            android-em-7.0-x86_64/opt: 3
             android.*: 2
             linux64-asan/opt: 2
             windows10-aarch64.*: 2
@@ -180,7 +182,7 @@ web-platform-tests-wdspec:
             default: built-projects
     tier:
         by-test-platform:
-            android.*: 3
+            android.*: 2
             linux64-asan/opt: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default

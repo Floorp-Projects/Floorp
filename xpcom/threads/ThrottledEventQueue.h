@@ -78,6 +78,8 @@ class ThrottledEventQueue final : public nsISerialEventTarget {
   // Determine how many events are pending in the queue.
   uint32_t Length() const;
 
+  already_AddRefed<nsIRunnable> GetEvent();
+
   // Block the current thread until the queue is empty. This may not be called
   // on the main thread or the base target. The ThrottledEventQueue must not be
   // paused.

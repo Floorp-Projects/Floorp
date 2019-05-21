@@ -1556,20 +1556,6 @@ void Gecko_SetToSVGPath(StyleShapeSource* aShape,
   aShape->SetPath(MakeUnique<StyleSVGPath>(aCommands, aFill));
 }
 
-void Gecko_SetStyleMotion(UniquePtr<StyleMotion>* aMotion,
-                          StyleMotion* aValue) {
-  MOZ_ASSERT(aMotion);
-  aMotion->reset(aValue);
-}
-
-StyleMotion* Gecko_NewStyleMotion() { return new StyleMotion(); }
-
-void Gecko_CopyStyleMotions(UniquePtr<StyleMotion>* aMotion,
-                            const StyleMotion* aOther) {
-  MOZ_ASSERT(aMotion);
-  *aMotion = aOther ? MakeUnique<StyleMotion>(*aOther) : nullptr;
-}
-
 void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len) {
   effects->mFilters.Clear();
   effects->mFilters.SetLength(new_len);

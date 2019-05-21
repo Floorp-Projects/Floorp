@@ -135,13 +135,9 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    *
    * @param   aSourceBuffer the argument of document.write (empty for .close())
    * @param   aKey a key unique to the script element that caused this call
-   * @param   aContentType "text/html" for HTML mode, else text/plain mode
    * @param   aLastCall true if .close() false if .write()
-   * @param   aMode ignored (for interface compat only)
    */
-  nsresult Parse(const nsAString& aSourceBuffer, void* aKey,
-                 const nsACString& aContentType, bool aLastCall,
-                 nsDTDMode aMode = eDTDMode_autodetect);
+  nsresult Parse(const nsAString& aSourceBuffer, void* aKey, bool aLastCall);
 
   /**
    * Stops the parser prematurely
@@ -253,6 +249,13 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
    * Parse until pending data is exhausted or a script blocks the parser
    */
   nsresult ParseUntilBlocked();
+
+  /**
+   * Start our executor.  This is meant to be used from document.open() _only_
+   * and does some work similar to what nsHtml5StreamParser::OnStartRequest does
+   * for normal parses.
+   */
+  nsresult StartExecutor();
 
  private:
   virtual ~nsHtml5Parser();

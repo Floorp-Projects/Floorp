@@ -64,7 +64,7 @@
     await testCustomInterface();
 
     let htmlWin = await new Promise(resolve => {
-      let htmlIframe = document.createElement("iframe");
+      let htmlIframe = document.createXULElement("iframe");
       htmlIframe.src = "file_empty.xhtml";
       htmlIframe.onload = () => resolve(htmlIframe.contentWindow);
       document.documentElement.appendChild(htmlIframe);

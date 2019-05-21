@@ -791,10 +791,10 @@ function startTest()
 
   setFocusTo("t1", window);
 
-  var textbox1 = document.createElement("textbox");
+  var textbox1 = document.createXULElement("textbox");
   $("innerbox").appendChild(textbox1);
 
-  var textbox2 = document.createElement("textbox");
+  var textbox2 = document.createXULElement("textbox");
   $("innerbox").appendChild(textbox2);
 
   gLastFocusMethod = 0;

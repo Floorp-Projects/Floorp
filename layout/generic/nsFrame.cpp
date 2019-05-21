@@ -2351,15 +2351,13 @@ void nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
 
 void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
                                           const nsDisplayListSet& aLists) {
-  if (!StyleOutline()->ShouldPaintOutline()) {
-    return;
-  }
+  // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
+  // "All css properties of table-column and table-column-group boxes are
+  // ignored, except when explicitly specified by this specification."
+  // CSS outlines fall into this category, so we skip them on these boxes.
+  MOZ_ASSERT(!IsTableColGroupFrame() && !IsTableColFrame());
 
-  if (IsTableColGroupFrame() || IsTableColFrame()) {
-    // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
-    // "All css properties of table-column and table-column-group boxes are
-    // ignored, except when explicitly specified by this specification."
-    // CSS outlines fall into this category, so we skip them on these boxes.
+  if (!StyleOutline()->ShouldPaintOutline()) {
     return;
   }
 
@@ -2379,6 +2377,42 @@ void nsFrame::DisplayOutline(nsDisplayListBuilder* aBuilder,
   if (!IsVisibleForPainting()) return;
 
   DisplayOutlineUnconditional(aBuilder, aLists);
+}
+
+void nsFrame::DisplayInsetBoxShadowUnconditional(nsDisplayListBuilder* aBuilder,
+                                                 nsDisplayList* aList) {
+  // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
+  // just because we're visible?  Or should it depend on the cell visibility
+  // when we're not the whole table?
+  const auto* effects = StyleEffects();
+  if (effects->HasBoxShadowWithInset(true)) {
+    aList->AppendNewToTop<nsDisplayBoxShadowInner>(aBuilder, this);
+  }
+}
+
+void nsFrame::DisplayInsetBoxShadow(nsDisplayListBuilder* aBuilder,
+                                    nsDisplayList* aList) {
+  if (!IsVisibleForPainting()) return;
+
+  DisplayInsetBoxShadowUnconditional(aBuilder, aList);
+}
+
+void nsFrame::DisplayOutsetBoxShadowUnconditional(
+    nsDisplayListBuilder* aBuilder, nsDisplayList* aList) {
+  // XXXbz should box-shadow for rows/rowgroups/columns/colgroups get painted
+  // just because we're visible?  Or should it depend on the cell visibility
+  // when we're not the whole table?
+  const auto* effects = StyleEffects();
+  if (effects->HasBoxShadowWithInset(false)) {
+    aList->AppendNewToTop<nsDisplayBoxShadowOuter>(aBuilder, this);
+  }
+}
+
+void nsFrame::DisplayOutsetBoxShadow(nsDisplayListBuilder* aBuilder,
+                                     nsDisplayList* aList) {
+  if (!IsVisibleForPainting()) return;
+
+  DisplayOutsetBoxShadowUnconditional(aBuilder, aList);
 }
 
 void nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
@@ -2402,7 +2436,9 @@ bool nsFrame::DisplayBackgroundUnconditional(nsDisplayListBuilder* aBuilder,
       !StyleBackground()->IsTransparent(this) ||
       StyleDisplay()->HasAppearance()) {
     return nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-        aBuilder, this, GetRectRelativeToSelf(), aLists.BorderBackground());
+        aBuilder, this,
+        GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this),
+        aLists.BorderBackground());
   }
   return false;
 }
@@ -2417,23 +2453,18 @@ void nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  const auto* effects = StyleEffects();
-  if (effects->HasBoxShadowWithInset(false)) {
-    aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowOuter>(aBuilder,
-                                                                       this);
-  }
+  DisplayOutsetBoxShadowUnconditional(aBuilder, aLists.BorderBackground());
 
   bool bgIsThemed =
       DisplayBackgroundUnconditional(aBuilder, aLists, aForceBackground);
 
-  if (effects->HasBoxShadowWithInset(true)) {
-    aLists.BorderBackground()->AppendNewToTop<nsDisplayBoxShadowInner>(aBuilder,
-                                                                       this);
-  }
+  DisplayInsetBoxShadowUnconditional(aBuilder, aLists.BorderBackground());
 
   // If there's a themed background, we should not create a border item.
   // It won't be rendered.
-  if (!bgIsThemed && StyleBorder()->HasBorder()) {
+  // Don't paint borders for tables here, since they paint them in a different
+  // order.
+  if (!bgIsThemed && StyleBorder()->HasBorder() && !IsTableFrame()) {
     aLists.BorderBackground()->AppendNewToTop<nsDisplayBorder>(aBuilder, this);
   }
 
@@ -3590,6 +3621,31 @@ static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
 
   if (aChild->ForceDescendIntoIfVisible() && aVisible.Intersects(overflow)) {
     return true;
+  }
+
+  if (aChild->IsFrameOfType(nsIFrame::eTablePart)) {
+    // Relative positioning and transforms can cause table parts to move, but we
+    // will still paint the backgrounds for their ancestor parts under them at
+    // their 'normal' position. That means that we must consider the overflow
+    // rects at both positions.
+
+    // We convert the overflow rect into the nsTableFrame's coordinate
+    // space, applying the normal position offset at each step. Then we
+    // compare that against the builder's cached dirty rect in table
+    // coordinate space.
+    const nsIFrame* f = aChild;
+    nsRect normalPositionOverflowRelativeToTable = overflow;
+
+    while (f->IsFrameOfType(nsIFrame::eTablePart)) {
+      normalPositionOverflowRelativeToTable += f->GetNormalPosition();
+      f = f->GetParent();
+    }
+
+    nsDisplayTableBackgroundSet* tableBGs = aBuilder->GetTableBackgroundSet();
+    if (tableBGs &&
+        tableBGs->GetDirtyRect().Intersects(normalPositionOverflowRelativeToTable)) {
+      return true;
+    }
   }
 
   return false;

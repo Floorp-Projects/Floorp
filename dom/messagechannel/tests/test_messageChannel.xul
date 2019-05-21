@@ -22,7 +22,7 @@
     SimpleTest.finish();
   }
 
-  var ifr = document.createElement('browser');
+  var ifr = document.createXULElement('browser');
   ifr.setAttribute("src", "iframe_messageChannel_chrome.html");
   ifr.setAttribute("flex", "1");
   ifr.addEventListener('load', function() {

@@ -36,3 +36,9 @@ pref("marionette.prefs.recommended", true);
 // Deprecated and scheduled for removal
 // with https://bugzil.la/marionette-window-tracking
 pref("marionette.contentListener", false);
+
+// Turn off DOM Push
+pref("dom.push.connection.enabled", false);
+
+// Privacy and tracking protection
+pref("privacy.trackingprotection.enabled", false);

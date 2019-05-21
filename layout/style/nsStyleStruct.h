@@ -1356,6 +1356,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   uint8_t mTextAlignLast;  // NS_STYLE_TEXT_ALIGN_*
   mozilla::StyleTextJustify mTextJustify;
   mozilla::StyleWhiteSpace mWhiteSpace;
+  mozilla::StyleLineBreak mLineBreak = mozilla::StyleLineBreak::Auto;
 
  private:
   mozilla::StyleWordBreak mWordBreak = mozilla::StyleWordBreak::Normal;
@@ -1664,27 +1665,6 @@ struct StyleShapeSource final {
   StyleGeometryBox mReferenceBox = StyleGeometryBox::NoBox;
 };
 
-struct StyleMotion final {
-  bool operator==(const StyleMotion& aOther) const {
-    return mOffsetPath == aOther.mOffsetPath;
-  }
-
-  bool operator!=(const StyleMotion& aOther) const {
-    return !(*this == aOther);
-  }
-
-  const StyleShapeSource& OffsetPath() const { return mOffsetPath; }
-
-  bool HasPath() const {
-    // Bug 1186329: We have to check other acceptable types after supporting
-    // different values of offset-path. e.g. basic-shapes, ray.
-    return mOffsetPath.GetType() == StyleShapeSourceType::Path;
-  }
-
- private:
-  StyleShapeSource mOffsetPath;
-};
-
 }  // namespace mozilla
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
@@ -1702,6 +1682,27 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
   RefPtr<mozilla::css::URLValue> mBinding;
+
+  nsStyleAutoArray<mozilla::StyleTransition> mTransitions;
+  // The number of elements in mTransitions that are not from repeating
+  // a list due to another property being longer.
+  uint32_t mTransitionTimingFunctionCount;
+  uint32_t mTransitionDurationCount;
+  uint32_t mTransitionDelayCount;
+  uint32_t mTransitionPropertyCount;
+  nsStyleAutoArray<mozilla::StyleAnimation> mAnimations;
+  // The number of elements in mAnimations that are not from repeating
+  // a list due to another property being longer.
+  uint32_t mAnimationTimingFunctionCount;
+  uint32_t mAnimationDurationCount;
+  uint32_t mAnimationDelayCount;
+  uint32_t mAnimationNameCount;
+  uint32_t mAnimationDirectionCount;
+  uint32_t mAnimationFillModeCount;
+  uint32_t mAnimationPlayStateCount;
+  uint32_t mAnimationIterationCountCount;
+
+  mozilla::StyleWillChange mWillChange;
   mozilla::StyleDisplay mDisplay;
   mozilla::StyleDisplay mOriginalDisplay;  // saved mDisplay for
                                            //         position:absolute/fixed
@@ -1728,7 +1729,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleOrient mOrient;
   uint8_t mIsolation;  // NS_STYLE_ISOLATION_*
   uint8_t mTopLayer;   // NS_STYLE_TOP_LAYER_*
-  mozilla::StyleWillChange mWillChange;
 
   mozilla::StyleTouchAction mTouchAction;
   uint8_t mScrollBehavior;  // NS_STYLE_SCROLL_BEHAVIOR_*
@@ -1737,41 +1737,29 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleOverflowAnchor mOverflowAnchor;
   mozilla::StyleScrollSnapAlign mScrollSnapAlign;
   mozilla::StyleScrollSnapType mScrollSnapType;
+  uint32_t mLineClamp;
   nsStyleCoord mScrollSnapPointsX;
   nsStyleCoord mScrollSnapPointsY;
   mozilla::Position mScrollSnapDestination;
   nsTArray<mozilla::Position> mScrollSnapCoordinate;
-  uint32_t mLineClamp;
-
-  // mSpecifiedTransform is the list of transform functions as
-  // specified, or null to indicate there is no transform.  (inherit or
-  // initial are replaced by an actual list of transform functions, or
-  // null, as appropriate.)
-  uint8_t mBackfaceVisibility;
-  uint8_t mTransformStyle;
-  StyleGeometryBox mTransformBox;
 
   mozilla::StyleTransform mTransform;
   mozilla::StyleRotate mRotate;
   mozilla::StyleTranslate mTranslate;
   mozilla::StyleScale mScale;
 
-  mozilla::UniquePtr<mozilla::StyleMotion> mMotion;
+  uint8_t mBackfaceVisibility;
+  uint8_t mTransformStyle;
+  StyleGeometryBox mTransformBox;
+
+  mozilla::StyleOffsetPath mOffsetPath;
+  mozilla::LengthPercentage mOffsetDistance;
 
   mozilla::StyleTransformOrigin mTransformOrigin;
   mozilla::StylePerspective mChildPerspective;
   mozilla::Position mPerspectiveOrigin;
 
   mozilla::StyleVerticalAlign mVerticalAlign;
-
-  nsStyleAutoArray<mozilla::StyleTransition> mTransitions;
-
-  // The number of elements in mTransitions that are not from repeating
-  // a list due to another property being longer.
-  uint32_t mTransitionTimingFunctionCount;
-  uint32_t mTransitionDurationCount;
-  uint32_t mTransitionDelayCount;
-  uint32_t mTransitionPropertyCount;
 
   nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
@@ -1793,19 +1781,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
                0.0f) +
            mTransitions[aIndex % mTransitionDelayCount].GetDelay();
   }
-
-  nsStyleAutoArray<mozilla::StyleAnimation> mAnimations;
-
-  // The number of elements in mAnimations that are not from repeating
-  // a list due to another property being longer.
-  uint32_t mAnimationTimingFunctionCount;
-  uint32_t mAnimationDurationCount;
-  uint32_t mAnimationDelayCount;
-  uint32_t mAnimationNameCount;
-  uint32_t mAnimationDirectionCount;
-  uint32_t mAnimationFillModeCount;
-  uint32_t mAnimationPlayStateCount;
-  uint32_t mAnimationIterationCountCount;
 
   nsAtom* GetAnimationName(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationNameCount].GetName();
@@ -2002,7 +1977,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return HasTransformProperty() || HasIndividualTransform() ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
            (mWillChange.bits & mozilla::StyleWillChangeBits_TRANSFORM) ||
-           (mMotion && mMotion->HasPath());
+           !mOffsetPath.IsNone();
   }
 
   bool HasTransformProperty() const { return !mTransform._0.IsEmpty(); }
