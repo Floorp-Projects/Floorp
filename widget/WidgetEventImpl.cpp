@@ -14,6 +14,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "nsCommandParams.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsPrintfCString.h"
@@ -183,11 +184,8 @@ SelectionType ToSelectionType(TextRangeType aTextRangeType) {
 
 static nsDataHashtable<nsDepCharHashKey, Command>* sCommandHashtable = nullptr;
 
-Command GetInternalCommand(const char* aCommandName) {
-  return GetInternalCommand(aCommandName, EmptyString());
-}
-
-Command GetInternalCommand(const char* aCommandName, const nsAString& aParam) {
+Command GetInternalCommand(const char* aCommandName,
+                           const nsCommandParams* aCommandParams) {
   if (!aCommandName) {
     return Command::DoNothing;
   }
@@ -195,16 +193,29 @@ Command GetInternalCommand(const char* aCommandName, const nsAString& aParam) {
   // Special cases for "cmd_align".  It's mapped to multiple internal commands
   // with additional param.  Therefore, we cannot handle it with the hashtable.
   if (!strcmp(aCommandName, "cmd_align")) {
-    if (aParam.LowerCaseEqualsASCII("left")) {
+    if (NS_WARN_IF(!aCommandParams)) {
+      return Command::DoNothing;
+    }
+    nsAutoCString cValue;
+    nsresult rv = aCommandParams->GetCString("state_attribute", cValue);
+    if (NS_FAILED(rv)) {
+      nsString value;  // Avoid copying the string buffer with using nsString.
+      rv = aCommandParams->GetString("state_attribute", value);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Command::DoNothing;
+      }
+      cValue = NS_ConvertUTF16toUTF8(value);
+    }
+    if (cValue.LowerCaseEqualsASCII("left")) {
       return Command::FormatJustifyLeft;
     }
-    if (aParam.LowerCaseEqualsASCII("right")) {
+    if (cValue.LowerCaseEqualsASCII("right")) {
       return Command::FormatJustifyRight;
     }
-    if (aParam.LowerCaseEqualsASCII("center")) {
+    if (cValue.LowerCaseEqualsASCII("center")) {
       return Command::FormatJustifyCenter;
     }
-    if (aParam.LowerCaseEqualsASCII("justify")) {
+    if (cValue.LowerCaseEqualsASCII("justify")) {
       return Command::FormatJustifyFull;
     }
     return Command::DoNothing;
