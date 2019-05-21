@@ -85,7 +85,6 @@ class OnboardingThemePickerViewHolder(private val view: View) : RecyclerView.Vie
     private fun setNewTheme(mode: Int) {
         if (AppCompatDelegate.getDefaultNightMode() == mode) return
         AppCompatDelegate.setDefaultNightMode(mode)
-        view.context?.asActivity()?.recreate()
         view.context?.components?.core?.let {
             it.engine.settings.preferredColorScheme = it.getPreferredColorScheme()
         }

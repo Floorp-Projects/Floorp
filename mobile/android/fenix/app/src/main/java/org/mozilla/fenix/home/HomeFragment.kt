@@ -7,6 +7,7 @@ package org.mozilla.fenix.home
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -74,6 +75,7 @@ class HomeFragment : Fragment(), CoroutineScope {
     private var homeMenu: HomeMenu? = null
 
     var deleteSessionJob: (suspend () -> Unit)? = null
+    private var layoutManagerSate: Parcelable? = null
 
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
@@ -117,6 +119,7 @@ class HomeFragment : Fragment(), CoroutineScope {
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
         DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
+
         return view
     }
 
@@ -180,6 +183,25 @@ class HomeFragment : Fragment(), CoroutineScope {
         homeDividerShadow.bringToFront()
     }
 
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        savedInstanceState?.apply {
+            layoutManagerSate = getParcelable(KEY_LAYOUT_MANAGER_STATE)
+            homeLayout.progress = getFloat(KEY_MOTION_LAYOUT_PROGRESS)
+        }
+
+        super.onViewStateRestored(savedInstanceState)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        sessionControlComponent.view.layoutManager!!.onSaveInstanceState()!!.apply {
+            outState.putParcelable(KEY_LAYOUT_MANAGER_STATE, this)
+        }
+
+        outState.putFloat(KEY_MOTION_LAYOUT_PROGRESS, homeLayout.progress)
+
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroyView() {
         homeMenu = null
         job.cancel()
@@ -201,6 +223,13 @@ class HomeFragment : Fragment(), CoroutineScope {
                         is SessionControlAction.Tab -> handleTabAction(it.action)
                         is SessionControlAction.Collection -> handleCollectionAction(it.action)
                         is SessionControlAction.Onboarding -> handleOnboardingAction(it.action)
+                        is SessionControlAction.ReloadData -> {
+                            layoutManagerSate?.also { parcelable ->
+                                sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
+                            }
+
+                            layoutManagerSate = null
+                        }
                     }
                 }
         }
@@ -513,5 +542,7 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     companion object {
         private const val toolbarPaddingDp = 12f
+        private const val KEY_MOTION_LAYOUT_PROGRESS = "motionLayout.progress"
+        private const val KEY_LAYOUT_MANAGER_STATE = "layoutManager.state"
     }
 }
