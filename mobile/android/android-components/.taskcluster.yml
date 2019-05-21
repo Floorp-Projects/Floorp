@@ -223,12 +223,12 @@ tasks:
                             - >-
                               git fetch ${repository} --tags
                               && git config advice.detachedHead false
-                              && git checkout ${tag}
+                              && git checkout ${event.release.tag_name}
                               && ./gradlew --no-daemon --version
                               && python automation/taskcluster/decision_task.py release
                               ${command_staging_flag}
                         metadata:
-                          name: Android Components - Decision task (${tag})
+                          name: Android Components - Decision task (${event.release.tag_name})
                           description: Build and publish release versions.
                 - $if: 'tasks_for == "cron"'
                   then:
