@@ -572,12 +572,9 @@ static ParseNode* ElemIndex(ParseNode* pn) {
   return &pn->as<PropertyByValue>().key();
 }
 
-static inline JSFunction* FunctionObject(FunctionNode* funNode) {
-  return funNode->funbox()->function();
-}
 
 static inline PropertyName* FunctionName(FunctionNode* funNode) {
-  if (JSAtom* name = FunctionObject(funNode)->explicitName()) {
+  if (JSAtom* name = funNode->funbox()->explicitName()) {
     return name->asPropertyName();
   }
   return nullptr;
