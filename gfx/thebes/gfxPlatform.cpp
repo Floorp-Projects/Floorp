@@ -410,7 +410,7 @@ NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 
 #define GFX_PREF_GRAPHITE_SHAPING "gfx.font_rendering.graphite.enabled"
 #if defined(XP_MACOSX)
-#define GFX_PREF_CORETEXT_SHAPING "gfx.font_rendering.coretext.enabled"
+#  define GFX_PREF_CORETEXT_SHAPING "gfx.font_rendering.coretext.enabled"
 #endif
 
 #define BIDI_NUMERAL_PREF "bidi.numeral"
@@ -2570,15 +2570,15 @@ static FeatureState& WebRenderHardwareQualificationStatus(
             NS_LITERAL_CSTRING("FEATURE_FAILURE_BAD_DEVICE_ID"));
       } else {
 #ifdef NIGHTLY_BUILD
-        // For Intel devices, if we have a battery, ignore it if the screen is
-        // small enough. Note that we always check for a battery with NVIDIA
+        // For AMD/Intel devices, if we have a battery, ignore it if the screen
+        // is small enough. Note that we always check for a battery with NVIDIA
         // because we do not have a limited/curated set of devices to support
         // WebRender on.
         const int32_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
         const int32_t screenPixels = aScreenSize.width * aScreenSize.height;
         bool disableForBattery = aHasBattery;
-        if (adapterVendorID == u"0x8086" && screenPixels > 0 &&
-            screenPixels <= kMaxPixelsBattery) {
+        if ((adapterVendorID == u"0x8086" || adapterVendorID == u"0x1002") &&
+            screenPixels > 0 && screenPixels <= kMaxPixelsBattery) {
           disableForBattery = false;
         }
 #else
