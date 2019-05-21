@@ -60,7 +60,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DocumentL10n)
   tmp->DisconnectMutations();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMutations)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMLocalization)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalization)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContentSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReady)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoots)
@@ -69,7 +69,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DocumentL10n)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMutations)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMLocalization)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalization)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContentSink)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReady)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoots)
@@ -110,12 +110,12 @@ void DocumentL10n::DisconnectMutations() {
 }
 
 bool DocumentL10n::Init(nsTArray<nsString>& aResourceIds) {
-  nsCOMPtr<mozIDOMLocalizationJSM> jsm =
-      do_ImportModule("resource://gre/modules/DOMLocalization.jsm");
+  nsCOMPtr<mozILocalizationJSM> jsm =
+      do_ImportModule("resource://gre/modules/Localization.jsm");
   MOZ_RELEASE_ASSERT(jsm);
 
-  Unused << jsm->GetDOMLocalization(getter_AddRefs(mDOMLocalization));
-  MOZ_RELEASE_ASSERT(mDOMLocalization);
+  Unused << jsm->GetLocalization(getter_AddRefs(mLocalization));
+  MOZ_RELEASE_ASSERT(mLocalization);
 
   nsIGlobalObject* global = mDocument->GetScopeObject();
   if (!global) {
@@ -133,7 +133,7 @@ bool DocumentL10n::Init(nsTArray<nsString>& aResourceIds) {
   // resources will be ready by the time the document
   // is ready for localization.
   uint32_t ret;
-  if (NS_FAILED(mDOMLocalization->AddResourceIds(aResourceIds, true, &ret))) {
+  if (NS_FAILED(mLocalization->AddResourceIds(aResourceIds, true, &ret))) {
     return false;
   }
 
@@ -204,19 +204,19 @@ already_AddRefed<Promise> DocumentL10n::MaybeWrapPromise(
 
 uint32_t DocumentL10n::AddResourceIds(nsTArray<nsString>& aResourceIds) {
   uint32_t ret = 0;
-  mDOMLocalization->AddResourceIds(aResourceIds, false, &ret);
+  mLocalization->AddResourceIds(aResourceIds, false, &ret);
   return ret;
 }
 
 uint32_t DocumentL10n::RemoveResourceIds(nsTArray<nsString>& aResourceIds) {
   // We need to guard against a scenario where the
-  // mDOMLocalization has been unlinked, but the elements
+  // mLocalization has been unlinked, but the elements
   // are only now removed from DOM.
-  if (!mDOMLocalization) {
+  if (!mLocalization) {
     return 0;
   }
   uint32_t ret = 0;
-  mDOMLocalization->RemoveResourceIds(aResourceIds, &ret);
+  mLocalization->RemoveResourceIds(aResourceIds, &ret);
   return ret;
 }
 
@@ -234,7 +234,7 @@ already_AddRefed<Promise> DocumentL10n::FormatMessages(
   }
 
   RefPtr<Promise> promise;
-  aRv = mDOMLocalization->FormatMessages(jsKeys, getter_AddRefs(promise));
+  aRv = mLocalization->FormatMessages(jsKeys, getter_AddRefs(promise));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -256,7 +256,7 @@ already_AddRefed<Promise> DocumentL10n::FormatValues(
   }
 
   RefPtr<Promise> promise;
-  aRv = mDOMLocalization->FormatValues(jsKeys, getter_AddRefs(promise));
+  aRv = mLocalization->FormatValues(jsKeys, getter_AddRefs(promise));
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -276,8 +276,7 @@ already_AddRefed<Promise> DocumentL10n::FormatValue(
   }
 
   RefPtr<Promise> promise;
-  nsresult rv =
-      mDOMLocalization->FormatValue(aId, args, getter_AddRefs(promise));
+  nsresult rv = mLocalization->FormatValue(aId, args, getter_AddRefs(promise));
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -544,6 +543,48 @@ already_AddRefed<Promise> DocumentL10n::TranslateElements(
   return MaybeWrapPromise(promise);
 }
 
+class L10nRootTranslationHandler final : public PromiseNativeHandler {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(L10nRootTranslationHandler)
+
+  explicit L10nRootTranslationHandler(Element* aRoot) : mRoot(aRoot) {}
+
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    DocumentL10n::SetRootInfo(mRoot);
+  }
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  }
+
+ private:
+  ~L10nRootTranslationHandler() = default;
+
+  RefPtr<Element> mRoot;
+};
+
+NS_IMPL_CYCLE_COLLECTION(L10nRootTranslationHandler, mRoot)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(L10nRootTranslationHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(L10nRootTranslationHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(L10nRootTranslationHandler)
+
+void DocumentL10n::TranslateRoots() {
+  ErrorResult rv;
+
+  for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
+    Element* root = iter.Get()->GetKey();
+
+    RefPtr<Promise> promise = TranslateFragment(*root, rv);
+    RefPtr<L10nRootTranslationHandler> nativeHandler =
+        new L10nRootTranslationHandler(root);
+    promise->AppendNativeHandler(nativeHandler);
+  }
+}
+
 void DocumentL10n::PauseObserving(ErrorResult& aRv) {
   mMutations->PauseObserving();
 }
@@ -683,12 +724,13 @@ void DocumentL10n::InitialDocumentTranslationCompleted() {
 Promise* DocumentL10n::Ready() { return mReady; }
 
 void DocumentL10n::OnChange() {
-  if (mDOMLocalization) {
-    mDOMLocalization->OnChange();
+  if (mLocalization) {
+    mLocalization->OnChange();
+    TranslateRoots();
   }
 }
 
-void DocumentL10n::ConnectRoot(nsINode* aNode) {
+void DocumentL10n::ConnectRoot(Element* aNode) {
   nsCOMPtr<nsIGlobalObject> global = aNode->GetOwnerGlobal();
   if (!global) {
     return;
@@ -696,7 +738,7 @@ void DocumentL10n::ConnectRoot(nsINode* aNode) {
 
 #ifdef DEBUG
   for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    nsINode* root = iter.Get()->GetKey();
+    Element* root = iter.Get()->GetKey();
 
     MOZ_ASSERT(
         root != aNode && !root->Contains(aNode) && !aNode->Contains(root),
@@ -709,7 +751,7 @@ void DocumentL10n::ConnectRoot(nsINode* aNode) {
   aNode->AddMutationObserverUnlessExists(mMutations);
 }
 
-void DocumentL10n::DisconnectRoot(nsINode* aNode) {
+void DocumentL10n::DisconnectRoot(Element* aNode) {
   if (mRoots.Contains(aNode)) {
     aNode->RemoveMutationObserver(mMutations);
     mRoots.RemoveEntry(aNode);
@@ -718,13 +760,14 @@ void DocumentL10n::DisconnectRoot(nsINode* aNode) {
 
 void DocumentL10n::DisconnectRoots() {
   for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    nsRefPtrHashKey<nsINode>* elem = iter.Get();
+    Element* elem = iter.Get()->GetKey();
 
-    elem->GetKey()->RemoveMutationObserver(mMutations);
+    elem->RemoveMutationObserver(mMutations);
   }
   mRoots.Clear();
 }
 
+/* static */
 void DocumentL10n::SetRootInfo(Element* aElement) {
   nsAutoCString primaryLocale;
   LocaleService::GetInstance()->GetAppLocaleAsBCP47(primaryLocale);
