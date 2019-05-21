@@ -20,6 +20,18 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.printdent('')
         self.write(ws.ws)
 
+    def visitVerbatimNode(self, verb):
+        if verb.indent:
+            self.printdent('')
+        self.write(verb.text)
+
+    def visitGroupNode(self, group):
+        offsetCols = self.indentCols * group.offset
+        self.col += offsetCols
+        for node in group.nodes:
+            node.accept(self)
+        self.col -= offsetCols
+
     def visitCppDirective(self, cd):
         if cd.rest:
             self.println('#%s %s' % (cd.directive, cd.rest))
