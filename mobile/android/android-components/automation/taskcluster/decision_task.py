@@ -240,10 +240,10 @@ def release(artifacts_info, is_snapshot, is_staging):
             artifact_info=artifact_info
         )
 
-        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
-            build_task_id, wait_on_builds_task_id, version, artifact_info['artifact'],
-            artifact_info['name'], is_snapshot, is_staging
-        )
+        # beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
+            # build_task_id, wait_on_builds_task_id, version, artifact_info['artifact'],
+            # artifact_info['name'], is_snapshot, is_staging
+        # )
 
     wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_wait_on_builds_task(build_tasks.keys())
 
