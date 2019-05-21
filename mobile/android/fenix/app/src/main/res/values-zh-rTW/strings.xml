@@ -174,6 +174,9 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">對所有網站開啟</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">已全域關閉。請到「設定」頁面開啟。</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for crash reporter -->
@@ -186,10 +189,20 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">開啟 Sync</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">使用桌面版 Firefox 掃描配對碼</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">登入</string>
     <!-- Preference for account creation -->
     <string name="preferences_sync_create_account">註冊帳號</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[請使用您的電腦開啟 <b>firefox.com/pair</b> 取得 QR Code。]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">開啟攝影機</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">取消</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->

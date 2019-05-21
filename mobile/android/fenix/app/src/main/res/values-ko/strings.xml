@@ -192,6 +192,9 @@
     <!-- Preference for account creation -->
     <string name="preferences_sync_create_account">계정 생성</string>
 
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">취소</string>
+
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
     <string name="preference_light_theme">밝은</string>

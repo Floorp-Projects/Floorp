@@ -12,6 +12,11 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Введите запрос или адрес</string>
 
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header">Нет открытых вкладок</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Открытые вами вкладки будут показаны здесь.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Вы находитесь в приватной сессии</string>
@@ -79,11 +84,10 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Вставить ссылку из буфера обмена</string>
 
-    <!-- Settings Fragment -->
+    <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Настройки</string>
 
-    <!-- Preferences -->
     <!-- Preference category for basic settings -->
     <string name="preferences_category_basics">Основные</string>
     <!-- Preference category for all links about Fenix -->
@@ -173,6 +177,9 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Включить для всех сайтов</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Выключено глобально. Можно включить в настройках.</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Телеметрия</string>
     <!-- Preference switch for crash reporter -->
@@ -185,10 +192,20 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Включить синхронизацию</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Отсканируйте код сопряжения на Firefox для компьютеров</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Войти</string>
     <!-- Preference for account creation -->
     <string name="preferences_sync_create_account">Создать аккаунт</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Посетите <b>firefox.com/pair</b> в Firefox на вашем компьютере, чтобы получить свой QR-код.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Открыть камеру</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Отмена</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -284,16 +301,15 @@
         The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
     <string name="session_items_more">%1$d сайт(а)…</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">Нет открытых вкладок</string>
-    <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">Открытые вами вкладки будут показаны здесь.</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Удалить историю</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Удалить</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">Выбрано: %1$d</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Удалить %1$d элемент(а)</string>
@@ -305,8 +321,6 @@
     <string name="history_this_month">В этом месяце</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Старее</string>
-    <!-- Text displayed in a notification when the user enters full screen mode -->
-    <string name="full_screen_notification">Вход в полноэкранный режим</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -327,6 +341,7 @@
     <!-- Content Description for session item share button -->
     <string name="content_description_session_share">Поделиться сессией</string>
 
+    <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Меню закладок</string>
     <!-- Screen title for editing bookmarks -->
@@ -386,10 +401,6 @@
     <string name="bookmark_deletion_multiple_snackbar_message">Удаление выбранных закладок</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ОТМЕНИТЬ</string>
-
-    <!-- Message for copying the URL via long press on the toolbar -->
-    <string name="url_copied">URL скопирован</string>
-
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
@@ -480,6 +491,7 @@
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Коллекция %d</string>
 
+    <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Коллекция удалена</string>
 
@@ -492,5 +504,11 @@
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Разрешить %1$s открыть %2$s</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Вход в полноэкранный режим</string>
 
-</resources>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL скопирован</string>
+
+
+    </resources>
