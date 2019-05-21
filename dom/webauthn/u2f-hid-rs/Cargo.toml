@@ -1,6 +1,6 @@
 [package]
 name = "u2fhid"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Kyle Machulis <kyle@nonpolynomial.com>", "J.C. Jones <jc@mozilla.com>", "Tim Taubert <ttaubert@mozilla.com>"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
@@ -23,7 +23,7 @@ features = [
 ]
 
 [dependencies]
-rand = "0.3"
+rand = "0.6"
 log = "0.4"
 libc = "^0.2"
 boxfnonce = "0.0.3"

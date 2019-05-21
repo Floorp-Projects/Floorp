@@ -38,44 +38,67 @@
 //! reference count and the two mutex bits in the same atomic word.
 
 #![warn(missing_docs)]
-#![cfg_attr(all(feature = "nightly", target_os = "linux"), feature(integer_atomics))]
+#![warn(rust_2018_idioms)]
+#![cfg_attr(
+    all(target_env = "sgx", target_vendor = "fortanix"),
+    feature(sgx_platform)
+)]
+#![cfg_attr(
+    all(
+        feature = "nightly",
+        target_arch = "wasm32",
+        target_feature = "atomics"
+    ),
+    feature(checked_duration_since, stdsimd)
+)]
+#![cfg_attr(
+    all(feature = "nightly", target_os = "cloudabi",),
+    feature(thread_local, checked_duration_since)
+)]
 
-extern crate rand;
-extern crate smallvec;
+use cfg_if::cfg_if;
 
-#[cfg(feature = "deadlock_detection")]
-extern crate backtrace;
-#[cfg(feature = "deadlock_detection")]
-extern crate petgraph;
-#[cfg(feature = "deadlock_detection")]
-extern crate thread_id;
+cfg_if! {
+    if #[cfg(all(has_sized_atomics, target_os = "linux"))] {
+        #[path = "thread_parker/linux.rs"]
+        mod thread_parker;
+    } else if #[cfg(unix)] {
+        #[path = "thread_parker/unix.rs"]
+        mod thread_parker;
+    } else if #[cfg(windows)] {
+        #[path = "thread_parker/windows/mod.rs"]
+        mod thread_parker;
+    } else if #[cfg(all(has_sized_atomics, target_os = "redox"))] {
+        #[path = "thread_parker/redox.rs"]
+        mod thread_parker;
+    } else if #[cfg(all(target_env = "sgx", target_vendor = "fortanix"))] {
+        #[path = "thread_parker/sgx.rs"]
+        mod thread_parker;
+    } else if #[cfg(all(
+        feature = "nightly",
+        target_arch = "wasm32",
+        target_feature = "atomics"
+    ))] {
+        #[path = "thread_parker/wasm.rs"]
+        mod thread_parker;
+    } else if #[cfg(all(feature = "nightly", target_os = "cloudabi"))] {
+        #[path = "thread_parker/cloudabi.rs"]
+        mod thread_parker;
+    } else {
+        #[path = "thread_parker/generic.rs"]
+        mod thread_parker;
+    }
+}
 
-#[cfg(unix)]
-extern crate libc;
-
-#[cfg(windows)]
-extern crate winapi;
-
-#[cfg(all(feature = "nightly", target_os = "linux"))]
-#[path = "thread_parker/linux.rs"]
-mod thread_parker;
-#[cfg(all(unix, not(all(feature = "nightly", target_os = "linux"))))]
-#[path = "thread_parker/unix.rs"]
-mod thread_parker;
-#[cfg(windows)]
-#[path = "thread_parker/windows/mod.rs"]
-mod thread_parker;
-#[cfg(not(any(windows, unix)))]
-#[path = "thread_parker/generic.rs"]
-mod thread_parker;
-
-mod util;
-mod spinwait;
-mod word_lock;
 mod parking_lot;
+mod spinwait;
+mod util;
+mod word_lock;
 
-pub use parking_lot::{FilterOp, ParkResult, ParkToken, RequeueOp, UnparkResult, UnparkToken};
-pub use parking_lot::{DEFAULT_PARK_TOKEN, DEFAULT_UNPARK_TOKEN};
-pub use parking_lot::{park, unpark_all, unpark_filter, unpark_one, unpark_requeue};
-pub use spinwait::SpinWait;
-pub use parking_lot::deadlock;
+pub use self::parking_lot::deadlock;
+pub use self::parking_lot::{park, unpark_all, unpark_filter, unpark_one, unpark_requeue};
+pub use self::parking_lot::{
+    FilterOp, ParkResult, ParkToken, RequeueOp, UnparkResult, UnparkToken,
+};
+pub use self::parking_lot::{DEFAULT_PARK_TOKEN, DEFAULT_UNPARK_TOKEN};
+pub use self::spinwait::SpinWait;
