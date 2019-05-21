@@ -61,11 +61,11 @@ export const editConditionalBreakpointItem = (
 
 export const conditionalBreakpointItem = (
   breakpoint: Breakpoint,
+  location: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) => {
   const {
     options: { condition },
-    location,
   } = breakpoint;
   return condition
     ? editConditionalBreakpointItem(location, breakpointActions)
@@ -98,11 +98,11 @@ export const editLogPointItem = (
 
 export const logPointItem = (
   breakpoint: Breakpoint,
+  location: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) => {
   const {
     options: { logValue },
-    location,
   } = breakpoint;
   return logValue
     ? editLogPointItem(location, breakpointActions)
@@ -133,6 +133,7 @@ export const toggleDisabledBreakpointItem = (
 export function breakpointItems(
   cx: Context,
   breakpoint: Breakpoint,
+  selectedLocation: SourceLocation,
   breakpointActions: BreakpointItemActions
 ) {
   const items = [
@@ -140,30 +141,19 @@ export function breakpointItems(
     toggleDisabledBreakpointItem(cx, breakpoint, breakpointActions),
   ];
 
-  if (features.columnBreakpoints) {
-    items.push(
-      { type: "separator" },
-      removeBreakpointsOnLineItem(cx, breakpoint.location, breakpointActions),
-      breakpoint.disabled
-        ? enableBreakpointsOnLineItem(
-            cx,
-            breakpoint.location,
-            breakpointActions
-          )
-        : disableBreakpointsOnLineItem(
-            cx,
-            breakpoint.location,
-            breakpointActions
-          ),
-      { type: "separator" }
-    );
-  }
+  items.push(
+    { type: "separator" },
+    removeBreakpointsOnLineItem(cx, selectedLocation, breakpointActions),
+    breakpoint.disabled
+      ? enableBreakpointsOnLineItem(cx, selectedLocation, breakpointActions)
+      : disableBreakpointsOnLineItem(cx, selectedLocation, breakpointActions),
+    { type: "separator" }
+  );
 
-  items.push(conditionalBreakpointItem(breakpoint, breakpointActions));
-
-  if (features.logPoints) {
-    items.push(logPointItem(breakpoint, breakpointActions));
-  }
+  items.push(
+    conditionalBreakpointItem(breakpoint, selectedLocation, breakpointActions)
+  );
+  items.push(logPointItem(breakpoint, selectedLocation, breakpointActions));
 
   return items;
 }
