@@ -117,11 +117,10 @@ export function toggleBreakpoints(
   breakpoints: Breakpoint[]
 ) {
   return async ({ dispatch }: ThunkArgs) => {
-    const promises = breakpoints.map(
-      breakpoint =>
-        shouldDisableBreakpoints
-          ? dispatch(disableBreakpoint(cx, breakpoint))
-          : dispatch(enableBreakpoint(cx, breakpoint))
+    const promises = breakpoints.map(breakpoint =>
+      shouldDisableBreakpoints
+        ? dispatch(disableBreakpoint(cx, breakpoint))
+        : dispatch(enableBreakpoint(cx, breakpoint))
     );
 
     await Promise.all(promises);
