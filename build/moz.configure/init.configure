@@ -750,15 +750,6 @@ def split_triplet(triplet, allow_unknown=False):
     def bitness(cpu):
         return CPU_bitness[cpu]
 
-    # Toolchains, most notably for cross compilation may use cpu-os
-    # prefixes. We need to be more specific about the LLVM target on Mac
-    # so cross-language LTO will work correctly.
-
-    if os.startswith('darwin'):
-        toolchain = '%s-apple-%s' % (cpu, os)
-    else:
-        toolchain = '%s-%s' % (cpu, os)
-
     return namespace(
         alias=triplet,
         cpu=sanitize(CPU, canonical_cpu),
@@ -768,7 +759,9 @@ def split_triplet(triplet, allow_unknown=False):
         endianness=sanitize(Endianness, endianness),
         raw_cpu=cpu,
         raw_os=os,
-        toolchain=toolchain,
+        # Toolchains, most notably for cross compilation may use cpu-os
+        # prefixes.
+        toolchain='%s-%s' % (cpu, os),
     )
 
 
