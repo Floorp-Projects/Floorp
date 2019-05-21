@@ -431,7 +431,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
         &extraVarScopeBindings_);
   }
 
-  void initFromLazyFunction();
+  void initFromLazyFunction(JSFunction* fun);
   void initStandaloneFunction(Scope* enclosingScope);
   void initWithEnclosingParseContext(ParseContext* enclosing, JSFunction* fun,
                                      FunctionSyntaxKind kind);
