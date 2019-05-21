@@ -293,11 +293,7 @@ var LoginManagerContent = {
         let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
         let messageManager = msg.target;
         let request = this._takeRequest(msg);
-        request.promise.resolve({
-          generatedPassword: msg.data.generatedPassword,
-          logins: loginsFound,
-          messageManager,
-        });
+        request.promise.resolve({ logins: loginsFound, messageManager });
         break;
       }
 
@@ -349,14 +345,13 @@ var LoginManagerContent = {
   },
 
   _autoCompleteSearchAsync(aSearchString, aPreviousResult,
-                           aElement) {
+                           aElement, aRect) {
     let doc = aElement.ownerDocument;
     let form = LoginFormFactory.createFromField(aElement);
     let win = doc.defaultView;
 
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
-    let autocompleteInfo = aElement.getAutocompleteInfo();
 
     let messageManager = win.docShell.messageManager;
 
@@ -366,15 +361,13 @@ var LoginManagerContent = {
                            null;
 
     let requestData = {};
-    let messageData = {
-      autocompleteInfo,
-      browsingContextId: win.docShell.browsingContext.id,
-      formOrigin,
-      actionOrigin,
-      searchString: aSearchString,
-      previousResult,
-      isSecure: InsecurePasswordUtils.isFormSecure(form),
-      isPasswordField: aElement.type == "password",
+    let messageData = { formOrigin,
+                        actionOrigin,
+                        searchString: aSearchString,
+                        previousResult,
+                        rect: aRect,
+                        isSecure: InsecurePasswordUtils.isFormSecure(form),
+                        isPasswordField: aElement.type == "password",
     };
 
     if (LoginHelper.showAutoCompleteFooter) {
