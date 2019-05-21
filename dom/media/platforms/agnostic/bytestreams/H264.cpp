@@ -998,11 +998,11 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
 
   // SPS content
   nsTArray<uint8_t> sps;
-  ByteWriter spsw(sps);
+  ByteWriter<BigEndian> spsw(sps);
   int numSps = 0;
   // PPS content
   nsTArray<uint8_t> pps;
-  ByteWriter ppsw(pps);
+  ByteWriter<BigEndian> ppsw(pps);
   int numPps = 0;
 
   int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
