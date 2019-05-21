@@ -71,6 +71,7 @@
     "assertNotPaused": false,
     "assertSourceCount": false,
     "assertPausedAtSourceAndLine": false,
+    "assertPreviews": false,
     "assertPreviewTextValue": false,
     "assertEditorBreakpoint": false,
     "assertBreakpointSnippet": false,

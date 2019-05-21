@@ -5,9 +5,11 @@
 // @flow
 
 import {
-  getOutOfScopeLocations,
-  getSelectedSourceWithContent,
+  hasInScopeLines,
+  getSourceWithContent,
+  getVisibleSelectedFrame,
 } from "../../selectors";
+
 import { getSourceLineCount } from "../../utils/source";
 
 import { range, flatMap, uniq, without } from "lodash";
@@ -29,31 +31,52 @@ function getOutOfScopeLines(outOfScopeLocations: ?(AstLocation[])) {
   );
 }
 
-export function setInScopeLines(cx: Context) {
-  return ({ dispatch, getState }: ThunkArgs) => {
-    const sourceWithContent = getSelectedSourceWithContent(getState());
-    const outOfScopeLocations = getOutOfScopeLocations(getState());
+async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
+  const { source, content } = getSourceWithContent(
+    getState(),
+    location.sourceId
+  );
 
-    if (!sourceWithContent || !sourceWithContent.content) {
+  let locations = null;
+  if (location.line && source && !source.isWasm) {
+    locations = await parser.findOutOfScopeLocations(
+      source.id,
+      ((location: any): parser.AstPosition)
+    );
+  }
+
+  const linesOutOfScope = getOutOfScopeLines(locations);
+  const sourceNumLines =
+    !content || !isFulfilled(content) ? 0 : getSourceLineCount(content.value);
+
+  const sourceLines = range(1, sourceNumLines + 1);
+
+  return !linesOutOfScope
+    ? sourceLines
+    : without(sourceLines, ...linesOutOfScope);
+}
+
+export function setInScopeLines(cx: Context) {
+  return async (thunkArgs: ThunkArgs) => {
+    const { getState, dispatch } = thunkArgs;
+    const visibleFrame = getVisibleSelectedFrame(getState());
+
+    if (!visibleFrame) {
       return;
     }
-    const content = sourceWithContent.content;
 
-    const linesOutOfScope = getOutOfScopeLines(outOfScopeLocations);
+    const { location } = visibleFrame;
+    if (hasInScopeLines(getState(), location)) {
+      return;
+    }
 
-    const sourceNumLines = isFulfilled(content)
-      ? getSourceLineCount(content.value)
-      : 0;
-    const sourceLines = range(1, sourceNumLines + 1);
-
-    const inScopeLines = !linesOutOfScope
-      ? sourceLines
-      : without(sourceLines, ...linesOutOfScope);
+    const lines = await getInScopeLines(cx, location, thunkArgs);
 
     dispatch({
       type: "IN_SCOPE_LINES",
       cx,
-      lines: inScopeLines,
+      location,
+      lines,
     });
   };
 }
