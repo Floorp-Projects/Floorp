@@ -433,9 +433,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   void initFromLazyFunction();
   void initStandaloneFunction(Scope* enclosingScope);
-  void initWithEnclosingParseContext(ParseContext* enclosing,
+  void initWithEnclosingParseContext(ParseContext* enclosing, JSFunction* fun,
                                      FunctionSyntaxKind kind);
-  void initFieldInitializer(ParseContext* enclosing, HasHeritage hasHeritage);
+  void initFieldInitializer(ParseContext* enclosing, JSFunction* fun, HasHeritage hasHeritage);
 
   inline bool isLazyFunctionWithoutEnclosingScope() const {
     return function()->isInterpretedLazy() &&
