@@ -341,33 +341,19 @@ mp_set(mp_int *mp, mp_digit d)
 mp_err
 mp_set_int(mp_int *mp, long z)
 {
-    int ix;
     unsigned long v = labs(z);
     mp_err res;
 
-    ARGCHK(mp != NULL, MP_BADARG);
-
-    mp_zero(mp);
-    if (z == 0)
-        return MP_OKAY; /* shortcut for zero */
-
-    if (sizeof v <= sizeof(mp_digit)) {
-        DIGIT(mp, 0) = v;
-    } else {
-        for (ix = sizeof(long) - 1; ix >= 0; ix--) {
-            if ((res = s_mp_mul_d(mp, (UCHAR_MAX + 1))) != MP_OKAY)
-                return res;
-
-            res = s_mp_add_d(mp, (mp_digit)((v >> (ix * CHAR_BIT)) & UCHAR_MAX));
-            if (res != MP_OKAY)
-                return res;
-        }
+    /* https://bugzilla.mozilla.org/show_bug.cgi?id=1509432 */
+    if ((res = mp_set_ulong(mp, v)) != MP_OKAY) { /* avoids duplicated code */
+        return res;
     }
-    if (z < 0)
+
+    if (z < 0) {
         SIGN(mp) = NEG;
+    }
 
     return MP_OKAY;
-
 } /* end mp_set_int() */
 
 /* }}} */

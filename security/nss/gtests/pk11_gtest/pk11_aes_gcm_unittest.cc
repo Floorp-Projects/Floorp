@@ -56,18 +56,26 @@ class Pkcs11AesGcmTest : public ::testing::TestWithParam<gcm_kat_value> {
         slot.get(), mech, PK11_OriginUnwrap, CKA_ENCRYPT, &keyItem, nullptr));
     ASSERT_TRUE(!!symKey) << msg;
 
-    // Encrypt.
+    // Encrypt with bogus parameters.
     unsigned int outputLen = 0;
     std::vector<uint8_t> output(plaintext.size() + gcmParams.ulTagBits / 8);
+    gcmParams.ulTagBits = 159082344;
     SECStatus rv =
         PK11_Encrypt(symKey.get(), mech, &params, output.data(), &outputLen,
                      output.size(), plaintext.data(), plaintext.size());
+    EXPECT_EQ(SECFailure, rv);
+    EXPECT_EQ(0U, outputLen);
+    gcmParams.ulTagBits = 128;
+
+    // Encrypt.
+    rv = PK11_Encrypt(symKey.get(), mech, &params, output.data(), &outputLen,
+                      output.size(), plaintext.data(), plaintext.size());
     if (invalid_iv) {
       EXPECT_EQ(rv, SECFailure) << msg;
+      EXPECT_EQ(0U, outputLen);
       return;
-    } else {
-      EXPECT_EQ(rv, SECSuccess) << msg;
     }
+    EXPECT_EQ(rv, SECSuccess) << msg;
 
     ASSERT_EQ(outputLen, output.size()) << msg;
 

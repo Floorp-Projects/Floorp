@@ -933,11 +933,11 @@ PK11_Decrypt(PK11SymKey *symKey,
     if (haslock)
         PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot, session, owner);
-    *outLen = len;
     if (crv != CKR_OK) {
         PORT_SetError(PK11_MapError(crv));
         return SECFailure;
     }
+    *outLen = len;
     return SECSuccess;
 }
 
@@ -979,11 +979,11 @@ PK11_Encrypt(PK11SymKey *symKey,
     if (haslock)
         PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot, session, owner);
-    *outLen = len;
     if (crv != CKR_OK) {
         PORT_SetError(PK11_MapError(crv));
         return SECFailure;
     }
+    *outLen = len;
     return SECSuccess;
 }
 
@@ -1665,10 +1665,10 @@ pk11_CreateGenericObjectHelper(PK11SlotInfo *slot,
 /* This is the classic interface. Applications would call this function to
  * create new object that would not be destroyed later. This lead to resource
  * leaks (and thus memory leaks in the PKCS #11 module).  To solve this we have
- * a new interface that automatically marks objects created on the fly to be 
- * destroyed later. 
+ * a new interface that automatically marks objects created on the fly to be
+ * destroyed later.
  * The old interface is preserved because applications like Mozilla purposefully
- * leak the reference to be found later with PK11_FindGenericObjects. New 
+ * leak the reference to be found later with PK11_FindGenericObjects. New
  * applications should use the new interface PK11_CreateManagedGenericObject */
 PK11GenericObject *
 PK11_CreateGenericObject(PK11SlotInfo *slot, const CK_ATTRIBUTE *pTemplate,
@@ -1678,8 +1678,8 @@ PK11_CreateGenericObject(PK11SlotInfo *slot, const CK_ATTRIBUTE *pTemplate,
                                           PR_FALSE);
 }
 
-/* Use this interface. It will automatically destroy any temporary objects 
- * (token = PR_FALSE) when the PK11GenericObject is freed. Permanent objects still 
+/* Use this interface. It will automatically destroy any temporary objects
+ * (token = PR_FALSE) when the PK11GenericObject is freed. Permanent objects still
  * need to be destroyed by hand with PK11_DestroyTokenObject.
  */
 PK11GenericObject *

@@ -5,8 +5,17 @@
 #include <assert.h>
 
 #include "ssl.h"
+#include "sslexp.h"
 
 #include "tls_common.h"
+
+static PRTime FixedTime(void*) { return 1234; }
+
+// Fix the time input, to avoid any time-based variation.
+void FixTime(PRFileDesc* fd) {
+  SECStatus rv = SSL_SetTimeFunc(fd, FixedTime, nullptr);
+  assert(rv == SECSuccess);
+}
 
 PRStatus EnableAllProtocolVersions() {
   SSLVersionRange supported;

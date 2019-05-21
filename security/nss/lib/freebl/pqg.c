@@ -1015,6 +1015,8 @@ makePfromQandSeed(
     hashlen = HASH_ResultLen(hashtype);
     outlen = hashlen * PR_BITS_PER_BYTE;
 
+    PORT_Assert(outlen > 0);
+
     /* L - 1 = n*outlen + b */
     n = (L - 1) / outlen;
     b = (L - 1) % outlen;
@@ -1768,6 +1770,7 @@ PQG_VerifyParams(const PQGParams *params,
         /* 10. P generated from (L, counter, g, SEED, Q) matches P
          * in PQGParams. */
         outlen = HASH_ResultLen(hashtype) * PR_BITS_PER_BYTE;
+        PORT_Assert(outlen > 0);
         n = (L - 1) / outlen;
         offset = vfy->counter * (n + 1) + ((type == FIPS186_1_TYPE) ? 2 : 1);
         CHECK_SEC_OK(makePfromQandSeed(hashtype, L, N, offset, g, &vfy->seed,
