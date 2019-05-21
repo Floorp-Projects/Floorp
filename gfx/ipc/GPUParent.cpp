@@ -14,6 +14,7 @@
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -480,6 +481,18 @@ mozilla::ipc::IPCResult GPUParent::RecvShutdownVR() {
   if (StaticPrefs::VRProcessEnabled()) {
     VRGPUChild::Shutdown();
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUParent::RecvUpdatePerfStatsCollectionMask(
+    const uint64_t& aMask) {
+  PerfStats::SetCollectionMask(static_cast<PerfStats::MetricMask>(aMask));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUParent::RecvCollectPerfStatsJSON(
+    CollectPerfStatsJSONResolver&& aResolver) {
+  aResolver(PerfStats::CollectLocalPerfStatsJSON());
   return IPC_OK();
 }
 
