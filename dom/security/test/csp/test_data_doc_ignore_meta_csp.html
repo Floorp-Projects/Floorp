@@ -24,9 +24,11 @@ function receiveMessage(event) {
   is(event.data.result, "dataDocCreated", "sanity: received msg from loaded frame");
 
   var frame = document.getElementById("testframe");
-  var principal = SpecialPowers.wrap(frame.contentDocument).nodePrincipal;
-  var cspJSON = principal.cspJSON;
-  is(cspJSON, "{\"csp-policies\":[]}", "there should be no CSP attached to the iframe");
+  var contentDoc = SpecialPowers.wrap(frame).contentDocument;
+  var cspOBJ = JSON.parse(contentDoc.cspJSON);
+  // make sure we got no policy attached
+  var policies = cspOBJ["csp-policies"];
+  is(policies.length, 0, "there should be no CSP attached to the iframe");
   SimpleTest.finish();
 }
 
