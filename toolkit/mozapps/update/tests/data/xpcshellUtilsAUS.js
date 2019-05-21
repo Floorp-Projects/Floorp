@@ -143,7 +143,6 @@ var gAddedEnvXRENoWindowsCrashDialog = false;
 var gEnvXPCOMDebugBreak;
 var gEnvXPCOMMemLeakLog;
 var gEnvDyldLibraryPath;
-var gEnvLdLibraryPath;
 
 const URL_HTTP_UPDATE_SJS = "http://test_details/";
 const DATA_URI_SPEC = Services.io.newFileURI(do_get_file("", false)).spec;
@@ -3656,6 +3655,15 @@ function getProcessArgs(aExtraArgs) {
     appBinPath = '"' + appBinPath + '"';
   }
 
+  // The profile must be specified for the tests that launch the application to
+  // run locally when the profiles.ini and installs.ini files already exist.
+  let profileDir = appBin.parent.parent;
+  profileDir.append("profile");
+  let profilePath = profileDir.path;
+  if (/ /.test(profilePath)) {
+    profilePath = '"' + profilePath + '"';
+  }
+
   let args;
   if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
     let launchScript = getLaunchScript();
@@ -3663,6 +3671,7 @@ function getProcessArgs(aExtraArgs) {
     launchScript.create(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_DIRECTORY);
 
     let scriptContents = "#! /bin/sh\n";
+    scriptContents += "export XRE_PROFILE_PATH=" + profilePath + "\n";
     scriptContents += appBinPath + " -no-remote -test-process-updates " +
                       aExtraArgs.join(" ") + " " + PIPE_TO_NULL;
     writeFile(launchScript, scriptContents);
@@ -3670,7 +3679,8 @@ function getProcessArgs(aExtraArgs) {
               scriptContents);
     args = [launchScript.path];
   } else {
-    args = ["/D", "/Q", "/C", appBinPath, "-no-remote", "-test-process-updates",
+    args = ["/D", "/Q", "/C", "set", "XRE_PROFILE_PATH=" + profilePath, "&&",
+            appBinPath, "-no-remote", "-test-process-updates",
             "-wait-for-browser"].concat(aExtraArgs).concat([PIPE_TO_NULL]);
   }
   return args;
@@ -4038,14 +4048,6 @@ function setEnvironment() {
     }
   }
 
-  if (AppConstants.platform == "linux" && gEnv.exists("LD_LIBRARY_PATH")) {
-    gEnvLdLibraryPath = gEnv.get("LD_LIBRARY_PATH");
-    debugDump("removing LD_LIBRARY_PATH environment variable");
-    // By removing the LD_LIBRARY_PATH environment variable this will test
-    // that setting the rpath for the updater is working properly.
-    gEnv.set("LD_LIBRARY_PATH", "");
-  }
-
   if (gEnv.exists("XPCOM_MEM_LEAK_LOG")) {
     gEnvXPCOMMemLeakLog = gEnv.get("XPCOM_MEM_LEAK_LOG");
     debugDump("removing the XPCOM_MEM_LEAK_LOG environment variable... " +
@@ -4106,12 +4108,6 @@ function resetEnvironment() {
       debugDump("removing DYLD_LIBRARY_PATH environment variable");
       gEnv.set("DYLD_LIBRARY_PATH", "");
     }
-  }
-
-  if (AppConstants.platform == "linux" && gEnvLdLibraryPath) {
-    debugDump("setting LD_LIBRARY_PATH environment variable value back " +
-              "to " + gEnvLdLibraryPath);
-    gEnv.set("LD_LIBRARY_PATH", gEnvLdLibraryPath);
   }
 
   if (AppConstants.platform == "win" && gAddedEnvXRENoWindowsCrashDialog) {
