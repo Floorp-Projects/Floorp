@@ -14,7 +14,6 @@ import kotlinx.coroutines.async
 import mozilla.components.browser.icons.decoder.AndroidIconDecoder
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.decoder.IconDecoder
-import mozilla.components.browser.icons.extension.AllSessionsObserver
 import mozilla.components.browser.icons.extension.IconSessionObserver
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
@@ -33,6 +32,7 @@ import mozilla.components.browser.icons.processor.MemoryIconProcessor
 import mozilla.components.browser.icons.utils.DiskCache
 import mozilla.components.browser.icons.utils.MemoryCache
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.utils.AllSessionsObserver
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.support.base.log.logger.Logger
@@ -126,8 +126,8 @@ class BrowserIcons(
             onSuccess = { extension ->
                 Logger.debug("Installed browser-icons extension")
 
-                AllSessionsObserver.register(
-                    sessionManager, IconSessionObserver(this, sessionManager, extension))
+                AllSessionsObserver(sessionManager, IconSessionObserver(this, sessionManager, extension))
+                    .start()
             },
             onError = { _, throwable ->
                 Logger.error("Could not install browser-icons extension", throwable)

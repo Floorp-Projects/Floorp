@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.icons.extension
+package mozilla.components.browser.session.utils
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.never
@@ -25,7 +27,8 @@ class AllSessionsObserverTest {
 
         val observer: Session.Observer = mock()
 
-        AllSessionsObserver.register(sessionManager, observer)
+        AllSessionsObserver(sessionManager, observer)
+            .start()
 
         verify(session1).register(observer)
         verify(session2).register(observer)
@@ -37,7 +40,8 @@ class AllSessionsObserverTest {
 
         val observer: Session.Observer = mock()
 
-        AllSessionsObserver.register(sessionManager, observer)
+        AllSessionsObserver(sessionManager, observer)
+            .start()
 
         val session1: Session = mock()
         val session2: Session = mock()
@@ -61,7 +65,8 @@ class AllSessionsObserverTest {
 
         val observer: Session.Observer = mock()
 
-        AllSessionsObserver.register(sessionManager, observer)
+        AllSessionsObserver(sessionManager, observer)
+            .start()
 
         sessionManager.remove(session1)
 
@@ -77,7 +82,8 @@ class AllSessionsObserverTest {
         val sessionManager = SessionManager(engine = mock())
 
         val observer: Session.Observer = mock()
-        AllSessionsObserver.register(sessionManager, observer)
+        AllSessionsObserver(sessionManager, observer)
+            .start()
 
         val session1: Session = mock()
         val session2: Session = mock()
@@ -105,7 +111,8 @@ class AllSessionsObserverTest {
         }
 
         val observer: Session.Observer = mock()
-        AllSessionsObserver.register(sessionManager, observer)
+        AllSessionsObserver(sessionManager, observer)
+            .start()
 
         verify(session1).register(observer)
         verify(session2).register(observer)
@@ -114,5 +121,33 @@ class AllSessionsObserverTest {
 
         verify(session1).unregister(observer)
         verify(session2).unregister(observer)
+    }
+
+    @Test
+    fun `Observer does not get notified after stopping`() {
+        val session1: Session = spy(Session("https://www.mozilla.org"))
+
+        val sessionManager = SessionManager(engine = mock()).apply {
+            add(session1)
+        }
+
+        val observer: Session.Observer = mock()
+
+        val allObserver = AllSessionsObserver(sessionManager, observer).apply {
+            start()
+        }
+
+        verify(session1).register(observer)
+
+        session1.title = "Hello World"
+
+        verify(observer).onTitleChanged(any(), eq("Hello World"))
+
+        allObserver.stop()
+
+        session1.title = "Hello Test"
+
+        verify(observer, never()).onTitleChanged(any(), eq("Hello Test"))
+        verify(session1).unregister(observer)
     }
 }

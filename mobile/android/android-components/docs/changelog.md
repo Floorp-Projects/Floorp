@@ -21,6 +21,9 @@ permalink: /changelog/
 * **support-test**
   * Added `testContext` property for retrieving application context from tests.
 
+* **browser-session**
+  * Added `AllSessionsObserver` helper that automatically subscribes and unsubscribes to all `Session` instances that get added/removed.
+
 # 0.53.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.52.0...v0.53.0)
