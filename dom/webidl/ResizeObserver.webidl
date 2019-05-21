@@ -29,8 +29,7 @@ interface ResizeObserver {
 
 callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
 
-[Constructor(Element target),
- Pref="layout.css.resizeobserver.enabled"]
+[Pref="layout.css.resizeobserver.enabled"]
 interface ResizeObserverEntry {
     readonly attribute Element target;
     readonly attribute DOMRectReadOnly contentRect;

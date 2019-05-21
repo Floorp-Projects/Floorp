@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ResizeObserver.h"
 
+#include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsSVGUtils.h"
@@ -271,13 +272,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ResizeObserverEntry)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-already_AddRefed<ResizeObserverEntry> ResizeObserverEntry::Constructor(
-    const GlobalObject& aGlobal, Element& aTarget, ErrorResult& aRv) {
-  RefPtr<ResizeObserverEntry> observerEntry =
-      new ResizeObserverEntry(aGlobal.GetAsSupports(), aTarget);
-  return observerEntry.forget();
-}
-
 void ResizeObserverEntry::SetBorderBoxSize(const nsSize& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
@@ -292,7 +286,7 @@ void ResizeObserverEntry::SetContentRectAndSize(const nsSize& aSize) {
   // Per the spec, we need to use the top-left padding offset as the origin of
   // our contentRect.
   nsRect rect(nsPoint(padding.left, padding.top), aSize);
-  RefPtr<DOMRect> contentRect = new DOMRect(mTarget);
+  RefPtr<DOMRect> contentRect = new DOMRect(this);
   contentRect->SetLayoutRect(rect);
   mContentRect = contentRect.forget();
 

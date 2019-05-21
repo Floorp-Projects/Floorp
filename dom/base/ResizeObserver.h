@@ -188,9 +188,6 @@ class ResizeObserverEntry final : public nsISupports, public nsWrapperCache {
     return ResizeObserverEntry_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  static already_AddRefed<ResizeObserverEntry> Constructor(
-      const GlobalObject& global, Element& target, ErrorResult& aRv);
-
   Element* Target() const { return mTarget; }
 
   /**
