@@ -138,7 +138,7 @@ class TaskBuilder(object):
         )
 
     def craft_beetmover_task(
-        self, build_task_id, wait_on_builds_task_id, version, artifact, artifact_name, is_snapshot, is_staging
+        self, build_task_id, wait_on_builds_task_id, version, artifacts, component_name, is_snapshot, is_staging
     ):
         if is_snapshot:
             if is_staging:
@@ -157,18 +157,26 @@ class TaskBuilder(object):
 
         version = version.lstrip('v')
         payload = {
+            "artifactMap": [{
+                "locale": "en-US",
+                "paths": {
+                    artifact['taskcluster_path']: {
+                        'checksums_path': '',  # TODO beetmover marks this as required even though it's not needed here
+                        'destinations': [artifact['maven_destination']]
+                    } for artifact in artifacts
+                },
+                "taskId": build_task_id,
+            }],
             "maxRunTime": 600,
             "upstreamArtifacts": [{
-                'paths': [artifact],
+                'paths': [artifact['taskcluster_path'] for artifact in artifacts],
                 'taskId': build_task_id,
                 'taskType': 'build',
-                'zipExtract': True,
             }],
             "releaseProperties": {
                 "appName": "snapshot_components" if is_snapshot else "components",
             },
             "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
-            "artifact_id": artifact_name
         }
 
         return self._craft_default_task_definition(
@@ -180,8 +188,8 @@ class TaskBuilder(object):
                 "project:mobile:android-components:releng:beetmover:bucket:{}".format(bucket_name),
                 "project:mobile:android-components:releng:beetmover:action:push-to-maven",
             ],
-            name="Android Components - Publish Module :{} via beetmover".format(artifact_name),
-            description="Publish release module {} to {}".format(artifact_name, bucket_public_url),
+            name="Android Components - Publish Module :{} via beetmover".format(component_name),
+            description="Publish release module {} to {}".format(component_name, bucket_public_url),
             payload=payload
         )
 

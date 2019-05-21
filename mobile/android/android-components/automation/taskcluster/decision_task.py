@@ -226,14 +226,18 @@ def _get_release_artifacts(module_definition, version):
     artifacts = []
     for f in files:
         for e in extensions:
-            artifact_filename = '{}-{}{}{}'.format(
-                module_definition['name'], version, f, e)
+            artifact_filename = '{}-{}{}{}'.format(module_definition['name'], version, f, e)
             artifacts.append({
                 'taskcluster_path': 'public/build/{}'.format(artifact_filename),
                 'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
                     os.path.abspath(module_definition['path']),
                     module_definition['name'],
-                    version, artifact_filename)
+                    version, artifact_filename),
+                'maven_destination': 'maven2/org/mozilla/components/{}/{}/{}'.format(
+                    module_definition['name'],
+                    version,
+                    artifact_filename,
+                )
             })
 
     return artifacts
@@ -265,10 +269,10 @@ def release(module_definitions, is_snapshot, is_staging):
 
         # TODO: add signing tasks as well
 
-        # beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
-            # build_task_id, wait_on_builds_task_id, version, artifact_info['artifact'],
-            # artifact_info['name'], is_snapshot, is_staging
-        # )
+        beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
+            build_task_id, wait_on_builds_task_id, version, artifacts,
+            module_definition['name'], is_snapshot, is_staging
+        )
 
     wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_wait_on_builds_task(build_tasks.keys())
 
