@@ -114,7 +114,7 @@ add_task(async function test() {
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
     // Load the page in 3 different contexts and set a cookie
     // which should only be visible in that context.
-    let cookie = USER_CONTEXTS[userContextId];
+    let cookie = USER_CONTEXTS[userContextId] + "=1";
 
     // Open our tab in the given user context.
     let { tab, browser } = await openTabInUserContext(userContextId);
