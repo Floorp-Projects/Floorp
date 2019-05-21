@@ -30,7 +30,6 @@ import mozilla.components.service.fxa.SharedPrefAccountStorage
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.CoroutineContext
 
-import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -90,7 +89,7 @@ open class FxaAccountManager(
     private val deviceTuple: DeviceTuple,
     syncManager: SyncManager? = null
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
-    private val logTag = "FirefoxAccountStateMachine"
+    private val logger = Logger("FirefoxAccountStateMachine")
 
     private val oauthObservers = object : Observable<OAuthObserver> by ObserverRegistry() {}
 
@@ -250,25 +249,16 @@ open class FxaAccountManager(
             val transitionInto = nextState(state, toProcess)
 
             if (transitionInto == null) {
-                Log.log(
-                    tag = logTag,
-                    message = "Got invalid event $toProcess for state $state."
-                )
+                logger.warn("Got invalid event $toProcess for state $state.")
                 continue
             }
 
-            Log.log(
-                tag = logTag,
-                message = "Processing event $toProcess for state $state. Next state is $transitionInto"
-            )
+            logger.info("Processing event $toProcess for state $state. Next state is $transitionInto")
 
             state = transitionInto
 
             stateActions(state, toProcess)?.let { successiveEvent ->
-                Log.log(
-                    tag = logTag,
-                    message = "Ran '$toProcess' side-effects for state $state, got successive event $successiveEvent"
-                )
+                logger.info( "Ran '$toProcess' side-effects for state $state, got successive event $successiveEvent")
                 eventQueue.add(successiveEvent)
             }
         } while (!eventQueue.isEmpty())
@@ -294,12 +284,7 @@ open class FxaAccountManager(
                         val savedAccount = try {
                             getAccountStorage().read()
                         } catch (e: FxaException) {
-                            Log.log(
-                                tag = logTag,
-                                priority = Log.Priority.ERROR,
-                                throwable = e,
-                                message = "Failed to load saved account."
-                            )
+                            logger.error("Failed to load saved account.", e)
 
                             notifyObservers { onError(FailedToLoadAccountException(e)) }
 
@@ -364,16 +349,22 @@ open class FxaAccountManager(
             AccountState.AuthenticatedNoProfile -> {
                 when (via) {
                     is Event.Authenticated -> {
+                        logger.info("Registering persistence callback")
                         account.registerPersistenceCallback(statePersistenceCallback)
 
+                        logger.info("Completing oauth flow")
                         account.completeOAuthFlow(via.code, via.state).await()
 
+                        logger.info("Registering device constellation observer")
                         account.deviceConstellation().register(deviceEventsIntegration)
 
+                        logger.info("Initializing device")
                         // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
                         account.deviceConstellation().initDeviceAsync(
                             deviceTuple.name, deviceTuple.type, deviceTuple.capabilities
                         ).await()
+
+                        logger.info("Starting periodic refresh of the device constellation")
                         account.deviceConstellation().startPeriodicRefresh()
 
                         notifyObservers { onAuthenticated(account) }
@@ -381,10 +372,16 @@ open class FxaAccountManager(
                         Event.FetchProfile
                     }
                     Event.AccountRestored -> {
+                        logger.info("Registering persistence callback")
                         account.registerPersistenceCallback(statePersistenceCallback)
+
+                        logger.info("Registering device constellation observer")
                         account.deviceConstellation().register(deviceEventsIntegration)
 
+                        logger.info("Ensuring device capabilities")
                         account.deviceConstellation().ensureCapabilitiesAsync(deviceTuple.capabilities).await()
+
+                        logger.info("Starting periodic refresh of the device constellation")
                         account.deviceConstellation().startPeriodicRefresh()
 
                         notifyObservers { onAuthenticated(account) }
@@ -394,16 +391,11 @@ open class FxaAccountManager(
                     Event.FetchProfile -> {
                         // Profile fetching and account authentication issues:
                         // https://github.com/mozilla/application-services/issues/483
-                        Log.log(tag = logTag, message = "Fetching profile...")
+                        logger.info("Fetching profile...")
                         profile = try {
                             account.getProfile(true).await()
                         } catch (e: FxaException) {
-                            Log.log(
-                                Log.Priority.ERROR,
-                                message = "Failed to get profile for authenticated account",
-                                throwable = e,
-                                tag = logTag
-                            )
+                            logger.error("Failed to get profile for authenticated account", e)
 
                             notifyObservers { onError(e) }
 
