@@ -94,10 +94,8 @@ function checkResults(result) {
     try {
       // get the csp in JSON notation from the principal
       var frame = document.getElementById("testframe");
-      var principal = SpecialPowers.wrap(frame.contentDocument).nodePrincipal;
-      var cspJSON = principal.cspJSON;
-      var cspOBJ = JSON.parse(cspJSON);
-
+      var contentDoc = SpecialPowers.wrap(frame.contentDocument);
+      var cspOBJ = JSON.parse(contentDoc.cspJSON);
       // make sure that the speculative policy and the actual policy
       // are not appended twice.
       var policies = cspOBJ["csp-policies"];

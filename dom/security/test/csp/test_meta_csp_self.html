@@ -31,11 +31,9 @@ function receiveMessage(event) {
   is(img.height, 0, "img should be blocked - height should be 0");
 
   // sanity check, make sure 'self' translates into data
-  var principal = SpecialPowers.wrap(frame).contentDocument.nodePrincipal;
-  var cspJSON = principal.cspJSON;
-
+  var contentDoc = SpecialPowers.wrap(frame).contentDocument;
   // parse the cspJSON in a csp-object
-  var cspOBJ = JSON.parse(cspJSON);
+  var cspOBJ = JSON.parse(contentDoc.cspJSON);
   ok(cspOBJ, "sanity: was able to parse the CSP JSON");
 
   // make sure we only got one policy

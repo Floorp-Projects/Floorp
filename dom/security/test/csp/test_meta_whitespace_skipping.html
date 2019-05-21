@@ -34,8 +34,8 @@ function checkResults(result) {
   try {
     // get the csp in JSON notation from the principal
     var frame = document.getElementById("testframe");
-    var principal = SpecialPowers.wrap(frame.contentDocument).nodePrincipal;
-    var cspJSON = principal.cspJSON;
+    var contentDoc = SpecialPowers.wrap(frame.contentDocument);
+    var cspJSON = contentDoc.cspJSON;
     ok(cspJSON, "CSP applied through meta element");
 
     // parse the cspJSON in a csp-object

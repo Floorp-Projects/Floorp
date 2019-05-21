@@ -35,8 +35,7 @@ function verifyResult(aTestName, aBrowser, aDataURI, aPID, aSamePID) {
     }
 
     // finally, evaluate that the CSP was set.
-    let principal = channel.loadInfo.triggeringPrincipal;
-    let cspOBJ = JSON.parse(principal.cspJSON);
+    let cspOBJ = JSON.parse(content.document.cspJSON);
     let policies = cspOBJ["csp-policies"];
     is(policies.length, 1, "should be one policy");
     let policy = policies[0];
