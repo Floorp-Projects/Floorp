@@ -467,6 +467,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   border-bottom: 1px solid @appmenuWarningBorderColor@;
 }
 
+.addon-banner-item:focus,
 .addon-banner-item:hover {
   background-color: @appmenuWarningBackgroundColorHover@;
 }
@@ -947,6 +948,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   background-color: hsla(96,65%,75%,.5);
 }
 
+.panel-banner-item:not([disabled]):focus,
 .panel-banner-item:not([disabled]):hover {
   background-color: hsla(96,65%,75%,.8);
 }
@@ -960,6 +962,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   color: @appmenuWarningColorBrightText@ !important;
 }
 
+:root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):focus,
 :root[lwt-popup-brighttext] .panel-banner-item:not([disabled]):hover {
   background-color: rgba(48,230,11,.15);
 }
@@ -972,6 +975,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   background-color: @appmenuWarningBackgroundColor@;
 }
 
+.panel-banner-item[notificationid="update-unsupported"]:not([disabled]):focus,
 .panel-banner-item[notificationid="update-unsupported"]:not([disabled]):hover {
   background-color: @appmenuWarningBackgroundColorHover@;
 }
@@ -984,6 +988,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   background-color: @appmenuWarningBackgroundColorBrightText@;
 }
 
+:root[lwt-popup-brighttext] .panel-banner-item[notificationid="update-unsupported"]:not([disabled]):focus,
 :root[lwt-popup-brighttext] .panel-banner-item[notificationid="update-unsupported"]:not([disabled]):hover {
   background-color: @appmenuWarningBackgroundColorHoverBrightText@;
 }
