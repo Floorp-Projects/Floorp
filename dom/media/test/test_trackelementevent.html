@@ -7,56 +7,58 @@
 </head>
 <body>
 <script type="text/javascript">
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
-  function() {
-    var video = document.createElement("video");
-    video.src = "seek.webm";
-    video.preload = "auto";
 
-    var trackOne = document.createElement("track");
-    trackOne.src = "basic.vtt";
-    trackOne.kind = "subtitles";
+function runTest() {
+  var video = document.createElement("video");
+  video.src = "seek.webm";
+  video.preload = "auto";
 
-    var trackTwo = document.createElement("track");
-    trackTwo.src = "bad-signature.vtt";
-    trackTwo.kind = "captions";
+  var trackOne = document.createElement("track");
+  trackOne.src = "basic.vtt";
+  trackOne.kind = "subtitles";
 
-    var trackThree = document.createElement("track");
-    trackThree.src = "bad.vtt";
-    trackThree.kind = "chapters";
+  var trackTwo = document.createElement("track");
+  trackTwo.src = "bad-signature.vtt";
+  trackTwo.kind = "captions";
 
-    var events = 0;
-    function trackOneEvent() {
-      ok(true, "A load event for trackOne should have happened.");
-      events++ && events == 3 && SimpleTest.finish();
-    }
-    function trackTwoEvent() {
-      ok(true, "An error event for trackTwo should have happened.");
-      events++ && events == 3 && SimpleTest.finish();
-    }
-    function trackThreeEvent() {
-      ok(true, "An error event for trackThree should have happened.");
-      events++ && events == 3 && SimpleTest.finish();
-    }
+  var trackThree = document.createElement("track");
+  trackThree.src = "bad.vtt";
+  trackThree.kind = "chapters";
 
-    function shouldNotBeCalled() {
-      ok(false, "Event should not have been called.");
-    }
-
-    trackOne.addEventListener("load", trackOneEvent);
-    trackOne.addEventListener("error", shouldNotBeCalled)
-    trackTwo.addEventListener("load", shouldNotBeCalled);
-    trackTwo.addEventListener("error", trackTwoEvent);
-    trackThree.addEventListener("load", shouldNotBeCalled);
-    trackThree.addEventListener("error", trackThreeEvent);
-
-    document.appendChild(video);
-    video.appendChild(trackOne);
-    video.appendChild(trackTwo);
-    video.appendChild(trackThree);
+  var events = 0;
+  function trackOneEvent() {
+    ok(true, "A load event for trackOne should have happened.");
+    events++ && events == 3 && SimpleTest.finish();
   }
-);
+  function trackTwoEvent() {
+    ok(true, "An error event for trackTwo should have happened.");
+    events++ && events == 3 && SimpleTest.finish();
+  }
+  function trackThreeEvent() {
+    ok(true, "An error event for trackThree should have happened.");
+    events++ && events == 3 && SimpleTest.finish();
+  }
+
+  function shouldNotBeCalled() {
+    ok(false, "Event should not have been called.");
+  }
+
+  trackOne.addEventListener("load", trackOneEvent);
+  trackOne.addEventListener("error", shouldNotBeCalled)
+  trackTwo.addEventListener("load", shouldNotBeCalled);
+  trackTwo.addEventListener("error", trackTwoEvent);
+  trackThree.addEventListener("load", shouldNotBeCalled);
+  trackThree.addEventListener("error", trackThreeEvent);
+
+  document.appendChild(video);
+  video.appendChild(trackOne);
+  video.appendChild(trackTwo);
+  video.appendChild(trackThree);
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = runTest;
+
 </script>
 </body>
 </html>
