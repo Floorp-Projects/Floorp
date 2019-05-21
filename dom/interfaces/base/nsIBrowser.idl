@@ -5,6 +5,7 @@
 
 interface nsIContentSecurityPolicy;
 interface nsIPrincipal;
+interface nsIURI;
 interface nsIWebProgress;
 
 webidl FrameLoader;
@@ -80,4 +81,26 @@ interface nsIBrowser : nsISupports
 
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIContentSecurityPolicy csp;
+
+  /**
+   * Whether or not the browser is in the process of an nsIWebNavigation
+   * navigation method.
+   */
+  attribute boolean isNavigating;
+
+  /**
+   * Whether or not the character encoding menu may be enabled.
+   */
+  attribute boolean mayEnableCharacterEncodingMenu;
+
+  /**
+   * Called by Gecko to update the browser when its state changes.
+   *
+   * @param aCharset the new character set of the document
+   * @param aDocumentURI the URI of the current document
+   * @param aContentType the content type of the document
+   */
+  void updateForStateChange(in AString aCharset,
+                            in nsIURI aDocumentURI,
+                            in AString aContentType);
 };
