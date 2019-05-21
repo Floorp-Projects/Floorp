@@ -166,6 +166,7 @@ EXPORTS += [
     'VideoSegment.h',
     'VideoUtils.h',
     'VorbisUtils.h',
+    'WavDumper.h',
     'XiphExtradata.h',
 ]
 
