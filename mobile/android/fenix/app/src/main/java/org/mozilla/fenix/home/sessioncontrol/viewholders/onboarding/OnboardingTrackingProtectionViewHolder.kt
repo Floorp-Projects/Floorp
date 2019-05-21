@@ -38,13 +38,10 @@ class OnboardingTrackingProtectionViewHolder(val view: View) : RecyclerView.View
 
     private fun updateTrackingProtectionSetting(enabled: Boolean) {
         Settings.getInstance(view.context).setTrackingProtection(enabled)
-        with(view.context.components.core) {
-            val policy = createTrackingProtectionPolicy(enabled)
-            engine.settings.trackingProtectionPolicy = policy
-            sessionManager.sessions.forEach {
-                if (enabled) sessionManager.getEngineSession(it)?.enableTrackingProtection(policy)
-                else sessionManager.getEngineSession(it)?.disableTrackingProtection()
-            }
+        with(view.context.components) {
+            val policy = core.createTrackingProtectionPolicy(enabled)
+            useCases.settingsUseCases.updateTrackingProtection.invoke(policy)
+            useCases.sessionUseCases.reload.invoke()
         }
 
         view.context.components.useCases.sessionUseCases.reload.invoke()

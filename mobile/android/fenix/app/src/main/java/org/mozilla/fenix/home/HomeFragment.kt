@@ -75,7 +75,7 @@ class HomeFragment : Fragment(), CoroutineScope {
     private var homeMenu: HomeMenu? = null
 
     var deleteSessionJob: (suspend () -> Unit)? = null
-    private var layoutManagerSate: Parcelable? = null
+    private var layoutManagerState: Parcelable? = null
 
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
@@ -186,23 +186,23 @@ class HomeFragment : Fragment(), CoroutineScope {
     }
 
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+
         savedInstanceState?.apply {
-            layoutManagerSate = getParcelable(KEY_LAYOUT_MANAGER_STATE)
+            layoutManagerState = getParcelable(KEY_LAYOUT_MANAGER_STATE)
             val progress = getFloat(KEY_MOTION_LAYOUT_PROGRESS)
             homeLayout.progress = if (progress > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
         }
-
-        super.onViewStateRestored(savedInstanceState)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
         sessionControlComponent.view.layoutManager!!.onSaveInstanceState()!!.apply {
             outState.putParcelable(KEY_LAYOUT_MANAGER_STATE, this)
         }
 
         outState.putFloat(KEY_MOTION_LAYOUT_PROGRESS, homeLayout.progress)
-
-        super.onSaveInstanceState(outState)
     }
 
     override fun onDestroyView() {
@@ -227,11 +227,11 @@ class HomeFragment : Fragment(), CoroutineScope {
                         is SessionControlAction.Collection -> handleCollectionAction(it.action)
                         is SessionControlAction.Onboarding -> handleOnboardingAction(it.action)
                         is SessionControlAction.ReloadData -> {
-                            layoutManagerSate?.also { parcelable ->
+                            layoutManagerState?.also { parcelable ->
                                 sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
                             }
 
-                            layoutManagerSate = null
+                            layoutManagerState = null
                         }
                     }
                 }
