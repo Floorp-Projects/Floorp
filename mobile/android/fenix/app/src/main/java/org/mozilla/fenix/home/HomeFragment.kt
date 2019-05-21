@@ -7,7 +7,6 @@ package org.mozilla.fenix.home
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -82,7 +81,6 @@ class HomeFragment : Fragment(), CoroutineScope {
     private var homeMenu: HomeMenu? = null
 
     var deleteSessionJob: (suspend () -> Unit)? = null
-    private var layoutManagerState: Parcelable? = null
 
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
@@ -192,26 +190,6 @@ class HomeFragment : Fragment(), CoroutineScope {
         homeDividerShadow.bringToFront()
     }
 
-    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-        super.onViewStateRestored(savedInstanceState)
-
-        savedInstanceState?.apply {
-            layoutManagerState = getParcelable(KEY_LAYOUT_MANAGER_STATE)
-            val progress = getFloat(KEY_MOTION_LAYOUT_PROGRESS)
-            homeLayout.progress = if (progress > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
-        }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-
-        sessionControlComponent.view.layoutManager!!.onSaveInstanceState()!!.apply {
-            outState.putParcelable(KEY_LAYOUT_MANAGER_STATE, this)
-        }
-
-        outState.putFloat(KEY_MOTION_LAYOUT_PROGRESS, homeLayout.progress)
-    }
-
     override fun onDestroyView() {
         homeMenu = null
         job.cancel()
@@ -220,6 +198,14 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+        val homeViewModel = activity?.run {
+            ViewModelProviders.of(this).get(HomeScreenViewModel::class.java)
+        }
+        homeViewModel?.layoutManagerState?.also { parcelable ->
+            sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
+        }
+        homeLayout?.progress =
+            if (homeViewModel?.motionLayoutProgress ?: 0F > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
         (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
@@ -234,11 +220,13 @@ class HomeFragment : Fragment(), CoroutineScope {
                         is SessionControlAction.Collection -> handleCollectionAction(it.action)
                         is SessionControlAction.Onboarding -> handleOnboardingAction(it.action)
                         is SessionControlAction.ReloadData -> {
-                            layoutManagerState?.also { parcelable ->
+                            val homeViewModel = activity?.run {
+                                ViewModelProviders.of(this).get(HomeScreenViewModel::class.java)
+                            }
+                            homeViewModel?.layoutManagerState?.also { parcelable ->
                                 sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
                             }
-
-                            layoutManagerState = null
+                            homeViewModel?.layoutManagerState = null
                         }
                     }
                 }
@@ -278,7 +266,9 @@ class HomeFragment : Fragment(), CoroutineScope {
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
             is TabAction.SaveTabGroup -> {
-                if ((activity as HomeActivity).browsingModeManager.isPrivate) { return }
+                if ((activity as HomeActivity).browsingModeManager.isPrivate) {
+                    return
+                }
                 showCollectionCreationFragment(action.selectedTabSessionId)
             }
             is TabAction.Select -> {
@@ -395,6 +385,12 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     override fun onPause() {
         super.onPause()
+        val homeViewModel = activity?.run {
+            ViewModelProviders.of(this).get(HomeScreenViewModel::class.java)
+        }
+        homeViewModel?.layoutManagerState =
+            sessionControlComponent.view.layoutManager?.onSaveInstanceState()
+        homeViewModel?.motionLayoutProgress = homeLayout?.progress ?: 0F
         sessionObserver?.let {
             requireComponents.core.sessionManager.unregister(it)
         }
@@ -582,12 +578,12 @@ class HomeFragment : Fragment(), CoroutineScope {
         Mode.Onboarding
     } else if ((activity as HomeActivity).browsingModeManager.isPrivate) {
         Mode.Private
-    } else { Mode.Normal }
+    } else {
+        Mode.Normal
+    }
 
     companion object {
         private const val toolbarPaddingDp = 12f
-        private const val KEY_MOTION_LAYOUT_PROGRESS = "motionLayout.progress"
-        private const val KEY_LAYOUT_MANAGER_STATE = "layoutManager.state"
         private const val MOTION_LAYOUT_PROGRESS_ROUND_POINT = 0.25f
     }
 }
