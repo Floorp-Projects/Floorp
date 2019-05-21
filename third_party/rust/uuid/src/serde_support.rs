@@ -13,7 +13,6 @@ use core::fmt;
 use prelude::*;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-#[cfg(feature = "serde")]
 impl Serialize for Uuid {
     fn serialize<S: Serializer>(
         &self,
@@ -28,7 +27,6 @@ impl Serialize for Uuid {
     }
 }
 
-#[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for Uuid {
     fn deserialize<D: Deserializer<'de>>(
         deserializer: D,
@@ -88,8 +86,8 @@ impl<'de> Deserialize<'de> for Uuid {
     }
 }
 
-#[cfg(all(test, feature = "serde"))]
-mod serde_tests {
+#[cfg(test)]
+mod tests {
     use serde_test;
 
     use prelude::*;
