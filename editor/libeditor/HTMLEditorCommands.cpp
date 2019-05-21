@@ -77,11 +77,6 @@ nsresult StateUpdatingCommandBase::DoCommand(Command aCommand,
   return ToggleState(MOZ_KnownLive(tagName), MOZ_KnownLive(htmlEditor));
 }
 
-nsresult StateUpdatingCommandBase::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult StateUpdatingCommandBase::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -127,11 +122,6 @@ nsresult PasteNoFormattingCommand::DoCommand(Command aCommand,
   // Known live because we hold a ref above in "editor"
   return MOZ_KnownLive(htmlEditor)
       ->PasteNoFormatting(nsIClipboard::kGlobalClipboard);
-}
-
-nsresult PasteNoFormattingCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult PasteNoFormattingCommand::GetCommandStateParams(
@@ -402,12 +392,6 @@ nsresult RemoveListCommand::DoCommand(Command aCommand,
   return htmlEditor->RemoveList(EmptyString());
 }
 
-nsresult RemoveListCommand::DoCommandParams(Command aCommand,
-                                            nsCommandParams* aParams,
-                                            TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult RemoveListCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -446,12 +430,6 @@ nsresult IndentCommand::DoCommand(Command aCommand,
   return NS_OK;
 }
 
-nsresult IndentCommand::DoCommandParams(Command aCommand,
-                                        nsCommandParams* aParams,
-                                        TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult IndentCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -488,12 +466,6 @@ nsresult OutdentCommand::DoCommand(Command aCommand,
     return rv;
   }
   return NS_OK;
-}
-
-nsresult OutdentCommand::DoCommandParams(Command aCommand,
-                                         nsCommandParams* aParams,
-                                         TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult OutdentCommand::GetCommandStateParams(
@@ -985,12 +957,6 @@ nsresult DecreaseZIndexCommand::DoCommand(Command aCommand,
   return htmlEditor->AddZIndex(-1);
 }
 
-nsresult DecreaseZIndexCommand::DoCommandParams(Command aCommand,
-                                                nsCommandParams* aParams,
-                                                TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult DecreaseZIndexCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -1028,12 +994,6 @@ nsresult IncreaseZIndexCommand::DoCommand(Command aCommand,
   return htmlEditor->AddZIndex(1);
 }
 
-nsresult IncreaseZIndexCommand::DoCommandParams(Command aCommand,
-                                                nsCommandParams* aParams,
-                                                TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult IncreaseZIndexCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -1067,12 +1027,6 @@ nsresult RemoveStylesCommand::DoCommand(Command aCommand,
     return NS_OK;
   }
   return MOZ_KnownLive(htmlEditor)->RemoveAllInlineProperties();
-}
-
-nsresult RemoveStylesCommand::DoCommandParams(Command aCommand,
-                                              nsCommandParams* aParams,
-                                              TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult RemoveStylesCommand::GetCommandStateParams(
@@ -1110,11 +1064,6 @@ nsresult IncreaseFontSizeCommand::DoCommand(Command aCommand,
   return MOZ_KnownLive(htmlEditor)->IncreaseFontSize();
 }
 
-nsresult IncreaseFontSizeCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
-}
-
 nsresult IncreaseFontSizeCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
@@ -1148,11 +1097,6 @@ nsresult DecreaseFontSizeCommand::DoCommand(Command aCommand,
     return NS_OK;
   }
   return MOZ_KnownLive(htmlEditor)->DecreaseFontSize();
-}
-
-nsresult DecreaseFontSizeCommand::DoCommandParams(
-    Command aCommand, nsCommandParams* aParams, TextEditor& aTextEditor) const {
-  return DoCommand(aCommand, aTextEditor);
 }
 
 nsresult DecreaseFontSizeCommand::GetCommandStateParams(
@@ -1260,19 +1204,14 @@ nsresult InsertTagCommand::DoCommand(Command aCommand,
   }
   nsresult rv =
       MOZ_KnownLive(htmlEditor)->InsertElementAtSelection(newElement, true);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertElementAtSelection() failed");
+  return rv;
 }
 
 nsresult InsertTagCommand::DoCommandParams(Command aCommand,
                                            nsCommandParams* aParams,
                                            TextEditor& aTextEditor) const {
-  // inserting an hr shouldn't have an parameters, just call DoCommand for that
-  if (aCommand == Command::InsertHorizontalRule) {
-    return DoCommand(aCommand, aTextEditor);
-  }
+  MOZ_ASSERT(aCommand != Command::InsertHorizontalRule);
 
   if (NS_WARN_IF(!aParams)) {
     return NS_ERROR_INVALID_ARG;

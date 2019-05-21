@@ -407,12 +407,6 @@ nsresult DocumentStateCommand::DoCommand(Command aCommand,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult DocumentStateCommand::DoCommandParams(Command aCommand,
-                                               nsCommandParams* aParams,
-                                               TextEditor& aTextEditor) const {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult DocumentStateCommand::GetCommandStateParams(
     Command aCommand, nsCommandParams& aParams, TextEditor* aTextEditor,
     nsIEditingSession* aEditingSession) const {
