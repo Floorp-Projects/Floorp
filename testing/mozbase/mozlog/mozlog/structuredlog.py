@@ -230,8 +230,7 @@ class StructuredLogger(object):
         action = raw_data["action"]
         converted_data = convertor_registry[action].convert_known(**raw_data)
         for k, v in six.iteritems(raw_data):
-            if (k not in converted_data and
-                    k not in convertor_registry[action].optional_args):
+            if k not in converted_data:
                 converted_data[k] = v
 
         data = self._make_log_data(action, converted_data)
