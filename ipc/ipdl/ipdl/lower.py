@@ -4439,10 +4439,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendmsg = (self.setMessageFlags(md, self.replyvar, seqno=seqno)
                    + [self.logMessage(md, self.replyvar, 'Sending reply '),
                        StmtDecl(Decl(Type.BOOL, sendok.name),
-                                init=ExprCall(
-                                    ExprSelect(self.protocol.callGetChannel(),
-                                               '->', 'Send'),
-                                    args=[self.replyvar])),
+                                init=ExprCall(ExprVar('ChannelSend'),
+                                              args=[self.replyvar])),
                        failifsendok])
         if len(md.returns) > 1:
             resolvedecl = Decl(_tuple([p.moveType(self.side) for p in md.returns],
@@ -4704,10 +4702,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         stmts.append(Whitespace.NL)
 
         # Generate the actual call expression.
-        send = ExprSelect(self.protocol.callGetChannel(actor), '->', 'Send')
+        send = ExprVar('ChannelSend')
+        if actor is not None:
+            send = ExprSelect(actor, '->', send.name)
         if md.returns:
             stmts.append(StmtExpr(ExprCall(send, args=[msgexpr,
-                                                       ExprVar('this'),
                                                        ExprMove(resolvefn),
                                                        ExprMove(rejectfn)])))
             retvar = None
@@ -4719,6 +4718,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return (retvar, stmts)
 
     def sendBlocking(self, md, msgexpr, replyexpr, actor=None):
+        send = ExprVar('ChannelSend')
+        if md.decl.type.isInterrupt():
+            send = ExprVar('ChannelCall')
+        if actor is not None:
+            send = ExprSelect(actor, '->', send.name)
+
         sendok = ExprVar('sendok__')
         return (
             sendok,
@@ -4733,12 +4738,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                        ExprLiteral.String(self.protocol.name + "::" +
                                                           md.prettyMsgName()),
                                        ExprVar('OTHER')])),
-                    StmtExpr(ExprAssn(sendok,
-                                      ExprCall(
-                                          ExprSelect(self.protocol.callGetChannel(actor),
-                                                     '->',
-                                                     _sendPrefix(md.decl.type)),
-                                          args=[msgexpr, ExprAddrOf(replyexpr)]))),
+                    StmtExpr(ExprAssn(sendok, ExprCall(send,
+                                                       args=[msgexpr,
+                                                             ExprAddrOf(replyexpr)]))),
                 ])
                 ])
         )
