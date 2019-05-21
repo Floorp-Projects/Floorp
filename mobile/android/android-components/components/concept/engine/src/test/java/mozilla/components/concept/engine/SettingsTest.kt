@@ -113,7 +113,7 @@ class SettingsTest {
         assertFalse(settings.testingModeEnabled)
         assertTrue(settings.allowAutoplayMedia)
         assertFalse(settings.suspendMediaWhenInactive)
-        assertFalse(settings.fontInflationEnabled)
+        assertTrue(settings.fontInflationEnabled)
         assertEquals(1.0F, settings.fontSizeFactor)
 
         val interceptor: RequestInterceptor = mock()
@@ -145,7 +145,7 @@ class SettingsTest {
             testingModeEnabled = true,
             allowAutoplayMedia = false,
             suspendMediaWhenInactive = true,
-            fontInflationEnabled = true,
+            fontInflationEnabled = false,
             fontSizeFactor = 2.0F)
 
         assertFalse(defaultSettings.domStorageEnabled)
@@ -173,7 +173,7 @@ class SettingsTest {
         assertTrue(defaultSettings.testingModeEnabled)
         assertFalse(defaultSettings.allowAutoplayMedia)
         assertTrue(defaultSettings.suspendMediaWhenInactive)
-        assertTrue(defaultSettings.fontInflationEnabled)
+        assertFalse(defaultSettings.fontInflationEnabled)
         assertEquals(2.0F, defaultSettings.fontSizeFactor)
     }
 }

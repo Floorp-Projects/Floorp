@@ -187,7 +187,7 @@ data class DefaultSettings(
     override var testingModeEnabled: Boolean = false,
     override var allowAutoplayMedia: Boolean = true,
     override var suspendMediaWhenInactive: Boolean = false,
-    override var fontInflationEnabled: Boolean = false,
+    override var fontInflationEnabled: Boolean = true,
     override var fontSizeFactor: Float = 1.0F
 ) : Settings()
 

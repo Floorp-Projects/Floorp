@@ -173,11 +173,25 @@ class GeckoEngine(
 
         override var fontInflationEnabled: Boolean
             get() = runtime.settings.fontInflationEnabled
-            set(value) { runtime.settings.fontInflationEnabled = value }
+            set(value) {
+                // Setting, even to the default value, causes an Exception if
+                // automaticFontSizeAdjustment is set to true (its default).
+                // So, let's only set if the value has changed.
+                if (value != runtime.settings.fontInflationEnabled) {
+                    runtime.settings.fontInflationEnabled = value
+                }
+            }
 
         override var fontSizeFactor: Float
             get() = runtime.settings.fontSizeFactor
-            set(value) { runtime.settings.fontSizeFactor = value }
+            set(value) {
+                // Setting, even to the default value, causes an Exception if
+                // automaticFontSizeAdjustment is set to true (its default).
+                // So, let's only set if the value has changed.
+                if (value != runtime.settings.fontSizeFactor) {
+                    runtime.settings.fontSizeFactor = value
+                }
+            }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
