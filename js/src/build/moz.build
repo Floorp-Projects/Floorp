@@ -52,11 +52,6 @@ USE_LIBS += [
     'zlib',
 ]
 
-if CONFIG['JS_BUILD_BINAST']:
-    USE_LIBS += [
-        'brotli',
-    ]
-
 if CONFIG['OS_ARCH'] not in ('WINNT', 'HP-UX'):
     OS_LIBS += [
         'm',
