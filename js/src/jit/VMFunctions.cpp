@@ -643,11 +643,6 @@ bool InterruptCheck(JSContext* cx) {
   return CheckForInterrupt(cx);
 }
 
-void* MallocWrapper(JS::Zone* zone, size_t nbytes) {
-  AutoUnsafeCallWithABI unsafe;
-  return zone->pod_malloc<uint8_t>(nbytes);
-}
-
 JSObject* NewCallObject(JSContext* cx, HandleShape shape,
                         HandleObjectGroup group) {
   JSObject* obj = CallObject::create(cx, shape, group);

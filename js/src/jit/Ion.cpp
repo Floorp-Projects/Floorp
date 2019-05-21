@@ -286,9 +286,6 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
   objectGroupPreBarrierOffset_ =
       generatePreBarrier(cx, masm, MIRType::ObjectGroup);
 
-  JitSpew(JitSpew_Codegen, "# Emitting malloc stub");
-  generateMallocStub(masm);
-
   JitSpew(JitSpew_Codegen, "# Emitting free stub");
   generateFreeStub(masm);
 
