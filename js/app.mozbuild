@@ -26,6 +26,11 @@ DIRS += [
     '/mozglue',
 ]
 
+if CONFIG['JS_BUILD_BINAST']:
+    DIRS += [
+        '/modules/brotli',
+    ]
+
 if CONFIG['USE_ICU']:
     DIRS += [
         '/config/external/icu',
