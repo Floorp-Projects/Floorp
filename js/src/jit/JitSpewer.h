@@ -66,6 +66,8 @@ namespace jit {
   _(MIRExpressions)                        \
   /* Print control flow graph */           \
   _(CFG)                                   \
+  /* Spew Tracelogger summary stats */     \
+  _(ScriptStats)                           \
                                            \
   /* BASELINE COMPILER SPEW */             \
                                            \
