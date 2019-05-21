@@ -5,16 +5,14 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use crate::mutex::MutexGuard;
-use crate::raw_mutex::{RawMutex, TOKEN_HANDOFF, TOKEN_NORMAL};
-use crate::{deadlock, util};
-use core::{
-    fmt, ptr,
-    sync::atomic::{AtomicPtr, Ordering},
-};
+use deadlock;
 use lock_api::RawMutex as RawMutexTrait;
+use mutex::MutexGuard;
 use parking_lot_core::{self, ParkResult, RequeueOp, UnparkResult, DEFAULT_PARK_TOKEN};
+use raw_mutex::{RawMutex, TOKEN_HANDOFF, TOKEN_NORMAL};
+use std::sync::atomic::{AtomicPtr, Ordering};
 use std::time::{Duration, Instant};
+use std::{fmt, ptr};
 
 /// A type indicating whether a timed wait on a condition variable returned
 /// due to a time out or not.
@@ -89,6 +87,7 @@ pub struct Condvar {
 impl Condvar {
     /// Creates a new condition variable which is ready to be waited on and
     /// notified.
+    #[cfg(feature = "nightly")]
     #[inline]
     pub const fn new() -> Condvar {
         Condvar {
@@ -96,85 +95,51 @@ impl Condvar {
         }
     }
 
+    /// Creates a new condition variable which is ready to be waited on and
+    /// notified.
+    #[cfg(not(feature = "nightly"))]
+    #[inline]
+    pub fn new() -> Condvar {
+        Condvar {
+            state: AtomicPtr::new(ptr::null_mut()),
+        }
+    }
+
     /// Wakes up one blocked thread on this condvar.
-    ///
-    /// Returns whether a thread was woken up.
     ///
     /// If there is a blocked thread on this condition variable, then it will
     /// be woken up from its call to `wait` or `wait_timeout`. Calls to
     /// `notify_one` are not buffered in any way.
     ///
     /// To wake up all threads, see `notify_all()`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use parking_lot::Condvar;
-    ///
-    /// let condvar = Condvar::new();
-    ///
-    /// // do something with condvar, share it with other threads
-    ///
-    /// if !condvar.notify_one() {
-    ///     println!("Nobody was listening for this.");
-    /// }
-    /// ```
     #[inline]
-    pub fn notify_one(&self) -> bool {
+    pub fn notify_one(&self) {
         // Nothing to do if there are no waiting threads
-        let state = self.state.load(Ordering::Relaxed);
-        if state.is_null() {
-            return false;
+        if self.state.load(Ordering::Relaxed).is_null() {
+            return;
         }
 
-        self.notify_one_slow(state)
+        self.notify_one_slow();
     }
 
     #[cold]
     #[inline(never)]
-    fn notify_one_slow(&self, mutex: *mut RawMutex) -> bool {
+    fn notify_one_slow(&self) {
         unsafe {
-            // Unpark one thread and requeue the rest onto the mutex
-            let from = self as *const _ as usize;
-            let to = mutex as usize;
-            let validate = || {
-                // Make sure that our atomic state still points to the same
-                // mutex. If not then it means that all threads on the current
-                // mutex were woken up and a new waiting thread switched to a
-                // different mutex. In that case we can get away with doing
-                // nothing.
-                if self.state.load(Ordering::Relaxed) != mutex {
-                    return RequeueOp::Abort;
-                }
-
-                // Unpark one thread if the mutex is unlocked, otherwise just
-                // requeue everything to the mutex. This is safe to do here
-                // since unlocking the mutex when the parked bit is set requires
-                // locking the queue. There is the possibility of a race if the
-                // mutex gets locked after we check, but that doesn't matter in
-                // this case.
-                if (*mutex).mark_parked_if_locked() {
-                    RequeueOp::RequeueOne
-                } else {
-                    RequeueOp::UnparkOne
-                }
-            };
-            let callback = |_op, result: UnparkResult| {
+            // Unpark one thread
+            let addr = self as *const _ as usize;
+            let callback = |result: UnparkResult| {
                 // Clear our state if there are no more waiting threads
                 if !result.have_more_threads {
                     self.state.store(ptr::null_mut(), Ordering::Relaxed);
                 }
                 TOKEN_NORMAL
             };
-            let res = parking_lot_core::unpark_requeue(from, to, validate, callback);
-
-            res.unparked_threads + res.requeued_threads != 0
+            parking_lot_core::unpark_one(addr, callback);
         }
     }
 
     /// Wakes up all blocked threads on this condvar.
-    ///
-    /// Returns the number of threads woken up.
     ///
     /// This method will ensure that any current waiters on the condition
     /// variable are awoken. Calls to `notify_all()` are not buffered in any
@@ -182,19 +147,19 @@ impl Condvar {
     ///
     /// To wake up only one thread, see `notify_one()`.
     #[inline]
-    pub fn notify_all(&self) -> usize {
+    pub fn notify_all(&self) {
         // Nothing to do if there are no waiting threads
         let state = self.state.load(Ordering::Relaxed);
         if state.is_null() {
-            return 0;
+            return;
         }
 
-        self.notify_all_slow(state)
+        self.notify_all_slow(state);
     }
 
     #[cold]
     #[inline(never)]
-    fn notify_all_slow(&self, mutex: *mut RawMutex) -> usize {
+    fn notify_all_slow(&self, mutex: *mut RawMutex) {
         unsafe {
             // Unpark one thread and requeue the rest onto the mutex
             let from = self as *const _ as usize;
@@ -228,14 +193,12 @@ impl Condvar {
             let callback = |op, result: UnparkResult| {
                 // If we requeued threads to the mutex, mark it as having
                 // parked threads. The RequeueAll case is already handled above.
-                if op == RequeueOp::UnparkOneRequeueRest && result.requeued_threads != 0 {
+                if op == RequeueOp::UnparkOneRequeueRest && result.have_more_threads {
                     (*mutex).mark_parked();
                 }
                 TOKEN_NORMAL
             };
-            let res = parking_lot_core::unpark_requeue(from, to, validate, callback);
-
-            res.unparked_threads + res.requeued_threads
+            parking_lot_core::unpark_requeue(from, to, validate, callback);
         }
     }
 
@@ -253,7 +216,7 @@ impl Condvar {
     /// This function will panic if another thread is waiting on the `Condvar`
     /// with a different `Mutex` object.
     #[inline]
-    pub fn wait<T: ?Sized>(&self, mutex_guard: &mut MutexGuard<'_, T>) {
+    pub fn wait<T: ?Sized>(&self, mutex_guard: &mut MutexGuard<T>) {
         self.wait_until_internal(unsafe { MutexGuard::mutex(mutex_guard).raw() }, None);
     }
 
@@ -283,7 +246,7 @@ impl Condvar {
     #[inline]
     pub fn wait_until<T: ?Sized>(
         &self,
-        mutex_guard: &mut MutexGuard<'_, T>,
+        mutex_guard: &mut MutexGuard<T>,
         timeout: Instant,
     ) -> WaitTimeoutResult {
         self.wait_until_internal(
@@ -294,7 +257,11 @@ impl Condvar {
 
     // This is a non-generic function to reduce the monomorphization cost of
     // using `wait_until`.
-    fn wait_until_internal(&self, mutex: &RawMutex, timeout: Option<Instant>) -> WaitTimeoutResult {
+    fn wait_until_internal(
+        &self,
+        mutex: &RawMutex,
+        timeout: Option<Instant>,
+    ) -> WaitTimeoutResult {
         unsafe {
             let result;
             let mut bad_mutex = false;
@@ -378,20 +345,13 @@ impl Condvar {
     ///
     /// Like `wait`, the lock specified will be re-acquired when this function
     /// returns, regardless of whether the timeout elapsed or not.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the given `timeout` is so large that it can't be added to the current time.
-    /// This panic is not possible if the crate is built with the `nightly` feature, then a too
-    /// large `timeout` becomes equivalent to just calling `wait`.
     #[inline]
     pub fn wait_for<T: ?Sized>(
         &self,
-        mutex_guard: &mut MutexGuard<'_, T>,
+        guard: &mut MutexGuard<T>,
         timeout: Duration,
     ) -> WaitTimeoutResult {
-        let deadline = util::to_deadline(timeout);
-        self.wait_until_internal(unsafe { MutexGuard::mutex(mutex_guard).raw() }, deadline)
+        self.wait_until(guard, Instant::now() + timeout)
     }
 }
 
@@ -403,18 +363,18 @@ impl Default for Condvar {
 }
 
 impl fmt::Debug for Condvar {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.pad("Condvar { .. }")
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Condvar, Mutex, MutexGuard};
     use std::sync::mpsc::channel;
     use std::sync::Arc;
     use std::thread;
     use std::time::{Duration, Instant};
+    use {Condvar, Mutex};
 
     #[test]
     fn smoke() {
@@ -475,70 +435,6 @@ mod tests {
     }
 
     #[test]
-    fn notify_one_return_true() {
-        let m = Arc::new(Mutex::new(()));
-        let m2 = m.clone();
-        let c = Arc::new(Condvar::new());
-        let c2 = c.clone();
-
-        let mut g = m.lock();
-        let _t = thread::spawn(move || {
-            let _g = m2.lock();
-            assert!(c2.notify_one());
-        });
-        c.wait(&mut g);
-    }
-
-    #[test]
-    fn notify_one_return_false() {
-        let m = Arc::new(Mutex::new(()));
-        let c = Arc::new(Condvar::new());
-
-        let _t = thread::spawn(move || {
-            let _g = m.lock();
-            assert!(!c.notify_one());
-        });
-    }
-
-    #[test]
-    fn notify_all_return() {
-        const N: usize = 10;
-
-        let data = Arc::new((Mutex::new(0), Condvar::new()));
-        let (tx, rx) = channel();
-        for _ in 0..N {
-            let data = data.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let &(ref lock, ref cond) = &*data;
-                let mut cnt = lock.lock();
-                *cnt += 1;
-                if *cnt == N {
-                    tx.send(()).unwrap();
-                }
-                while *cnt != 0 {
-                    cond.wait(&mut cnt);
-                }
-                tx.send(()).unwrap();
-            });
-        }
-        drop(tx);
-
-        let &(ref lock, ref cond) = &*data;
-        rx.recv().unwrap();
-        let mut cnt = lock.lock();
-        *cnt = 0;
-        assert_eq!(cond.notify_all(), N);
-        drop(cnt);
-
-        for _ in 0..N {
-            rx.recv().unwrap();
-        }
-
-        assert_eq!(cond.notify_all(), 0);
-    }
-
-    #[test]
     fn wait_for() {
         let m = Arc::new(Mutex::new(()));
         let m2 = m.clone();
@@ -548,21 +444,12 @@ mod tests {
         let mut g = m.lock();
         let no_timeout = c.wait_for(&mut g, Duration::from_millis(1));
         assert!(no_timeout.timed_out());
-
         let _t = thread::spawn(move || {
             let _g = m2.lock();
             c2.notify_one();
         });
-        // Non-nightly panics on too large timeouts. Nightly treats it as indefinite wait.
-        let very_long_timeout = if cfg!(feature = "nightly") {
-            Duration::from_secs(u64::max_value())
-        } else {
-            Duration::from_millis(u32::max_value() as u64)
-        };
-
-        let timeout_res = c.wait_for(&mut g, very_long_timeout);
+        let timeout_res = c.wait_for(&mut g, Duration::from_millis(u32::max_value() as u64));
         assert!(!timeout_res.timed_out());
-
         drop(g);
     }
 
@@ -642,51 +529,5 @@ mod tests {
     fn test_debug_condvar() {
         let c = Condvar::new();
         assert_eq!(format!("{:?}", c), "Condvar { .. }");
-    }
-
-    #[test]
-    fn test_condvar_requeue() {
-        let m = Arc::new(Mutex::new(()));
-        let m2 = m.clone();
-        let c = Arc::new(Condvar::new());
-        let c2 = c.clone();
-        let t = thread::spawn(move || {
-            let mut g = m2.lock();
-            c2.wait(&mut g);
-        });
-
-        let mut g = m.lock();
-        while !c.notify_one() {
-            // Wait for the thread to get into wait()
-            MutexGuard::bump(&mut g);
-        }
-        // The thread should have been requeued to the mutex, which we wake up now.
-        drop(g);
-        t.join().unwrap();
-    }
-
-    #[test]
-    fn test_issue_129() {
-        let locks = Arc::new((Mutex::new(()), Condvar::new()));
-
-        let (tx, rx) = channel();
-        for _ in 0..4 {
-            let locks = locks.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let mut guard = locks.0.lock();
-                locks.1.wait(&mut guard);
-                locks.1.wait_for(&mut guard, Duration::from_millis(1));
-                locks.1.notify_one();
-                tx.send(()).unwrap();
-            });
-        }
-
-        thread::sleep(Duration::from_millis(100));
-        locks.1.notify_one();
-
-        for _ in 0..4 {
-            assert_eq!(rx.recv_timeout(Duration::from_millis(500)), Ok(()));
-        }
     }
 }

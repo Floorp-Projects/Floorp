@@ -5,8 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use crate::raw_mutex::RawMutex;
 use lock_api;
+use raw_mutex::RawMutex;
 
 /// A mutual exclusion primitive useful for protecting shared data
 ///
@@ -69,7 +69,7 @@ use lock_api;
 ///
 /// let (tx, rx) = channel();
 /// for _ in 0..10 {
-///     let (data, tx) = (Arc::clone(&data), tx.clone());
+///     let (data, tx) = (data.clone(), tx.clone());
 ///     thread::spawn(move || {
 ///         // The shared state can only be accessed once the lock is held.
 ///         // Our non-atomic increment is safe because we're the only thread
@@ -105,14 +105,11 @@ pub type MappedMutexGuard<'a, T> = lock_api::MappedMutexGuard<'a, RawMutex, T>;
 
 #[cfg(test)]
 mod tests {
-    use crate::{Condvar, Mutex};
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::mpsc::channel;
     use std::sync::Arc;
     use std::thread;
-
-    #[cfg(feature = "serde")]
-    use bincode::{deserialize, serialize};
+    use {Condvar, Mutex};
 
     struct Packet<T>(Arc<(Mutex<T>, Condvar)>);
 
@@ -256,8 +253,7 @@ mod tests {
             }
             let _u = Unwinder { i: arc2 };
             panic!();
-        })
-        .join();
+        }).join();
         let lock = arc.lock();
         assert_eq!(*lock, 2);
     }
@@ -287,20 +283,16 @@ mod tests {
         let mutex = Mutex::new(vec![0u8, 10]);
 
         assert_eq!(format!("{:?}", mutex), "Mutex { data: [0, 10] }");
+        assert_eq!(
+            format!("{:#?}", mutex),
+            "Mutex {
+    data: [
+        0,
+        10
+    ]
+}"
+        );
         let _lock = mutex.lock();
-        assert_eq!(format!("{:?}", mutex), "Mutex { data: <locked> }");
-    }
-
-    #[cfg(feature = "serde")]
-    #[test]
-    fn test_serde() {
-        let contents: Vec<u8> = vec![0, 1, 2];
-        let mutex = Mutex::new(contents.clone());
-
-        let serialized = serialize(&mutex).unwrap();
-        let deserialized: Mutex<Vec<u8>> = deserialize(&serialized).unwrap();
-
-        assert_eq!(*(mutex.lock()), *(deserialized.lock()));
-        assert_eq!(contents, *(deserialized.lock()));
+        assert_eq!(format!("{:?}", mutex), "Mutex { <locked> }");
     }
 }
