@@ -262,7 +262,7 @@ module.exports = {
     // Use {} instead of new Object()
     "no-new-object": "error",
 
-    // Dissallow use of new wrappers
+    // Disallow use of new wrappers
     "no-new-wrappers": "error",
 
     // Disallow use of event global.
