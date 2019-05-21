@@ -40,7 +40,7 @@ int commit_hook(void* aArg) {
  *        Whether a transaction is expected or not.
  */
 void check_transaction(mozIStorageConnection* aDB,
-                       mozIStorageBaseStatement** aStmts, uint32_t aStmtsLen,
+                       const nsTArray<RefPtr<mozIStorageBaseStatement>>& aStmts,
                        bool aTransactionExpected) {
   // -- install a transaction commit hook.
   int commit = 0;
@@ -48,8 +48,8 @@ void check_transaction(mozIStorageConnection* aDB,
 
   RefPtr<AsyncStatementSpinner> asyncSpin(new AsyncStatementSpinner());
   nsCOMPtr<mozIStoragePendingStatement> asyncPend;
-  do_check_success(aDB->ExecuteAsync(aStmts, aStmtsLen, asyncSpin,
-                                     getter_AddRefs(asyncPend)));
+  do_check_success(
+      aDB->ExecuteAsync(aStmts, asyncSpin, getter_AddRefs(asyncPend)));
   do_check_true(asyncPend);
 
   // -- complete the execution
@@ -67,7 +67,7 @@ void check_transaction(mozIStorageConnection* aDB,
   }
 
   // -- cleanup
-  for (uint32_t i = 0; i < aStmtsLen; ++i) {
+  for (uint32_t i = 0; i < aStmts.Length(); ++i) {
     aStmts[i]->Finalize();
   }
   blocking_async_close(aDB);
@@ -93,12 +93,13 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncReadStatements)
   db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
                            getter_AddRefs(stmt2));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt1,
-      stmt2,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt1.forget(),
+      stmt2.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), false);
+  check_transaction(db, nsTArray<RefPtr<mozIStorageBaseStatement>>(stmts),
+                    false);
 }
 
 /**
@@ -118,12 +119,12 @@ TEST(storage_asyncStatementExecution_transaction, MultipleReadStatements)
   db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
                       getter_AddRefs(stmt2));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt1,
-      stmt2,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt1.forget(),
+      stmt2.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), false);
+  check_transaction(db, stmts, false);
 }
 
 /**
@@ -145,12 +146,12 @@ TEST(storage_asyncStatementExecution_transaction,
       NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
       getter_AddRefs(stmt2));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt1,
-      stmt2,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt1.forget(),
+      stmt2.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), true);
+  check_transaction(db, stmts, true);
 }
 
 /**
@@ -170,12 +171,12 @@ TEST(storage_asyncStatementExecution_transaction, MultipleReadWriteStatements)
       NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
       getter_AddRefs(stmt2));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt1,
-      stmt2,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt1.forget(),
+      stmt2.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), true);
+  check_transaction(db, stmts, true);
 }
 
 /**
@@ -197,12 +198,12 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncWriteStatements)
       NS_LITERAL_CSTRING("CREATE TABLE test2 (id INTEGER PRIMARY KEY)"),
       getter_AddRefs(stmt2));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt1,
-      stmt2,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt1.forget(),
+      stmt2.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), true);
+  check_transaction(db, stmts, true);
 }
 
 /**
@@ -224,12 +225,12 @@ TEST(storage_asyncStatementExecution_transaction, MultipleWriteStatements)
       NS_LITERAL_CSTRING("CREATE TABLE test2 (id INTEGER PRIMARY KEY)"),
       getter_AddRefs(stmt2));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt1,
-      stmt2,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt1.forget(),
+      stmt2.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), true);
+  check_transaction(db, stmts, true);
 }
 
 /**
@@ -245,11 +246,11 @@ TEST(storage_asyncStatementExecution_transaction, SingleAsyncReadStatement)
   db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
                            getter_AddRefs(stmt));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), false);
+  check_transaction(db, stmts, false);
 }
 
 /**
@@ -265,11 +266,11 @@ TEST(storage_asyncStatementExecution_transaction, SingleReadStatement)
   db->CreateStatement(NS_LITERAL_CSTRING("SELECT * FROM sqlite_master"),
                       getter_AddRefs(stmt));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), false);
+  check_transaction(db, stmts, false);
 }
 
 /**
@@ -286,11 +287,11 @@ TEST(storage_asyncStatementExecution_transaction, SingleAsyncWriteStatement)
       NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
       getter_AddRefs(stmt));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), true);
+  check_transaction(db, stmts, true);
 }
 
 /**
@@ -306,11 +307,11 @@ TEST(storage_asyncStatementExecution_transaction, SingleWriteStatement)
       NS_LITERAL_CSTRING("CREATE TABLE test (id INTEGER PRIMARY KEY)"),
       getter_AddRefs(stmt));
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), true);
+  check_transaction(db, stmts, true);
 }
 
 /**
@@ -340,11 +341,11 @@ TEST(storage_asyncStatementExecution_transaction,
   stmt->BindParameters(paramsArray);
   paramsArray = nullptr;
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), false);
+  check_transaction(db, stmts, false);
 }
 
 /**
@@ -372,11 +373,11 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsReadStatement)
   stmt->BindParameters(paramsArray);
   paramsArray = nullptr;
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), false);
+  check_transaction(db, stmts, false);
 }
 
 /**
@@ -414,11 +415,11 @@ TEST(storage_asyncStatementExecution_transaction,
   stmt->BindParameters(paramsArray);
   paramsArray = nullptr;
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), true);
+  check_transaction(db, stmts, true);
 }
 
 /**
@@ -454,9 +455,9 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsWriteStatement)
   stmt->BindParameters(paramsArray);
   paramsArray = nullptr;
 
-  mozIStorageBaseStatement* stmts[] = {
-      stmt,
+  nsTArray<RefPtr<mozIStorageBaseStatement>> stmts = {
+      stmt.forget(),
   };
 
-  check_transaction(db, stmts, ArrayLength(stmts), true);
+  check_transaction(db, stmts, true);
 }

@@ -17,7 +17,6 @@ pub trait EncodingSupport {
     fn is_utf16_be_or_le(encoding: &Self::Encoding) -> bool;
 }
 
-
 /// Determine the character encoding of a CSS stylesheet.
 ///
 /// This is based on the presence of a BOM (Byte Order Mark), an `@charset` rule, and
@@ -30,31 +29,32 @@ pub trait EncodingSupport {
 ///     (https://drafts.csswg.org/css-syntax/#environment-encoding), if any.
 ///
 /// Returns the encoding to use.
-pub fn stylesheet_encoding<E>(css: &[u8], protocol_encoding_label: Option<&[u8]>,
-                              environment_encoding: Option<E::Encoding>)
-                              -> E::Encoding
-                              where E: EncodingSupport {
+pub fn stylesheet_encoding<E>(
+    css: &[u8],
+    protocol_encoding_label: Option<&[u8]>,
+    environment_encoding: Option<E::Encoding>,
+) -> E::Encoding
+where
+    E: EncodingSupport,
+{
     // https://drafts.csswg.org/css-syntax/#the-input-byte-stream
-    match protocol_encoding_label {
-        None => (),
-        Some(label) => match E::from_label(label) {
-            None => (),
-            Some(protocol_encoding) => return protocol_encoding
-        }
-    }
+    if let Some(label) = protocol_encoding_label {
+        if let Some(protocol_encoding) = E::from_label(label) {
+            return protocol_encoding;
+        };
+    };
+
     let prefix = b"@charset \"";
     if css.starts_with(prefix) {
         let rest = &css[prefix.len()..];
-        match rest.iter().position(|&b| b == b'"') {
-            None => (),
-            Some(label_length) => if rest[label_length..].starts_with(b"\";") {
+        if let Some(label_length) = rest.iter().position(|&b| b == b'"') {
+            if rest[label_length..].starts_with(b"\";") {
                 let label = &rest[..label_length];
-                match E::from_label(label) {
-                    None => (),
-                    Some(charset_encoding) => if E::is_utf16_be_or_le(&charset_encoding) {
-                        return E::utf8()
+                if let Some(charset_encoding) = E::from_label(label) {
+                    if E::is_utf16_be_or_le(&charset_encoding) {
+                        return E::utf8();
                     } else {
-                        return charset_encoding
+                        return charset_encoding;
                     }
                 }
             }

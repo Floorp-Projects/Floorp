@@ -36,37 +36,130 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "SHOULD_SHOW_ORIGIN",
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("LoginAutoCompleteResult");
 });
+XPCOMUtils.defineLazyGetter(this, "passwordMgrBundle", () => {
+  return Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
+});
+
+function loginSort(a, b) {
+  let userA = a.username.toLowerCase();
+  let userB = b.username.toLowerCase();
+
+  if (userA < userB) {
+    return -1;
+  }
+
+  if (userA > userB) {
+    return 1;
+  }
+
+  return 0;
+}
+
+function findDuplicates(loginList) {
+  let seen = new Set();
+  let duplicates = new Set();
+  for (let login of loginList) {
+    if (seen.has(login.username)) {
+      duplicates.add(login.username);
+    }
+    seen.add(login.username);
+  }
+  return duplicates;
+}
+
+function getLocalizedString(key, formatArgs = null) {
+  if (formatArgs) {
+    return passwordMgrBundle.formatStringFromName(key, formatArgs, formatArgs.length);
+  }
+  return passwordMgrBundle.GetStringFromName(key);
+}
+
+
+class AutocompleteItem {
+  constructor(style) {
+    this.comment = "";
+    this.style = style;
+    this.value = "";
+  }
+
+  removeFromStorage() { /* Do nothing by default */ }
+}
+
+class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
+  constructor() {
+    super("insecureWarning");
+
+    XPCOMUtils.defineLazyGetter(this, "label", () => {
+      let learnMoreString = getLocalizedString("insecureFieldWarningLearnMore");
+      return getLocalizedString("insecureFieldWarningDescription2", [learnMoreString]);
+    });
+  }
+}
+
+class LoginAutocompleteItem extends AutocompleteItem {
+  constructor(login, isPasswordField, dateAndTimeFormatter, duplicateUsernames, messageManager) {
+    super(SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
+    this._login = login;
+    this._messageManager = messageManager;
+
+    XPCOMUtils.defineLazyGetter(this, "label", () => {
+      let username = login.username;
+      // If login is empty or duplicated we want to append a modification date to it.
+      if (!username || duplicateUsernames.has(username)) {
+        if (!username) {
+          username = getLocalizedString("noUsername");
+        }
+        let meta = login.QueryInterface(Ci.nsILoginMetaInfo);
+        let time = dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
+        username = getLocalizedString("loginHostAge", [username, time]);
+      }
+
+      return username;
+    });
+
+    XPCOMUtils.defineLazyGetter(this, "value", () => {
+      return isPasswordField ? login.password : login.username;
+    });
+
+    XPCOMUtils.defineLazyGetter(this, "comment", () => {
+      return JSON.stringify({
+        loginOrigin: login.hostname,
+      });
+    });
+  }
+
+  removeFromStorage() {
+    if (this._messageManager) {
+      let vanilla = LoginHelper.loginToVanillaObject(this._login);
+      this._messageManager.sendAsyncMessage("PasswordManager:removeLogin",
+                                            { login: vanilla });
+    } else {
+      Services.logins.removeLogin(this._login);
+    }
+  }
+}
+
+class LoginsFooterAutocompleteItem extends AutocompleteItem {
+  constructor(hostname) {
+    super("loginsFooter");
+
+    XPCOMUtils.defineLazyGetter(this, "label", () => {
+      return JSON.stringify({
+        label: getLocalizedString("viewSavedLogins.label"),
+        hostname,
+      });
+    });
+  }
+}
 
 
 // nsIAutoCompleteResult implementation
-function LoginAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messageManager, isPasswordField, hostname}) {
-  function loginSort(a, b) {
-    let userA = a.username.toLowerCase();
-    let userB = b.username.toLowerCase();
-
-    if (userA < userB) {
-      return -1;
-    }
-
-    if (userA > userB) {
-      return 1;
-    }
-
-    return 0;
-  }
-
-  function findDuplicates(loginList) {
-    let seen = new Set();
-    let duplicates = new Set();
-    for (let login of loginList) {
-      if (seen.has(login.username)) {
-        duplicates.add(login.username);
-      }
-      seen.add(login.username);
-    }
-    return duplicates;
-  }
-
+function LoginAutoCompleteResult(aSearchString, matchingLogins, {
+  isSecure,
+  messageManager,
+  isPasswordField,
+  hostname,
+}) {
   let hidingFooterOnPWFieldAutoOpened = false;
   function isFooterEnabled() {
     // We need to check LoginHelper.enabled here since the insecure warning should
@@ -91,21 +184,33 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messa
     return true;
   }
 
-  this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
-  this._showAutoCompleteFooter = isFooterEnabled() ? 1 : 0;
-  this._showOrigin = SHOULD_SHOW_ORIGIN ? 1 : 0;
   this.searchString = aSearchString;
-  this.logins = matchingLogins.sort(loginSort);
-  this.matchCount = matchingLogins.length + this._showInsecureFieldWarning + this._showAutoCompleteFooter;
-  this._messageManager = messageManager;
-  this._stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
-  this._dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
-  this._isPasswordField = isPasswordField;
-  this._hostname = hostname;
 
-  this._duplicateUsernames = findDuplicates(matchingLogins);
+  // Build up the array of autocomplete rows to display.
+  this._rows = [];
 
+  // Insecure field warning comes first if it applies and is enabled.
+  if (!isSecure && LoginHelper.showInsecureFieldWarning) {
+    this._rows.push(new InsecureLoginFormAutocompleteItem());
+  }
+
+  // Saved login items
+  let logins = matchingLogins.sort(loginSort);
+  let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+  let duplicateUsernames = findDuplicates(matchingLogins);
+  for (let login of logins) {
+    let item = new LoginAutocompleteItem(login, isPasswordField, dateAndTimeFormatter,
+                                         duplicateUsernames, messageManager);
+    this._rows.push(item);
+  }
+
+  // The footer comes last if it's enabled
+  if (isFooterEnabled()) {
+    this._rows.push(new LoginsFooterAutocompleteItem(hostname));
+  }
+
+  // Determine the result code and default index.
   if (this.matchCount > 0) {
     this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
     this.defaultIndex = 0;
@@ -121,8 +226,15 @@ LoginAutoCompleteResult.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteResult,
                                           Ci.nsISupportsWeakReference]),
 
-  // private
-  logins: null,
+  /**
+   * Accessed via .wrappedJSObject
+   * @private
+   */
+  get logins() {
+    return this._rows.filter(item => {
+      return item.constructor === LoginAutocompleteItem;
+    }).map(item => item._login);
+  },
 
   // Allow autoCompleteSearch to get at the JS object so it can
   // modify some readonly properties for internal use.
@@ -135,88 +247,33 @@ LoginAutoCompleteResult.prototype = {
   searchResult: Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
   defaultIndex: -1,
   errorDescription: "",
-  matchCount: 0,
+  get matchCount() {
+    return this._rows.length;
+  },
 
   getValueAt(index) {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
-
-    if (this._showInsecureFieldWarning && index === 0) {
-      return "";
-    }
-
-    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
-      return "";
-    }
-
-    let selectedLogin = this.logins[index - this._showInsecureFieldWarning];
-
-    return this._isPasswordField ? selectedLogin.password : selectedLogin.username;
+    return this._rows[index].value;
   },
 
   getLabelAt(index) {
     if (index < 0 || index >= this.matchCount) {
       throw new Error("Index out of range.");
     }
-
-    let getLocalizedString = (key, formatArgs = null) => {
-      if (formatArgs) {
-        return this._stringBundle.formatStringFromName(key, formatArgs, formatArgs.length);
-      }
-      return this._stringBundle.GetStringFromName(key);
-    };
-
-    if (this._showInsecureFieldWarning && index === 0) {
-      let learnMoreString = getLocalizedString("insecureFieldWarningLearnMore");
-      return getLocalizedString("insecureFieldWarningDescription2", [learnMoreString]);
-    } else if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
-      return JSON.stringify({
-        label: getLocalizedString("viewSavedLogins.label"),
-        hostname: this._hostname,
-      });
-    }
-
-    let login = this.logins[index - this._showInsecureFieldWarning];
-    let username = login.username;
-    // If login is empty or duplicated we want to append a modification date to it.
-    if (!username || this._duplicateUsernames.has(username)) {
-      if (!username) {
-        username = getLocalizedString("noUsername");
-      }
-      let meta = login.QueryInterface(Ci.nsILoginMetaInfo);
-      let time = this._dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
-      username = getLocalizedString("loginHostAge", [username, time]);
-    }
-
-    return username;
+    return this._rows[index].label;
   },
 
   getCommentAt(index) {
-    if (this._showInsecureFieldWarning && index === 0) {
-      return "";
+    if (index < 0 || index >= this.matchCount) {
+      throw new Error("Index out of range.");
     }
-
-    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
-      return "";
-    }
-
-    let login = this.logins[index - this._showInsecureFieldWarning];
-    return JSON.stringify({
-      loginOrigin: login.hostname,
-    });
+    return this._rows[index].comment;
   },
 
   getStyleAt(index) {
-    if (index == 0 && this._showInsecureFieldWarning) {
-      return "insecureWarning";
-    } else if (this._showAutoCompleteFooter && index == this.matchCount - 1) {
-      return "loginsFooter";
-    } else if (this._showOrigin) {
-      return "loginWithOrigin";
-    }
-
-    return "login";
+    return this._rows[index].style;
   },
 
   getImageAt(index) {
@@ -232,35 +289,14 @@ LoginAutoCompleteResult.prototype = {
       throw new Error("Index out of range.");
     }
 
-    if (this._showInsecureFieldWarning && index === 0) {
-      // Ignore the warning message item.
-      return;
-    }
+    let [removedItem] = this._rows.splice(index, 1);
 
-    if (this._showInsecureFieldWarning) {
-      index--;
-    }
-
-    // The user cannot delete the autocomplete footer.
-    if (this._showAutoCompleteFooter && index === this.matchCount - 1) {
-      return;
-    }
-
-    let [removedLogin] = this.logins.splice(index, 1);
-
-    this.matchCount--;
-    if (this.defaultIndex > this.logins.length) {
+    if (this.defaultIndex > this._rows.length) {
       this.defaultIndex--;
     }
 
     if (removeFromDB) {
-      if (this._messageManager) {
-        let vanilla = LoginHelper.loginToVanillaObject(removedLogin);
-        this._messageManager.sendAsyncMessage("PasswordManager:removeLogin",
-                                              { login: vanilla });
-      } else {
-        Services.logins.removeLogin(removedLogin);
-      }
+      removedItem.removeFromStorage();
     }
   },
 };

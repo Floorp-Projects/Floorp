@@ -141,7 +141,7 @@
         }
       };
 
-      let frame = document.createElement("iframe");
+      let frame = document.createXULElement("iframe");
       frame.onload = function() {
         obs.addObserver(observer, TOPIC);
         // Create dummy DOMRequestHelper specific to checkWindowDestruction()

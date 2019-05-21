@@ -69,7 +69,7 @@ include = [
   "FontFamilyNameSyntax",
   "OverflowWrap",
   "TimingFunction",
-  "PathCommand",
+  "OffsetPath",
   "UnicodeRange",
   "UserSelect",
   "Float",
@@ -105,6 +105,7 @@ include = [
   "Perspective",
   "ZIndex",
   "TransformOrigin",
+  "LineBreak",
   "WordBreak",
   "Contain",
   "Origin",
@@ -436,9 +437,17 @@ renaming_overrides_prefixing = true
  public:
 """
 
-
 "Angle" = """
   inline static StyleAngle Zero();
   inline float ToDegrees() const;
   inline double ToRadians() const;
+"""
+
+"OffsetPath" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
+  StyleOffsetPath() {}
+ public:
 """

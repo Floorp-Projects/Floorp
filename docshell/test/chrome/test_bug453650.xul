@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=453650
   nextTest();
 
   function* runTests() {
-    var iframe = document.createElement("iframe");
+    var iframe = document.createXULElement("iframe");
     iframe.style.width = "300px";
     iframe.style.height = "300px";
     iframe.setAttribute("src", "data:text/html,<h1 id='h'>hello</h1>");

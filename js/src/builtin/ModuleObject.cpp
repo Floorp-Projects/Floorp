@@ -16,6 +16,7 @@
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "gc/Tracer.h"
+#include "js/Modules.h"  // JS::GetModulePrivate, JS::ModuleDynamicImportHook
 #include "js/PropertySpec.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"

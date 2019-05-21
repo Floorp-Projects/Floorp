@@ -2316,11 +2316,20 @@ BrowserGlue.prototype = {
     }
   },
 
+  _migrateXULStoreForDocument(fromURL, toURL) {
+    Array.from(Services.xulStore.getIDsEnumerator(fromURL)).forEach((id) => {
+      Array.from(Services.xulStore.getAttributeEnumerator(fromURL, id)).forEach(attr => {
+        let value = Services.xulStore.getValue(fromURL, id, attr);
+        Services.xulStore.setValue(toURL, id, attr, value);
+      });
+    });
+  },
+
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 81;
+    const UI_VERSION = 82;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2622,6 +2631,11 @@ BrowserGlue.prototype = {
           }
         }
       }
+    }
+
+    if (currentUIVersion < 82) {
+      this._migrateXULStoreForDocument("chrome://browser/content/browser.xul",
+                                       "chrome://browser/content/browser.xhtml");
     }
 
     // Update the migration version.
@@ -3370,16 +3384,16 @@ var DefaultBrowserCheck = {
 
   _createPopup(win, notNowStrings, neverStrings) {
     let doc = win.document;
-    let popup = doc.createElement("menupopup");
+    let popup = doc.createXULElement("menupopup");
     popup.id = this.OPTIONPOPUP;
 
-    let notNowItem = doc.createElement("menuitem");
+    let notNowItem = doc.createXULElement("menuitem");
     notNowItem.id = "defaultBrowserNotNow";
     notNowItem.setAttribute("label", notNowStrings.label);
     notNowItem.setAttribute("accesskey", notNowStrings.accesskey);
     popup.appendChild(notNowItem);
 
-    let neverItem = doc.createElement("menuitem");
+    let neverItem = doc.createXULElement("menuitem");
     neverItem.id = "defaultBrowserNever";
     neverItem.setAttribute("label", neverStrings.label);
     neverItem.setAttribute("accesskey", neverStrings.accesskey);

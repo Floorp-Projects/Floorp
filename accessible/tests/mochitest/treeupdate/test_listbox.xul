@@ -24,8 +24,8 @@
     {
       this.listboxNode = getNode(aListboxID);
 
-      this.listitemNode = document.createElement("richlistitem");
-      var label = document.createElement("label");
+      this.listitemNode = document.createXULElement("richlistitem");
+      var label = document.createXULElement("label");
       label.setAttribute("value", "item1");
       this.listitemNode.appendChild(label);
 

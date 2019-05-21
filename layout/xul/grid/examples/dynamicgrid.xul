@@ -63,7 +63,7 @@
 
    function createButton(str)
    {
-	 var b = document.createElement("button");
+	 var b = document.createXULElement("button");
 	 b.setAttribute("label", str+count);
 	 count++;
 	 addCellSelectionHandle(b);
@@ -72,7 +72,7 @@
 
    function createRow()
    {
-	 var b = document.createElement("row");
+	 var b = document.createXULElement("row");
  	 b.setAttribute("dynamic","true");
 
 	 addRowColumnSelectionHandle(b);
@@ -81,7 +81,7 @@
 
    function createColumn()
    {
-	 var b = document.createElement("column");
+	 var b = document.createXULElement("column");
 	 b.setAttribute("dynamic","true");
 	 addRowColumnSelectionHandle(b);
 	 return b;
@@ -89,7 +89,7 @@
 
    function createText(str)
    {
-	 var text = document.createElement("text");
+	 var text = document.createXULElement("text");
 	 text.setAttribute("value", str+count);
 	 count++;
 	 text.setAttribute("style", "font-size: 40pt");

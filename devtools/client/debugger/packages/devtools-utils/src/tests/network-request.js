@@ -47,11 +47,10 @@ describe("network request", () => {
   it("timed out fetch", async () => {
     global.fetch.mockImplementation(async () => {});
 
-    try {
-      await networkRequest("foo");
-    } catch (e) {
+    // eslint-disable-next-line jest/valid-expect-in-promise
+    networkRequest("foo").catch(e => {
       expect(e.message).toEqual("Connect timeout error");
-    }
+    });
 
     jest.runAllTimers();
   });

@@ -378,7 +378,7 @@ class ModuleInfo {
 }
 
 function createBrowser() {
-  const browser = window.browser = document.createElement("browser");
+  const browser = window.browser = document.createXULElement("browser");
   // Identify this `<browser>` element uniquely to Marionette, devtools, etc.
   browser.permanentKey = {};
 

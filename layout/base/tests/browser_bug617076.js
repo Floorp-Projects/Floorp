@@ -16,7 +16,7 @@ add_task(async function test() {
   // insert button into test page content
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let doc = content.document;
-    let e = doc.createElement("button");
+    let e = doc.createXULElement("button");
     e.setAttribute("label", "hello");
     e.setAttribute("tooltiptext", "world");
     e.setAttribute("id", "test-button");

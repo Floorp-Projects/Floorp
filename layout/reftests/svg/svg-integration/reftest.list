@@ -48,5 +48,5 @@ fuzzy(0-1,0-5000) == mask-clipPath-opacity-01e.xhtml mask-clipPath-opacity-01-re
 
 # box-decoration-break tests
 fuzzy-if(Android,0-4,0-10) fuzzy-if(webrender&&cocoaWidget,9-9,3-3) == box-decoration-break-01.xhtml box-decoration-break-01-ref.xhtml
-fuzzy(0-62,0-14) == box-decoration-break-02.xhtml box-decoration-break-02-ref.xhtml
+fuzzy(0-119,0-16) == box-decoration-break-02.xhtml box-decoration-break-02-ref.xhtml
 fuzzy(0-67,0-238) == box-decoration-break-03.xhtml box-decoration-break-01-ref.xhtml

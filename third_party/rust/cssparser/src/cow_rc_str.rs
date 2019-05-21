@@ -103,16 +103,12 @@ impl<'a> Clone for CowRcStr<'a> {
     fn clone(&self) -> Self {
         match self.unpack() {
             Err(ptr) => {
-                let rc = unsafe {
-                    Rc::from_raw(ptr)
-                };
+                let rc = unsafe { Rc::from_raw(ptr) };
                 let new_rc = rc.clone();
-                mem::forget(rc);  // Don’t actually take ownership of this strong reference
+                mem::forget(rc); // Don’t actually take ownership of this strong reference
                 CowRcStr::from_rc(new_rc)
             }
-            Ok(_) => {
-                CowRcStr { ..*self }
-            }
+            Ok(_) => CowRcStr { ..*self },
         }
     }
 }
@@ -121,9 +117,7 @@ impl<'a> Drop for CowRcStr<'a> {
     #[inline]
     fn drop(&mut self) {
         if let Err(ptr) = self.unpack() {
-            mem::drop(unsafe {
-                Rc::from_raw(ptr)
-            })
+            mem::drop(unsafe { Rc::from_raw(ptr) })
         }
     }
 }
@@ -133,9 +127,7 @@ impl<'a> Deref for CowRcStr<'a> {
 
     #[inline]
     fn deref(&self) -> &str {
-        self.unpack().unwrap_or_else(|ptr| unsafe {
-            &**ptr
-        })
+        self.unpack().unwrap_or_else(|ptr| unsafe { &**ptr })
     }
 }
 

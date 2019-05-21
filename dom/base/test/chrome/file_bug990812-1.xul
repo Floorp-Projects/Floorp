@@ -45,7 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
         }
       });
 
-      var browser = document.createElement("browser");
+      var browser = document.createXULElement("browser");
       browser.setAttribute("messagemanagergroup", "test");
       browser.setAttribute("src", "about:mozilla");
       browser.setAttribute("type", "content");

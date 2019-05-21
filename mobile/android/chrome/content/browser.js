@@ -3615,7 +3615,7 @@ Tab.prototype = {
 
     aParams = aParams || {};
 
-    this.browser = document.createElement("browser");
+    this.browser = document.createXULElement("browser");
     this.browser.setAttribute("type", "content");
     this.browser.setAttribute("messagemanagergroup", "browsers");
 

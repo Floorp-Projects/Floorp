@@ -21,3 +21,4 @@ mingw_disable_one_try.patch
 mingw_noexports_casts.patch
 mingw_offsetof.patch
 add_aarch64_windows_support.patch
+aarch64_control_flow_guard.patch

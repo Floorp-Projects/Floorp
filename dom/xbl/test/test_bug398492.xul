@@ -50,7 +50,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=398492
       var anonKids = document.getAnonymousNodes(n2);
       is(anonKids, null, "No XBL binding attached to cloned node");
 
-      var n3 = document.createElement("hbox");
+      var n3 = document.createXULElement("hbox");
       document.documentElement.appendChild(n3);
       var kid3 = document.createTextNode("Text");
       n3.appendChild(kid3);

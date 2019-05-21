@@ -409,6 +409,9 @@ NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 #define GFX_PREF_WORD_CACHE_MAXENTRIES "gfx.font_rendering.wordcache.maxentries"
 
 #define GFX_PREF_GRAPHITE_SHAPING "gfx.font_rendering.graphite.enabled"
+#if defined(XP_MACOSX)
+#define GFX_PREF_CORETEXT_SHAPING "gfx.font_rendering.coretext.enabled"
+#endif
 
 #define BIDI_NUMERAL_PREF "bidi.numeral"
 
@@ -2216,6 +2219,10 @@ void gfxPlatform::FontsPrefsChanged(const char* aPref) {
   } else if (!strcmp(GFX_PREF_GRAPHITE_SHAPING, aPref)) {
     mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
     FlushFontAndWordCaches();
+#if defined(XP_MACOSX)
+  } else if (!strcmp(GFX_PREF_CORETEXT_SHAPING, aPref)) {
+    FlushFontAndWordCaches();
+#endif
   } else if (!strcmp(BIDI_NUMERAL_PREF, aPref)) {
     mBidiNumeralOption = UNINITIALIZED_VALUE;
   } else if (!strcmp(GFX_PREF_OPENTYPE_SVG, aPref)) {

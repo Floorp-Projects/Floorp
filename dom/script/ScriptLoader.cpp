@@ -16,6 +16,7 @@
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/MemoryFunctions.h"
+#include "js/Modules.h"  // JS::CompileModule, JS::FinishDynamicModuleImport, JS::{G,S}etModuleResolveHook, JS::Get{ModulePrivate,ModuleScript,RequestedModule{s,Specifier,SourcePos}}, JS::SetModule{DynamicImport,Metadata}Hook
 #include "js/OffThreadScriptCompilation.h"
 #include "js/Realm.h"
 #include "js/SourceText.h"
@@ -30,6 +31,7 @@
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/StaticPrefs.h"
+#include "nsAboutProtocolUtils.h"
 #include "nsGkAtoms.h"
 #include "nsNetUtil.h"
 #include "nsGlobalWindowInner.h"
@@ -336,6 +338,50 @@ nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
   }
 
   return NS_OK;
+}
+
+/* static */
+bool ScriptLoader::IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest) {
+  // if we are not dealing with a codebasePrincipal it can not be a
+  // Principal with a scheme of about: and there is nothing left to do
+  if (!aRequest->TriggeringPrincipal()->GetIsCodebasePrincipal()) {
+    return false;
+  }
+
+  // if the triggering uri is not of scheme about:, there is nothing to do
+  nsCOMPtr<nsIURI> triggeringURI;
+  nsresult rv =
+      aRequest->TriggeringPrincipal()->GetURI(getter_AddRefs(triggeringURI));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool isAbout =
+      (NS_SUCCEEDED(triggeringURI->SchemeIs("about", &isAbout)) && isAbout);
+  if (!isAbout) {
+    return false;
+  }
+
+  // if the about: page is linkable from content, there is nothing to do
+  nsCOMPtr<nsIAboutModule> aboutMod;
+  rv = NS_GetAboutModule(triggeringURI, getter_AddRefs(aboutMod));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  uint32_t aboutModuleFlags = 0;
+  rv = aboutMod->GetURIFlags(triggeringURI, &aboutModuleFlags);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (aboutModuleFlags & nsIAboutModule::MAKE_LINKABLE) {
+    return false;
+  }
+
+  // if the uri to be loaded is not of scheme chrome:, there is nothing to do.
+  bool isChrome =
+      (NS_SUCCEEDED(aRequest->mURI->SchemeIs("chrome", &isChrome)) && isChrome);
+  if (!isChrome) {
+    return false;
+  }
+
+  // seems like an about page wants to load a chrome URI.
+  return true;
 }
 
 bool ScriptLoader::ModuleMapContainsURL(nsIURI* aURL) const {
@@ -1240,14 +1286,19 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   nsSecurityFlags securityFlags;
   if (aRequest->IsModuleRequest()) {
     // According to the spec, module scripts have different behaviour to classic
-    // scripts and always use CORS.
-    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
-    if (aRequest->CORSMode() == CORS_NONE ||
-        aRequest->CORSMode() == CORS_ANONYMOUS) {
-      securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+    // scripts and always use CORS. Only exception: Non linkable about: pages
+    // which load local module scripts.
+    if (IsAboutPageLoadingChromeURI(aRequest)) {
+      securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
     } else {
-      MOZ_ASSERT(aRequest->CORSMode() == CORS_USE_CREDENTIALS);
-      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+      securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+      if (aRequest->CORSMode() == CORS_NONE ||
+          aRequest->CORSMode() == CORS_ANONYMOUS) {
+        securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+      } else {
+        MOZ_ASSERT(aRequest->CORSMode() == CORS_USE_CREDENTIALS);
+        securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+      }
     }
   } else {
     securityFlags = aRequest->CORSMode() == CORS_NONE

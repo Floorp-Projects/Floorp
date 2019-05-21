@@ -1,0 +1,160 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* JavaScript modules (as in, the syntactic construct) implementation. */
+
+#include "js/Modules.h"
+
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+
+#include <stdint.h>  // uint32_t
+
+#include "jsapi.h"    // js::AssertHeapIsIdle
+#include "jstypes.h"  // JS_PUBLIC_API
+
+#include "builtin/ModuleObject.h"  // js::FinishDynamicModuleImport, js::{,Requested}ModuleObject
+#include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
+#include "js/RootingAPI.h"              // JS::MutableHandle
+#include "js/Value.h"                   // JS::Value
+#include "vm/JSContext.h"               // CHECK_THREAD, JSContext
+#include "vm/JSObject.h"                // JSObject
+#include "vm/Runtime.h"                 // JSRuntime
+
+#include "vm/JSContext-inl.h"  // JSContext::{c,releaseC}heck
+
+using js::AssertHeapIsIdle;
+using js::ModuleObject;
+using js::RequestedModuleObject;
+
+JS_PUBLIC_API JS::ModuleResolveHook JS::GetModuleResolveHook(JSRuntime* rt) {
+  AssertHeapIsIdle();
+
+  return rt->moduleResolveHook;
+}
+
+JS_PUBLIC_API void JS::SetModuleResolveHook(JSRuntime* rt,
+                                            ModuleResolveHook func) {
+  AssertHeapIsIdle();
+
+  rt->moduleResolveHook = func;
+}
+
+JS_PUBLIC_API JS::ModuleMetadataHook JS::GetModuleMetadataHook(JSRuntime* rt) {
+  AssertHeapIsIdle();
+
+  return rt->moduleMetadataHook;
+}
+
+JS_PUBLIC_API void JS::SetModuleMetadataHook(JSRuntime* rt,
+                                             ModuleMetadataHook func) {
+  AssertHeapIsIdle();
+
+  rt->moduleMetadataHook = func;
+}
+
+JS_PUBLIC_API JS::ModuleDynamicImportHook JS::GetModuleDynamicImportHook(
+    JSRuntime* rt) {
+  AssertHeapIsIdle();
+
+  return rt->moduleDynamicImportHook;
+}
+
+JS_PUBLIC_API void JS::SetModuleDynamicImportHook(
+    JSRuntime* rt, ModuleDynamicImportHook func) {
+  AssertHeapIsIdle();
+
+  rt->moduleDynamicImportHook = func;
+}
+
+JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
+    JSContext* cx, Handle<Value> referencingPrivate,
+    Handle<JSString*> specifier, Handle<JSObject*> promise) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(referencingPrivate, promise);
+
+  return js::FinishDynamicModuleImport(cx, referencingPrivate, specifier,
+                                       promise);
+}
+
+JS_PUBLIC_API bool JS::CompileModule(JSContext* cx,
+                                     const ReadOnlyCompileOptions& options,
+                                     SourceText<char16_t>& srcBuf,
+                                     MutableHandle<JSObject*> module) {
+  MOZ_ASSERT(!cx->zone()->isAtomsZone());
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  module.set(js::frontend::CompileModule(cx, options, srcBuf));
+  return !!module;
+}
+
+JS_PUBLIC_API void JS::SetModulePrivate(JSObject* module, const Value& value) {
+  JSRuntime* rt = module->zone()->runtimeFromMainThread();
+  module->as<ModuleObject>().scriptSourceObject()->setPrivate(rt, value);
+}
+
+JS_PUBLIC_API JS::Value JS::GetModulePrivate(JSObject* module) {
+  return module->as<ModuleObject>().scriptSourceObject()->canonicalPrivate();
+}
+
+JS_PUBLIC_API bool JS::ModuleInstantiate(JSContext* cx,
+                                         Handle<JSObject*> moduleArg) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->releaseCheck(moduleArg);
+
+  return ModuleObject::Instantiate(cx, moduleArg.as<ModuleObject>());
+}
+
+JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
+                                      Handle<JSObject*> moduleArg) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->releaseCheck(moduleArg);
+
+  return ModuleObject::Evaluate(cx, moduleArg.as<ModuleObject>());
+}
+
+JS_PUBLIC_API JSObject* JS::GetRequestedModules(JSContext* cx,
+                                                Handle<JSObject*> moduleArg) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(moduleArg);
+
+  return &moduleArg->as<ModuleObject>().requestedModules();
+}
+
+JS_PUBLIC_API JSString* JS::GetRequestedModuleSpecifier(JSContext* cx,
+                                                        Handle<Value> value) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(value);
+
+  JSObject* obj = &value.toObject();
+  return obj->as<RequestedModuleObject>().moduleSpecifier();
+}
+
+JS_PUBLIC_API void JS::GetRequestedModuleSourcePos(JSContext* cx,
+                                                   JS::HandleValue value,
+                                                   uint32_t* lineNumber,
+                                                   uint32_t* columnNumber) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(value);
+  MOZ_ASSERT(lineNumber);
+  MOZ_ASSERT(columnNumber);
+
+  auto& requested = value.toObject().as<RequestedModuleObject>();
+  *lineNumber = requested.lineNumber();
+  *columnNumber = requested.columnNumber();
+}
+
+JS_PUBLIC_API JSScript* JS::GetModuleScript(JS::HandleObject moduleRecord) {
+  AssertHeapIsIdle();
+
+  return moduleRecord->as<ModuleObject>().script();
+}

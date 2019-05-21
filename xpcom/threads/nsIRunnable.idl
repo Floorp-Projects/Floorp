@@ -25,5 +25,7 @@ interface nsIRunnablePriority : nsISupports
     const unsigned short PRIORITY_INPUT = 1;
     const unsigned short PRIORITY_HIGH = 2;
     const unsigned short PRIORITY_MEDIUMHIGH = 3;
+    const unsigned short PRIORITY_IDLE = 4;
+    const unsigned short PRIORITY_DEFERRED_TIMERS = 5;
     readonly attribute unsigned long priority;
 };

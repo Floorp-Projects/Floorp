@@ -70,33 +70,59 @@ class nsDisplayTableItem : public nsPaintedDisplayItem {
   bool mDrawsBackground;
 };
 
-class nsAutoPushCurrentTableItem {
+class nsDisplayTableBackgroundSet {
  public:
-  nsAutoPushCurrentTableItem() : mBuilder(nullptr), mOldCurrentItem(nullptr) {}
+  nsDisplayList* ColGroupBackgrounds() { return &mColGroupBackgrounds; }
 
-  void Push(nsDisplayListBuilder* aBuilder, nsDisplayTableItem* aPushItem) {
-    mBuilder = aBuilder;
-    mOldCurrentItem = aBuilder->GetCurrentTableItem();
-    aBuilder->SetCurrentTableItem(aPushItem);
-#ifdef DEBUG
-    mPushedItem = aPushItem;
-#endif
+  nsDisplayList* ColBackgrounds() { return &mColBackgrounds; }
+
+  nsDisplayTableBackgroundSet(nsDisplayListBuilder* aBuilder, nsIFrame* aTable)
+      : mBuilder(aBuilder) {
+    mPrevTableBackgroundSet = mBuilder->SetTableBackgroundSet(this);
+    mozilla::DebugOnly<const nsIFrame*> reference =
+        mBuilder->FindReferenceFrameFor(aTable, &mToReferenceFrame);
+    MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(reference, aTable));
+    mDirtyRect = mBuilder->GetDirtyRect();
   }
-  ~nsAutoPushCurrentTableItem() {
-    if (!mBuilder) return;
-#ifdef DEBUG
-    NS_ASSERTION(mBuilder->GetCurrentTableItem() == mPushedItem,
-                 "Someone messed with the current table item behind our back!");
-#endif
-    mBuilder->SetCurrentTableItem(mOldCurrentItem);
+
+  ~nsDisplayTableBackgroundSet() {
+    mozilla::DebugOnly<nsDisplayTableBackgroundSet*> result =
+        mBuilder->SetTableBackgroundSet(mPrevTableBackgroundSet);
+    MOZ_ASSERT(result == this);
   }
+
+  /**
+   * Move all display items in our lists to top of the corresponding lists in
+   * the destination.
+   */
+  void MoveTo(const nsDisplayListSet& aDestination) {
+    aDestination.BorderBackground()->AppendToTop(ColGroupBackgrounds());
+    aDestination.BorderBackground()->AppendToTop(ColBackgrounds());
+  }
+
+  void AddColumn(nsTableColFrame* aFrame) { mColumns.AppendElement(aFrame); }
+
+  nsTableColFrame* GetColForIndex(int32_t aIndex) { return mColumns[aIndex]; }
+
+  const nsPoint& TableToReferenceFrame() { return mToReferenceFrame; }
+
+  const nsRect& GetDirtyRect() { return mDirtyRect; }
 
  private:
+  // This class is only used on stack, so we don't have to worry about leaking
+  // it.  Don't let us be heap-allocated!
+  void* operator new(size_t sz) CPP_THROW_NEW;
+
+ protected:
   nsDisplayListBuilder* mBuilder;
-  nsDisplayTableItem* mOldCurrentItem;
-#ifdef DEBUG
-  nsDisplayTableItem* mPushedItem;
-#endif
+  nsDisplayTableBackgroundSet* mPrevTableBackgroundSet;
+
+  nsDisplayList mColGroupBackgrounds;
+  nsDisplayList mColBackgrounds;
+
+  nsTArray<nsTableColFrame*> mColumns;
+  nsPoint mToReferenceFrame;
+  nsRect mDirtyRect;
 };
 
 /* ========================================================================== */
@@ -214,28 +240,6 @@ class nsTableFrame : public nsContainerFrame {
   static nsTableFrame* GetTableFramePassingThrough(nsIFrame* aMustPassThrough,
                                                    nsIFrame* aSourceFrame,
                                                    bool* aDidPassThrough);
-
-  typedef void (*DisplayGenericTablePartTraversal)(
-      nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-      const nsDisplayListSet& aLists);
-  static void GenericTraversal(nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-                               const nsDisplayListSet& aLists);
-
-  /**
-   * Helper method to handle display common to table frames, rowgroup frames
-   * and row frames. It creates a background display item for handling events
-   * if necessary, an outline display item if necessary, and displays
-   * all the the frame's children.
-   * @param aDisplayItem the display item created for this part, or null
-   * if this part's border/background painting is delegated to an ancestor
-   * @param aTraversal a function that gets called to traverse the table
-   * part's child frames and add their display list items to a
-   * display list set.
-   */
-  static void DisplayGenericTablePart(
-      nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
-      const nsDisplayListSet& aLists,
-      DisplayGenericTablePartTraversal aTraversal = GenericTraversal);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.

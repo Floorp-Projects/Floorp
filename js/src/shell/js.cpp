@@ -98,6 +98,7 @@
 #include "js/Initialization.h"
 #include "js/JSON.h"
 #include "js/MemoryFunctions.h"
+#include "js/Modules.h"  // JS::GetModulePrivate, JS::SetModule{DynamicImport,Metadata,Resolve}Hook, JS::SetModulePrivate
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
 #include "js/Realm.h"

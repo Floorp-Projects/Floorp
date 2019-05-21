@@ -24,7 +24,7 @@ var sandboxCode = (function() {
 add_task(async function test() {
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
 
-  let frame = newWin.document.createElement("iframe");
+  let frame = newWin.document.createXULElement("iframe");
   frame.setAttribute("type", "content");
   frame.setAttribute("src", "http://mochi.test:8888/browser/dom/tests/browser/browser_xhr_sandbox.js");
 

@@ -118,7 +118,7 @@ add_task(async function test_last_multiple_bindings_on_statements() {
       bp.bindByName("text", TEXT);
       bp.bindByName("real", REAL);
       bp.bindByName("null", null);
-      bp.bindBlobByName("blob", BLOB, BLOB.length);
+      bp.bindBlobByName("blob", BLOB);
       params.addParams(bp);
     }
     stmts[i].bindParameters(params);

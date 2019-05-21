@@ -1,0 +1,112 @@
+[COFF] Add address-taken import thunks to the fid table
+
+https://bugs.llvm.org/show_bug.cgi?id=39799
+https://reviews.llvm.org/D58739
+
+--- a/lld/COFF/Writer.cpp
++++ b/lld/COFF/Writer.cpp
+@@ -1390,19 +1390,47 @@
+ // symbol in an executable section.
+ static void maybeAddAddressTakenFunction(SymbolRVASet &AddressTakenSyms,
+                                          Symbol *S) {
+-  auto *D = dyn_cast_or_null<DefinedCOFF>(S);
+-
+-  // Ignore undefined symbols and references to non-functions (e.g. globals and
+-  // labels).
+-  if (!D ||
+-      D->getCOFFSymbol().getComplexType() != COFF::IMAGE_SYM_DTYPE_FUNCTION)
++  if (!S)
+     return;
+ 
+-  // Mark the symbol as address taken if it's in an executable section.
+-  Chunk *RefChunk = D->getChunk();
+-  OutputSection *OS = RefChunk ? RefChunk->getOutputSection() : nullptr;
+-  if (OS && OS->Header.Characteristics & IMAGE_SCN_MEM_EXECUTE)
+-    addSymbolToRVASet(AddressTakenSyms, D);
++  switch (S->kind()) {
++  case Symbol::DefinedLocalImportKind:
++  case Symbol::DefinedImportDataKind:
++    // Defines an __imp_ pointer, so it is data, so it is ignored.
++    break;
++  case Symbol::DefinedCommonKind:
++    // Common is always data, so it is ignored.
++    break;
++  case Symbol::DefinedAbsoluteKind:
++  case Symbol::DefinedSyntheticKind:
++    // Absolute is never code, synthetic generally isn't and usually isn't
++    // determinable.
++    break;
++  case Symbol::LazyKind:
++  case Symbol::UndefinedKind:
++    // Undefined symbols resolve to zero, so they don't have an RVA. Lazy
++    // symbols shouldn't have relocations.
++    break;
++
++  case Symbol::DefinedImportThunkKind:
++    // Thunks are always code, include them.
++    addSymbolToRVASet(AddressTakenSyms, cast<Defined>(S));
++    break;
++
++  case Symbol::DefinedRegularKind: {
++    // This is a regular, defined, symbol from a COFF file. Mark the symbol as
++    // address taken if the symbol type is function and it's in an executable
++    // section.
++    auto *D = cast<DefinedRegular>(S);
++    if (D->getCOFFSymbol().getComplexType() == COFF::IMAGE_SYM_DTYPE_FUNCTION) {
++      Chunk *RefChunk = D->getChunk();
++      OutputSection *OS = RefChunk ? RefChunk->getOutputSection() : nullptr;
++      if (OS && OS->Header.Characteristics & IMAGE_SCN_MEM_EXECUTE)
++        addSymbolToRVASet(AddressTakenSyms, D);
++    }
++    break;
++  }
++  }
+ }
+ 
+ // Visit all relocations from all section contributions of this object file and
+--- a/lld/test/COFF/guardcf-thunk.s
++++ b/lld/test/COFF/guardcf-thunk.s
+@@ -0,0 +1,43 @@
++# REQUIRES: x86
++
++# Make a DLL that exports exportfn1.
++# RUN: yaml2obj < %p/Inputs/export.yaml > %t.obj
++# RUN: lld-link /out:%t.dll /dll %t.obj /export:exportfn1 /implib:%t.lib
++
++# Make an obj that takes the address of that exported function.
++# RUN: llvm-mc -filetype=obj -triple=x86_64-windows-msvc %s -o %t2.obj
++# RUN: lld-link -entry:main -guard:cf %t2.obj %t.lib -nodefaultlib -out:%t.exe
++# RUN: llvm-readobj -coff-load-config %t.exe | FileCheck %s
++
++# Check that the gfids table contains *exactly* two entries, one for exportfn1
++# and one for main.
++# CHECK: GuardFidTable [
++# CHECK-NEXT: 0x{{[0-9A-Fa-f]+0$}}
++# CHECK-NEXT: 0x{{[0-9A-Fa-f]+0$}}
++# CHECK-NEXT: ]
++
++
++        .def     @feat.00;
++        .scl    3;
++        .type   0;
++        .endef
++        .globl  @feat.00
++@feat.00 = 0x001
++
++        .section .text,"rx"
++        .def     main; .scl    2; .type   32; .endef
++        .global main
++main:
++        leaq exportfn1(%rip), %rax
++        retq
++
++        .section .rdata,"dr"
++.globl _load_config_used
++_load_config_used:
++        .long 256
++        .fill 124, 1, 0
++        .quad __guard_fids_table
++        .quad __guard_fids_count
++        .long __guard_flags
++        .fill 128, 1, 0
++
