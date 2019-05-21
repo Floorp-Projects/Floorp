@@ -146,6 +146,16 @@ abstract class Settings {
      * Setting to control whether media should be suspended when the session is inactive.
      */
     open var suspendMediaWhenInactive: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether font inflation is enabled.
+     */
+    open var fontInflationEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the font size factor. All font sizes will be multiplied by this factor.
+     */
+    open var fontSizeFactor: Float by UnsupportedSetting()
 }
 
 /**
@@ -176,7 +186,9 @@ data class DefaultSettings(
     override var preferredColorScheme: PreferredColorScheme = PreferredColorScheme.System,
     override var testingModeEnabled: Boolean = false,
     override var allowAutoplayMedia: Boolean = true,
-    override var suspendMediaWhenInactive: Boolean = false
+    override var suspendMediaWhenInactive: Boolean = false,
+    override var fontInflationEnabled: Boolean = false,
+    override var fontSizeFactor: Float = 1.0F
 ) : Settings()
 
 class UnsupportedSetting<T> {

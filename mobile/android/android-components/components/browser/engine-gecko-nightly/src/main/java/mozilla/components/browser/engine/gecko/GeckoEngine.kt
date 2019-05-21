@@ -170,6 +170,14 @@ class GeckoEngine(
         override var suspendMediaWhenInactive: Boolean
             get() = defaultSettings?.suspendMediaWhenInactive ?: false
             set(value) { defaultSettings?.suspendMediaWhenInactive = value }
+
+        override var fontInflationEnabled: Boolean
+            get() = runtime.settings.fontInflationEnabled
+            set(value) { runtime.settings.fontInflationEnabled = value }
+
+        override var fontSizeFactor: Float
+            get() = runtime.settings.fontSizeFactor
+            set(value) { runtime.settings.fontSizeFactor = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
@@ -183,6 +191,8 @@ class GeckoEngine(
             this.preferredColorScheme = it.preferredColorScheme
             this.allowAutoplayMedia = it.allowAutoplayMedia
             this.suspendMediaWhenInactive = it.suspendMediaWhenInactive
+            this.fontInflationEnabled = it.fontInflationEnabled
+            this.fontSizeFactor = it.fontSizeFactor
         }
     }
 }

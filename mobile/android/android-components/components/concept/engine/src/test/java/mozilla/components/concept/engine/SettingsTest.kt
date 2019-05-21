@@ -72,7 +72,11 @@ class SettingsTest {
             { settings.allowAutoplayMedia },
             { settings.allowAutoplayMedia = false },
             { settings.suspendMediaWhenInactive },
-            { settings.suspendMediaWhenInactive = false }
+            { settings.suspendMediaWhenInactive = false },
+            { settings.fontInflationEnabled },
+            { settings.fontInflationEnabled = false },
+            { settings.fontSizeFactor },
+            { settings.fontSizeFactor = 1.0F }
         )
     }
 
@@ -109,6 +113,8 @@ class SettingsTest {
         assertFalse(settings.testingModeEnabled)
         assertTrue(settings.allowAutoplayMedia)
         assertFalse(settings.suspendMediaWhenInactive)
+        assertFalse(settings.fontInflationEnabled)
+        assertEquals(1.0F, settings.fontSizeFactor)
 
         val interceptor: RequestInterceptor = mock()
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
@@ -138,7 +144,9 @@ class SettingsTest {
             preferredColorScheme = PreferredColorScheme.Dark,
             testingModeEnabled = true,
             allowAutoplayMedia = false,
-            suspendMediaWhenInactive = true)
+            suspendMediaWhenInactive = true,
+            fontInflationEnabled = true,
+            fontSizeFactor = 2.0F)
 
         assertFalse(defaultSettings.domStorageEnabled)
         assertFalse(defaultSettings.javascriptEnabled)
@@ -165,5 +173,7 @@ class SettingsTest {
         assertTrue(defaultSettings.testingModeEnabled)
         assertFalse(defaultSettings.allowAutoplayMedia)
         assertTrue(defaultSettings.suspendMediaWhenInactive)
+        assertTrue(defaultSettings.fontInflationEnabled)
+        assertEquals(2.0F, defaultSettings.fontSizeFactor)
     }
 }

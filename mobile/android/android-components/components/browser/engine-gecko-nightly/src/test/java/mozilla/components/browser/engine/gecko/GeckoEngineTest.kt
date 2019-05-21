@@ -68,6 +68,8 @@ class GeckoEngineTest {
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtimeSettings.automaticFontSizeAdjustment).thenReturn(true)
+        `when`(runtimeSettings.fontInflationEnabled).thenReturn(false)
+        `when`(runtimeSettings.fontSizeFactor).thenReturn(1.0F)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         `when`(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
         `when`(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
@@ -85,6 +87,14 @@ class GeckoEngineTest {
         assertTrue(engine.settings.automaticFontSizeAdjustment)
         engine.settings.automaticFontSizeAdjustment = false
         verify(runtimeSettings).automaticFontSizeAdjustment = false
+
+        assertFalse(engine.settings.fontInflationEnabled)
+        engine.settings.fontInflationEnabled = true
+        verify(runtimeSettings).fontInflationEnabled = true
+
+        assertEquals(1.0F, engine.settings.fontSizeFactor)
+        engine.settings.fontSizeFactor = 2.0F
+        verify(runtimeSettings).fontSizeFactor = 2.0F
 
         assertFalse(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = true
@@ -157,6 +167,8 @@ class GeckoEngineTest {
                 javascriptEnabled = false,
                 webFontsEnabled = false,
                 automaticFontSizeAdjustment = false,
+                fontInflationEnabled = true,
+                fontSizeFactor = 2.0F,
                 remoteDebuggingEnabled = true,
                 testingModeEnabled = true,
                 userAgentString = "test-ua",
@@ -168,6 +180,8 @@ class GeckoEngineTest {
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
         verify(runtimeSettings).automaticFontSizeAdjustment = false
+        verify(runtimeSettings).fontInflationEnabled = true
+        verify(runtimeSettings).fontSizeFactor = 2.0F
         verify(runtimeSettings).remoteDebuggingEnabled = true
         verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
