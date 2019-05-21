@@ -463,46 +463,48 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
                                           aOriginalNode};
   nsINode* node = &fixupNodeDeterminer.GetFixupNodeFallBackToOriginalNode();
 
+  nsresult rv = NS_OK;
+
   if (node->IsElement()) {
     if ((mFlags & (nsIDocumentEncoder::OutputPreformatted |
                    nsIDocumentEncoder::OutputDropInvisibleBreak)) &&
         nsLayoutUtils::IsInvisibleBreak(node)) {
-      return NS_OK;
+      return rv;
     }
     Element* originalElement = aOriginalNode.AsElement();
-    mSerializer->AppendElementStart(node->AsElement(), originalElement, aStr);
-    return NS_OK;
+    rv = mSerializer->AppendElementStart(node->AsElement(), originalElement, aStr);
+    return rv;
   }
 
   switch (node->NodeType()) {
     case nsINode::TEXT_NODE: {
-      mSerializer->AppendText(static_cast<nsIContent*>(node), aStartOffset,
+      rv = mSerializer->AppendText(static_cast<nsIContent*>(node), aStartOffset,
                               aEndOffset, aStr);
       break;
     }
     case nsINode::CDATA_SECTION_NODE: {
-      mSerializer->AppendCDATASection(static_cast<nsIContent*>(node),
+      rv = mSerializer->AppendCDATASection(static_cast<nsIContent*>(node),
                                       aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsINode::PROCESSING_INSTRUCTION_NODE: {
-      mSerializer->AppendProcessingInstruction(
+      rv = mSerializer->AppendProcessingInstruction(
           static_cast<ProcessingInstruction*>(node), aStartOffset, aEndOffset,
           aStr);
       break;
     }
     case nsINode::COMMENT_NODE: {
-      mSerializer->AppendComment(static_cast<Comment*>(node), aStartOffset,
+      rv = mSerializer->AppendComment(static_cast<Comment*>(node), aStartOffset,
                                  aEndOffset, aStr);
       break;
     }
     case nsINode::DOCUMENT_TYPE_NODE: {
-      mSerializer->AppendDoctype(static_cast<DocumentType*>(node), aStr);
+      rv = mSerializer->AppendDoctype(static_cast<DocumentType*>(node), aStr);
       break;
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode& aNode, nsAString& aStr) {
@@ -521,10 +523,13 @@ nsresult nsDocumentEncoder::SerializeNodeEnd(nsINode& aNode, nsAString& aStr) {
     return NS_OK;
   }
 
+  nsresult rv = NS_OK;
+
   if (aNode.IsElement()) {
-    mSerializer->AppendElementEnd(aNode.AsElement(), aStr);
+    rv = mSerializer->AppendElementEnd(aNode.AsElement(), aStr);
   }
-  return NS_OK;
+
+  return rv;
 }
 
 nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
@@ -1311,12 +1316,14 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   i = count;
   while (i > 0) {
     node = mCommonAncestors.ElementAt(--i);
-    SerializeNodeStart(*node, 0, -1, aContextString);
+    rv = SerializeNodeStart(*node, 0, -1, aContextString);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   // i = 0; guaranteed by above
   while (i < count) {
     node = mCommonAncestors.ElementAt(i++);
-    SerializeNodeEnd(*node, aContextString);
+    rv = SerializeNodeEnd(*node, aContextString);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // encode range info : the start and end depth of the selection, where the
@@ -1328,7 +1335,7 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   infoString.AppendInt(mEndDepth);
   aInfoString = infoString;
 
-  return NS_OK;
+  return rv;
 }
 
 bool nsHTMLCopyEncoder::IncludeInContext(nsINode* aNode) {
