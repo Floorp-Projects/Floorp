@@ -171,31 +171,10 @@ nsresult OpenWindow(const ClientOpenWindowArgs& aArgs,
       PrincipalInfoToPrincipal(aArgs.principalInfo());
   MOZ_DIAGNOSTIC_ASSERT(principal);
 
-  // XXXckerschb: After Bug 965637 we have the CSP stored in the client which
-  // allows to clean that part up.
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  if (!aArgs.cspInfos().IsEmpty()) {
-    csp = new nsCSPContext();
-    csp->SetRequestContext(nullptr, principal);
-    for (const mozilla::ipc::ContentSecurityPolicy& policy : aArgs.cspInfos()) {
-      nsresult rv = csp->AppendPolicy(policy.policy(), policy.reportOnlyFlag(),
-                                      policy.deliveredViaMetaTagFlag());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
+  if (aArgs.cspInfo().isSome()) {
+    csp = CSPInfoToCSP(aArgs.cspInfo().ref(), nullptr);
   }
-
-#ifdef DEBUG
-  if (principal && !principal->GetIsNullPrincipal()) {
-    // We do not serialize CSP for NullPricnipals as of now, for all others
-    // we make sure the CSP within the Principal and the explicit CSP are
-    // identical. After Bug 965637 we can remove that assertion anyway.
-    nsCOMPtr<nsIContentSecurityPolicy> principalCSP;
-    principal->GetCsp(getter_AddRefs(principalCSP));
-    MOZ_ASSERT(nsCSPContext::Equals(csp, principalCSP));
-  }
-#endif
 
   // [[6.1 Open Window]]
   if (XRE_IsContentProcess()) {

@@ -1735,10 +1735,13 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 
-  // Verify that we don't have any CSP on pristine principal.
+  // Verify that we don't have any CSP on pristine client.
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  Unused << info.mPrincipal->GetCsp(getter_AddRefs(csp));
+  if (info.mChannel) {
+    nsCOMPtr<nsILoadInfo> loadinfo = info.mChannel->LoadInfo();
+    csp = loadinfo->GetCsp();
+  }
   MOZ_DIAGNOSTIC_ASSERT(!csp);
 #endif
 
@@ -1749,8 +1752,8 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   WorkerPrivate::OverrideLoadInfoLoadGroup(info, info.mPrincipal);
 
-  rv = info.SetPrincipalsOnMainThread(info.mPrincipal, info.mStoragePrincipal,
-                                      info.mLoadGroup);
+  rv = info.SetPrincipalsAndCSPOnMainThread(
+      info.mPrincipal, info.mStoragePrincipal, info.mLoadGroup, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
