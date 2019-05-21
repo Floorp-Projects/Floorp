@@ -7,7 +7,6 @@
 /* General popup rules */
 
 #PopupAutoComplete > richlistbox > richlistitem {
-  height: 20px;
   min-height: 20px;
   border: 0;
   border-radius: 0;
@@ -39,39 +38,21 @@
   color: HighlightText;
 }
 
-/* Login form autocompletion with and without origin showing */
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .ac-site-icon,
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
-  display: initial;
-  list-style-image: url(chrome://browser/skin/login.svg);
-  -moz-context-properties: fill;
-  fill: GrayText;
-}
+/* Autocomplete richlistitem support for a two-line label display */
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"][selected] > .login-wrapper > .ac-site-icon,
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon[selected] {
-  fill: HighlightText;
-}
-
-/* Login form autocompletion with origin showing */
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] {
-  height: auto;
-  padding: 4px;
-}
-
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper {
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper {
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   margin: 0;
 }
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .ac-site-icon {
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .ac-site-icon {
   margin-inline-start: auto;
   margin-inline-end: 4px;
 }
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .login-text {
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper {
   /* The text should flex while the icon should not */
   flex: 1;
   /* width/min-width are needed to get the text-overflow: ellipsis to work for the children */
@@ -79,15 +60,44 @@
   width: 0;
 }
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .login-text > .login-row {
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper > .label-row {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .login-wrapper > .login-text > .login-origin {
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .labels-wrapper > .line2-label {
   padding-top: 2px !important;
   opacity: .6;
+}
+
+/* Login form autocompletion (with and without origin showing) and generated passwords */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
+  display: initial;
+  list-style-image: url(chrome://browser/skin/login.svg);
+  -moz-context-properties: fill;
+  fill: GrayText;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"][selected] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"][selected] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon[selected] {
+  fill: HighlightText;
+}
+
+/* Login form autocompletion with origin showing and generated passwords */
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"],
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] {
+  padding: 4px;
+}
+
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] + richlistitem[originaltype="generatedPassword"],
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] + richlistitem[originaltype="generatedPassword"] {
+  /* Separator between logins and generated passwords */
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 /* Insecure field warning */

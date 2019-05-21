@@ -15,6 +15,8 @@ ChromeUtils.defineModuleGetter(this, "DeferredTask",
                                "resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
+ChromeUtils.defineModuleGetter(this, "PasswordGenerator",
+                               "resource://gre/modules/PasswordGenerator.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -26,6 +28,15 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 var EXPORTED_SYMBOLS = [ "LoginManagerParent" ];
 
 var LoginManagerParent = {
+  /**
+   * A map of a principal's origin (including suffixes) to a generated password string so that we
+   * can offer the same password later (e.g. in a confirmation field).
+   *
+   * We don't currently evict from this cache so entries should last until the end of the browser
+   * session. That may change later but for now a typical session would max out at a few entries.
+   */
+  _generatedPasswordsByPrincipalOrigin: new Map(),
+
   /**
    * Reference to the default LoginRecipesParent (instead of the initialization promise) for
    * synchronous access. This is a temporary hack and new consumers should yield on
@@ -244,9 +255,16 @@ var LoginManagerParent = {
     });
   },
 
-  doAutocompleteSearch({ formOrigin, actionOrigin,
-                         searchString, previousResult,
-                         rect, requestId, isSecure, isPasswordField,
+  doAutocompleteSearch({
+    autocompleteInfo,
+    browsingContextId,
+    formOrigin,
+    actionOrigin,
+    searchString,
+    previousResult,
+    requestId,
+    isSecure,
+    isPasswordField,
   }, target) {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
@@ -288,20 +306,54 @@ var LoginManagerParent = {
 
       // Remove results that are too short, or have different prefix.
       // Also don't offer empty usernames as possible results except
-      // for password field.
+      // for on password fields.
       if (isPasswordField) {
         return true;
       }
       return match && match.toLowerCase().startsWith(searchStringLower);
     });
 
+    let generatedPassword = null;
+    if (isPasswordField && autocompleteInfo.fieldName == "new-password") {
+      generatedPassword = this.getGeneratedPassword(browsingContextId);
+    }
+
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
     var jsLogins = LoginHelper.loginsToVanillaObjects(matchingLogins);
     target.messageManager.sendAsyncMessage("PasswordManager:loginsAutoCompleted", {
       requestId,
+      generatedPassword,
       logins: jsLogins,
     });
+  },
+
+  /**
+   * Expose `BrowsingContext` so we can stub it in tests.
+   */
+  get _browsingContextGlobal() {
+    return BrowsingContext;
+  },
+
+  getGeneratedPassword(browsingContextId) {
+    if (!LoginHelper.enabled || !LoginHelper.generationAvailable || !LoginHelper.generationEnabled) {
+      return null;
+    }
+
+    let browsingContext = BrowsingContext.get(browsingContextId);
+    if (!browsingContext) {
+      return null;
+    }
+    let framePrincipalOrigin = browsingContext.currentWindowGlobal.documentPrincipal.origin;
+    // Use the same password if we already generated one for this origin so that it doesn't change
+    // with each search/keystroke and the user can easily re-enter a password in a confirmation field.
+    let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(framePrincipalOrigin);
+    if (generatedPW) {
+      return generatedPW;
+    }
+    generatedPW = PasswordGenerator.generatePassword();
+    this._generatedPasswordsByPrincipalOrigin.set(framePrincipalOrigin, generatedPW);
+    return generatedPW;
   },
 
   onFormSubmit({hostname, formSubmitURL, autoFilledLoginGuid,

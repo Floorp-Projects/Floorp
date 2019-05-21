@@ -4,6 +4,8 @@
 
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 
+const GENERATED_PASSWORD_LENGTH = 15;
+const GENERATED_PASSWORD_REGEX = /^[a-km-np-zA-HJ-NP-Z2-9]{15}$/;
 // Copied from LoginTestUtils.masterPassword.masterPassword to use from the content process.
 const MASTER_PASSWORD = "omgsecret!";
 const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
@@ -40,7 +42,7 @@ function $_(formNum, name) {
 
 /**
  * Check autocomplete popup results to ensure that expected
- * values are being shown correctly as items in the popup.
+ * *labels* are being shown correctly as items in the popup.
  */
 function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
   if (hostname !== null) {
@@ -48,8 +50,7 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
 
     // Check the footer first.
     let footerResult = actualValues[actualValues.length - 1];
-    ok(footerResult.includes("View Saved Logins"), "the footer text is shown correctly");
-    ok(footerResult.includes(hostname), "the footer has the correct hostname attribute");
+    is(footerResult, "View Saved Logins", "the footer text is shown correctly");
   }
 
   if (hostname === null) {
@@ -66,6 +67,17 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
   // Check the rest of the autocomplete item values.
   checkArrayValues(actualValues.slice(0, -1), expectedValues, msg);
 }
+
+/**
+ * Check for expected username/password in form.
+ * @see `checkForm` below for a similar function.
+ */
+function checkLoginForm(usernameField, expectedUsername, passwordField, expectedPassword) {
+  let formID = usernameField.parentNode.id;
+  is(usernameField.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
+  is(passwordField.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
+}
+
 
 /**
  * Check a form for expected values. If an argument is null, a field's
@@ -210,7 +222,7 @@ function logoutMasterPassword() {
 }
 
 /**
- * Resolves when a specified number of forms have been processed.
+ * Resolves when a specified number of forms have been processed for (potential) filling.
  */
 function promiseFormsProcessed(expectedCount = 1) {
   var processedCount = 0;
@@ -218,6 +230,7 @@ function promiseFormsProcessed(expectedCount = 1) {
     function onProcessedForm(subject, topic, data) {
       processedCount++;
       if (processedCount == expectedCount) {
+        info(`${processedCount} form(s) processed`);
         SpecialPowers.removeObserver(onProcessedForm, "passwordmgr-processed-form");
         resolve(SpecialPowers.Cu.waiveXrays(subject), data);
       }
@@ -396,9 +409,3 @@ this.LoginManager = new Proxy({}, {
   },
 });
 
-// Check for expected username/password in form.
-function checkLoginForm(usernameField, expectedUsername, passwordField, expectedPassword) {
-  let formID = usernameField.parentNode.id;
-  is(usernameField.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
-  is(passwordField.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
-}
