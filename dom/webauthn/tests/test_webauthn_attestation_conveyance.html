@@ -23,7 +23,7 @@
     function getAttestationCertFromAttestationBuffer(aAttestationBuffer) {
       return webAuthnDecodeCBORAttestation(aAttestationBuffer)
       .then((aAttestationObj) => {
-        is("fido-u2f", aAttestationObj.fmt, "Is a FIDO U2F Attestation");
+        is(aAttestationObj.fmt, "fido-u2f", "Is a FIDO U2F Attestation");
         let attestationCertDER = aAttestationObj.attStmt.x5c[0];
         let certDERBuffer = attestationCertDER.slice(0, attestationCertDER.byteLength).buffer;
         let certAsn1 = org.pkijs.fromBER(certDERBuffer);
@@ -34,9 +34,9 @@
     function verifyAnonymizedCertificate(aResult) {
       return webAuthnDecodeCBORAttestation(aResult.response.attestationObject)
       .then(({fmt, attStmt}) => {
-        is("none", fmt, "Is a None Attestation");
-        is("object", typeof(attStmt), "attStmt is a map");
-        is(0, Object.keys(attStmt).length, "attStmt is empty");
+        is(fmt, "none", "Is a None Attestation");
+        is(typeof(attStmt), "object", "attStmt is a map");
+        is(Object.keys(attStmt).length, 0, "attStmt is empty");
       });
     }
 
@@ -100,7 +100,14 @@
 
       // Request direct attestation, which will prompt for user intervention.
       await requestMakeCredential("direct")
-        .then(verifyDirectCertificate)
+        .then((x) => {
+          if (AppConstants.platform === "android") {
+            // If this is Android, the result will be anonymized (Bug 1551229)
+            return verifyAnonymizedCertificate(x);
+          } else {
+            return verifyDirectCertificate(x);
+          }
+        })
         .catch(arrivingHereIsBad);
     });
 
