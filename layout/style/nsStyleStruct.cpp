@@ -2998,10 +2998,6 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mScrollSnapType(
           {StyleScrollSnapAxis::Both, StyleScrollSnapStrictness::None}),
       mLineClamp(0),
-      mScrollSnapPointsX(eStyleUnit_None),
-      mScrollSnapPointsY(eStyleUnit_None),
-      mScrollSnapDestination(
-          {LengthPercentage::Zero(), LengthPercentage::Zero()}),
       mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
       mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
       mTransformBox(StyleGeometryBox::BorderBox),
@@ -3063,10 +3059,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOverscrollBehaviorY(aSource.mOverscrollBehaviorY),
       mScrollSnapType(aSource.mScrollSnapType),
       mLineClamp(aSource.mLineClamp),
-      mScrollSnapPointsX(aSource.mScrollSnapPointsX),
-      mScrollSnapPointsY(aSource.mScrollSnapPointsY),
-      mScrollSnapDestination(aSource.mScrollSnapDestination),
-      mScrollSnapCoordinate(aSource.mScrollSnapCoordinate),
       mTransform(aSource.mTransform),
       mRotate(aSource.mRotate),
       mTranslate(aSource.mTranslate),
@@ -3152,9 +3144,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
       (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None) ||
       mScrollBehavior != aNewData.mScrollBehavior ||
       mScrollSnapType != aNewData.mScrollSnapType ||
-      mScrollSnapPointsX != aNewData.mScrollSnapPointsX ||
-      mScrollSnapPointsY != aNewData.mScrollSnapPointsY ||
-      mScrollSnapDestination != aNewData.mScrollSnapDestination ||
       mTopLayer != aNewData.mTopLayer || mResize != aNewData.mResize) {
     return nsChangeHint_ReconstructFrame;
   }
@@ -3181,16 +3170,17 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     hint |= nsChangeHint_ScrollbarChange;
   }
 
-  /* Note: When mScrollBehavior, mScrollSnapTypeX, mScrollSnapTypeY,
-   * mScrollSnapPointsX, mScrollSnapPointsY, or mScrollSnapDestination are
-   * changed, nsChangeHint_NeutralChange is not sufficient to enter
-   * nsCSSFrameConstructor::PropagateScrollToViewport. By using the same hint
-   * as used when the overflow css property changes,
-   * nsChangeHint_ReconstructFrame, PropagateScrollToViewport will be called.
+  /* Note: When mScrollBehavior or mScrollSnapType are changed,
+   * nsChangeHint_NeutralChange is not sufficient to enter
+   * nsCSSFrameConstructor::PropagateScrollToViewport. By using the same hint as
+   * used when the overflow css property changes, nsChangeHint_ReconstructFrame,
+   * PropagateScrollToViewport will be called.
    *
    * The scroll-behavior css property is not expected to change often (the
    * CSSOM-View DOM methods are likely to be used in those cases); however,
    * if this does become common perhaps a faster-path might be worth while.
+   *
+   * FIXME(emilio): Can we do what we do for overflow changes?
    */
 
   if (mFloat != aNewData.mFloat) {
@@ -3371,7 +3361,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
                 mAnimationPlayStateCount != aNewData.mAnimationPlayStateCount ||
                 mAnimationIterationCountCount !=
                     aNewData.mAnimationIterationCountCount ||
-                mScrollSnapCoordinate != aNewData.mScrollSnapCoordinate ||
                 mWillChange != aNewData.mWillChange ||
                 mOverflowAnchor != aNewData.mOverflowAnchor)) {
     hint |= nsChangeHint_NeutralChange;

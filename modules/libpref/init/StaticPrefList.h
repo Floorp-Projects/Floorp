@@ -1298,14 +1298,6 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
-// Is support for the old unspecced scroll-snap enabled?
-// E.g. scroll-snap-points-{x,y}, scroll-snap-coordinate, etc.
-VARCACHE_PREF(
-  "layout.css.scroll-snap.enabled",
-   layout_css_scroll_snap_enabled,
-  bool, false
-)
-
 // Are shared memory User Agent style sheets enabled?
 VARCACHE_PREF(
   "layout.css.shared-memory-ua-sheets.enabled",

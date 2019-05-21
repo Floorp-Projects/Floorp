@@ -1738,10 +1738,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleScrollSnapAlign mScrollSnapAlign;
   mozilla::StyleScrollSnapType mScrollSnapType;
   uint32_t mLineClamp;
-  nsStyleCoord mScrollSnapPointsX;
-  nsStyleCoord mScrollSnapPointsY;
-  mozilla::Position mScrollSnapDestination;
-  nsTArray<mozilla::Position> mScrollSnapCoordinate;
 
   mozilla::StyleTransform mTransform;
   mozilla::StyleRotate mRotate;
