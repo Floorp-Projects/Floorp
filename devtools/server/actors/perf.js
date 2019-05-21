@@ -69,9 +69,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
         settings.entries,
         settings.interval,
         settings.features,
-        settings.features.length,
         settings.threads,
-        settings.threads.length,
         settings.duration
       );
     } catch (e) {

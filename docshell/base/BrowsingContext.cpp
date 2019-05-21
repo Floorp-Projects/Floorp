@@ -889,7 +889,7 @@ void BrowsingContext::DidSetIsActivatedByUserGesture(ContentParent* aSource) {
 
 namespace ipc {
 
-void IPDLParamTraits<dom::BrowsingContext>::Write(
+void IPDLParamTraits<dom::BrowsingContext*>::Write(
     IPC::Message* aMsg, IProtocol* aActor, dom::BrowsingContext* aParam) {
   uint64_t id = aParam ? aParam->Id() : 0;
   WriteIPDLParam(aMsg, aActor, id);
@@ -902,7 +902,7 @@ void IPDLParamTraits<dom::BrowsingContext>::Write(
   }
 }
 
-bool IPDLParamTraits<dom::BrowsingContext>::Read(
+bool IPDLParamTraits<dom::BrowsingContext*>::Read(
     const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
     RefPtr<dom::BrowsingContext>* aResult) {
   uint64_t id = 0;

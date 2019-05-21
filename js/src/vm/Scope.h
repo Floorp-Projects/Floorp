@@ -568,7 +568,6 @@ class FunctionScope : public Scope {
     Data() = delete;
 
     void trace(JSTracer* trc);
-    Zone* zone() const;
   };
 
   static FunctionScope* create(JSContext* cx, Handle<Data*> data,

@@ -3851,7 +3851,7 @@ static bool NeedsFunctionEnvironmentObjects(frontend::BytecodeEmitter* bce) {
   js::Scope* outerScope = bce->outermostScope();
   if (outerScope->kind() == js::ScopeKind::NamedLambda ||
       outerScope->kind() == js::ScopeKind::StrictNamedLambda) {
-    MOZ_ASSERT(bce->sc->asFunctionBox()->function()->isNamedLambda());
+    MOZ_ASSERT(bce->sc->asFunctionBox()->isNamedLambda());
 
     if (outerScope->hasEnvironment()) {
       return true;

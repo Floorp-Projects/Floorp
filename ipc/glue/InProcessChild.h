@@ -53,7 +53,7 @@ class InProcessChild : public PInProcessChild {
   // NOTE: PInProcess lifecycle management is declared as staic methods and
   // state on InProcessParent, and implemented in InProcessImpl.cpp.
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-  virtual void DeallocPInProcessChild() override;
+  virtual void ActorDealloc() override;
   ~InProcessChild() = default;
 
   static StaticRefPtr<InProcessChild> sSingleton;

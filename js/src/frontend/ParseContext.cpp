@@ -146,7 +146,7 @@ bool ParseContext::Scope::propagateAndMarkAnnexBFunctionBoxes(
     uint32_t unused;
     for (FunctionBox* funbox : *possibleAnnexBFunctionBoxes_) {
       if (pc->annexBAppliesToLexicalFunctionInInnermostScope(funbox)) {
-        name = funbox->function()->explicitName()->asPropertyName();
+        name = funbox->explicitName()->asPropertyName();
         if (!pc->tryDeclareVar(
                 name, DeclarationKind::VarForAnnexBLexicalFunction,
                 DeclaredNameInfo::npos, &redeclaredKind, &unused)) {
@@ -241,7 +241,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       isStandaloneFunctionBody_(false),
       superScopeNeedsHomeObject_(false) {
   if (isFunctionBox()) {
-    if (functionBox()->function()->isNamedLambda()) {
+    if (functionBox()->isNamedLambda()) {
       namedLambdaScope_.emplace(cx, parent, usedNames);
     }
     functionScope_.emplace(cx, parent, usedNames);
@@ -297,7 +297,7 @@ bool ParseContext::annexBAppliesToLexicalFunctionInInnermostScope(
   MOZ_ASSERT(!sc()->strict());
 
   RootedPropertyName name(sc()->cx_,
-                          funbox->function()->explicitName()->asPropertyName());
+                          funbox->explicitName()->asPropertyName());
   Maybe<DeclarationKind> redeclaredKind = isVarRedeclaredInInnermostScope(
       name, DeclarationKind::VarForAnnexBLexicalFunction);
 

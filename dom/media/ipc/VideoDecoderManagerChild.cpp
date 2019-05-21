@@ -153,9 +153,7 @@ void VideoDecoderManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
   mCanSend = false;
 }
 
-void VideoDecoderManagerChild::DeallocPVideoDecoderManagerChild() {
-  mIPDLSelfRef = nullptr;
-}
+void VideoDecoderManagerChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
 
 bool VideoDecoderManagerChild::CanSend() {
   MOZ_ASSERT(NS_GetCurrentThread() == GetManagerThread());

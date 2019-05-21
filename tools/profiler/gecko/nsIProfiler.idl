@@ -35,11 +35,9 @@ interface nsIProfiler : nsISupports
 {
   boolean CanProfile();
   void StartProfiler(in uint32_t aEntries, in double aInterval,
-                      [array, size_is(aFeatureCount)] in string aFeatures,
-                      in uint32_t aFeatureCount,
-                      [array, size_is(aFilterCount), optional] in string aFilters,
-                      [optional] in uint32_t aFilterCount,
-                      [optional] in double aDuration);
+                     in Array<AUTF8String> aFeatures,
+                     [optional] in Array<AUTF8String> aFilters,
+                     [optional] in double aDuration);
   void StopProfiler();
   boolean IsPaused();
   void PauseSampling();
@@ -82,13 +80,13 @@ interface nsIProfiler : nsISupports
    * Returns an array of the features that are supported in this build.
    * Features may vary depending on platform and build flags.
    */
-  void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
+  Array<AUTF8String> GetFeatures();
 
   /**
    * Returns an array of all features that are supported by the profiler.
    * The array may contain features that are not supported in this build.
    */
-  void GetAllFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
+  Array<AUTF8String> GetAllFeatures();
 
   void GetBufferInfo(out uint32_t aCurrentPosition, out uint32_t aTotalSize,
                      out uint32_t aGeneration);

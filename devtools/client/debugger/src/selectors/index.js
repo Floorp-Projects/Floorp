@@ -44,6 +44,7 @@ export { inComponent } from "./inComponent";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
 export { getCallStackFrames } from "./getCallStackFrames";
 export { getBreakpointSources } from "./breakpointSources";
+export { isLineInScope } from "./isLineInScope";
 export { getXHRBreakpoints, shouldPauseOnAnyXHR } from "./breakpoints";
 export * from "./visibleColumnBreakpoints";
 export {

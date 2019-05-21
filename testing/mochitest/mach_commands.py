@@ -576,7 +576,7 @@ class RobocopCommands(MachCommandBase):
             kwargs['adbPath'] = get_adb_path(self)
 
         mochitest = self._spawn(MochitestRunner)
-        return mochitest.run_robocop_test(self._mach_context, tests, 'robocop', **kwargs)
+        return mochitest.run_robocop_test(self._mach_context, tests, **kwargs)
 
 
 # NOTE python/mach/mach/commands/commandinfo.py references this function

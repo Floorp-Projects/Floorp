@@ -203,7 +203,7 @@ CompositorManagerChild::CompositorManagerChild(
   SetReplyTimeout();
 }
 
-void CompositorManagerChild::DeallocPCompositorManagerChild() {
+void CompositorManagerChild::ActorDealloc() {
   MOZ_ASSERT(!mCanSend);
   Release();
 }

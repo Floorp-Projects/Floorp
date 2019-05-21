@@ -77,7 +77,7 @@ void VideoBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   mCanSend = false;
 }
 
-void VideoBridgeChild::DeallocPVideoBridgeChild() { mIPDLSelfRef = nullptr; }
+void VideoBridgeChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
 
 PTextureChild* VideoBridgeChild::CreateTexture(
     const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,

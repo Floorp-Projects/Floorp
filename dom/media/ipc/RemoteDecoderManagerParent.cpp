@@ -190,8 +190,6 @@ void RemoteDecoderManagerParent::Open(
   AddRef();
 }
 
-void RemoteDecoderManagerParent::DeallocPRemoteDecoderManagerParent() {
-  Release();
-}
+void RemoteDecoderManagerParent::ActorDealloc() { Release(); }
 
 }  // namespace mozilla

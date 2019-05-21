@@ -11,6 +11,8 @@
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this, "WEBEXT_PERMISSION_PROMPTS",
   "extensions.webextPermissionPrompts", false);
@@ -85,7 +87,7 @@ async function loadReleaseNotes(uri) {
     ParserUtils.SanitizerDropForms;
 
   // Sanitize and parse the content to a fragment.
-  const context = document.createElement("div");
+  const context = document.createElementNS(HTML_NS, "div");
   return ParserUtils.parseFragment(text, flags, false, uri, context);
 }
 

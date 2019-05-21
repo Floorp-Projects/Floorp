@@ -115,7 +115,7 @@ void VsyncBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-void VsyncBridgeChild::DeallocPVsyncBridgeChild() { Release(); }
+void VsyncBridgeChild::ActorDealloc() { Release(); }
 
 void VsyncBridgeChild::ProcessingError(Result aCode, const char* aReason) {
   MOZ_RELEASE_ASSERT(aCode == MsgDropped,

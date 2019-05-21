@@ -26,7 +26,7 @@ add_task(async function() {
 
   Services.prefs.clearUserPref(acceptedExtensionIdsPref);
 
-  const allFeaturesAcceptedByProfiler = Services.profiler.GetAllFeatures([]);
+  const allFeaturesAcceptedByProfiler = Services.profiler.GetAllFeatures();
   ok(allFeaturesAcceptedByProfiler.length >= 2,
      "Either we've massively reduced the profiler's feature set, or something is wrong.");
 

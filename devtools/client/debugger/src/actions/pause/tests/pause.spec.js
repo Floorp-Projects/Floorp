@@ -85,6 +85,7 @@ function createPauseInfo(
       { id: mockFrameId, sourceId: frameLocation.sourceId },
       {
         location: frameLocation,
+        generatedLocation: frameLocation,
         ...frameOpts,
       }
     ),

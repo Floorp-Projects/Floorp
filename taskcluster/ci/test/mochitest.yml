@@ -73,10 +73,7 @@ mochitest:
             windows10-64-ccov/debug: 10
             macosx.*64-ccov/debug: 10
             default: 5
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     max-run-time:
         by-test-platform:
             android-em.*: 7200
@@ -273,10 +270,7 @@ mochitest-gpu:
             android-em.*: xlarge
             default: default
     virtualization: virtual-with-gpu
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     mozharness:
         mochitest-flavor: plain
         extra-options:
@@ -387,10 +381,7 @@ mochitest-webgl1-core:
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     virtualization: virtual-with-gpu
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     loopback-video: true
     tier:
         by-test-platform:
@@ -414,10 +405,7 @@ mochitest-webgl1-ext:
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     virtualization: virtual-with-gpu
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     loopback-video: true
     tier:
         by-test-platform:
@@ -440,10 +428,7 @@ mochitest-webgl2-core:
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     virtualization: virtual-with-gpu
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     loopback-video: true
     tier:
         by-test-platform:
@@ -467,10 +452,7 @@ mochitest-webgl2-ext:
             default: built-projects
     virtualization: virtual-with-gpu
     chunks: 4
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     loopback-video: true
     tier:
         by-test-platform:
@@ -492,10 +474,7 @@ mochitest-webgl2-deqp:
     run-on-projects: []  # Don't run this for now.
     virtualization: virtual-with-gpu
     chunks: 4
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     loopback-video: true
     tier:
         by-test-platform:

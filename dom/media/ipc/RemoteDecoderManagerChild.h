@@ -33,7 +33,7 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild {
   void InitIPDL();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  void DeallocPRemoteDecoderManagerChild() override;
+  void ActorDealloc() override;
 
   PRemoteDecoderChild* AllocPRemoteDecoderChild(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,

@@ -55,10 +55,7 @@ web-platform-tests:
         by-test-platform:
             .*-ccov/debug: 10800
             default: 7200
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     run-on-projects:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
@@ -85,10 +82,7 @@ web-platform-tests-headless:
         by-test-platform:
             macosx.*/opt: 8
             macosx.*/debug: 16
-    e10s:
-        by-test-platform:
-            macosx.*: true
-            default: true
+    e10s: true
     max-run-time: 7200
     run-on-projects: []  # disabled pending releng approval
     mozharness:
@@ -119,10 +113,7 @@ web-platform-tests-reftests:
             windows.*-(32|64)(-qr)?/debug: 5
             android.*: 6
             default: 4
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     run-on-projects:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
@@ -145,10 +136,7 @@ web-platform-tests-reftests-headless:
     schedules-component: web-platform-tests-reftests
     treeherder-symbol: W(WrH)
     chunks: 6
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
+    e10s: true
     run-on-projects: []  # disabled pending releng approval
     mozharness:
         extra-options:

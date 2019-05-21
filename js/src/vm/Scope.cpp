@@ -644,10 +644,6 @@ static inline uint32_t FunctionScopeEnvShapeFlags(bool hasParameterExprs) {
   return BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
 }
 
-Zone* FunctionScope::Data::zone() const {
-  return canonicalFunction ? canonicalFunction->zone() : nullptr;
-}
-
 /* static */
 FunctionScope* FunctionScope::create(JSContext* cx, Handle<Data*> dataArg,
                                      bool hasParameterExprs,

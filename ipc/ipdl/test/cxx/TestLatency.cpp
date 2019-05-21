@@ -75,8 +75,6 @@ mozilla::ipc::IPCResult TestLatencyParent::RecvPong() {
 mozilla::ipc::IPCResult TestLatencyParent::RecvPong5() {
   ++mWhichPong5;
 
-  // MOZ_ASSERT((PTestLatency::PING5 != state()) == (mWhichPong5 < 5));
-
   if (mWhichPong5 < 5) {
     return IPC_OK();
   }
@@ -168,8 +166,6 @@ mozilla::ipc::IPCResult TestLatencyChild::RecvPing() {
 
 mozilla::ipc::IPCResult TestLatencyChild::RecvPing5() {
   ++mWhichPing5;
-
-  // MOZ_ASSERT((PTestLatency::PONG1 != state()) == (mWhichPing5 < 5));
 
   if (mWhichPing5 < 5) {
     return IPC_OK();

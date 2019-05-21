@@ -52,14 +52,13 @@ DataChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener,
 }
 
 void DataChannelChild::AddIPDLReference() {
-  AddRef();
+  AddRef();  // Released in NeckoChild::DeallocPDataChannelChild.
   mIPCOpen = true;
 }
 
 void DataChannelChild::ActorDestroy(ActorDestroyReason why) {
   MOZ_ASSERT(mIPCOpen);
   mIPCOpen = false;
-  Release();
 }
 
 }  // namespace net

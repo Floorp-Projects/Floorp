@@ -13,28 +13,6 @@ child:
     async Start();
     intr Hang();
     async __delete__();
-
-/*
-state START:
-    send Start goto RACE;
-
-state RACE:
-    recv Nonce goto RACE1;
-    call StackFrame goto RACE2;
-state RACE1:
-    call StackFrame goto FRAME2;
-state RACE2:
-    recv Nonce goto FRAME2;
-
-// So as to test unwinding the RPC stack
-state FRAME2: answer StackFrame goto FRAME3;
-state FRAME3: call StackFrame goto FRAME4;
-state FRAME4: answer StackFrame goto HANG;
-state HANG:   call Hang goto DEATH;
-
-state DEATH:
-    send __delete__;
-*/
 };
 
 } // namespace _ipdltest

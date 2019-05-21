@@ -824,21 +824,6 @@ ImgDrawResult nsBulletFrame::PaintBullet(gfxContext& aRenderingContext,
                    aDisableSubpixelAA, this);
 }
 
-int32_t nsBulletFrame::Ordinal(bool aDebugFromA11y) const {
-  auto* fc = PresShell()->FrameConstructor();
-  auto* cm = fc->CounterManager();
-  auto* list = cm->CounterListFor(nsGkAtoms::list_item);
-  MOZ_ASSERT(aDebugFromA11y || (list && !list->IsDirty()));
-  nsIFrame* listItem = GetParent()->GetContent()->GetPrimaryFrame();
-  int32_t value = 0;
-  for (auto* node = list->First(); node; node = list->Next(node)) {
-    if (node->mPseudoFrame == listItem) {
-      value = node->mValueAfter;
-    }
-  }
-  return value;
-}
-
 void nsBulletFrame::GetListItemText(CounterStyle* aStyle,
                                     mozilla::WritingMode aWritingMode,
                                     int32_t aOrdinal, nsAString& aResult) {
@@ -1282,7 +1267,7 @@ void nsBulletFrame::GetSpokenText(nsAString& aText) {
       PresContext()->CounterStyleManager()->ResolveCounterStyle(
           StyleList()->mCounterStyle);
   bool isBullet;
-  style->GetSpokenCounterText(Ordinal(true), GetWritingMode(), aText, isBullet);
+  style->GetSpokenCounterText(Ordinal(), GetWritingMode(), aText, isBullet);
   if (isBullet) {
     if (!style->IsNone()) {
       aText.Append(' ');
@@ -1329,6 +1314,17 @@ void nsBulletFrame::DeregisterAndCancelImageRequest() {
     // Cancel the image request and forget about it.
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);
     mImageRequest = nullptr;
+  }
+}
+
+void nsBulletFrame::SetOrdinal(int32_t aOrdinal, bool aNotify) {
+  if (mOrdinal == aOrdinal) {
+    return;
+  }
+  mOrdinal = aOrdinal;
+  if (aNotify) {
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
+                                  NS_FRAME_IS_DIRTY);
   }
 }
 

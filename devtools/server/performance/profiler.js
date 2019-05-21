@@ -112,9 +112,7 @@ const ProfilerManager = (function() {
           config.entries,
           config.interval,
           config.features,
-          config.features.length,
           config.threadFilters,
-          config.threadFilters.length
         );
       } catch (e) {
         // For some reason, the profiler couldn't be started. This could happen,
@@ -200,7 +198,7 @@ const ProfilerManager = (function() {
      * @return {object}
      */
     getFeatures: function() {
-      return { features: Services.profiler.GetFeatures([]) };
+      return { features: Services.profiler.GetFeatures() };
     },
 
     /**

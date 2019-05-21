@@ -51,7 +51,6 @@
   color: inherit;
 }
 
-.tree-node.focused button.jump-definition,
 .tree-node.focused button.open-inspector,
 .tree-node.focused button.invoke-getter {
   background-color: currentColor;

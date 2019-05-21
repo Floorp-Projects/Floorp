@@ -348,14 +348,17 @@ class SyntaxParseHandler {
                                               AccessorType atype) {
     return true;
   }
-  MOZ_MUST_USE bool addClassMethodDefinition(ListNodeType memberList, Node key,
-                                             FunctionNodeType funNode,
+  MOZ_MUST_USE Node newClassMethodDefinition(Node key, FunctionNodeType funNode,
                                              AccessorType atype,
                                              bool isStatic) {
-    return true;
+    return NodeGeneric;
   }
-  MOZ_MUST_USE bool addClassFieldDefinition(ListNodeType memberList, Node name,
+  MOZ_MUST_USE Node newClassFieldDefinition(Node name,
                                             FunctionNodeType initializer) {
+    return NodeGeneric;
+  }
+  MOZ_MUST_USE bool addClassMemberDefinition(ListNodeType memberList,
+                                             Node member) {
     return true;
   }
   UnaryNodeType newYieldExpression(uint32_t begin, Node value) {

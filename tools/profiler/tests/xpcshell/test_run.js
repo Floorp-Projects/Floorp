@@ -9,7 +9,7 @@ function run_test() {
 
   Assert.ok(!Services.profiler.IsActive());
 
-  Services.profiler.StartProfiler(1000, 10, [], 0);
+  Services.profiler.StartProfiler(1000, 10, []);
 
   Assert.ok(Services.profiler.IsActive());
 

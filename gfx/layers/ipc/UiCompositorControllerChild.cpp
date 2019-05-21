@@ -215,7 +215,7 @@ void UiCompositorControllerChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-void UiCompositorControllerChild::DeallocPUiCompositorControllerChild() {
+void UiCompositorControllerChild::ActorDealloc() {
   if (mParent) {
     mParent = nullptr;
   }

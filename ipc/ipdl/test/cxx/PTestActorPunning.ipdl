@@ -20,20 +20,6 @@ parent:
     async PTestActorPunningSub();
     async Pun(PTestActorPunningSub a, Bad bad);
     async __delete__();
-
-/*
-state PING:
-    send Start goto CONSTRUCTING;
-
-state CONSTRUCTING:
-    recv PTestActorPunningPunned goto CONSTRUCTING;
-    recv PTestActorPunningSub goto CONSTRUCTING;
-    recv Pun goto DEAD;
-    // We never make it past this transition, --> error.
-
-state DEAD:
-    recv __delete__;
-*/
 };
 
 } // namespace mozilla

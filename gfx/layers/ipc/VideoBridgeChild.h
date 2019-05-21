@@ -33,7 +33,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   bool DeallocPTextureChild(PTextureChild* actor);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  void DeallocPVideoBridgeChild() override;
+  void ActorDealloc() override;
 
   // ISurfaceAllocator
   bool AllocUnsafeShmem(size_t aSize,

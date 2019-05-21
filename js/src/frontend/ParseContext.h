@@ -498,7 +498,7 @@ class ParseContext : public Nestable<ParseContext> {
   }
 
   Scope& namedLambdaScope() {
-    MOZ_ASSERT(functionBox()->function()->isNamedLambda());
+    MOZ_ASSERT(functionBox()->isNamedLambda());
     return *namedLambdaScope_;
   }
 
@@ -615,17 +615,17 @@ class ParseContext : public Nestable<ParseContext> {
   }
 
   bool isArrowFunction() const {
-    return sc_->isFunctionBox() && sc_->asFunctionBox()->function()->isArrow();
+    return sc_->isFunctionBox() && sc_->asFunctionBox()->isArrow();
   }
 
   bool isMethod() const {
-    return sc_->isFunctionBox() && sc_->asFunctionBox()->function()->isMethod();
+    return sc_->isFunctionBox() && sc_->asFunctionBox()->isMethod();
   }
 
   bool isGetterOrSetter() const {
     return sc_->isFunctionBox() &&
-           (sc_->asFunctionBox()->function()->isGetter() ||
-            sc_->asFunctionBox()->function()->isSetter());
+           (sc_->asFunctionBox()->isGetter() ||
+            sc_->asFunctionBox()->isSetter());
   }
 
   uint32_t scriptId() const { return scriptId_; }

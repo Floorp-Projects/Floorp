@@ -10,11 +10,13 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ScopeExit.h"
 
+#include <algorithm>
 #include <string.h>
 #include <utility>
 
 #include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"
+#include "jit/JitSpewer.h"
 #include "js/Printf.h"
 #include "js/TraceLoggerAPI.h"
 #include "threading/LockGuard.h"
@@ -85,16 +87,20 @@ void js::DestroyTraceLogger(TraceLoggerThread* logger) {
 }
 
 bool TraceLoggerThread::init() {
-  if (!events.init()) {
+  if (!events_.init()) {
     return false;
   }
 
   // Minimum amount of capacity needed for operation to allow flushing.
   // Flushing requires space for the actual event and two spaces to log the
   // start and stop of flushing.
-  if (!events.ensureSpaceBeforeAdd(3)) {
+  if (!events_.ensureSpaceBeforeAdd(3)) {
     return false;
   }
+
+  char* buffer = js_pod_malloc<char>(32);
+  js::ThisThread::GetName(buffer, 32);
+  threadName_.reset(buffer);
 
   return true;
 }
@@ -103,8 +109,8 @@ void TraceLoggerThread::initGraph() {
   // Create a graph. I don't like this is called reset, but it locks the
   // graph into the UniquePtr. So it gets deleted when TraceLoggerThread
   // is destructed.
-  graph.reset(js_new<TraceLoggerGraph>());
-  if (!graph.get()) {
+  graph_.reset(js_new<TraceLoggerGraph>());
+  if (!graph_.get()) {
     return;
   }
 
@@ -113,8 +119,8 @@ void TraceLoggerThread::initGraph() {
   double delta =
       traceLoggerState->getTimeStampOffset(mozilla::TimeStamp::Now());
   uint64_t start = static_cast<uint64_t>(delta);
-  if (!graph->init(start, graphFile)) {
-    graph = nullptr;
+  if (!graph_->init(start, graphFile)) {
+    graph_ = nullptr;
     return;
   }
 
@@ -122,12 +128,12 @@ void TraceLoggerThread::initGraph() {
     // Report the textIds to the graph.
     for (uint32_t i = 0; i < TraceLogger_TreeItemEnd; i++) {
       TraceLoggerTextId id = TraceLoggerTextId(i);
-      graph->addTextId(i, TLTextIdString(id));
+      graph_->addTextId(i, TLTextIdString(id));
     }
-    graph->addTextId(TraceLogger_TreeItemEnd, "TraceLogger internal");
+    graph_->addTextId(TraceLogger_TreeItemEnd, "TraceLogger internal");
     for (uint32_t i = TraceLogger_TreeItemEnd + 1; i < TraceLogger_Last; i++) {
       TraceLoggerTextId id = TraceLoggerTextId(i);
-      graph->addTextId(i, TLTextIdString(id));
+      graph_->addTextId(i, TLTextIdString(id));
     }
   }
 }
@@ -179,9 +185,7 @@ void TraceLoggerThreadState::enableDefaultLogging() {
   enabledTextIds[TraceLogger_Scripts] = true;
   enabledTextIds[TraceLogger_Engine] = true;
   enabledTextIds[TraceLogger_WasmCompilation] = true;
-  enabledTextIds[TraceLogger_Interpreter] = true;
-  enabledTextIds[TraceLogger_Baseline] = true;
-  enabledTextIds[TraceLogger_IonMonkey] = true;
+  enabledTextIds[TraceLogger_Invalidation] = true;
 }
 
 void TraceLoggerThreadState::enableIonLogging() {
@@ -228,11 +232,11 @@ void TraceLoggerThreadState::enableFrontendLogging() {
 }
 
 TraceLoggerThread::~TraceLoggerThread() {
-  if (graph.get()) {
-    if (!failed) {
-      graph->log(events, traceLoggerState->startTime);
+  if (graph_.get()) {
+    if (!failed_) {
+      graph_->log(events_, traceLoggerState->startTime);
     }
-    graph = nullptr;
+    graph_ = nullptr;
   }
 }
 
@@ -242,7 +246,7 @@ bool TraceLoggerThread::enable() {
     return true;
   }
 
-  if (failed) {
+  if (failed_) {
     return false;
   }
 
@@ -255,7 +259,7 @@ bool TraceLoggerThread::enable() {
 bool TraceLoggerThread::fail(JSContext* cx, const char* error) {
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_TRACELOGGER_ENABLE_FAIL, error);
-  failed = true;
+  failed_ = true;
   enabled_ = 0;
 
   return false;
@@ -263,7 +267,7 @@ bool TraceLoggerThread::fail(JSContext* cx, const char* error) {
 
 void TraceLoggerThread::silentFail(const char* error) {
   traceLoggerState->maybeSpewError(error);
-  failed = true;
+  failed_ = true;
   enabled_ = 0;
 }
 
@@ -271,11 +275,11 @@ size_t TraceLoggerThread::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = 0;
 #ifdef DEBUG
-  size += graphStack.sizeOfExcludingThis(mallocSizeOf);
+  size += graphStack_.sizeOfExcludingThis(mallocSizeOf);
 #endif
-  size += events.sizeOfExcludingThis(mallocSizeOf);
-  if (graph.get()) {
-    size += graph->sizeOfIncludingThis(mallocSizeOf);
+  size += events_.sizeOfExcludingThis(mallocSizeOf);
+  if (graph_.get()) {
+    size += graph_->sizeOfIncludingThis(mallocSizeOf);
   }
   return size;
 }
@@ -349,7 +353,7 @@ bool TraceLoggerThread::enable(JSContext* cx) {
 }
 
 bool TraceLoggerThread::disable(bool force, const char* error) {
-  if (failed) {
+  if (failed_) {
     MOZ_ASSERT(enabled_ == 0);
     return false;
   }
@@ -374,14 +378,14 @@ bool TraceLoggerThread::disable(bool force, const char* error) {
 }
 
 const char* TraceLoggerThread::maybeEventText(uint32_t id) {
-  if (id < TraceLogger_Last) {
+  if (TLTextIdIsEnumEvent(id)) {
     return TLTextIdString(static_cast<TraceLoggerTextId>(id));
   }
   return traceLoggerState->maybeEventText(id);
 }
 
 TraceLoggerEventPayload* TraceLoggerThreadState::getPayload(uint32_t id) {
-  if (id < TraceLogger_Last) {
+  if (TLTextIdIsEnumEvent(id)) {
     return nullptr;
   }
 
@@ -559,30 +563,30 @@ void TraceLoggerThread::startEvent(uint32_t id) {
 #ifdef DEBUG
   if (enabled_ > 0) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!graphStack.append(id)) {
+    if (!graphStack_.append(id)) {
       oomUnsafe.crash("Could not add item to debug stack.");
     }
   }
 #endif
 
-  if (graph.get() && traceLoggerState->isGraphFileEnabled()) {
+  if (graph_.get() && traceLoggerState->isGraphFileEnabled()) {
     // Flush each textId to disk.  textId values up to TraceLogger_Last are
     // statically defined and each one has an associated constant event string
     // defined by TLTextIdString().  For any events with textId >=
     // TraceLogger_Last the payload associated with that textId must first be
     // found and then maybeEventText() will find the event string form the
     // dictionary.
-    for (uint32_t otherId = graph->nextTextId(); otherId <= id; otherId++) {
-      if (id < TraceLogger_Last) {
+    for (uint32_t otherId = graph_->nextTextId(); otherId <= id; otherId++) {
+      if (TLTextIdIsEnumEvent(id)) {
         const char* text = TLTextIdString(static_cast<TraceLoggerTextId>(id));
-        graph->addTextId(otherId, text);
+        graph_->addTextId(otherId, text);
       } else {
         TraceLoggerEventPayload* p = traceLoggerState->getPayload(id);
         if (p) {
           const char* filename = traceLoggerState->maybeEventText(p);
           mozilla::Maybe<uint32_t> line = p->line();
           mozilla::Maybe<uint32_t> column = p->column();
-          graph->addTextId(otherId, filename, line, column);
+          graph_->addTextId(otherId, filename, line, column);
           p->release();
         }
       }
@@ -616,8 +620,8 @@ void TraceLoggerThread::stopEvent(uint32_t id) {
   }
 
 #ifdef DEBUG
-  if (!graphStack.empty()) {
-    uint32_t prev = graphStack.popCopy();
+  if (!graphStack_.empty()) {
+    uint32_t prev = graphStack_.popCopy();
     if (id == TraceLogger_Error || prev == TraceLogger_Error) {
       // When encountering an Error id the stack will most likely not be correct
       // anymore. Ignore this.
@@ -626,9 +630,9 @@ void TraceLoggerThread::stopEvent(uint32_t id) {
                  prev == TraceLogger_Baseline ||
                  prev == TraceLogger_Interpreter);
     } else if (id == TraceLogger_Scripts) {
-      MOZ_ASSERT(prev >= TraceLogger_Last);
-    } else if (id >= TraceLogger_Last) {
-      MOZ_ASSERT(prev >= TraceLogger_Last);
+      MOZ_ASSERT(TLTextIdIsScriptEvent(prev));
+    } else if (TLTextIdIsScriptEvent(id)) {
+      MOZ_ASSERT(TLTextIdIsScriptEvent(prev));
       if (prev != id) {
         // Ignore if the text has been flushed already.
         MOZ_ASSERT_IF(maybeEventText(prev),
@@ -664,7 +668,7 @@ size_t JS::TraceLoggerDictionaryImpl::NextChunk(JSContext* cx,
   size_t bufferIndex = 0;
 
   const char* eventString = nullptr;
-  if (*dataIndex < TraceLogger_Last) {
+  if (TLTextIdIsEnumEvent(*dataIndex)) {
     eventString = TLTextIdString(static_cast<TraceLoggerTextId>(*dataIndex));
   } else {
     uint32_t dictId = *dataIndex - TraceLogger_Last;
@@ -703,17 +707,20 @@ size_t JS::TraceLoggerIdImpl::NextChunk(JSContext* cx, size_t* dataIndex,
   }
 
   size_t bufferIndex = 0;
-  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events_;
 
   for (; *dataIndex < events.size(); (*dataIndex)++) {
     if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
       continue;
     }
 
-    if (events[*dataIndex].textId >= TraceLogger_Last) {
+    if (TLTextIdIsScriptEvent(events[*dataIndex].textId)) {
       TraceLoggerEventPayload* payload =
           traceLoggerState->getPayload(events[*dataIndex].textId);
       MOZ_ASSERT(payload);
+      if (!payload) {
+        return 0;
+      }
       // Write the index of this event into the jsTracerDictionary array
       // property
       uint32_t dictId = TraceLogger_Last + payload->dictionaryId();
@@ -721,7 +728,6 @@ size_t JS::TraceLoggerIdImpl::NextChunk(JSContext* cx, size_t* dataIndex,
       payload->release();
     } else {
       buffer[bufferIndex++] = events[*dataIndex].textId;
-      ;
     }
 
     if (bufferIndex == bufferSize) {
@@ -745,17 +751,20 @@ size_t JS::TraceLoggerLineNoImpl::NextChunk(JSContext* cx, size_t* dataIndex,
   }
 
   size_t bufferIndex = 0;
-  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events_;
 
   for (; *dataIndex < events.size(); (*dataIndex)++) {
     if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
       continue;
     }
 
-    if (events[*dataIndex].textId >= TraceLogger_Last) {
+    if (TLTextIdIsScriptEvent(events[*dataIndex].textId)) {
       TraceLoggerEventPayload* payload =
           traceLoggerState->getPayload(events[*dataIndex].textId);
       MOZ_ASSERT(payload);
+      if (!payload) {
+        return 0;
+      }
       mozilla::Maybe<uint32_t> line = payload->line();
       payload->release();
       if (line) {
@@ -787,17 +796,20 @@ size_t JS::TraceLoggerColNoImpl::NextChunk(JSContext* cx, size_t* dataIndex,
   }
 
   size_t bufferIndex = 0;
-  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events_;
 
   for (; *dataIndex < events.size(); (*dataIndex)++) {
     if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
       continue;
     }
 
-    if (events[*dataIndex].textId >= TraceLogger_Last) {
+    if (TLTextIdIsScriptEvent(events[*dataIndex].textId)) {
       TraceLoggerEventPayload* payload =
           traceLoggerState->getPayload(events[*dataIndex].textId);
       MOZ_ASSERT(payload);
+      if (!payload) {
+        return 0;
+      }
       mozilla::Maybe<uint32_t> column = payload->column();
       payload->release();
       if (column) {
@@ -829,7 +841,7 @@ size_t JS::TraceLoggerTimeStampImpl::NextChunk(JSContext* cx, size_t* dataIndex,
   }
 
   size_t bufferIndex = 0;
-  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events_;
 
   for (; *dataIndex < events.size(); (*dataIndex)++) {
     if (TLTextIdIsInternalEvent(events[*dataIndex].textId)) {
@@ -856,7 +868,7 @@ size_t JS::TraceLoggerDurationImpl::NextChunk(JSContext* cx, size_t* dataIndex,
     return 0;
   }
 
-  ContinuousSpace<EventEntry>& events = cx->traceLogger->events;
+  ContinuousSpace<EventEntry>& events = cx->traceLogger->events_;
   Vector<size_t, 0, js::SystemAllocPolicy> eventStack;
   using EventDurationMap =
       HashMap<size_t, double, DefaultHasher<size_t>, SystemAllocPolicy>;
@@ -949,7 +961,7 @@ void TraceLoggerThread::log(uint32_t id) {
 
 #ifdef DEBUG
   if (id == TraceLogger_Disable) {
-    graphStack.clear();
+    graphStack_.clear();
   }
 #endif
 
@@ -958,12 +970,12 @@ void TraceLoggerThread::log(uint32_t id) {
   // We request for 3 items to add, since if we don't have enough room
   // we record the time it took to make more space. To log this information
   // we need 2 extra free entries.
-  if (!events.hasSpaceForAdd(3)) {
+  if (!events_.hasSpaceForAdd(3)) {
     mozilla::TimeStamp start = mozilla::TimeStamp::Now();
 
-    if (!events.ensureSpaceBeforeAdd(3)) {
-      if (graph.get()) {
-        graph->log(events, traceLoggerState->startTime);
+    if (!events_.ensureSpaceBeforeAdd(3)) {
+      if (graph_.get()) {
+        graph_->log(events_, traceLoggerState->startTime);
       }
 
       // The data structures are full, and the graph file is not enabled
@@ -974,21 +986,21 @@ void TraceLoggerThread::log(uint32_t id) {
       }
 
       iteration_++;
-      events.clear();
+      events_.clear();
 
       // Periodically remove unused payloads from the global logger state.
       traceLoggerState->purgeUnusedPayloads();
     }
 
-    // Log the time it took to flush the events as being from the
+    // Log the time it took to flush the events_ as being from the
     // Tracelogger.
-    if (graph.get()) {
-      MOZ_ASSERT(events.hasSpaceForAdd(2));
-      EventEntry& entryStart = events.pushUninitialized();
+    if (graph_.get()) {
+      MOZ_ASSERT(events_.hasSpaceForAdd(2));
+      EventEntry& entryStart = events_.pushUninitialized();
       entryStart.time = start;
       entryStart.textId = TraceLogger_Internal;
 
-      EventEntry& entryStop = events.pushUninitialized();
+      EventEntry& entryStop = events_.pushUninitialized();
       entryStop.time = mozilla::TimeStamp::Now();
       entryStop.textId = TraceLogger_Stop;
     }
@@ -996,7 +1008,7 @@ void TraceLoggerThread::log(uint32_t id) {
 
   mozilla::TimeStamp time = mozilla::TimeStamp::Now();
 
-  EventEntry& entry = events.pushUninitialized();
+  EventEntry& entry = events_.pushUninitialized();
   entry.time = time;
   entry.textId = id;
 }
@@ -1070,17 +1082,17 @@ void TraceLoggerThreadState::clear() {
 }
 
 void TraceLoggerThread::clear() {
-  if (graph.get()) {
-    graph.reset();
+  if (graph_.get()) {
+    graph_.reset();
   }
 
-  graph = nullptr;
+  graph_ = nullptr;
 
 #ifdef DEBUG
-  graphStack.clear();
+  graphStack_.clear();
 #endif
 
-  if (!events.reset()) {
+  if (!events_.reset()) {
     silentFail("Cannot reset event buffer.");
   }
 }
@@ -1324,7 +1336,7 @@ TraceLoggerThread* TraceLoggerThreadState::forCurrentThread(
   if (!cx->traceLogger) {
     LockGuard<Mutex> guard(lock);
 
-    TraceLoggerThread* logger = js_new<TraceLoggerThread>();
+    TraceLoggerThread* logger = js_new<TraceLoggerThread>(cx);
     if (!logger) {
       return nullptr;
     }
@@ -1465,7 +1477,334 @@ JS_PUBLIC_API bool JS::InitTraceLogger() {
 
 JS_PUBLIC_API bool JS::TraceLoggerSupported() { return traceLoggerState; }
 
+// Perform a process wide synchronous spew of every thread that tracelogger has
+// captured.
+void TraceLoggerThreadState::spewTraceLoggerStats() {
+  for (TraceLoggerThread* logger : threadLoggers) {
+    logger->spewTraceLoggerStats();
+  }
+}
+
+// Usage here is JS_TRACELOGGER_SPEW=<event1>,<event2>,etc for custom spewing.
+// If the environment variable is not found, we use a default set of events.
+static bool getSpewIds(EventVector& spewIds) {
+  const char* env = getenv("JS_TRACELOGGER_SPEW");
+  if (env) {
+    for (uint32_t i = 1; i < TraceLogger_Last; i++) {
+      TraceLoggerTextId id = TraceLoggerTextId(i);
+      if (ContainsFlag(env, TLTextIdString(id))) {
+        if (!spewIds.append(id)) {
+          return false;
+        }
+      }
+    }
+  } else {
+    const uint32_t defaultSpewEvents[] = {
+        TraceLogger_ParsingFull, TraceLogger_Interpreter,
+        TraceLogger_Baseline,    TraceLogger_BaselineCompilation,
+        TraceLogger_IonMonkey,   TraceLogger_IonCompilation,
+        TraceLogger_Bailout};
+
+    for (uint32_t id : defaultSpewEvents) {
+      if (!spewIds.append(id)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+static void spewHeaderRow(UniqueChars& threadName, EventVector& spewIds) {
+  if (threadName) {
+    JitSpew(jit::JitSpew_ScriptStats, "Thread: %s (pid=%d)", threadName.get(),
+            getpid());
+  } else {
+    JitSpew(jit::JitSpew_ScriptStats, "Unknown Thread (pid=%d)", getpid());
+  }
+
+  UniqueChars header = JS_smprintf("%10s ", "totalTime");
+  for (uint32_t i : spewIds) {
+    TraceLoggerTextId id = TraceLoggerTextId(i);
+    if (TLTextIdIsLogEvent(id)) {
+      header =
+          JS_sprintf_append(std::move(header), "%12s ", TLTextIdString(id));
+    } else {
+      header =
+          JS_sprintf_append(std::move(header), "%25s ", TLTextIdString(id));
+    }
+  }
+
+  JitSpew(jit::JitSpew_ScriptStats, "%s Script", header.get());
+}
+
+void TraceLoggerThread::spewTraceLoggerStats() {
+  if (!jit::JitOptions.enableTraceLogger) {
+    return;
+  }
+
+  ScriptMap map;
+  if (!collectTraceLoggerStats(map)) {
+    return;
+  }
+  if (map.empty()) {
+    return;
+  }
+
+  SortedStatsVector sorted_map;
+  if (!sortTraceLoggerStats(map, sorted_map)) {
+    return;
+  }
+  map.clearAndCompact();
+
+  EventVector spewIds;
+  if (!getSpewIds(spewIds)) {
+    return;
+  }
+
+  // Dynamically generate the header row in JitSpew.
+  spewHeaderRow(threadName_, spewIds);
+
+  for (UniquePtr<ScriptStats>& datap : sorted_map) {
+    auto& tlevents = datap->events_;
+    uint32_t selfTime = datap->selfTime;
+
+    if (selfTime == 0) {
+      continue;
+    }
+
+    UniqueChars row = JS_smprintf("%10u ", selfTime);
+    for (uint32_t i : spewIds) {
+      TraceLoggerTextId id = TraceLoggerTextId(i);
+      uint32_t time = tlevents[id].time;
+      uint32_t freq = tlevents[id].count;
+      uint32_t percent = (time * 100) / selfTime;
+      if (TLTextIdIsLogEvent(id)) {
+        row = JS_sprintf_append(std::move(row), "%12u ", freq);
+      } else {
+        row = JS_sprintf_append(std::move(row), "%8u (%3u%%,f=%-7u) ", time,
+                                percent, freq);
+      }
+    }
+    JitSpew(jit::JitSpew_ScriptStats, "%s %s", row.get(), datap->scriptName);
+
+    // If structured spewer is enabled, we might as well spew everything.
+    AutoStructuredSpewer spew(cx_, SpewChannel::ScriptStats, nullptr);
+    if (spew) {
+      spew->property("script", datap->scriptName);
+      spew->property("totalTime", selfTime);
+      spew->beginListProperty("events");
+      for (uint32_t i = 1; i < TraceLogger_Last; i++) {
+        TraceLoggerTextId id = TraceLoggerTextId(i);
+        if (TLTextIdIsInternalEvent(id) || tlevents[id].count == 0) {
+          continue;
+        }
+
+        spew->beginObject();
+        spew->property("id", TLTextIdString(id));
+        if (TLTextIdIsTreeEvent(id)) {
+          spew->property("time", tlevents[id].time);
+          spew->property("frequency", tlevents[id].count);
+        } else if (TLTextIdIsLogEvent(id)) {
+          spew->property("frequency", tlevents[id].count);
+        }
+        spew->endObject();
+      }
+      spew->endList();
+    }
+  }
+}
+
+static bool updateScriptMap(ScriptMap& map, char* key, uint32_t eventId,
+                            uint32_t value) {
+  if (!key) {
+    return false;
+  }
+
+  if (!map.has(key)) {
+    UniquePtr<ScriptStats> datap;
+    datap.reset(js_new<ScriptStats>(key));
+    if (!map.putNew(key, std::move(datap))) {
+      return false;
+    }
+  }
+  ScriptMap::Ptr p = map.lookup(key);
+  p->value()->events_[eventId].time += value;
+  p->value()->events_[eventId].count++;
+
+  if (TLTextIdIsTreeEvent(eventId)) {
+    p->value()->selfTime += value;
+  }
+  return true;
+}
+
+UniqueChars TraceLoggerThreadState::getFullScriptName(uint32_t textId) {
+  TraceLoggerEventPayload* payload = getPayload(textId);
+  MOZ_ASSERT(payload);
+  if (!payload) {
+    return nullptr;
+  }
+  char* filename = dictionaryData[payload->dictionaryId()].get();
+  uint32_t lineno = payload->line() ? *(payload->line()) : 0;
+  uint32_t colno = payload->column() ? *(payload->column()) : 0;
+  UniqueChars scriptName = JS_smprintf("%s:%u:%u", filename, lineno, colno);
+  payload->release();
+  return scriptName;
+}
+
+static bool sortBySelfTime(const UniquePtr<ScriptStats>& lhs,
+                           const UniquePtr<ScriptStats>& rhs) {
+  return lhs.get()->selfTime > rhs.get()->selfTime;
+}
+
+bool TraceLoggerThread::sortTraceLoggerStats(ScriptMap& map,
+                                             SortedStatsVector& sorted_map) {
+  for (auto range = map.all(); !range.empty(); range.popFront()) {
+    if (!sorted_map.append(std::move(range.front().value()))) {
+      return false;
+    }
+  }
+
+  std::sort(sorted_map.begin(), sorted_map.end(), sortBySelfTime);
+
+  return true;
+}
+
+// Traverse each event and calculate the self-time, along with the script that
+// each event belongs to. We do this quickly by maintaining two stacks:
+//  (i) eventStack - Each new event encountered is pushed onto the stack. Events
+//                   are popped off whenever a TraceLogger_Stop is encountered
+//                   and sent to updateScriptMap.
+// (ii) funcStack - Each new script encountered is pushed onto this stack.
+//                  Elements are popped off whenever a TraceLogger_Stop is
+//                  encountered that matches a script event on the top of
+//                  eventStack.
+bool TraceLoggerThread::collectTraceLoggerStats(ScriptMap& map) {
+  uint32_t totalJSTime = 0;
+
+  struct eventInfo {
+    uint32_t textId;
+    uint32_t time;
+    mozilla::TimeStamp start;
+
+    explicit eventInfo(uint32_t textId_) : textId(textId_), time(0) {}
+  };
+
+  Vector<eventInfo*, 0, js::SystemAllocPolicy> eventStack;
+  Vector<uint32_t, 0, js::SystemAllocPolicy> funcStack;
+
+  mozilla::TimeStamp startTime, stopTime;
+  uint32_t size = events_.size();
+  for (size_t i = 0; i < size; i++) {
+    uint32_t textId = events_[i].textId;
+
+    // Record any log events that have no durations such as Bailouts with a
+    // value of 1.  Make sure the funcStack actually has something in it or
+    // else the Bailout event will not be associated with any script.  This
+    // can commonly occur when profiling & tracing starts since we may have
+    // already past the point where the script event is created.
+    if (TLTextIdIsLogEvent(textId) && !funcStack.empty()) {
+      UniqueChars script =
+          traceLoggerState->getFullScriptName(funcStack.back());
+      if (!updateScriptMap(map, script.release(), textId, 1)) {
+        return false;
+      }
+    }
+
+    // Hit a new tree event or a stop event, so add (new event timestamp - old
+    // event timestamp) to the old event's self-time.
+    if (TLTextIdIsTreeEvent(textId)) {
+      if (!eventStack.empty()) {
+        stopTime = events_[i].time;
+
+        uint32_t deltaTime =
+            static_cast<uint32_t>((stopTime - startTime).ToMicroseconds());
+        eventStack.back()->time += deltaTime;
+
+        if (TLTextIdIsEnumEvent(eventStack.back()->textId)) {
+          if (!funcStack.empty() && !eventStack.empty()) {
+            UniqueChars script =
+                traceLoggerState->getFullScriptName(funcStack.back());
+            if (!updateScriptMap(map, script.release(),
+                                 eventStack.back()->textId, deltaTime)) {
+              return false;
+            }
+          }
+        }
+        totalJSTime += deltaTime;
+      }
+
+      if (TLTextIdIsScriptEvent(textId)) {
+        if (!funcStack.append(textId)) {
+          return false;
+        }
+      }
+
+      eventInfo* entry = js_new<eventInfo>(textId);
+      entry->start = events_[i].time;
+      if (!eventStack.append(entry)) {
+        return false;
+      }
+
+      startTime = events_[i].time;
+
+    } else if (textId == TraceLogger_Stop) {
+      if (!eventStack.empty()) {
+        stopTime = events_[i].time;
+
+        uint32_t deltaTime =
+            static_cast<uint32_t>((stopTime - startTime).ToMicroseconds());
+        eventInfo* entry = eventStack.popCopy();
+
+        uint32_t topId = entry->textId;
+        entry->time += deltaTime;
+
+        if (TLTextIdIsEnumEvent(topId)) {
+          // funcStack will usually be empty near the beginning of a profiling
+          // session since we may have skipped the point where the script event
+          // is created.  If that's the case, then skip this event since we
+          // cannot associate it with any script.
+          if (!funcStack.empty()) {
+            UniqueChars script =
+                traceLoggerState->getFullScriptName(funcStack.back());
+            if (!updateScriptMap(map, script.release(), topId, deltaTime)) {
+              return false;
+            }
+          }
+        }
+        js_delete(entry);
+
+        if (TLTextIdIsScriptEvent(topId) && !funcStack.empty()) {
+          funcStack.popBack();
+        }
+
+        totalJSTime += deltaTime;
+        startTime = events_[i].time;
+      }
+    }
+  }
+
+  return true;
+}
+
 JS_PUBLIC_API void JS::ResetTraceLogger(void) { js::ResetTraceLogger(); }
+
+JS_PUBLIC_API void JS::SpewTraceLoggerThread(JSContext* cx) {
+  if (!traceLoggerState) {
+    return;
+  }
+
+  if (cx && cx->traceLogger) {
+    cx->traceLogger->spewTraceLoggerStats();
+  }
+}
+
+JS_PUBLIC_API void JS::SpewTraceLoggerForCurrentProcess() {
+  if (!traceLoggerState) {
+    return;
+  }
+  traceLoggerState->spewTraceLoggerStats();
+}
 
 JS_PUBLIC_API void JS::StartTraceLogger(JSContext* cx) {
   if (!traceLoggerState) {
@@ -1476,6 +1815,7 @@ JS_PUBLIC_API void JS::StartTraceLogger(JSContext* cx) {
     LockGuard<Mutex> guard(traceLoggerState->lock);
     traceLoggerState->enableTextIdsForProfiler();
     jit::JitOptions.enableTraceLogger = true;
+    traceLoggerState->startTime = mozilla::TimeStamp::Now();
   }
 
   TraceLoggerThread* logger = traceLoggerState->forCurrentThread(cx);

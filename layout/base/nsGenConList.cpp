@@ -70,6 +70,14 @@ inline int32_t PseudoCompareType(nsIFrame* aFrame, nsIContent** aContent) {
   return 0;
 }
 
+#ifdef DEBUG
+static bool IsXBLInvolved(nsIContent* aContent1, nsIContent* aContent2) {
+  auto* ancestor = nsContentUtils::GetCommonAncestor(aContent1, aContent2);
+  return ancestor && ancestor->IsElement() &&
+         ancestor->AsElement()->GetXBLBinding();
+}
+#endif
+
 /* static */
 bool nsGenConList::NodeAfter(const nsGenConNode* aNode1,
                              const nsGenConNode* aNode2) {
@@ -83,43 +91,23 @@ bool nsGenConList::NodeAfter(const nsGenConNode* aNode1,
   nsIContent* content2;
   int32_t pseudoType1 = PseudoCompareType(frame1, &content1);
   int32_t pseudoType2 = PseudoCompareType(frame2, &content2);
-  if (pseudoType1 == 0 || pseudoType2 == 0) {
-    if (content1 == content2) {
-      NS_ASSERTION(pseudoType1 != pseudoType2, "identical");
+  if (content1 == content2) {
+    NS_ASSERTION(pseudoType1 != pseudoType2, "identical");
+    if (pseudoType1 == 0 || pseudoType2 == 0) {
       return pseudoType2 == 0;
     }
-    // We want to treat an element as coming before its :before and ::marker
-    // (preorder traversal), so treating both as :before now works.
-    if (pseudoType1 == 0) {
-      pseudoType1 = -1;
-      if (pseudoType2 == -2) {
-        pseudoType2 = -1;
-      }
-    }
-    if (pseudoType2 == 0) {
-      pseudoType2 = -1;
-      if (pseudoType1 == -2) {
-        pseudoType1 = -1;
-      }
-    }
-  } else {
-    if (content1 == content2) {
-      NS_ASSERTION(pseudoType1 != pseudoType2, "identical");
-      return pseudoType1 > pseudoType2;
-    }
-    if (pseudoType1 == -2) {
-      pseudoType1 = -1;
-    }
-    if (pseudoType2 == -2) {
-      pseudoType2 = -1;
-    }
+    return pseudoType1 > pseudoType2;
   }
 
-  int32_t cmp = nsLayoutUtils::DoCompareTreePosition(content1, content2,
-                                                     pseudoType1, -pseudoType2);
+  // Two pseudo-elements of different elements, we want to treat them as if
+  // they were normal elements and just use tree order.
+  content1 = frame1->GetContent();
+  content2 = frame2->GetContent();
+
+  int32_t cmp = nsLayoutUtils::CompareTreePosition(content1, content2);
   // DoCompareTreePosition doesn't know about XBL anonymous content, and we
   // probably shouldn't bother teaching it about it.
-  MOZ_ASSERT(cmp != 0 || content1->GetParent()->GetXBLBinding(),
+  MOZ_ASSERT(cmp != 0 || IsXBLInvolved(content1, content2),
              "same content, different frames");
   return cmp > 0;
 }
