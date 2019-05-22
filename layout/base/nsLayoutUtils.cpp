@@ -9363,7 +9363,7 @@ void nsLayoutUtils::AppendFrameTextContent(nsIFrame* aFrame,
     auto textFrame = static_cast<nsTextFrame*>(aFrame);
     auto offset = textFrame->GetContentOffset();
     auto length = textFrame->GetContentLength();
-    textFrame->GetContent()->GetText()->AppendTo(aResult, offset, length);
+    textFrame->TextFragment()->AppendTo(aResult, offset, length);
   } else {
     for (nsIFrame* child : aFrame->PrincipalChildList()) {
       AppendFrameTextContent(child, aResult);
