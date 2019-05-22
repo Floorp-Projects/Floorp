@@ -3271,7 +3271,11 @@ bool TakeMinidumpForChild(uint32_t childPid, nsIFile** dump,
   if (!pd) return false;
 
   NS_IF_ADDREF(*dump = pd->minidump);
-  aAnnotations = *(pd->annotations);
+  // Only Flash process minidumps don't have annotations. Once we get rid of
+  // the Flash processes this check will become redundant.
+  if (pd->annotations) {
+    aAnnotations = *(pd->annotations);
+  }
   if (aSequence) {
     *aSequence = pd->sequence;
   }
