@@ -11,18 +11,14 @@
 #include "mozilla/dom/IDTracker.h"
 #include "FrameProperties.h"
 #include "mozilla/dom/Element.h"
-#include "nsHashKeys.h"
 #include "nsID.h"
 #include "nsIFrame.h"
 #include "nsIMutationObserver.h"
-#include "nsInterfaceHashtable.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
 #include "nsStringFwd.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGUtils.h"
-#include "nsTHashtable.h"
-#include "nsURIHashKey.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsAtom;
@@ -64,9 +60,13 @@ class URLAndReferrerInfo {
 
   NS_INLINE_DECL_REFCOUNTING(URLAndReferrerInfo)
 
-  nsIURI* GetURI() { return mURI; }
-  nsIURI* GetReferrer() { return mReferrer; }
-  mozilla::net::ReferrerPolicy GetReferrerPolicy() { return mReferrerPolicy; }
+  nsIURI* GetURI() const { return mURI; }
+  nsIURI* GetReferrer() const { return mReferrer; }
+  mozilla::net::ReferrerPolicy GetReferrerPolicy() const {
+    return mReferrerPolicy;
+  }
+
+  bool operator==(const URLAndReferrerInfo& aRHS) const;
 
  private:
   ~URLAndReferrerInfo() = default;
