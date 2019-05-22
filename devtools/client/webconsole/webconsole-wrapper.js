@@ -477,10 +477,6 @@ class WebConsoleWrapper {
     store.dispatch(actions.privateMessagesClear());
   }
 
-  dispatchTimestampsToggle(enabled) {
-    store.dispatch(actions.timestampsToggle(enabled));
-  }
-
   dispatchPaused(_, packet) {
     if (packet.executionPoint) {
       store.dispatch(actions.setPauseExecutionPoint(packet.executionPoint));
