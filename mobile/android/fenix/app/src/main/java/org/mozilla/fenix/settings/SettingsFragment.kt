@@ -37,6 +37,7 @@ import org.mozilla.fenix.R.string.pref_key_help
 import org.mozilla.fenix.R.string.pref_key_language
 import org.mozilla.fenix.R.string.pref_key_leakcanary
 import org.mozilla.fenix.R.string.pref_key_make_default_browser
+import org.mozilla.fenix.R.string.pref_key_privacy_policy
 import org.mozilla.fenix.R.string.pref_key_rate
 import org.mozilla.fenix.R.string.pref_key_remote_debugging
 import org.mozilla.fenix.R.string.pref_key_search_engine_settings
@@ -159,6 +160,12 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             }
             resources.getString(pref_key_theme) -> {
                 navigateToThemeSettings()
+            }
+            resources.getString(pref_key_privacy_policy) -> {
+                requireContext().apply {
+                    val intent = SupportUtils.createCustomTabIntent(this, SupportUtils.PRIVACY_NOTICE_URL)
+                    startActivity(intent)
+                }
             }
         }
         return super.onPreferenceTreeClick(preference)
