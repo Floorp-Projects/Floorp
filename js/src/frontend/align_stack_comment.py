@@ -24,6 +24,7 @@ stack_comment_pat = re.compile('^( *//) *(\[stack\].*)$')
 
 def align_stack_comment(path):
     lines = []
+    changed = False
 
     with open(path) as f:
         max_head_len = 0
@@ -33,6 +34,8 @@ def align_stack_comment(path):
 
         for line in f:
             line_num += 1
+            # Python includes \n in lines.
+            line = line.rstrip('\n')
 
             m = stack_comment_pat.search(line)
             if m:
@@ -53,9 +56,15 @@ def align_stack_comment(path):
                 max_head_len = max(max_head_len, head_len)
                 max_comment_len = max(max_comment_len, comment_len)
 
-                lines.append((True, head, comment))
+                spaces = max(ALIGNMENT_COLUMN - head_len, 0)
+                formatted = head + ' ' * spaces + comment
+
+                if formatted != line:
+                    changed = True
+
+                lines.append(formatted)
             else:
-                lines.append((False, line.rstrip(), None))
+                lines.append(line)
 
         print('Info: Minimum column number for [stack]: {}'.format(
             max_head_len), file=sys.stderr)
@@ -64,15 +73,12 @@ def align_stack_comment(path):
         print('Info: Max length of stack transition comments: {}'.format(
             max_comment_len), file=sys.stderr)
 
-    with open(path, 'w') as f:
-        for is_stack_comment, head_or_line, comment in lines:
-            if is_stack_comment:
-                print(head_or_line, file=f, end='')
-                spaces = max(ALIGNMENT_COLUMN - len(head_or_line), 0)
-                print(' ' * spaces, file=f, end='')
-                print(comment, file=f)
-            else:
-                print(head_or_line, file=f)
+    if changed:
+        with open(path, 'w') as f:
+            for line in lines:
+                print(line, file=f)
+    else:
+        print("No change.")
 
 
 if __name__ == '__main__':
