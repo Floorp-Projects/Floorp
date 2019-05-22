@@ -38,16 +38,10 @@ IPCResult VRParent::RecvNewGPUVRManager(Endpoint<PVRGPUParent>&& aEndpoint) {
   return IPC_OK();
 }
 
-IPCResult VRParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
-                             nsTArray<GfxVarUpdate>&& vars,
+IPCResult VRParent::RecvInit(nsTArray<GfxVarUpdate>&& vars,
                              const DevicePrefs& devicePrefs) {
   Unused << SendInitComplete();
 
-  const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
-  for (auto& setting : prefs) {
-    gfxPrefs::Pref* pref = globalPrefs[setting.index()];
-    pref->SetCachedValue(setting.value());
-  }
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -71,12 +65,6 @@ IPCResult VRParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
 IPCResult VRParent::RecvNotifyVsync(const TimeStamp& vsyncTimestamp) {
   VRManager* vm = VRManager::Get();
   vm->NotifyVsync(vsyncTimestamp);
-  return IPC_OK();
-}
-
-IPCResult VRParent::RecvUpdatePref(const GfxPrefSetting& setting) {
-  gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
-  pref->SetCachedValue(setting.value());
   return IPC_OK();
 }
 
