@@ -29,7 +29,7 @@ interface AwesomeBar {
     fun removeProviders(vararg providers: SuggestionProvider)
 
     /**
-     * Removes all [SuggestionProviders]
+     * Removes all [SuggestionProvider]s
      */
     fun removeAllProviders()
 

@@ -404,6 +404,18 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `cast to view`() {
+        // Given
+        val toolbar = BrowserToolbar(context)
+
+        // When
+        val view = toolbar.asView()
+
+        // Then
+        assertNotNull(view)
+    }
+
+    @Test
     fun `URL update does not override search terms in edit mode`() {
         val toolbar = BrowserToolbar(context)
         val displayToolbar = mock(DisplayToolbar::class.java)
