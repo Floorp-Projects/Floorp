@@ -60,6 +60,17 @@ var PictureInPicture = {
   },
 
   /**
+   * Remove attribute which enables pip icon in tab
+   */
+  clearPipTabIcon() {
+    let win = this.browser.ownerGlobal;
+    let tab = win.gBrowser.getTabForBrowser(this.browser);
+    if (tab) {
+      tab.removeAttribute("pictureinpicture");
+    }
+  },
+
+  /**
    * Find and close any pre-existing Picture in Picture windows.
    */
   async closePipWindow() {
@@ -109,6 +120,9 @@ var PictureInPicture = {
     if (videoData.playing) {
       controls.classList.add("playing");
     }
+    // set attribute which shows pip icon in tab
+    let tab = parentWin.gBrowser.getTabForBrowser(browser);
+    tab.setAttribute("pictureinpicture", true);
     win.setupPlayer(browser, videoData);
   },
 
@@ -117,6 +131,7 @@ var PictureInPicture = {
    * browser object.
    */
   unload() {
+    this.clearPipTabIcon();
     delete this.weakPipControls;
     delete this.browser;
   },

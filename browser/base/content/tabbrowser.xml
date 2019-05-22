@@ -1948,7 +1948,10 @@
                        xbl:inherits="xbl:text=label,accesskey,fadein,pinned,selected=visuallyselected,attention"
                        role="presentation"/>
           </xul:hbox>
-          <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked"
+          <xul:image xbl:inherits="pictureinpicture"
+                     class="tab-icon-pip"
+                     role="presentation"/>
+          <xul:image xbl:inherits="soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked,pictureinpicture"
                      anonid="soundplaying-icon"
                      class="tab-icon-sound"
                      role="presentation"/>
@@ -2057,6 +2060,12 @@
       <property name="soundPlaying" readonly="true">
         <getter>
           return this.getAttribute("soundplaying") == "true";
+        </getter>
+      </property>
+
+      <property name="pictureinpicture" readonly="true">
+        <getter>
+          return this.getAttribute("pictureinpicture") == "true";
         </getter>
       </property>
 
