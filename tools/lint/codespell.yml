@@ -31,6 +31,7 @@ codespell:
         - python/mach/docs/
         - python/mozlint/
         - python/safety/
+        - security/manager/locales/en-US/
         - services/sync/locales/en-US/
         - taskcluster/docs/
         - testing/mozbase/docs/
@@ -38,6 +39,7 @@ codespell:
         - toolkit/components/normandy/docs/
         - toolkit/components/telemetry/docs/
         - toolkit/crashreporter/docs/
+        - toolkit/locales/en-US/
         - tools/lint/
         - tools/tryselect/
     # List of extensions coming from:
