@@ -8,7 +8,6 @@
 
 #include "AsyncPanZoomController.h"
 #include "FrameMetrics.h"
-#include "gfxPrefs.h"
 #include "nsPoint.h"
 #include "ScrollAnimationPhysics.h"
 #include "ScrollAnimationBezierPhysics.h"

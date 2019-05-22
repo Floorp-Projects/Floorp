@@ -5,7 +5,6 @@
 
 #include "DecoderFactory.h"
 
-#include "gfxPrefs.h"
 #include "nsMimeTypes.h"
 #include "mozilla/RefPtr.h"
 

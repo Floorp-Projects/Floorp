@@ -96,7 +96,6 @@
 #include "nsIAuthPromptCallback.h"
 #include "nsAuthInformationHolder.h"
 #include "nsICancelable.h"
-#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "nsILoginManagerPrompter.h"
 #include "nsPIWindowRoot.h"

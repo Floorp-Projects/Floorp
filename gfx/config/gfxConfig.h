@@ -20,7 +20,7 @@ class FeatureFailure;
 
 // Manages the history and state of a graphics feature. The flow of a feature
 // is:
-//   - A default value, set by all.js, gfxPrefs, or gfxPlatform.
+//   - A default value, set by all.js, or gfxPlatform.
 //   - A user value, set by an external value or user pref.
 //   - An environment value, determined by system/hardware factors or
 //   nsIGfxInfo.

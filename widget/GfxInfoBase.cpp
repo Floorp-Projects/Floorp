@@ -29,7 +29,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/PaintThread.h"
-#include "gfxPrefs.h"
+
 #include "gfxPlatform.h"
 #include "gfxConfig.h"
 #include "DriverCrashGuard.h"
@@ -589,7 +589,6 @@ GfxInfoBase::~GfxInfoBase() {}
 
 nsresult GfxInfoBase::Init() {
   InitGfxDriverInfoShutdownObserver();
-  gfxPrefs::GetSingleton();
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {

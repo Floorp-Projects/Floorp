@@ -30,7 +30,6 @@
 #include "prsystem.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
-#include "gfxPrefs.h"
 #include "ScopedGLHelpers.h"
 #ifdef MOZ_WIDGET_GTK
 #  include <gdk/gdk.h>
@@ -86,7 +85,6 @@ PRLibrary* LoadApitraceLibrary() {
   if (!path) return nullptr;
 
   // Initialization of gfx prefs here is only needed during the unit tests...
-  gfxPrefs::GetSingleton();
   if (!StaticPrefs::UseApitrace()) {
     return nullptr;
   }
