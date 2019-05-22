@@ -3042,7 +3042,8 @@ int NS_main(int argc, NS_tchar** argv) {
   int lastFallbackError = FALLBACKKEY_UNKNOWN_ERROR;
 
   // Launch a second instance of the updater with the runas verb on Windows
-  // when write access is denied to the installation directory.
+  // when write access is denied to the installation directory and the update
+  // isn't being staged.
   HANDLE updateLockFileHandle = INVALID_HANDLE_VALUE;
   NS_tchar elevatedLockFilePath[MAXPATHLEN] = {NS_T('\0')};
   if (!sUsingService &&
@@ -3078,10 +3079,12 @@ int NS_main(int argc, NS_tchar** argv) {
     if (NS_tremove(updateLockFilePath) && errno != ENOENT) {
       // Try to fall back to the old way of doing updates if a staged
       // update fails.
-      if (sStagedUpdate || sReplaceRequest) {
+      if (sReplaceRequest) {
         // Note that this could fail, but if it does, there isn't too much we
         // can do in order to recover anyways.
         WriteStatusFile("pending");
+      } else if (sStagedUpdate) {
+        WriteStatusFile(DELETE_ERROR_STAGING_LOCK_FILE);
       }
       LOG(("Update already in progress! Exiting"));
       return 1;
@@ -3254,7 +3257,10 @@ int NS_main(int argc, NS_tchar** argv) {
         if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
           CloseHandle(updateLockFileHandle);
         }
-        WriteStatusFile("pending");
+        WriteStatusFile(UNEXPECTED_STAGING_ERROR);
+        LOG(
+            ("Non-critical update staging error! Falling back to non-staged "
+             "updates and exiting"));
         return 0;
       }
 
@@ -3341,6 +3347,23 @@ int NS_main(int argc, NS_tchar** argv) {
 #endif
 
   if (sStagedUpdate) {
+#ifdef TEST_UPDATER
+    // This allows testing that the correct UI after an update staging failure
+    // that falls back to applying the update on startup. It is simulated due
+    // to the difficulty of creating the conditions for this type of staging
+    // failure.
+    if (EnvHasValue("MOZ_TEST_STAGING_ERROR")) {
+#  ifdef XP_WIN
+      if (updateLockFileHandle != INVALID_HANDLE_VALUE) {
+        CloseHandle(updateLockFileHandle);
+      }
+#  endif
+      // WRITE_ERROR is one of the cases where the staging failure falls back to
+      // applying the update on startup.
+      WriteStatusFile(WRITE_ERROR);
+      return 0;
+    }
+#endif
     // When staging updates, blow away the old installation directory and create
     // it from scratch.
     ensure_remove_recursive(gWorkingDirPath);
