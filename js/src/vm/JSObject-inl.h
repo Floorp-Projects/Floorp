@@ -50,16 +50,18 @@ inline void JSObject::finalize(js::FreeOp* fop) {
 
   if (nobj->hasDynamicElements()) {
     js::ObjectElements* elements = nobj->getElementsHeader();
+    size_t size = elements->numAllocatedElements() * sizeof(js::HeapSlot);
     if (elements->isCopyOnWrite()) {
       if (elements->ownerObject() == this) {
         // Don't free the elements until object finalization finishes,
         // so that other objects can access these elements while they
         // are themselves finalized.
         MOZ_ASSERT(elements->numShiftedElements() == 0);
-        fop->freeLater(elements);
+        fop->freeLater(this, elements, size, js::MemoryUse::ObjectElements);
       }
     } else {
-      fop->free_(nobj->getUnshiftedElementsHeader());
+      fop->free_(this, nobj->getUnshiftedElementsHeader(), size,
+                 js::MemoryUse::ObjectElements);
     }
   }
 
