@@ -11,10 +11,7 @@ import platform
 import subprocess
 import sys
 import uuid
-try:
-    import builtins
-except ImportError:
-    import __builtin__ as builtins
+import __builtin__
 
 from types import ModuleType
 
@@ -437,4 +434,4 @@ class ImportHook(object):
 
 
 # Install our hook
-builtins.__import__ = ImportHook(builtins.__import__)
+__builtin__.__import__ = ImportHook(__builtin__.__import__)
