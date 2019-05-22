@@ -19,6 +19,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IdentifierMapEntry.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/ServoStyleRuleMap.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -328,6 +329,16 @@ void ShadowRoot::RuleChanged(StyleSheet& aSheet, css::Rule*) {
   MOZ_ASSERT(mServoStyles);
   Servo_AuthorStyles_ForceDirty(mServoStyles.get());
   ApplicableRulesChanged();
+}
+
+// We don't need to do anything else than forwarding to the document if
+// necessary.
+void ShadowRoot::StyleSheetCloned(StyleSheet& aSheet) {
+  if (Document* doc = GetComposedDoc()) {
+    if (PresShell* shell = doc->GetPresShell()) {
+      shell->StyleSet()->StyleSheetCloned(aSheet);
+    }
+  }
 }
 
 void ShadowRoot::ApplicableRulesChanged() {

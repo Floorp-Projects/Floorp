@@ -31,12 +31,11 @@ Test that css-logic handles media-queries correctly
     const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
     const Services = require("Services");
     const {CssLogic} = require("devtools/server/actors/inspector/css-logic");
-    const InspectorUtils = require("InspectorUtils");
 
     SimpleTest.waitForExplicitFinish();
 
     const div = document.querySelector("div");
-    const cssLogic = new CssLogic(InspectorUtils.isInheritedProperty);
+    const cssLogic = new CssLogic();
     cssLogic.highlight(div);
     cssLogic.processMatchedSelectors();
 

@@ -560,11 +560,12 @@ parent:
                              bool? aPrivatedMode,
                              nsCString[] aPositions,
                              int32_t[] aPositionDescendants,
-                             uint32_t aFlushId);
+                             uint32_t aFlushId,
+                             bool aIsFinal);
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
-    async FlushTabState(uint32_t aFlushId);
+    async FlushTabState(uint32_t aFlushId, bool aIsFinal);
 
 parent:
 

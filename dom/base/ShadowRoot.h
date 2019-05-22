@@ -72,6 +72,7 @@ class ShadowRoot final : public DocumentFragment,
   void RuleAdded(StyleSheet&, css::Rule&);
   void RuleRemoved(StyleSheet&, css::Rule&);
   void RuleChanged(StyleSheet&, css::Rule*);
+  void StyleSheetCloned(StyleSheet&);
   void StyleSheetApplicableStateChanged(StyleSheet&, bool aApplicable);
 
   StyleSheetList* StyleSheets() {
