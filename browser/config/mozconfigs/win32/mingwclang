@@ -56,11 +56,6 @@ RANLIB=llvm-ranlib
 # For Stylo
 BINDGEN_CFLAGS="-I$TOOLTOOL_DIR/clang/i686-w64-mingw32/include/c++/v1 -I$TOOLTOOL_DIR/clang/i686-w64-mingw32/include"
 
-# Bug 1471698 - Work around binutils corrupting mingw clang binaries.
-LDFLAGS="-Wl,-S"
-STRIP=/bin/true
-OBJCOPY=/bin/true
-
 # We want to make sure we use binutils and other binaries in the tooltool
 # package.
 mk_add_options "export PATH=$TOOLTOOL_DIR/clang/bin:$TOOLTOOL_DIR/mingw32/bin:$TOOLTOOL_DIR/wine/bin:$TOOLTOOL_DIR/upx/bin:$TOOLTOOL_DIR/fxc2/bin:$PATH"
