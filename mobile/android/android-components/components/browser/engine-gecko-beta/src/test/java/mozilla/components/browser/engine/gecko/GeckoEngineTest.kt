@@ -6,9 +6,11 @@ package mozilla.components.browser.engine.gecko
 
 import android.app.Activity
 import android.content.Context
+import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -21,6 +23,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
@@ -66,7 +69,11 @@ class GeckoEngineTest {
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtimeSettings.automaticFontSizeAdjustment).thenReturn(true)
+        `when`(runtimeSettings.fontInflationEnabled).thenReturn(true)
+        `when`(runtimeSettings.fontSizeFactor).thenReturn(1.0F)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
+        `when`(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
+        `when`(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
 
@@ -82,6 +89,18 @@ class GeckoEngineTest {
         engine.settings.automaticFontSizeAdjustment = false
         verify(runtimeSettings).automaticFontSizeAdjustment = false
 
+        assertTrue(engine.settings.fontInflationEnabled)
+        engine.settings.fontInflationEnabled = true
+        verify(runtimeSettings, never()).fontInflationEnabled = true
+        engine.settings.fontInflationEnabled = false
+        verify(runtimeSettings).fontInflationEnabled = false
+
+        assertEquals(1.0F, engine.settings.fontSizeFactor)
+        engine.settings.fontSizeFactor = 1.0F
+        verify(runtimeSettings, never()).fontSizeFactor = 1.0F
+        engine.settings.fontSizeFactor = 2.0F
+        verify(runtimeSettings).fontSizeFactor = 2.0F
+
         assertFalse(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = true
         verify(runtimeSettings).remoteDebuggingEnabled = true
@@ -89,6 +108,18 @@ class GeckoEngineTest {
         assertFalse(engine.settings.testingModeEnabled)
         engine.settings.testingModeEnabled = true
         assertTrue(engine.settings.testingModeEnabled)
+
+        assertEquals(PreferredColorScheme.System, engine.settings.preferredColorScheme)
+        engine.settings.preferredColorScheme = PreferredColorScheme.Dark
+        verify(runtimeSettings).preferredColorScheme = PreferredColorScheme.Dark.toGeckoValue()
+
+        assertTrue(engine.settings.allowAutoplayMedia)
+        engine.settings.allowAutoplayMedia = false
+        verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
+
+        assertFalse(engine.settings.suspendMediaWhenInactive)
+        engine.settings.suspendMediaWhenInactive = true
+        assertEquals(true, engine.settings.suspendMediaWhenInactive)
 
         // Specifying no ua-string default should result in GeckoView's default.
         assertEquals(GeckoSession.getDefaultUserAgent(), engine.settings.userAgentString)
@@ -104,6 +135,8 @@ class GeckoEngineTest {
                 TrackingProtectionPolicy.ANALYTICS,
                 TrackingProtectionPolicy.CONTENT,
                 TrackingProtectionPolicy.TEST,
+                TrackingProtectionPolicy.CRYPTOMINING,
+                TrackingProtectionPolicy.FINGERPRINTING,
                 TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL,
                 TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED,
                 TrackingProtectionPolicy.SAFE_BROWSING_MALWARE,
@@ -131,26 +164,41 @@ class GeckoEngineTest {
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
+        `when`(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED)
+        `when`(runtimeSettings.fontInflationEnabled).thenReturn(true)
 
-        val engine = GeckoEngine(context, DefaultSettings(
+        val engine = GeckoEngine(context,
+            DefaultSettings(
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
                 javascriptEnabled = false,
                 webFontsEnabled = false,
                 automaticFontSizeAdjustment = false,
+                fontInflationEnabled = false,
+                fontSizeFactor = 2.0F,
                 remoteDebuggingEnabled = true,
                 testingModeEnabled = true,
-                userAgentString = "test-ua"), runtime)
+                userAgentString = "test-ua",
+                preferredColorScheme = PreferredColorScheme.Light,
+                allowAutoplayMedia = false,
+                suspendMediaWhenInactive = true
+            ), runtime)
 
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
         verify(runtimeSettings).automaticFontSizeAdjustment = false
+        verify(runtimeSettings).fontInflationEnabled = false
+        verify(runtimeSettings).fontSizeFactor = 2.0F
         verify(runtimeSettings).remoteDebuggingEnabled = true
+        verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
+
         assertEquals(TrackingProtectionPolicy.select(
             TrackingProtectionPolicy.AD,
             TrackingProtectionPolicy.SOCIAL,
             TrackingProtectionPolicy.ANALYTICS,
             TrackingProtectionPolicy.CONTENT,
             TrackingProtectionPolicy.TEST,
+            TrackingProtectionPolicy.CRYPTOMINING,
+            TrackingProtectionPolicy.FINGERPRINTING,
             TrackingProtectionPolicy.SAFE_BROWSING_HARMFUL,
             TrackingProtectionPolicy.SAFE_BROWSING_UNWANTED,
             TrackingProtectionPolicy.SAFE_BROWSING_MALWARE,
@@ -158,6 +206,9 @@ class GeckoEngineTest {
         ).categories, contentBlockingSettings.categories)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
+        assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)
+        assertFalse(engine.settings.allowAutoplayMedia)
+        assertTrue(engine.settings.suspendMediaWhenInactive)
     }
 
     @Test
@@ -192,6 +243,34 @@ class GeckoEngineTest {
         verify(runtime).registerWebExtension(extCaptor.capture())
         assertEquals("test-webext", extCaptor.value.id)
         assertEquals("resource://android/assets/extensions/test", extCaptor.value.location)
+        assertEquals(GeckoWebExtension.Flags.ALLOW_CONTENT_MESSAGING, extCaptor.value.flags)
+        assertTrue(onSuccessCalled)
+        assertFalse(onErrorCalled)
+    }
+
+    @Test
+    fun `install web extension successfully but do not allow content messaging`() {
+        val runtime = mock(GeckoRuntime::class.java)
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+        var onErrorCalled = false
+        var result = GeckoResult<Void>()
+
+        `when`(runtime.registerWebExtension(any())).thenReturn(result)
+        engine.installWebExtension(
+                "test-webext",
+                "resource://android/assets/extensions/test",
+                allowContentMessaging = false,
+                onSuccess = { onSuccessCalled = true },
+                onError = { _, _ -> onErrorCalled = true }
+        )
+        result.complete(null)
+
+        val extCaptor = argumentCaptor<GeckoWebExtension>()
+        verify(runtime).registerWebExtension(extCaptor.capture())
+        assertEquals("test-webext", extCaptor.value.id)
+        assertEquals("resource://android/assets/extensions/test", extCaptor.value.location)
+        assertEquals(GeckoWebExtension.Flags.NONE, extCaptor.value.flags)
         assertTrue(onSuccessCalled)
         assertFalse(onErrorCalled)
     }

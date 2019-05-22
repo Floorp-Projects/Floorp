@@ -38,6 +38,7 @@ dependencies {
     // As the Kotlin/Java API is the same for all ABIs it is not important which one we import here.
     compileOnly Gecko.geckoview_nightly_arm
     testImplementation Gecko.geckoview_nightly_arm
+
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
