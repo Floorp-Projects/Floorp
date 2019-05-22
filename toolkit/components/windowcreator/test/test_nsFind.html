@@ -13,6 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450048">Mozilla Bug 450048</a>
 <p id="display">This is the text to search i<b>n&shy;t</b>o</p>
 <p id="quotes">"straight" and &ldquo;curly&rdquo; and &lsquo;didn't&rsquo; and 'doesn&rsquo;t'</p>
+<p id="nullcharsnative">native null&#0;</p>
+<p id="nullcharsinjected"></p>
 <div id="content" style="display: none">
 
 </div>
@@ -23,6 +25,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
 
   // Check nsFind class and its nsIFind interface.
 
+  // Inject some text that we'll search for after the DOM content is loaded.
+  const INJECTED_NULL_TEXT = "injected null\0";
+  const nullcharsinjected = document.getElementById("nullcharsinjected");
+  const nulltextnode = document.createTextNode(INJECTED_NULL_TEXT);
+  nullcharsinjected.appendChild(nulltextnode);
+
+  document.addEventListener("DOMContentLoaded", runTests);
+
+function runTests() {
   var rf = SpecialPowers.Cc["@mozilla.org/embedcomp/rangefind;1"]
                         .getService(SpecialPowers.Ci.nsIFind);
 
@@ -138,11 +149,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
   }
 
   function assertFound(node, value) {
-    ok(find(node, value), "\"" + value + "\" not found");
+    ok(find(node, value), "\"" + value + "\" should be found");
   }
 
   function assertNotFound(node, value) {
-    ok(!find(node, value), "\"" + value + "\" found");
+    ok(!find(node, value), "\"" + value + "\" should not be found");
+  }
+
+  function assertNotFoundTODO(node, value) {
+    todo(!find(node, value), "\"" + value + "\" should not be found");
   }
 
   var quotes = document.getElementById("quotes");
@@ -221,6 +236,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
   assertFound(quotes, "'doesn\u2019t'");
   assertNotFound(quotes, "'doesn\u2018t'");
   assertNotFound(quotes, "'doesn't'");
+
+  // Embedded strings containing null characters can't be found, because
+  // the HTML parser converts them to \ufffd, which is the replacement
+  // character.
+  const NULL_CHARACTER = "\0";
+  const nullcharsnative = document.getElementById("nullcharsnative");
+  assertNotFoundTODO(nullcharsnative, NULL_CHARACTER); // Bug 1539653
+  assertFound(nullcharsnative, "native null\ufffd");
+
+  // Injected strings containing null characters can be found.
+  assertFound(nullcharsinjected, NULL_CHARACTER);
+  assertFound(nullcharsinjected, INJECTED_NULL_TEXT);
+}
 </script>
 </pre>
 </body>
