@@ -4862,14 +4862,7 @@ void nsGlobalWindowOuter::FocusOuter() {
   }
 
   nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mDocShell);
-
-  bool isVisible = false;
-  if (baseWin) {
-    baseWin->GetVisibility(&isVisible);
-  }
-
-  if (!isVisible) {
-    // A hidden tab is being focused, ignore this call.
+  if (!baseWin) {
     return;
   }
 
@@ -4928,14 +4921,8 @@ void nsGlobalWindowOuter::FocusOuter() {
       return;
     }
 
-    RefPtr<Element> frame = parentdoc->FindContentForSubDocument(mDoc);
-    if (frame) {
-      uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
-      if (canFocus) flags |= nsIFocusManager::FLAG_RAISE;
-      DebugOnly<nsresult> rv = fm->SetFocus(frame, flags);
-      MOZ_ASSERT(NS_SUCCEEDED(rv),
-                 "SetFocus only fails if the first argument is null, "
-                 "but we pass an element");
+    if (Element* frame = parentdoc->FindContentForSubDocument(mDoc)) {
+      nsContentUtils::RequestFrameFocus(*frame, canFocus);
     }
     return;
   }

@@ -2121,14 +2121,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnWindowedPluginKeyEvent(
 
 mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(const bool& aCanRaise) {
   LOGBROWSERFOCUS(("RecvRequestFocus %p, aCanRaise: %d", this, aCanRaise));
-  BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent();
-  if (bridgeParent) {
+  if (BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent()) {
     mozilla::Unused << bridgeParent->SendRequestFocus(aCanRaise);
-    return IPC_OK();
-  }
-
-  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
     return IPC_OK();
   }
 
@@ -2136,11 +2130,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(const bool& aCanRaise) {
     return IPC_OK();
   }
 
-  uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
-  if (aCanRaise) flags |= nsIFocusManager::FLAG_RAISE;
-
-  RefPtr<Element> element = mFrameElement;
-  fm->SetFocus(element, flags);
+  nsContentUtils::RequestFrameFocus(*mFrameElement, aCanRaise);
   return IPC_OK();
 }
 
