@@ -12,6 +12,7 @@ object StatusBarUtils {
     /**
      * Determine the height of the status bar asynchronously.
      */
+    @Suppress("unused")
     fun getStatusBarHeight(view: View, block: (Int) -> Unit) {
         if (statusBarSize > 0) {
             block(statusBarSize)

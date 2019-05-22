@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 
+@Suppress("unused")
 object ThreadUtils {
     private val looperBackgroundThread by lazy {
         HandlerThread("BackgroundThread")

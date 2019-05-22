@@ -12,6 +12,7 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class DomainMatcherTest {
+
     @Test
     fun `should perform basic domain matching for a given query`() {
         assertNull(segmentAwareDomainMatch("moz", listOf()))
@@ -21,6 +22,7 @@ class DomainMatcherTest {
                 "https://mobile.twitter.com", "https://m.youtube.com",
                 "https://en.Wikipedia.org/Wiki/Mozilla",
                 "http://192.168.254.254:8000", "http://192.168.254.254:8000/admin",
+                "http://иННая.локаль", // TODO add more test data for non-english locales
                 "about:config", "about:crashes"
         )
         // Full url matching.
@@ -81,6 +83,12 @@ class DomainMatcherTest {
         assertEquals(
                 DomainMatch("about:crashes", "about:crashes"),
                 segmentAwareDomainMatch("about:cr", urls)
+        )
+
+        // Non-english locale.
+        assertEquals(
+            DomainMatch("http://инная.локаль", "инная.локаль"),
+            segmentAwareDomainMatch("ин", urls)
         )
 
         assertNull(segmentAwareDomainMatch("nomatch", urls))

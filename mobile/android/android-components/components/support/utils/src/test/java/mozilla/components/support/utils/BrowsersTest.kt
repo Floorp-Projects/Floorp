@@ -4,13 +4,12 @@
 
 package mozilla.components.support.utils
 
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
-import androidx.test.core.app.ApplicationProvider
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -23,12 +22,10 @@ import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class BrowsersTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `with empty package manager`() {
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertNull(browsers.defaultBrowser)
         assertNull(browsers.firefoxBrandedBrowser)
@@ -46,7 +43,7 @@ class BrowsersTest {
             defaultBrowser = Browsers.KnownBrowser.FIREFOX.packageName
         )
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertNotNull(browsers.defaultBrowser)
         assertEquals(Browsers.KnownBrowser.FIREFOX.packageName, browsers.defaultBrowser!!.packageName)
@@ -77,7 +74,7 @@ class BrowsersTest {
             ),
             defaultBrowser = Browsers.KnownBrowser.REFERENCE_BROWSER.packageName)
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertNotNull(browsers.defaultBrowser)
         assertEquals(Browsers.KnownBrowser.REFERENCE_BROWSER.packageName, browsers.defaultBrowser!!.packageName)
@@ -113,7 +110,7 @@ class BrowsersTest {
             browsers = listOf(Browsers.KnownBrowser.FIREFOX_BETA.packageName),
             defaultBrowser = Browsers.KnownBrowser.FIREFOX_BETA.packageName)
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertEquals(Browsers.KnownBrowser.FIREFOX_BETA.packageName, browsers.defaultBrowser!!.packageName)
         assertEquals(Browsers.KnownBrowser.FIREFOX_BETA.packageName, browsers.firefoxBrandedBrowser!!.packageName)
@@ -127,7 +124,7 @@ class BrowsersTest {
             browsers = listOf(Browsers.KnownBrowser.FIREFOX_NIGHTLY.packageName),
             defaultBrowser = Browsers.KnownBrowser.FIREFOX_NIGHTLY.packageName)
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertEquals(Browsers.KnownBrowser.FIREFOX_NIGHTLY.packageName, browsers.defaultBrowser!!.packageName)
         assertEquals(Browsers.KnownBrowser.FIREFOX_NIGHTLY.packageName, browsers.firefoxBrandedBrowser!!.packageName)
@@ -141,7 +138,7 @@ class BrowsersTest {
             browsers = listOf(Browsers.KnownBrowser.FIREFOX_AURORA.packageName),
             defaultBrowser = Browsers.KnownBrowser.FIREFOX_AURORA.packageName)
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertEquals(Browsers.KnownBrowser.FIREFOX_AURORA.packageName, browsers.defaultBrowser!!.packageName)
         assertEquals(Browsers.KnownBrowser.FIREFOX_AURORA.packageName, browsers.firefoxBrandedBrowser!!.packageName)
@@ -155,7 +152,7 @@ class BrowsersTest {
             browsers = listOf(Browsers.KnownBrowser.FIREFOX_FDROID.packageName),
             defaultBrowser = Browsers.KnownBrowser.FIREFOX_FDROID.packageName)
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertEquals(Browsers.KnownBrowser.FIREFOX_FDROID.packageName, browsers.defaultBrowser!!.packageName)
         assertEquals(Browsers.KnownBrowser.FIREFOX_FDROID.packageName, browsers.firefoxBrandedBrowser!!.packageName)
@@ -166,10 +163,10 @@ class BrowsersTest {
     @Test
     fun `With this app being the default browser`() {
         pretendBrowsersAreInstalled(
-            browsers = listOf(context.packageName),
-            defaultBrowser = context.packageName)
+            browsers = listOf(testContext.packageName),
+            defaultBrowser = testContext.packageName)
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertTrue(browsers.isDefaultBrowser)
         assertFalse(browsers.isFirefoxDefaultBrowser)
@@ -187,7 +184,7 @@ class BrowsersTest {
             defaultBrowser = "org.example.unknown.browser"
         )
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertEquals("org.example.unknown.browser", browsers.defaultBrowser!!.packageName)
         assertNull(browsers.firefoxBrandedBrowser)
@@ -213,7 +210,7 @@ class BrowsersTest {
             defaultBrowser = "org.example.unknown.browser",
             defaultBrowserExported = false)
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertNull(browsers.defaultBrowser)
         assertEquals(Browsers.KnownBrowser.FIREFOX.packageName, browsers.firefoxBrandedBrowser!!.packageName)
@@ -239,13 +236,69 @@ class BrowsersTest {
                 Browsers.KnownBrowser.CHROME.packageName),
             browsersExported = false)
 
-        val browsers = Browsers.all(context)
+        val browsers = Browsers.all(testContext)
 
         assertNull(browsers.defaultBrowser)
         assertEquals(Browsers.KnownBrowser.FIREFOX.packageName, browsers.firefoxBrandedBrowser!!.packageName)
         assertTrue(browsers.hasFirefoxBrandedBrowserInstalled)
         browsers.installedBrowsers.forEach { println(it.packageName + " : " + it.exported) }
         assertFalse(browsers.hasThirdPartyDefaultBrowser)
+    }
+
+    @Test
+    fun `forUrl() with empty package manager`() {
+        val browsers = Browsers.forUrl(testContext, "http://www.mozilla.org")
+
+        assertNull(browsers.defaultBrowser)
+        assertNull(browsers.firefoxBrandedBrowser)
+        assertFalse(browsers.hasFirefoxBrandedBrowserInstalled)
+        assertTrue(browsers.installedBrowsers.isEmpty())
+        assertFalse(browsers.hasThirdPartyDefaultBrowser)
+        assertFalse(browsers.hasMultipleThirdPartyBrowsers)
+        assertFalse(browsers.isDefaultBrowser)
+        assertFalse(browsers.isFirefoxDefaultBrowser)
+    }
+
+    @Test
+    fun `forUrl() with firefox as default browser`() {
+        pretendBrowsersAreInstalled(
+            defaultBrowser = Browsers.KnownBrowser.FIREFOX.packageName
+        )
+
+        val browsers = Browsers.forUrl(testContext, "http://www.mozilla.org")
+
+        assertNotNull(browsers.defaultBrowser)
+        assertEquals(Browsers.KnownBrowser.FIREFOX.packageName, browsers.defaultBrowser!!.packageName)
+
+        assertNotNull(browsers.firefoxBrandedBrowser)
+        assertEquals(Browsers.KnownBrowser.FIREFOX.packageName, browsers.firefoxBrandedBrowser!!.packageName)
+
+        assertTrue(browsers.hasFirefoxBrandedBrowserInstalled)
+
+        assertEquals(1, browsers.installedBrowsers.size)
+
+        assertFalse(browsers.hasThirdPartyDefaultBrowser)
+        assertFalse(browsers.hasMultipleThirdPartyBrowsers)
+        assertFalse(browsers.isDefaultBrowser)
+        assertTrue(browsers.isFirefoxDefaultBrowser)
+    }
+
+    @Test
+    fun `forUrl() with wrong non-uri`() {
+        pretendBrowsersAreInstalled(
+            defaultBrowser = Browsers.KnownBrowser.FIREFOX.packageName
+        )
+
+        val browsers = Browsers.forUrl(testContext, "not-a-uri")
+
+        assertNull(browsers.defaultBrowser)
+        assertNull(browsers.firefoxBrandedBrowser)
+        assertFalse(browsers.hasFirefoxBrandedBrowserInstalled)
+        assertTrue(browsers.installedBrowsers.isEmpty())
+        assertFalse(browsers.hasThirdPartyDefaultBrowser)
+        assertFalse(browsers.hasMultipleThirdPartyBrowsers)
+        assertFalse(browsers.isDefaultBrowser)
+        assertFalse(browsers.isFirefoxDefaultBrowser)
     }
 
     private fun pretendBrowsersAreInstalled(
@@ -255,7 +308,7 @@ class BrowsersTest {
         browsersExported: Boolean = true,
         defaultBrowserExported: Boolean = true
     ) {
-        val packageManager = context.packageManager
+        val packageManager = testContext.packageManager
         val shadow = shadowOf(packageManager)
 
         browsers.forEach { packageName ->
@@ -266,7 +319,7 @@ class BrowsersTest {
             val packageInfo = PackageInfo()
             packageInfo.packageName = packageName
 
-            shadow.addPackage(packageInfo)
+            shadow.installPackage(packageInfo)
 
             val activityInfo = ActivityInfo()
             activityInfo.exported = browsersExported
