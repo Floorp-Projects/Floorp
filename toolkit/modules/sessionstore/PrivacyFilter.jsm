@@ -46,7 +46,7 @@ var PrivacyFilter = Object.freeze({
     // If the given form data object has an associated URL that we are not
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
-    if (data.url && !PrivacyLevel.check(data.url)) {
+    if (!data || (data.url && !PrivacyLevel.check(data.url))) {
       return null;
     }
 
