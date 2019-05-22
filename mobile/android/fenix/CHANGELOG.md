@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1735 - Adds API to see the release channel
 - #2318 - Added Firefox Accounts Pairing feature to "Turn On Sync" options
 - #2390 - Adds Onboarding for Fenix
+- #2531 - Adds link to privacy policy in settings
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP
