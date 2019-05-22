@@ -465,7 +465,24 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun loadWebExtensionPage() {
-        val extension = WebExtension("resource://android/assets/web_extensions/extension-page-update/")
+        val result = GeckoResult<String>()
+        var extension: WebExtension? = null;
+
+        val messageDelegate = object : WebExtension.MessageDelegate {
+            override fun onMessage(message: Any,
+                                   sender: WebExtension.MessageSender): GeckoResult<Any>? {
+                Assert.assertEquals(extension, sender.webExtension)
+                Assert.assertEquals(WebExtension.MessageSender.ENV_TYPE_EXTENSION,
+                        sender.environmentType)
+                result.complete(message as String)
+
+                return null
+            }
+        }
+
+        extension = WebExtension("resource://android/assets/web_extensions/extension-page-update/")
+        extension.setMessageDelegate(messageDelegate, "browser")
+
         sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension))
 
         mainSession.loadUri("http://example.com");
@@ -504,6 +521,10 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForResult(pageStop)
 
         assertThat("Url should load WebExtension page", page, endsWith("/tab.html"))
+
+        assertThat("WebExtension page should have access to privileged APIs",
+            sessionRule.waitForResult(result), equalTo("HELLO_FROM_PAGE"))
+
         sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(extension))
     }
 
