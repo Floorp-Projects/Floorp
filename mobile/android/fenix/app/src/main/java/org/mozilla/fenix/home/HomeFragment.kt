@@ -80,6 +80,7 @@ class HomeFragment : Fragment(), CoroutineScope {
 
     private var homeMenu: HomeMenu? = null
 
+    var deleteAllSessionsJob: (suspend () -> Unit)? = null
     var deleteSessionJob: (suspend () -> Unit)? = null
     var deleteCollectionJob: (suspend () -> Unit)? = null
 
@@ -299,7 +300,7 @@ class HomeFragment : Fragment(), CoroutineScope {
                     }
             }
             is TabAction.CloseAll -> {
-                requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(action.private)
+                removeAllTabsWithUndo(action.private)
             }
             is TabAction.PrivateBrowsingLearnMore -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
@@ -330,6 +331,14 @@ class HomeFragment : Fragment(), CoroutineScope {
                 it.invoke()
             }.invokeOnCompletion {
                 deleteSessionJob = null
+            }
+        }
+
+        deleteAllSessionsJob?.let {
+            launch {
+                it.invoke()
+            }.invokeOnCompletion {
+                deleteAllSessionsJob = null
             }
         }
 
@@ -491,6 +500,23 @@ class HomeFragment : Fragment(), CoroutineScope {
         }
         requireComponents.core.sessionManager.register(observer)
         return observer
+    }
+
+    private fun removeAllTabsWithUndo(isPrivate: Boolean) {
+        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.TabsChange(listOf()))
+        deleteAllSessionsJob = {
+            requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(isPrivate)
+        }
+
+        CoroutineScope(Dispatchers.Main).allowUndo(
+            view!!, getString(R.string.snackbar_tabs_deleted),
+            getString(R.string.snackbar_deleted_undo), {
+                deleteAllSessionsJob = null
+                emitSessionChanges()
+            }
+        ) {
+            requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(isPrivate)
+        }
     }
 
     private fun removeTabWithUndo(sessionId: String) {
