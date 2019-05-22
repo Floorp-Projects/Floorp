@@ -428,28 +428,22 @@ class ExtensionData {
     }
 
     let uri = this.rootURI.QueryInterface(Ci.nsIJARURI);
-    let file = uri.JARFile.QueryInterface(Ci.nsIFileURL).file;
 
-    // Normalize the directory path.
-    path = `${uri.JAREntry}/${path}`;
-    path = path.replace(/\/\/+/g, "/").replace(/^\/|\/$/g, "") + "/";
-    if (path === "/") {
-      path = "";
-    }
-
-    // Escape pattern metacharacters.
-    let pattern = path.replace(/[[\]()?*~|$\\]/g, "\\$&") + "*";
+    // Append the sub-directory path to the base JAR URI and normalize the
+    // result.
+    let entry = `${uri.JAREntry}/${path}/`.replace(/\/\/+/g, "/").replace(/^\//, "");
+    uri = Services.io.newURI(`jar:${uri.JARFile.spec}!/${entry}`);
 
     let results = [];
-    for (let name of aomStartup.enumerateZipFile(file, pattern)) {
-      if (!name.startsWith(path)) {
+    for (let name of aomStartup.enumerateJARSubtree(uri)) {
+      if (!name.startsWith(entry)) {
         throw new Error("Unexpected ZipReader entry");
       }
 
       // The enumerator returns the full path of all entries.
       // Trim off the leading path, and filter out entries from
       // subdirectories.
-      name = name.slice(path.length);
+      name = name.slice(entry.length);
       if (name && !/\/./.test(name)) {
         results.push({
           name: name.replace("/", ""),
