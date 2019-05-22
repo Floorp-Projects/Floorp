@@ -6,7 +6,9 @@
 const EXPORTED_SYMBOLS = ["RemoteSecuritySettings"];
 
 const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
+ChromeUtils.defineModuleGetter(this, "BlocklistClients", "resource://services-common/blocklist-clients.js");
 
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {X509} = ChromeUtils.import("resource://gre/modules/psm/X509.jsm", null);
@@ -93,6 +95,19 @@ class CertInfo {
 CertInfo.prototype.QueryInterface = ChromeUtils.generateQI([Ci.nsICertInfo]);
 
 this.RemoteSecuritySettings = class RemoteSecuritySettings {
+    /**
+     * Initialize the clients (cheap instantiation) and setup their sync event.
+     * This static method is called from BrowserGlue.jsm soon after startup.
+     */
+    static init() {
+      // In Bug 1543598, the OneCRL and Pinning clients will be moved in this module.
+      BlocklistClients.initialize();
+
+      if (AppConstants.MOZ_NEW_CERT_STORAGE) {
+        new RemoteSecuritySettings();
+      }
+    }
+
     constructor() {
         this.client = RemoteSettings(Services.prefs.getCharPref(INTERMEDIATES_COLLECTION_PREF), {
           bucketNamePref: INTERMEDIATES_BUCKET_PREF,
@@ -142,7 +157,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         const col = await this.client.openCollection();
         // If we don't have prior data, make it so we re-load everything.
         if (!hasPriorCertData) {
-          let toUpdate = await this.client.get();
+          let { data: toUpdate } = await col.list();
           let promises = [];
           toUpdate.forEach((record) => {
             record.cert_import_complete = false;
@@ -150,7 +165,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
           });
           await Promise.all(promises);
         }
-        const current = await this.client.get();
+        const { data: current } = await col.list();
         const waiting = current.filter(record => !record.cert_import_complete);
 
         log.debug(`There are ${waiting.length} intermediates awaiting download.`);
@@ -181,7 +196,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
           record.cert_import_complete = true;
           return col.update(record);
         }));
-        const finalCurrent = await this.client.get();
+        const { data: finalCurrent } = await col.list();
         const finalWaiting = finalCurrent.filter(record => !record.cert_import_complete);
         const countPreloaded = finalCurrent.length - finalWaiting.length;
 
