@@ -369,8 +369,8 @@ var SessionStore = {
     return SessionStoreInternal.navigateAndRestore(tab, loadArguments, historyIndex);
   },
 
-  updateSessionStoreFromTablistener(aTab, aData) {
-    return SessionStoreInternal.updateSessionStoreFromTablistener(aTab, aData);
+  updateSessionStoreFromTablistener(aBrowser, aData) {
+    return SessionStoreInternal.updateSessionStoreFromTablistener(aBrowser, aData);
   },
 
   getSessionHistory(tab, updatedCallback) {
@@ -822,17 +822,20 @@ var SessionStoreInternal = {
     }
   },
 
-  updateSessionStoreFromTablistener(aTab, aData) {
-    let browser = aTab.linkedBrowser;
-    let win = browser.ownerGlobal;
-    TabState.update(browser, aData);
+  updateSessionStoreFromTablistener(aBrowser, aData) {
+    if (aBrowser.permanentKey == undefined) {
+      return;
+    }
+
+    TabState.update(aBrowser, aData);
+    let win = aBrowser.ownerGlobal;
     this.saveStateDelayed(win);
 
     if (aData.flushID) {
       // This is an update kicked off by an async flush request. Notify the
       // TabStateFlusher so that it can finish the request and notify its
       // consumer that's waiting for the flush to be done.
-      TabStateFlusher.resolve(browser, aData.flushID);
+      TabStateFlusher.resolve(aBrowser, aData.flushID);
     }
   },
 
