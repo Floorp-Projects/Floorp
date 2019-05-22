@@ -11,7 +11,6 @@
 #include "PDMFactory.h"
 #include "VideoUtils.h"
 #include "WebMDemuxer.h"
-#include "gfxPrefs.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
@@ -168,7 +167,6 @@ void Benchmark::Dispose() {
 void Benchmark::Init() {
   MOZ_ASSERT(NS_IsMainThread());
   gfxVars::Initialize();
-  gfxPrefs::GetSingleton();
 }
 
 BenchmarkPlayback::BenchmarkPlayback(Benchmark* aGlobalState,

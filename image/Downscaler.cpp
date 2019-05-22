@@ -8,7 +8,7 @@
 
 #include <algorithm>
 #include <ctime>
-#include "gfxPrefs.h"
+
 #include "mozilla/gfx/2D.h"
 
 using std::max;

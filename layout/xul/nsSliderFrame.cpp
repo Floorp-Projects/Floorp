@@ -13,7 +13,6 @@
 
 #include "nsSliderFrame.h"
 
-#include "gfxPrefs.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"

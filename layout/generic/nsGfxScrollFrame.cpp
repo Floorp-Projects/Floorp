@@ -61,7 +61,6 @@
 #include "nsIFrameInlines.h"
 #include "nsILayoutHistoryState.h"
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
 #include "mozilla/StaticPrefs.h"
 #include "ScrollAnimationPhysics.h"
 #include "ScrollAnimationBezierPhysics.h"

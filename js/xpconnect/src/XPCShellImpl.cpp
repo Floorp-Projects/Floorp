@@ -39,7 +39,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsJSUtils.h"
-#include "gfxPrefs.h"
+
 #include "nsIXULRuntime.h"
 #include "GeckoProfiler.h"
 
@@ -1327,8 +1327,6 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
       return 1;
     }
 
-    // Initialize graphics prefs on the main thread, if not already done
-    gfxPrefs::GetSingleton();
     // Initialize e10s check on the main thread, if not already done
     BrowserTabsRemoteAutostart();
 #ifdef XP_WIN
