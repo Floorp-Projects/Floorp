@@ -33,9 +33,6 @@ const { getAllNotifications } = require("devtools/client/webconsole/selectors/no
 const { div } = dom;
 const isMacOS = Services.appinfo.OS === "Darwin";
 
-// Prefs
-const { PREFS } = require("devtools/client/webconsole/constants");
-
 /**
  * Console root Application component.
  */
@@ -64,35 +61,6 @@ class App extends Component {
     this.onClick = this.onClick.bind(this);
     this.onPaste = this.onPaste.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
-  }
-
-  componentDidMount() {
-    const {
-      UI,
-    } = PREFS;
-
-    // Toggle the timestamp on preference change. We use a weak observer to not have to
-    // remove the observer (because we don't want to have a componentWillUnmount that
-    // would do extra work).
-    this.timeStampObserver = {
-      QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIObserver,
-        Ci.nsISupportsWeakReference,
-      ]),
-
-      observe: () => {
-        const enabled = Services.prefs.getBoolPref(UI.MESSAGE_TIMESTAMP);
-        this.props.dispatch(actions.timestampsToggle(enabled));
-      },
-    };
-
-    Services.prefs.addObserver(
-      UI.MESSAGE_TIMESTAMP,
-      this.timeStampObserver,
-      // This is flag needed to register a weak observer.
-      // See https://searchfox.org/mozilla-central/rev/f4c39907e0b527dc4b9356a1eeb8c6e6c62d383a/modules/libpref/nsIPrefBranch.idl#430
-      true
-    );
   }
 
   onKeyDown(event) {
