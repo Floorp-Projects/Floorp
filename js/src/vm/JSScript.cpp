@@ -2883,10 +2883,10 @@ void ScriptSource::codeRetrievableData(ScriptSource* ss) {
   // There's nothing to code for retrievable data.  Just be sure to set
   // retrievable data when decoding.
   if (mode == XDR_ENCODE) {
-    MOZ_ASSERT(ss->data.is<Retrievable<char16_t>>());
+    MOZ_ASSERT(ss->data.is<Retrievable<Unit>>());
   } else {
     MOZ_ASSERT(ss->data.is<Missing>());
-    ss->data = SourceType(Retrievable<char16_t>());
+    ss->data = SourceType(Retrievable<Unit>());
   }
 }
 
