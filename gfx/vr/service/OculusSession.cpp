@@ -11,7 +11,6 @@
 #include <math.h>
 #include <d3d11.h>
 
-#include "gfxPrefs.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
@@ -207,7 +206,7 @@ OculusSession::OculusSession()
 OculusSession::~OculusSession() { Shutdown(); }
 
 bool OculusSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
-  if (!gfxPrefs::VREnabled() || !gfxPrefs::VROculusEnabled()) {
+  if (!StaticPrefs::VREnabled() || !StaticPrefs::VROculusEnabled()) {
     return false;
   }
 

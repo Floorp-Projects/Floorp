@@ -7,7 +7,7 @@
 
 #include <cstring>
 #include "CompositorTypes.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
@@ -69,11 +69,11 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
   const bool useANGLE = compositorConnection->GetCompositorUseANGLE();
 
   const bool useGl =
-      !gfxPrefs::WebGLForceLayersReadback() &&
+      !StaticPrefs::WebGLForceLayersReadback() &&
       (backend == layers::LayersBackend::LAYERS_OPENGL ||
        (backend == layers::LayersBackend::LAYERS_WR && !useANGLE));
   const bool useD3D =
-      !gfxPrefs::WebGLForceLayersReadback() &&
+      !StaticPrefs::WebGLForceLayersReadback() &&
       (backend == layers::LayersBackend::LAYERS_D3D11 ||
        (backend == layers::LayersBackend::LAYERS_WR && useANGLE));
 

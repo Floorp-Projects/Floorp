@@ -12,7 +12,6 @@
 #include "GeckoProfiler.h"          // for AUTO_PROFILER_LABEL
 #include "Layers.h"                 // for PaintedLayer, Layer, etc
 #include "gfxPlatform.h"            // for gfxPlatform
-#include "gfxPrefs.h"               // for gfxPrefs
 #include "gfxUtils.h"               // for gfxUtils
 #include "mozilla/ArrayUtils.h"     // for ArrayLength
 #include "mozilla/gfx/BasePoint.h"  // for BasePoint
@@ -25,6 +24,7 @@
 #include "mozilla/layers/ShadowLayers.h"   // for ShadowableLayer
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/Move.h"                  // for Move
+#include "mozilla/StaticPrefs.h"           // for StaticPrefs
 #include "mozilla/gfx/Point.h"             // for IntSize
 #include "gfx2DGlue.h"
 #include "nsLayoutUtils.h"  // for invalidation debugging
@@ -76,7 +76,7 @@ void RotatedBuffer::BeginCapture() {
   MOZ_ASSERT(!mCapture);
   MOZ_ASSERT(target);
   mCapture = Factory::CreateCaptureDrawTargetForTarget(
-      target, gfxPrefs::LayersOMTPCaptureLimit());
+      target, StaticPrefs::LayersOMTPCaptureLimit());
 }
 
 RefPtr<gfx::DrawTargetCapture> RotatedBuffer::EndCapture() {

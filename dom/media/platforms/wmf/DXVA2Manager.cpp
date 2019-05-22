@@ -15,7 +15,6 @@
 #include "VideoUtils.h"
 #include "WMFUtils.h"
 #include "gfxCrashReporterUtils.h"
-#include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mfapi.h"
 #include "mozilla/StaticPrefs.h"
@@ -680,7 +679,8 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
         layers::ImageBridgeChild::GetSingleton().get(), mDevice,
         gfx::SurfaceFormat::NV12);
 
-    if (ImageBridgeChild::GetSingleton() && gfxPrefs::PDMWMFUseSyncTexture() &&
+    if (ImageBridgeChild::GetSingleton() &&
+        StaticPrefs::PDMWMFUseSyncTexture() &&
         mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
       // We use a syncobject to avoid the cost of the mutex lock when
       // compositing, and because it allows color conversion ocurring directly
@@ -695,7 +695,7 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   } else {
     mTextureClientAllocator = new D3D11RecycleAllocator(
         aKnowsCompositor, mDevice, gfx::SurfaceFormat::NV12);
-    if (gfxPrefs::PDMWMFUseSyncTexture()) {
+    if (StaticPrefs::PDMWMFUseSyncTexture()) {
       // We use a syncobject to avoid the cost of the mutex lock when
       // compositing, and because it allows color conversion ocurring directly
       // from this texture DXVA does not seem to accept IDXGIKeyedMutex textures
