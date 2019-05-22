@@ -140,6 +140,7 @@ class FontInspector {
    * @return {Number}
    *         Converted numeric value.
    */
+  /* eslint-disable complexity */
   async convertUnits(property, value, fromUnit, toUnit) {
     if (value !== parseFloat(value)) {
       throw TypeError(`Invalid value for conversion. Expected Number, got ${value}`);
@@ -268,6 +269,7 @@ class FontInspector {
     // Round pixel values.
     return Math.round(out);
   }
+  /* eslint-enable complexity */
 
   /**
    * Destruction function called when the inspector is destroyed. Removes event listeners
