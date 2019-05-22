@@ -1401,11 +1401,13 @@ void HttpChannelChild::FailedAsyncOpen(const nsresult& status) {
   // Might be called twice in race condition in theory.
   // (one by RecvFailedAsyncOpen, another by
   // HttpBackgroundChannelChild::ActorFailed)
-  if (NS_WARN_IF(NS_FAILED(mStatus))) {
+  if (mOnStartRequestCalled) {
     return;
   }
 
-  mStatus = status;
+  if (NS_SUCCEEDED(mStatus)) {
+    mStatus = status;
+  }
 
   // We're already being called from IPDL, therefore already "async"
   HandleAsyncAbort();
@@ -2566,7 +2568,10 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   AssertPrivateBrowsingId();
 #endif
 
-  if (mCanceled) return mStatus;
+  if (mCanceled) {
+    ReleaseListeners();
+    return mStatus;
+  }
 
   NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
   NS_ENSURE_ARG_POINTER(listener);
@@ -2635,7 +2640,8 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
     // We may have been canceled already, either by on-modify-request
     // listeners or by load group observers; in that case, don't create IPDL
     // connection. See nsHttpChannel::AsyncOpen().
-    return NS_OK;
+    ReleaseListeners();
+    return mStatus;
   }
 
   // Set user agent override from docshell
@@ -2687,7 +2693,11 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
     // Fall through
   }
 
-  return ContinueAsyncOpen();
+  rv = ContinueAsyncOpen();
+  if (NS_FAILED(rv)) {
+    ReleaseListeners();
+  }
+  return rv;
 }
 
 // Assigns an nsIEventTarget to our IPDL actor so that IPC messages are sent to

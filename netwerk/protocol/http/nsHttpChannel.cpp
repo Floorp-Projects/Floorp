@@ -6362,6 +6362,11 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
 
+  if (mCanceled) {
+    ReleaseListeners();
+    return mStatus;
+  }
+
   if (MaybeWaitForUploadStreamLength(listener, nullptr)) {
     return NS_OK;
   }
