@@ -5284,6 +5284,31 @@ nsresult Preferences::AddFloatVarCache(float* aCache, const nsACString& aPref,
   return NS_OK;
 }
 
+static void AtomicFloatVarChanged(const char* aPref, void* aClosure) {
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<std::atomic<float>*>(cache->mCacheLocation) =
+      Preferences::GetFloat(aPref, cache->mDefaultValueFloat);
+}
+
+/* static */
+nsresult Preferences::AddAtomicFloatVarCache(std::atomic<float>* aCache,
+                                             const nsACString& aPref,
+                                             float aDefault,
+                                             bool aSkipAssignment) {
+  AssertNotAlreadyCached("float", aPref, aCache);
+  if (!aSkipAssignment) {
+    *aCache = GetFloat(PromiseFlatCString(aPref).get(), aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueFloat = aDefault;
+  CacheDataAppendElement(data);
+  Preferences::RegisterCallback(AtomicFloatVarChanged, aPref, data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
+  return NS_OK;
+}
+
 // For a VarCache pref like this:
 //
 //   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
@@ -5433,6 +5458,18 @@ static void InitVarCachePref(const nsACString& aName, float* aCache,
   *aCache = aDefaultValue;
   if (aIsStartup) {
     Preferences::AddFloatVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+static void InitVarCachePref(const nsACString& aName,
+                             std::atomic<float>* aCache, float aDefaultValue,
+                             bool aIsStartup, bool aSetValue) {
+  if (aSetValue) {
+    SetPref_float(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddAtomicFloatVarCache(aCache, aName, aDefaultValue, true);
   }
 }
 
