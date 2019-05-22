@@ -7978,7 +7978,13 @@ class CGPerSignatureCall(CGThing):
                 self.getArguments(), argsPre, returnType,
                 self.extendedAttributes, descriptor,
                 nativeMethodName,
-                static, argsPost=argsPost, resultVar=resultVar))
+                static,
+                # We know our "self" must be being kept alive; otherwise we have
+                # a serious problem.  In common cases it's just an argument and
+                # we're MOZ_CAN_RUN_SCRIPT, but in some cases it's on the stack
+                # and being kept alive via references from JS.
+                object="MOZ_KnownLive(self)",
+                argsPost=argsPost, resultVar=resultVar))
 
         if useCounterName:
             # Generate a telemetry call for when [UseCounter] is used.
@@ -8752,7 +8758,8 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, name, args, getThisObj,
                  callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);\n"):
-        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args,
+                                        canRunScript=True)
 
         self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");\n' % descriptor.interface.identifier.name
 
