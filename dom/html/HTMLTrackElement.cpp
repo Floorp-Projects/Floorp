@@ -213,6 +213,15 @@ bool HTMLTrackElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLTrackElement::SetSrc(const nsAString& aSrc, ErrorResult& aError) {
+  LOG(LogLevel::Info,
+      ("%p Set src=%s", this, NS_ConvertUTF16toUTF8(aSrc).get()));
+
+  nsAutoString src;
+  if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src) && src == aSrc) {
+    LOG(LogLevel::Info, ("%p No need to reload for same src url", this));
+    return;
+  }
+
   SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
   SetReadyState(TextTrackReadyState::NotLoaded);
   if (!mMediaParent) {
