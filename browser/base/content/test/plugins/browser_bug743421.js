@@ -7,7 +7,7 @@ add_task(async function() {
     Services.prefs.clearUserPref("plugins.click_to_play");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
-    await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
+    await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins", gTestBrowser);
     resetBlocklist();
     gBrowser.removeCurrentTab();
     window.focus();
@@ -29,7 +29,7 @@ add_task(async function() {
   // Prime the blocklist service, the remote service doesn't launch on startup.
   await promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html,<html></html>");
 
-  await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
+  await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins", gTestBrowser);
 });
 
 // Tests that navigation within the page and the window.history API doesn't break click-to-play state.

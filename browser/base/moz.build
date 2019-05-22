@@ -38,6 +38,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/performance/legacyurlbar/browser.ini',
     'content/test/performance/lowdpi/browser.ini',
     'content/test/permissions/browser.ini',
+    'content/test/plugins/browser-rs-blocklist.ini',
     'content/test/plugins/browser.ini',
     'content/test/popupNotifications/browser.ini',
     'content/test/popups/browser.ini',
