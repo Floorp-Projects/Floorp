@@ -69,18 +69,21 @@ static bool IsSameOriginWithAllParentDocs(nsINode* aDoc) {
 already_AddRefed<Promise> MediaDevices::GetUserMedia(
     const MediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
-  if (Document* doc = GetOwner()->GetExtantDoc()) {
-    if (!GetOwner()->IsSecureContext()) {
-      doc->SetDocumentAndPageUseCounter(eUseCounter_custom_GetUserMediaInsec);
-    }
-    if (!IsSameOriginWithAllParentDocs(doc)) {
-      doc->SetDocumentAndPageUseCounter(eUseCounter_custom_GetUserMediaXOrigin);
-    }
-    Document* topDoc = doc->GetTopLevelContentDocument();
-    IgnoredErrorResult ignored;
-    if (topDoc && !topDoc->HasFocus(ignored)) {
-      doc->SetDocumentAndPageUseCounter(
-          eUseCounter_custom_GetUserMediaUnfocused);
+  if (RefPtr<nsPIDOMWindowInner> owner = GetOwner()) {
+    if (Document* doc = owner->GetExtantDoc()) {
+      if (!owner->IsSecureContext()) {
+        doc->SetDocumentAndPageUseCounter(eUseCounter_custom_GetUserMediaInsec);
+      }
+      if (!IsSameOriginWithAllParentDocs(doc)) {
+        doc->SetDocumentAndPageUseCounter(
+            eUseCounter_custom_GetUserMediaXOrigin);
+      }
+      Document* topDoc = doc->GetTopLevelContentDocument();
+      IgnoredErrorResult ignored;
+      if (topDoc && !topDoc->HasFocus(ignored)) {
+        doc->SetDocumentAndPageUseCounter(
+            eUseCounter_custom_GetUserMediaUnfocused);
+      }
     }
   }
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
@@ -112,16 +115,18 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
                                                          ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (Document* doc = GetOwner()->GetExtantDoc()) {
-    if (!GetOwner()->IsSecureContext()) {
-      doc->SetDocumentAndPageUseCounter(
-          eUseCounter_custom_EnumerateDevicesInsec);
-    }
-    Document* topDoc = doc->GetTopLevelContentDocument();
-    IgnoredErrorResult ignored;
-    if (topDoc && !topDoc->HasFocus(ignored)) {
-      doc->SetDocumentAndPageUseCounter(
-          eUseCounter_custom_EnumerateDevicesUnfocused);
+  if (RefPtr<nsPIDOMWindowInner> owner = GetOwner()) {
+    if (Document* doc = owner->GetExtantDoc()) {
+      if (!owner->IsSecureContext()) {
+        doc->SetDocumentAndPageUseCounter(
+            eUseCounter_custom_EnumerateDevicesInsec);
+      }
+      Document* topDoc = doc->GetTopLevelContentDocument();
+      IgnoredErrorResult ignored;
+      if (topDoc && !topDoc->HasFocus(ignored)) {
+        doc->SetDocumentAndPageUseCounter(
+            eUseCounter_custom_EnumerateDevicesUnfocused);
+      }
     }
   }
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
@@ -172,10 +177,12 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
 already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
     const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
     ErrorResult& aRv) {
-  if (Document* doc = GetOwner()->GetExtantDoc()) {
-    if (!IsSameOriginWithAllParentDocs(doc)) {
-      doc->SetDocumentAndPageUseCounter(
-          eUseCounter_custom_GetDisplayMediaXOrigin);
+  if (RefPtr<nsPIDOMWindowInner> owner = GetOwner()) {
+    if (Document* doc = owner->GetExtantDoc()) {
+      if (!IsSameOriginWithAllParentDocs(doc)) {
+        doc->SetDocumentAndPageUseCounter(
+            eUseCounter_custom_GetDisplayMediaXOrigin);
+      }
     }
   }
   RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
