@@ -81,7 +81,6 @@ function configureStore(webConsoleUI, options = {}) {
         ? getBoolPref(PREFS.UI.CONTENT_MESSAGES)
         : true,
       editor: getBoolPref(PREFS.UI.EDITOR),
-      timestampsVisible: getBoolPref(PREFS.UI.MESSAGE_TIMESTAMP),
     }),
   };
 
