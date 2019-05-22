@@ -52,6 +52,10 @@ projects:
     path: components/feature/intent
     description: 'Combining various feature components for intent processing.'
     publish: true
+  feature-media:
+    path: components/feature/media
+    description: 'Feature component for website media related features.'
+    publish: true
   feature-readerview:
     path: components/feature/readerview
     description: 'Feature implementation providing a Reader View WebExtension.'
