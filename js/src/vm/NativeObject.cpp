@@ -321,24 +321,6 @@ void NativeObject::setLastPropertyShrinkFixedSlots(Shape* shape) {
   setShape(shape);
 }
 
-void NativeObject::setLastPropertyMakeNonNative(Shape* shape) {
-  MOZ_ASSERT(!inDictionaryMode());
-  MOZ_ASSERT(!shape->getObjectClass()->isNative());
-  MOZ_ASSERT(shape->zone() == zone());
-  MOZ_ASSERT(shape->slotSpan() == 0);
-  MOZ_ASSERT(shape->numFixedSlots() == 0);
-
-  if (hasDynamicElements()) {
-    js_free(getUnshiftedElementsHeader());
-  }
-  if (hasDynamicSlots()) {
-    js_free(slots_);
-    slots_ = nullptr;
-  }
-
-  setShape(shape);
-}
-
 bool NativeObject::setSlotSpan(JSContext* cx, uint32_t span) {
   MOZ_ASSERT(inDictionaryMode());
 
@@ -375,6 +357,9 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCount,
       return false;
     }
     Debug_SetSlotRangeToCrashOnTouch(slots_, newCount);
+
+    AddCellMemory(this, newCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
+
     return true;
   }
 
@@ -383,6 +368,9 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCount,
   if (!newslots) {
     return false; /* Leave slots at its old size. */
   }
+
+  RemoveCellMemory(this, oldCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
+  AddCellMemory(this, newCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
 
   slots_ = newslots;
 
@@ -443,6 +431,8 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCount,
   MOZ_ASSERT(newCount < oldCount);
 
   if (newCount == 0) {
+    RemoveCellMemory(this, numDynamicSlots() * sizeof(HeapSlot),
+                     MemoryUse::ObjectSlots);
     FreeSlots(cx, slots_);
     slots_ = nullptr;
     return;
@@ -456,6 +446,9 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCount,
     cx->recoverFromOutOfMemory();
     return; /* Leave slots at its old size. */
   }
+
+  RemoveCellMemory(this, oldCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
+  AddCellMemory(this, newCount * sizeof(HeapSlot), MemoryUse::ObjectSlots);
 
   slots_ = newslots;
 }
