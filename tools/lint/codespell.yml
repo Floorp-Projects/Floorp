@@ -62,6 +62,7 @@ codespell:
         - properties
         - rst
         - md
+        - ftl
     support-files:
         - 'tools/lint/spell/**'
     type: external
