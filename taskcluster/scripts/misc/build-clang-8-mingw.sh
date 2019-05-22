@@ -36,10 +36,6 @@ mingw_version=164990461720e0ed6ea5ea9f359d78595b1a459a
 libunwind_version=6ee92fcc97350ae32db3172a269e9afcc2bab686
 llvm_mingw_version=c3a16814bd26aa6702e1e5b482a3d9044bb0f725
 
-binutils_version=2.27
-binutils_ext=bz2
-binutils_sha=369737ce51587f92466041a97ab7d2358c6d9e1b6490b3940eb09fb0a9a6ac88
-
 # This is default value of _WIN32_WINNT. Gecko configure script explicitly sets this,
 # so this is not used to build Gecko itself. We default to 0x601, which is Windows 7.
 default_win32_winnt=0x601
@@ -71,14 +67,6 @@ prepare() {
   pushd llvm-mingw
   git checkout $llvm_mingw_version
   popd
-
-  wget -c --progress=dot:mega ftp://ftp.gnu.org/gnu/binutils/binutils-$binutils_version.tar.$binutils_ext
-  if [ "$(sha256sum binutils-$binutils_version.tar.$binutils_ext)" != "$binutils_sha  binutils-$binutils_version.tar.$binutils_ext" ];
-  then
-    echo Corrupted binutils archive
-    exit 1
-  fi
-  tar -jxf binutils-$binutils_version.tar.$binutils_ext
 
   popd
 }
@@ -282,22 +270,12 @@ build_libcxx() {
 }
 
 build_utils() {
-  mkdir binutils
-  pushd binutils
-  $SRC_DIR/binutils-$binutils_version/configure --prefix=$INSTALL_DIR \
-                                                --disable-multilib \
-                                                --disable-nls \
-                                                --target=$machine-w64-mingw32
-  make $make_flags
-
-  # Manually install only nm
-  cp binutils/nm-new $INSTALL_DIR/bin/$machine-w64-mingw32-nm
-
   pushd $INSTALL_DIR/bin/
+  ln -s llvm-nm $machine-w64-mingw32-nm
+  ln -s llvm-strip $machine-w64-mingw32-strip
   ln -s llvm-readobj $machine-w64-mingw32-readobj
+  ln -s llvm-objcopy $machine-w64-mingw32-objcopy
   ./clang $SRC_DIR/llvm-mingw/wrappers/windres-wrapper.c -O2 -Wl,-s -o $machine-w64-mingw32-windres
-  popd
-
   popd
 }
 
