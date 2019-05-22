@@ -3,9 +3,11 @@ cache: cargo
 sudo: true
 os:
   - linux
-# Taken out temporarily because it's to slow
-#  - osx
+  - osx
 
+env:
+  - FEATURES=""
+  - FEATURES="serialize"
 rust:
   - nightly
   - beta
@@ -17,13 +19,12 @@ matrix:
   allow_failures:
     - rust: nightly
 
-before_install:
-  - sudo apt-get update
-
 addons:
   apt:
     packages:
       - libcurl4-openssl-dev
+      - zlib1g-dev
+      - libiberty-dev
       - libelf-dev
       - libdw-dev
       - cmake
@@ -34,34 +35,46 @@ addons:
 before_script:
   - export PATH=$PATH:~/.cargo/bin
   - |
-    if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then
-      cargo install --force clippy;
+    if [[ "$TRAVIS_RUST_VERSION" == "stable" ]]; then
+      rustup component add rustfmt-preview
+      rustup component add clippy
     fi
 
 script:
-  - cargo build --verbose --all
+  - echo FEATURES="$FEATURES"
   - |
-    if [[ "$TRAVIS_RUST_VERSION" == "nightly" &&
-      -f ~/.cargo/bin/cargo-clippy ]]; then
-      cargo clippy;
+    if [[ "$TRAVIS_RUST_VERSION" == "stable" ]]; then
+      cargo fmt --all -- --check
     fi
-  - cargo test --verbose --all
+  - cargo build --verbose --all --features="$FEATURES"
+  - |
+    if [[ "$TRAVIS_RUST_VERSION" == "stable" ]]; then
+      cargo clippy --all-targets --all-features -- -D warnings;
+    fi
+  - |
+    if [[ "$TRAVIS_RUST_VERSION" == "1.17.0" ]]; then
+      cargo test --all-features --verbose --all
+    else
+      cargo test --all-targets --all-features --verbose --all
+    fi
+
 
 after_success:
   - |
-      if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" ]]; then
-        wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
-        tar xzf master.tar.gz &&
-        cd kcov-master &&
+      if [[ "$TRAVIS_OS_NAME" == "linux" && "$TRAVIS_RUST_VERSION" == "stable" && "$FEATURES" == "serialize" ]]; then
+        wget https://github.com/SimonKagstrom/kcov/archive/v34.tar.gz &&
+        tar xzf v34.tar.gz &&
+        cd kcov-34 &&
         mkdir build &&
         cd build &&
         cmake .. &&
         make &&
         sudo make install &&
         cd ../.. &&
-        rm -rf kcov-master &&
+        rm -rf kcov-34 &&
         kcov --version &&
-        for file in target/debug/rsdparsa-*[^\.d]; do echo "$file"; mkdir -p "target/cov/$(basename $file)"; kcov --verify --exclude-pattern=/.cargo,/usr/lib "target/cov/$(basename $file)" "$file"; done &&
+        (cd target/debug/ && ls -al) &&
+        for file in target/debug/webrtc_sdp-*[^\.d]; do echo "$file"; mkdir -p "target/cov/$(basename $file)"; kcov --verify --exclude-pattern=/.cargo,/usr/lib "target/cov/$(basename $file)" "$file"; done &&
         for file in target/debug/unit_tests-*[^\.d]; do echo "$file"; mkdir -p "target/cov/$(basename $file)"; kcov --verify --exclude-pattern=/.cargo,/usr/lib "target/cov/$(basename $file)" "$file"; done &&
         bash <(curl -s https://codecov.io/bash) &&
         echo "Uploaded code coverage"
