@@ -685,12 +685,13 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
 
   if (mListener) {
     nsCOMPtr<nsIStreamListener> listener(mListener);
+    mOnStartRequestCalled = true;
     rv = listener->OnStartRequest(aRequest);
   } else {
     rv = NS_ERROR_UNEXPECTED;
   }
-
   mOnStartRequestCalled = true;
+
   if (NS_FAILED(rv)) {
     Cancel(rv);
     return;
@@ -1260,6 +1261,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   MOZ_ASSERT(mListener);
   if (mListener) {
     nsCOMPtr<nsIStreamListener> listener(mListener);
+    mOnStopRequestCalled = true;
     listener->OnStopRequest(aRequest, mStatus);
   }
   mOnStopRequestCalled = true;
@@ -1573,6 +1575,7 @@ void HttpChannelChild::DoNotifyListener() {
 
   if (mListener && !mOnStartRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
+    mOnStartRequestCalled = true;  // avoid reentrancy bugs by setting this now
     listener->OnStartRequest(this);
   }
   mOnStartRequestCalled = true;
@@ -1591,10 +1594,10 @@ void HttpChannelChild::ContinueDoNotifyListener() {
 
   if (mListener && !mOnStopRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStopRequest(this, mStatus);
-
     mOnStopRequestCalled = true;
+    listener->OnStopRequest(this, mStatus);
   }
+  mOnStopRequestCalled = true;
 
   // notify "http-on-stop-request" observers
   gHttpHandler->OnStopRequest(this);
