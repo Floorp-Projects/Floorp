@@ -140,18 +140,6 @@ var OSKeyStore = {
       }
     });
 
-    if (nativeOSKeyStore.isNSSKeyStore) {
-      // Workaround bug 1492305: NSS-implemented methods don't reject when user cancels.
-      unlockPromise = unlockPromise.then(() => {
-        log.debug("ensureLoggedIn: isNSSKeyStore: ", reauth, Services.logins.isLoggedIn);
-        // User has hit the cancel button on the master password prompt.
-        // We must reject the promise chain here.
-        if (!Services.logins.isLoggedIn) {
-          throw Components.Exception("User canceled OS unlock entry (Workaround)", Cr.NS_ERROR_FAILURE);
-        }
-      });
-    }
-
     unlockPromise = unlockPromise.then(() => {
       log.debug("ensureLoggedIn: Logged in");
       this._pendingUnlockPromise = null;
