@@ -275,6 +275,9 @@ pub trait MatrixHelpers<Src, Dst> {
     /// It ignores the Z coordinate and is usable for "flattened" transformations,
     /// since they are not generally inversible.
     fn inverse_project_2d_origin(&self) -> Option<TypedPoint2D<f32, Src>>;
+    /// Turn Z transformation into identity. This is useful when crossing "flat"
+    /// transform styled stacking contexts upon traversing the coordinate systems.
+    fn flatten_z_output(&mut self);
 }
 
 impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
@@ -391,6 +394,13 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
         } else {
             None
         }
+    }
+
+    fn flatten_z_output(&mut self) {
+        self.m13 = 0.0;
+        self.m23 = 0.0;
+        self.m33 = 1.0;
+        self.m43 = 0.0;
     }
 }
 
