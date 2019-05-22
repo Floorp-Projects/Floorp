@@ -11,7 +11,6 @@
 #include "Layers.h"                         // for Layer, ContainerLayer, etc
 #include "CompositableTransactionParent.h"  // for EditReplyVector
 #include "CompositorBridgeParent.h"
-#include "gfxPrefs.h"
 #include "mozilla/gfx/BasePoint3D.h"         // for BasePoint3D
 #include "mozilla/layers/AnimationHelper.h"  // for GetAnimatedPropValue
 #include "mozilla/layers/CanvasLayerComposite.h"
@@ -472,9 +471,9 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvUpdate(
 #endif
 
   // Enable visual warning for long transaction when draw FPS option is enabled
-  bool drawFps = gfxPrefs::LayersDrawFPS();
+  bool drawFps = StaticPrefs::LayersDrawFPS();
   if (drawFps) {
-    uint32_t visualWarningTrigger = gfxPrefs::LayerTransactionWarning();
+    uint32_t visualWarningTrigger = StaticPrefs::LayerTransactionWarning();
     // The default theshold is 200ms to trigger, hit red when it take 4 times
     // longer
     TimeDuration latency = TimeStamp::Now() - aInfo.transactionStart();
@@ -751,7 +750,7 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvGetTransform(
   // containers are enabled, then the APZ transform might not be on |layer| but
   // instead would be on the parent of |layer|, if that is the root scrollable
   // metrics. So we special-case that behaviour.
-  if (gfxPrefs::LayoutUseContainersForRootFrames() &&
+  if (StaticPrefs::LayoutUseContainersForRootFrames() &&
       !layer->HasScrollableFrameMetrics() && layer->GetParent() &&
       layer->GetParent()->HasRootScrollableFrameMetrics()) {
     transform *= layer->GetParent()->AsHostLayer()->GetShadowBaseTransform();

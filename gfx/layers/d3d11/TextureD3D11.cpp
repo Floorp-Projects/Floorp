@@ -11,7 +11,7 @@
 #include "ReadbackManagerD3D11.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
@@ -286,7 +286,7 @@ static void DestroyDrawTarget(RefPtr<DrawTarget>& aDT,
 
 D3D11TextureData::~D3D11TextureData() {
   if (mDrawTarget) {
-    if (PaintThread::Get() && gfxPrefs::Direct2DDestroyDTOnPaintThread()) {
+    if (PaintThread::Get() && StaticPrefs::Direct2DDestroyDTOnPaintThread()) {
       RefPtr<DrawTarget> dt = mDrawTarget;
       RefPtr<ID3D11Texture2D> tex = mTexture;
       RefPtr<Runnable> task = NS_NewRunnableFunction(

@@ -26,8 +26,8 @@ class DesktopFlingPhysics {
   }
   void Sample(const TimeDuration& aDelta, ParentLayerPoint* aOutVelocity,
               ParentLayerPoint* aOutOffset) {
-    float friction = gfxPrefs::APZFlingFriction();
-    float threshold = gfxPrefs::APZFlingStoppedThreshold();
+    float friction = StaticPrefs::APZFlingFriction();
+    float threshold = StaticPrefs::APZFlingStoppedThreshold();
 
     mVelocity = ParentLayerPoint(
         ApplyFrictionOrCancel(mVelocity.x, aDelta, friction, threshold),

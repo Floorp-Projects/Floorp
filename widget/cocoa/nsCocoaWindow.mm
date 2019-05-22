@@ -36,12 +36,12 @@
 #include "VibrancyManager.h"
 
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
 #include "qcms.h"
 
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/PresShell.h"
 #include <algorithm>
 
@@ -2007,7 +2007,7 @@ void nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform) {
     return;
   }
 
-  if (gfxPrefs::WindowTransformsDisabled()) {
+  if (StaticPrefs::WindowTransformsDisabled()) {
     // CGSSetWindowTransform is a private API. In case calling it causes
     // problems either now or in the future, we'll want to have an easy kill
     // switch. So we allow disabling it with a pref.
