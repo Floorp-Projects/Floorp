@@ -120,6 +120,8 @@ const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
 const WRITE_ERROR_ACCESS_DENIED            = 35;
 const WRITE_ERROR_CALLBACK_APP             = 37;
+const UNEXPECTED_STAGING_ERROR             = 43;
+const DELETE_ERROR_STAGING_LOCK_FILE       = 44;
 const SERVICE_COULD_NOT_COPY_UPDATER       = 49;
 const SERVICE_STILL_APPLYING_TERMINATED    = 50;
 const SERVICE_STILL_APPLYING_NO_EXIT_CODE  = 51;
@@ -3225,7 +3227,10 @@ UpdateManager.prototype = {
     cleanUpUpdatesDir(false);
 
     if (update.state == STATE_FAILED && parts[1]) {
-      if (!handleUpdateFailure(update, parts[1])) {
+      if (parts[1] == DELETE_ERROR_STAGING_LOCK_FILE ||
+          parts[1] == UNEXPECTED_STAGING_ERROR) {
+        writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+      } else if (!handleUpdateFailure(update, parts[1])) {
         handleFallbackToCompleteUpdate(update, true);
       }
 
