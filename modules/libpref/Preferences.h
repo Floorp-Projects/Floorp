@@ -34,6 +34,8 @@ class nsPrefBranch;
 
 namespace mozilla {
 
+struct RegisterCallbacksInternal;
+
 void UnloadPrefsModule();
 
 // A typesafe version of PrefChangeFunc, with its data argument type deduced
@@ -640,6 +642,7 @@ class Preferences final : public nsIPrefService,
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects(
       bool aIsStartup);
 
+  friend struct RegisterCallbacksInternal;
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const nsACString& aPref, void* aClosure,
                                    MatchKind aMatchKind,
