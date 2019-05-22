@@ -429,10 +429,9 @@ class TupBackend(CommonBackend):
             static_libs += self._lib_paths(backend_file.objdir, rust_linked)
 
         symbols_file = []
-        if (shlib.symbols_file and
-            backend_file.environment.substs.get('GCC_USE_GNU_LD')):
+        if shlib.symbols_file and shlib.symbols_link_arg:
             inputs.append(shlib.symbols_file)
-            symbols_file = ['-Wl,--version-script,%s' % shlib.symbols_file]
+            symbols_file = [shlib.symbols_link_arg]
 
         cmd = (
             mkshlib +

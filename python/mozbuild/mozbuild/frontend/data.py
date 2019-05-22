@@ -734,6 +734,7 @@ class SharedLibrary(Library):
         'variant',
         'symbols_file',
         'output_category',
+        'symbols_link_arg',
     )
 
     DICT_ATTRS = {
@@ -791,6 +792,18 @@ class SharedLibrary(Library):
         else:
             # Explicitly provided name.
             self.symbols_file = symbols_file
+
+        if self.symbols_file:
+            os_target = context.config.substs['OS_TARGET']
+            if os_target == 'Darwin':
+                self.symbols_link_arg = '-Wl,-exported_symbols_list,' + self.symbols_file
+            elif os_target == 'WINNT':
+                if context.config.substs.get('GNU_CC'):
+                    self.symbols_link_arg = self.symbols_file
+                else:
+                    self.symbols_link_arg = '-DEF:' + self.symbols_file
+            elif context.config.substs.get('GCC_USE_GNU_LD'):
+                self.symbols_link_arg = '-Wl,--version-script,' + self.symbols_file
 
 
 class HostSharedLibrary(HostMixin, Library):
