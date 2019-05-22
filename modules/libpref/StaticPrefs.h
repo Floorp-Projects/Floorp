@@ -66,41 +66,51 @@ template <typename T>
 struct IsAtomic<std::atomic<T>> : TrueType {};
 
 class StaticPrefs {
-// For a VarCache pref like this:
-//
-//   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
-//
-// we generate a static variable declaration, a getter and a setter definition.
-// A StaticPref can be set by using the corresponding Set method. For
-// example, if the accessor is Foo() then calling SetFoo(...) will update
-// the preference and also change the return value of subsequent Foo() calls.
-// Changing StaticPrefs values in one process will not affect the result in
-// other processes.
-// Important Note: The use of the Setter is strongly discouraged.
-//
-//   private:
-//     static int32_t sVarCache_my_varcache;
-//   public:
-//     static int32_t my_varcache() { return sVarCache_my_varcache; }
-//     static void Setmy_varcache(int32_t aValue) {
-//	     sVarCache_my_varcache = aValue;
-//     }
-//
+  // For a VarCache pref like this:
+  //
+  //   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
+  //
+  // we generate a static variable declaration, a getter and a setter
+  // definition. A StaticPref can be set by using the corresponding Set method.
+  // For example, if the accessor is Foo() then calling SetFoo(...) will update
+  // the preference and also change the return value of subsequent Foo() calls.
+  // Changing StaticPrefs values in one process will not affect the result in
+  // other processes.
+  // Important Note: The use of the Setter is strongly discouraged.
+  //
+  //   private:
+  //     static int32_t sVarCache_my_varcache;
+  //   public:
+  //     static int32_t my_varcache() { return sVarCache_my_varcache; }
+  //     static void Setmy_varcache(int32_t aValue) {
+  //	     sVarCache_my_varcache = aValue;
+  //     }
+  //
+
+ public:
+  // Enums for the update policy.
+  enum class UpdatePolicy {
+    Skip,  // Set the value to default, skip any Preferences calls.
+    Once,  // Evaluate the preference once, unchanged during the session.
+    Live   // Evaluate the preference and set callback so it stays current/live.
+  };
+
 #define PREF(str, cpp_type, default_value)
-#define VARCACHE_PREF(str, id, cpp_type, default_value)            \
+#define VARCACHE_PREF(policy, str, id, cpp_type, default_value)    \
  private:                                                          \
   static cpp_type sVarCache_##id;                                  \
                                                                    \
  public:                                                           \
   static StripAtomic<cpp_type> id() {                              \
-    MOZ_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),     \
+    MOZ_ASSERT(UpdatePolicy::policy != UpdatePolicy::Live ||       \
+                   IsAtomic<cpp_type>::value || NS_IsMainThread(), \
                "Non-atomic static pref '" str                      \
                "' being accessed on background thread by getter"); \
     return sVarCache_##id;                                         \
   }                                                                \
   static void Set##id(StripAtomic<cpp_type> aValue) {              \
     MOZ_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),     \
-               "Non-atomic static set pref '" str                  \
+               "Non-atomic static pref '" str                      \
                "' being accessed on background thread by setter"); \
     sVarCache_##id = aValue;                                       \
   }
@@ -110,6 +120,7 @@ class StaticPrefs {
 
  public:
   static void InitAll(bool aIsStartup);
+  static void InitOncePrefs();
 };
 
 }  // namespace mozilla
