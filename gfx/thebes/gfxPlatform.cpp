@@ -823,6 +823,16 @@ class WrRolloutPrefShutdownSaver : public nsIObserver {
   }
 };
 
+static void FrameRatePrefChanged(const char* aPref, void*) {
+  int32_t newRate = gfxPlatform::ForceSoftwareVsync()
+                        ? gfxPlatform::GetSoftwareVsyncRate()
+                        : -1;
+  if (newRate != gLastUsedFrameRate) {
+    gLastUsedFrameRate = newRate;
+    gfxPlatform::ReInitFrameRate();
+  }
+}
+
 NS_IMPL_ISUPPORTS(WrRolloutPrefShutdownSaver, nsIObserver)
 
 void gfxPlatform::Init() {
@@ -967,14 +977,9 @@ void gfxPlatform::Init() {
   }
 
   gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
-  auto updateFrameRateCallback = [](const GfxPrefValue& aValue) -> void {
-    int32_t newRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
-    if (newRate != gLastUsedFrameRate) {
-      gLastUsedFrameRate = newRate;
-      ReInitFrameRate();
-    }
-  };
-  gfxPrefs::SetLayoutFrameRateChangeCallback(updateFrameRateCallback);
+  Preferences::RegisterCallback(
+      FrameRatePrefChanged,
+      nsDependentCString(StaticPrefs::GetLayoutFrameRatePrefName()));
   // Set up the vsync source for the parent process.
   ReInitFrameRate();
 
@@ -3057,18 +3062,18 @@ bool gfxPlatform::IsInLayoutAsapMode() {
   // the second is that the compositor goes ASAP and the refresh driver
   // goes at whatever the configurated rate is. This only checks the version
   // talos uses, which is the refresh driver and compositor are in lockstep.
-  return gfxPrefs::LayoutFrameRate() == 0;
+  return StaticPrefs::LayoutFrameRate() == 0;
 }
 
 /* static */
 bool gfxPlatform::ForceSoftwareVsync() {
-  return gfxPrefs::LayoutFrameRate() > 0 ||
+  return StaticPrefs::LayoutFrameRate() > 0 ||
          recordreplay::IsRecordingOrReplaying();
 }
 
 /* static */
 int gfxPlatform::GetSoftwareVsyncRate() {
-  int preferenceRate = gfxPrefs::LayoutFrameRate();
+  int preferenceRate = StaticPrefs::LayoutFrameRate();
   if (preferenceRate <= 0) {
     return gfxPlatform::GetDefaultFrameRate();
   }
