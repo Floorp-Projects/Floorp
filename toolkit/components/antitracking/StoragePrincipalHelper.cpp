@@ -16,24 +16,21 @@ namespace mozilla {
 
 namespace {
 
-already_AddRefed<nsIURI> MaybeGetFirstPartyURI(nsIChannel* aChannel) {
+bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs) {
   MOZ_ASSERT(aChannel);
 
   if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
-    return nullptr;
+    return false;
   }
 
-  // Let's use the storage principal only if we need to partition the cookie
-  // jar.
-  nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForChannel(aChannel);
-  if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny) {
-    return nullptr;
+  if (nsContentUtils::StorageAllowedForChannel(aChannel) !=
+      nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+    return false;
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (!httpChannel) {
-    return nullptr;
+    return false;
   }
 
   MOZ_ASSERT(httpChannel->IsThirdPartyTrackingResource());
@@ -41,16 +38,17 @@ already_AddRefed<nsIURI> MaybeGetFirstPartyURI(nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> toplevelPrincipal = loadInfo->GetTopLevelPrincipal();
   if (!toplevelPrincipal) {
-    return nullptr;
+    return false;
   }
 
   nsCOMPtr<nsIURI> principalURI;
   nsresult rv = toplevelPrincipal->GetURI(getter_AddRefs(principalURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
+    return false;
   }
 
-  return principalURI.forget();
+  aAttrs.SetFirstPartyDomain(false, principalURI, true /* aForced */);
+  return true;
 }
 
 }  // namespace
@@ -68,16 +66,15 @@ nsresult StoragePrincipalHelper::Create(nsIChannel* aChannel,
     storagePrincipal.forget(aStoragePrincipal);
   });
 
-  nsCOMPtr<nsIURI> principalURI = MaybeGetFirstPartyURI(aChannel);
-  if (!principalURI) {
+  OriginAttributes attrs = aPrincipal->OriginAttributesRef();
+  if (!ChooseOriginAttributes(aChannel, attrs)) {
     return NS_OK;
   }
 
   scopeExit.release();
 
   nsCOMPtr<nsIPrincipal> storagePrincipal =
-      BasePrincipal::Cast(aPrincipal)
-          ->CloneForcingFirstPartyDomain(principalURI);
+      BasePrincipal::Cast(aPrincipal)->CloneForcingOriginAttributes(attrs);
 
   storagePrincipal.forget(aStoragePrincipal);
   return NS_OK;
@@ -88,13 +85,7 @@ nsresult StoragePrincipalHelper::PrepareOriginAttributes(
     nsIChannel* aChannel, OriginAttributes& aOriginAttributes) {
   MOZ_ASSERT(aChannel);
 
-  nsCOMPtr<nsIURI> principalURI = MaybeGetFirstPartyURI(aChannel);
-  if (!principalURI) {
-    return NS_OK;
-  }
-
-  aOriginAttributes.SetFirstPartyDomain(false, principalURI,
-                                        true /* aForced */);
+  ChooseOriginAttributes(aChannel, aOriginAttributes);
   return NS_OK;
 }
 

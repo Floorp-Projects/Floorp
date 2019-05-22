@@ -341,19 +341,6 @@ already_AddRefed<BasePrincipal> BasePrincipal::CreateCodebasePrincipal(
   return BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 }
 
-already_AddRefed<BasePrincipal> BasePrincipal::CloneForcingFirstPartyDomain(
-    nsIURI* aURI) {
-  if (NS_WARN_IF(!IsCodebasePrincipal())) {
-    return nullptr;
-  }
-
-  OriginAttributes attrs = OriginAttributesRef();
-  // XXX this is slow. Maybe we should consider to make it faster.
-  attrs.SetFirstPartyDomain(false, aURI, true /* aForced */);
-
-  return CloneForcingOriginAttributes(attrs);
-}
-
 already_AddRefed<BasePrincipal> BasePrincipal::CloneForcingOriginAttributes(
     const OriginAttributes& aOriginAttributes) {
   if (NS_WARN_IF(!IsCodebasePrincipal())) {
