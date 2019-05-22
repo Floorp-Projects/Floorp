@@ -151,7 +151,7 @@ with Files("browser-sync.js"):
 with Files("contentSearch*"):
     BUG_COMPONENT = ("Firefox", "Search")
 
-with Files("hiddenWindow.xul"):
+with Files("hiddenWindowMac.xhtml"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
 
 with Files("macWindow.inc.xul"):
