@@ -16,6 +16,41 @@ import java.lang.UnsupportedOperationException
 interface Engine {
 
     /**
+     * Describes a combination of browsing data types stored by the engine.
+     */
+    class BrowsingData internal constructor(val types: Int) {
+        companion object {
+            const val COOKIES: Int = 1 shl 0
+            const val NETWORK_CACHE: Int = 1 shl 1
+            const val IMAGE_CACHE: Int = 1 shl 2
+            const val DOM_STORAGES: Int = 1 shl 4
+            const val AUTH_SESSIONS: Int = 1 shl 5
+            const val PERMISSIONS: Int = 1 shl 6
+            const val ALL_CACHES: Int = NETWORK_CACHE + IMAGE_CACHE
+            const val ALL_SITE_SETTINGS: Int = (1 shl 7) + PERMISSIONS
+            const val ALL_SITE_DATA: Int = (1 shl 8) + COOKIES + DOM_STORAGES + ALL_CACHES + ALL_SITE_SETTINGS
+            const val ALL: Int = 1 shl 9
+
+            fun allCaches() = BrowsingData(ALL_CACHES)
+            fun allSiteSettings() = BrowsingData(ALL_SITE_SETTINGS)
+            fun allSiteData() = BrowsingData(ALL_SITE_DATA)
+            fun all() = BrowsingData(ALL)
+            fun select(vararg types: Int) = BrowsingData(types.sum())
+        }
+
+        fun contains(type: Int) = (types and type) != 0 || types == ALL
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is BrowsingData) return false
+            if (types != other.types) return false
+            return true
+        }
+
+        override fun hashCode() = types
+    }
+
+    /**
      * Creates a new view for rendering web content.
      *
      * @param context an application context
@@ -79,6 +114,22 @@ interface Engine {
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((String, Throwable) -> Unit) = { _, _ -> }
     ): Unit = onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
+
+    /**
+     * Clears browsing data stored by the engine.
+     *
+     * @param data the type of data that should be cleared.
+     * @param host (optional) name of the host for which data should be cleared. If
+     * omitted data will be cleared for all hosts.
+     * @param onSuccess (optional) callback invoked if the data was cleared successfully.
+     * @param onError (optional) callback invoked if clearing the data caused an exception.
+     */
+    fun clearData(
+        data: BrowsingData,
+        host: String? = null,
+        onSuccess: (() -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { }
+    ): Unit = onSuccess()
 
     /**
      * Provides access to the settings of this engine.

@@ -6,7 +6,10 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.concept.engine.Engine.BrowsingData
 import org.json.JSONObject
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -14,36 +17,92 @@ import java.lang.UnsupportedOperationException
 
 class EngineTest {
 
-    @Test
-    fun `invokes error callback if webextensions not supported`() {
-        val engine = object : Engine {
-            override fun createView(context: Context, attrs: AttributeSet?): EngineView {
-                throw NotImplementedError("Not needed for test")
-            }
-
-            override fun createSession(private: Boolean): EngineSession {
-                throw NotImplementedError("Not needed for test")
-            }
-
-            override fun createSessionState(json: JSONObject): EngineSessionState {
-                throw NotImplementedError("Not needed for test")
-            }
-
-            override fun name(): String {
-                throw NotImplementedError("Not needed for test")
-            }
-
-            override fun speculativeConnect(url: String) {
-                throw NotImplementedError("Not needed for test")
-            }
-
-            override val settings: Settings
-                get() = throw NotImplementedError("Not needed for test")
+    private val testEngine = object : Engine {
+        override fun createView(context: Context, attrs: AttributeSet?): EngineView {
+            throw NotImplementedError("Not needed for test")
         }
 
+        override fun createSession(private: Boolean): EngineSession {
+            throw NotImplementedError("Not needed for test")
+        }
+
+        override fun createSessionState(json: JSONObject): EngineSessionState {
+            throw NotImplementedError("Not needed for test")
+        }
+
+        override fun name(): String {
+            throw NotImplementedError("Not needed for test")
+        }
+
+        override fun speculativeConnect(url: String) {
+            throw NotImplementedError("Not needed for test")
+        }
+
+        override val settings: Settings
+            get() = throw NotImplementedError("Not needed for test")
+    }
+
+    @Test
+    fun `invokes error callback if webextensions not supported`() {
         var exception: Throwable? = null
-        engine.installWebExtension("my-ext", "resource://path", onError = { _, e -> exception = e })
+        testEngine.installWebExtension("my-ext", "resource://path", onError = { _, e -> exception = e })
         assertNotNull(exception)
         assertTrue(exception is UnsupportedOperationException)
+    }
+
+    // TODO change this behaviour to invoke error callback once
+    // https://github.com/mozilla-mobile/android-components/issues/1798
+    // is fully implemented.
+    @Test
+    fun `invokes success callback if clear data not supported`() {
+        var callbackInvoked = false
+        testEngine.clearData(Engine.BrowsingData.all(), onSuccess = { callbackInvoked = true })
+        assertTrue(callbackInvoked)
+    }
+
+    @Test
+    fun `browsing data types can be combined`() {
+        assertEquals(BrowsingData.ALL, BrowsingData.all().types)
+        assertTrue(BrowsingData.all().contains(BrowsingData.NETWORK_CACHE))
+        assertTrue(BrowsingData.all().contains(BrowsingData.IMAGE_CACHE))
+        assertTrue(BrowsingData.all().contains(BrowsingData.PERMISSIONS))
+        assertTrue(BrowsingData.all().contains(BrowsingData.DOM_STORAGES))
+        assertTrue(BrowsingData.all().contains(BrowsingData.COOKIES))
+        assertTrue(BrowsingData.all().contains(BrowsingData.AUTH_SESSIONS))
+        assertTrue(BrowsingData.all().contains(BrowsingData.allSiteSettings().types))
+        assertTrue(BrowsingData.all().contains(BrowsingData.allSiteData().types))
+        assertTrue(BrowsingData.all().contains(BrowsingData.allCaches().types))
+
+        assertEquals(BrowsingData.ALL_CACHES, BrowsingData.allCaches().types)
+        assertTrue(BrowsingData.allCaches().contains(BrowsingData.NETWORK_CACHE))
+        assertTrue(BrowsingData.allCaches().contains(BrowsingData.IMAGE_CACHE))
+        assertFalse(BrowsingData.allCaches().contains(BrowsingData.PERMISSIONS))
+        assertFalse(BrowsingData.allCaches().contains(BrowsingData.AUTH_SESSIONS))
+        assertFalse(BrowsingData.allCaches().contains(BrowsingData.COOKIES))
+        assertFalse(BrowsingData.allCaches().contains(BrowsingData.DOM_STORAGES))
+
+        assertEquals(BrowsingData.ALL_SITE_DATA, BrowsingData.allSiteData().types)
+        assertTrue(BrowsingData.allSiteData().contains(BrowsingData.NETWORK_CACHE))
+        assertTrue(BrowsingData.allSiteData().contains(BrowsingData.IMAGE_CACHE))
+        assertTrue(BrowsingData.allSiteData().contains(BrowsingData.PERMISSIONS))
+        assertTrue(BrowsingData.allSiteData().contains(BrowsingData.DOM_STORAGES))
+        assertTrue(BrowsingData.allSiteData().contains(BrowsingData.COOKIES))
+        assertFalse(BrowsingData.allSiteData().contains(BrowsingData.AUTH_SESSIONS))
+
+        assertEquals(BrowsingData.ALL_SITE_SETTINGS, BrowsingData.allSiteSettings().types)
+        assertTrue(BrowsingData.allSiteSettings().contains(BrowsingData.PERMISSIONS))
+        assertFalse(BrowsingData.allSiteSettings().contains(BrowsingData.IMAGE_CACHE))
+        assertFalse(BrowsingData.allSiteSettings().contains(BrowsingData.NETWORK_CACHE))
+        assertFalse(BrowsingData.allSiteSettings().contains(BrowsingData.AUTH_SESSIONS))
+        assertFalse(BrowsingData.allSiteSettings().contains(BrowsingData.COOKIES))
+        assertFalse(BrowsingData.allSiteSettings().contains(BrowsingData.DOM_STORAGES))
+
+        val browsingData = BrowsingData.select(BrowsingData.COOKIES, BrowsingData.DOM_STORAGES)
+        assertTrue(browsingData.contains(BrowsingData.COOKIES))
+        assertTrue(browsingData.contains(BrowsingData.DOM_STORAGES))
+        assertFalse(browsingData.contains(BrowsingData.AUTH_SESSIONS))
+        assertFalse(browsingData.contains(BrowsingData.IMAGE_CACHE))
+        assertFalse(browsingData.contains(BrowsingData.NETWORK_CACHE))
+        assertFalse(browsingData.contains(BrowsingData.PERMISSIONS))
     }
 }
