@@ -525,9 +525,6 @@ void Gecko_DestroyShapeSource(mozilla::StyleShapeSource* shape);
 
 void Gecko_NewShapeImage(mozilla::StyleShapeSource* shape);
 
-void Gecko_StyleShapeSource_SetURLValue(mozilla::StyleShapeSource* shape,
-                                        mozilla::css::URLValue* uri);
-
 void Gecko_SetToSVGPath(
     mozilla::StyleShapeSource* shape,
     mozilla::StyleForgottenArcSlicePtr<mozilla::StylePathCommand>,
