@@ -7,7 +7,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -73,8 +73,9 @@ void WebRenderBridgeChild::DoDestroy() {
 
 void WebRenderBridgeChild::AddWebRenderParentCommand(
     const WebRenderParentCommand& aCmd, wr::RenderRoot aRenderRoot) {
-  MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default ||
-             (XRE_IsParentProcess() && gfxPrefs::WebRenderSplitRenderRoots()));
+  MOZ_ASSERT(
+      aRenderRoot == wr::RenderRoot::Default ||
+      (XRE_IsParentProcess() && StaticPrefs::WebRenderSplitRenderRoots()));
   mParentCommands[aRenderRoot].AppendElement(aCmd);
 }
 
@@ -119,7 +120,7 @@ void WebRenderBridgeChild::EndTransaction(
   for (auto& renderRoot : aRenderRoots) {
     MOZ_ASSERT(
         renderRoot.mRenderRoot == wr::RenderRoot::Default ||
-        (XRE_IsParentProcess() && gfxPrefs::WebRenderSplitRenderRoots()));
+        (XRE_IsParentProcess() && StaticPrefs::WebRenderSplitRenderRoots()));
     renderRoot.mCommands = std::move(mParentCommands[renderRoot.mRenderRoot]);
   }
 
@@ -151,7 +152,7 @@ void WebRenderBridgeChild::EndEmptyTransaction(
   for (auto& update : aRenderRootUpdates) {
     MOZ_ASSERT(
         update.mRenderRoot == wr::RenderRoot::Default ||
-        (XRE_IsParentProcess() && gfxPrefs::WebRenderSplitRenderRoots()));
+        (XRE_IsParentProcess() && StaticPrefs::WebRenderSplitRenderRoots()));
     update.mCommands = std::move(mParentCommands[update.mRenderRoot]);
   }
 
@@ -175,7 +176,7 @@ void WebRenderBridgeChild::ProcessWebRenderParentCommands() {
   for (auto renderRoot : wr::kRenderRoots) {
     if (!mParentCommands[renderRoot].IsEmpty()) {
       MOZ_ASSERT(renderRoot == wr::RenderRoot::Default ||
-                 gfxPrefs::WebRenderSplitRenderRoots());
+                 StaticPrefs::WebRenderSplitRenderRoots());
       this->SendParentCommands(mParentCommands[renderRoot], renderRoot);
       mParentCommands[renderRoot].Clear();
     }

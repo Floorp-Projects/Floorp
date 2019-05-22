@@ -48,10 +48,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
-#include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MouseEvents.h"
 #include "GLConsts.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/VsyncDispatcher.h"
@@ -857,7 +857,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
       NewRunnableMethod<float>("layers::IAPZCTreeManager::SetDPI", mAPZC,
                                &IAPZCTreeManager::SetDPI, dpi));
 
-  if (gfxPrefs::APZKeyboardEnabled()) {
+  if (StaticPrefs::APZKeyboardEnabled()) {
     KeyboardMap map = nsXBLWindowKeyHandler::CollectKeyboardShortcuts();
     // On Android the main thread is not the controller thread
     APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(

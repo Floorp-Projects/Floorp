@@ -9,7 +9,7 @@
 #include "BufferCache.h"
 #include "ClearRegionHelper.h"
 #include "gfxConfig.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "gfxUtils.h"
 #include "LayersLogging.h"
 #include "ShaderDefinitionsMLGPU.h"
@@ -85,7 +85,7 @@ bool MLGDevice::Initialize() {
 
   // We allow this to be pref'd off for testing. Switching it off enables
   // Direct3D 11.0/Windows 7/OpenGL-style buffer code paths.
-  if (!gfxPrefs::AdvancedLayersEnableBufferSharing()) {
+  if (!StaticPrefs::AdvancedLayersEnableBufferSharing()) {
     gfxConfig::EnableFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
                               "Disabled by pref");
     mCanUseConstantBufferOffsetBinding = false;
@@ -99,7 +99,7 @@ bool MLGDevice::Initialize() {
   // We allow this to be pref'd off for testing. Disabling it turns on
   // ID3D11DeviceContext1::ClearView support, which is present on
   // newer Windows 8+ drivers.
-  if (!gfxPrefs::AdvancedLayersEnableClearView()) {
+  if (!StaticPrefs::AdvancedLayersEnableClearView()) {
     mCanUseClearView = false;
   }
 
@@ -127,7 +127,7 @@ bool MLGDevice::Initialize() {
                 "Failed to allocate a shared shader buffer");
   }
 
-  if (gfxPrefs::AdvancedLayersEnableBufferCache()) {
+  if (StaticPrefs::AdvancedLayersEnableBufferCache()) {
     mConstantBufferCache = MakeUnique<BufferCache>(this);
   }
 

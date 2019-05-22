@@ -17,7 +17,6 @@
 #include "WMFAudioMFTManager.h"
 #include "WMFMediaDataDecoder.h"
 #include "WMFVideoMFTManager.h"
-#include "gfxPrefs.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticMutex.h"
@@ -90,7 +89,7 @@ void WMFDecoderModule::Init() {
 
   sDXVAEnabled = sDXVAEnabled && gfx::gfxVars::CanUseHardwareVideoDecoding();
   testForVPx = testForVPx && gfx::gfxVars::CanUseHardwareVideoDecoding();
-  if (testForVPx && gfxPrefs::MediaWmfVp9Enabled()) {
+  if (testForVPx && StaticPrefs::MediaWmfVp9Enabled()) {
     gfx::WMFVPXVideoCrashGuard guard;
     if (!guard.Crashed()) {
       sUsableVPXMFT = CanCreateMFTDecoder(CLSID_WebmMfVpxDec);

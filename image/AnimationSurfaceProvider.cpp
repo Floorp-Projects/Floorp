@@ -5,7 +5,7 @@
 
 #include "AnimationSurfaceProvider.h"
 
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsProxyRelease.h"
 
@@ -464,7 +464,7 @@ bool AnimationSurfaceProvider::ShouldPreferSyncRun() const {
   MutexAutoLock lock(mDecodingMutex);
   MOZ_ASSERT(mDecoder);
 
-  return mDecoder->ShouldSyncDecode(gfxPrefs::ImageMemDecodeBytesAtATime());
+  return mDecoder->ShouldSyncDecode(StaticPrefs::ImageMemDecodeBytesAtATime());
 }
 
 RawAccessFrameRef AnimationSurfaceProvider::RecycleFrame(

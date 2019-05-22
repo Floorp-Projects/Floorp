@@ -15,6 +15,7 @@
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/VideoDecoderManagerChild.h"
@@ -487,7 +488,7 @@ mozilla::ipc::IPCResult GPUParent::RecvRequestMemoryReport(
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvShutdownVR() {
-  if (gfxPrefs::VRProcessEnabled()) {
+  if (StaticPrefs::VRProcessEnabled()) {
     VRGPUChild::Shutdown();
   }
   return IPC_OK();
