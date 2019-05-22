@@ -2957,30 +2957,8 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, "nsPref:changed")) {
     // A pref changed. If it's not on the blacklist, inform child processes.
-#define BLACKLIST_ENTRY(s) \
-  { s, (sizeof(s) / sizeof(char16_t)) - 1 }
-    struct BlacklistEntry {
-      const char16_t* mPrefBranch;
-      size_t mLen;
-    };
-    // These prefs are not useful in child processes.
-    static const BlacklistEntry sContentPrefBranchBlacklist[] = {
-        BLACKLIST_ENTRY(u"app.update.lastUpdateTime."),
-        BLACKLIST_ENTRY(u"datareporting.policy."),
-        BLACKLIST_ENTRY(u"browser.safebrowsing.provider."),
-        BLACKLIST_ENTRY(u"browser.shell."),
-        BLACKLIST_ENTRY(u"browser.slowStartup."),
-        BLACKLIST_ENTRY(u"extensions.getAddons.cache."),
-        BLACKLIST_ENTRY(u"media.gmp-manager."),
-        BLACKLIST_ENTRY(u"media.gmp-gmpopenh264."),
-        BLACKLIST_ENTRY(u"privacy.sanitize."),
-    };
-#undef BLACKLIST_ENTRY
-
-    for (const auto& entry : sContentPrefBranchBlacklist) {
-      if (NS_strncmp(entry.mPrefBranch, aData, entry.mLen) == 0) {
-        return NS_OK;
-      }
+    if (!ShouldSyncPreference(aData)) {
+      return NS_OK;
     }
 
     // We know prefs are ASCII here.
@@ -3126,6 +3104,37 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   return NS_OK;
+}
+
+/* static */
+bool ContentParent::ShouldSyncPreference(const char16_t* aData) {
+#define BLACKLIST_ENTRY(s) \
+  { s, (sizeof(s) / sizeof(char16_t)) - 1 }
+  struct BlacklistEntry {
+    const char16_t* mPrefBranch;
+    size_t mLen;
+  };
+  // These prefs are not useful in child processes.
+  static const BlacklistEntry sContentPrefBranchBlacklist[] = {
+      BLACKLIST_ENTRY(u"app.update.lastUpdateTime."),
+      BLACKLIST_ENTRY(u"datareporting.policy."),
+      BLACKLIST_ENTRY(u"browser.safebrowsing.provider."),
+      BLACKLIST_ENTRY(u"browser.shell."),
+      BLACKLIST_ENTRY(u"browser.slowStartup."),
+      BLACKLIST_ENTRY(u"browser.startup."),
+      BLACKLIST_ENTRY(u"extensions.getAddons.cache."),
+      BLACKLIST_ENTRY(u"media.gmp-manager."),
+      BLACKLIST_ENTRY(u"media.gmp-gmpopenh264."),
+      BLACKLIST_ENTRY(u"privacy.sanitize."),
+  };
+#undef BLACKLIST_ENTRY
+
+  for (const auto& entry : sContentPrefBranchBlacklist) {
+    if (NS_strncmp(entry.mPrefBranch, aData, entry.mLen) == 0) {
+      return false;
+    }
+  }
+  return true;
 }
 
 void ContentParent::UpdateNetworkLinkType() {
