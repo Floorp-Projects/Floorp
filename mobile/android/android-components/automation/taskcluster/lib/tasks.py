@@ -97,6 +97,30 @@ class TaskBuilder(object):
             command='pip install "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
         )
 
+    def craft_sign_task(self, build_task_id, artifacts, component_name, is_staging):
+        payload = {
+            "maxRunTime": 600,
+            "upstreamArtifacts": [{
+                "paths": [artifact["taskcluster_path"] for artifact in artifacts],
+                "formats": ["autograph_gpg"],
+                "taskId": build_task_id,
+                "taskType": "build"
+            }]
+        }
+
+        return self._craft_default_task_definition(
+            worker_type='mobile-signing-dep-v1' if is_staging else 'mobile-signing-v1',
+            provisioner_id='scriptworker-prov-v1',
+            dependencies=[build_task_id],
+            routes=[],
+            scopes=[
+                "project:mobile:android-components:releng:signing:cert:{}-signing".format("dep" if is_staging else "release"),
+            ],
+            name='Android Components - Sign Module :{}'.format(component_name),
+            description="Sign release module {}".format(component_name),
+            payload=payload
+        )
+
     def craft_ui_tests_task(self):
         artifacts = {
             "public": {
