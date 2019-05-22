@@ -11,6 +11,7 @@ import io.sentry.SentryClientFactory
 import io.sentry.dsn.Dsn
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -19,7 +20,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -77,7 +77,6 @@ class SentryServiceTest {
         service.report(Crash.UncaughtExceptionCrash(exception))
 
         verify(client).sendException(exception)
-        verifyNoMoreInteractions(client)
     }
 
     @Test
@@ -95,7 +94,6 @@ class SentryServiceTest {
         service.report(Crash.NativeCodeCrash("", true, "", false))
 
         verify(client).sendMessage(any())
-        verifyNoMoreInteractions(client)
     }
 
     @Test
@@ -112,6 +110,21 @@ class SentryServiceTest {
         service.report(Crash.NativeCodeCrash("", true, "", false))
 
         verify(client, never()).sendMessage(any())
-        verifyNoMoreInteractions(client)
+    }
+
+    @Test
+    fun `SentryService adds default tags`() {
+        val client: SentryClient = mock()
+
+        SentryService(
+            context,
+            "https://not:real6@sentry.prod.example.net/405",
+            clientFactory = object : SentryClientFactory() {
+                override fun createSentryClient(dsn: Dsn?): SentryClient = client
+            })
+
+        verify(client).addTag(eq("ac.version"), any())
+        verify(client).addTag(eq("ac.git"), any())
+        verify(client).addTag(eq("ac.as.build_version"), any())
     }
 }

@@ -59,7 +59,7 @@ class CrashReporter(
      * Install this [CrashReporter] instance. At this point the component will be setup to collect crash reports.
      */
     fun install(applicationContext: Context): CrashReporter {
-        CrashReporter.instance = this
+        instance = this
 
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         val handler = ExceptionHandler(applicationContext, this, defaultHandler)
