@@ -157,7 +157,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
         const col = await this.client.openCollection();
         // If we don't have prior data, make it so we re-load everything.
         if (!hasPriorCertData) {
-          let toUpdate = await this.client.get();
+          let { data: toUpdate } = await col.list();
           let promises = [];
           toUpdate.forEach((record) => {
             record.cert_import_complete = false;
@@ -165,7 +165,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
           });
           await Promise.all(promises);
         }
-        const current = await this.client.get();
+        const { data: current } = await col.list();
         const waiting = current.filter(record => !record.cert_import_complete);
 
         log.debug(`There are ${waiting.length} intermediates awaiting download.`);
@@ -196,7 +196,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
           record.cert_import_complete = true;
           return col.update(record);
         }));
-        const finalCurrent = await this.client.get();
+        const { data: finalCurrent } = await col.list();
         const finalWaiting = finalCurrent.filter(record => !record.cert_import_complete);
         const countPreloaded = finalCurrent.length - finalWaiting.length;
 
