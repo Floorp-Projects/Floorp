@@ -232,8 +232,12 @@ MemoryPorts* GetMemoryPortsForPid(pid_t pid) {
 }
 
 // We just received a port representing a region of shared memory, reply to
-// the process that set it with the mach_port_t that represents it in this process.
-// That will be the Handle to be shared over normal IPC
+// the process that set it with the mach_port_t that represents it in this
+// process. That will be the Handle to be shared over normal IPC.
+//
+// WARNING: this function is called while gMutex is not held and must not
+// reference structures protected by gMutex. See the deadlock warning in
+// ShareToProcess().
 void HandleSharePortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports) {
   mach_port_t port = rmsg->GetTranslatedPort(0);
   uint64_t* serial = reinterpret_cast<uint64_t*>(rmsg->GetData());
@@ -352,15 +356,32 @@ static void* PortServerThread(void* argument) {
     } else if (rmsg.GetMessageID() == kUpdateTextureLocksMsg) {
       layers::TextureSync::DispatchCheckTexturesForUnlock();
     } else {
-      StaticMutexAutoLock smal(gMutex);
       switch (rmsg.GetMessageID()) {
-        case kSharePortsMsg:
+        case kSharePortsMsg: {
+          // Don't acquire gMutex here while calling HandleSharePortsMessage()
+          // to avoid deadlock. If gMutex is held by ShareToProcess(), we will
+          // block and create the following deadlock chain.
+          //
+          // 1) local:PortServerThread() blocked on local:gMutex held by
+          // 2) local:ShareToProcess() waiting for reply from
+          // 3) peer:PortServerThread() blocked on peer:gMutex held by
+          // 4) peer:ShareToProcess() waiting for reply from 1.
+          //
+          // It's safe to call HandleSharePortsMessage() without gMutex
+          // because HandleSharePortsMessage() only sends an outgoing message
+          // without referencing data structures protected by gMutex. The
+          // |ports| struct is deallocated on this thread in the kShutdownMsg
+          // message handling before this thread exits.
           HandleSharePortsMessage(&rmsg, ports);
           break;
-        case kGetPortsMsg:
+        }
+        case kGetPortsMsg: {
+          StaticMutexAutoLock smal(gMutex);
           HandleGetPortsMessage(&rmsg, ports);
           break;
-        case kCleanupMsg:
+        }
+        case kCleanupMsg: {
+          StaticMutexAutoLock smal(gMutex);
           if (gParentPid == 0) {
             LOG_ERROR("Cleanup message not valid for parent process");
             continue;
@@ -374,8 +395,11 @@ static void* PortServerThread(void* argument) {
           pid = reinterpret_cast<pid_t*>(rmsg.GetData());
           SharedMemoryBasic::CleanupForPid(*pid);
           break;
-        default:
+        }
+        default: {
+          // gMutex not required
           LOG_ERROR("Unknown message\n");
+        }
       }
     }
   }
