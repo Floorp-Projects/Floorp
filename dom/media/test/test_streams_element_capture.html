@@ -113,10 +113,6 @@ function startTest(test, token) {
   let tests = gPlayTests;
   // Filter out bug1377278.webm due to bug 1541401.
   tests = tests.filter(t => !t.name.includes("1377278"));
-  // Filter out these files due to bug 1546655.
-  tests = tests.filter(t => !t.name.includes("ambisonics"));
-  tests = tests.filter(t => !t.name.includes("flac-s24"));
-  tests = tests.filter(t => !t.name.includes("opus-mapping2"));
   manager.runTests(tests, startTest);
 })();
 </script>
