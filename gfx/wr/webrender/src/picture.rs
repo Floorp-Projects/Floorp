@@ -2344,6 +2344,28 @@ impl PicturePrimitive {
         }
     }
 
+    /// Gets the raster space to use when rendering the picture.
+    /// Usually this would be the requested raster space. However, if the
+    /// picture's spatial node or one of its ancestors is being pinch zoomed
+    /// then we round it. This prevents us rasterizing glyphs for every minor
+    /// change in zoom level, as that would be too expensive.
+    pub fn get_raster_space(&self, clip_scroll_tree: &ClipScrollTree) -> RasterSpace {
+        let spatial_node = &clip_scroll_tree.spatial_nodes[self.spatial_node_index.0 as usize];
+        if spatial_node.is_ancestor_or_self_zooming {
+            let scale_factors = clip_scroll_tree
+                .get_relative_transform(self.spatial_node_index, ROOT_SPATIAL_NODE_INDEX)
+                .scale_factors();
+
+            // Round the scale up to the nearest power of 2, but don't exceed 8.
+            let scale = scale_factors.0.max(scale_factors.1).min(8.0);
+            let rounded_up = 1 << scale.log2().ceil() as u32;
+
+            RasterSpace::Local(rounded_up as f32)
+        } else {
+            self.requested_raster_space
+        }
+    }
+
     pub fn take_context(
         &mut self,
         pic_index: PictureIndex,
@@ -2746,7 +2768,6 @@ impl PicturePrimitive {
             apply_local_clip_rect: self.apply_local_clip_rect,
             is_composite,
             is_passthrough,
-            raster_space: self.requested_raster_space,
             raster_spatial_node_index,
             surface_spatial_node_index,
             surface_index,

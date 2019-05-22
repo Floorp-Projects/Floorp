@@ -660,6 +660,9 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
           AsyncPanZoomController::eForCompositing);
       transforms.AppendElement(wr::ToWrTransformProperty(
           *zoomAnimationId, Matrix4x4::Scaling(zoom.scale, zoom.scale, 1.0f)));
+
+      aTxn.UpdateIsTransformPinchZooming(*zoomAnimationId,
+                                         apzc->IsPinchZooming());
     }
 
     // The positive translation means the painted content is supposed to
