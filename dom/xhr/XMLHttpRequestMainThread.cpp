@@ -231,12 +231,15 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
       mIsMappedArrayBuffer(false),
       mXPCOMifier(nullptr),
       mEventDispatchingSuspended(false),
-      mEofDecoded(false) {
+      mEofDecoded(false),
+      mDelayedDoneNotifier(nullptr) {
   mozilla::HoldJSObjects(this);
 }
 
 XMLHttpRequestMainThread::~XMLHttpRequestMainThread() {
-  DisconnectDoneNotifier();
+  MOZ_ASSERT(
+      !mDelayedDoneNotifier,
+      "How can we have mDelayedDoneNotifier, which owns us, in destructor?");
 
   mFlagDeleted = true;
 
@@ -2234,6 +2237,8 @@ void XMLHttpRequestMainThread::MatchCharsetAndDecoderToResponseDocument() {
 }
 void XMLHttpRequestMainThread::DisconnectDoneNotifier() {
   if (mDelayedDoneNotifier) {
+    // Disconnect may release the last reference to 'this'.
+    RefPtr<XMLHttpRequestMainThread> kungfuDeathGrip = this;
     mDelayedDoneNotifier->Disconnect();
     mDelayedDoneNotifier = nullptr;
   }
