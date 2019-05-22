@@ -19,7 +19,7 @@ linux64-sccache:
     worker:
         max-run-time: 1800
     run:
-        toolchain-artifact: public/build/sccache2.tar.xz
+        toolchain-artifact: public/build/sccache.tar.xz
     toolchains:
         - linux64-rust-1.34
         - linux64-binutils
@@ -38,7 +38,7 @@ macosx64-sccache:
     run:
         arguments: ['x86_64-apple-darwin']
         tooltool-downloads: internal
-        toolchain-artifact: public/build/sccache2.tar.xz
+        toolchain-artifact: public/build/sccache.tar.xz
     toolchains:
         - linux64-rust-macos-1.34
         - linux64-clang-8
@@ -55,6 +55,6 @@ win64-sccache:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
     run:
-        toolchain-artifact: public/build/sccache2.tar.bz2
+        toolchain-artifact: public/build/sccache.tar.bz2
     toolchains:
         - win64-rust-1.34
