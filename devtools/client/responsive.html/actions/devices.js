@@ -22,7 +22,7 @@ const { post } = require("../utils/message");
 
 const { addDevice, editDevice, getDevices, removeDevice } = require("devtools/client/shared/devices");
 const { changeUserAgent, toggleTouchSimulation } = require("./ui");
-const { changeDevice, changePixelRatio } = require("./viewports");
+const { changeDevice, changePixelRatio, changeViewportAngle } = require("./viewports");
 
 const DISPLAYED_DEVICES_PREF = "devtools.responsive.html.displayedDeviceList";
 
@@ -113,6 +113,7 @@ module.exports = {
       post(window, {
         type: "change-device",
         device: newDevice,
+        viewport,
       });
 
       // Update UI if the device is selected.
@@ -212,13 +213,16 @@ module.exports = {
         return;
       }
 
+      const viewport = getState().viewports[0];
       post(window, {
         type: "change-device",
         device,
+        viewport,
       });
 
       dispatch(changeDevice(id, device.name, deviceType));
       dispatch(changePixelRatio(id, device.pixelRatio));
+      dispatch(changeViewportAngle(id, viewport.angle));
       dispatch(changeUserAgent(device.userAgent));
       dispatch(toggleTouchSimulation(device.touch));
     };

@@ -10,6 +10,7 @@ const {
   ADD_VIEWPORT,
   CHANGE_DEVICE,
   CHANGE_PIXEL_RATIO,
+  CHANGE_VIEWPORT_ANGLE,
   EDIT_DEVICE,
   REMOVE_DEVICE_ASSOCIATION,
   RESIZE_VIEWPORT,
@@ -19,12 +20,14 @@ const {
 const VIEWPORT_WIDTH_PREF = "devtools.responsive.viewport.width";
 const VIEWPORT_HEIGHT_PREF = "devtools.responsive.viewport.height";
 const VIEWPORT_PIXEL_RATIO_PREF = "devtools.responsive.viewport.pixelRatio";
+const VIEWPORT_ANGLE_PREF = "devtools.responsive.viewport.angle";
 
 let nextViewportId = 0;
 
 const INITIAL_VIEWPORTS = [];
 const INITIAL_VIEWPORT = {
   id: nextViewportId++,
+  angle: Services.prefs.getIntPref(VIEWPORT_ANGLE_PREF, 0),
   device: "",
   deviceType: "",
   height: Services.prefs.getIntPref(VIEWPORT_HEIGHT_PREF, 480),
@@ -75,6 +78,21 @@ const reducers = {
       return {
         ...viewport,
         pixelRatio,
+      };
+    });
+  },
+
+  [CHANGE_VIEWPORT_ANGLE](viewports, { id, angle }) {
+    return viewports.map(viewport => {
+      if (viewport.id !== id) {
+        return viewport;
+      }
+
+      Services.prefs.setIntPref(VIEWPORT_ANGLE_PREF, angle);
+
+      return {
+        ...viewport,
+        angle,
       };
     });
   },
