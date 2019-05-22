@@ -26,6 +26,10 @@ import kotlinx.coroutines.runBlocking
 import org.mozilla.fenix.GleanMetrics.QrScanner
 import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.ErrorPage
+import org.mozilla.fenix.GleanMetrics.Sync
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.utils.Settings
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -188,6 +192,27 @@ private val Event.wrapper
             { ErrorPage.visitedError },
             { ErrorPage.visitedErrorKeys.valueOf(it) }
         )
+        is Event.SyncOpened -> EventWrapper<NoExtraKeys>(
+            { Sync.opened.record(it) }
+        )
+        is Event.SyncClosed -> EventWrapper<NoExtraKeys>(
+            { Sync.closed.record(it) }
+        )
+        is Event.SyncSignIn -> EventWrapper<NoExtraKeys>(
+            { Sync.signIn.record(it) }
+        )
+        is Event.SyncScanPairing -> EventWrapper<NoExtraKeys>(
+            { Sync.scanPairing.record(it) }
+        )
+        is Event.SyncCreateAccount -> EventWrapper<NoExtraKeys>(
+            { Sync.createAccount.record(it) }
+        )
+        is Event.SyncSyncNow -> EventWrapper<NoExtraKeys>(
+            { Sync.syncNow.record(it) }
+        )
+        is Event.SyncSignOut -> EventWrapper<NoExtraKeys>(
+            { Sync.signOut.record(it) }
+        )
 
         // Don't track other events with Glean
         else -> null
@@ -217,6 +242,11 @@ class GleanMetricsService(private val context: Context) : MetricsService {
                 defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
                 defaultMozBrowser.set(MozillaProductDetector.getMozillaBrowserDefault(context) ?: "")
                 mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
+
+                val syncItemsKey = context.getPreferenceKey(R.string.pref_key_sync_syncing_items)
+                Settings.getInstance(context).preferences.getStringSet(syncItemsKey, setOf())?.toList()?.let {
+                    syncingItems.set(it)
+                }
             }
 
             SearchDefaultEngine.apply {

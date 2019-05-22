@@ -12,10 +12,21 @@ import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 
 class TurnOnSyncFragment : PreferenceFragmentCompat() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireComponents.analytics.metrics.track(Event.SyncOpened)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        requireComponents.analytics.metrics.track(Event.SyncClosed)
+    }
 
     override fun onResume() {
         super.onResume()
@@ -33,7 +44,7 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
         val preferencePairSignIn =
             findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_pair))
         preferenceSignIn?.onPreferenceClickListener = getClickListenerForSignIn()
-        preferenceNewAccount?.onPreferenceClickListener = getClickListenerForSignIn()
+        preferenceNewAccount?.onPreferenceClickListener = getClickListenerForCreateAccount()
         preferencePairSignIn?.onPreferenceClickListener = getClickListenerForPairing()
     }
 
@@ -45,6 +56,19 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
             // session history stack.
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
+            requireComponents.analytics.metrics.track(Event.SyncSignIn)
+            view?.let {
+                (activity as HomeActivity).openToBrowser(BrowserDirection.FromTurnOnSync)
+            }
+            true
+        }
+    }
+
+    private fun getClickListenerForCreateAccount(): Preference.OnPreferenceClickListener {
+        // Currently the same as sign in, as FxA handles this, however we want to emit a different telemetry event
+        return Preference.OnPreferenceClickListener {
+            requireComponents.services.accountsAuthFeature.beginAuthentication()
+            requireComponents.analytics.metrics.track(Event.SyncCreateAccount)
             view?.let {
                 (activity as HomeActivity).openToBrowser(BrowserDirection.FromTurnOnSync)
             }
@@ -56,6 +80,7 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
         return Preference.OnPreferenceClickListener {
             val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairInstructionsFragment()
             Navigation.findNavController(view!!).navigate(directions)
+            requireComponents.analytics.metrics.track(Event.SyncScanPairing)
 
             true
         }

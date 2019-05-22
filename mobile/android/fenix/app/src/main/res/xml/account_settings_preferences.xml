@@ -9,6 +9,7 @@
             android:title="@string/preferences_sync_now" />
 
     <PreferenceCategory
+            android:key="@string/preferences_sync_category"
             android:title="@string/preferences_sync_category">
 
         <CheckBoxPreference

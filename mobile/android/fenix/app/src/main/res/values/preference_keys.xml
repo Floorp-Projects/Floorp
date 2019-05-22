@@ -44,6 +44,7 @@
     <string name="pref_key_sync_pair" translatable="false">pref_key_sync_pair</string>
     <string name="pref_key_sync_sign_in" translatable="false">pref_key_sync_sign_in</string>
     <string name="pref_key_sync_create_account" translatable="false">pref_key_sync_create_account</string>
+    <string name="pref_key_sync_syncing_items" translatable="false">pref_key_sync_syncing_items</string>
 
     <!-- Search Settings -->
     <string name="pref_key_show_search_suggestions" translatable="false">pref_key_show_search_suggestions</string>

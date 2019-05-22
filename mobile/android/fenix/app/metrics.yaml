@@ -370,6 +370,18 @@ metrics:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2019-09-01"
+  syncing_items:
+    type: string_list
+    description: >
+      The preference keys for the switch preferences the user has enabled to sync with FxA. We currently track:
+      Bookmarks and History.
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
 
 search.default_engine:
   code:
@@ -730,6 +742,85 @@ error_page:
     - 1242
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/2491#issuecomment-492414486
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
+sync:
+  opened:
+    type: event
+    description: >
+      A user opened the sync page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  closed:
+    type: event
+    description: >
+      A user closed the sync page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  sign_in:
+    type: event
+    description: >
+      A user pressed the sign in button on the sync page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  scan_pairing:
+    type: event
+    description: >
+      A user pressed the scan pairing button on the sync page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  create_account:
+    type: event
+    description: >
+      A user pressed the create account button on the sync page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  sync_now:
+    type: event
+    description: >
+      A user pressed the sync now button on the sync page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  sign_out:
+    type: event
+    description: >
+      A user pressed the sign out button on the sync page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"

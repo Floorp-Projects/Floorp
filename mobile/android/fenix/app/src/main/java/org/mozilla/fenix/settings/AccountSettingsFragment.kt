@@ -9,8 +9,11 @@ import android.os.Bundle
 import android.text.format.DateUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
+import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.forEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,8 +27,10 @@ import mozilla.components.service.fxa.FxaPanicException
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.utils.Settings
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
 
@@ -92,6 +97,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
 
     private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
+            requireComponents.analytics.metrics.track(Event.SyncSignOut)
             launch {
                 accountManager.logoutAsync().await()
                 Navigation.findNavController(view!!).popBackStack()
@@ -103,6 +109,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
     private fun getClickListenerForSyncNow(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
             // Trigger a sync.
+            requireComponents.analytics.metrics.track(Event.SyncSyncNow)
             requireComponents.backgroundServices.syncManager.syncNow()
             // Poll for device events.
             launch {
@@ -146,6 +153,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
                 view?.announceForAccessibility(getString(R.string.sync_syncing))
                 pref?.title = getString(R.string.sync_syncing)
                 pref?.isEnabled = false
+
+                updateSyncingItemsPreference()
             }
         }
 
@@ -174,12 +183,30 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         }
     }
 
+
     private val deviceConstellationObserver = object : DeviceConstellationObserver {
         override fun onDevicesUpdate(constellation: ConstellationState) {
             val deviceNameKey = context!!.getPreferenceKey(R.string.pref_key_sync_device_name)
             val preferenceDeviceName = findPreference<Preference>(deviceNameKey)
             preferenceDeviceName?.summary = constellation.currentDevice?.displayName
         }
+    }
+
+    private fun updateSyncingItemsPreference() {
+        val syncCategory = context!!.getPreferenceKey(R.string.preferences_sync_category)
+        val preferencesSyncCategory = findPreference<Preference>(syncCategory) as PreferenceCategory
+        val stringSet = mutableSetOf<String>()
+
+        preferencesSyncCategory.forEach {
+            (it as CheckBoxPreference).let { checkboxPreference ->
+                if (checkboxPreference.isChecked) {
+                    stringSet.add(checkboxPreference.key)
+                }
+            }
+        }
+
+        Settings.getInstance(context!!).preferences.edit()
+            .putStringSet(context!!.getPreferenceKey(R.string.pref_key_sync_syncing_items), stringSet).apply()
     }
 
     fun updateLastSyncedTimePref(context: Context, pref: Preference, failed: Boolean = false) {
