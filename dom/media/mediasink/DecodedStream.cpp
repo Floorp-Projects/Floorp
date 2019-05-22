@@ -865,7 +865,6 @@ StreamTime DecodedStream::SentDuration() {
 
 void DecodedStream::SendData() {
   AssertOwnerThread();
-  MOZ_ASSERT(mStartTime.isSome(), "Must be called after StartPlayback()");
 
   // Not yet created on the main thread. MDSM will try again later.
   if (!mData) {
