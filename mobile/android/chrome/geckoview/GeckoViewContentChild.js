@@ -228,17 +228,22 @@ class GeckoViewContentChild extends GeckoViewChildModule {
             }
           }, {capture: true, mozSystemGroup: true, once: true});
 
-          addEventListener("pageshow", _ => {
-            const scrolldata = this._savedState.scrolldata;
-            if (scrolldata) {
-              this.Utils.restoreFrameTreeData(content, scrolldata, (frame, data) => {
-                if (data.scroll) {
-                  SessionStoreUtils.restoreScrollPosition(frame, data);
-                }
-              });
+          let scrollRestore = _ => {
+            if (content.location != "about:blank") {
+              const scrolldata = this._savedState.scrolldata;
+              if (scrolldata) {
+                this.Utils.restoreFrameTreeData(content, scrolldata, (frame, data) => {
+                  if (data.scroll) {
+                    SessionStoreUtils.restoreScrollPosition(frame, data);
+                  }
+                });
+              }
+              delete this._savedState;
+              removeEventListener("pageshow", scrollRestore);
             }
-            delete this._savedState;
-          }, {capture: true, mozSystemGroup: true, once: true});
+          }
+
+          addEventListener("pageshow", scrollRestore, {capture: true, mozSystemGroup: true});
 
           if (!this.progressFilter) {
             this.progressFilter =
