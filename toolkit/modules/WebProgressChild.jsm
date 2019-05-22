@@ -25,10 +25,11 @@ class WebProgressChild {
   constructor(mm) {
     this.mm = mm;
 
-    // NOTIFY_PROGRESS, NOTIFY_STATE_ALL, NOTIFY_STATUS, NOTIFY_REFRESH, and
+    this.inLoadURI = false;
+
+    // NOTIFY_PROGRESS, NOTIFY_STATUS, NOTIFY_REFRESH, and
     // NOTIFY_CONTENT_BLOCKING are handled by PBrowser.
     let notifyCode = Ci.nsIWebProgress.NOTIFY_ALL &
-                        ~Ci.nsIWebProgress.NOTIFY_STATE_ALL &
                         ~Ci.nsIWebProgress.NOTIFY_PROGRESS &
                         ~Ci.nsIWebProgress.NOTIFY_STATUS &
                         ~Ci.nsIWebProgress.NOTIFY_REFRESH &
@@ -100,6 +101,26 @@ class WebProgressChild {
     this.mm.sendAsyncMessage(name, data);
   }
 
+  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+    let json = this._setupJSON(aWebProgress, aRequest, aStateFlags);
+
+    json.stateFlags = aStateFlags;
+    json.status = aStatus;
+
+    // It's possible that this state change was triggered by
+    // loading an internal error page, for which the parent
+    // will want to know some details, so we'll update it with
+    // the documentURI.
+    if (aWebProgress && aWebProgress.isTopLevel) {
+      json.documentURI = this.mm.content.document.documentURIObject.spec;
+      json.charset = this.mm.content.document.characterSet;
+      json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
+      json.inLoadURI = this.inLoadURI;
+    }
+
+    this._send("Content:StateChange", json);
+  }
+
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
     let json = this._setupJSON(aWebProgress, aRequest);
 
@@ -120,7 +141,7 @@ class WebProgressChild {
       let csp = this.mm.content.document.csp;
       json.csp = E10SUtils.serializeCSP(csp);
       json.synthetic = this.mm.content.document.mozSyntheticDocument;
-      json.isNavigating = this.mm.docShell.isNavigating;
+      json.inLoadURI = this.inLoadURI;
       json.requestContextID = this.mm.content.document.documentLoadGroup
         ? this.mm.content.document.documentLoadGroup.requestContextID
         : null;
