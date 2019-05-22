@@ -54,15 +54,10 @@ gfxPrefs::gfxPrefs() {
 }
 
 void gfxPrefs::Init() {
-  // Set up Moz2D prefs.
-  SetGfxLoggingLevelChangeCallback([](const GfxPrefValue& aValue) -> void {
-    mozilla::gfx::LoggingPrefs::sGfxLogLevel = aValue.get_int32_t();
-  });
 }
 
 gfxPrefs::~gfxPrefs() {
   gfxPrefs::AssertMainThread();
-  SetGfxLoggingLevelChangeCallback(nullptr);
   delete sGfxPrefList;
   sGfxPrefList = nullptr;
 }
