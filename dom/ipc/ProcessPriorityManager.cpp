@@ -8,7 +8,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -684,17 +683,20 @@ void ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(
 
 void ParticularProcessPriorityManager::OnBrowserParentDestroyed(
     nsISupports* aSubject) {
-  nsCOMPtr<nsIRemoteTab> remoteTab = do_QueryInterface(aSubject);
-  NS_ENSURE_TRUE_VOID(remoteTab);
-  BrowserHost* browserHost = BrowserHost::GetFrom(remoteTab.get());
-  BrowserParent* browserParent = browserHost->GetActor();
+  nsCOMPtr<nsIRemoteTab> tp = do_QueryInterface(aSubject);
+  NS_ENSURE_TRUE_VOID(tp);
 
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (browserParent->Manager() != mContentParent) {
+  if (BrowserParent::GetFrom(tp)->Manager() != mContentParent) {
     return;
   }
 
-  mActiveBrowserParents.RemoveEntry(browserParent->GetTabId());
+  uint64_t tabId;
+  if (NS_WARN_IF(NS_FAILED(tp->GetTabId(&tabId)))) {
+    return;
+  }
+
+  mActiveBrowserParents.RemoveEntry(tabId);
 
   ResetPriority();
 }

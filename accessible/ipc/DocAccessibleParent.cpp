@@ -672,8 +672,8 @@ void DocAccessibleParent::MaybeInitWindowEmulation() {
     rect.MoveToX(rootRect.X() - rect.X());
     rect.MoveToY(rect.Y() - rootRect.Y());
 
-    auto browserParent = static_cast<dom::BrowserParent*>(Manager());
-    isActive = browserParent->GetDocShellIsActive();
+    auto tab = static_cast<dom::BrowserParent*>(Manager());
+    tab->GetDocShellIsActive(&isActive);
   }
 
   nsWinUtils::NativeWindowCreateProc onCreate([this](HWND aHwnd) -> void {

@@ -61,10 +61,11 @@ class nsPIWindowRoot : public mozilla::dom::EventTarget {
   virtual mozilla::dom::EventTarget* GetParentTarget() = 0;
 
   // Stores a weak reference to the browser.
-  virtual void AddBrowser(nsIRemoteTab* aBrowser) = 0;
-  virtual void RemoveBrowser(nsIRemoteTab* aBrowser) = 0;
+  virtual void AddBrowser(mozilla::dom::BrowserParent* aBrowser) = 0;
+  virtual void RemoveBrowser(mozilla::dom::BrowserParent* aBrowser) = 0;
 
-  typedef void (*BrowserEnumerator)(nsIRemoteTab* aTab, void* aArg);
+  typedef void (*BrowserEnumerator)(mozilla::dom::BrowserParent* aTab,
+                                    void* aArg);
 
   // Enumerate all stored browsers that for which the weak reference is valid.
   virtual void EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) = 0;
