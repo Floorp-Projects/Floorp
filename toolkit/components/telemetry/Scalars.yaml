@@ -1570,7 +1570,7 @@ devtools.responsive:
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - mbalfanz@mozilla.com
+      - jryans@mozilla.com
     record_in_processes:
       - main
     release_channel_collection: opt-out
@@ -1584,20 +1584,7 @@ devtools.responsive:
     keyed: true
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - mbalfanz@mozilla.com
-    record_in_processes:
-      - main
-    release_channel_collection: opt-out
-  viewport_change_count:
-    bug_numbers:
-      - 1552464
-    description: >
-      Number of times the viewport attributes changed while in Responsive Design Mode.
-    expires: never
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-      - mbalfanz@mozilla.com
+      - jryans@mozilla.com
     record_in_processes:
       - main
     release_channel_collection: opt-out
