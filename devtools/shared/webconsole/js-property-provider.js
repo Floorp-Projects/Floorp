@@ -247,6 +247,7 @@ function analyzeInputString(str) {
  *                               access (e.g. `window["addEvent`).
  *            }
  */
+/* eslint-disable complexity */
 function JSPropertyProvider({
   dbgObject,
   environment,
@@ -506,6 +507,7 @@ function JSPropertyProvider({
 
   return prepareReturnedObject(getMatchedPropsInDbgObject(obj, search));
 }
+/* eslint-enable complexity */
 
 /**
  * For a given environment and constructor name, returns its Debugger.Object wrapped
