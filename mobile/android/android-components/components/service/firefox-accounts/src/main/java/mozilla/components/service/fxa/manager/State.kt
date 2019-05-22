@@ -4,12 +4,15 @@
 
 package mozilla.components.service.fxa.manager
 
+import mozilla.components.concept.sync.AuthException
+
 /**
  * States of the [FxaAccountManager].
  */
 enum class AccountState {
     Start,
     NotAuthenticated,
+    AuthenticationProblems,
     AuthenticatedNoProfile,
     AuthenticatedWithProfile
 }
@@ -34,6 +37,11 @@ internal sealed class Event {
         override fun toString(): String {
             // data classes define their own toString, so we override it here as well as in the base
             // class to avoid exposing 'code' and 'state' in logs.
+            return this.javaClass.simpleName
+        }
+    }
+    data class AuthenticationError(val error: AuthException) : Event() {
+        override fun toString(): String {
             return this.javaClass.simpleName
         }
     }

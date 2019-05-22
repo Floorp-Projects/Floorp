@@ -140,6 +140,11 @@ abstract class GeneralSyncManager : SyncManager, Observable<SyncStatusObserver> 
 
     override fun loggedOut() = synchronized(this) {
         logger.debug("Logging out")
+        // We might have never had a chance to initialize the account/dispatcher (e.g. during auth
+        // problems while restoring an account on startup). Bail out.
+        if (account == null) {
+            return@synchronized
+        }
         account = null
         syncDispatcher!!.stopPeriodicSync()
         syncDispatcher!!.close()

@@ -99,14 +99,6 @@ class GeneralSyncManagerTest {
 //        verify(dispatcher, times(4)).startPeriodicSync(any(), any())
     }
 
-    @Test(expected = KotlinNullPointerException::class)
-    fun `logging out before being authenticated is a mistake`() {
-        val manager = TestSyncManager(mock()) { _, _ ->
-            fail()
-        }
-        manager.loggedOut()
-    }
-
     @Test
     fun `logging out should reset an account and clean up the dispatcher`() {
         val dispatcher: SyncDispatcher = mock()
@@ -121,16 +113,6 @@ class GeneralSyncManagerTest {
 
         verify(dispatcher).stopPeriodicSync()
         verify(dispatcher).close()
-    }
-
-    @Test(expected = KotlinNullPointerException::class)
-    fun `logging out twice is a mistake`() {
-        val account: OAuthAccount = mock()
-        val manager = TestSyncManager(mock()) { _, _ -> }
-
-        manager.authenticated(account)
-        manager.loggedOut()
-        manager.loggedOut()
     }
 
     @Test

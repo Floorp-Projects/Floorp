@@ -8,9 +8,12 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.AccessTokenInfo
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceType
@@ -22,6 +25,7 @@ import mozilla.components.service.fxa.manager.DeviceTuple
 import mozilla.components.service.fxa.manager.Event
 import mozilla.components.service.fxa.manager.FailedToLoadAccountException
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -84,6 +88,7 @@ class FxaAccountManagerTest {
         assertNull(FxaAccountManager.nextState(state, Event.FailedToFetchProfile))
         assertNull(FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertNull(FxaAccountManager.nextState(state, Event.Logout))
+        assertNull(FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
 
         // State 'NotAuthenticated'.
         state = AccountState.NotAuthenticated
@@ -98,6 +103,7 @@ class FxaAccountManagerTest {
         assertNull(FxaAccountManager.nextState(state, Event.FailedToFetchProfile))
         assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertNull(FxaAccountManager.nextState(state, Event.Logout))
+        assertNull(FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
 
         // State 'AuthenticatedNoProfile'.
         state = AccountState.AuthenticatedNoProfile
@@ -111,6 +117,7 @@ class FxaAccountManagerTest {
         assertEquals(AccountState.AuthenticatedNoProfile, FxaAccountManager.nextState(state, Event.FailedToFetchProfile))
         assertNull(FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.Logout))
+        assertEquals(AccountState.AuthenticationProblems, FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
 
         // State 'AuthenticatedWithProfile'.
         state = AccountState.AuthenticatedWithProfile
@@ -124,6 +131,21 @@ class FxaAccountManagerTest {
         assertNull(FxaAccountManager.nextState(state, Event.FailedToFetchProfile))
         assertNull(FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.Logout))
+        assertEquals(AccountState.AuthenticationProblems, FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
+
+        // State 'AuthenticationProblems'.
+        state = AccountState.AuthenticationProblems
+        assertNull(FxaAccountManager.nextState(state, Event.Init))
+        assertNull(FxaAccountManager.nextState(state, Event.AccountNotFound))
+        assertNull(FxaAccountManager.nextState(state, Event.AccountRestored))
+        assertEquals(AccountState.AuthenticationProblems, FxaAccountManager.nextState(state, Event.Authenticate))
+        assertEquals(AccountState.AuthenticatedNoProfile, FxaAccountManager.nextState(state, Event.Authenticated("code", "state")))
+        assertNull(FxaAccountManager.nextState(state, Event.FetchProfile))
+        assertNull(FxaAccountManager.nextState(state, Event.FetchedProfile))
+        assertNull(FxaAccountManager.nextState(state, Event.FailedToFetchProfile))
+        assertEquals(AccountState.AuthenticationProblems, FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
+        assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.Logout))
+        assertNull(FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
     }
 
     @Test
@@ -294,6 +316,10 @@ class FxaAccountManagerTest {
             }
 
             override fun onAuthenticated(account: OAuthAccount) {
+                fail()
+            }
+
+            override fun onAuthenticationProblems() {
                 fail()
             }
 
@@ -659,9 +685,9 @@ class FxaAccountManagerTest {
         verify(accountStorage, times(1)).read()
         verify(accountStorage, never()).clear()
 
-        val captor = argumentCaptor<FxaException>()
-        verify(accountObserver, times(1)).onError(captor.capture())
-        assertEquals(fxaException.message, captor.value.message)
+//        val captor = argumentCaptor<FxaException>()
+//        verify(accountObserver, times(1)).onError(captor.capture())
+//        assertEquals(fxaException.message, captor.value.message)
 
         verify(accountObserver, times(1)).onAuthenticated(mockAccount)
         verify(accountObserver, never()).onProfileUpdated(any())

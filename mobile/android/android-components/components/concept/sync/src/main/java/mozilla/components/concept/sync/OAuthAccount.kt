@@ -90,6 +90,11 @@ interface AccountObserver {
     fun onProfileUpdated(profile: Profile)
 
     /**
+     * Account needs to be re-authenticated (e.g. due to a password change).
+     */
+    fun onAuthenticationProblems()
+
+    /**
      * Account manager encountered an error. Inspect [error] for details.
      * @param error A specific error encountered.
      */

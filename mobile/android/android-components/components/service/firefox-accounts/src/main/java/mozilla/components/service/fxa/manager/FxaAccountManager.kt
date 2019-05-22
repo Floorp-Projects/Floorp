@@ -13,7 +13,10 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceType
@@ -26,6 +29,8 @@ import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaException
+import mozilla.components.service.fxa.FxaPanicException
+import mozilla.components.service.fxa.FxaUnauthorizedException
 import mozilla.components.service.fxa.SharedPrefAccountStorage
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.CoroutineContext
@@ -45,6 +50,20 @@ import java.util.concurrent.Executors
  * @param cause Optional original cause of failure.
  */
 class FailedToLoadAccountException(cause: Exception?) : Exception(cause)
+
+/**
+ * A global registry for propagating [AuthException] errors. Components such as [SyncManager] and
+ * [FxaDeviceRefreshManager] may encounter authentication problems during their normal operation, and
+ * this registry is how they inform [FxaAccountManager] that these errors happened.
+ *
+ * [FxaAccountManager] monitors this registry, adjusts internal state accordingly, and notifies
+ * registered [AccountObserver] that account needs re-authentication.
+ */
+val authErrorRegistry = ObserverRegistry<AuthErrorObserver>()
+
+interface AuthErrorObserver {
+    fun onAuthError(e: AuthException)
+}
 
 /**
  * Observer interface which lets its consumers respond to authentication requests.
@@ -95,6 +114,14 @@ open class FxaAccountManager(
 
     init {
         syncManager?.let { this.register(SyncManagerIntegration(it)) }
+
+        authErrorRegistry.register(object : AuthErrorObserver {
+            override fun onAuthError(e: AuthException) {
+                CoroutineScope(coroutineContext).launch {
+                    processQueueAsync(Event.AuthenticationError(e)).await()
+                }
+            }
+        })
     }
 
     private class FxaStatePersistenceCallback(
@@ -139,6 +166,7 @@ open class FxaAccountManager(
                 }
                 AccountState.AuthenticatedNoProfile -> {
                     when (event) {
+                        is Event.AuthenticationError -> AccountState.AuthenticationProblems
                         Event.FetchProfile -> AccountState.AuthenticatedNoProfile
                         Event.FetchedProfile -> AccountState.AuthenticatedWithProfile
                         Event.FailedToFetchProfile -> AccountState.AuthenticatedNoProfile
@@ -148,6 +176,16 @@ open class FxaAccountManager(
                 }
                 AccountState.AuthenticatedWithProfile -> {
                     when (event) {
+                        is Event.AuthenticationError -> AccountState.AuthenticationProblems
+                        Event.Logout -> AccountState.NotAuthenticated
+                        else -> null
+                    }
+                }
+                AccountState.AuthenticationProblems -> {
+                    when (event) {
+                        Event.Authenticate -> AccountState.AuthenticationProblems
+                        Event.FailedToAuthenticate -> AccountState.AuthenticationProblems
+                        is Event.Authenticated -> AccountState.AuthenticatedNoProfile
                         Event.Logout -> AccountState.NotAuthenticated
                         else -> null
                     }
@@ -183,11 +221,28 @@ open class FxaAccountManager(
         return processQueueAsync(Event.Init)
     }
 
+    /**
+     * Main point for interaction with an [OAuthAccount] instance.
+     * @return [OAuthAccount] if we're in an authenticated state, null otherwise.
+     */
     fun authenticatedAccount(): OAuthAccount? {
         return when (state) {
             AccountState.AuthenticatedWithProfile,
             AccountState.AuthenticatedNoProfile -> account
             else -> null
+        }
+    }
+
+    /**
+     * Indicates if account needs to be re-authenticated via [beginAuthenticationAsync].
+     * Most common reason for an account to need re-authentication is a password change.
+     *
+     * @return A boolean flag indicating if account needs to be re-authenticated.
+     */
+    fun accountNeedsReauth(): Boolean {
+        return when (state) {
+            AccountState.AuthenticationProblems -> true
+            else -> false
         }
     }
 
@@ -283,6 +338,9 @@ open class FxaAccountManager(
                         // Locally corrupt accounts are simply treated as 'absent'.
                         val savedAccount = try {
                             getAccountStorage().read()
+                        } catch (e: FxaPanicException) {
+                            // Don't swallow panics from the underlying library.
+                            throw e
                         } catch (e: FxaException) {
                             logger.error("Failed to load saved account.", e)
 
@@ -324,18 +382,14 @@ open class FxaAccountManager(
                         null
                     }
                     Event.Authenticate -> {
-                        val url = try {
-                            account.beginOAuthFlow(scopes, true).await()
-                        } catch (e: FxaException) {
-                            oauthObservers.notifyObservers { onError(e) }
-                            return Event.FailedToAuthenticate
-                        }
-                        oauthObservers.notifyObservers { onBeginOAuthFlow(url) }
-                        null
+                        return doAuthenticate()
                     }
                     is Event.Pair -> {
                         val url = try {
                             account.beginPairingFlow(via.pairingUrl, scopes).await()
+                        } catch (e: FxaPanicException) {
+                            // Don't swallow panics from the underlying library.
+                            throw e
                         } catch (e: FxaException) {
                             oauthObservers.notifyObservers { onError(e) }
                             return Event.FailedToAuthenticate
@@ -379,7 +433,16 @@ open class FxaAccountManager(
                         account.deviceConstellation().register(deviceEventsIntegration)
 
                         logger.info("Ensuring device capabilities")
-                        account.deviceConstellation().ensureCapabilitiesAsync(deviceTuple.capabilities).await()
+                        try {
+                            account.deviceConstellation().ensureCapabilitiesAsync(deviceTuple.capabilities).await()
+                        } catch (e: FxaPanicException) {
+                            // Don't swallow panics from the underlying library.
+                            throw e
+                        } catch (e: FxaUnauthorizedException) {
+                            return Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED, e))
+                        } catch (e: FxaException) {
+                            logger.warn("Failed to ensure device capabilities", e)
+                        }
 
                         logger.info("Starting periodic refresh of the device constellation")
                         account.deviceConstellation().startPeriodicRefresh()
@@ -392,15 +455,19 @@ open class FxaAccountManager(
                         // Profile fetching and account authentication issues:
                         // https://github.com/mozilla/application-services/issues/483
                         logger.info("Fetching profile...")
+
                         profile = try {
                             account.getProfile(true).await()
+                        } catch (e: FxaPanicException) {
+                            // Don't swallow panics from the underlying library.
+                            throw e
+                        } catch (e: FxaUnauthorizedException) {
+                            return Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED, e))
                         } catch (e: FxaException) {
                             logger.error("Failed to get profile for authenticated account", e)
-
-                            notifyObservers { onError(e) }
-
                             return Event.FailedToFetchProfile
                         }
+
                         Event.FetchedProfile
                     }
                     else -> null
@@ -417,7 +484,33 @@ open class FxaAccountManager(
                     else -> null
                 }
             }
+            AccountState.AuthenticationProblems -> {
+                when (via) {
+                    Event.Authenticate -> {
+                        return doAuthenticate()
+                    }
+                    is Event.AuthenticationError -> {
+                        notifyObservers { onAuthenticationProblems() }
+                        null
+                    }
+                    else -> null
+                }
+            }
         }
+    }
+
+    private suspend fun doAuthenticate(): Event? {
+        val url = try {
+            account.beginOAuthFlow(scopes, true).await()
+        } catch (e: FxaPanicException) {
+            // Don't swallow panics from the underlying library.
+            throw e
+        } catch (e: FxaException) {
+            oauthObservers.notifyObservers { onError(e) }
+            return Event.FailedToAuthenticate
+        }
+        oauthObservers.notifyObservers { onBeginOAuthFlow(url) }
+        return null
     }
 
     @VisibleForTesting
@@ -458,6 +551,10 @@ open class FxaAccountManager(
         override fun onProfileUpdated(profile: Profile) {
             // SyncManager doesn't care about the FxA profile.
             // In the future, we might kick-off an immediate sync here.
+        }
+
+        override fun onAuthenticationProblems() {
+            syncManager.loggedOut()
         }
 
         override fun onError(error: Exception) {
