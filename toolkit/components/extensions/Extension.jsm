@@ -122,7 +122,7 @@ const WEBEXT_STORAGE_USER_CONTEXT_ID = -1 >>> 0;
 const CHILD_SHUTDOWN_TIMEOUT_MS = 8000;
 
 // Permissions that are only available to privileged extensions.
-const PRIVILEGED_PERMS = new Set(["mozillaAddons", "geckoViewAddons"]);
+const PRIVILEGED_PERMS = new Set(["mozillaAddons", "geckoViewAddons", "telemetry"]);
 
 /**
  * Classify an individual permission from a webextension manifest
