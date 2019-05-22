@@ -53,15 +53,24 @@ void SHEntryChildShared::EvictContentViewers(
   MOZ_ASSERT(sSHEntryChildSharedTable,
              "we have content viewers to evict, but the table hasn't been "
              "initialized yet");
+  uint32_t numEvictedSoFar = 0;
   for (auto iter = aToEvictSharedStateIDs.begin();
        iter != aToEvictSharedStateIDs.end(); ++iter) {
     RefPtr<SHEntryChildShared> shared = sSHEntryChildSharedTable->Get(*iter);
     MOZ_ASSERT(shared, "shared entry can't be null");
     nsCOMPtr<nsIContentViewer> viewer = shared->mContentViewer;
     if (viewer) {
+      numEvictedSoFar++;
       shared->SetContentViewer(nullptr);
       shared->SyncPresentationState();
       viewer->Destroy();
+    }
+    if (std::next(iter) == aToEvictSharedStateIDs.end() &&
+        numEvictedSoFar > 0) {
+      // This is the last shared object, so we should notify our
+      // listeners about any content viewers that were evicted.
+      // It does not matter which shared entry we will use for notifying.
+      shared->NotifyListenersContentViewerEvicted(numEvictedSoFar);
     }
   }
 }
@@ -132,6 +141,13 @@ void SHEntryChildShared::DropPresentationState() {
   mChildShells.Clear();
   mRefreshURIList = nullptr;
   mEditorData = nullptr;
+}
+
+void SHEntryChildShared::NotifyListenersContentViewerEvicted(
+    uint32_t aNumEvicted) {
+  if (StaticPrefs::docshell_shistory_testing_bfevict() && mSHistory) {
+    mSHistory->SendNotifyListenersContentViewerEvicted(aNumEvicted);
+  }
 }
 
 nsresult SHEntryChildShared::SetContentViewer(nsIContentViewer* aViewer) {
@@ -994,6 +1010,7 @@ void SHEntryChild::EvictContentViewer() {
   if (viewer) {
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
+    mShared->NotifyListenersContentViewerEvicted();
     SetContentViewer(nullptr);
     SyncPresentationState();
     viewer->Destroy();

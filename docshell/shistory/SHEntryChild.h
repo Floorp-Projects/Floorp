@@ -45,6 +45,8 @@ class SHEntryChildShared final : public nsIBFCacheEntry,
   static void EvictContentViewers(
       const nsTArray<uint64_t>& aToEvictSharedStateIDs);
 
+  void NotifyListenersContentViewerEvicted(uint32_t aNumEvicted = 1);
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIBFCACHEENTRY
 

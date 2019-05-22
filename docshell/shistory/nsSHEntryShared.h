@@ -51,6 +51,8 @@ class SHEntrySharedParentState {
 
   uint64_t GetID() const { return mID; }
 
+  void NotifyListenersContentViewerEvicted();
+
  protected:
   friend class nsSHEntry;
 

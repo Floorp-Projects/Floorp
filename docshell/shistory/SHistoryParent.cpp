@@ -239,6 +239,12 @@ bool SHistoryParent::RecvEvict(nsTArray<PSHEntryParent*>&& aEntries) {
   return true;
 }
 
+bool SHistoryParent::RecvNotifyListenersContentViewerEvicted(
+    uint32_t aNumEvicted) {
+  mHistory->NotifyListenersContentViewerEvicted(aNumEvicted);
+  return true;
+}
+
 void LegacySHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
   if (aIndex < 0) {
     return;
