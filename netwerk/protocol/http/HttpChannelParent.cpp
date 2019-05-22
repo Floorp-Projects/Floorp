@@ -2023,12 +2023,15 @@ HttpChannelParent::StartRedirect(uint32_t registrarId, nsIChannel* newChannel,
     responseHead = &cleanedUpResponseHead;
   }
 
+  ResourceTimingStruct timing;
+  GetTimingAttributes(mChannel, timing);
+
   bool result = false;
   if (!mIPCClosed) {
     result = SendRedirect1Begin(registrarId, uriParams, newLoadFlags,
                                 redirectFlags, loadInfoForwarderArg,
                                 *responseHead, secInfoSerialization, channelId,
-                                mChannel->GetPeerAddr());
+                                mChannel->GetPeerAddr(), timing);
   }
   if (!result) {
     // Bug 621446 investigation

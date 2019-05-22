@@ -1662,7 +1662,7 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild> {
                  const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                  const nsHttpResponseHead& responseHead,
                  const nsACString& securityInfoSerialization,
-                 const uint64_t& channelId)
+                 const uint64_t& channelId, const ResourceTimingStruct& timing)
       : NeckoTargetChannelEvent<HttpChannelChild>(child),
         mRegistrarId(registrarId),
         mNewURI(newURI),
@@ -1671,12 +1671,13 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild> {
         mResponseHead(responseHead),
         mSecurityInfoSerialization(securityInfoSerialization),
         mChannelId(channelId),
-        mLoadInfoForwarder(loadInfoForwarder) {}
+        mLoadInfoForwarder(loadInfoForwarder),
+        mTiming(timing) {}
 
   void Run() override {
     mChild->Redirect1Begin(mRegistrarId, mNewURI, mNewLoadFlags, mRedirectFlags,
                            mLoadInfoForwarder, mResponseHead,
-                           mSecurityInfoSerialization, mChannelId);
+                           mSecurityInfoSerialization, mChannelId, mTiming);
   }
 
  private:
@@ -1688,6 +1689,7 @@ class Redirect1Event : public NeckoTargetChannelEvent<HttpChannelChild> {
   nsCString mSecurityInfoSerialization;
   uint64_t mChannelId;
   ParentLoadInfoForwarderArgs mLoadInfoForwarder;
+  ResourceTimingStruct mTiming;
 };
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
@@ -1696,7 +1698,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
     const nsHttpResponseHead& responseHead,
     const nsCString& securityInfoSerialization, const uint64_t& channelId,
-    const NetAddr& oldPeerAddr) {
+    const NetAddr& oldPeerAddr, const ResourceTimingStruct& timing) {
   // TODO: handle security info
   LOG(("HttpChannelChild::RecvRedirect1Begin [this=%p]\n", this));
   // We set peer address of child to the old peer,
@@ -1708,7 +1710,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
 
   mEventQ->RunOrEnqueue(new Redirect1Event(
       this, registrarId, newUri, newLoadFlags, redirectFlags, loadInfoForwarder,
-      responseHead, securityInfoSerialization, channelId));
+      responseHead, securityInfoSerialization, channelId, timing));
   return IPC_OK();
 }
 
@@ -1778,7 +1780,8 @@ void HttpChannelChild::Redirect1Begin(
     const uint32_t& newLoadFlags, const uint32_t& redirectFlags,
     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
     const nsHttpResponseHead& responseHead,
-    const nsACString& securityInfoSerialization, const uint64_t& channelId) {
+    const nsACString& securityInfoSerialization, const uint64_t& channelId,
+    const ResourceTimingStruct& timing) {
   nsresult rv;
 
   LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
@@ -1787,6 +1790,7 @@ void HttpChannelChild::Redirect1Begin(
 
   nsCOMPtr<nsIURI> uri = DeserializeURI(newOriginalURI);
 
+  mTransactionTimings = timing;
   PROFILER_ADD_NETWORK_MARKER(mURI, mPriority, channelId,
                               NetworkLoadType::LOAD_REDIRECT,
                               mLastStatusReported, TimeStamp::Now(), 0,

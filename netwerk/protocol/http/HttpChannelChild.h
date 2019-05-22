@@ -155,7 +155,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
       const nsHttpResponseHead& responseHead,
       const nsCString& securityInfoSerialization, const uint64_t& channelId,
-      const NetAddr& oldPeerAddr) override;
+      const NetAddr& oldPeerAddr, const ResourceTimingStruct& aTiming) override;
   mozilla::ipc::IPCResult RecvRedirect3Complete() override;
   mozilla::ipc::IPCResult RecvAssociateApplicationCache(
       const nsCString& groupID, const nsCString& clientID) override;
@@ -499,7 +499,8 @@ class HttpChannelChild final : public PHttpChannelChild,
                       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                       const nsHttpResponseHead& responseHead,
                       const nsACString& securityInfoSerialization,
-                      const uint64_t& channelId);
+                      const uint64_t& channelId,
+                      const ResourceTimingStruct& timing);
   bool Redirect3Complete(OverrideRunnable* aRunnable);
   void DeleteSelf();
   void DoNotifyListener();
