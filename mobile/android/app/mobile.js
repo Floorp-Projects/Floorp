@@ -191,7 +191,7 @@ pref("xpinstall.signatures.required", true);
 // constants in AddonManager.jsm for values to use here, and Bug 1405528 for a rationale).
 pref("extensions.autoDisableScopes", 15);
 
-pref("extensions.enabledScopes", 1);
+pref("extensions.enabledScopes", 5);
 pref("extensions.autoupdate.enabled", true);
 pref("extensions.autoupdate.interval", 86400);
 pref("extensions.update.enabled", true);
