@@ -178,6 +178,16 @@ void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
   });
 }
 
+void CanonicalBrowsingContext::NotifyMediaMutedChanged(bool aMuted) {
+  nsPIDOMWindowOuter* window = GetDOMWindow();
+  if (window) {
+    window->SetAudioMuted(aMuted);
+  }
+  Group()->EachParent([&](ContentParent* aParent) {
+    Unused << aParent->SendSetMediaMuted(this, aMuted);
+  });
+}
+
 void CanonicalBrowsingContext::SetFieldEpochsForChild(
     ContentParent* aChild, const BrowsingContext::FieldEpochs& aEpochs) {
   mChildFieldEpochs.Put(aChild->ChildID(), aEpochs);
