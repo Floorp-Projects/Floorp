@@ -23,40 +23,42 @@ enum class DomainList(val listName: String) {
 /**
  * Provides autocomplete functionality for domains based on provided list of assets (see [Domains]).
  */
-class ShippedDomainsProvider : BaseDomainAutocompleteProvider(DomainList.DEFAULT) {
-    override fun initialize(context: Context) {
-        scope.launch {
-            domains = async { Domains.load(context).into() }.await()
-        }
-    }
-}
+class ShippedDomainsProvider : BaseDomainAutocompleteProvider(DomainList.DEFAULT, Domains.asLoader())
 
 /**
  * Provides autocomplete functionality for domains based on a list managed by [CustomDomains].
  */
-class CustomDomainsProvider : BaseDomainAutocompleteProvider(DomainList.CUSTOM) {
-    override fun initialize(context: Context) {
-        scope.launch {
-            domains = async { CustomDomains.load(context).into() }.await()
-        }
-    }
-}
+class CustomDomainsProvider : BaseDomainAutocompleteProvider(DomainList.CUSTOM, CustomDomains.asLoader())
 
 interface DomainAutocompleteProvider {
     fun getAutocompleteSuggestion(query: String): DomainAutocompleteResult?
 }
 
+typealias DomainsLoader = (Context) -> List<Domain>
+
+private fun Domains.asLoader(): DomainsLoader = { context: Context -> load(context).into() }
+private fun CustomDomains.asLoader(): DomainsLoader = { context: Context -> load(context).into() }
+
 /**
  * Provides common autocomplete functionality powered by domain lists.
+ *
+ * @param list source of domains
+ * @param domainsLoader provider for all available domains
  */
-abstract class BaseDomainAutocompleteProvider(private val list: DomainList) :
-    DomainAutocompleteProvider {
-    internal val scope = CoroutineScope(Dispatchers.IO)
+open class BaseDomainAutocompleteProvider(
+    private val list: DomainList,
+    private val domainsLoader: DomainsLoader
+) : DomainAutocompleteProvider, CoroutineScope by CoroutineScope(Dispatchers.IO) {
+
     // We compute 'domains' on the worker thread; make sure it's immediately visible on the UI thread.
     @Volatile
     var domains: List<Domain> = emptyList()
 
-    abstract fun initialize(context: Context)
+    fun initialize(context: Context) {
+        launch {
+            domains = async { domainsLoader(context) }.await()
+        }
+    }
 
     /**
      * Computes an autocomplete suggestion for the given text, and invokes the
@@ -103,12 +105,12 @@ abstract class BaseDomainAutocompleteProvider(private val list: DomainList) :
      * that exactly matches the search text - which is what this method is for:
      */
     private fun getResultText(rawSearchText: String, autocomplete: String) =
-            rawSearchText + autocomplete.substring(rawSearchText.length)
+        rawSearchText + autocomplete.substring(rawSearchText.length)
 }
 
 /**
  * Describes an autocompletion result against a list of domains.
-* @property input Input for which this result is being provided.
+ * @property input Input for which this result is being provided.
  * @property text Result of autocompletion, text to be displayed.
  * @property url Result of autocompletion, full matching url.
  * @property source Name of the autocompletion source.

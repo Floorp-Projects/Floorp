@@ -11,7 +11,5 @@ object KotlinCompiler {
     // KotlinCompile task dependencies available to buildSrc so we settle for defining this list here instead.
     // Maybe this is easier in Gradle 5+.
     @JvmStatic
-    val projectsWithWarningsAsErrorsDisabled = setOf(
-        "browser-domains"
-    )
+    val projectsWithWarningsAsErrorsDisabled = setOf()
 }

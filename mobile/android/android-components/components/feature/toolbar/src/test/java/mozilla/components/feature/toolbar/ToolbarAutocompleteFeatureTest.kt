@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.toolbar
 
-import android.content.Context
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.domains.Domain
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
@@ -111,8 +110,7 @@ class ToolbarAutocompleteFeatureTest {
         val autocompleteDelegate: AutocompleteDelegate = mock()
 
         var history: HistoryStorage = InMemoryHistoryStorage()
-        val domains = object : BaseDomainAutocompleteProvider(DomainList.CUSTOM) {
-            override fun initialize(context: Context) {}
+        val domains = object : BaseDomainAutocompleteProvider(DomainList.CUSTOM, { emptyList() }) {
             fun testDomains(list: List<Domain>) {
                 domains = list
             }

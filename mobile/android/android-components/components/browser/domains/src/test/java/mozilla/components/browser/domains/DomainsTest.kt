@@ -4,25 +4,25 @@
 
 package mozilla.components.browser.domains
 
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class DomainsTest {
 
     @Test
     fun loadDomains() {
-        val domains = Domains.load(RuntimeEnvironment.application, setOf("us"))
+        val domains = Domains.load(testContext, setOf("us"))
         Assert.assertFalse(domains.isEmpty())
         Assert.assertTrue(domains.contains("reddit.com"))
     }
 
     @Test
     fun loadDomainsWithDefaultCountries() {
-        val domains = Domains.load(RuntimeEnvironment.application)
+        val domains = Domains.load(testContext)
         Assert.assertFalse(domains.isEmpty())
         // From the global list
         Assert.assertTrue(domains.contains("mozilla.org"))

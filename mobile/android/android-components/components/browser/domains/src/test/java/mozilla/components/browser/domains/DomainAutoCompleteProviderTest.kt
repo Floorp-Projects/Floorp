@@ -2,11 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("DEPRECATION")
+
 package mozilla.components.browser.domains
 
 import android.preference.PreferenceManager
 import mozilla.components.browser.domains.DomainAutoCompleteProvider.AutocompleteSource.CUSTOM_LIST
 import mozilla.components.browser.domains.DomainAutoCompleteProvider.AutocompleteSource.DEFAULT_LIST
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,26 +17,31 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
+/**
+ * While [DomainAutoCompleteProvider] exists (even if it's deprecated) we need to test it.
+ */
 @RunWith(RobolectricTestRunner::class)
 class DomainAutoCompleteProviderTest {
 
     @After
     fun tearDown() {
-        PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
-                .edit()
-                .clear()
-                .apply()
+        PreferenceManager.getDefaultSharedPreferences(testContext)
+            .edit()
+            .clear()
+            .apply()
     }
 
     @Test
     fun autocompletionWithShippedDomains() {
-        val provider = DomainAutoCompleteProvider()
-        provider.initialize(RuntimeEnvironment.application, true, false, false)
+        val provider = DomainAutoCompleteProvider().also {
+            it.initialize(testContext,
+                useShippedDomains = true, useCustomDomains = false,
+                loadDomainsFromDisk = false)
 
-        provider.shippedDomains = listOf("mozilla.org", "google.com", "facebook.com").into()
-        provider.customDomains = emptyList()
+            it.shippedDomains = listOf("mozilla.org", "google.com", "facebook.com").into()
+            it.customDomains = emptyList()
+        }
 
         val size = provider.shippedDomains.size
 
@@ -55,10 +63,13 @@ class DomainAutoCompleteProviderTest {
         val domains = listOf("facebook.com", "google.com", "mozilla.org")
         val customDomains = listOf("gap.com", "www.fanfiction.com", "https://mobile.de")
 
-        val provider = DomainAutoCompleteProvider()
-        provider.initialize(RuntimeEnvironment.application, true, true, false)
-        provider.shippedDomains = domains.into()
-        provider.customDomains = customDomains.into()
+        val provider = DomainAutoCompleteProvider().also {
+            it.initialize(testContext,
+                useShippedDomains = true, useCustomDomains = true,
+                loadDomainsFromDisk = false)
+            it.shippedDomains = domains.into()
+            it.customDomains = customDomains.into()
+        }
 
         assertCompletion(provider, "f", CUSTOM_LIST, customDomains.size, "fanfiction.com", "http://www.fanfiction.com")
         assertCompletion(provider, "fa", CUSTOM_LIST, customDomains.size, "fanfiction.com", "http://www.fanfiction.com")
@@ -89,6 +100,7 @@ class DomainAutoCompleteProviderTest {
         expectedUrl: String
     ) {
         val result = provider.autocomplete(text)
+
         assertFalse(result.text.isEmpty())
 
         assertEquals(completion, result.text)
@@ -99,6 +111,7 @@ class DomainAutoCompleteProviderTest {
 
     private fun assertNoCompletion(provider: DomainAutoCompleteProvider, text: String) {
         val result = provider.autocomplete(text)
+
         assertTrue(result.text.isEmpty())
         assertTrue(result.url.isEmpty())
         assertTrue(result.source.isEmpty())

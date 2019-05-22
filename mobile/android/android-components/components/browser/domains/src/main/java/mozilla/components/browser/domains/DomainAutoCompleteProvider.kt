@@ -17,8 +17,12 @@ import java.util.Locale
  * [CustomDomains].
  */
 // FIXME delete this https://github.com/mozilla-mobile/android-components/issues/1358
-@Deprecated("Use [Providers.ShippedDomainsProvider] or [Providers.CustomDomainsProvider]")
+@Deprecated("Use `ShippedDomainsProvider` or `CustomDomainsProvider`",
+    ReplaceWith("ShippedDomainsProvider()/CustomDomainsProvider()",
+        "mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider",
+        "mozilla.components.browser.domains.autocomplete.CustomDomainsProvider"))
 class DomainAutoCompleteProvider {
+
     object AutocompleteSource {
         const val DEFAULT_LIST = "default"
         const val CUSTOM_LIST = "custom"

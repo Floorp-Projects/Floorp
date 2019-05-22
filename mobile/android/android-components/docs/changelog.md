@@ -20,6 +20,10 @@ permalink: /changelog/
 * **samples-firefox-accounts**
   * Switch FxA sample to production servers, fix pairing.
 
+* **browser-domains**
+  * New domain autocomplete providers `ShippedDomainsProvider` and `CustomDomainsProvider` that
+    should be used instead of deprecated `DomainAutoCompleteProvider`.
+
 # 0.55.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.54.0...v0.55.0)
