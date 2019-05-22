@@ -645,9 +645,6 @@ static void AddImageURL(const nsStyleImage& aImage, nsTArray<nsString>& aURLs) {
 static void AddImageURL(const StyleShapeSource& aShapeSource,
                         nsTArray<nsString>& aURLs) {
   switch (aShapeSource.GetType()) {
-    case StyleShapeSourceType::URL:
-      AddImageURL(aShapeSource.URL(), aURLs);
-      break;
     case StyleShapeSourceType::Image:
       AddImageURL(aShapeSource.ShapeImage(), aURLs);
       break;
@@ -2561,8 +2558,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
       !firstLayer.mRepeat.IsInitialValue() ||
       !firstLayer.mSize.IsInitialValue() ||
       !(firstLayer.mImage.GetType() == eStyleImageType_Null ||
-        firstLayer.mImage.GetType() == eStyleImageType_Image ||
-        firstLayer.mImage.GetType() == eStyleImageType_URL)) {
+        firstLayer.mImage.GetType() == eStyleImageType_Image)) {
     return nullptr;
   }
 

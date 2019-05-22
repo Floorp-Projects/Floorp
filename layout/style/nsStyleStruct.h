@@ -263,7 +263,6 @@ enum nsStyleImageType {
   eStyleImageType_Image,
   eStyleImageType_Gradient,
   eStyleImageType_Element,
-  eStyleImageType_URL
 };
 
 struct CachedBorderImageData {
@@ -308,7 +307,6 @@ struct nsStyleImage {
   void SetGradientData(nsStyleGradient* aGradient);
   void SetElementId(already_AddRefed<nsAtom> aElementId);
   void SetCropRect(mozilla::UniquePtr<nsStyleSides> aCropRect);
-  void SetURLValue(already_AddRefed<const URLValue> aURLValue);
 
   void ResolveImage(mozilla::dom::Document& aDocument,
                     const nsStyleImage* aOldImage) {
@@ -432,9 +430,6 @@ struct nsStyleImage {
   union {
     nsStyleImageRequest* mImage;
     nsStyleGradient* mGradient;
-    const URLValue* mURLValue;  // See the comment in SetStyleImage's 'case
-                                // eCSSUnit_URL' section to know why we need to
-                                // store URLValues separately from mImage.
     nsAtom* mElementId;
   };
 
@@ -1597,14 +1592,6 @@ struct StyleShapeSource final {
   }
 
   StyleShapeSourceType GetType() const { return mType; }
-
-  const css::URLValue& URL() const {
-    MOZ_ASSERT(mType == StyleShapeSourceType::URL, "Wrong shape source type!");
-    MOZ_ASSERT(mShapeImage && mShapeImage->GetURLValue());
-    return *mShapeImage->GetURLValue();
-  }
-
-  void SetURL(const css::URLValue& aURLValue);
 
   const nsStyleImage& ShapeImage() const {
     MOZ_ASSERT(mType == StyleShapeSourceType::Image,
