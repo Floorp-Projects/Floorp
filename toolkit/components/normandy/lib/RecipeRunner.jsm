@@ -199,6 +199,7 @@ var RecipeRunner = {
   },
 
   async run() {
+    Services.obs.notifyObservers(null, "recipe-runner:start");
     this.clearCaches();
     // Unless lazy classification is enabled, prep the classify cache.
     if (!Services.prefs.getBoolPref(LAZY_CLASSIFY_PREF, false)) {
@@ -241,6 +242,7 @@ var RecipeRunner = {
     await actions.finalize();
 
     await Uptake.reportRunner(Uptake.RUNNER_SUCCESS);
+    Services.obs.notifyObservers(null, "recipe-runner:end");
   },
 
   /**
