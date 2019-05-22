@@ -13,6 +13,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/Unused.h"
+#include "ProcessUtils.h"
 #include "VRChild.h"
 #include "VRManager.h"
 #include "VRThread.h"
@@ -61,8 +62,15 @@ bool VRProcessParent::Launch() {
   extraArgs.push_back("-parentBuildID");
   extraArgs.push_back(parentBuildID.get());
 
+  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
+  if (!mPrefSerializer->SerializeToSharedMemory()) {
+    return false;
+  }
+  mPrefSerializer->AddSharedPrefCmdLineArgs(*this, extraArgs);
+
   if (!GeckoChildProcessHost::AsyncLaunch(extraArgs)) {
     mLaunchPhase = LaunchPhase::Complete;
+    mPrefSerializer = nullptr;
     return false;
   }
   return true;
@@ -134,6 +142,8 @@ void VRProcessParent::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(!mVRChild);
 
   mLaunchPhase = LaunchPhase::Complete;
+  mPrefSerializer = nullptr;
+
   if (aSucceeded) {
     mVRChild = MakeUnique<VRChild>(this);
 
