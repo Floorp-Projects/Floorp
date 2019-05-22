@@ -227,7 +227,7 @@ struct JSWindowActorInfo
 {
   nsString name;
   bool allFrames;
-  nsCString url;
+  nsCString? url;
 
   JSWindowActorEventDecl[] events;
   nsCString[] observers;
