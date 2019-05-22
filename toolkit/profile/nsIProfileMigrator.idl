@@ -38,7 +38,7 @@ interface nsIProfileStartup : nsISupports
  * @obtainable service, contractid("@mozilla.org/toolkit/profile-migrator;1")
  */
 [scriptable, uuid(3df284a5-2258-4d46-a664-761ecdc04c22)]
-interface nsIProfileMigrator : nsISupports 
+interface nsIProfileMigrator : nsISupports
 {
   /**
    * Migrate data from an outside source, if possible.  Does nothing

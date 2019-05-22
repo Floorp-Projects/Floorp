@@ -63,7 +63,7 @@ interface nsIUnicharInputStream : nsISupports {
    * not call the writer with zero characters to consume.
    *
    * @param aWriter the "consumer" of the data to be read
-   * @param aClosure opaque parameter passed to writer 
+   * @param aClosure opaque parameter passed to writer
    * @param aCount the maximum number of characters to be read
    *
    * @return number of characters read (may be less than aCount)

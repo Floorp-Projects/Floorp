@@ -55,7 +55,7 @@ interface nsIURL : nsIURI
      * directory and not a file, e.g. http://host/foo/bar/, then the Directory
      * attribute accesses the complete /foo/bar/ portion, and the FileName is
      * the empty string. Note that this is purely based on searching for the
-     * last trailing slash. And hence don't rely on this to be a definite file. 
+     * last trailing slash. And hence don't rely on this to be a definite file.
      *
      * Some characters may be escaped.
      */
@@ -82,7 +82,7 @@ interface nsIURL : nsIURI
 
     /**
      * This method takes a uri and compares the two.  The common uri portion
-     * is returned as a string.  The minimum common uri portion is the 
+     * is returned as a string.  The minimum common uri portion is the
      * protocol, and any of these if present:  login, password, host and port
      * If no commonality is found, "" is returned.  If they are identical, the
      * whole path with file/ref/etc. is returned.  For file uris, it is

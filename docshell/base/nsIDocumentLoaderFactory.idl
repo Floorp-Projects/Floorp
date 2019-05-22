@@ -28,7 +28,7 @@ interface nsIDocumentLoaderFactory : nsISupports {
     nsIContentViewer createInstance(in string aCommand,
                               in nsIChannel aChannel,
                               in nsILoadGroup aLoadGroup,
-                              in ACString aContentType, 
+                              in ACString aContentType,
                               in nsIDocShell aContainer,
                               in nsISupports aExtraInfo,
                               out nsIStreamListener aDocListenerResult);

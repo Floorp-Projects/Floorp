@@ -2,21 +2,21 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-  
+
 /**
  * The mother of all xpcom interfaces.
  */
 
 /* In order to get both the right typelib and the right header we force
 *  the 'real' output from xpidl to be commented out in the generated header
-*  and includes a copy of the original nsISupports.h. This is all just to deal 
+*  and includes a copy of the original nsISupports.h. This is all just to deal
 *  with the Mac specific ": public __comobject" thing.
 */
 
 #include "nsrootidl.idl"
 
 %{C++
-/* 
+/*
  * Start commenting out the C++ versions of the below in the output header
  */
 #if 0
@@ -24,14 +24,14 @@
 
 [scriptable, uuid(00000000-0000-0000-c000-000000000046)]
 interface nsISupports {
-  void QueryInterface(in nsIIDRef uuid, 
+  void QueryInterface(in nsIIDRef uuid,
                       [iid_is(uuid),retval] out nsQIResult result);
   [noscript, notxpcom] nsrefcnt AddRef();
   [noscript, notxpcom] nsrefcnt Release();
 };
 
 %{C++
-/* 
+/*
  * End commenting out the C++ versions of the above in the output header
  */
 #endif

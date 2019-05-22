@@ -24,7 +24,7 @@ const uint32_t WARNING_CONFIRM_ADDON_INSTALL_CLICK_THROUGH  = 4;
 
 
 /*
- * modal dialogs/warnings 
+ * modal dialogs/warnings
  */
 
 //     removed WARNING_ENTERING_SECURE_SITE = 5;
@@ -55,7 +55,7 @@ const uint32_t WARNING_CONFIRM_POST_TO_INSECURE_FROM_SECURE_CLICK_THROUGH = 10;
 //     removed WARNING_PHISHING_PAGE_GET_ME_OUT_OF_HERE = 19;
 //     removed WARNING_PHISHING_PAGE_IGNORE_WARNING = 20;
 
-/* 
+/*
  * SSL Error dialogs
  * deprecated: we use the _TOP versions below
  */

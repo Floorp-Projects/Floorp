@@ -9,8 +9,8 @@ interface nsIEventTarget;
 
 /**
  * If an input stream is non-blocking, it may return NS_BASE_STREAM_WOULD_BLOCK
- * when read.  The caller must then wait for the stream to have some data to 
- * read.  If the stream implements nsIAsyncInputStream, then the caller can use 
+ * when read.  The caller must then wait for the stream to have some data to
+ * read.  If the stream implements nsIAsyncInputStream, then the caller can use
  * this interface to request an asynchronous notification when the stream
  * becomes readable or closed (via the AsyncWait method).
  *
@@ -23,15 +23,15 @@ interface nsIEventTarget;
 interface nsIAsyncInputStream : nsIInputStream
 {
     /**
-     * This method closes the stream and sets its internal status.  If the 
+     * This method closes the stream and sets its internal status.  If the
      * stream is already closed, then this method is ignored.  Once the stream
      * is closed, the stream's status cannot be changed.  Any successful status
      * code passed to this method is treated as NS_BASE_STREAM_CLOSED, which
-     * has an effect equivalent to nsIInputStream::close. 
+     * has an effect equivalent to nsIInputStream::close.
      *
-     * NOTE: this method exists in part to support pipes, which have both an 
+     * NOTE: this method exists in part to support pipes, which have both an
      * input end and an output end.  If the input end of a pipe is closed, then
-     * writes to the output end of the pipe will fail.  The error code returned 
+     * writes to the output end of the pipe will fail.  The error code returned
      * when an attempt is made to write to a "broken" pipe corresponds to the
      * status code passed in when the input end of the pipe was closed, which
      * greatly simplifies working with pipes in some cases.
@@ -46,7 +46,7 @@ interface nsIAsyncInputStream : nsIInputStream
      * Asynchronously wait for the stream to be readable or closed.  The
      * notification is one-shot, meaning that each asyncWait call will result
      * in exactly one notification callback.  After the OnInputStreamReady event
-     * is dispatched, the stream releases its reference to the 
+     * is dispatched, the stream releases its reference to the
      * nsIInputStreamCallback object.  It is safe to call asyncWait again from the
      * notification handler.
      *
@@ -56,7 +56,7 @@ interface nsIAsyncInputStream : nsIInputStream
      * stream is already readable or closed when AsyncWait is called, then the
      * OnInputStreamReady event will be dispatched immediately.  Otherwise, the
      * event will be dispatched when the stream becomes readable or closed.
-     * 
+     *
      * @param aCallback
      *        This object is notified when the stream becomes ready.  This
      *        parameter may be null to clear an existing callback.

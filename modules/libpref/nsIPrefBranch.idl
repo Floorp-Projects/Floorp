@@ -196,7 +196,7 @@ interface nsIPrefBranch : nsISupports
    *                  represents. Interfaces currently supported are:
    *                    - nsIFile
    *                    - nsIPrefLocalizedString (Localized UniChar)
-   * @param aValue    The XPCOM object into which to the complex preference 
+   * @param aValue    The XPCOM object into which to the complex preference
    *                  value should be retrieved.
    *
    * @throws Error The value does not exist or is the wrong type.
@@ -218,7 +218,7 @@ interface nsIPrefBranch : nsISupports
    *                    - nsISupportsString (UniChar)
    *                      (deprecated; see setStringPref)
    *                    - nsIPrefLocalizedString (Localized UniChar)
-   * @param aValue    The XPCOM object from which to set the complex preference 
+   * @param aValue    The XPCOM object from which to set the complex preference
    *                  value.
    *
    * @throws Error if setting failed or the value is the wrong type.
@@ -297,7 +297,7 @@ interface nsIPrefBranch : nsISupports
   boolean prefIsLocked(in string aPrefName);
 
   /**
-   * Called to unlock a specific preference. Unlocking a previously locked 
+   * Called to unlock a specific preference. Unlocking a previously locked
    * preference allows the preference service to once again return the user set
    * value of the preference.
    *
@@ -332,7 +332,7 @@ interface nsIPrefBranch : nsISupports
   /**
    * Returns an array of strings representing the child preferences of the
    * root of this branch.
-   * 
+   *
    * @param aStartingAt The point on the branch at which to start enumerating
    *                    the child preferences. Pass in "" to enumerate all
    *                    preferences referenced by this branch.
@@ -418,7 +418,7 @@ interface nsIPrefBranch : nsISupports
    * It is possible to change preferences during the notification.
    *
    * @note
-   * It is not safe to change observers during this callback in Gecko 
+   * It is not safe to change observers during this callback in Gecko
    * releases before 1.9. If you want a safe way to remove a pref observer,
    * please use an nsITimer.
    *
