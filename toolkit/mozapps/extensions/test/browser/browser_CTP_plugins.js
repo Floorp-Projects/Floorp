@@ -1,25 +1,40 @@
 const gHttpTestRoot = "http://127.0.0.1:8888/" + RELATIVE_DIR + "/";
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
-function updateBlocklist(aCallback) {
-  var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
-                          .getService(Ci.nsITimerCallback);
+function updateBlocklist(aURL, aCallback) {
   var observer = function() {
     Services.obs.removeObserver(observer, "plugin-blocklist-updated");
     SimpleTest.executeSoon(aCallback);
   };
   Services.obs.addObserver(observer, "plugin-blocklist-updated");
-  blocklistNotifier.notify(null);
+  if (Services.prefs.getBoolPref("extensions.blocklist.useXML", true)) {
+    info("Loading plugin data " + aURL + " using xml implementation.");
+    Services.prefs.setCharPref("extensions.blocklist.url", aURL);
+    var blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
+      .getService(Ci.nsITimerCallback);
+    blocklistNotifier.notify(null);
+  } else {
+    info("Loading plugin data " + aURL + " using remote settings.");
+    if (aURL.endsWith("blockNoPlugins.xml")) {
+      AddonTestUtils.loadBlocklistRawData({plugins: []});
+    } else if (aURL.endsWith("blockPluginHard.xml")) {
+      AddonTestUtils.loadBlocklistRawData({plugins: [{
+        matchFilename: "libnptest\\.so|nptest\\.dll|Test\\.plugin",
+        versionRange: [{"severity": "2"}],
+        blockID: "p9999",
+      }]});
+    } else {
+      ok(false, "Should never be asked to update to unknown blocklist data.");
+    }
+  }
 }
 
 var _originalBlocklistURL = null;
 function setAndUpdateBlocklist(aURL, aCallback) {
-  // FIXME needs to change blocklist differently.
-  // Tracked in https://bugzilla.mozilla.org/show_bug.cgi?id=1549548 .
   if (!_originalBlocklistURL) {
     _originalBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
   }
-  Services.prefs.setCharPref("extensions.blocklist.url", aURL);
-  updateBlocklist(aCallback);
+  updateBlocklist(aURL, aCallback);
 }
 
 function resetBlocklist(aCallback) {
@@ -39,6 +54,7 @@ add_task(async function() {
   SpecialPowers.pushPrefEnv({"set": [
     ["plugins.click_to_play", true],
     ["extensions.blocklist.suppressUI", true],
+    ["extensions.blocklist.useXML", true],
   ]});
   registerCleanupFunction(async function() {
     let pluginTag = getTestPluginTag();
@@ -48,9 +64,18 @@ add_task(async function() {
     });
     resetBlocklist();
   });
-
   let pluginTag = getTestPluginTag();
   pluginTag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  await checkPlugins();
+
+  pluginTag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  SpecialPowers.pushPrefEnv({set: [
+    ["extensions.blocklist.useXML", false],
+  ]});
+  await checkPlugins();
+});
+
+async function checkPlugins() {
   let managerWindow = await open_manager("addons://list/plugin");
 
   let plugins = await AddonManager.getAddonsByTypes(["plugin"]);
@@ -177,4 +202,6 @@ add_task(async function() {
   is(menu.disabled, true, "part13: detail state menu should be disabled");
 
   managerWindow.close();
-});
+  await new Promise(resolve =>
+    setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", resolve));
+}
