@@ -851,6 +851,14 @@ class RaptorAndroid(Raptor):
         for key, value in commands.items():
             self._set_value_and_check_exitcode(key, value, root=True)
 
+    def build_browser_profile(self):
+        super(RaptorAndroid, self).build_browser_profile()
+
+         # Merge in the android profile
+        path = os.path.join(self.profile_data_dir, 'raptor-android')
+        self.log.info("Merging profile: {}".format(path))
+        self.profile.merge(path)
+
     def clear_app_data(self):
         self.log.info("clearing %s app data" % self.config['binary'])
         self.device.shell("pm clear %s" % self.config['binary'])
