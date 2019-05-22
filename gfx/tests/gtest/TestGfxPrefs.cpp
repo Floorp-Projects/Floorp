@@ -28,16 +28,16 @@ TEST(GfxPrefs, OnceValues)
   ASSERT_TRUE(gfxPrefs::SingletonExists());
 
   // Once boolean, default true
-  ASSERT_TRUE(gfxPrefs::WorkAroundDriverBugs());
+  ASSERT_TRUE(StaticPrefs::WorkAroundDriverBugs());
 
   // Once boolean, default false
-  ASSERT_FALSE(gfxPrefs::UseApitrace());
+  ASSERT_FALSE(StaticPrefs::UseApitrace());
 
   // Once uint32_t, default 5
-  ASSERT_TRUE(gfxPrefs::APZMaxVelocityQueueSize() == 5);
+  ASSERT_TRUE(StaticPrefs::APZMaxVelocityQueueSize() == 5);
 
   // Once float, default 0 (should be OK with ==)
-  ASSERT_TRUE(gfxPrefs::APZCurveFunctionX1() == 0.0f);
+  ASSERT_TRUE(StaticPrefs::APZCurveFunctionX1() == 0.0f);
 }
 
 TEST(GfxPrefs, Set)
@@ -46,18 +46,18 @@ TEST(GfxPrefs, Set)
   ASSERT_TRUE(gfxPrefs::SingletonExists());
 
   // Once boolean, default false
-  ASSERT_FALSE(gfxPrefs::UseApitrace());
-  gfxPrefs::SetUseApitrace(true);
-  ASSERT_TRUE(gfxPrefs::UseApitrace());
-  gfxPrefs::SetUseApitrace(false);
-  ASSERT_FALSE(gfxPrefs::UseApitrace());
+  ASSERT_FALSE(StaticPrefs::UseApitrace());
+  StaticPrefs::SetUseApitrace(true);
+  ASSERT_TRUE(StaticPrefs::UseApitrace());
+  StaticPrefs::SetUseApitrace(false);
+  ASSERT_FALSE(StaticPrefs::UseApitrace());
 
   // Once float, default 0
-  ASSERT_TRUE(gfxPrefs::APZCurveFunctionX1() == 0.0f);
-  gfxPrefs::SetAPZCurveFunctionX1(1.75f);
-  ASSERT_TRUE(gfxPrefs::APZCurveFunctionX1() == 1.75f);
-  gfxPrefs::SetAPZCurveFunctionX1(0.0f);
-  ASSERT_TRUE(gfxPrefs::APZCurveFunctionX1() == 0.0f);
+  ASSERT_TRUE(StaticPrefs::APZCurveFunctionX1() == 0.0f);
+  StaticPrefs::SetAPZCurveFunctionX1(1.75f);
+  ASSERT_TRUE(StaticPrefs::APZCurveFunctionX1() == 1.75f);
+  StaticPrefs::SetAPZCurveFunctionX1(0.0f);
+  ASSERT_TRUE(StaticPrefs::APZCurveFunctionX1() == 0.0f);
 }
 
 // Randomly test the function we use in nsExceptionHandler.cpp here:

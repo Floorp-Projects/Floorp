@@ -10,13 +10,13 @@
 
 #include "base/task.h"
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
 #include "GeckoProfiler.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsIPropertyBag2.h"
@@ -48,7 +48,7 @@ void PaintThread::AddRef() {}
 /* static */
 int32_t PaintThread::CalculatePaintWorkerCount() {
   int32_t cpuCores = PR_GetNumberOfProcessors();
-  int32_t workerCount = gfxPrefs::LayersOMTPPaintWorkers();
+  int32_t workerCount = StaticPrefs::LayersOMTPPaintWorkers();
 
   // If not manually specified, default to (cpuCores * 3) / 4, and clamp
   // between 1 and 4. If a user wants more, they can manually specify it

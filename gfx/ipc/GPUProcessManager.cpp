@@ -6,7 +6,6 @@
 
 #include "GPUProcessManager.h"
 
-#include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessListener.h"
 #include "mozilla/MemoryReportingProcess.h"
@@ -385,8 +384,8 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
 static bool ShouldLimitDeviceResets(uint32_t count, int32_t deltaMilliseconds) {
   // We decide to limit by comparing the amount of resets that have happened
   // and time since the last reset to two prefs.
-  int32_t timeLimit = gfxPrefs::DeviceResetThresholdMilliseconds();
-  int32_t countLimit = gfxPrefs::DeviceResetLimitCount();
+  int32_t timeLimit = StaticPrefs::DeviceResetThresholdMilliseconds();
+  int32_t countLimit = StaticPrefs::DeviceResetLimitCount();
 
   bool hasTimeLimit = timeLimit >= 0;
   bool hasCountLimit = countLimit >= 0;

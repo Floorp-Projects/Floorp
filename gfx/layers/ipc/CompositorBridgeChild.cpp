@@ -11,7 +11,7 @@
 #include "ClientLayerManager.h"  // for ClientLayerManager
 #include "base/message_loop.h"   // for MessageLoop
 #include "base/task.h"           // for NewRunnableMethod, etc
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -870,10 +870,10 @@ TextureClientPool* CompositorBridgeChild::GetTexturePool(
       aAllocator->GetCompositorBackendType(),
       aAllocator->SupportsTextureDirectMapping(),
       aAllocator->GetMaxTextureSize(), aFormat, gfx::gfxVars::TileSize(),
-      aFlags, gfxPrefs::LayersTilePoolShrinkTimeout(),
-      gfxPrefs::LayersTilePoolClearTimeout(),
-      gfxPrefs::LayersTileInitialPoolSize(),
-      gfxPrefs::LayersTilePoolUnusedSize(), this));
+      aFlags, StaticPrefs::LayersTilePoolShrinkTimeout(),
+      StaticPrefs::LayersTilePoolClearTimeout(),
+      StaticPrefs::LayersTileInitialPoolSize(),
+      StaticPrefs::LayersTilePoolUnusedSize(), this));
 
   return mTexturePools.LastElement();
 }

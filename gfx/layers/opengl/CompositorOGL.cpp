@@ -16,12 +16,11 @@
 #include "gfxCrashReporterUtils.h"  // for ScopedGfxFeatureReporter
 #include "gfxEnv.h"                 // for gfxEnv
 #include "gfxPlatform.h"            // for gfxPlatform
-#include "gfxPrefs.h"               // for gfxPrefs
 #include "gfxRect.h"                // for gfxRect
 #include "gfxUtils.h"               // for gfxUtils, etc
 #include "mozilla/ArrayUtils.h"     // for ArrayLength
 #include "mozilla/Preferences.h"    // for Preferences
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs.h"    // for StaticPrefs
 #include "mozilla/gfx/BasePoint.h"  // for BasePoint
 #include "mozilla/gfx/Matrix.h"     // for Matrix4x4, Matrix
 #include "mozilla/gfx/Triangle.h"   // for Triangle
@@ -1549,7 +1548,7 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
       BindAndDrawGeometry(program, aGeometry);
     } break;
     case EffectTypes::COMPONENT_ALPHA: {
-      MOZ_ASSERT(gfxPrefs::ComponentAlphaEnabled());
+      MOZ_ASSERT(StaticPrefs::ComponentAlphaEnabled());
       MOZ_ASSERT(blendMode == gfx::CompositionOp::OP_OVER,
                  "Can't support blend modes with component alpha!");
       EffectComponentAlpha* effectComponentAlpha =
@@ -1973,7 +1972,7 @@ GLuint CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit) {
 }
 
 bool CompositorOGL::SupportsTextureDirectMapping() {
-  if (!gfxPrefs::AllowTextureDirectMapping()) {
+  if (!StaticPrefs::AllowTextureDirectMapping()) {
     return false;
   }
 

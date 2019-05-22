@@ -6694,7 +6694,7 @@ nsDisplayRenderRoot::nsDisplayRenderRoot(
       mRenderRoot(aRenderRoot),
       mBuiltWRCommands(false) {
   MOZ_ASSERT(aRenderRoot != wr::RenderRoot::Default);
-  MOZ_ASSERT(gfxPrefs::WebRenderSplitRenderRoots());
+  MOZ_ASSERT(StaticPrefs::WebRenderSplitRenderRoots());
   ExpandDisplayListBuilderRenderRootRect(aBuilder);
   MOZ_COUNT_CTOR(nsDisplayRenderRoot);
 }
