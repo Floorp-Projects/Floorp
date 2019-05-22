@@ -1866,6 +1866,10 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
   bool bIsProxyWithInlineValues =
       b->is<ProxyObject>() && b->as<ProxyObject>().usingInlineValueArray();
 
+  // Swap element associations.
+  Zone* zone = a->zone();
+  zone->swapCellMemory(a, b, MemoryUse::ObjectElements);
+
   if (a->tenuredSizeOfThis() == b->tenuredSizeOfThis()) {
     // When both objects are the same size, just do a plain swap of their
     // contents.
@@ -1985,7 +1989,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
    * Normally write barriers happen before the write. However, that's not
    * necessary here because nothing is being destroyed. We're just swapping.
    */
-  JS::Zone* zone = a->zone();
   if (zone->needsIncrementalBarrier()) {
     a->traceChildren(zone->barrierTracer());
     b->traceChildren(zone->barrierTracer());

@@ -1215,26 +1215,7 @@ class NativeObject : public JSObject {
   inline void elementsRangeWriteBarrierPost(uint32_t start, uint32_t count);
 
  public:
-  // When an array's length becomes non-writable, writes to indexes greater
-  // greater than or equal to the length don't change the array.  We handle
-  // this with a check for non-writable length in most places. But in JIT code
-  // every check counts -- so we piggyback the check on the already-required
-  // range check for |index < capacity| by making capacity of arrays with
-  // non-writable length never exceed the length. This mechanism is also used
-  // when an object becomes non-extensible.
-  void shrinkCapacityToInitializedLength(JSContext* cx) {
-    if (getElementsHeader()->numShiftedElements() > 0) {
-      moveShiftedElements();
-    }
-
-    ObjectElements* header = getElementsHeader();
-    uint32_t len = header->initializedLength;
-    if (header->capacity > len) {
-      shrinkElements(cx, len);
-      header = getElementsHeader();
-      header->capacity = len;
-    }
-  }
+  void shrinkCapacityToInitializedLength(JSContext* cx);
 
  private:
   void setDenseInitializedLengthInternal(uint32_t length) {

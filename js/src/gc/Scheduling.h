@@ -681,6 +681,11 @@ class MemoryTracker {
     untrackMemory(cell, nbytes, use);
 #endif
   }
+  void swapMemory(Cell* a, Cell* b, MemoryUse use) {
+#ifdef DEBUG
+    swapTrackedMemory(a, b, use);
+#endif
+  }
 
   size_t bytes() const { return bytes_; }
 
@@ -692,9 +697,6 @@ class MemoryTracker {
       bytes_;
 
 #ifdef DEBUG
-  void trackMemory(Cell* cell, size_t nbytes, MemoryUse use);
-  void untrackMemory(Cell* cell, size_t nbytes, MemoryUse use);
-
   struct Key {
     Key(Cell* cell, MemoryUse use);
     Cell* cell() const;
@@ -718,9 +720,14 @@ class MemoryTracker {
     static void rekey(Key& k, const Key& newKey);
   };
 
-  Mutex mutex;
-
   using Map = HashMap<Key, size_t, Hasher, SystemAllocPolicy>;
+
+  void trackMemory(Cell* cell, size_t nbytes, MemoryUse use);
+  void untrackMemory(Cell* cell, size_t nbytes, MemoryUse use);
+  void swapTrackedMemory(Cell* a, Cell* b, MemoryUse use);
+  size_t getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock);
+
+  Mutex mutex;
   Map map;
 #endif
 };
