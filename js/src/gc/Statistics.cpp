@@ -104,8 +104,18 @@ static FILE* MaybeOpenFileFromEnv(const char* env) {
   } else if (strcmp(value, "stderr") == 0) {
     file = stderr;
   } else {
+    char path[300];
+    if (value[0] != '/') {
+      const char* dir = getenv("MOZ_UPLOAD_DIR");
+      if (dir) {
+        SprintfLiteral(path, "%s/%s", dir, value);
+        value = path;
+      }
+    }
+
     file = fopen(value, "a");
     if (!file) {
+      perror("opening log file");
       MOZ_CRASH("Failed to open log file.");
     }
   }

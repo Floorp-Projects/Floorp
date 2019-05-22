@@ -5,6 +5,7 @@
 
 /* Defines the abstract interface for a principal. */
 
+#include "nsIContentSecurityPolicy.idl"
 #include "nsISerializable.idl"
 
 %{C++
@@ -37,9 +38,6 @@ class OriginAttributes;
 %}
 
 interface nsIURI;
-interface nsIContentSecurityPolicy;
-
-webidl Document;
 
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
@@ -149,53 +147,6 @@ interface nsIPrincipal : nsISerializable
      */
     void checkMayLoad(in nsIURI uri, in boolean report,
                       in boolean allowIfInheritsPrincipal);
-
-    /**
-     * A Content Security Policy associated with this principal. Use this function to
-     * query the associated CSP with this principal, but please *only* use this
-     * function to *set* a CSP when you know exactly what you are doing.
-     * Most likely you want to call ensureCSP instead of setCSP.
-     */
-    readonly attribute nsIContentSecurityPolicy csp;
-    [noscript] void setCsp(in nsIContentSecurityPolicy aCsp);
-
-    /*
-     * Use this function to query a CSP associated with this principal.
-     * If no CSP is associated with this principal then one is created
-     * internally and setRequestContext is called on the CSP using aDocument.
-     *
-     * Please note if aDocument is null, then setRequestContext on the
-     * CSP object is called using the current principal.
-     */
-    [noscript] nsIContentSecurityPolicy ensureCSP(in Document aDocument);
-
-    /**
-     * A speculative Content Security Policy associated with this
-     * principal. Set during speculative loading (preloading) and
-     * used *only* for preloads.
-     *
-     * If you want to query the CSP associated with that principal,
-     * then this is *not* what you want. Instead query 'csp'.
-     */
-    [noscript] readonly attribute nsIContentSecurityPolicy preloadCsp;
-
-    /*
-     * Use this function to query a speculative CSP associated with this
-     * principal. If no speculative CSP is associated with this principal
-     * then one is created internally and setRequestContext is called on
-     * the CSP using aDocument.
-     *
-     * Please note if aDocument is null, then setRequestContext on the
-     * speculative CSP object is called using the current principal.
-     */
-    [noscript] nsIContentSecurityPolicy ensurePreloadCSP(in Document aDocument);
-
-    /**
-     * The CSP of the principal in JSON notation.
-     * Note, that the CSP itself is not exposed to JS, but script
-     * should be able to obtain a JSON representation of the CSP.
-     */
-    readonly attribute AString cspJSON;
 
     /**
      * A dictionary of the non-default origin attributes associated with this
@@ -361,4 +312,24 @@ interface nsIExpandedPrincipal : nsISupports
    */
   [noscript, notxpcom, nostdcall]
   PrincipalArray AllowList();
+
+
+  /**
+   * Bug 1548468: Move CSP off ExpandedPrincipal.
+   *
+   * A Content Security Policy associated with this principal. Use this function
+   * to query the associated CSP with this principal.
+   */
+  readonly attribute nsIContentSecurityPolicy csp;
+
+%{ C++
+  inline already_AddRefed<nsIContentSecurityPolicy> GetCsp()
+  {
+    nsCOMPtr<nsIContentSecurityPolicy> result;
+    mozilla::DebugOnly<nsresult> rv = GetCsp(getter_AddRefs(result));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result.forget();
+  }
+%}
+
 };

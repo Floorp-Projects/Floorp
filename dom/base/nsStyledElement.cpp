@@ -185,9 +185,9 @@ void nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
   Document* doc = OwnerDoc();
   bool isNativeAnon = IsInNativeAnonymousSubtree();
 
-  if (!isNativeAnon && !nsStyleUtil::CSPAllowsInlineStyle(
-                           this, NodePrincipal(), aMaybeScriptedPrincipal,
-                           doc->GetDocumentURI(), 0, 0, aValue, nullptr))
+  if (!isNativeAnon &&
+      !nsStyleUtil::CSPAllowsInlineStyle(this, doc, aMaybeScriptedPrincipal, 0,
+                                         0, aValue, nullptr))
     return;
 
   if (aForceInDataDoc || !doc->IsLoadedAsData() || GetExistingStyle() ||

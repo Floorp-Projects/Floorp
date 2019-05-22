@@ -330,9 +330,8 @@ nsStyleLinkElement::DoUpdateStyleSheet(Document* aOldDocument,
     MOZ_ASSERT(thisContent->IsElement());
     nsresult rv = NS_OK;
     if (!nsStyleUtil::CSPAllowsInlineStyle(
-            thisContent->AsElement(), thisContent->NodePrincipal(),
-            info->mTriggeringPrincipal, doc->GetDocumentURI(), mLineNumber,
-            mColumnNumber, text, &rv)) {
+            thisContent->AsElement(), doc, info->mTriggeringPrincipal,
+            mLineNumber, mColumnNumber, text, &rv)) {
       if (NS_FAILED(rv)) {
         return Err(rv);
       }

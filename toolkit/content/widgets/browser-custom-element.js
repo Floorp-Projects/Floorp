@@ -599,9 +599,7 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   }
 
   get csp() {
-    // After Bug 965637 we can query the csp directly from the contentDocument
-    // instead of contentDocument.nodePrincipal.
-    return this.isRemoteBrowser ? this._csp : this.contentDocument.nodePrincipal.csp;
+    return this.isRemoteBrowser ? this._csp : this.contentDocument.csp;
   }
 
   get contentRequestContextID() {

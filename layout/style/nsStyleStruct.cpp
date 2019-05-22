@@ -273,6 +273,8 @@ static inline BorderRadius ZeroBorderRadius() {
 
 nsStyleBorder::nsStyleBorder(const Document& aDocument)
     : mBorderRadius(ZeroBorderRadius()),
+      mBorderImageWidth(
+          StyleRectWithAllSides(StyleBorderImageSideWidth::Number(1.))),
       mBorderImageOutset(
           StyleRectWithAllSides(StyleNonNegativeLengthOrNumber::Number(0.))),
       mBorderImageSlice(
@@ -292,7 +294,6 @@ nsStyleBorder::nsStyleBorder(const Document& aDocument)
 
   nscoord medium = kMediumBorderWidth;
   NS_FOR_CSS_SIDES(side) {
-    mBorderImageWidth.Set(side, nsStyleCoord(1.0f, eStyleUnit_Factor));
     mBorder.Side(side) = medium;
     mBorderStyle[side] = StyleBorderStyle::None;
   }
@@ -930,7 +931,8 @@ void StyleShapeSource::DoCopy(const StyleShapeSource& aOther) {
       break;
 
     case StyleShapeSourceType::Shape: {
-      UniquePtr<StyleBasicShape> shape(Servo_CloneBasicShape(&aOther.BasicShape()));
+      UniquePtr<StyleBasicShape> shape(
+          Servo_CloneBasicShape(&aOther.BasicShape()));
       // TODO(emilio): This could be a copy-ctor call like above if we teach
       // cbindgen to generate copy-constructors for tagged unions.
       SetBasicShape(std::move(shape), aOther.GetReferenceBox());
@@ -2459,7 +2461,6 @@ static bool AnyLayerIsElementImage(const nsStyleImageLayers& aLayers) {
 
 nsChangeHint nsStyleImageLayers::CalcDifference(
     const nsStyleImageLayers& aNewLayers, LayerType aType) const {
-
   nsChangeHint hint = nsChangeHint(0);
 
   // If the number of visible images changes, then it's easy-peasy.
@@ -2486,8 +2487,8 @@ nsChangeHint nsStyleImageLayers::CalcDifference(
           moreLayersLayer.CalcDifference(lessLayersLayer);
       if (layerDifference && (IsElementImage(moreLayersLayer) ||
                               IsElementImage(lessLayersLayer))) {
-        layerDifference |= nsChangeHint_UpdateEffects |
-                           nsChangeHint_RepaintFrame;
+        layerDifference |=
+            nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
       }
       hint |= layerDifference;
       continue;
@@ -2997,10 +2998,6 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mScrollSnapType(
           {StyleScrollSnapAxis::Both, StyleScrollSnapStrictness::None}),
       mLineClamp(0),
-      mScrollSnapPointsX(eStyleUnit_None),
-      mScrollSnapPointsY(eStyleUnit_None),
-      mScrollSnapDestination(
-          {LengthPercentage::Zero(), LengthPercentage::Zero()}),
       mBackfaceVisibility(NS_STYLE_BACKFACE_VISIBILITY_VISIBLE),
       mTransformStyle(NS_STYLE_TRANSFORM_STYLE_FLAT),
       mTransformBox(StyleGeometryBox::BorderBox),
@@ -3062,10 +3059,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOverscrollBehaviorY(aSource.mOverscrollBehaviorY),
       mScrollSnapType(aSource.mScrollSnapType),
       mLineClamp(aSource.mLineClamp),
-      mScrollSnapPointsX(aSource.mScrollSnapPointsX),
-      mScrollSnapPointsY(aSource.mScrollSnapPointsY),
-      mScrollSnapDestination(aSource.mScrollSnapDestination),
-      mScrollSnapCoordinate(aSource.mScrollSnapCoordinate),
       mTransform(aSource.mTransform),
       mRotate(aSource.mRotate),
       mTranslate(aSource.mTranslate),
@@ -3085,9 +3078,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   MOZ_COUNT_CTOR(nsStyleDisplay);
 }
 
-nsStyleDisplay::~nsStyleDisplay() {
-  MOZ_COUNT_DTOR(nsStyleDisplay);
-}
+nsStyleDisplay::~nsStyleDisplay() { MOZ_COUNT_DTOR(nsStyleDisplay); }
 
 void nsStyleDisplay::TriggerImageLoads(Document& aDocument,
                                        const nsStyleDisplay* aOldStyle) {
@@ -3153,9 +3144,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
       (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None) ||
       mScrollBehavior != aNewData.mScrollBehavior ||
       mScrollSnapType != aNewData.mScrollSnapType ||
-      mScrollSnapPointsX != aNewData.mScrollSnapPointsX ||
-      mScrollSnapPointsY != aNewData.mScrollSnapPointsY ||
-      mScrollSnapDestination != aNewData.mScrollSnapDestination ||
       mTopLayer != aNewData.mTopLayer || mResize != aNewData.mResize) {
     return nsChangeHint_ReconstructFrame;
   }
@@ -3182,16 +3170,17 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     hint |= nsChangeHint_ScrollbarChange;
   }
 
-  /* Note: When mScrollBehavior, mScrollSnapTypeX, mScrollSnapTypeY,
-   * mScrollSnapPointsX, mScrollSnapPointsY, or mScrollSnapDestination are
-   * changed, nsChangeHint_NeutralChange is not sufficient to enter
-   * nsCSSFrameConstructor::PropagateScrollToViewport. By using the same hint
-   * as used when the overflow css property changes,
-   * nsChangeHint_ReconstructFrame, PropagateScrollToViewport will be called.
+  /* Note: When mScrollBehavior or mScrollSnapType are changed,
+   * nsChangeHint_NeutralChange is not sufficient to enter
+   * nsCSSFrameConstructor::PropagateScrollToViewport. By using the same hint as
+   * used when the overflow css property changes, nsChangeHint_ReconstructFrame,
+   * PropagateScrollToViewport will be called.
    *
    * The scroll-behavior css property is not expected to change often (the
    * CSSOM-View DOM methods are likely to be used in those cases); however,
    * if this does become common perhaps a faster-path might be worth while.
+   *
+   * FIXME(emilio): Can we do what we do for overflow changes?
    */
 
   if (mFloat != aNewData.mFloat) {
@@ -3372,7 +3361,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
                 mAnimationPlayStateCount != aNewData.mAnimationPlayStateCount ||
                 mAnimationIterationCountCount !=
                     aNewData.mAnimationIterationCountCount ||
-                mScrollSnapCoordinate != aNewData.mScrollSnapCoordinate ||
                 mWillChange != aNewData.mWillChange ||
                 mOverflowAnchor != aNewData.mOverflowAnchor)) {
     hint |= nsChangeHint_NeutralChange;
@@ -3966,9 +3954,7 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
-nsStyleUIReset::~nsStyleUIReset() {
-  MOZ_COUNT_DTOR(nsStyleUIReset);
-}
+nsStyleUIReset::~nsStyleUIReset() { MOZ_COUNT_DTOR(nsStyleUIReset); }
 
 nsChangeHint nsStyleUIReset::CalcDifference(
     const nsStyleUIReset& aNewData) const {

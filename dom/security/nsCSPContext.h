@@ -57,17 +57,16 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   static bool Equals(nsIContentSecurityPolicy* aCSP,
                      nsIContentSecurityPolicy* aOtherCSP);
 
-  nsresult InitFromOther(nsCSPContext* otherContext,
-                         mozilla::dom::Document* aDoc,
-                         nsIPrincipal* aPrincipal);
-
-  void SetIPCPolicies(
-      const nsTArray<mozilla::ipc::ContentSecurityPolicy>& policies);
+  // Init a CSP from a different CSP
+  nsresult InitFromOther(nsCSPContext* otherContext);
 
   /**
-   * SetRequestContext() needs to be called before the innerWindowID
-   * is initialized on the document. Use this function to call back to
-   * flush queued up console messages and initalize the innerWindowID.
+   * SetRequestContextWithDocument() needs to be called before the
+   * innerWindowID is initialized on the document. Use this function
+   * to call back to flush queued up console messages and initialize
+   * the innerWindowID. Node, If SetRequestContextWithPrincipal() was
+   * called then we do not have a innerWindowID anyway and hence
+   * we can not flush messages to the correct console.
    */
   void flushConsoleMessages();
 
@@ -174,10 +173,7 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   nsCOMPtr<nsIURI> mSelfURI;
   nsCOMPtr<nsILoadGroup> mCallingChannelLoadGroup;
   nsWeakPtr mLoadingContext;
-  // The CSP hangs off the principal, so let's store a raw pointer of the
-  // principal to avoid memory leaks. Within the destructor of the principal we
-  // explicitly set mLoadingPrincipal to null.
-  nsIPrincipal* mLoadingPrincipal;
+  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 
   // helper members used to queue up web console messages till
   // the windowID becomes available. see flushConsoleMessages()

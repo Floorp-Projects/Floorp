@@ -17,6 +17,8 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/Logging.h"
 
+class nsIChannel;
+
 namespace mozilla {
 namespace dom {
 struct CSP;
@@ -203,6 +205,7 @@ CSPDirective CSP_ContentTypeToDirective(nsContentPolicyType aType);
 class nsCSPSrcVisitor;
 
 void CSP_PercentDecodeStr(const nsAString& aEncStr, nsAString& outDecStr);
+bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel);
 
 /* =============== nsCSPSrc ================== */
 

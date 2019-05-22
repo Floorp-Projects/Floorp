@@ -6769,45 +6769,6 @@ static void CollectScrollPositionsForSnap(
   }
 }
 
-/**
- * Collect the scroll-snap-coordinates of frames in the subtree rooted at
- * |aFrame|, relative to |aScrolledFrame|, into |aOutCoords|.
- */
-static void CollectScrollSnapCoordinates(nsIFrame* aFrame,
-                                         nsIFrame* aScrolledFrame,
-                                         nsTArray<nsPoint>& aOutCoords) {
-  MOZ_ASSERT(!StaticPrefs::layout_css_scroll_snap_v1_enabled());
-
-  nsIFrame::ChildListIterator childLists(aFrame);
-  for (; !childLists.IsDone(); childLists.Next()) {
-    nsFrameList::Enumerator childFrames(childLists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* f = childFrames.get();
-
-      const nsStyleDisplay* styleDisplay = f->StyleDisplay();
-      size_t coordCount = styleDisplay->mScrollSnapCoordinate.Length();
-
-      if (coordCount) {
-        nsRect frameRect = f->GetRect();
-        nsPoint offset = f->GetOffsetTo(aScrolledFrame);
-        nsRect edgesRect = nsRect(offset, frameRect.Size());
-        for (size_t coordNum = 0; coordNum < coordCount; coordNum++) {
-          const Position& coordPosition =
-              f->StyleDisplay()->mScrollSnapCoordinate[coordNum];
-          nsPoint coordPoint = edgesRect.TopLeft();
-          coordPoint += nsPoint(coordPosition.horizontal.Resolve(
-                                    frameRect.width, NSToCoordRoundWithClamp),
-                                coordPosition.vertical.Resolve(
-                                    frameRect.height, NSToCoordRoundWithClamp));
-          aOutCoords.AppendElement(coordPoint);
-        }
-      }
-
-      CollectScrollSnapCoordinates(f, aScrolledFrame, aOutCoords);
-    }
-  }
-}
-
 static nscoord ResolveScrollPaddingStyleValue(
     const StyleRect<mozilla::NonNegativeLengthPercentageOrAuto>&
         aScrollPaddingStyle,
@@ -6859,44 +6820,6 @@ nsMargin ScrollFrameHelper::GetScrollPadding() const {
                                    GetScrollPortRect().Size());
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::ComputeOldScrollSnapInfo() const {
-  MOZ_ASSERT(!StaticPrefs::layout_css_scroll_snap_v1_enabled());
-  ScrollSnapInfo result;
-
-  ScrollStyles styles = GetScrollStylesFromFrame();
-
-  if (styles.mScrollSnapTypeY == StyleScrollSnapStrictness::None &&
-      styles.mScrollSnapTypeX == StyleScrollSnapStrictness::None) {
-    // We won't be snapping, short-circuit the computation.
-    return result;
-  }
-
-  result.mScrollSnapTypeX = styles.mScrollSnapTypeX;
-  result.mScrollSnapTypeY = styles.mScrollSnapTypeY;
-
-  nsSize scrollPortSize = GetScrollPortRect().Size();
-
-  result.mScrollSnapDestination =
-      nsPoint(styles.mScrollSnapDestinationX.Resolve(scrollPortSize.width),
-              styles.mScrollSnapDestinationY.Resolve(scrollPortSize.height));
-
-  if (styles.mScrollSnapPointsX.GetUnit() != eStyleUnit_None) {
-    result.mScrollSnapIntervalX =
-        Some(styles.mScrollSnapPointsX.ComputeCoordPercentCalc(
-            scrollPortSize.width));
-  }
-  if (styles.mScrollSnapPointsY.GetUnit() != eStyleUnit_None) {
-    result.mScrollSnapIntervalY =
-        Some(styles.mScrollSnapPointsY.ComputeCoordPercentCalc(
-            scrollPortSize.height));
-  }
-
-  CollectScrollSnapCoordinates(mScrolledFrame, mScrolledFrame,
-                               result.mScrollSnapCoordinates);
-
-  return result;
-}
-
 layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
     const Maybe<nsPoint>& aDestination) const {
   MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
@@ -6938,12 +6861,11 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
 
 layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo(
     const Maybe<nsPoint>& aDestination) const {
-  // TODO(botond): Should we cache it?
-  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    return ComputeScrollSnapInfo(aDestination);
+  if (!StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    return {};
   }
-
-  return ComputeOldScrollSnapInfo();
+  // TODO(botond): Should we cache it?
+  return ComputeScrollSnapInfo(aDestination);
 }
 
 bool ScrollFrameHelper::GetSnapPointForDestination(

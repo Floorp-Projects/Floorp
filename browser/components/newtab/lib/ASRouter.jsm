@@ -62,9 +62,9 @@ const TRAILHEAD_CONFIG = {
   },
   LOCALES: ["en-US", "en-GB", "en-CA", "de", "de-DE", "fr", "fr-FR"],
   EXPERIMENT_RATIOS: [
-    ["", 1],
+    ["", 0],
     ["interrupts", 1],
-    ["triplets", 1],
+    ["triplets", 3],
   ],
 };
 

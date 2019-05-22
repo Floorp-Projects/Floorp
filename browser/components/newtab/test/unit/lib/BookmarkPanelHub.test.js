@@ -18,7 +18,7 @@ describe("BookmarkPanelHub", () => {
     sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
 
-    fakeL10n = {setAttributes: sandbox.stub(), translateElements: sandbox.stub()};
+    fakeL10n = {setAttributes: sandbox.stub()};
     globals.set("DOMLocalization", function() { return fakeL10n; }); // eslint-disable-line prefer-arrow-callback
     globals.set("FxAccounts", {config: {promiseEmailFirstURI: sandbox.stub()}});
     isBrowserPrivateStub = sandbox.stub().returns(false);
@@ -61,7 +61,10 @@ describe("BookmarkPanelHub", () => {
       close: sandbox.stub(),
     };
     fakeDispatch = sandbox.stub();
-    fakeWindow = {ownerGlobal: {openLinkIn: sandbox.stub(), gBrowser: {selectedBrowser: "browser"}}};
+    fakeWindow = {
+      ownerGlobal: {openLinkIn: sandbox.stub(), gBrowser: {selectedBrowser: "browser"}},
+      MozXULElement: {insertFTLIfNeeded: sandbox.stub()},
+    };
   });
   afterEach(() => {
     instance.uninit();
@@ -139,6 +142,13 @@ describe("BookmarkPanelHub", () => {
       assert.calledOnce(instance.showMessage);
       assert.calledWithExactly(instance.showMessage, "content", fakeTarget, fakeWindow);
       assert.calledOnce(instance.sendImpression);
+    });
+    it("should insert the appropriate ftl files with translations", () => {
+      instance.onResponse({content: "content"}, fakeTarget, fakeWindow);
+
+      assert.calledTwice(fakeWindow.MozXULElement.insertFTLIfNeeded);
+      assert.calledWith(fakeWindow.MozXULElement.insertFTLIfNeeded, "browser/newtab/asrouter.ftl");
+      assert.calledWith(fakeWindow.MozXULElement.insertFTLIfNeeded, "browser/branding/sync-brand.ftl");
     });
     it("should dispatch a user impression", () => {
       sandbox.spy(instance, "sendUserEventTelemetry");

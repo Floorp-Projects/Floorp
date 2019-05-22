@@ -230,7 +230,8 @@ nsresult nsWebShellWindow::Initialize(
     if (nsContentUtils::IsExpandedPrincipal(principal)) {
       principal = nullptr;
     }
-    rv = mDocShell->CreateAboutBlankContentViewer(principal);
+    rv = mDocShell->CreateAboutBlankContentViewer(principal,
+                                                  /* aCsp = */ nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
     RefPtr<Document> doc = mDocShell->GetDocument();
     NS_ENSURE_TRUE(!!doc, NS_ERROR_FAILURE);

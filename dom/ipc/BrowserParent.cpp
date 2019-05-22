@@ -112,6 +112,7 @@
 #include "IHistory.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "MMPrinter.h"
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetParent.h"
@@ -137,6 +138,8 @@ using namespace mozilla::jsipc;
 using namespace mozilla::gfx;
 
 using mozilla::Unused;
+using mozilla::LazyLogModule;
+using mozilla::StaticAutoPtr;
 
 LazyLogModule gBrowserFocusLog("BrowserFocus");
 
@@ -357,10 +360,8 @@ already_AddRefed<nsPIDOMWindowOuter> BrowserParent::GetParentWindowOuter() {
 }
 
 already_AddRefed<nsIWidget> BrowserParent::GetTopLevelWidget() {
-  nsCOMPtr<nsIContent> content = mFrameElement;
-  if (content) {
-    PresShell* presShell = content->OwnerDoc()->GetPresShell();
-    if (presShell) {
+  if (RefPtr<Element> element = mFrameElement) {
+    if (PresShell* presShell = element->OwnerDoc()->GetPresShell()) {
       nsViewManager* vm = presShell->GetViewManager();
       nsCOMPtr<nsIWidget> widget;
       vm->GetRootWidget(getter_AddRefs(widget));
@@ -568,8 +569,7 @@ void BrowserParent::AddWindowListeners() {
 }
 
 void BrowserParent::RemoveWindowListeners() {
-  if (mFrameElement && mFrameElement->OwnerDoc() &&
-      mFrameElement->OwnerDoc()->GetWindow()) {
+  if (mFrameElement && mFrameElement->OwnerDoc()->GetWindow()) {
     nsCOMPtr<nsPIDOMWindowOuter> window =
         mFrameElement->OwnerDoc()->GetWindow();
     nsCOMPtr<EventTarget> eventTarget = window->GetTopWindowRoot();
@@ -832,7 +832,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvEvent(const RemoteDOMEvent& aEvent) {
   RefPtr<Event> event = aEvent.mEvent;
   NS_ENSURE_TRUE(event, IPC_OK());
 
-  nsCOMPtr<mozilla::dom::EventTarget> target = mFrameElement;
+  RefPtr<EventTarget> target = mFrameElement;
   NS_ENSURE_TRUE(target, IPC_OK());
 
   event->SetOwner(target);
@@ -2132,14 +2132,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(const bool& aCanRaise) {
     return IPC_OK();
   }
 
-  if (!mFrameElement || !mFrameElement->OwnerDoc()) {
+  if (!mFrameElement) {
     return IPC_OK();
   }
 
   uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
   if (aCanRaise) flags |= nsIFocusManager::FLAG_RAISE;
 
-  nsCOMPtr<Element> element = mFrameElement;
+  RefPtr<Element> element = mFrameElement;
   fm->SetFocus(element, flags);
   return IPC_OK();
 }
@@ -2844,7 +2844,7 @@ BrowserParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMWindowOuter> window;
-  nsCOMPtr<nsIContent> frame = mFrameElement;
+  RefPtr<Element> frame = mFrameElement;
   if (frame) window = frame->OwnerDoc()->GetWindow();
 
   // Get an auth prompter for our window so that the parenting
@@ -2882,7 +2882,7 @@ already_AddRefed<nsFrameLoader> BrowserParent::GetFrameLoader(
     RefPtr<nsFrameLoader> fl = mFrameLoader;
     return fl.forget();
   }
-  nsCOMPtr<Element> frameElement(mFrameElement);
+  RefPtr<Element> frameElement(mFrameElement);
   RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(frameElement);
   return frameLoaderOwner ? frameLoaderOwner->GetFrameLoader() : nullptr;
 }
@@ -3258,7 +3258,7 @@ void BrowserParent::LayerTreeUpdate(const LayersObserverEpoch& aEpoch,
     return;
   }
 
-  nsCOMPtr<mozilla::dom::EventTarget> target = mFrameElement;
+  RefPtr<EventTarget> target = mFrameElement;
   if (!target) {
     NS_WARNING("Could not locate target for layer tree message.");
     return;
@@ -3321,7 +3321,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPaintWhileInterruptingJSNoOp(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvRemotePaintIsReady() {
-  nsCOMPtr<mozilla::dom::EventTarget> target = mFrameElement;
+  RefPtr<EventTarget> target = mFrameElement;
   if (!target) {
     NS_WARNING("Could not locate target for MozAfterRemotePaint message.");
     return IPC_OK();
@@ -3479,7 +3479,7 @@ class FakeChannel final : public nsIChannel,
   NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) NO_IMPL;
   NS_IMETHOD GetTopWindow(mozIDOMWindowProxy**) NO_IMPL;
   NS_IMETHOD GetTopFrameElement(Element** aElement) override {
-    nsCOMPtr<Element> elem = mElement;
+    RefPtr<Element> elem = mElement;
     elem.forget(aElement);
     return NS_OK;
   }
@@ -3506,7 +3506,7 @@ class FakeChannel final : public nsIChannel,
 
   nsCOMPtr<nsIURI> mUri;
   uint64_t mCallbackId;
-  nsCOMPtr<Element> mElement;
+  RefPtr<Element> mElement;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
 };
 
