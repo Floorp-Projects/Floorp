@@ -268,6 +268,7 @@ function cssTrim(str) {
  *        rewriteDeclarations, and skip the usual name-checking
  *        heuristic.
  */
+/* eslint-disable complexity */
 function parseDeclarationsInternal(isCssPropertyKnown, inputString,
                                    parseComments, inComment, commentOverride) {
   if (inputString === null || inputString === undefined) {
@@ -465,6 +466,7 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
 
   return declarations;
 }
+/* eslint-enable complexity */
 
 /**
  * Returns an array of CSS declarations given a string.
