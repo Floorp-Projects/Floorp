@@ -1537,10 +1537,8 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
     return true;
   }
 
-  bool equal;
-  if (NS_SUCCEEDED(mDoc->NodePrincipal()->Equals(aNewDocument->NodePrincipal(),
-                                                 &equal)) &&
-      equal) {
+  if (BasePrincipal::Cast(mDoc->NodePrincipal())
+          ->FastEqualsConsideringDomain(aNewDocument->NodePrincipal())) {
     // The origin is the same.
     return true;
   }
