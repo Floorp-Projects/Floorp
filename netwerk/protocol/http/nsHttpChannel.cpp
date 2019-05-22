@@ -1782,9 +1782,9 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
     if (mListener) {
       nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
+      mOnStartRequestCalled = true;
       deleteProtector->OnStartRequest(this);
     }
-
     mOnStartRequestCalled = true;
   });
 
@@ -1862,8 +1862,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     MOZ_ASSERT(!mOnStartRequestCalled,
                "We should not call OsStartRequest twice");
     nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
-    rv = deleteProtector->OnStartRequest(this);
     mOnStartRequestCalled = true;
+    rv = deleteProtector->OnStartRequest(this);
     if (NS_FAILED(rv)) return rv;
   } else {
     NS_WARNING("OnStartRequest skipped because of null listener");
@@ -7957,9 +7957,10 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
       MOZ_ASSERT(!mOnStartRequestCalled,
                  "We should not call OnStartRequest twice.");
       nsCOMPtr<nsIStreamListener> listener(mListener);
-      listener->OnStartRequest(this);
       mOnStartRequestCalled = true;
+      listener->OnStartRequest(this);
     } else {
+      mOnStartRequestCalled = true;
       NS_WARNING("OnStartRequest skipped because of null listener");
     }
   }
@@ -8160,9 +8161,10 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     MOZ_ASSERT(mOnStartRequestCalled,
                "OnStartRequest should be called before OnStopRequest");
     MOZ_ASSERT(!mOnStopRequestCalled, "We should not call OnStopRequest twice");
-    mListener->OnStopRequest(this, aStatus);
     mOnStopRequestCalled = true;
+    mListener->OnStopRequest(this, aStatus);
   }
+  mOnStopRequestCalled = true;
 
   // The prefetch needs to be released on the main thread
   mDNSPrefetch = nullptr;
