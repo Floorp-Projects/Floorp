@@ -175,6 +175,9 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">모든 사이트에서 사용</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">꺼져 있습니다. 켜려면 설정에서 변경하세요.</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">데이터 수집</string>
     <!-- Preference switch for crash reporter -->
@@ -187,11 +190,18 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Sync 켜기</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">데스크톱 Firefox에서 페어링 코드를 스캔하세요</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">로그인</string>
     <!-- Preference for account creation -->
     <string name="preferences_sync_create_account">계정 생성</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[컴퓨터의 Firefox에서 <b>firefox.com/pair</b>를 방문하면 QR 코드를 받을 수 있습니다.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">카메라 열기</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">취소</string>
 

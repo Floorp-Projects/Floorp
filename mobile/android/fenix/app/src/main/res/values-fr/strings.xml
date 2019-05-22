@@ -190,6 +190,8 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activer Sync</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Scannez le code d’association depuis Firefox pour ordinateur</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Connexion</string>
     <!-- Preference for account creation -->
@@ -198,6 +200,8 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions"><![CDATA[Visitez <b>firefox.com/pair</b> dans Firefox sur votre ordinateur pour obtenir votre QR code.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Ouvrir l’appareil photo</string>
     <!-- Button to cancel pairing -->
     <string name="pair_cancel">Annuler</string>
 

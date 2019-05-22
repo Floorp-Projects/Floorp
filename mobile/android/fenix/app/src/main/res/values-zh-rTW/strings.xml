@@ -151,11 +151,11 @@
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing">同步中</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">同步失敗。上次成功: ％s</string>
+    <string name="sync_failed_summary">同步失敗。上次成功: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">同步失敗。上次同步: 從未</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">上次同步: ％s</string>
+    <string name="sync_last_synced_summary">上次同步: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">上次同步: 從未</string>
 
@@ -306,7 +306,7 @@
     <string name="history_delete_item">刪除</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
-    <string name="history_multi_select_title">已選擇 ％1$d 筆書籤</string>
+    <string name="history_multi_select_title">已選擇 %1$d 筆書籤</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">刪除 %1$d 個項目</string>
@@ -370,7 +370,7 @@
     <string name="bookmark_menu_delete_button">刪除</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
-    <string name="bookmarks_multi_select_title">已選擇 ％1$d 筆書籤</string>
+    <string name="bookmarks_multi_select_title">已選擇 %1$d 筆書籤</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">編輯書籤</string>
     <!-- Bookmark sign in button message -->
