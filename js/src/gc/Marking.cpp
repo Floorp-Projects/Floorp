@@ -2773,13 +2773,6 @@ void js::gc::StoreBuffer::CellPtrEdge::traceTyped(TenuringTracer& mover) const {
              "traceKind mismatch.");
 #endif
 
-  // Bug 1376646: Make separate store buffers for strings and objects, and
-  // only check IsInsideNursery once.
-
-  if (!IsInsideNursery(*edge)) {
-    return;
-  }
-
   mover.traverse(reinterpret_cast<CellType**>(edge));
 }
 
