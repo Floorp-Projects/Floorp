@@ -565,7 +565,7 @@ SearchService.prototype = {
     if (gInitialized) {
       if (!Components.isSuccessCode(this._initRV)) {
         SearchUtils.log("_ensureInitialized: failure");
-        throw this._initRV;
+        throw Components.Exception("SearchService previously failed to initialize", this._initRV);
       }
       return;
     }
@@ -1708,9 +1708,8 @@ SearchService.prototype = {
         throw ex;
       }
     }
-
     if (!Components.isSuccessCode(this._initRV)) {
-      throw this._initRV;
+      throw Components.Exception("SearchService initialization failed", this._initRV);
     }
     return this._initRV;
   },
