@@ -19,7 +19,7 @@ sealed class SyncStatus {
     /**
      * Sync completed with an error.
      */
-    data class Error(val exception: Exception) : SyncStatus()
+    data class Error(val exception: Throwable) : SyncStatus()
 }
 
 /**

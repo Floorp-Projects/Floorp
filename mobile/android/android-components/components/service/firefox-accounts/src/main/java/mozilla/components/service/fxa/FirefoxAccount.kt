@@ -14,6 +14,8 @@ import mozilla.appservices.fxaclient.FirefoxAccount as InternalFxAcct
 import mozilla.appservices.fxaclient.FxaException.Unauthorized as Unauthorized
 
 import mozilla.components.concept.sync.AccessTokenInfo
+import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
@@ -165,15 +167,20 @@ class FirefoxAccount internal constructor(
     /**
      * Tries to fetch an access token for the given scope.
      *
-     * @param scope Single OAuth scope (no spaces) for which the client wants access
+     * @param singleScope Single OAuth scope (no spaces) for which the client wants access
      * @return [AccessTokenInfo] that stores the token, along with its scope, key and
      *                           expiration timestamp (in seconds) since epoch when complete
-     * @throws Unauthorized We couldn't provide an access token for this scope.
+     * @throws AuthException We couldn't provide an access token for this scope.
      * The caller should then start the OAuth Flow again with the desired scope.
      */
     override fun getAccessToken(singleScope: String): Deferred<AccessTokenInfo> {
         return scope.async {
-            inner.getAccessToken(singleScope).into()
+            try {
+                inner.getAccessToken(singleScope).into()
+            } catch (e: FxaUnauthorizedException) {
+                // Re-wrap an internal auth error to a concept-level auth error.
+                throw AuthException(AuthExceptionType.UNAUTHORIZED, cause = e)
+            }
         }
     }
 

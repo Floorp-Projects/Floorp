@@ -10,13 +10,14 @@ import kotlinx.coroutines.Deferred
  * An auth-related exception type, for use with [AuthException].
  */
 enum class AuthExceptionType(val msg: String) {
-    KEY_INFO("Missing key info")
+    KEY_INFO("Missing key info"),
+    UNAUTHORIZED("Unauthorized")
 }
 
 /**
  * An exception which may happen while obtaining auth information using [OAuthAccount].
  */
-class AuthException(type: AuthExceptionType) : java.lang.Exception(type.msg)
+class AuthException(type: AuthExceptionType, cause: Exception? = null) : Throwable(type.msg, cause)
 
 /**
  * Facilitates testing consumers of FirefoxAccount.
@@ -34,6 +35,9 @@ interface OAuthAccount : AutoCloseable {
     fun deviceConstellation(): DeviceConstellation
     fun toJSONString(): String
 
+    /**
+     * @throws AuthException if account needs to restart the OAuth flow.
+     */
     suspend fun authInfo(singleScope: String): AuthInfo {
         val tokenServerURL = this.getTokenServerEndpointURL()
         val tokenInfo = this.getAccessToken(singleScope).await()
