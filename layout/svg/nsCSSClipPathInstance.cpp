@@ -54,7 +54,7 @@ bool nsCSSClipPathInstance::HitTestBasicShapeOrPathClip(
   MOZ_ASSERT(type != StyleShapeSourceType::None, "unexpected none value");
   // In the future nsCSSClipPathInstance may handle <clipPath> references as
   // well. For the time being return early.
-  if (type == StyleShapeSourceType::URL) {
+  if (type == StyleShapeSourceType::Image) {
     return false;
   }
 

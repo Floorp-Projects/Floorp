@@ -1540,11 +1540,6 @@ void Gecko_DestroyShapeSource(StyleShapeSource* aShape) {
   aShape->~StyleShapeSource();
 }
 
-void Gecko_StyleShapeSource_SetURLValue(StyleShapeSource* aShape,
-                                        URLValue* aURL) {
-  aShape->SetURL(*aURL);
-}
-
 void Gecko_NewShapeImage(StyleShapeSource* aShape) {
   aShape->SetShapeImage(MakeUnique<nsStyleImage>());
 }

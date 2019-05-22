@@ -440,6 +440,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Called when a rule is added to the sheet from CSSOM.
   void RuleRemoved(css::Rule&);
 
+  // Called when a stylesheet is cloned.
+  void StyleSheetCloned(StyleSheet&);
+
   void ApplicableStateChanged(bool aApplicable);
 
   struct ChildSheetListBuilder {

@@ -620,7 +620,7 @@ TEST(TestCookie, TestCookieMain)
              nullptr);
   GetACookie(cookieService, "http://parser.test/", nullptr, cookie);
   EXPECT_TRUE(CheckResult(cookie.get(), MUST_CONTAIN, R"(test="fubar! = foo)"));
-  EXPECT_TRUE(CheckResult(cookie.get(), MUST_NOT_CONTAIN, "five"));
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_CONTAIN, "five"));
   SetACookie(cookieService, "http://parser.test/", nullptr,
              "test=kill; domain=.parser.test; max-age=0 \n five; max-age=0",
              nullptr);
@@ -632,13 +632,13 @@ TEST(TestCookie, TestCookieMain)
   // cookies to overwrite it
   SetACookie(cookieService, "http://parser.test/", nullptr, "six", nullptr);
   GetACookie(cookieService, "http://parser.test/", nullptr, cookie);
-  EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "six"));
   SetACookie(cookieService, "http://parser.test/", nullptr, "seven", nullptr);
   GetACookie(cookieService, "http://parser.test/", nullptr, cookie);
-  EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "seven"));
   SetACookie(cookieService, "http://parser.test/", nullptr, " =eight", nullptr);
   GetACookie(cookieService, "http://parser.test/", nullptr, cookie);
-  EXPECT_TRUE(CheckResult(cookie.get(), MUST_BE_NULL));
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "eight"));
   SetACookie(cookieService, "http://parser.test/", nullptr, "test=six",
              nullptr);
   GetACookie(cookieService, "http://parser.test/", nullptr, cookie);

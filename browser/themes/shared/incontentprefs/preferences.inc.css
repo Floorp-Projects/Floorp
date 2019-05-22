@@ -208,7 +208,8 @@ button > hbox > label {
 .androidIcon,
 .iOSIcon,
 #updateSettingCrossUserWarning,
-.extension-controlled > description {
+.extension-controlled > description,
+.info-panel > description {
   -moz-context-properties: fill;
   fill: currentColor;
 }
