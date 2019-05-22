@@ -962,11 +962,14 @@ void DecodedStream::DisconnectListener() {
 nsCString DecodedStream::GetDebugInfo() {
   AssertOwnerThread();
   int64_t startTime = mStartTime.isSome() ? mStartTime->ToMicroseconds() : -1;
-  auto str =
-      nsPrintfCString("DecodedStream=%p mStartTime=%" PRId64
-                      " mLastOutputTime=%" PRId64 " mPlaying=%d mData=%p",
-                      this, startTime, mLastOutputTime.ToMicroseconds(),
-                      mPlaying.Ref(), mData.get());
+  auto lastAudio = mAudioQueue.PeekBack();
+  auto str = nsPrintfCString(
+      "DecodedStream=%p mStartTime=%" PRId64 " mLastOutputTime=%" PRId64
+      " mPlaying=%d AudioQueue(finished=%d size=%zu lastEndTime=%" PRId64
+      ") mData=%p",
+      this, startTime, mLastOutputTime.ToMicroseconds(), mPlaying.Ref(),
+      mAudioQueue.IsFinished(), mAudioQueue.GetSize(),
+      lastAudio ? lastAudio->GetEndTime().ToMicroseconds() : -1, mData.get());
   if (mData) {
     AppendStringIfNotEmpty(str, mData->GetDebugInfo());
   }
