@@ -458,7 +458,7 @@ class HomeFragment : Fragment(), CoroutineScope {
         val observer = object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) {
                 super.onSessionAdded(session)
-                session.register(singleSessionObserver)
+                session.register(singleSessionObserver, this@HomeFragment)
                 emitSessionChanges()
             }
 
@@ -476,7 +476,7 @@ class HomeFragment : Fragment(), CoroutineScope {
             override fun onSessionsRestored() {
                 super.onSessionsRestored()
                 requireComponents.core.sessionManager.sessions.forEach {
-                    it.register(singleSessionObserver)
+                    it.register(singleSessionObserver, this@HomeFragment)
                 }
                 emitSessionChanges()
             }
