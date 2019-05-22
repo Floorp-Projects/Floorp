@@ -834,7 +834,6 @@ bool StyleShapeSource::operator==(const StyleShapeSource& aOther) const {
     case StyleShapeSourceType::None:
       return true;
 
-    case StyleShapeSourceType::URL:
     case StyleShapeSourceType::Image:
       return *mShapeImage == *aOther.mShapeImage;
 
@@ -851,16 +850,6 @@ bool StyleShapeSource::operator==(const StyleShapeSource& aOther) const {
 
   MOZ_ASSERT_UNREACHABLE("Unexpected shape source type!");
   return true;
-}
-
-void StyleShapeSource::SetURL(const css::URLValue& aValue) {
-  if (mType != StyleShapeSourceType::Image &&
-      mType != StyleShapeSourceType::URL) {
-    DoDestroy();
-    new (&mShapeImage) UniquePtr<nsStyleImage>(new nsStyleImage());
-  }
-  mShapeImage->SetURLValue(do_AddRef(&aValue));
-  mType = StyleShapeSourceType::URL;
 }
 
 void StyleShapeSource::SetShapeImage(UniquePtr<nsStyleImage> aShapeImage) {
@@ -922,10 +911,6 @@ void StyleShapeSource::DoCopy(const StyleShapeSource& aOther) {
       mType = StyleShapeSourceType::None;
       break;
 
-    case StyleShapeSourceType::URL:
-      SetURL(aOther.URL());
-      break;
-
     case StyleShapeSourceType::Image:
       SetShapeImage(MakeUnique<nsStyleImage>(aOther.ShapeImage()));
       break;
@@ -955,7 +940,6 @@ void StyleShapeSource::DoDestroy() {
       mBasicShape.~UniquePtr<StyleBasicShape>();
       break;
     case StyleShapeSourceType::Image:
-    case StyleShapeSourceType::URL:
       mShapeImage.~UniquePtr<nsStyleImage>();
       break;
     case StyleShapeSourceType::Path:
@@ -1108,6 +1092,7 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 void nsStyleSVGReset::TriggerImageLoads(Document& aDocument,
                                         const nsStyleSVGReset* aOldStyle) {
   MOZ_ASSERT(NS_IsMainThread());
+  // NOTE(emilio): we intentionally don't call TriggerImageLoads for clip-path.
 
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
     nsStyleImage& image = mMask.mLayers[i].mImage;
@@ -2021,8 +2006,6 @@ void nsStyleImage::DoCopy(const nsStyleImage& aOther) {
     SetGradientData(aOther.mGradient);
   } else if (aOther.mType == eStyleImageType_Element) {
     SetElementId(do_AddRef(aOther.mElementId));
-  } else if (aOther.mType == eStyleImageType_URL) {
-    SetURLValue(do_AddRef(aOther.mURLValue));
   }
 
   UniquePtr<nsStyleSides> cropRectCopy;
@@ -2039,10 +2022,6 @@ void nsStyleImage::SetNull() {
     NS_RELEASE(mImage);
   } else if (mType == eStyleImageType_Element) {
     NS_RELEASE(mElementId);
-  } else if (mType == eStyleImageType_URL) {
-    // FIXME: NS_RELEASE doesn't handle const gracefully (unlike RefPtr).
-    const_cast<css::URLValue*>(mURLValue)->Release();
-    mURLValue = nullptr;
   }
 
   mType = eStyleImageType_Null;
@@ -2094,19 +2073,6 @@ void nsStyleImage::SetElementId(already_AddRefed<nsAtom> aElementId) {
 
 void nsStyleImage::SetCropRect(UniquePtr<nsStyleSides> aCropRect) {
   mCropRect = std::move(aCropRect);
-}
-
-void nsStyleImage::SetURLValue(already_AddRefed<const URLValue> aValue) {
-  RefPtr<const URLValue> value = aValue;
-
-  if (mType != eStyleImageType_Null) {
-    SetNull();
-  }
-
-  if (value) {
-    mURLValue = value.forget().take();
-    mType = eStyleImageType_URL;
-  }
 }
 
 static int32_t ConvertToPixelCoord(const nsStyleCoord& aCoord,
@@ -2211,7 +2177,7 @@ bool nsStyleImage::IsOpaque() const {
     return mGradient->IsOpaque();
   }
 
-  if (mType == eStyleImageType_Element || mType == eStyleImageType_URL) {
+  if (mType == eStyleImageType_Element) {
     return false;
   }
 
@@ -2243,7 +2209,6 @@ bool nsStyleImage::IsComplete() const {
       return false;
     case eStyleImageType_Gradient:
     case eStyleImageType_Element:
-    case eStyleImageType_URL:
       return true;
     case eStyleImageType_Image: {
       if (!IsResolved()) {
@@ -2270,7 +2235,6 @@ bool nsStyleImage::IsLoaded() const {
       return false;
     case eStyleImageType_Gradient:
     case eStyleImageType_Element:
-    case eStyleImageType_URL:
       return true;
     case eStyleImageType_Image: {
       imgRequestProxy* req = GetImageData();
@@ -2315,10 +2279,6 @@ bool nsStyleImage::operator==(const nsStyleImage& aOther) const {
     return mElementId == aOther.mElementId;
   }
 
-  if (mType == eStyleImageType_URL) {
-    return DefinitelyEqualURIs(mURLValue, aOther.mURLValue);
-  }
-
   return true;
 }
 
@@ -2350,14 +2310,7 @@ already_AddRefed<nsIURI> nsStyleImage::GetImageURI() const {
 }
 
 const css::URLValue* nsStyleImage::GetURLValue() const {
-  if (mType == eStyleImageType_Image) {
-    return mImage->GetImageValue();
-  }
-  if (mType == eStyleImageType_URL) {
-    return mURLValue;
-  }
-
-  return nullptr;
+  return mType == eStyleImageType_Image ? mImage->GetImageValue() : nullptr;
 }
 
 // --------------------
