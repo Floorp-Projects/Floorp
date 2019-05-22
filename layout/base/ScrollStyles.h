@@ -28,10 +28,6 @@ struct ScrollStyles {
   StyleOverscrollBehavior mOverscrollBehaviorY;
   StyleScrollSnapStrictness mScrollSnapTypeX;
   StyleScrollSnapStrictness mScrollSnapTypeY;
-  nsStyleCoord mScrollSnapPointsX;
-  nsStyleCoord mScrollSnapPointsY;
-  LengthPercentage mScrollSnapDestinationX;
-  LengthPercentage mScrollSnapDestinationY;
 
   ScrollStyles(StyleOverflow aH, StyleOverflow aV)
       : mHorizontal(aH),
@@ -40,11 +36,7 @@ struct ScrollStyles {
         mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
         mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
         mScrollSnapTypeX(StyleScrollSnapStrictness::None),
-        mScrollSnapTypeY(StyleScrollSnapStrictness::None),
-        mScrollSnapPointsX(nsStyleCoord(eStyleUnit_None)),
-        mScrollSnapPointsY(nsStyleCoord(eStyleUnit_None)),
-        mScrollSnapDestinationX(LengthPercentage::Zero()),
-        mScrollSnapDestinationY(LengthPercentage::Zero()) {}
+        mScrollSnapTypeY(StyleScrollSnapStrictness::None) {}
 
   ScrollStyles(WritingMode aWritingMode, const nsStyleDisplay* aDisplay);
   ScrollStyles(WritingMode aWritingMode, StyleOverflow aH, StyleOverflow aV,
@@ -58,11 +50,7 @@ struct ScrollStyles {
            aStyles.mOverscrollBehaviorX == mOverscrollBehaviorX &&
            aStyles.mOverscrollBehaviorY == mOverscrollBehaviorY &&
            aStyles.mScrollSnapTypeX == mScrollSnapTypeX &&
-           aStyles.mScrollSnapTypeY == mScrollSnapTypeY &&
-           aStyles.mScrollSnapPointsX == mScrollSnapPointsX &&
-           aStyles.mScrollSnapPointsY == mScrollSnapPointsY &&
-           aStyles.mScrollSnapDestinationX == mScrollSnapDestinationX &&
-           aStyles.mScrollSnapDestinationY == mScrollSnapDestinationY;
+           aStyles.mScrollSnapTypeY == mScrollSnapTypeY;
   }
   bool operator!=(const ScrollStyles& aStyles) const {
     return !(*this == aStyles);

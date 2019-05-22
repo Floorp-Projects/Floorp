@@ -1022,11 +1022,7 @@ static bool CheckOverflow(ComputedStyle* aComputedStyle,
       display->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
       display->mOverscrollBehaviorX == StyleOverscrollBehavior::Auto &&
       display->mOverscrollBehaviorY == StyleOverscrollBehavior::Auto &&
-      display->mScrollSnapType.strictness == StyleScrollSnapStrictness::None &&
-      display->mScrollSnapPointsX == nsStyleCoord(eStyleUnit_None) &&
-      display->mScrollSnapPointsY == nsStyleCoord(eStyleUnit_None) &&
-      display->mScrollSnapDestination.horizontal == LengthPercentage::Zero() &&
-      display->mScrollSnapDestination.vertical == LengthPercentage::Zero()) {
+      display->mScrollSnapType.strictness == StyleScrollSnapStrictness::None) {
     return false;
   }
 

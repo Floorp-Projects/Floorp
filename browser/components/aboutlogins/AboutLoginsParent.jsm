@@ -39,12 +39,26 @@ const isValidLogin = login => {
 };
 
 const convertSubjectToLogin = subject => {
-    subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
-    const login = LoginHelper.loginToVanillaObject(subject);
-    if (!isValidLogin(login)) {
-      return null;
-    }
-    return login;
+  subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
+  const login = LoginHelper.loginToVanillaObject(subject);
+  if (!isValidLogin(login)) {
+    return null;
+  }
+  return augmentVanillaLoginObject(login);
+};
+
+const augmentVanillaLoginObject = login => {
+  let title;
+  try {
+    title = (new URL(login.hostname)).host;
+  } catch (ex) {
+    title = login.hostname;
+  }
+  title = title.replace(/^http(s)?:\/\//, "").
+                replace(/^www\d*\./, "");
+  return Object.assign({}, login, {
+    title,
+  });
 };
 
 var AboutLoginsParent = {
@@ -60,6 +74,16 @@ var AboutLoginsParent = {
     }
 
     switch (message.name) {
+      case "AboutLogins:CreateLogin": {
+        let newLogin = message.data.login;
+        Object.assign(newLogin, {
+          formSubmitURL: "",
+          usernameField: "",
+          passwordField: "",
+        });
+        Services.logins.addLogin(LoginHelper.vanillaObjectToLogin(newLogin));
+        break;
+      }
       case "AboutLogins:DeleteLogin": {
         let login = LoginHelper.vanillaObjectToLogin(message.data.login);
         Services.logins.removeLogin(login);
@@ -68,8 +92,8 @@ var AboutLoginsParent = {
       case "AboutLogins:OpenSite": {
         let guid = message.data.login.guid;
         let logins = LoginHelper.searchLoginsWithObject({guid});
-        if (!logins || logins.length != 1) {
-          log.warn(`AboutLogins:OpenSite: expected to find a login for guid: ${guid} but found ${(logins || []).length}`);
+        if (logins.length != 1) {
+          log.warn(`AboutLogins:OpenSite: expected to find a login for guid: ${guid} but found ${logins.length}`);
           return;
         }
 
@@ -91,8 +115,8 @@ var AboutLoginsParent = {
       case "AboutLogins:UpdateLogin": {
         let loginUpdates = message.data.login;
         let logins = LoginHelper.searchLoginsWithObject({guid: loginUpdates.guid});
-        if (!logins || logins.length != 1) {
-          log.warn(`AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${(logins || []).length}`);
+        if (logins.length != 1) {
+          log.warn(`AboutLogins:UpdateLogin: expected to find a login for guid: ${loginUpdates.guid} but found ${logins.length}`);
           return;
         }
 
@@ -232,6 +256,7 @@ var AboutLoginsParent = {
     return Services.logins
                    .getAllLogins()
                    .filter(isValidLogin)
-                   .map(LoginHelper.loginToVanillaObject);
+                   .map(LoginHelper.loginToVanillaObject)
+                   .map(augmentVanillaLoginObject);
   },
 };

@@ -287,11 +287,18 @@ bool nsCSPContext::Equals(nsIContentSecurityPolicy* aCSP,
   return true;
 }
 
-nsresult nsCSPContext::InitFromOther(nsCSPContext* aOtherContext,
-                                     Document* aDoc, nsIPrincipal* aPrincipal) {
+nsresult nsCSPContext::InitFromOther(nsCSPContext* aOtherContext) {
   NS_ENSURE_ARG(aOtherContext);
 
-  nsresult rv = SetRequestContext(aDoc, aPrincipal);
+  nsresult rv = NS_OK;
+  nsCOMPtr<Document> doc = do_QueryReferent(aOtherContext->mLoadingContext);
+  if (doc) {
+    rv = SetRequestContextWithDocument(doc);
+  } else {
+    rv = SetRequestContextWithPrincipal(
+        aOtherContext->mLoadingPrincipal, aOtherContext->mSelfURI,
+        aOtherContext->mReferrer, aOtherContext->mInnerWindowID);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (auto policy : aOtherContext->mPolicies) {
@@ -302,11 +309,6 @@ nsresult nsCSPContext::InitFromOther(nsCSPContext* aOtherContext,
   }
   mIPCPolicies = aOtherContext->mIPCPolicies;
   return NS_OK;
-}
-
-void nsCSPContext::SetIPCPolicies(
-    const nsTArray<mozilla::ipc::ContentSecurityPolicy>& aPolicies) {
-  mIPCPolicies = aPolicies;
 }
 
 void nsCSPContext::EnsureIPCPoliciesRead() {
@@ -397,8 +399,21 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString, bool aReportOnly,
   CSPCONTEXTLOG(("nsCSPContext::AppendPolicy: %s",
                  NS_ConvertUTF16toUTF8(aPolicyString).get()));
 
-  // Use the mSelfURI from setRequestContext, see bug 991474
-  NS_ASSERTION(mSelfURI, "mSelfURI required for AppendPolicy, but not set");
+  // Use mSelfURI from setRequestContextWith{Document,Principal} (bug 991474)
+  MOZ_ASSERT(
+      mLoadingPrincipal,
+      "did you forget to call setRequestContextWith{Document,Principal}?");
+  MOZ_ASSERT(
+      mSelfURI,
+      "did you forget to call setRequestContextWith{Document,Principal}?");
+  // After Bug 1496418 we can remove that assertion because we will allow
+  // CSP on system privileged documents.
+  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mLoadingPrincipal),
+             "Do not call setRequestContextWith{Document,Principal} using "
+             "SystemPrincipal");
+  NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(mSelfURI, NS_ERROR_UNEXPECTED);
+
   nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(
       aPolicyString, mSelfURI, aReportOnly, this, aDeliveredViaMetaTag);
   if (policy) {
@@ -691,46 +706,77 @@ nsCSPContext::LogViolationDetails(
 #undef CASE_CHECK_AND_REPORT
 
 NS_IMETHODIMP
-nsCSPContext::SetRequestContext(Document* aDocument, nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aDocument || aPrincipal,
-             "Can't set context without doc or principal");
-  NS_ENSURE_ARG(aDocument || aPrincipal);
+nsCSPContext::SetRequestContextWithDocument(Document* aDocument) {
+  MOZ_ASSERT(aDocument, "Can't set context without doc");
+  NS_ENSURE_ARG(aDocument);
 
-  if (aDocument) {
-    mLoadingContext = do_GetWeakReference(aDocument);
-    mSelfURI = aDocument->GetDocumentURI();
-    mLoadingPrincipal = aDocument->NodePrincipal();
-    aDocument->GetReferrer(mReferrer);
-    mInnerWindowID = aDocument->InnerWindowID();
-    // the innerWindowID is not available for CSPs delivered through the
-    // header at the time setReqeustContext is called - let's queue up
-    // console messages until it becomes available, see flushConsoleMessages
-    mQueueUpMessages = !mInnerWindowID;
-    mCallingChannelLoadGroup = aDocument->GetDocumentLoadGroup();
-    mEventTarget = aDocument->EventTargetFor(TaskCategory::Other);
-  } else {
-    CSPCONTEXTLOG(
-        ("No Document in SetRequestContext; can not query loadgroup; sending "
-         "reports may fail."));
-    mLoadingPrincipal = aPrincipal;
-    mLoadingPrincipal->GetURI(getter_AddRefs(mSelfURI));
-    // if no document is available, then it also does not make sense to queue
-    // console messages sending messages to the browser conolse instead of the
-    // web console in that case.
-    mQueueUpMessages = false;
-  }
+  mLoadingContext = do_GetWeakReference(aDocument);
+  mSelfURI = aDocument->GetDocumentURI();
+  mLoadingPrincipal = aDocument->NodePrincipal();
+  aDocument->GetReferrer(mReferrer);
+  mInnerWindowID = aDocument->InnerWindowID();
+  // the innerWindowID is not available for CSPs delivered through the
+  // header at the time setReqeustContext is called - let's queue up
+  // console messages until it becomes available, see flushConsoleMessages
+  mQueueUpMessages = !mInnerWindowID;
+  mCallingChannelLoadGroup = aDocument->GetDocumentLoadGroup();
+  // set the flag on the document for CSP telemetry
+  mEventTarget = aDocument->EventTargetFor(TaskCategory::Other);
 
-  NS_ASSERTION(
-      mSelfURI,
-      "mSelfURI not available, can not translate 'self' into actual URI");
+  MOZ_ASSERT(mLoadingPrincipal, "need a valid requestPrincipal");
+  MOZ_ASSERT(mSelfURI, "need mSelfURI to translate 'self' into actual URI");
+  // After Bug 1496418 we can remove that assertion because we will allow
+  // CSP on system privileged documents.
+  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mLoadingPrincipal),
+             "do not apply CSP to system privileged documents");
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsCSPContext::SetRequestContextWithPrincipal(nsIPrincipal* aRequestPrincipal,
+                                             nsIURI* aSelfURI,
+                                             const nsAString& aReferrer,
+                                             uint64_t aInnerWindowId) {
+  NS_ENSURE_ARG(aRequestPrincipal);
+
+  mLoadingPrincipal = aRequestPrincipal;
+  mSelfURI = aSelfURI;
+  mReferrer = aReferrer;
+  mInnerWindowID = aInnerWindowId;
+  // if no document is available, then it also does not make sense to queue
+  // console messages sending messages to the browser console instead of the web
+  // console in that case.
+  mQueueUpMessages = false;
+  mCallingChannelLoadGroup = nullptr;
+  mEventTarget = nullptr;
+
+  MOZ_ASSERT(mLoadingPrincipal, "need a valid requestPrincipal");
+  MOZ_ASSERT(mSelfURI, "need mSelfURI to translate 'self' into actual URI");
+  // After Bug 1496418 we can remove that assertion because we will allow
+  // CSP on system privileged documents.
+  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mLoadingPrincipal),
+             "do not apply CSP to system privileged documents");
+  return NS_OK;
+}
+
+nsIPrincipal* nsCSPContext::GetRequestPrincipal() { return mLoadingPrincipal; }
+
+nsIURI* nsCSPContext::GetSelfURI() { return mSelfURI; }
+
+NS_IMETHODIMP
+nsCSPContext::GetReferrer(nsAString& outReferrer) {
+  outReferrer.Truncate();
+  outReferrer.Append(mReferrer);
+  return NS_OK;
+}
+
+uint64_t nsCSPContext::GetInnerWindowID() { return mInnerWindowID; }
 
 NS_IMETHODIMP
 nsCSPContext::EnsureEventTarget(nsIEventTarget* aEventTarget) {
   NS_ENSURE_ARG(aEventTarget);
   // Don't bother if we did have a valid event target (if the csp object is
-  // tied to a document in SetRequestContext)
+  // tied to a document in SetRequestContextWithDocument)
   if (mEventTarget) {
     return NS_OK;
   }
@@ -1086,9 +1132,9 @@ nsresult nsCSPContext::SendReports(
     }
     reportChannel->SetNotificationCallbacks(reportSink);
 
-    // apply the loadgroup from the channel taken by setRequestContext.  If
-    // there's no loadgroup, AsyncOpen will fail on process-split necko (since
-    // the channel cannot query the iBrowserChild).
+    // apply the loadgroup taken by setRequestContextWithDocument. If there's
+    // no loadgroup, AsyncOpen will fail on process-split necko (since the
+    // channel cannot query the iBrowserChild).
     rv = reportChannel->SetLoadGroup(mCallingChannelLoadGroup);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1126,9 +1172,9 @@ nsresult nsCSPContext::SendReports(
     rv = reportChannel->AsyncOpen(listener);
 
     // AsyncOpen should not fail, but could if there's no load group (like if
-    // SetRequestContext is not given a channel).  This should fail quietly and
-    // not return an error since it's really ok if reports don't go out, but
-    // it's good to log the error locally.
+    // SetRequestContextWith{Document,Principal} is not given a channel). This
+    // should fail quietly and not return an error since it's really ok if
+    // reports don't go out, but it's good to log the error locally.
 
     if (NS_FAILED(rv)) {
       const char16_t* params[] = {reportURIs[r].get()};
@@ -1689,7 +1735,13 @@ nsCSPContext::Read(nsIObjectInputStream* aStream) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSelfURI = do_QueryInterface(supports);
-  NS_ASSERTION(mSelfURI, "need a self URI to de-serialize");
+  MOZ_ASSERT(mSelfURI, "need a self URI to de-serialize");
+
+  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mLoadingPrincipal = do_QueryInterface(supports);
+  MOZ_ASSERT(mLoadingPrincipal, "need a loadingPrincipal to de-serialize");
 
   uint32_t numPolicies;
   rv = aStream->Read32(&numPolicies);
@@ -1721,6 +1773,10 @@ NS_IMETHODIMP
 nsCSPContext::Write(nsIObjectOutputStream* aStream) {
   nsresult rv = NS_WriteOptionalCompoundObject(aStream, mSelfURI,
                                                NS_GET_IID(nsIURI), true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = NS_WriteOptionalCompoundObject(aStream, mLoadingPrincipal,
+                                      NS_GET_IID(nsIPrincipal), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Serialize all the policies.

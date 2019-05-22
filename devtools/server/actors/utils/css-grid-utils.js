@@ -58,8 +58,8 @@ function getStringifiableArea({ columnEnd, columnStart, name, rowEnd, rowStart, 
   return { columnEnd, columnStart, name, rowEnd, rowStart, type };
 }
 
-function getStringifiableLine({ breadth, names, number, start }) {
-  return { breadth, names, number, start };
+function getStringifiableLine({ breadth, names, number, start, type }) {
+  return { breadth, names, number, start, type };
 }
 
 function getStringifiableTrack({ breadth, start, state, type }) {

@@ -195,6 +195,10 @@ void* nsINode::UnsetProperty(const nsAtom* aPropertyName, nsresult* aStatus) {
                                                    aStatus);
 }
 
+nsIContentSecurityPolicy* nsINode::GetCsp() const {
+  return OwnerDoc()->GetCsp();
+}
+
 nsINode::nsSlots* nsINode::CreateSlots() { return new nsSlots(); }
 
 nsIContent* nsINode::GetTextEditorRootContent(TextEditor** aTextEditor) {

@@ -138,9 +138,7 @@ class WebProgressChild {
       json.charset = this.mm.content.document.characterSet;
       json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
       json.principal = this.mm.content.document.nodePrincipal;
-      // After Bug 965637 we can query the csp directly from content.document
-      // instead of content.document.nodePrincipal.
-      let csp = this.mm.content.document.nodePrincipal.csp;
+      let csp = this.mm.content.document.csp;
       json.csp = E10SUtils.serializeCSP(csp);
       json.synthetic = this.mm.content.document.mozSyntheticDocument;
       json.inLoadURI = this.inLoadURI;

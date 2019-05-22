@@ -25,6 +25,7 @@
       <img id="branding-logo" src="chrome://branding/content/aboutlogins.svg" alt=""/>
       <login-filter data-l10n-id="login-filter"
                     data-l10n-attrs="placeholder"></login-filter>
+      <button id="create-login-button" data-l10n-id="create-login-button"></button>
     </header>
     <login-list data-l10n-id="login-list"
                 data-l10n-attrs="count"
@@ -41,6 +42,7 @@
                                  hostname-label,
                                  modal-input-reveal-checkbox-hide,
                                  modal-input-reveal-checkbox-show,
+                                 new-login-title,
                                  open-site-button,
                                  password-label,
                                  save-changes-button,
@@ -77,7 +79,8 @@
       <div class="detail-row">
         <label>
           <span class="hostname-label field-label"></span>
-          <span class="hostname"/>
+          <span class="hostname-saved-value"></span>
+          <input type="text" name="hostname"/>
         </label>
         <button class="open-site-button"></button>
       </div>

@@ -23,15 +23,16 @@ class CentOSFedoraBootstrapper(NasmInstall, NodeInstall, StyloInstall,
         BaseBootstrapper.__init__(self, **kwargs)
 
         self.distro = distro
-        self.version = version
+        self.version = int(version.split('.')[0])
         self.dist_id = dist_id
 
         self.group_packages = []
 
+        # For CentOS 7, later versions of nodejs come from nodesource
+        # and include the npm package.
         self.packages = [
             'autoconf213',
             'nodejs',
-            'npm',
             'which',
         ]
 
@@ -52,6 +53,7 @@ class CentOSFedoraBootstrapper(NasmInstall, NodeInstall, StyloInstall,
             'pulseaudio-libs-devel',
             'wireless-tools-devel',
             'yasm',
+            'gcc-c++',
         ]
 
         self.mobile_android_packages = [
@@ -63,8 +65,6 @@ class CentOSFedoraBootstrapper(NasmInstall, NodeInstall, StyloInstall,
         if self.distro in ('CentOS', 'CentOS Linux'):
             self.group_packages += [
                 'Development Tools',
-                'Development Libraries',
-                'GNOME Software Development',
             ]
 
             self.packages += [
@@ -75,18 +75,42 @@ class CentOSFedoraBootstrapper(NasmInstall, NodeInstall, StyloInstall,
                 'gtk3-devel',
             ]
 
+            if self.version == 6:
+                self.group_packages += [
+                    'Development Libraries',
+                    'GNOME Software Development',
+                ]
+
+                self.packages += [
+                    'npm',
+                ]
+
+            else:
+                self.packages += [
+                    'python2-devel',
+                    'redhat-rpm-config',
+                ]
+
+                self.browser_group_packages = [
+                    'Development Tools',
+                ]
+
+                self.browser_packages += [
+                    'python-dbus',
+                ]
+
         elif self.distro == 'Fedora':
             self.group_packages += [
                 'C Development Tools and Libraries',
             ]
 
             self.packages += [
+                'npm',
                 'python2-devel',
                 'redhat-rpm-config',
             ]
 
             self.browser_packages += [
-                'gcc-c++',
                 'python-dbus',
             ]
 
@@ -115,7 +139,7 @@ class CentOSFedoraBootstrapper(NasmInstall, NodeInstall, StyloInstall,
         self.dnf_groupinstall(*self.browser_group_packages)
         self.dnf_install(*self.browser_packages)
 
-        if self.distro in ('CentOS', 'CentOS Linux'):
+        if self.distro in ('CentOS', 'CentOS Linux') and self.version == 6:
             yasm = ('http://dl.fedoraproject.org/pub/epel/6/i386/'
                     'Packages/y/yasm-1.2.0-1.el6.i686.rpm')
             if platform.architecture()[0] == '64bit':

@@ -29,6 +29,7 @@ class LoginList extends ReflectedFluentElement {
 
   render() {
     let list = this.shadowRoot.querySelector("ol");
+    list.textContent = "";
     for (let login of this._logins) {
       list.append(new LoginListItem(login));
     }
@@ -65,10 +66,10 @@ class LoginList extends ReflectedFluentElement {
           if (this._selectedItem.getAttribute("guid") == event.detail.guid) {
             return;
           }
-          this._selectedItem.classList.toggle("selected", false);
+          this._selectedItem.classList.remove("selected");
         }
         this._selectedItem = this.shadowRoot.querySelector(`login-list-item[guid="${event.detail.guid}"]`);
-        this._selectedItem.classList.toggle("selected", true);
+        this._selectedItem.classList.add("selected");
         break;
       }
     }
@@ -82,9 +83,15 @@ class LoginList extends ReflectedFluentElement {
     return this.reflectedFluentIDs;
   }
 
+  clearSelection() {
+    if (!this._selectedItem) {
+      return;
+    }
+    this._selectedItem.classList.remove("selected");
+    this._selectedItem = null;
+  }
+
   setLogins(logins) {
-    let list = this.shadowRoot.querySelector("ol");
-    list.textContent = "";
     this._logins = logins;
     this.render();
   }
@@ -93,6 +100,7 @@ class LoginList extends ReflectedFluentElement {
     this._logins.push(login);
     let list = this.shadowRoot.querySelector("ol");
     list.append(new LoginListItem(login));
+    document.l10n.setAttributes(this, "login-list", {count: this._logins.length});
   }
 
   loginModified(login) {
@@ -120,6 +128,7 @@ class LoginList extends ReflectedFluentElement {
         break;
       }
     }
+    document.l10n.setAttributes(this, "login-list", {count: this._logins.length});
   }
 }
 customElements.define("login-list", LoginList);

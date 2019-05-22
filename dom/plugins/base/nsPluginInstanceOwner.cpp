@@ -445,10 +445,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(
         NullPrincipal::CreateWithInheritedAttributes(content->NodePrincipal());
   }
 
-  // Currently we query the CSP from the NodePrincipal. After Bug 965637
-  // we can query the CSP from the doc directly (content->OwerDoc()).
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  content->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  nsCOMPtr<nsIContentSecurityPolicy> csp = content->GetCsp();
 
   rv = lh->OnLinkClick(content, uri, unitarget, VoidString(), aPostStream,
                        headersDataStream,

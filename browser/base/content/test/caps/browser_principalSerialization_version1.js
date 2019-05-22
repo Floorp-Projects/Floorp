@@ -98,7 +98,6 @@ add_task(async function test_realHistoryCheck() {
         testData.output.URISpec = principal.URI.spec;
       }
       testData.output.originAttributes = principal.originAttributes;
-      testData.output.cspJSON = principal.cspJSON;
 
       tests.push(testData);
     }
@@ -118,7 +117,6 @@ add_task(async function test_realHistoryCheck() {
           "privateBrowsingId": 0,
           "userContextId": 0,
         },
-        "cspJSON": "{}",
       },
     },
     {
@@ -131,7 +129,6 @@ add_task(async function test_realHistoryCheck() {
           "privateBrowsingId": 0,
           "userContextId": 0,
         },
-        "cspJSON": "{}",
       },
     },
     {
@@ -144,7 +141,6 @@ add_task(async function test_realHistoryCheck() {
           "privateBrowsingId": 0,
           "userContextId": 0,
         },
-        "cspJSON": "{}",
       },
     },
     {
@@ -157,14 +153,12 @@ add_task(async function test_realHistoryCheck() {
           "privateBrowsingId": 0,
           "userContextId": 0,
         },
-        "cspJSON": "{}",
       },
     },
   ];
 
   for (let test of serializedPrincipalsFromFirefox) {
     let principal = E10SUtils.deserializePrincipal(test.input);
-    is(principal.cspJSON, test.output.cspJSON, "should have CSP");
 
     for (let key in principal.originAttributes) {
       is(principal.originAttributes[key], test.output.originAttributes[key], `Ensure value of ${key} is ${test.output.originAttributes[key]}`);

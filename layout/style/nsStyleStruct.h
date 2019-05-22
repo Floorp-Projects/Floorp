@@ -837,7 +837,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
  public:
   mozilla::StyleBorderRadius mBorderRadius;  // coord, percent
   nsStyleImage mBorderImageSource;
-  nsStyleSides mBorderImageWidth;  // length, factor, percent, auto
+  mozilla::StyleBorderImageWidth mBorderImageWidth;
   mozilla::StyleNonNegativeLengthOrNumberRect mBorderImageOutset;
   mozilla::StyleBorderImageSlice mBorderImageSlice;  // factor, percent
   mozilla::StyleBorderImageRepeat mBorderImageRepeatH;
@@ -1738,10 +1738,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleScrollSnapAlign mScrollSnapAlign;
   mozilla::StyleScrollSnapType mScrollSnapType;
   uint32_t mLineClamp;
-  nsStyleCoord mScrollSnapPointsX;
-  nsStyleCoord mScrollSnapPointsY;
-  mozilla::Position mScrollSnapDestination;
-  nsTArray<mozilla::Position> mScrollSnapCoordinate;
 
   mozilla::StyleTransform mTransform;
   mozilla::StyleRotate mRotate;

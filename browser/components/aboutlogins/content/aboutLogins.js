@@ -7,6 +7,12 @@ let gElements = {};
 document.addEventListener("DOMContentLoaded", () => {
   gElements.loginList = document.querySelector("login-list");
   gElements.loginItem = document.querySelector("login-item");
+  gElements.newLoginButton = document.querySelector("#create-login-button");
+
+  gElements.newLoginButton.addEventListener("click", () => {
+    gElements.loginItem.setLogin({});
+    gElements.loginList.clearSelection();
+  });
 
   document.dispatchEvent(new CustomEvent("AboutLoginsInit", {bubbles: true}));
 }, {once: true});
@@ -19,6 +25,7 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     }
     case "LoginAdded": {
       gElements.loginList.loginAdded(event.detail.value);
+      gElements.loginItem.loginAdded(event.detail.value);
       break;
     }
     case "LoginModified": {

@@ -64,6 +64,7 @@ describe("CFRPageActions", () => {
       PrivateBrowsingUtils: {isWindowPrivate: sandbox.stub().returns(false)},
       gBrowser: {selectedBrowser: fakeBrowser},
     });
+    document.createXULElement = document.createElement;
 
     elements = {};
     const [body] = document.getElementsByTagName("body");

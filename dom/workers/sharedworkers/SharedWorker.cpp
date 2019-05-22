@@ -12,7 +12,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePort.h"
-#include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/RemoteWorkerTypes.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
@@ -35,45 +34,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
-
-namespace {
-
-nsresult PopulateContentSecurityPolicyArray(
-    nsIPrincipal* aPrincipal, nsTArray<ContentSecurityPolicy>& policies,
-    nsTArray<ContentSecurityPolicy>& preloadPolicies) {
-  MOZ_ASSERT(aPrincipal);
-  MOZ_ASSERT(policies.IsEmpty());
-  MOZ_ASSERT(preloadPolicies.IsEmpty());
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = BasePrincipal::Cast(aPrincipal)->GetCsp(getter_AddRefs(csp));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (csp) {
-    rv = PopulateContentSecurityPolicies(csp, policies);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  rv = BasePrincipal::Cast(aPrincipal)->GetPreloadCsp(getter_AddRefs(csp));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (csp) {
-    rv = PopulateContentSecurityPolicies(csp, preloadPolicies);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  return NS_OK;
-}
-
-}  // namespace
 
 SharedWorker::SharedWorker(nsPIDOMWindowInner* aWindow,
                            SharedWorkerChild* aActor, MessagePort* aMessagePort)
@@ -152,26 +112,9 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     return nullptr;
   }
 
-  nsTArray<ContentSecurityPolicy> principalCSP;
-  nsTArray<ContentSecurityPolicy> principalPreloadCSP;
-  aRv = PopulateContentSecurityPolicyArray(loadInfo.mPrincipal, principalCSP,
-                                           principalPreloadCSP);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
   PrincipalInfo loadingPrincipalInfo;
   aRv = PrincipalToPrincipalInfo(loadInfo.mLoadingPrincipal,
                                  &loadingPrincipalInfo);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  nsTArray<ContentSecurityPolicy> loadingPrincipalCSP;
-  nsTArray<ContentSecurityPolicy> loadingPrincipalPreloadCSP;
-  aRv = PopulateContentSecurityPolicyArray(loadInfo.mLoadingPrincipal,
-                                           loadingPrincipalCSP,
-                                           loadingPrincipalPreloadCSP);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -218,15 +161,6 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     }
   }
 
-  nsTArray<ContentSecurityPolicy> storagePrincipalCSP;
-  nsTArray<ContentSecurityPolicy> storagePrincipalPreloadCSP;
-  aRv = PopulateContentSecurityPolicyArray(loadInfo.mStoragePrincipal,
-                                           storagePrincipalCSP,
-                                           storagePrincipalPreloadCSP);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
   // We don't actually care about this MessageChannel, but we use it to 'steal'
   // its 2 connected ports.
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
@@ -257,10 +191,9 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
 
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
-      loadingPrincipalInfo, loadingPrincipalCSP, loadingPrincipalPreloadCSP,
-      principalInfo, principalCSP, principalPreloadCSP, storagePrincipalInfo,
-      storagePrincipalCSP, storagePrincipalPreloadCSP, loadInfo.mDomain,
-      isSecureContext, ipcClientInfo, storageAllowed, true /* sharedWorker */);
+      loadingPrincipalInfo, principalInfo, storagePrincipalInfo,
+      loadInfo.mDomain, isSecureContext, ipcClientInfo, storageAllowed,
+      true /* sharedWorker */);
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier);

@@ -825,9 +825,7 @@ nsresult HTMLFormSubmission::GetFromForm(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check if CSP allows this form-action
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = aForm->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIContentSecurityPolicy> csp = aForm->GetCsp();
   if (csp) {
     bool permitsFormAction = true;
 

@@ -330,10 +330,39 @@ TextPropertyEditor.prototype = {
 
       for (const gridFragment of gridFragments) {
         for (const rowLine of gridFragment.rows.lines) {
-          gridLineNames.rows = gridLineNames.rows.concat(rowLine.names);
+          // We specifically ignore implicit line names created from implicitly named
+          // areas. This is because showing implicit line names can be confusing for
+          // designers who may have used a line name with "-start" or "-end" and created
+          // an implicitly named grid area without meaning to.
+          let gridArea;
+
+          for (const name of rowLine.names) {
+            const rowLineName = name.substring(0, name.lastIndexOf("-start")) ||
+              name.substring(0, name.lastIndexOf("-end"));
+            gridArea = gridFragment.areas.find(area => area.name === rowLineName);
+
+            if (rowLine.type === "implicit" && gridArea &&
+                gridArea.type === "implicit") {
+              continue;
+            }
+            gridLineNames.rows.push(name);
+          }
         }
+
         for (const colLine of gridFragment.cols.lines) {
-          gridLineNames.cols = gridLineNames.cols.concat(colLine.names);
+          let gridArea;
+
+          for (const name of colLine.names) {
+            const colLineName = name.substring(0, name.lastIndexOf("-start")) ||
+              name.substring(0, name.lastIndexOf("-end"));
+            gridArea = gridFragment.areas.find(area => area.name === colLineName);
+
+            if (colLine.type === "implicit" && gridArea &&
+                gridArea.type === "implicit") {
+              continue;
+            }
+            gridLineNames.cols.push(name);
+          }
         }
       }
     }

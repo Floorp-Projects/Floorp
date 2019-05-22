@@ -169,6 +169,14 @@ bool ExpandedPrincipal::AddonAllowsLoad(nsIURI* aURI,
   return false;
 }
 
+void ExpandedPrincipal::SetCsp(nsIContentSecurityPolicy* aCSP) { mCSP = aCSP; }
+
+NS_IMETHODIMP
+ExpandedPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp) {
+  NS_IF_ADDREF(*aCsp = mCSP);
+  return NS_OK;
+}
+
 nsIPrincipal* ExpandedPrincipal::PrincipalToInherit(nsIURI* aRequestedURI) {
   if (aRequestedURI) {
     // If a given sub-principal subsumes the given URI, use that principal for

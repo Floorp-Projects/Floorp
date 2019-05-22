@@ -1,0 +1,59 @@
+<!doctype html>
+<style type='text/css'>
+  /* Implicit gridlines created from explicit grid areas. */
+  .wrapperA {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: minmax(100px, auto);
+    grid-template-areas:
+      "header header header"
+      "main   main   main";
+  }
+
+  .header {
+    grid-column: header-start / header-end;
+    grid-row: header-start / header-end;
+  }
+
+  .main {
+    grid-area: main;
+  }
+
+  /* Implicit grid areas created from explicit gridlines */
+  .wrapperB {
+    display: grid;
+    grid-template-columns: [main-start] 1fr [content-start] 1fr [content-end main-end];
+    grid-template-rows: [main-start] 100px [content-start] 100px [content-end main-end];
+  }
+
+  .contentArea {
+    grid-column: content-start / content-end;
+    grid-row: content-start / content-end;
+  }
+
+  .wrapperC {
+    display: grid;
+    grid-template-columns: [a-start b-end] 1fr [c];
+  }
+
+  .a {
+    grid-column: a-start / a-end;
+  }
+
+  .b {
+    grid-column: b-start / b-end;
+  }
+</style>
+<div>
+  <div class="wrapperA">
+    <div class="header">Header</div>
+    <div class="main">Content</div>
+  </div>
+  <div class="wrapperB">
+    <div class="contentArea">Implicit area named "content".</div>
+  </div>
+  <div class="wrapperC">
+    <div class="a">A.</div>
+    <div class="b">B.</div>
+  </div>
+</div>
