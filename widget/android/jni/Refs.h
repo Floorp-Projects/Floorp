@@ -710,6 +710,9 @@ class StringParam : public String::Ref {
   static jstring GetString(JNIEnv* env, const nsAString& str) {
     const jstring result = env->NewString(
         reinterpret_cast<const jchar*>(str.BeginReading()), str.Length());
+    if (!result) {
+      NS_ABORT_OOM(str.Length() * sizeof(char16_t));
+    }
     MOZ_CATCH_JNI_EXCEPTION(env);
     return result;
   }
