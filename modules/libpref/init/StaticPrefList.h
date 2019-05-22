@@ -786,6 +786,12 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  "full-screen-api.mouse-event-allow-left-button-only",
+   full_screen_api_mouse_event_allow_left_button_only,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // Preference stylesheet prefs.
 //---------------------------------------------------------------------------

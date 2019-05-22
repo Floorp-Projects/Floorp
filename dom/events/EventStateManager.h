@@ -1262,6 +1262,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static int32_t sUserKeyboardEventDepth;
 
   static bool sNormalLMouseEventInProcess;
+  static int16_t sCurrentMouseBtn;
 
   static EventStateManager* sActiveESM;
 
@@ -1297,6 +1298,11 @@ class MOZ_RAII AutoHandlingUserInputStatePusher final {
 
   bool NeedsToResetFocusManagerMouseButtonHandlingState() const {
     return mMessage == eMouseDown || mMessage == eMouseUp;
+  }
+
+  bool NeedsToUpdateCurrentMouseBtnState() const {
+    return mMessage == eMouseDown || mMessage == eMouseUp ||
+           mMessage == ePointerDown || mMessage == ePointerUp;
   }
 };
 

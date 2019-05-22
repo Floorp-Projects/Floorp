@@ -2332,12 +2332,14 @@ class nsContentUtils {
   static bool IsFocusedContent(const nsIContent* aContent);
 
   /**
-   * Returns true if requests for fullscreen are allowed in the current
+   * Returns nullptr if requests for fullscreen are allowed in the current
    * context. Requests are only allowed if the user initiated them (like with
    * a mouse-click or key press), unless this check has been disabled by
    * setting the pref "full-screen-api.allow-trusted-requests-only" to false.
+   * If fullscreen is not allowed, a key for the error message is returned.
    */
-  static bool IsRequestFullscreenAllowed(mozilla::dom::CallerType aCallerType);
+  static const char* CheckRequestFullscreenAllowed(
+      mozilla::dom::CallerType aCallerType);
 
   /**
    * Returns true if calling execCommand with 'cut' or 'copy' arguments is
