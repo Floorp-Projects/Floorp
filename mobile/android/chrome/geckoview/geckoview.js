@@ -70,6 +70,7 @@ var ModuleManager = {
 
     this.forEach(module => {
       module.onInit();
+      module.loadInitFrameScript();
     });
 
     window.addEventListener("unload", () => {
@@ -161,6 +162,14 @@ var ModuleManager = {
     });
 
     parent.appendChild(this.browser);
+
+    this.messageManager.addMessageListener("GeckoView:ContentModuleLoaded",
+                                           this);
+
+    this.forEach(module => {
+      // We're attaching a new browser so we have to reload the frame scripts
+      module.loadInitFrameScript();
+    });
 
     disabledModules.forEach(module => {
       module.enabled = true;
@@ -264,12 +273,9 @@ class ModuleInfo {
     // For init, load resource _before_ initializing browser to support the
     // onInitBrowser() override. However, load content module after initializing
     // browser, because we don't have a message manager before then.
-    this._loadPhase({
-      resource: onInit && onInit.resource,
-    });
-    this._onInitPhase = {
-      frameScript: onInit && onInit.frameScript,
-    };
+    this._loadResource(onInit);
+
+    this._onInitPhase = onInit;
     this._onEnablePhase = onEnable;
   }
 
@@ -278,9 +284,15 @@ class ModuleInfo {
       this._impl.onInit();
       this._impl.onSettingsUpdate();
     }
-    this._loadPhase(this._onInitPhase);
 
     this.enabled = this._enabledOnInit;
+  }
+
+  /**
+   * Loads the onInit frame script
+   */
+  loadInitFrameScript() {
+    this._loadFrameScript(this._onInitPhase);
   }
 
   onDestroy() {
@@ -289,37 +301,46 @@ class ModuleInfo {
     }
   }
 
-  // Called before the browser is removed
+  /**
+   * Called before the browser is removed
+   */
   onDestroyBrowser() {
-    if (this.impl) {
-      this.impl.onDestroyBrowser();
+    if (this._impl) {
+      this._impl.onDestroyBrowser();
     }
     this._contentModuleLoaded = false;
   }
 
   /**
-   * Load resources according to a phase object that contains possible keys,
+   * Load resource according to a phase object that contains possible keys,
    *
    * "resource": specify the JSM resource to load for this module.
    * "frameScript": specify a content JS frame script to load for this module.
    */
-  _loadPhase(aPhase) {
-    if (!aPhase) {
+  _loadResource(aPhase) {
+    if (!aPhase || !aPhase.resource || this._impl) {
       return;
     }
 
-    if (aPhase.resource && !this._impl) {
-      const exports = ChromeUtils.import(aPhase.resource);
-      this._impl = new exports[this._name](this);
+    const exports = ChromeUtils.import(aPhase.resource);
+    this._impl = new exports[this._name](this);
+  }
+
+  /**
+   * Load frameScript according to a phase object that contains possible keys,
+   *
+   * "frameScript": specify a content JS frame script to load for this module.
+   */
+  _loadFrameScript(aPhase) {
+    if (!aPhase || !aPhase.frameScript || this._contentModuleLoaded) {
+      return;
     }
 
-    if (aPhase.frameScript && !this._contentModuleLoaded) {
-      if (this._impl) {
-        this._impl.onLoadContentModule();
-      }
-      this._manager.messageManager.loadFrameScript(aPhase.frameScript, true);
-      this._contentModuleLoaded = true;
+    if (this._impl) {
+      this._impl.onLoadContentModule();
     }
+    this._manager.messageManager.loadFrameScript(aPhase.frameScript, true);
+    this._contentModuleLoaded = true;
   }
 
   get manager() {
@@ -350,7 +371,8 @@ class ModuleInfo {
     this._enabled = aEnabled;
 
     if (aEnabled) {
-      this._loadPhase(this._onEnablePhase);
+      this._loadResource(this._onEnablePhase);
+      this._loadFrameScript(this._onEnablePhase);
       if (this._impl) {
         this._impl.onEnable();
         this._impl.onSettingsUpdate();
