@@ -422,6 +422,73 @@ const TEST_DATA = [
     expected: [{name: "\u00a0vertical-align", value: "top", priority: "",
                 offsets: [0, 20]}],
   },
+
+  // Regression test for bug 1544223 - take CSS blocks into consideration before handling
+  // ; and : (i.e. don't advance to the property name or value automatically).
+  {
+    input: `--foo: (
+      :doodle {
+        @grid: 30x1 / 18vmin;
+      }
+      :container {
+        perspective: 30vmin;
+      }
+
+      @place-cell: center;
+      @size: 100%;
+
+      :after, :before {
+        content: '';
+        @size: 100%;
+        position: absolute;
+        border: 2.4vmin solid var(--color);
+        border-image: radial-gradient(
+          var(--color), transparent 60%
+        );
+        border-image-width: 4;
+        transform: rotate(@pn(0, 5deg));
+      }
+
+      will-change: transform, opacity;
+      animation: scale-up 15s linear infinite;
+      animation-delay: calc(-15s / @size() * @i());
+      box-shadow: inset 0 0 1em var(--color);
+      border-radius: 50%;
+      filter: var(--filter);
+
+      @keyframes scale-up {
+        0%, 100% {
+          transform: translateZ(0) scale(0) rotate(0);
+          opacity: 0;
+        }
+        50% {
+          opacity: 1;
+        }
+        99% {
+          transform:
+            translateZ(30vmin)
+            scale(1)
+            rotate(-270deg);
+        }
+      }
+    );`,
+    expected: [{
+      name: "--foo",
+      value: "( :doodle { @grid: 30x1 / 18vmin; } :container { perspective: 30vmin; } " +
+             "@place-cell: center; @size: 100%; :after, :before { content: ''; @size: " +
+             "100%; position: absolute; border: 2.4vmin solid var(--color); " +
+             "border-image: radial-gradient( var(--color), transparent 60% ); " +
+             "border-image-width: 4; transform: rotate(@pn(0, 5deg)); } will-change: " +
+             "transform, opacity; animation: scale-up 15s linear infinite; " +
+             "animation-delay: calc(-15s / @size() * @i()); box-shadow: inset 0 0 1em " +
+             "var(--color); border-radius: 50%; filter: var(--filter); @keyframes " +
+             "scale-up { 0%, 100% { transform: translateZ(0) scale(0) rotate(0); " +
+             "opacity: 0; } 50% { opacity: 1; } 99% { transform: translateZ(30vmin) " +
+             "scale(1) rotate(-270deg); } } )",
+      priority: "",
+      offsets: [0, 1036],
+    }],
+  },
 ];
 
 function run_test() {
