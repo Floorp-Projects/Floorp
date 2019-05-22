@@ -332,8 +332,8 @@ struct ParamTraits<mozilla::layers::ScrollSnapInfo> {
   typedef mozilla::layers::ScrollSnapInfo paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mScrollSnapTypeX);
-    WriteParam(aMsg, aParam.mScrollSnapTypeY);
+    WriteParam(aMsg, aParam.mScrollSnapStrictnessX);
+    WriteParam(aMsg, aParam.mScrollSnapStrictnessY);
     WriteParam(aMsg, aParam.mScrollSnapIntervalX);
     WriteParam(aMsg, aParam.mScrollSnapIntervalY);
     WriteParam(aMsg, aParam.mScrollSnapDestination);
@@ -347,8 +347,8 @@ struct ParamTraits<mozilla::layers::ScrollSnapInfo> {
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mScrollSnapTypeX) &&
-            ReadParam(aMsg, aIter, &aResult->mScrollSnapTypeY) &&
+    return (ReadParam(aMsg, aIter, &aResult->mScrollSnapStrictnessX) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollSnapStrictnessY) &&
             ReadParam(aMsg, aIter, &aResult->mScrollSnapIntervalX) &&
             ReadParam(aMsg, aIter, &aResult->mScrollSnapIntervalY) &&
             ReadParam(aMsg, aIter, &aResult->mScrollSnapDestination) &&
