@@ -159,11 +159,22 @@ IPCResult BrowserBridgeChild::RecvSetLayersId(
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
     const bool& aCanRaise) {
   // Adapted from BrowserParent
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return IPC_OK();
+  }
+
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
   if (!owner) {
     return IPC_OK();
   }
-  nsContentUtils::RequestFrameFocus(*owner, aCanRaise);
+
+  uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
+  if (aCanRaise) {
+    flags |= nsIFocusManager::FLAG_RAISE;
+  }
+
+  fm->SetFocus(owner, flags);
   return IPC_OK();
 }
 
@@ -176,7 +187,8 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
   }
 
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
-  if (!owner) {
+
+  if (!owner || !owner->OwnerDoc()) {
     return IPC_OK();
   }
 
