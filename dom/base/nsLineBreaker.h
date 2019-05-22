@@ -213,6 +213,20 @@ class nsLineBreaker {
     mStrictness = aMode;
   }
 
+  /**
+   * Return whether the line-breaker has a buffered "current word" that may
+   * be extended with additional word-forming characters.
+   */
+  bool InWord() const { return !mCurrentWord.IsEmpty(); }
+
+  /**
+   * Set the word-continuation state, which will suppress capitalization of
+   * the next letter that might otherwise apply.
+   */
+  void SetWordContinuation(bool aContinuation) {
+    mWordContinuation = aContinuation;
+  }
+
  private:
   // This is a list of text sources that make up the "current word" (i.e.,
   // run of text which does not contain any whitespace). All the mLengths
@@ -262,6 +276,11 @@ class nsLineBreaker {
   mozilla::intl::LineBreaker::WordBreak mWordBreak;
   // strictness of break rules, from line-break property
   mozilla::intl::LineBreaker::Strictness mStrictness;
+  // Should the text be treated as continuing a word-in-progress (for purposes
+  // of initial capitalization)? Normally this is set to false whenever we
+  // start using a linebreaker, but it may be set to true if the line-breaker
+  // has been explicitly flushed mid-word.
+  bool mWordContinuation;
 };
 
 #endif /*NSLINEBREAKER_H_*/
