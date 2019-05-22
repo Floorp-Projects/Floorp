@@ -22,6 +22,7 @@
 
 namespace mozilla {
 
+using media::NullableTimeUnit;
 using media::TimeUnit;
 
 /*
@@ -275,11 +276,11 @@ class DecodedStreamData {
   // mLastVideoStartTime is the start timestamp for the last packet sent to the
   // stream. Therefore video packets starting after this time need to be copied
   // to the output stream.
-  Maybe<TimeUnit> mLastVideoStartTime;
+  NullableTimeUnit mLastVideoStartTime;
   // mLastVideoEndTime is the end timestamp for the last packet sent to the
   // stream. It is used to adjust durations of chunks sent to the output stream
   // when there are overlaps in VideoData.
-  Maybe<TimeUnit> mLastVideoEndTime;
+  NullableTimeUnit mLastVideoEndTime;
   // The timestamp of the last frame, so we can ensure time never goes
   // backwards.
   TimeStamp mLastVideoTimeStamp;
