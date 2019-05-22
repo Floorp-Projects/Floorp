@@ -69,8 +69,10 @@ const prefs = {
       INPUT_HISTORY_COUNT: "devtools.webconsole.inputHistoryCount",
       // Is editor mode enabled.
       EDITOR: "devtools.webconsole.input.editor",
-      // Display content messages in the browser console
+      // Display content messages in the browser console.
       CONTENT_MESSAGES: "devtools.browserconsole.contentMessages",
+      // Display timestamp in messages.
+      MESSAGE_TIMESTAMP: "devtools.webconsole.timestampMessages",
     },
     FEATURES: {
       // We use the same pref to enable the sidebar on webconsole and browser console.
