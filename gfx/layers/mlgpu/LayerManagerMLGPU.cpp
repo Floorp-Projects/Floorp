@@ -25,6 +25,7 @@
 #include "CompositionRecorder.h"
 #include "mozilla/layers/Diagnostics.h"
 #include "mozilla/layers/TextRenderer.h"
+#include "mozilla/StaticPrefs.h"
 
 #ifdef XP_WIN
 #  include "mozilla/widget/WinCompositorWidget.h"
@@ -262,8 +263,8 @@ void LayerManagerMLGPU::EndTransaction(const TimeStamp& aTimeStamp,
   }
 
   // Don't draw the diagnostic overlay if we want to snapshot the output.
-  mDrawDiagnostics = gfxPrefs::LayersDrawFPS() && !mTarget;
-  mUsingInvalidation = gfxPrefs::AdvancedLayersUseInvalidation();
+  mDrawDiagnostics = StaticPrefs::LayersDrawFPS() && !mTarget;
+  mUsingInvalidation = StaticPrefs::AdvancedLayersUseInvalidation();
   mDebugFrameNumber++;
 
   AL_LOG("--- Compositing frame %d ---\n", mDebugFrameNumber);
@@ -550,7 +551,7 @@ void LayerManagerMLGPU::ClearCachedResources(Layer* aSubtree) {
 }
 
 void LayerManagerMLGPU::NotifyShadowTreeTransaction() {
-  if (gfxPrefs::LayersDrawFPS()) {
+  if (StaticPrefs::LayersDrawFPS()) {
     mDiagnostics->AddTxnFrame();
   }
 }

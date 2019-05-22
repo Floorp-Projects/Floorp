@@ -81,7 +81,7 @@ bool WebGLContext::IsExtensionSupported(dom::CallerType callerType,
     allowPrivilegedExts = true;
   }
 
-  if (gfxPrefs::WebGLPrivilegedExtensionsEnabled()) {
+  if (StaticPrefs::WebGLPrivilegedExtensionsEnabled()) {
     allowPrivilegedExts = true;
   }
 

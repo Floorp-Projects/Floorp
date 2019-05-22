@@ -1461,9 +1461,11 @@ void gfxUtils::RemoveShaderCacheFromDiskIfNecessary() {
 
 /* static */
 bool gfxUtils::DumpDisplayList() {
-  return gfxPrefs::LayoutDumpDisplayList() ||
-         (gfxPrefs::LayoutDumpDisplayListParent() && XRE_IsParentProcess()) ||
-         (gfxPrefs::LayoutDumpDisplayListContent() && XRE_IsContentProcess());
+  return StaticPrefs::LayoutDumpDisplayList() ||
+         (StaticPrefs::LayoutDumpDisplayListParent() &&
+          XRE_IsParentProcess()) ||
+         (StaticPrefs::LayoutDumpDisplayListContent() &&
+          XRE_IsContentProcess());
 }
 
 wr::RenderRoot gfxUtils::GetContentRenderRoot() {

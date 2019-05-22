@@ -207,9 +207,9 @@ static const char* const sExtensionNames[] = {
     "GL_OES_vertex_array_object"};
 
 static bool ShouldUseTLSIsCurrent(bool useTLSIsCurrent) {
-  if (gfxPrefs::UseTLSIsCurrent() == 0) return useTLSIsCurrent;
+  if (StaticPrefs::UseTLSIsCurrent() == 0) return useTLSIsCurrent;
 
-  return gfxPrefs::UseTLSIsCurrent() > 0;
+  return StaticPrefs::UseTLSIsCurrent() > 0;
 }
 
 static bool ParseVersion(const std::string& versionStr,
@@ -1746,7 +1746,7 @@ GLFormats GLContext::ChooseGLFormats(const SurfaceCaps& caps) const {
     }
   }
 
-  uint32_t msaaLevel = gfxPrefs::MSAALevel();
+  uint32_t msaaLevel = StaticPrefs::MSAALevel();
   GLsizei samples = msaaLevel * msaaLevel;
   samples = std::min(samples, mMaxSamples);
 

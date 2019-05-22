@@ -546,7 +546,7 @@ bool ShadowLayerForwarder::EndTransaction(
   }
 
   Maybe<TimeStamp> startTime;
-  if (gfxPrefs::LayersDrawFPS()) {
+  if (StaticPrefs::LayersDrawFPS()) {
     startTime = Some(TimeStamp::Now());
   }
 

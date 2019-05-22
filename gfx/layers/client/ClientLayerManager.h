@@ -202,7 +202,7 @@ class ClientLayerManager final : public LayerManager,
   void LogTestDataForCurrentPaint(ScrollableLayerGuid::ViewID aScrollId,
                                   const std::string& aKey,
                                   const std::string& aValue) {
-    MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");
+    MOZ_ASSERT(StaticPrefs::APZTestLoggingEnabled(), "don't call me");
     mApzTestData.LogTestDataForPaint(mPaintSequenceNumber, aScrollId, aKey,
                                      aValue);
   }
@@ -220,13 +220,13 @@ class ClientLayerManager final : public LayerManager,
                                     ScrollableLayerGuid::ViewID aScrollId,
                                     const std::string& aKey,
                                     const std::string& aValue) {
-    MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");
+    MOZ_ASSERT(StaticPrefs::APZTestLoggingEnabled(), "don't call me");
     mApzTestData.LogTestDataForRepaintRequest(aSequenceNumber, aScrollId, aKey,
                                               aValue);
   }
   void LogAdditionalTestData(const std::string& aKey,
                              const std::string& aValue) {
-    MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");
+    MOZ_ASSERT(StaticPrefs::APZTestLoggingEnabled(), "don't call me");
     mApzTestData.RecordAdditionalData(aKey, aValue);
   }
 
