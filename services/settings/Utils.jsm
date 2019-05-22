@@ -11,8 +11,24 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
+// Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
+// See LOG_LEVELS in Console.jsm. Common examples: "all", "debug", "info", "warn", "error".
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  const { ConsoleAPI } = ChromeUtils.import("resource://gre/modules/Console.jsm", {});
+  return new ConsoleAPI({
+    maxLogLevel: "info",
+    maxLogLevelPref: "services.settings.loglevel",
+    prefix: "services.settings",
+  });
+});
+
 var Utils = {
   CHANGES_PATH: "/buckets/monitor/collections/changes/records",
+
+  /**
+   * Logger instance.
+   */
+  log,
 
   /**
    * Check if local data exist for the specified client.

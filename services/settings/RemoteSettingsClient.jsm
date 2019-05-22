@@ -33,6 +33,7 @@ const DB_NAME = "remote-settings";
 
 const TELEMETRY_COMPONENT = "remotesettings";
 
+XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
 XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL",
                                       "services.settings.server");
 
@@ -212,9 +213,11 @@ class RemoteSettingsClient extends EventEmitter {
         // We'll try to avoid returning an empty list.
         if (await Utils.hasLocalDump(this.bucketName, this.collectionName)) {
           // Since there is a JSON dump, load it as default data.
+          console.debug("Local DB is empty, load JSON dump");
           await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
         } else {
           // There is no JSON dump, force a synchronization from the server.
+          console.debug("Local DB is empty, pull data from server");
           await this.sync({ loadDump: false });
         }
         // Either from trusted dump, or already done during sync.
@@ -230,8 +233,8 @@ class RemoteSettingsClient extends EventEmitter {
     const kintoCollection = await this.openCollection();
     const { data } = await kintoCollection.list({ filters, order });
 
-    // Verify signature of local data.
     if (verifySignature) {
+      console.debug("Verify signature of local data");
       const localRecords = data.map(r => kintoCollection.cleanLocalFields(r));
       const timestamp = await kintoCollection.db.getLastModified();
       const metadata = await kintoCollection.metadata();
@@ -299,6 +302,7 @@ class RemoteSettingsClient extends EventEmitter {
           const imported = await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
           // The worker only returns an integer. List the imported records to build the sync event.
           if (imported > 0) {
+            console.debug(`${imported} records loaded from JSON dump`);
             ({ data: importedFromDump } = await kintoCollection.list());
           }
           collectionLastModified = await kintoCollection.db.getLastModified();
@@ -311,6 +315,7 @@ class RemoteSettingsClient extends EventEmitter {
       // If the data is up to date, there's no need to sync. We still need
       // to record the fact that a check happened.
       if (expectedTimestamp <= collectionLastModified) {
+        console.debug(`${this.identifier} local data is up-to-date`);
         reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
         return;
       }
@@ -331,6 +336,8 @@ class RemoteSettingsClient extends EventEmitter {
           // In case the signature is valid, apply the changes locally.
           return payload;
         }];
+      } else {
+        console.warn(`Signature disabled on ${this.identifier}`);
       }
 
       let syncResult;
@@ -354,6 +361,7 @@ class RemoteSettingsClient extends EventEmitter {
           // We will attempt to fix this by retrieving the whole
           // remote collection.
           try {
+            console.warn(`Signature verified failed for ${this.identifier}. Retry from scratch`);
             syncResult = await this._retrySyncFromScratch(kintoCollection, expectedTimestamp);
           } catch (e) {
             // If the signature fails again, or if an error occured during wiping out the
@@ -392,6 +400,8 @@ class RemoteSettingsClient extends EventEmitter {
           reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
           throw e;
         }
+      } else {
+        console.info(`All changes are filtered by JEXL expressions for ${this.identifier}`);
       }
     } catch (e) {
       // IndexedDB errors. See https://developer.mozilla.org/en-US/docs/Web/API/IDBRequest/error
@@ -493,6 +503,7 @@ class RemoteSettingsClient extends EventEmitter {
     // replace the local data
     const localLastModified = await kintoCollection.db.getLastModified();
     if (timestamp >= localLastModified) {
+      console.debug(`Import raw data from server for ${this.identifier}`);
       await kintoCollection.clear();
       await kintoCollection.loadDump(remoteRecords);
       await kintoCollection.db.saveLastModified(timestamp);
