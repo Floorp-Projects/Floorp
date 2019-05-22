@@ -1,0 +1,12 @@
+[
+  {
+    "matchFilename": "libnptest\\.so|nptest\\.dll|Test\\.plugin",
+    "versionRange": [
+      {
+        "severity": "0",
+        "vulnerabilityStatus": "1"
+      }
+    ],
+    "blockID": "p9999"
+  }
+]
