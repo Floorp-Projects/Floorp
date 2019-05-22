@@ -394,22 +394,22 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mDidLoadURLInit(false),
       mAwaitingLA(false),
       mSkipKeyPress(false),
-      mLayersObserverEpoch {
-  1
-}
+      mLayersObserverEpoch{1},
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
-, mNativeWindowHandle(0)
+      mNativeWindowHandle(0),
 #endif
 #if defined(ACCESSIBILITY)
-      ,
-    mTopLevelDocAccessibleChild(nullptr)
+      mTopLevelDocAccessibleChild(nullptr),
 #endif
-        ,
-    mPendingDocShellIsActive(false), mPendingDocShellReceivedMessage(false),
-    mPendingRenderLayers(false),
-    mPendingRenderLayersReceivedMessage(false), mPendingLayersObserverEpoch{0},
-    mPendingDocShellBlockers(0), mCancelContentJSEpoch(0),
-    mWidgetNativeData(0) {
+      mShouldSendWebProgressEventsToParent(false),
+      mPendingDocShellIsActive(false),
+      mPendingDocShellReceivedMessage(false),
+      mPendingRenderLayers(false),
+      mPendingRenderLayersReceivedMessage(false),
+      mPendingLayersObserverEpoch{0},
+      mPendingDocShellBlockers(0),
+      mCancelContentJSEpoch(0),
+      mWidgetNativeData(0) {
   mozilla::HoldJSObjects(this);
 
   nsWeakPtr weakPtrThis(do_GetWeakReference(
@@ -3453,6 +3453,11 @@ void BrowserChild::BeforeUnloadRemoved() {
   }
 }
 
+NS_IMETHODIMP BrowserChild::BeginSendingWebProgressEventsToParent() {
+  mShouldSendWebProgressEventsToParent = true;
+  return NS_OK;
+}
+
 mozilla::dom::TabGroup* BrowserChild::TabGroup() { return mTabGroup; }
 
 nsresult BrowserChild::GetHasSiblings(bool* aHasSiblings) {
@@ -3478,7 +3483,7 @@ NS_IMETHODIMP BrowserChild::OnProgressChange(nsIWebProgress* aWebProgress,
                                              int32_t aMaxSelfProgress,
                                              int32_t aCurTotalProgress,
                                              int32_t aMaxTotalProgress) {
-  if (!IPCOpen()) {
+  if (!IPCOpen() || !mShouldSendWebProgressEventsToParent) {
     return NS_OK;
   }
 
@@ -3507,7 +3512,7 @@ NS_IMETHODIMP BrowserChild::OnStatusChange(nsIWebProgress* aWebProgress,
                                            nsIRequest* aRequest,
                                            nsresult aStatus,
                                            const char16_t* aMessage) {
-  if (!IPCOpen()) {
+  if (!IPCOpen() || !mShouldSendWebProgressEventsToParent) {
     return NS_OK;
   }
 
@@ -3534,7 +3539,7 @@ NS_IMETHODIMP BrowserChild::OnSecurityChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP BrowserChild::OnContentBlockingEvent(nsIWebProgress* aWebProgress,
                                                    nsIRequest* aRequest,
                                                    uint32_t aEvent) {
-  if (!IPCOpen()) {
+  if (!IPCOpen() || !mShouldSendWebProgressEventsToParent) {
     return NS_OK;
   }
 
