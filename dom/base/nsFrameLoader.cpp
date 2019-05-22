@@ -1788,6 +1788,9 @@ void nsFrameLoader::StartDestroy() {
   }
   mDestroyCalled = true;
 
+  // request a tabStateFlush before tab is closed
+  RequestTabStateFlush(/*flushId*/ 0, /*isFinal*/ true);
+
   // After this point, we return an error when trying to send a message using
   // the message manager on the frame.
   if (mMessageManager) {
@@ -3172,16 +3175,16 @@ void nsFrameLoader::RequestUpdatePosition(ErrorResult& aRv) {
   }
 }
 
-bool nsFrameLoader::RequestTabStateFlush(uint32_t aFlushId) {
+bool nsFrameLoader::RequestTabStateFlush(uint32_t aFlushId, bool aIsFinal) {
   if (mSessionStoreListener) {
-    mSessionStoreListener->ForceFlushFromParent(aFlushId);
+    mSessionStoreListener->ForceFlushFromParent(aFlushId, aIsFinal);
     // No async ipc call is involved in parent only case
     return false;
   }
 
   // If remote browsing (e10s), handle this with the BrowserParent.
   if (mBrowserParent) {
-    Unused << mBrowserParent->SendFlushTabState(aFlushId);
+    Unused << mBrowserParent->SendFlushTabState(aFlushId, aIsFinal);
     return true;
   }
 

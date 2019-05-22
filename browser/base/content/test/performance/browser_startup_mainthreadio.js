@@ -914,7 +914,7 @@ add_task(async function() {
   if (shouldPass) {
     ok(shouldPass, "No unexpected main thread I/O during startup");
   } else {
-    const filename = "startup-mainthreadio-profile.json";
+    const filename = "profile_startup_mainthreadio.json";
     let path = Cc["@mozilla.org/process/environment;1"]
                  .getService(Ci.nsIEnvironment)
                  .get("MOZ_UPLOAD_DIR");
@@ -923,7 +923,7 @@ add_task(async function() {
     await OS.File.writeAtomic(profilePath,
                               encoder.encode(JSON.stringify(startupRecorder.data.profile)));
     ok(false,
-       "Unexpected main thread I/O behavior during startup; profile uploaded in " +
-       filename);
+       "Unexpected main thread I/O behavior during startup; open the " +
+       `${filename} artifact in the Firefox Profiler to see what happened`);
   }
 });
