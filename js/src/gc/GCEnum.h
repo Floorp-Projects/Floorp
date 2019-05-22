@@ -94,7 +94,8 @@ enum class ZealMode {
 #define JS_FOR_EACH_INTERNAL_MEMORY_USE(_) \
   _(ArrayBufferContents)                   \
   _(StringContents)                        \
-  _(ObjectElements)
+  _(ObjectElements)                        \
+  _(ObjectSlots)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \

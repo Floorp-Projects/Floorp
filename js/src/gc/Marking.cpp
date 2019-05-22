@@ -2968,13 +2968,14 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
     return 0;
   }
 
+  Zone* zone = src->zone();
+  size_t count = src->numDynamicSlots();
+
   if (!nursery().isInside(src->slots_)) {
+    AddCellMemory(dst, count * sizeof(HeapSlot), MemoryUse::ObjectSlots);
     nursery().removeMallocedBuffer(src->slots_);
     return 0;
   }
-
-  Zone* zone = src->zone();
-  size_t count = src->numDynamicSlots();
 
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -2984,6 +2985,8 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
                       "Failed to allocate slots while tenuring.");
     }
   }
+
+  AddCellMemory(dst, count * sizeof(HeapSlot), MemoryUse::ObjectSlots);
 
   PodCopy(dst->slots_, src->slots_, count);
   nursery().setSlotsForwardingPointer(src->slots_, dst->slots_, count);

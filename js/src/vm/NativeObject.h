@@ -538,11 +538,6 @@ class NativeObject : public JSObject {
   // the new properties.
   void setLastPropertyShrinkFixedSlots(Shape* shape);
 
-  // As for setLastProperty(), but changes the class associated with the
-  // object to a non-native one. This leaves the object with a type and shape
-  // that are (temporarily) inconsistent.
-  void setLastPropertyMakeNonNative(Shape* shape);
-
   // Newly-created TypedArrays that map a SharedArrayBuffer are
   // marked as shared by giving them an ObjectElements that has the
   // ObjectElements::SHARED_MEMORY flag set.
@@ -937,6 +932,7 @@ class NativeObject : public JSObject {
 
   static MOZ_MUST_USE bool fillInAfterSwap(JSContext* cx,
                                            HandleNativeObject obj,
+                                           NativeObject* old,
                                            HandleValueVector values,
                                            void* priv);
 
