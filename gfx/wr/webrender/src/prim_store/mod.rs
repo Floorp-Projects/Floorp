@@ -1774,7 +1774,9 @@ impl PrimitiveStore {
                 frame_state.tile_cache = Some(tile_cache);
             }
 
-            (prim_list, surface_index, pic.apply_local_clip_rect, pic.requested_raster_space)
+            let raster_space = pic.get_raster_space(frame_context.clip_scroll_tree);
+
+            (prim_list, surface_index, pic.apply_local_clip_rect, raster_space)
         };
 
         let surface = &frame_context.surfaces[surface_index.0 as usize];

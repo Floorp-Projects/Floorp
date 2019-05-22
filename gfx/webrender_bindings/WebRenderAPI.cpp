@@ -246,6 +246,11 @@ void TransactionWrapper::UpdatePinchZoom(float aZoom) {
   wr_transaction_pinch_zoom(mTxn, aZoom);
 }
 
+void TransactionWrapper::UpdateIsTransformPinchZooming(uint64_t aAnimationId,
+                                                       bool aIsZooming) {
+  wr_transaction_set_is_transform_pinch_zooming(mTxn, aAnimationId, aIsZooming);
+}
+
 /*static*/
 already_AddRefed<WebRenderAPI> WebRenderAPI::Create(
     layers::CompositorBridgeParent* aBridge,
