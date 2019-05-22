@@ -28,6 +28,7 @@ class RemoteWebProgressManager {
 
   swapBrowser(aBrowser) {
     if (this._messageManager) {
+      this._messageManager.removeMessageListener("Content:StateChange", this);
       this._messageManager.removeMessageListener("Content:LocationChange", this);
       this._messageManager.removeMessageListener("Content:SecurityChange", this);
       this._messageManager.removeMessageListener("Content:LoadURIResult", this);
@@ -35,6 +36,7 @@ class RemoteWebProgressManager {
 
     this._browser = aBrowser;
     this._messageManager = aBrowser.messageManager;
+    this._messageManager.addMessageListener("Content:StateChange", this);
     this._messageManager.addMessageListener("Content:LocationChange", this);
     this._messageManager.addMessageListener("Content:SecurityChange", this);
     this._messageManager.addMessageListener("Content:LoadURIResult", this);
@@ -156,7 +158,7 @@ class RemoteWebProgressManager {
     // It shouldn't go through the same processing as all the forwarded
     // webprogresslistener messages.
     if (aMessage.name == "Content:LoadURIResult") {
-      this._browser.isNavigating = false;
+      this._browser.inLoadURI = false;
       return;
     }
 
@@ -191,8 +193,8 @@ class RemoteWebProgressManager {
       if (json.documentContentType !== null) {
         this._browser._documentContentType = json.documentContentType;
       }
-      if (typeof json.isNavigating != "undefined") {
-        this._browser.isNavigating = json.isNavigating;
+      if (typeof json.inLoadURI != "undefined") {
+        this._browser.inLoadURI = json.inLoadURI;
       }
       if (json.charset) {
         this._browser._characterSet = json.charset;
@@ -201,6 +203,13 @@ class RemoteWebProgressManager {
     }
 
     switch (aMessage.name) {
+    case "Content:StateChange":
+      if (isTopLevel) {
+        this._browser._documentURI = Services.io.newURI(json.documentURI);
+      }
+      this.onStateChange(webProgress, request, json.stateFlags, json.status);
+      break;
+
     case "Content:LocationChange":
       let location = Services.io.newURI(json.location);
       let flags = json.flags;
