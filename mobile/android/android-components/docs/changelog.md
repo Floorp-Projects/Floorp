@@ -30,6 +30,9 @@ permalink: /changelog/
 * **browser-session**
   * Added `AllSessionsObserver` helper that automatically subscribes and unsubscribes to all `Session` instances that get added/removed.
 
+* **support-base**
+  * Added `Build` object that contains information about the current Android Components build (like version number and git hash).
+
 # 0.53.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.52.0...v0.53.0)

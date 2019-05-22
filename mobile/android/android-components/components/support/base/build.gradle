@@ -7,6 +7,15 @@ apply plugin: 'kotlin-android'
 
 def generatedSrcDir = new File(buildDir, "generated/components/src/main/java")
 
+def getGitHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'rev-parse', '--short', 'HEAD'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
 android {
     compileSdkVersion config.compileSdkVersion
 
@@ -15,12 +24,18 @@ android {
         targetSdkVersion config.targetSdkVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
+        buildConfigField("String", "APPLICATION_SERVICES_VERSION", "\"" + Versions.mozilla_appservices + "\"")
+        buildConfigField("String", "GIT_HASH", "\"dev build\"")
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            buildConfigField("String", "GIT_HASH", "\"" + getGitHash() + "\"")
         }
     }
 
