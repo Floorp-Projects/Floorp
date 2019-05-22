@@ -9,7 +9,7 @@ use api::units::*;
 use crate::clip_scroll_tree::{CoordinateSystem, CoordinateSystemId, SpatialNodeIndex, TransformUpdateState};
 use euclid::SideOffsets2D;
 use crate::scene::SceneProperties;
-use crate::util::{LayoutFastTransform, LayoutToWorldFastTransform, ScaleOffset, TransformedRectKind};
+use crate::util::{LayoutFastTransform, LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset, TransformedRectKind};
 
 #[derive(Clone, Debug)]
 pub enum SpatialNodeType {
@@ -362,13 +362,21 @@ impl SpatialNode {
                             .pre_mul(&relative_transform);
 
                         // Push that new coordinate system and record the new id.
-                        let coord_system = CoordinateSystem {
-                            transform,
-                            should_flatten: match (info.transform_style, info.kind) {
-                                (TransformStyle::Flat, ReferenceFrameKind::Transform) => true,
-                                (_, _) => false,
-                            },
-                            parent: Some(state.current_coordinate_system_id),
+                        let coord_system = {
+                            let parent_system = &coord_systems[state.current_coordinate_system_id.0 as usize];
+                            let mut cur_transform = transform;
+                            if parent_system.should_flatten {
+                                cur_transform.flatten_z_output();
+                            }
+                            CoordinateSystem {
+                                transform,
+                                world_transform: cur_transform.post_mul(&parent_system.world_transform),
+                                should_flatten: match (info.transform_style, info.kind) {
+                                    (TransformStyle::Flat, ReferenceFrameKind::Transform) => true,
+                                    (_, _) => false,
+                                },
+                                parent: Some(state.current_coordinate_system_id),
+                            }
                         };
                         state.current_coordinate_system_id = CoordinateSystemId(coord_systems.len() as u32);
                         coord_systems.push(coord_system);
