@@ -50,7 +50,7 @@ Test that css-logic calculates CSS specificity properly
     SimpleTest.waitForExplicitFinish();
 
     createDocument();
-    const cssLogic = new CssLogic(InspectorUtils.isInheritedProperty);
+    const cssLogic = new CssLogic();
 
     cssLogic.highlight(document.body);
     const cssSheet = cssLogic.sheets[0];
