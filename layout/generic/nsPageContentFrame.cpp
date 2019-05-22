@@ -10,7 +10,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
-#include "nsSimplePageSequenceFrame.h"
+#include "nsPageSequenceFrame.h"
 
 using namespace mozilla;
 
