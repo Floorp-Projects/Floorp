@@ -115,9 +115,11 @@ class GeckoViewNavigation extends GeckoViewModule {
         try {
           parsedUri = Services.io.newURI(uri);
           if (parsedUri.schemeIs("about") || parsedUri.schemeIs("data") ||
-              parsedUri.schemeIs("file") || parsedUri.schemeIs("resource")) {
+              parsedUri.schemeIs("file") || parsedUri.schemeIs("resource") ||
+              parsedUri.schemeIs("moz-extension")) {
             // Only allow privileged loading for certain URIs.
-            triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+            triggeringPrincipal = Services.scriptSecurityManager
+                .createCodebasePrincipal(parsedUri, {});
           }
         } catch (ignored) {
         }

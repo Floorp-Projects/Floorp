@@ -12,9 +12,6 @@
       "run_at": "document_idle"
     }
   ],
-  "web_accessible_resources": [
-    "tab.html"
-  ],
   "permissions": [
     "geckoViewAddons",
     "nativeMessaging",
