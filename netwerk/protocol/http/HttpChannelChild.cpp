@@ -3721,7 +3721,10 @@ nsresult HttpChannelChild::AsyncCallImpl(
 }
 
 nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer) {
-  ENSURE_CALLED_BEFORE_CONNECT();
+  // Normally this would be ENSURE_CALLED_BEFORE_CONNECT, but since the
+  // "connect" is done in the main process, and mRequestObserversCalled is never
+  // set in the ChannelChild, before connect basically means before asyncOpen.
+  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
   // remove old referrer if any, loop backwards
   for (int i = mClientSetRequestHeaders.Length() - 1; i >= 0; --i) {
