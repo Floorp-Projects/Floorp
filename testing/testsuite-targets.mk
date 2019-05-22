@@ -225,7 +225,11 @@ stage-android: make-stage-dir
 	$(NSINSTALL) -D $(DEPTH)/_tests/reftest/hyphenation
 	$(NSINSTALL) $(wildcard $(topsrcdir)/intl/locales/*/hyphenation/*.dic) $(DEPTH)/_tests/reftest/hyphenation
 
+ifdef MOZ_COPY_PDBS
+CPP_UNIT_TEST_BINS=$(filter-out $(wildcard $(DIST)/cppunittests/*.pdb), $(wildcard $(DIST)/cppunittests/*))
+else
 CPP_UNIT_TEST_BINS=$(wildcard $(DIST)/cppunittests/*)
+endif
 
 stage-cppunittests: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/cppunittest
