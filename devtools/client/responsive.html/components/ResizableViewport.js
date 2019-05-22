@@ -23,6 +23,7 @@ class ResizableViewport extends PureComponent {
     return {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
+      onChangeViewportOrientation: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       doResizeViewport: PropTypes.func.isRequired,
@@ -150,6 +151,7 @@ class ResizableViewport extends PureComponent {
       swapAfterMount,
       viewport,
       onBrowserMounted,
+      onChangeViewportOrientation,
       onContentResize,
       onResizeViewport,
     } = this.props;
@@ -178,7 +180,9 @@ class ResizableViewport extends PureComponent {
             Browser({
               swapAfterMount,
               userContextId: viewport.userContextId,
+              viewportId: viewport.id,
               onBrowserMounted,
+              onChangeViewportOrientation,
               onContentResize,
               onResizeViewport,
             })

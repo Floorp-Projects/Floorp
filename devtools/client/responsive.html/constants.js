@@ -6,3 +6,9 @@
 
 // The minimum viewport width and height
 exports.MIN_VIEWPORT_DIMENSION = 50;
+
+// Orientation types
+exports.PORTRAIT_PRIMARY = "portrait-primary";
+exports.PORTRAIT_SECONDARY = "portrait-secondary";
+exports.LANDSCAPE_PRIMARY = "landscape-primary";
+exports.LANDSCAPE_SECONDARY = "landscape-secondary";
