@@ -30,6 +30,7 @@ window._gBrowser = {
     }
     window.addEventListener("sizemodechange", this);
     window.addEventListener("occlusionstatechange", this);
+    window.addEventListener("framefocusrequested", this);
 
     this._setupInitialBrowserAndTab();
 
@@ -4298,6 +4299,18 @@ window._gBrowser = {
       case "keypress":
         this._handleKeyPressEventMac(aEvent);
         break;
+      case "framefocusrequested": {
+        let tab = this.getTabForBrowser(aEvent.target);
+        if (!tab || tab == this.selectedTab) {
+          // Let the focus manager try to do its thing by not calling
+          // preventDefault(). It will still raise the window if appropriate.
+          break;
+        }
+        this.selectedTab = tab;
+        window.focus();
+        aEvent.preventDefault();
+        break;
+      }
       case "sizemodechange":
       case "occlusionstatechange":
         if (aEvent.target == window && !this._switcher) {
@@ -4508,6 +4521,7 @@ window._gBrowser = {
     }
     window.removeEventListener("sizemodechange", this);
     window.removeEventListener("occlusionstatechange", this);
+    window.removeEventListener("framefocusrequested", this);
 
     if (gMultiProcessBrowser) {
       let messageManager = window.getGroupMessageManager("browsers");
