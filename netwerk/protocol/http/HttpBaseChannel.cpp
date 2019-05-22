@@ -2990,10 +2990,10 @@ void HttpBaseChannel::DoNotifyListener() {
 
   if (mListener && !mOnStartRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStartRequest(this);
-
     mOnStartRequestCalled = true;
+    listener->OnStartRequest(this);
   }
+  mOnStartRequestCalled = true;
 
   // Make sure mIsPending is set to false. At this moment we are done from
   // the point of view of our consumer and we have to report our self
@@ -3002,10 +3002,10 @@ void HttpBaseChannel::DoNotifyListener() {
 
   if (mListener && !mOnStopRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStopRequest(this, mStatus);
-
     mOnStopRequestCalled = true;
+    listener->OnStopRequest(this, mStatus);
   }
+  mOnStopRequestCalled = true;
 
   // notify "http-on-stop-connect" observers
   gHttpHandler->OnStopRequest(this);
