@@ -19,14 +19,14 @@ interface nsIPrintingPromptService : nsISupports
 {
    /**
    *  This service enables embedders to implement their own Print and Progress Dialogs.
-   *  Each platform has a "base" or "basckstop" implementation of the service. The 
+   *  Each platform has a "base" or "basckstop" implementation of the service. The
    *  service is automatically registered at start up.
    *
    *  Historically, platform toolkits with native dialogs have implemented them in the GFX layer
    *  Usually they were displayed when a new DeviceContextSpec specific to that platform
    *  was created.
    *
-   *  Windows: The GFX layer no longers supports default toolkit behavior for displaying the 
+   *  Windows: The GFX layer no longers supports default toolkit behavior for displaying the
    *           native Print Dialog.
    *           If an embedder implemented service returns any error code (other than NS_ERROR_ABORT)
    *           printing will terminate.
@@ -34,7 +34,7 @@ interface nsIPrintingPromptService : nsISupports
    *           Returning NS_OK assumes that the PrintSettings object was correctly filled in and
    *           if it does not have valid fields for printer name, etc. it may also terminate.
    *
-   *           Defaults for platform service:           
+   *           Defaults for platform service:
    *             showPrintDialog           - displays a native dialog
    *             showPrintProgressDialog   - displays a XUL dialog
    *             showPageSetupDialog       - displays a XUL dialog
@@ -43,10 +43,10 @@ interface nsIPrintingPromptService : nsISupports
    *             Stated once again: There is no "fallback" native platform support in GFX for the
    *             displaying of the native print dialog. The current default implementation for Windows
    *             display a native print dialog but a XUL-based progress dialog.
-   *             If you wish to have a native progress dialog on Windows you will have to create and 
+   *             If you wish to have a native progress dialog on Windows you will have to create and
    *             register your own service.
-   *  
-   *             Note: The Windows version Mozilla implements this service which is 
+   *
+   *             Note: The Windows version Mozilla implements this service which is
    *                   automatically built and registered for you. You can use it as an example.
    *                   It is located at "widget/windows/nsPrintDialogService.cpp". That service
    *                   is capable of displaying a native print dialog and a XUL progress dialog.
@@ -60,8 +60,8 @@ interface nsIPrintingPromptService : nsISupports
    *              2) For the Print Dialog:
    *                 You may stub out this service by having all the methods return NS_ERROR_NOT_IMPLEMENTED.
    *                 You can then fly you own dialog and then properly fill in the PrintSettings object
-   *                 before calling nsIWebBrowserPrint's Print method. If you stub out this service  
-   *                 you MUST set "printSilent" to true, if you do not, Printing will terminate and an 
+   *                 before calling nsIWebBrowserPrint's Print method. If you stub out this service
+   *                 you MUST set "printSilent" to true, if you do not, Printing will terminate and an
    *                 error dialog will be displayed.
    *
    *  Mac: The GFX layer still supports default toolkit behavior for displaying the Print Dialog.
@@ -80,11 +80,11 @@ interface nsIPrintingPromptService : nsISupports
    *         showPageSetupDialog       - displays a native dialog
    *
    */
- 
+
 
 
   /**
-   *  Show the Print Dialog 
+   *  Show the Print Dialog
    *
    *  @param parent - a DOM windows the dialog will be parented to (required)
    *  @param webBrowserPrint - represents the document to be printed (required)

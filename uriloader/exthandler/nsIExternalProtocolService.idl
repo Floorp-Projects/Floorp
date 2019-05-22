@@ -13,11 +13,11 @@ interface nsIHandlerInfo;
 
 /**
  * The external protocol service is used for finding and launching
- * web handlers (a la registerProtocolHandler in the HTML5 draft) or 
+ * web handlers (a la registerProtocolHandler in the HTML5 draft) or
  * platform-specific applications for handling particular protocols.
  *
  * You can ask the external protocol service if it has an external
- * handler for a given protocol scheme. And you can ask it to load 
+ * handler for a given protocol scheme. And you can ask it to load
  * the url using the default handler.
  */
 [scriptable, uuid(70f93b7a-3ec6-4bcb-b093-92d9984c9f83)]
@@ -53,13 +53,13 @@ interface nsIExternalProtocolService : nsISupports
    * Retrieve the handler for the given protocol.  If neither the application
    * nor the OS knows about a handler for the protocol, the object this method
    * returns will represent a default handler for unknown content.
-   * 
+   *
    * @param aProtocolScheme the scheme from a URL: http, ftp, mailto, etc.
-   * 
+   *
    * Note: aProtocolScheme should not include a trailing colon, which is part
    * of the URI syntax, not part of the scheme itself (i.e. pass "mailto" not
    * "mailto:").
-   * 
+   *
    * @return the handler, if any; otherwise a default handler
    */
   nsIHandlerInfo getProtocolHandlerInfo(in ACString aProtocolScheme);
@@ -75,10 +75,10 @@ interface nsIExternalProtocolService : nsISupports
   nsIHandlerInfo getProtocolHandlerInfoFromOS(in ACString aProtocolScheme,
                                               out boolean aFound);
 
-  /** 
+  /**
    * Set some sane defaults for a protocol handler object.
-   * 
-   * @param aHandlerInfo      nsIHandlerInfo object, as returned by 
+   *
+   * @param aHandlerInfo      nsIHandlerInfo object, as returned by
    *                          getProtocolHandlerInfoFromOS
    * @param aOSHandlerExists  was the object above created for an extant
    *                          OS default handler?  This is generally the
@@ -95,17 +95,17 @@ interface nsIExternalProtocolService : nsISupports
    * @param aURI
    *        The URI to load
    *
-   * @param aWindowContext 
+   * @param aWindowContext
    *        The window to parent the dialog against, and, if a web handler
    *        is chosen, it is loaded in this window as well.  This parameter
    *        may be ultimately passed nsIURILoader.openURI in the case of a
    *        web handler, and aWindowContext is null or not present, web
    *        handlers will fail.  We need to do better than that; bug 394483
    *        filed in order to track.
-   * 
+   *
    * @note  Embedders that do not expose the http protocol should not currently
    *        use web-based protocol handlers, as handoff won't work correctly
-   *        (bug 394479).  
+   *        (bug 394479).
    */
   void loadURI(in nsIURI aURI,
                [optional] in nsIInterfaceRequestor aWindowContext);

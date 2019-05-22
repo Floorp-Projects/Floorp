@@ -16,13 +16,13 @@ interface nsIDOMXULSelectControlItemElement : nsISupports {
   attribute AString label;
   attribute AString accessKey;
   attribute AString command;
-  
+
   attribute AString value;
-  
+
   readonly attribute boolean selected;
-  
+
   readonly attribute Element control;
-  
+
   // XXX defined in XULElement, but should be defined here
   // void doCommand();
 };

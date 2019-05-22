@@ -19,11 +19,11 @@ webidl Node;
  * by in-process accessibility clients, which can be used
  * to find out how to get accessibility and DOM interfaces for
  * the event and its target. To listen to in-process accessibility invents,
- * make your object an nsIObserver, and listen for accessible-event by 
+ * make your object an nsIObserver, and listen for accessible-event by
  * using code something like this:
- *   nsCOMPtr<nsIObserverService> observerService = 
+ *   nsCOMPtr<nsIObserverService> observerService =
  *     do_GetService("@mozilla.org/observer-service;1", &rv);
- *   if (NS_SUCCEEDED(rv)) 
+ *   if (NS_SUCCEEDED(rv))
  *     rv = observerService->AddObserver(this, "accessible-event", PR_TRUE);
  */
 [scriptable, builtinclass, uuid(20c69a40-6c2c-42a3-a578-6f4473aab9dd)]
@@ -190,7 +190,7 @@ interface nsIAccessibleEvent : nsISupports
    * An application is about to exit drag-and-drop mode
    */
   const unsigned long EVENT_DRAGDROP_END = 0x0020;
-  
+
   /**
    * A dialog box has been displayed
    */
@@ -438,13 +438,13 @@ interface nsIAccessibleEvent : nsISupports
    * defined in this interface.
    */
   readonly attribute unsigned long eventType;
-  
+
   /**
    * The nsIAccessible associated with the event.
    * May return null if no accessible is available
    */
   readonly attribute nsIAccessible accessible;
-  
+
   /**
    * The nsIAccessibleDocument that the event target nsIAccessible
    * resides in. This can be used to get the DOM window,

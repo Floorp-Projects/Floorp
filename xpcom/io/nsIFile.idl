@@ -103,8 +103,8 @@ interface nsIFile : nsISupports
     [must_use] void create(in unsigned long type, in unsigned long permissions);
 
     /**
-     *  Accessor to the leaf name of the file itself.      
-     *  For the |nativeLeafName| method, the nativeLeafName must 
+     *  Accessor to the leaf name of the file itself.
+     *  For the |nativeLeafName| method, the nativeLeafName must
      *  be in the native filesystem charset.
      */
     attribute AString leafName;
@@ -118,7 +118,7 @@ interface nsIFile : nsISupports
      *  If 'this' is not created we will return an error
      *  (NS_ERROR_FILE_TARGET_DOES_NOT_EXIST).
      *
-     *  copyTo may fail if the file already exists in the destination 
+     *  copyTo may fail if the file already exists in the destination
      *  directory.
      *
      *  copyTo will NOT resolve aliases/shortcuts during the copy.
@@ -128,8 +128,8 @@ interface nsIFile : nsISupports
      *       newParentDir is null, copyTo() will use the parent
      *       directory of this file. If the newParentDir is not
      *       empty and is not a directory, an error will be
-     *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR). For the 
-     *       |CopyToNative| method, the newName must be in the 
+     *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR). For the
+     *       |CopyToNative| method, the newName must be in the
      *       native filesystem charset.
      *
      *   @param newName
@@ -145,8 +145,8 @@ interface nsIFile : nsISupports
      *
      *  This function is identical to copyTo with the exception that,
      *  as the name implies, it follows symbolic links.  The XP_UNIX
-     *  implementation always follow symbolic links when copying.  For 
-     *  the |CopyToFollowingLinks| method, the newName must be in the 
+     *  implementation always follow symbolic links when copying.  For
+     *  the |CopyToFollowingLinks| method, the newName must be in the
      *  native filesystem charset.
      */
     void copyToFollowingLinks(in nsIFile newParentDir, in AString newName);
@@ -175,8 +175,8 @@ interface nsIFile : nsISupports
      *       newParentDir is empty, moveTo() will rename the file
      *       within its current directory. If the newParentDir is
      *       not empty and does not name a directory, an error will
-     *       be returned (NS_ERROR_FILE_DESTINATION_NOT_DIR).  For 
-     *       the |moveToNative| method, the newName must be in the 
+     *       be returned (NS_ERROR_FILE_DESTINATION_NOT_DIR).  For
+     *       the |moveToNative| method, the newName must be in the
      *       native filesystem charset.
      *
      *   @param newName
@@ -251,7 +251,7 @@ interface nsIFile : nsISupports
      *  path
      *      Find out what the nsIFile points at.
      *
-     *  Note that the ACString attributes are returned in the 
+     *  Note that the ACString attributes are returned in the
      *  native filesystem charset.
      *
      */
@@ -284,7 +284,7 @@ interface nsIFile : nsISupports
 
     /**
      *  createUnique
-     *  
+     *
      *  This function will create a new file or directory in the
      *  file system. Any nodes that have not been created or
      *  resolved, will be.  If this file already exists, we try
@@ -338,7 +338,7 @@ interface nsIFile : nsISupports
      *  Parent will be null when this is at the top of the volume.
      */
     readonly attribute nsIFile parent;
-    
+
     /**
      *  Returns an enumeration of the elements in a directory. Each
      *  element in the enumeration is an nsIFile.
@@ -362,16 +362,16 @@ interface nsIFile : nsISupports
      *  This function will initialize the nsIFile object.  Any
      *  internal state information will be reset.
      *
-     *   @param filePath       
-     *       A string which specifies a full file path to a 
+     *   @param filePath
+     *       A string which specifies a full file path to a
      *       location.  Relative paths will be treated as an
-     *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  For 
+     *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  For
      *       initWithNativePath, the filePath must be in the native
      *       filesystem charset.
      */
     void initWithPath(in AString filePath);
     [noscript] void initWithNativePath(in ACString filePath);
-    
+
     /**
      *  initWithFile
      *
@@ -381,23 +381,23 @@ interface nsIFile : nsISupports
      *       the file this becomes equivalent to
      */
     void initWithFile(in nsIFile aFile);
-    
+
     /**
      *  followLinks
      *
      *  This attribute will determine if the nsLocalFile will auto
      *  resolve symbolic links.  By default, this value will be false
      *  on all non unix systems.  On unix, this attribute is effectively
-     *  a noop.  
+     *  a noop.
      */
-    attribute boolean followLinks;  
+    attribute boolean followLinks;
 
     /**
      * Flag for openNSPRFileDesc(), to hint to the OS that the file will be
      * read sequentially with agressive readahead.
      */
     const unsigned long OS_READAHEAD = 0x40000000;
-    
+
     /**
      * Flag for openNSPRFileDesc(). Deprecated and unreliable!
      * Instead use NS_OpenAnonymousTemporaryFile() to create a temporary
@@ -444,12 +444,12 @@ interface nsIFile : nsISupports
      *   @param relativeFilePath
      *       relativeFilePath is a native relative path. For security reasons,
      *       this cannot contain .. or cannot start with a directory separator.
-     *       For the |appendRelativeNativePath| method, the relativeFilePath 
+     *       For the |appendRelativeNativePath| method, the relativeFilePath
      *       must be in the native filesystem charset.
      */
     void appendRelativePath(in AString relativeFilePath);
     [noscript] void appendRelativeNativePath(in ACString relativeFilePath);
-    
+
     /**
      *  Accessor to a null terminated string which will specify
      *  the file in a persistent manner for disk storage.

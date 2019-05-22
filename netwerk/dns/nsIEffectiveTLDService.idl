@@ -27,8 +27,8 @@ interface nsIEffectiveTLDService : nsISupports
      *
      * @returns the public suffix
      *
-     * @throws NS_ERROR_UNEXPECTED 
-     *         or other error returned by nsIIDNService::normalize when 
+     * @throws NS_ERROR_UNEXPECTED
+     *         or other error returned by nsIIDNService::normalize when
      *         the hostname contains characters disallowed in URIs
      * @throws NS_ERROR_HOST_IS_IP_ADDRESS
      *         if the host is a numeric IPv4 or IPv6 address (as determined by
@@ -64,8 +64,8 @@ interface nsIEffectiveTLDService : nsISupports
      *
      * @returns the base domain (public suffix plus the requested number of additional parts)
      *
-     * @throws NS_ERROR_UNEXPECTED 
-     *         or other error returned by nsIIDNService::normalize when 
+     * @throws NS_ERROR_UNEXPECTED
+     *         or other error returned by nsIIDNService::normalize when
      *         the hostname contains characters disallowed in URIs
      * @throws NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS
      *         when there are insufficient subdomain levels in the hostname to satisfy the

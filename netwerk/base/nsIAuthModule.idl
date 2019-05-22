@@ -87,11 +87,11 @@ interface nsIAuthModule : nsISupports
                       in unsigned long    aInTokenLength,
                       out voidPtr         aOutToken,
                       out unsigned long   aOutTokenLength);
-    /** 
+    /**
      * Once a security context has been established through calls to GetNextToken()
      * it may be used to protect data exchanged between client and server. Calls
      * to Wrap() are used to protect items of data to be sent to the server.
-     * 
+     *
      * @param aInToken
      *        A buffer containing the data to be sent to the server
      * @param aInTokenLength
@@ -106,17 +106,17 @@ interface nsIAuthModule : nsISupports
      *
      * Wrap() may return NS_ERROR_NOT_IMPLEMENTED, if the underlying authentication
      * mechanism does not support security layers.
-     */    
+     */
     void wrap([const] in voidPtr aInToken,
               in unsigned long   aInTokenLength,
-              in boolean         confidential, 
+              in boolean         confidential,
               out voidPtr        aOutToken,
               out unsigned long  aOutTokenLength);
 
-    /** 
+    /**
      * Unwrap() is used to unpack, decrypt, and verify the checksums on data
      * returned by a server when security layers are in use.
-     * 
+     *
      * @param aInToken
      *        A buffer containing the data received from the server
      * @param aInTokenLength
@@ -126,7 +126,7 @@ interface nsIAuthModule : nsISupports
      * @param aOutTokenLength
      *        The length of the output token buffer
      *
-     * Unwrap() may return NS_ERROR_NOT_IMPLEMENTED, if the underlying  
+     * Unwrap() may return NS_ERROR_NOT_IMPLEMENTED, if the underlying
      * authentication mechanism does not support security layers.
      */
     void unwrap([const] in voidPtr aInToken,

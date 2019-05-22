@@ -198,7 +198,7 @@ interface nsIURI : nsISupports
 
     /**
      * This method resolves a relative string into an absolute URI string,
-     * using this URI as the base. 
+     * using this URI as the base.
      *
      * NOTE: some implementations may have no concept of a relative URI.
      */

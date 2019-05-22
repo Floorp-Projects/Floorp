@@ -27,14 +27,14 @@ interface nsIBrowserProfileMigrator : nsISupports
   /**
    * Copy user profile information to the current active profile.
    * @param aItems   list of data items to migrate. see above for values.
-   * @param aStartup helper interface which is non-null if called during startup. 
+   * @param aStartup helper interface which is non-null if called during startup.
    * @param aProfile profile to migrate from, if there is more than one.
    */
   void migrate(in unsigned short aItems, in nsIProfileStartup aStartup, in jsval aProfile);
 
   /**
    * A bit field containing profile items that this migrator
-   * offers for import. 
+   * offers for import.
    * @param   aProfile the profile that we are looking for available data
    *          to import
    * @param   aDoingStartup "true" if the profile is not currently being used.

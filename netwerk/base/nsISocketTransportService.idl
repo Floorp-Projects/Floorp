@@ -19,7 +19,7 @@ struct PRFileDesc;
 [ptr] native nsASocketHandlerPtr(nsASocketHandler);
 
 [builtinclass, scriptable, uuid(ad56b25f-e6bb-4db3-9f7b-5b7db33fd2b1)]
-interface nsISocketTransportService : nsISupports 
+interface nsISocketTransportService : nsISupports
 {
     /**
      * Creates a transport for a specified host and port.

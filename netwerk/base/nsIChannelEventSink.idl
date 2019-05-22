@@ -94,7 +94,7 @@ interface nsIChannelEventSink : nsISupports
      * @throw <any> Throwing an exception will cause the redirect to be
      *        cancelled
      */
-    void asyncOnChannelRedirect(in nsIChannel oldChannel, 
+    void asyncOnChannelRedirect(in nsIChannel oldChannel,
                                 in nsIChannel newChannel,
                                 in unsigned long flags,
                                 in nsIAsyncVerifyRedirectCallback callback);

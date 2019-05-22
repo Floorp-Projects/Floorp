@@ -32,7 +32,7 @@ interface nsIAutoCompleteSearch : nsISupports
 
 [scriptable, uuid(8bd1dbbc-dcce-4007-9afa-b551eb687b61)]
 interface nsIAutoCompleteObserver : nsISupports
-{ 
+{
   /*
    * Called when a search is complete and the results are ready
    *

@@ -12,7 +12,7 @@ interface nsIURIMutator;
 interface nsIFileProtocolHandler : nsIProtocolHandler
 {
     /**
-     * This method constructs a new file URI 
+     * This method constructs a new file URI
      *
      * @param aFile nsIFile
      * @return reference to a new nsIURI object
@@ -45,7 +45,7 @@ interface nsIFileProtocolHandler : nsIProtocolHandler
      * Converts the nsIFile to the corresponding URL string. Should
      * only be called on files which are not directories. Otherwise
      * identical to getURLSpecFromFile, but is usually more efficient.
-     * WARNING: This restriction may not be enforced at runtime! 
+     * WARNING: This restriction may not be enforced at runtime!
      */
     AUTF8String getURLSpecFromActualFile(in nsIFile file);
 
@@ -53,7 +53,7 @@ interface nsIFileProtocolHandler : nsIProtocolHandler
      * Converts the nsIFile to the corresponding URL string. Should
      * only be called on files which are directories. Otherwise
      * identical to getURLSpecFromFile, but is usually more efficient.
-     * WARNING: This restriction may not be enforced at runtime! 
+     * WARNING: This restriction may not be enforced at runtime!
      */
     AUTF8String getURLSpecFromDir(in nsIFile file);
 
