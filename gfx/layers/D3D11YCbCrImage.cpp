@@ -24,39 +24,40 @@ D3D11YCbCrImage::D3D11YCbCrImage()
 
 D3D11YCbCrImage::~D3D11YCbCrImage() {}
 
-bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
-                              ImageContainer* aContainer,
-                              const PlanarYCbCrData& aData) {
-  mPictureRect = IntRect(aData.mPicX, aData.mPicY, aData.mPicSize.width,
-                         aData.mPicSize.height);
-  mYSize = aData.mYSize;
-  mCbCrSize = aData.mCbCrSize;
-  mColorDepth = aData.mColorDepth;
-  mColorSpace = aData.mYUVColorSpace;
+/* static */
+already_AddRefed<TextureClient>
+D3D11YCbCrImage::CreateAndCopyDataToDXGIYCbCrTextureData(
+    KnowsCompositor* aAllocator, ImageContainer* aContainer,
+    const PlanarYCbCrData& aData) {
+  if (!aAllocator || !aContainer) {
+    return nullptr;
+  }
 
   D3D11YCbCrRecycleAllocator* allocator =
       aContainer->GetD3D11YCbCrRecycleAllocator(aAllocator);
   if (!allocator) {
-    return false;
+    return nullptr;
   }
 
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
   if (!device) {
-    return false;
+    return nullptr;
   }
+
+  RefPtr<TextureClient> textureClient;
 
   {
     DXGIYCbCrTextureAllocationHelper helper(aData, TextureFlags::DEFAULT,
                                             device);
-    mTextureClient = allocator->CreateOrRecycle(helper);
+    textureClient = allocator->CreateOrRecycle(helper);
   }
 
-  if (!mTextureClient) {
-    return false;
+  if (!textureClient) {
+    return nullptr;
   }
 
   DXGIYCbCrTextureData* data =
-      mTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
+      textureClient->GetInternalData()->AsDXGIYCbCrTextureData();
 
   ID3D11Texture2D* textureY = data->GetD3D11Texture(0);
   ID3D11Texture2D* textureCb = data->GetD3D11Texture(1);
@@ -67,12 +68,12 @@ bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
 
   if (FAILED(hr) || !mt) {
     gfxCriticalError() << "Multithread safety interface not supported. " << hr;
-    return false;
+    return nullptr;
   }
 
   if (!mt->GetMultithreadProtected()) {
     gfxCriticalError() << "Device used not marked as multithread-safe.";
-    return false;
+    return nullptr;
   }
 
   D3D11MTAutoEnter mtAutoEnter(mt.forget());
@@ -81,7 +82,7 @@ bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   device->GetImmediateContext(getter_AddRefs(ctx));
   if (!ctx) {
     gfxCriticalError() << "Failed to get immediate context.";
-    return false;
+    return nullptr;
   }
 
   AutoLockD3D11Texture lockY(textureY);
@@ -96,6 +97,25 @@ bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   ctx->UpdateSubresource(textureCr, 0, nullptr, aData.mCrChannel,
                          aData.mCbCrStride,
                          aData.mCbCrStride * aData.mCbCrSize.height);
+
+  return textureClient.forget();
+}
+
+bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
+                              ImageContainer* aContainer,
+                              const PlanarYCbCrData& aData) {
+  mPictureRect = IntRect(aData.mPicX, aData.mPicY, aData.mPicSize.width,
+                         aData.mPicSize.height);
+  mYSize = aData.mYSize;
+  mCbCrSize = aData.mCbCrSize;
+  mColorDepth = aData.mColorDepth;
+  mColorSpace = aData.mYUVColorSpace;
+
+  mTextureClient =
+      CreateAndCopyDataToDXGIYCbCrTextureData(aAllocator, aContainer, aData);
+  if (!mTextureClient) {
+    return false;
+  }
 
   return true;
 }
