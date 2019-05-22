@@ -219,10 +219,19 @@ WebConsoleConnectionProxy.prototype = {
    * Dispatch a message event on the new frontend and emit an event for tests.
    */
   dispatchMessageUpdate: function(networkInfo, response) {
+    // Some message might try to update while we are closing the toolbox.
+    if (!this.webConsoleUI) {
+      return;
+    }
     this.webConsoleUI.wrapper.dispatchMessageUpdate(networkInfo, response);
   },
 
   dispatchRequestUpdate: function(id, data) {
+    // Some request might try to update while we are closing the toolbox.
+    if (!this.webConsoleUI) {
+      return;
+    }
+
     this.webConsoleUI.wrapper.dispatchRequestUpdate(id, data);
   },
 
