@@ -77,6 +77,7 @@ import org.mozilla.geckoview.ScreenLength;
 import org.mozilla.geckoview.SessionAccessibility;
 import org.mozilla.geckoview.SessionFinder;
 import org.mozilla.geckoview.SessionTextInput;
+import org.mozilla.geckoview.StorageController;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebMessage;
 import org.mozilla.geckoview.WebRequest;
@@ -275,6 +276,7 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public GeckoRuntime.Delegate getDelegate();
     method @UiThread @Nullable public File getProfileDir();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
+    method @UiThread @NonNull public StorageController getStorageController();
     method @UiThread @NonNull public RuntimeTelemetry getTelemetry();
     method @UiThread public void orientationChanged();
     method @UiThread public void orientationChanged(int);
@@ -1010,6 +1012,26 @@ package org.mozilla.geckoview {
     method @UiThread public void onProvideAutofillVirtualStructure(@NonNull ViewStructure, int);
     method @UiThread public void setDelegate(@Nullable GeckoSession.TextInputDelegate);
     method @UiThread public synchronized void setView(@Nullable View);
+  }
+
+  public final class StorageController {
+    ctor public StorageController();
+    method @AnyThread @NonNull public GeckoResult<Void> clearData(long);
+    method @AnyThread @NonNull public GeckoResult<Void> clearDataFromHost(@NonNull String, long);
+  }
+
+  public static class StorageController.ClearFlags {
+    ctor public ClearFlags();
+    field public static final long ALL = 512L;
+    field public static final long ALL_CACHES = 6L;
+    field public static final long AUTH_SESSIONS = 32L;
+    field public static final long COOKIES = 1L;
+    field public static final long DOM_STORAGES = 16L;
+    field public static final long IMAGE_CACHE = 4L;
+    field public static final long NETWORK_CACHE = 2L;
+    field public static final long PERMISSIONS = 64L;
+    field public static final long SITE_DATA = 471L;
+    field public static final long SITE_SETTINGS = 192L;
   }
 
   public class WebExtension {
