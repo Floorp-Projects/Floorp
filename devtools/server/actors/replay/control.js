@@ -274,6 +274,13 @@ ChildProcess.prototype = {
       },
     });
     this.asyncManifests.shift();
+
+    // If this is the active child then we shouldn't leave it in an unpaused
+    // state, so callers can interact with it as expected.
+    if (this == gActiveChild) {
+      this.waitUntilPaused();
+    }
+
     return true;
   },
 };
@@ -1214,7 +1221,9 @@ const gControl = {
       pauseReplayingChild(gPausePoint);
       gActiveChild.sendManifest({
         contents: { kind: "batchDebuggerRequest", requests: gDebuggerRequests },
-        onFinished(finishData) { assert(!finishData.restoredCheckpoint); },
+        onFinished(finishData) {
+          assert(!finishData || !finishData.restoredCheckpoint);
+        },
       });
       gActiveChild.waitUntilPaused();
       return { unhandledDivergence: true };
