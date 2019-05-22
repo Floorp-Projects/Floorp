@@ -183,8 +183,8 @@ async function assignCookiesUnderFirstParty(aURL, aFirstParty, aCookieValue) {
 async function generateCookies(aThirdParty) {
   // we generate two different cookies for two first party domains.
   let cookies = [];
-  cookies.push(Math.random().toString() + "=1");
-  cookies.push(Math.random().toString() + "=1");
+  cookies.push(Math.random().toString());
+  cookies.push(Math.random().toString());
 
   let firstSiteURL;
   let secondSiteURL;
