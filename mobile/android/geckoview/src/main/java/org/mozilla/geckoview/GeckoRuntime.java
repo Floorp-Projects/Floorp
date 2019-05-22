@@ -160,6 +160,7 @@ public final class GeckoRuntime implements Parcelable {
     private Delegate mDelegate;
     private RuntimeTelemetry mTelemetry;
     private WebExtensionEventDispatcher mWebExtensionDispatcher;
+    private StorageController mStorageController;
 
     /**
      * Attach the runtime to the given context.
@@ -561,6 +562,24 @@ public final class GeckoRuntime implements Parcelable {
     public void orientationChanged(final int newOrientation) {
         ThreadUtils.assertOnUiThread();
         GeckoScreenOrientation.getInstance().update(newOrientation);
+    }
+
+
+    /**
+     * Get the storage controller for this runtime.
+     * The storage controller can be used to manage persistent storage data
+     * accumulated by {@link GeckoSession}.
+     *
+     * @return The {@link StorageController} for this instance.
+     */
+    @UiThread
+    public @NonNull StorageController getStorageController() {
+        ThreadUtils.assertOnUiThread();
+
+        if (mStorageController == null) {
+            mStorageController = new StorageController();
+        }
+        return mStorageController;
     }
 
     @Override // Parcelable
