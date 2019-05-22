@@ -647,7 +647,7 @@ var SessionStoreInternal = {
     let state;
     let ss = SessionStartup;
 
-    if (ss.doRestore() ||
+    if (ss.willRestore() ||
         ss.sessionType == ss.DEFER_SESSION) {
       state = ss.state;
     }
@@ -678,7 +678,7 @@ var SessionStoreInternal = {
           // restore it
           LastSession.setState(state.lastSessionState);
 
-          if (ss.previousSessionCrashed) {
+          if (ss.willRestoreAsCrashed()) {
             this._recentCrashes = (state.session &&
                                    state.session.recentCrashes || 0) + 1;
 
@@ -1242,7 +1242,7 @@ var SessionStoreInternal = {
 
       if (closedWindowState) {
         let newWindowState;
-        if (AppConstants.platform == "macosx" || !this._doResumeSession()) {
+        if (AppConstants.platform == "macosx" || !SessionStartup.willRestore()) {
           // We want to split the window up into pinned tabs and unpinned tabs.
           // Pinned tabs should be restored. If there are any remaining tabs,
           // they should be added back to _closedWindows.
@@ -4696,15 +4696,6 @@ var SessionStoreInternal = {
     WINDOW_SHOWING_PROMISES.set(window, PromiseUtils.defer());
 
     return window;
-  },
-
-  /**
-   * Whether or not to resume session, if not recovering from a crash.
-   * @returns bool
-   */
-  _doResumeSession: function ssi_doResumeSession() {
-    return this._prefBranch.getIntPref("startup.page") == 3 ||
-           this._prefBranch.getBoolPref("sessionstore.resume_session_once");
   },
 
   /**
