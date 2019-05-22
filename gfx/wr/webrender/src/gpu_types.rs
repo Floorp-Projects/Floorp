@@ -321,22 +321,6 @@ pub struct SplitCompositeInstance {
     pub render_task_address: RenderTaskAddress,
 }
 
-impl SplitCompositeInstance {
-    pub fn new(
-        prim_header_index: PrimitiveHeaderIndex,
-        polygons_address: GpuCacheAddress,
-        render_task_address: RenderTaskAddress,
-        z: ZBufferId,
-    ) -> Self {
-        SplitCompositeInstance {
-            prim_header_index,
-            polygons_address,
-            z,
-            render_task_address,
-        }
-    }
-}
-
 impl From<SplitCompositeInstance> for PrimitiveInstanceData {
     fn from(instance: SplitCompositeInstance) -> Self {
         PrimitiveInstanceData {

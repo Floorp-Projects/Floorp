@@ -1220,14 +1220,19 @@ impl<'a> DisplayListFlattener<'a> {
 
                     for _ in 0 .. item_clip_node.count {
                         // Get the id of the clip sources entry for that clip chain node.
-                        let (handle, spatial_node_index, local_pos) = {
+                        let (handle, spatial_node_index, local_pos, has_complex_clip) = {
                             let clip_chain = self
                                 .clip_store
                                 .get_clip_chain(clip_node_clip_chain_id);
 
                             clip_node_clip_chain_id = clip_chain.parent_clip_chain_id;
 
-                            (clip_chain.handle, clip_chain.spatial_node_index, clip_chain.local_pos)
+                            (
+                                clip_chain.handle,
+                                clip_chain.spatial_node_index,
+                                clip_chain.local_pos,
+                                clip_chain.has_complex_clip,
+                            )
                         };
 
                         // Add a new clip chain node, which references the same clip sources, and
@@ -1239,6 +1244,7 @@ impl<'a> DisplayListFlattener<'a> {
                                 local_pos,
                                 spatial_node_index,
                                 clip_chain_id,
+                                has_complex_clip,
                             );
                     }
                 }
@@ -1308,6 +1314,7 @@ impl<'a> DisplayListFlattener<'a> {
             for (local_pos, item) in clip_items {
                 // Intern this clip item, and store the handle
                 // in the clip chain node.
+                let has_complex_clip = item.has_complex_clip();
                 let handle = self.interners
                     .clip
                     .intern(&item, || ());
@@ -1317,6 +1324,7 @@ impl<'a> DisplayListFlattener<'a> {
                     local_pos,
                     spatial_node_index,
                     clip_chain_id,
+                    has_complex_clip,
                 );
             }
 
@@ -1585,15 +1593,27 @@ impl<'a> DisplayListFlattener<'a> {
             Picture3DContext::Out
         };
 
-        // Force an intermediate surface if the stacking context
-        // has a clip node. In the future, we may decide during
+        // Force an intermediate surface if the stacking context has a
+        // complex clip node. In the future, we may decide during
         // prepare step to skip the intermediate surface if the
         // clip node doesn't affect the stacking context rect.
-        let blit_reason = if clip_chain_id == ClipChainId::NONE {
-            BlitReason::empty()
-        } else {
-            BlitReason::CLIP
-        };
+        let mut blit_reason = BlitReason::empty();
+        let mut current_clip_chain_id = clip_chain_id;
+
+        // Walk each clip in this chain, to see whether any of the clips
+        // require that we draw this to an intermediate surface.
+        while current_clip_chain_id != ClipChainId::NONE {
+            let clip_chain_node = &self
+                .clip_store
+                .clip_chain_nodes[current_clip_chain_id.0 as usize];
+
+            if clip_chain_node.has_complex_clip {
+                blit_reason = BlitReason::CLIP;
+                break;
+            }
+
+            current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
+        }
 
         // Push the SC onto the stack, so we know how to handle things in
         // pop_stacking_context.
@@ -2021,6 +2041,7 @@ impl<'a> DisplayListFlattener<'a> {
                 clip_region.main.origin,
                 spatial_node,
                 parent_clip_chain_index,
+                false,
             );
         clip_count += 1;
 
@@ -2037,6 +2058,7 @@ impl<'a> DisplayListFlattener<'a> {
                     image_mask.rect.origin,
                     spatial_node,
                     parent_clip_chain_index,
+                    true,
                 );
             clip_count += 1;
         }
@@ -2054,6 +2076,7 @@ impl<'a> DisplayListFlattener<'a> {
                     region.rect.origin,
                     spatial_node,
                     parent_clip_chain_index,
+                    true,
                 );
             clip_count += 1;
         }

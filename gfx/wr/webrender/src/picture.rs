@@ -1645,7 +1645,6 @@ impl<'a> PictureUpdateState<'a> {
 
         state.update(
             pic_index,
-            ClipChainId::NONE,
             picture_primitives,
             frame_context,
             gpu_cache,
@@ -1709,7 +1708,6 @@ impl<'a> PictureUpdateState<'a> {
     fn update(
         &mut self,
         pic_index: PictureIndex,
-        clip_chain_id: ClipChainId,
         picture_primitives: &mut [PicturePrimitive],
         frame_context: &FrameBuildingContext,
         gpu_cache: &mut GpuCache,
@@ -1717,16 +1715,12 @@ impl<'a> PictureUpdateState<'a> {
         clip_data_store: &ClipDataStore,
     ) {
         if let Some(prim_list) = picture_primitives[pic_index.0].pre_update(
-            clip_chain_id,
             self,
             frame_context,
-            clip_store,
-            clip_data_store,
         ) {
-            for (child_pic_index, clip_chain_id) in &prim_list.pictures {
+            for child_pic_index in &prim_list.pictures {
                 self.update(
                     *child_pic_index,
-                    *clip_chain_id,
                     picture_primitives,
                     frame_context,
                     gpu_cache,
@@ -1768,7 +1762,7 @@ impl<'a> PictureUpdateState<'a> {
             None => fallback_raster_spatial_node,
         };
 
-        for (child_pic_index, _) in &picture.prim_list.pictures {
+        for child_pic_index in &picture.prim_list.pictures {
             self.assign_raster_roots(*child_pic_index, picture_primitives, new_fallback);
         }
     }
@@ -1995,7 +1989,7 @@ impl ClusterIndex {
 
 /// A list of pictures, stored by the PrimitiveList to enable a
 /// fast traversal of just the pictures.
-pub type PictureList = SmallVec<[(PictureIndex, ClipChainId); 4]>;
+pub type PictureList = SmallVec<[PictureIndex; 4]>;
 
 /// A list of primitive instances that are added to a picture
 /// This ensures we can keep a list of primitives that
@@ -2044,7 +2038,7 @@ impl PrimitiveList {
             // remove this match and embed this info directly in the primitive instance.
             let is_pic = match prim_instance.kind {
                 PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                    pictures.push((pic_index, prim_instance.clip_chain_id));
+                    pictures.push(pic_index);
                     true
                 }
                 _ => {
@@ -2238,7 +2232,7 @@ impl PicturePrimitive {
         pt.add_item(format!("raster_config: {:?}", self.raster_config));
         pt.add_item(format!("requested_composite_mode: {:?}", self.requested_composite_mode));
 
-        for (index, _) in &self.prim_list.pictures {
+        for index in &self.prim_list.pictures {
             pictures[index.0].print(pictures, *index, pt);
         }
 
@@ -2905,11 +2899,8 @@ impl PicturePrimitive {
     /// surface / raster config now though.
     fn pre_update(
         &mut self,
-        clip_chain_id: ClipChainId,
         state: &mut PictureUpdateState,
         frame_context: &FrameBuildingContext,
-        clip_store: &ClipStore,
-        clip_data_store: &ClipDataStore,
     ) -> Option<PrimitiveList> {
         // Reset raster config in case we early out below.
         self.raster_config = None;
@@ -2941,52 +2932,6 @@ impl PicturePrimitive {
         // See if this picture actually needs a surface for compositing.
         let actual_composite_mode = match self.requested_composite_mode {
             Some(PictureCompositeMode::Filter(ref filter)) if filter.is_noop() => None,
-            Some(PictureCompositeMode::Blit(reason)) if reason == BlitReason::CLIP => {
-                // If the only reason a picture has requested a surface is due to the clip
-                // chain node, we might choose to skip drawing a surface, and instead apply
-                // the clips to each individual primitive. The logic below works out which
-                // option to choose.
-
-                // Assume that we will apply clips to individual items
-                let mut apply_clip_to_picture = false;
-                let mut current_clip_chain_id = clip_chain_id;
-
-                // Walk each clip in this chain, to see whether to allocate a surface and clip
-                // that, or whether to apply clips to each primitive.
-                while current_clip_chain_id != ClipChainId::NONE {
-                    let clip_chain_node = &clip_store.clip_chain_nodes[current_clip_chain_id.0 as usize];
-                    let clip_node = &clip_data_store[clip_chain_node.handle];
-
-                    match clip_node.item {
-                        ClipItem::Rectangle(_, ClipMode::Clip) => {
-                            // Normal rectangle clips can be handled as per-item clips.
-                            // TODO(gw): In future, we might want to consider selecting
-                            //           a surface in some situations here (e.g. if the
-                            //           stacking context is in a different coord system
-                            //           from the clip, and there are enough primitives
-                            //           in the stacking context to justify a surface).
-                        }
-                        ClipItem::Rectangle(_, ClipMode::ClipOut) |
-                        ClipItem::RoundedRectangle(..) |
-                        ClipItem::Image { .. } |
-                        ClipItem::BoxShadow(..) => {
-                            // Any of these clip types will require a surface.
-                            apply_clip_to_picture = true;
-                            break;
-                        }
-                    }
-
-                    current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
-                }
-
-                // If we decided not to use a surfce for clipping, then skip and draw straight
-                // into the parent surface.
-                if apply_clip_to_picture {
-                    Some(PictureCompositeMode::Blit(reason))
-                } else {
-                    None
-                }
-            }
             ref mode => mode.clone(),
         };
 
