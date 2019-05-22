@@ -19,6 +19,8 @@ GamepadService.addGamepad(
     GamepadService.noHand,
     4, // buttons
     2,
+    0,
+    0,
     0).then((aIndex) => new Promise((aResolve) => {
       // Press a button to make the gamepad visible to the page.
       GamepadService.newButtonEvent(aIndex, 0, true, true);
