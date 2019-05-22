@@ -57,8 +57,6 @@ interface nsIRemoteTab : nsISupports
 
   readonly attribute uint64_t tabId;
 
-  readonly attribute uint64_t contentProcessId;
-
   /**
    * The OS level process Id of the related child process.
    */
@@ -146,9 +144,4 @@ interface nsIRemoteTab : nsISupports
   void maybeCancelContentJSExecution(
       in nsIRemoteTab_NavigationType aNavigationType,
       [optional] in jsval aCancelContentJSOptions);
-
-  /**
-   * Notify the remote tab that the resolution has changed.
-   */
-  [noscript] void notifyResolutionChanged();
 };

@@ -11,7 +11,6 @@
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalChild.h"
@@ -144,7 +143,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalParent::GetChildActor() {
   return do_AddRef(static_cast<WindowGlobalChild*>(otherSide));
 }
 
-already_AddRefed<BrowserParent> WindowGlobalParent::GetBrowserParent() {
+already_AddRefed<BrowserParent> WindowGlobalParent::GetRemoteTab() {
   if (IsInProcess() || mIPCClosed) {
     return nullptr;
   }
@@ -165,7 +164,7 @@ IPCResult WindowGlobalParent::RecvBecomeCurrentWindowGlobal() {
 
 IPCResult WindowGlobalParent::RecvDestroy() {
   if (!mIPCClosed) {
-    RefPtr<BrowserParent> browserParent = GetBrowserParent();
+    RefPtr<BrowserParent> browserParent = GetRemoteTab();
     if (!browserParent || !browserParent->IsDestroyed()) {
       // Make a copy so that we can avoid potential iterator invalidation when
       // calling the user-provided Destroy() methods.
@@ -201,7 +200,7 @@ void WindowGlobalParent::ReceiveRawMessage(
 }
 
 const nsAString& WindowGlobalParent::GetRemoteType() {
-  if (RefPtr<BrowserParent> browserParent = GetBrowserParent()) {
+  if (RefPtr<BrowserParent> browserParent = GetRemoteTab()) {
     return browserParent->Manager()->GetRemoteType();
   }
 
@@ -254,7 +253,7 @@ IPCResult WindowGlobalParent::RecvDidEmbedBrowsingContext(
 already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
     dom::BrowsingContext* aBc, const nsAString& aRemoteType,
     uint64_t aPendingSwitchId, ErrorResult& aRv) {
-  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  RefPtr<BrowserParent> browserParent = GetRemoteTab();
   if (NS_WARN_IF(!browserParent)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -278,13 +277,12 @@ already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
         }
 
         // If we got a BrowserBridgeParent, the frame is out-of-process, so pull
-        // our target content process off of it. Otherwise, it's an in-process
+        // our target BrowserParent off of it. Otherwise, it's an in-process
         // frame, so we can directly use ours.
         if (bridge) {
-          promise->MaybeResolve(
-              bridge->GetBrowserParent()->Manager()->ChildID());
+          promise->MaybeResolve(bridge->GetBrowserParent());
         } else {
-          promise->MaybeResolve(browserParent->Manager()->ChildID());
+          promise->MaybeResolve(browserParent);
         }
       };
 

@@ -128,7 +128,6 @@
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-#include "js/Conversions.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -2570,7 +2569,7 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     // notify "http-on-may-change-process" observers
     gHttpHandler->OnMayChangeProcess(this);
 
-    if (mRedirectContentProcessIdPromise) {
+    if (mRedirectTabPromise) {
       MOZ_ASSERT(!mOnStartRequestCalled);
 
       PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
@@ -7245,11 +7244,10 @@ nsHttpChannel::GetRequestMethod(nsACString& aMethod) {
 class DomPromiseListener final : dom::PromiseNativeHandler {
   NS_DECL_ISUPPORTS
 
-  static RefPtr<nsHttpChannel::ContentProcessIdPromise> Create(
-      dom::Promise* aDOMPromise) {
+  static RefPtr<nsHttpChannel::TabPromise> Create(dom::Promise* aDOMPromise) {
     MOZ_ASSERT(aDOMPromise);
     RefPtr<DomPromiseListener> handler = new DomPromiseListener();
-    RefPtr<nsHttpChannel::ContentProcessIdPromise> promise =
+    RefPtr<nsHttpChannel::TabPromise> promise =
         handler->mPromiseHolder.Ensure(__func__);
     aDOMPromise->AppendNativeHandler(handler);
     return promise;
@@ -7257,12 +7255,15 @@ class DomPromiseListener final : dom::PromiseNativeHandler {
 
   virtual void ResolvedCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue) override {
-    uint64_t cpId;
-    if (!JS::ToUint64(aCx, aValue, &cpId)) {
-      mPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+    nsCOMPtr<nsIRemoteTab> browserParent;
+    JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+    nsresult rv =
+        UnwrapArg<nsIRemoteTab>(aCx, obj, getter_AddRefs(browserParent));
+    if (NS_FAILED(rv)) {
+      mPromiseHolder.Reject(rv, __func__);
       return;
     }
-    mPromiseHolder.Resolve(cpId, __func__);
+    mPromiseHolder.Resolve(browserParent, __func__);
   }
 
   virtual void RejectedCallback(JSContext* aCx,
@@ -7277,15 +7278,15 @@ class DomPromiseListener final : dom::PromiseNativeHandler {
  private:
   DomPromiseListener() = default;
   ~DomPromiseListener() = default;
-  MozPromiseHolder<nsHttpChannel::ContentProcessIdPromise> mPromiseHolder;
+  MozPromiseHolder<nsHttpChannel::TabPromise> mPromiseHolder;
 };
 
 NS_IMPL_ISUPPORTS0(DomPromiseListener)
 
-NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(
-    dom::Promise* aContentProcessIdPromise, uint64_t aIdentifier) {
+NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(dom::Promise* aTabPromise,
+                                             uint64_t aIdentifier) {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG(aContentProcessIdPromise);
+  NS_ENSURE_ARG(aTabPromise);
 
   LOG(("nsHttpChannel::SwitchProcessTo [this=%p]", this));
   LogCallingScriptLocation(this);
@@ -7293,8 +7294,7 @@ NS_IMETHODIMP nsHttpChannel::SwitchProcessTo(
   // We cannot do this after OnStartRequest of the listener has been called.
   NS_ENSURE_FALSE(mOnStartRequestCalled, NS_ERROR_NOT_AVAILABLE);
 
-  mRedirectContentProcessIdPromise =
-      DomPromiseListener::Create(aContentProcessIdPromise);
+  mRedirectTabPromise = DomPromiseListener::Create(aTabPromise);
   mCrossProcessRedirectIdentifier = aIdentifier;
   return NS_OK;
 }
@@ -7645,7 +7645,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
     // notify "http-on-may-change-process" observers
     gHttpHandler->OnMayChangeProcess(this);
 
-    if (mRedirectContentProcessIdPromise) {
+    if (mRedirectTabPromise) {
       PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
       rv = StartCrossProcessRedirect();
       if (NS_SUCCEEDED(rv)) {
