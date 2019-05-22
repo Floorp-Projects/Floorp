@@ -1354,7 +1354,7 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
       d3d11.Disable(FeatureStatus::Blacklisted, "Blacklisted, see bug 1351349",
                     NS_LITERAL_CSTRING("FEATURE_FAILURE_BUG_1351349"));
 #else
-      gfxPrefs::SetCompositorClearState(true);
+      StaticPrefs::SetCompositorClearState(true);
 #endif
     }
   }

@@ -6928,7 +6928,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
   // Special behaviour for desktop mode, provided we are not on an about: page
   nsPIDOMWindowOuter* win = GetWindow();
   if (win && win->IsDesktopModeViewport() && !IsAboutPage()) {
-    CSSCoord viewportWidth = gfxPrefs::DesktopViewportWidth() / fullZoom;
+    CSSCoord viewportWidth = StaticPrefs::DesktopViewportWidth() / fullZoom;
     CSSToScreenScale scaleToFit(aDisplaySize.width / viewportWidth);
     float aspectRatio = (float)aDisplaySize.height / aDisplaySize.width;
     CSSSize viewportSize(viewportWidth, viewportWidth * aspectRatio);
@@ -7066,7 +7066,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       nsViewportInfo::ZoomFlag effectiveZoomFlag =
           mAllowZoom ? nsViewportInfo::ZoomFlag::AllowZoom
                      : nsViewportInfo::ZoomFlag::DisallowZoom;
-      if (gfxPrefs::ForceUserScalable()) {
+      if (StaticPrefs::ForceUserScalable()) {
         // If the pref to force user-scalable is enabled, we ignore the values
         // from the meta-viewport tag for these properties and just assume they
         // allow the page to be scalable. Note in particular that this code is
@@ -7179,7 +7179,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
             // Divide by fullZoom to stretch CSS pixel size of viewport in order
             // to keep device pixel size unchanged after full zoom applied.
             // See bug 974242.
-            width = gfxPrefs::DesktopViewportWidth() / fullZoom;
+            width = StaticPrefs::DesktopViewportWidth() / fullZoom;
           } else {
             // Some viewport information was provided; follow the spec.
             width = displaySize.width;

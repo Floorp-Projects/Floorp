@@ -8,8 +8,8 @@
 #define mozilla_gfx_layers_composite_Diagnostics_h
 
 #include "FPSCounter.h"
-#include "gfxPrefs.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TimeStamp.h"
 #include <deque>
 #include <string>
@@ -66,7 +66,7 @@ class Diagnostics {
   class Record {
    public:
     explicit Record(TimeStamp aStart = TimeStamp()) {
-      if (gfxPrefs::LayersDrawFPS()) {
+      if (StaticPrefs::LayersDrawFPS()) {
         mStart = aStart.IsNull() ? TimeStamp::Now() : aStart;
       }
     }

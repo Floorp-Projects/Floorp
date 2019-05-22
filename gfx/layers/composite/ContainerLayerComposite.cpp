@@ -432,7 +432,7 @@ void RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
       continue;
     }
 
-    if (gfxPrefs::LayersDrawFPS()) {
+    if (StaticPrefs::LayersDrawFPS()) {
       for (const auto& metadata : layer->GetAllScrollMetadata()) {
         if (metadata.IsApzForceDisabled()) {
           aManager->DisabledApzWarning();
@@ -477,7 +477,7 @@ void RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
       PrintUniformityInfo(layer);
     }
 
-    if (gfxPrefs::DrawLayerInfo()) {
+    if (StaticPrefs::DrawLayerInfo()) {
       DrawLayerInfo(preparedData.mClipRect, aManager, layer);
     }
 
@@ -509,7 +509,7 @@ void RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
         }
       }
 
-      if (gfxPrefs::APZMinimap()) {
+      if (StaticPrefs::APZMinimap()) {
         RenderMinimap(aContainer, sampler, aManager, aClipRect, layer);
       }
     }
@@ -650,7 +650,8 @@ void ContainerRender(ContainerT* aContainer, LayerManagerComposite* aManager,
   // APZCs attached to it has a nonempty async transform, then that transform is
   // not applied to any visible content. Display a warning box (conditioned on
   // the FPS display being enabled).
-  if (gfxPrefs::LayersDrawFPS() && aContainer->IsScrollableWithoutContent()) {
+  if (StaticPrefs::LayersDrawFPS() &&
+      aContainer->IsScrollableWithoutContent()) {
     RefPtr<APZSampler> sampler =
         aManager->GetCompositor()->GetCompositorBridgeParent()->GetAPZSampler();
     // Since aContainer doesn't have any children we can just iterate from the

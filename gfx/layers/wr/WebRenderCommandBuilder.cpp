@@ -1618,8 +1618,8 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
 bool WebRenderCommandBuilder::ShouldDumpDisplayList(
     nsDisplayListBuilder* aBuilder) {
   return aBuilder != nullptr && aBuilder->IsInActiveDocShell() &&
-         ((XRE_IsParentProcess() && gfxPrefs::WebRenderDLDumpParent()) ||
-          (XRE_IsContentProcess() && gfxPrefs::WebRenderDLDumpContent()));
+         ((XRE_IsParentProcess() && StaticPrefs::WebRenderDLDumpParent()) ||
+          (XRE_IsContentProcess() && StaticPrefs::WebRenderDLDumpContent()));
 }
 
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
@@ -2090,9 +2090,9 @@ WebRenderCommandBuilder::GenerateFallbackData(
     wr::IpcResourceUpdateQueue& aResources, const StackingContextHelper& aSc,
     nsDisplayListBuilder* aDisplayListBuilder, LayoutDeviceRect& aImageRect) {
   bool useBlobImage =
-      gfxPrefs::WebRenderBlobImages() && !aItem->MustPaintOnContentSide();
+      StaticPrefs::WebRenderBlobImages() && !aItem->MustPaintOnContentSide();
   Maybe<gfx::Color> highlight = Nothing();
-  if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
+  if (StaticPrefs::WebRenderHighlightPaintedLayers()) {
     highlight = Some(useBlobImage ? gfx::Color(1.0, 0.0, 0.0, 0.5)
                                   : gfx::Color(1.0, 1.0, 0.0, 0.5));
   }

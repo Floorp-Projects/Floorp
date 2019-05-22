@@ -273,7 +273,7 @@ CompositorHitTestInfo HitTestingTreeNode::HitTest(
     if (mEventRegions.mDTCRequiresTargetConfirmation) {
       result += CompositorHitTestFlags::eRequiresTargetConfirmation;
     }
-  } else if (gfxPrefs::TouchActionEnabled()) {
+  } else if (StaticPrefs::TouchActionEnabled()) {
     if (mEventRegions.mNoActionRegion.Contains(point.x, point.y)) {
       // set all the touch-action flags as disabled
       result += CompositorHitTestTouchActionMask;

@@ -9,6 +9,7 @@
 #include <cmath>
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
@@ -32,7 +33,7 @@ const float kDecelerationRate = 2.3582018f;
 
 // Default friction constant in android.view.ViewConfiguration.
 static float GetFlingFriction() {
-  return gfxPrefs::APZChromeFlingPhysicsFriction();
+  return StaticPrefs::APZChromeFlingPhysicsFriction();
 }
 
 // Tension lines cross at (GetInflexion(), 1).
@@ -40,7 +41,7 @@ static float GetInflexion() {
   // Clamp the inflexion to the range [0,1]. Values outside of this range
   // do not make sense in the physics model, and for negative values the
   // approximation used to compute the spline curve does not converge.
-  const float inflexion = gfxPrefs::APZChromeFlingPhysicsInflexion();
+  const float inflexion = StaticPrefs::APZChromeFlingPhysicsInflexion();
   if (inflexion < 0.0f) {
     return 0.0f;
   }
@@ -53,7 +54,7 @@ static float GetInflexion() {
 // Fling scroll is stopped when the scroll position is |kThresholdForFlingEnd|
 // pixels or closer from the end.
 static float GetThresholdForFlingEnd() {
-  return gfxPrefs::APZChromeFlingPhysicsStopThreshold();
+  return StaticPrefs::APZChromeFlingPhysicsStopThreshold();
 }
 
 static double ComputeSplineDeceleration(ParentLayerCoord aVelocity,

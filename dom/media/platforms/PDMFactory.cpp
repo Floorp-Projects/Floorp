@@ -15,7 +15,6 @@
 #include "MediaChangeMonitor.h"
 #include "MediaInfo.h"
 #include "VPXDecoder.h"
-#include "gfxPrefs.h"
 #include "nsIXULRuntime.h" // for BrowserTabsRemoteAutostart
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -174,7 +173,6 @@ void PDMFactory::EnsureInit() {
     if (!sInstance) {
       // Ensure that all system variables are initialized.
       gfx::gfxVars::Initialize();
-      gfxPrefs::GetSingleton();
       // On the main thread and holding the lock -> Create instance.
       sInstance = new PDMFactoryImpl();
       ClearOnShutdown(&sInstance);
