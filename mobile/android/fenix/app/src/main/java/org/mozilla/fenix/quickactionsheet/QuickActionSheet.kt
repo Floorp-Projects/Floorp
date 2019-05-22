@@ -53,6 +53,7 @@ class QuickActionSheet @JvmOverloads constructor(
         handle = findViewById(R.id.quick_action_sheet_handle)
         linearLayout = findViewById(R.id.quick_action_sheet)
         quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout.parent as View) as QuickActionSheetBehavior
+        quickActionSheetBehavior.isHideable = false
         setupHandle()
     }
 

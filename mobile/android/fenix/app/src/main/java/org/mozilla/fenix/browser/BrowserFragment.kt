@@ -14,7 +14,6 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.accessibility.AccessibilityManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
@@ -25,6 +24,7 @@ import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.android.synthetic.main.fragment_search.*
+import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -41,7 +41,6 @@ import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.readerview.ReaderViewFeature
-import mozilla.components.feature.session.behavior.EngineViewBottomBehavior
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
@@ -162,6 +161,17 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             }
         }
 
+        view.engineView.asView().apply {
+            (layoutParams as CoordinatorLayout.LayoutParams).apply {
+                setMargins(
+                    0,
+                    0,
+                    0,
+                    (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt() +
+                        QUICK_ACTION_SHEET_HANDLE_HEIGHT)
+            }
+        }
+
         QuickActionComponent(
             view.nestedScrollQuickAction,
             ActionBusFactory.get(this),
@@ -213,12 +223,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             owner = this,
             view = view
         )
-
-        if (customTabSessionId == null) {
-            (engineView.asView().layoutParams as CoordinatorLayout.LayoutParams).apply {
-                behavior = EngineViewBottomBehavior(context, null)
-            }
-        }
 
         downloadsFeature.set(
             feature = DownloadsFeature(
@@ -391,11 +395,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         super.onStart()
         sessionObserver = subscribeToSession()
         sessionManagerObserver = subscribeToSessions()
-        val accessibilityManager = activity?.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-        accessibilityManager?.addTouchExplorationStateChangeListener {
-            updateToolbar()
-        }
-        updateToolbar()
         getSessionById()?.let { updateBookmarkState(it) }
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
@@ -730,7 +729,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     getManagedEmitter<QuickActionChange>().onNext(QuickActionChange.BounceNeededChange)
                 }
 
-                setToolbarBehavior(loading)
                 super.onLoadingStateChanged(session, loading)
             }
         }
@@ -745,12 +743,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 (activity as HomeActivity).updateThemeForSession(session)
             }
         }.also { requireComponents.core.sessionManager.register(it) }
-    }
-
-    private fun updateToolbar() {
-        getSessionById()?.loading?.let {
-            setToolbarBehavior(it)
-        }
     }
 
     private fun findBookmarkedURL(session: Session?): Boolean {
@@ -773,34 +765,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         }
     }
 
-    private fun setToolbarBehavior(loading: Boolean) {
-        val toolbarView = toolbarComponent.uiView.view
-        (toolbarView.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            // Stop toolbar from collapsing if TalkBack is enabled or page is loading
-            val accessibilityManager = context
-                ?.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-
-            behavior = when {
-                loading || accessibilityManager?.isTouchExplorationEnabled == true -> {
-                    (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(toolbarView)
-                    (behavior as? BrowserToolbarTopBehavior)?.forceExpand(toolbarView)
-                    null
-                }
-                customTabSessionId != null -> {
-                    BrowserToolbarTopBehavior(context, null)
-                }
-                else -> {
-                    BrowserToolbarBottomBehavior(context, null)
-                }
-            }
-        }
-    }
-
     companion object {
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
         private const val TOOLBAR_HEIGHT = 56f
+        private const val QUICK_ACTION_SHEET_HANDLE_HEIGHT = 36
         const val REPORT_SITE_ISSUE_URL =
             "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
     }
