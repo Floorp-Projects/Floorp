@@ -18,7 +18,7 @@ def read_build_config():
     return cached_build_config
 
 
-def module_definitions():
+def components():
     build_config = read_build_config()
     return [{
         'name': name,

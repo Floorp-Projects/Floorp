@@ -28,10 +28,10 @@ class TaskBuilder(object):
         self.tasks_priority = tasks_priority
 
     def craft_build_task(self, module_name, gradle_tasks, subtitle='', run_coverage=False,
-                         is_snapshot=False, module_definition=None, artifacts=None):
+                         is_snapshot=False, component=None, artifacts=None):
         taskcluster_artifacts = {}
         # component is not None when this is a release build, in which case artifacts is defined too
-        if module_definition is not None:
+        if component is not None:
             taskcluster_artifacts = {
                 artifact['taskcluster_path']: {
                     'type': 'file',
@@ -55,7 +55,7 @@ class TaskBuilder(object):
         command = ' && '.join(cmd for cmd in (gradle_command, post_gradle_command) if cmd)
 
         features = {}
-        if module_definition is not None:
+        if component is not None:
             features['chainOfTrust'] = True
         elif any(scope.startswith('secrets:') for scope in scopes):
             features['taskclusterProxy'] = True
@@ -135,10 +135,35 @@ class TaskBuilder(object):
             ],
             artifacts=artifacts,
             env_vars=env_vars,
+
+    def craft_sign_task(self, build_task_id, wait_on_builds_task_id, artifacts, component_name, is_staging):
+        signing_format = "autograph_gpg"
+        payload = {
+            "maxRunTime": 600,
+            "upstreamArtifacts": [{
+                "paths": [artifact["taskcluster_path"] for artifact in artifacts],
+                "formats": [signing_format],
+                "taskId": build_task_id,
+                "taskType": "build"
+            }]
+        }
+
+        return self._craft_default_task_definition(
+            worker_type='mobile-signing-dep-v1' if is_staging else 'mobile-signing-v1',
+            provisioner_id='scriptworker-prov-v1',
+            dependencies=[build_task_id, wait_on_builds_task_id],
+            routes=[],
+            scopes=[
+                "project:mobile:android-components:releng:signing:format:{}".format(signing_format),
+            ],
+            name='Android Components - Sign Module :{}'.format(component_name),
+            description="Sign release module {}".format(component_name),
+            payload=payload,
         )
 
     def craft_beetmover_task(
-        self, build_task_id, wait_on_builds_task_id, version, artifacts, component_name, is_snapshot, is_staging
+        self, build_task_id, sign_task_id, build_artifacts, sign_artifacts, component_name, is_snapshot,
+            is_staging
     ):
         if is_snapshot:
             if is_staging:
@@ -155,7 +180,6 @@ class TaskBuilder(object):
                 bucket_name = 'maven-production'
                 bucket_public_url = 'https://maven.mozilla.org/'
 
-        version = version.lstrip('v')
         payload = {
             "artifactMap": [{
                 "locale": "en-US",
@@ -163,26 +187,29 @@ class TaskBuilder(object):
                     artifact['taskcluster_path']: {
                         'checksums_path': '',  # TODO beetmover marks this as required even though it's not needed here
                         'destinations': [artifact['maven_destination']]
-                    } for artifact in artifacts
+                    } for artifact in (build_artifacts + sign_artifacts)
                 },
                 "taskId": build_task_id,
             }],
             "maxRunTime": 600,
             "upstreamArtifacts": [{
-                'paths': [artifact['taskcluster_path'] for artifact in artifacts],
+                'paths': [artifact['taskcluster_path'] for artifact in build_artifacts],
                 'taskId': build_task_id,
                 'taskType': 'build',
+            }, {
+                'paths': [artifact['taskcluster_path'] for artifact in sign_artifacts],
+                'taskId': sign_task_id,
+                'taskType': 'sign',
             }],
             "releaseProperties": {
                 "appName": "snapshot_components" if is_snapshot else "components",
             },
-            "version": "{}-SNAPSHOT".format(version) if is_snapshot else version,
         }
 
         return self._craft_default_task_definition(
             self.beetmover_worker_type,
             'scriptworker-prov-v1',
-            dependencies=[build_task_id, wait_on_builds_task_id],
+            dependencies=[build_task_id, sign_task_id],
             routes=[],
             scopes=[
                 "project:mobile:android-components:releng:beetmover:bucket:{}".format(bucket_name),

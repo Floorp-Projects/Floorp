@@ -9,11 +9,12 @@ Decision task
 from __future__ import print_function
 
 import argparse
+import itertools
 import os
 import taskcluster
 import sys
 
-from lib.build_config import components_version, module_definitions
+from lib.build_config import components_version, components
 from lib.tasks import TaskBuilder, schedule_task_graph
 from lib.util import (
     populate_chain_of_trust_task_graph,
@@ -218,60 +219,62 @@ def _get_release_gradle_tasks(module_name, is_snapshot):
     return gradle_tasks + ' ' + module_name + ':publish' + ' ' + module_name + ':zipMavenArtifacts'
 
 
-def _get_release_artifacts(module_definition, version):
-    files = ('.aar', '.pom', '-sources.jar')
-    extensions = ('', '.sha1', '.md5')
-    # FIXME: use cartesian product
-
-    artifacts = []
-    for f in files:
-        for e in extensions:
-            artifact_filename = '{}-{}{}{}'.format(module_definition['name'], version, f, e)
-            artifacts.append({
-                'taskcluster_path': 'public/build/{}'.format(artifact_filename),
-                'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
-                    os.path.abspath(module_definition['path']),
-                    module_definition['name'],
-                    version, artifact_filename),
-                'maven_destination': 'maven2/org/mozilla/components/{}/{}/{}'.format(
-                    module_definition['name'],
-                    version,
-                    artifact_filename,
-                )
-            })
-
-    return artifacts
-
-
-def release(module_definitions, is_snapshot, is_staging):
+def release(components, is_snapshot, is_staging):
     version = components_version()
 
     build_tasks = {}
+    sign_tasks = {}
     wait_on_builds_tasks = {}
     beetmover_tasks = {}
     other_tasks = {}
     wait_on_builds_task_id = taskcluster.slugId()
 
-    for module_definition in module_definitions:
-        artifacts = _get_release_artifacts(module_definition, version)
+    for component in components:
+        def _to_release_artifact(extension):
+            artifact_filename = '{}-{}{}'.format(component['name'], version, extension)
+
+            return {
+                'taskcluster_path': 'public/build/{}'.format(artifact_filename),
+                'build_fs_path': '{}/build/maven/org/mozilla/components/{}/{}/{}'.format(
+                    os.path.abspath(component['path']),
+                    component['name'],
+                    version, artifact_filename),
+                'maven_destination': 'maven2/org/mozilla/components/{}/{}/{}'.format(
+                    component['name'],
+                    version,
+                    artifact_filename,
+                )
+            }
 
         build_task_id = taskcluster.slugId()
-        module_name = _get_gradle_module_name(module_definition)
+        module_name = _get_gradle_module_name(component)
         build_tasks[build_task_id] = BUILDER.craft_build_task(
             module_name=module_name,
             gradle_tasks=_get_release_gradle_tasks(module_name, is_snapshot),
             subtitle='({}{})'.format(version, '-SNAPSHOT' if is_snapshot else ''),
             run_coverage=False,
             is_snapshot=is_snapshot,
-            module_definition=module_definition,
-            artifacts=artifacts
+            component=component,
+            artifacts=[_to_release_artifact(extension + hash_extension)
+                       for extension, hash_extension in
+                       itertools.product(('.aar', '.pom', '-sources.jar'), ('', '.sha1', '.md5'))]
         )
 
-        # TODO: add signing tasks as well
+        sign_task_id = taskcluster.slugId()
+        sign_tasks[sign_task_id] = BUILDER.craft_sign_task(
+            build_task_id, wait_on_builds_task_id, [_to_release_artifact(extension)
+                                                    for extension in ('.aar', '.pom', '-sources.jar')],
+            component['name'], is_staging,
+        )
 
+        beetmover_build_artifacts = [_to_release_artifact(extension + hash_extension)
+                                     for extension, hash_extension in
+                                     itertools.product(('.aar', '.pom', '-sources.jar'), ('', '.sha1', '.md5'))]
+        beetmover_sign_artifacts = [_to_release_artifact(extension + '.asc')
+                                    for extension in ('.aar', '.pom', '-sources.jar')]
         beetmover_tasks[taskcluster.slugId()] = BUILDER.craft_beetmover_task(
-            build_task_id, wait_on_builds_task_id, version, artifacts,
-            module_definition['name'], is_snapshot, is_staging
+            build_task_id, sign_task_id, beetmover_build_artifacts, beetmover_sign_artifacts,
+            component['name'], is_snapshot, is_staging
         )
 
     wait_on_builds_tasks[wait_on_builds_task_id] = BUILDER.craft_wait_on_builds_task(build_tasks.keys())
@@ -280,7 +283,7 @@ def release(module_definitions, is_snapshot, is_staging):
         for craft_function in (BUILDER.craft_detekt_task, BUILDER.craft_ktlint_task, BUILDER.craft_compare_locales_task):
             other_tasks[taskcluster.slugId()] = craft_function()
 
-    return (build_tasks, wait_on_builds_tasks, beetmover_tasks, other_tasks)
+    return (build_tasks, wait_on_builds_tasks, sign_tasks, beetmover_tasks, other_tasks)
 
 
 if __name__ == "__main__":
@@ -306,11 +309,11 @@ if __name__ == "__main__":
 
     command = result.command
 
-    module_definitions = module_definitions()
+    components = components()
     if command == 'release':
-        module_definitions = [info for info in module_definitions if info['shouldPublish']]
+        components = [info for info in components if info['shouldPublish']]
 
-    if len(module_definitions) == 0:
+    if len(components) == 0:
         print("Could not get module names from gradle")
         sys.exit(2)
 
@@ -320,7 +323,7 @@ if __name__ == "__main__":
         ordered_groups_of_tasks = push(artifacts_info)
     elif command == 'release':
         ordered_groups_of_tasks = release(
-            module_definitions, result.is_snapshot, result.is_staging
+            components, result.is_snapshot, result.is_staging
         )
     else:
         raise Exception('Unsupported command "{}"'.format(command))
