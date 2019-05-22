@@ -12,6 +12,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 67.0
+    * `browser-engine-gecko-beta`: GeckoView 68.0
+    * `browser-engine-gecko-nightly`: GeckoView 69.0
+
 * **feature-findinpage**
   * Find in Page Bar now displays 0/0 for no matches found with new attr findInPageNoMatchesTextColor
 
