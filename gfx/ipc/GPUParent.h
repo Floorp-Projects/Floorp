@@ -57,6 +57,7 @@ class GPUParent final : public PGPUParent {
       Endpoint<PProfilerChild>&& aEndpoint);
   mozilla::ipc::IPCResult RecvUpdatePref(const GfxPrefSetting& pref);
   mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref);
+  mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& pref);
   mozilla::ipc::IPCResult RecvNewContentCompositorManager(
       Endpoint<PCompositorManagerParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvNewContentImageBridge(
