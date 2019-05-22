@@ -3,11 +3,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsSimplePageSequenceFrame_h___
-#define nsSimplePageSequenceFrame_h___
+#ifndef nsPageSequenceFrame_h___
+#define nsPageSequenceFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsIPageSequenceFrame.h"
+#include "nsPageSequenceFrame.h"
 #include "nsContainerFrame.h"
 #include "nsIPrintSettings.h"
 
@@ -25,11 +25,11 @@ class HTMLCanvasElement;
 //-----------------------------------------------
 // This class maintains all the data that
 // is used by all the page frame
-// It lives while the nsSimplePageSequenceFrame lives
+// It lives while the nsPageSequenceFrame lives
 class nsSharedPageData {
  public:
   // This object a shared by all the nsPageFrames
-  // parented to a SimplePageSequenceFrame
+  // parented to a nsPageSequenceFrame
   nsSharedPageData() : mShrinkToFitRatio(1.0f) {}
 
   nsString mDateTimeStr;
@@ -55,14 +55,13 @@ class nsSharedPageData {
 };
 
 // Simple page sequence frame class. Used when we're in paginated mode
-class nsSimplePageSequenceFrame final : public nsContainerFrame,
-                                        public nsIPageSequenceFrame {
+class nsPageSequenceFrame final : public nsContainerFrame {
  public:
-  friend nsSimplePageSequenceFrame* NS_NewSimplePageSequenceFrame(
+  friend nsPageSequenceFrame* NS_NewPageSequenceFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
+  NS_DECL_FRAMEARENA_HELPERS(nsPageSequenceFrame)
 
   // nsIFrame
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
@@ -73,22 +72,20 @@ class nsSimplePageSequenceFrame final : public nsContainerFrame,
                         const nsDisplayListSet& aLists) override;
 
   // For Shrink To Fit
-  NS_IMETHOD GetSTFPercent(float& aSTFPercent) override;
+  float GetSTFPercent() const { return mPageData->mShrinkToFitRatio; }
 
   // Async Printing
-  NS_IMETHOD StartPrint(nsPresContext* aPresContext,
-                        nsIPrintSettings* aPrintSettings,
-                        const nsAString& aDocTitle,
-                        const nsAString& aDocURL) override;
-  NS_IMETHOD PrePrintNextPage(nsITimerCallback* aCallback,
-                              bool* aDone) override;
-  NS_IMETHOD PrintNextPage() override;
-  NS_IMETHOD ResetPrintCanvasList() override;
-  NS_IMETHOD GetCurrentPageNum(int32_t* aPageNum) override;
-  NS_IMETHOD GetNumPages(int32_t* aNumPages) override;
-  NS_IMETHOD IsDoingPrintRange(bool* aDoing) override;
-  NS_IMETHOD GetPrintRange(int32_t* aFromPage, int32_t* aToPage) override;
-  NS_IMETHOD DoPageEnd() override;
+  nsresult StartPrint(nsPresContext* aPresContext,
+                      nsIPrintSettings* aPrintSettings,
+                      const nsAString& aDocTitle, const nsAString& aDocURL);
+  nsresult PrePrintNextPage(nsITimerCallback* aCallback, bool* aDone);
+  nsresult PrintNextPage();
+  void ResetPrintCanvasList();
+  int32_t GetCurrentPageNum() const { return mPageNum; }
+  int32_t GetNumPages() const { return mTotalPages; }
+  bool IsDoingPrintRange() const { return mDoingPageRange; }
+  void GetPrintRange(int32_t* aFromPage, int32_t* aToPage) const;
+  nsresult DoPageEnd();
 
   // We must allow Print Preview UI to have a background, no matter what the
   // user's settings
@@ -106,8 +103,8 @@ class nsSimplePageSequenceFrame final : public nsContainerFrame,
 #endif
 
  protected:
-  nsSimplePageSequenceFrame(ComputedStyle*, nsPresContext*);
-  virtual ~nsSimplePageSequenceFrame();
+  nsPageSequenceFrame(ComputedStyle*, nsPresContext*);
+  virtual ~nsPageSequenceFrame();
 
   void SetPageNumberFormat(const char* aPropName, const char* aDefPropVal,
                            bool aPageNumOnly);
@@ -154,4 +151,4 @@ class nsSimplePageSequenceFrame final : public nsContainerFrame,
   bool mCurrentCanvasListSetup;
 };
 
-#endif /* nsSimplePageSequenceFrame_h___ */
+#endif /* nsPageSequenceFrame_h___ */
