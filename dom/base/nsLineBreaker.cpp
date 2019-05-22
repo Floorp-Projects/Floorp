@@ -24,7 +24,8 @@ nsLineBreaker::nsLineBreaker()
       mAfterBreakableSpace(false),
       mBreakHere(false),
       mWordBreak(LineBreaker::WordBreak::Normal),
-      mStrictness(LineBreaker::Strictness::Auto) {}
+      mStrictness(LineBreaker::Strictness::Auto),
+      mWordContinuation(false) {}
 
 nsLineBreaker::~nsLineBreaker() {
   NS_ASSERTION(mCurrentWord.Length() == 0,
@@ -126,7 +127,7 @@ nsresult nsLineBreaker::FlushCurrentWord() {
       ti->mSink->SetBreaks(ti->mSinkOffset + skipSet, ti->mLength - skipSet,
                            breakState.Elements() + offset + skipSet);
 
-      if (ti->mFlags & BREAK_NEED_CAPITALIZATION) {
+      if (!mWordContinuation && (ti->mFlags & BREAK_NEED_CAPITALIZATION)) {
         if (capitalizationState.Length() == 0) {
           if (!capitalizationState.AppendElements(length))
             return NS_ERROR_OUT_OF_MEMORY;
@@ -147,6 +148,7 @@ nsresult nsLineBreaker::FlushCurrentWord() {
   mCurrentWordContainsComplexChar = false;
   mCurrentWordContainsMixedLang = false;
   mCurrentWordLanguage = nullptr;
+  mWordContinuation = false;
   return NS_OK;
 }
 
@@ -261,12 +263,13 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
                                   breakState.Elements() + wordStart);
           }
         }
-        if (!noCapitalizationNeeded) {
+        if (!mWordContinuation && !noCapitalizationNeeded) {
           SetupCapitalization(aText + wordStart, offset - wordStart,
                               capitalizationState.Elements() + wordStart);
         }
       }
       wordHasComplexChar = false;
+      mWordContinuation = false;
       ++offset;
       if (offset >= aLength) break;
       wordStart = offset;
@@ -477,6 +480,7 @@ nsresult nsLineBreaker::AppendInvisibleWhitespace(uint32_t aFlags) {
     mBreakHere = true;
   }
   mAfterBreakableSpace = isBreakableSpace;
+  mWordContinuation = false;
   return NS_OK;
 }
 

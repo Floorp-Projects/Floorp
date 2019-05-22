@@ -108,7 +108,8 @@ class ServoStyleSet {
   // are mutated from CSSOM.
   void RuleAdded(StyleSheet&, css::Rule&);
   void RuleRemoved(StyleSheet&, css::Rule&);
-  void RuleChanged(StyleSheet& aSheet, css::Rule* aRule);
+  void RuleChanged(StyleSheet&, css::Rule* aRule);
+  void StyleSheetCloned(StyleSheet&);
 
   // Runs style invalidation due to document state changes.
   void InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged);
@@ -379,12 +380,6 @@ class ServoStyleSet {
   // sheet inners.
   bool EnsureUniqueInnerOnCSSSheets();
 
-  // Called by StyleSheet::EnsureUniqueInner to let us know it cloned
-  // its inner.
-  void SetNeedsRestyleAfterEnsureUniqueInner() {
-    mNeedsRestyleAfterEnsureUniqueInner = true;
-  }
-
   // Returns the style rule map.
   ServoStyleRuleMap* StyleRuleMap();
 
@@ -434,6 +429,19 @@ class ServoStyleSet {
   friend class PostTraversalTask;
 
   bool ShouldTraverseInParallel() const;
+
+  /**
+   * Forces all the ShadowRoot styles to be dirty.
+   *
+   * Only to be used for:
+   *
+   *  * Devtools (dealing with sheet cloning).
+   *  * Compatibility-mode changes.
+   *
+   * Try to do something more incremental for other callers that are exposed to
+   * the web.
+   */
+  void ForceDirtyAllShadowStyles();
 
   /**
    * Gets the pending snapshots to handle from the restyle manager.
