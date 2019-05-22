@@ -53,10 +53,8 @@ Communication
 The mailing list for Firefox remote debugging discussion is
 `dev-remote@lists.mozilla.org`_ (`subscribe`_, `archive`_).
 
-If you prefer real-time chat, there is often someone in the *#remote*
-IRC channel on irc.mozilla.org.  Don’t ask if you may ask a
-question just go ahead and ask, and please wait for an answer as
-we might not be in your timezone.
+If you prefer real-time chat, there is often someone in the *#remote* channel
+on the <a href=https://devtools-html.slack.com/>DevTools Slack</a> instance.
 
 .. _dev-remote@lists.mozilla.org: mailto:dev-remote@lists.mozilla.org
 .. _subscribe: https://lists.mozilla.org/listinfo/dev-remote

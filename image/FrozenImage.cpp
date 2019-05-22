@@ -92,6 +92,27 @@ FrozenImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
                             aSamplingFilter, aSVGContext, aFlags, aOpacity);
 }
 
+NS_IMETHODIMP
+FrozenImage::StartDecoding(uint32_t aFlags, uint32_t aWhichFrame) {
+  return InnerImage()->StartDecoding(aFlags, FRAME_FIRST);
+}
+
+bool FrozenImage::StartDecodingWithResult(uint32_t aFlags,
+                                          uint32_t aWhichFrame) {
+  return InnerImage()->StartDecodingWithResult(aFlags, FRAME_FIRST);
+}
+
+bool FrozenImage::RequestDecodeWithResult(uint32_t aFlags,
+                                          uint32_t aWhichFrame) {
+  return InnerImage()->RequestDecodeWithResult(aFlags, FRAME_FIRST);
+}
+
+NS_IMETHODIMP
+FrozenImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags,
+                                  uint32_t aWhichFrame) {
+  return InnerImage()->RequestDecodeForSize(aSize, aFlags, FRAME_FIRST);
+}
+
 NS_IMETHODIMP_(void)
 FrozenImage::RequestRefresh(const TimeStamp& aTime) {
   // Do nothing.
