@@ -209,6 +209,7 @@ pub struct ClipChainNode {
     pub local_pos: LayoutPoint,
     pub spatial_node_index: SpatialNodeIndex,
     pub parent_clip_chain_id: ClipChainId,
+    pub has_complex_clip: bool,
 }
 
 // When a clip node is found to be valid for a
@@ -563,6 +564,7 @@ impl ClipStore {
         local_pos: LayoutPoint,
         spatial_node_index: SpatialNodeIndex,
         parent_clip_chain_id: ClipChainId,
+        has_complex_clip: bool,
     ) -> ClipChainId {
         let id = ClipChainId(self.clip_chain_nodes.len() as u32);
         self.clip_chain_nodes.push(ClipChainNode {
@@ -570,6 +572,7 @@ impl ClipStore {
             spatial_node_index,
             local_pos,
             parent_clip_chain_id,
+            has_complex_clip,
         });
         id
     }
@@ -866,6 +869,17 @@ impl ClipItemKey {
             Au::from_f32_px(blur_radius),
             clip_mode,
         )
+    }
+
+    pub fn has_complex_clip(&self) -> bool {
+        match *self {
+            ClipItemKey::Rectangle(_, ClipMode::Clip) => false,
+
+            ClipItemKey::Rectangle(_, ClipMode::ClipOut) |
+            ClipItemKey::RoundedRectangle(..) |
+            ClipItemKey::ImageMask(..) |
+            ClipItemKey::BoxShadow(..) => true,
+        }
     }
 }
 

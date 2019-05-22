@@ -374,10 +374,6 @@ pub struct ColorRenderTarget {
     // we can set a scissor rect and only clear to the
     // used portion of the target as an optimization.
     pub used_rect: DeviceIntRect,
-    // This is used to build batches for this render target. In future,
-    // this will be used to support splitting a single picture primitive
-    // list into multiple batch sets.
-    batch_builder: BatchBuilder,
 }
 
 impl RenderTarget for ColorRenderTarget {
@@ -396,7 +392,6 @@ impl RenderTarget for ColorRenderTarget {
             alpha_tasks: Vec::new(),
             screen_size,
             used_rect: DeviceIntRect::zero(),
-            batch_builder: BatchBuilder::new(),
         }
     }
 
@@ -436,15 +431,24 @@ impl RenderTarget for ColorRenderTarget {
                         Some(target_rect)
                     };
 
-                    let mut alpha_batch_builder = AlphaBatchBuilder::new(
+                    // TODO(gw): The type names of AlphaBatchBuilder and BatchBuilder
+                    //           are still confusing. Once more of the picture caching
+                    //           improvement code lands, the AlphaBatchBuilder and
+                    //           AlphaBatchList types will be collapsed into one, which
+                    //           should simplify coming up with better type names.
+                    let alpha_batch_builder = AlphaBatchBuilder::new(
                         self.screen_size,
                         ctx.break_advanced_blend_batches,
                         *task_id,
+                        render_tasks.get_task_address(*task_id),
                     );
 
-                    self.batch_builder.add_pic_to_batch(
+                    let mut batch_builder = BatchBuilder::new(
+                        alpha_batch_builder,
+                    );
+
+                    batch_builder.add_pic_to_batch(
                         pic,
-                        &mut alpha_batch_builder,
                         ctx,
                         gpu_cache,
                         render_tasks,
@@ -454,6 +458,8 @@ impl RenderTarget for ColorRenderTarget {
                         pic_task.root_spatial_node_index,
                         z_generator,
                     );
+
+                    let alpha_batch_builder = batch_builder.finalize();
 
                     alpha_batch_builder.build(
                         &mut self.alpha_batch_containers,
