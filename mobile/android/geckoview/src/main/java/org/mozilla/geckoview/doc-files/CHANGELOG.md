@@ -100,6 +100,10 @@ exclude: true
 [68.23]: ./GeckoView.html#setVerticalClipping-int-
 [68.24]: ./GeckoDisplay.html#setVerticalClipping-int-
 
+- Added [`StorageController`][68.25] API for clearing data.
+
+[68.25]: ../StorageController.html
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -306,4 +310,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: dfd66add2059abb3318cfffbfc60001d2e25efb2
+[api-version]: 6078967e45c80550c5d17189856d3d3206b8540f
