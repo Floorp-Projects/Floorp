@@ -4,6 +4,9 @@
 
 package org.mozilla.geckoview.test
 
+import android.os.Handler
+import android.os.Looper
+import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
@@ -23,13 +26,33 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.test.util.HttpBin
+import java.net.URI
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 @ReuseSession(false)
 class NavigationDelegateTest : BaseSessionTest() {
+    companion object {
+        val TEST_ENDPOINT: String = "http://localhost:4242"
+    }
+
+    lateinit var server: HttpBin
+
+    @Before
+    fun setup() {
+        server = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
+        server.start()
+    }
+
+    @After
+    fun cleanup() {
+        server.stop()
+    }
 
     fun testLoadErrorWithErrorPage(testUri: String, expectedCategory: Int,
                                    expectedError: Int,
@@ -579,7 +602,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun load() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
@@ -773,7 +796,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun reload() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
 
         sessionRule.session.reload()
@@ -815,10 +838,10 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun goBackAndForward() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
 
-        sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
