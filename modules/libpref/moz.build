@@ -36,6 +36,7 @@ pref_groups = [
     'content',
     'device',
     'devtools',
+    'docshell',
     'dom',
     'editor',
     'extensions',

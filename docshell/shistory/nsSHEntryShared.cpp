@@ -52,6 +52,13 @@ void dom::SHEntrySharedParentState::CopyFrom(
   mLastTouched = aEntry->mLastTouched;
 }
 
+void dom::SHEntrySharedParentState::NotifyListenersContentViewerEvicted() {
+  if (nsCOMPtr<nsISHistory> shistory = do_QueryReferent(mSHistory)) {
+    RefPtr<nsSHistory> nsshistory = static_cast<nsSHistory*>(shistory.get());
+    nsshistory->NotifyListenersContentViewerEvicted(1);
+  }
+}
+
 dom::SHEntrySharedChildState::SHEntrySharedChildState()
     : mSaveLayoutState(true) {}
 

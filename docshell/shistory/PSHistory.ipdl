@@ -58,7 +58,7 @@ parent:
   sync Evict(PSHEntry[] entry);
   sync EnsureCorrectEntryAtCurrIndex(PSHEntry entry);
   sync EvictContentViewersOrReplaceEntry(nullable PSHEntry newSHEntry, bool replace);
-
+  async NotifyListenersContentViewerEvicted(uint32_t numEvicted);
   async __delete__();
 };
 

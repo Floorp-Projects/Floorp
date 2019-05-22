@@ -143,6 +143,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
 
   void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
                      int32_t* aOutEndIndex);
+  void NotifyListenersContentViewerEvicted(uint32_t aNumEvicted);
 
  protected:
   virtual ~nsSHistory();

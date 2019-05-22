@@ -1038,6 +1038,7 @@ nsLegacySHEntry::CreateLoadInfo(nsDocShellLoadState** aLoadState) {
 void nsSHEntry::EvictContentViewer() {
   nsCOMPtr<nsIContentViewer> viewer = GetContentViewer();
   if (viewer) {
+    mShared->NotifyListenersContentViewerEvicted();
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
     SetContentViewer(nullptr);
