@@ -413,17 +413,17 @@ void ContentSessionStore::GetScrollPositions(
   mScrollChanged = NO_CHANGE;
 }
 
-bool TabListener::ForceFlushFromParent(uint32_t aFlushId) {
+bool TabListener::ForceFlushFromParent(uint32_t aFlushId, bool aIsFinal) {
   if (!XRE_IsParentProcess()) {
     return false;
   }
   if (!mSessionStore) {
     return false;
   }
-  return UpdateSessionStore(aFlushId);
+  return UpdateSessionStore(aFlushId, aIsFinal);
 }
 
-bool TabListener::UpdateSessionStore(uint32_t aFlushId) {
+bool TabListener::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
   if (!aFlushId) {
     if (!mSessionStore || !mSessionStore->UpdateNeeded()) {
       return false;
@@ -475,7 +475,7 @@ bool TabListener::UpdateSessionStore(uint32_t aFlushId) {
     mSessionStore->GetScrollPositions(positions, descendants);
     xulBrowserWindow->UpdateScrollPositions(positions, descendants);
   }
-  xulBrowserWindow->UpdateSessionStore(mOwnerContent, aFlushId);
+  xulBrowserWindow->UpdateSessionStore(mOwnerContent, aFlushId, aIsFinal);
   StopTimerForUpdate();
   return true;
 }

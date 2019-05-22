@@ -518,6 +518,20 @@ android-hw-arm7-raptor:
     - raptor-tp6m-12-geckoview-cold
     - raptor-tp6m-13-geckoview-cold
     - raptor-tp6m-14-geckoview-cold
+    - raptor-tp6m-1-fennec-cold
+    - raptor-tp6m-2-fennec-cold
+    - raptor-tp6m-3-fennec-cold
+    - raptor-tp6m-4-fennec-cold
+    - raptor-tp6m-5-fennec-cold
+    - raptor-tp6m-6-fennec-cold
+    - raptor-tp6m-7-fennec-cold
+    - raptor-tp6m-8-fennec-cold
+    - raptor-tp6m-9-fennec-cold
+    - raptor-tp6m-10-fennec-cold
+    - raptor-tp6m-11-fennec-cold
+    - raptor-tp6m-12-fennec-cold
+    - raptor-tp6m-13-fennec-cold
+    - raptor-tp6m-14-fennec-cold
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
@@ -570,6 +584,20 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-12-geckoview-cold
     - raptor-tp6m-13-geckoview-cold
     - raptor-tp6m-14-geckoview-cold
+    - raptor-tp6m-1-fennec-cold
+    - raptor-tp6m-2-fennec-cold
+    - raptor-tp6m-3-fennec-cold
+    - raptor-tp6m-4-fennec-cold
+    - raptor-tp6m-5-fennec-cold
+    - raptor-tp6m-6-fennec-cold
+    - raptor-tp6m-7-fennec-cold
+    - raptor-tp6m-8-fennec-cold
+    - raptor-tp6m-9-fennec-cold
+    - raptor-tp6m-10-fennec-cold
+    - raptor-tp6m-11-fennec-cold
+    - raptor-tp6m-12-fennec-cold
+    - raptor-tp6m-13-fennec-cold
+    - raptor-tp6m-14-fennec-cold
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
@@ -597,6 +625,20 @@ android-hw-arm7-raptor-nightly:
     - raptor-tp6m-8-fennec
     - raptor-tp6m-9-fennec
     - raptor-tp6m-10-fennec
+    - raptor-tp6m-1-fennec-cold
+    - raptor-tp6m-2-fennec-cold
+    - raptor-tp6m-3-fennec-cold
+    - raptor-tp6m-4-fennec-cold
+    - raptor-tp6m-5-fennec-cold
+    - raptor-tp6m-6-fennec-cold
+    - raptor-tp6m-7-fennec-cold
+    - raptor-tp6m-8-fennec-cold
+    - raptor-tp6m-9-fennec-cold
+    - raptor-tp6m-10-fennec-cold
+    - raptor-tp6m-11-fennec-cold
+    - raptor-tp6m-12-fennec-cold
+    - raptor-tp6m-13-fennec-cold
+    - raptor-tp6m-14-fennec-cold
 
 android-hw-aarch64-raptor-nightly:
     - raptor-speedometer-fennec
@@ -610,3 +652,17 @@ android-hw-aarch64-raptor-nightly:
     - raptor-tp6m-8-fennec
     - raptor-tp6m-9-fennec
     - raptor-tp6m-10-fennec
+    - raptor-tp6m-1-fennec-cold
+    - raptor-tp6m-2-fennec-cold
+    - raptor-tp6m-3-fennec-cold
+    - raptor-tp6m-4-fennec-cold
+    - raptor-tp6m-5-fennec-cold
+    - raptor-tp6m-6-fennec-cold
+    - raptor-tp6m-7-fennec-cold
+    - raptor-tp6m-8-fennec-cold
+    - raptor-tp6m-9-fennec-cold
+    - raptor-tp6m-10-fennec-cold
+    - raptor-tp6m-11-fennec-cold
+    - raptor-tp6m-12-fennec-cold
+    - raptor-tp6m-13-fennec-cold
+    - raptor-tp6m-14-fennec-cold

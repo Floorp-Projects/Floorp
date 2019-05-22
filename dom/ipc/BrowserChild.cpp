@@ -1940,8 +1940,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvNativeSynthesisResponse(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvFlushTabState(
-    const uint32_t& aFlushId) {
-  UpdateSessionStore(aFlushId);
+    const uint32_t& aFlushId, const bool& aIsFinal) {
+  UpdateSessionStore(aFlushId, aIsFinal);
   return IPC_OK();
 }
 
@@ -3626,7 +3626,7 @@ nsresult BrowserChild::PrepareProgressListenerData(
   return NS_OK;
 }
 
-bool BrowserChild::UpdateSessionStore(uint32_t aFlushId) {
+bool BrowserChild::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
   if (!mSessionStoreListener) {
     return false;
   }
@@ -3649,7 +3649,7 @@ bool BrowserChild::UpdateSessionStore(uint32_t aFlushId) {
   }
 
   Unused << SendSessionStoreUpdate(docShellCaps, privatedMode, positions,
-                                   positionDescendants, aFlushId);
+                                   positionDescendants, aFlushId, aIsFinal);
   return true;
 }
 

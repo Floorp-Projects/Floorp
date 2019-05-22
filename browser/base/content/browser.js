@@ -5318,16 +5318,13 @@ var XULBrowserWindow = {
     this._sessionData.isPrivate = aIsPrivate;
   },
 
-  updateSessionStore: function XWB_updateSessionStore(aBrowser, aFlushId) {
-    let tab = gBrowser.getTabForBrowser(aBrowser);
-    if (tab) {
-      SessionStore.updateSessionStoreFromTablistener(tab, {
-        data: this._sessionData,
-        flushID: aFlushId,
-        isFinal: false,
-      });
-      this._sessionData = {};
-    }
+  updateSessionStore: function XWB_updateSessionStore(aBrowser, aFlushId, aIsFinal) {
+    SessionStore.updateSessionStoreFromTablistener(aBrowser, {
+      data: this._sessionData,
+      flushID: aFlushId,
+      isFinal: aIsFinal,
+    });
+    this._sessionData = {};
   },
 };
 
