@@ -3,16 +3,18 @@
 ChromeUtils.import("resource://gre/modules/TelemetryArchive.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
-function createExtension(backgroundScript, permissions) {
+// All tests run privileged unless otherwise specified not to.
+function createExtension(backgroundScript, permissions, isPrivileged = true) {
   let extensionData = {
     background: backgroundScript,
     manifest: {permissions},
+    isPrivileged,
   };
   return ExtensionTestUtils.loadExtension(extensionData);
 }
 
 async function run(test) {
-  let extension = createExtension(test.backgroundScript, test.permissions || ["telemetry"]);
+  let extension = createExtension(test.backgroundScript, test.permissions || ["telemetry"], test.isPrivileged);
   await extension.startup();
   await extension.awaitFinish(test.doneSignal);
   await extension.unload();
@@ -22,6 +24,18 @@ async function run(test) {
 // See 1280234 c67 for discussion.
 if (AppConstants.MOZ_BUILD_APP === "browser") {
   add_task(async function test_telemetry_without_telemetry_permission() {
+    await run({
+      backgroundScript: () => {
+        browser.test.assertTrue(!browser.telemetry, "'telemetry' permission is required");
+        browser.test.notifyPass("telemetry_permission");
+      },
+      permissions: [],
+      doneSignal: "telemetry_permission",
+      isPrivileged: false,
+    });
+  });
+
+  add_task(async function test_telemetry_without_telemetry_permission_privileged() {
     await run({
       backgroundScript: () => {
         browser.test.assertTrue(!browser.telemetry, "'telemetry' permission is required");
