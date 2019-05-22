@@ -916,6 +916,8 @@ class BrowserChild final : public BrowserChildBase,
 #endif
   bool mCoalesceMouseMoveEvents;
 
+  bool mShouldSendWebProgressEventsToParent;
+
   // In some circumstances, a DocShell might be in a state where it is
   // "blocked", and we should not attempt to change its active state or
   // the underlying PresShell state until the DocShell becomes unblocked.
