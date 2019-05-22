@@ -19,11 +19,16 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DeviceEventsObserver
+import mozilla.components.service.fxa.FxaException
+import mozilla.components.service.fxa.FxaPanicException
+import mozilla.components.service.fxa.FxaUnauthorizedException
 import mozilla.components.support.base.log.logger.Logger
 
 import mozilla.components.support.base.observer.Observable
@@ -61,7 +66,21 @@ internal open class PollingDeviceManager(
     fun pollAsync(): Deferred<Unit> {
         return scope.async {
             logger.debug("poll")
-            processEvents(constellation.pollForEventsAsync().await())
+            val events = try {
+                constellation.pollForEventsAsync().await()
+            } catch (e: FxaPanicException) {
+                // Re-throw panics.
+                throw e
+            } catch (e: FxaUnauthorizedException) {
+                // Propagate auth errors.
+                authErrorRegistry.notifyObservers { onAuthError(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
+                return@async
+            } catch (e: FxaException) {
+                // Ignore intermittent errors.
+                logger.warn("Failed to poll for events", e)
+                return@async
+            }
+            processEvents(events)
         }
     }
 
@@ -77,7 +96,22 @@ internal open class PollingDeviceManager(
     fun refreshDevicesAsync(): Deferred<Unit> = synchronized(this) {
         return scope.async {
             logger.info("Refreshing device list...")
-            val allDevices = constellation.fetchAllDevicesAsync().await()
+
+            val allDevices = try {
+                constellation.fetchAllDevicesAsync().await()
+            } catch (e: FxaPanicException) {
+                // Re-throw panics.
+                throw e
+            } catch (e: FxaUnauthorizedException) {
+                // Propagate auth errors.
+                authErrorRegistry.notifyObservers { onAuthError(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
+                return@async
+            } catch (e: FxaException) {
+                // Ignore intermittent errors.
+                logger.warn("Failed to fetch devices", e)
+                return@async
+            }
+
             // Find the current device.
             val currentDevice = allDevices.find { it.isCurrentDevice }
             // Filter out the current devices.
