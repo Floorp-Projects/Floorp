@@ -23,7 +23,11 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
                                             const double& aIntensity,
                                             const double& aDuration,
                                             const uint32_t& aPromiseID);
-  mozilla::ipc::IPCResult RecvStopVibrateHaptic(const uint32_t& aGamepadIndex);
+  mozilla::ipc::IPCResult RecvStopVibrateHaptic(const uint32_t& aControllerIdx);
+  mozilla::ipc::IPCResult RecvLightIndicatorColor(
+      const uint32_t& aControllerIdx, const uint32_t& aLightColorIndex,
+      const uint8_t& aRed, const uint8_t& aGreen, const uint8_t& aBlue,
+      const uint32_t& aPromiseID);
   void DispatchUpdateEvent(const GamepadChangeEvent& aEvent);
   bool HasGamepadListener() const { return mHasGamepadListener; }
 
