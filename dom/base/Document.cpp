@@ -5523,6 +5523,17 @@ already_AddRefed<Element> Document::CreateElement(
     return nullptr;
   }
 
+  // Temporary check until XULDocument has been removed.
+  if (IsXULDocument()) {
+#if DEBUG
+    xpc_DumpJSStack(true, true, false);
+#endif
+    MOZ_DIAGNOSTIC_ASSERT(false,
+                          "CreateElement() not allowed in XUL document.");
+    rv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   bool needsLowercase = IsHTMLDocument() && !IsLowercaseASCII(aTagName);
   nsAutoString lcTagName;
   if (needsLowercase) {
