@@ -480,7 +480,7 @@
     <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Collection deleted</string>
-    <!-- Text shown in snackbar when user deletes a collection -->
+    <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Collection renamed</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">Tab deleted</string>
