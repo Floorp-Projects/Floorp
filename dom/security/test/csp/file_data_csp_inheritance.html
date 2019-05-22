@@ -11,12 +11,13 @@
 <script type="application/javascript">
   // get the csp in JSON notation from the principal
   var frame = document.getElementById("dataFrame");
-  var principal = SpecialPowers.wrap(frame.contentDocument).nodePrincipal;
-  var cspJSON = principal.cspJSON;
-  var cspOBJ = JSON.parse(principal.cspJSON);
-  // make sure we got >>one<< policy
-  var policies = cspOBJ["csp-policies"];
-  window.parent.postMessage({result: policies.length}, "*");
+  frame.onload = function () {
+    var contentDoc = SpecialPowers.wrap(frame).contentDocument;
+    var cspOBJ = JSON.parse(contentDoc.cspJSON);
+    // make sure we got >>one<< policy
+    var policies = cspOBJ["csp-policies"];
+    window.parent.postMessage({result: policies.length}, "*");
+  }
 </script>
 
 </body>

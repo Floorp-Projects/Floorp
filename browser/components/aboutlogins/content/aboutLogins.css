@@ -17,6 +17,7 @@ header {
   align-items: center;
   background-color: var(--in-content-box-background);
   border-bottom: 1px solid var(--in-content-box-border-color);
+  padding: 0 18px;
 }
 
 login-filter {
@@ -26,6 +27,7 @@ login-filter {
 
 login-list {
   grid-area: logins;
+  overflow: hidden auto;
 }
 
 login-item {
@@ -35,7 +37,12 @@ login-item {
 
 #branding-logo {
   height: 32px;
+  margin-inline-end: 18px;
+}
+
+#create-login-button {
   margin-inline-start: 18px;
+  margin-inline-end: 0;
 }
 
 :root:not(.official-branding) #branding-logo {

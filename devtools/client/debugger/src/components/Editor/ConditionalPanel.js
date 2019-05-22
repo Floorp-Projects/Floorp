@@ -137,6 +137,7 @@ export class ConditionalPanel extends PureComponent<Props> {
         noHScroll: true,
       }
     );
+
     if (this.input) {
       let parent: ?Node = this.input.parentNode;
       while (parent) {
@@ -158,7 +159,7 @@ export class ConditionalPanel extends PureComponent<Props> {
   }
 
   createEditor = (input: ?HTMLTextAreaElement) => {
-    const { log, editor } = this.props;
+    const { log, editor, closeConditionalPanel } = this.props;
 
     const codeMirror = editor.CodeMirror.fromTextArea(input, {
       mode: "javascript",
@@ -175,6 +176,8 @@ export class ConditionalPanel extends PureComponent<Props> {
         e.codemirrorIgnore = true;
       }
     });
+
+    codeMirror.on("blur", (cm, e) => closeConditionalPanel());
 
     const codeMirrorWrapper = codeMirror.getWrapperElement();
 
@@ -206,7 +209,6 @@ export class ConditionalPanel extends PureComponent<Props> {
           "log-point": log,
         })}
         onClick={() => this.keepFocusOnInput()}
-        onBlur={this.props.closeConditionalPanel}
         ref={node => (this.panelNode = node)}
       >
         <div className="prompt">»</div>

@@ -81,7 +81,7 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
   dump("Created test " + id + " : " + policy + "\n\n");
 
   principal = Services.scriptSecurityManager.createCodebasePrincipal(selfuri, {});
-  csp.setRequestContext(null, principal);
+  csp.setRequestContextWithPrincipal(principal, selfuri, "", 0);
 
   // Load up the policy
   // set as report-only if that's the case

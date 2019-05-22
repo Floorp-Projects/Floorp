@@ -22,6 +22,7 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::CSPInfo;
 using mozilla::ipc::PrincipalInfo;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Clients);
@@ -218,11 +219,10 @@ already_AddRefed<Promise> Clients::OpenWindow(const nsAString& aURL,
   }
 
   const PrincipalInfo& principalInfo = workerPrivate->GetPrincipalInfo();
-  const nsTArray<mozilla::ipc::ContentSecurityPolicy>& cspInfos =
-      workerPrivate->GetCSPInfos();
+  const CSPInfo& cspInfo = workerPrivate->GetCSPInfo();
   nsCString baseURL = workerPrivate->GetLocationInfo().mHref;
 
-  ClientOpenWindowArgs args(principalInfo, cspInfos,
+  ClientOpenWindowArgs args(principalInfo, Some(cspInfo),
                             NS_ConvertUTF16toUTF8(aURL), baseURL);
 
   nsCOMPtr<nsIGlobalObject> global = mGlobal;

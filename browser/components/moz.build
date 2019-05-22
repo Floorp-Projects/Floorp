@@ -47,6 +47,7 @@ DIRS += [
     'pocket',
     'preferences',
     'privatebrowsing',
+    'protections',
     'protocolhandler',
     'resistfingerprinting',
     'search',

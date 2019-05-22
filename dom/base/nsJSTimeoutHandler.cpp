@@ -18,7 +18,6 @@
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsGlobalWindow.h"
-#include "nsIContentSecurityPolicy.h"
 #include "mozilla/dom/Document.h"
 #include "nsIScriptTimeoutHandler.h"
 #include "nsIXPConnect.h"

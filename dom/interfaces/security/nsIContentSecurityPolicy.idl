@@ -221,10 +221,21 @@ interface nsIContentSecurityPolicy : nsISerializable
    * Called after the CSP object is created to fill in appropriate request
    * context. Either use
    *  * aDocument (preferred), or if no document is available, then provide
-   *  * aPrincipal
+   *  * aPrincipal, aSelfURI, aReferrer, aInnerWindowId explicitly.
    */
-  void setRequestContext(in Document aDocument,
-                         in nsIPrincipal aPrincipal);
+  [must_use] void setRequestContextWithDocument(in Document aDocument);
+  [must_use] void setRequestContextWithPrincipal(in nsIPrincipal aRequestPrincipal,
+                                                 in nsIURI aSelfURI,
+                                                 in AString aReferrer,
+                                                 in unsigned long long aInnerWindowId);
+
+  /**
+   * Get the various arguments needed to create a new request context for a CSP.
+   */
+  [noscript, notxpcom, nostdcall] readonly attribute nsIPrincipal requestPrincipal;
+  [noscript, notxpcom, nostdcall] readonly attribute nsIURI selfURI;
+  [noscript] readonly attribute AString referrer;
+  [noscript, notxpcom, nostdcall] readonly attribute unsigned long long innerWindowID;
 
   /**
    *  Ensure we have a nsIEventTarget to use to label CSPReportSenderRunnable

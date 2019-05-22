@@ -1,0 +1,12 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+.under-construction {
+    background-image: url("chrome://browser/content/illustrations/under-construction.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    min-height: 300px;
+    min-width: 300px;
+    /* Move the image down a bit - should be slightly higher than halfway down the page */
+    margin-top: -10%;
+}
