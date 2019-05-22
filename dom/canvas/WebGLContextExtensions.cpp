@@ -6,7 +6,6 @@
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
 #include "WebGLExtensions.h"
-#include "gfxPrefs.h"
 #include "GLContext.h"
 
 #include "nsString.h"

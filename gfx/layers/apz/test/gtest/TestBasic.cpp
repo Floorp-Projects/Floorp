@@ -6,7 +6,7 @@
 
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
-#include "gfxPrefs.h"
+
 #include "InputUtils.h"
 
 TEST_F(APZCBasicTester, Overzoom) {

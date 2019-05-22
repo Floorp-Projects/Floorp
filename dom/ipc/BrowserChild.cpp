@@ -8,7 +8,6 @@
 
 #include "BrowserChild.h"
 
-#include "gfxPrefs.h"
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/DocAccessibleChild.h"
 #endif

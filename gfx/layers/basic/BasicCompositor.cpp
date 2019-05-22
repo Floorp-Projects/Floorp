@@ -24,7 +24,6 @@
 #include "YCbCrUtils.h"
 #include <algorithm>
 #include "ImageContainer.h"
-#include "gfxPrefs.h"
 
 namespace mozilla {
 using namespace mozilla::gfx;

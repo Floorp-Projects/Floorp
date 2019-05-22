@@ -5,7 +5,6 @@
 
 #include "nsWindowBase.h"
 
-#include "gfxPrefs.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/PresShell.h"
 #include "KeyboardLayout.h"

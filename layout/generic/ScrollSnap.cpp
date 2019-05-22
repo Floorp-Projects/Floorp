@@ -7,7 +7,7 @@
 #include "ScrollSnap.h"
 
 #include "FrameMetrics.h"
-#include "gfxPrefs.h"
+
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "nsLineLayout.h"

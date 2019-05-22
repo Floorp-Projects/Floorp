@@ -206,7 +206,6 @@
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "gfxPlatform.h"
 #include "gfxPlatformFontList.h"
-#include "gfxPrefs.h"
 #include "prio.h"
 #include "private/pprio.h"
 #include "ContentProcessManager.h"

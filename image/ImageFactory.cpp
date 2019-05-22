@@ -110,9 +110,6 @@ already_AddRefed<Image> ImageFactory::CreateImage(
     nsIRequest* aRequest, ProgressTracker* aProgressTracker,
     const nsCString& aMimeType, nsIURI* aURI, bool aIsMultiPart,
     uint32_t aInnerWindowId) {
-  MOZ_ASSERT(gfxPrefs::SingletonExists(),
-             "Pref observers should have been initialized already");
-
   // Compute the image's initialization flags.
   uint32_t imageFlags = ComputeImageFlags(aURI, aMimeType, aIsMultiPart);
 

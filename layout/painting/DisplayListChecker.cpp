@@ -6,7 +6,6 @@
 
 #include "DisplayListChecker.h"
 
-#include "gfxPrefs.h"
 #include "nsDisplayList.h"
 
 namespace mozilla {

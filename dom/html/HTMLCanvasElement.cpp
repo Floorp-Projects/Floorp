@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/HTMLCanvasElement.h"
 
-#include "gfxPrefs.h"
 #include "ImageEncoder.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"

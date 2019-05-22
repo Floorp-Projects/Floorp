@@ -9,7 +9,6 @@
 
 #include "AsyncPanZoomController.h"
 #include "Units.h"
-#include "gfxPrefs.h"
 #include "mozilla/Assertions.h"
 
 namespace mozilla {

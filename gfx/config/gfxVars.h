@@ -56,7 +56,7 @@ class gfxVarReceiver;
 
 // Some graphics settings are computed on the UI process and must be
 // communicated to content and GPU processes. gfxVars helps facilitate
-// this. Its function is similar to gfxPrefs, except rather than hold
+// this. Its function is similar to StaticPrefs, except rather than hold
 // user preferences, it holds dynamically computed values.
 //
 // Each variable in GFX_VARS_LIST exposes the following static methods:

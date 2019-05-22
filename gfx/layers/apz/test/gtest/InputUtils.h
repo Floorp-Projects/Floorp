@@ -13,7 +13,6 @@
  */
 
 #include "APZTestCommon.h"
-#include "gfxPrefs.h"
 
 /* The InputReceiver template parameter used in the helper functions below needs
  * to be a class that implements functions with the signatures:

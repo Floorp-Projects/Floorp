@@ -7,8 +7,6 @@
 #include "KeyboardScrollAnimation.h"
 #include "ScrollAnimationBezierPhysics.h"
 
-#include "gfxPrefs.h"
-
 namespace mozilla {
 namespace layers {
 
