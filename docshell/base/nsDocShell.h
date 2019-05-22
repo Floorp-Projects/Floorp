@@ -1250,10 +1250,6 @@ class nsDocShell final : public nsDocLoader,
 
   // Set when activity in this docshell is being watched by the developer tools.
   bool mWatchedByDevtools : 1;
-
-  // This flag indicates whether or not the DocShell is currently executing an
-  // nsIWebNavigation navigation method.
-  bool mIsNavigating : 1;
 };
 
 #endif /* nsDocShell_h__ */
