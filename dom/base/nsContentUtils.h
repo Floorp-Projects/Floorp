@@ -1521,6 +1521,12 @@ class nsContentUtils {
   static nsresult DispatchFocusChromeEvent(nsPIDOMWindowOuter* aWindow);
 
   /**
+   * Helper to dispatch a "framefocusrequested" event to chrome, which will only
+   * bring the window to the foreground and switch tabs if aCanRaise is true.
+   */
+  static void RequestFrameFocus(Element& aFrameElement, bool aCanRaise);
+
+  /**
    * This method creates and dispatches a trusted event.
    * If aTarget is not a chrome object, the nearest chrome object in the
    * propagation path will be used as the start of the event target chain.
