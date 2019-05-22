@@ -145,7 +145,8 @@ child:
                        nsHttpResponseHead responseHead,
                        nsCString          securityInfoSerialization,
                        uint64_t           channelId,
-                       NetAddr            oldPeerAddr);
+                       NetAddr            oldPeerAddr,
+                       ResourceTimingStruct timing);
 
   // Called if redirect successful so that child can complete setup.
   async Redirect3Complete();
