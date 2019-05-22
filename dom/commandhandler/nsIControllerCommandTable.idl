@@ -12,14 +12,14 @@ class nsControllerCommandTable;
 
 /**
  * nsIControllerCommandTable
- * 
+ *
  * An interface via which a controller can maintain a series of commands,
  * and efficiently dispatch commands to their respective handlers.
  *
  * Controllers that use an nsIControllerCommandTable should support
  * nsIInterfaceRequestor, and be able to return an interface to their
  * controller command table via getInterface().
- * 
+ *
  */
 
 [scriptable, builtinclass, uuid(c847f90e-b8f3-49db-a4df-8867831f2800)]
@@ -28,11 +28,11 @@ interface nsIControllerCommandTable : nsISupports
   /**
    * Make this command table immutable, so that commands cannot
    * be registered or unregistered. Some command tables are made
-   * mutable after command registration so that they can be 
+   * mutable after command registration so that they can be
    * used as singletons.
    */
   void  makeImmutable();
-  
+
   /**
    * Register and unregister commands with the command table.
    *
@@ -43,7 +43,7 @@ interface nsIControllerCommandTable : nsISupports
    */
   void    registerCommand(in string aCommandName, in nsIControllerCommand aCommand);
   void    unregisterCommand(in string aCommandName, in nsIControllerCommand aCommand);
-  
+
   /**
    * Find the command handler which has been registered to handle the named command.
    *

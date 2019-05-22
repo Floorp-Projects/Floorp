@@ -47,13 +47,13 @@ interface nsISocketProvider : nsISupports
      */
     [noscript]
     void newSocket(in long                      aFamily,
-                   in string                    aHost, 
+                   in string                    aHost,
                    in long                      aPort,
                    in nsIProxyInfo              aProxy,
                    in const_OriginAttributesRef aOriginAttributes,
                    in unsigned long             aFlags,
                    in unsigned long             aTlsFlags,
-                   out PRFileDescStar           aFileDesc, 
+                   out PRFileDescStar           aFileDesc,
                    out nsISupports              aSecurityInfo);
 
     /**
@@ -68,13 +68,13 @@ interface nsISocketProvider : nsISupports
      */
     [noscript]
     void addToSocket(in long                      aFamily,
-                     in string                    aHost, 
+                     in string                    aHost,
                      in long                      aPort,
                      in nsIProxyInfo              aProxy,
                      in const_OriginAttributesRef aOriginAttributes,
                      in unsigned long             aFlags,
                      in unsigned long             aTlsFlags,
-                     in PRFileDescStar            aFileDesc, 
+                     in PRFileDescStar            aFileDesc,
                      out nsISupports              aSecurityInfo);
 
     /**
@@ -86,7 +86,7 @@ interface nsISocketProvider : nsISupports
      * later connect et al. request.
      */
     const long PROXY_RESOLVES_HOST = 1 << 0;
-    
+
     /**
      * When setting this flag, the socket will not apply any
      * credentials when establishing a connection. For example,

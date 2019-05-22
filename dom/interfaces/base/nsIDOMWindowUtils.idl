@@ -209,9 +209,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * The effect of this API is for gfx code to allocate more or fewer
    * pixels for rescalable content by a factor of |resolution| in
    * both dimensions.
-   * 
+   *
    * In addition, the content is scaled by the amount of the resolution,
-   * so that it is displayed at a correspondingly larger or smaller size, 
+   * so that it is displayed at a correspondingly larger or smaller size,
    * without the need for the caller to set an additional transform.
    *
    * This can be used to implement a non-reflowing scale-zoom, e.g.

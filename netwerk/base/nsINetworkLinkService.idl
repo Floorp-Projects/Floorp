@@ -35,7 +35,7 @@ interface nsINetworkLinkService : nsISupports
    * it is up.
    */
   readonly attribute boolean isLinkUp;
-  
+
   /**
    * This is set to true when we believe that isLinkUp is accurate.
    */

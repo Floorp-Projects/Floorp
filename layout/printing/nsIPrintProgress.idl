@@ -14,25 +14,25 @@ interface nsIPrintProgress: nsIWebProgressListener {
   /* Open the progress dialog
      you can specify parameters through an xpcom object
   */
-  void openProgressDialog(in mozIDOMWindowProxy parent, 
-                          in string dialogURL, 
-                          in nsISupports parameters, 
+  void openProgressDialog(in mozIDOMWindowProxy parent,
+                          in string dialogURL,
+                          in nsISupports parameters,
                           in nsIObserver openDialogObserver,
                           out boolean notifyOnOpen);
-  
+
   /* Close the progress dialog */
   void closeProgressDialog(in boolean forceClose);
-  
+
   /* Register a Web Progress Listener */
   void registerListener(in nsIWebProgressListener listener);
 
   /* Unregister a Web Progress Listener */
   void unregisterListener(in nsIWebProgressListener listener);
-  
-  /* This method is called after the dialog that shows the progress has been shown 
+
+  /* This method is called after the dialog that shows the progress has been shown
   */
   void doneIniting();
-  
+
   /* Retrieve the prompter, needed to display modal dialog on top of progress dialog */
   nsIPrompt getPrompter();
 

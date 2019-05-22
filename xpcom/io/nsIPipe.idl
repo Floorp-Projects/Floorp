@@ -28,7 +28,7 @@ interface nsIAsyncOutputStream;
  * The pipe supports nsIAsyncInputStream and nsIAsyncOutputStream, which give
  * the user of a non-blocking pipe the ability to wait for the pipe to become
  * ready again.  For example, in the case of an empty non-blocking pipe, the
- * user can call AsyncWait on the input end of the pipe to be notified when 
+ * user can call AsyncWait on the input end of the pipe to be notified when
  * the pipe has data to read (or when the pipe becomes closed).
  *
  * NS_NewPipe2 and NS_NewPipe provide convenient pipe constructors.  In most
@@ -77,12 +77,12 @@ interface nsIPipe : nsISupports
  * XXX this interface doesn't really belong in here.  It is here because
  * currently nsPipeInputStream is the only implementation of this interface.
  */
-[scriptable, uuid(8C39EF62-F7C9-11d4-98F5-001083010E9B)] 
+[scriptable, uuid(8C39EF62-F7C9-11d4-98F5-001083010E9B)]
 interface nsISearchableInputStream : nsISupports
 {
     /**
      * Searches for a string in the input stream. Since the stream has a notion
-     * of EOF, it is possible that the string may at some time be in the 
+     * of EOF, it is possible that the string may at some time be in the
      * buffer, but is is not currently found up to some offset. Consequently,
      * both the found and not found cases return an offset:
      *    if found, return offset where it was found
@@ -90,8 +90,8 @@ interface nsISearchableInputStream : nsISupports
      * In the case the stream is at EOF and the string is not found, the first
      * byte not searched will correspond to the length of the buffer.
      */
-    void search(in string forString, 
-                in boolean ignoreCase, 
+    void search(in string forString,
+                in boolean ignoreCase,
                 out boolean found,
                 out unsigned long offsetSearchedTo);
 };

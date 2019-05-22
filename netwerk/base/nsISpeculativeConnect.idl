@@ -19,7 +19,7 @@ interface nsISpeculativeConnect : nsISupports
      * ready and/or progressed when the transaction is actually submitted.
      *
      * No obligation is taken on by the implementer, nor is the submitter obligated
-     * to actually open the new channel. 
+     * to actually open the new channel.
      *
      * @param aURI the URI of the hinted transaction
      * @param aPrincipal the principal that will be used for opening the

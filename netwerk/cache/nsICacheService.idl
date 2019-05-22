@@ -40,7 +40,7 @@ interface nsICacheService : nsISupports
      *   by the storage policy will not be searched when opening entries
      *   from the returned session.
      * @param streamBased - Indicates whether or not the data being cached
-     *   can be represented as a stream.  The storagePolicy must be 
+     *   can be represented as a stream.  The storagePolicy must be
      *   consistent with the value of this field.  For example, a non-stream-
      *   based cache entry can only have a storage policy of STORE_IN_MEMORY.
      * @return new cache session.

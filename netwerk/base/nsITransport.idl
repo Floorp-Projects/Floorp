@@ -15,11 +15,11 @@ interface nsIEventTarget;
  * This interface provides a common way of accessing i/o streams connected
  * to some resource.  This interface does not in any way specify the resource.
  * It provides methods to open blocking or non-blocking, buffered or unbuffered
- * streams to the resource.  The name "transport" is meant to connote the 
+ * streams to the resource.  The name "transport" is meant to connote the
  * inherent data transfer implied by this interface (i.e., data is being
  * transfered in some fashion via the streams exposed by this interface).
  *
- * A transport can have an event sink associated with it.  The event sink 
+ * A transport can have an event sink associated with it.  The event sink
  * receives transport-specific events as the transfer is occuring.  For a
  * socket transport, these events can include status about the connection.
  * See nsISocketTransport for more info about socket transport specifics.
@@ -46,7 +46,7 @@ interface nsITransport : nsISupports
      *   If this flag is NOT specified, then the stream has non-blocking
      *   stream semantics.  This means that if the stream has no data and is
      *   not closed, then reading from it returns NS_BASE_STREAM_WOULD_BLOCK.
-     *   In addition, in non-blocking mode, the stream is guaranteed to 
+     *   In addition, in non-blocking mode, the stream is guaranteed to
      *   support nsIAsyncInputStream.  This interface allows the consumer of
      *   the stream to be notified when the stream can again be read.
      *
@@ -122,8 +122,8 @@ interface nsITransport : nsISupports
      *        any thread.
      */
     void setEventSink(in nsITransportEventSink aSink,
-                      in nsIEventTarget aEventTarget); 
-    
+                      in nsIEventTarget aEventTarget);
+
     /**
      * Generic nsITransportEventSink status codes.  nsITransport
      * implementations may override these status codes with their own more

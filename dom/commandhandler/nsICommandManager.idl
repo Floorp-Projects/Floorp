@@ -74,7 +74,7 @@ interface nsICommandManager : nsISupports
    * (equivalent to calling isCommandEnabled).
    *
    * aCommandName is the name of the command that needs the state
-   * aTargetWindow is the source of command controller 
+   * aTargetWindow is the source of command controller
    *      (null means use focus controller)
    * On output: aCommandParams: values set by the caller filled in with
    * state from the command.

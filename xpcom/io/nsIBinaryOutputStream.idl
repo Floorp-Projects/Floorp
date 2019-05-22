@@ -20,7 +20,7 @@
 [scriptable, uuid(204ee610-8765-11d3-90cf-0040056a906e)]
 interface nsIBinaryOutputStream : nsIOutputStream {
     void setOutputStream(in nsIOutputStream aOutputStream);
-    
+
     /**
      * Write a boolean as an 8-bit char to the stream.
      */

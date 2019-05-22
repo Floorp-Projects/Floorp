@@ -10,13 +10,13 @@ interface nsIURI;
 
 /**
  * nsIWebProtocolHandlerRegistrar
- * 
+ *
  * Applications wishing to use web protocol handlers need to implement this
  * interface. Typically they will prompt the user to confirm adding an entry
- * to the local list. 
+ * to the local list.
  *
  * The component must have the contract id defined below so that the Navigator
- * implementation can invoke it. 
+ * implementation can invoke it.
  */
 
 [scriptable, uuid(1ce9ef8d-f462-49ca-b8e9-c946c4f37d6e)]

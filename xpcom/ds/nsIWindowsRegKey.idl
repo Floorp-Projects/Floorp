@@ -78,7 +78,7 @@ interface nsIWindowsRegKey : nsISupports
    * This attribute exposes the native HKEY and is available to provide C++
    * consumers with the flexibility of making other Windows registry API calls
    * that are not exposed via this interface.
-   * 
+   *
    * It is possible to initialize this object by setting an HKEY on it.  In
    * that case, it is the responsibility of the consumer setting the HKEY to
    * ensure that it is a valid HKEY.
@@ -187,7 +187,7 @@ interface nsIWindowsRegKey : nsISupports
 
   /**
    * This method removes a child key and all of its values.  This method will
-   * fail if the key has any children of its own. 
+   * fail if the key has any children of its own.
    *
    * @param relPath
    *        The relative path from this key to the key to be removed.
@@ -286,7 +286,7 @@ interface nsIWindowsRegKey : nsISupports
   /**
    * This method writes the binary contents of the named value.  The value will
    * be created if it does not already exist.
-   * 
+   *
    * JavaScript callers should take care with the value passed to this method
    * since it will be truncated from a JS string (unicode) to a ISO-Latin-1
    * string.  (The binary data will be treated as an ISO-Latin-1 character

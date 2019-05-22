@@ -73,7 +73,7 @@ interface nsILocalFileWin : nsIFile
      * fileAttributesWin
      *
      * Set or get windows specific file attributes.
-     * 
+     *
      * Throws NS_ERROR_FILE_INVALID_PATH for an invalid file.
      * Throws NS_ERROR_FAILURE if the set or get fails.
      */

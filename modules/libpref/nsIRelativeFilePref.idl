@@ -14,7 +14,7 @@ interface nsIFile;
  *
  * @see nsIPrefBranch::getComplexValue
  * @see nsIPrefBranch::setComplexValue
- * 
+ *
  */
 
 [uuid(2f977d4e-5485-11d4-87e2-0010a4e75ef2)]

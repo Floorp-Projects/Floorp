@@ -10,7 +10,7 @@
 interface nsIUnicharLineInputStream : nsISupports
 {
   /**
-   * Read a single line from the stream, where a line is a 
+   * Read a single line from the stream, where a line is a
    * possibly zero length sequence of characters terminated by a
    * CR, LF, CRLF, LFCR, or eof.
    * The line terminator is not returned.

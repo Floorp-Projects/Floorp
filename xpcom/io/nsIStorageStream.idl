@@ -46,7 +46,7 @@ interface nsIStorageStream : nsISupports
      */
     nsIInputStream newInputStream(in int32_t startPosition);
 
-    /** 
+    /**
      * The length attribute indicates the total number of bytes stored in the
      * nsIStorageStream internal buffer, regardless of any consumption by input
      * streams.  Assigning to the length field can be used to truncate the
