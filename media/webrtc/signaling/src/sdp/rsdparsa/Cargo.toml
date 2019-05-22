@@ -1,7 +1,17 @@
 [package]
-name = "rsdparsa"
+name = "webrtc-sdp"
 version = "0.1.0"
 authors = ["Nils Ohlmeier <github@ohlmeier.org>"]
+description = "This create parses strings in the format of the Session Description Protocol according to RFC4566. It specifically supports the subset of features required to support WebRTC according to the JSEP draft."
+homepage = "https://github.com/nils-ohlmeier/rsdparsa"
+readme = "README.md"
+keywords = ["webrtc", "sdp", "jsep"]
+categories = ["parsing", "network-programming"]
+license = "MPL-2.0"
+
+[badges]
+travis-ci = { repository = "nils-ohlmeier/rsdparsa", branch = "master" }
+codecov = { repository = "nils-ohlmeier/rsdparsa", branch = "master", service = "github" }
 
 [features]
 default = []
@@ -9,10 +19,9 @@ default = []
 serialize = ["serde", "serde_derive"]
 
 [dependencies]
-# clippy = {version = "*", optional = true}
-log = "0.4"
+log = {version = "0.4.6"}
 serde = {version = "1.0" , optional = true}
 serde_derive = {version = "1.0" , optional = true}
 
 [dev-dependencies]
-# serde_json = {version = "1.0"}
+serde_json = {version = "1.0"}
