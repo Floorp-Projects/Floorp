@@ -59,6 +59,13 @@ class FrozenImage : public ImageWrapper {
        uint32_t aWhichFrame, gfx::SamplingFilter aSamplingFilter,
        const Maybe<SVGImageContext>& aSVGContext, uint32_t aFlags,
        float aOpacity) override;
+  NS_IMETHOD StartDecoding(uint32_t aFlags, uint32_t aWhichFrame) override;
+  NS_IMETHOD_(bool)
+  StartDecodingWithResult(uint32_t aFlags, uint32_t aWhichFrame) override;
+  NS_IMETHOD_(bool)
+  RequestDecodeWithResult(uint32_t aFlags, uint32_t aWhichFrame) override;
+  NS_IMETHOD RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags,
+                                  uint32_t aWhichFrame) override;
   NS_IMETHOD_(void) RequestRefresh(const TimeStamp& aTime) override;
   NS_IMETHOD GetAnimationMode(uint16_t* aAnimationMode) override;
   NS_IMETHOD SetAnimationMode(uint16_t aAnimationMode) override;
