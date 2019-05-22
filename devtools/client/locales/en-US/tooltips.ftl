@@ -24,6 +24,8 @@ inactive-css-not-flex-item = <strong>{ $property }</strong> has no effect on thi
 
 inactive-css-not-flex-container = <strong>{ $property }</strong> has no effect on this element since it’s not a flex container.
 
+inactive-css-not-inline-or-tablecell = <strong>{ $property }</strong> has no effect on this element since it’s not an inline or table-cell element.
+
 ## In the Rule View when a CSS property cannot be successfully applied we display
 ## an icon. When this icon is hovered this message is displayed to explain how
 ## the problem can be solved.
@@ -39,3 +41,5 @@ inactive-css-not-grid-container-fix = Try adding <strong>display:grid</strong> o
 inactive-css-not-flex-item-fix = Try adding <strong>display:flex</strong> or <strong>display:inline-flex</strong> to the item’s parent. { learn-more }
 
 inactive-css-not-flex-container-fix = Try adding <strong>display:flex</strong> or <strong>display:inline-flex</strong>. { learn-more }
+
+inactive-css-not-inline-or-tablecell-fix = Try adding <strong>display:inline</strong> or <strong>display:table-cell</strong>. { learn-more }
