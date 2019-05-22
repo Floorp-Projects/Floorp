@@ -54,7 +54,7 @@ class CSSPseudoElement final : public nsWrapperCache {
     return retVal.forget();
   }
 
-  void GetAnimations(const AnimationFilter& filter,
+  void GetAnimations(const GetAnimationsOptions& aOptions,
                      nsTArray<RefPtr<Animation>>& aRetVal);
   already_AddRefed<Animation> Animate(
       JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
