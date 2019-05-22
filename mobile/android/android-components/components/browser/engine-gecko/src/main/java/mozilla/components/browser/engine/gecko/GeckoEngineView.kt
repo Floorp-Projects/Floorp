@@ -11,6 +11,7 @@ import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import org.mozilla.geckoview.GeckoResult
 
 /**
  * Gecko-based EngineView implementation.
@@ -60,7 +61,16 @@ class GeckoEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 
-    override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
+    override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
+        val geckoResult = currentGeckoView.capturePixels()
+        geckoResult.then({ bitmap ->
+            onFinish(bitmap)
+            GeckoResult<Void>()
+        }, {
+            onFinish(null)
+            GeckoResult<Void>()
+        })
+    }
 
     override fun setVerticalClipping(clippingHeight: Int) {
         // no-op: requires GeckoView 68.0

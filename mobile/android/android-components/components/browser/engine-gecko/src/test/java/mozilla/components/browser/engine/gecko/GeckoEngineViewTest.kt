@@ -4,23 +4,29 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.app.Activity
 import android.content.Context
-import androidx.test.core.app.ApplicationProvider
+import android.graphics.Bitmap
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GeckoEngineViewTest {
+
     private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
+        get() = Robolectric.buildActivity(Activity::class.java).get()
 
     @Test
     fun render() {
@@ -41,11 +47,39 @@ class GeckoEngineViewTest {
     }
 
     @Test
+    fun captureThumbnail() {
+        val engineView = GeckoEngineView(context)
+        val mockGeckoView = mock(NestedGeckoView::class.java)
+        var thumbnail: Bitmap? = null
+
+        var geckoResult = GeckoResult<Bitmap>()
+        `when`(mockGeckoView.capturePixels()).thenReturn(geckoResult)
+        engineView.currentGeckoView = mockGeckoView
+
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+
+        geckoResult.complete(mock())
+        assertNotNull(thumbnail)
+
+        geckoResult = GeckoResult()
+        `when`(mockGeckoView.capturePixels()).thenReturn(geckoResult)
+
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+
+        geckoResult.completeExceptionally(mock())
+        assertNull(thumbnail)
+    }
+
+    @Test
     fun `setVerticalClipping is a no-op`() {
         val engineView = GeckoEngineView(context)
         engineView.currentGeckoView = mock()
 
         engineView.setVerticalClipping(42)
-        verifyNoMoreInteractions(engineView.currentGeckoView)
+        Mockito.verifyNoMoreInteractions(engineView.currentGeckoView)
     }
 }

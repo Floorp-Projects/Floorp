@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -13,8 +14,11 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 
 /**
@@ -27,6 +31,18 @@ class GeckoEngine(
     executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) }
 ) : Engine {
     private val executor by lazy { executorProvider.invoke() }
+
+    init {
+        runtime.delegate = GeckoRuntime.Delegate {
+            // On shutdown: The runtime is shutting down (possibly because of an unrecoverable error state). We crash
+            // the app here for two reasons:
+            //  - We want to know about those unsolicited shutdowns and fix those issues.
+            //  - We can't recover easily from this situation. Just continuing will leave us with an engine that
+            //    doesn't do anything anymore.
+            @Suppress("TooGenericExceptionThrown")
+            throw RuntimeException("GeckoRuntime is shutting down")
+        }
+    }
 
     /**
      * Creates a new Gecko-based EngineView.
@@ -59,6 +75,27 @@ class GeckoEngine(
         executor.speculativeConnect(url)
     }
 
+    /**
+     * See [Engine.installWebExtension].
+     */
+    override fun installWebExtension(
+        id: String,
+        url: String,
+        allowContentMessaging: Boolean,
+        onSuccess: ((WebExtension) -> Unit),
+        onError: ((String, Throwable) -> Unit)
+    ) {
+        GeckoWebExtension(id, url).also { ext ->
+            runtime.registerWebExtension(ext.nativeExtension).then({
+                onSuccess(ext)
+                GeckoResult<Void>()
+            }, {
+                throwable -> onError(id, throwable)
+                GeckoResult<Void>()
+            })
+        }
+    }
+
     override fun name(): String = "Gecko"
 
     /**
@@ -73,11 +110,15 @@ class GeckoEngine(
             get() = runtime.settings.webFontsEnabled
             set(value) { runtime.settings.webFontsEnabled = value }
 
+        override var automaticFontSizeAdjustment: Boolean
+            get() = runtime.settings.automaticFontSizeAdjustment
+            set(value) { runtime.settings.automaticFontSizeAdjustment = value }
+
         override var trackingProtectionPolicy: TrackingProtectionPolicy?
-            get() = TrackingProtectionPolicy.select(runtime.settings.trackingProtectionCategories)
+            get() = TrackingProtectionPolicy.select(runtime.settings.contentBlocking.categories)
             set(value) {
                 value?.let {
-                    runtime.settings.trackingProtectionCategories = it.categories
+                    runtime.settings.contentBlocking.categories = it.categories
                     defaultSettings?.trackingProtectionPolicy = value
                 }
             }
@@ -95,15 +136,13 @@ class GeckoEngine(
             set(value) { defaultSettings?.testingModeEnabled = value }
 
         override var userAgentString: String?
-            // TODO if no default user agent string is provided we should
-            // return the engine default here, but we can't get to it in
-            // a practical way right now: https://bugzilla.mozilla.org/show_bug.cgi?id=1512997
-            get() = defaultSettings?.userAgentString
+            get() = defaultSettings?.userAgentString ?: GeckoSession.getDefaultUserAgent()
             set(value) { defaultSettings?.userAgentString = value }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
             this.webFontsEnabled = it.webFontsEnabled
+            this.automaticFontSizeAdjustment = it.automaticFontSizeAdjustment
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
             this.testingModeEnabled = it.testingModeEnabled

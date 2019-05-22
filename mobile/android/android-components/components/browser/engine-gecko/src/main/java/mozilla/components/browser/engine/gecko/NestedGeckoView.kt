@@ -48,13 +48,11 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         val event = MotionEvent.obtain(ev)
         val action = ev.actionMasked
+        val eventY = event.y.toInt()
 
         if (action == MotionEvent.ACTION_DOWN) {
             nestedOffsetY = 0
         }
-
-        val eventY = event.y.toInt()
-        event.offsetLocation(0f, nestedOffsetY.toFloat())
 
         when (action) {
             MotionEvent.ACTION_MOVE -> {

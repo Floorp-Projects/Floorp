@@ -39,6 +39,9 @@ import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextCallback
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DATETIME_TYPE_DATETIME_LOCAL
@@ -933,9 +936,9 @@ class GeckoPromptDelegateTest {
 
             override fun confirm(button: Int) {
                 when (button) {
-                    GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE -> onPositiveButtonWasCalled = true
-                    GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE -> onNegativeButtonWasCalled = true
-                    GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL -> onNeutralButtonWasCalled = true
+                    BUTTON_TYPE_POSITIVE -> onPositiveButtonWasCalled = true
+                    BUTTON_TYPE_NEGATIVE -> onNegativeButtonWasCalled = true
+                    BUTTON_TYPE_NEUTRAL -> onNeutralButtonWasCalled = true
                 }
             }
 

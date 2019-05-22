@@ -7,7 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.os.Handler
 import android.os.Message
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
@@ -44,6 +44,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -61,6 +62,7 @@ import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.Executors
 
 @RunWith(RobolectricTestRunner::class)
 class GeckoEngineSessionTest {
@@ -71,10 +73,11 @@ class GeckoEngineSessionTest {
     private lateinit var progressDelegate: ArgumentCaptor<GeckoSession.ProgressDelegate>
     private lateinit var contentDelegate: ArgumentCaptor<GeckoSession.ContentDelegate>
     private lateinit var permissionDelegate: ArgumentCaptor<GeckoSession.PermissionDelegate>
-    private lateinit var trackingProtectionDelegate: ArgumentCaptor<GeckoSession.TrackingProtectionDelegate>
+    private lateinit var contentBlockingDelegate: ArgumentCaptor<ContentBlocking.Delegate>
     private lateinit var historyDelegate: ArgumentCaptor<GeckoSession.HistoryDelegate>
 
-    private val testMainScope = CoroutineScope(newSingleThreadContext("Test"))
+    private val testMainScope = CoroutineScope(
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
     @Before
     fun setup() {
@@ -96,8 +99,7 @@ class GeckoEngineSessionTest {
         progressDelegate = ArgumentCaptor.forClass(GeckoSession.ProgressDelegate::class.java)
         contentDelegate = ArgumentCaptor.forClass(GeckoSession.ContentDelegate::class.java)
         permissionDelegate = ArgumentCaptor.forClass(GeckoSession.PermissionDelegate::class.java)
-        trackingProtectionDelegate = ArgumentCaptor.forClass(
-                GeckoSession.TrackingProtectionDelegate::class.java)
+        contentBlockingDelegate = ArgumentCaptor.forClass(ContentBlocking.Delegate::class.java)
         historyDelegate = ArgumentCaptor.forClass(GeckoSession.HistoryDelegate::class.java)
 
         geckoSession = mockGeckoSession()
@@ -109,7 +111,7 @@ class GeckoEngineSessionTest {
         verify(geckoSession).progressDelegate = progressDelegate.capture()
         verify(geckoSession).contentDelegate = contentDelegate.capture()
         verify(geckoSession).permissionDelegate = permissionDelegate.capture()
-        verify(geckoSession).trackingProtectionDelegate = trackingProtectionDelegate.capture()
+        verify(geckoSession).contentBlockingDelegate = contentBlockingDelegate.capture()
         verify(geckoSession).historyDelegate = historyDelegate.capture()
     }
 
@@ -594,7 +596,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `notifies configured history delegate of reloads`() {
+    fun `notifies configured history delegate of reloads`() = runBlocking {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
                 geckoSessionProvider = geckoSessionProvider,
                 context = testMainScope.coroutineContext)
@@ -639,7 +641,7 @@ class GeckoEngineSessionTest {
         runBlocking(testMainScope.coroutineContext) {
             engineSession.job.children.forEach { it.join() }
             verify(historyTrackingDelegate).shouldStoreUri("https://www.mozilla.com/not-allowed")
-            verify(historyTrackingDelegate, never()).onVisited(eq("https://www.mozilla.com/not-allowed"), any())
+            verify(historyTrackingDelegate, never()).onVisited(eq("https://www.mozilla.com/not-allowed"), mozilla.components.support.test.any())
         }
     }
 
@@ -653,15 +655,15 @@ class GeckoEngineSessionTest {
         captureDelegates()
 
         engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
-        `when`(historyTrackingDelegate.shouldStoreUri(any())).thenReturn(true)
+        `when`(historyTrackingDelegate.shouldStoreUri(mozilla.components.support.test.any())).thenReturn(true)
 
         historyDelegate.value.onVisited(
-            geckoSession,
-            "https://www.mozilla.com/tempredirect",
-            null,
-            // bitwise 'or'
-            GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL
-                    or GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE
+                geckoSession,
+                "https://www.mozilla.com/tempredirect",
+                null,
+                // bitwise 'or'
+                GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL
+                        or GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE
         )
 
         runBlocking(testMainScope.coroutineContext) {
@@ -670,11 +672,11 @@ class GeckoEngineSessionTest {
         }
 
         historyDelegate.value.onVisited(
-            geckoSession,
-            "https://www.mozilla.com/permredirect",
-            null,
-            GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL
-                    or GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE_PERMANENT
+                geckoSession,
+                "https://www.mozilla.com/permredirect",
+                null,
+                GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL
+                        or GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE_PERMANENT
         )
 
         runBlocking(testMainScope.coroutineContext) {
@@ -802,7 +804,7 @@ class GeckoEngineSessionTest {
 
         captureDelegates()
 
-        trackingProtectionDelegate.value.onTrackerBlocked(geckoSession, "tracker1", 0)
+        contentBlockingDelegate.value.onContentBlocked(geckoSession, ContentBlocking.BlockEvent("tracker1", 0))
         assertEquals("tracker1", trackerBlocked)
     }
 
@@ -864,6 +866,22 @@ class GeckoEngineSessionTest {
 
         engineSession.disableTrackingProtection()
         assertTrue(trackerBlockingDisabledObserved)
+    }
+
+    @Test
+    fun trackingProtectionCategoriesAreAligned() {
+        assertEquals(TrackingProtectionPolicy.AD, ContentBlocking.AT_AD)
+        assertEquals(TrackingProtectionPolicy.ANALYTICS, ContentBlocking.AT_ANALYTIC)
+        assertEquals(TrackingProtectionPolicy.CONTENT, ContentBlocking.AT_CONTENT)
+        assertEquals(TrackingProtectionPolicy.SOCIAL, ContentBlocking.AT_SOCIAL)
+        assertEquals(TrackingProtectionPolicy.TEST, ContentBlocking.AT_TEST)
+
+        assertEquals(
+            TrackingProtectionPolicy.all().categories and
+            TrackingProtectionPolicy.CRYPTOMINING.inv() and
+            TrackingProtectionPolicy.FINGERPRINTING.inv() and
+            TrackingProtectionPolicy.SAFE_BROWSING_ALL.inv(),
+            ContentBlocking.AT_ALL)
     }
 
     @Test
@@ -1242,25 +1260,26 @@ class GeckoEngineSessionTest {
         })
 
         class MockContextElement(
+            baseUri: String?,
             linkUri: String?,
             title: String?,
             altText: String?,
             typeStr: String,
             srcUri: String?
-        ) : GeckoSession.ContentDelegate.ContextElement(linkUri, title, altText, typeStr, srcUri)
+        ) : GeckoSession.ContentDelegate.ContextElement(baseUri, linkUri, title, altText, typeStr, srcUri)
 
         delegate.onContextMenu(geckoSession, 0, 0,
-            MockContextElement(null, "title", "alt", "HTMLAudioElement", "file.mp3"))
+            MockContextElement(null, null, "title", "alt", "HTMLAudioElement", "file.mp3"))
         assertTrue(observedChanged)
 
         observedChanged = false
         delegate.onContextMenu(geckoSession, 0, 0,
-            MockContextElement(null, "title", "alt", "HTMLAudioElement", null))
+            MockContextElement(null, null, "title", "alt", "HTMLAudioElement", null))
         assertFalse(observedChanged)
 
         observedChanged = false
         delegate.onContextMenu(geckoSession, 0, 0,
-            MockContextElement(null, "title", "alt", "foobar", null))
+            MockContextElement(null, null, "title", "alt", "foobar", null))
         assertFalse(observedChanged)
     }
 
@@ -1329,7 +1348,7 @@ class GeckoEngineSessionTest {
 
         desktopModeToggled = false
         `when`(geckoSession.settings.userAgentMode)
-            .thenReturn(GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
+                .thenReturn(GeckoSessionSettings.USER_AGENT_MODE_DESKTOP)
         `when`(geckoSession.settings.viewportMode)
                 .thenReturn(GeckoSessionSettings.VIEWPORT_MODE_DESKTOP)
 
