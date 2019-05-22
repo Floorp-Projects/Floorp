@@ -85,6 +85,11 @@ IPCResult VRParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult VRParent::RecvPreferenceUpdate(const Pref& aPref) {
+  Preferences::SetPreference(aPref);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult VRParent::RecvOpenVRControllerActionPathToVR(
     const nsCString& aPath) {
   mOpenVRControllerAction = aPath;
