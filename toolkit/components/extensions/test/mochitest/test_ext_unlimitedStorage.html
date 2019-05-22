@@ -133,58 +133,6 @@ add_task(async function test_unlimitedStorage() {
   await test_background_storagePersist(EXTENSION_ID);
 });
 
-add_task(async function test_unlimitedStorage_removed_on_update() {
-  const EXTENSION_ID = "test-unlimitedStorage-removed-on-update@mozilla";
-
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["unlimitedStorage"],
-      applications: {
-        gecko: {
-          id: EXTENSION_ID,
-        },
-      },
-    },
-
-    background: async function() {
-      browser.test.sendMessage("extension-uuid", window.location.host);
-    },
-  });
-
-  await extension.startup();
-
-  const uuid = await extension.awaitMessage("extension-uuid");
-
-  checkSitePermissions(uuid, Services.perms.ALLOW_ACTION, "has been allowed");
-
-  await extension.unload();
-
-  // Simulate an update which do not require the unlimitedStorage permission.
-  let updatedExtension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      applications: {
-        gecko: {
-          id: EXTENSION_ID,
-        },
-      },
-    },
-
-    background: async function() {
-      browser.test.sendMessage("updated-extension-uuid", window.location.host);
-    },
-  });
-
-  updatedExtension.startup();
-
-  const updatedExtensionUUID = await updatedExtension.awaitMessage("updated-extension-uuid");
-
-  is(uuid, updatedExtensionUUID, "The updated extension has the same uuid");
-
-  checkSitePermissions(uuid, Services.perms.UNKNOWN_ACTION, "has been cleared");
-
-  await updatedExtension.unload();
-});
-
 </script>
 
 </body>

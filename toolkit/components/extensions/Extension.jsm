@@ -1833,16 +1833,22 @@ class Extension extends ExtensionData {
     const testPermission = perm =>
       Services.perms.testPermissionFromPrincipal(principal, perm);
 
+    const addUnlimitedStoragePermissions = () => {
+      // Set the indexedDB permission and a custom "WebExtensions-unlimitedStorage" to
+      // remember that the permission hasn't been selected manually by the user.
+      Services.perms.addFromPrincipal(principal, "WebExtensions-unlimitedStorage",
+                                      Services.perms.ALLOW_ACTION);
+      Services.perms.addFromPrincipal(principal, "indexedDB",
+                                      Services.perms.ALLOW_ACTION);
+      Services.perms.addFromPrincipal(principal, "persistent-storage",
+                                      Services.perms.ALLOW_ACTION);
+    };
+
     // Only update storage permissions when the extension changes in
     // some way.
     if (reason !== "APP_STARTUP" && reason !== "APP_SHUTDOWN") {
       if (this.hasPermission("unlimitedStorage")) {
-        // Set the indexedDB permission and a custom "WebExtensions-unlimitedStorage" to remember
-        // that the permission hasn't been selected manually by the user.
-        Services.perms.addFromPrincipal(principal, "WebExtensions-unlimitedStorage",
-                                        Services.perms.ALLOW_ACTION);
-        Services.perms.addFromPrincipal(principal, "indexedDB", Services.perms.ALLOW_ACTION);
-        Services.perms.addFromPrincipal(principal, "persistent-storage", Services.perms.ALLOW_ACTION);
+        addUnlimitedStoragePermissions();
       } else {
         // Remove the indexedDB permission if it has been enabled using the
         // unlimitedStorage WebExtensions permissions.
@@ -1850,6 +1856,13 @@ class Extension extends ExtensionData {
         Services.perms.removeFromPrincipal(principal, "indexedDB");
         Services.perms.removeFromPrincipal(principal, "persistent-storage");
       }
+    } else if (reason === "APP_STARTUP" && this.hasPermission("unlimitedStorage") &&
+               (testPermission("indexedDB") !== Services.perms.ALLOW_ACTION ||
+                testPermission("persistent-storage") !== Services.perms.ALLOW_ACTION)) {
+      // If the extension does have the unlimitedStorage permission, but the
+      // expected site permissions are missing during the app startup, then
+      // add them back (See Bug 1454192).
+      addUnlimitedStoragePermissions();
     }
 
     // Never change geolocation permissions at shutdown, since it uses a
