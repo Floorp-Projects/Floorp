@@ -61,25 +61,51 @@ private fun privateModeAdapterItems(tabs: List<Tab>): List<AdapterItem> {
     return items
 }
 
-private fun onboardingAdapterItems(): List<AdapterItem> = listOf(
-    AdapterItem.OnboardingHeader,
-    AdapterItem.OnboardingSectionHeader() { it.getString(R.string.onboarding_fxa_section_header) },
-    AdapterItem.OnboardingFirefoxAccount,
-    AdapterItem.OnboardingSectionHeader() {
-        val appName = it.getString(R.string.app_name)
-        it.getString(R.string.onboarding_feature_section_header, appName)
-    },
-    AdapterItem.OnboardingThemePicker,
-    AdapterItem.OnboardingTrackingProtection,
-    AdapterItem.OnboardingPrivateBrowsing,
-    AdapterItem.OnboardingPrivacyNotice,
-    AdapterItem.OnboardingFinish
-)
+private fun onboardingAdapterItems(onboardingState: OnboardingState): List<AdapterItem> {
+    val items: MutableList<AdapterItem> = mutableListOf(AdapterItem.OnboardingHeader)
+
+    // TODO customize the UI based on different account states.
+    // Customize FxA items based on where we are with the account state:
+    items.addAll(when (onboardingState) {
+        OnboardingState.SignedOut -> {
+            listOf(
+                AdapterItem.OnboardingSectionHeader { it.getString(R.string.onboarding_fxa_section_header) },
+                AdapterItem.OnboardingFirefoxAccount
+            )
+        }
+        OnboardingState.AutoSignedIn -> {
+            listOf(
+                AdapterItem.OnboardingSectionHeader { it.getString(R.string.onboarding_fxa_section_header) },
+                AdapterItem.OnboardingFirefoxAccount
+            )
+        }
+        OnboardingState.ManuallySignedIn -> {
+            listOf(
+                AdapterItem.OnboardingSectionHeader { it.getString(R.string.onboarding_fxa_section_header) },
+                AdapterItem.OnboardingFirefoxAccount
+            )
+        }
+    })
+
+    items.addAll(listOf(
+        AdapterItem.OnboardingSectionHeader {
+            val appName = it.getString(R.string.app_name)
+            it.getString(R.string.onboarding_feature_section_header, appName)
+        },
+        AdapterItem.OnboardingThemePicker,
+        AdapterItem.OnboardingTrackingProtection,
+        AdapterItem.OnboardingPrivateBrowsing,
+        AdapterItem.OnboardingPrivacyNotice,
+        AdapterItem.OnboardingFinish
+    ))
+
+    return items
+}
 
 private fun SessionControlState.toAdapterList(): List<AdapterItem> = when (mode) {
     is Mode.Normal -> normalModeAdapterItems(tabs, collections, expandedCollections)
     is Mode.Private -> privateModeAdapterItems(tabs)
-    is Mode.Onboarding -> onboardingAdapterItems()
+    is Mode.Onboarding -> onboardingAdapterItems(mode.state)
 }
 
 private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapIndexed { index, tab ->

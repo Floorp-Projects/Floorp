@@ -64,10 +64,23 @@ fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
 
     return sessionBundle
 }
+
+/**
+ * Describes various onboarding states.
+ */
+enum class OnboardingState {
+    // signed out, no account carried over from Fennec.
+    SignedOut,
+    // auto-signed in, via a Fennec account.
+    AutoSignedIn,
+    // manually signed in while in onboarding.
+    ManuallySignedIn
+}
+
 sealed class Mode {
     object Normal : Mode()
     object Private : Mode()
-    object Onboarding : Mode()
+    data class Onboarding(val state: OnboardingState) : Mode()
 }
 
 data class SessionControlState(

@@ -55,6 +55,7 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlViewModel
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
+import org.mozilla.fenix.home.sessioncontrol.OnboardingState
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -638,7 +639,13 @@ class HomeFragment : Fragment(), CoroutineScope {
     }
 
     private fun currentMode(): Mode = if (!onboarding.userHasBeenOnboarded()) {
-        Mode.Onboarding
+        // TODO monitor account state changes somewhere in this class via AccountObserver + `accountManager.register()`.
+        val account = requireComponents.backgroundServices.accountManager.authenticatedAccount()
+        if (account == null) {
+            Mode.Onboarding(OnboardingState.SignedOut)
+        } else {
+            Mode.Onboarding(OnboardingState.ManuallySignedIn)
+        }
     } else if ((activity as HomeActivity).browsingModeManager.isPrivate) {
         Mode.Private
     } else {
