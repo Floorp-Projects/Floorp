@@ -19,13 +19,13 @@ function handleRequest(req, resp) {
 
   let setCookieScript = "";
   if (opts.setRedCookie) {
-    resp.setHeader("Set-Cookie", "red=1", false);
-    setCookieScript = '<script>document.cookie="red=1";</script>';
+    resp.setHeader("Set-Cookie", "red", false);
+    setCookieScript = '<script>document.cookie="red";</script>';
   }
 
   if (opts.setGreenCookie) {
-    resp.setHeader("Set-Cookie", "green=1", false);
-    setCookieScript = '<script>document.cookie="green=1";</script>';
+    resp.setHeader("Set-Cookie", "green", false);
+    setCookieScript = '<script>document.cookie="green";</script>';
   }
 
   if (opts.iframe) {
@@ -43,14 +43,14 @@ function handleRequest(req, resp) {
   }
 
   if (req.hasHeader("Cookie") &&
-      req.getHeader("Cookie").split(";").indexOf("red=1") >= 0) {
+      req.getHeader("Cookie").split(";").indexOf("red") >= 0) {
     resp.write('<html style="background: #f00;">' + setCookieScript + '</html>');
     resp.finish();
     return;
   }
 
   if (req.hasHeader("Cookie") &&
-      req.getHeader("Cookie").split(";").indexOf("green=1") >= 0) {
+      req.getHeader("Cookie").split(";").indexOf("green") >= 0) {
     resp.write('<html style="background: #0f0;">' + setCookieScript + '</html>');
     resp.finish();
     return;
