@@ -3443,9 +3443,9 @@ void Document::GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations) {
   if (!root) {
     return;
   }
-  AnimationFilter filter;
-  filter.mSubtree = true;
-  root->GetAnimations(filter, aAnimations);
+  GetAnimationsOptions options;
+  options.mSubtree = true;
+  root->GetAnimations(options, aAnimations);
 }
 
 SVGSVGElement* Document::GetSVGRootElement() const {

@@ -84,7 +84,7 @@ namespace css {
 struct URLValue;
 }  // namespace css
 namespace dom {
-struct AnimationFilter;
+struct GetAnimationsOptions;
 struct ScrollIntoViewOptions;
 struct ScrollToOptions;
 class DOMIntersectionObserver;
@@ -1339,7 +1339,7 @@ class Element : public FragmentOrElement {
   // Note: GetAnimations will flush style while GetAnimationsUnsorted won't.
   // Callers must keep this element alive because flushing style may destroy
   // this element.
-  void GetAnimations(const AnimationFilter& filter,
+  void GetAnimations(const GetAnimationsOptions& aOptions,
                      nsTArray<RefPtr<Animation>>& aAnimations);
   static void GetAnimationsUnsorted(Element* aElement,
                                     PseudoStyleType aPseudoType,

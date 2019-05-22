@@ -3474,7 +3474,7 @@ already_AddRefed<Animation> Element::Animate(
   return animation.forget();
 }
 
-void Element::GetAnimations(const AnimationFilter& filter,
+void Element::GetAnimations(const GetAnimationsOptions& aOptions,
                             nsTArray<RefPtr<Animation>>& aAnimations) {
   Document* doc = GetComposedDoc();
   if (doc) {
@@ -3505,7 +3505,7 @@ void Element::GetAnimations(const AnimationFilter& filter,
     return;
   }
 
-  if (!filter.mSubtree || pseudoType == PseudoStyleType::before ||
+  if (!aOptions.mSubtree || pseudoType == PseudoStyleType::before ||
       pseudoType == PseudoStyleType::after ||
       pseudoType == PseudoStyleType::marker) {
     GetAnimationsUnsorted(elem, pseudoType, aAnimations);
