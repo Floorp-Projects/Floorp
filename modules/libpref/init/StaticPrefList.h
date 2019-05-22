@@ -3631,6 +3631,7 @@ VARCACHE_PREF(Live, "layout.display-list.dump-parent",       LayoutDumpDisplayLi
 VARCACHE_PREF(Live, "layout.display-list.show-rebuild-area", LayoutDisplayListShowArea, RelaxedAtomicBool, false);
 VARCACHE_PREF(Live, "layout.display-list.flatten-transform", LayoutFlattenTransform, RelaxedAtomicBool, true);
 
+VARCACHE_PREF(Live, "layout.frame_rate",                     LayoutFrameRate, RelaxedAtomicInt32, -1);
 VARCACHE_PREF(Live, "layout.min-active-layer-size",          LayoutMinActiveLayerSize, int, 64);
 VARCACHE_PREF(Once, "layout.paint_rects_separately",         LayoutPaintRectsSeparately, RelaxedAtomicBool, true);
 
