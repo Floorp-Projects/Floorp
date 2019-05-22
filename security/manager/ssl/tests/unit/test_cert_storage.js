@@ -14,7 +14,7 @@
 
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
 const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
-const {BlocklistClients} = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+const { BlocklistClients } = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
 
 // First, we need to setup appInfo for the blocklist service to work
 var id = "xpcshell@tests.mozilla.org";
@@ -45,116 +45,58 @@ if (!gRevocations.exists()) {
 var certDB = Cc["@mozilla.org/security/x509certdb;1"]
                .getService(Ci.nsIX509CertDB);
 
-// set up a test server to serve the kinto views.
-var testserver = new HttpServer();
-
-
-const kintoHelloViewJSON = `{"settings":{"batch_max_requests":25}}`;
-const kintoChangesJSON = `{
-  "data": [
-    {
-      "host": "firefox.settings.services.mozilla.com",
-      "id": "3ace9d8e-00b5-a353-7fd5-1f081ff482ba",
-      "last_modified": 100000000000000000001,
-      "bucket": "security-state",
-      "collection": "onecrl"
-    }
-  ]
-}`;
-const certMetadataJSON = `{"data": {}}`;
-const certBlocklistJSON = `{
-  "data": [` +
+const certBlocklist = [
   // test with some bad data ...
-  ` {
-      "id": "1",
-      "last_modified": 100000000000000000001,
-      "issuerName": "Some nonsense in issuer",
-      "serialNumber": "AkHVNA=="
-    },
-    {
-      "id": "2",
-      "last_modified": 100000000000000000002,
-      "issuerName": "MA0xCzAJBgNVBAMMAmNh",
-      "serialNumber": "some nonsense in serial"
-    },
-    {
-      "id": "3",
-      "last_modified": 100000000000000000003,
-      "issuerName": "and serial",
-      "serialNumber": "some nonsense in both issuer"
-    },` +
+  {
+    issuerName: "Some nonsense in issuer",
+    serialNumber: "AkHVNA==",
+  },
+  {
+    issuerName: "MA0xCzAJBgNVBAMMAmNh",
+    serialNumber: "some nonsense in serial",
+  },
+  {
+    issuerName: "and serial",
+    serialNumber: "some nonsense in both issuer",
+  },
   // some mixed
   // In these case, the issuer name and the valid serialNumber correspond
   // to test-int.pem in bad_certs/
-  ` {
-      "id": "4",
-      "last_modified": 100000000000000000004,
-      "issuerName": "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
-      "serialNumber": "oops! more nonsense."
-    },` +
-  ` {
-      "id": "5",
-      "last_modified": 100000000000000000004,
-      "issuerName": "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
-      "serialNumber": "a0X7/7DlTaedpgrIJg25iBPOkIM="
-    },` +
+  {
+    issuerName: "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
+    serialNumber: "oops! more nonsense.",
+  },
+  {
+    issuerName: "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
+    serialNumber: "a0X7/7DlTaedpgrIJg25iBPOkIM=",
+  },
   // ... and some good
   // In this case, the issuer name and the valid serialNumber correspond
   // to other-test-ca.pem in bad_certs/ (for testing root revocation)
-  ` {
-      "id": "6",
-      "last_modified": 100000000000000000005,
-      "issuerName": "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=",
-      "serialNumber": "Rym6o+VN9xgZXT/QLrvN/nv1ZN4="
-    },` +
+  {
+    issuerName: "MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E=",
+    serialNumber: "Rym6o+VN9xgZXT/QLrvN/nv1ZN4=",
+  },
   // These items correspond to an entry in sample_revocations.txt where:
   // isser name is the base-64 encoded subject DN for the shared Test
   // Intermediate and the serialNumbers are base-64 encoded 78 and 31,
   // respectively.
   // We need this to ensure that existing items are retained if they're
   // also in the blocklist
-  ` {
-      "id": "7",
-      "last_modified": 100000000000000000006,
-      "issuerName": "MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl",
-      "serialNumber": "Tg=="
-    },` +
-  ` {
-      "id": "8",
-      "last_modified": 100000000000000000006,
-      "issuerName": "MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl",
-      "serialNumber": "Hw=="
-    },` +
+  {
+    issuerName: "MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl",
+    serialNumber: "Tg==",
+  },
+  {
+    issuerName: "MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl",
+    serialNumber: "Hw==",
+  },
   // This item revokes same-issuer-ee.pem by subject and pubKeyHash.
-  ` {
-      "id": "9",
-      "last_modified": 100000000000000000007,
-      "subject": "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
-      "pubKeyHash": "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8="
-    }
-  ]
-}`;
-
-function serveResponse(body) {
-  return (req, response) => {
-    response.setHeader("Content-Type", "application/json; charset=UTF-8");
-    response.setStatusLine(null, 200, "OK");
-    response.write(body);
-  };
-}
-
-testserver.registerPathHandler("/v1/",
-                               serveResponse(kintoHelloViewJSON));
-testserver.registerPathHandler("/v1/buckets/monitor/collections/changes/records",
-                               serveResponse(kintoChangesJSON));
-testserver.registerPathHandler("/v1/buckets/security-state/collections/onecrl",
-                               serveResponse(certMetadataJSON));
-testserver.registerPathHandler("/v1/buckets/security-state/collections/onecrl/records",
-                               serveResponse(certBlocklistJSON));
-
-// start the test server
-testserver.start(-1);
-var port = testserver.identity.primaryPort;
+  {
+    subject: "MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
+    pubKeyHash: "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
+  },
+];
 
 // Setup the addonManager
 var addonManager = Cc["@mozilla.org/addons/integration;1"]
@@ -184,14 +126,20 @@ function load_cert(cert, trust) {
   addCertFromFile(certDB, file, trust);
 }
 
-function fetch_blocklist() {
-  Services.prefs.setBoolPref("services.settings.load_dump", false);
-  Services.prefs.setCharPref("services.settings.server",
-                             `http://localhost:${port}/v1`);
+async function update_blocklist() {
+  const { OneCRLBlocklistClient } = BlocklistClients.initialize();
 
-  BlocklistClients.initialize({ verifySignature: false });
-
-  return RemoteSettings.pollChanges();
+  const fakeEvent = {
+    current: certBlocklist, // with old .txt revocations.
+    deleted: [],
+    created: certBlocklist, // with new cert storage.
+    updated: [],
+  };
+  await OneCRLBlocklistClient.emit("sync", { data: fakeEvent });
+  // Save the last check timestamp, used by cert_storage to assert
+  // if the blocklist is «fresh».
+  Services.prefs.setIntPref(OneCRLBlocklistClient.lastCheckTimePref,
+    Math.floor(Date.now() / 1000));
 }
 
 function* generate_revocations_txt_lines() {
@@ -327,7 +275,7 @@ function run_test() {
   });
 
   // blocklist load is async so we must use add_test from here
-  add_task(fetch_blocklist);
+  add_task(update_blocklist);
 
   add_task(async function() {
     // The blocklist will be loaded now. Let's check the data is sane.
