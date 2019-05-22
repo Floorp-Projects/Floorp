@@ -23,7 +23,6 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentSHistory.h"
-#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsStubMutationObserver.h"
@@ -93,9 +92,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
                             public nsWrapperCache {
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
+  typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::Document Document;
   typedef mozilla::dom::BrowserParent BrowserParent;
-  typedef mozilla::dom::BrowserBridgeChild BrowserBridgeChild;
   typedef mozilla::dom::BrowsingContext BrowsingContext;
   typedef mozilla::layout::RenderFrame RenderFrame;
 
@@ -312,13 +311,13 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * Returns the IPDL actor used if this is a top-level remote browser, or null
    * otherwise.
    */
-  BrowserParent* GetBrowserParent() const;
+  PBrowserParent* GetRemoteBrowser() const;
 
   /**
-   * Returns the IPDL actor used if this is an out-of-process iframe, or null
+   * Returns the BrowserBridgeChild if this is an out-of-process iframe, or null
    * otherwise.
    */
-  BrowserBridgeChild* GetBrowserBridgeChild() const;
+  mozilla::dom::BrowserBridgeChild* GetBrowserBridgeChild() const;
 
   /**
    * Returns the layers ID that this remote frame is using to render.
@@ -343,7 +342,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * this object, which means you can't have called ShowRemoteFrame()
    * or ReallyStartLoading().
    */
-  void InitializeFromBrowserParent(BrowserParent* aBrowserParent);
+  void SetRemoteBrowser(nsIRemoteTab* aBrowserParent);
 
   /**
    * Stashes a detached nsIFrame on the frame loader. We do this when we're
@@ -446,10 +445,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void FireErrorEvent();
   nsresult ReallyStartLoadingInternal();
 
-  // Returns true if we have a remote browser or else attempts to create a
-  // remote browser and returns true if successful.
-  bool EnsureRemoteBrowser();
-
   // Return true if remote browser created; nothing else to do
   bool TryRemoteBrowser();
 
@@ -497,8 +492,11 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // target process.
   uint64_t mPendingSwitchID;
 
+  RefPtr<BrowserParent> mBrowserParent;
   uint64_t mChildID;
-  RefPtr<mozilla::dom::RemoteBrowser> mRemoteBrowser;
+
+  // This is used when this refers to a remote sub frame
+  RefPtr<mozilla::dom::BrowserBridgeChild> mBrowserBridgeChild;
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;

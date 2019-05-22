@@ -26,7 +26,7 @@ nsDocShell* ParentSHistory::GetDocShell() {
 }
 
 BrowserParent* ParentSHistory::GetBrowserParent() {
-  return mFrameLoader->GetBrowserParent();
+  return static_cast<BrowserParent*>(mFrameLoader->GetRemoteBrowser());
 }
 
 already_AddRefed<ChildSHistory> ParentSHistory::GetChildIfSameProcess() {

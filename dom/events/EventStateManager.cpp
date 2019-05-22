@@ -1096,7 +1096,9 @@ static bool HandleAccessKeyInRemoteChild(BrowserParent* aBrowserParent,
   AccessKeyInfo* accessKeyInfo = static_cast<AccessKeyInfo*>(aArg);
 
   // Only forward accesskeys for the active tab.
-  if (aBrowserParent->GetDocShellIsActive()) {
+  bool active;
+  aBrowserParent->GetDocShellIsActive(&active);
+  if (active) {
     // Even if there is no target for the accesskey in this process,
     // the event may match with a content accesskey.  If so, the keyboard
     // event should be handled with reply event for preventing double action.

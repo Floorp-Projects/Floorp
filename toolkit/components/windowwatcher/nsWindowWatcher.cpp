@@ -66,7 +66,6 @@
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #include "nsIXULWindow.h"
@@ -477,7 +476,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(
   if (aRemoteTab) {
     // We need to examine the window that aRemoteTab belongs to in
     // order to inform us of what kind of window we're going to open.
-    BrowserHost* openingTab = BrowserHost::GetFrom(aRemoteTab);
+    BrowserParent* openingTab = BrowserParent::GetFrom(aRemoteTab);
     parentWindowOuter = openingTab->GetParentWindowOuter();
 
     // Propagate the privacy & fission status of the parent window, if

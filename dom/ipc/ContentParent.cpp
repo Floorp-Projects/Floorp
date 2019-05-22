@@ -1083,10 +1083,12 @@ mozilla::ipc::IPCResult ContentParent::RecvLaunchRDDProcess(
 }
 
 /*static*/
-already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
-    const TabContext& aContext, Element* aFrameElement,
-    BrowsingContext* aBrowsingContext, ContentParent* aOpenerContentParent,
-    BrowserParent* aSameTabGroupAs, uint64_t aNextRemoteTabId) {
+BrowserParent* ContentParent::CreateBrowser(const TabContext& aContext,
+                                            Element* aFrameElement,
+                                            BrowsingContext* aBrowsingContext,
+                                            ContentParent* aOpenerContentParent,
+                                            BrowserParent* aSameTabGroupAs,
+                                            uint64_t aNextRemoteTabId) {
   AUTO_PROFILER_LABEL("ContentParent::CreateBrowser", OTHER);
 
   if (!sCanLaunchSubprocesses) {
@@ -1103,11 +1105,10 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     if (BrowserParent* parent =
             sNextBrowserParents.GetAndRemove(aNextRemoteTabId)
                 .valueOr(nullptr)) {
-      RefPtr<BrowserHost> browserHost = new BrowserHost(parent);
       MOZ_ASSERT(!parent->GetOwnerElement(),
                  "Shouldn't have an owner elemnt before");
       parent->SetOwnerElement(aFrameElement);
-      return browserHost.forget();
+      return parent;
     }
   }
 
@@ -1215,9 +1216,8 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       Unused << browserParent->SendAwaitLargeAlloc();
     }
 
-    RefPtr<BrowserHost> browserHost = new BrowserHost(browserParent);
     browserParent->SetOwnerElement(aFrameElement);
-    return browserHost.forget();
+    return browserParent;
   }
   return nullptr;
 }
@@ -4683,7 +4683,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     const bool& aCalledFromJS, const bool& aPositionSpecified,
     const bool& aSizeSpecified, nsIURI* aURIToLoad, const nsCString& aFeatures,
     const float& aFullZoom, uint64_t aNextRemoteTabId, const nsString& aName,
-    nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
+    nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewBrowserParent,
     bool* aWindowIsNew, int32_t& aOpenLocation,
     nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
     bool aLoadURI, nsIContentSecurityPolicy* aCsp)
@@ -4700,9 +4700,6 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   BrowserParent* thisBrowserParent = BrowserParent::GetFrom(aThisTab);
-  BrowserHost* thisBrowserHost =
-      thisBrowserParent ? thisBrowserParent->GetBrowserHost() : nullptr;
-  MOZ_ASSERT(!thisBrowserParent == !thisBrowserHost);
   nsCOMPtr<nsIContent> frame;
   if (thisBrowserParent) {
     frame = thisBrowserParent->GetOwnerElement();
@@ -4752,8 +4749,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
 
   // Read the origin attributes for the tab from the opener browserParent.
   OriginAttributes openerOriginAttributes;
-  if (thisBrowserHost) {
-    nsCOMPtr<nsILoadContext> loadContext = thisBrowserHost->GetLoadContext();
+  if (thisBrowserParent) {
+    nsCOMPtr<nsILoadContext> loadContext = thisBrowserParent->GetLoadContext();
     loadContext->GetOriginAttributes(openerOriginAttributes);
   } else if (Preferences::GetBool("browser.privatebrowsing.autostart")) {
     openerOriginAttributes.mPrivateBrowsingId = 1;
@@ -4789,7 +4786,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     if (NS_SUCCEEDED(aResult) && frameLoaderOwner) {
       RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
       if (frameLoader) {
-        aNewRemoteTab = frameLoader->GetRemoteTab();
+        aNewBrowserParent = frameLoader->GetRemoteTab();
         // At this point, it's possible the inserted frameloader hasn't gone
         // through layout yet. To ensure that the dimensions that we send down
         // when telling the frameloader to display will be correct (instead of
@@ -4819,15 +4816,13 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   }
 
   aResult = pwwatch->OpenWindowWithRemoteTab(
-      thisBrowserHost, aFeatures, aCalledFromJS, aFullZoom, aNextRemoteTabId,
-      !aSetOpener, getter_AddRefs(aNewRemoteTab));
+      thisBrowserParent, aFeatures, aCalledFromJS, aFullZoom, aNextRemoteTabId,
+      !aSetOpener, getter_AddRefs(aNewBrowserParent));
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return IPC_OK();
   }
 
-  MOZ_ASSERT(aNewRemoteTab);
-  BrowserHost* newBrowserHost = BrowserHost::GetFrom(aNewRemoteTab.get());
-  BrowserParent* newBrowserParent = newBrowserHost->GetActor();
+  MOZ_ASSERT(aNewBrowserParent);
 
   // At this point, it's possible the inserted frameloader hasn't gone through
   // layout yet. To ensure that the dimensions that we send down when telling
@@ -4838,7 +4833,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   // This involves doing a bit of gymnastics in order to get at the FrameLoader,
   // so we scope this to avoid polluting the main function scope.
   {
-    nsCOMPtr<Element> frameElement = newBrowserHost->GetOwnerElement();
+    nsCOMPtr<Element> frameElement =
+        BrowserParent::GetFrom(aNewBrowserParent)->GetOwnerElement();
     MOZ_ASSERT(frameElement);
     RefPtr<nsFrameLoaderOwner> frameLoaderOwner = do_QueryObject(frameElement);
     MOZ_ASSERT(frameLoaderOwner);
@@ -4850,7 +4846,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   // If we were passed a name for the window which would override the default,
   // we should send it down to the new tab.
   if (nsContentUtils::IsOverridingWindowName(aName)) {
-    Unused << newBrowserParent->SendSetWindowName(aName);
+    Unused
+        << BrowserParent::GetFrom(aNewBrowserParent)->SendSetWindowName(aName);
   }
 
   // Don't send down the OriginAttributes if the content process is handling
@@ -4859,7 +4856,8 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
   // If we send it down in the non-async case, then we might set the
   // OriginAttributes after the document has already navigated.
   if (!aSetOpener) {
-    Unused << newBrowserParent->SendSetOriginAttributes(openerOriginAttributes);
+    Unused << BrowserParent::GetFrom(aNewBrowserParent)
+                  ->SendSetOriginAttributes(openerOriginAttributes);
   }
 
   if (aURIToLoad && aLoadURI) {
@@ -4868,7 +4866,7 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
       openerWindow = thisBrowserParent->GetParentWindowOuter();
     }
     nsCOMPtr<nsIBrowserDOMWindow> newBrowserDOMWin =
-        newBrowserParent->GetBrowserDOMWindow();
+        BrowserParent::GetFrom(aNewBrowserParent)->GetBrowserDOMWindow();
     if (NS_WARN_IF(!newBrowserDOMWin)) {
       aResult = NS_ERROR_ABORT;
       return IPC_OK();
@@ -4948,8 +4946,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
   if (sNextBrowserParents.GetAndRemove(nextRemoteTabId).valueOr(nullptr)) {
     cwi.windowOpened() = false;
   }
-  MOZ_ASSERT(BrowserHost::GetFrom(newRemoteTab.get()) ==
-             newTab->GetBrowserHost());
+  MOZ_ASSERT(BrowserParent::GetFrom(newRemoteTab) == newTab);
 
   newTab->SwapFrameScriptsFrom(cwi.frameScripts());
   newTab->MaybeShowFrame();

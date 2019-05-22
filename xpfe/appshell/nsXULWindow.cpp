@@ -59,7 +59,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/BrowserHost.h"
 #include "mozilla/dom/BrowserParent.h"
 
 #ifdef MOZ_NEW_XULSTORE
@@ -353,8 +352,9 @@ nsTArray<RefPtr<mozilla::LiveResizeListener>>
 nsXULWindow::GetLiveResizeListeners() {
   nsTArray<RefPtr<mozilla::LiveResizeListener>> listeners;
   if (mPrimaryBrowserParent) {
-    BrowserHost* host = BrowserHost::GetFrom(mPrimaryBrowserParent.get());
-    listeners.AppendElement(host->GetActor());
+    BrowserParent* parent =
+        static_cast<BrowserParent*>(mPrimaryBrowserParent.get());
+    listeners.AppendElement(parent);
   }
   return listeners;
 }
@@ -1864,9 +1864,9 @@ nsXULWindow::GetPrimaryContentSize(int32_t* aWidth, int32_t* aHeight) {
 
 nsresult nsXULWindow::GetPrimaryRemoteTabSize(int32_t* aWidth,
                                               int32_t* aHeight) {
-  BrowserHost* host = BrowserHost::GetFrom(mPrimaryBrowserParent.get());
+  BrowserParent* browserParent = BrowserParent::GetFrom(mPrimaryBrowserParent);
   // Need strong ref, since Client* can run script.
-  nsCOMPtr<Element> element = host->GetOwnerElement();
+  nsCOMPtr<Element> element = browserParent->GetOwnerElement();
   NS_ENSURE_STATE(element);
 
   *aWidth = element->ClientWidth();

@@ -297,29 +297,32 @@ JSObject* nsWindowRoot::WrapObject(JSContext* aCx,
   return mozilla::dom::WindowRoot_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void nsWindowRoot::AddBrowser(nsIRemoteTab* aBrowser) {
-  nsWeakPtr weakBrowser = do_GetWeakReference(aBrowser);
+void nsWindowRoot::AddBrowser(mozilla::dom::BrowserParent* aBrowser) {
+  nsWeakPtr weakBrowser =
+      do_GetWeakReference(static_cast<nsIRemoteTab*>(aBrowser));
   mWeakBrowsers.PutEntry(weakBrowser);
 }
 
-void nsWindowRoot::RemoveBrowser(nsIRemoteTab* aBrowser) {
-  nsWeakPtr weakBrowser = do_GetWeakReference(aBrowser);
+void nsWindowRoot::RemoveBrowser(mozilla::dom::BrowserParent* aBrowser) {
+  nsWeakPtr weakBrowser =
+      do_GetWeakReference(static_cast<nsIRemoteTab*>(aBrowser));
   mWeakBrowsers.RemoveEntry(weakBrowser);
 }
 
 void nsWindowRoot::EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) {
   // Collect strong references to all browsers in a separate array in
   // case aEnumFunc alters mWeakBrowsers.
-  nsTArray<nsCOMPtr<nsIRemoteTab>> remoteTabs;
+  nsTArray<RefPtr<BrowserParent>> browserParents;
   for (auto iter = mWeakBrowsers.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCOMPtr<nsIRemoteTab> remoteTab(do_QueryReferent(iter.Get()->GetKey()));
-    if (remoteTab) {
-      remoteTabs.AppendElement(remoteTab);
+    nsCOMPtr<nsIRemoteTab> browserParent(
+        do_QueryReferent(iter.Get()->GetKey()));
+    if (BrowserParent* tab = BrowserParent::GetFrom(browserParent)) {
+      browserParents.AppendElement(tab);
     }
   }
 
-  for (uint32_t i = 0; i < remoteTabs.Length(); ++i) {
-    aEnumFunc(remoteTabs[i], aArg);
+  for (uint32_t i = 0; i < browserParents.Length(); ++i) {
+    aEnumFunc(browserParents[i], aArg);
   }
 }
 

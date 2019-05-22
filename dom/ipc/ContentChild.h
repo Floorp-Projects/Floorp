@@ -10,10 +10,8 @@
 #include "base/shared_memory.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
-#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ipc/Shmem.h"
@@ -40,7 +38,6 @@ class nsIDomainPolicy;
 class nsIURIClassifierCallback;
 struct LookAndFeelInt;
 class nsDocShellLoadState;
-class nsFrameLoader;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
@@ -80,7 +77,6 @@ class ConsoleListener;
 class ClonedMessageData;
 class BrowserChild;
 class GetFilesHelperChild;
-class TabContext;
 
 class ContentChild final : public PContentChild,
                            public nsIWindowProvider,
@@ -162,10 +158,6 @@ class ContentChild final : public PContentChild,
   static void AppendProcessId(nsACString& aName);
 
   static void UpdateCookieStatus(nsIChannel* aChannel);
-
-  static already_AddRefed<RemoteBrowser> CreateBrowser(
-      nsFrameLoader* aFrameLoader, const TabContext& aContext,
-      const nsString& aRemoteType, BrowsingContext* aBrowsingContext);
 
   mozilla::ipc::IPCResult RecvInitGMPService(
       Endpoint<PGMPServiceChild>&& aGMPService);

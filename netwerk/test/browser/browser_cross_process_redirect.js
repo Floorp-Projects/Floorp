@@ -70,7 +70,7 @@ ProcessChooser.prototype = {
       // Can asyncly create a tab, or can resolve with a tab that was
       // previously created.
       info("resolving");
-      resolve(self.remoteTab.contentProcessId);
+      resolve(self.remoteTab);
     });
 
     info("calling switchprocessto");

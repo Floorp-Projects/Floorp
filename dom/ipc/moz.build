@@ -35,10 +35,8 @@ EXPORTS.mozilla.dom.ipc += [
 
 EXPORTS.mozilla.dom += [
     'BrowserBridgeChild.h',
-    'BrowserBridgeHost.h',
     'BrowserBridgeParent.h',
     'BrowserChild.h',
-    'BrowserHost.h',
     'BrowserParent.h',
     'CoalescedInputData.h',
     'CoalescedMouseData.h',
@@ -58,7 +56,6 @@ EXPORTS.mozilla.dom += [
     'MemoryReportRequest.h',
     'PermissionMessageUtils.h',
     'ReferrerInfoUtils.h',
-    'RemoteBrowser.h',
     'RemoteWebProgress.h',
     'RemoteWebProgressRequest.h',
     'TabContext.h',
@@ -79,10 +76,8 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'BrowserBridgeChild.cpp',
-    'BrowserBridgeHost.cpp',
     'BrowserBridgeParent.cpp',
     'BrowserChild.cpp',
-    'BrowserHost.cpp',
     'BrowserParent.cpp',
     'CoalescedMouseData.cpp',
     'CoalescedWheelData.cpp',

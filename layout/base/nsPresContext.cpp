@@ -1393,8 +1393,8 @@ bool nsPresContext::UIResolutionChangedSubdocumentCallback(
   return true;
 }
 
-static void NotifyTabUIResolutionChanged(nsIRemoteTab* aTab, void* aArg) {
-  aTab->NotifyResolutionChanged();
+static void NotifyTabUIResolutionChanged(BrowserParent* aTab, void* aArg) {
+  aTab->UIResolutionChanged();
 }
 
 static void NotifyChildrenUIResolutionChanged(nsPIDOMWindowOuter* aWindow) {
