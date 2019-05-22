@@ -156,6 +156,16 @@ class GeckoEngineSessionTest {
         assertEquals(GeckoEngineSession.PROGRESS_STOP, observedProgress)
         assertEquals(false, observedLoadingState)
 
+        // Stop will update the loading state and progress observers even when
+        // we haven't completed been successful.
+        progressDelegate.value.onPageStart(mock(), "http://mozilla.org")
+        assertEquals(GeckoEngineSession.PROGRESS_START, observedProgress)
+        assertEquals(true, observedLoadingState)
+
+        progressDelegate.value.onPageStop(mock(), false)
+        assertEquals(GeckoEngineSession.PROGRESS_STOP, observedProgress)
+        assertEquals(false, observedLoadingState)
+
         val securityInfo = mock(GeckoSession.ProgressDelegate.SecurityInformation::class.java)
         progressDelegate.value.onSecurityChange(mock(), securityInfo)
         assertTrue(observedSecurityChange)

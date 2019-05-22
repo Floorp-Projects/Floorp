@@ -391,11 +391,9 @@ class GeckoEngineSession(
         }
 
         override fun onPageStop(session: GeckoSession, success: Boolean) {
-            if (success) {
-                notifyObservers {
-                    onProgress(PROGRESS_STOP)
-                    onLoadingStateChange(false)
-                }
+            notifyObservers {
+                onProgress(PROGRESS_STOP)
+                onLoadingStateChange(false)
             }
         }
 
