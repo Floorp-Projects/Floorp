@@ -1277,10 +1277,10 @@ bool nsBidiPresUtils::ChildListMayRequireBidi(nsIFrame* aFirstChild,
 
         // Check whether the text frame has any RTL characters; if so, bidi
         // resolution will be needed.
-        nsIContent* content = frame->GetContent();
+        dom::Text* content = frame->GetContent()->AsText();
         if (content != *aCurrContent) {
           *aCurrContent = content;
-          const nsTextFragment* txt = content->GetText();
+          const nsTextFragment* txt = &content->TextFragment();
           if (txt->Is2b() &&
               HasRTLChars(MakeSpan(txt->Get2b(), txt->GetLength()))) {
             return true;
