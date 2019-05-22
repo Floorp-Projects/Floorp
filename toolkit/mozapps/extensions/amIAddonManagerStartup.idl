@@ -45,20 +45,32 @@ interface amIAddonManagerStartup : nsISupports
   jsval decodeBlob(in jsval value);
 
   /**
-   * Enumerates over all entries in the given zip file matching the given
-   * pattern, and returns an array of their paths.
+   * Enumerates over all entries in the JAR file at the given URI, and returns
+   * an array of entry paths which match the given pattern. The URI may be
+   * either a file: URL pointing directly to a zip file, or a jar: URI
+   * pointing to a zip file nested within another zip file. Only one level of
+   * nesting is supported.
    *
    * This should be used in preference to manually opening or retrieving a
    * ZipReader from the zip cache, since the former causes main thread IO and
    * the latter can lead to file locking issues due to unpredictable GC behavior
    * keeping the cached ZipReader alive after the cache is flushed.
    *
-   * @param file The zip file to enumerate.
+   * @param uri The URI of the zip file to enumerate.
    * @param pattern The pattern to match, as passed to nsIZipReader.findEntries.
    */
-  void enumerateZipFile(in nsIFile file, in AUTF8String pattern,
-                        [optional] out unsigned long count,
-                        [retval, array, size_is(count)] out wstring entries);
+  Array<AString> enumerateJAR(in nsIURI uri, in AUTF8String pattern);
+
+  /**
+   * Similar to |enumerateJAR| above, but accepts the URI of a directory
+   * within a JAR file, and returns a list of all entries below it.
+   *
+   * The given URI must be a jar: URI, and its JAR file must point either to a
+   * file: URI, or to a singly-nested JAR within another JAR file (i.e.,
+   * "jar:file:///thing.jar!/" or "jar:jar:file:///thing.jar!/stuff.jar!/").
+   * Multiple levels of nesting are not supported.
+   */
+  Array<AString> enumerateJARSubtree(in nsIURI uri);
 
   /**
    * Initializes the URL Preloader.
