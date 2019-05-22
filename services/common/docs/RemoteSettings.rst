@@ -265,6 +265,15 @@ By default, the entries returned by ``.get()`` are filtered based on the JEXL ex
 Debugging and manual testing
 ============================
 
+Logging
+-------
+
+In order to enable verbose logging, set the log level preference to ``debug``.
+
+.. code-block:: javascript
+
+    Services.prefs.setCharPref("services.settings.loglevel", "debug");
+
 Remote Settings Dev Tools
 -------------------------
 
