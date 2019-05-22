@@ -137,12 +137,11 @@ class TaskBuilder(object):
             env_vars=env_vars,
 
     def craft_sign_task(self, build_task_id, wait_on_builds_task_id, artifacts, component_name, is_staging):
-        signing_format = "autograph_gpg"
         payload = {
             "maxRunTime": 600,
             "upstreamArtifacts": [{
                 "paths": [artifact["taskcluster_path"] for artifact in artifacts],
-                "formats": [signing_format],
+                "formats": ["autograph_gpg"],
                 "taskId": build_task_id,
                 "taskType": "build"
             }]
@@ -154,7 +153,7 @@ class TaskBuilder(object):
             dependencies=[build_task_id, wait_on_builds_task_id],
             routes=[],
             scopes=[
-                "project:mobile:android-components:releng:signing:format:{}".format(signing_format),
+                "project:mobile:android-components:releng:signing:cert:{}-signing".format("dep" if is_staging else "release"),
             ],
             name='Android Components - Sign Module :{}'.format(component_name),
             description="Sign release module {}".format(component_name),
