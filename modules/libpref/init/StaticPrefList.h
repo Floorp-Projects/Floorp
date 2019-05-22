@@ -78,6 +78,10 @@
 //   of one of those. The C++ preprocessor doesn't like template syntax in a
 //   macro argument, so use the typedefs defines in StaticPrefs.h; for example,
 //   use `ReleaseAcquireAtomicBool` instead of `Atomic<bool, ReleaseAcquire>`.
+//   Pref with a Skip or Once policy can be non-atomic as they are only ever
+//   written to once during the parent process startup.
+//   Pref with a Live policy must be made Atomic if ever accessed outside the
+//   main thread; assertions are in place to prevent incorrect usage.
 //
 // - <default-value> is the same as for normal prefs.
 //
@@ -3214,7 +3218,7 @@ VARCACHE_PREF(
   Once,
   "layers.gpu-process.enabled",
   GPUProcessEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 // The apz prefs are explained in AsyncPanZoomController.cpp
@@ -3425,28 +3429,28 @@ VARCACHE_PREF(
   Once,
   "apz.fling_curve_function_x1",
   APZCurveFunctionX1,
-  AtomicFloat, 0.0f
+  float, 0.0f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.fling_curve_function_x2",
   APZCurveFunctionX2,
-  AtomicFloat, 1.0f
+  float, 1.0f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.fling_curve_function_y1",
   APZCurveFunctionY1,
-  AtomicFloat, 0.0f
+  float, 0.0f
 )
 
 VARCACHE_PREF(
   Once,
   "apz.fling_curve_function_y2",
   APZCurveFunctionY2,
-  AtomicFloat, 1.0f
+  float, 1.0f
 )
 
 VARCACHE_PREF(
@@ -3495,7 +3499,7 @@ VARCACHE_PREF(
   Once,
   "apz.keyboard.enabled",
   APZKeyboardEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -3523,7 +3527,7 @@ VARCACHE_PREF(
   Once,
   "apz.max_velocity_queue_size",
   APZMaxVelocityQueueSize,
-  RelaxedAtomicUint32, 5
+  uint32_t, 5
 )
 
 VARCACHE_PREF(
@@ -3621,7 +3625,7 @@ VARCACHE_PREF(
   Once,
   "apz.pinch_lock.buffer_max_age",
   APZPinchLockBufferMaxAge,
-  RelaxedAtomicInt32, 50
+  int32_t, 50
 )
 
 VARCACHE_PREF(
@@ -3798,7 +3802,7 @@ VARCACHE_PREF(
   Once,
   "dom.vr.enabled",
   VREnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -3819,7 +3823,7 @@ VARCACHE_PREF(
   Once,
   "dom.vr.external.enabled",
   VRExternalEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -3847,7 +3851,7 @@ VARCACHE_PREF(
   Once,
   "dom.vr.oculus.enabled",
   VROculusEnabled,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -3875,21 +3879,21 @@ VARCACHE_PREF(
   Once,
   "dom.vr.openvr.enabled",
   VROpenVREnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "dom.vr.openvr.action_input",
   VROpenVRActionInputEnabled,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "dom.vr.osvr.enabled",
   VROSVREnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -3952,21 +3956,21 @@ VARCACHE_PREF(
   Once,
   "dom.vr.process.enabled",
   VRProcessEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "dom.vr.process.startup_timeout_ms",
   VRProcessTimeoutMs,
-  RelaxedAtomicInt32, 5000
+  int32_t, 5000
 )
 
 VARCACHE_PREF(
   Once,
   "dom.vr.service.enabled",
   VRServiceEnabled,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -4144,14 +4148,14 @@ VARCACHE_PREF(
   Once,
   "gfx.android.rgb16.force",
   AndroidRGB16Force,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.apitrace.enabled",
   UseApitrace,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 #if defined(RELEASE_OR_BETA)
@@ -4160,7 +4164,7 @@ VARCACHE_PREF(
   Skip,
   "gfx.blocklist.all",
   BlocklistAll,
-  RelaxedAtomicInt32, 0
+  int32_t, 0
 )
 
 #else
@@ -4168,7 +4172,7 @@ VARCACHE_PREF(
   Once,
   "gfx.blocklist.all",
   BlocklistAll,
-  RelaxedAtomicInt32, 0
+  int32_t, 0
 )
 
 #endif
@@ -4261,7 +4265,7 @@ VARCACHE_PREF(
   Once,
   "gfx.content.skia-font-cache-size",
   SkiaContentFontCacheSize,
-  RelaxedAtomicInt32, 5
+  int32_t, 5
 )
 
 
@@ -4269,14 +4273,14 @@ VARCACHE_PREF(
   Once,
   "gfx.device-reset.limit",
   DeviceResetLimitCount,
-  RelaxedAtomicInt32, 10
+  int32_t, 10
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.device-reset.threshold-ms",
   DeviceResetThresholdMilliseconds,
-  RelaxedAtomicInt32, -1
+  int32_t, -1
 )
 
 
@@ -4284,14 +4288,14 @@ VARCACHE_PREF(
   Once,
   "gfx.direct2d.disabled",
   Direct2DDisabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.direct2d.force-enabled",
   Direct2DForceEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -4326,21 +4330,21 @@ VARCACHE_PREF(
   Once,
   "gfx.direct3d11.enable-debug-layer",
   Direct3D11EnableDebugLayer,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.direct3d11.break-on-error",
   Direct3D11BreakOnError,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.direct3d11.sleep-on-create-device",
   Direct3D11SleepOnCreateDevice,
-  RelaxedAtomicInt32, 0
+  int32_t, 0
 )
 
 VARCACHE_PREF(
@@ -4375,14 +4379,14 @@ VARCACHE_PREF(
   Once,
   "gfx.e10s.hide-plugins-for-scroll",
   HidePluginsForScroll,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.e10s.font-list.shared",
   SharedFontList,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 #if defined(XP_MACOSX)
@@ -4420,7 +4424,7 @@ VARCACHE_PREF(
   Once,
   "gfx.logging.crash.length",
   GfxLoggingCrashLength,
-  RelaxedAtomicUint32, 16
+  uint32_t, 16
 )
 
 VARCACHE_PREF(
@@ -4435,21 +4439,21 @@ VARCACHE_PREF(
   Once,
   "gfx.logging.texture-usage.enabled",
   GfxLoggingTextureUsageEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.logging.peak-texture-usage.enabled",
   GfxLoggingPeakTextureUsageEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.logging.slow-frames.enabled",
   LoggingSlowFramesEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 // Use gfxPlatform::MaxAllocSize instead of the pref directly
@@ -4457,7 +4461,7 @@ VARCACHE_PREF(
   Once,
   "gfx.max-alloc-size",
   MaxAllocSizeDoNotUseDirectly,
-  RelaxedAtomicInt32, (int32_t)500000000
+  int32_t, (int32_t)500000000
 )
 
 // Use gfxPlatform::MaxTextureSize instead of the pref directly
@@ -4465,7 +4469,7 @@ VARCACHE_PREF(
   Once,
   "gfx.max-texture-size",
   MaxTextureSizeDoNotUseDirectly,
-  RelaxedAtomicInt32, (int32_t)32767
+  int32_t, (int32_t)32767
 )
 
 VARCACHE_PREF(
@@ -4500,7 +4504,7 @@ VARCACHE_PREF(
   Once,
   "gfx.text.disable-aa",
   DisableAllTextAA,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -4524,28 +4528,28 @@ VARCACHE_PREF(
   Once,
   "gfx.use-iosurface-textures",
   UseIOSurfaceTextures,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.use-mutex-on-present",
   UseMutexOnPresent,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.use-surfacetexture-textures",
   UseSurfaceTextureTextures,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.allow-texture-direct-mapping",
   AllowTextureDirectMapping,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -4559,7 +4563,7 @@ VARCACHE_PREF(
   Once,
   "gfx.vsync.compositor.unobserve-count",
   CompositorUnobserveCount,
-  RelaxedAtomicInt32, 10
+  int32_t, 10
 )
 
 
@@ -4567,14 +4571,14 @@ VARCACHE_PREF(
   Once,
   "gfx.webrender.all",
   WebRenderAll,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.webrender.all.qualified",
   WebRenderAllQualified,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -4623,14 +4627,14 @@ VARCACHE_PREF(
   Once,
   "gfx.webrender.enabled",
   WebRenderEnabledDoNotUseDirectly,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "gfx.webrender.force-disabled",
   WebRenderForceDisabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -4665,7 +4669,7 @@ VARCACHE_PREF(
   Once,
   "gfx.webrender.split-render-roots",
   WebRenderSplitRenderRoots,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -4681,7 +4685,7 @@ VARCACHE_PREF(
   Once,
   "gfx.work-around-driver-bugs",
   WorkAroundDriverBugs,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 
@@ -4776,14 +4780,14 @@ VARCACHE_PREF(
   Once,
   "image.cache.size",
   ImageCacheSize,
-  RelaxedAtomicInt32, 5*1024*1024
+  int32_t, 5*1024*1024
 )
 
 VARCACHE_PREF(
   Once,
   "image.cache.timeweight",
   ImageCacheTimeWeight,
-  RelaxedAtomicInt32, 500
+  int32_t, 500
 )
 
 VARCACHE_PREF(
@@ -4818,7 +4822,7 @@ VARCACHE_PREF(
   Once,
   "image.mem.decode_bytes_at_a_time",
   ImageMemDecodeBytesAtATime,
-  RelaxedAtomicUint32, 200000
+  uint32_t, 200000
 )
 
 VARCACHE_PREF(
@@ -4832,7 +4836,7 @@ VARCACHE_PREF(
   Once,
   "image.mem.animated.discardable",
   ImageMemAnimatedDiscardable,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -4860,28 +4864,28 @@ VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.discard_factor",
   ImageMemSurfaceCacheDiscardFactor,
-  RelaxedAtomicUint32, 1
+  uint32_t, 1
 )
 
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.max_size_kb",
   ImageMemSurfaceCacheMaxSizeKB,
-  RelaxedAtomicUint32, 100 * 1024
+  uint32_t, 100 * 1024
 )
 
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.min_expiration_ms",
   ImageMemSurfaceCacheMinExpirationMS,
-  RelaxedAtomicUint32, 60*1000
+  uint32_t, 60*1000
 )
 
 VARCACHE_PREF(
   Once,
   "image.mem.surfacecache.size_factor",
   ImageMemSurfaceCacheSizeFactor,
-  RelaxedAtomicUint32, 64
+  uint32_t, 64
 )
 
 VARCACHE_PREF(
@@ -4895,14 +4899,14 @@ VARCACHE_PREF(
   Once,
   "image.multithreaded_decoding.limit",
   ImageMTDecodingLimit,
-  RelaxedAtomicInt32, -1
+  int32_t, -1
 )
 
 VARCACHE_PREF(
   Once,
   "image.multithreaded_decoding.idle_timeout",
   ImageMTDecodingIdleTimeout,
-  RelaxedAtomicInt32, -1
+  int32_t, -1
 )
 
 VARCACHE_PREF(
@@ -4917,7 +4921,7 @@ VARCACHE_PREF(
   Once,
   "layers.acceleration.disabled",
   LayersAccelerationDisabledDoNotUseDirectly,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 // Instead, use gfxConfig::IsEnabled(Feature::HW_COMPOSITING).
@@ -4947,7 +4951,7 @@ VARCACHE_PREF(
   Once,
   "layers.acceleration.force-enabled",
   LayersAccelerationForceEnabledDoNotUseDirectly,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -4961,14 +4965,14 @@ VARCACHE_PREF(
   Once,
   "layers.amd-switchable-gfx.enabled",
   LayersAMDSwitchableGfxEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.async-pan-zoom.enabled",
   AsyncPanZoomEnabledDoNotUseDirectly,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -4982,7 +4986,7 @@ VARCACHE_PREF(
   Once,
   "layers.bufferrotation.enabled",
   BufferRotationEnabled,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -4999,7 +5003,7 @@ VARCACHE_PREF(
   Skip,
   "layers.componentalpha.enabled",
   ComponentAlphaEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 #else
@@ -5009,7 +5013,7 @@ VARCACHE_PREF(
   Once,
   "layers.componentalpha.enabled",
   ComponentAlphaEnabled,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 #endif
@@ -5017,7 +5021,7 @@ VARCACHE_PREF(
   Once,
   "layers.d3d11.force-warp",
   LayersD3D11ForceWARP,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -5120,14 +5124,14 @@ VARCACHE_PREF(
   Once,
   "layers.enable-tiles",
   LayersTilesEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.enable-tiles-if-skia-pomtp",
   LayersTilesEnabledIfSkiaPOMTP,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -5141,28 +5145,28 @@ VARCACHE_PREF(
   Once,
   "layers.force-shmem-tiles",
   ForceShmemTiles,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.allow-software",
   GPUProcessAllowSoftware,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.force-enabled",
   GPUProcessForceEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.gpu-process.ipc_reply_timeout_ms",
   GPUProcessIPCReplyTimeoutMs,
-  RelaxedAtomicInt32, 10000
+  int32_t, 10000
 )
 
 VARCACHE_PREF(
@@ -5184,7 +5188,7 @@ VARCACHE_PREF(
   Once,
   "layers.gpu-process.startup_timeout_ms",
   GPUProcessTimeoutMs,
-  RelaxedAtomicInt32, 5000
+  int32_t, 5000
 )
 
 VARCACHE_PREF(
@@ -5219,42 +5223,42 @@ VARCACHE_PREF(
   Once,
   "layers.mlgpu.enabled",
   AdvancedLayersEnabledDoNotUseDirectly,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-buffer-cache",
   AdvancedLayersEnableBufferCache,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-buffer-sharing",
   AdvancedLayersEnableBufferSharing,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-clear-view",
   AdvancedLayersEnableClearView,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-cpu-occlusion",
   AdvancedLayersEnableCPUOcclusion,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-depth-buffer",
   AdvancedLayersEnableDepthBuffer,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -5268,21 +5272,21 @@ VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-on-windows7",
   AdvancedLayersEnableOnWindows7,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.mlgpu.enable-container-resizing",
   AdvancedLayersEnableContainerResizing,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
   Once,
   "layers.offmainthreadcomposition.force-disabled",
   LayersOffMainThreadCompositionForceDisabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -5296,7 +5300,7 @@ VARCACHE_PREF(
   Once,
   "layers.omtp.capture-limit",
   LayersOMTPCaptureLimit,
-  RelaxedAtomicUint32, 25 * 1024 * 1024
+  uint32_t, 25 * 1024 * 1024
 )
 
 VARCACHE_PREF(
@@ -5310,7 +5314,7 @@ VARCACHE_PREF(
   Once,
   "layers.omtp.paint-workers",
   LayersOMTPPaintWorkers,
-  RelaxedAtomicInt32, 1
+  int32_t, 1
 )
 
 VARCACHE_PREF(
@@ -5331,7 +5335,7 @@ VARCACHE_PREF(
   Once,
   "layers.prefer-opengl",
   LayersPreferOpenGL,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -5370,49 +5374,49 @@ VARCACHE_PREF(
   Once,
   "layers.tile-width",
   LayersTileWidth,
-  RelaxedAtomicInt32, 256
+  int32_t, 256
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-height",
   LayersTileHeight,
-  RelaxedAtomicInt32, 256
+  int32_t, 256
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-initial-pool-size",
   LayersTileInitialPoolSize,
-  RelaxedAtomicUint32, (uint32_t)50
+  uint32_t, (uint32_t)50
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-pool-unused-size",
   LayersTilePoolUnusedSize,
-  RelaxedAtomicUint32, (uint32_t)10
+  uint32_t, (uint32_t)10
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-pool-shrink-timeout",
   LayersTilePoolShrinkTimeout,
-  RelaxedAtomicUint32, (uint32_t)50
+  uint32_t, (uint32_t)50
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tile-pool-clear-timeout",
   LayersTilePoolClearTimeout,
-  RelaxedAtomicUint32, (uint32_t)5000
+  uint32_t, (uint32_t)5000
 )
 
 VARCACHE_PREF(
   Once,
   "layers.tiles.adjust",
   LayersTilesAdjust,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -5426,7 +5430,7 @@ VARCACHE_PREF(
   Once,
   "layers.tiles.edge-padding",
   TileEdgePaddingEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -5454,14 +5458,14 @@ VARCACHE_PREF(
   Once,
   "layers.uniformity-info",
   UniformityInfo,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
   Once,
   "layers.use-image-offscreen-surfaces",
   UseImageOffscreenSurfaces,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -5683,7 +5687,7 @@ VARCACHE_PREF(
   Once,
   "layout.paint_rects_separately",
   LayoutPaintRectsSeparately,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 // This and code dependent on it should be removed once containerless scrolling looks stable.
@@ -5714,7 +5718,7 @@ VARCACHE_PREF(
   Once,
   "media.hardware-video-decoding.force-enabled",
   HardwareVideoDecodingForceEnabled,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 #ifdef XP_WIN
@@ -5750,7 +5754,7 @@ VARCACHE_PREF(
   Once,
   "media.wmf.use-sync-texture",
   PDMWMFUseSyncTexture,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 VARCACHE_PREF(
@@ -5799,7 +5803,7 @@ VARCACHE_PREF(
   Once,
   "media.wmf.vp9.enabled",
   MediaWmfVp9Enabled,
-  RelaxedAtomicBool, true
+  bool, true
 )
 
 #endif
@@ -5885,7 +5889,7 @@ VARCACHE_PREF(
   Once,
   "slider.snapMultiplier",
   SliderSnapMultiplier,
-  RelaxedAtomicInt32, 0
+  int32_t, 0
 )
 
 
@@ -6083,7 +6087,7 @@ VARCACHE_PREF(
   Once,
   "webgl.force-layers-readback",
   WebGLForceLayersReadback,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
