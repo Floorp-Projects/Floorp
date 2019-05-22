@@ -5,7 +5,10 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import android.view.ViewGroup
+import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.FragmentNavigator
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
@@ -19,13 +22,13 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
 class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
+    browserLayout: ViewGroup,
     toolbarMenu: ToolbarMenu,
     domainAutocompleteProvider: DomainAutocompleteProvider,
     historyStorage: HistoryStorage,
@@ -53,8 +56,18 @@ class ToolbarIntegration(
                     sessionManager,
                     {
                         toolbar.hideKeyboard()
+                        // We need to dynamically add the options here because if you do it in XML it overwrites
+                        val options = NavOptions.Builder().setPopUpTo(R.id.browserFragment, false)
+                            .setEnterAnim(R.anim.fade_in).setExitAnim(R.anim.fade_out).build()
+                        val extras =
+                            FragmentNavigator.Extras.Builder()
+                                .addSharedElement(
+                                    browserLayout,
+                                    "$TAB_ITEM_TRANSITION_NAME${sessionManager.selectedSession?.id}"
+                                )
+                                .build()
                         Navigation.findNavController(toolbar)
-                            .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
+                            .navigate(R.id.action_browserFragment_to_homeFragment, null, options, extras)
                     },
                     isPrivate
                 )
@@ -74,8 +87,10 @@ class ToolbarIntegration(
         toolbar,
         context.components.core.sessionManager,
         sessionId,
-        ToolbarFeature.UrlRenderConfiguration(PublicSuffixList(context),
-            DefaultThemeManager.resolveAttribute(R.attr.primaryText, context), renderStyle = renderStyle)
+        ToolbarFeature.UrlRenderConfiguration(
+            PublicSuffixList(context),
+            DefaultThemeManager.resolveAttribute(R.attr.primaryText, context), renderStyle = renderStyle
+        )
     )
     private var menuPresenter = MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)
 
@@ -87,5 +102,9 @@ class ToolbarIntegration(
     override fun stop() {
         menuPresenter.stop()
         toolbarPresenter.stop()
+    }
+
+    companion object {
+        private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
     }
 }

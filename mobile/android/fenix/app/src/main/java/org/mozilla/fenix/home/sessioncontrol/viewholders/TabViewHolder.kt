@@ -53,7 +53,7 @@ class TabViewHolder(
 
         close_tab_button.increaseTapArea(buttonIncreaseDps)
         item_tab.setOnClickListener {
-            actionEmitter.onNext(TabAction.Select(tab?.sessionId!!))
+            actionEmitter.onNext(TabAction.Select(it, tab?.sessionId!!))
         }
 
         item_tab.setOnLongClickListener {
@@ -85,6 +85,7 @@ class TabViewHolder(
     fun bindSession(tab: Tab) {
         this.tab = tab
         updateTabUI(tab)
+        item_tab.transitionName = "$TAB_ITEM_TRANSITION_NAME${tab.sessionId}"
         updateSelected(tab.selected ?: false)
     }
 
@@ -105,6 +106,7 @@ class TabViewHolder(
     }
 
     companion object {
+        private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         const val LAYOUT_ID = R.layout.tab_list_row
         const val buttonIncreaseDps = 12
         const val favIconBorderRadiusInPx = 8

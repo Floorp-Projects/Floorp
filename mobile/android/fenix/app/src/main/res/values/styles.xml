@@ -6,6 +6,7 @@
 
     <style name="NormalThemeBase" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Android system styling -->
+        <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
         <item name="android:statusBarColor">@color/foundation_normal_theme</item>
@@ -58,6 +59,7 @@
 
     <style name="PrivateThemeBase" parent="Theme.AppCompat.NoActionBar">
         <!-- Android system styling -->
+        <item name="android:windowContentTransitions">true</item>
         <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
         <item name="android:statusBarColor">@color/foundation_private_theme</item>

@@ -7,6 +7,7 @@ package org.mozilla.fenix.home.sessioncontrol
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Parcelable
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -97,7 +98,7 @@ sealed class TabAction : Action {
     object Add : TabAction()
     object ShareTabs : TabAction()
     data class CloseAll(val private: Boolean) : TabAction()
-    data class Select(val sessionId: String) : TabAction()
+    data class Select(val tabView: View, val sessionId: String) : TabAction()
     data class Close(val sessionId: String) : TabAction()
     data class Share(val sessionId: String) : TabAction()
     object PrivateBrowsingLearnMore : TabAction()

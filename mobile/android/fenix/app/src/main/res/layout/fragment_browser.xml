@@ -24,7 +24,7 @@
         android:clipToPadding="true"
         app:behavior_hideable="true"
         app:behavior_peekHeight="12dp"
-        app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior"/>
+        app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior" />
 
     <mozilla.components.feature.findinpage.view.FindInPageBar
         android:id="@+id/findInPageView"
@@ -41,11 +41,11 @@
 
     <mozilla.components.feature.readerview.view.ReaderViewControlsBar
         android:id="@+id/readerViewControlsBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
         android:background="?foundation"
         android:elevation="24dp"
-        android:visibility="gone"
-        android:layout_gravity="bottom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:visibility="gone" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

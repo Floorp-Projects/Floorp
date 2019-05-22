@@ -108,6 +108,7 @@ class ToolbarUIView(
             toolbarIntegration = ToolbarIntegration(
                 this,
                 view,
+                container,
                 menuToolbar,
                 ShippedDomainsProvider().also { it.initialize(this) },
                 components.core.historyStorage,

@@ -19,6 +19,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.FragmentNavigator
+import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +48,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.urlToTrimmedHost
@@ -95,6 +98,12 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        postponeEnterTransition()
+        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -155,6 +164,13 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 view.toolbar.setCompoundDrawables(searchIcon, null, null, null)
             }
         }
+
+        postponeEnterTransition()
+        sessionControlComponent.view.getViewTreeObserver()
+            .addOnPreDrawListener {
+                startPostponedEnterTransition()
+                true
+            }
 
         view.menuButton.setOnClickListener {
             homeMenu?.menuBuilder?.build(requireContext())?.show(
@@ -285,7 +301,12 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 val session =
                     requireComponents.core.sessionManager.findSessionById(action.sessionId)
                 requireComponents.core.sessionManager.select(session!!)
-                (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
+                val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
+                val extras =
+                    FragmentNavigator.Extras.Builder()
+                        .addSharedElement(action.tabView, "$TAB_ITEM_TRANSITION_NAME${action.sessionId}")
+                        .build()
+                Navigation.findNavController(action.tabView).navigate(directions, extras)
             }
             is TabAction.Close -> {
                 if (deleteSessionJob == null) removeTabWithUndo(action.sessionId) else {
@@ -401,7 +422,8 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 (activity as HomeActivity).openToBrowserAndLoad(
                     searchTermOrURL = action.tab.url,
                     newTab = true,
-                    from = BrowserDirection.FromHome)
+                    from = BrowserDirection.FromHome
+                )
             }
             is CollectionAction.OpenTabs -> {
                 invokePendingDeleteJobs()
@@ -662,6 +684,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     override fun onProfileUpdated(profile: Profile) { emitAccountChanges() }
 
     companion object {
+        private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val toolbarPaddingDp = 12f
         private const val MOTION_LAYOUT_PROGRESS_ROUND_POINT = 0.25f
     }

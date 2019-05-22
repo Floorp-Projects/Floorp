@@ -28,7 +28,9 @@
             app:destination="@id/searchFragment" />
         <action
             android:id="@+id/action_homeFragment_to_browserFragment"
-            app:destination="@id/browserFragment" />
+            app:destination="@id/browserFragment"
+            app:enterAnim="@anim/fade_in"
+            app:exitAnim="@anim/fade_out" />
         <action
             android:id="@+id/action_homeFragment_to_libraryFragment"
             app:destination="@id/libraryFragment" />
@@ -113,9 +115,7 @@
         tools:layout="@layout/fragment_browser">
         <action
             android:id="@+id/action_browserFragment_to_homeFragment"
-            app:destination="@id/homeFragment"
-            app:popUpTo="@+id/nav_graph"
-            app:popUpToInclusive="true" />
+            app:destination="@id/homeFragment" />
         <action
             android:id="@+id/action_browserFragment_to_searchFragment"
             app:destination="@id/searchFragment" />

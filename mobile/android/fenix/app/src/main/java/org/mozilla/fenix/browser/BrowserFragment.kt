@@ -19,12 +19,12 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
+import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.android.synthetic.main.fragment_search.*
-import kotlinx.android.synthetic.main.layout_quick_action_sheet.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -116,6 +116,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        postponeEnterTransition()
         job = Job()
     }
 
@@ -128,6 +129,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         customTabSessionId = arguments?.getString(IntentProcessor.ACTIVE_SESSION_ID)
 
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
+        view.browserLayout.transitionName = "$TAB_ITEM_TRANSITION_NAME${getSessionById()?.id}"
 
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
@@ -179,13 +181,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 QuickActionViewModel::class.java
             ) {
                 QuickActionViewModel(
-                QuickActionState(
-                    readable = getSessionById()?.readerable ?: false,
-                    bookmarked = findBookmarkedURL(getSessionById()),
-                    readerActive = getSessionById()?.readerMode ?: false,
-                    bounceNeeded = false
+                    QuickActionState(
+                        readable = getSessionById()?.readerable ?: false,
+                        bookmarked = findBookmarkedURL(getSessionById()),
+                        readerActive = getSessionById()?.readerMode ?: false,
+                        bounceNeeded = false
+                    )
                 )
-            )
             }
         )
 
@@ -205,6 +207,15 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        toolbarIntegration.set(
+            feature = (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
+            owner = this,
+            view = view
+        )
+
+        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+        startPostponedEnterTransition()
 
         val sessionManager = requireComponents.core.sessionManager
 
@@ -264,12 +275,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             feature = FindInPageIntegration(
                 requireComponents.core.sessionManager, view.findInPageView, view.engineView
             ),
-            owner = this,
-            view = view
-        )
-
-        toolbarIntegration.set(
-            feature = (toolbarComponent.uiView as ToolbarUIView).toolbarIntegration,
             owner = this,
             view = view
         )
@@ -771,6 +776,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     companion object {
+        private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
