@@ -4,13 +4,12 @@
 
 package mozilla.components.browser.menu.item
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
-import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -19,11 +18,9 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class SimpleBrowserMenuItemTest {
-    private val context: Context get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `simple menu items are always visible by default`() {
@@ -40,9 +37,8 @@ class SimpleBrowserMenuItemTest {
             // do nothing
         }
 
-        val view = LayoutInflater.from(
-            RuntimeEnvironment.application
-        ).inflate(item.getLayoutResource(), null)
+        val view = LayoutInflater.from(testContext)
+            .inflate(item.getLayoutResource(), null)
 
         assertNotNull(view)
     }
@@ -56,7 +52,7 @@ class SimpleBrowserMenuItemTest {
         }
 
         val menu = mock(BrowserMenu::class.java)
-        val view = TextView(RuntimeEnvironment.application)
+        val view = TextView(testContext)
 
         item.bind(menu, view)
 
@@ -79,11 +75,11 @@ class SimpleBrowserMenuItemTest {
         val textView = view.findViewById<TextView>(R.id.simple_text)
         assertEquals(textView.text, "Powered by Mozilla")
         assertEquals(textView.textSize, 10f)
-        assertEquals(textView.currentTextColor, context.getColor(android.R.color.holo_green_dark))
+        assertEquals(textView.currentTextColor, testContext.getColor(android.R.color.holo_green_dark))
     }
 
     private fun inflate(item: SimpleBrowserMenuItem): View {
-        val view = LayoutInflater.from(context).inflate(item.getLayoutResource(), null)
+        val view = LayoutInflater.from(testContext).inflate(item.getLayoutResource(), null)
         val mockMenu = mock(BrowserMenu::class.java)
         item.bind(mockMenu, view)
         return view

@@ -6,6 +6,7 @@ package mozilla.components.browser.menu
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
@@ -17,10 +18,10 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserMenuAdapterTest {
+
     @Test
     fun `items that return false from the visible lambda will be filtered out`() {
         val items = listOf(
@@ -30,7 +31,7 @@ class BrowserMenuAdapterTest {
             createMenuItem(4) { false },
             createMenuItem(5) { true })
 
-        val adapter = BrowserMenuAdapter(RuntimeEnvironment.application, items)
+        val adapter = BrowserMenuAdapter(testContext, items)
 
         assertEquals(3, adapter.visibleItems.size)
 
@@ -49,7 +50,7 @@ class BrowserMenuAdapterTest {
                 createMenuItem(23),
                 createMenuItem(42))
 
-        val adapter = BrowserMenuAdapter(RuntimeEnvironment.application, items)
+        val adapter = BrowserMenuAdapter(testContext, items)
 
         assertEquals(2, adapter.itemCount)
 
@@ -64,7 +65,7 @@ class BrowserMenuAdapterTest {
 
         val menu = mock(BrowserMenu::class.java)
 
-        val adapter = BrowserMenuAdapter(RuntimeEnvironment.application, listOf(item1, item2))
+        val adapter = BrowserMenuAdapter(testContext, listOf(item1, item2))
         adapter.menu = menu
 
         val view = mock(View::class.java)
@@ -91,7 +92,7 @@ class BrowserMenuAdapterTest {
 
         val menu = mock(BrowserMenu::class.java)
 
-        val adapter = BrowserMenuAdapter(RuntimeEnvironment.application, listOf(item1, item2))
+        val adapter = BrowserMenuAdapter(testContext, listOf(item1, item2))
         adapter.menu = menu
         val recyclerView = mock(RecyclerView::class.java)
 

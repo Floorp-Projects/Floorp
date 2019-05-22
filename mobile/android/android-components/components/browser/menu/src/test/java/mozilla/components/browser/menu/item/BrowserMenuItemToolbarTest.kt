@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -22,10 +23,10 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserMenuItemToolbarTest {
+
     @Test
     fun `toolbar is visible by default`() {
         val toolbar = BrowserMenuItemToolbar(emptyList())
@@ -37,16 +38,15 @@ class BrowserMenuItemToolbarTest {
     fun `layout resource can be inflated`() {
         val toolbar = BrowserMenuItemToolbar(emptyList())
 
-        val view = LayoutInflater.from(
-            RuntimeEnvironment.application
-        ).inflate(toolbar.getLayoutResource(), null)
+        val view = LayoutInflater.from(testContext)
+            .inflate(toolbar.getLayoutResource(), null)
 
         assertNotNull(view)
     }
 
     @Test
     fun `empty toolbar does not add anything to view group`() {
-        val layout = LinearLayout(RuntimeEnvironment.application)
+        val layout = LinearLayout(testContext)
 
         val menu = mock(BrowserMenu::class.java)
 
@@ -58,9 +58,9 @@ class BrowserMenuItemToolbarTest {
 
     @Test
     fun `toolbar removes previously existing child views from view group`() {
-        val layout = LinearLayout(RuntimeEnvironment.application)
-        layout.addView(TextView(RuntimeEnvironment.application))
-        layout.addView(TextView(RuntimeEnvironment.application))
+        val layout = LinearLayout(testContext)
+        layout.addView(TextView(testContext))
+        layout.addView(TextView(testContext))
 
         assertEquals(2, layout.childCount)
 
@@ -92,7 +92,7 @@ class BrowserMenuItemToolbarTest {
         )
 
         val menu = mock(BrowserMenu::class.java)
-        val layout = LinearLayout(RuntimeEnvironment.application)
+        val layout = LinearLayout(testContext)
 
         val toolbar = BrowserMenuItemToolbar(buttons)
         toolbar.bind(menu, layout)
@@ -124,7 +124,7 @@ class BrowserMenuItemToolbarTest {
         )
 
         val menu = mock(BrowserMenu::class.java)
-        val layout = LinearLayout(RuntimeEnvironment.application)
+        val layout = LinearLayout(testContext)
 
         val toolbar = BrowserMenuItemToolbar(buttons)
         toolbar.bind(menu, layout)
@@ -146,7 +146,7 @@ class BrowserMenuItemToolbarTest {
         )
 
         val menu = mock(BrowserMenu::class.java)
-        val layout = LinearLayout(RuntimeEnvironment.application)
+        val layout = LinearLayout(testContext)
 
         val toolbar = BrowserMenuItemToolbar(buttons)
         toolbar.bind(menu, layout)
@@ -174,7 +174,7 @@ class BrowserMenuItemToolbarTest {
         )
 
         val menu = mock(BrowserMenu::class.java)
-        val layout = LinearLayout(RuntimeEnvironment.application)
+        val layout = LinearLayout(testContext)
 
         val toolbar = BrowserMenuItemToolbar(buttons)
         toolbar.bind(menu, layout)
@@ -225,7 +225,7 @@ class BrowserMenuItemToolbarTest {
         )
 
         val menu = mock(BrowserMenu::class.java)
-        val layout = LinearLayout(RuntimeEnvironment.application)
+        val layout = LinearLayout(testContext)
 
         val toolbar = BrowserMenuItemToolbar(buttons)
         toolbar.bind(menu, layout)
@@ -274,7 +274,7 @@ class BrowserMenuItemToolbarTest {
         assertFalse(callbackInvoked)
 
         val menu = mock(BrowserMenu::class.java)
-        val layout = LinearLayout(RuntimeEnvironment.application)
+        val layout = LinearLayout(testContext)
 
         val toolbar = BrowserMenuItemToolbar(listOf(button))
         toolbar.bind(menu, layout)

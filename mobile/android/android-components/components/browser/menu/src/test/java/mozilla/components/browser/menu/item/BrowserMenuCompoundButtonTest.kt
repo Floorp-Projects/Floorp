@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.CheckBox
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -13,7 +14,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserMenuCompoundButtonTest {
@@ -33,9 +33,8 @@ class BrowserMenuCompoundButtonTest {
             // do nothing
         }
 
-        val view = LayoutInflater.from(
-            RuntimeEnvironment.application
-        ).inflate(item.getLayoutResource(), null)
+        val view = LayoutInflater.from(testContext)
+            .inflate(item.getLayoutResource(), null)
 
         assertNotNull(view)
     }
@@ -49,7 +48,7 @@ class BrowserMenuCompoundButtonTest {
         }
 
         val menu = mock(BrowserMenu::class.java)
-        val view = CheckBox(RuntimeEnvironment.application)
+        val view = CheckBox(testContext)
 
         item.bind(menu, view)
 
@@ -65,7 +64,7 @@ class BrowserMenuCompoundButtonTest {
         val item = SimpleTestBrowserCompoundButton("Hello", initialState) {}
 
         val menu = mock(BrowserMenu::class.java)
-        val view = spy(CheckBox(RuntimeEnvironment.application))
+        val view = spy(CheckBox(testContext))
         item.bind(menu, view)
 
         verify(view).isChecked = true

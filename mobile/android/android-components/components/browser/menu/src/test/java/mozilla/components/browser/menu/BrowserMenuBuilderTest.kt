@@ -7,22 +7,23 @@ package mozilla.components.browser.menu
 import android.view.View
 import android.widget.ImageButton
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class BrowserMenuBuilderTest {
+
     @Test
     fun `items are forwarded from builder to menu`() {
         val builder = BrowserMenuBuilder(listOf(mockMenuItem(), mockMenuItem()))
 
-        val menu = builder.build(RuntimeEnvironment.application)
+        val menu = builder.build(testContext)
 
-        val anchor = ImageButton(RuntimeEnvironment.application)
+        val anchor = ImageButton(testContext)
         val popup = menu.show(anchor)
 
         val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
