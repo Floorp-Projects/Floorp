@@ -5390,8 +5390,8 @@ bool ScrollFrameHelper::NeedsScrollSnap() const {
   }
 
   ScrollStyles styles = GetScrollStylesFromFrame();
-  return styles.mScrollSnapTypeY != StyleScrollSnapStrictness::None ||
-         styles.mScrollSnapTypeX != StyleScrollSnapStrictness::None;
+  return styles.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None ||
+         styles.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None;
 }
 
 bool ScrollFrameHelper::IsScrollbarOnRight() const {
@@ -6838,7 +6838,7 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
   }
 
   WritingMode writingMode = GetFrameForDir()->GetWritingMode();
-  result.InitializeScrollSnapType(writingMode, disp);
+  result.InitializeScrollSnapStrictness(writingMode, disp);
 
   nsRect snapport = GetScrollPortRect();
   nsMargin scrollPadding = GetScrollPadding();

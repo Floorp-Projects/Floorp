@@ -26,8 +26,8 @@ struct ScrollStyles {
   uint8_t mScrollBehavior;
   StyleOverscrollBehavior mOverscrollBehaviorX;
   StyleOverscrollBehavior mOverscrollBehaviorY;
-  StyleScrollSnapStrictness mScrollSnapTypeX;
-  StyleScrollSnapStrictness mScrollSnapTypeY;
+  StyleScrollSnapStrictness mScrollSnapStrictnessX;
+  StyleScrollSnapStrictness mScrollSnapStrictnessY;
 
   ScrollStyles(StyleOverflow aH, StyleOverflow aV)
       : mHorizontal(aH),
@@ -35,22 +35,22 @@ struct ScrollStyles {
         mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
         mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
         mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
-        mScrollSnapTypeX(StyleScrollSnapStrictness::None),
-        mScrollSnapTypeY(StyleScrollSnapStrictness::None) {}
+        mScrollSnapStrictnessX(StyleScrollSnapStrictness::None),
+        mScrollSnapStrictnessY(StyleScrollSnapStrictness::None) {}
 
   ScrollStyles(WritingMode aWritingMode, const nsStyleDisplay* aDisplay);
   ScrollStyles(WritingMode aWritingMode, StyleOverflow aH, StyleOverflow aV,
                const nsStyleDisplay* aDisplay);
-  void InitializeScrollSnapType(WritingMode aWritingMode,
-                                const nsStyleDisplay* aDisplay);
+  void InitializeScrollSnapStrictness(WritingMode aWritingMode,
+                                      const nsStyleDisplay* aDisplay);
   bool operator==(const ScrollStyles& aStyles) const {
     return aStyles.mHorizontal == mHorizontal &&
            aStyles.mVertical == mVertical &&
            aStyles.mScrollBehavior == mScrollBehavior &&
            aStyles.mOverscrollBehaviorX == mOverscrollBehaviorX &&
            aStyles.mOverscrollBehaviorY == mOverscrollBehaviorY &&
-           aStyles.mScrollSnapTypeX == mScrollSnapTypeX &&
-           aStyles.mScrollSnapTypeY == mScrollSnapTypeY;
+           aStyles.mScrollSnapStrictnessX == mScrollSnapStrictnessX &&
+           aStyles.mScrollSnapStrictnessY == mScrollSnapStrictnessY;
   }
   bool operator!=(const ScrollStyles& aStyles) const {
     return !(*this == aStyles);
