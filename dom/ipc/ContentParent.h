@@ -1217,6 +1217,8 @@ class ContentParent final : public PContentParent,
 
   void UpdateNetworkLinkType();
 
+  static bool ShouldSyncPreference(const char16_t* aData);
+
  private:
   // Released in ActorDestroy; deliberately not exposed to the CC.
   RefPtr<ContentParent> mSelfRef;
