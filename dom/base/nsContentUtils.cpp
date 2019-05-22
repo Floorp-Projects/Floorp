@@ -4176,6 +4176,32 @@ nsresult nsContentUtils::DispatchFocusChromeEvent(nsPIDOMWindowOuter* aWindow) {
                              CanBubble::eYes, Cancelable::eYes);
 }
 
+void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise) {
+  RefPtr<Element> target = &aFrameElement;
+  bool defaultAction = true;
+  if (aCanRaise) {
+    DispatchEventOnlyToChrome(target->OwnerDoc(), target,
+                              NS_LITERAL_STRING("framefocusrequested"),
+                              CanBubble::eYes, Cancelable::eYes,
+                              &defaultAction);
+  }
+  if (!defaultAction) {
+    return;
+  }
+
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return;
+  }
+
+  uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
+  if (aCanRaise) {
+    flags |= nsIFocusManager::FLAG_RAISE;
+  }
+
+  fm->SetFocus(target, flags);
+}
+
 nsresult nsContentUtils::DispatchEventOnlyToChrome(
     Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
     CanBubble aCanBubble, Cancelable aCancelable, bool* aDefaultAction) {
