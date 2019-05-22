@@ -97,8 +97,8 @@ if [ -n "$TARGET" ]; then
     SCCACHE_OUT=target/$TARGET/release/sccache*
 fi
 
-mkdir sccache2
-cp $SCCACHE_OUT sccache2/
-tar -acf sccache2.tar.$COMPRESS_EXT sccache2
+mkdir sccache
+cp $SCCACHE_OUT sccache/
+tar -acf sccache.tar.$COMPRESS_EXT sccache
 mkdir -p $UPLOAD_DIR
-cp sccache2.tar.$COMPRESS_EXT $UPLOAD_DIR
+cp sccache.tar.$COMPRESS_EXT $UPLOAD_DIR
