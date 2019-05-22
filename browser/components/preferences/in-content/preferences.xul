@@ -169,7 +169,12 @@
               <image class="info-icon"></image>
             </hbox>
             <hbox align="center" flex="1">
-              <label class="policies-label" flex="1" data-l10n-id="managed-notice"></label>
+              <label class="policies-label"
+                     flex="1"
+                     href="about:policies"
+                     useoriginprincipal="true"
+                     is="text-link"
+                     data-l10n-id="managed-notice"/>
             </hbox>
           </hbox>
           <textbox
