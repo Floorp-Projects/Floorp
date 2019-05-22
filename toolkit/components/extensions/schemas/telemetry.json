@@ -80,7 +80,10 @@
         }
       }
     }],
-    "permissions": ["telemetry"],
+    "permissions": [
+      "telemetry",
+      "mozillaAddons"
+    ],
     "functions": [{
       "name": "submitPing",
       "type": "function",
