@@ -373,7 +373,6 @@ DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
   mPrincipalHandle.Connect(mOutputStreamManager->CanonicalPrincipalHandle());
 
   mWatchManager.Watch(mPlaying, &DecodedStream::PlayingChanged);
-
   PlayingChanged();  // Notify of the initial state
 }
 
@@ -948,6 +947,7 @@ void DecodedStream::ConnectListener() {
       mOwnerThread, this, &DecodedStream::SendData);
   mVideoFinishListener = mVideoQueue.FinishEvent().Connect(
       mOwnerThread, this, &DecodedStream::SendData);
+  mWatchManager.Watch(mPlaying, &DecodedStream::SendData);
 }
 
 void DecodedStream::DisconnectListener() {
@@ -957,6 +957,7 @@ void DecodedStream::DisconnectListener() {
   mVideoPushListener.Disconnect();
   mAudioFinishListener.Disconnect();
   mVideoFinishListener.Disconnect();
+  mWatchManager.Unwatch(mPlaying, &DecodedStream::SendData);
 }
 
 nsCString DecodedStream::GetDebugInfo() {
