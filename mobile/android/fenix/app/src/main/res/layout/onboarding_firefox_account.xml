@@ -42,4 +42,49 @@
             android:textColor="?neutral"
             android:textSize="14sp" />
     </FrameLayout>
+    <FrameLayout
+        android:id="@+id/stay_signed_in_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/button_background"
+        android:backgroundTint="@color/onboarding_card_button_background_dark"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:clickable="false"
+            android:focusable="false"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:text="@string/onboarding_firefox_account_stay_signed_in"
+            android:textColor="?neutral"
+            android:textSize="14sp" />
+    </FrameLayout>
+    <FrameLayout
+        android:id="@+id/sign_out_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:clickable="false"
+            android:focusable="false"
+            android:gravity="center"
+            android:text="@string/onboarding_firefox_account_sign_out"
+            android:textColor="?neutral"
+            android:textSize="12sp" />
+    </FrameLayout>
 </LinearLayout>

@@ -51,7 +51,7 @@ sealed class AdapterItem {
 
     object OnboardingHeader : AdapterItem()
     data class OnboardingSectionHeader(val labelBuilder: (Context) -> String) : AdapterItem()
-    object OnboardingFirefoxAccount : AdapterItem()
+    data class OnboardingFirefoxAccount(val state: OnboardingState) : AdapterItem()
     object OnboardingThemePicker : AdapterItem()
     object OnboardingTrackingProtection : AdapterItem()
     object OnboardingPrivateBrowsing : AdapterItem()
@@ -72,7 +72,7 @@ sealed class AdapterItem {
             is TabInCollectionItem -> TabInCollectionViewHolder.LAYOUT_ID
             OnboardingHeader -> OnboardingHeaderViewHolder.LAYOUT_ID
             is OnboardingSectionHeader -> OnboardingSectionHeaderViewHolder.LAYOUT_ID
-            OnboardingFirefoxAccount -> OnboardingFirefoxAccountViewHolder.LAYOUT_ID
+            is OnboardingFirefoxAccount -> OnboardingFirefoxAccountViewHolder.LAYOUT_ID
             OnboardingThemePicker -> OnboardingThemePickerViewHolder.LAYOUT_ID
             OnboardingTrackingProtection -> OnboardingTrackingProtectionViewHolder.LAYOUT_ID
             OnboardingPrivateBrowsing -> OnboardingPrivateBrowsingViewHolder.LAYOUT_ID
@@ -155,6 +155,9 @@ class SessionControlAdapter(
             }
             is OnboardingSectionHeaderViewHolder -> holder.bind(
                 (items[position] as AdapterItem.OnboardingSectionHeader).labelBuilder
+            )
+            is OnboardingFirefoxAccountViewHolder -> holder.bind(
+                (items[position] as AdapterItem.OnboardingFirefoxAccount).state == OnboardingState.AutoSignedIn
             )
         }
     }

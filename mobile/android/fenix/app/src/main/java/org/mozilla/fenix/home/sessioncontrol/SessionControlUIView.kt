@@ -70,21 +70,15 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
         OnboardingState.SignedOut -> {
             listOf(
                 AdapterItem.OnboardingSectionHeader { it.getString(R.string.onboarding_fxa_section_header) },
-                AdapterItem.OnboardingFirefoxAccount
+                AdapterItem.OnboardingFirefoxAccount(onboardingState)
             )
         }
         OnboardingState.AutoSignedIn -> {
             listOf(
-                AdapterItem.OnboardingSectionHeader { it.getString(R.string.onboarding_fxa_section_header) },
-                AdapterItem.OnboardingFirefoxAccount
+                AdapterItem.OnboardingFirefoxAccount(onboardingState)
             )
         }
-        OnboardingState.ManuallySignedIn -> {
-            listOf(
-                AdapterItem.OnboardingSectionHeader { it.getString(R.string.onboarding_fxa_section_header) },
-                AdapterItem.OnboardingFirefoxAccount
-            )
-        }
+        else -> listOf()
     })
 
     items.addAll(listOf(

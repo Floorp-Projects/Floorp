@@ -34,8 +34,15 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
     <string name="onboarding_firefox_account_header" translatable="false">Get the most out of %s.</string>
-    <!-- text for the button to sign into your Firefox account -->
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated -->
+    <string name="onboarding_firefox_account_auto_signin_header" translatable="false">You are signed in to another Firefox browser on this phone.</string>
+    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
     <string name="onboarding_firefox_account_sign_in">Sign in to Firefox</string>
+    <!-- text for the button to stay signed into your Firefox account. -->
+    <string name="onboarding_firefox_account_stay_signed_in">Stay signed in</string>
+    <!-- text for the button to sign out of your Firefox account. -->
+    <string name="onboarding_firefox_account_sign_out">Sign out</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header" translatable="false">Protect yourself</string>
     <!-- text for the tracking protection card description

@@ -11,16 +11,29 @@ import kotlinx.android.synthetic.main.onboarding_firefox_account.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.HomeFragmentDirections
 
-class OnboardingFirefoxAccountViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
+class OnboardingFirefoxAccountViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
     init {
-        val appName = view.context.getString(R.string.app_name)
-        view.header_text.text = view.context.getString(R.string.onboarding_firefox_account_header, appName)
-
         view.turn_on_sync_button.setOnClickListener {
             val directions = HomeFragmentDirections.actionHomeFragmentToTurnOnSyncFragment()
             Navigation.findNavController(view).navigate(directions)
         }
+    }
+
+    fun bind(autoSignedIn: Boolean) {
+        val appName = view.context.getString(R.string.app_name)
+
+        val icon =
+            if (autoSignedIn) view.context.getDrawable(R.drawable.ic_onboarding_avatar_anonymous)
+            else view.context.getDrawable(R.drawable.ic_onboarding_firefox_accounts)
+
+        view.header_text.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
+        view.header_text.text =
+            if (!autoSignedIn) view.context.getString(R.string.onboarding_firefox_account_auto_signin_header)
+            else view.context.getString(R.string.onboarding_firefox_account_header, appName)
+
+        view.turn_on_sync_button.visibility = if (autoSignedIn) View.GONE else View.VISIBLE
+        view.stay_signed_in_button.visibility = if (autoSignedIn) View.VISIBLE else View.GONE
+        view.sign_out_button.visibility = if (autoSignedIn) View.VISIBLE else View.GONE
     }
 
     companion object {
