@@ -24,6 +24,7 @@
 
 #include "mozAutoDocUpdate.h"
 #include "nsLayoutStylesheetCache.h"
+#include "SheetLoadData.h"
 
 namespace mozilla {
 
@@ -431,6 +432,20 @@ void StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet) {
 #endif
 }
 
+#define NOTIFY(function_, args_)                           \
+  do {                                                     \
+    StyleSheet* current = this;                            \
+    do {                                                   \
+      for (ServoStyleSet * handle : current->mStyleSets) { \
+        handle->function_ args_;                           \
+      }                                                    \
+      if (auto* shadow = current->GetContainingShadow()) { \
+        shadow->function_ args_;                           \
+      }                                                    \
+      current = current->mParent;                          \
+    } while (current);                                     \
+  } while (0)
+
 void StyleSheet::EnsureUniqueInner() {
   MOZ_ASSERT(mInner->mSheets.Length() != 0, "unexpected number of outers");
 
@@ -459,9 +474,7 @@ void StyleSheet::EnsureUniqueInner() {
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
   // document
-  for (ServoStyleSet* setHandle : mStyleSets) {
-    setHandle->SetNeedsRestyleAfterEnsureUniqueInner();
-  }
+  NOTIFY(StyleSheetCloned, (*this));
 }
 
 void StyleSheet::AppendAllChildSheets(nsTArray<StyleSheet*>& aArray) {
@@ -582,20 +595,6 @@ dom::ShadowRoot* StyleSheet::GetContainingShadow() const {
 
   return mOwningNode->AsContent()->GetContainingShadow();
 }
-
-#define NOTIFY(function_, args_)                           \
-  do {                                                     \
-    StyleSheet* current = this;                            \
-    do {                                                   \
-      for (ServoStyleSet * handle : current->mStyleSets) { \
-        handle->function_ args_;                           \
-      }                                                    \
-      if (auto* shadow = current->GetContainingShadow()) { \
-        shadow->function_ args_;                           \
-      }                                                    \
-      current = current->mParent;                          \
-    } while (current);                                     \
-  } while (0)
 
 void StyleSheet::RuleAdded(css::Rule& aRule) {
   mState |= State::ModifiedRules;

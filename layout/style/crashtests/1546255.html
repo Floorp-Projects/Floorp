@@ -1,0 +1,29 @@
+<style id="id_0">
+    @import url('data:;base64,QGN7IGJ9CkRBTVAsIEhUTUwgey');
+</style>
+<script>
+  function start () {
+    style = document.createElement('style')
+    document.head.appendChild(style)
+
+    const o0 = document.getElementById('id_0')
+    const o1 = document.getElementById('id_1')
+
+    const range = new Range()
+    range.selectNode(o1)
+
+    style.sheet.insertRule('@namespace\'', 0)
+    for (let i = 0; i < 7; i++) {
+      range.insertNode(o0)
+    }
+
+    const xhr = new XMLHttpRequest()
+    xhr.open('G', '', false)
+    xhr.send()
+
+    SpecialPowers.InspectorUtils.getCSSStyleRules(document.documentElement)
+  }
+
+  window.addEventListener('load', start)
+</script>
+<li id="id_1">
