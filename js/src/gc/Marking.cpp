@@ -3104,8 +3104,7 @@ size_t js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
   }
 
   if (dst->isFlat() && !dst->isInline()) {
-    AddCellMemory(dst, dst->asFlat().allocSize(),
-                  MemoryUse::StringContents);
+    AddCellMemory(dst, dst->asFlat().allocSize(), MemoryUse::StringContents);
   }
 
   return size;
