@@ -2,7 +2,7 @@
 #
 # Process this file with autoconf to produce a configure script.
 #
-# Copyright 2001-2018 by
+# Copyright (C) 2001-2019 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -11,13 +11,13 @@
 # indicate that you have read the license and understand and accept it
 # fully.
 
-AC_INIT([FreeType], [2.9.1], [freetype@nongnu.org], [freetype])
+AC_INIT([FreeType], [2.10], [freetype@nongnu.org], [freetype])
 AC_CONFIG_SRCDIR([ftconfig.in])
 
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='22:1:16'
+version_info='23:0:17'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -37,7 +37,7 @@ AC_SUBST(EXEEXT)
 PKG_PROG_PKG_CONFIG([0.24])
 
 LT_INIT(win32-dll)
-LT_PROG_RC
+AC_CHECK_HEADER([windows.h], [LT_PROG_RC])
 
 
 # checks for native programs to generate building tool
@@ -196,7 +196,7 @@ AC_SYS_LARGEFILE
 AC_ARG_ENABLE([mmap],
   AS_HELP_STRING([--disable-mmap],
                  [do not check mmap() and do not use]),
-  [enable_mmap="no"],[enable_mmap="yes"])
+  [enable_mmap="no"], [enable_mmap="yes"])
 if test "x${enable_mmap}" != "xno"; then
   AC_FUNC_MMAP
 fi
@@ -311,14 +311,26 @@ AC_SUBST([XX_ANSIFLAGS])
 # It is recommended that shared libraries hide symbols except those with
 # explicit __attribute__((visibility("default"))).
 #
+found_visibility_flag=no
 AC_MSG_CHECKING([for -fvisibility=hidden compiler flag])
 orig_CFLAGS="${CFLAGS}"
 CFLAGS="${CFLAGS} -fvisibility=hidden"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[])],
-                  AC_MSG_RESULT(yes),
-                  CFLAGS="${orig_CFLAGS}"
-                  AC_MSG_RESULT(no))
+AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
+               [found_visibility_flag=yes
+                AC_MSG_RESULT(yes)],
+               [CFLAGS="${orig_CFLAGS}"
+                AC_MSG_RESULT(no)])
 
+if test "${found_visibility_flag}" = "no"; then
+  AC_MSG_CHECKING([for -xldscope=hidden compiler flag])
+  orig_CFLAGS="${CFLAGS}"
+  CFLAGS="${CFLAGS} -xldscope=hidden"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
+                 [found_visibility_flag=yes
+                  AC_MSG_RESULT(yes)],
+                 [CFLAGS="${orig_CFLAGS}"
+                  AC_MSG_RESULT(no)])
+fi
 
 # All library tests below try `pkg-config' first.  If that fails, a function
 # from the library is tested in the traditional autoconf way (zlib, bzip2),
@@ -956,6 +968,25 @@ case "$CFLAGS" in
     ;;
 esac
 
+# Check for python and docwriter
+
+AC_CHECK_PROGS([PYTHON], [python3 python2 python], [missing])
+have_docwriter=no
+if test "x$PYTHON" != "xmissing"; then
+  AC_CHECK_PROGS([PIP], [pip3 pip2 pip], [missing])
+
+  if test "x$PIP" != "xmissing"; then
+    AC_MSG_CHECKING([for \`docwriter' Python module])
+    $PIP show -q docwriter
+    if test "x$?" = "x0"; then
+      have_docwriter=yes
+      AC_MSG_RESULT([yes])
+    else
+      AC_MSG_RESULT([no])
+    fi
+  fi
+fi
+
 
 # entries in Requires.private are separated by commas;
 REQUIRES_PRIVATE="$zlib_reqpriv,     \
@@ -1099,5 +1130,16 @@ Library configuration:
   libpng:        $have_libpng
   harfbuzz:      $have_harfbuzz
 ])
+
+# Warn if docwriter is not installed
+
+if test $have_docwriter = no; then
+  AC_MSG_NOTICE([
+  Warning: \`make refdoc' will fail since pip package \`docwriter' is not
+  installed.  To install, run \`$PIP install docwriter', or to use a python
+  virtual environment, run \`make refdoc-venv' (requires pip package
+  \`virtualenv').
+  ])
+fi
 
 # end of configure.raw

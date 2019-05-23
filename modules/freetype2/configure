@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2002-2018 by
+# Copyright (C) 2002-2019 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -96,6 +96,8 @@ inode_dst=`ls -id $abs_curr_dir | awk '{print $1}'`
 if test $inode_src -ne $inode_dst; then
   if test ! -d reference; then
     mkdir reference
+    echo "Copying documentation assets"
+    cp -R $abs_ft2_dir/docs/reference/markdown $abs_curr_dir/reference
   fi
   if test ! -r $abs_curr_dir/modules.cfg; then
     echo "Copying \`modules.cfg'"
