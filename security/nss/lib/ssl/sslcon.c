@@ -155,8 +155,8 @@ ssl_BeginClientHandshake(sslSocket *ss)
         SSL_TRC(3, ("%d: SSL[%d]: using external token", SSL_GETPID(), ss->fd));
     } else if (!ss->opt.noCache) {
         /* Try to find server in our session-id cache */
-        sid = ssl_LookupSID(&ss->sec.ci.peer, ss->sec.ci.port, ss->peerID,
-                            ss->url);
+        sid = ssl_LookupSID(ssl_Time(ss), &ss->sec.ci.peer,
+                            ss->sec.ci.port, ss->peerID, ss->url);
     }
 
     if (sid) {
@@ -170,24 +170,14 @@ ssl_BeginClientHandshake(sslSocket *ss)
         }
     }
     if (!sid) {
-        sid = PORT_ZNew(sslSessionID);
+        sid = ssl3_NewSessionID(ss, PR_FALSE);
         if (!sid) {
             goto loser;
         }
-        sid->references = 1;
-        sid->cached = never_cached;
-        sid->addr = ss->sec.ci.peer;
-        sid->port = ss->sec.ci.port;
-        if (ss->peerID != NULL) {
-            sid->peerID = PORT_Strdup(ss->peerID);
-        }
-        if (ss->url != NULL) {
-            sid->urlSvrName = PORT_Strdup(ss->url);
-        }
+        /* This session is a dummy, which we don't want to resume. */
+        sid->u.ssl3.keys.resumable = PR_FALSE;
     }
     ss->sec.ci.sid = sid;
-
-    PORT_Assert(sid != NULL);
 
     ss->gs.state = GS_INIT;
     ss->handshake = ssl_GatherRecord1stHandshake;

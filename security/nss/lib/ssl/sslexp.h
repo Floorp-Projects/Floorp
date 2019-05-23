@@ -159,7 +159,7 @@ typedef SECStatus(PR_CALLBACK *SSLExtensionHandler)(
                           handler, handlerArg))
 
 /*
- * Setup the anti-replay buffer for supporting 0-RTT in TLS 1.3 on servers.
+ * Initialize the anti-replay buffer for supporting 0-RTT in TLS 1.3 on servers.
  *
  * To use 0-RTT on a server, you must call this function.  Failing to call this
  * function will result in all 0-RTT being rejected.  Connections will complete,
@@ -181,11 +181,11 @@ typedef SECStatus(PR_CALLBACK *SSLExtensionHandler)(
  * The first tuning parameter to consider is |window|, which determines the
  * window over which ClientHello messages will be tracked.  This also causes
  * early data to be rejected if a ClientHello contains a ticket age parameter
- * that is outside of this window (see Section 4.2.10.4 of
- * draft-ietf-tls-tls13-20 for details).  Set |window| to account for any
- * potential sources of clock error.  |window| is the entire width of the
- * window, which is symmetrical.  Therefore to allow 5 seconds of clock error in
- * both directions, set the value to 10 seconds (i.e., 10 * PR_USEC_PER_SEC).
+ * that is outside of this window (see Section 8.3 of RFC 8446 for details).
+ * Set |window| to account for any potential sources of clock error.  |window|
+ * is the entire width of the window, which is symmetrical.  Therefore to allow
+ * 5 seconds of clock error in both directions, set the value to 10 seconds
+ * (i.e., 10 * PR_USEC_PER_SEC).
  *
  * After calling this function, early data will be rejected until |window|
  * elapses.  This prevents replay across crashes and restarts.  Only call this
@@ -219,10 +219,11 @@ typedef SECStatus(PR_CALLBACK *SSLExtensionHandler)(
  * Early data can be replayed at least once with every server instance that will
  * accept tickets that are encrypted with the same key.
  */
-#define SSL_SetupAntiReplay(window, k, bits)                                    \
-    SSL_EXPERIMENTAL_API("SSL_SetupAntiReplay",                                 \
-                         (PRTime _window, unsigned int _k, unsigned int _bits), \
-                         (window, k, bits))
+#define SSL_InitAntiReplay(now, window, k, bits)                \
+    SSL_EXPERIMENTAL_API("SSL_InitAntiReplay",                  \
+                         (PRTime _now, PRTime _window,          \
+                          unsigned int _k, unsigned int _bits), \
+                         (now, window, k, bits))
 
 /*
  * This function allows a server application to generate a session ticket that
@@ -723,8 +724,20 @@ typedef struct SSLAeadContextStr SSLAeadContext;
                           hsHash, hsHashLen, label, labelLen,              \
                           mech, keySize, keyp))
 
+/* SSL_SetTimeFunc overrides the default time function (PR_Now()) and provides
+ * an alternative source of time for the socket. This is used in testing, and in
+ * applications that need better control over how the clock is accessed. Set the
+ * function to NULL to use PR_Now().*/
+typedef PRTime(PR_CALLBACK *SSLTimeFunc)(void *arg);
+
+#define SSL_SetTimeFunc(fd, f, arg)                                      \
+    SSL_EXPERIMENTAL_API("SSL_SetTimeFunc",                              \
+                         (PRFileDesc * _fd, SSLTimeFunc _f, void *_arg), \
+                         (fd, f, arg))
+
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API
+#define SSL_SetupAntiReplay(a, b, c) SSL_DEPRECATED_EXPERIMENTAL_API
 
 SEC_END_PROTOS
 
