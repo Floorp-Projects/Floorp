@@ -328,10 +328,10 @@ class TypeScript {
    * always monitor JOF_TYPESET opcodes in the interpreter and stub calls,
    * and only look at barriers when generating JIT code for the script.
    */
-  static inline void MonitorBytecodeType(JSContext* cx, JSScript* script,
-                                         jsbytecode* pc, const js::Value& val);
-  static inline void MonitorBytecodeType(JSContext* cx, JSScript* script,
-                                         jsbytecode* pc, TypeSet::Type type);
+  static void MonitorBytecodeType(JSContext* cx, JSScript* script,
+                                  jsbytecode* pc, const js::Value& val);
+  static void MonitorBytecodeType(JSContext* cx, JSScript* script,
+                                  jsbytecode* pc, TypeSet::Type type);
   static inline void MonitorBytecodeType(JSContext* cx, const js::Value& rval);
 
   static inline void MonitorBytecodeType(JSContext* cx, JSScript* script,
