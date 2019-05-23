@@ -29,7 +29,9 @@
             android:id="@+id/action_homeFragment_to_browserFragment"
             app:destination="@id/browserFragment"
             app:enterAnim="@anim/fade_in"
-            app:exitAnim="@anim/fade_out" />
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/fade_out" />
         <action
             android:id="@+id/action_homeFragment_to_libraryFragment"
             app:destination="@id/libraryFragment" />
