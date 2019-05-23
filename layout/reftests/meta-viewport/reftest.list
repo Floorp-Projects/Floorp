@@ -2,12 +2,13 @@ default-preferences pref(dom.meta-viewport.enabled,true) pref(apz.allow_zooming,
 
 # These tests assume that viewport width in reftest is 800px.
 == box-shadow.html initial-scale-0_5-ref.html
-== initial-scale-0.html initial-scale-0_5-ref.html
-== initial-scale-100.html initial-scale-0_5-ref.html
+== initial-scale-0.html initial-scale-0_25-ref.html
+== initial-scale-100.html initial-scale-10-ref.html
 == no-viewport.html initial-scale-0_5-ref.html
 == viewport-width.html initial-scale-0_5-ref.html
 == initial-scale-1.html no-zoom-ref.html
 == minimum-scale.html no-zoom-ref.html
+== negative-initial-and-maximum-scale.html initial-scale-0_5-ref.html
 == no-scalable-with-minimum-scale.html no-scalable-with-minimum-scale-ref.html
 == clamped-by-default-minimum-scale.html initial-scale-0_25-ref.html
 

@@ -1238,8 +1238,8 @@ Document::Document(const char* aContentType)
       mMaybeServiceWorkerControlled(false),
       mAllowZoom(false),
       mValidScaleFloat(false),
+      mValidMinScale(false),
       mValidMaxScale(false),
-      mScaleStrEmpty(false),
       mWidthStrEmpty(false),
       mParserAborted(false),
       mReportedUseCounters(false),
@@ -6843,9 +6843,73 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
 
 bool Document::UseWidthDeviceWidthFallbackViewport() const { return false; }
 
-void Document::ParseWidthAndHeightInMetaViewport(
-    const nsAString& aWidthString, const nsAString& aHeightString,
-    const nsAString& aScaleString) {
+static Maybe<LayoutDeviceToScreenScale> ParseScaleString(
+    const nsString& aScaleString) {
+  // https://drafts.csswg.org/css-device-adapt/#min-scale-max-scale
+  if (aScaleString.EqualsLiteral("device-width") ||
+      aScaleString.EqualsLiteral("device-height")) {
+    return Some(LayoutDeviceToScreenScale(10.0f));
+  } else if (aScaleString.EqualsLiteral("yes")) {
+    return Some(LayoutDeviceToScreenScale(1.0f));
+  } else if (aScaleString.EqualsLiteral("no")) {
+    return Some(LayoutDeviceToScreenScale(kViewportMinScale));
+  } else if (aScaleString.IsEmpty()) {
+    return Nothing();
+  }
+
+  nsresult scaleErrorCode;
+  float scale = aScaleString.ToFloat(&scaleErrorCode);
+  if (NS_FAILED(scaleErrorCode)) {
+    return Some(LayoutDeviceToScreenScale(kViewportMinScale));
+  }
+
+  if (scale < 0) {
+    return Nothing();
+  }
+  return Some(clamped(LayoutDeviceToScreenScale(scale), kViewportMinScale,
+                      kViewportMaxScale));
+}
+
+Maybe<LayoutDeviceToScreenScale> Document::ParseScaleInHeader(
+  nsAtom* aHeaderField) {
+  MOZ_ASSERT(aHeaderField == nsGkAtoms::viewport_initial_scale ||
+             aHeaderField == nsGkAtoms::viewport_maximum_scale ||
+             aHeaderField == nsGkAtoms::viewport_minimum_scale);
+
+  nsAutoString scaleStr;
+  GetHeaderData(aHeaderField, scaleStr);
+
+  return ParseScaleString(scaleStr);
+}
+
+void Document::ParseScalesInMetaViewport() {
+  Maybe<LayoutDeviceToScreenScale> scale;
+
+  scale = ParseScaleInHeader(nsGkAtoms::viewport_initial_scale);
+  mScaleFloat = scale.valueOr(LayoutDeviceToScreenScale(0.0f));
+  mValidScaleFloat = scale.isSome();
+
+  scale = ParseScaleInHeader(nsGkAtoms::viewport_maximum_scale);
+  // Chrome uses '5' for the fallback value of maximum-scale, we might
+  // consider matching it in future.
+  // https://cs.chromium.org/chromium/src/third_party/blink/renderer/core/html/html_meta_element.cc?l=452&rcl=65ca4278b42d269ca738fc93ef7ae04a032afeb0
+  mScaleMaxFloat = scale.valueOr(kViewportMaxScale);
+  mValidMaxScale = scale.isSome();
+
+  scale = ParseScaleInHeader(nsGkAtoms::viewport_minimum_scale);
+  mScaleMinFloat = scale.valueOr(kViewportMinScale);
+  mValidMinScale = scale.isSome();
+
+  // Resolve min-zoom and max-zoom values.
+  // https://drafts.csswg.org/css-device-adapt/#constraining-min-max-zoom
+  if (mValidMaxScale && mValidMinScale) {
+    mScaleMaxFloat = std::max(mScaleMinFloat, mScaleMaxFloat);
+  }
+}
+
+void Document::ParseWidthAndHeightInMetaViewport(const nsAString& aWidthString,
+                                                 const nsAString& aHeightString,
+                                                 bool aHasValidScale) {
   // The width and height properties
   // https://drafts.csswg.org/css-device-adapt/#width-and-height-properties
   //
@@ -6876,8 +6940,7 @@ void Document::ParseWidthAndHeightInMetaViewport(
         mMaxWidth = nsViewportInfo::Auto;
       }
     }
-    // FIXME: Check the scale is not 'auto' once we support auto value for it.
-  } else if (!aScaleString.IsEmpty()) {
+  } else if (aHasValidScale) {
     if (aHeightString.IsEmpty()) {
       mMinWidth = nsViewportInfo::ExtendToZoom;
       mMaxWidth = nsViewportInfo::ExtendToZoom;
@@ -6985,48 +7048,8 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
         }
       }
 
-      nsAutoString minScaleStr;
-      GetHeaderData(nsGkAtoms::viewport_minimum_scale, minScaleStr);
-
-      nsresult scaleMinErrorCode;
-      mScaleMinFloat =
-          LayoutDeviceToScreenScale(minScaleStr.ToFloat(&scaleMinErrorCode));
-
-      if (NS_FAILED(scaleMinErrorCode)) {
-        mScaleMinFloat = kViewportMinScale;
-      }
-
-      mScaleMinFloat = mozilla::clamped(mScaleMinFloat, kViewportMinScale,
-                                        kViewportMaxScale);
-
-      nsAutoString maxScaleStr;
-      GetHeaderData(nsGkAtoms::viewport_maximum_scale, maxScaleStr);
-
-      // We define a special error code variable for the scale and max scale,
-      // because they are used later (see the width calculations).
-      nsresult scaleMaxErrorCode;
-      mScaleMaxFloat =
-          LayoutDeviceToScreenScale(maxScaleStr.ToFloat(&scaleMaxErrorCode));
-
-      if (NS_FAILED(scaleMaxErrorCode)) {
-        mScaleMaxFloat = kViewportMaxScale;
-      }
-
-      // Resolve min-zoom and max-zoom values.
-      // https://drafts.csswg.org/css-device-adapt/#constraining-min-max-zoom
-      if (NS_SUCCEEDED(scaleMaxErrorCode) && NS_SUCCEEDED(scaleMinErrorCode)) {
-        mScaleMaxFloat = std::max(mScaleMinFloat, mScaleMaxFloat);
-      }
-
-      mScaleMaxFloat = mozilla::clamped(mScaleMaxFloat, kViewportMinScale,
-                                        kViewportMaxScale);
-
-      nsAutoString scaleStr;
-      GetHeaderData(nsGkAtoms::viewport_initial_scale, scaleStr);
-
-      nsresult scaleErrorCode;
-      mScaleFloat =
-          LayoutDeviceToScreenScale(scaleStr.ToFloat(&scaleErrorCode));
+      // Parse initial-scale, minimum-scale and maximum-scale.
+      ParseScalesInMetaViewport();
 
       nsAutoString widthStr, heightStr;
 
@@ -7035,7 +7058,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
 
       // Parse width and height properties
       // This function sets m{Min,Max}{Width,Height}.
-      ParseWidthAndHeightInMetaViewport(widthStr, heightStr, scaleStr);
+      ParseWidthAndHeightInMetaViewport(widthStr, heightStr, mValidScaleFloat);
 
       mAllowZoom = true;
       nsAutoString userScalable;
@@ -7047,11 +7070,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
         mAllowZoom = false;
       }
 
-      mScaleStrEmpty = scaleStr.IsEmpty();
       mWidthStrEmpty = widthStr.IsEmpty();
-      mValidScaleFloat = !scaleStr.IsEmpty() && NS_SUCCEEDED(scaleErrorCode);
-      mValidMaxScale =
-          !maxScaleStr.IsEmpty() && NS_SUCCEEDED(scaleMaxErrorCode);
 
       mViewportType = viewportIsEmpty ? Empty : Specified;
       MOZ_FALLTHROUGH;
@@ -7235,7 +7254,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
 
       // Also recalculate the default zoom, if it wasn't specified in the
       // metadata, and the width is specified.
-      if (mScaleStrEmpty && !mWidthStrEmpty) {
+      if (!mValidScaleFloat && !mWidthStrEmpty) {
         CSSToScreenScale bestFitScale(float(aDisplaySize.width) / size.width);
         scaleFloat = (scaleFloat > bestFitScale) ? scaleFloat : bestFitScale;
       }
