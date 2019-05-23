@@ -1328,8 +1328,6 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", tru
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
 #endif
 
-pref("trailhead.firstrun.branches", "control");
-
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
 

@@ -38,10 +38,12 @@ export class _Trailhead extends React.PureComponent {
       isModalOpen: true,
       showCardPanel: true,
       showCards: false,
+      // The params below are for FxA metrics
+      deviceId: "",
       flowId: "",
       flowBeginTime: 0,
     };
-    this.didFetch = false;
+    this.fxaMetricsInitialized = false;
   }
 
   get dialog() {
@@ -55,20 +57,25 @@ export class _Trailhead extends React.PureComponent {
       link.rel = "localization";
     });
 
-    if (this.props.fxaEndpoint && !this.didFetch) {
+    await this.componentWillUpdate(this.props);
+  }
+
+  // Get the fxa data if we don't have it yet from mount or update
+  async componentWillUpdate(props) {
+    if (props.fxaEndpoint && !this.fxaMetricsInitialized) {
       try {
-        this.didFetch = true;
-        const url = new URL(`${this.props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
+        this.fxaMetricsInitialized = true;
+        const url = new URL(`${props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
         this.addUtmParams(url);
         const response = await fetch(url, {credentials: "omit"});
         if (response.status === 200) {
-          const {flowId, flowBeginTime} = await response.json();
-          this.setState({flowId, flowBeginTime});
+          const {deviceId, flowId, flowBeginTime} = await response.json();
+          this.setState({deviceId, flowId, flowBeginTime});
         } else {
-          this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_FETCH_ERROR", value: response.status}}));
+          props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_FETCH_ERROR", value: response.status}}));
         }
       } catch (error) {
-        this.props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_ERROR"}}));
+        props.dispatch(ac.OnlyToMain({type: at.TELEMETRY_UNDESIRED_EVENT, data: {event: "FXA_METRICS_ERROR"}}));
       }
     }
   }
@@ -117,7 +124,17 @@ export class _Trailhead extends React.PureComponent {
     }
   }
 
-  onSubmit() {
+  onSubmit(event) {
+    // Dynamically require the email on submission so screen readers don't read
+    // out it's always required because there's also ways to skip the modal
+    const {email} = event.target.elements;
+    if (!email.value.length) {
+      email.required = true;
+      email.checkValidity();
+      event.preventDefault();
+      return;
+    }
+
     this.props.dispatch(ac.UserEvent({event: "SUBMIT_EMAIL", ...this._getFormInfo()}));
 
     global.addEventListener("visibilitychange", this.closeModal);
@@ -135,6 +152,9 @@ export class _Trailhead extends React.PureComponent {
     if (!ev || ev.type !== "visibilitychange") {
       this.props.dispatch(ac.UserEvent({event: "SKIPPED_SIGNIN", ...this._getFormInfo()}));
     }
+
+    // Bug 1190882 - Focus in a disappearing dialog confuses screen readers
+    this.props.document.activeElement.blur();
   }
 
   /**
@@ -155,6 +175,7 @@ export class _Trailhead extends React.PureComponent {
 
   hideCardPanel() {
     this.setState({showCardPanel: false});
+    this.props.onDismissBundle();
   }
 
   revealCards() {
@@ -194,6 +215,7 @@ export class _Trailhead extends React.PureComponent {
       this.addUtmParams(url, true);
 
       if (action.addFlowParams) {
+        url.searchParams.append("device_id", this.state.deviceId);
         url.searchParams.append("flow_id", this.state.flowId);
         url.searchParams.append("flow_begin_time", this.state.flowBeginTime);
       }
@@ -232,9 +254,9 @@ export class _Trailhead extends React.PureComponent {
             {this.getStringValue(content.learn.text)}
           </a>
         </div>
-        <div className="trailheadForm">
-          <h3 data-l10n-id={content.form.title.string_id}>{this.getStringValue(content.form.title)}</h3>
-          <p data-l10n-id={content.form.text.string_id}>{this.getStringValue(content.form.text)}</p>
+        <div role="group" aria-labelledby="joinFormHeader" aria-describedby="joinFormBody" className="trailheadForm">
+          <h3 id="joinFormHeader" data-l10n-id={content.form.title.string_id}>{this.getStringValue(content.form.title)}</h3>
+          <p id="joinFormBody" data-l10n-id={content.form.text.string_id}>{this.getStringValue(content.form.text)}</p>
           <form method="get" action={this.props.fxaEndpoint} target="_blank" rel="noopener noreferrer" onSubmit={this.onSubmit}>
             <input name="service" type="hidden" value="sync" />
             <input name="action" type="hidden" value="email" />
@@ -243,6 +265,7 @@ export class _Trailhead extends React.PureComponent {
             <input name="utm_source" type="hidden" value="activity-stream" />
             <input name="utm_campaign" type="hidden" value="firstrun" />
             <input name="utm_term" type="hidden" value={utm_term} />
+            <input name="device_id" type="hidden" value={this.state.deviceId} />
             <input name="flow_id" type="hidden" value={this.state.flowId} />
             <input name="flow_begin_time" type="hidden" value={this.state.flowBeginTime} />
             <input name="style" type="hidden" value="trailhead" />
@@ -252,7 +275,6 @@ export class _Trailhead extends React.PureComponent {
               placeholder={this.getStringValue(content.form.email)}
               name="email"
               type="email"
-              required="required"
               onInvalid={this.onInputInvalid}
               onChange={this.onInputChange} />
             <p className="trailheadTerms" data-l10n-id="onboarding-join-form-legal">

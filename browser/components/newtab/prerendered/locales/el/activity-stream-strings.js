@@ -41,7 +41,7 @@ window.gActivityStreamStrings = {
   "prefs_home_header": "Περιεχόμενο αρχικής σελίδας Firefox",
   "prefs_home_description": "Επιλέξτε τι περιεχόμενο θέλετε στην αρχική σελίδα του Firefox σας.",
   "prefs_content_discovery_header": "Αρχική Firefox",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
+  "prefs_content_discovery_description": "Η ανακάλυψη περιεχομένου στην Αρχική Firefox σάς επιτρέπει να ανακαλύψετε υψηλής ποιότητας, σχετικά άρθρα από όλο τον ιστό.",
   "prefs_content_discovery_button": "Απενεργοποίηση ανακάλυψης περιεχομένου",
   "prefs_section_rows_option": "{num} σειρά;{num} σειρές",
   "prefs_search_header": "Διαδικτυακή αναζήτηση",

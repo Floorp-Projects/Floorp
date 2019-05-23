@@ -108,7 +108,7 @@ window.gActivityStreamStrings = {
   "firstrun_continue_to_login": "Pokračovať",
   "firstrun_skip_login": "Preskočiť tento krok",
   "context_menu_title": "Otvorí ponuku",
-  "manual_migration_explanation2": "Vyskúšajte Firefox so záložkami, históriou prehliadania a heslami s iných prehliadačov.",
+  "manual_migration_explanation2": "Vyskúšajte Firefox so záložkami, históriou prehliadania a heslami z iných prehliadačov.",
   "manual_migration_cancel_button": "Nie, ďakujem",
   "manual_migration_import_button": "Importovať teraz"
 };

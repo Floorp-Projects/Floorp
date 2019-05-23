@@ -3864,9 +3864,10 @@ a.firstrun-link {
     color: var(--newtab-text-conditional-color);
     background: var(--trailhead-card-button-background-color);
     border: 0;
-    height: 30px;
+    margin: 14px;
     min-width: 70%;
-    padding: 0 14px; }
+    padding: 6px 14px;
+    white-space: pre-wrap; }
     .trailheadCard .onboardingButton:focus, .trailheadCard .onboardingButton:hover {
       box-shadow: none;
       background: var(--trailhead-card-button-background-hover-color); }
@@ -3875,15 +3876,14 @@ a.firstrun-link {
     .trailheadCard .onboardingButton:active {
       background: var(--trailhead-card-button-background-active-color); }
   .trailheadCard .onboardingButtonContainer {
-    height: 60px;
     position: absolute;
-    bottom: 0;
+    bottom: 16px;
     left: 0;
     width: 100%;
     text-align: center; }
 
 .inline-onboarding.activity-stream.welcome {
-  overflow: scroll; }
+  overflow-y: scroll; }
 
 .inline-onboarding .modalOverlayInner {
   position: absolute; }

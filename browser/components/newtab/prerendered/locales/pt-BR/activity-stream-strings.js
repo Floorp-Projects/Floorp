@@ -3,7 +3,7 @@ window.gActivityStreamStrings = {
   "newtab_page_title": "Nova aba",
   "header_top_sites": "Sites preferidos",
   "header_highlights": "Destaques",
-  "header_recommended_by": "Recomendado por {provider}",
+  "header_recommended_by": "Recomendado pelo {provider}",
   "context_menu_button_sr": "Abrir menu de contexto para {title}",
   "section_context_menu_button_sr": "Abrir o menu de contexto da seção",
   "type_label_visited": "Visitado",

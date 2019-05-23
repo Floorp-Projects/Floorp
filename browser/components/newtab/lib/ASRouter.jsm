@@ -58,9 +58,9 @@ const TRAILHEAD_CONFIG = {
   },
   LOCALES: ["en-US", "en-GB", "en-CA", "de", "de-DE", "fr", "fr-FR"],
   EXPERIMENT_RATIOS: [
-    ["", 1],
+    ["", 0],
     ["interrupts", 1],
-    ["triplets", 1],
+    ["triplets", 3],
   ],
 };
 
@@ -622,6 +622,15 @@ class _ASRouter {
     }
   }
 
+  async _hasAddonAttributionData() {
+    try {
+      const data = await AttributionCode.getAttrDataAsync() || {};
+      return data.source === "addons.mozilla.org";
+    } catch (e) {
+      return false;
+    }
+  }
+
   /**
    * _generateTrailheadBranches - Generates and returns Trailhead configuration and chooses an experiment
    *                             based on clientID and locale.
@@ -641,7 +650,7 @@ class _ASRouter {
 
     const locale = Services.locale.appLocaleAsLangTag;
 
-    if (TRAILHEAD_CONFIG.LOCALES.includes(locale)) {
+    if (TRAILHEAD_CONFIG.LOCALES.includes(locale) && !(await this._hasAddonAttributionData())) {
       const {userId} = ClientEnvironment;
       experiment = await chooseBranch(`${userId}-trailhead-experiments`, TRAILHEAD_CONFIG.EXPERIMENT_RATIOS);
 

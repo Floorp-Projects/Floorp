@@ -42,7 +42,7 @@ window.gActivityStreamStrings = {
   "prefs_home_description": "Selecciona el contenido que desea en la pantalla de inicio de Firefox.",
   "prefs_content_discovery_header": "Página de inicio de Firefox",
   "prefs_content_discovery_description": "Content Discovery en la página de inicio de Firefox le permite descubrir artículos de alta calidad y relevantes de toda la web.",
-  "prefs_content_discovery_button": "Desactivar Content Discovery",
+  "prefs_content_discovery_button": "Deshabilitar Content Discovery",
   "prefs_section_rows_option": "{num} fila;{num} filas",
   "prefs_search_header": "Búsqueda web",
   "prefs_topsites_description": "Los sitios que más visitas",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "context_menu_title": "Abrir menú",
   "manual_migration_explanation2": "Prueba Firefox con los marcadores, historial y contraseñas de otro navegador.",
   "manual_migration_cancel_button": "No, gracias",
-  "manual_migration_import_button": "Importar ahora",
-  "pocket_learn_more": "Saber más"
+  "manual_migration_import_button": "Importar ahora"
 };
