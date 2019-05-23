@@ -77,6 +77,17 @@ class Settings private constructor(context: Context) {
         ).apply()
     }
 
+    fun setAutoSize(newValue: Boolean) {
+        preferences.edit().putBoolean(appContext.getPreferenceKey(R.string.pref_key_accessibility_auto_size), newValue)
+            .apply()
+    }
+
+    val shouldUseAutoSize: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_accessibility_auto_size),
+            true
+        )
+
     fun setFontSizeFactor(newValue: Float) {
         preferences.edit().putFloat(appContext.getPreferenceKey(R.string.pref_key_accessibility_font_scale), newValue)
             .apply()
