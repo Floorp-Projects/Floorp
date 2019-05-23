@@ -75,7 +75,7 @@ class Core(private val context: Context) {
             trackingProtectionPolicy = createTrackingProtectionPolicy(),
             historyTrackingDelegate = HistoryDelegate(historyStorage),
             preferredColorScheme = getPreferredColorScheme(),
-            automaticFontSizeAdjustment = Settings.getInstance(context).fontSizeFactor == 1f
+            automaticFontSizeAdjustment = false
         )
 
         GeckoEngine(context, defaultSettings, runtime)
