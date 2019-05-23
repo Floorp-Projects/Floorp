@@ -60,6 +60,10 @@
             android:key="@string/pref_key_site_permissions"
             android:title="@string/preferences_site_permissions" />
         <androidx.preference.Preference
+            android:icon="@drawable/ic_delete"
+            android:key="@string/pref_key_delete_browsing_data"
+            android:title="@string/preferences_delete_browsing_data" />
+        <androidx.preference.Preference
             android:icon="@drawable/ic_data_collection"
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_choices" />

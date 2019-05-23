@@ -33,6 +33,7 @@ import org.mozilla.fenix.R.string.pref_key_accessibility
 import org.mozilla.fenix.R.string.pref_key_account
 import org.mozilla.fenix.R.string.pref_key_account_category
 import org.mozilla.fenix.R.string.pref_key_data_choices
+import org.mozilla.fenix.R.string.pref_key_delete_browsing_data
 import org.mozilla.fenix.R.string.pref_key_help
 import org.mozilla.fenix.R.string.pref_key_language
 import org.mozilla.fenix.R.string.pref_key_leakcanary
@@ -160,6 +161,9 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             }
             resources.getString(pref_key_account) -> {
                 navigateToAccountSettings()
+            }
+            resources.getString(pref_key_delete_browsing_data) -> {
+                navigateToDeleteBrowsingData()
             }
             resources.getString(pref_key_theme) -> {
                 navigateToThemeSettings()
@@ -290,6 +294,11 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     private fun navigateToAccountSettings() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
+    private fun navigateToDeleteBrowsingData() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToDeleteBrowsingDataFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 

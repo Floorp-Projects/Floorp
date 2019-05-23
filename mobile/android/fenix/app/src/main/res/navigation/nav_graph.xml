@@ -283,6 +283,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_trackingProtectionFragment"
             app:destination="@id/trackingProtectionFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_deleteBrowsingDataFragment"
+            app:destination="@id/deleteBrowsingDataFragment" />
     </fragment>
     <fragment
         android:id="@+id/dataChoicesFragment"
@@ -377,6 +380,11 @@
         <action
             android:id="@+id/action_trackingProtectionFragment_to_exceptionsFragment"
             app:destination="@id/exceptionsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/deleteBrowsingDataFragment"
+        android:name="org.mozilla.fenix.settings.DeleteBrowsingDataFragment"
+        android:label="DeleteBrowsingDataFragment">
     </fragment>
     <fragment
         android:id="@+id/exceptionsFragment"

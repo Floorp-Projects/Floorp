@@ -557,8 +557,12 @@
     <string name="preference_accessibility_text_size_summary">Make text on websites larger or smaller</string>
     <!-- Title for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Font Size</string>
+
     <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Automatic Font Sizing</string>
     <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_summary">Font size will match your Android settings. Disable to manage font size here.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Delete browsing data</string>
 </resources>
