@@ -180,6 +180,8 @@ interface nsIChannel : nsIRequest
      *
      * NOTE: Implementations should throw NS_ERROR_ALREADY_OPENED if the
      * channel is reopened.
+     * NOTE: Implementations should throw an error if the channel has been
+     * cancelled prior asyncOpen being called.
      *
      * @param aListener the nsIStreamListener implementation
      * @see nsIChannelEventSink for onChannelRedirect

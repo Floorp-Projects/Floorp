@@ -685,12 +685,13 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest,
 
   if (mListener) {
     nsCOMPtr<nsIStreamListener> listener(mListener);
+    mOnStartRequestCalled = true;
     rv = listener->OnStartRequest(aRequest);
   } else {
     rv = NS_ERROR_UNEXPECTED;
   }
-
   mOnStartRequestCalled = true;
+
   if (NS_FAILED(rv)) {
     Cancel(rv);
     return;
@@ -1260,6 +1261,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   MOZ_ASSERT(mListener);
   if (mListener) {
     nsCOMPtr<nsIStreamListener> listener(mListener);
+    mOnStopRequestCalled = true;
     listener->OnStopRequest(aRequest, mStatus);
   }
   mOnStopRequestCalled = true;
@@ -1401,11 +1403,13 @@ void HttpChannelChild::FailedAsyncOpen(const nsresult& status) {
   // Might be called twice in race condition in theory.
   // (one by RecvFailedAsyncOpen, another by
   // HttpBackgroundChannelChild::ActorFailed)
-  if (NS_WARN_IF(NS_FAILED(mStatus))) {
+  if (mOnStartRequestCalled) {
     return;
   }
 
-  mStatus = status;
+  if (NS_SUCCEEDED(mStatus)) {
+    mStatus = status;
+  }
 
   // We're already being called from IPDL, therefore already "async"
   HandleAsyncAbort();
@@ -1571,6 +1575,7 @@ void HttpChannelChild::DoNotifyListener() {
 
   if (mListener && !mOnStartRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
+    mOnStartRequestCalled = true;  // avoid reentrancy bugs by setting this now
     listener->OnStartRequest(this);
   }
   mOnStartRequestCalled = true;
@@ -1589,10 +1594,10 @@ void HttpChannelChild::ContinueDoNotifyListener() {
 
   if (mListener && !mOnStopRequestCalled) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    listener->OnStopRequest(this, mStatus);
-
     mOnStopRequestCalled = true;
+    listener->OnStopRequest(this, mStatus);
   }
+  mOnStopRequestCalled = true;
 
   // notify "http-on-stop-request" observers
   gHttpHandler->OnStopRequest(this);
@@ -2566,7 +2571,10 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   AssertPrivateBrowsingId();
 #endif
 
-  if (mCanceled) return mStatus;
+  if (mCanceled) {
+    ReleaseListeners();
+    return mStatus;
+  }
 
   NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
   NS_ENSURE_ARG_POINTER(listener);
@@ -2635,7 +2643,8 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
     // We may have been canceled already, either by on-modify-request
     // listeners or by load group observers; in that case, don't create IPDL
     // connection. See nsHttpChannel::AsyncOpen().
-    return NS_OK;
+    ReleaseListeners();
+    return mStatus;
   }
 
   // Set user agent override from docshell
@@ -2687,7 +2696,11 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
     // Fall through
   }
 
-  return ContinueAsyncOpen();
+  rv = ContinueAsyncOpen();
+  if (NS_FAILED(rv)) {
+    ReleaseListeners();
+  }
+  return rv;
 }
 
 // Assigns an nsIEventTarget to our IPDL actor so that IPC messages are sent to
@@ -3721,7 +3734,10 @@ nsresult HttpChannelChild::AsyncCallImpl(
 }
 
 nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer) {
-  ENSURE_CALLED_BEFORE_CONNECT();
+  // Normally this would be ENSURE_CALLED_BEFORE_CONNECT, but since the
+  // "connect" is done in the main process, and mRequestObserversCalled is never
+  // set in the ChannelChild, before connect basically means before asyncOpen.
+  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
   // remove old referrer if any, loop backwards
   for (int i = mClientSetRequestHeaders.Length() - 1; i >= 0; --i) {

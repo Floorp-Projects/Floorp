@@ -326,7 +326,7 @@ Preferences.resetBranch = function(prefBranch = "") {
     // The current implementation of nsIPrefBranch in Mozilla
     // doesn't implement resetBranch, so we do it ourselves.
     if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED)
-      this.reset(this._prefBranch.getChildList(prefBranch, []));
+      this.reset(this._prefBranch.getChildList(prefBranch));
     else
       throw ex;
   }

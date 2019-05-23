@@ -337,7 +337,7 @@ var SafeBrowsing = {
 
     // Get the different providers
     let branch = Services.prefs.getBranch("browser.safebrowsing.provider.");
-    let children = branch.getChildList("", {});
+    let children = branch.getChildList("");
     this.providers = {};
     this.listToProvider = {};
 
