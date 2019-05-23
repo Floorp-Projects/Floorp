@@ -1628,7 +1628,7 @@ class Section {
     if (data && Object.keys(data).length > 0) {
       let s = GenericSubsection.renderSubsectionHeader(process, true, section);
       let heading = document.createElement("h2");
-      heading.textContent = process;
+      document.l10n.setAttributes(heading, "about-telemetry-process", {process});
       s.appendChild(heading);
 
       this.renderData(data, s);
