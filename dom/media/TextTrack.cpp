@@ -54,24 +54,6 @@ static const char* ToReadyStateStr(const TextTrackReadyState aState) {
   return "Unknown";
 }
 
-static const char* ToTextTrackKindStr(const TextTrackKind aKind) {
-  switch (aKind) {
-    case TextTrackKind::Subtitles:
-      return "Subtitles";
-    case TextTrackKind::Captions:
-      return "Captions";
-    case TextTrackKind::Descriptions:
-      return "Descriptions";
-    case TextTrackKind::Chapters:
-      return "Chapters";
-    case TextTrackKind::Metadata:
-      return "Metadata";
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid kind.");
-  }
-  return "Unknown";
-}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(TextTrack, DOMEventTargetHelper, mCueList,
                                    mActiveCueList, mTextTrackList,
                                    mTrackElement)
@@ -130,8 +112,7 @@ void TextTrack::SetMode(TextTrackMode aValue) {
   if (mMode == aValue) {
     return;
   }
-  WEBVTT_LOG("Set mode=%s for track kind %s", ToStateStr(aValue),
-             ToTextTrackKindStr(mKind));
+  WEBVTT_LOG("Set mode=%s", ToStateStr(aValue));
   mMode = aValue;
 
   HTMLMediaElement* mediaElement = GetMediaElement();
@@ -147,12 +128,6 @@ void TextTrack::SetMode(TextTrackMode aValue) {
   }
   if (mediaElement) {
     mediaElement->NotifyTextTrackModeChanged();
-  }
-  // https://html.spec.whatwg.org/multipage/media.html#sourcing-out-of-band-text-tracks:start-the-track-processing-model
-  // Run the `start-the-track-processing-model` to track's corresponding track
-  // element whenever track's mode changes.
-  if (mTrackElement) {
-    mTrackElement->MaybeDispatchLoadResource();
   }
   // Ensure the TimeMarchesOn is called in case that the mCueList
   // is empty.
@@ -194,14 +169,6 @@ void TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv) {
   HTMLMediaElement* mediaElement = GetMediaElement();
   if (mediaElement) {
     mediaElement->NotifyCueRemoved(aCue);
-  }
-}
-
-void TextTrack::ClearAllCues() {
-  WEBVTT_LOG("ClearAllCues");
-  ErrorResult dummy;
-  while (!mCueList->IsEmpty()) {
-    RemoveCue(*(*mCueList)[0], dummy);
   }
 }
 
