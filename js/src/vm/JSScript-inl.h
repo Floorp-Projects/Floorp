@@ -183,7 +183,7 @@ inline bool JSScript::isDebuggee() const {
 
 inline js::jit::ICScript* JSScript::icScript() const {
   MOZ_ASSERT(hasICScript());
-  return types_->icScript();
+  return jitScript_->icScript();
 }
 
 #endif /* vm_JSScript_inl_h */

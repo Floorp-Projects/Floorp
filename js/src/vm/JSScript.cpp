@@ -4039,8 +4039,8 @@ size_t JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
   return mallocSizeOf(data_);
 }
 
-size_t JSScript::sizeOfTypeScript(mozilla::MallocSizeOf mallocSizeOf) const {
-  return types_ ? types_->sizeOfIncludingThis(mallocSizeOf) : 0;
+size_t JSScript::sizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf) const {
+  return jitScript_ ? jitScript_->sizeOfIncludingThis(mallocSizeOf) : 0;
 }
 
 js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
@@ -4061,8 +4061,8 @@ void JSScript::finalize(FreeOp* fop) {
 
   fop->runtime()->geckoProfiler().onScriptFinalized(this);
 
-  if (types_) {
-    types_->destroy(zone());
+  if (jitScript_) {
+    jitScript_->destroy(zone());
   }
 
   jit::DestroyJitScripts(fop, this);
@@ -5428,7 +5428,7 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   } else if (hasBaselineScript()) {
     jitCodeRaw_ = baseline->method()->raw();
     jitCodeSkipArgCheck_ = jitCodeRaw_;
-  } else if (types() && js::jit::JitOptions.baselineInterpreter) {
+  } else if (jitScript() && js::jit::JitOptions.baselineInterpreter) {
     jitCodeRaw_ = rt->jitRuntime()->baselineInterpreter().codeRaw();
     jitCodeSkipArgCheck_ = jitCodeRaw_;
   } else {
@@ -5511,7 +5511,7 @@ JS::ubi::Base::Size JS::ubi::Concrete<JSScript>::size(
   Size size = gc::Arena::thingSize(get().asTenured().getAllocKind());
 
   size += get().sizeOfData(mallocSizeOf);
-  size += get().sizeOfTypeScript(mallocSizeOf);
+  size += get().sizeOfJitScript(mallocSizeOf);
 
   size_t baselineSize = 0;
   size_t baselineStubsSize = 0;

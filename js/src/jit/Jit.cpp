@@ -141,7 +141,7 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
     // Make sure we can enter Baseline Interpreter or JIT code. Note that
     // the prologue has warm-up checks to tier up if needed.
     if (JitOptions.baselineInterpreter) {
-      if (script->types()) {
+      if (script->jitScript()) {
         break;
       }
     } else {
