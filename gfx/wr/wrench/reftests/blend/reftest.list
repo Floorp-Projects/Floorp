@@ -1,15 +1,17 @@
-== multiply.yaml multiply-ref.yaml
-== multiply-2.yaml multiply-2-ref.yaml
-== color_targets(3) alpha_targets(0) multiply-3.yaml multiply-2-ref.yaml
-== difference.yaml difference-ref.yaml
-fuzzy(1,30000) == difference-transparent.yaml difference-transparent-ref.yaml
-== darken.yaml darken-ref.yaml
-== lighten.yaml lighten-ref.yaml
+# Some tests in this file skipped on debug Android because of panic,
+# GL error 502 at blit_framebuffer
+skip_on(android,debug) == multiply.yaml multiply-ref.yaml
+skip_on(android,debug) == multiply-2.yaml multiply-2-ref.yaml
+skip_on(android,debug) == color_targets(3) alpha_targets(0) multiply-3.yaml multiply-2-ref.yaml
+skip_on(android,debug) == difference.yaml difference-ref.yaml
+skip_on(android,debug) fuzzy(1,30000) == difference-transparent.yaml difference-transparent-ref.yaml
+skip_on(android,debug) == darken.yaml darken-ref.yaml
+skip_on(android,debug) == lighten.yaml lighten-ref.yaml
 
-== repeated-difference.yaml repeated-difference-ref.yaml
+skip_on(android,debug) == repeated-difference.yaml repeated-difference-ref.yaml
 
 == isolated.yaml isolated-ref.yaml
-== isolated-2.yaml isolated-2-ref.yaml
+skip_on(android,debug) == isolated-2.yaml isolated-2-ref.yaml
 == isolated-with-filter.yaml isolated-ref.yaml
 == isolated-premultiplied.yaml blank.yaml
 == isolated-premultiplied-2.yaml isolated-premultiplied-2-ref.yaml
@@ -21,4 +23,4 @@ fuzzy(1,30000) == difference-transparent.yaml difference-transparent-ref.yaml
 fuzzy(1,2502) == transparent-composite-1.yaml transparent-composite-1-ref.yaml
 fuzzy(1,2502) == transparent-composite-2.yaml transparent-composite-2-ref.yaml
 
-== multi-mix-blend-mode.yaml multi-mix-blend-mode-ref.yaml
+skip_on(android,debug) == multi-mix-blend-mode.yaml multi-mix-blend-mode-ref.yaml
