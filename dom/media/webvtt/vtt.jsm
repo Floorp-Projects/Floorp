@@ -1090,6 +1090,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     }
   }
 
+  // It's used to record how many cues we process in the last `processCues` run.
+  var lastDisplayedCueNums = 0;
+
   // Runs the processing model over the cues and regions passed to it.
   // Spec https://www.w3.org/TR/webvtt1/#processing-model
   // @parem window : JS window
@@ -1102,6 +1105,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     if (!cues) {
       LOG(`Abort processing because no cue.`);
       clearAllCuesDiv(overlay);
+      lastDisplayedCueNums = 0;
       return;
     }
 
@@ -1118,8 +1122,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
     // Determine if we need to compute the display states of the cues. This could
     // be the case if a cue's state has been changed since the last computation or
-    // if it has not been computed yet.
+    // if it has not been computed yet, or the displayed cues number changes.
     function shouldCompute(cues) {
+      if (lastDisplayedCueNums != cues.length) {
+        return true;
+      }
+
       if (overlay.lastControlBarShownStatus != controlBarShown) {
         return true;
       }
@@ -1163,8 +1171,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     let regionNodeBoxes = {};
     let regionNodeBox;
 
-    LOG(`=== processCues ===`);
-
+    LOG(`=== processCues, ` +
+        `lastDisplayedCueNums=${lastDisplayedCueNums}, currentCueNums=${cues.length} ===`);
+    lastDisplayedCueNums = cues.length;
     for (let i = 0; i < cues.length; i++) {
       cue = cues[i];
       if (cue.region != null) {
