@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebVTT : cues with overlapping time should be displayed correctly </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="manifest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<video id ="v" src="gizmo.mp4" controls>
+<script class="testbody" type="text/javascript">
+/**
+ * This test is used to ensure that when cues with overlapping times, the one
+ * with earlier end timestamp should disappear when the media time reaches its
+ * end time. In this test, we have two cues with overlapping time, when the video
+ * starts, both cues should be displayed. When the time passes 1 seconds, the
+ * first cue should disappear and the second cues should be still displayed.
+ */
+var CUES_INFO = [
+  { id: 0, startTime: 0, endTime: 1, text: "This is cue 0."},
+  { id: 1, startTime: 0, endTime: 6, text: "This is cue 1."},
+];
+
+var video = document.getElementById("v");
+
+async function startTest() {
+  const cues = createCues();
+  await startVideo();
+
+  await waitUntilCueIsShowing(cues[0]);
+  await waitUntilCueIsShowing(cues[1]);
+
+  await waitUntilCueIsHiding(cues[0]);
+  await waitUntilCueIsShowing(cues[1]);
+  IsVideoStillPlaying();
+
+  endTestAndClearVideo();
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = startTest;
+
+/**
+ * The following are test helper functions.
+ */
+function createCues() {
+  let track = video.addTextTrack("subtitles");
+  track.mode = "showing";
+  let cue0 = new VTTCue(CUES_INFO[0].startTime, CUES_INFO[0].endTime,
+                        CUES_INFO[0].text);
+  cue0.id = CUES_INFO[0].id;
+  let cue1 = new VTTCue(CUES_INFO[1].startTime, CUES_INFO[1].endTime,
+                        CUES_INFO[1].text);
+  cue1.id = CUES_INFO[1].id;
+  track.addCue(cue0);
+  track.addCue(cue1);
+  // Convert them to chrome objects in order to use chrome privilege APIs.
+  cue0 = SpecialPowers.wrap(cue0);
+  cue1 = SpecialPowers.wrap(cue1);
+  return [cue0, cue1];
+}
+
+async function startVideo() {
+  info(`start play video`);
+  const played = video && await video.play().then(() => true, () => false);
+  ok(played, "video has started playing");
+}
+
+async function waitUntilCueIsShowing(cue) {
+  info(`wait until cue ${cue.id} is showing`);
+  // cue has not been showing yet.
+  if (!cue.getActive) {
+    await once(cue, "enter");
+  }
+  info(`video current time=${video.currentTime}`);
+  ok(cue.getActive, `cue ${cue.id} is showing`);
+}
+
+async function waitUntilCueIsHiding(cue) {
+  info(`wait until cue ${cue.id} is hiding`);
+  // cue has not been hidden yet.
+  if (cue.getActive) {
+    await once(cue, "exit");
+  }
+  info(`video current time=${video.currentTime}`);
+  ok(!cue.getActive, `cue ${cue.id} is hidding`);
+}
+
+function IsVideoStillPlaying() {
+  ok(!video.paused, `video is still playing, currentTime=${video.currentTime}`);
+}
+
+function endTestAndClearVideo() {
+  removeNodeAndSource(video);
+  SimpleTest.finish();
+}
+
+</script>
+</body>
+</html>
