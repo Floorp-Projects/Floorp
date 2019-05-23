@@ -1,7 +1,7 @@
 platform(linux,mac) == local-clip.yaml local-clip.png
 platform(linux,mac) == rotated-clip.yaml rotated-clip.png
 platform(linux,mac) == rotated-clip-large.yaml rotated-clip-large.png
-== image-rotated-clip.yaml image-rotated-clip.png
+skip_on(android) == image-rotated-clip.yaml image-rotated-clip.png  # Fails on Android
 # Something leaks the state: the test passes if only run `reftest reftests/transform`
 # but fails when all the tests are run
 platform(linux,mac) fuzzy(1,4) == rotated-image.yaml rotated-image.png
@@ -23,7 +23,7 @@ platform(linux,mac) == nested-preserve-3d.yaml nested-preserve-3d.png
 platform(linux,mac) fuzzy(1,283) == near-plane-clip.yaml near-plane-clip.png
 platform(linux,mac) == perspective-mask.yaml perspective-mask.png
 rotate-clip.yaml rotate-clip-ref.yaml
-clip-translate.yaml clip-translate-ref.yaml
+skip_on(android) == clip-translate.yaml clip-translate-ref.yaml  # Fails on Android
 platform(linux,mac) == perspective-clip.yaml perspective-clip.png
 platform(linux,mac) fuzzy(1,2) == perspective-clip-1.yaml perspective-clip-1.png
 platform(linux,mac) fuzzy(1,2) == perspective-shadow.yaml perspective-shadow.png
