@@ -54,6 +54,16 @@ class APZCTreeManagerTester : public APZCTesterBase {
     }
   }
 
+  // A convenience function for letting a test modify the frame metrics
+  // stored on a particular layer. The layer doesn't let us modify it in-place,
+  // so we take care of the copying in this function.
+  template <typename Callback>
+  void ModifyFrameMetrics(Layer* aLayer, Callback aCallback) {
+    ScrollMetadata metadata = aLayer->GetScrollMetadata(0);
+    aCallback(metadata.GetMetrics());
+    aLayer->SetScrollMetadata(metadata);
+  }
+
   nsTArray<RefPtr<Layer> > layers;
   RefPtr<LayerManager> lm;
   RefPtr<Layer> root;
