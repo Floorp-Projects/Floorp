@@ -20,6 +20,17 @@ class OnboardingFirefoxAccountViewHolder(private val view: View) : RecyclerView.
     }
 
     fun bind(autoSignedIn: Boolean) {
+        updateHeaderText(autoSignedIn)
+        updateButtonVisibility(autoSignedIn)
+    }
+
+    private fun updateButtonVisibility(autoSignedIn: Boolean) {
+        view.turn_on_sync_button.visibility = if (autoSignedIn) View.GONE else View.VISIBLE
+        view.stay_signed_in_button.visibility = if (autoSignedIn) View.VISIBLE else View.GONE
+        view.sign_out_button.visibility = if (autoSignedIn) View.VISIBLE else View.GONE
+    }
+
+    private fun updateHeaderText(autoSignedIn: Boolean) {
         val appName = view.context.getString(R.string.app_name)
 
         val icon =
@@ -30,10 +41,6 @@ class OnboardingFirefoxAccountViewHolder(private val view: View) : RecyclerView.
         view.header_text.text =
             if (!autoSignedIn) view.context.getString(R.string.onboarding_firefox_account_auto_signin_header)
             else view.context.getString(R.string.onboarding_firefox_account_header, appName)
-
-        view.turn_on_sync_button.visibility = if (autoSignedIn) View.GONE else View.VISIBLE
-        view.stay_signed_in_button.visibility = if (autoSignedIn) View.VISIBLE else View.GONE
-        view.sign_out_button.visibility = if (autoSignedIn) View.VISIBLE else View.GONE
     }
 
     companion object {

@@ -26,6 +26,9 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.BOTTOM
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.END
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.START
@@ -67,7 +70,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class HomeFragment : Fragment(), CoroutineScope {
+class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
     private var tabCollectionObserver: Observer<List<TabCollection>>? = null
@@ -209,6 +212,8 @@ class HomeFragment : Fragment(), CoroutineScope {
         homeLayout?.progress =
             if (homeViewModel?.motionLayoutProgress ?: 0F > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
         (activity as AppCompatActivity).supportActionBar?.hide()
+
+        requireComponents.backgroundServices.accountManager.register(this, owner = this)
     }
 
     @SuppressWarnings("ComplexMethod")
@@ -613,6 +618,11 @@ class HomeFragment : Fragment(), CoroutineScope {
         )
     }
 
+    private fun emitAccountChanges() {
+        val mode = currentMode()
+        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+    }
+
     private fun showCollectionCreationFragment(
         selectedTabId: String? = null,
         selectedTabCollection: TabCollection? = null,
@@ -639,7 +649,6 @@ class HomeFragment : Fragment(), CoroutineScope {
     }
 
     private fun currentMode(): Mode = if (!onboarding.userHasBeenOnboarded()) {
-        // TODO monitor account state changes somewhere in this class via AccountObserver + `accountManager.register()`.
         val account = requireComponents.backgroundServices.accountManager.authenticatedAccount()
         if (account == null) {
             Mode.Onboarding(OnboardingState.SignedOut)
@@ -651,6 +660,11 @@ class HomeFragment : Fragment(), CoroutineScope {
     } else {
         Mode.Normal
     }
+
+    override fun onAuthenticated(account: OAuthAccount) { emitAccountChanges() }
+    override fun onError(error: Exception) { emitAccountChanges() }
+    override fun onLoggedOut() { emitAccountChanges() }
+    override fun onProfileUpdated(profile: Profile) { emitAccountChanges() }
 
     companion object {
         private const val toolbarPaddingDp = 12f

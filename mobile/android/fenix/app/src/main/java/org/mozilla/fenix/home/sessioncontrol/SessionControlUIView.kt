@@ -64,7 +64,6 @@ private fun privateModeAdapterItems(tabs: List<Tab>): List<AdapterItem> {
 private fun onboardingAdapterItems(onboardingState: OnboardingState): List<AdapterItem> {
     val items: MutableList<AdapterItem> = mutableListOf(AdapterItem.OnboardingHeader)
 
-    // TODO customize the UI based on different account states.
     // Customize FxA items based on where we are with the account state:
     items.addAll(when (onboardingState) {
         OnboardingState.SignedOut -> {

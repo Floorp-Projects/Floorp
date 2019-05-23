@@ -69,11 +69,11 @@ fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
  * Describes various onboarding states.
  */
 enum class OnboardingState {
-    // signed out, no account carried over from Fennec.
+    // Signed out, no account carried over from Fennec.
     SignedOut,
-    // auto-signed in, via a Fennec account.
+    // Auto-signed in, via a Fennec account.
     AutoSignedIn,
-    // manually signed in while in onboarding.
+    // Manually signed in while in onboarding.
     ManuallySignedIn
 }
 
