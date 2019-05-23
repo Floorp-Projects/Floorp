@@ -37,7 +37,9 @@ add_task(async function() {
   ok(refreshedDoc.querySelector(".debug-target-info"),
      "about:devtools-toolbox header is correctly displayed");
 
+  const onToolboxDestroy = gDevTools.once("toolbox-destroyed");
   await removeTab(tab);
+  await onToolboxDestroy;
   await removeTab(targetTab);
 });
 
