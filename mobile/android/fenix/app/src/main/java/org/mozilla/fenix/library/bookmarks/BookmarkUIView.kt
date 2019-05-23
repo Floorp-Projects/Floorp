@@ -129,10 +129,13 @@ class BookmarkUIView(
         (activity as? AppCompatActivity)?.title =
             if (root?.guid in setOf(
                     BookmarkRoot.Mobile.id,
-                    BookmarkRoot.Root.id,
                     null
                 )
-            ) context.getString(R.string.library_bookmarks) else root!!.title
+            ) {
+                context.getString(R.string.library_bookmarks)
+            } else {
+                root!!.title
+            }
     }
 
     private fun themeToolbar(

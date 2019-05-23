@@ -72,6 +72,9 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     override val coroutineContext: CoroutineContext
         get() = Main + job
 
+    // Map of internal "root titles" to user friendly labels.
+    private lateinit var rootTitles: Map<String, String>
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
         bookmarkComponent = BookmarkComponent(
@@ -96,6 +99,18 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
         return view
     }
 
+    // Fill out our title map once we have context.
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        rootTitles = mapOf(
+            "root" to context.getString(R.string.library_desktop_bookmarks_root),
+            "menu" to context.getString(R.string.library_desktop_bookmarks_menu),
+            "toolbar" to context.getString(R.string.library_desktop_bookmarks_toolbar),
+            "unfiled" to context.getString(R.string.library_desktop_bookmarks_unfiled)
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
@@ -116,7 +131,9 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     private fun loadInitialBookmarkFolder(currentGuid: String): Job {
         return launch(IO) {
-            currentRoot = requireComponents.core.bookmarksStorage.getTree(currentGuid) as BookmarkNode
+            currentRoot = withOptionalDesktopFolders(
+                requireComponents.core.bookmarksStorage.getTree(currentGuid)
+            ) as BookmarkNode
 
             launch(Main) {
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot!!))
@@ -349,8 +366,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     override fun onProfileUpdated(profile: Profile) {
     }
 
-    fun getBookmarks() = (bookmarkComponent.uiView as BookmarkUIView).tree?.children
-    fun getSelectedBookmarks() = (bookmarkComponent.uiView as BookmarkUIView).getSelected()
+    private fun getSelectedBookmarks() = (bookmarkComponent.uiView as BookmarkUIView).getSelected()
 
     private suspend fun deleteSelectedBookmarks(
         selected: Set<BookmarkNode> = getSelectedBookmarks(),
@@ -362,7 +378,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     }
 
     private suspend fun refreshBookmarks(components: Components = requireComponents) {
-        components.core.bookmarksStorage.getTree(currentRoot!!.guid, false)
+        withOptionalDesktopFolders(components.core.bookmarksStorage.getTree(currentRoot!!.guid, false))
             ?.let { node ->
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(node))
             }
@@ -371,6 +387,98 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     private fun BookmarkNode.copyUrl(context: Context) {
         val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipBoard.primaryClip = ClipData.newPlainText(url, url)
+    }
+
+    @SuppressWarnings("ReturnCount")
+    private suspend fun withOptionalDesktopFolders(node: BookmarkNode?): BookmarkNode? {
+        // No-op if node is missing.
+        if (node == null) {
+            return null
+        }
+
+        // If we're in the mobile root, add-in a synthetic "Desktop Bookmarks" folder.
+        if (node.guid == BookmarkRoot.Mobile.id) {
+            // We're going to make a copy of the mobile node, and add-in a synthetic child folder to the top of the
+            // children's list that contains all of the desktop roots.
+            val childrenWithVirtualFolder: MutableList<BookmarkNode> = mutableListOf()
+            virtualDesktopFolder()?.let { childrenWithVirtualFolder.add(it) }
+
+            node.children?.let { children ->
+                childrenWithVirtualFolder.addAll(children)
+            }
+
+            return BookmarkNode(
+                type = node.type,
+                guid = node.guid,
+                parentGuid = node.parentGuid,
+                position = node.position,
+                title = node.title,
+                url = node.url,
+                children = childrenWithVirtualFolder
+            )
+
+        // If we're looking at the root, that means we're in the "Desktop Bookmarks" folder.
+        // Rename its child roots and remove the mobile root.
+        } else if (node.guid == BookmarkRoot.Root.id) {
+            return BookmarkNode(
+                type = node.type,
+                guid = node.guid,
+                parentGuid = node.parentGuid,
+                position = node.position,
+                title = rootTitles[node.title],
+                url = node.url,
+                children = processDesktopRoots(node.children)
+            )
+        // If we're looking at one of the desktop roots, change their titles to friendly names.
+        } else if (node.guid in listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id)) {
+            return BookmarkNode(
+                type = node.type,
+                guid = node.guid,
+                parentGuid = node.parentGuid,
+                position = node.position,
+                title = rootTitles[node.title],
+                url = node.url,
+                children = node.children
+            )
+        }
+
+        // Otherwise, just return the node as-is.
+        return node
+    }
+
+    private suspend fun virtualDesktopFolder(): BookmarkNode? {
+        val rootNode = requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, false)
+            ?: return null
+        return BookmarkNode(
+            type = rootNode.type,
+            guid = rootNode.guid,
+            parentGuid = rootNode.parentGuid,
+            position = rootNode.position,
+            title = rootTitles[rootNode.title],
+            url = rootNode.url,
+            children = rootNode.children
+        )
+    }
+
+    /**
+     * Removes 'mobile' root (to avoid a cyclical bookmarks tree in the UI) and renames other roots to friendly titles.
+     */
+    private fun processDesktopRoots(roots: List<BookmarkNode>?): List<BookmarkNode>? {
+        if (roots == null) {
+            return null
+        }
+
+        return roots.filter { rootTitles.containsKey(it.title) }.map {
+            BookmarkNode(
+                type = it.type,
+                guid = it.guid,
+                parentGuid = it.parentGuid,
+                position = it.position,
+                title = rootTitles[it.title],
+                url = it.url,
+                children = it.children
+            )
+        }
     }
 }
 

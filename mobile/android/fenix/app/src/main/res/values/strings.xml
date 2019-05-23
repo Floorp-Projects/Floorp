@@ -245,6 +245,14 @@
     <string name="library_downloads">Downloads</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Bookmarks</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Desktop Bookmarks</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Bookmarks Menu</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Bookmarks Toolbar</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Other Bookmarks</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">History</string>
     <!-- Option in Library to open Reading List -->
