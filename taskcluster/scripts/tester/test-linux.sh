@@ -6,11 +6,9 @@ echo "running as" $(id)
 
 # Detect release version.
 . /etc/lsb-release
-if [ "${DISTRIB_RELEASE}" == "12.04" ]; then
-    echo "Ubuntu 12.04 not supported"
+if [ "${DISTRIB_RELEASE}" != "16.04" ]; then
+    echo "Ubuntu 16.04 required"
     exit 1
-elif [ "${DISTRIB_RELEASE}" == "16.04" ]; then
-    UBUNTU_1604=1
 fi
 
 ####
@@ -27,6 +25,7 @@ fi
 : MOZHARNESS_OPTIONS            ${MOZHARNESS_OPTIONS}
 : NEED_XVFB                     ${NEED_XVFB:=true}
 : NEED_WINDOW_MANAGER           ${NEED_WINDOW_MANAGER:=false}
+: NEED_COMPIZ                   ${NEED_COMPIZ}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
 : START_VNC                     ${START_VNC:=false}
 : TASKCLUSTER_INTERACTIVE       ${TASKCLUSTER_INTERACTIVE:=false}
@@ -151,17 +150,13 @@ if $NEED_WINDOW_MANAGER; then
     # credit card numbers.
     eval `dbus-launch --sh-syntax`
     eval `echo '' | /usr/bin/gnome-keyring-daemon -r -d --unlock --components=secrets`
-
-    if [ "${UBUNTU_1604}" ]; then
-        # start compiz for our window manager
-        compiz 2>&1 &
-        #TODO: how to determine if compiz starts correctly?
-    fi
 fi
 
-if [ "${UBUNTU_1604}" ]; then
-    maybe_start_pulse
+if $NEED_COMPIZ; then
+    compiz 2>&1 &
 fi
+
+maybe_start_pulse
 
 # For telemetry purposes, the build process wants information about the
 # source it is running
