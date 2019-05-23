@@ -6,9 +6,9 @@ Rust crate for a convenient RAII scope guard that will run a given closure when
 it goes out of scope, even if the code between panics (assuming unwinding panic).
 
 The `defer!` macro and `guard` are `no_std` compatible (require only core),
-but the on unwinding strategy requires linking to `std`.
+but the on unwinding / not on uwinding strategies requires linking to `std`.
 
-Requires Rust 1.11.
+Requires Rust 1.20.
 
 
 Please read the `API documentation here`__
@@ -47,11 +47,33 @@ How to use
             let _ = f.sync_all();
         });
         // Access the file through the scope guard itself
-        file.write(b"test me\n").unwrap();
+        file.write_all(b"test me\n").unwrap();
     }
 
 Recent Changes
 --------------
+
+- 1.0.0
+
+  - Change the closure type from ``FnMut(&mut T)`` to ``FnOnce(T)``:
+    Passing the inner value by value instead of a mutable reference is a
+    breaking change, but allows the guard closure to consume it. (by @tormol)
+
+  - Add ``defer_on_success!{}``, ``guard_on_success()`` and ``OnSuccess``
+    strategy, which triggers when scope is exited *without* panic. It's the
+    opposite to ``OnUnwind`` / ``guard_on_unwind()`` / ``defer_on_unwind!{}``.
+
+  - Add ``ScopeGuard::into_inner()``, which "defuses" the guard and returns the
+    guarded value. (by @tormol)
+
+  - Implement ``Sync`` for guards with non-``Sync`` closures.
+
+  - Require Rust 1.20
+
+- 0.3.3
+
+  - Use ``#[inline]`` on a few more functions by @stjepang (#14)
+  - Add examples to crate documentation
 
 - 0.3.2
 

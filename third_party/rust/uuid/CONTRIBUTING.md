@@ -88,7 +88,7 @@ If the pull request is still a work in progress, prepend`[WIP] ` in your
 title. `WIP bot` will make sure that the PR doesn't accidentally get merged.
 
 > Uuid Project has a minimum rust version policy. Currently `uuid` should 
-compile with atleast `1.18.0`, and is enforced on our CI builds.
+compile with atleast `1.22.0`, and is enforced on our CI builds.
 
 When you feel that the PR is ready, please ping one of the maintainers so
 they can review your changes.
