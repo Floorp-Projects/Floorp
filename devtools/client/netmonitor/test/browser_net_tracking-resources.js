@@ -30,8 +30,12 @@ add_task(async function() {
   // Execute request with third party tracking protection flag.
   await performRequests(monitor, tab, 1);
 
-  const requests = document.querySelectorAll(".request-list-item .tracking-resource");
-  is(requests.length, 1, "There should be one tracking request");
+  const domainRequests =
+    document.querySelectorAll(".requests-list-domain .tracking-resource");
+  const UrlRequests = document.querySelectorAll(".requests-list-url .tracking-resource");
+
+  is(domainRequests.length, 1, "There should be one domain column tracking request");
+  is(UrlRequests.length, 1, "There should be one URL column tracking request");
 
   await teardown(monitor);
 });
