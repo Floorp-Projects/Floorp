@@ -1,3 +1,130 @@
+
+CHANGES BETWEEN 2.9.1 and 2.10
+
+  I. IMPORTANT CHANGES
+
+    - A bunch  of new functions has  been added to access  and process
+      COLR/CPAL data of OpenType fonts with color-layered glyphs.
+
+        FT_Palette_Data_Get
+          Retrieve color palette data.
+        FT_Palette_Select
+          Select and activate a color palette for color-layered
+          glyphs.
+        FT_Palette_Set_Foreground_Color
+          Set text foreground color for palette index 0xFFFF.
+
+        FT_Get_Color_Glyph_Layer
+          Get color layers for a given glyph (using an interator
+          object).
+
+        FT_Bitmap_Blend
+          Blend one bitmap onto another with a given color.
+
+    - An   experimental  feature   is   the  new   behaviour  of   the
+      `FT_LOAD_COLOR' load  flag for color-layered  glyphs: Internally
+      it  sets a  flag so  that  if `FT_Render_Glyph'  is called  with
+      `FT_RENDER_MODE_NORMAL'      (or       `FT_Load_Glyph'      with
+      `FT_LOAD_RENDER'), a default blending  of the color glyph layers
+      will happen automatically for convenience.
+
+    - As  a   GSoC  2018   project,  Nikhil   Ramakrishnan  completely
+      overhauled and modernized the API reference.
+
+
+  II. MISCELLANEOUS
+
+    - The  logic for  computing  the global  ascender, descender,  and
+      height  of  OpenType  fonts   has  been  slightly  adjusted  for
+      consistency.
+
+      . If the `useTypoMetrics' flag (i.e., bit 7 in the `fsSelection'
+        field) in the  `OS/2' table is set, use the  `sTypo' fields in
+        `OS/2' unconditionally.
+      . Otherwise use  the metrics data from the `hhea'  table (if not
+        zero).
+      . Otherwise use the `sTypo' fields from the `OS/2' table (if not
+        zero).
+      . Otherwise use the `usWin' data from the `OS/2' table as a last
+        resort.
+
+      Variable fonts will apply the `MVAR' deltas to whichever metrics
+      were picked.
+
+    - `TT_Set_MM_Blend' could  fail if  call repeatedly with  the same
+      arguments.
+
+    - The precision  of handling  deltas in  Variation Fonts  has been
+      increased.  The  problem did only show  up with multidimensional
+      designspaces.
+
+    - New function `FT_Library_SetLcdGeometry' to  set up the geometry
+      of LCD subpixels.
+
+    - FreeType now uses the `defaultChar' property of PCF fonts to set
+      the  glyph for  the undefined  character  at glyph  index 0  (as
+      FreeType already does for all other supported font formats).  As
+      a consequence,  the order of  glyphs of  a PCF font  if accessed
+      with  FreeType  can  be   different  now  compared  to  previous
+      versions.
+
+      This change doesn't affect PCF font access with cmaps.
+
+    - `FT_Select_Charmap' has  been changed  to allow  parameter value
+      `FT_ENCODING_NONE', which is valid for BDF, PCF, and Windows FNT
+      formats to  access built-in cmaps  that don't have  a predefined
+      `FT_Encoding' value.
+
+    - A previously  reserved field in the  `FT_GlyphSlotRec' structure
+      now holds the glyph index.
+
+    - On Win32 platforms,  the use of `_DLL' to build  the library has
+      been replaced with `DLL_EXPORT' and `DLL_IMPORT'.
+
+    - The usual round  of fuzzer bug fixes to  better reject malformed
+      fonts.
+
+    - `FT_Outline_New_Internal'  and  `FT_Outline_Done_Internal'  have
+      been removed.  These two functions were public by oversight only
+      and were never documented.
+
+    - A new  function `FT_Error_String' returns descriptions  of error
+      codes if  configuration macro  FT_CONFIG_OPTION_ERROR_STRINGS is
+      defined.
+
+    - `FT_Set_MM_WeightVector'  and  `FT_Get_MM_WeightVector' are  new
+      functions limited to Adobe MultiMaster fonts to directly set and
+      get the weight vector.
+
+    - Support for Position Independent Code as needed by  systems that
+      prohibit  automatic  address  fixups,  such  as BREW,  has  been
+      removed.  [Compilation with modern compilers that use flags like
+      `-fPIC' or `-fPIE' is not affected.]
+
+    - The  `ftdump' demo  program has  new  options `-c'  and `-C'  to
+      display charmaps  in compact and detailed  format, respectively.
+      Option `-V' has been removed.
+
+    - The `ftview', `ftstring',  and `ftgrid' demo programs  use a new
+      command line option `-d' to  specify the program window's width,
+      height, and color depth.
+
+    - The `ftview' demo program now  displays red boxes for zero-width
+      glyphs.
+
+    - `ftglyph'   has   limited   support  to   display   fonts   with
+      color-layered glyphs.  This will be improved later on.
+
+    - `ftgrid' can now display bitmap fonts also.
+
+    - The `ttdebug'  demo program has  a new  option `-f' to  select a
+      member of a TrueType collection (TTC).
+
+    - Other various improvements to the demo programs.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.9 and 2.9.1
 
   I. IMPORTANT BUG FIXES
@@ -8,7 +135,7 @@ CHANGES BETWEEN 2.9 and 2.9.1
     - CVE-2018-6942: Older  FreeType versions  can crash  with certain
       malformed variation fonts.
 
-        http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6942
+        https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6942
 
 
   II. MISCELLANEOUS
@@ -232,7 +359,7 @@ CHANGES BETWEEN 2.7.1 and 2.8
       following properties can be  handled: stem darkening, LCD filter
       weights, and the random seed for the `random' CFF operator.
 
-    - The PCF change to show more `colourful' family names (introduced
+    - The PCF change to show more `colorful'  family names (introduced
       in version 2.7.1) was too radical; it can now be configured with
       PCF_CONFIG_OPTION_LONG_FAMILY_NAMES   at   compile   time.    If
       activated, it can  be switched off at run time  with the new pcf
@@ -383,7 +510,7 @@ CHANGES BETWEEN 2.7 and 2.7.1
       and the number of CVT entries.  Please report if you encounter a
       font where the selected values are not adequate.
 
-    - PCF family names are made more `colourful'; they now include the
+    - PCF family names are made more `colorful';  they now include the
       foundry  and information  whether they contain  wide characters.
       For example,  you no longer get `Fixed' but  rather `Sony Fixed'
       or `Misc Fixed Wide'.
@@ -667,8 +794,8 @@ CHANGES BETWEEN 2.6.1 and 2.6.2
     - The `ftstring' demo program now supports subpixel rendering; use
       key `l' to cycle through the LCD modes.
 
-    - The `ftstring'  demo program now supports  colour rendering; use
-      the `space' key to cycle through various colour combinations.
+    - The `ftstring'  demo program now supports  color rendering;  use
+      the `space' key to cycle through various color combinations.
 
     - The graphical demo programs now use a default gamma value of 1.8
       (instead of 1.2).
@@ -1325,7 +1452,7 @@ CHANGES BETWEEN 2.4.10 and 2.4.11
 
       Originally, it was a separate patch available from
 
-        http://www.infinality.net/blog/
+        https://web.archive.org/web/20150710073951/http://www.infinality.net:80/blog/
 
       and which has been integrated.
 
@@ -4047,7 +4174,7 @@ CHANGES BETWEEN beta8 and 2.0
     untested for now.
 
   - Updated `docs/docmaker.py', a draft  API reference is available at
-    http://www.freetype.org/ft2api.html.
+    https://web.archive.org/web/20001215173400/http://www.freetype.org:80/ft2api.html.
 
   - Changed `type1' to use `psaux'.
 
@@ -5017,7 +5144,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright 2000-2018 by
+Copyright (C) 2000-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,
