@@ -5,6 +5,7 @@
 
 const test = new SearchConfigTest({
   identifier: "baidu",
+  aliases: ["@\u767E\u5EA6", "@baidu"],
   default: {
     included: [{
       regions: [

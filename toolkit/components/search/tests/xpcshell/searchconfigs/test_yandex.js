@@ -5,6 +5,7 @@
 
 const test = new SearchConfigTest({
   identifier: "yandex",
+  aliases: ["@\u044F\u043D\u0434\u0435\u043A\u0441", "@yandex"],
   default: {
     included: [{
       regions: [
