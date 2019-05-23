@@ -1,0 +1,11 @@
+---
+rust:
+    description: Reformat rust
+    include:
+        - servo/
+    extensions:
+        - rs
+    support-files:
+        - 'tools/lint/rust/**'
+    type: external
+    payload: rust:lint
