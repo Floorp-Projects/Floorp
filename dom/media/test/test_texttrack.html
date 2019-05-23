@@ -9,79 +9,16 @@
 <body>
 <video id="v">
 <script type="text/javascript">
-
+/**
+ * This test is used to check different things.
+ * (1) the default value of track element's attributes
+ * (2) readonly attributes can't be modifted
+ * (3) the order of tracks in the media element's track list
+ */
 var enabledTrackElement = null;
 
 async function runTest() {
-  var video = document.getElementById("v");
-
-  isnot(video.textTracks, undefined, "HTMLMediaElement::TextTrack() property should be available.")
-
-  var trackList = video.textTracks;
-  is(trackList.length, 0, "Length should be 0.");
-
-  ok(typeof video.addTextTrack == "function", "HTMLMediaElement::AddTextTrack() function should be available.")
-
-  // Insert some tracks in an order that is not sorted, we will test if they
-  // are sorted later.
-  info(`- Add a track element with label 'third' -`);
-  video.addTextTrack("subtitles", "third", "en-CA");
-  is(trackList.length, 1, "Length should be 1.");
-
-  var textTrack = video.textTracks[0];
-  is(textTrack.label, "third", "Label should be set to third.");
-  is(textTrack.language, "en-CA", "Language should be en-CA.");
-  is(textTrack.kind, "subtitles", "Default kind should be subtitles.");
-  is(textTrack.mode, "hidden", "Default mode should be hidden.");
-
-  // Mode should not allow a bogus value.
-  textTrack.mode = 'bogus';
-  is(textTrack.mode, 'hidden', "Mode should be not allow a bogus value.");
-
-  // Should allow all these values for mode.
-  checkMode("showing", "Mode should allow \"showing\"");
-  checkMode("disabled", "Mode should allow \"disabled\"");
-  checkMode("hidden", "Mode should allow \"hidden\"");
-
-  // All below are read-only properties and so should not allow setting.
-  textTrack.label = "French subtitles";
-  is(textTrack.label, "third", "Label is read-only so should still be \"label\".");
-
-  textTrack.language = "en";
-  is(textTrack.language, "en-CA", "Language is read-only so should still be \"en-CA\".");
-
-  textTrack.kind = "captions";
-  is(textTrack.kind, "subtitles", "Kind is read-only so should still be \"subtitles\"");
-
-  function checkMode(value, message) {
-    textTrack.mode = value;
-    is(textTrack.mode, value, message);
-  }
-
-  info(`- Add a track element with label 'first' -`);
-  var trackOne = document.createElement("track");
-  trackOne.label = "first";
-  trackOne.src = "basic.vtt";
-  trackOne.default = true;
-  trackOne.id = "2";
-  // The automatic track selection would choose the first track element with
-  // `default` attribute, so this track would be enable later.
-  enabledTrackElement = trackOne;
-  video.appendChild(trackOne);
-
-  info(`- Add a track element with label 'fourth' -`);
-  video.addTextTrack("subtitles", "fourth", "en-CA");
-
-  info(`- Add a track element with label 'second' -`);
-  var trackTwo = document.createElement("track");
-  trackTwo.label = "second";
-  trackTwo.src = "basic.vtt";
-  // Although this track has `default` attribute as well, it won't be enable by
-  // the automatic track selection because it's not the first default track in
-  // the media element's track list.
-  trackTwo.default = true;
-  video.appendChild(trackTwo);
-
+  addFourTextTrackElementsToVideo();
   startLoadingVideo();
   await waitUntilEnableTrackLoaded();
   checkTracksStatus();
@@ -94,6 +31,86 @@ onload = runTest;
 /**
  * The following are test helper functions.
  */
+function addFourTextTrackElementsToVideo() {
+  let video = document.getElementById("v");
+  isnot(video.textTracks, undefined,
+        "HTMLMediaElement::TextTrack() property should be available.")
+
+  let trackList = video.textTracks;
+  is(trackList.length, 0, "Length should be 0.");
+
+  ok(typeof video.addTextTrack == "function",
+     "HTMLMediaElement::AddTextTrack() function should be available.")
+
+  // Insert some tracks in an order that is not sorted, we will test if they
+  // are sorted later.
+  info(`- Add a track element with label 'third' -`);
+  video.addTextTrack("subtitles", "third", "en-CA");
+  is(trackList.length, 1, "Length should be 1.");
+
+  let textTrack = video.textTracks[0];
+  checkAttributesDefaultValue(textTrack);
+  checkTextTrackMode(textTrack);
+  checkReadOnlyAttributes(textTrack);
+
+  info(`- Add a track element with label 'first' -`);
+  let trackOne = document.createElement("track");
+  video.appendChild(trackOne);
+  trackOne.label = "first";
+  trackOne.src = "basic.vtt";
+  trackOne.default = true;
+  trackOne.id = "2";
+  // The automatic track selection would choose the first track element with
+  // `default` attribute, so this track would be enable later.
+  enabledTrackElement = trackOne;
+
+  info(`- Add a track element with label 'fourth' -`);
+  video.addTextTrack("subtitles", "fourth", "en-CA");
+
+  info(`- Add a track element with label 'second' -`);
+  let trackTwo = document.createElement("track");
+  video.appendChild(trackTwo);
+  trackTwo.label = "second";
+  trackTwo.src = "basic.vtt";
+  // Although this track has `default` attribute as well, it won't be enable by
+  // the automatic track selection because it's not the first default track in
+  // the media element's track list.
+  trackTwo.default = true;
+}
+
+function checkAttributesDefaultValue(track) {
+  is(track.label, "third", "Label should be set to third.");
+  is(track.language, "en-CA", "Language should be en-CA.");
+  is(track.kind, "subtitles", "Default kind should be subtitles.");
+  is(track.mode, "hidden", "Default mode should be hidden.");
+}
+
+function checkTextTrackMode(track) {
+  // Mode should not allow a bogus value.
+  track.mode = 'bogus';
+  is(track.mode, 'hidden', "Mode should be not allow a bogus value.");
+
+  // Should allow all these values for mode.
+  changeTextTrackMode("showing");
+  changeTextTrackMode("disabled");
+  changeTextTrackMode("hidden");
+
+  function changeTextTrackMode(mode) {
+    track.mode = mode;
+    is(track.mode, mode, `Mode should allow \"${mode}\"`);
+  }
+}
+
+function checkReadOnlyAttributes(track) {
+  // All below are read-only properties and so should not allow setting.
+  track.label = "French subtitles";
+  is(track.label, "third", "Label is read-only so should still be \"label\".");
+  track.language = "en";
+  is(track.language, "en-CA", "Language is read-only so should still be \"en-CA\".");
+  track.kind = "captions";
+  is(track.kind, "subtitles", "Kind is read-only so should still be \"subtitles\"");
+}
+
 function startLoadingVideo() {
   let video = document.getElementById("v");
   video.src = "seek.webm";
