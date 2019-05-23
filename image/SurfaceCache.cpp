@@ -19,12 +19,12 @@
 #include "mozilla/Pair.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Tuple.h"
 #include "nsIMemoryReporter.h"
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "imgFrame.h"
 #include "Image.h"
 #include "ISurfaceProvider.h"
@@ -409,8 +409,7 @@ class ImageSurfaceCache {
 
     // Typically an image cache will not have too many size-varying surfaces, so
     // if we exceed the given threshold, we should consider using a subset.
-    int32_t thresholdSurfaces =
-        StaticPrefs::ImageCacheFactor2ThresholdSurfaces();
+    int32_t thresholdSurfaces = gfxPrefs::ImageCacheFactor2ThresholdSurfaces();
     if (thresholdSurfaces < 0 ||
         mSurfaces.Count() <= static_cast<uint32_t>(thresholdSurfaces)) {
       return;
@@ -1056,7 +1055,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     // difference between this and UnlockImage.)
     DoUnlockSurfaces(
         WrapNotNull(cache),
-        /* aStaticOnly = */ !StaticPrefs::ImageMemAnimatedDiscardable(),
+        /* aStaticOnly = */ !gfxPrefs::ImageMemAnimatedDiscardable(),
         aAutoLock);
   }
 
@@ -1373,22 +1372,22 @@ void SurfaceCache::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sInstance, "Shouldn't initialize more than once");
 
-  // See StaticPrefs for the default values of these preferences.
+  // See gfxPrefs for the default values of these preferences.
 
   // Length of time before an unused surface is removed from the cache, in
   // milliseconds.
   uint32_t surfaceCacheExpirationTimeMS =
-      StaticPrefs::ImageMemSurfaceCacheMinExpirationMS();
+      gfxPrefs::ImageMemSurfaceCacheMinExpirationMS();
 
   // What fraction of the memory used by the surface cache we should discard
   // when we get a memory pressure notification. This value is interpreted as
   // 1/N, so 1 means to discard everything, 2 means to discard about half of the
   // memory we're using, and so forth. We clamp it to avoid division by zero.
   uint32_t surfaceCacheDiscardFactor =
-      max(StaticPrefs::ImageMemSurfaceCacheDiscardFactor(), 1u);
+      max(gfxPrefs::ImageMemSurfaceCacheDiscardFactor(), 1u);
 
   // Maximum size of the surface cache, in kilobytes.
-  uint64_t surfaceCacheMaxSizeKB = StaticPrefs::ImageMemSurfaceCacheMaxSizeKB();
+  uint64_t surfaceCacheMaxSizeKB = gfxPrefs::ImageMemSurfaceCacheMaxSizeKB();
 
   // A knob determining the actual size of the surface cache. Currently the
   // cache is (size of main memory) / (surface cache size factor) KB
@@ -1399,7 +1398,7 @@ void SurfaceCache::Initialize() {
   // of memory, which would yield a 64MB cache on this setting.
   // We clamp this value to avoid division by zero.
   uint32_t surfaceCacheSizeFactor =
-      max(StaticPrefs::ImageMemSurfaceCacheSizeFactor(), 1u);
+      max(gfxPrefs::ImageMemSurfaceCacheSizeFactor(), 1u);
 
   // Compute the size of the surface cache.
   uint64_t memorySize = PR_GetPhysicalMemorySize();
@@ -1637,7 +1636,7 @@ IntSize SurfaceCache::ClampVectorSize(const IntSize& aSize) {
   // It shouldn't get here if it is significantly larger because
   // VectorImage::UseSurfaceCacheForSize should prevent us from requesting
   // a rasterized version of a surface greater than 4x the maximum.
-  int32_t maxSizeKB = StaticPrefs::ImageCacheMaxRasterizedSVGThresholdKB();
+  int32_t maxSizeKB = gfxPrefs::ImageCacheMaxRasterizedSVGThresholdKB();
   if (maxSizeKB <= 0) {
     return aSize;
   }

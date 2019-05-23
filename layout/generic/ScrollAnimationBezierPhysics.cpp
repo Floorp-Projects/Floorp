@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScrollAnimationBezierPhysics.h"
+#include "gfxPrefs.h"
 
 using namespace mozilla;
 
@@ -92,9 +93,9 @@ void ScrollAnimationBezierPhysics::InitTimingFunction(
     SMILKeySpline& aTimingFunction, nscoord aCurrentPos,
     nscoord aCurrentVelocity, nscoord aDestination) {
   if (aDestination == aCurrentPos ||
-      StaticPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
+      gfxPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
     aTimingFunction.Init(
-        0, 0, 1 - StaticPrefs::SmoothScrollStopDecelerationWeighting(), 1);
+        0, 0, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
     return;
   }
 
@@ -103,11 +104,11 @@ void ScrollAnimationBezierPhysics::InitTimingFunction(
       aCurrentVelocity * (mDuration / oneSecond) / (aDestination - aCurrentPos);
   double normalization = sqrt(1.0 + slope * slope);
   double dt =
-      1.0 / normalization * StaticPrefs::SmoothScrollCurrentVelocityWeighting();
-  double dxy = slope / normalization *
-               StaticPrefs::SmoothScrollCurrentVelocityWeighting();
+      1.0 / normalization * gfxPrefs::SmoothScrollCurrentVelocityWeighting();
+  double dxy =
+      slope / normalization * gfxPrefs::SmoothScrollCurrentVelocityWeighting();
   aTimingFunction.Init(
-      dt, dxy, 1 - StaticPrefs::SmoothScrollStopDecelerationWeighting(), 1);
+      dt, dxy, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
 }
 
 nsPoint ScrollAnimationBezierPhysics::PositionAt(const TimeStamp& aTime) {

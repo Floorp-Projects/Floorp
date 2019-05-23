@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TiledContentHost.h"
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "PaintedLayerComposite.h"      // for PaintedLayerComposite
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
@@ -24,7 +25,6 @@
 #include "nsPoint.h"          // for IntPoint
 #include "nsPrintfCString.h"  // for nsPrintfCString
 #include "nsRect.h"           // for IntRect
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
@@ -35,12 +35,12 @@ class Layer;
 
 float TileHost::GetFadeInOpacity(float aOpacity) {
   TimeStamp now = TimeStamp::Now();
-  if (!StaticPrefs::LayerTileFadeInEnabled() || mFadeStart.IsNull() ||
+  if (!gfxPrefs::LayerTileFadeInEnabled() || mFadeStart.IsNull() ||
       now < mFadeStart) {
     return aOpacity;
   }
 
-  float duration = StaticPrefs::LayerTileFadeInDuration();
+  float duration = gfxPrefs::LayerTileFadeInDuration();
   float elapsed = (now - mFadeStart).ToMilliseconds();
   if (elapsed > duration) {
     mFadeStart = TimeStamp();
@@ -338,8 +338,8 @@ bool TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
       tile.mFadeStart = TimeStamp::Now();
 
       aLayerManager->CompositeUntil(
-          tile.mFadeStart + TimeDuration::FromMilliseconds(
-                                StaticPrefs::LayerTileFadeInDuration()));
+          tile.mFadeStart +
+          TimeDuration::FromMilliseconds(gfxPrefs::LayerTileFadeInDuration()));
     }
   }
 
@@ -422,7 +422,7 @@ void TiledContentHost::Composite(
   // we end up changing the expected overall transparency of the content,
   // and it just looks wrong.
   Color backgroundColor;
-  if (aOpacity == 1.0f && StaticPrefs::LowPrecisionOpacity() < 1.0f) {
+  if (aOpacity == 1.0f && gfxPrefs::LowPrecisionOpacity() < 1.0f) {
     // Background colors are only stored on scrollable layers. Grab
     // the one from the nearest scrollable ancestor layer.
     for (LayerMetricsWrapper ancestor(GetLayer(),
@@ -436,7 +436,7 @@ void TiledContentHost::Composite(
   }
   float lowPrecisionOpacityReduction =
       (aOpacity == 1.0f && backgroundColor.a == 1.0f)
-          ? StaticPrefs::LowPrecisionOpacity()
+          ? gfxPrefs::LowPrecisionOpacity()
           : 1.0f;
 
   nsIntRegion tmpRegion;
@@ -631,7 +631,7 @@ void TiledContentHost::PrintInfo(std::stringstream& aStream,
   aStream << nsPrintfCString("TiledContentHost (0x%p)", this).get();
 
 #if defined(MOZ_DUMP_PAINTING)
-  if (StaticPrefs::LayersDumpTexture()) {
+  if (gfxPrefs::LayersDumpTexture()) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
 

@@ -7,6 +7,7 @@
 
 #include <d3d11.h>
 #include <d3d11_1.h>
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "WGLLibrary.h"
 #include "nsPrintfCString.h"
@@ -414,7 +415,7 @@ SharedSurface_D3D11Interop::SharedSurface_D3D11Interop(
       mLockHandle(lockHandle),
       mTexD3D(texD3D),
       mDXGIHandle(dxgiHandle),
-      mNeedsFinish(StaticPrefs::WebGLDXGLNeedsFinish()),
+      mNeedsFinish(gfxPrefs::WebGLDXGLNeedsFinish()),
       mLockedForGL(false) {
   MOZ_ASSERT(bool(mProdTex) == bool(mInteropFB));
 }

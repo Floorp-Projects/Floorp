@@ -11,9 +11,10 @@
 
 #include "nsSubDocumentFrame.h"
 
+#include "gfxPrefs.h"
+
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFrameElement.h"
 #include "mozilla/layout/RenderFrame.h"
@@ -426,7 +427,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           aBuilder, &copyOfVisible, &copyOfDirty,
           /* aSetBase = */ true);
 
-      if (!StaticPrefs::LayoutUseContainersForRootFrames() ||
+      if (!gfxPrefs::LayoutUseContainersForRootFrames() ||
           !aBuilder->IsPaintingToWindow()) {
         haveDisplayPort = false;
       }
@@ -607,7 +608,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // unscrolled color item for overscroll. Try again now that we're
   // outside the scrolled ContainerLayer.
   if (!aBuilder->IsForEventDelivery() &&
-      StaticPrefs::LayoutUseContainersForRootFrames() &&
+      gfxPrefs::LayoutUseContainersForRootFrames() &&
       !nsLayoutUtils::NeedsPrintPreviewBackground(presContext)) {
     nsRect bounds =
         GetContentRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);

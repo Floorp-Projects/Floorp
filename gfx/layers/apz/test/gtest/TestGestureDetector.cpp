@@ -6,6 +6,7 @@
 
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
+#include "gfxPrefs.h"
 
 class APZCGestureDetectorTester : public APZCBasicTester {
  public:
@@ -392,7 +393,7 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
         TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time(), &blockId);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
-    if (StaticPrefs::TouchActionEnabled() &&
+    if (gfxPrefs::TouchActionEnabled() &&
         status != nsEventStatus_eConsumeNoDefault) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
       nsTArray<uint32_t> allowedTouchBehaviors;
@@ -458,7 +459,7 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
                                      mcc->Time(), &blockId);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
-    if (StaticPrefs::TouchActionEnabled() &&
+    if (gfxPrefs::TouchActionEnabled() &&
         status != nsEventStatus_eConsumeNoDefault) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
       nsTArray<uint32_t> allowedTouchBehaviors;
@@ -706,7 +707,7 @@ TEST_F(APZCGestureDetectorTester, LongPressInterruptedByWheel) {
   uint64_t wheelBlockId = 0;
   nsEventStatus status =
       TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time(), &touchBlockId);
-  if (StaticPrefs::TouchActionEnabled() &&
+  if (gfxPrefs::TouchActionEnabled() &&
       status != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(apzc, touchBlockId);
   }

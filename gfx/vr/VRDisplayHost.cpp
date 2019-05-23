@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRDisplayHost.h"
-#include "VRThread.h"
+#include "gfxPrefs.h"
 #include "gfxVR.h"
 #include "ipc/VRLayerParent.h"
-#include "mozilla/StaticPrefs.h"
-#include "mozilla/dom/GamepadBinding.h"       // For GamepadMappingType
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
 #include "mozilla/layers/TextureHost.h"
+#include "mozilla/dom/GamepadBinding.h"  // For GamepadMappingType
+#include "VRThread.h"
 
 #if defined(XP_WIN)
 
@@ -268,7 +268,7 @@ void VRDisplayHost::CheckWatchDog() {
     bShouldStartFrame = true;
   } else {
     TimeDuration duration = TimeStamp::Now() - lastFrameStart;
-    if (duration.ToMilliseconds() > StaticPrefs::VRDisplayRafMaxDuration()) {
+    if (duration.ToMilliseconds() > gfxPrefs::VRDisplayRafMaxDuration()) {
       bShouldStartFrame = true;
     }
   }

@@ -469,7 +469,7 @@ void imgRequest::AdjustPriorityInternal(int32_t aDelta) {
 }
 
 void imgRequest::BoostPriority(uint32_t aCategory) {
-  if (!StaticPrefs::ImageLayoutNetworkPriority()) {
+  if (!gfxPrefs::ImageLayoutNetworkPriority()) {
     return;
   }
 

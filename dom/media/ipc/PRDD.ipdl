@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include MemoryReportTypes;
-include PrefsTypes;
 
 include protocol PProfiler;
 include protocol PRemoteDecoderManager;
@@ -32,8 +31,6 @@ parent:
                             bool anonymize,
                             bool minimizeMemoryUsage,
                             FileDescriptor? DMDFile);
-
-  async PreferenceUpdate(Pref pref);
 
 child:
   // args TBD, sent when init complete. Occurs once, after Init().

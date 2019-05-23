@@ -21,7 +21,6 @@
 #  include "nsDebug.h"
 #endif
 #include "2D.h"
-#include "mozilla/Atomics.h"
 #include "Point.h"
 #include "BaseRect.h"
 #include "Matrix.h"
@@ -59,7 +58,7 @@ class LoggingPrefs {
   // 1 just errors, 2 adds warnings and 3 or 4 add debug logging.
   // In addition to setting the value to 4, you will need to set the
   // environment variable MOZ_LOG to gfx:4. See mozilla/Logging.h for details.
-  static Atomic<int32_t> sGfxLogLevel;
+  static int32_t sGfxLogLevel;
 };
 
 /// Graphics logging is available in both debug and release builds and is

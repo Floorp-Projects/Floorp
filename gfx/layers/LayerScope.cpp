@@ -21,7 +21,7 @@
 
 #include "gfxContext.h"
 #include "gfxUtils.h"
-
+#include "gfxPrefs.h"
 #include "nsIWidget.h"
 
 #include "GLContext.h"
@@ -1420,7 +1420,7 @@ LayerScopeWebSocketManager::LayerScopeWebSocketManager()
   NS_NewNamedThread("LayerScope", getter_AddRefs(mDebugSenderThread));
 
   mServerSocket = do_CreateInstance(NS_SERVERSOCKET_CONTRACTID);
-  int port = StaticPrefs::LayerScopePort();
+  int port = gfxPrefs::LayerScopePort();
   mServerSocket->Init(port, false, -1);
   mServerSocket->AsyncListen(new SocketListener);
 }
@@ -1465,7 +1465,7 @@ NS_IMETHODIMP LayerScopeWebSocketManager::SocketListener::OnSocketAccepted(
 // ----------------------------------------------
 /*static*/
 void LayerScope::Init() {
-  if (!StaticPrefs::LayerScopeEnabled() || XRE_IsGPUProcess()) {
+  if (!gfxPrefs::LayerScopeEnabled() || XRE_IsGPUProcess()) {
     return;
   }
 
@@ -1563,7 +1563,7 @@ bool LayerScope::CheckSendable() {
   // Only compositor threads check LayerScope status
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread() || gIsGtest);
 
-  if (!StaticPrefs::LayerScopeEnabled()) {
+  if (!gfxPrefs::LayerScopeEnabled()) {
     return false;
   }
   if (!gLayerScopeManager.GetSocketManager()) {

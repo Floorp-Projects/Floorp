@@ -30,7 +30,6 @@
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ShapeUtils.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
 #include "nsISelectionController.h"
@@ -39,6 +38,7 @@
 #include "nsStyleTransformMatrix.h"
 #include "nsTransitionManager.h"
 #include "gfxMatrix.h"
+#include "gfxPrefs.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
@@ -73,7 +73,6 @@
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/Telemetry.h"
@@ -1069,7 +1068,7 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
   nsRect visible = aVisibleRect;
   nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
 
-  if (StaticPrefs::APZAllowZooming() &&
+  if (gfxPrefs::APZAllowZooming() &&
       nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
       aBuilder->IsPaintingToWindow()) {
     dirtyRectRelativeToDirtyFrame =
@@ -1101,7 +1100,7 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
       }
     }
     visible = dirtyRectRelativeToDirtyFrame;
-    if (StaticPrefs::APZTestLoggingEnabled() &&
+    if (gfxPrefs::APZTestLoggingEnabled() &&
         presShell->GetDocument()->IsContentDocument()) {
       nsLayoutUtils::LogAdditionalTestData(
           aBuilder, "fixedPosDisplayport",
@@ -1349,7 +1348,7 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   Document* document = mReferenceFrame->PresContext()->Document();
   mBuildAsyncZoomContainer = nsLayoutUtils::AllowZoomingForDocument(document) &&
-                             !StaticPrefs::LayoutUseContainersForRootFrames();
+                             !gfxPrefs::LayoutUseContainersForRootFrames();
 }
 
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
@@ -2474,7 +2473,7 @@ bool nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
 
   nsRegion r;
   const ActiveScrolledRoot* rootASR = nullptr;
-  if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     rootASR = aBuilder->ActiveScrolledRootForRootScrollframe();
   }
   r.And(*aVisibleRegion, GetClippedBoundsWithRespectToASR(aBuilder, rootASR));
@@ -2623,7 +2622,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
                                    docShell);
 #endif
 
-    if (XRE_IsContentProcess() && StaticPrefs::AlwaysPaint()) {
+    if (XRE_IsContentProcess() && gfxPrefs::AlwaysPaint()) {
       FrameLayerBuilder::InvalidateAllLayers(aLayerManager);
     }
 
@@ -2638,7 +2637,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
       rootLayer->SetScrollMetadata(nsTArray<ScrollMetadata>());
     }
 
-    float rootLayerResolution = StaticPrefs::LayoutUseContainersForRootFrames()
+    float rootLayerResolution = gfxPrefs::LayoutUseContainersForRootFrames()
                                     ? presShell->GetResolution()
                                     : 1.0f;
     ContainerLayerParameters containerParameters(rootLayerResolution,
@@ -2651,7 +2650,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
                                                   frame, nullptr, this,
                                                   containerParameters, nullptr);
 
-      if (!record.GetStart().IsNull() && StaticPrefs::LayersDrawFPS()) {
+      if (!record.GetStart().IsNull() && gfxPrefs::LayersDrawFPS()) {
         if (PaintTiming* pt =
                 ClientLayerManager::MaybeGetPaintTiming(aLayerManager)) {
           pt->flbMs() = (TimeStamp::Now() - record.GetStart()).ToMilliseconds();
@@ -2662,7 +2661,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
     if (!root) {
       return nullptr;
     }
-    if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+    if (gfxPrefs::LayoutUseContainersForRootFrames()) {
       // Root is being scaled up by the X/Y resolution. Scale it back down.
       root->SetPostScale(1.0f / containerParameters.mXScale,
                          1.0f / containerParameters.mYScale);
@@ -3324,7 +3323,7 @@ Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
     return Some(clip->GetClipRect());
   }
 #ifdef DEBUG
-  if (!StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
     MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
   }
 #endif
@@ -3348,7 +3347,7 @@ bool nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager,
 }
 
 bool nsDisplayItem::CanUseAdvancedLayer(LayerManager* aManager) const {
-  return StaticPrefs::LayersAdvancedBasicLayerEnabled() || !aManager ||
+  return gfxPrefs::LayersAdvancedBasicLayerEnabled() || !aManager ||
          aManager->GetBackendType() == layers::LayersBackend::LAYERS_WR;
 }
 
@@ -6104,8 +6103,8 @@ static bool IsItemTooSmallForActiveLayer(nsIFrame* aFrame) {
       aFrame->GetVisualOverflowRectRelativeToSelf().ToOutsidePixels(
           aFrame->PresContext()->AppUnitsPerDevPixel());
   return visibleDevPixels.Size() <
-         nsIntSize(StaticPrefs::LayoutMinActiveLayerSize(),
-                   StaticPrefs::LayoutMinActiveLayerSize());
+         nsIntSize(gfxPrefs::LayoutMinActiveLayerSize(),
+                   gfxPrefs::LayoutMinActiveLayerSize());
 }
 
 /* static */
@@ -6694,7 +6693,7 @@ nsDisplayRenderRoot::nsDisplayRenderRoot(
       mRenderRoot(aRenderRoot),
       mBuiltWRCommands(false) {
   MOZ_ASSERT(aRenderRoot != wr::RenderRoot::Default);
-  MOZ_ASSERT(StaticPrefs::WebRenderSplitRenderRoots());
+  MOZ_ASSERT(gfxPrefs::WebRenderSplitRenderRoots());
   ExpandDisplayListBuilderRenderRootRect(aBuilder);
   MOZ_COUNT_CTOR(nsDisplayRenderRoot);
 }
@@ -6981,7 +6980,7 @@ already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
   PresShell* presShell = mFrame->PresShell();
-  float rootLayerResolution = StaticPrefs::LayoutUseContainersForRootFrames()
+  float rootLayerResolution = gfxPrefs::LayoutUseContainersForRootFrames()
                                   ? presShell->GetResolution()
                                   : 1.0f;
   ContainerLayerParameters containerParameters(
@@ -6991,7 +6990,7 @@ already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
   RefPtr<Layer> layer =
       nsDisplaySubDocument::BuildLayer(aBuilder, aManager, containerParameters);
 
-  if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     layer->SetPostScale(1.0f / presShell->GetResolution(),
                         1.0f / presShell->GetResolution());
     layer->AsContainerLayer()->SetScaleToResolution(presShell->GetResolution());
@@ -7722,7 +7721,7 @@ void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
-  if (gfxVars::UseWebRender() || !StaticPrefs::LayoutFlattenTransform()) {
+  if (gfxVars::UseWebRender() || !gfxPrefs::LayoutFlattenTransform()) {
     return false;
   }
 
@@ -8088,10 +8087,10 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     return FullPrerender;
   }
 
-  float viewportRatioX = StaticPrefs::AnimationPrerenderViewportRatioLimitX();
-  float viewportRatioY = StaticPrefs::AnimationPrerenderViewportRatioLimitY();
-  uint32_t absoluteLimitX = StaticPrefs::AnimationPrerenderAbsoluteLimitX();
-  uint32_t absoluteLimitY = StaticPrefs::AnimationPrerenderAbsoluteLimitY();
+  float viewportRatioX = gfxPrefs::AnimationPrerenderViewportRatioLimitX();
+  float viewportRatioY = gfxPrefs::AnimationPrerenderViewportRatioLimitY();
+  uint32_t absoluteLimitX = gfxPrefs::AnimationPrerenderAbsoluteLimitX();
+  uint32_t absoluteLimitY = gfxPrefs::AnimationPrerenderAbsoluteLimitY();
   nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
   // Only prerender if the transformed frame's size is <= a multiple of the
   // reference frame size (~viewport), and less than an absolute limit.
@@ -8118,7 +8117,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     return FullPrerender;
   }
 
-  if (StaticPrefs::PartiallyPrerenderAnimatedContent()) {
+  if (gfxPrefs::PartiallyPrerenderAnimatedContent()) {
     *aDirtyRect = nsLayoutUtils::ComputePartialPrerenderArea(*aDirtyRect,
                                                              overflow, maxSize);
     return PartialPrerender;
@@ -9565,7 +9564,7 @@ bool nsDisplayMasksAndClipPaths::CanPaintOnMaskLayer(LayerManager* aManager) {
     return false;
   }
 
-  if (StaticPrefs::DrawMaskLayer()) {
+  if (gfxPrefs::DrawMaskLayer()) {
     return false;
   }
 
@@ -9840,7 +9839,7 @@ Maybe<nsRect> nsDisplayMasksAndClipPaths::GetClipWithRespectToASR(
     return Some(childList->GetClippedBoundsWithRespectToASR(aBuilder, aASR));
   }
 #ifdef DEBUG
-  if (!StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
     MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
   }
 #endif
@@ -9988,7 +9987,7 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(WrFiltersHolder& wrFilters) {
 
   // If there are too many filters to render, then just pretend that we
   // succeeded, and don't render any of them.
-  if (filters.Length() > StaticPrefs::WebRenderMaxFilterOpsPerChain()) {
+  if (filters.Length() > gfxPrefs::WebRenderMaxFilterOpsPerChain()) {
     return true;
   }
   wrFilters.filters.SetCapacity(filters.Length());
@@ -10193,7 +10192,7 @@ bool nsDisplaySVGWrapper::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (StaticPrefs::WebRenderBlobInvalidation()) {
+  if (gfxPrefs::WebRenderBlobInvalidation()) {
     return nsDisplayWrapList::CreateWebRenderCommands(
         aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
   }
@@ -10254,7 +10253,7 @@ bool nsDisplayForeignObject::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (StaticPrefs::WebRenderBlobInvalidation()) {
+  if (gfxPrefs::WebRenderBlobInvalidation()) {
     AutoRestore<bool> restoreDoGrouping(aManager->CommandBuilder().mDoGrouping);
     aManager->CommandBuilder().mDoGrouping = false;
     return nsDisplayWrapList::CreateWebRenderCommands(

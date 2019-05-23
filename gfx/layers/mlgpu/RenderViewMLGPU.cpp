@@ -7,7 +7,7 @@
 #include "RenderViewMLGPU.h"
 #include "ContainerLayerMLGPU.h"
 #include "FrameBuilder.h"
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 #include "LayersHelpers.h"
 #include "LayersLogging.h"
 #include "MLGDevice.h"
@@ -74,7 +74,7 @@ RenderViewMLGPU::RenderViewMLGPU(FrameBuilder* aBuilder,
       mCurrentMaskRectBufferIndex(kInvalidResourceIndex),
       mCurrentDepthMode(MLGDepthTestMode::Disabled),
       mNextSortIndex(1),
-      mUseDepthBuffer(StaticPrefs::AdvancedLayersEnableDepthBuffer()),
+      mUseDepthBuffer(gfxPrefs::AdvancedLayersEnableDepthBuffer()),
       mDepthBufferNeedsClear(false) {
   if (aParent) {
     aParent->AddChild(this);
@@ -188,7 +188,7 @@ bool RenderViewMLGPU::UpdateVisibleRegion(ItemInfo& aItem) {
   // CPU-based occlusion culling as well, since the GPU will do most of our
   // culling work for us.
   if (mUseDepthBuffer || !aItem.translation ||
-      !StaticPrefs::AdvancedLayersEnableCPUOcclusion()) {
+      !gfxPrefs::AdvancedLayersEnableCPUOcclusion()) {
     // Update the render region even if we won't compute visibility, since some
     // layer types (like Canvas and Image) need to have the visible region
     // clamped.
