@@ -213,7 +213,11 @@ module.exports = {
     // Require camel case names
     "camelcase": "error",
     // Warn about cyclomatic complexity in functions.
-    "complexity": ["error", 40],
+    // 20 is ESLint's default, and we want to keep it this way to prevent new highly
+    // complex functions from being introduced. However, because Mozilla's eslintrc has
+    // some other value defined, we need to override it here. See bug 1553449 for more
+    // information on complex DevTools functions that are currently excluded.
+    "complexity": ["error", 20],
     // Don't warn for inconsistent naming when capturing this (not so important
     // with auto-binding fat arrow functions).
     "consistent-this": "off",

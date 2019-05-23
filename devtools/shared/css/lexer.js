@@ -10,7 +10,7 @@
 // this file violates some naming conventions and consequently locally
 // disables some eslint rules.
 
-/* eslint-disable camelcase, mozilla/no-aArgs, no-else-return */
+/* eslint-disable camelcase, mozilla/no-aArgs, no-else-return, complexity */
 
 "use strict";
 
