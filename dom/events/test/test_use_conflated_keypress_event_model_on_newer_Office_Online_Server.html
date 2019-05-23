@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1545410
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Testing whether "keypress" event model is forcibly conflated model if the document is newer Office Online Server instance</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1545410">Bug 1545410</a>
+<p id="display"></p>
+<pre id="test"></pre>
+<input id="input">
+<iframe id="iframe" srcdoc='<html><body><div id="WACViewPanel_EditingElement" spellcheck="false" class="FireFox usehover WACEditing EditMode EditingSurfaceBody WACViewPanel_DisableLegacyKeyCodeAndCharCode" style="overflow: visible; visibility: visible;" contenteditable="true"></div></body></html>'></iframe>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async function doTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.keyboardevent.keypress.set_keycode_and_charcode_to_same_value", true],
+    ],
+  });
+
+  let iframe = document.getElementById("iframe");
+  iframe.contentDocument.body.firstChild.focus();
+  let keypressEvent;
+  iframe.contentDocument.body.addEventListener("keypress", aEvent => keypressEvent = aEvent, {once: true});
+  synthesizeKey("a", {}, iframe.contentWindow);
+  is(keypressEvent.keyCode, "a".charCodeAt(0),
+     "keyCode value of 'a' should be 'a'");
+  is(keypressEvent.charCode, "a".charCodeAt(0),
+     "charCode value of 'a' should be 'a'");
+
+  iframe.contentDocument.body.addEventListener("keypress", aEvent => keypressEvent = aEvent, {once: true});
+  synthesizeKey("KEY_Enter", {}, iframe.contentWindow);
+  is(keypressEvent.keyCode, KeyboardEvent.DOM_VK_RETURN,
+     "keyCode value of 'Enter' should be DOM_VK_RETURN");
+  is(keypressEvent.charCode, KeyboardEvent.DOM_VK_RETURN,
+     "charCode value of 'Enter' should be DOM_VK_RETURN");
+
+  let input = document.getElementById("input");
+  input.focus();
+  input.addEventListener("keypress", aEvent => keypressEvent = aEvent, {once: true});
+  synthesizeKey("a", {});
+  is(keypressEvent.keyCode, "a".charCodeAt(0),
+     "keyCode value of 'a' in the parent document should be 'a'");
+  is(keypressEvent.charCode, "a".charCodeAt(0),
+     "charCode value of 'a' in the parent document should be 'a'");
+
+  input.addEventListener("keypress", aEvent => keypressEvent = aEvent, {once: true});
+  synthesizeKey("KEY_Enter");
+  is(keypressEvent.keyCode, KeyboardEvent.DOM_VK_RETURN,
+     "keyCode value of 'Enter' in the parent document should be DOM_VK_RETURN");
+  is(keypressEvent.charCode, KeyboardEvent.DOM_VK_RETURN,
+     "charCode value of 'Enter' in the parent document should be DOM_VK_RETURN");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
