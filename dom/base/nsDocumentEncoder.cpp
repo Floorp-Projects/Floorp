@@ -179,6 +179,25 @@ class EncodingScope {
 
 bool EncodingScope::IsLimited() const { return mSelection || mRange || mNode; }
 
+struct RangeBoundaryPathsAndOffsets {
+  using ContainerPath = AutoTArray<nsIContent*, 8>;
+  using ContainerOffsets = AutoTArray<int32_t, 8>;
+
+  // The first node is the range's boundary node, the following ones the
+  // ancestors.
+  ContainerPath mStartContainerPath;
+  // The first offset represents where at the boundary node the range starts.
+  // Each other offset is the index of the child relative to its parent.
+  ContainerOffsets mStartContainerOffsets;
+
+  // The first node is the range's boundary node, the following one the
+  // ancestors.
+  ContainerPath mEndContainerPath;
+  // The first offset represents where at the boundary node the range ends.
+  // Each other offset is the index of the child relative to its parent.
+  ContainerOffsets mEndContainerOffsets;
+};
+
 class nsDocumentEncoder : public nsIDocumentEncoder {
  public:
   nsDocumentEncoder();
@@ -297,10 +316,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
   int32_t mStartRootIndex;
   int32_t mEndRootIndex;
   AutoTArray<nsINode*, 8> mCommonAncestors;
-  AutoTArray<nsIContent*, 8> mStartNodes;
-  AutoTArray<int32_t, 8> mStartOffsets;
-  AutoTArray<nsIContent*, 8> mEndNodes;
-  AutoTArray<int32_t, 8> mEndOffsets;
+  RangeBoundaryPathsAndOffsets mRangeBoundaryPathsAndOffsets;
   AutoTArray<AutoTArray<nsINode*, 8>, 8> mRangeContexts;
   // Whether the serializer cares about being notified to scan elements to
   // keep track of whether they are preformatted.  This stores the out
@@ -346,6 +362,7 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer) {
   mEncodingScope = {};
   mCommonParent = nullptr;
   mNodeFixup = nullptr;
+  mRangeBoundaryPathsAndOffsets = {};
   if (aClearCachedSerializer) {
     mSerializer = nullptr;
   }
@@ -775,13 +792,18 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
   // get start and end nodes for this recursion level
   nsCOMPtr<nsIContent> startNode, endNode;
   {
+    auto& startContainerPath =
+        mRangeBoundaryPathsAndOffsets.mStartContainerPath;
+    auto& endContainerPath = mRangeBoundaryPathsAndOffsets.mEndContainerPath;
     int32_t start = mStartRootIndex - aDepth;
-    if (start >= 0 && (uint32_t)start <= mStartNodes.Length())
-      startNode = mStartNodes[start];
+    if (start >= 0 && (uint32_t)start <= startContainerPath.Length()) {
+      startNode = startContainerPath[start];
+    }
 
     int32_t end = mEndRootIndex - aDepth;
-    if (end >= 0 && (uint32_t)end <= mEndNodes.Length())
-      endNode = mEndNodes[end];
+    if (end >= 0 && (uint32_t)end <= endContainerPath.Length()) {
+      endNode = endContainerPath[end];
+    }
   }
 
   if (startNode != content && endNode != content) {
@@ -820,13 +842,19 @@ nsresult nsDocumentEncoder::SerializeRangeNodes(nsRange* const aRange,
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      const auto& startContainerOffsets =
+          mRangeBoundaryPathsAndOffsets.mStartContainerOffsets;
+      const auto& endContainerOffsets =
+          mRangeBoundaryPathsAndOffsets.mEndContainerOffsets;
       // do some calculations that will tell us which children of this
       // node are in the range.
       int32_t startOffset = 0, endOffset = -1;
-      if (startNode == content && mStartRootIndex >= aDepth)
-        startOffset = mStartOffsets[mStartRootIndex - aDepth];
-      if (endNode == content && mEndRootIndex >= aDepth)
-        endOffset = mEndOffsets[mEndRootIndex - aDepth];
+      if (startNode == content && mStartRootIndex >= aDepth) {
+        startOffset = startContainerOffsets[mStartRootIndex - aDepth];
+      }
+      if (endNode == content && mEndRootIndex >= aDepth) {
+        endOffset = endContainerOffsets[mEndRootIndex - aDepth];
+      }
       // generated content will cause offset values of -1 to be returned.
       uint32_t childCount = content->GetChildCount();
 
@@ -948,20 +976,24 @@ nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange,
 
   mStartDepth = mEndDepth = 0;
   mCommonAncestors.Clear();
-  mStartNodes.Clear();
-  mStartOffsets.Clear();
-  mEndNodes.Clear();
-  mEndOffsets.Clear();
+
+  mRangeBoundaryPathsAndOffsets = {};
+  auto& startContainerPath = mRangeBoundaryPathsAndOffsets.mStartContainerPath;
+  auto& startContainerOffsets =
+      mRangeBoundaryPathsAndOffsets.mStartContainerOffsets;
+  auto& endContainerPath = mRangeBoundaryPathsAndOffsets.mEndContainerPath;
+  auto& endContainerOffsets =
+      mRangeBoundaryPathsAndOffsets.mEndContainerOffsets;
 
   nsContentUtils::GetAncestors(mCommonParent, mCommonAncestors);
-  nsContentUtils::GetAncestorsAndOffsets(startContainer, startOffset,
-                                         &mStartNodes, &mStartOffsets);
-  nsContentUtils::GetAncestorsAndOffsets(endContainer, endOffset, &mEndNodes,
-                                         &mEndOffsets);
+  nsContentUtils::GetAncestorsAndOffsets(
+      startContainer, startOffset, &startContainerPath, &startContainerOffsets);
+  nsContentUtils::GetAncestorsAndOffsets(
+      endContainer, endOffset, &endContainerPath, &endContainerOffsets);
 
   nsCOMPtr<nsIContent> commonContent = do_QueryInterface(mCommonParent);
-  mStartRootIndex = mStartNodes.IndexOf(commonContent);
-  mEndRootIndex = mEndNodes.IndexOf(commonContent);
+  mStartRootIndex = startContainerPath.IndexOf(commonContent);
+  mEndRootIndex = endContainerPath.IndexOf(commonContent);
 
   nsresult rv = NS_OK;
 
