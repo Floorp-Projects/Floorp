@@ -42,6 +42,8 @@ const test = new SearchConfigTest({
       "homepage": "form=MOZSPG",
       "newtab": "form=MOZTSB",
     },
+    searchUrlCode: "pc=MOZI",
+    searchFormUrlCode: "pc=MOZI",
   }],
 });
 
