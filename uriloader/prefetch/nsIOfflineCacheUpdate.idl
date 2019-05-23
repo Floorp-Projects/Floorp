@@ -41,7 +41,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
    * Informs the observer about an application being available to associate.
    *
    * @param applicationCache
-   *        The application cache instance that has been created or found by the 
+   *        The application cache instance that has been created or found by the
    *        update to associate with
    */
   void applicationCacheAvailable(in nsIApplicationCache applicationCache);
@@ -110,7 +110,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
             [optional] in nsIFile aCustomProfileDir);
 
   /**
-   * Initialize the update for partial processing. 
+   * Initialize the update for partial processing.
    *
    * @param aManifestURI
    *        The manifest URI of the related cache.
@@ -119,7 +119,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        must be ID of cache in the cache group identified by
    *        the manifest URI passed in the first parameter.
    * @param aDocumentURI
-   *        The page that is requesting the update. May be null 
+   *        The page that is requesting the update. May be null
    *        when this information is unknown.
    */
   void initPartial(in nsIURI aManifestURI, in ACString aClientID,

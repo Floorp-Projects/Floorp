@@ -10,10 +10,10 @@ interface nsIControllers;
 [scriptable, uuid(bdc1d047-6d22-4813-bc50-638ccb349c7d)]
 interface nsIDOMXULControlElement : nsISupports {
   attribute boolean disabled;
-  
+
 // XXX defined in XULElement, but should be defined here
 //  readonly attribute nsIControllers controllers;
-  
+
 //  void focus();
 //  void blur();
 };

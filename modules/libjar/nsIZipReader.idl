@@ -67,7 +67,7 @@ interface nsIZipReader : nsISupports
 {
     /**
      * Opens a zip file for reading.
-     * It is allowed to open with another file, 
+     * It is allowed to open with another file,
      * but it needs to be closed first with close().
      */
     void open(in nsIFile zipFile);
@@ -103,11 +103,11 @@ interface nsIZipReader : nsISupports
     void close();
 
     /**
-     * Tests the integrity of the archive by performing a CRC check 
+     * Tests the integrity of the archive by performing a CRC check
      * on each item expanded into memory.  If an entry is specified
      * the integrity of only that item is tested.  If null (javascript)
-     * or EmptyCString() (c++) is passed in the integrity of all items 
-     * in the archive are tested.  
+     * or EmptyCString() (c++) is passed in the integrity of all items
+     * in the archive are tested.
      */
     void test(in AUTF8String aEntryName);
 
@@ -129,13 +129,13 @@ interface nsIZipReader : nsISupports
      * Checks whether the zipfile contains an entry specified by entryName.
      */
     boolean hasEntry(in AUTF8String zipEntry);
- 
+
     /**
      * Returns a string enumerator containing the matching entry names.
      *
      * @param aPattern
      *   A regular expression used to find matching entries in the zip file.
-     *   Set this parameter to null (javascript) or EmptyCString() (c++) or "*" 
+     *   Set this parameter to null (javascript) or EmptyCString() (c++) or "*"
      *   to get all entries; otherwise, use the
      *   following syntax:
      *
@@ -144,7 +144,7 @@ interface nsIZipReader : nsISupports
      *   o $ matches the end of the string
      *   o [abc] matches one occurrence of a, b, or c. The only character that
      *           must be escaped inside the brackets is ].  ^ and - must never
-     *           appear in the first and second positions within the brackets, 
+     *           appear in the first and second positions within the brackets,
      *           respectively.  (In the former case, the behavior specified for
      *           '[^az]' will happen.)
      *   o [a-z] matches any character between a and z.  The characters a and z
@@ -184,7 +184,7 @@ interface nsIZipReader : nsISupports
 
     /**
      * Returns an input stream containing the contents of the specified zip
-     * entry. If the entry refers to a directory (ends with '/'), a directory stream 
+     * entry. If the entry refers to a directory (ends with '/'), a directory stream
      * is opened, otherwise the contents of the file entry is returned.
      * @param aJarSpec the Spec of the URI for the JAR (only used for directory streams)
      * @param zipEntry the name of the entry to open the stream from
@@ -199,7 +199,7 @@ interface nsIZipReader : nsISupports
 interface nsIZipReaderCache : nsISupports
 {
     /**
-     * Initializes a new zip reader cache. 
+     * Initializes a new zip reader cache.
      * @param cacheSize - the number of released entries to maintain before
      *   beginning to throw some out (note that the number of outstanding
      *   entries can be much greater than this number -- this is the count
@@ -211,11 +211,11 @@ interface nsIZipReaderCache : nsISupports
      * Returns a (possibly shared) nsIZipReader for an nsIFile.
      *
      * If the zip reader for given file is not in the cache, a new zip reader
-     * is created, initialized, and opened (see nsIZipReader::init and 
-     * nsIZipReader::open). Otherwise the previously created zip reader is 
+     * is created, initialized, and opened (see nsIZipReader::init and
+     * nsIZipReader::open). Otherwise the previously created zip reader is
      * returned.
      *
-     * @note If someone called close() on the shared nsIZipReader, this method 
+     * @note If someone called close() on the shared nsIZipReader, this method
      *       will return the closed zip reader.
      */
     nsIZipReader getZip(in nsIFile zipFile);

@@ -1725,9 +1725,8 @@ class ScriptSource::LoadSourceMatcher {
     }
 
     if (!ss_->setRetrievedSource(
-             cx_,
-             EntryUnits<Utf8Unit>(reinterpret_cast<Utf8Unit*>(utf8Source)),
-             *length)) {
+            cx_, EntryUnits<Utf8Unit>(reinterpret_cast<Utf8Unit*>(utf8Source)),
+            *length)) {
       return false;
     }
 
@@ -2748,8 +2747,8 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
   // XDR the BinAST data.
   Maybe<SharedImmutableString> binASTData;
   if (mode == XDR_DECODE) {
-    auto bytes = xdr->cx()->template make_pod_array<char>(Max<size_t>(
-        binASTLength, 1));
+    auto bytes =
+        xdr->cx()->template make_pod_array<char>(Max<size_t>(binASTLength, 1));
     if (!bytes) {
       return xdr->fail(JS::TranscodeResult_Throw);
     }
@@ -2820,7 +2819,8 @@ XDRResult ScriptSource::codeBinASTData(XDRState<mode>* const xdr,
     JSAtom** atomsBase = binASTMetadata->atomsBase();
     auto slices = binASTMetadata->sliceBase();
     const char* sourceBase =
-        (mode == XDR_ENCODE ? ss->data.as<BinAST>().string : *binASTData).chars();
+        (mode == XDR_ENCODE ? ss->data.as<BinAST>().string : *binASTData)
+            .chars();
 
     for (uint32_t i = 0; i < numStrings; i++) {
       uint8_t isNull;
@@ -3373,7 +3373,8 @@ void js::FreeScriptData(JSRuntime* rt) {
 
 #ifdef DEBUG
   if (numLive > 0) {
-    fprintf(stderr, "ERROR: GC found %zu live SharedScriptData at shutdown\n", numLive);
+    fprintf(stderr, "ERROR: GC found %zu live SharedScriptData at shutdown\n",
+            numLive);
   }
 #endif
 
@@ -4039,8 +4040,15 @@ size_t JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const {
   return mallocSizeOf(data_);
 }
 
-size_t JSScript::sizeOfTypeScript(mozilla::MallocSizeOf mallocSizeOf) const {
-  return types_ ? types_->sizeOfIncludingThis(mallocSizeOf) : 0;
+void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
+                                  size_t* sizeOfJitScript,
+                                  size_t* sizeOfBaselineFallbackStubs) const {
+  if (!jitScript_) {
+    return;
+  }
+
+  jitScript_->addSizeOfIncludingThis(mallocSizeOf, sizeOfJitScript,
+                                     sizeOfBaselineFallbackStubs);
 }
 
 js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
@@ -4061,8 +4069,8 @@ void JSScript::finalize(FreeOp* fop) {
 
   fop->runtime()->geckoProfiler().onScriptFinalized(this);
 
-  if (types_) {
-    types_->destroy(zone());
+  if (jitScript_) {
+    jitScript_->destroy(zone());
   }
 
   jit::DestroyJitScripts(fop, this);
@@ -5428,7 +5436,7 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   } else if (hasBaselineScript()) {
     jitCodeRaw_ = baseline->method()->raw();
     jitCodeSkipArgCheck_ = jitCodeRaw_;
-  } else if (types() && js::jit::JitOptions.baselineInterpreter) {
+  } else if (jitScript() && js::jit::JitOptions.baselineInterpreter) {
     jitCodeRaw_ = rt->jitRuntime()->baselineInterpreter().codeRaw();
     jitCodeSkipArgCheck_ = jitCodeRaw_;
   } else {
@@ -5511,14 +5519,16 @@ JS::ubi::Base::Size JS::ubi::Concrete<JSScript>::size(
   Size size = gc::Arena::thingSize(get().asTenured().getAllocKind());
 
   size += get().sizeOfData(mallocSizeOf);
-  size += get().sizeOfTypeScript(mallocSizeOf);
+
+  size_t jitScriptSize = 0;
+  size_t fallbackStubSize = 0;
+  get().addSizeOfJitScript(mallocSizeOf, &jitScriptSize, &fallbackStubSize);
+  size += jitScriptSize;
+  size += fallbackStubSize;
 
   size_t baselineSize = 0;
-  size_t baselineStubsSize = 0;
-  jit::AddSizeOfBaselineData(&get(), mallocSizeOf, &baselineSize,
-                             &baselineStubsSize);
+  jit::AddSizeOfBaselineData(&get(), mallocSizeOf, &baselineSize);
   size += baselineSize;
-  size += baselineStubsSize;
 
   size += jit::SizeOfIonData(&get(), mallocSizeOf);
 

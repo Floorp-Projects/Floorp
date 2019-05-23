@@ -13,7 +13,7 @@ interface nsIScriptError;
  */
 
 [scriptable, uuid(01f681af-0f22-4725-a914-0d396114daf0)]
-interface nsIExpatSink : nsISupports 
+interface nsIExpatSink : nsISupports
 {
   /**
    * Called to handle the opening tag of an element.
@@ -46,7 +46,7 @@ interface nsIExpatSink : nsISupports
    * Called to handle a comment
    * @param aCommentText the text of the comment (not including the
    *        "<!--" and "-->")
-   */ 
+   */
   void HandleComment(in wstring aCommentText);
 
   /**
@@ -54,7 +54,7 @@ interface nsIExpatSink : nsISupports
    * @param aData the text in the CDATA section.  This is null-terminated.
    * @param aLength the length of the aData string
    */
-  void HandleCDataSection([size_is(aLength)] in wstring aData, 
+  void HandleCDataSection([size_is(aLength)] in wstring aData,
                           in unsigned long aLength);
 
   /**
@@ -72,7 +72,7 @@ interface nsIExpatSink : nsISupports
    * @param aData the data to handle.  aData is NOT NULL-TERMINATED.
    * @param aLength the length of the aData string
    */
-  void HandleCharacterData([size_is(aLength)] in wstring aData, 
+  void HandleCharacterData([size_is(aLength)] in wstring aData,
                            in unsigned long aLength);
 
   /**
@@ -80,7 +80,7 @@ interface nsIExpatSink : nsISupports
    * @param aTarget the PI target (e.g. xml-stylesheet)
    * @param aData all the rest of the data in the PI
    */
-  void HandleProcessingInstruction(in wstring aTarget, 
+  void HandleProcessingInstruction(in wstring aTarget,
                                    in wstring aData);
 
   /**
@@ -108,4 +108,4 @@ interface nsIExpatSink : nsISupports
   boolean ReportError(in wstring aErrorText,
                       in wstring aSourceText,
                       in nsIScriptError aError);
-}; 
+};

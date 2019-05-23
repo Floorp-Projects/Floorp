@@ -59,7 +59,7 @@ interface nsIStreamConverterService : nsISupports {
     /**
      * <b>ASYNCHRONOUS VERSION</b>
      * Retrieves a nsIStreamListener that receives the original/raw data via its
-     * nsIStreamListener::OnDataAvailable() callback, then converts and pushes 
+     * nsIStreamListener::OnDataAvailable() callback, then converts and pushes
      * the data to aListener.
      *
      * Use this method when you want to proxy (and convert) nsIStreamListener
@@ -73,8 +73,8 @@ interface nsIStreamConverterService : nsISupports {
      * @return              A nsIStreamListener that receives data via its
      *                      OnDataAvailable() method.
      */
-    nsIStreamListener asyncConvertData(in string aFromType, 
-                                       in string aToType, 
+    nsIStreamListener asyncConvertData(in string aFromType,
+                                       in string aToType,
                                        in nsIStreamListener aListener,
                                        in nsISupports aContext);
 };

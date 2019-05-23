@@ -156,36 +156,25 @@ class MOZ_RAII FallbackStubAllocator {
   }
 };
 
-/* static */
-UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
+}  // namespace jit
+
+bool JitScript::initICEntries(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
   MOZ_ASSERT(jit::IsBaselineEnabled(cx));
 
-  const uint32_t numICEntries = script->numICEntries();
+  MOZ_ASSERT(numICEntries() == script->numICEntries());
 
-  // Allocate the ICScript.
-  UniquePtr<ICScript> icScript(
-      script->zone()->pod_malloc_with_extra<ICScript, ICEntry>(numICEntries));
-  if (!icScript) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-  new (icScript.get()) ICScript(numICEntries);
+  // TODO(bug 1551796): move JitScript into jit namespace so we don't need this.
+  using namespace js::jit;
 
-  // We need to call prepareForDestruction on ICScript before we |delete| it.
-  auto prepareForDestruction = mozilla::MakeScopeExit(
-      [&] { icScript->prepareForDestruction(cx->zone()); });
-
-  FallbackStubAllocator alloc(cx, icScript->fallbackStubSpace_);
+  FallbackStubAllocator alloc(cx, fallbackStubSpace_);
 
   // Index of the next ICEntry to initialize.
   uint32_t icEntryIndex = 0;
 
   using Kind = BaselineICFallbackKind;
 
-  ICScript* icScriptPtr = icScript.get();
-  auto addIC = [cx, icScriptPtr, &icEntryIndex, script](jsbytecode* pc,
-                                                        ICStub* stub) {
+  auto addIC = [cx, this, &icEntryIndex, script](jsbytecode* pc, ICStub* stub) {
     if (!stub) {
       MOZ_ASSERT(cx->isExceptionPending());
       mozilla::Unused << cx;  // Silence -Wunused-lambda-capture in opt builds.
@@ -194,7 +183,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
 
     // Initialize the ICEntry.
     uint32_t offset = pc ? script->pcToOffset(pc) : ICEntry::ProloguePCOffset;
-    ICEntry& entryRef = icScriptPtr->icEntry(icEntryIndex);
+    ICEntry& entryRef = icEntry(icEntryIndex);
     icEntryIndex++;
     new (&entryRef) ICEntry(stub, offset);
 
@@ -215,14 +204,14 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
     ICStub* stub =
         alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor, nullptr, 0);
     if (!addIC(nullptr, stub)) {
-      return nullptr;
+      return false;
     }
 
     for (size_t i = 0; i < fun->nargs(); i++) {
       ICStub* stub = alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor,
                                                            nullptr, i + 1);
       if (!addIC(nullptr, stub)) {
-        return nullptr;
+        return false;
       }
     }
   }
@@ -248,7 +237,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_IFNE: {
         ICStub* stub = alloc.newStub<ICToBool_Fallback>(Kind::ToBool);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -258,7 +247,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_DEC: {
         ICStub* stub = alloc.newStub<ICUnaryArith_Fallback>(Kind::UnaryArith);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -276,7 +265,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_POW: {
         ICStub* stub = alloc.newStub<ICBinaryArith_Fallback>(Kind::BinaryArith);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -290,7 +279,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_STRICTNE: {
         ICStub* stub = alloc.newStub<ICCompare_Fallback>(Kind::Compare);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -298,7 +287,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
         ICStub* stub =
             alloc.newStub<ICWarmUpCounter_Fallback>(Kind::WarmUpCounter);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -306,12 +295,12 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
         ObjectGroup* group =
             ObjectGroup::allocationSiteGroup(cx, script, pc, JSProto_Array);
         if (!group) {
-          return nullptr;
+          return false;
         }
         ICStub* stub =
             alloc.newStub<ICNewArray_Fallback>(Kind::NewArray, group);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -319,7 +308,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_NEWINIT: {
         ICStub* stub = alloc.newStub<ICNewObject_Fallback>(Kind::NewObject);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -331,7 +320,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_STRICTSETELEM: {
         ICStub* stub = alloc.newStub<ICSetElem_Fallback>(Kind::SetElem);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -347,7 +336,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_STRICTSETGNAME: {
         ICStub* stub = alloc.newStub<ICSetProp_Fallback>(Kind::SetProp);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -357,14 +346,14 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_GETBOUNDNAME: {
         ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetProp);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
       case JSOP_GETPROP_SUPER: {
         ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetPropSuper);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -372,28 +361,28 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_CALLELEM: {
         ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElem);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
       case JSOP_GETELEM_SUPER: {
         ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElemSuper);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
       case JSOP_IN: {
         ICStub* stub = alloc.newStub<ICIn_Fallback>(Kind::In);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
       case JSOP_HASOWN: {
         ICStub* stub = alloc.newStub<ICHasOwn_Fallback>(Kind::HasOwn);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -401,7 +390,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_GETGNAME: {
         ICStub* stub = alloc.newStub<ICGetName_Fallback>(Kind::GetName);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -409,7 +398,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_BINDGNAME: {
         ICStub* stub = alloc.newStub<ICBindName_Fallback>(Kind::BindName);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -418,7 +407,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
         ICStub* stub =
             alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor, nullptr);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -426,7 +415,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
         ICStub* stub =
             alloc.newStub<ICGetIntrinsic_Fallback>(Kind::GetIntrinsic);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -439,7 +428,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_STRICTEVAL: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::Call);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -447,7 +436,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_NEW: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::CallConstructing);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -456,7 +445,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_STRICTSPREADEVAL: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::SpreadCall);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -465,14 +454,14 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
         ICStub* stub =
             alloc.newStub<ICCall_Fallback>(Kind::SpreadCallConstructing);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
       case JSOP_INSTANCEOF: {
         ICStub* stub = alloc.newStub<ICInstanceOf_Fallback>(Kind::InstanceOf);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -480,14 +469,14 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       case JSOP_TYPEOFEXPR: {
         ICStub* stub = alloc.newStub<ICTypeOf_Fallback>(Kind::TypeOf);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
       case JSOP_ITER: {
         ICStub* stub = alloc.newStub<ICGetIterator_Fallback>(Kind::GetIterator);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -496,12 +485,12 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
             cx, nullptr, 0, TenuredObject,
             ObjectGroup::NewArrayKind::UnknownIndex);
         if (!templateObject) {
-          return nullptr;
+          return false;
         }
         ICStub* stub =
             alloc.newStub<ICRest_Fallback>(Kind::Rest, templateObject);
         if (!addIC(pc, stub)) {
-          return nullptr;
+          return false;
         }
         break;
       }
@@ -511,12 +500,12 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
   }
 
   // Assert all ICEntries have been initialized.
-  MOZ_ASSERT(icEntryIndex == numICEntries);
+  MOZ_ASSERT(icEntryIndex == numICEntries());
 
-  prepareForDestruction.release();
-
-  return icScript;
+  return true;
 }
+
+namespace jit {
 
 ICStubConstIterator& ICStubConstIterator::operator++() {
   MOZ_ASSERT(currentStub_ != nullptr);
@@ -1098,7 +1087,7 @@ bool ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx,
                                                   JSScript* script) {
   MOZ_ASSERT(fallbackMonitorStub_ == nullptr);
 
-  ICStubSpace* space = script->icScript()->fallbackStubSpace();
+  ICStubSpace* space = script->jitScript()->fallbackStubSpace();
   FallbackStubAllocator alloc(cx, *space);
   auto* stub = alloc.newStub<ICTypeMonitor_Fallback>(
       BaselineICFallbackKind::TypeMonitor, this);
@@ -1127,9 +1116,9 @@ static MOZ_MUST_USE bool TypeMonitorResult(JSContext* cx,
                                            BaselineFrame* frame,
                                            HandleScript script, jsbytecode* pc,
                                            HandleValue val) {
-  AutoSweepTypeScript sweep(script);
-  StackTypeSet* types = script->types()->bytecodeTypes(sweep, script, pc);
-  TypeScript::MonitorBytecodeType(cx, script, pc, types, val);
+  AutoSweepJitScript sweep(script);
+  StackTypeSet* types = script->jitScript()->bytecodeTypes(sweep, script, pc);
+  JitScript::MonitorBytecodeType(cx, script, pc, types, val);
 
   return stub->addMonitorStubForValue(cx, frame, types, val);
 }
@@ -1152,7 +1141,7 @@ bool ICCacheIR_Updated::initUpdatingChain(JSContext* cx, ICStubSpace* space) {
 ICStubSpace* ICStubCompiler::StubSpaceForStub(bool makesGCCalls,
                                               JSScript* script) {
   if (makesGCCalls) {
-    return script->icScript()->fallbackStubSpace();
+    return script->jitScript()->fallbackStubSpace();
   }
   return script->zone()->jitZone()->optimizedStubSpace();
 }
@@ -1297,14 +1286,18 @@ void ICStubCompilerBase::PushStubPayload(MacroAssembler& masm,
   masm.adjustFrame(sizeof(intptr_t));
 }
 
-void ICScript::noteAccessedGetter(uint32_t pcOffset) {
-  ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  ICFallbackStub* stub = entry.fallbackStub();
+}  // namespace jit
+
+void JitScript::noteAccessedGetter(uint32_t pcOffset) {
+  jit::ICEntry& entry = icEntryFromPCOffset(pcOffset);
+  jit::ICFallbackStub* stub = entry.fallbackStub();
 
   if (stub->isGetProp_Fallback()) {
     stub->toGetProp_Fallback()->noteAccessedGetter();
   }
 }
+
+namespace jit {
 
 // TypeMonitor_Fallback
 //
@@ -1514,29 +1507,29 @@ bool DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame,
                *GetNextPc(pc) == JSOP_CHECKTHISREINIT ||
                *GetNextPc(pc) == JSOP_CHECKRETURN);
     if (stub->monitorsThis()) {
-      TypeScript::MonitorThisType(cx, script, TypeSet::UnknownType());
+      JitScript::MonitorThisType(cx, script, TypeSet::UnknownType());
     } else {
-      TypeScript::MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
+      JitScript::MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
     }
     return true;
   }
 
-  TypeScript* typeScript = script->types();
-  AutoSweepTypeScript sweep(script);
+  JitScript* jitScript = script->jitScript();
+  AutoSweepJitScript sweep(script);
 
   StackTypeSet* types;
   uint32_t argument;
   if (stub->monitorsArgument(&argument)) {
     MOZ_ASSERT(pc == script->code());
-    types = typeScript->argTypes(sweep, script, argument);
-    TypeScript::MonitorArgType(cx, script, argument, value);
+    types = jitScript->argTypes(sweep, script, argument);
+    JitScript::MonitorArgType(cx, script, argument, value);
   } else if (stub->monitorsThis()) {
     MOZ_ASSERT(pc == script->code());
-    types = typeScript->thisTypes(sweep, script);
-    TypeScript::MonitorThisType(cx, script, value);
+    types = jitScript->thisTypes(sweep, script);
+    JitScript::MonitorThisType(cx, script, value);
   } else {
-    types = typeScript->bytecodeTypes(sweep, script, pc);
-    TypeScript::MonitorBytecodeType(cx, script, pc, types, value);
+    types = jitScript->bytecodeTypes(sweep, script, pc);
+    JitScript::MonitorBytecodeType(cx, script, pc, types, value);
   }
 
   return stub->addMonitorStubForValue(cx, frame, types, value);
@@ -2493,14 +2486,18 @@ bool FallbackICCodeCompiler::emit_SetElem() {
   return tailCallVM<Fn, DoSetElemFallback>(masm);
 }
 
-void ICScript::noteHasDenseAdd(uint32_t pcOffset) {
-  ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  ICFallbackStub* stub = entry.fallbackStub();
+}  // namespace jit
+
+void JitScript::noteHasDenseAdd(uint32_t pcOffset) {
+  jit::ICEntry& entry = icEntryFromPCOffset(pcOffset);
+  jit::ICFallbackStub* stub = entry.fallbackStub();
 
   if (stub->isSetElem_Fallback()) {
     stub->toSetElem_Fallback()->noteHasDenseAdd();
   }
 }
+
+namespace jit {
 
 template <typename T>
 void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
@@ -2779,7 +2776,7 @@ bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
   // needs to be monitored once. Attach a stub to load the resulting constant
   // directly.
 
-  TypeScript::MonitorBytecodeType(cx, script, pc, res);
+  JitScript::MonitorBytecodeType(cx, script, pc, res);
 
   TryAttachStub<GetIntrinsicIRGenerator>("GetIntrinsic", cx, frame, stub,
                                          BaselineCacheIRStubKind::Regular, res);

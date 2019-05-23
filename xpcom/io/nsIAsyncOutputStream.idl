@@ -23,15 +23,15 @@ interface nsIEventTarget;
 interface nsIAsyncOutputStream : nsIOutputStream
 {
     /**
-     * This method closes the stream and sets its internal status.  If the 
+     * This method closes the stream and sets its internal status.  If the
      * stream is already closed, then this method is ignored.  Once the stream
      * is closed, the stream's status cannot be changed.  Any successful status
      * code passed to this method is treated as NS_BASE_STREAM_CLOSED, which
-     * is equivalent to nsIInputStream::close. 
+     * is equivalent to nsIInputStream::close.
      *
-     * NOTE: this method exists in part to support pipes, which have both an 
+     * NOTE: this method exists in part to support pipes, which have both an
      * input end and an output end.  If the output end of a pipe is closed, then
-     * reads from the input end of the pipe will fail.  The error code returned 
+     * reads from the input end of the pipe will fail.  The error code returned
      * when an attempt is made to read from a "closed" pipe corresponds to the
      * status code passed in when the output end of the pipe is closed, which
      * greatly simplifies working with pipes in some cases.
@@ -46,7 +46,7 @@ interface nsIAsyncOutputStream : nsIOutputStream
      * Asynchronously wait for the stream to be writable or closed.  The
      * notification is one-shot, meaning that each asyncWait call will result
      * in exactly one notification callback.  After the OnOutputStreamReady event
-     * is dispatched, the stream releases its reference to the 
+     * is dispatched, the stream releases its reference to the
      * nsIOutputStreamCallback object.  It is safe to call asyncWait again from the
      * notification handler.
      *
@@ -56,7 +56,7 @@ interface nsIAsyncOutputStream : nsIOutputStream
      * the stream is already writable or closed when AsyncWait is called, then the
      * OnOutputStreamReady event will be dispatched immediately.  Otherwise, the
      * event will be dispatched when the stream becomes writable or closed.
-     * 
+     *
      * @param aCallback
      *        This object is notified when the stream becomes ready.  This
      *        parameter may be null to clear an existing callback.

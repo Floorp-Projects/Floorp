@@ -5,6 +5,7 @@
 
 const test = new SearchConfigTest({
   identifier: "google",
+  aliases: ["@google"],
   default: {
     // Included everywhere apart from the exclusions below. These are basically
     // just excluding what Yandex and Baidu include.

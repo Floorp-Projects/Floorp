@@ -13,6 +13,7 @@
 
 #include "jit/BaselineJIT.h"
 #include "jit/IonAnalysis.h"
+#include "jit/JitScript.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/RegExpObject.h"
 #include "wasm/AsmJS.h"
@@ -179,11 +180,6 @@ inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
 
 inline bool JSScript::isDebuggee() const {
   return realm_->debuggerObservesAllExecution() || hasDebugScript();
-}
-
-inline js::jit::ICScript* JSScript::icScript() const {
-  MOZ_ASSERT(hasICScript());
-  return types_->icScript();
 }
 
 #endif /* vm_JSScript_inl_h */

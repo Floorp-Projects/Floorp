@@ -18,7 +18,7 @@
 #define MOZITXTTOHTMLCONV_CID \
     { 0x77c0e42a, 0x1dd2, 0x11b2, \
     { 0x8e, 0xbf, 0xed, 0xc6, 0x60, 0x6f, 0x2f, 0x4b } }
-	
+
 #define MOZ_TXTTOHTMLCONV_CONTRACTID \
   "@mozilla.org/txttohtmlconv;1"
 
@@ -75,7 +75,7 @@ interface mozITXTToHTMLConv : nsIStreamConverter {
   unsigned long   citeLevelTXT(in wstring line,
                                out unsigned long logLineStart);
 
-/** 
+/**
  @param a wide string to scan for the presence of a URL.
  @param aLength --> the length of the buffer to be scanned
  @param aPos --> the position in the buffer to start scanning for a url

@@ -19,7 +19,7 @@ interface nsIClipboardOwner : nsISupports
     * @param  aTransferable The transferable
     * @result NS_Ok if no errors
     */
-  
+
     void LosingOwnership ( in nsITransferable aTransferable ) ;
 };
 

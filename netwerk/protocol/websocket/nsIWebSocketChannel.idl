@@ -19,7 +19,7 @@ webidl Node;
 #include "nsISupports.idl"
 
 /**
- * Low-level websocket API: handles network protocol.  
+ * Low-level websocket API: handles network protocol.
  *
  * This is primarly intended for use by the higher-level nsIWebSocket.idl.
  * We are also making it scriptable for now, but this may change once we have
@@ -146,7 +146,7 @@ interface nsIWebSocketChannel : nsISupports
      * @param aReason the websocket closing handshake close reason
      */
     [must_use] void close(in unsigned short aCode, in AUTF8String aReason);
-    
+
     // section 7.4.1 defines these close codes
     const unsigned short CLOSE_NORMAL               = 1000;
     const unsigned short CLOSE_GOING_AWAY           = 1001;
@@ -160,7 +160,7 @@ interface nsIWebSocketChannel : nsISupports
     const unsigned short CLOSE_TOO_LARGE            = 1009;
     const unsigned short CLOSE_EXTENSION_MISSING    = 1010;
     // Initially used just for server-side internal errors: adopted later for
-    // client-side errors too (not clear if will make into spec: see 
+    // client-side errors too (not clear if will make into spec: see
     // http://www.ietf.org/mail-archive/web/hybi/current/msg09372.html
     const unsigned short CLOSE_INTERNAL_ERROR       = 1011;
     // MUST NOT be set as a status code in Close control frame by an endpoint:
@@ -181,19 +181,19 @@ interface nsIWebSocketChannel : nsISupports
      */
     [must_use] void sendBinaryMsg(in ACString aMsg);
 
-    /** 
+    /**
      * Use to send a binary stream (Blob) to Websocket peer.
      *
-     * @param aStream The input stream to be sent.  
+     * @param aStream The input stream to be sent.
      */
-    [must_use] void sendBinaryStream(in nsIInputStream aStream, 
+    [must_use] void sendBinaryStream(in nsIInputStream aStream,
                                      in unsigned long length);
 
     /**
      * This value determines how often (in seconds) websocket keepalive
      * pings are sent.  If set to 0 (the default), no pings are ever sent.
      *
-     * This value can currently only be set before asyncOpen is called, else 
+     * This value can currently only be set before asyncOpen is called, else
      * NS_ERROR_IN_PROGRESS is thrown.
      *
      * Be careful using this setting: ping traffic can consume lots of power and
@@ -206,7 +206,7 @@ interface nsIWebSocketChannel : nsISupports
      * the server to reply to a ping that has been sent before considering the
      * connection broken.
      *
-     * This value can currently only be set before asyncOpen is called, else 
+     * This value can currently only be set before asyncOpen is called, else
      * NS_ERROR_IN_PROGRESS is thrown.
      */
     [must_use] attribute unsigned long pingTimeout;

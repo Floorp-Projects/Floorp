@@ -9,7 +9,7 @@
 
 /**
  * The nsIScrollable is an interface that can be implemented by a control that
- * supports scrolling.  This is a generic interface without concern for the 
+ * supports scrolling.  This is a generic interface without concern for the
  * type of content that may be inside.
  */
 [scriptable, uuid(3507fc93-313e-4a4c-8ca8-4d0ea0f97315)]

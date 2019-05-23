@@ -755,8 +755,8 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
 AbortReasonOr<Ok> IonBuilder::init() {
   {
     LifoAlloc::AutoFallibleScope fallibleAllocator(alloc().lifoAlloc());
-    if (!TypeScript::FreezeTypeSets(constraints(), script(), &thisTypes,
-                                    &argTypes, &typeArray)) {
+    if (!JitScript::FreezeTypeSets(constraints(), script(), &thisTypes,
+                                   &argTypes, &typeArray)) {
       return abort(AbortReason::Alloc);
     }
   }
@@ -773,7 +773,7 @@ AbortReasonOr<Ok> IonBuilder::init() {
     argTypes = nullptr;
   }
 
-  bytecodeTypeMap = script()->types()->bytecodeTypeMap();
+  bytecodeTypeMap = script()->jitScript()->bytecodeTypeMap();
 
   return Ok();
 }
@@ -4050,8 +4050,9 @@ IonBuilder::InliningResult IonBuilder::inlineScriptedCall(CallInfo& callInfo,
 
   // Improve type information of |this| when not set.
   if (callInfo.constructing() && !callInfo.thisArg()->resultTypeSet()) {
-    AutoSweepTypeScript sweep(calleeScript);
-    StackTypeSet* types = calleeScript->types()->thisTypes(sweep, calleeScript);
+    AutoSweepJitScript sweep(calleeScript);
+    StackTypeSet* types =
+        calleeScript->jitScript()->thisTypes(sweep, calleeScript);
     if (!types->unknown()) {
       TemporaryTypeSet* clonedTypes = types->clone(alloc_->lifoAlloc());
       if (!clonedTypes) {
@@ -5332,13 +5333,13 @@ MDefinition* IonBuilder::createThisScriptedSingleton(JSFunction* target) {
   }
 
   JSScript* targetScript = target->nonLazyScript();
-  TypeScript* typeScript = targetScript->types();
-  if (!typeScript) {
+  JitScript* jitScript = targetScript->jitScript();
+  if (!jitScript) {
     return nullptr;
   }
 
-  AutoSweepTypeScript sweep(targetScript);
-  StackTypeSet* thisTypes = typeScript->thisTypes(sweep, targetScript);
+  AutoSweepJitScript sweep(targetScript);
+  StackTypeSet* thisTypes = jitScript->thisTypes(sweep, targetScript);
   if (!thisTypes->hasType(TypeSet::ObjectType(templateObject))) {
     return nullptr;
   }
@@ -5402,13 +5403,13 @@ MDefinition* IonBuilder::createThisScriptedBaseline(MDefinition* callee) {
   }
 
   JSScript* targetScript = target->nonLazyScript();
-  TypeScript* typeScript = targetScript->types();
-  if (!typeScript) {
+  JitScript* jitScript = targetScript->jitScript();
+  if (!jitScript) {
     return nullptr;
   }
 
-  AutoSweepTypeScript sweep(targetScript);
-  StackTypeSet* thisTypes = typeScript->thisTypes(sweep, targetScript);
+  AutoSweepJitScript sweep(targetScript);
+  StackTypeSet* thisTypes = jitScript->thisTypes(sweep, targetScript);
   if (!thisTypes->hasType(TypeSet::ObjectType(templateObject))) {
     return nullptr;
   }
@@ -6095,25 +6096,25 @@ bool IonBuilder::testNeedsArgumentCheck(JSFunction* target,
   }
 
   JSScript* targetScript = target->nonLazyScript();
-  TypeScript* typeScript = targetScript->types();
-  if (!typeScript) {
+  JitScript* jitScript = targetScript->jitScript();
+  if (!jitScript) {
     return true;
   }
 
-  AutoSweepTypeScript sweep(targetScript);
+  AutoSweepJitScript sweep(targetScript);
   if (!ArgumentTypesMatch(callInfo.thisArg(),
-                          typeScript->thisTypes(sweep, targetScript))) {
+                          jitScript->thisTypes(sweep, targetScript))) {
     return true;
   }
   uint32_t expected_args = Min<uint32_t>(callInfo.argc(), target->nargs());
   for (size_t i = 0; i < expected_args; i++) {
     if (!ArgumentTypesMatch(callInfo.getArg(i),
-                            typeScript->argTypes(sweep, targetScript, i))) {
+                            jitScript->argTypes(sweep, targetScript, i))) {
       return true;
     }
   }
   for (size_t i = callInfo.argc(); i < target->nargs(); i++) {
-    StackTypeSet* types = typeScript->argTypes(sweep, targetScript, i);
+    StackTypeSet* types = jitScript->argTypes(sweep, targetScript, i);
     if (!types->mightBeMIRType(MIRType::Undefined)) {
       return true;
     }
@@ -13585,8 +13586,8 @@ MInstruction* IonBuilder::addSharedTypedArrayGuard(MDefinition* obj) {
 }
 
 TemporaryTypeSet* IonBuilder::bytecodeTypes(jsbytecode* pc) {
-  return TypeScript::BytecodeTypes(script(), pc, bytecodeTypeMap,
-                                   &typeArrayHint, typeArray);
+  return JitScript::BytecodeTypes(script(), pc, bytecodeTypeMap, &typeArrayHint,
+                                  typeArray);
 }
 
 TypedObjectPrediction IonBuilder::typedObjectPrediction(MDefinition* typedObj) {

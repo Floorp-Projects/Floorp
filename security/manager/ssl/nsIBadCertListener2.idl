@@ -26,7 +26,7 @@ interface nsIBadCertListener2 : nsISupports {
    *  @return The consumer shall return true if it wants to suppress the error message
    *          related to the bad cert (the connection will still get canceled).
    */
-  boolean notifyCertProblem(in nsIInterfaceRequestor socketInfo, 
+  boolean notifyCertProblem(in nsIInterfaceRequestor socketInfo,
                             in nsITransportSecurityInfo secInfo,
                             in AUTF8String targetSite);
 };

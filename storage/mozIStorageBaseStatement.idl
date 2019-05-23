@@ -14,7 +14,7 @@ interface mozIStorageBindingParams;
 interface mozIStorageBindingParamsArray;
 
 /**
- * The base interface for both pure asynchronous storage statements 
+ * The base interface for both pure asynchronous storage statements
  * (mozIStorageAsyncStatement) and 'classic' storage statements
  * (mozIStorageStatement) that can be used for both synchronous and asynchronous
  * purposes.
@@ -25,7 +25,7 @@ interface mozIStorageBaseStatement : mozIStorageBindingParams {
    * Finalizes a statement so you can successfully close a database connection.
    * Once a statement has been finalized it can no longer be used for any
    * purpose.
-   * 
+   *
    * Statements are implicitly finalized when their reference counts hits zero.
    * If you are a native (C++) caller this is accomplished by setting all of
    * your nsCOMPtr instances to be NULL.  If you are operating from JavaScript
@@ -112,7 +112,7 @@ interface mozIStorageBaseStatement : mozIStorageBindingParams {
    *        The escape character.
    * @return an AString of an escaped version of aValue
    *         (%, _ and the escape char are escaped with the escape char)
-   *         For example, we will convert "foo/bar_baz%20cheese" 
+   *         For example, we will convert "foo/bar_baz%20cheese"
    *         into "foo//bar/_baz/%20cheese" (if the escape char is '/').
    */
   AString escapeStringForLIKE(in AString aValue, in wchar aEscapeChar);
