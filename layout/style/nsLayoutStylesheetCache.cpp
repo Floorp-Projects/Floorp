@@ -446,13 +446,6 @@ void nsLayoutStylesheetCache::InitFromProfile() {
                 eLogToConsole);
   LoadSheetFile(chromeFile, &mUserChromeSheet, eUserSheetFeatures,
                 eLogToConsole);
-
-  if (XRE_IsParentProcess()) {
-    // We're interested specifically in potential chrome customizations,
-    // so we only need data points from the parent process
-    Telemetry::Accumulate(Telemetry::USER_CHROME_CSS_LOADED,
-                          mUserChromeSheet != nullptr);
-  }
 }
 
 void nsLayoutStylesheetCache::LoadSheetURL(const char* aURL,
