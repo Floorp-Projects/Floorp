@@ -307,11 +307,14 @@ class TypeScript {
     return reinterpret_cast<uint32_t*>(typeArray_ + numTypeSets_);
   }
 
-  static inline StackTypeSet* ThisTypes(JSScript* script);
-  static inline StackTypeSet* ArgTypes(JSScript* script, unsigned i);
+  inline StackTypeSet* thisTypes(const AutoSweepTypeScript& sweep,
+                                 JSScript* script);
+  inline StackTypeSet* argTypes(const AutoSweepTypeScript& sweep,
+                                JSScript* script, unsigned i);
 
   /* Get the type set for values observed at an opcode. */
-  static inline StackTypeSet* BytecodeTypes(JSScript* script, jsbytecode* pc);
+  inline StackTypeSet* bytecodeTypes(const AutoSweepTypeScript& sweep,
+                                     JSScript* script, jsbytecode* pc);
 
   template <typename TYPESET>
   static inline TYPESET* BytecodeTypes(JSScript* script, jsbytecode* pc,
