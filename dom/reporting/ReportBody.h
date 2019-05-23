@@ -27,9 +27,6 @@ class ReportBody : public nsISupports, public nsWrapperCache {
 
   explicit ReportBody(nsPIDOMWindowInner* aWindow);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
   nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
 
   virtual void ToJSON(JSONWriter& aJSONWriter) const = 0;
