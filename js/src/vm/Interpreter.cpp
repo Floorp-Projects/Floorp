@@ -2119,7 +2119,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
         /* Resume execution in the calling frame. */
         if (MOZ_LIKELY(interpReturnOK)) {
-          TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
+          TypeScript::MonitorBytecodeType(cx, script, REGS.pc, REGS.sp[-1]);
 
           if (JSOp(*REGS.pc) == JSOP_RESUME) {
             ADVANCE_AND_DISPATCH(JSOP_RESUME_LENGTH);
@@ -2773,7 +2773,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto error;
       }
 
-      TypeScript::Monitor(cx, script, REGS.pc, lval);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, lval);
       cx->debugOnlyCheck(lval);
     }
     END_CASE(JSOP_GETPROP)
@@ -2787,7 +2787,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto error;
       }
 
-      TypeScript::Monitor(cx, script, REGS.pc, rref);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, rref);
       cx->debugOnlyCheck(rref);
 
       REGS.sp--;
@@ -2802,7 +2802,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto error;
       }
 
-      TypeScript::Monitor(cx, script, REGS.pc, rval);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, rval);
       cx->debugOnlyCheck(rval);
     }
     END_CASE(JSOP_GETBOUNDNAME)
@@ -2895,7 +2895,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         }
       }
 
-      TypeScript::Monitor(cx, script, REGS.pc, res);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, res);
       REGS.sp--;
     }
     END_CASE(JSOP_GETELEM)
@@ -2915,7 +2915,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto error;
       }
 
-      TypeScript::Monitor(cx, script, REGS.pc, res);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, res);
       REGS.sp -= 2;
     }
     END_CASE(JSOP_GETELEM_SUPER)
@@ -2980,7 +2980,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       REGS.sp = args.spAfterCall();
-      TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, REGS.sp[-1]);
     }
     END_CASE(JSOP_EVAL)
 
@@ -3087,7 +3087,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           }
         }
         Value* newsp = args.spAfterCall();
-        TypeScript::Monitor(cx, script, REGS.pc, newsp[-1]);
+        TypeScript::MonitorBytecodeType(cx, script, REGS.pc, newsp[-1]);
         REGS.sp = newsp;
         ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);
       }
@@ -3237,7 +3237,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       PUSH_COPY(rval);
-      TypeScript::Monitor(cx, script, REGS.pc, rval);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, rval);
       static_assert(JSOP_GETNAME_LENGTH == JSOP_GETGNAME_LENGTH,
                     "We're sharing the END_CASE so the lengths better match");
     }
@@ -3251,7 +3251,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto error;
       }
 
-      TypeScript::Monitor(cx, script, REGS.pc, rval);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, rval);
     }
     END_CASE(JSOP_GETIMPORT)
 
@@ -3262,7 +3262,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       PUSH_COPY(rval);
-      TypeScript::Monitor(cx, script, REGS.pc, rval);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, rval);
     }
     END_CASE(JSOP_GETINTRINSIC)
 
@@ -3424,7 +3424,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 #endif
       PUSH_COPY(val);
-      TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
+      TypeScript::MonitorBytecodeType(cx, script, REGS.pc, REGS.sp[-1]);
     }
     END_CASE(JSOP_GETALIASEDVAR)
 
@@ -5105,7 +5105,7 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
   }
 
-  TypeScript::Monitor(cx, script, pc, res);
+  TypeScript::MonitorBytecodeType(cx, script, pc, res);
   return true;
 }
 
