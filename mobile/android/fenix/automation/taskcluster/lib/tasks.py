@@ -512,15 +512,10 @@ class TaskBuilder(object):
         test_name,
         job_symbol,
         group_symbol=None,
-        extra_test_args=None,
         force_run_on_64_bit_device=False,
     ):
-        extra_test_args = [] if extra_test_args is None else extra_test_args
-        apk_location = '{}/{}/artifacts/{}'.format(
-            _DEFAULT_TASK_URL, signing_task_id, DEFAULT_APK_ARTIFACT_LOCATION
-        )
         architecture, _ = get_architecture_and_build_type_from_variant(variant)
-        worker_type = 'gecko-t-ap-perf-p2' if force_run_on_64_bit_device or architecture == 'aarch64' else 'gecko-t-ap-perf-g5'
+        worker_type = 'gecko-t-bitbar-gw-perf-p2' if force_run_on_64_bit_device or architecture == 'aarch64' else 'gecko-t-bitbar-gw-perf-g5'
 
         if force_run_on_64_bit_device:
             treeherder_platform = 'android-hw-p2-8-0-arm7-api-16'
@@ -535,6 +530,8 @@ class TaskBuilder(object):
             name_prefix, variant, '(on 64-bit-device)' if force_run_on_64_bit_device else ''
         )
 
+        apk_url = '{}/{}/artifacts/{}'.format(_DEFAULT_TASK_URL, signing_task_id,
+                                                        DEFAULT_APK_ARTIFACT_LOCATION)
         return self._craft_default_task_definition(
             worker_type=worker_type,
             provisioner_id='proj-autophone',
@@ -542,27 +539,33 @@ class TaskBuilder(object):
             name=task_name,
             description=description,
             payload={
+                "maxRunTime": 2700,
                 "artifacts": [{
-                    'path': '/builds/worker/{}'.format(worker_path),
+                    'path': '{}'.format(worker_path),
                     'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
                     'type': 'directory',
                     'name': 'public/{}/'.format(public_folder)
                 } for worker_path, public_folder in (
-                    ('artifacts', 'test'),
-                    ('workspace/build/logs', 'logs'),
+                    ('artifacts/public', 'test'),
+                    ('workspace/logs', 'logs'),
                     ('workspace/build/blobber_upload_dir', 'test_info'),
                 )],
-                "command": [
+                "command": [[
+                    "/builds/taskcluster/script.py",
+                    "bash",
                     "./test-linux.sh",
-                    '--installer-url={}'.format(apk_location),
-                    "--test-packages-url={}/{}/artifacts/public/build/target.test_packages.json".format(_DEFAULT_TASK_URL, mozharness_task_id),
+                    "--cfg=mozharness/configs/raptor/android_hw_config.py",
                     "--test={}".format(test_name),
                     "--app=fenix",
                     "--binary=org.mozilla.fenix.raptor",
-                    "--activity=GeckoViewActivity",
-                    "--download-symbols=ondemand"
-                ] + extra_test_args,
+                    "--activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity",
+                    "--download-symbols=ondemand",
+                ]],
                 "env": {
+                    "EXTRA_MOZHARNESS_CONFIG": json.dumps({
+                        "test_packages_url": "{}/{}/artifacts/public/build/target.test_packages.json".format(_DEFAULT_TASK_URL, mozharness_task_id),
+                        "installer_url": apk_url,
+                    }),
                     "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/mozilla-central",
                     "GECKO_HEAD_REV": gecko_revision,
                     "MOZ_AUTOMATION": "1",
@@ -572,21 +575,27 @@ class TaskBuilder(object):
                     "MOZHARNESS_CONFIG": "raptor/android_hw_config.py",
                     "MOZHARNESS_SCRIPT": "raptor_script.py",
                     "MOZHARNESS_URL": "{}/{}/artifacts/public/build/mozharness.zip".format(_DEFAULT_TASK_URL, mozharness_task_id),
-                    "MOZILLA_BUILD_URL": apk_location,
+                    "MOZILLA_BUILD_URL": apk_url,
                     "NEED_XVFB": "false",
                     "NO_FAIL_ON_TEST_ERRORS": "1",
-                    "TASKCLUSTER_WORKER_TYPE": 'proj-autophone/{}'.format(worker_type),
-                    "WORKING_DIR": "/builds/worker",
-                    "WORKSPACE": "/builds/worker/workspace",
+                    "SCCACHE_DISABLE": "1",
+                    "TASKCLUSTER_WORKER_TYPE": worker_type[len('gecko-'):],
+                    "TRY_COMMIT_MSG": "",
+                    "TRY_SELECTOR": "fuzzy",
                     "XPCOM_DEBUG_BREAK": "warn",
                 },
-                "context": "https://hg.mozilla.org/mozilla-central/raw-file/{}/taskcluster/scripts/tester/test-linux.sh".format(gecko_revision)
+                "mounts": [{
+                    "content": {
+                        "url": "https://hg.mozilla.org/mozilla-central/raw-file/{}/taskcluster/scripts/tester/test-linux.sh".format(gecko_revision),
+                    },
+                    "file": "test-linux.sh",
+                }]
             },
             treeherder={
                 'jobKind': 'test',
                 'groupSymbol': 'Rap' if group_symbol is None else group_symbol,
                 'machine': {
-                  'platform': treeherder_platform,
+                    'platform': treeherder_platform,
                 },
                 'symbol': job_symbol,
                 'tier': 2,
