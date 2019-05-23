@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1558349549359" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1558536765550" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2996,6 +2996,38 @@
     <emItem blockID="413065ac-176f-440d-b4a7-0f928f3e330d" id="jid1-HfFCNbAsKx6Aow@jetpack">
       <prefs/>
       <versionRange minVersion="0" maxVersion="2.9.1.0" severity="3"/>
+    </emItem>
+    <emItem blockID="0225ae55-626d-42b2-8f48-46ec95ec89f8" id="/^((\{2b3eed60-8f6e-4afc-99f1-38d12f4253da\})|(\{3a6f9dac-3a93-4f6f-8b74-9ebc0f501306\})|(\{46bba8e9-7a75-4dd6-932e-bdd74141cb87\})|(\{4b480ab6-b63a-43f8-b4f4-d312972ab086\})|(\{6106687e-ca0c-4d7e-93bc-115929e4d299\})|(\{717ce133-3c0a-448e-b6ed-fc7d22b76534\})|(\{7224f1ae-c342-4bb5-8441-d324a8951624\})|(\{768e9638-2eba-42e4-a13a-4f3f1df391a2\})|(\{7b655f43-c871-46d2-8f6d-31989e8ee939\})|(\{7e46c692-9488-4671-8c39-7830f92628b0\})|(\{83bc6b56-545f-4ba1-a80b-f82d55cc0f68\})|(\{970a774e-b7a7-498f-b3f2-d88b14b4dab1\})|(\{9d2e8731-3287-46eb-9c19-ece63fe693c7\})|(\{a37ccd20-e04f-4949-b055-98ca58639606\})|(\{af85f82c-3e8f-4ee5-ab53-b8d3aaac34ec\})|(\{b35c6d47-8b07-4d49-89a9-dfe8c10f58f6\})|(\{c2485579-368c-4593-a1cd-985b2fa0b990\})|(\{c85c16ba-78b4-41b3-9201-f80fa662c52f\})|(\{c97e5535-6f2e-4d34-a5a3-0e6e07f7fd13\})|(\{ce7db166-9564-482f-91d9-3a450ec3216d\})|(\{d64a2c73-ff21-4e3e-998f-ec2dc42ad725\})|(\{db6d93c3-67a0-410c-b7bd-f72f267f0cec\})|(\{e513775f-359f-47aa-a3d9-eddc946aabe0\})|(\{f70258e4-643b-4ec2-9c84-de89009eec61\})|(\{f8794e87-82b2-4df4-bce6-db207f62c165\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="2212748f-ad60-497f-af7b-50d20b326e40" id="{da993d54-9605-42f7-a32f-9f565245070c}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="41137e55-8a11-4259-a009-42c29daadf17" id="{ac4be7d1-4db6-4b4c-bf48-e345350bcb59}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="a5fa8f77-7761-4996-a11d-d8cf723103da" id="{dc6176c4-a192-4a92-849f-ad13abe889ad}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="efecef61-549b-4c13-8a52-394c636dd24b" id="/^((\{ec19994c-c5a5-46d9-bd4d-0fc417c6f4b8\})|(\{a0be7e8d-b0a3-460b-8a52-429c79e49ee2\})|(\{1814dd58-4147-4cca-a0a3-c5aa35966d9c\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="9c5f5681-8547-4e65-9c05-5796e483b8e1" id="/^((\{3e20d1e2-a7ee-4ce2-ab9c-51c8300a8ff6\})|(\{30906bbc-0942-445b-89c8-f74dac0edb8f\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="7e86024e-5621-4ded-bc16-184f94fa2e29" id="{a37a7625-b64e-45f3-8b79-f71634f14438}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="43966df2-e95c-415b-bffc-13814e1d2b11" id="{3fc1db2b-e7db-4512-b24e-1faf4d3a1b4d}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
   </emItems>
   <pluginItems>
