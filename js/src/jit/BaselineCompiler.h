@@ -526,7 +526,7 @@ class BaselineCompilerHandler {
   JSScript* script_;
   jsbytecode* pc_;
 
-  // Index of the current ICEntry in the script's ICScript.
+  // Index of the current ICEntry in the script's JitScript.
   uint32_t icEntryIndex_;
 
   bool compileDebugInstrumentation_;

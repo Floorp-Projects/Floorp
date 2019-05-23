@@ -575,7 +575,7 @@ bool BaselineCompileFromBaselineInterpreter(JSContext* cx, BaselineFrame* frame,
 void FinishDiscardBaselineScript(FreeOp* fop, JSScript* script);
 
 void AddSizeOfBaselineData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf,
-                           size_t* data, size_t* fallbackStubs);
+                           size_t* data);
 
 void ToggleBaselineProfiling(JSRuntime* runtime, bool enable);
 
@@ -638,9 +638,9 @@ MOZ_MUST_USE bool BailoutIonToBaseline(
     bool invalidate, BaselineBailoutInfo** bailoutInfo,
     const ExceptionBailoutInfo* exceptionInfo);
 
-// Mark TypeScripts on the stack as active, so that they are not discarded
+// Mark JitScripts on the stack as active, so that they are not discarded
 // during GC.
-void MarkActiveTypeScripts(Zone* zone);
+void MarkActiveJitScripts(Zone* zone);
 
 MethodStatus BaselineCompile(JSContext* cx, JSScript* script,
                              bool forceDebugInstrumentation = false);

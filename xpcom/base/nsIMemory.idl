@@ -17,13 +17,13 @@
  * A client that wishes to be notified of low memory situations (for
  * example, because the client maintains a large memory cache that
  * could be released when memory is tight) should register with the
- * observer service (see nsIObserverService) using the topic 
- * "memory-pressure".  There are specific types of notications 
- * that can occur.  These types will be passed as the |aData| 
- * parameter of the of the "memory-pressure" notification: 
- * 
+ * observer service (see nsIObserverService) using the topic
+ * "memory-pressure".  There are specific types of notications
+ * that can occur.  These types will be passed as the |aData|
+ * parameter of the of the "memory-pressure" notification:
+ *
  * "low-memory"
- * This will be passed as the extra data when the pressure 
+ * This will be passed as the extra data when the pressure
  * observer is being asked to flush for low-memory conditions.
  *
  * "low-memory-ongoing"
@@ -33,8 +33,8 @@
  * a GC are unlikely to succeed.
  *
  * "heap-minimize"
- * This will be passed as the extra data when the pressure 
- * observer is being asked to flush because of a heap minimize 
+ * This will be passed as the extra data when the pressure
+ * observer is being asked to flush because of a heap minimize
  * call.
  */
 

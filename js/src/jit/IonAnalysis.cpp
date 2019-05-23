@@ -4554,7 +4554,7 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
     }
   }
 
-  TypeScript::MonitorThisType(cx, script, TypeSet::ObjectType(group));
+  JitScript::MonitorThisType(cx, script, TypeSet::ObjectType(group));
 
   MIRGraph graph(&temp);
   InlineScriptTree* inlineScriptTree =
@@ -4800,8 +4800,8 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
     return false;
   }
 
-  AutoKeepTypeScripts keepTypes(cx);
-  if (!script->ensureHasTypes(cx, keepTypes)) {
+  AutoKeepJitScripts keepJitScript(cx);
+  if (!script->ensureHasJitScript(cx, keepJitScript)) {
     return false;
   }
 

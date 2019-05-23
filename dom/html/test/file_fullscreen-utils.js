@@ -72,12 +72,19 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
 
 // Calls |callback| when the next fullscreenerror is dispatched to inDoc||document.
 function addFullscreenErrorContinuation(callback, inDoc) {
-  var doc = inDoc || document;
-  var listener = function(event) {
-    doc.removeEventListener("fullscreenerror", listener);
-    setTimeout(function(){callback(event);}, 0);
-  };
-  doc.addEventListener("fullscreenerror", listener);
+  return new Promise((resolve) => {
+    let doc = inDoc || document;
+    let listener = function(event) {
+      doc.removeEventListener("fullscreenerror", listener);
+      setTimeout(function(){
+        if(callback) {
+          callback(event);
+        }
+        resolve();
+      }, 0);
+    };
+    doc.addEventListener("fullscreenerror", listener);
+  })
 }
 
 // Waits until the window has both the load event and a MozAfterPaint called on

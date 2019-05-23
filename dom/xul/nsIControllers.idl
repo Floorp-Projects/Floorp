@@ -29,6 +29,6 @@ interface nsIControllers : nsISupports
         Get the controller specified by the given ID.
     */
     nsIController getControllerById(in unsigned long controllerID);
-    
+
 	unsigned long getControllerCount();
 };

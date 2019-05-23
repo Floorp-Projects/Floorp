@@ -15,14 +15,14 @@ interface nsIRefreshURI : nsISupports {
     /**
       * Load a uri after waiting for aMillis milliseconds. If the docshell
       * is busy loading a page currently, the refresh request will be
-      * queued and executed when the current load finishes. 
+      * queued and executed when the current load finishes.
       *
       * @param aUri The uri to refresh.
       * @param aPrincipal The triggeringPrincipal for the refresh load
       *   May be null, in which case the principal of current document will be
       *   applied.
       * @param aMillis The number of milliseconds to wait.
-      * @param aRepeat Flag to indicate if the uri is to be 
+      * @param aRepeat Flag to indicate if the uri is to be
       *                repeatedly refreshed every aMillis milliseconds.
       * @param aMetaRefresh Flag to indicate if this is a Meta refresh.
       */
@@ -45,24 +45,24 @@ interface nsIRefreshURI : nsISupports {
                          in long aMillis, in boolean aMetaRefresh);
 
     /**
-      * Checks the passed in channel to see if there is a refresh header, 
+      * Checks the passed in channel to see if there is a refresh header,
       * if there is, will setup a timer to refresh the uri found
       * in the header. If docshell is busy loading a page currently, the
-      * request will be queued and executed when the current page 
-      * finishes loading. 
+      * request will be queued and executed when the current page
+      * finishes loading.
       *
       * Returns the NS_REFRESHURI_HEADER_FOUND success code if a refresh
       * header was found and successfully setup.
       *
-      * @param aChannel The channel to be parsed. 
+      * @param aChannel The channel to be parsed.
       */
-    void setupRefreshURI(in nsIChannel aChannel); 
+    void setupRefreshURI(in nsIChannel aChannel);
 
     /**
       * Parses the passed in header string and sets up a refreshURI if
-      * a "refresh" header is found. If docshell is busy loading a page 
-      * currently, the request will be queued and executed when 
-      * the current page finishes loading. 
+      * a "refresh" header is found. If docshell is busy loading a page
+      * currently, the request will be queued and executed when
+      * the current page finishes loading.
       *
       * @param aBaseURI base URI to resolve refresh uri with.
       * @param aPrincipal The triggeringPrincipal for the refresh load

@@ -23,7 +23,7 @@ interface mozIStorageAggregateFunction : nsISupports {
   /**
    * onStep is called when next value should be passed to
    * a custom function.
-   * 
+   *
    * @param aFunctionArguments    The arguments passed in to the function
    */
   void onStep(in mozIStorageValueArray aFunctionArguments);

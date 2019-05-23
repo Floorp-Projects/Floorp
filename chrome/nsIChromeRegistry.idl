@@ -49,7 +49,7 @@ interface nsIXULChromeRegistry : nsIChromeRegistry
   // passed to ECMA402 Intl API methods without throwing a RangeError.
   ACString getSelectedLocale(in ACString packageName,
                              [optional] in boolean asBCP47);
-  
+
   // Get whether the default writing direction of the locale is RTL
   // (or may be overridden by intl.uidirection pref)
   boolean isLocaleRTL(in ACString package);

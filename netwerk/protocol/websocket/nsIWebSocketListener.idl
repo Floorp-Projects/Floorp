@@ -15,7 +15,7 @@ interface nsIWebSocketListener : nsISupports
 {
     /**
      * Called to signify the establishment of the message stream.
-     * 
+     *
      * Unlike most other networking channels (which use nsIRequestObserver
      * instead of this class), we do not guarantee that OnStart is always
      * called: OnStop is called without calling this function if errors occur
@@ -31,7 +31,7 @@ interface nsIWebSocketListener : nsISupports
      * OnStop is the final notification the listener will receive and it
      * completes the WebSocket connection: after it returns the
      * nsIWebSocketChannel will release its reference to the listener.
-     * 
+     *
      * Note: this event can be received in error cases even if
      * nsIWebSocketChannel::Close() has not been called.
      *
@@ -84,7 +84,7 @@ interface nsIWebSocketListener : nsISupports
     [must_use] void onServerClose(in nsISupports aContext,
                                   in unsigned short aCode,
                                   in AUTF8String aReason);
-    
+
 };
 
 

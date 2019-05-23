@@ -17,13 +17,13 @@ interface nsIInterfaceRequestor;
 
 /**
  * The uri dispatcher is responsible for taking uri's, determining
- * the content and routing the opened url to the correct content 
- * handler. 
+ * the content and routing the opened url to the correct content
+ * handler.
  *
- * When you encounter a url you want to open, you typically call 
- * openURI, passing it the content listener for the window the uri is 
- * originating from. The uri dispatcher opens the url to discover the 
- * content type. It then gives the content listener first crack at 
+ * When you encounter a url you want to open, you typically call
+ * openURI, passing it the content listener for the window the uri is
+ * originating from. The uri dispatcher opens the url to discover the
+ * content type. It then gives the content listener first crack at
  * handling the content. If it doesn't want it, the dispatcher tries
  * to hand it off one of the registered content listeners. This allows
  * running applications the chance to jump in and handle the content.
@@ -32,8 +32,8 @@ interface nsIInterfaceRequestor;
  * looking for the preferred content handler for the content type
  * of the uri. The content handler may create an app instance
  * or it may hand the contents off to a platform specific plugin
- * or helper app. Or it may hand the url off to an OS registered 
- * application. 
+ * or helper app. Or it may hand the url off to an OS registered
+ * application.
  */
 [scriptable, uuid(8762c4e7-be35-4958-9b81-a05685bb516d)]
 interface nsIURILoader : nsISupports
@@ -64,7 +64,7 @@ interface nsIURILoader : nsISupports
   /**
    * As applications such as messenger and the browser are instantiated,
    * they register content listener's with the uri dispatcher corresponding
-   * to content windows within that application. 
+   * to content windows within that application.
    *
    * Note to self: we may want to optimize things a bit more by requiring
    * the content types the registered content listener cares about.
@@ -94,7 +94,7 @@ interface nsIURILoader : nsISupports
    *        from the window context. We will also be using the window context
    *        to get at the progress event sink interface.
    *        <b>Must not be null!</b>
-   */ 
+   */
   void openURI(in nsIChannel aChannel,
                in unsigned long aFlags,
                in nsIInterfaceRequestor aWindowContext);
@@ -133,7 +133,7 @@ interface nsIURILoader : nsISupports
    *        from the window context. We will also be using the window context
    *        to get at the progress event sink interface.
    *        <b>Must not be null!</b>
-   */ 
+   */
   nsIStreamListener openChannel(in nsIChannel aChannel,
                                 in unsigned long aFlags,
                                 in nsIInterfaceRequestor aWindowContext);

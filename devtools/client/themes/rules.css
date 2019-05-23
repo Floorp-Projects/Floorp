@@ -365,22 +365,20 @@
   display: inline-block;
   width: 12px;
   height: 12px;
-  background-size: cover;
+  background-size: 12px;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
 }
 
 .ruleview-warning {
   background-image: url(chrome://devtools/skin/images/alert.svg);
-  background-position: 0.73px 0.4px;
-  -moz-context-properties: fill;
   fill: var(--yellow-60);
 }
 
 .ruleview-unused-warning {
-  background-image: url(chrome://devtools/skin/images/alerticon-unused.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole/info.svg);
   background-color: var(--theme-sidebar-background);
-  -moz-context-properties: fill, stroke;
-  fill: var(--theme-icon-dimmed-color);
-  stroke: var(--theme-icon-dimmed-color);
+  fill: var(--theme-icon-dimmed-color);  
 }
 
 .ruleview-unused-warning:hover {
