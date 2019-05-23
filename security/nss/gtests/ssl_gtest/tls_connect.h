@@ -48,6 +48,8 @@ class TlsConnectTestBase : public ::testing::Test {
   virtual void SetUp();
   virtual void TearDown();
 
+  PRTime now() const { return now_; }
+
   // Initialize client and server.
   void Init();
   // Clear the statistics.
@@ -131,6 +133,8 @@ class TlsConnectTestBase : public ::testing::Test {
 
   // Move the DTLS timers for both endpoints to pop the next timer.
   void ShiftDtlsTimers();
+  void AdvanceTime(PRTime time_shift);
+  void RolloverAntiReplay();
 
   void SaveAlgorithmPolicy();
   void RestoreAlgorithmPolicy();
@@ -164,10 +168,12 @@ class TlsConnectTestBase : public ::testing::Test {
   void CheckResumption(SessionResumptionMode expected);
   void CheckExtendedMasterSecret();
   void CheckEarlyDataAccepted();
+  static PRTime TimeFunc(void* arg);
 
   bool expect_extended_master_secret_;
   bool expect_early_data_accepted_;
   bool skip_version_checks_;
+  PRTime now_;
 
   // Track groups and make sure that there are no duplicates.
   class DuplicateGroupChecker {

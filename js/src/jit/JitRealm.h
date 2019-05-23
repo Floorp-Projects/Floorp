@@ -178,7 +178,6 @@ class JitRuntime {
   WriteOnceData<uint32_t> objectGroupPreBarrierOffset_;
 
   // Thunk to call malloc/free.
-  WriteOnceData<uint32_t> mallocStubOffset_;
   WriteOnceData<uint32_t> freeStubOffset_;
 
   // Thunk called to finish compilation of an IonScript.
@@ -266,7 +265,6 @@ class JitRuntime {
   void generateInvalidator(MacroAssembler& masm, Label* bailoutTail);
   uint32_t generatePreBarrier(JSContext* cx, MacroAssembler& masm,
                               MIRType type);
-  void generateMallocStub(MacroAssembler& masm);
   void generateFreeStub(MacroAssembler& masm);
   JitCode* generateDebugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
   JitCode* generateBaselineDebugModeOSRHandler(
@@ -388,8 +386,6 @@ class JitRuntime {
         MOZ_CRASH();
     }
   }
-
-  TrampolinePtr mallocStub() const { return trampolineCode(mallocStubOffset_); }
 
   TrampolinePtr freeStub() const { return trampolineCode(freeStubOffset_); }
 

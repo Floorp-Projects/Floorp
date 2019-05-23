@@ -183,10 +183,11 @@ typedef SECStatus (*sslHandshakeFunc)(sslSocket *ss);
 
 void ssl_CacheSessionID(sslSocket *ss);
 void ssl_UncacheSessionID(sslSocket *ss);
-void ssl_ServerCacheSessionID(sslSessionID *sid);
+void ssl_ServerCacheSessionID(sslSessionID *sid, PRTime creationTime);
 void ssl_ServerUncacheSessionID(sslSessionID *sid);
 
-typedef sslSessionID *(*sslSessionIDLookupFunc)(const PRIPv6Addr *addr,
+typedef sslSessionID *(*sslSessionIDLookupFunc)(PRTime ssl_now,
+                                                const PRIPv6Addr *addr,
                                                 unsigned char *sid,
                                                 unsigned int sidLen,
                                                 CERTCertDBHandle *dbHandle);
@@ -946,6 +947,10 @@ struct sslSocketStr {
     /* Enabled version range */
     SSLVersionRange vrange;
 
+    /* A function that returns the current time. */
+    SSLTimeFunc now;
+    void *nowArg;
+
     /* State flags */
     unsigned long clientAuthRequested;
     unsigned long delayDisabled;     /* Nagle delay disabled */
@@ -1104,8 +1109,7 @@ extern char ssl_trace;
 extern FILE *ssl_trace_iob;
 extern FILE *ssl_keylog_iob;
 extern PZLock *ssl_keylog_lock;
-extern PRUint32 ssl3_sid_timeout;
-extern PRUint32 ssl_ticket_lifetime;
+static const PRUint32 ssl_ticket_lifetime = 2 * 24 * 60 * 60; // 2 days.
 
 extern const char *const ssl3_cipherName[];
 
@@ -1195,8 +1199,9 @@ extern SECStatus ssl3_InitPendingCipherSpecs(sslSocket *ss, PK11SymKey *secret,
                                              PRBool derive);
 extern void ssl_DestroyKeyMaterial(ssl3KeyMaterial *keyMaterial);
 extern sslSessionID *ssl3_NewSessionID(sslSocket *ss, PRBool is_server);
-extern sslSessionID *ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port,
-                                   const char *peerID, const char *urlSvrName);
+extern sslSessionID *ssl_LookupSID(PRTime now, const PRIPv6Addr *addr,
+                                   PRUint16 port, const char *peerID,
+                                   const char *urlSvrName);
 extern void ssl_FreeSID(sslSessionID *sid);
 extern void ssl_DestroySID(sslSessionID *sid, PRBool freeIt);
 extern sslSessionID *ssl_ReferenceSID(sslSessionID *sid);
@@ -1606,8 +1611,8 @@ PRBool ssl3_config_match(const ssl3CipherSuiteCfg *suite, PRUint8 policy,
 
 /* calls for accessing wrapping keys across processes. */
 extern SECStatus
-ssl_GetWrappingKey(unsigned int symWrapMechIndex, unsigned int wrapKeyIndex,
-                   SSLWrappedSymWrappingKey *wswk);
+ssl_GetWrappingKey(unsigned int symWrapMechIndex,
+                   unsigned int wrapKeyIndex, SSLWrappedSymWrappingKey *wswk);
 
 /* The caller passes in the new value it wants
  * to set.  This code tests the wrapped sym key entry in the file on disk.
@@ -1719,13 +1724,8 @@ extern void ssl3_CheckCipherSuiteOrderConsistency();
 
 extern int ssl_MapLowLevelError(int hiLevelError);
 
-extern PRUint32 ssl_TimeSec(void);
-#ifdef UNSAFE_FUZZER_MODE
-#define ssl_TimeUsec() ((PRTime)12345678)
-#else
-#define ssl_TimeUsec() (PR_Now())
-#endif
-extern PRBool ssl_TicketTimeValid(const NewSessionTicket *ticket);
+PRTime ssl_Time(const sslSocket *ss);
+PRBool ssl_TicketTimeValid(const sslSocket *ss, const NewSessionTicket *ticket);
 
 extern void SSL_AtomicIncrementLong(long *x);
 
@@ -1763,7 +1763,7 @@ PK11SymKey *ssl_unwrapSymKey(PK11SymKey *wrapKey,
                              CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation,
                              int keySize, CK_FLAGS keyFlags, void *pinArg);
 
-/* Remove when stable. */
+/* Experimental APIs. Remove when stable. */
 
 SECStatus SSLExp_SetResumptionTokenCallback(PRFileDesc *fd,
                                             SSLResumptionTokenCallback cb,
@@ -1814,6 +1814,8 @@ SSLExp_HkdfExpandLabelWithMech(PRUint16 version, PRUint16 cipherSuite, PK11SymKe
                                const char *label, unsigned int labelLen,
                                CK_MECHANISM_TYPE mech, unsigned int keySize,
                                PK11SymKey **keyp);
+
+SECStatus SSLExp_SetTimeFunc(PRFileDesc *fd, SSLTimeFunc f, void *arg);
 
 SEC_END_PROTOS
 

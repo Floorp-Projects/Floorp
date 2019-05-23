@@ -2811,7 +2811,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
                    const NativeTemplateObject& templateObj, bool initContents);
 
  public:
-  void callMallocStub(size_t nbytes, Register result, Label* fail);
   void callFreeStub(Register slots);
   void createGCObject(Register result, Register temp,
                       const TemplateObject& templateObj,
