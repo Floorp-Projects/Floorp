@@ -191,12 +191,16 @@ const HEADERS = [
     canFilter: true,
   },
   {
-      name: "domain",
-      canFilter: true,
+    name: "domain",
+    canFilter: true,
   },
   {
     name: "file",
     canFilter: false,
+  },
+  {
+    name: "url",
+    canFilter: true,
   },
   {
     name: "protocol",

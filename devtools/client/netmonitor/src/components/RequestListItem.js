@@ -30,6 +30,7 @@ const { RESPONSE_HEADERS } = require("../constants");
   RequestListColumnTime,
   RequestListColumnTransferredSize,
   RequestListColumnType,
+  RequestListColumnUrl,
   RequestListColumnWaterfall
 */
 
@@ -47,6 +48,9 @@ loader.lazyGetter(this, "RequestListColumnDomain", function() {
 });
 loader.lazyGetter(this, "RequestListColumnFile", function() {
   return createFactory(require("./RequestListColumnFile"));
+});
+loader.lazyGetter(this, "RequestListColumnUrl", function() {
+  return createFactory(require("./RequestListColumnUrl"));
 });
 loader.lazyGetter(this, "RequestListColumnMethod", function() {
   return createFactory(require("./RequestListColumnMethod"));
@@ -223,10 +227,14 @@ class RequestListItem extends Component {
         columns.status && RequestListColumnStatus({ item }),
         columns.method && RequestListColumnMethod({ item }),
         columns.domain && RequestListColumnDomain({
-            item,
-            onSecurityIconMouseDown,
+          item,
+          onSecurityIconMouseDown,
         }),
         columns.file && RequestListColumnFile({ item }),
+        columns.url && RequestListColumnUrl({
+          item,
+          onSecurityIconMouseDown,
+        }),
         columns.protocol && RequestListColumnProtocol({ item }),
         columns.scheme && RequestListColumnScheme({ item }),
         columns.remoteip && RequestListColumnRemoteIP({ item }),
