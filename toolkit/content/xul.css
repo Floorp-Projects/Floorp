@@ -107,15 +107,6 @@ label html|span.accesskey {
 
 /********** toolbarbutton **********/
 
-toolbarbutton {
-  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton");
-}
-
-toolbarbutton.badged-button > toolbarbutton,
-toolbarbutton.badged-button {
-  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-badged");
-}
-
 .toolbarbutton-badge:not([value]),
 .toolbarbutton-badge[value=""] {
   display: none;

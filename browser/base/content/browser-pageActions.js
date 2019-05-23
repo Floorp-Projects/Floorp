@@ -239,6 +239,9 @@ var BrowserPageActions = {
       "subviewbutton-iconic",
       "pageAction-panel-button"
     );
+    if (action.isBadged) {
+      buttonNode.setAttribute("badged", "true");
+    }
     buttonNode.setAttribute("actionid", action.id);
     buttonNode.addEventListener("command", event => {
       this.doCommandForAction(action, event, buttonNode);
@@ -1126,7 +1129,6 @@ BrowserPageActions.addSearchEngine = {
     this._updateTitleAndIcon();
     this.action.setWantsSubview(this.engines.length > 1, window);
     let button = BrowserPageActions.panelButtonNodeForActionID(this.action.id);
-    button.classList.add("badged-button");
     button.setAttribute("image", this.engines[0].icon);
     button.setAttribute("uri", this.engines[0].uri);
     button.setAttribute("crop", "center");
@@ -1139,7 +1141,7 @@ BrowserPageActions.addSearchEngine = {
     }
     for (let engine of this.engines) {
       let button = document.createXULElement("toolbarbutton");
-      button.classList.add("subviewbutton", "subviewbutton-iconic");
+      button.classList.add("subviewbutton", "subviewbutton-iconic", "badged-button");
       button.setAttribute("label", engine.title);
       button.setAttribute("image", engine.icon);
       button.setAttribute("uri", engine.uri);
