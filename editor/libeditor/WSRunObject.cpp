@@ -368,12 +368,18 @@ nsresult WSRunObject::InsertText(Document& aDocument,
     }
   }
 
-  // Ready, aim, fire!
+  // XXX If the point is not editable, InsertTextWithTransaction() returns
+  //     error, but we keep handling it.  But I think that it wastes the
+  //     runtime cost.  So, perhaps, we should return error code which couldn't
+  //     modify it and make each caller of this method decide whether it should
+  //     keep or stop handling the edit action.
   nsresult rv =
       MOZ_KnownLive(mHTMLEditor)
           ->InsertTextWithTransaction(aDocument, theString, pointToInsert,
                                       aPointAfterInsertedString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    // XXX Temporarily, set new insertion point to the original point.
+    *aPointAfterInsertedString = pointToInsert;
     return NS_OK;
   }
   return NS_OK;

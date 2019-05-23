@@ -1,0 +1,29 @@
+<html>
+<head>
+    <script>
+
+      function start () {
+        const sel = document.getSelection()
+        const range_1 = new Range()
+        const noscript = document.getElementById('id_24')
+        const map = document.getElementById('id_26')
+        sel.selectAllChildren(noscript)
+        const range_2 = range_1.cloneRange()
+        range_2.selectNode(map)
+        const frag = range_2.extractContents()
+        range_2.insertNode(noscript)
+        document.documentElement.contentEditable = true
+        document.execCommand('removeFormat', false,)
+        noscript.contentEditable = false
+        document.execCommand('insertText', false, 'ï¿½\n')
+      }
+
+      window.addEventListener('load', start)
+    </script>
+</head>
+<body>
+<big class="">
+    <map class="" id="id_26">
+        <noscript class="" id="id_24">
+</body>
+</html>
