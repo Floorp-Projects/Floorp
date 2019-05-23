@@ -37,7 +37,7 @@ platform(linux,mac) == blend-clipped.yaml blend-clipped.png
 platform(linux,mac) == filter-drop-shadow-clip.yaml filter-drop-shadow-clip.png
 == filter-segments.yaml filter-segments-ref.yaml
 == iframe-dropshadow.yaml iframe-dropshadow-ref.yaml
-== filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml
+skip_on(android,debug) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml  # Android: GL error 502 at blit_framebuffer
 == fuzzy(3,20000) srgb-to-linear.yaml srgb-to-linear-ref.yaml
 != srgb-to-linear-2.yaml srgb-to-linear-ref.yaml
 != filter-blur-huge.yaml blank.yaml
