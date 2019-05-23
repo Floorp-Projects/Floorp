@@ -661,29 +661,28 @@ inline StackTypeSet* TypeScript::bytecodeTypes(const AutoSweepTypeScript& sweep,
                        typeArray(sweep));
 }
 
-/* static */ inline void TypeScript::Monitor(JSContext* cx, JSScript* script,
-                                             jsbytecode* pc,
-                                             const js::Value& rval) {
+/* static */ inline void TypeScript::MonitorBytecodeType(
+    JSContext* cx, JSScript* script, jsbytecode* pc, const js::Value& rval) {
   TypeMonitorResult(cx, script, pc, rval);
 }
 
-/* static */ inline void TypeScript::Monitor(JSContext* cx, JSScript* script,
-                                             jsbytecode* pc,
-                                             TypeSet::Type type) {
+/* static */ inline void TypeScript::MonitorBytecodeType(JSContext* cx,
+                                                         JSScript* script,
+                                                         jsbytecode* pc,
+                                                         TypeSet::Type type) {
   TypeMonitorResult(cx, script, pc, type);
 }
 
-/* static */ inline void TypeScript::Monitor(JSContext* cx,
-                                             const js::Value& rval) {
+/* static */ inline void TypeScript::MonitorBytecodeType(
+    JSContext* cx, const js::Value& rval) {
   jsbytecode* pc;
   RootedScript script(cx, cx->currentScript(&pc));
-  Monitor(cx, script, pc, rval);
+  MonitorBytecodeType(cx, script, pc, rval);
 }
 
-/* static */ inline void TypeScript::Monitor(JSContext* cx, JSScript* script,
-                                             jsbytecode* pc,
-                                             StackTypeSet* types,
-                                             const js::Value& rval) {
+/* static */ inline void TypeScript::MonitorBytecodeType(
+    JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
+    const js::Value& rval) {
   TypeSet::Type type = TypeSet::GetValueType(rval);
   if (!types->hasType(type)) {
     TypeMonitorResult(cx, script, pc, types, type);
@@ -717,8 +716,9 @@ inline StackTypeSet* TypeScript::bytecodeTypes(const AutoSweepTypeScript& sweep,
   }
 }
 
-/* static */ inline void TypeScript::SetThis(JSContext* cx, JSScript* script,
-                                             TypeSet::Type type) {
+/* static */ inline void TypeScript::MonitorThisType(JSContext* cx,
+                                                     JSScript* script,
+                                                     TypeSet::Type type) {
   cx->check(script, type);
 
   TypeScript* typeScript = script->types();
@@ -738,14 +738,16 @@ inline StackTypeSet* TypeScript::bytecodeTypes(const AutoSweepTypeScript& sweep,
   }
 }
 
-/* static */ inline void TypeScript::SetThis(JSContext* cx, JSScript* script,
-                                             const js::Value& value) {
-  SetThis(cx, script, TypeSet::GetValueType(value));
+/* static */ inline void TypeScript::MonitorThisType(JSContext* cx,
+                                                     JSScript* script,
+                                                     const js::Value& value) {
+  MonitorThisType(cx, script, TypeSet::GetValueType(value));
 }
 
-/* static */ inline void TypeScript::SetArgument(JSContext* cx,
-                                                 JSScript* script, unsigned arg,
-                                                 TypeSet::Type type) {
+/* static */ inline void TypeScript::MonitorArgType(JSContext* cx,
+                                                    JSScript* script,
+                                                    unsigned arg,
+                                                    TypeSet::Type type) {
   cx->check(script->compartment(), type);
 
   TypeScript* typeScript = script->types();
@@ -765,10 +767,11 @@ inline StackTypeSet* TypeScript::bytecodeTypes(const AutoSweepTypeScript& sweep,
   }
 }
 
-/* static */ inline void TypeScript::SetArgument(JSContext* cx,
-                                                 JSScript* script, unsigned arg,
-                                                 const js::Value& value) {
-  SetArgument(cx, script, arg, TypeSet::GetValueType(value));
+/* static */ inline void TypeScript::MonitorArgType(JSContext* cx,
+                                                    JSScript* script,
+                                                    unsigned arg,
+                                                    const js::Value& value) {
+  MonitorArgType(cx, script, arg, TypeSet::GetValueType(value));
 }
 
 inline AutoKeepTypeScripts::AutoKeepTypeScripts(JSContext* cx)

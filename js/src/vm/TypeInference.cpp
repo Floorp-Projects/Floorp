@@ -3381,7 +3381,7 @@ void js::TypeMonitorCallSlow(JSContext* cx, JSObject* callee,
   JSScript* script = callee->as<JSFunction>().nonLazyScript();
 
   if (!constructing) {
-    TypeScript::SetThis(cx, script, args.thisv());
+    TypeScript::MonitorThisType(cx, script, args.thisv());
   }
 
   /*
@@ -3391,12 +3391,12 @@ void js::TypeMonitorCallSlow(JSContext* cx, JSObject* callee,
    */
   unsigned arg = 0;
   for (; arg < args.length() && arg < nargs; arg++) {
-    TypeScript::SetArgument(cx, script, arg, args[arg]);
+    TypeScript::MonitorArgType(cx, script, arg, args[arg]);
   }
 
   /* Watch for fewer actuals than formals to the call. */
   for (; arg < nargs; arg++) {
-    TypeScript::SetArgument(cx, script, arg, UndefinedValue());
+    TypeScript::MonitorArgType(cx, script, arg, UndefinedValue());
   }
 }
 
