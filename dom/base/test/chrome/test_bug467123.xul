@@ -17,10 +17,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467123
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-
     /** Test for Bug 467123 **/
+    let url = Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService)
+                .newURI(document.location.href);
+    let file = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                 .getService(Ci.nsIChromeRegistry)
+                 .convertChromeURL(url)
+                 .QueryInterface(Ci.nsIFileURL)
+                 .file.parent;
+    file.append("clonedoc");
+    Components.manager.addBootstrappedManifestLocation(file);
+
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "chrome://global/content/bindings/button.xml", false);
+    xhr.open("GET", "chrome://clonedoc/content/doc.xml", false);
     xhr.send();
     ok(xhr.responseXML, "We should have response document!");
     var e = null;

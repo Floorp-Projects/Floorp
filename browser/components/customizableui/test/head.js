@@ -30,7 +30,7 @@ const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kForceOverflowWidthPx = 300;
 
 function createDummyXULButton(id, label, win = window) {
-  let btn = document.createElementNS(kNSXUL, "toolbarbutton");
+  let btn = win.document.createElementNS(kNSXUL, "toolbarbutton");
   btn.id = id;
   btn.setAttribute("label", label || id);
   btn.className = "toolbarbutton-1 chromeclass-toolbar-additional";
@@ -445,8 +445,7 @@ function checkContextMenu(aContextMenu, aExpectedEntries, aWindow = window) {
 
 function waitForOverflowButtonShown(win = window) {
   let ov = win.document.getElementById("nav-bar-overflow-button");
-  let icon = win.document.getAnonymousElementByAttribute(ov, "class", "toolbarbutton-icon");
-  return waitForElementShown(icon);
+  return waitForElementShown(ov.icon);
 }
 function waitForElementShown(element) {
   let win = element.ownerGlobal;

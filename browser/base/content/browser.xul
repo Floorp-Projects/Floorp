@@ -745,7 +745,8 @@
                            removable="true"/>
 
             <toolbarbutton id="alltabs-button"
-                           class="toolbarbutton-1 chromeclass-toolbar-additional tabs-alltabs-button badged-button"
+                           class="toolbarbutton-1 chromeclass-toolbar-additional tabs-alltabs-button"
+                           badged="true"
                            oncommand="gTabsPanel.showAllTabsPanel();"
                            label="&listAllTabs.label;"
                            tooltiptext="&listAllTabs.label;"
@@ -1021,7 +1022,8 @@
              during the customization of the toolbar, in the palette, and before
              the Downloads Indicator overlay is loaded. -->
         <toolbarbutton id="downloads-button"
-                       class="toolbarbutton-1 chromeclass-toolbar-additional badged-button"
+                       class="toolbarbutton-1 chromeclass-toolbar-additional"
+                       badged="true"
                        key="key_openDownloads"
                        onmousedown="DownloadsIndicatorView.onCommand(event);"
                        onkeypress="DownloadsIndicatorView.onCommand(event);"
@@ -1057,7 +1059,8 @@
                        tooltiptext="&libraryButton.tooltip;"
                        label="&places.library.title;"/>
 
-        <toolbarbutton id="fxa-toolbar-menu-button" class="toolbarbutton-1 badged-button chromeclass-toolbar-additional subviewbutton-nav"
+        <toolbarbutton id="fxa-toolbar-menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
+                       badged="true"
                        onmousedown="gSync.toggleAccountPanel('PanelUI-fxa', event)"
                        onkeypress="gSync.toggleAccountPanel('PanelUI-fxa', event)"
                        consumeanchor="fxa-toolbar-menu-button"
@@ -1084,7 +1087,8 @@
       <toolbaritem id="PanelUI-button"
                    removable="false">
         <toolbarbutton id="PanelUI-menu-button"
-                       class="toolbarbutton-1 badged-button"
+                       class="toolbarbutton-1"
+                       badged="true"
                        consumeanchor="PanelUI-button"
                        label="&brandShortName;"
                        tooltiptext="&appmenu.tooltip;"/>
@@ -1203,7 +1207,6 @@
                      type="menu"
                      label="&bookmarksMenuButton2.label;"
                      tooltip="dynamic-shortcut-tooltip"
-                     anchor="dropmarker"
                      ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
                      ondragover="PlacesMenuDNDHandler.onDragOver(event);"
                      ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
