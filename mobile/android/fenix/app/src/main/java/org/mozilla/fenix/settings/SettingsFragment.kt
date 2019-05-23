@@ -52,7 +52,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import kotlin.coroutines.CoroutineContext
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObserver {
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
@@ -61,7 +61,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         job = Job()
-        updateSignInVisibility()
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
             try {
@@ -118,6 +117,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
 
         setupPreferences()
         setupAccountUI()
+        updateSignInVisibility()
     }
 
     @Suppress("ComplexMethod")
@@ -283,6 +283,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
 
     override fun onAuthenticated(account: OAuthAccount) {
         updateAuthState(account)
+        updateSignInVisibility()
     }
 
     override fun onError(error: Exception) {
