@@ -159,6 +159,7 @@ PhaseKindGraphRoots = [
             JoinParallelTasksPhaseKind
         ]),
     ]),
+    PhaseKind("DECOMMIT", "Decommit", 72),
     PhaseKind("GC_END", "End Callback", 44),
     PhaseKind("MINOR_GC", "All Minor GCs", 45, [
         MarkRootsPhaseKind,
