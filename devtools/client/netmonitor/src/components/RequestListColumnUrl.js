@@ -6,18 +6,18 @@
 
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const { td } = require("devtools/client/shared/vendor/react-dom-factories");
+const { L10N } = require("../utils/l10n");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getFormattedIPAndPort } = require("../utils/format-utils");
 const { propertiesEqual } = require("../utils/request-utils");
 const SecurityState = createFactory(require("./SecurityState"));
-
-const UPDATED_DOMAIN_PROPS = [
+const UPDATED_FILE_PROPS = [
   "remoteAddress",
   "securityState",
   "urlDetails",
 ];
 
-class RequestListColumnDomain extends Component {
+class RequestListColumnUrl extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
@@ -26,10 +26,14 @@ class RequestListColumnDomain extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return !propertiesEqual(UPDATED_DOMAIN_PROPS, this.props.item, nextProps.item);
+    return !propertiesEqual(UPDATED_FILE_PROPS, this.props.item, nextProps.item);
   }
 
   render() {
+    const {
+      item: { urlDetails },
+    } = this.props;
+
     const {
       item,
       onSecurityIconMouseDown,
@@ -39,21 +43,33 @@ class RequestListColumnDomain extends Component {
       remoteAddress,
       remotePort,
       urlDetails: {
-        host,
         isLocal,
       },
     } = item;
 
-    const title = host + (remoteAddress ?
+    const title = (remoteAddress ?
       ` (${getFormattedIPAndPort(remoteAddress, remotePort)})` : "");
 
+    // deals with returning whole url
+    const originalURL = urlDetails.url;
+    const decodedFileURL = urlDetails.unicodeUrl;
+    const ORIGINAL_FILE_URL = L10N.getFormatStr("netRequest.originalFileURL.tooltip",
+      originalURL);
+    const DECODED_FILE_URL = L10N.getFormatStr("netRequest.decodedFileURL.tooltip",
+      decodedFileURL);
+    const urlToolTip = originalURL === decodedFileURL ?
+      originalURL : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
+
     return (
-      td({ className: "requests-list-column requests-list-domain", title },
+      td({
+          className: "requests-list-column requests-list-url",
+          title: urlToolTip + title,
+      },
         SecurityState({item, onSecurityIconMouseDown, isLocal}),
-        host,
+        originalURL
       )
     );
   }
 }
 
-module.exports = RequestListColumnDomain;
+module.exports = RequestListColumnUrl;
