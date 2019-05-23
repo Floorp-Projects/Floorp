@@ -125,48 +125,73 @@ function ensureStorage() {
  * called otherwise.
  */
 function migrateStorage(storage) {
-  if (storage.data.__version == 2) {
+  if (storage.data.__version == 3) {
     return;
   }
-  const newData = {
-    __version: 2,
-    experiments: {},
-  };
-  for (let [expName, experiment] of Object.entries(storage.data)) {
-    if (expName == "__version") {
-      continue;
+
+  // v1 doesn't have a __version; it's just experiments
+  const oldVersion = storage.data.__version || 1;
+
+  if (oldVersion == 1) {
+    // Add version field
+    storage.data = {
+      __version: 2,
+      experiments: storage.data,
+    };
+
+    // Migrate storage.data to multi-preference format
+    const oldExperiments = storage.data.experiments;
+    const v2Experiments = {};
+
+    for (let [expName, experiment] of Object.entries(oldExperiments)) {
+      if (expName == "__version") {
+        continue;
+      }
+
+      const {
+        name,
+        branch,
+        expired,
+        lastSeen,
+        preferenceName,
+        preferenceValue,
+        preferenceType,
+        previousPreferenceValue,
+        preferenceBranchType,
+        experimentType,
+      } = experiment;
+      const newExperiment = {
+        name,
+        branch,
+        expired,
+        lastSeen,
+        preferences: {
+          [preferenceName]: {
+            preferenceBranchType,
+            preferenceType,
+            preferenceValue,
+            previousPreferenceValue,
+          },
+        },
+        experimentType,
+      };
+      v2Experiments[expName] = newExperiment;
+    }
+    storage.data.experiments = v2Experiments;
+  }
+  if (oldVersion <= 2) {
+    // Add "actionName" field for experiments that don't have it
+    for (const experiment of Object.values(storage.data.experiments)) {
+      if (!experiment.actionName) {
+        // Assume SinglePreferenceExperimentAction because as of this
+        // writing, no multi-pref experiment recipe has launched.
+        experiment.actionName = "SinglePreferenceExperimentAction";
+      }
     }
 
-    const {
-      name,
-      branch,
-      expired,
-      lastSeen,
-      preferenceName,
-      preferenceValue,
-      preferenceType,
-      previousPreferenceValue,
-      preferenceBranchType,
-      experimentType,
-    } = experiment;
-    const newExperiment = {
-      name,
-      branch,
-      expired,
-      lastSeen,
-      preferences: {
-        [preferenceName]: {
-          preferenceBranchType,
-          preferenceType,
-          preferenceValue,
-          previousPreferenceValue,
-        },
-      },
-      experimentType,
-    };
-    newData.experiments[expName] = newExperiment;
+    // Bump version
+    storage.data.__version = 3;
   }
-  storage.data = newData;
 }
 
 const log = LogManager.getLogger("preference-experiments");
