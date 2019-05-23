@@ -4,12 +4,15 @@
 
 package org.mozilla.fenix.home
 
+import android.content.DialogInterface
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
@@ -85,7 +88,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
     var deleteAllSessionsJob: (suspend () -> Unit)? = null
     var deleteSessionJob: (suspend () -> Unit)? = null
-    var deleteCollectionJob: (suspend () -> Unit)? = null
 
     private val onboarding by lazy { FenixOnboarding(requireContext()) }
     private lateinit var sessionControlComponent: SessionControlComponent
@@ -346,14 +348,29 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 deleteAllSessionsJob = null
             }
         }
+    }
 
-        deleteCollectionJob?.let {
-            launch {
-                it.invoke()
-            }.invokeOnCompletion {
-                deleteCollectionJob = null
+    private fun createDeleteCollectionPrompt(tabCollection: TabCollection) {
+        AlertDialog.Builder(
+            ContextThemeWrapper(
+                activity,
+                R.style.DialogStyle
+            )
+        ).apply {
+            val message = context.getString(R.string.tab_collection_dialog_message, tabCollection.title)
+            setMessage(message)
+            setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
+                dialog.cancel()
             }
-        }
+            setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
+                launch(Dispatchers.IO) {
+                    requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
+                }.invokeOnCompletion {
+                    dialog.dismiss()
+                }
+            }
+            create()
+        }.show()
     }
 
     @Suppress("ComplexMethod")
@@ -368,7 +385,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                     .onNext(SessionControlChange.ExpansionChange(action.collection, false))
             }
             is CollectionAction.Delete -> {
-                removeCollectionWithUndo(action.collection)
+                createDeleteCollectionPrompt(action.collection)
             }
             is CollectionAction.AddTab -> {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
@@ -566,32 +583,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 ?.let { session ->
                     sessionManager.remove(session)
                 }
-        }
-    }
-
-    private fun removeCollectionWithUndo(tabCollection: TabCollection) {
-        // Update the UI with the tab collection removed, but don't remove it from storage yet
-        val updatedCollectionList = requireComponents.core.tabCollectionStorage.cachedTabCollections.toMutableList()
-        updatedCollectionList.remove(tabCollection)
-        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(updatedCollectionList))
-
-        deleteCollectionJob = {
-            launch(Dispatchers.IO) {
-                requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
-            }
-        }
-
-        CoroutineScope(Dispatchers.Main).allowUndo(
-            view!!, getString(R.string.snackbar_collection_deleted),
-            getString(R.string.snackbar_deleted_undo), {
-                deleteCollectionJob = null
-                getManagedEmitter<SessionControlChange>().onNext(SessionControlChange
-                    .CollectionsChange(requireComponents.core.tabCollectionStorage.cachedTabCollections))
-            }
-        ) {
-            launch(Dispatchers.IO) {
-                requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
-            }
         }
     }
 
