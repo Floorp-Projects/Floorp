@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import org.mozilla.fenix.R
+import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import kotlin.coroutines.CoroutineContext
 
@@ -23,6 +24,7 @@ class SaveCollectionListAdapter(
 
     private lateinit var job: Job
     private var tabCollections = listOf<TabCollection>()
+    private var selectedTabs: Set<Tab> = setOf()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CollectionViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -34,6 +36,12 @@ class SaveCollectionListAdapter(
     override fun onBindViewHolder(holder: CollectionViewHolder, position: Int) {
         val collection = tabCollections[position]
         holder.bind(collection)
+        holder.view.setOnClickListener {
+            collection.apply {
+                val action = CollectionCreationAction.SelectCollection(this, selectedTabs.toList())
+                actionEmitter.onNext(action)
+            }
+        }
     }
 
     override fun getItemCount(): Int = tabCollections.size
@@ -48,8 +56,9 @@ class SaveCollectionListAdapter(
         job.cancel()
     }
 
-    fun reloadData(tabCollections: List<TabCollection>) {
+    fun updateData(tabCollections: List<TabCollection>, selectedTabs: Set<Tab>) {
         this.tabCollections = tabCollections
+        this.selectedTabs = selectedTabs
         notifyDataSetChanged()
     }
 }
@@ -65,17 +74,6 @@ class CollectionViewHolder(
         get() = Dispatchers.IO + job
 
     private var collection: TabCollection? = null
-
-    private val listener = View.OnClickListener {
-        collection?.apply {
-            val action = CollectionCreationAction.SelectCollection(this)
-            actionEmitter.onNext(action)
-        }
-    }
-
-    init {
-        view.setOnClickListener(listener)
-    }
 
     fun bind(collection: TabCollection) {
         this.collection = collection

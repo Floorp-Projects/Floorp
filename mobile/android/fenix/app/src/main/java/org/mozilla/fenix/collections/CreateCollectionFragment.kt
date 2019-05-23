@@ -103,17 +103,17 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                         .onNext(CollectionCreationChange.StepChanged(SaveCollectionStep.SelectCollection))
                 }
                 is CollectionCreationAction.AddTabToSelection -> {
-                    viewModel.selectedTabs.add(it.tab)
                     getManagedEmitter<CollectionCreationChange>()
                         .onNext(CollectionCreationChange.TabAdded(it.tab))
                 }
                 is CollectionCreationAction.RemoveTabFromSelection -> {
-                    viewModel.selectedTabs.remove(it.tab)
                     getManagedEmitter<CollectionCreationChange>()
                         .onNext(CollectionCreationChange.TabRemoved(it.tab))
                 }
-                is CollectionCreationAction.SelectAllTapped -> getManagedEmitter<CollectionCreationChange>()
-                    .onNext(CollectionCreationChange.AddAllTabs)
+                is CollectionCreationAction.SelectAllTapped -> {
+                    getManagedEmitter<CollectionCreationChange>()
+                        .onNext(CollectionCreationChange.AddAllTabs)
+                }
                 is CollectionCreationAction.AddNewCollection -> getManagedEmitter<CollectionCreationChange>().onNext(
                     CollectionCreationChange.StepChanged(SaveCollectionStep.NameCollection)
                 )
@@ -130,10 +130,10 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     }
                 }
                 is CollectionCreationAction.SelectCollection -> {
-                    showSavedSnackbar(viewModel.selectedTabs.size)
+                    showSavedSnackbar(it.tabs.size)
                     dismiss()
                     context?.let { context ->
-                        val sessionBundle = viewModel.selectedTabs.toList().toSessionBundle(context)
+                        val sessionBundle = it.tabs.toList().toSessionBundle(context)
                         launch(Dispatchers.IO) {
                             requireComponents.core.tabCollectionStorage
                                 .addTabsToCollection(it.collection, sessionBundle)

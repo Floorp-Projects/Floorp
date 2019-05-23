@@ -21,7 +21,6 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.component_collection_creation.*
 import kotlinx.android.synthetic.main.component_collection_creation.view.*
-import kotlinx.android.synthetic.main.sign_in_preference.*
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
@@ -257,8 +256,7 @@ class CollectionCreationUIView(
                     view.context.getString(R.string.create_collection_name_collection)
             }
         }
-
-        collectionSaveListAdapter.reloadData(it.tabCollections)
+        collectionSaveListAdapter.updateData(it.tabCollections, it.selectedTabs)
     }
 
     fun onResumed() {

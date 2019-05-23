@@ -54,7 +54,7 @@ sealed class CollectionCreationAction : Action {
         CollectionCreationAction()
     data class RenameCollection(val collection: TabCollection, val name: String) :
         CollectionCreationAction()
-    data class SelectCollection(val collection: TabCollection) :
+    data class SelectCollection(val collection: TabCollection, val tabs: List<Tab>) :
         CollectionCreationAction()
 }
 
