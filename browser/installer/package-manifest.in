@@ -288,6 +288,7 @@
 @RESPATH@/greprefs.js
 @RESPATH@/defaults/autoconfig/prefcalls.js
 @RESPATH@/browser/defaults/permissions
+; Remote Settings JSON dumps
 @RESPATH@/browser/defaults/settings/blocklists
 @RESPATH@/browser/defaults/settings/pinning
 @RESPATH@/browser/defaults/settings/main
