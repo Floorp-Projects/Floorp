@@ -1893,26 +1893,22 @@ static const webgl::FormatUsageInfo* ValidateCopyDestUsage(
   return dstUsage;
 }
 
-static bool ValidateCopyTexImageForFeedback(const WebGLContext& webgl,
-                                            const WebGLTexture& tex,
-                                            const uint8_t mipLevel,
-                                            const uint32_t zLayer) {
-  const auto& fb = webgl.BoundReadFb();
+bool WebGLTexture::ValidateCopyTexImageForFeedback(uint32_t level,
+                                                   GLint layer) const {
+  const auto& fb = mContext->mBoundReadFramebuffer;
   if (fb) {
-    MOZ_ASSERT(fb->ColorReadBuffer());
-    const auto& attach = *fb->ColorReadBuffer();
-    MOZ_ASSERT(attach.ZLayerCount() ==
-               1);  // Multiview invalid for copyTexImage.
+    const auto& attach = fb->ColorReadBuffer();
+    MOZ_ASSERT(attach);
 
-    if (attach.Texture() == &tex && attach.Layer() == zLayer &&
-        attach.MipLevel() == mipLevel) {
+    if (attach->Texture() == this && attach->Layer() == layer &&
+        uint32_t(attach->MipLevel()) == level) {
       // Note that the TexImageTargets *don't* have to match for this to be
       // undefined per GLES 3.0.4 p211, thus an INVALID_OP in WebGL.
-      webgl.ErrorInvalidOperation(
+      mContext->ErrorInvalidOperation(
           "Feedback loop detected, as this texture"
           " is already attached to READ_FRAMEBUFFER's"
           " READ_BUFFER-selected COLOR_ATTACHMENT%u.",
-          attach.mAttachmentPoint);
+          attach->mAttachmentPoint);
       return false;
     }
   }
@@ -2056,10 +2052,7 @@ void WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level,
     return;
   }
 
-  const uint32_t zOffset = 0;
-  if (!ValidateCopyTexImageForFeedback(*mContext, *this,
-                                       AssertedCast<uint8_t>(level), zOffset))
-    return;
+  if (!ValidateCopyTexImageForFeedback(level)) return;
 
   ////////////////////////////////////
   // Check that source and dest info are compatible
@@ -2145,10 +2138,7 @@ void WebGLTexture::CopyTexSubImage(TexImageTarget target, GLint level,
     return;
   }
 
-  if (!ValidateCopyTexImageForFeedback(*mContext, *this,
-                                       AssertedCast<uint8_t>(level),
-                                       AssertedCast<uint32_t>(zOffset)))
-    return;
+  if (!ValidateCopyTexImageForFeedback(level, zOffset)) return;
 
   ////////////////////////////////////
   // Check that source and dest info are compatible

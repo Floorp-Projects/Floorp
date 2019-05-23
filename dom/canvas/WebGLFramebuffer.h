@@ -31,17 +31,6 @@ namespace gl {
 class GLContext;
 }  // namespace gl
 
-namespace webgl {
-struct FbAttachInfo final {
-  WebGLRenderbuffer* rb = nullptr;
-  WebGLTexture* tex = nullptr;
-  GLint mipLevel = 0;
-  GLint zLayer = 0;
-  GLsizei zLayerCount = 1;
-  bool isMultiview = false;
-};
-}  // namespace webgl
-
 class WebGLFBAttachPoint final {
   friend class WebGLFramebuffer;
 
@@ -52,10 +41,9 @@ class WebGLFBAttachPoint final {
  private:
   WebGLRefPtr<WebGLTexture> mTexturePtr;
   WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
-  uint32_t mTexImageLayer = 0;
-  uint8_t mTexImageZLayerCount = 1;
-  uint8_t mTexImageLevel = 0;
-  bool mIsMultiview = false;
+  TexImageTarget mTexImageTarget = 0;
+  GLint mTexImageLayer = 0;
+  uint32_t mTexImageLevel = 0;
 
   ////
 
@@ -79,16 +67,16 @@ class WebGLFBAttachPoint final {
 
   void Clear();
 
-  void Set(gl::GLContext* gl, const webgl::FbAttachInfo&);
+  void SetTexImage(gl::GLContext* gl, WebGLTexture* tex, TexImageTarget target,
+                   GLint level, GLint layer = 0);
+  void SetRenderbuffer(gl::GLContext* gl, WebGLRenderbuffer* rb);
 
   WebGLTexture* Texture() const { return mTexturePtr; }
   WebGLRenderbuffer* Renderbuffer() const { return mRenderbufferPtr; }
 
-  auto Layer() const { return mTexImageLayer; }
-  auto ZLayerCount() const { return mTexImageZLayerCount; }
-  auto MipLevel() const { return mTexImageLevel; }
-  const auto& IsMultiview() const { return mIsMultiview; }
-
+  TexImageTarget ImageTarget() const { return mTexImageTarget; }
+  GLint Layer() const { return mTexImageLayer; }
+  uint32_t MipLevel() const { return mTexImageLevel; }
   void AttachmentName(nsCString* out) const;
 
   const webgl::ImageInfo* GetImageInfo() const;
@@ -105,8 +93,8 @@ class WebGLFBAttachPoint final {
     if (!HasAttachment() | !other.HasAttachment()) return false;
 
 #define _(X) (X == other.X)
-    return (_(mRenderbufferPtr) && _(mTexturePtr) && _(mTexImageLevel) &&
-            _(mTexImageLayer) && _(mTexImageZLayerCount));
+    return (_(mRenderbufferPtr) & _(mTexturePtr) & _(mTexImageTarget.get()) &
+            _(mTexImageLevel) & _(mTexImageLayer));
 #undef _
   }
 
@@ -125,9 +113,9 @@ class WebGLFBAttachPoint final {
 
       ORDER_BY(mRef.mRenderbufferPtr)
       ORDER_BY(mRef.mTexturePtr)
+      ORDER_BY(mRef.mTexImageTarget.get())
       ORDER_BY(mRef.mTexImageLevel)
       ORDER_BY(mRef.mTexImageLayer)
-      ORDER_BY(mRef.mTexImageZLayerCount)
 
 #undef ORDER_BY
       return false;
@@ -179,8 +167,6 @@ class WebGLFramebuffer final : public nsWrapperCache,
     uint32_t width = 0;
     uint32_t height = 0;
     bool hasFloat32 = false;
-    uint8_t zLayerCount = 1;
-    bool isMultiview = false;
 
     // IsFeedback
     std::vector<const WebGLFBAttachPoint*> texAttachments;  // Non-null
@@ -270,8 +256,12 @@ class WebGLFramebuffer final : public nsWrapperCache,
   }
 
   FBStatus CheckFramebufferStatus() const;
-  void FramebufferAttach(GLenum attachEnum,
-                         const webgl::FbAttachInfo& toAttach);
+  void FramebufferRenderbuffer(GLenum attachment, GLenum rbtarget,
+                               WebGLRenderbuffer* rb);
+  void FramebufferTexture2D(GLenum attachment, GLenum texImageTarget,
+                            WebGLTexture* tex, GLint level);
+  void FramebufferTextureLayer(GLenum attachment, WebGLTexture* tex,
+                               GLint level, GLint layer);
   void DrawBuffers(const dom::Sequence<GLenum>& buffers);
   void ReadBuffer(GLenum attachPoint);
 

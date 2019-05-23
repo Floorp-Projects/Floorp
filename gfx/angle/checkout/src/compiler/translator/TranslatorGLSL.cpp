@@ -278,9 +278,13 @@ void TranslatorGLSL::writeExtensionBehavior(TIntermNode *root, ShCompileOptions 
         }
 
         const bool isMultiview = (iter.first == TExtension::OVR_multiview2);
-        if (isMultiview)
+        if (isMultiview && getShaderType() == GL_VERTEX_SHADER &&
+            (compileOptions & SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER) != 0u)
         {
-            EmitMultiviewGLSL(*this, compileOptions, iter.second, sink);
+            // Emit the NV_viewport_array2 extension in a vertex shader if the
+            // SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER option is set and the OVR_multiview2(2)
+            // extension is requested.
+            sink << "#extension GL_NV_viewport_array2 : require\n";
         }
 
         // Support ANGLE_texture_multisample extension on GLSL300

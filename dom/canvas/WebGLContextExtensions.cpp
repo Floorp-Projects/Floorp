@@ -51,7 +51,6 @@ namespace mozilla {
     WEBGL_EXTENSION_IDENTIFIER(OES_texture_half_float)
     WEBGL_EXTENSION_IDENTIFIER(OES_texture_half_float_linear)
     WEBGL_EXTENSION_IDENTIFIER(OES_vertex_array_object)
-    WEBGL_EXTENSION_IDENTIFIER(OVR_multiview2)
     WEBGL_EXTENSION_IDENTIFIER(WEBGL_color_buffer_float)
     WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_astc)
     WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_etc)
@@ -186,10 +185,6 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
 
     case WebGLExtensionID::OES_vertex_array_object:
       return !IsWebGL2();  // Always supported in webgl1.
-
-    // OVR_
-    case WebGLExtensionID::OVR_multiview2:
-      return WebGLExtensionMultiview::IsSupported(this);
 
     // WEBGL_
     case WebGLExtensionID::WEBGL_color_buffer_float:
@@ -392,11 +387,6 @@ void WebGLContext::EnableExtension(WebGLExtensionID ext) {
       break;
     case WebGLExtensionID::OES_vertex_array_object:
       obj = new WebGLExtensionVertexArray(this);
-      break;
-
-    // WEBGL_
-    case WebGLExtensionID::OVR_multiview2:
-      obj = new WebGLExtensionMultiview(this);
       break;
 
     // WEBGL_

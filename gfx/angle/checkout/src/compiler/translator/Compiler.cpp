@@ -1373,40 +1373,4 @@ bool TCompiler::isVaryingDefined(const char *varyingName)
     return false;
 }
 
-void EmitMultiviewGLSL(const TCompiler &compiler,
-                       const ShCompileOptions &compileOptions,
-                       const TBehavior behavior,
-                       TInfoSinkBase &sink)
-{
-    ASSERT(behavior != EBhUndefined);
-    if (behavior == EBhDisable)
-        return;
-
-    const bool isVertexShader = (compiler.getShaderType() == GL_VERTEX_SHADER);
-    if (compileOptions & SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW)
-    {
-        // Emit ARB_shader_viewport_layer_array/NV_viewport_array2 in a vertex shader if the
-        // SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER option is set and the
-        // OVR_multiview(2) extension is requested.
-        if (isVertexShader && (compileOptions & SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER))
-        {
-            sink << "#if defined(GL_ARB_shader_viewport_layer_array)\n"
-                 << "#extension GL_ARB_shader_viewport_layer_array : require\n"
-                 << "#elif defined(GL_NV_viewport_array2)\n"
-                 << "#extension GL_NV_viewport_array2 : require\n"
-                 << "#endif\n";
-        }
-    }
-    else
-    {
-        sink << "#extension GL_OVR_multiview2 : " << GetBehaviorString(behavior) << "\n";
-
-        const auto &numViews = compiler.getNumViews();
-        if (isVertexShader && numViews != -1)
-        {
-            sink << "layout(num_views=" << numViews << ") in;\n";
-        }
-    }
-}
-
 }  // namespace sh
