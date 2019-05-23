@@ -199,6 +199,7 @@ const reducers = {
    * - when changes cancel each other out leaving the rule unchanged, the rule is removed
    *   from the store. Its parent rule is removed as well if it too ends up unchanged.
    */
+  /* eslint-disable complexity */
   [TRACK_CHANGE](state, { change }) {
     const defaults = {
       selector: null,
@@ -351,6 +352,7 @@ const reducers = {
 
     return state;
   },
+  /* eslint-enable complexity */
 
   [RESET_CHANGES](state) {
     return INITIAL_STATE;
