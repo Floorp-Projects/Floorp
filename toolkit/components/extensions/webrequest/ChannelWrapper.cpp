@@ -22,7 +22,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/BrowserHost.h"
 #include "nsIContentPolicy.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -140,10 +140,10 @@ already_AddRefed<ChannelWrapper> ChannelWrapper::Get(const GlobalObject& global,
 
 already_AddRefed<ChannelWrapper> ChannelWrapper::GetRegisteredChannel(
     const GlobalObject& global, uint64_t aChannelId,
-    const WebExtensionPolicy& aAddon, nsIRemoteTab* aBrowserParent) {
+    const WebExtensionPolicy& aAddon, nsIRemoteTab* aRemoteTab) {
   ContentParent* contentParent = nullptr;
-  if (BrowserParent* parent = static_cast<BrowserParent*>(aBrowserParent)) {
-    contentParent = parent->Manager();
+  if (BrowserHost* host = BrowserHost::GetFrom(aRemoteTab)) {
+    contentParent = host->GetActor()->Manager();
   }
 
   auto& webreq = WebRequestService::GetSingleton();
@@ -682,12 +682,12 @@ void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
 
 already_AddRefed<nsITraceableChannel> ChannelWrapper::GetTraceableChannel(
     nsAtom* aAddonId, dom::ContentParent* aContentParent) const {
-  nsCOMPtr<nsIRemoteTab> browserParent;
-  if (mAddonEntries.Get(aAddonId, getter_AddRefs(browserParent))) {
+  nsCOMPtr<nsIRemoteTab> remoteTab;
+  if (mAddonEntries.Get(aAddonId, getter_AddRefs(remoteTab))) {
     ContentParent* contentParent = nullptr;
-    if (browserParent) {
+    if (remoteTab) {
       contentParent =
-          static_cast<BrowserParent*>(browserParent.get())->Manager();
+          BrowserHost::GetFrom(remoteTab.get())->GetActor()->Manager();
     }
 
     if (contentParent == aContentParent) {

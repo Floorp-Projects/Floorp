@@ -214,6 +214,8 @@
 
   MozXULElement.implementCustomInterface(MozButtonBase, [Ci.nsIDOMXULButtonElement]);
 
+  MozElements.ButtonBase = MozButtonBase;
+
   class MozButton extends MozButtonBase {
     static get inheritedAttributes() {
       return {
