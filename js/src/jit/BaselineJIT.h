@@ -638,9 +638,9 @@ MOZ_MUST_USE bool BailoutIonToBaseline(
     bool invalidate, BaselineBailoutInfo** bailoutInfo,
     const ExceptionBailoutInfo* exceptionInfo);
 
-// Mark TypeScripts on the stack as active, so that they are not discarded
+// Mark JitScripts on the stack as active, so that they are not discarded
 // during GC.
-void MarkActiveTypeScripts(Zone* zone);
+void MarkActiveJitScripts(Zone* zone);
 
 MethodStatus BaselineCompile(JSContext* cx, JSScript* script,
                              bool forceDebugInstrumentation = false);

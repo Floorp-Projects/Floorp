@@ -188,17 +188,17 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   }
 
   // Ensure the argument types are included in the argument TypeSets stored in
-  // the TypeScript. This is necessary for Ion, because the import will use
+  // the JitScript. This is necessary for Ion, because the import will use
   // the skip-arg-checks entry point.
   //
-  // Note that the TypeScript is never discarded while the script has a
+  // Note that the JitScript is never discarded while the script has a
   // BaselineScript, so if those checks hold now they must hold at least until
   // the BaselineScript is discarded and when that happens the import is
   // patched back.
-  AutoSweepTypeScript sweep(script);
-  TypeScript* typeScript = script->types();
+  AutoSweepJitScript sweep(script);
+  JitScript* jitScript = script->jitScript();
 
-  StackTypeSet* thisTypes = typeScript->thisTypes(sweep, script);
+  StackTypeSet* thisTypes = jitScript->thisTypes(sweep, script);
   if (!thisTypes->hasType(TypeSet::UndefinedType())) {
     return true;
   }
@@ -233,7 +233,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
         MOZ_CRASH("NullRef not expressible");
     }
 
-    StackTypeSet* argTypes = typeScript->argTypes(sweep, script, i);
+    StackTypeSet* argTypes = jitScript->argTypes(sweep, script, i);
     if (!argTypes->hasType(type)) {
       return true;
     }
@@ -243,7 +243,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   // arguments rectifier: check that the imported function can handle
   // undefined there.
   for (uint32_t i = importArgs.length(); i < importFun->nargs(); i++) {
-    StackTypeSet* argTypes = typeScript->argTypes(sweep, script, i);
+    StackTypeSet* argTypes = jitScript->argTypes(sweep, script, i);
     if (!argTypes->hasType(TypeSet::UndefinedType())) {
       return true;
     }

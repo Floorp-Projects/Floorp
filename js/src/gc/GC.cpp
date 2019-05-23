@@ -2531,7 +2531,7 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
 
   for (auto script = zone->cellIterUnsafe<JSScript>(); !script.done();
        script.next()) {
-    AutoSweepTypeScript sweep(script);
+    AutoSweepJitScript sweep(script);
   }
   for (auto group = zone->cellIterUnsafe<ObjectGroup>(); !group.done();
        group.next()) {
@@ -5916,7 +5916,7 @@ static void SweepThing(Shape* shape) {
   }
 }
 
-static void SweepThing(JSScript* script) { AutoSweepTypeScript sweep(script); }
+static void SweepThing(JSScript* script) { AutoSweepJitScript sweep(script); }
 
 static void SweepThing(ObjectGroup* group) {
   AutoSweepObjectGroup sweep(group);
@@ -8102,7 +8102,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
        script.next()) {
     MOZ_ASSERT(script->realm() == source);
     script->realm_ = target;
-    MOZ_ASSERT(!script->types());
+    MOZ_ASSERT(!script->jitScript());
   }
 
   GlobalObject* global = target->maybeGlobal();
