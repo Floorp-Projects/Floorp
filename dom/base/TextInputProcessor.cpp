@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gfxPrefs.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
@@ -389,7 +390,7 @@ nsresult TextInputProcessor::BeginInputTransactionInternal(
 
   nsresult rv = NS_OK;
   if (aForTests) {
-    bool isAPZAware = StaticPrefs::TestEventsAsyncEnabled();
+    bool isAPZAware = gfxPrefs::TestEventsAsyncEnabled();
     rv = dispatcher->BeginTestInputTransaction(this, isAPZAware);
   } else {
     rv = dispatcher->BeginInputTransaction(this);

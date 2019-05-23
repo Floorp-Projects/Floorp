@@ -8,13 +8,13 @@
 
 #include "CompositableHost.h"
 #include "gfxEnv.h"
+#include "gfxPrefs.h"
 #include "gfxEnv.h"
 #include "GeckoProfiler.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "nsExceptionHandler.h"
 #include "mozilla/Range.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
@@ -326,8 +326,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
 
-  if (!IsRootWebRenderBridgeParent() &&
-      StaticPrefs::WebRenderSplitRenderRoots()) {
+  if (!IsRootWebRenderBridgeParent() && gfxPrefs::WebRenderSplitRenderRoots()) {
     mRenderRoot = wr::RenderRoot::Content;
   }
 
@@ -922,7 +921,7 @@ bool WebRenderBridgeParent::SetDisplayList(
       }
       LayoutDeviceIntSize widgetSize = mWidget->GetClientSize();
       LayoutDeviceIntRect rect;
-      if (StaticPrefs::WebRenderSplitRenderRoots()) {
+      if (gfxPrefs::WebRenderSplitRenderRoots()) {
         rect = RoundedToInt(aRect);
         rect.SetWidth(
             std::max(0, std::min(widgetSize.width - rect.X(), rect.Width())));
@@ -1609,7 +1608,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   for (auto renderRoot : wr::kRenderRoots) {
     if (renderRoot == wr::RenderRoot::Default ||
         (IsRootWebRenderBridgeParent() &&
-         StaticPrefs::WebRenderSplitRenderRoots())) {
+         gfxPrefs::WebRenderSplitRenderRoots())) {
       // Clear resources
       wr::TransactionBuilder txn;
       txn.SetLowPriority(true);
@@ -1697,7 +1696,7 @@ void WebRenderBridgeParent::ScheduleForcedGenerateFrame() {
   for (auto renderRoot : wr::kRenderRoots) {
     if (renderRoot == wr::RenderRoot::Default ||
         (IsRootWebRenderBridgeParent() &&
-         StaticPrefs::WebRenderSplitRenderRoots())) {
+         gfxPrefs::WebRenderSplitRenderRoots())) {
       wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
       fastTxn.InvalidateRenderedFrame();
       Api(renderRoot)->SendTransaction(fastTxn);
@@ -1734,7 +1733,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetConfirmedTargetAPZC(
   for (size_t i = 0; i < aTargets.Length(); i++) {
     // Guard against bad data from hijacked child processes
     if (aTargets[i].mRenderRoot > wr::kHighestRenderRoot ||
-        (!StaticPrefs::WebRenderSplitRenderRoots() &&
+        (!gfxPrefs::WebRenderSplitRenderRoots() &&
          aTargets[i].mRenderRoot != wr::RenderRoot::Default)) {
       NS_ERROR(
           "Unexpected render root in RecvSetConfirmedTargetAPZC; dropping "
@@ -2100,7 +2099,7 @@ void WebRenderBridgeParent::NotifyDidSceneBuild(
   if (lastVsyncId == VsyncId() || !mMostRecentComposite ||
       mMostRecentComposite >= lastVsync ||
       ((TimeStamp::Now() - lastVsync).ToMilliseconds() >
-       StaticPrefs::WebRenderLateSceneBuildThreshold())) {
+       gfxPrefs::WebRenderLateSceneBuildThreshold())) {
     mCompositorScheduler->ScheduleComposition();
     return;
   }

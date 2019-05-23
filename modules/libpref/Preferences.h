@@ -22,7 +22,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
-#include <atomic>
 
 class nsIFile;
 
@@ -33,8 +32,6 @@ typedef void (*PrefChangedFunc)(const char* aPref, void* aData);
 class nsPrefBranch;
 
 namespace mozilla {
-
-struct RegisterCallbacksInternal;
 
 void UnloadPrefsModule();
 
@@ -508,11 +505,6 @@ class Preferences final : public nsIPrefService,
                                    float aDefault = 0.0f,
                                    bool aSkipAssignment = false);
 
-  static nsresult AddAtomicFloatVarCache(std::atomic<float>* aVariable,
-                                         const nsACString& aPref,
-                                         float aDefault = 0.0f,
-                                         bool aSkipAssignment = false);
-
   template <int N>
   static nsresult AddBoolVarCache(bool* aVariable, const char (&aPref)[N],
                                   bool aDefault = false,
@@ -564,15 +556,6 @@ class Preferences final : public nsIPrefService,
                                    bool aSkipAssignment = false) {
     return AddFloatVarCache(aVariable, nsLiteralCString(aPref), aDefault,
                             aSkipAssignment);
-  }
-
-  template <int N>
-  static nsresult AddAtomicFloatVarCache(std::atomic<float>* aVariable,
-                                         const char (&aPref)[N],
-                                         float aDefault = 0.0f,
-                                         bool aSkipAssignment = false) {
-    return AddAtomicFloatVarCache(aVariable, nsLiteralCString(aPref), aDefault,
-                                  aSkipAssignment);
   }
 
   // When a content process is created these methods are used to pass changed
@@ -642,7 +625,6 @@ class Preferences final : public nsIPrefService,
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects(
       bool aIsStartup);
 
-  friend struct RegisterCallbacksInternal;
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const nsACString& aPref, void* aClosure,
                                    MatchKind aMatchKind,

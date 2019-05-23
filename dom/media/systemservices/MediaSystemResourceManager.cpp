@@ -6,6 +6,7 @@
 
 #include "mozilla/TaskQueue.h"
 
+#include "gfxPrefs.h"
 #include "MediaSystemResourceManagerChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 

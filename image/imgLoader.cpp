@@ -15,7 +15,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/StaticPrefs.h"
@@ -56,6 +55,7 @@
 #include "nsIMemoryReporter.h"
 #include "DecoderFactory.h"
 #include "Image.h"
+#include "gfxPrefs.h"
 #include "prtime.h"
 #include "ReferrerInfo.h"
 
@@ -86,7 +86,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
 
     layers::CompositorManagerChild* manager =
         CompositorManagerChild::GetInstance();
-    if (!manager || !StaticPrefs::ImageMemDebugReporting()) {
+    if (!manager || !gfxPrefs::ImageMemDebugReporting()) {
       layers::SharedSurfacesMemoryReport sharedSurfaces;
       FinishCollectReports(aHandleReport, aData, aAnonymize, sharedSurfaces);
       return NS_OK;
@@ -263,7 +263,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
 
       summaryTotal += counter;
 
-      if (counter.IsNotable() || StaticPrefs::ImageMemDebugReporting()) {
+      if (counter.IsNotable() || gfxPrefs::ImageMemDebugReporting()) {
         ReportImage(aHandleReport, aData, aPathPrefix, counter,
                     aSharedSurfaces);
       } else {
@@ -344,7 +344,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
       if (counter.Type() == SurfaceMemoryCounterType::NORMAL) {
         PlaybackType playback = counter.Key().Playback();
         if (playback == PlaybackType::eAnimated) {
-          if (StaticPrefs::ImageMemDebugReporting()) {
+          if (gfxPrefs::ImageMemDebugReporting()) {
             surfacePathPrefix.AppendPrintf(
                 " (animation %4u)", uint32_t(counter.Values().FrameIndex()));
           } else {
@@ -1251,8 +1251,8 @@ imgCacheQueue& imgLoader::GetCacheQueue(const ImageCacheKey& aKey) {
 }
 
 void imgLoader::GlobalInit() {
-  sCacheTimeWeight = StaticPrefs::ImageCacheTimeWeight() / 1000.0;
-  int32_t cachesize = StaticPrefs::ImageCacheSize();
+  sCacheTimeWeight = gfxPrefs::ImageCacheTimeWeight() / 1000.0;
+  int32_t cachesize = gfxPrefs::ImageCacheSize();
   sCacheMaxSize = cachesize > 0 ? cachesize : 0;
 
   sMemReporter = new imgMemoryReporter();

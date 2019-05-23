@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Image.h"
-
+#include "gfxPrefs.h"
 #include "Layers.h"  // for LayerManager
 #include "nsRefreshDriver.h"
 #include "nsContentUtils.h"

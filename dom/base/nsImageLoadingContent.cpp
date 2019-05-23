@@ -39,6 +39,8 @@
 #include "nsIContentPolicy.h"
 #include "SVGObserverUtils.h"
 
+#include "gfxPrefs.h"
+
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"
@@ -527,7 +529,7 @@ void nsImageLoadingContent::MaybeForceSyncDecoding(
     // attribute on a timer.
     TimeStamp now = TimeStamp::Now();
     TimeDuration threshold = TimeDuration::FromMilliseconds(
-        StaticPrefs::ImageInferSrcAnimationThresholdMS());
+        gfxPrefs::ImageInferSrcAnimationThresholdMS());
 
     // If the length of time between request changes is less than the threshold,
     // then force sync decoding to eliminate flicker from the animation.

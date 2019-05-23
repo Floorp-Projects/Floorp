@@ -9,6 +9,7 @@
 
 #include "AsyncPanZoomController.h"
 #include "Units.h"
+#include "gfxPrefs.h"
 #include "mozilla/Assertions.h"
 
 #define FLING_PHYS_LOG(...)
@@ -25,8 +26,8 @@ class DesktopFlingPhysics {
   }
   void Sample(const TimeDuration& aDelta, ParentLayerPoint* aOutVelocity,
               ParentLayerPoint* aOutOffset) {
-    float friction = StaticPrefs::APZFlingFriction();
-    float threshold = StaticPrefs::APZFlingStoppedThreshold();
+    float friction = gfxPrefs::APZFlingFriction();
+    float threshold = gfxPrefs::APZFlingStoppedThreshold();
 
     mVelocity = ParentLayerPoint(
         ApplyFrictionOrCancel(mVelocity.x, aDelta, friction, threshold),

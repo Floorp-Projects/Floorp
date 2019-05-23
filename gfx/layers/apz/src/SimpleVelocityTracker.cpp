@@ -6,8 +6,8 @@
 
 #include "SimpleVelocityTracker.h"
 
+#include "gfxPrefs.h"
 #include "mozilla/ComputedTimingFunction.h"  // for ComputedTimingFunction
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"               // for StaticAutoPtr
 
 #define SVT_LOG(...)
@@ -86,7 +86,7 @@ Maybe<float> SimpleVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
   int count = 0;
   for (const auto& e : mVelocityQueue) {
     uint32_t timeDelta = (aTimestampMs - e.first);
-    if (timeDelta < StaticPrefs::APZVelocityRelevanceTime()) {
+    if (timeDelta < gfxPrefs::APZVelocityRelevanceTime()) {
       count++;
       velocity += e.second;
     }
@@ -103,24 +103,24 @@ void SimpleVelocityTracker::Clear() { mVelocityQueue.Clear(); }
 void SimpleVelocityTracker::AddVelocityToQueue(uint32_t aTimestampMs,
                                                float aVelocity) {
   mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, aVelocity));
-  if (mVelocityQueue.Length() > StaticPrefs::APZMaxVelocityQueueSize()) {
+  if (mVelocityQueue.Length() > gfxPrefs::APZMaxVelocityQueueSize()) {
     mVelocityQueue.RemoveElementAt(0);
   }
 }
 
 float SimpleVelocityTracker::ApplyFlingCurveToVelocity(float aVelocity) const {
   float newVelocity = aVelocity;
-  if (StaticPrefs::APZMaxVelocity() > 0.0f) {
+  if (gfxPrefs::APZMaxVelocity() > 0.0f) {
     bool velocityIsNegative = (newVelocity < 0);
     newVelocity = fabs(newVelocity);
 
-    float maxVelocity = mAxis->ToLocalVelocity(StaticPrefs::APZMaxVelocity());
+    float maxVelocity = mAxis->ToLocalVelocity(gfxPrefs::APZMaxVelocity());
     newVelocity = std::min(newVelocity, maxVelocity);
 
-    if (StaticPrefs::APZCurveThreshold() > 0.0f &&
-        StaticPrefs::APZCurveThreshold() < StaticPrefs::APZMaxVelocity()) {
+    if (gfxPrefs::APZCurveThreshold() > 0.0f &&
+        gfxPrefs::APZCurveThreshold() < gfxPrefs::APZMaxVelocity()) {
       float curveThreshold =
-          mAxis->ToLocalVelocity(StaticPrefs::APZCurveThreshold());
+          mAxis->ToLocalVelocity(gfxPrefs::APZCurveThreshold());
       if (newVelocity > curveThreshold) {
         // here, 0 < curveThreshold < newVelocity <= maxVelocity, so we apply
         // the curve
