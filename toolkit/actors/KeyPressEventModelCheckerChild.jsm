@@ -29,10 +29,23 @@ class KeyPressEventModelCheckerChild extends ActorChild {
     // here, conflated model isn't used forcibly.  If you need it, you need
     // to change WidgetKeyboardEvent, dom::KeyboardEvent and PresShell.
     let model = HTMLDocument.KEYPRESS_EVENT_MODEL_DEFAULT;
-    if (this._isOldConfluence(aEvent.target.ownerGlobal)) {
+    if (this._isOldOfficeOnlineServer(aEvent.target) ||
+        this._isOldConfluence(aEvent.target.ownerGlobal)) {
       model = HTMLDocument.KEYPRESS_EVENT_MODEL_SPLIT;
     }
     aEvent.target.setKeyPressEventModel(model);
+  }
+
+  _isOldOfficeOnlineServer(aDocument) {
+    let editingElement =
+        aDocument.getElementById("WACViewPanel_EditingElement");
+    if (!editingElement) {
+      return false;
+    }
+    let isOldVersion =
+        !editingElement.classList.contains(
+            "WACViewPanel_DisableLegacyKeyCodeAndCharCode");
+    return isOldVersion;
   }
 
   _isOldConfluence(aWindow) {
