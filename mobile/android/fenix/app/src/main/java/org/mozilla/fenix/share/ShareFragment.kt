@@ -12,11 +12,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.DialogFragment
+import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.navigation.fragment.NavHostFragment.findNavController
+import kotlinx.android.synthetic.main.component_share.*
 import kotlinx.android.synthetic.main.fragment_share.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import mozilla.components.concept.sync.DeviceEventOutgoing
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
@@ -24,12 +27,13 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import kotlin.coroutines.CoroutineContext
 
-class ShareFragment : DialogFragment(), CoroutineScope {
+class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
     private lateinit var job: Job
     private lateinit var component: ShareComponent
     private lateinit var url: String
+    private lateinit var title: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +46,7 @@ class ShareFragment : DialogFragment(), CoroutineScope {
 
         job = Job()
         url = args.url
+        title = args.title ?: ""
         component = ShareComponent(
             view.share_wrapper,
             ActionBusFactory.get(this),
@@ -66,14 +71,42 @@ class ShareFragment : DialogFragment(), CoroutineScope {
         job.cancel()
     }
 
+    @SuppressWarnings("ComplexMethod")
     private fun subscribeToActions() {
         getAutoDisposeObservable<ShareAction>().subscribe {
             when (it) {
                 ShareAction.Close -> {
                     dismiss()
                 }
+                ShareAction.SignInClicked -> {
+                    val directions = ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()
+                    findNavController(this@ShareFragment).navigate(directions)
+                }
                 ShareAction.AddNewDeviceClicked -> {
                     requireComponents.useCases.tabsUseCases.addTab.invoke(ADD_NEW_DEVICES_URL, true)
+                }
+                ShareAction.HideSendTab -> {
+                    send_tab_group.visibility = View.GONE
+                }
+                is ShareAction.ShareDeviceClicked -> {
+                    val authAccount = requireComponents.backgroundServices.accountManager.authenticatedAccount()
+                    authAccount?.run {
+                        deviceConstellation().sendEventToDeviceAsync(
+                            it.device.id,
+                            DeviceEventOutgoing.SendTab(title, url)
+                        )
+                    }
+                }
+                is ShareAction.SendAllClicked -> {
+                    val authAccount = requireComponents.backgroundServices.accountManager.authenticatedAccount()
+                    authAccount?.run {
+                        it.devices.forEach { device ->
+                            deviceConstellation().sendEventToDeviceAsync(
+                                device.id,
+                                DeviceEventOutgoing.SendTab(title, url)
+                            )
+                        }
+                    }
                 }
                 is ShareAction.ShareAppClicked -> {
                     val intent = Intent(ACTION_SEND).apply {
@@ -84,13 +117,13 @@ class ShareFragment : DialogFragment(), CoroutineScope {
                     }
                     startActivity(intent)
                 }
-                // TODO support other actions in a follow-up issue
             }
             dismiss()
         }
     }
 
     companion object {
+        // TODO Replace this link with the correct one when provided.
         const val ADD_NEW_DEVICES_URL = "https://accounts.firefox.com/connect_another_device"
     }
 }

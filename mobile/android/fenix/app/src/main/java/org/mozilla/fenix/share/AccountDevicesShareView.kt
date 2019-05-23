@@ -60,13 +60,14 @@ class AccountDevicesShareAdapter(
             return list
         }
 
-        list.add(SyncShareOption.AddNewDevice)
-
         accountManager.authenticatedAccount()?.deviceConstellation()?.state()?.otherDevices?.let { devices ->
-            val shareableDevices = devices
-                .filter {
-                    it.capabilities.contains(DeviceCapability.SEND_TAB)
-                }
+            val shareableDevices = devices.filter { it.capabilities.contains(DeviceCapability.SEND_TAB) }
+
+            if (shareableDevices.isEmpty()) {
+                list.add(SyncShareOption.AddNewDevice)
+                actionEmitter.onNext(ShareAction.HideSendTab)
+            }
+
             val shareOptions = shareableDevices.map {
                 when (it.deviceType) {
                     DeviceType.MOBILE -> SyncShareOption.Mobile(it.displayName, it)

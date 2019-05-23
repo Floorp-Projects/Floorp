@@ -17,6 +17,8 @@
         android:importantForAccessibility="no"
         android:layout_marginTop="8dp"
         android:background="@drawable/device_background"
+        android:clickable="false"
+        android:focusable="false"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

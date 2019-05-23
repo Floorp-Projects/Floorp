@@ -395,6 +395,16 @@
         <argument
             android:name="url"
             app:argType="string" />
+        <argument
+            android:name="title"
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_shareFragment_to_turnOnSyncFragment"
+            app:destination="@+id/turnOnSyncFragment"
+            app:popUpTo="@id/shareFragment"
+            app:popUpToInclusive="true" />
     </dialog>
     <dialog
         android:id="@+id/quickSettingsSheetDialogFragment"
