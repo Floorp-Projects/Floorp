@@ -26,6 +26,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Logging.h"
 #include "nsIObserverService.h"
+#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -592,7 +593,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mThread(nullptr),
       mStackSize(aStackSize),
       mNestedEventLoopDepth(0),
-      mCurrentEventLoopDepth(-1),
+      mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(uint8_t(aMainThread)),
@@ -612,7 +613,7 @@ nsThread::nsThread()
       mThread(nullptr),
       mStackSize(0),
       mNestedEventLoopDepth(0),
-      mCurrentEventLoopDepth(-1),
+      mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(NOT_MAIN_THREAD),
@@ -1212,7 +1213,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
               duration.ToMicroseconds());
         }
         mCurrentEvent = nullptr;
-        mCurrentEventLoopDepth = -1;
+        mCurrentEventLoopDepth = MaxValue<uint32_t>::value;
         mCurrentPerformanceCounter = nullptr;
       }
     } else if (aMayWait) {
