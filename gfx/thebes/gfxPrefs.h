@@ -195,9 +195,6 @@ class gfxPrefs final {
       CopyPrefValue(&mValue, aOutValue);
     }
     void SetCachedValue(const GfxPrefValue& aOutValue) override {
-      // This is only used in non-XPCOM processes.
-      MOZ_ASSERT(!IsPrefsServiceAvailable());
-
       T newValue;
       CopyPrefValue(&aOutValue, &newValue);
 
