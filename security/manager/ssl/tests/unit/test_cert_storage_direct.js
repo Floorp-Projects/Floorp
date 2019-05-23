@@ -27,22 +27,6 @@ async function removeCertsByHashes(hashesBase64) {
   Assert.equal(result, Cr.NS_OK, "removeCertsByHashes should succeed");
 }
 
-function stringToArray(s) {
-  let a = [];
-  for (let i = 0; i < s.length; i++) {
-    a.push(s.charCodeAt(i));
-  }
-  return a;
-}
-
-function arrayToString(a) {
-  let s = "";
-  for (let b of a) {
-    s += String.fromCharCode(b);
-  }
-  return s;
-}
-
 function getLongString(uniquePart, length) {
   return String(uniquePart).padStart(length, "0");
 }
