@@ -21,6 +21,8 @@ permalink: /changelog/
     * `browser-engine-gecko-beta`: GeckoView 68.0
     * `browser-engine-gecko-nightly`: GeckoView 69.0
 
+* ⚠️ **Deprecated components**: `feature-session-bundling`, `ui-doorhanger`, `ui-progress` (See blog posting).
+
 * **feature-findinpage**
   * Find in Page Bar now displays 0/0 for no matches found with new attr findInPageNoMatchesTextColor
 
