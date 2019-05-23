@@ -34,6 +34,3 @@ user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.phishing.enabled", false);
 // Automatically unload beforeunload alerts
 user_pref("dom.disable_beforeunload", true);
-// sometime wpt runs test even before the document becomes visible, which would
-// delay video.play() and cause play() running in wrong order.
-user_pref("media.block-autoplay-until-in-foreground", false);
