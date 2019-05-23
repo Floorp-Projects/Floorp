@@ -38,8 +38,8 @@ add_task(async function setup() {
   Services.prefs.setCharPref("xpinstall.blacklist.add.TEST", "http://blacklist.example.com");
 
   // Get list of preferences to check
-  var whitelistPreferences = Services.prefs.getChildList(PREF_XPI_WHITELIST_PERMISSIONS, {});
-  var blacklistPreferences = Services.prefs.getChildList(PREF_XPI_BLACKLIST_PERMISSIONS, {});
+  var whitelistPreferences = Services.prefs.getChildList(PREF_XPI_WHITELIST_PERMISSIONS);
+  var blacklistPreferences = Services.prefs.getChildList(PREF_XPI_BLACKLIST_PERMISSIONS);
   var preferences = whitelistPreferences.concat(blacklistPreferences);
 
   await promiseStartupManager();

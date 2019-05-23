@@ -213,7 +213,7 @@ module.exports = {
     // Require camel case names
     "camelcase": "error",
     // Warn about cyclomatic complexity in functions.
-    "complexity": ["error", 53],
+    "complexity": ["error", 40],
     // Don't warn for inconsistent naming when capturing this (not so important
     // with auto-binding fat arrow functions).
     "consistent-this": "off",

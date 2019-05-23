@@ -682,6 +682,9 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvStartDelayedAutoplayMediaComponents(
       BrowsingContext* aContext);
 
+  mozilla::ipc::IPCResult RecvSetMediaMuted(BrowsingContext* aContext,
+                                            bool aMuted);
+
   void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
 
 #ifdef NIGHTLY_BUILD

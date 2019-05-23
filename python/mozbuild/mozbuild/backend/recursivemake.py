@@ -1314,7 +1314,9 @@ class RecursiveMakeBackend(CommonBackend):
         if libdef.soname:
             backend_file.write('DSO_SONAME := %s\n' % libdef.soname)
         if libdef.symbols_file:
-            backend_file.write('SYMBOLS_FILE := %s\n' % libdef.symbols_file)
+            if libdef.symbols_link_arg:
+                backend_file.write('EXTRA_DSO_LDOPTS += %s\n' % libdef.symbols_link_arg)
+                backend_file.write('EXTRA_DEPS += %s\n' % libdef.symbols_file)
         if not libdef.cxx_link:
             backend_file.write('LIB_IS_C_ONLY := 1\n')
         if libdef.output_category:

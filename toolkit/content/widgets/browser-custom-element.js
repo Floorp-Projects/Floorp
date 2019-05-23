@@ -979,12 +979,12 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     if (!transientState) {
       this._audioMuted = true;
     }
-    this.messageManager.sendAsyncMessage("AudioPlayback", { type: "mute" });
+    this.frameLoader.browsingContext.notifyMediaMutedChanged(true);
   }
 
   unmute() {
     this._audioMuted = false;
-    this.messageManager.sendAsyncMessage("AudioPlayback", { type: "unmute" });
+    this.frameLoader.browsingContext.notifyMediaMutedChanged(false);
   }
 
   pauseMedia(disposable) {

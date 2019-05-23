@@ -132,6 +132,20 @@ class InactivePropertyHelper {
         msgId: "inactive-css-not-grid-or-flex-container",
         numFixProps: 2,
       },
+      // Inline properties used on non-inline-level elements.
+      {
+        invalidProperties: [
+          "vertical-align",
+        ],
+        when: () => {
+          return !this.checkStyle("display", ["inline", "table-cell"]) &&
+                 !this.cssRule.selectorText.includes("::first-letter") &&
+                 !this.cssRule.selectorText.includes("::first-line");
+        },
+        fixId: "inactive-css-not-inline-or-tablecell-fix",
+        msgId: "inactive-css-not-inline-or-tablecell",
+        numFixProps: 2,
+      },
     ];
   }
 
@@ -243,6 +257,13 @@ class InactivePropertyHelper {
    */
   get style() {
     return this._style;
+  }
+
+  /**
+   *  Provide a public reference to the css rule.
+   */
+  get cssRule() {
+    return this._cssRule;
   }
 
   /**

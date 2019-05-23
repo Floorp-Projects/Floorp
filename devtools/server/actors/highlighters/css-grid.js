@@ -1153,6 +1153,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    * @param  {Boolean||undefined} isStackedLine
    *         Boolean indicating if the line is stacked.
    */
+  /* eslint-disable complexity */
   renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType,
     isStackedLine) {
     const displayPixelRatio = getDisplayPixelRatio(this.win);
@@ -1339,6 +1340,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.ctx.fillText(numberText, x, y);
     this.ctx.restore();
   }
+  /* eslint-enable complexity */
 
   /**
    * Determine which edge of a line number box to aim the line number arrow at.

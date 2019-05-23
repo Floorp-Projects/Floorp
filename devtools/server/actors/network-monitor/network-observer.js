@@ -886,6 +886,7 @@ NetworkObserver.prototype = {
    *         - total - the total time for all of the request and response.
    *         - timings - the HAR timings object.
    */
+  /* eslint-disable complexity */
   _setupHarTimings: function(httpActivity, fromCache) {
     if (fromCache) {
       // If it came from the browser cache, we have no timing
@@ -1097,6 +1098,7 @@ NetworkObserver.prototype = {
       offsets: ot.offsets,
     };
   },
+  /* eslint-enable complexity */
 
   _calculateOffsetAndTotalTime: function(harTimings,
                                           secureConnectionStartTime,

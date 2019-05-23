@@ -1077,6 +1077,7 @@ InplaceEditor.prototype = {
   /**
    * Handle the input field's keypress event.
    */
+  /* eslint-disable complexity */
   _onKeyPress: function(event) {
     let prevent = false;
 
@@ -1210,6 +1211,7 @@ InplaceEditor.prototype = {
       event.preventDefault();
     }
   },
+  /* eslint-enable complexity */
 
   _onContextMenu: function(event) {
     if (this.contextMenu) {
@@ -1339,6 +1341,7 @@ InplaceEditor.prototype = {
     // Since we are calling this method from a keypress event handler, the
     // |input.value| does not include currently typed character. Thus we perform
     // this method async.
+    /* eslint-disable complexity */
     this._openPopupTimeout = this.doc.defaultView.setTimeout(() => {
       if (this._preventSuggestions) {
         this._preventSuggestions = false;
@@ -1525,6 +1528,7 @@ InplaceEditor.prototype = {
       this.emit("after-suggest");
       this._doValidation();
     }, 0);
+    /* eslint-enable complexity */
   },
 
   /**

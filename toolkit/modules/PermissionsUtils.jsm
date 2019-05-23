@@ -10,7 +10,7 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var gImportedPrefBranches = new Set();
 
 function importPrefBranch(aPrefBranch, aPermission, aAction) {
-  let list = Services.prefs.getChildList(aPrefBranch, {});
+  let list = Services.prefs.getChildList(aPrefBranch);
 
   for (let pref of list) {
     let origins = Services.prefs.getCharPref(pref, "");
