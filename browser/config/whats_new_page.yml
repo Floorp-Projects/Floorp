@@ -24,14 +24,9 @@
           - cs
           - cy
           - da
-          - de
           - el
-          - en-CA
-          - en-GB
-          - en-US
           - es-AR
           - es-ES
-          - fr
           - fy-NL
           - hu
           - ia
@@ -55,3 +50,19 @@
           - vi
           - zh-CN
           - zh-TW
+- type: show-url
+  # yamllint disable-line rule:line-length
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version}/whatsnew/?oldversion=%OLD_VERSION%"
+  conditions:
+      blob-types: [wnp]
+      release-types: [release]
+      products: [firefox]
+      update-channel: release
+      # show for all updates
+      # otherwise add a 'versions: ["<67.0.x"]' line for some value of x
+      locales:
+          - de
+          - en-CA
+          - en-GB
+          - en-US
+          - fr
