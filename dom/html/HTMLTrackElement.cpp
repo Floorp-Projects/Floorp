@@ -232,10 +232,31 @@ void HTMLTrackElement::SetSrc(const nsAString& aSrc, ErrorResult& aError) {
     mChannel = nullptr;
   }
 
-  DispatchLoadResource();
+  MaybeDispatchLoadResource();
 }
 
-void HTMLTrackElement::DispatchLoadResource() {
+// This function will run partial steps from `start-the-track-processing-model`
+// and finish the rest of steps in `LoadResource()` during the stable state.
+// https://html.spec.whatwg.org/multipage/media.html#start-the-track-processing-model
+void HTMLTrackElement::MaybeDispatchLoadResource() {
+  MOZ_ASSERT(mTrack, "Should have already created text track!");
+
+  // step2, if the text track's text track mode is not set to one of hidden or
+  // showing, then return.
+  if (mTrack->Mode() == TextTrackMode::Disabled) {
+    LOG(LogLevel::Info, ("%p Do not load resource for disable track", this));
+    return;
+  }
+
+  // step3, if the text track's track element does not have a media element as a
+  // parent, return.
+  if (!mMediaParent) {
+    LOG(LogLevel::Info,
+        ("%p Do not load resource for track without media element", this));
+    return;
+  }
+
+  // step5, await a stable state and run the rest of steps.
   if (!mLoadResourceDispatched) {
     RefPtr<WebVTTListener> listener = new WebVTTListener(this);
     RefPtr<Runnable> r = NewRunnableMethod<RefPtr<WebVTTListener>>(
@@ -361,7 +382,7 @@ nsresult HTMLTrackElement::BindToTree(Document* aDocument, nsIContent* aParent,
     if (!mTrack) {
       CreateTextTrack();
     }
-    DispatchLoadResource();
+    MaybeDispatchLoadResource();
   }
 
   return NS_OK;
