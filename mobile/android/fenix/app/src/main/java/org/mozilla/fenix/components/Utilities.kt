@@ -32,4 +32,11 @@ class Utilities(
     val privateIntentProcessor by lazy {
         IntentProcessor(sessionUseCases, sessionManager, searchUseCases, context, isPrivate = true)
     }
+
+    /**
+     * Provides notification functionality, manages notification channels.
+     */
+    val notificationManager by lazy {
+        NotificationManager(context)
+    }
 }

@@ -81,7 +81,15 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
 
     private fun getClickListenerForSyncNow(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
+            // Trigger a sync.
             requireComponents.backgroundServices.syncManager.syncNow()
+            // Poll for device events.
+            launch {
+                requireComponents.backgroundServices.accountManager.authenticatedAccount()
+                    ?.deviceConstellation()
+                    ?.refreshDeviceStateAsync()
+                    ?.await()
+            }
             true
         }
     }

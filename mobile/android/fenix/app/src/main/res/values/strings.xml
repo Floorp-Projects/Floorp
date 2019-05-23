@@ -160,6 +160,12 @@
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Last synced: never</string>
 
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Received tabs</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Notifications for tabs received from other Firefox devices.</string>
+
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
     <string name="preferences_tracking_protection_settings">Tracking Protection</string>

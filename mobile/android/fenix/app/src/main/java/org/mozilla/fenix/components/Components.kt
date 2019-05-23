@@ -12,7 +12,9 @@ import org.mozilla.fenix.test.Mockable
  */
 @Mockable
 class Components(private val context: Context) {
-    val backgroundServices by lazy { BackgroundServices(context, core.historyStorage, core.bookmarksStorage) }
+    val backgroundServices by lazy {
+        BackgroundServices(context, core.historyStorage, core.bookmarksStorage, utils.notificationManager)
+    }
     val services by lazy { Services(backgroundServices.accountManager, useCases.tabsUseCases) }
     val core by lazy { Core(context) }
     val search by lazy { Search(context) }

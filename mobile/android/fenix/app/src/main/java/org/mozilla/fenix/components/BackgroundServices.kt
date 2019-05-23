@@ -5,11 +5,15 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.concept.sync.DeviceCapability
+import mozilla.components.concept.sync.DeviceEvent
+import mozilla.components.concept.sync.DeviceEventsObserver
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.sync.BackgroundSyncManager
 import mozilla.components.feature.sync.GlobalSyncableStoreProvider
@@ -26,7 +30,8 @@ import org.mozilla.fenix.test.Mockable
 class BackgroundServices(
     context: Context,
     historyStorage: PlacesHistoryStorage,
-    bookmarkStorage: PlacesBookmarksStorage
+    bookmarkStorage: PlacesBookmarksStorage,
+    notificationManager: NotificationManager
 ) {
     companion object {
         const val CLIENT_ID = "a2270f727f45f648"
@@ -51,13 +56,22 @@ class BackgroundServices(
         it.addStore("bookmarks")
     }
 
+    private val deviceEventObserver = object : DeviceEventsObserver {
+        override fun onEvents(events: List<DeviceEvent>) {
+            events.filter { it is DeviceEvent.TabReceived }.forEach {
+                notificationManager.showReceivedTabs(it as DeviceEvent.TabReceived)
+            }
+        }
+    }
+
     val accountManager = FxaAccountManager(
         context,
         config,
         scopes,
-        DeviceTuple("Fenix", DeviceType.MOBILE, emptyList()),
+        DeviceTuple("Fenix", DeviceType.MOBILE, listOf(DeviceCapability.SEND_TAB)),
         syncManager
     ).also {
+        it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), true)
         CoroutineScope(Dispatchers.Main).launch { it.initAsync().await() }
     }
 }
