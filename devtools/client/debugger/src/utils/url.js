@@ -3,8 +3,8 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-
 import { memoize } from "lodash";
+import { URL } from "whatwg-url";
 
 const defaultUrl = {
   hash: "",
