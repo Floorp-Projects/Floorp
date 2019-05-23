@@ -9,8 +9,8 @@
 #include "LayerManagerComposite.h"  // for LayerManagerComposite, etc
 #include "Layers.h"                 // for Layer, ContainerLayer, etc
 #include "gfxPoint.h"               // for gfxPoint, gfxSize
+#include "gfxPrefs.h"               // for gfxPrefs
 #include "mozilla/ServoBindings.h"  // for Servo_AnimationValue_GetOpacity, etc
-#include "mozilla/StaticPrefs.h"    // for StaticPrefs
 #include "mozilla/WidgetUtils.h"    // for ComputeTransformForRotation
 #include "mozilla/gfx/BaseRect.h"   // for BaseRect
 #include "mozilla/gfx/Point.h"      // for RoundedToInt, PointTyped
@@ -35,6 +35,7 @@
 #include "nsTArray.h"                // for nsTArray, nsTArray_Impl, etc
 #include "nsTArrayForwardDeclare.h"  // for InfallibleTArray
 #include "UnitTransforms.h"          // for TransformTo
+#include "gfxPrefs.h"
 #if defined(MOZ_WIDGET_ANDROID)
 #  include <android/log.h>
 #  include "mozilla/layers/UiCompositorControllerParent.h"
@@ -789,7 +790,7 @@ static bool SampleAnimations(Layer* aLayer,
 }
 
 void AsyncCompositionManager::RecordShadowTransforms(Layer* aLayer) {
-  MOZ_ASSERT(StaticPrefs::CollectScrollTransforms());
+  MOZ_ASSERT(gfxPrefs::CollectScrollTransforms());
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
 
   ForEachNodePostOrder<ForwardIterator>(aLayer, [this](Layer* layer) {
@@ -1472,7 +1473,7 @@ bool AsyncCompositionManager::TransformShadowTree(
   trans *= gfx::Matrix4x4::From2D(mWorldTransform);
   rootComposite->SetShadowBaseTransform(trans);
 
-  if (StaticPrefs::CollectScrollTransforms()) {
+  if (gfxPrefs::CollectScrollTransforms()) {
     RecordShadowTransforms(root);
   }
 
@@ -1487,9 +1488,9 @@ void AsyncCompositionManager::SetFixedLayerMargins(ScreenIntCoord aTop,
 }
 ScreenMargin AsyncCompositionManager::GetFixedLayerMargins() const {
   ScreenMargin result = mFixedLayerMargins;
-  if (StaticPrefs::APZFixedMarginOverrideEnabled()) {
-    result.top = StaticPrefs::APZFixedMarginOverrideTop();
-    result.bottom = StaticPrefs::APZFixedMarginOverrideBottom();
+  if (gfxPrefs::APZFixedMarginOverrideEnabled()) {
+    result.top = gfxPrefs::APZFixedMarginOverrideTop();
+    result.bottom = gfxPrefs::APZFixedMarginOverrideBottom();
   }
   return result;
 }

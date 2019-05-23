@@ -20,6 +20,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 
 static already_AddRefed<Decoder> CreateTrivialBlendingDecoder() {
+  gfxPrefs::GetSingleton();
   DecoderType decoderType = DecoderFactory::GetDecoderType("image/gif");
   DecoderFlags decoderFlags = DefaultDecoderFlags();
   SurfaceFlags surfaceFlags = DefaultSurfaceFlags();

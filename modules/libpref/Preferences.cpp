@@ -3064,47 +3064,14 @@ class PWRunnable : public Runnable {
 };
 
 struct CacheData {
-  CacheData(void* aCacheLocation, bool aValue)
-      : mCacheLocation(aCacheLocation), mDefaultValueBool(aValue) {}
-  CacheData(void* aCacheLocation, int32_t aValue)
-      : mCacheLocation(aCacheLocation), mDefaultValueInt(aValue) {}
-  CacheData(void* aCacheLocation, uint32_t aValue)
-      : mCacheLocation(aCacheLocation), mDefaultValueUint(aValue) {}
-  CacheData(void* aCacheLocation, float aValue)
-      : mCacheLocation(aCacheLocation), mDefaultValueFloat(aValue) {}
-
-  template <typename T>
-  T GetDefault() const;
-
-  void* const mCacheLocation;
-
- private:
+  void* mCacheLocation;
   union {
-    const bool mDefaultValueBool;
-    const int32_t mDefaultValueInt;
-    const uint32_t mDefaultValueUint;
-    const float mDefaultValueFloat;
+    bool mDefaultValueBool;
+    int32_t mDefaultValueInt;
+    uint32_t mDefaultValueUint;
+    float mDefaultValueFloat;
   };
 };
-
-// We specialise the CacheData::GetDefault() here, as somehow you can't do it
-// inline within CacheData definition.
-template <>
-bool CacheData::GetDefault() const {
-  return mDefaultValueBool;
-}
-template <>
-int32_t CacheData::GetDefault() const {
-  return mDefaultValueInt;
-}
-template <>
-uint32_t CacheData::GetDefault() const {
-  return mDefaultValueUint;
-}
-template <>
-float CacheData::GetDefault() const {
-  return mDefaultValueFloat;
-}
 
 // gCacheDataDesc holds information about prefs startup. It's being used for
 // diagnosing prefs startup problems in bug 1276488.
@@ -3716,10 +3683,6 @@ void Preferences::InitializeUserPrefs() {
   sPreferences->mCurrentFile = prefsFile.forget();
 
   sPreferences->NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
-
-  // Ensure that StaticPref of type Once are properly set to the underlying
-  // Preference value as they may have been updated with a user-set value.
-  StaticPrefs::InitOncePrefs();
 
   // At this point all the prefs files have been read and telemetry has been
   // initialized. Send all the file load measurements to telemetry.
@@ -4356,22 +4319,24 @@ template <typename T>
 static T GetPref(const char* aName, T aDefaultValue);
 
 template <>
-bool MOZ_MAYBE_UNUSED GetPref(const char* aName, bool aDefaultValue) {
+bool MOZ_MAYBE_UNUSED GetPref<bool>(const char* aName, bool aDefaultValue) {
   return Preferences::GetBool(aName, aDefaultValue);
 }
 
 template <>
-int32_t MOZ_MAYBE_UNUSED GetPref(const char* aName, int32_t aDefaultValue) {
+int32_t MOZ_MAYBE_UNUSED GetPref<int32_t>(const char* aName,
+                                          int32_t aDefaultValue) {
   return Preferences::GetInt(aName, aDefaultValue);
 }
 
 template <>
-uint32_t MOZ_MAYBE_UNUSED GetPref(const char* aName, uint32_t aDefaultValue) {
+uint32_t MOZ_MAYBE_UNUSED GetPref<uint32_t>(const char* aName,
+                                            uint32_t aDefaultValue) {
   return Preferences::GetInt(aName, aDefaultValue);
 }
 
 template <>
-float MOZ_MAYBE_UNUSED GetPref(const char* aName, float aDefaultValue) {
+float MOZ_MAYBE_UNUSED GetPref<float>(const char* aName, float aDefaultValue) {
   return Preferences::GetFloat(aName, aDefaultValue);
 }
 
@@ -4425,24 +4390,16 @@ static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
       }
     }
 
-    if (aIsStartup) {
-      StaticPrefs::InitOncePrefs();
-    }
-
 #ifdef DEBUG
     // Check that all varcache preferences match their current values. This
     // can currently fail if the default value of a static varcache preference
     // is changed in a preference file or at runtime, rather than in
     // StaticPrefList.h.
-    // StaticPrefs with a Skip policy aren't updated with an overridden value,
-    // and shouldn't be checked.
 
 #  define PREF(name, cpp_type, value)
-#  define VARCACHE_PREF(policy, name, id, cpp_type, value)                    \
-    MOZ_ASSERT(                                                               \
-        StaticPrefs::UpdatePolicy::policy ==                                  \
-                StaticPrefs::UpdatePolicy::Skip ||                            \
-            GetPref<StripAtomic<cpp_type>>(name, value) == StaticPrefs::id(), \
+#  define VARCACHE_PREF(name, id, cpp_type, value)                        \
+    MOZ_ASSERT(                                                           \
+        GetPref<StripAtomic<cpp_type>>(name, value) == StaticPrefs::id(), \
         "Incorrect cached value for " name);
 #  include "mozilla/StaticPrefList.h"
 #  undef PREF
@@ -4623,12 +4580,6 @@ static nsresult pref_ReadDefaultPrefs(const RefPtr<nsZipArchive> jarReader,
       // Do we care if a file provided by this process fails to load?
       pref_LoadPrefsInDir(path, nullptr, 0);
     }
-  }
-
-  if (aIsStartup) {
-    // Ensure that StaticPref of type Once are properly set to the underlying
-    // Preference value.
-    StaticPrefs::InitOncePrefs();
   }
 
   if (XRE_IsParentProcess()) {
@@ -5133,42 +5084,34 @@ static void CacheDataAppendElement(CacheData* aData) {
   gCacheData->AppendElement(aData);
 }
 
-template <typename T>
-static void VarChanged(const char* aPref, void* aClosure) {
+static void BoolVarChanged(const char* aPref, void* aClosure) {
   CacheData* cache = static_cast<CacheData*>(aClosure);
-  *static_cast<T*>(cache->mCacheLocation) =
-      GetPref(aPref, cache->GetDefault<StripAtomic<T>>());
-}
-
-// We define this method in a struct which is made friend of Preferences in
-// order to access private members.
-struct RegisterCallbacksInternal {
-  template <typename T>
-  static nsresult RegisterCallback(CacheData* aCacheData,
-                                   const nsACString& aPref) {
-    return Preferences::RegisterCallback(VarChanged<T>, aPref, aCacheData,
-                                         Preferences::ExactMatch,
-                                         /* isPriority */ true);
-  }
-};
-
-template <typename T>
-static nsresult AddVarCache(T* aCache, const nsACString& aPref,
-                            StripAtomic<T> aDefault, bool aSkipAssignment) {
-  if (!aSkipAssignment) {
-    *aCache = GetPref(PromiseFlatCString(aPref).get(), aDefault);
-  }
-  CacheData* data = new CacheData(aCache, aDefault);
-  CacheDataAppendElement(data);
-  RegisterCallbacksInternal::RegisterCallback<T>(data, aPref);
-  return NS_OK;
+  *static_cast<bool*>(cache->mCacheLocation) =
+      Preferences::GetBool(aPref, cache->mDefaultValueBool);
 }
 
 /* static */
 nsresult Preferences::AddBoolVarCache(bool* aCache, const nsACString& aPref,
                                       bool aDefault, bool aSkipAssignment) {
   AssertNotAlreadyCached("bool", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  if (!aSkipAssignment) {
+    *aCache = GetBool(PromiseFlatCString(aPref).get(), aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueBool = aDefault;
+  CacheDataAppendElement(data);
+  Preferences::RegisterCallback(BoolVarChanged, aPref, data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
+  return NS_OK;
+}
+
+template <MemoryOrdering Order>
+static void AtomicBoolVarChanged(const char* aPref, void* aClosure) {
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<Atomic<bool, Order>*>(cache->mCacheLocation) =
+      Preferences::GetBool(aPref, cache->mDefaultValueBool);
 }
 
 template <MemoryOrdering Order>
@@ -5178,14 +5121,46 @@ nsresult Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
                                             bool aDefault,
                                             bool aSkipAssignment) {
   AssertNotAlreadyCached("bool", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  if (!aSkipAssignment) {
+    *aCache = GetBool(PromiseFlatCString(aPref).get(), aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueBool = aDefault;
+  CacheDataAppendElement(data);
+  Preferences::RegisterCallback(AtomicBoolVarChanged<Order>, aPref, data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
+  return NS_OK;
+}
+
+static void IntVarChanged(const char* aPref, void* aClosure) {
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<int32_t*>(cache->mCacheLocation) =
+      Preferences::GetInt(aPref, cache->mDefaultValueInt);
 }
 
 /* static */
 nsresult Preferences::AddIntVarCache(int32_t* aCache, const nsACString& aPref,
                                      int32_t aDefault, bool aSkipAssignment) {
   AssertNotAlreadyCached("int", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  if (!aSkipAssignment) {
+    *aCache = GetInt(PromiseFlatCString(aPref).get(), aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueInt = aDefault;
+  CacheDataAppendElement(data);
+  Preferences::RegisterCallback(IntVarChanged, aPref, data,
+                                Preferences::ExactMatch, /* isPriority */ true);
+  return NS_OK;
+}
+
+template <MemoryOrdering Order>
+static void AtomicIntVarChanged(const char* aPref, void* aClosure) {
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<Atomic<int32_t, Order>*>(cache->mCacheLocation) =
+      Preferences::GetInt(aPref, cache->mDefaultValueUint);
 }
 
 template <MemoryOrdering Order>
@@ -5195,14 +5170,47 @@ nsresult Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
                                            int32_t aDefault,
                                            bool aSkipAssignment) {
   AssertNotAlreadyCached("int", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  if (!aSkipAssignment) {
+    *aCache = GetInt(PromiseFlatCString(aPref).get(), aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueUint = aDefault;
+  CacheDataAppendElement(data);
+  Preferences::RegisterCallback(AtomicIntVarChanged<Order>, aPref, data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
+  return NS_OK;
+}
+
+static void UintVarChanged(const char* aPref, void* aClosure) {
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<uint32_t*>(cache->mCacheLocation) =
+      Preferences::GetUint(aPref, cache->mDefaultValueUint);
 }
 
 /* static */
 nsresult Preferences::AddUintVarCache(uint32_t* aCache, const nsACString& aPref,
                                       uint32_t aDefault, bool aSkipAssignment) {
   AssertNotAlreadyCached("uint", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  if (!aSkipAssignment) {
+    *aCache = GetUint(PromiseFlatCString(aPref).get(), aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueUint = aDefault;
+  CacheDataAppendElement(data);
+  Preferences::RegisterCallback(UintVarChanged, aPref, data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
+  return NS_OK;
+}
+
+template <MemoryOrdering Order>
+static void AtomicUintVarChanged(const char* aPref, void* aClosure) {
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<Atomic<uint32_t, Order>*>(cache->mCacheLocation) =
+      Preferences::GetUint(aPref, cache->mDefaultValueUint);
 }
 
 template <MemoryOrdering Order>
@@ -5212,7 +5220,17 @@ nsresult Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                             uint32_t aDefault,
                                             bool aSkipAssignment) {
   AssertNotAlreadyCached("uint", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  if (!aSkipAssignment) {
+    *aCache = GetUint(PromiseFlatCString(aPref).get(), aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueUint = aDefault;
+  CacheDataAppendElement(data);
+  Preferences::RegisterCallback(AtomicUintVarChanged<Order>, aPref, data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
+  return NS_OK;
 }
 
 // Since the definition of template functions is not in a header file, we
@@ -5243,21 +5261,43 @@ template nsresult Preferences::AddAtomicUintVarCache(
     Atomic<uint32_t, SequentiallyConsistent>*, const nsACString&, uint32_t,
     bool);
 
+static void FloatVarChanged(const char* aPref, void* aClosure) {
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<float*>(cache->mCacheLocation) =
+      Preferences::GetFloat(aPref, cache->mDefaultValueFloat);
+}
+
 /* static */
 nsresult Preferences::AddFloatVarCache(float* aCache, const nsACString& aPref,
                                        float aDefault, bool aSkipAssignment) {
   AssertNotAlreadyCached("float", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  if (!aSkipAssignment) {
+    *aCache = GetFloat(PromiseFlatCString(aPref).get(), aDefault);
+  }
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueFloat = aDefault;
+  CacheDataAppendElement(data);
+  Preferences::RegisterCallback(FloatVarChanged, aPref, data,
+                                Preferences::ExactMatch,
+                                /* isPriority */ true);
+  return NS_OK;
 }
 
-/* static */
-nsresult Preferences::AddAtomicFloatVarCache(std::atomic<float>* aCache,
-                                             const nsACString& aPref,
-                                             float aDefault,
-                                             bool aSkipAssignment) {
-  AssertNotAlreadyCached("float", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
-}
+// For a VarCache pref like this:
+//
+//   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
+//
+// we generate a static variable definition:
+//
+//   int32_t StaticPrefs::sVarCache_my_varcache(99);
+//
+#define PREF(name, cpp_type, value)
+#define VARCACHE_PREF(name, id, cpp_type, value) \
+  cpp_type StaticPrefs::sVarCache_##id(value);
+#include "mozilla/StaticPrefList.h"
+#undef PREF
+#undef VARCACHE_PREF
 
 // The SetPref_*() functions below end in a `_<type>` suffix because they are
 // used by the PREF macro definition in InitAll() below.
@@ -5303,87 +5343,112 @@ MOZ_MAYBE_UNUSED static void SetPref_String(const char* aName,
                /* fromInit */ true);
 }
 
-static void SetPref(const char* aName, bool aDefaultValue) {
-  SetPref_bool(aName, aDefaultValue);
-}
-static void SetPref(const char* aName, int32_t aDefaultValue) {
-  SetPref_int32_t(aName, aDefaultValue);
-}
-static void SetPref(const char* aName, uint32_t aDefaultValue) {
-  SetPref_int32_t(aName, int32_t(aDefaultValue));
-}
-static void SetPref(const char* aName, float aDefaultValue) {
-  SetPref_float(aName, aDefaultValue);
-}
-MOZ_MAYBE_UNUSED static void SetPref(const char* aName,
-                                     const char* aDefaultValue) {
-  SetPref_String(aName, aDefaultValue);
-}
-
-template <typename T>
-static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
-                             const nsACString& aName, T* aCache,
-                             StripAtomic<T> aDefaultValue, bool aIsStartup,
+static void InitVarCachePref(const nsACString& aName, bool* aCache,
+                             bool aDefaultValue, bool aIsStartup,
                              bool aSetValue) {
   if (aSetValue) {
-    SetPref(PromiseFlatCString(aName).get(), aDefaultValue);
+    SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
   }
-
   *aCache = aDefaultValue;
-  if (MOZ_LIKELY(aIsStartup) &&
-      MOZ_LIKELY(aPolicy == StaticPrefs::UpdatePolicy::Live)) {
-    AddVarCache(aCache, aName, aDefaultValue, true);
+  if (aIsStartup) {
+    Preferences::AddBoolVarCache(aCache, aName, aDefaultValue, true);
   }
 }
 
-// For a VarCache pref like this:
-//
-//   VARCACHE_PREF(Once, "my.varcache", my_varcache, int32_t, 99)
-//
-// we generate a static variable definition and a setter like:
-//
-//   int32_t StaticPrefs::sVarCache_my_varcache(99);
-//   void StaticPrefs::Setmy_varcache(int32_t aValue) {
-//     SetPref(Getmy_varcachePrefName(), aValue);
-//     if (UpdatePolicy::policy == UpdatePolicy::Once) {
-//       sVarCache_my_varcache =
-//           GetPref(Getmy_varcachePrefName(), sVarCache_my_varcache);
-//     }
-//     return;
-//   }
-
-#define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, id, cpp_type, value)                       \
-  cpp_type StaticPrefs::sVarCache_##id(value);                                 \
-  void StaticPrefs::Set##id(StripAtomic<cpp_type> aValue) {                    \
-    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() && XRE_IsParentProcess(),          \
-                          "pref '" name "' being set outside parent process"); \
-    SetPref(Get##id##PrefName(), aValue);                                      \
-    if (UpdatePolicy::policy == UpdatePolicy::Once) {                          \
-      sVarCache_##id =                                                         \
-          GetPref(Get##id##PrefName(), StripAtomic<cpp_type>(sVarCache_##id)); \
-    }                                                                          \
-    /* The StaticPrefs storage will be updated by the registered callback */   \
-    return;                                                                    \
+template <MemoryOrdering Order>
+static void InitVarCachePref(const nsACString& aName,
+                             Atomic<bool, Order>* aCache, bool aDefaultValue,
+                             bool aIsStartup, bool aSetValue) {
+  if (aSetValue) {
+    SetPref_bool(PromiseFlatCString(aName).get(), aDefaultValue);
   }
-#include "mozilla/StaticPrefList.h"
-#undef PREF
-#undef VARCACHE_PREF
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddAtomicBoolVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+// XXX: this will eventually become used
+MOZ_MAYBE_UNUSED static void InitVarCachePref(const nsACString& aName,
+                                              int32_t* aCache,
+                                              int32_t aDefaultValue,
+                                              bool aIsStartup, bool aSetValue) {
+  if (aSetValue) {
+    SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddIntVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+template <MemoryOrdering Order>
+static void InitVarCachePref(const nsACString& aName,
+                             Atomic<int32_t, Order>* aCache,
+                             int32_t aDefaultValue, bool aIsStartup,
+                             bool aSetValue) {
+  if (aSetValue) {
+    SetPref_int32_t(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddAtomicIntVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+static void InitVarCachePref(const nsACString& aName, uint32_t* aCache,
+                             uint32_t aDefaultValue, bool aIsStartup,
+                             bool aSetValue) {
+  if (aSetValue) {
+    SetPref_int32_t(PromiseFlatCString(aName).get(),
+                    static_cast<int32_t>(aDefaultValue));
+  }
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddUintVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+template <MemoryOrdering Order>
+static void InitVarCachePref(const nsACString& aName,
+                             Atomic<uint32_t, Order>* aCache,
+                             uint32_t aDefaultValue, bool aIsStartup,
+                             bool aSetValue) {
+  if (aSetValue) {
+    SetPref_int32_t(PromiseFlatCString(aName).get(),
+                    static_cast<int32_t>(aDefaultValue));
+  }
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddAtomicUintVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+static void InitVarCachePref(const nsACString& aName, float* aCache,
+                             float aDefaultValue, bool aIsStartup,
+                             bool aSetValue) {
+  if (aSetValue) {
+    SetPref_float(PromiseFlatCString(aName).get(), aDefaultValue);
+  }
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddFloatVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
 
 /* static */
 void StaticPrefs::InitAll(bool aIsStartup) {
   // For prefs like these:
   //
   //   PREF("foo.bar.baz", bool, true)
-  //   VARCACHE_PREF(Live, "my.varcache", my_varcache, int32_t, 99)
+  //   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
   //
   // we generate registration calls:
   //
   //   if (isParent)
   //     SetPref_bool("foo.bar.baz", true);
-  //   InitVarCachePref(StaticPrefs::UpdatePolicy::Live, "my.varcache",
-  //                    &StaticPrefs::sVarCache_my_varcache, 99, aIsStartup,
-  //                    isParent);
+  //   InitVarCachePref("my.varcache", &StaticPrefs::sVarCache_my_varcache, 99,
+  //                    aIsStartup);
   //
   // The SetPref_*() functions have a type suffix to avoid ambiguity between
   // prefs having int32_t and float default values. That suffix is not needed
@@ -5395,35 +5460,9 @@ void StaticPrefs::InitAll(bool aIsStartup) {
   bool isParent = XRE_IsParentProcess();
 #define PREF(name, cpp_type, value) \
   if (isParent) SetPref_##cpp_type(name, value);
-#define VARCACHE_PREF(policy, name, id, cpp_type, value)                   \
-  InitVarCachePref(StaticPrefs::UpdatePolicy::policy,                      \
-                   NS_LITERAL_CSTRING(name), &StaticPrefs::sVarCache_##id, \
+#define VARCACHE_PREF(name, id, cpp_type, value)                           \
+  InitVarCachePref(NS_LITERAL_CSTRING(name), &StaticPrefs::sVarCache_##id, \
                    value, aIsStartup, isParent);
-#include "mozilla/StaticPrefList.h"
-#undef PREF
-#undef VARCACHE_PREF
-}
-
-/* static */
-void StaticPrefs::InitOncePrefs() {
-  // For prefs like these:
-  //
-  //   VARCACHE_PREF(Skip, "my.varcache", my_varcache, int32_t, 99)
-  //
-  // we generate registration calls:
-  //
-  //   if (UpdatePolicy::Skip == UpdatePolicy::Once) {
-  //     StaticPrefs::sVarCache_my_varcache =
-  //         GetPref("my.varcache", StripAtomic<int32_t>(99));
-  //   }
-  //
-  // This is done to get the potentially updated Preference value as we didn't
-  // register a callback method for the Once policy.
-#define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, id, cpp_type, value)                       \
-  if (UpdatePolicy::policy == UpdatePolicy::Once) {                            \
-    StaticPrefs::sVarCache_##id = GetPref(name, StripAtomic<cpp_type>(value)); \
-  }
 #include "mozilla/StaticPrefList.h"
 #undef PREF
 #undef VARCACHE_PREF

@@ -14,7 +14,7 @@
 #include "RenderTrace.h"        // for RenderTraceScope
 #include "gfx2DGlue.h"          // for Moz2D transition helpers
 #include "gfxPlatform.h"        // for gfxImageFormat, gfxPlatform
-
+#include "gfxPrefs.h"
 //#include "gfxSharedImageSurface.h"      // for gfxSharedImageSurface
 #include "ipc/IPCMessageUtils.h"  // for gfxContentType, null_t
 #include "IPDLActor.h"
@@ -546,7 +546,7 @@ bool ShadowLayerForwarder::EndTransaction(
   }
 
   Maybe<TimeStamp> startTime;
-  if (StaticPrefs::LayersDrawFPS()) {
+  if (gfxPrefs::LayersDrawFPS()) {
     startTime = Some(TimeStamp::Now());
   }
 

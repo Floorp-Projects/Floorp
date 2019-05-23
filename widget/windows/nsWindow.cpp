@@ -57,7 +57,7 @@
 #include "gfx2DGlue.h"
 #include "gfxEnv.h"
 #include "gfxPlatform.h"
-
+#include "gfxPrefs.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
@@ -4195,7 +4195,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       // Messages should be only at topLevel window.
       && nsWindowType::eWindowType_toplevel == mWindowType
       // Currently this scheme is used only when pointer events is enabled.
-      && StaticPrefs::PointerEventsEnabled() && InkCollector::sInkCollector) {
+      && gfxPrefs::PointerEventsEnabled() && InkCollector::sInkCollector) {
     InkCollector::sInkCollector->SetTarget(mWnd);
     InkCollector::sInkCollector->SetPointerId(pointerId);
   }

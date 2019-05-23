@@ -11,10 +11,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "gfxPrefs.h"
 #include "Layers.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
@@ -154,13 +154,13 @@ class WebRenderLayerManager final : public LayerManager {
   void LogTestDataForCurrentPaint(ScrollableLayerGuid::ViewID aScrollId,
                                   const std::string& aKey,
                                   const std::string& aValue) {
-    MOZ_ASSERT(StaticPrefs::APZTestLoggingEnabled(), "don't call me");
+    MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");
     mApzTestData.LogTestDataForPaint(mPaintSequenceNumber, aScrollId, aKey,
                                      aValue);
   }
   void LogAdditionalTestData(const std::string& aKey,
                              const std::string& aValue) {
-    MOZ_ASSERT(StaticPrefs::APZTestLoggingEnabled(), "don't call me");
+    MOZ_ASSERT(gfxPrefs::APZTestLoggingEnabled(), "don't call me");
     mApzTestData.RecordAdditionalData(aKey, aValue);
   }
 

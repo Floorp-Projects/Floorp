@@ -10,6 +10,7 @@
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                     // for Compositor
 #include "DragTracker.h"                    // for DragTracker
+#include "gfxPrefs.h"                       // for gfxPrefs
 #include "GenericFlingAnimation.h"          // for FLING_LOG
 #include "HitTestingTreeNode.h"             // for HitTestingTreeNode
 #include "InputBlockState.h"                // for InputBlockState
@@ -36,9 +37,8 @@
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/mozalloc.h"  // for operator new
-#include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/StaticPrefs.h"        // for StaticPrefs
 #include "mozilla/TouchEvents.h"
+#include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/EventStateManager.h"  // for WheelPrefs
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsDebug.h"                 // for NS_WARNING
@@ -272,7 +272,7 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
       "layers::APZCTreeManager::APZCTreeManager",
       [self] { self->mFlushObserver = new CheckerboardFlushObserver(self); }));
   AsyncPanZoomController::InitializeGlobalState();
-  mApzcTreeLog.ConditionOnPrefFunction(StaticPrefs::APZPrintTree);
+  mApzcTreeLog.ConditionOnPrefFunction(gfxPrefs::APZPrintTree);
 #if defined(MOZ_WIDGET_ANDROID)
   if (jni::IsFennec()) {
     mToolbarAnimator = new AndroidDynamicToolbarAnimator(this);
@@ -369,7 +369,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
   // For testing purposes, we log some data to the APZTestData associated with
   // the layers id that originated this update.
   APZTestData* testData = nullptr;
-  if (StaticPrefs::APZTestLoggingEnabled()) {
+  if (gfxPrefs::APZTestLoggingEnabled()) {
     MutexAutoLock lock(mTestDataLock);
     UniquePtr<APZTestData> ptr = MakeUnique<APZTestData>();
     auto result = mTestData.insert(
@@ -604,7 +604,7 @@ void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
                                        const FocusTarget& aFocusTarget) {
   AssertOnUpdaterThread();
 
-  if (!StaticPrefs::APZKeyboardEnabled()) {
+  if (!gfxPrefs::APZKeyboardEnabled()) {
     return;
   }
 
@@ -1306,7 +1306,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
       }
 
       if (apzc) {
-        if (StaticPrefs::APZTestLoggingEnabled() &&
+        if (gfxPrefs::APZTestLoggingEnabled() &&
             mouseInput.mType == MouseInput::MOUSE_HITTEST) {
           ScrollableLayerGuid guid = apzc->GetGuid();
 
@@ -1318,7 +1318,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
         }
 
         TargetConfirmationFlags confFlags{hitResult};
-        bool apzDragEnabled = StaticPrefs::APZDragEnabled();
+        bool apzDragEnabled = gfxPrefs::APZDragEnabled();
         if (apzDragEnabled && hitScrollbar) {
           // If scrollbar dragging is enabled and we hit a scrollbar, wait
           // for the main-thread confirmation because it contains drag metrics
@@ -1543,8 +1543,8 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
     case KEYBOARD_INPUT: {
       // Disable async keyboard scrolling when accessibility.browsewithcaret is
       // enabled
-      if (!StaticPrefs::APZKeyboardEnabled() ||
-          StaticPrefs::AccessibilityBrowseWithCaret()) {
+      if (!gfxPrefs::APZKeyboardEnabled() ||
+          gfxPrefs::AccessibilityBrowseWithCaret()) {
         APZ_KEY_LOG("Skipping key input from invalid prefs\n");
         return result;
       }
@@ -1740,7 +1740,7 @@ nsEventStatus APZCTreeManager::ProcessTouchInput(
     // checked are similar to the ones we check for MOUSE_INPUT starting
     // a scrollbar mouse-drag.
     mInScrollbarTouchDrag =
-        StaticPrefs::APZDragEnabled() && StaticPrefs::APZTouchDragEnabled() &&
+        gfxPrefs::APZDragEnabled() && gfxPrefs::APZTouchDragEnabled() &&
         hitScrollbarNode && hitScrollbarNode->IsScrollThumbNode() &&
         hitScrollbarNode->GetScrollbarData().mThumbIsAsyncDraggable;
 
@@ -1923,7 +1923,7 @@ void APZCTreeManager::SetupScrollbarDrag(
 
   // Under some conditions, we can confirm the drag block right away.
   // Otherwise, we have to wait for a main-thread confirmation.
-  if (StaticPrefs::APZDragInitiationEnabled() &&
+  if (gfxPrefs::APZDragInitiationEnabled() &&
       // check that the scrollbar's target scroll frame is layerized
       aScrollThumbNode->GetScrollTargetId() == aApzc->GetGuid().mScrollId &&
       !aApzc->IsScrollInfoLayer()) {
@@ -2387,7 +2387,7 @@ ParentLayerPoint APZCTreeManager::DispatchFling(
     AsyncPanZoomController* aPrev, const FlingHandoffState& aHandoffState) {
   // If immediate handoff is disallowed, do not allow handoff beyond the
   // single APZC that's scrolled by the input block that triggered this fling.
-  if (aHandoffState.mIsHandoff && !StaticPrefs::APZAllowImmediateHandoff() &&
+  if (aHandoffState.mIsHandoff && !gfxPrefs::APZAllowImmediateHandoff() &&
       aHandoffState.mScrolledApzc == aPrev) {
     FLING_LOG("APZCTM dropping handoff due to disallowed immediate handoff\n");
     return aHandoffState.mVelocity;
@@ -3294,8 +3294,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
   // With container scrolling, the RCD-RSF scrollbars are subject to the
   // content resolution, which requires some special handling.
   bool scrollbarSubjectToResolution =
-      aMetrics.IsRootContent() &&
-      StaticPrefs::LayoutUseContainersForRootFrames();
+      aMetrics.IsRootContent() && gfxPrefs::LayoutUseContainersForRootFrames();
 
   // |asyncTransform| represents the amount by which we have scrolled and
   // zoomed since the last paint. Because the scrollbar was sized and positioned

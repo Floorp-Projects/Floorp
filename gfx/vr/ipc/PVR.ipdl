@@ -10,7 +10,6 @@ include "VRMessageUtils.h";
 
 include GraphicsMessages;
 include MemoryReportTypes;
-include PrefsTypes;
 include protocol PVRGPU;
 
 include "VRMessageUtils.h";
@@ -22,11 +21,11 @@ async protocol PVR
 {
 parent:
   async NewGPUVRManager(Endpoint<PVRGPUParent> endpoint);
-  async Init(GfxVarUpdate[] vars, DevicePrefs devicePrefs);
+  async Init(GfxPrefSetting[] prefs, GfxVarUpdate[] vars, DevicePrefs devicePrefs);
   async NotifyVsync(TimeStamp vsyncTimestamp);
 
+  async UpdatePref(GfxPrefSetting pref);
   async UpdateVar(GfxVarUpdate var);
-  async PreferenceUpdate(Pref pref);
   async OpenVRControllerActionPathToVR(nsCString aPath);
   async OpenVRControllerManifestPathToVR(OpenVRControllerType aType, nsCString aPath);
   async RequestMemoryReport(uint32_t generation,

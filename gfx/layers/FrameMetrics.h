@@ -987,7 +987,7 @@ struct ScrollMetadata {
     mIsAutoDirRootContentRTL = aValue;
   }
   bool IsAutoDirRootContentRTL() const { return mIsAutoDirRootContentRTL; }
-  // Implemented out of line because the implementation needs StaticPrefs.h
+  // Implemented out of line because the implementation needs gfxPrefs.h
   // and we don't want to include that from FrameMetrics.h.
   void SetUsesContainerScrolling(bool aValue);
   bool UsesContainerScrolling() const { return mUsesContainerScrolling; }

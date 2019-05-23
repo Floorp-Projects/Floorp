@@ -6,7 +6,7 @@
 
 #include "AndroidVelocityTracker.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 namespace layers {
@@ -251,7 +251,7 @@ Maybe<float> AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
   float time[kHistorySize];
   uint32_t m = 0;
   int index = mHistory.Length() - 1;
-  const uint32_t horizon = StaticPrefs::APZVelocityRelevanceTime();
+  const uint32_t horizon = gfxPrefs::APZVelocityRelevanceTime();
   const auto& newest_movement = mHistory[index];
 
   do {

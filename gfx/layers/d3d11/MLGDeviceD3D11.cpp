@@ -20,7 +20,7 @@
 #include "MLGShaders.h"
 #include "TextureD3D11.h"
 #include "gfxConfig.h"
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 namespace layers {
@@ -232,7 +232,7 @@ bool MLGSwapChainD3D11::Initialize(CompositorWidget* aWidget) {
   }
 
   RefPtr<IDXGIFactory2> dxgiFactory2;
-  if (StaticPrefs::Direct3D11UseDoubleBuffering() &&
+  if (gfxPrefs::Direct3D11UseDoubleBuffering() &&
       SUCCEEDED(dxgiFactory->QueryInterface(dxgiFactory2.StartAssignment())) &&
       dxgiFactory2 && IsWin10OrLater() && XRE_IsGPUProcess()) {
     // DXGI_SCALING_NONE is not available on Windows 7 with the Platform Update:
@@ -321,7 +321,7 @@ RefPtr<MLGRenderTarget> MLGSwapChainD3D11::AcquireBackBuffer() {
 
   if (!mRT) {
     MLGRenderTargetFlags flags = MLGRenderTargetFlags::Default;
-    if (StaticPrefs::AdvancedLayersEnableDepthBuffer()) {
+    if (gfxPrefs::AdvancedLayersEnableDepthBuffer()) {
       flags |= MLGRenderTargetFlags::ZBuffer;
     }
 

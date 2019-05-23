@@ -38,10 +38,16 @@ IPCResult VRParent::RecvNewGPUVRManager(Endpoint<PVRGPUParent>&& aEndpoint) {
   return IPC_OK();
 }
 
-IPCResult VRParent::RecvInit(nsTArray<GfxVarUpdate>&& vars,
+IPCResult VRParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
+                             nsTArray<GfxVarUpdate>&& vars,
                              const DevicePrefs& devicePrefs) {
   Unused << SendInitComplete();
 
+  const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
+  for (auto& setting : prefs) {
+    gfxPrefs::Pref* pref = globalPrefs[setting.index()];
+    pref->SetCachedValue(setting.value());
+  }
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -68,13 +74,14 @@ IPCResult VRParent::RecvNotifyVsync(const TimeStamp& vsyncTimestamp) {
   return IPC_OK();
 }
 
-IPCResult VRParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
-  gfxVars::ApplyUpdate(aUpdate);
+IPCResult VRParent::RecvUpdatePref(const GfxPrefSetting& setting) {
+  gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
+  pref->SetCachedValue(setting.value());
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult VRParent::RecvPreferenceUpdate(const Pref& aPref) {
-  Preferences::SetPreference(aPref);
+IPCResult VRParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
+  gfxVars::ApplyUpdate(aUpdate);
   return IPC_OK();
 }
 
@@ -128,6 +135,7 @@ void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
+  gfxPrefs::DestroySingleton();
   CrashReporterClient::DestroySingleton();
   // Only calling XRE_ShutdownChildProcess() at the child process
   // instead of the main process. Otherwise, it will close all child processes
@@ -163,6 +171,8 @@ bool VRParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);
 
+  // Ensure gfxPrefs are initialized.
+  gfxPrefs::GetSingleton();
   gfxConfig::Init();
   gfxVars::Initialize();
 #if defined(XP_WIN)

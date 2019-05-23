@@ -23,13 +23,12 @@
 #include "nsXULAppAPI.h"
 #include "nsIXULAppInfo.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/PaintThread.h"
-
+#include "gfxPrefs.h"
 #include "gfxPlatform.h"
 #include "gfxConfig.h"
 #include "DriverCrashGuard.h"
@@ -589,6 +588,7 @@ GfxInfoBase::~GfxInfoBase() {}
 
 nsresult GfxInfoBase::Init() {
   InitGfxDriverInfoShutdownObserver();
+  gfxPrefs::GetSingleton();
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
@@ -601,7 +601,7 @@ nsresult GfxInfoBase::Init() {
 NS_IMETHODIMP
 GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
                               int32_t* aStatus) {
-  int32_t blocklistAll = StaticPrefs::BlocklistAll();
+  int32_t blocklistAll = gfxPrefs::BlocklistAll();
   if (blocklistAll > 0) {
     gfxCriticalErrorOnce(gfxCriticalError::DefaultOptions(false))
         << "Forcing blocklisting all features";

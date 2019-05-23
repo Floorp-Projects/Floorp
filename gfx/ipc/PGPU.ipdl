@@ -6,7 +6,6 @@
 include GraphicsMessages;
 include MemoryReportTypes;
 include HangTypes;
-include PrefsTypes;
 include protocol PAPZInputBridge;
 include protocol PCompositorManager;
 include protocol PImageBridge;
@@ -50,7 +49,8 @@ parent:
   async PAPZInputBridge(LayersId aLayersId);
 
   // Sent by the UI process to initiate core settings.
-  async Init(GfxVarUpdate[] vars,
+  async Init(GfxPrefSetting[] prefs,
+             GfxVarUpdate[] vars,
              DevicePrefs devicePrefs,
              LayerTreeIdMapping[] mapping);
 
@@ -62,10 +62,9 @@ parent:
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
   // Forward GPU process its endpoints to the VR process.
   async InitVR(Endpoint<PVRGPUChild> endpoint);
-  // Called to update a gfx variable.
+  // Called to update a gfx preference or variable.
+  async UpdatePref(GfxPrefSetting pref);
   async UpdateVar(GfxVarUpdate var);
-
-  async PreferenceUpdate(Pref pref);
 
   // Create a new content-process compositor bridge.
   async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint);

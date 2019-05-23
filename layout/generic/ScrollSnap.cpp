@@ -7,7 +7,7 @@
 #include "ScrollSnap.h"
 
 #include "FrameMetrics.h"
-
+#include "gfxPrefs.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "nsLineLayout.h"
@@ -333,7 +333,7 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
 
   bool snapped = false;
   nsPoint finalPos = calcSnapPoints.GetBestEdge();
-  nscoord proximityThreshold = StaticPrefs::ScrollSnapProximityThreshold();
+  nscoord proximityThreshold = gfxPrefs::ScrollSnapProximityThreshold();
   proximityThreshold = nsPresContext::CSSPixelsToAppUnits(proximityThreshold);
   if (aSnapInfo.mScrollSnapStrictnessY ==
           StyleScrollSnapStrictness::Proximity &&

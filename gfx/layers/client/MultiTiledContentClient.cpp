@@ -7,7 +7,6 @@
 #include "mozilla/layers/MultiTiledContentClient.h"
 
 #include "ClientTiledPaintedLayer.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 
 namespace mozilla {
@@ -23,8 +22,8 @@ MultiTiledContentClient::MultiTiledContentClient(
       mLowPrecisionTiledBuffer(aPaintedLayer, *this, aManager,
                                &mSharedFrameMetricsHelper) {
   MOZ_COUNT_CTOR(MultiTiledContentClient);
-  mLowPrecisionTiledBuffer.SetResolution(StaticPrefs::LowPrecisionResolution());
-  mHasLowPrecision = StaticPrefs::UseLowPrecisionBuffer();
+  mLowPrecisionTiledBuffer.SetResolution(gfxPrefs::LowPrecisionResolution());
+  mHasLowPrecision = gfxPrefs::UseLowPrecisionBuffer();
 }
 
 void MultiTiledContentClient::ClearCachedResources() {
@@ -265,7 +264,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       ctx = nullptr;
 
       // Edge padding allows us to avoid resampling artifacts
-      if (StaticPrefs::TileEdgePaddingEnabled() && mResolution == 1) {
+      if (gfxPrefs::TileEdgePaddingEnabled() && mResolution == 1) {
         drawTarget->PadEdges(newValidRegion.MovedBy(-mTilingOrigin));
       }
 

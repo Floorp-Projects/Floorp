@@ -24,12 +24,13 @@
 #ifdef MOZ_WIDGET_GTK
 #  include "gfxPlatformGtk.h"  // for gfxPlatform
 #endif
+#include "gfxPrefs.h"                 // for gfxPrefs
 #include "mozilla/AutoRestore.h"      // for AutoRestore
 #include "mozilla/ClearOnShutdown.h"  // for ClearOnShutdown
 #include "mozilla/DebugOnly.h"        // for DebugOnly
-#include "mozilla/StaticPrefs.h"      // for StaticPrefs
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/gfx/2D.h"         // for DrawTarget
+#include "mozilla/gfx/GPUChild.h"   // for GfxPrefValue
 #include "mozilla/gfx/Point.h"      // for IntSize
 #include "mozilla/gfx/Rect.h"       // for IntSize
 #include "mozilla/gfx/gfxVars.h"    // for gfxVars
@@ -293,10 +294,10 @@ static int32_t CalculateCompositionFrameRate() {
   // DEFAULT_FRAME_RATE in nsRefreshDriver.cpp.
   // TODO: This should actually return the vsync rate.
   const int32_t defaultFrameRate = 60;
-  int32_t compositionFrameRatePref = StaticPrefs::LayersCompositionFrameRate();
+  int32_t compositionFrameRatePref = gfxPrefs::LayersCompositionFrameRate();
   if (compositionFrameRatePref < 0) {
     // Use the same frame rate for composition as for layout.
-    int32_t layoutFrameRatePref = StaticPrefs::LayoutFrameRate();
+    int32_t layoutFrameRatePref = gfxPrefs::LayoutFrameRate();
     if (layoutFrameRatePref < 0) {
       // TODO: The main thread frame scheduling code consults the actual
       // monitor refresh rate in this case. We should do the same.
@@ -1003,7 +1004,7 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
   RenderTraceLayers(mLayerManager->GetRoot(), "0000");
 
 #ifdef MOZ_DUMP_PAINTING
-  if (StaticPrefs::DumpHostLayers()) {
+  if (gfxPrefs::DumpHostLayers()) {
     printf_stderr("Painting --- compositing layer tree:\n");
     mLayerManager->Dump(/* aSorted = */ true);
   }
@@ -1043,7 +1044,7 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
 #endif
 
   // 0 -> Full-tilt composite
-  if (StaticPrefs::LayersCompositionFrameRate() == 0 ||
+  if (gfxPrefs::LayersCompositionFrameRate() == 0 ||
       mLayerManager->AlwaysScheduleComposite()) {
     // Special full-tilt composite mode for performance testing
     ScheduleComposition();
@@ -1215,7 +1216,7 @@ void CompositorBridgeParent::ScheduleRotationOnCompositorThread(
         "layers::CompositorBridgeParent::ForceComposition", this,
         &CompositorBridgeParent::ForceComposition);
     mForceCompositionTask = task;
-    ScheduleTask(task.forget(), StaticPrefs::OrientationSyncMillis());
+    ScheduleTask(task.forget(), gfxPrefs::OrientationSyncMillis());
   }
 }
 
@@ -1553,7 +1554,7 @@ PLayerTransactionParent* CompositorBridgeParent::AllocPLayerTransactionParent(
 #ifdef XP_WIN
   // This is needed to avoid freezing the window on a device crash on double
   // buffering, see bug 1549674.
-  if (StaticPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater() &&
+  if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater() &&
       XRE_IsGPUProcess()) {
     mWidget->AsWindows()->EnsureCompositorWindow();
   }
@@ -1792,7 +1793,7 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     return mWrBridge;
   }
 
-  if (StaticPrefs::WebRenderSplitRenderRoots()) {
+  if (gfxPrefs::WebRenderSplitRenderRoots()) {
     apis.AppendElement(
         apis[0]->CreateDocument(aSize, 1, wr::RenderRoot::Content));
   }
