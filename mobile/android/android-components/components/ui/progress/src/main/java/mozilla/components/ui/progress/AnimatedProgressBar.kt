@@ -20,6 +20,8 @@ import android.widget.ProgressBar
 /**
  * An animated progress bar following the Photon Design System.
  */
+@Deprecated(
+    "The ui-progress component is deprecated. Using this progress bar affects site loading performance.")
 open class AnimatedProgressBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
