@@ -64,6 +64,7 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
  private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
+  void OnPreferenceChange(const char16_t* aData);
 
   RDDProcessManager();
 
@@ -95,6 +96,10 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
   RDDProcessHost* mProcess;
   uint64_t mProcessToken;
   RDDChild* mRDDChild;
+  // Collects any pref changes that occur during process launch (after
+  // the initial map is passed in command-line arguments) to be sent
+  // when the process can receive IPC messages.
+  nsTArray<mozilla::dom::Pref> mQueuedPrefs;
 };
 
 }  // namespace mozilla
