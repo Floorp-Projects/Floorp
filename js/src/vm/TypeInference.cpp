@@ -1208,11 +1208,17 @@ bool TypeScript::FreezeTypeSets(CompilerConstraintList* constraints,
     }
   }
 
-  *pThisTypes = types + (ThisTypes(script) - existing);
-  *pArgTypes = (script->functionNonDelazifying() &&
-                script->functionNonDelazifying()->nargs())
-                   ? (types + (ArgTypes(script, 0) - existing))
-                   : nullptr;
+  size_t thisTypesIndex = typeScript->thisTypes(sweep, script) - existing;
+  *pThisTypes = types + thisTypesIndex;
+
+  if (script->functionNonDelazifying() &&
+      script->functionNonDelazifying()->nargs() > 0) {
+    size_t firstArgIndex = typeScript->argTypes(sweep, script, 0) - existing;
+    *pArgTypes = types + firstArgIndex;
+  } else {
+    *pArgTypes = nullptr;
+  }
+
   *pBytecodeTypes = types;
 
   constraints->freezeScript(script, *pThisTypes, *pArgTypes, *pBytecodeTypes);
@@ -1518,8 +1524,9 @@ bool js::FinishCompilation(JSContext* cx, HandleScript script,
     }
 
     AutoSweepTypeScript sweep(entry.script);
+    TypeScript* typeScript = entry.script->types();
     if (!CheckFrozenTypeSet(sweep, cx, entry.thisTypes,
-                            TypeScript::ThisTypes(entry.script))) {
+                            typeScript->thisTypes(sweep, entry.script))) {
       succeeded = false;
     }
     unsigned nargs = entry.script->functionNonDelazifying()
@@ -1527,7 +1534,7 @@ bool js::FinishCompilation(JSContext* cx, HandleScript script,
                          : 0;
     for (size_t i = 0; i < nargs; i++) {
       if (!CheckFrozenTypeSet(sweep, cx, &entry.argTypes[i],
-                              TypeScript::ArgTypes(entry.script, i))) {
+                              typeScript->argTypes(sweep, entry.script, i))) {
         succeeded = false;
       }
     }
@@ -1608,18 +1615,20 @@ void js::FinishDefinitePropertiesAnalysis(JSContext* cx,
     const CompilerConstraintList::FrozenScript& entry =
         constraints->frozenScript(i);
     JSScript* script = entry.script;
-    MOZ_ASSERT(script->types());
+    TypeScript* typeScript = script->types();
+    MOZ_ASSERT(typeScript);
 
-    MOZ_ASSERT(TypeScript::ThisTypes(script)->isSubset(entry.thisTypes));
+    AutoSweepTypeScript sweep(script);
+    MOZ_ASSERT(typeScript->thisTypes(sweep, script)->isSubset(entry.thisTypes));
 
     unsigned nargs = entry.script->functionNonDelazifying()
                          ? entry.script->functionNonDelazifying()->nargs()
                          : 0;
     for (size_t j = 0; j < nargs; j++) {
-      MOZ_ASSERT(TypeScript::ArgTypes(script, j)->isSubset(&entry.argTypes[j]));
+      StackTypeSet* argTypes = typeScript->argTypes(sweep, script, j);
+      MOZ_ASSERT(argTypes->isSubset(&entry.argTypes[j]));
     }
 
-    AutoSweepTypeScript sweep(script);
     for (size_t j = 0; j < script->numBytecodeTypeSets(); j++) {
       MOZ_ASSERT(script->types()->typeArray(sweep)[j].isSubset(
           &entry.bytecodeTypes[j]));
@@ -1638,14 +1647,14 @@ void js::FinishDefinitePropertiesAnalysis(JSContext* cx,
 
     AutoSweepTypeScript sweep(script);
     CheckDefinitePropertiesTypeSet(sweep, cx, entry.thisTypes,
-                                   TypeScript::ThisTypes(script));
+                                   types->thisTypes(sweep, script));
 
     unsigned nargs = script->functionNonDelazifying()
                          ? script->functionNonDelazifying()->nargs()
                          : 0;
     for (size_t j = 0; j < nargs; j++) {
-      CheckDefinitePropertiesTypeSet(sweep, cx, &entry.argTypes[j],
-                                     TypeScript::ArgTypes(script, j));
+      StackTypeSet* argTypes = types->argTypes(sweep, script, j);
+      CheckDefinitePropertiesTypeSet(sweep, cx, &entry.argTypes[j], argTypes);
     }
 
     for (size_t j = 0; j < script->numBytecodeTypeSets(); j++) {
@@ -3413,7 +3422,7 @@ void js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
   AutoEnterAnalysis enter(cx);
 
   AutoSweepTypeScript sweep(script);
-  StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
+  StackTypeSet* types = script->types()->bytecodeTypes(sweep, script, pc);
   if (types->hasType(type)) {
     return;
   }
@@ -3431,7 +3440,7 @@ void js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
 
   AutoSweepTypeScript sweep(script);
 
-  MOZ_ASSERT(types == TypeScript::BytecodeTypes(script, pc));
+  MOZ_ASSERT(types == script->types()->bytecodeTypes(sweep, script, pc));
   MOZ_ASSERT(!types->hasType(type));
 
   InferSpew(ISpewOps, "bytecodeType: %p %05zu: %s", script,
@@ -3545,19 +3554,20 @@ bool JSScript::makeTypes(JSContext* cx) {
   updateJitCodeRaw(cx->runtime());
 
 #ifdef DEBUG
+  AutoSweepTypeScript sweep(this);
   StackTypeSet* typeArray = typeScript->typeArrayDontCheckGeneration();
   for (unsigned i = 0; i < numBytecodeTypeSets(); i++) {
     InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u %p",
               InferSpewColor(&typeArray[i]), &typeArray[i],
               InferSpewColorReset(), i, this);
   }
-  TypeSet* thisTypes = TypeScript::ThisTypes(this);
+  StackTypeSet* thisTypes = typeScript->thisTypes(sweep, this);
   InferSpew(ISpewOps, "typeSet: %sT%p%s this %p", InferSpewColor(thisTypes),
             thisTypes, InferSpewColorReset(), this);
   unsigned nargs =
       functionNonDelazifying() ? functionNonDelazifying()->nargs() : 0;
   for (unsigned i = 0; i < nargs; i++) {
-    TypeSet* types = TypeScript::ArgTypes(this, i);
+    StackTypeSet* types = typeScript->argTypes(sweep, this, i);
     InferSpew(ISpewOps, "typeSet: %sT%p%s arg%u %p", InferSpewColor(types),
               types, InferSpewColorReset(), i, this);
   }
@@ -4653,13 +4663,13 @@ void TypeScript::printTypes(JSContext* cx, HandleScript script) {
   }
 
   fprintf(stderr, "\n    this:");
-  TypeScript::ThisTypes(script)->print();
+  thisTypes(sweep, script)->print();
 
   for (unsigned i = 0; script->functionNonDelazifying() &&
                        i < script->functionNonDelazifying()->nargs();
        i++) {
     fprintf(stderr, "\n    arg%u:", i);
-    TypeScript::ArgTypes(script, i)->print();
+    argTypes(sweep, script, i)->print();
   }
   fprintf(stderr, "\n");
 
@@ -4676,7 +4686,7 @@ void TypeScript::printTypes(JSContext* cx, HandleScript script) {
     }
 
     if (CodeSpec[*pc].format & JOF_TYPESET) {
-      StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
+      StackTypeSet* types = bytecodeTypes(sweep, script, pc);
       fprintf(stderr, "  typeset %u:", unsigned(types - typeArray(sweep)));
       types->print();
       fprintf(stderr, "\n");
