@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<meta name="viewport" content="initial-scale=100,width=device-width">
+<meta name="viewport" content="initial-scale=-1,maximum-scale=-1,width=device-width">
 <style>
 html, body {
   margin: 0;
@@ -8,14 +8,16 @@ html, body {
   scrollbar-width: none;
 }
 #container {
+  min-width: 1600px; /* this value should be double of viewport width */
+  min-height: 3000px;
   position: relative;
 }
 #inner {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 10px;
-  height: 10px;
+  right: 0;
+  width: 100px;
+  height: 100px;
   background: green;
 }
 </style>
