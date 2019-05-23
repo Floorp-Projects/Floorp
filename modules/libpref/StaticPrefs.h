@@ -11,6 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/TypeTraits.h"
 #include "MainThreadUtils.h"
+#include <atomic>
 
 namespace mozilla {
 
@@ -32,6 +33,10 @@ typedef Atomic<uint32_t, ReleaseAcquire> ReleaseAcquireAtomicUint32;
 typedef Atomic<uint32_t, SequentiallyConsistent>
     SequentiallyConsistentAtomicUint32;
 
+// Atomic<float> currently doesn't work (see bug 1552086), once this tast has
+// been completed we will be able to use Atomic<float> instead.
+typedef std::atomic<float> AtomicFloat;
+
 template <typename T>
 struct StripAtomicImpl {
   typedef T Type;
@@ -43,6 +48,11 @@ struct StripAtomicImpl<Atomic<T, Order>> {
 };
 
 template <typename T>
+struct StripAtomicImpl<std::atomic<T>> {
+  typedef T Type;
+};
+
+template <typename T>
 using StripAtomic = typename StripAtomicImpl<T>::Type;
 
 template <typename T>
@@ -50,6 +60,9 @@ struct IsAtomic : FalseType {};
 
 template <typename T, MemoryOrdering Order>
 struct IsAtomic<Atomic<T, Order>> : TrueType {};
+
+template <typename T>
+struct IsAtomic<std::atomic<T>> : TrueType {};
 
 class StaticPrefs {
 // For a VarCache pref like this:
