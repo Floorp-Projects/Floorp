@@ -57,8 +57,8 @@ interface nsIClassInfo : nsISupports
     const uint32_t PLUGIN_OBJECT        = 1 << 4;
     const uint32_t SINGLETON_CLASSINFO  = 1 << 5;
 
-    // The high order bit is RESERVED for consumers of these flags. 
-    // No implementor of this interface should ever return flags 
+    // The high order bit is RESERVED for consumers of these flags.
+    // No implementor of this interface should ever return flags
     // with this bit set.
     const uint32_t RESERVED             = 1 << 31;
 

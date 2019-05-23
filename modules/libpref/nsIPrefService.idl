@@ -71,7 +71,7 @@ interface nsIPrefService : nsISupports
    *                  branch will be able to easily access the preferences
    *                  "browser.startup.page", "browser.startup.homepage", or
    *                  "browser.startup.homepage_override" by simply requesting
-   *                  "page", "homepage", or "homepage_override". nullptr or "" 
+   *                  "page", "homepage", or "homepage_override". nullptr or ""
    *                  may be used to access to the entire preference "tree".
    *
    * @return nsIPrefBranch The object representing the requested branch.
@@ -81,7 +81,7 @@ interface nsIPrefService : nsISupports
   nsIPrefBranch getBranch(in string aPrefRoot);
 
   /**
-   * Call to get a Preferences "Branch" which accesses only the default 
+   * Call to get a Preferences "Branch" which accesses only the default
    * preference data. Using a Set method on this object will always create or
    * set a default preference value. When using a Get method a default value
    * will always be returned.
@@ -91,7 +91,7 @@ interface nsIPrefService : nsISupports
    *                  branch will be able to easily access the preferences
    *                  "browser.startup.page", "browser.startup.homepage", or
    *                  "browser.startup.homepage_override" by simply requesting
-   *                  "page", "homepage", or "homepage_override". nullptr or "" 
+   *                  "page", "homepage", or "homepage_override". nullptr or ""
    *                  may be used to access to the entire preference "tree".
    *
    * @note

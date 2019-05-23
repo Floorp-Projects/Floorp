@@ -60,7 +60,7 @@ interface nsIMIMEService : nsISupports {
      * @return The MIME type, if any.
      */
     ACString getTypeFromURI(in nsIURI aURI);
-    
+
     //
     ACString getTypeFromFile(in nsIFile aFile);
 

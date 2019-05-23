@@ -8,14 +8,14 @@
 [scriptable, uuid(C1B1F426-7E83-4759-9F88-0E1B17F49366)]
 interface nsIByteRangeRequest : nsISupports
 {
-    /** 
+    /**
      * Returns true IFF this request is a byte range request, otherwise it
-     * returns false (This is effectively the same as checking to see if 
+     * returns false (This is effectively the same as checking to see if
      * |startRequest| is zero and |endRange| is the content length.)
      */
     readonly attribute boolean isByteRangeRequest;
 
-    /** 
+    /**
      * Absolute start position in remote file for this request.
      */
     readonly attribute long long startRange;

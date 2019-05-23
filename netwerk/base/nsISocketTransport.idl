@@ -102,7 +102,7 @@ interface nsISocketTransport : nsITransport
      * This attribute is only available once the socket is connected.
      */
     readonly attribute nsISupports securityInfo;
-    
+
     /**
      * Security notification callbacks passed to the secure socket provider
      * via nsISSLSocketControl at socket creation time.
@@ -110,7 +110,7 @@ interface nsISocketTransport : nsITransport
      * NOTE: this attribute cannot be changed once a stream has been opened.
      */
     attribute nsIInterfaceRequestor securityCallbacks;
-   
+
     /**
      * Test if this socket transport is (still) connected.
      */
@@ -173,7 +173,7 @@ interface nsISocketTransport : nsITransport
     const unsigned long STATUS_TLS_HANDSHAKE_ENDED    = 0x804b000d;
 
     /**
-     * connectionFlags is a bitmask that can be used to modify underlying 
+     * connectionFlags is a bitmask that can be used to modify underlying
      * behavior of the socket connection. See the flags below.
      */
     attribute unsigned long connectionFlags;
@@ -181,7 +181,7 @@ interface nsISocketTransport : nsITransport
     /**
      * Values for the connectionFlags
      *
-     * When making a new connection BYPASS_CACHE will force the Necko DNS 
+     * When making a new connection BYPASS_CACHE will force the Necko DNS
      * cache entry to be refreshed with a new call to NSPR if it is set before
      * opening the new stream.
      */

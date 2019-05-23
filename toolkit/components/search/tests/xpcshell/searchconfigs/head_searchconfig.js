@@ -6,6 +6,7 @@
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -334,12 +335,24 @@ class SearchConfigTest {
     const engine = this._findEngine(engines, this._config.identifier);
     this.assertOk(engine, "Should have an engine present");
 
+    if (this._config.aliases) {
+      this.assertDeepEqual(engine._internalAliases,
+        this._config.aliases, "Should have the correct aliases for the engine");
+    }
+
     const location = `in region:${region}, locale:${locale}`;
 
     for (const rule of details) {
       this._assertCorrectDomains(location, engine, rule);
       if (rule.codes) {
         this._assertCorrectCodes(location, engine, rule);
+      }
+      if (rule.searchUrlCode || rule.searchFormUrlCode) {
+        this._assertCorrectUrlCode(location, engine, rule);
+      }
+      if (rule.aliases) {
+        this.assertDeepEqual(engine._internalAliases,
+          rule.aliases, "Should have the correct aliases for the engine");
       }
     }
   }
@@ -402,6 +415,29 @@ class SearchConfigTest {
   }
 
   /**
+   * Asserts whether the engine is using the correct URL codes or not.
+   *
+   * @param {string} location
+   *   Debug string with locale + region information.
+   * @param {object} engine
+   *   The engine being tested.
+   * @param {object} rules
+   *   Rules to test.
+   */
+  _assertCorrectUrlCode(location, engine, rule) {
+    if (rule.searchUrlCode) {
+      const submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
+      this.assertOk(submission.uri.query.split("&").includes(rule.searchUrlCode),
+        `Expected "${rule.searchUrlCode}" in "${submission.uri.spec}"`);
+    }
+    if (rule.searchFormUrlCode) {
+      const uri = engine.searchForm;
+      this.assertOk(uri.includes(rule.searchFormUrlCode),
+        `Expected "${rule.searchFormUrlCode}" in "${uri}"`);
+    }
+  }
+
+  /**
    * Helper functions which avoid outputting test results when there are no
    * failures. These help the tests to run faster, and avoid clogging up the
    * python test runner process.
@@ -415,6 +451,12 @@ class SearchConfigTest {
   assertEqual(actual, expected, message) {
     if (actual != expected || this._testDebug) {
       Assert.equal(actual, expected, message);
+    }
+  }
+
+  assertDeepEqual(actual, expected, message) {
+    if (!ObjectUtils.deepEqual(actual, expected)) {
+      Assert.deepEqual(actual, expected, message);
     }
   }
 }

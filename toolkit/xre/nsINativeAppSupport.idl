@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 
 /* nsINativeAppSupport
@@ -13,7 +13,7 @@
  * Due to the nature of the beast, this interface is not a full-blown
  * XPCOM component.  The primary reason is that objects that implement
  * this interface generally must be operational *before* XPCOM (or any
- * of the rest of Mozilla) are initialized.  As a result, this 
+ * of the rest of Mozilla) are initialized.  As a result, this
  * interface is instantiated by somewhat unconventional means.
  *
  * To create the implementor of this interface, you call the function
@@ -21,7 +21,7 @@
  * in nsAppRunner.cpp
  *
  * The interface provides these functions:
- *  start - You call this to inform the native app support that the  
+ *  start - You call this to inform the native app support that the
  *          application is starting.  In addition, it serves as a
  *          query as to whether the application should continue to
  *          run.

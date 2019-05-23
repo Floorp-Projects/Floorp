@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 
 #include "domstubs.idl"
@@ -22,7 +22,7 @@ interface mozIDOMWindowProxy;
  * By default, the implementation will search the focussed frame, or
  * if there is no focussed frame, the web browser content area. It
  * does not by default search subframes or iframes. To change this
- * behaviour, and to explicitly set the frame to search, 
+ * behaviour, and to explicitly set the frame to search,
  * QueryInterface to nsIWebBrowserFindInFrames.
  */
 
@@ -83,7 +83,7 @@ interface nsIWebBrowserFind : nsISupports
      * searchFrames
      *
      * Whether to search through all frames in the content area. Default is true.
-     * 
+     *
      * Note that you can control whether the search propagates into child or
      * parent frames explicitly using nsIWebBrowserFindInFrames, but if one,
      * but not both, of searchSubframes and searchParentFrames are set, this
@@ -101,7 +101,7 @@ interface nsIWebBrowserFind : nsISupports
  *
  * Get by doing a QueryInterface from nsIWebBrowserFind.
  */
- 
+
 [scriptable, uuid(e0f5d182-34bc-11d5-be5b-b760676c6ebc)]
 interface nsIWebBrowserFindInFrames : nsISupports
 {
@@ -121,7 +121,7 @@ interface nsIWebBrowserFindInFrames : nsISupports
      * Set this to only search a subtree of the frame hierarchy.
      */
     attribute mozIDOMWindowProxy  rootSearchFrame;
-        
+
     /**
      * searchSubframes
      *
@@ -130,7 +130,7 @@ interface nsIWebBrowserFindInFrames : nsISupports
      * Setting nsIWebBrowserfind.searchFrames to true sets this to true.
      */
     attribute boolean searchSubframes;
-    
+
     /**
      * searchParentFrames
      *

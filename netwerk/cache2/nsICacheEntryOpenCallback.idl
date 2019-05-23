@@ -41,7 +41,7 @@ interface nsICacheEntryOpenCallback : nsISupports
    * In that case this callback can be invoked on any thread, usually it is the cache I/O
    * or cache management thread.
    *
-   * IMPORTANT NOTE: 
+   * IMPORTANT NOTE:
    * This callback may be invoked sooner then respective asyncOpenURI call exits.
    *
    * @param aEntry
@@ -56,12 +56,12 @@ interface nsICacheEntryOpenCallback : nsISupports
                                   in nsIApplicationCache aApplicationCache);
 
   /**
-   * Callback giving actual result of asyncOpenURI.  It may give consumer the cache 
+   * Callback giving actual result of asyncOpenURI.  It may give consumer the cache
    * entry or a failure result when it's not possible to open it from some reason.
    * This callback is ensured to be called on the same thread on which asyncOpenURI
    * has been called.
    *
-   * IMPORTANT NOTE: 
+   * IMPORTANT NOTE:
    * This callback may be invoked sooner then respective asyncOpenURI call exits.
    *
    * @param aEntry

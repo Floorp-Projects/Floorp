@@ -13,7 +13,7 @@ cpp_quote("// get_nodeInfo(")
 cpp_quote("//  /* [out] */ BSTR  *nodeName,   // For elements, this is the tag name")
 cpp_quote("//  /* [out] */ short  *nameSpaceID,")
 cpp_quote("//  /* [out] */ BSTR  *nodeValue, ")
-cpp_quote("//  /* [out] */ unsigned int    *numChildren); ") 
+cpp_quote("//  /* [out] */ unsigned int    *numChildren); ")
 cpp_quote("//  /* [out] */ unsigned int    *uniqueID;  // In Win32 accessible events we generate, the target's childID matches to this")
 cpp_quote("//  /* [out] */ unsigned short  *nodeType,")
 cpp_quote("// ---------------------------------------------------------------------------------------------------=")
@@ -124,33 +124,33 @@ interface ISimpleDOMNode : IUnknown
     [out, retval] unsigned short *nodeType
   );
 
-  [propget] HRESULT attributes(  
+  [propget] HRESULT attributes(
     [in] unsigned short maxAttribs,
-    [out, size_is(maxAttribs), length_is(*numAttribs)] BSTR *attribNames, 
-    [out, size_is(maxAttribs), length_is(*numAttribs)] short *nameSpaceID,  
+    [out, size_is(maxAttribs), length_is(*numAttribs)] BSTR *attribNames,
+    [out, size_is(maxAttribs), length_is(*numAttribs)] short *nameSpaceID,
     [out, size_is(maxAttribs), length_is(*numAttribs)] BSTR *attribValues,
     [out, retval] unsigned short *numAttribs
   );
 
-  [propget] HRESULT attributesForNames(  
+  [propget] HRESULT attributesForNames(
     [in] unsigned short numAttribs,
-    [in, size_is(numAttribs), length_is(numAttribs)] BSTR *attribNames, 
-    [in, size_is(numAttribs), length_is(numAttribs)] short *nameSpaceID,  
+    [in, size_is(numAttribs), length_is(numAttribs)] BSTR *attribNames,
+    [in, size_is(numAttribs), length_is(numAttribs)] short *nameSpaceID,
     [out, retval, size_is(numAttribs), length_is(numAttribs)] BSTR *attribValues
   );
 
-  [propget] HRESULT computedStyle(  
+  [propget] HRESULT computedStyle(
     [in] unsigned short maxStyleProperties,
     [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes
-    [out, size_is(maxStyleProperties), length_is(*numStyleProperties)] BSTR *styleProperties, 
+    [out, size_is(maxStyleProperties), length_is(*numStyleProperties)] BSTR *styleProperties,
     [out, size_is(maxStyleProperties), length_is(*numStyleProperties)] BSTR *styleValues,
     [out, retval] unsigned short *numStyleProperties
   );
 
-  [propget] HRESULT computedStyleForProperties(  
-    [in] unsigned short numStyleProperties, 
+  [propget] HRESULT computedStyleForProperties(
+    [in] unsigned short numStyleProperties,
     [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes
-    [in, size_is(numStyleProperties), length_is(numStyleProperties)] BSTR *styleProperties, 
+    [in, size_is(numStyleProperties), length_is(numStyleProperties)] BSTR *styleProperties,
     [out, retval, size_is(numStyleProperties), length_is(numStyleProperties)] BSTR *styleValues
   );
 
@@ -161,7 +161,7 @@ interface ISimpleDOMNode : IUnknown
   [propget] HRESULT lastChild([out, retval] ISimpleDOMNode **node);
   [propget] HRESULT previousSibling([out, retval] ISimpleDOMNode **node);
   [propget] HRESULT nextSibling([out, retval] ISimpleDOMNode **node);
-  [propget] HRESULT childAt([in] unsigned childIndex, 
+  [propget] HRESULT childAt([in] unsigned childIndex,
                             [out, retval] ISimpleDOMNode **node);
 
   [propget] HRESULT innerHTML([out, retval] BSTR *innerHTML);

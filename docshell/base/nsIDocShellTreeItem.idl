@@ -15,7 +15,7 @@ webidl Document;
 /**
  * The nsIDocShellTreeItem supplies the methods that are required of any item
  * that wishes to be able to live within the docshell tree either as a middle
- * node or a leaf. 
+ * node or a leaf.
  */
 
 [scriptable, builtinclass, uuid(9b7c586f-9214-480c-a2c4-49b526fff1a6)]
@@ -46,7 +46,7 @@ interface nsIDocShellTreeItem : nsISupports
 	const long typeAll=0x7FFFFFFF;
 
 	/*
-	The type this item is.  
+	The type this item is.
 	*/
 	readonly attribute long itemType;
 	[noscript,notxpcom,nostdcall] long ItemType();
@@ -65,20 +65,20 @@ interface nsIDocShellTreeItem : nsISupports
 	readonly attribute nsIDocShellTreeItem sameTypeParent;
 
 	/*
-	Returns the root DocShellTreeItem.  This is a convience equivalent to 
+	Returns the root DocShellTreeItem.  This is a convience equivalent to
 	getting the parent and its parent until there isn't a parent.
 	*/
 	readonly attribute nsIDocShellTreeItem rootTreeItem;
 
 	/*
-	Returns the root DocShellTreeItem of the same type.  This is a convience 
-	equivalent to getting the parent of the same type and its parent until 
+	Returns the root DocShellTreeItem of the same type.  This is a convience
+	equivalent to getting the parent of the same type and its parent until
 	there isn't a parent.
 	*/
 	readonly attribute nsIDocShellTreeItem sameTypeRootTreeItem;
 
 	/*
-	Returns the docShellTreeItem with the specified name.  Search order is as 
+	Returns the docShellTreeItem with the specified name.  Search order is as
 	follows...
 	1.)  Check name of self, if it matches return it.
 	2.)  For each immediate child.
@@ -114,25 +114,25 @@ interface nsIDocShellTreeItem : nsISupports
 	The owner of the DocShell Tree.  This interface will be called upon when
 	the docshell has things it needs to tell to the owner of the docshell.
 	Note that docShell tree ownership does not cross tree types.  Meaning
-	setting ownership on a chrome tree does not set ownership on the content 
+	setting ownership on a chrome tree does not set ownership on the content
 	sub-trees.  A given tree's boundaries are identified by the type changes.
 	Trees of different types may be connected, but should not be traversed
 	for things such as ownership.
-	
-	Note implementers of this interface should NOT effect the lifetime of the 
+
+	Note implementers of this interface should NOT effect the lifetime of the
 	parent DocShell by holding this reference as it creates a cycle.  Owners
 	when releasing this interface should set the treeOwner to nullptr.
 	Implementers of this interface are guaranteed that when treeOwner is
 	set that the poitner is valid without having to addref.
-	
-	Further note however when others try to get the interface it should be 
-	addref'd before handing it to them. 
+
+	Further note however when others try to get the interface it should be
+	addref'd before handing it to them.
 	*/
 	readonly attribute nsIDocShellTreeOwner treeOwner;
 	[noscript] void setTreeOwner(in nsIDocShellTreeOwner treeOwner);
 
 	/*
-	The current number of DocShells which are immediate children of the 
+	The current number of DocShells which are immediate children of the
 	this object.
 	*/
 	readonly attribute long childCount;

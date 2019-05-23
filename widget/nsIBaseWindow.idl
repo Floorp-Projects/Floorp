@@ -16,9 +16,9 @@ class nsIWidget;
 typedef voidPtr nativeWindow;
 
 /**
- * The nsIBaseWindow describes a generic window and basic operations that 
+ * The nsIBaseWindow describes a generic window and basic operations that
  * can be performed on it.  This is not to be a complete windowing interface
- * but rather a common set that nearly all windowed objects support.    
+ * but rather a common set that nearly all windowed objects support.
  */
 
 [scriptable, uuid(ca635529-a977-4552-9b8a-66187e54d882)]
@@ -32,7 +32,7 @@ interface nsIBaseWindow : nsISupports
 
 	@param parentNativeWindow - This allows a system to pass in the parenting
 		window as a native reference rather than relying on the calling
-		application to have created the parent window as an nsIWidget.  This 
+		application to have created the parent window as an nsIWidget.  This
 		value will be ignored (should be nullptr) if an nsIWidget is passed in to
 		the parentWidget parameter.
 
@@ -44,7 +44,7 @@ interface nsIBaseWindow : nsISupports
 	@param x - This is the x co-ordinate relative to the parent to place the
 		window.
 
-	@param y - This is the y co-ordinate relative to the parent to place the 
+	@param y - This is the y co-ordinate relative to the parent to place the
 		window.
 
 	@param cx - This is the width	for the window to be.
@@ -55,10 +55,10 @@ interface nsIBaseWindow : nsISupports
 				NS_ERROR_UNEXPECTED - Call was unexpected at this time.  Most likely
 					due to you calling it after create() has been called.
 				NS_ERROR_INVALID_ARG - controls that require either a parentNativeWindow
-					or a parentWidget may return invalid arg when they do not 
+					or a parentWidget may return invalid arg when they do not
 					receive what they are needing.
 	*/
-	[noscript]void initWindow(in nativeWindow parentNativeWindow, 
+	[noscript]void initWindow(in nativeWindow parentNativeWindow,
 		in nsIWidget parentWidget,	in long x, in long y, in long cx, in long cy);
 
 	/*
@@ -123,23 +123,23 @@ interface nsIBaseWindow : nsISupports
 	Convenience function combining the SetPosition and SetSize into one call.
 	Also is more efficient than calling both.
 	*/
-	void setPositionAndSize(in long x, in long y, in long cx, in long cy, 
+	void setPositionAndSize(in long x, in long y, in long cx, in long cy,
 		in unsigned long flags);
-		
+
 	/*
 	Convenience function combining the GetPosition and GetSize into one call.
 	Also is more efficient than calling both.
 	*/
 	void getPositionAndSize(out long x, out long y, out long cx, out long cy);
-	 
-	/** 
+
+	/**
 	 * Tell the window to repaint itself
 	 * @param aForce - if true, repaint immediately
 	 *                 if false, the window may defer repainting as it sees fit.
 	 */
 	void repaint(in boolean force);
 
-	/*			  
+	/*
 	This is the parenting widget for the control.  This may be null if the
 	native window was handed in for the parent during initialization.
 	If this	is returned, it should refer to the same object as
@@ -148,7 +148,7 @@ interface nsIBaseWindow : nsISupports
 	Setting this after Create() has been called may not be supported by some
 	implementations.
 
-	On controls that don't support widgets, setting this will return a 
+	On controls that don't support widgets, setting this will return a
 	NS_ERROR_NOT_IMPLEMENTED error.
 	*/
 	[noscript] attribute nsIWidget parentWidget;
@@ -177,7 +177,7 @@ interface nsIBaseWindow : nsISupports
 
 	/*
 	Attribute controls the visibility of the object behind this interface.
-	Setting this attribute to false will hide the control.  Setting it to 
+	Setting this attribute to false will hide the control.  Setting it to
 	true will show it.
 	*/
 	attribute boolean visibility;

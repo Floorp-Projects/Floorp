@@ -9,6 +9,8 @@
 #include "mozJSComponentLoader.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/JSWindowActorService.h"
+#include "mozilla/dom/JSWindowActorParent.h"
+#include "mozilla/dom/JSWindowActorChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -57,7 +59,28 @@ void WindowGlobalActor::ConstructActor(const nsAString& aName,
     side = &proto->Child();
   }
 
-  aRv = loader->Import(cx, side->mModuleURI, &global, &exports);
+  // Support basic functionally such as SendAsyncMessage and SendQuery for
+  // unspecified moduleURI.
+  if (!side->mModuleURI) {
+    RefPtr<JSWindowActor> actor;
+    if (actorType == JSWindowActor::Type::Parent) {
+      actor = new JSWindowActorParent();
+    } else {
+      actor = new JSWindowActorChild();
+    }
+
+    JS::Rooted<JS::Value> wrapper(cx);
+    if (!ToJSValue(cx, actor, &wrapper)) {
+      aRv.NoteJSContextException(cx);
+      return;
+    }
+
+    MOZ_ASSERT(wrapper.isObject());
+    aActor.set(&wrapper.toObject());
+    return;
+  }
+
+  aRv = loader->Import(cx, side->mModuleURI.ref(), &global, &exports);
   if (aRv.Failed()) {
     return;
   }

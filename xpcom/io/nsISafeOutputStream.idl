@@ -9,7 +9,7 @@
  * This interface provides a mechanism to control an output stream
  * that takes care not to overwrite an existing target until it is known
  * that all writes to the destination succeeded.
- * 
+ *
  * An object that supports this interface is intended to also support
  * nsIOutputStream.
  *

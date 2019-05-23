@@ -2922,10 +2922,10 @@ bool Debugger::updateExecutionObservabilityOfFrames(
   return true;
 }
 
-static inline void MarkTypeScriptActiveIfObservable(
+static inline void MarkJitScriptActiveIfObservable(
     JSScript* script, const Debugger::ExecutionObservableSet& obs) {
   if (obs.shouldRecompileOrInvalidate(script)) {
-    script->types()->setActive();
+    script->jitScript()->setActive();
   }
 }
 
@@ -2988,13 +2988,13 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
       const JSJitFrameIter& frame = iter.frame();
       switch (frame.type()) {
         case FrameType::BaselineJS:
-          MarkTypeScriptActiveIfObservable(frame.script(), obs);
+          MarkJitScriptActiveIfObservable(frame.script(), obs);
           break;
         case FrameType::IonJS:
-          MarkTypeScriptActiveIfObservable(frame.script(), obs);
+          MarkJitScriptActiveIfObservable(frame.script(), obs);
           for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more();
                ++inlineIter) {
-            MarkTypeScriptActiveIfObservable(inlineIter.script(), obs);
+            MarkJitScriptActiveIfObservable(inlineIter.script(), obs);
           }
           break;
         default:;
@@ -3007,10 +3007,10 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
   // discard the BaselineScript on scripts that have no IonScript.
   for (size_t i = 0; i < scripts.length(); i++) {
     MOZ_ASSERT_IF(scripts[i]->isDebuggee(), observing);
-    if (!scripts[i]->types()->active()) {
+    if (!scripts[i]->jitScript()->active()) {
       FinishDiscardBaselineScript(fop, scripts[i]);
     }
-    scripts[i]->types()->resetActive();
+    scripts[i]->jitScript()->resetActive();
   }
 
   // Iterate through all wasm instances to find ones that need to be updated.

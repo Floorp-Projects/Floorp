@@ -6,15 +6,15 @@
 #include "nsISupports.idl"
 
 /**
- * nsIErrorService: This is an interim service that allows nsresult codes to be mapped to 
+ * nsIErrorService: This is an interim service that allows nsresult codes to be mapped to
  * string bundles that can be used to look up error messages. String bundle keys can also
- * be mapped. 
+ * be mapped.
  *
  * This service will eventually get replaced by extending xpidl to allow errors to be defined.
  * (http://bugzilla.mozilla.org/show_bug.cgi?id=13423).
  */
 [uuid(afe1f190-a3c2-11e3-a5e2-0800200c9a66)]
-interface nsIErrorService : nsISupports 
+interface nsIErrorService : nsISupports
 {
     /**
      * Registers a string bundle URL for an error module. Error modules are obtained from

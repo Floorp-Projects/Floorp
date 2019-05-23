@@ -197,6 +197,7 @@ static uint32_t sESMInstanceCount = 0;
 int32_t EventStateManager::sUserInputEventDepth = 0;
 int32_t EventStateManager::sUserKeyboardEventDepth = 0;
 bool EventStateManager::sNormalLMouseEventInProcess = false;
+int16_t EventStateManager::sCurrentMouseBtn = MouseButton::eNotPressed;
 EventStateManager* EventStateManager::sActiveESM = nullptr;
 Document* EventStateManager::sMouseOverDocument = nullptr;
 AutoWeakFrame EventStateManager::sLastDragOverFrame = nullptr;
@@ -6280,6 +6281,12 @@ AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
     mMouseButtonEventHandlingDocument =
         fm->SetMouseButtonHandlingDocument(aDocument);
   }
+  if (NeedsToUpdateCurrentMouseBtnState()) {
+    WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+    if (mouseEvent) {
+      EventStateManager::sCurrentMouseBtn = mouseEvent->mButton;
+    }
+  }
 }
 
 AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher() {
@@ -6295,6 +6302,9 @@ AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher() {
     NS_ENSURE_TRUE_VOID(fm);
     nsCOMPtr<Document> handlingDocument =
         fm->SetMouseButtonHandlingDocument(mMouseButtonEventHandlingDocument);
+  }
+  if (NeedsToUpdateCurrentMouseBtnState()) {
+    EventStateManager::sCurrentMouseBtn = MouseButton::eNotPressed;
   }
 }
 
