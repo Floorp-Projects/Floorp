@@ -654,13 +654,6 @@ inline StackTypeSet* TypeScript::bytecodeTypes(const AutoSweepTypeScript& sweep,
 }
 
 /* static */ inline void TypeScript::MonitorBytecodeType(
-    JSContext* cx, const js::Value& rval) {
-  jsbytecode* pc;
-  RootedScript script(cx, cx->currentScript(&pc));
-  MonitorBytecodeType(cx, script, pc, rval);
-}
-
-/* static */ inline void TypeScript::MonitorBytecodeType(
     JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
     const js::Value& rval) {
   TypeSet::Type type = TypeSet::GetValueType(rval);
