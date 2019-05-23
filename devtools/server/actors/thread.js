@@ -1664,14 +1664,15 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       sourceActor = this.sources.createSourceActor(source);
     }
 
-    if (this._onLoadBreakpointURLs.has(source.url)) {
-      this.setBreakpoint({ sourceUrl: source.url, line: 1 }, {});
+    const sourceUrl = sourceActor.url;
+    if (this._onLoadBreakpointURLs.has(sourceUrl)) {
+      this.setBreakpoint({ sourceUrl, line: 1 }, {});
     }
 
     const bpActors = this.breakpointActorMap.findActors()
-    .filter((actor) => {
-      return actor.location.sourceUrl && actor.location.sourceUrl == source.url;
-    });
+    .filter((actor) =>
+      actor.location.sourceUrl && actor.location.sourceUrl == sourceUrl
+    );
 
     for (const actor of bpActors) {
       sourceActor.applyBreakpoint(actor);
