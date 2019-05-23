@@ -3571,10 +3571,7 @@ void AsyncPanZoomController::AdjustScrollForSurfaceShift(
   // size from Metrics().GetViewport() to make sure it reflects any height
   // change due to dynamic toolbar movement.
   mCompositedLayoutViewport.SizeTo(Metrics().GetLayoutViewport().Size());
-  FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
-      CSSRect(mCompositedScrollOffset,
-              Metrics().CalculateCompositedSizeInCssPixels()),
-      Metrics().GetScrollableRect(), mCompositedLayoutViewport);
+  RecalculateCompositedLayoutViewport();
   RequestContentRepaint();
   UpdateSharedCompositorFrameMetrics();
 }
@@ -3587,6 +3584,19 @@ void AsyncPanZoomController::SetScrollOffset(const CSSPoint& aOffset) {
 void AsyncPanZoomController::ClampAndSetScrollOffset(const CSSPoint& aOffset) {
   Metrics().ClampAndSetScrollOffset(aOffset);
   Metrics().RecalculateLayoutViewportOffset();
+}
+
+void AsyncPanZoomController::ClampCompositedScrollOffset() {
+  mCompositedScrollOffset =
+      Metrics().CalculateScrollRange().ClampPoint(mCompositedScrollOffset);
+  RecalculateCompositedLayoutViewport();
+}
+
+void AsyncPanZoomController::RecalculateCompositedLayoutViewport() {
+  FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
+      CSSRect(mCompositedScrollOffset,
+              Metrics().CalculateCompositedSizeInCssPixels()),
+      Metrics().GetScrollableRect(), mCompositedLayoutViewport);
 }
 
 void AsyncPanZoomController::ScrollBy(const CSSPoint& aOffset) {
@@ -4677,6 +4687,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       // scrollable rect may have changed in a way that makes our local
       // scroll offset out of bounds, so re-clamp it.
       ClampAndSetScrollOffset(Metrics().GetScrollOffset());
+      ClampCompositedScrollOffset();
     }
   }
 
