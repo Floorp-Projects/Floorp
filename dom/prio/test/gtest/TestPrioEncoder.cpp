@@ -9,41 +9,16 @@
 #include "jsapi.h"
 #include "PrioEncoder.h"
 
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "mprio.h"
 
 TEST(PrioEncoder, BadPublicKeys)
 {
-  mozilla::dom::AutoJSAPI jsAPI;
-  ASSERT_TRUE(jsAPI.Init(xpc::PrivilegedJunkScope()));
-  JSContext* cx = jsAPI.cx();
-
-  mozilla::Preferences::SetCString("prio.publicKeyA",
-                                   nsCString(NS_LITERAL_CSTRING("badA")));
-  mozilla::Preferences::SetCString("prio.publicKeyB",
-                                   nsCString(NS_LITERAL_CSTRING("badB")));
-
-  mozilla::dom::GlobalObject global(cx, xpc::PrivilegedJunkScope());
-
-  nsCString batchID = NS_LITERAL_CSTRING("abc123");
-
-  mozilla::dom::PrioParams prioParams;
-  mozilla::dom::RootedDictionary<mozilla::dom::PrioEncodedData> prioEncodedData(
-      cx);
   mozilla::ErrorResult rv;
+  rv = mozilla::dom::PrioEncoder::SetKeys("badA", "badB");
 
-  mozilla::dom::PrioEncoder::Encode(global, batchID, prioParams,
-                                    prioEncodedData, rv);
   ASSERT_TRUE(rv.Failed());
-
-  // Call again to ensure that the singleton state is consistent.
-  mozilla::dom::PrioEncoder::Encode(global, batchID, prioParams,
-                                    prioEncodedData, rv);
-  ASSERT_TRUE(rv.Failed());
-
-  // Reset error result so test runner does not fail.
   rv = mozilla::ErrorResult();
 }
 
@@ -198,11 +173,6 @@ TEST(PrioEncoder, VerifyFull)
   ASSERT_TRUE(jsAPI.Init(xpc::PrivilegedJunkScope()));
   JSContext* cx = jsAPI.cx();
 
-  mozilla::Preferences::SetCString(
-      "prio.publicKeyA", nsCString(reinterpret_cast<const char*>(pkHexA)));
-  mozilla::Preferences::SetCString(
-      "prio.publicKeyB", nsCString(reinterpret_cast<const char*>(pkHexB)));
-
   mozilla::dom::GlobalObject global(cx, xpc::PrivilegedJunkScope());
 
   nsCString batchID;
@@ -218,6 +188,11 @@ TEST(PrioEncoder, VerifyFull)
   mozilla::dom::RootedDictionary<mozilla::dom::PrioEncodedData> prioEncodedData(
       cx);
   mozilla::ErrorResult rv;
+
+  rv =
+      mozilla::dom::PrioEncoder::SetKeys(reinterpret_cast<const char*>(pkHexA),
+                                         reinterpret_cast<const char*>(pkHexB));
+  ASSERT_FALSE(rv.Failed());
 
   mozilla::dom::PrioEncoder::Encode(global, batchID, prioParams,
                                     prioEncodedData, rv);

@@ -35,6 +35,10 @@ class PrioEncoder {
   // maximum number of booleans that can be prio-encoded in a single batch.
   const static uint32_t gNumBooleans = 2046;
 
+  // Set (or, by passing nullptrs, reset) the keys used to encode the payloads.
+  static nsresult SetKeys(const char* aKeyA = nullptr,
+                          const char* aKeyB = nullptr);
+
  private:
   PrioEncoder();
   ~PrioEncoder();
