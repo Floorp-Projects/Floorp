@@ -5,6 +5,7 @@
 
 const test = new SearchConfigTest({
   identifier: "ddg",
+  aliases: ["@duckduckgo", "@ddg"],
   default: {
     // Not included anywhere.
   },

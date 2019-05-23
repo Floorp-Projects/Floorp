@@ -5,6 +5,7 @@
 
 const test = new SearchConfigTest({
   identifier: "ebay",
+  aliases: ["@ebay"],
   default: {
     // Not included anywhere.
   },
