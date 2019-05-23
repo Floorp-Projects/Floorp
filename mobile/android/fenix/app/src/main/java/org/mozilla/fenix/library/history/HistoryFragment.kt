@@ -38,7 +38,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -182,12 +181,12 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
             R.id.share_history_multi_select -> {
                 val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
                 when {
-                    selectedHistory.size == 1 -> context?.share(selectedHistory.first().url)
+                    selectedHistory.size == 1 -> share(selectedHistory.first().url)
                     selectedHistory.size > 1 -> {
                         val shareText = selectedHistory.joinToString("\n") {
                             it.url
                         }
-                        requireContext().share(shareText)
+                        share(shareText)
                     }
                 }
                 true
@@ -282,5 +281,10 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
         selected.forEach {
             components.core.historyStorage.deleteVisit(it.url, it.visitedAt)
         }
+    }
+
+    private fun share(text: String) {
+        val directions = HistoryFragmentDirections.actionHistoryFragmentToShareFragment(text)
+        Navigation.findNavController(view!!).navigate(directions)
     }
 }

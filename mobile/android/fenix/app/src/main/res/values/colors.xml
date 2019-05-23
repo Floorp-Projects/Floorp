@@ -137,7 +137,14 @@
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/primary_text_light_theme</color>
 
+    <!-- Onboarding colors -->
     <color name="onboarding_card_background_dark">#20123A</color>
     <color name="onboarding_card_primary_text_dark">#3FE1B0</color>
     <color name="onboarding_card_button_background_dark">#312A65</color>
+
+    <!-- Share UI -->
+    <color name="default_share_background">#E3E2E3</color>
+    <color name="device_type_desktop_background">#F091C3</color>
+    <color name="device_type_mobile_background">#D4C1FA</color>
+    <color name="device_foreground">#20123A</color>
 </resources>

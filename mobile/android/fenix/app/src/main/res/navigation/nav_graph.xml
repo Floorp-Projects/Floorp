@@ -38,6 +38,9 @@
         <action
             android:id="@+id/action_homeFragment_to_createCollectionFragment"
             app:destination="@id/createCollectionFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_shareFragment"
+            app:destination="@id/shareFragment" />
     </fragment>
 
     <fragment
@@ -133,6 +136,9 @@
             android:id="@+id/action_browserFragment_to_createCollectionFragment"
             app:destination="@id/createCollectionFragment" />
         <action
+            android:id="@+id/action_browserFragment_to_shareFragment"
+            app:destination="@id/shareFragment" />
+        <action
             android:id="@+id/action_browserFragment_to_quickSettingsSheetDialogFragment"
             app:destination="@id/quickSettingsSheetDialogFragment" />
     </fragment>
@@ -161,6 +167,9 @@
         <action
             android:id="@+id/action_historyFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_historyFragment_to_shareFragment"
+            app:destination="@id/shareFragment" />
     </fragment>
 
     <fragment
@@ -185,6 +194,9 @@
         <action
             android:id="@+id/action_bookmarkFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_bookmarkFragment_to_shareFragment"
+            app:destination="@id/shareFragment" />
     </fragment>
 
     <fragment
@@ -374,6 +386,15 @@
         android:name="org.mozilla.fenix.collections.CreateCollectionFragment"
         android:label="fragment_create_collection"
         tools:layout="@layout/fragment_create_collection" />
+    <dialog
+        android:id="@+id/shareFragment"
+        android:name="org.mozilla.fenix.share.ShareFragment"
+        android:label="fragment_share"
+        tools:layout="@layout/fragment_share" >
+        <argument
+            android:name="url"
+            app:argType="string" />
+    </dialog>
     <dialog
         android:id="@+id/quickSettingsSheetDialogFragment"
         android:name="org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment"

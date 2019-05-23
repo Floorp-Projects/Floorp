@@ -46,7 +46,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -207,7 +206,10 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                     }
                     is BookmarkAction.Share -> {
                         it.item.url?.apply {
-                            requireContext().share(this)
+                            navigation
+                                .navigate(
+                                    BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(this)
+                                )
                             requireComponents.analytics.metrics.track(Event.ShareBookmark)
                         }
                     }

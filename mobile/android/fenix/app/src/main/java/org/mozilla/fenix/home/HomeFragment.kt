@@ -45,7 +45,6 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.Mode
@@ -302,7 +301,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 invokePendingDeleteJobs()
                 requireComponents.core.sessionManager.findSessionById(action.sessionId)
                     ?.let { session ->
-                        requireContext().share(session.url)
+                        share(session.url)
                     }
             }
             is TabAction.CloseAll -> {
@@ -326,7 +325,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 val shareText = requireComponents.core.sessionManager.sessions.joinToString("\n") {
                     it.url
                 }
-                requireContext().share(shareText)
+                share(shareText)
             }
         }
     }
@@ -397,7 +396,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 val shareText = action.collection.tabs.joinToString("\n") {
                     it.url
                 }
-                requireContext().share(shareText)
+                share(shareText)
             }
             is CollectionAction.RemoveTab -> {
                 launch(Dispatchers.IO) {
@@ -646,6 +645,11 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
             Navigation.findNavController(it).navigate(directions)
         }
+    }
+
+    private fun share(text: String) {
+        val directions = HomeFragmentDirections.actionHomeFragmentToShareFragment(text)
+        Navigation.findNavController(view!!).navigate(directions)
     }
 
     private fun currentMode(): Mode = if (!onboarding.userHasBeenOnboarded()) {

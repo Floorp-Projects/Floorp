@@ -75,7 +75,6 @@ import org.mozilla.fenix.components.toolbar.ToolbarViewModel
 import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.lib.Do
@@ -439,7 +438,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     is QuickActionAction.SharePressed -> {
                         requireComponents.analytics.metrics.track(Event.QuickActionSheetShareTapped)
                         getSessionById()?.let { session ->
-                            session.url.apply { requireContext().share(this) }
+                            shareUrl(session.url)
                         }
                     }
                     is QuickActionAction.DownloadsPressed -> {
@@ -616,7 +615,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(action.item.isChecked)
             ToolbarMenu.Item.Share -> getSessionById()?.let { session ->
                 session.url.apply {
-                    requireContext().share(this)
+                    shareUrl(this)
                 }
             }
             ToolbarMenu.Item.NewPrivateTab -> {
@@ -764,6 +763,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     .onNext(QuickActionChange.BookmarkedStateChange(found))
             }
         }
+    }
+
+    private fun shareUrl(url: String) {
+        val directions = BrowserFragmentDirections.actionBrowserFragmentToShareFragment(url)
+        Navigation.findNavController(view!!).navigate(directions)
     }
 
     companion object {

@@ -237,6 +237,11 @@ android.applicationVariants.all { variant ->
         buildConfigField 'String', 'LEANPLUM_TOKEN', 'null'
         println("X_X")
     }
+
+// -------------------------------------------------------------------------------------------------
+// Feature build flags
+// -------------------------------------------------------------------------------------------------
+    buildConfigField 'Boolean', 'SEND_TAB_ENABLED', "false"
 }
 
 androidExtensions {
