@@ -70,6 +70,9 @@ Options
 
         await RemoteSettings("a-key").get({ syncIfEmpty: false });
 
+* ``verifySignature``: verify the content signature of the local data (default: ``false``).
+  An error is thrown if the local data was altered. This hurts performance, but can be used if your use case needs to be secure from local tampering.
+
 
 Events
 ------
@@ -230,6 +233,20 @@ The polling for changes process sends two notifications that observers can regis
 Advanced Options
 ================
 
+``localFields``: records fields that remain local
+-------------------------------------------------
+
+During synchronization, the local database is compared with the server data. Any difference will be overwritten by the remote version.
+
+In some use-cases it's necessary to store some state using extra attributes on records. The ``localFields`` options allows to specify which records field names should be preserved on records during synchronization.
+
+.. code-block:: javascript
+
+    const client = RemoteSettings("a-collection", {
+      localFields: [ "userNotified", "userResponse" ],
+    });
+
+
 ``filterFunc``: custom filtering function
 -----------------------------------------
 
@@ -237,7 +254,7 @@ By default, the entries returned by ``.get()`` are filtered based on the JEXL ex
 
 .. code-block:: javascript
 
-    RemoteSettings("a-collection", {
+    const client = RemoteSettings("a-collection", {
       filterFunc: (record, environment) => {
         const { enabled, ...entry } = record;
         return enabled ? entry : null;
@@ -298,13 +315,13 @@ You can forge a ``payload`` that contains the events attributes as described abo
 .. code-block:: js
 
     const payload = {
-      current: [{ id: "", age: 43 }],
+      current: [{ id: "abc", age: 43 }],
       created: [],
       updated: [{ old: { id: "abc", age: 42 }, new: { id: "abc", age: 43 }}],
       deleted: [],
     };
 
-    await RemoteSettings("a-key").emit("sync", { "data": payload });
+    await RemoteSettings("a-key").emit("sync", { data: payload });
 
 
 Manipulate local data
@@ -321,16 +338,23 @@ And records can be created manually (as if they were synchronized from the serve
 .. code-block:: js
 
     const record = await collection.create({
+      id: "a-custom-string-or-uuid",
       domain: "website.com",
       usernameSelector: "#login-account",
       passwordSelector: "#pass-signin",
     }, { synced: true });
 
+If no timestamp is set, any call to ``.get()`` will trigger the load of initial data (JSON dump) if any, or a synchronization will be triggered. To avoid that, store a fake timestamp:
+
+.. code-block:: js
+
+    await collection.db.saveLastModified(42);
+
 In order to bypass the potential target filtering of ``RemoteSettings("key").get()``, the low-level listing of records can be obtained with ``collection.list()``:
 
 .. code-block:: js
 
-    const subset = await collection.list({
+    const { data: subset } = await collection.list({
       filters: {
         "property": "value"
       }
@@ -353,20 +377,27 @@ We host more documentation on https://remote-settings.readthedocs.io/, on how to
 About blocklists
 ----------------
 
-Addons, certificates, plugins, and GFX blocklists were the first use-cases of remote settings, and thus have some specificities.
+The security settings, as well as addons, plugins, and GFX blocklists were the first use-cases of remote settings, and thus have some specificities.
 
-For example, they leverage advanced customization options (bucket, content-signature certificate, target filtering etc.), and in order to be able to inspect and manipulate their data, the client instances must first be explicitly initialized.
-
-.. code-block:: js
-
-    const {BlocklistClients} = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
-
-    BlocklistClients.initialize();
-
-Then, in order to access a specific client instance, the bucket must be specified:
+For example, they leverage advanced customization options (bucket, content-signature certificate, target filtering etc.). In order to get a reference to these clients, their initialization code must be executed first.
 
 .. code-block:: js
 
-    const collection = await RemoteSettings("addons", { bucketName: "blocklists" }).openCollection();
+    const {RemoteSecuritySettings} = ChromeUtils.import("resource://gre/modules/psm/RemoteSecuritySettings.jsm");
 
-And in the storage inspector, the IndexedDB internal store will be prefixed with ``blocklists`` instead of ``main`` (eg. ``blocklists/addons``).
+    RemoteSecuritySettings.init();
+
+
+    const Blocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
+
+    Blocklist.ExtensionBlocklistRS._ensureInitialized();
+    Blocklist.PluginBlocklistRS._ensureInitialized();
+    Blocklist.GfxBlocklistRS._ensureInitialized();
+
+Then, in order to access a specific client instance, the ``bucketName`` must be specified:
+
+.. code-block:: js
+
+    const client = RemoteSettings("onecrl", { bucketName: "security-state" });
+
+And in the storage inspector, the IndexedDB internal store will be prefixed with ``security-state`` instead of ``main`` (eg. ``security-state/onecrl``).
