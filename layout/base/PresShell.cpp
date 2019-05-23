@@ -9064,8 +9064,8 @@ void PresShell::WillDoReflow() {
 void PresShell::DidDoReflow(bool aInterruptible) {
   HandlePostedReflowCallbacks(aInterruptible);
 
-  nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
-  if (docShell) {
+  AutoAssertNoFlush noReentrantFlush(*this);
+  if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
     DOMHighResTimeStamp now = GetPerformanceNowUnclamped();
     docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
   }
