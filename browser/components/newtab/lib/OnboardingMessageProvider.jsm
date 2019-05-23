@@ -6,6 +6,7 @@ const {Localization} = ChromeUtils.import("resource://gre/modules/Localization.j
 const {FxAccountsConfig} = ChromeUtils.import("resource://gre/modules/FxAccountsConfig.jsm");
 const {AttributionCode} = ChromeUtils.import("resource:///modules/AttributionCode.jsm");
 const {AddonRepository} = ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 async function getAddonInfo() {
   try {
@@ -218,12 +219,15 @@ const ONBOARDING_MESSAGES = async () => ([
     bundled: 3,
     order: 2,
     content: {
-      title: {string_id: "onboarding-tracking-protection-title"},
-      text: {string_id: "onboarding-tracking-protection-text"},
+      title: {string_id: "onboarding-tracking-protection-title2"},
+      text: {string_id: "onboarding-tracking-protection-text2"},
       icon: "tracking",
       primary_button: {
-        label: {string_id: "onboarding-tracking-protection-button"},
-        action: {
+        label: {string_id: "onboarding-tracking-protection-button2"},
+        action: Services.locale.appLocaleAsLangTag.substr(0, 2) === "en" ? {
+          type: "OPEN_URL",
+          data: {args: "https://mzl.la/ETPdefault", where: "tabshifted"},
+        } : {
           type: "OPEN_PREFERENCES_PAGE",
           data: {category: "privacy-trackingprotection"},
         },
@@ -239,10 +243,10 @@ const ONBOARDING_MESSAGES = async () => ([
     order: 2,
     content: {
       title: {string_id: "onboarding-data-sync-title"},
-      text: {string_id: "onboarding-data-sync-text"},
+      text: {string_id: "onboarding-data-sync-text2"},
       icon: "devices",
       primary_button: {
-        label: {string_id: "onboarding-data-sync-button"},
+        label: {string_id: "onboarding-data-sync-button2"},
         action: {
           type: "OPEN_URL",
           addFlowParams: true,
@@ -297,7 +301,7 @@ const ONBOARDING_MESSAGES = async () => ([
     order: 5,
     content: {
       title: {string_id: "onboarding-firefox-send-title"},
-      text: {string_id: "onboarding-firefox-send-text"},
+      text: {string_id: "onboarding-firefox-send-text2"},
       icon: "ffsend",
       primary_button: {
         label: {string_id: "onboarding-firefox-send-button"},
@@ -343,7 +347,7 @@ const ONBOARDING_MESSAGES = async () => ([
         label: {string_id: "onboarding-send-tabs-button"},
         action: {
           type: "OPEN_URL",
-          data: {args: "https://support.mozilla.org/kb/send-tab-firefox-desktop-mobile", where: "tabshifted"},
+          data: {args: "https://support.mozilla.org/kb/send-tab-firefox-desktop-other-devices", where: "tabshifted"},
         },
       },
     },
@@ -357,7 +361,7 @@ const ONBOARDING_MESSAGES = async () => ([
     order: 2,
     content: {
       title: {string_id: "onboarding-pocket-anywhere-title"},
-      text: {string_id: "onboarding-pocket-anywhere-text"},
+      text: {string_id: "onboarding-pocket-anywhere-text2"},
       icon: "pocket",
       primary_button: {
         label: {string_id: "onboarding-pocket-anywhere-button"},
@@ -377,10 +381,10 @@ const ONBOARDING_MESSAGES = async () => ([
     order: 3,
     content: {
       title: {string_id: "onboarding-lockwise-passwords-title"},
-      text: {string_id: "onboarding-lockwise-passwords-text"},
+      text: {string_id: "onboarding-lockwise-passwords-text2"},
       icon: "lockwise",
       primary_button: {
-        label: {string_id: "onboarding-lockwise-passwords-button"},
+        label: {string_id: "onboarding-lockwise-passwords-button2"},
         action: {
           type: "OPEN_URL",
           data: {args: "https://lockwise.firefox.com/", where: "tabshifted"},
@@ -397,7 +401,7 @@ const ONBOARDING_MESSAGES = async () => ([
     order: 4,
     content: {
       title: {string_id: "onboarding-facebook-container-title"},
-      text: {string_id: "onboarding-facebook-container-text"},
+      text: {string_id: "onboarding-facebook-container-text2"},
       icon: "fbcont",
       primary_button: {
         label: {string_id: "onboarding-facebook-container-button"},

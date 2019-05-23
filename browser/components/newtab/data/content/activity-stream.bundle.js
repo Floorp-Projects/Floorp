@@ -2577,7 +2577,16 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
   }
 
   dismissBundle(bundle) {
-    return () => ASRouterUtils.dismissBundle(bundle);
+    return () => {
+      ASRouterUtils.dismissBundle(bundle);
+      this.sendUserActionTelemetry({
+        event: "DISMISS",
+        id: "onboarding-cards",
+        message_id: bundle.map(m => m.id).join(","),
+        // Passing the action because some bundles (Trailhead) don't have a provider set
+        action: "onboarding_user_event"
+      });
+    };
   }
 
   triggerOnboarding() {
@@ -2670,7 +2679,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
       return react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_6__["OnboardingMessage"], _extends({}, this.state.bundle, {
         UISurface: "NEWTAB_OVERLAY",
         onAction: ASRouterUtils.executeAction,
-        onDoneButton: this.dismissBundle(this.state.bundle.bundle),
+        onDismissBundle: this.dismissBundle(this.state.bundle.bundle),
         sendUserActionTelemetry: this.sendUserActionTelemetry }));
     }
     return null;
@@ -2709,7 +2718,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Pur
         document: this.props.document,
         message: message,
         onAction: ASRouterUtils.executeAction,
-        onDoneButton: this.dismissBundle(this.state.bundle.bundle),
+        onDismissBundle: this.dismissBundle(this.state.message.bundle),
         sendUserActionTelemetry: this.sendUserActionTelemetry,
         dispatch: this.props.dispatch,
         fxaEndpoint: this.props.fxaEndpoint });
@@ -3210,7 +3219,7 @@ class ModalOverlay extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     const { title, button_label } = this.props;
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
       ModalOverlayWrapper,
-      { onClose: this.props.onDoneButton },
+      { onClose: this.props.onDismissBundle },
       react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
         "h2",
         null,
@@ -3225,7 +3234,7 @@ class ModalOverlay extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
         react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(
           "button",
           { className: "button primary modalButton",
-            onClick: this.props.onDoneButton },
+            onClick: this.props.onDismissBundle },
           " ",
           button_label,
           " "
@@ -3505,6 +3514,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
     this.state = {
       emailInput: "",
       overlayRemoved: false,
+      deviceId: "",
       flowId: "",
       flowBeginTime: 0
     };
@@ -3521,8 +3531,8 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
           const fxaParams = "entrypoint=activity-stream-firstrun&form_type=email";
           const response = yield fetch(`${_this.props.fxa_endpoint}/metrics-flow?${fxaParams}&${_this.utmParams}`, { credentials: "omit" });
           if (response.status === 200) {
-            const { flowId, flowBeginTime } = yield response.json();
-            _this.setState({ flowId, flowBeginTime });
+            const { deviceId, flowId, flowBeginTime } = yield response.json();
+            _this.setState({ deviceId, flowId, flowBeginTime });
           } else {
             _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_FETCH_ERROR", value: response.status } }));
           }
@@ -3663,6 +3673,7 @@ class _StartupOverlay extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureC
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "utm_campaign", type: "hidden", value: "firstrun" }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "utm_medium", type: "hidden", value: "referral" }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "utm_term", type: "hidden", value: "trailhead-control" }),
+              react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "device_id", type: "hidden", value: this.state.deviceId }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "flow_id", type: "hidden", value: this.state.flowId }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", { name: "flow_begin_time", type: "hidden", value: this.state.flowBeginTime }),
               react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(
@@ -3754,10 +3765,12 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       isModalOpen: true,
       showCardPanel: true,
       showCards: false,
+      // The params below are for FxA metrics
+      deviceId: "",
       flowId: "",
       flowBeginTime: 0
     };
-    this.didFetch = false;
+    this.fxaMetricsInitialized = false;
   }
 
   get dialog() {
@@ -3774,20 +3787,29 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
         link.rel = "localization";
       });
 
-      if (_this.props.fxaEndpoint && !_this.didFetch) {
+      yield _this.componentWillUpdate(_this.props);
+    })();
+  }
+
+  // Get the fxa data if we don't have it yet from mount or update
+  componentWillUpdate(props) {
+    var _this2 = this;
+
+    return _asyncToGenerator(function* () {
+      if (props.fxaEndpoint && !_this2.fxaMetricsInitialized) {
         try {
-          _this.didFetch = true;
-          const url = new URL(`${_this.props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
-          _this.addUtmParams(url);
+          _this2.fxaMetricsInitialized = true;
+          const url = new URL(`${props.fxaEndpoint}/metrics-flow?entrypoint=activity-stream-firstrun&form_type=email`);
+          _this2.addUtmParams(url);
           const response = yield fetch(url, { credentials: "omit" });
           if (response.status === 200) {
-            const { flowId, flowBeginTime } = yield response.json();
-            _this.setState({ flowId, flowBeginTime });
+            const { deviceId, flowId, flowBeginTime } = yield response.json();
+            _this2.setState({ deviceId, flowId, flowBeginTime });
           } else {
-            _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_FETCH_ERROR", value: response.status } }));
+            props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_FETCH_ERROR", value: response.status } }));
           }
         } catch (error) {
-          _this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_ERROR" } }));
+          props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({ type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].TELEMETRY_UNDESIRED_EVENT, data: { event: "FXA_METRICS_ERROR" } }));
         }
       }
     })();
@@ -3835,7 +3857,17 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     }
   }
 
-  onSubmit() {
+  onSubmit(event) {
+    // Dynamically require the email on submission so screen readers don't read
+    // out it's always required because there's also ways to skip the modal
+    const { email } = event.target.elements;
+    if (!email.value.length) {
+      email.required = true;
+      email.checkValidity();
+      event.preventDefault();
+      return;
+    }
+
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent(Object.assign({ event: "SUBMIT_EMAIL" }, this._getFormInfo())));
 
     global.addEventListener("visibilitychange", this.closeModal);
@@ -3853,6 +3885,9 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
     if (!ev || ev.type !== "visibilitychange") {
       this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].UserEvent(Object.assign({ event: "SKIPPED_SIGNIN" }, this._getFormInfo())));
     }
+
+    // Bug 1190882 - Focus in a disappearing dialog confuses screen readers
+    this.props.document.activeElement.blur();
   }
 
   /**
@@ -3873,6 +3908,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
 
   hideCardPanel() {
     this.setState({ showCardPanel: false });
+    this.props.onDismissBundle();
   }
 
   revealCards() {
@@ -3912,6 +3948,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
       this.addUtmParams(url, true);
 
       if (action.addFlowParams) {
+        url.searchParams.append("device_id", this.state.deviceId);
         url.searchParams.append("flow_id", this.state.flowId);
         url.searchParams.append("flow_begin_time", this.state.flowBeginTime);
       }
@@ -3975,15 +4012,15 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
           ),
           react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
             "div",
-            { className: "trailheadForm" },
+            { role: "group", "aria-labelledby": "joinFormHeader", "aria-describedby": "joinFormBody", className: "trailheadForm" },
             react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
               "h3",
-              { "data-l10n-id": content.form.title.string_id },
+              { id: "joinFormHeader", "data-l10n-id": content.form.title.string_id },
               this.getStringValue(content.form.title)
             ),
             react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
               "p",
-              { "data-l10n-id": content.form.text.string_id },
+              { id: "joinFormBody", "data-l10n-id": content.form.text.string_id },
               this.getStringValue(content.form.text)
             ),
             react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(
@@ -3996,6 +4033,7 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
               react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { name: "utm_source", type: "hidden", value: "activity-stream" }),
               react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { name: "utm_campaign", type: "hidden", value: "firstrun" }),
               react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { name: "utm_term", type: "hidden", value: utm_term }),
+              react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { name: "device_id", type: "hidden", value: this.state.deviceId }),
               react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { name: "flow_id", type: "hidden", value: this.state.flowId }),
               react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { name: "flow_begin_time", type: "hidden", value: this.state.flowBeginTime }),
               react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("input", { name: "style", type: "hidden", value: "trailhead" }),
@@ -4005,7 +4043,6 @@ class _Trailhead extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureCompon
                 placeholder: this.getStringValue(content.form.email),
                 name: "email",
                 type: "email",
-                required: "required",
                 onInvalid: this.onInputInvalid,
                 onChange: this.onInputChange }),
               react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(

@@ -36,6 +36,9 @@ describe("<Trailhead>", () => {
     dummyNode = document.createElement("body");
     sandbox.stub(dummyNode, "querySelector").returns(dummyNode);
     const fakeDocument = {
+      get activeElement() {
+        return dummyNode;
+      },
       get body() {
         return dummyNode;
       },
@@ -68,9 +71,20 @@ describe("<Trailhead>", () => {
     assert.notCalled(dispatch);
   });
 
-  it("should emit UserEvent SUBMIT_EMAIL when you submit the form", () => {
+  it("should prevent submissions with no email", () => {
+    const form = wrapper.find("form");
+    const preventDefault = sandbox.stub();
+
+    form.simulate("submit", {preventDefault});
+
+    assert.calledOnce(preventDefault);
+    assert.notCalled(dispatch);
+  });
+  it("should emit UserEvent SUBMIT_EMAIL when you submit a valid email", () => {
     let form = wrapper.find("form");
     assert.ok(form.exists());
+    form.getDOMNode().elements.email.value = "a@b.c";
+
     form.simulate("submit");
 
     assert.calledOnce(dispatch);
@@ -93,13 +107,14 @@ describe("<Trailhead>", () => {
       data: {args: "https://example.com/path?foo=bar"},
     };
     wrapper.setState({
+      deviceId: "abc",
       flowId: "123",
       flowBeginTime: 456,
     });
     wrapper.instance().onCardAction(action);
     assert.calledOnce(onAction);
     const url = onAction.firstCall.args[0].data.args;
-    assert.equal(url, "https://example.com/path?foo=bar&utm_source=activity-stream&utm_campaign=firstrun&utm_medium=referral&utm_term=trailhead-join-card&flow_id=123&flow_begin_time=456");
+    assert.equal(url, "https://example.com/path?foo=bar&utm_source=activity-stream&utm_campaign=firstrun&utm_medium=referral&utm_term=trailhead-join-card&device_id=abc&flow_id=123&flow_begin_time=456");
   });
 
   it("should keep focus in dialog when blurring start button", () => {
