@@ -31,6 +31,12 @@ using namespace mozilla::layout;
 /* virtual */
 nscoord nsTableWrapperFrame::GetLogicalBaseline(
     WritingMode aWritingMode) const {
+  if (StyleDisplay()->IsContainLayout()) {
+    // We have no baseline. Fall back to the inherited impl which is
+    // appropriate for this situation.
+    return nsContainerFrame::GetLogicalBaseline(aWritingMode);
+  }
+
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid) {
     MOZ_ASSERT_UNREACHABLE("no inner table");
