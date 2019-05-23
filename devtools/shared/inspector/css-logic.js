@@ -180,7 +180,6 @@ function getLineCountInComments(text) {
  * @param string text The CSS source to prettify.
  * @return string Prettified CSS source
  */
-/* eslint-disable complexity */
 function prettifyCSS(text, ruleCount) {
   if (prettifyCSS.LINE_SEPARATOR == null) {
     const os = Services.appinfo.OS;
@@ -406,7 +405,6 @@ function prettifyCSS(text, ruleCount) {
 
   return result;
 }
-/* eslint-enable complexity */
 
 exports.prettifyCSS = prettifyCSS;
 

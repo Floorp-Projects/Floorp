@@ -186,7 +186,6 @@ class RequestListItem extends Component {
     }
   }
 
-  /* eslint-disable complexity */
   render() {
     const {
       blocked,
@@ -285,7 +284,6 @@ class RequestListItem extends Component {
       )
     );
   }
-  /* eslint-enable complexity */
 }
 
 module.exports = RequestListItem;

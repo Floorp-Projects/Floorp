@@ -25,7 +25,6 @@ class RequestListContextMenu {
     this.props = props;
   }
 
-  /* eslint-disable complexity */
   open(event, clickedRequest, requests) {
     const {
       id,
@@ -285,7 +284,6 @@ class RequestListContextMenu {
       screenY: event.screenY,
     });
   }
-  /* eslint-enable complexity */
 
   /**
    * Opens selected item in the debugger

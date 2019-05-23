@@ -46,7 +46,6 @@ function Requests() {
  * This reducer is responsible for maintaining list of request
  * within the Network panel.
  */
-/* eslint-disable complexity */
 function requestsReducer(state = Requests(), action) {
   switch (action.type) {
     // Appending new request into the list/map.
@@ -183,7 +182,6 @@ function requestsReducer(state = Requests(), action) {
       return state;
   }
 }
-/* eslint-enable complexity */
 
 // Helpers
 

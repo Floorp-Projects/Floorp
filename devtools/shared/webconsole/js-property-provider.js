@@ -60,7 +60,6 @@ function hasArrayIndex(str) {
  *                               element access (e.g. `x["match`).
  *            }
  */
-/* eslint-disable complexity */
 function analyzeInputString(str) {
   const bodyStack = [];
 
@@ -196,7 +195,6 @@ function analyzeInputString(str) {
 
   return buildReturnObject();
 }
-/* eslint-enable complexity */
 
 /**
  * Provides a list of properties, that are possible matches based on the passed

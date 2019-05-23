@@ -505,7 +505,6 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * @param {Ci.nsIAccessibleEvent} subject
    *                                      accessible event object.
    */
-  /* eslint-disable complexity */
   observe(subject) {
     const event = subject.QueryInterface(Ci.nsIAccessibleEvent);
     const rawAccessible = event.accessible;
@@ -601,7 +600,6 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
         break;
     }
   },
-  /* eslint-enable complexity */
 
   /**
    * Ensure that nothing interferes with the audit for an accessible object
