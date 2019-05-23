@@ -240,6 +240,7 @@ function newExperimentOpts(opts = {}) {
 
   return Object.assign({
     name: STUDY_NAME,
+    actionName: "SomeAction",
     branch: "branch",
   }, opts, {
     preferences,

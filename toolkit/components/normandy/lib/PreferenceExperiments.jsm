@@ -402,6 +402,9 @@ var PreferenceExperiments = {
    * Start a new preference experiment.
    * @param {Object} experiment
    * @param {string} experiment.name
+   * @param {string} experiment.actionName  The action who knows about this
+   *   experiment and is responsible for cleaning it up. This should
+   *   correspond to the name of some BaseAction subclass.
    * @param {string} experiment.branch
    * @param {string} experiment.preferenceName
    * @param {string|integer|boolean} experiment.preferenceValue
@@ -413,6 +416,7 @@ var PreferenceExperiments = {
    */
   async start({
     name,
+    actionName,
     branch,
     preferences,
     experimentType = "exp",
@@ -487,6 +491,7 @@ var PreferenceExperiments = {
     /** @type {Experiment} */
     const experiment = {
       name,
+      actionName,
       branch,
       expired: false,
       lastSeen: new Date().toJSON(),
