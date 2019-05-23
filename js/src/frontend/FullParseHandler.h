@@ -755,14 +755,12 @@ class FullParseHandler {
   inline MOZ_MUST_USE bool setLastFunctionFormalParameterDefault(
       FunctionNodeType funNode, Node defaultValue);
 
- private:
   void checkAndSetIsDirectRHSAnonFunction(Node pn) {
     if (IsAnonymousFunctionDefinition(pn)) {
       pn->setDirectRHSAnonFunction(true);
     }
   }
 
- public:
   FunctionNodeType newFunction(FunctionSyntaxKind syntaxKind,
                                const TokenPos& pos) {
     return new_<FunctionNode>(syntaxKind, pos);
