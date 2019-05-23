@@ -448,7 +448,7 @@ tls13_ClientSendPreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         goto loser;
 
     /* Obfuscated age. */
-    age = ssl_TimeUsec() - session_ticket->received_timestamp;
+    age = ssl_Time(ss) - session_ticket->received_timestamp;
     age /= PR_USEC_PER_MSEC;
     age += session_ticket->ticket_age_add;
     rv = sslBuffer_AppendNumber(buf, age, 4);

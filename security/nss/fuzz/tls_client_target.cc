@@ -106,6 +106,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t len) {
   // Probably not too important for clients.
   SSL_SetURL(ssl_fd, "server");
 
+  FixTime(ssl_fd);
   SetSocketOptions(ssl_fd, config);
   EnableAllCipherSuites(ssl_fd);
   SetupCallbacks(ssl_fd, config.get());

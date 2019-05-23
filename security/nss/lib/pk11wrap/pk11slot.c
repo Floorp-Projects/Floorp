@@ -1439,6 +1439,11 @@ PK11_InitSlot(SECMODModule *mod, CK_SLOT_ID slotID, PK11SlotInfo *slot)
     slot->slotID = slotID;
     slot->isThreadSafe = mod->isThreadSafe;
     slot->hasRSAInfo = PR_FALSE;
+    slot->module = mod; /* NOTE: we don't make a reference here because
+                         * modules have references to their slots. This
+                         * works because modules keep implicit references
+                         * from their slots, and won't unload and disappear
+                         * until all their slots have been freed */
 
     if (PK11_GETTAB(slot)->C_GetSlotInfo(slotID, &slotInfo) != CKR_OK) {
         slot->disabled = PR_TRUE;
@@ -1448,11 +1453,6 @@ PK11_InitSlot(SECMODModule *mod, CK_SLOT_ID slotID, PK11SlotInfo *slot)
 
     /* test to make sure claimed mechanism work */
     slot->needTest = mod->internal ? PR_FALSE : PR_TRUE;
-    slot->module = mod; /* NOTE: we don't make a reference here because
-                         * modules have references to their slots. This
-                         * works because modules keep implicit references
-                         * from their slots, and won't unload and disappear
-                         * until all their slots have been freed */
     (void)PK11_MakeString(NULL, slot->slot_name,
                           (char *)slotInfo.slotDescription, sizeof(slotInfo.slotDescription));
     slot->isHW = (PRBool)((slotInfo.flags & CKF_HW_SLOT) == CKF_HW_SLOT);

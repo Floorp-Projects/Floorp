@@ -8902,35 +8902,6 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   return code;
 }
 
-void JitRuntime::generateMallocStub(MacroAssembler& masm) {
-  const Register regReturn = CallTempReg0;
-  const Register regZone = CallTempReg0;
-  const Register regNBytes = CallTempReg1;
-
-  mallocStubOffset_ = startTrampolineCode(masm);
-
-  AllocatableRegisterSet regs(RegisterSet::Volatile());
-#ifdef JS_USE_LINK_REGISTER
-  masm.pushReturnAddress();
-#endif
-  regs.takeUnchecked(regZone);
-  regs.takeUnchecked(regNBytes);
-  LiveRegisterSet save(regs.asLiveSet());
-  masm.PushRegsInMask(save);
-
-  const Register regTemp = regs.takeAnyGeneral();
-  MOZ_ASSERT(regTemp != regNBytes && regTemp != regZone);
-
-  masm.setupUnalignedABICall(regTemp);
-  masm.passABIArg(regZone);
-  masm.passABIArg(regNBytes);
-  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, MallocWrapper));
-  masm.storeCallPointerResult(regReturn);
-
-  masm.PopRegsInMask(save);
-  masm.ret();
-}
-
 void JitRuntime::generateFreeStub(MacroAssembler& masm) {
   const Register regSlots = CallTempReg0;
 

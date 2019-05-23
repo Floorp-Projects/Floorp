@@ -983,7 +983,7 @@ static bool InitModuleLoader(JSContext* cx) {
   }
 
   RootedValue rv(cx);
-  return JS::Evaluate(cx, options, srcBuf, &rv);
+  return JS::EvaluateDontInflate(cx, options, srcBuf, &rv);
 }
 
 static bool GetModuleImportHook(JSContext* cx,
@@ -1768,9 +1768,10 @@ static bool LoadScript(JSContext* cx, unsigned argc, Value* vp,
         .setNoScriptRval(true);
 
     RootedValue unused(cx);
-    if (!(compileOnly
-              ? JS::CompileUtf8Path(cx, opts, filename.get()) != nullptr
-              : JS::EvaluateUtf8Path(cx, opts, filename.get(), &unused))) {
+    if (!(compileOnly ? JS::CompileUtf8PathDontInflate(
+                            cx, opts, filename.get()) != nullptr
+                      : JS::EvaluateUtf8PathDontInflate(
+                            cx, opts, filename.get(), &unused))) {
       return false;
     }
   }
@@ -3498,7 +3499,7 @@ static bool DisassFile(JSContext* cx, unsigned argc, Value* vp) {
         .setIsRunOnce(true)
         .setNoScriptRval(true);
 
-    script = JS::CompileUtf8Path(cx, options, filename.get());
+    script = JS::CompileUtf8PathDontInflate(cx, options, filename.get());
     if (!script) {
       return false;
     }
@@ -10164,7 +10165,7 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       }
 
       RootedValue rval(cx);
-      if (!JS::Evaluate(cx, opts, srcBuf, &rval)) {
+      if (!JS::EvaluateDontInflate(cx, opts, srcBuf, &rval)) {
         return false;
       }
 

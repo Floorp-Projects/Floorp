@@ -1,0 +1,274 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include <memory>
+#include "nss.h"
+#include "pk11pub.h"
+#include "secerr.h"
+
+#include "nss_scoped_ptrs.h"
+#include "gtest/gtest.h"
+
+namespace nss_test {
+
+static const uint8_t kInput[99] = {1, 2, 3};
+static const uint8_t kKeyData[24] = {'K', 'E', 'Y'};
+
+static SECItem* GetIv() {
+  static const uint8_t kIvData[16] = {'I', 'V'};
+  static const SECItem kIv = {siBuffer, const_cast<uint8_t*>(kIvData),
+                              static_cast<unsigned int>(sizeof(kIvData))};
+  return const_cast<SECItem*>(&kIv);
+}
+
+class Pkcs11CbcPadTest : public ::testing::TestWithParam<CK_MECHANISM_TYPE> {
+ protected:
+  bool is_padded() const {
+    switch (GetParam()) {
+      case CKM_AES_CBC_PAD:
+      case CKM_DES3_CBC_PAD:
+        return true;
+
+      case CKM_AES_CBC:
+      case CKM_DES3_CBC:
+        return false;
+
+      default:
+        ADD_FAILURE() << "Unknown mechanism " << GetParam();
+    }
+    return false;
+  }
+
+  size_t block_size() const {
+    return static_cast<size_t>(PK11_GetBlockSize(GetParam(), nullptr));
+  }
+
+  size_t GetInputLen(CK_ATTRIBUTE_TYPE op) const {
+    if (is_padded() && op == CKA_ENCRYPT) {
+      // Anything goes for encryption when padded.
+      return sizeof(kInput);
+    }
+
+    // Otherwise, use a strict multiple of the block size.
+    size_t block_count = sizeof(kInput) / block_size();
+    EXPECT_LT(1U, block_count) << "need 2 blocks for tests";
+    return block_count * block_size();
+  }
+
+  ScopedPK11SymKey MakeKey(CK_ATTRIBUTE_TYPE op) {
+    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+    EXPECT_NE(nullptr, slot);
+    if (!slot) {
+      return nullptr;
+    }
+
+    unsigned int key_len = 0;
+    switch (GetParam()) {
+      case CKM_AES_CBC_PAD:
+      case CKM_AES_CBC:
+        key_len = 16;  // This doesn't do AES-256 to keep it simple.
+        break;
+
+      case CKM_DES3_CBC_PAD:
+      case CKM_DES3_CBC:
+        key_len = 24;
+        break;
+
+      default:
+        ADD_FAILURE() << "Unknown mechanism " << GetParam();
+        return nullptr;
+    }
+
+    SECItem key_item = {siBuffer, const_cast<uint8_t*>(kKeyData), key_len};
+    PK11SymKey* p = PK11_ImportSymKey(slot.get(), GetParam(), PK11_OriginUnwrap,
+                                      op, &key_item, nullptr);
+    EXPECT_NE(nullptr, p);
+    return ScopedPK11SymKey(p);
+  }
+
+  ScopedPK11Context MakeContext(CK_ATTRIBUTE_TYPE op) {
+    ScopedPK11SymKey k = MakeKey(op);
+    PK11Context* ctx =
+        PK11_CreateContextBySymKey(GetParam(), op, k.get(), GetIv());
+    EXPECT_NE(nullptr, ctx);
+    return ScopedPK11Context(ctx);
+  }
+};
+
+TEST_P(Pkcs11CbcPadTest, EncryptDecrypt) {
+  uint8_t encrypted[sizeof(kInput) + 64];  // Allow for padding and expansion.
+  size_t input_len = GetInputLen(CKA_ENCRYPT);
+
+  ScopedPK11SymKey ek = MakeKey(CKA_ENCRYPT);
+  unsigned int encrypted_len = 0;
+  SECStatus rv =
+      PK11_Encrypt(ek.get(), GetParam(), GetIv(), encrypted, &encrypted_len,
+                   sizeof(encrypted), kInput, input_len);
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_LE(input_len, static_cast<size_t>(encrypted_len));
+
+  // Though the decrypted result can't be larger than the input we provided,
+  // NSS needs extra space to put the padding in.
+  uint8_t decrypted[sizeof(kInput) + 64];
+  unsigned int decrypted_len = 0;
+  ScopedPK11SymKey dk = MakeKey(CKA_DECRYPT);
+  rv = PK11_Decrypt(dk.get(), GetParam(), GetIv(), decrypted, &decrypted_len,
+                    sizeof(decrypted), encrypted, encrypted_len);
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_EQ(input_len, static_cast<size_t>(decrypted_len));
+  EXPECT_EQ(0, memcmp(kInput, decrypted, input_len));
+}
+
+TEST_P(Pkcs11CbcPadTest, ContextEncryptDecrypt) {
+  uint8_t encrypted[sizeof(kInput) + 64];  // Allow for padding and expansion.
+  size_t input_len = GetInputLen(CKA_ENCRYPT);
+
+  ScopedPK11Context ectx = MakeContext(CKA_ENCRYPT);
+  int encrypted_len = 0;
+  SECStatus rv = PK11_CipherOp(ectx.get(), encrypted, &encrypted_len,
+                               sizeof(encrypted), kInput, input_len);
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_LE(0, encrypted_len);  // Stupid signed parameters.
+
+  unsigned int final_len = 0;
+  rv = PK11_CipherFinal(ectx.get(), encrypted + encrypted_len, &final_len,
+                        sizeof(encrypted) - encrypted_len);
+  ASSERT_EQ(SECSuccess, rv);
+  encrypted_len += final_len;
+  EXPECT_LE(input_len, static_cast<size_t>(encrypted_len));
+
+  uint8_t decrypted[sizeof(kInput) + 64];
+  int decrypted_len = 0;
+  ScopedPK11Context dctx = MakeContext(CKA_DECRYPT);
+  rv = PK11_CipherOp(dctx.get(), decrypted, &decrypted_len, sizeof(decrypted),
+                     encrypted, encrypted_len);
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_LE(0, decrypted_len);
+
+  rv = PK11_CipherFinal(dctx.get(), decrypted + decrypted_len, &final_len,
+                        sizeof(decrypted) - decrypted_len);
+  ASSERT_EQ(SECSuccess, rv);
+  decrypted_len += final_len;
+  EXPECT_EQ(input_len, static_cast<size_t>(decrypted_len));
+  EXPECT_EQ(0, memcmp(kInput, decrypted, input_len));
+}
+
+TEST_P(Pkcs11CbcPadTest, ContextEncryptDecryptTwoParts) {
+  uint8_t encrypted[sizeof(kInput) + 64];
+  size_t input_len = GetInputLen(CKA_ENCRYPT);
+
+  ScopedPK11Context ectx = MakeContext(CKA_ENCRYPT);
+  int first_len = 0;
+  SECStatus rv = PK11_CipherOp(ectx.get(), encrypted, &first_len,
+                               sizeof(encrypted), kInput, block_size());
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_LE(0, first_len);
+
+  int second_len = 0;
+  rv = PK11_CipherOp(ectx.get(), encrypted + first_len, &second_len,
+                     sizeof(encrypted) - first_len, kInput + block_size(),
+                     input_len - block_size());
+  ASSERT_EQ(SECSuccess, rv);
+  ASSERT_LE(0, second_len);
+
+  unsigned int final_len = 0;
+  rv = PK11_CipherFinal(ectx.get(), encrypted + first_len + second_len,
+                        &final_len, sizeof(encrypted) - first_len - second_len);
+  ASSERT_EQ(SECSuccess, rv);
+  unsigned int encrypted_len = first_len + second_len + final_len;
+  ASSERT_LE(input_len, static_cast<size_t>(encrypted_len));
+
+  // Now decrypt this in a similar fashion.
+  uint8_t decrypted[sizeof(kInput) + 64];
+  ScopedPK11Context dctx = MakeContext(CKA_DECRYPT);
+  rv = PK11_CipherOp(dctx.get(), decrypted, &first_len, sizeof(decrypted),
+                     encrypted, block_size());
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_LE(0, first_len);
+
+  rv = PK11_CipherOp(dctx.get(), decrypted + first_len, &second_len,
+                     sizeof(decrypted) - first_len, encrypted + block_size(),
+                     encrypted_len - block_size());
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_LE(0, second_len);
+
+  unsigned int decrypted_len = 0;
+  rv = PK11_CipherFinal(dctx.get(), decrypted + first_len + second_len,
+                        &decrypted_len,
+                        sizeof(decrypted) - first_len - second_len);
+  ASSERT_EQ(SECSuccess, rv);
+  decrypted_len += first_len + second_len;
+  EXPECT_EQ(input_len, static_cast<size_t>(decrypted_len));
+  EXPECT_EQ(0, memcmp(kInput, decrypted, input_len));
+}
+
+TEST_P(Pkcs11CbcPadTest, FailDecryptSimple) {
+  ScopedPK11SymKey dk = MakeKey(CKA_DECRYPT);
+  uint8_t output[sizeof(kInput) + 64];
+  unsigned int output_len = 999;
+  SECStatus rv =
+      PK11_Decrypt(dk.get(), GetParam(), GetIv(), output, &output_len,
+                   sizeof(output), kInput, GetInputLen(CKA_DECRYPT));
+  if (is_padded()) {
+    EXPECT_EQ(SECFailure, rv);
+    EXPECT_EQ(999U, output_len);
+  } else {
+    // Unpadded decryption can't really fail.
+    EXPECT_EQ(SECSuccess, rv);
+  }
+}
+
+TEST_P(Pkcs11CbcPadTest, FailEncryptSimple) {
+  ScopedPK11SymKey ek = MakeKey(CKA_ENCRYPT);
+  uint8_t output[3];  // Too small for anything.
+  unsigned int output_len = 333;
+
+  SECStatus rv =
+      PK11_Encrypt(ek.get(), GetParam(), GetIv(), output, &output_len,
+                   sizeof(output), kInput, GetInputLen(CKA_ENCRYPT));
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(333U, output_len);
+}
+
+TEST_P(Pkcs11CbcPadTest, ContextFailDecryptSimple) {
+  ScopedPK11Context dctx = MakeContext(CKA_DECRYPT);
+  uint8_t output[sizeof(kInput) + 64];
+  int output_len = 77;
+
+  SECStatus rv = PK11_CipherOp(dctx.get(), output, &output_len, sizeof(output),
+                               kInput, GetInputLen(CKA_DECRYPT));
+  EXPECT_EQ(SECSuccess, rv);
+  EXPECT_LE(0, output_len) << "this is not an AEAD, so content leaks";
+
+  unsigned int final_len = 88;
+  rv = PK11_CipherFinal(dctx.get(), output, &final_len, sizeof(output));
+  if (is_padded()) {
+    EXPECT_EQ(SECFailure, rv);
+    ASSERT_EQ(88U, final_len) << "final_len should be untouched";
+  } else {
+    // Unpadded decryption can't really fail.
+    EXPECT_EQ(SECSuccess, rv);
+  }
+}
+
+TEST_P(Pkcs11CbcPadTest, ContextFailDecryptInvalidBlockSize) {
+  ScopedPK11Context dctx = MakeContext(CKA_DECRYPT);
+  uint8_t output[sizeof(kInput) + 64];
+  int output_len = 888;
+
+  SECStatus rv = PK11_CipherOp(dctx.get(), output, &output_len, sizeof(output),
+                               kInput, GetInputLen(CKA_DECRYPT) - 1);
+  EXPECT_EQ(SECFailure, rv);
+  // Because PK11_CipherOp is partial, it can return data on failure.
+  // This means that it needs to reset its output length to 0 when it starts.
+  EXPECT_EQ(0, output_len) << "output_len is reset";
+}
+
+INSTANTIATE_TEST_CASE_P(EncryptDecrypt, Pkcs11CbcPadTest,
+                        ::testing::Values(CKM_AES_CBC_PAD, CKM_AES_CBC,
+                                          CKM_DES3_CBC_PAD, CKM_DES3_CBC));
+
+}  // namespace nss_test

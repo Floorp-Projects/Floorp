@@ -99,7 +99,7 @@
     }],
     [ 'OS=="win"', {
       'libraries': [
-        'advapi32.lib',
+        '-ladvapi32',
       ],
       'conditions': [
         [ 'cc_use_gnu_ld!=1 and target_arch=="x64"', {
