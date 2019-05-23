@@ -6,6 +6,7 @@
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -328,6 +329,11 @@ class SearchConfigTest {
     const engine = this._findEngine(engines, this._config.identifier);
     this.assertOk(engine, "Should have an engine present");
 
+    if (this._config.aliases) {
+      this.assertDeepEqual(engine._internalAliases,
+        this._config.aliases, "Should have the correct aliases for the engine");
+    }
+
     const location = `in region:${region}, locale:${locale}`;
 
     for (const rule of details) {
@@ -337,6 +343,10 @@ class SearchConfigTest {
       }
       if (rule.searchUrlCode || rule.searchFormUrlCode) {
         this._assertCorrectUrlCode(location, engine, rule);
+      }
+      if (rule.aliases) {
+        this.assertDeepEqual(engine._internalAliases,
+          rule.aliases, "Should have the correct aliases for the engine");
       }
     }
   }
@@ -435,6 +445,12 @@ class SearchConfigTest {
   assertEqual(actual, expected, message) {
     if (actual != expected || this._testDebug) {
       Assert.equal(actual, expected, message);
+    }
+  }
+
+  assertDeepEqual(actual, expected, message) {
+    if (!ObjectUtils.deepEqual(actual, expected)) {
+      Assert.deepEqual(actual, expected, message);
     }
   }
 }

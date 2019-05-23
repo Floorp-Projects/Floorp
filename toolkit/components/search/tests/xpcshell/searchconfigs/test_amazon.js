@@ -34,6 +34,7 @@ const test = new SearchConfigTest({
     // Note: the order here is important. A region/locale match higher up in the
     // list will override a region/locale match lower down.
     domain: "amazon.com.au",
+    aliases: ["@amazon"],
     included: [{
       regions: ["au"],
       locales: {
@@ -55,6 +56,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.ca",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: ["ca", "en-CA"],
@@ -79,6 +81,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.fr",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: ["br", "fr", "ff", "son", "wo"],
@@ -98,6 +101,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.co.uk",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: [
@@ -120,6 +124,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.com",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: [
@@ -142,6 +147,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.co.jp",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         startsWith: ["ja"],
@@ -151,6 +157,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.de",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: ["de", "dsb", "hsb"],
@@ -159,6 +166,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.in",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: [
@@ -170,6 +178,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.it",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: ["it", "lij"],

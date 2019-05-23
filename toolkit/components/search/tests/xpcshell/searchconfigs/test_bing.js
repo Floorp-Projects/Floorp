@@ -5,6 +5,7 @@
 
 const test = new SearchConfigTest({
   identifier: "bing",
+  aliases: ["@bing"],
   default: {
     // Not included anywhere.
   },
