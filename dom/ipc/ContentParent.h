@@ -10,6 +10,7 @@
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/gfx/GPUProcessListener.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -208,12 +209,10 @@ class ContentParent final : public PContentParent,
    * should be the frame/iframe element with which this process will
    * associated.
    */
-  static BrowserParent* CreateBrowser(const TabContext& aContext,
-                                      Element* aFrameElement,
-                                      BrowsingContext* aBrowsingContext,
-                                      ContentParent* aOpenerContentParent,
-                                      BrowserParent* aSameTabGroupAs,
-                                      uint64_t aNextRemoteTabId);
+  static already_AddRefed<RemoteBrowser> CreateBrowser(
+      const TabContext& aContext, Element* aFrameElement,
+      BrowsingContext* aBrowsingContext, ContentParent* aOpenerContentParent,
+      BrowserParent* aSameTabGroupAs, uint64_t aNextRemoteTabId);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -682,7 +681,7 @@ class ContentParent final : public PContentParent,
       const bool& aSizeSpecified, nsIURI* aURIToLoad,
       const nsCString& aFeatures, const float& aFullZoom,
       uint64_t aNextRemoteTabId, const nsString& aName, nsresult& aResult,
-      nsCOMPtr<nsIRemoteTab>& aNewBrowserParent, bool* aWindowIsNew,
+      nsCOMPtr<nsIRemoteTab>& aNewRemoteTab, bool* aWindowIsNew,
       int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
       nsIReferrerInfo* aReferrerInfo, bool aLoadUri,
       nsIContentSecurityPolicy* aCsp);
