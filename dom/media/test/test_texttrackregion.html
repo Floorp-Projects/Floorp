@@ -6,20 +6,15 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
+<video id="v" src="seek.webm" preload="auto">
+  <track src="region.vtt" kind="subtitles" id="default" default>
+</video>
 <script type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
   function() {
-    var video = document.createElement("video");
-    video.src = "seek.webm";
-    video.preload = "auto";
-
-    var trackElement = document.createElement("track");
-    trackElement.src = "region.vtt";
-    trackElement.kind = "subtitles";
-
-    document.appendChild(video);
-    video.appendChild(trackElement);
+    var video = document.getElementById("v");
+    var trackElement = document.getElementById("default");
     video.addEventListener("loadedmetadata", function run_tests() {
       // Re-que run_tests() at the end of the event loop until the track
       // element has loaded its data.
