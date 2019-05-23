@@ -52,8 +52,6 @@ class GLConstHeader:
             ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
             ' * file, You can obtain one at http://mozilla.org/MPL/2.0/. */',
             '',
-            '// clang-format off',
-            '',
             '#ifndef GLCONSTS_H_',
             '#define GLCONSTS_H_',
             '',
@@ -64,7 +62,7 @@ class GLConstHeader:
             ' *',
             ' * To generate this file, see tutorial in \'GLParseRegistryXML.py\'.',
             ' */',
-            '',
+            ''
         ])
 
     def formatLibBegin(self, lib):
@@ -91,9 +89,7 @@ class GLConstHeader:
     def formatFileEnd(self):
         self.write([
             '',
-            '#endif // GLCONSTS_H_',
-            '',
-            '// clang-format on',
+            '#endif // GLCONSTS_H_'
         ])
 
 

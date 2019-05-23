@@ -21,7 +21,7 @@ DEFINES['LIBANGLE_IMPLEMENTATION'] = True
 DEFINES['LIBGLESV2_IMPLEMENTATION'] = True
 DEFINES['NOMINMAX'] = True
 #DEFINES['NO_TCMALLOC'] = True
-DEFINES['NTDDI_VERSION'] = 'NTDDI_WIN10_RS2'
+DEFINES['NTDDI_VERSION'] = '0x0A000003'
 #DEFINES['PSAPI_VERSION'] = '2'
 #DEFINES['SAFE_BROWSING_CSD'] = True
 #DEFINES['SAFE_BROWSING_DB_LOCAL'] = True
@@ -55,6 +55,7 @@ LOCAL_INCLUDES += [
 
 #CXXFLAGS += [
 #    '/bigobj',
+#    '/d2FastFail',
 #    '/D__DATE__=',
 #    '/D__TIME__=',
 #    '/D__TIMESTAMP__=',
@@ -172,6 +173,7 @@ OS_LIBS += [
 #LDFLAGS += [
 #    '/DEBUG',
 #    '/DYNAMICBASE',
+#    '/fastfail',
 #    '/FIXED:NO',
 #    '/ignore:4199',
 #    '/ignore:4221',

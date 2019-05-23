@@ -107,7 +107,6 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
   std::vector<UniformBlockInfo*> uniformBlocks;  // Owns its contents.
   std::vector<RefPtr<WebGLActiveInfo>> transformFeedbackVaryings;
   std::unordered_map<uint8_t, const FragOutputInfo> fragOutputs;
-  uint8_t zLayerCount = 1;
 
   // Needed for draw call validation.
   std::vector<UniformInfo*> uniformSamplers;
@@ -208,7 +207,6 @@ class WebGLProgram final : public nsWrapperCache,
     return mMostRecentLinkInfo.get();
   }
 
-  const auto& VertShader() const { return mVertShader; }
   const auto& FragShader() const { return mFragShader; }
 
   WebGLContext* GetParentObject() const { return mContext; }

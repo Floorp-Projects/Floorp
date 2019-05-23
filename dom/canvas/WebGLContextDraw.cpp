@@ -279,15 +279,6 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
 
   const auto& tfo = webgl->mBoundTransformFeedback;
   if (tfo && tfo->IsActiveAndNotPaused()) {
-    if (fb) {
-      const auto& info = *fb->GetCompletenessInfo();
-      if (info.isMultiview) {
-        webgl->ErrorInvalidOperation(
-            "Cannot render to multiview with transform feedback.");
-        return nullptr;
-      }
-    }
-
     uint32_t numUsed;
     switch (linkInfo->transformFeedbackBufferMode) {
       case LOCAL_GL_INTERLEAVED_ATTRIBS:
@@ -348,11 +339,7 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
       };
 
   if (!webgl->mRasterizerDiscardEnabled) {
-    uint8_t fbZLayerCount = 1;
     if (fb) {
-      const auto& info = *fb->GetCompletenessInfo();
-      fbZLayerCount = info.zLayerCount;
-
       for (const auto& attach : fb->ColorDrawBuffers()) {
         const auto i =
             uint8_t(attach->mAttachmentPoint - LOCAL_GL_COLOR_ATTACHMENT0);
@@ -364,13 +351,6 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
     } else {
       if (!fnValidateFragOutputType(0, webgl::TextureBaseType::Float))
         return nullptr;
-    }
-
-    if (fbZLayerCount != linkInfo->zLayerCount) {
-      webgl->ErrorInvalidOperation(
-          "Multiview count mismatch: shader: %u, framebuffer: %u",
-          uint32_t{linkInfo->zLayerCount}, uint32_t{fbZLayerCount});
-      return nullptr;
     }
   }
 
