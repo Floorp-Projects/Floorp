@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit
  * considered expired and a new bundle will be used.
  */
 @Suppress("TooManyFunctions")
+@Deprecated("This component is getting removed. See feature-tab-collections for an alternative.")
 class SessionBundleStorage(
     private val context: Context,
     private val engine: Engine,
