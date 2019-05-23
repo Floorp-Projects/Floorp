@@ -2478,8 +2478,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
                                 parser->errorReporter(), funbox);
 
   MOZ_ASSERT((fieldInitializers_.valid) ==
-             (funbox->kind() ==
-              JSFunction::FunctionKind::ClassConstructor));
+             (funbox->kind() == JSFunction::FunctionKind::ClassConstructor));
 
   setScriptStartOffsetIfUnset(paramsBody->pn_pos.begin);
 
@@ -2752,7 +2751,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
         if (!eoe.skipObjAndKeyAndRhs()) {
           return false;
         }
-        if (!eoe.emitAssignment()) {
+        if (!eoe.emitAssignment(ElemOpEmitter::EmitSetFunctionName::No)) {
           //        [stack] VAL
           return false;
         }
@@ -4045,19 +4044,28 @@ bool BytecodeEmitter::emitSingleDeclaration(ListNode* declList, NameNode* decl,
   return true;
 }
 
-static bool EmitAssignmentRhs(BytecodeEmitter* bce, ParseNode* rhs,
-                              uint8_t offset) {
-  // If there is a RHS tree, emit the tree.
-  if (rhs) {
-    return bce->emitTree(rhs);
+bool BytecodeEmitter::emitAssignmentRhs(ParseNode* rhs,
+                                        HandleAtom anonFunctionName,
+                                        bool* emitSetFunName) {
+  *emitSetFunName = false;
+  if (rhs->isDirectRHSAnonFunction()) {
+    if (anonFunctionName) {
+      return emitAnonymousFunctionWithName(rhs, anonFunctionName);
+    }
+    // If anonFunctionName is null, that means we don't have a compiletime
+    // name, and should emit JSOP_SETFUNNAME (which happens later).
+    *emitSetFunName = true;
   }
+  return emitTree(rhs);
+}
 
-  // Otherwise the RHS value to assign is already on the stack, i.e., the
-  // next enumeration value in a for-in or for-of loop. Depending on how
-  // many other values have been pushed on the stack, we need to get the
-  // already-pushed RHS value.
-  if (offset != 1 && !bce->emit2(JSOP_PICK, offset - 1)) {
-    return false;
+// The RHS value to assign is already on the stack, i.e., the next enumeration
+// value in a for-in or for-of loop. Offset is the location in the stack of the
+// already-emitted rhs. If we emitted a BIND[G]NAME, then the scope is on the
+// top of the stack and we need to dig one deeper to get the right RHS value.
+bool BytecodeEmitter::emitAssignmentRhs(uint8_t offset) {
+  if (offset != 1) {
+    return emit2(JSOP_PICK, offset - 1);
   }
 
   return true;
@@ -4103,6 +4111,8 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   JSOp compoundOp = CompoundAssignmentParseNodeKindToJSOp(kind);
   bool isCompound = compoundOp != JSOP_NOP;
   bool isInit = kind == ParseNodeKind::InitExpr;
+  ElemOpEmitter::EmitSetFunctionName emitSetFunName =
+      ElemOpEmitter::EmitSetFunctionName::No;
 
   MOZ_ASSERT_IF(isInit, lhs->isKind(ParseNodeKind::DotExpr) ||
                             lhs->isKind(ParseNodeKind::ElemExpr));
@@ -4120,18 +4130,19 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       return false;
     }
 
-    if (rhs && rhs->isDirectRHSAnonFunction()) {
-      MOZ_ASSERT(!nameNode->isInParens());
-      MOZ_ASSERT(!isCompound);
-      if (!emitAnonymousFunctionWithName(rhs, name)) {
+    if (rhs) {
+      bool emitSetFunctionName;
+      if (!emitAssignmentRhs(rhs, name, &emitSetFunctionName)) {
         //          [stack] ENV? VAL? RHS
         return false;
       }
+      // We should always have the name, so we should never need to emit
+      // JSOP_SETFUNNAME.
+      MOZ_ASSERT(!emitSetFunctionName);
     } else {
-      // Emit the RHS. If we emitted a BIND[G]NAME, then the scope is on
-      // the top of the stack and we need to pick the right RHS value.
       uint8_t offset = noe.emittedBindOp() ? 2 : 1;
-      if (!EmitAssignmentRhs(this, rhs, offset)) {
+      // Assumption: Things with pre-emitted RHS values never need to be named.
+      if (!emitAssignmentRhs(offset)) {
         //          [stack] ENV? VAL? RHS
         return false;
       }
@@ -4158,6 +4169,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   // Deal with non-name assignments.
   uint8_t offset = 1;
 
+  RootedAtom anonFunctionName(cx);
   switch (lhs->getKind()) {
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &lhs->as<PropertyAccess>();
@@ -4171,6 +4183,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       if (!poe->prepareForObj()) {
         return false;
       }
+      anonFunctionName = &prop->name();
       if (isSuper) {
         UnaryNode* base = &prop->expression().as<UnaryNode>();
         if (!emitGetThisForSuperBase(base)) {
@@ -4301,9 +4314,29 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       break;
   }
 
-  if (!EmitAssignmentRhs(this, rhs, offset)) {
-    //              [stack] ... VAL? RHS
-    return false;
+  // Purpose of anonFunctionName:
+  // In normal property assignments (`obj.x = function(){}`), the anonymous
+  // function does not have a computed name, and rhs->isDirectRHSAnonFunction()
+  // will be false (and anonFunctionName will not be used). However, in field
+  // initializers (`class C { x = function(){} }`), field initialization is
+  // implemented via a property or elem assignment (where we are now), and
+  // rhs->isDirectRHSAnonFunction() is set - so we'll assign the name of the
+  // function.
+  if (rhs) {
+    bool emitSetFunctionName;
+    if (!emitAssignmentRhs(rhs, anonFunctionName, &emitSetFunctionName)) {
+      //            [stack] ... VAL? RHS
+      return false;
+    }
+    emitSetFunName = emitSetFunctionName
+                         ? ElemOpEmitter::EmitSetFunctionName::Yes
+                         : ElemOpEmitter::EmitSetFunctionName::No;
+  } else {
+    // Assumption: Things with pre-emitted RHS values never need to be named.
+    if (!emitAssignmentRhs(offset)) {
+      //            [stack] ... VAL? RHS
+      return false;
+    }
   }
 
   /* If += etc., emit the binary operator with a source note. */
@@ -4334,7 +4367,9 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       // We threw above, so nothing to do here.
       break;
     case ParseNodeKind::ElemExpr: {
-      if (!eoe->emitAssignment()) {
+      MOZ_ASSERT((!anonFunctionName && rhs && rhs->isDirectRHSAnonFunction()) ==
+                 (emitSetFunName == ElemOpEmitter::EmitSetFunctionName::Yes));
+      if (!eoe->emitAssignment(emitSetFunName)) {
         //          [stack] VAL
         return false;
       }
@@ -5632,8 +5667,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
   RootedFunction fun(cx, funbox->function());
 
   MOZ_ASSERT((classContentsIfConstructor != nullptr) ==
-             (funbox->kind() ==
-              JSFunction::FunctionKind::ClassConstructor));
+             (funbox->kind() == JSFunction::FunctionKind::ClassConstructor));
 
   //                [stack]
 
@@ -8080,8 +8114,7 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   for (BytecodeEmitter* current = this; current; current = current->parent) {
     if (current->sc->isFunctionBox()) {
       FunctionBox* box = current->sc->asFunctionBox();
-      if (box->kind() ==
-          JSFunction::FunctionKind::ClassConstructor) {
+      if (box->kind() == JSFunction::FunctionKind::ClassConstructor) {
         const FieldInitializers& fieldInitializers =
             current->getFieldInitializers();
         MOZ_ASSERT(fieldInitializers.valid);
