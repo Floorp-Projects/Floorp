@@ -36,6 +36,7 @@ private object Versions {
     // be kept in sync with the version used by android-components above.
     const val mozilla_appservices = "0.28.1"
 
+
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
     const val installreferrer = "1.0"

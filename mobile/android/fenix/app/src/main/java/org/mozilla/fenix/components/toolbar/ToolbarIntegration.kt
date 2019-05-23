@@ -77,12 +77,15 @@ class ToolbarIntegration(
         ToolbarFeature.UrlRenderConfiguration(PublicSuffixList(context),
             DefaultThemeManager.resolveAttribute(R.attr.primaryText, context), renderStyle = renderStyle)
     )
+    private var menuPresenter = MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)
 
     override fun start() {
+        menuPresenter.start()
         toolbarPresenter.start()
     }
 
     override fun stop() {
+        menuPresenter.stop()
         toolbarPresenter.stop()
     }
 }
