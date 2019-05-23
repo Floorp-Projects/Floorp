@@ -539,6 +539,7 @@ function parseNamedDeclarations(isCssPropertyKnown, inputString,
  * @return {Array} an array of objects with the following signature:
  *         [{ "value": string, "type": integer }, ...]
  */
+/* eslint-disable complexity */
 function parsePseudoClassesAndAttributes(value) {
   if (!value) {
     throw new Error("empty input string");
@@ -624,6 +625,7 @@ function parsePseudoClassesAndAttributes(value) {
 
   return result;
 }
+/* eslint-enable complexity */
 
 /**
  * Expects a single CSS value to be passed as the input and parses the value

@@ -835,6 +835,7 @@ var cookieHelpers = {
    *          }
    *        }
    */
+  /* eslint-disable complexity */
   editCookie(data) {
     let {field, oldValue, newValue} = data;
     const origName = field === "name" ? oldValue : data.items.name;
@@ -920,6 +921,7 @@ var cookieHelpers = {
       cookie.sameSite
     );
   },
+  /* eslint-enable complexity */
 
   _removeCookies(host, opts = {}) {
     // We use a uniqueId to emulate compound keys for cookies. We need to
@@ -2775,6 +2777,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
    *           Pass an empty array if the host itself was affected: either completely
    *           removed or cleared.
    */
+  /* eslint-disable complexity */
   update(action, storeType, data) {
     if (action == "cleared") {
       this.emit("stores-cleared", { [storeType]: data });
@@ -2839,6 +2842,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
 
     return null;
   },
+  /* eslint-enable complexity */
 
   /**
    * This method removes data from the this.boundUpdate object in the same
