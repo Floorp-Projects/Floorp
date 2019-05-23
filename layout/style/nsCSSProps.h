@@ -310,6 +310,7 @@ class nsCSSProps {
   static const KTableEntry kTextAlignKTable[];
   static const KTableEntry kTextDecorationStyleKTable[];
   static const KTableEntry kTextEmphasisStyleShapeKTable[];
+  static const KTableEntry kTextOverflowKTable[];
 };
 
 // MOZ_DBG support for nsCSSPropertyID

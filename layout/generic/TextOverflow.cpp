@@ -152,7 +152,7 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
  public:
   nsDisplayTextOverflowMarker(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               const nsRect& aRect, nscoord aAscent,
-                              const StyleTextOverflowSide& aStyle,
+                              nsStyleTextOverflowSide aStyle,
                               uint32_t aLineNumber, uint16_t aIndex)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
@@ -203,7 +203,7 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
   NS_DISPLAY_DECL_NAME("TextOverflow", TYPE_TEXT_OVERFLOW)
  private:
   nsRect mRect;  // in reference frame coordinates
-  const StyleTextOverflowSide mStyle;
+  const nsStyleTextOverflowSide mStyle;
   nscoord mAscent;  // baseline for the marker text in mRect
   uint16_t mIndex;
 };
@@ -248,7 +248,7 @@ void nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
   }
   pt += aOffsetFromRect;
 
-  if (mStyle.IsEllipsis()) {
+  if (mStyle.mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS) {
     gfxTextRun* textRun = GetEllipsisTextRun(mFrame);
     if (textRun) {
       NS_ASSERTION(!textRun->IsRightToLeft(),
@@ -260,9 +260,8 @@ void nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
   } else {
     RefPtr<nsFontMetrics> fm =
         nsLayoutUtils::GetInflatedFontMetricsForFrame(mFrame);
-    NS_ConvertUTF8toUTF16 str16{mStyle.AsString().AsString()};
-    nsLayoutUtils::DrawString(mFrame, *fm, aCtx, str16.get(), str16.Length(),
-                              pt);
+    nsLayoutUtils::DrawString(mFrame, *fm, aCtx, mStyle.mString.get(),
+                              mStyle.mString.Length(), pt);
   }
 }
 
@@ -331,21 +330,12 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
   }
   uint8_t direction = aBlockFrame->StyleVisibility()->mDirection;
   const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
-
-  const auto& textOverflow = style->mTextOverflow;
-  bool shouldToggleDirection =
-      textOverflow.sides_are_logical && (direction == NS_STYLE_DIRECTION_RTL);
-  const auto& leftSide =
-      shouldToggleDirection ? textOverflow.second : textOverflow.first;
-  const auto& rightSide =
-      shouldToggleDirection ? textOverflow.first : textOverflow.second;
-
   if (mBlockWM.IsBidiLTR()) {
-    mIStart.Init(leftSide);
-    mIEnd.Init(rightSide);
+    mIStart.Init(style->mTextOverflow.GetLeft(direction));
+    mIEnd.Init(style->mTextOverflow.GetRight(direction));
   } else {
-    mIStart.Init(rightSide);
-    mIEnd.Init(leftSide);
+    mIStart.Init(style->mTextOverflow.GetRight(direction));
+    mIEnd.Init(style->mTextOverflow.GetLeft(direction));
   }
   // The left/right marker string is setup in ExamineLineFrames when a line
   // has overflow on that side.
@@ -702,16 +692,18 @@ LogicalRect TextOverflow::ExamineLineFrames(nsLineBox* aLine,
 
 void TextOverflow::ProcessLine(const nsDisplayListSet& aLists, nsLineBox* aLine,
                                uint32_t aLineNumber) {
-  if (mIStart.mStyle->IsClip() && mIEnd.mStyle->IsClip() &&
+  if (mIStart.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
+      mIEnd.mStyle->mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
       !aLine->HasLineClampEllipsis()) {
     return;
   }
 
   mIStart.Reset();
-  mIStart.mActive = !mIStart.mStyle->IsClip();
+  mIStart.mActive = mIStart.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP;
   mIEnd.Reset();
   mIEnd.mHasBlockEllipsis = aLine->HasLineClampEllipsis();
-  mIEnd.mActive = !mIEnd.mStyle->IsClip() || aLine->HasLineClampEllipsis();
+  mIEnd.mActive = mIEnd.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP ||
+                  aLine->HasLineClampEllipsis();
 
   FrameHashtable framesToHide(64);
   AlignmentEdges alignmentEdges;
@@ -824,8 +816,8 @@ void TextOverflow::PruneDisplayListContents(
 /* static */
 bool TextOverflow::HasClippedTextOverflow(nsIFrame* aBlockFrame) {
   const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
-  return style->mTextOverflow.first.IsClip() &&
-         style->mTextOverflow.second.IsClip();
+  return style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
+         style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_CLIP;
 }
 
 /* static */
@@ -904,7 +896,7 @@ void TextOverflow::CreateMarkers(const nsLineBox* aLine, bool aCreateIStart,
                markerRect, clipState);
     mMarkerList.AppendNewToTop<nsDisplayTextOverflowMarker>(
         mBuilder, mBlock, markerRect, aLine->GetLogicalAscent(),
-        mIEnd.mHasBlockEllipsis ? StyleTextOverflowSide::Ellipsis()
+        mIEnd.mHasBlockEllipsis ? nsStyleTextOverflowSide::Ellipsis()
                                 : *mIEnd.mStyle,
         aLineNumber, 1);
   }
@@ -920,7 +912,8 @@ void TextOverflow::Marker::SetupString(nsIFrame* aFrame) {
   // don't track the block ellipsis string and the text-overflow marker string
   // separately, if both apply to the element, we will always use "…" as the
   // string for text-overflow.
-  if (HasBlockEllipsis(aFrame) || mStyle->IsEllipsis()) {
+  if (HasBlockEllipsis(aFrame) ||
+      mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS) {
     gfxTextRun* textRun = GetEllipsisTextRun(aFrame);
     if (textRun) {
       mISize = textRun->GetAdvanceWidth();
@@ -932,8 +925,8 @@ void TextOverflow::Marker::SetupString(nsIFrame* aFrame) {
         aFrame->PresShell()->CreateReferenceRenderingContext();
     RefPtr<nsFontMetrics> fm =
         nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
-    mISize = nsLayoutUtils::AppUnitWidthOfStringBidi(
-        NS_ConvertUTF8toUTF16(mStyle->AsString().AsString()), aFrame, *fm, *rc);
+    mISize = nsLayoutUtils::AppUnitWidthOfStringBidi(mStyle->mString, aFrame,
+                                                     *fm, *rc);
   }
   mIntrinsicISize = mISize;
   mInitialized = true;
