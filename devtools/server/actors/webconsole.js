@@ -534,6 +534,7 @@ WebConsoleActor.prototype =
    * @return object
    *         The response object which holds the startedListeners array.
    */
+  /* eslint-disable complexity */
   startListeners: async function(request) {
     const startedListeners = [];
     const window = !this.parentActor.isRootActor ? this.window : null;
@@ -692,6 +693,7 @@ WebConsoleActor.prototype =
       traits: this.traits,
     };
   },
+  /* eslint-enable complexity */
 
   /**
    * Handler for the "stopListeners" request.
@@ -985,6 +987,7 @@ WebConsoleActor.prototype =
    * @return object
    *         The evaluation response packet.
    */
+  /* eslint-disable complexity */
   evaluateJS: function(request) {
     const input = request.text;
     const timestamp = Date.now();
@@ -1154,6 +1157,7 @@ WebConsoleActor.prototype =
       notes: errorNotes,
     };
   },
+  /* eslint-enable complexity */
 
   /**
    * The Autocomplete request handler.
