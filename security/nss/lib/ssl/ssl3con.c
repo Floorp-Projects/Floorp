@@ -4841,7 +4841,8 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
          * XXX If we've been called from ssl_BeginClientHandshake, then
          * this lookup is duplicative and wasteful.
          */
-        sid = ssl_LookupSID(&ss->sec.ci.peer, ss->sec.ci.port, ss->peerID, ss->url);
+        sid = ssl_LookupSID(ssl_Time(ss), &ss->sec.ci.peer,
+                            ss->sec.ci.port, ss->peerID, ss->url);
     } else {
         sid = NULL;
     }
@@ -8578,8 +8579,8 @@ ssl3_HandleClientHello(sslSocket *ss, PRUint8 *b, PRUint32 length)
                         ss->sec.ci.peer.pr_s6_addr32[2],
                         ss->sec.ci.peer.pr_s6_addr32[3]));
             if (ssl_sid_lookup) {
-                sid = (*ssl_sid_lookup)(&ss->sec.ci.peer, sidBytes.data,
-                                        sidBytes.len, ss->dbHandle);
+                sid = (*ssl_sid_lookup)(ssl_Time(ss), &ss->sec.ci.peer,
+                                        sidBytes.data, sidBytes.len, ss->dbHandle);
             } else {
                 errCode = SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED;
                 goto loser;
@@ -10276,7 +10277,7 @@ ssl3_HandleNewSessionTicket(sslSocket *ss, PRUint8 *b, PRUint32 length)
      * until it has verified the server's Finished message." See the comment in
      * ssl3_FinishHandshake for more details.
      */
-    ss->ssl3.hs.newSessionTicket.received_timestamp = ssl_TimeUsec();
+    ss->ssl3.hs.newSessionTicket.received_timestamp = ssl_Time(ss);
     if (length < 4) {
         (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
         PORT_SetError(SSL_ERROR_RX_MALFORMED_NEW_SESSION_TICKET);
@@ -11584,8 +11585,8 @@ ssl3_FillInCachedSID(sslSocket *ss, sslSessionID *sid, PK11SymKey *secret)
         sid->keaGroup = ssl_grp_none;
     }
     sid->sigScheme = ss->sec.signatureScheme;
-    sid->lastAccessTime = sid->creationTime = ssl_TimeUsec();
-    sid->expirationTime = sid->creationTime + ssl3_sid_timeout * PR_USEC_PER_SEC;
+    sid->lastAccessTime = sid->creationTime = ssl_Time(ss);
+    sid->expirationTime = sid->creationTime + (ssl_ticket_lifetime * PR_USEC_PER_SEC);
     sid->localCert = CERT_DupCertificate(ss->sec.localCert);
     if (ss->sec.isServer) {
         sid->namedCurve = ss->sec.serverCert->namedCurve;

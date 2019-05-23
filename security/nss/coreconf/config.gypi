@@ -106,7 +106,6 @@
     'moz_fold_libs%': 0,
     'moz_folded_library_name%': '',
     'sanitizer_flags%': 0,
-    'test_build%': 0,
     'static_libs%': 0,
     'no_zdefs%': 0,
     'fuzz%': 0,
@@ -130,7 +129,6 @@
     # This is mostly for linking to libraries.
     'variables': {
       'mapfile%': '',
-      'test_build%': 0,
       'static_libs%': 0,
       'debug_optimization_level%': '0',
       'release_optimization_level%': '2',
@@ -151,11 +149,6 @@
           'NSS_FIPS_DISABLED',
           'NSS_NO_INIT_SUPPORT',
         ],
-      }],
-      [ 'static_libs==1', {
-        'variables': {
-          'standalone_static_library': '1',
-        },
       }],
       [ 'OS!="android" and OS!="mac" and OS!="ios" and OS!="win"', {
         'libraries': [
@@ -233,7 +226,7 @@
         'product_dir': '<(nss_dist_obj_dir)/lib'
       }, '_type=="executable"', {
         'product_dir': '<(nss_dist_obj_dir)/bin'
-      }, '_standalone_static_library==1', {
+      }, 'static_libs==1 or _standalone_static_library==1', {
         'product_dir': '<(nss_dist_obj_dir)/lib'
       }],
       # mapfile handling
@@ -323,6 +316,9 @@
             'SubSystem': '2',
           },
         },
+      }],
+      [ '_type=="static_library" and static_libs==1', {
+        'standalone_static_library': 1,
       }],
     ],
     'default_configuration': 'Debug',
