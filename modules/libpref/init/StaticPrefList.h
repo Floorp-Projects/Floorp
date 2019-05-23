@@ -1216,6 +1216,34 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+// Is Gamepad Extension API enabled?
+VARCACHE_PREF(
+  "dom.gamepad.extensions.enabled",
+   dom_gamepad_extensions_enabled,
+   bool, true
+)
+
+// Is LightIndcator API enabled in Gamepad Extension API?
+VARCACHE_PREF(
+  "dom.gamepad.extensions.lightindicator",
+   dom_gamepad_extensions_lightindicator,
+   bool, false
+)
+
+// Is MultiTouch API enabled in Gamepad Extension API?
+VARCACHE_PREF(
+  "dom.gamepad.extensions.multitouch",
+   dom_gamepad_extensions_multitouch,
+   bool, false
+)
+
+// Is Gamepad vibrate haptic feedback function enabled?
+VARCACHE_PREF(
+  "dom.gamepad.haptic_feedback.enabled",
+   dom_gamepad_haptic_feedback_enabled,
+   bool, true
+)
+
 // How long a content process can take before closing its IPC channel
 // after shutdown is initiated.  If the process exceeds the timeout,
 // we fear the worst and kill it.
