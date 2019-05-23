@@ -8,6 +8,8 @@
 #include "HttpLog.h"
 
 #include "HttpChannelParentListener.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
@@ -158,13 +160,14 @@ nsresult HttpChannelParentListener::TriggerCrossProcessRedirect(
 
   nsCOMPtr<nsIChannel> channel = aChannel;
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(channel);
-  RefPtr<nsHttpChannel::TabPromise> p = httpChannel->TakeRedirectTabPromise();
+  RefPtr<nsHttpChannel::ContentProcessIdPromise> p =
+      httpChannel->TakeRedirectContentProcessIdPromise();
   nsCOMPtr<nsILoadInfo> loadInfo = aLoadInfo;
 
   RefPtr<HttpChannelParentListener> self = this;
   p->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [=](nsCOMPtr<nsIRemoteTab> tp) {
+      [=](uint64_t cpId) {
         nsresult rv;
 
         // Register the new channel and obtain id for it
@@ -199,8 +202,13 @@ nsresult HttpChannelParentListener::TriggerCrossProcessRedirect(
           MOZ_ALWAYS_SUCCEEDS(internalChannel->GetRedirectMode(&redirectMode));
         }
 
-        dom::BrowserParent* browserParent = dom::BrowserParent::GetFrom(tp);
-        auto result = browserParent->Manager()->SendCrossProcessRedirect(
+        dom::ContentParent* cp =
+            dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
+                ContentParentId{cpId});
+        if (!cp) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        auto result = cp->SendCrossProcessRedirect(
             self->mRedirectChannelId, uri, newLoadFlags, loadInfoArgs,
             channelId, originalURI, aIdentifier, redirectMode);
 

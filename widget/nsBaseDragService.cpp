@@ -566,9 +566,8 @@ nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
   if (flo) {
     RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
     if (fl) {
-      auto* tp =
-          static_cast<mozilla::dom::BrowserParent*>(fl->GetRemoteBrowser());
-      if (tp && tp->TakeDragVisualization(*aSurface, aScreenDragRect)) {
+      auto* bp = fl->GetBrowserParent();
+      if (bp && bp->TakeDragVisualization(*aSurface, aScreenDragRect)) {
         if (mImage) {
           // Just clear the surface if chrome has overridden it with an image.
           *aSurface = nullptr;

@@ -247,7 +247,7 @@ add_task(async function browseraction_contextmenu_manage_extension() {
 
     info("Wait until the overflow menu is ready");
     let overflowButton = win.document.getElementById("nav-bar-overflow-button");
-    let icon = win.document.getAnonymousElementByAttribute(overflowButton, "class", "toolbarbutton-icon");
+    let icon = overflowButton.icon;
     await waitForElementShown(icon);
 
     if (!customizing) {
@@ -326,7 +326,7 @@ async function runTestContextMenu({
 
   info("Wait until the overflow menu is ready");
   let overflowButton = win.document.getElementById("nav-bar-overflow-button");
-  let icon = win.document.getAnonymousElementByAttribute(overflowButton, "class", "toolbarbutton-icon");
+  let icon = overflowButton.icon;
   await waitForElementShown(icon);
 
   if (!customizing) {
