@@ -42,7 +42,9 @@
 #include "nsVideoFrame.h"
 
 static mozilla::LazyLogModule gTrackElementLog("nsTrackElement");
-#define LOG(type, msg) MOZ_LOG(gTrackElementLog, type, msg)
+#define LOG(msg, ...)                          \
+  MOZ_LOG(gTrackElementLog, LogLevel::Verbose, \
+          ("TextTrackElement=%p, " msg, this, ##__VA_ARGS__))
 
 // Replace the usual NS_IMPL_NS_NEW_HTML_ELEMENT(Track) so
 // we can return an UnknownElement instead when pref'd off.
@@ -213,12 +215,11 @@ bool HTMLTrackElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLTrackElement::SetSrc(const nsAString& aSrc, ErrorResult& aError) {
-  LOG(LogLevel::Info,
-      ("%p Set src=%s", this, NS_ConvertUTF16toUTF8(aSrc).get()));
+  LOG("Set src=%s", NS_ConvertUTF16toUTF8(aSrc).get());
 
   nsAutoString src;
   if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src) && src == aSrc) {
-    LOG(LogLevel::Info, ("%p No need to reload for same src url", this));
+    LOG("No need to reload for same src url");
     return;
   }
 
@@ -257,20 +258,19 @@ void HTMLTrackElement::MaybeDispatchLoadResource() {
   // step2, if the text track's text track mode is not set to one of hidden or
   // showing, then return.
   if (mTrack->Mode() == TextTrackMode::Disabled) {
-    LOG(LogLevel::Info, ("%p Do not load resource for disable track", this));
+    LOG("Do not load resource for disable track");
     return;
   }
 
   // step3, if the text track's track element does not have a media element as a
   // parent, return.
   if (!mMediaParent) {
-    LOG(LogLevel::Info,
-        ("%p Do not load resource for track without media element", this));
+    LOG("Do not load resource for track without media element");
     return;
   }
 
   if (ReadyState() == TextTrackReadyState::Loaded) {
-    LOG(LogLevel::Info, ("%p Has already loaded resource", this));
+    LOG("Has already loaded resource");
     return;
   }
 
@@ -286,11 +286,12 @@ void HTMLTrackElement::MaybeDispatchLoadResource() {
 }
 
 void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
+  LOG("LoadResource");
   mLoadResourceDispatched = false;
 
   nsAutoString src;
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::src, src) || src.IsEmpty()) {
-    LOG(LogLevel::Info, ("%p Fail to load because no src", this));
+    LOG("Fail to load because no src");
     SetReadyState(TextTrackReadyState::FailedToLoad);
     return;
   }
@@ -298,8 +299,7 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NewURIFromString(src, getter_AddRefs(uri));
   NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
-  LOG(LogLevel::Info, ("%p Trying to load from src=%s", this,
-                       NS_ConvertUTF16toUTF8(src).get()));
+  LOG("Trying to load from src=%s", NS_ConvertUTF16toUTF8(src).get());
 
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
@@ -362,7 +362,7 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
 
         channel->SetNotificationCallbacks(mListener);
 
-        LOG(LogLevel::Debug, ("opening webvtt channel"));
+        LOG("opening webvtt channel");
         rv = channel->AsyncOpen(mListener);
 
         if (NS_FAILED(rv)) {
@@ -380,7 +380,7 @@ nsresult HTMLTrackElement::BindToTree(Document* aDocument, nsIContent* aParent,
       nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  LOG(LogLevel::Debug, ("Track Element bound to tree."));
+  LOG("Track Element bound to tree.");
   auto* parent = HTMLMediaElement::FromNodeOrNull(aParent);
   if (!parent) {
     return NS_OK;
@@ -392,7 +392,7 @@ nsresult HTMLTrackElement::BindToTree(Document* aDocument, nsIContent* aParent,
 
     // TODO: separate notification for 'alternate' tracks?
     mMediaParent->NotifyAddedSource();
-    LOG(LogLevel::Debug, ("Track element sent notification to parent."));
+    LOG("Track element sent notification to parent.");
 
     // We may already have a TextTrack at this point if GetTrack() has already
     // been called. This happens, for instance, if script tries to get the
@@ -436,9 +436,11 @@ void HTMLTrackElement::SetReadyState(uint16_t aReadyState) {
   if (mTrack) {
     switch (aReadyState) {
       case TextTrackReadyState::Loaded:
+        LOG("dispatch 'load' event");
         DispatchTrackRunnable(NS_LITERAL_STRING("load"));
         break;
       case TextTrackReadyState::FailedToLoad:
+        LOG("dispatch 'error' event");
         DispatchTrackRunnable(NS_LITERAL_STRING("error"));
         break;
     }
