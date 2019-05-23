@@ -703,7 +703,6 @@ impl TileCache {
         prim_instances: &[PrimitiveInstance],
         root_clip_chain_id: ClipChainId,
         pictures: &[PicturePrimitive],
-        clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
         // Build the list of reference primitives
         // for this picture cache.
@@ -718,7 +717,6 @@ impl TileCache {
             map_local_to_world: SpaceMapper::new(
                 ROOT_SPATIAL_NODE_INDEX,
                 WorldRect::zero(),
-                clip_scroll_tree,
             ),
             tiles_to_draw: Vec::new(),
             opacity_bindings: FastHashMap::default(),
@@ -834,7 +832,6 @@ impl TileCache {
         self.map_local_to_world = SpaceMapper::new(
             ROOT_SPATIAL_NODE_INDEX,
             frame_context.screen_world_rect,
-            frame_context.clip_scroll_tree,
         );
 
         let world_mapper = SpaceMapper::new_with_target(
@@ -1843,7 +1840,6 @@ impl SurfaceInfo {
         let map_local_to_surface = SpaceMapper::new(
             surface_spatial_node_index,
             pic_bounds,
-            clip_scroll_tree,
         );
 
         SurfaceInfo {
@@ -2401,7 +2397,6 @@ impl PicturePrimitive {
         let map_local_to_pic = SpaceMapper::new(
             surface_spatial_node_index,
             pic_bounds,
-            frame_context.clip_scroll_tree,
         );
 
         let (map_raster_to_world, map_pic_to_raster) = create_raster_mappers(
@@ -2535,7 +2530,7 @@ impl PicturePrimitive {
                             // and compute the union of them to determine what we need to rasterize and blur?
                             max_std_deviation = f32::max(max_std_deviation, shadow.blur_radius * device_pixel_scale.0);
                         }
-        
+
                         max_std_deviation = max_std_deviation.round();
                         let max_blur_range = (max_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
                         let mut device_rect = clipped.inflate(max_blur_range, max_blur_range)
@@ -2545,7 +2540,7 @@ impl PicturePrimitive {
                             device_rect.size,
                             DeviceSize::new(max_std_deviation, max_std_deviation),
                         );
-        
+
                         let uv_rect_kind = calculate_uv_rect_kind(
                             &pic_rect,
                             &transform,
@@ -2553,7 +2548,7 @@ impl PicturePrimitive {
                             device_pixel_scale,
                             true,
                         );
-        
+
                         let mut picture_task = RenderTask::new_picture(
                             RenderTaskLocation::Dynamic(None, device_rect.size),
                             unclipped.size,
@@ -2564,15 +2559,15 @@ impl PicturePrimitive {
                             device_pixel_scale,
                         );
                         picture_task.mark_for_saving();
-        
+
                         let picture_task_id = frame_state.render_tasks.add(picture_task);
-        
+
                         self.secondary_render_task_id = Some(picture_task_id);
-        
+
                         let mut blur_tasks = BlurTaskCache::default();
-        
+
                         self.extra_gpu_data_handles.resize(shadows.len(), GpuCacheHandle::new());
-        
+
                         let mut blur_render_task_id = picture_task_id;
                         for shadow in shadows {
                             let std_dev = f32::round(shadow.blur_radius * device_pixel_scale.0);
@@ -2583,9 +2578,9 @@ impl PicturePrimitive {
                                 RenderTargetKind::Color,
                                 ClearMode::Transparent,
                                 Some(&mut blur_tasks),
-                            );      
+                            );
                         }
-        
+
                         // TODO(nical) the second one should to be the blur's task id but we have several blurs now
                         (blur_render_task_id, picture_task_id)
                     }
@@ -3398,7 +3393,6 @@ fn build_ref_prims(
     let mut map_local_to_world = SpaceMapper::new(
         ROOT_SPATIAL_NODE_INDEX,
         WorldRect::zero(),
-        clip_scroll_tree,
     );
 
     for ref_prim in ref_prims {
