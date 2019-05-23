@@ -31,7 +31,7 @@ interface nsIUploadChannel : nsISupports
      * application) that want to upload data streams without any knowledge of
      * protocol specifications.  For this reason, we have a special meaning
      * for the aContentType parameter (see below).
-     * 
+     *
      * @param aStream
      *        The stream to be uploaded by this channel.
      * @param aContentType

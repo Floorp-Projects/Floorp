@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 
 /**
@@ -35,7 +35,7 @@ interface nsITooltipListener : nsISupports
      */
     void onShowTooltip(in long aXCoords, in long aYCoords, in AString aTipText,
                        in AString aTipDir);
-  
+
     /**
      * Called when the tooltip should be hidden, either because the pointer
      * has moved or the tooltip has timed out.

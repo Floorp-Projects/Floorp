@@ -103,3 +103,5 @@ user_pref("ui.systemUsesDarkTheme", 0);
 user_pref("dom.push.serverURL", "");
 // Disable intermittent telemetry collection
 user_pref("toolkit.telemetry.initDelay", 99999999);
+// Setting this pref to true for usercss reftests, since it relies on userContent.css
+user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);

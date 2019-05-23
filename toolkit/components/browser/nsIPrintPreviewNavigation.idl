@@ -23,7 +23,7 @@ interface nsIPrintPreviewNavigation  : nsISupports
    * Return - PR_TRUE if success
    */
   boolean	nextPage();
-  
+
   /**
    * Preview the previous Page
    *

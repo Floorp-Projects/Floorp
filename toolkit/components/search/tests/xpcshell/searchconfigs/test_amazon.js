@@ -34,6 +34,7 @@ const test = new SearchConfigTest({
     // Note: the order here is important. A region/locale match higher up in the
     // list will override a region/locale match lower down.
     domain: "amazon.com.au",
+    aliases: ["@amazon"],
     included: [{
       regions: ["au"],
       locales: {
@@ -55,6 +56,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.ca",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: ["ca", "en-CA"],
@@ -79,6 +81,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.fr",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: ["br", "fr", "ff", "son", "wo"],
@@ -94,9 +97,11 @@ const test = new SearchConfigTest({
       },
     }],
     excluded: [{regions: ["ca"]}],
+    searchUrlCode: "tag=firefox-fr-21",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.co.uk",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: [
@@ -115,9 +120,11 @@ const test = new SearchConfigTest({
       },
     }],
     excluded: [{regions: ["au"]}],
+    searchUrlCode: "tag=firefox-uk-21",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.com",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: [
@@ -128,6 +135,7 @@ const test = new SearchConfigTest({
       },
     }],
     excluded: [{regions: ["au", "ca", "fr", "gb"]}],
+    searchUrlCode: "tag=mozilla-20",
   }, {
     domain: "amazon.cn",
     included: [{
@@ -135,17 +143,21 @@ const test = new SearchConfigTest({
         matches: ["zh-CN"],
       },
     }],
+    searchUrlCode: "ix=sunray",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.co.jp",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         startsWith: ["ja"],
       },
     }],
+    searchUrlCode: "tag=mozillajapan-fx-22",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.de",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: ["de", "dsb", "hsb"],
@@ -154,6 +166,7 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.in",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: [
@@ -165,11 +178,13 @@ const test = new SearchConfigTest({
     noSuggestionsURL: true,
   }, {
     domain: "amazon.it",
+    aliases: ["@amazon"],
     included: [{
       locales: {
         matches: ["it", "lij"],
       },
     }],
+    searchUrlCode: "tag=firefoxit-21",
     noSuggestionsURL: true,
   }],
 });

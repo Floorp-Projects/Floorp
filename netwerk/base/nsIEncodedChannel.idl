@@ -37,9 +37,9 @@ interface nsIEncodedChannel : nsISupports
 
     /**
      * This attribute controls whether or not content conversion should be
-     * done per the Content-Encoding response header.  applyConversion can only 
-     * be set before or during OnStartRequest.  Calling this during 
-     * OnDataAvailable is an error. 
+     * done per the Content-Encoding response header.  applyConversion can only
+     * be set before or during OnStartRequest.  Calling this during
+     * OnDataAvailable is an error.
      *
      * TRUE by default.
      */

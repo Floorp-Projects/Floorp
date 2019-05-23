@@ -24,7 +24,7 @@ interface nsIEmbeddingSiteWindow : nsISupports
      * @see getDimensions
      */
     const unsigned long DIM_FLAGS_POSITION   = 1;
-    
+
     /**
      * Flag indicates that the size of the inner area is required/specified.
      *
@@ -79,7 +79,7 @@ interface nsIEmbeddingSiteWindow : nsISupports
      * Sets the dimensions for the window; the position & size. The
      * flags to indicate what the caller wants to set and whether the size
      * refers to the inner or outer area. The inner area refers to just
-     * the embedded area, wheras the outer area can also include any 
+     * the embedded area, wheras the outer area can also include any
      * surrounding chrome, window frame, title bar, and so on.
      *
      * @param flags  Combination of position, inner and outer size flags.
@@ -149,7 +149,7 @@ interface nsIEmbeddingSiteWindow : nsISupports
      * </ul>
      */
     [noscript] readonly attribute voidPtr siteWindow;
-    
+
     /**
      * Blur the window. This should unfocus the window and send an onblur event.
      */

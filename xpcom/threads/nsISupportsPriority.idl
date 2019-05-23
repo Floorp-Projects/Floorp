@@ -26,7 +26,7 @@ interface nsISupportsPriority : nsISupports
   const long PRIORITY_NORMAL  =   0;
   const long PRIORITY_LOW     =  10;
   const long PRIORITY_LOWEST  =  20;
-  
+
   /**
    * This attribute may be modified to change the priority of this object.  The
    * implementation of this interface is free to truncate a given priority

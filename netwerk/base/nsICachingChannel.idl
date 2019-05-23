@@ -24,7 +24,7 @@ interface nsICachingChannel : nsICacheInfoChannel
      * Set/get the cache token... uniquely identifies the data in the cache.
      * Holding a reference to this token prevents the cached data from being
      * removed.
-     * 
+     *
      * A cache token retrieved from a particular instance of nsICachingChannel
      * could be set on another instance of nsICachingChannel provided the
      * underlying implementations are compatible.  The implementation of

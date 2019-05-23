@@ -52,6 +52,7 @@ const DEFAULT_SIGNER = "remote-settings.content-signature.mozilla.org";
 XPCOMUtils.defineLazyGetter(this, "gPrefs", () => {
   return Services.prefs.getBranch(PREF_SETTINGS_BRANCH);
 });
+XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
 XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL", PREF_SETTINGS_BRANCH + PREF_SETTINGS_SERVER);
 
 /**
@@ -107,6 +108,7 @@ function remoteSettingsFunction() {
       // Invalidate the polling status, since we want the new collection to
       // be taken into account.
       _invalidatePolling = true;
+      console.debug(`Instantiated new client ${c.identifier}`);
     }
     return _clients.get(collectionName);
   };
@@ -140,6 +142,7 @@ function remoteSettingsFunction() {
     // Mainly because we cannot guess which `signerName` has to be used for example.
     // And we don't want to synchronize data for collections in the main bucket that are
     // completely unknown (ie. no database and no JSON dump).
+    console.debug(`No known client for ${bucketName}/${collectionName}`);
     return null;
   }
 
@@ -171,6 +174,7 @@ function remoteSettingsFunction() {
       }
     }
 
+    console.info("Start polling for changes");
     Services.obs.notifyObservers(null, "remote-settings:changes-poll-start", JSON.stringify({ expectedTimestamp }));
 
     // Do we have the latest version already?
@@ -213,6 +217,7 @@ function remoteSettingsFunction() {
 
     // Check if the server asked the clients to back off (for next poll).
     if (backoffSeconds) {
+      console.info("Server asks clients to backoff for ${backoffSeconds} seconds");
       const backoffReleaseTime = Date.now() + backoffSeconds * 1000;
       gPrefs.setCharPref(PREF_SETTINGS_SERVER_BACKOFF, backoffReleaseTime);
     }
@@ -247,6 +252,7 @@ function remoteSettingsFunction() {
         // Save last time this client was successfully synced.
         Services.prefs.setIntPref(client.lastCheckTimePref, checkedServerTimeInSeconds);
       } catch (e) {
+        console.error(e);
         if (!firstError) {
           firstError = e;
           firstError.details = change;
@@ -276,6 +282,7 @@ function remoteSettingsFunction() {
     // Report the global synchronization success.
     await UptakeTelemetry.report(TELEMETRY_COMPONENT, UptakeTelemetry.STATUS.SUCCESS, syncTelemetryArgs);
 
+    console.info("Polling for changes done");
     Services.obs.notifyObservers(null, "remote-settings:changes-poll-end");
   };
 
@@ -321,6 +328,7 @@ function remoteSettingsFunction() {
    * Startup function called from nsBrowserGlue.
    */
   remoteSettings.init = () => {
+    console.info("Initialize Remote Settings");
     // Hook the Push broadcast and RemoteSettings polling.
     // When we start on a new profile there will be no ETag stored.
     // Use an arbitrary ETag that is guaranteed not to occur.
@@ -347,6 +355,8 @@ var remoteSettingsBroadcastHandler = {
       pushBroadcastService.PHASES.HELLO,
       pushBroadcastService.PHASES.REGISTER,
     ].includes(phase);
+
+    console.info(`Push notification received (version=${version} phase=${phase})`);
 
     return RemoteSettings.pollChanges({
       expectedTimestamp: version,

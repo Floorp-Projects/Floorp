@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-/** 
+/**
  * This interface allows the proxy code to use platform-specific proxy
  * settings when the proxy preference is set to "automatic discovery". This service
  * acts like a PAC parser to netwerk, but it will actually read the system settings and
@@ -28,7 +28,7 @@ interface nsISystemProxySettings : nsISupports
      * If non-empty, use this PAC file. If empty, call getProxyForURI instead.
      */
     readonly attribute AUTF8String PACURI;
-    
+
     /**
      * See ProxyAutoConfig::getProxyForURI; this function behaves similarly except
      * a more relaxed return string is allowed that includes full urls instead of just

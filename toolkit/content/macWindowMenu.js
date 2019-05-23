@@ -10,7 +10,7 @@ function macWindowMenuDidShow() {
     if (win.document.documentElement.getAttribute("inwindowmenu") == "false") {
       continue;
     }
-    let item = document.createElement("menuitem");
+    let item = document.createXULElement("menuitem");
     item.setAttribute("label", win.document.title);
     if (win == window) {
       item.setAttribute("checked", "true");

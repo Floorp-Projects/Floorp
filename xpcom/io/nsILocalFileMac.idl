@@ -58,10 +58,10 @@ interface nsILocalFileMac : nsIFile
     * NOTE: Supported only for XP_MACOSX
     *
     * @return
-    *  
-    */ 
+    *
+    */
   [noscript] CFURLRef getCFURL();
- 
+
     /**
     * getFSRef
     *
@@ -75,10 +75,10 @@ interface nsILocalFileMac : nsIFile
     * NOTE: Supported only for XP_MACOSX
     *
     * @return
-    *  
-    */ 
+    *
+    */
   [noscript] FSRef getFSRef();
-   
+
    /**
     * getFSSpec
     *
@@ -90,13 +90,13 @@ interface nsILocalFileMac : nsIFile
     * the unresolved alias file.
     *
     * @return
-    *  
-    */ 
+    *
+    */
   [noscript] FSSpec getFSSpec();
 
    /**
     * fileSizeWithResFork
-    * 
+    *
     * Returns the combined size of both the data fork and the resource
     * fork (if present) rather than just the size of the data fork
     * as returned by GetFileSize()
@@ -148,7 +148,7 @@ interface nsILocalFileMac : nsIFile
    /**
     * bundleDisplayName
     *
-    * returns the display name of the application bundle (usually the human 
+    * returns the display name of the application bundle (usually the human
     * readable name of the application)
     */
    readonly attribute AString bundleDisplayName;

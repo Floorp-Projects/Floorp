@@ -23,7 +23,7 @@ interface nsIPrivateModeCallback : nsISupports
   void callback();
 };
 
-/** 
+/**
  * An optional interface for accessing or removing the cookies
  * that are in the cookie list
  */

@@ -16,7 +16,7 @@ interface nsIInputAvailableCallback;
  * NS_MakeAsyncNonBlockingInputStream.
  *
  * Use this service to transform any blocking stream (e.g., file stream)
- * into a fully asynchronous stream that can be read/written without 
+ * into a fully asynchronous stream that can be read/written without
  * blocking the main thread.
  */
 [builtinclass, scriptable, uuid(5e0adf7d-9785-45c3-a193-04f25a75da8f)]

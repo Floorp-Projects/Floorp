@@ -52,7 +52,7 @@ interface nsIProtocolHandler : nsISupports
      */
     readonly attribute ACString scheme;
 
-    /** 
+    /**
      * The default port is the port that this protocol normally uses.
      * If a port does not make sense for the protocol (e.g., "about:")
      * then -1 will be returned.
@@ -60,7 +60,7 @@ interface nsIProtocolHandler : nsISupports
     readonly attribute long defaultPort;
 
     /**
-     * Returns the protocol specific flags (see flag definitions below).  
+     * Returns the protocol specific flags (see flag definitions below).
      */
     readonly attribute unsigned long protocolFlags;
 
@@ -101,8 +101,8 @@ interface nsIProtocolHandler : nsISupports
      *                         no charset transformation from aSpec).
      * @param aBaseURI       - if null, aSpec must specify an absolute URI.
      *                         otherwise, aSpec may be resolved relative
-     *                         to aBaseURI, depending on the protocol. 
-     *                         If the protocol has no concept of relative 
+     *                         to aBaseURI, depending on the protocol.
+     *                         If the protocol has no concept of relative
      *                         URI aBaseURI will simply be ignored.
      */
     nsIURI newURI(in AUTF8String aSpec,
@@ -118,11 +118,11 @@ interface nsIProtocolHandler : nsISupports
     /**
      * Allows a protocol to override blacklisted ports.
      *
-     * This method will be called when there is an attempt to connect to a port 
+     * This method will be called when there is an attempt to connect to a port
      * that is blacklisted.  For example, for most protocols, port 25 (Simple Mail
-     * Transfer) is banned.  When a URI containing this "known-to-do-bad-things" 
-     * port number is encountered, this function will be called to ask if the 
-     * protocol handler wants to override the ban.  
+     * Transfer) is banned.  When a URI containing this "known-to-do-bad-things"
+     * port number is encountered, this function will be called to ask if the
+     * protocol handler wants to override the ban.
      */
     boolean allowPort(in long port, in string scheme);
 
@@ -218,7 +218,7 @@ interface nsIProtocolHandler : nsISupports
      * Web-safe protocols like "http" should set this flag.
      */
     const unsigned long URI_LOADABLE_BY_ANYONE = (1<<6);
-    
+
     /**
      * The URIs for this protocol are UNSAFE if loaded by untrusted (web)
      * content and may only be loaded by privileged code (for example, code
@@ -226,7 +226,7 @@ interface nsIProtocolHandler : nsISupports
      * this flag.
      */
     const unsigned long URI_DANGEROUS_TO_LOAD = (1<<7);
-    
+
     /**
      * The URIs for this protocol point to resources that are part of the
      * application's user interface.  There are cases when such resources may

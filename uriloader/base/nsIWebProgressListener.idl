@@ -82,7 +82,7 @@ interface nsIWebProgressListener : nsISupports
    *   This flag is set in addition to STATE_IS_REQUEST.  A document request
    *   supports the nsIChannel interface and its loadFlags attribute includes
    *   the nsIChannel::LOAD_DOCUMENT_URI flag.
-   * 
+   *
    *   A document request does not complete until all requests associated with
    *   the loading of its corresponding document have completed.  This includes
    *   other document requests (e.g., corresponding to HTML <iframe> elements).
@@ -229,7 +229,7 @@ interface nsIWebProgressListener : nsISupports
     * State bits for EV == Extended Validation == High Assurance
     *
     * These flags describe the level of identity verification
-    * in a call to the onSecurityChange method. 
+    * in a call to the onSecurityChange method.
     *
     * STATE_IDENTITY_EV_TOPLEVEL
     *   The topmost document uses an EV cert.
@@ -376,7 +376,7 @@ interface nsIWebProgressListener : nsISupports
    * Flags for onLocationChange
    *
    * LOCATION_CHANGE_SAME_DOCUMENT
-   *   This flag is on when |aWebProgress| did not load a new document. 
+   *   This flag is on when |aWebProgress| did not load a new document.
    *   For example, the location change is due to an anchor scroll or a
    *   pushState/popState/replaceState.
    *

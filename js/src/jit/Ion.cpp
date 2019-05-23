@@ -3146,8 +3146,8 @@ void jit::TraceJitScripts(JSTracer* trc, JSScript* script) {
     jit::BaselineScript::Trace(trc, script->baselineScript());
   }
 
-  if (script->hasICScript()) {
-    script->icScript()->trace(trc);
+  if (script->hasJitScript()) {
+    script->jitScript()->trace(trc);
   }
 }
 

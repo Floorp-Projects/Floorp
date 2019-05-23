@@ -231,6 +231,7 @@ interface nsIDocumentEncoder : nsISupports
 
   /**
    * Initialize with a pointer to the document and the mime type.
+   * Resets wrap column to 72 and resets node fixup.
    * @param aDocument Document to encode.
    * @param aMimeType MimeType to use. May also be set by SetMimeType.
    * @param aFlags Flags to use while encoding. May also be set by SetFlags.

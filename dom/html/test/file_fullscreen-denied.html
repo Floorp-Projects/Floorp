@@ -111,13 +111,48 @@ function testLongRunningEventHandler() {
   }
   addFullscreenErrorContinuation(() => {
     ok(!document.fullscreenElement,
-       "Should not grant request in long-running event handler.");
-    // Restore the pref environment we changed before
-    // entering testNonTrustContext.
-    SpecialPowers.popPrefEnv(finish);
+      "Should not grant request in long-running event handler.");
+    SimpleTest.executeSoon(testFullscreenMouseBtn);
   });
   window.addEventListener("keypress", longRunningHandler);
   sendString("a");
+}
+
+function requestFullscreenMouseBtn(event, button) {
+  let clickEl = document.createElement("p");
+  clickEl.innerText = "Click Me";
+
+  function eventHandler(event) {
+    document.body.requestFullscreen();
+    event.target.removeEventListener(event, this);
+  }
+
+  clickEl.addEventListener(event, eventHandler);
+  document.body.appendChild(clickEl);
+  synthesizeMouseAtCenter(clickEl, { button });
+}
+
+async function testFullscreenMouseBtn(event, button, next) {
+  await SpecialPowers.pushPrefEnv({
+    "set": [["full-screen-api.mouse-event-allow-left-button-only", true]]
+  });
+  let fsRequestEvents = ["mousedown", "mouseup", "pointerdown", "pointerup"];
+  let mouseButtons = [1, 2];
+
+  for (let i = 0; i < fsRequestEvents.length; i++) {
+    let event = fsRequestEvents[i];
+    for (let j = 0; j < mouseButtons.length; j++) {
+      let mouseButton = mouseButtons[j];
+      let fsDenied = addFullscreenErrorContinuation();
+      requestFullscreenMouseBtn(event, mouseButton);
+      await fsDenied;
+      ok(!document.fullscreenElement, `Should not grant request on '${event}' triggered by mouse button ${mouseButton}`);
+    }
+  }
+  // Restore the pref environment we changed before
+  // entering testNonTrustContext.
+  await SpecialPowers.popPrefEnv();
+  finish();
 }
 
 function finish() {

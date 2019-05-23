@@ -25,7 +25,7 @@ interface nsIPermission : nsISupports
     /**
      * a case-sensitive ASCII string, indicating the type of permission
      * (e.g., "cookie", "image", etc).
-     * This string is specified by the consumer when adding a permission 
+     * This string is specified by the consumer when adding a permission
      * via nsIPermissionManager.
      * @see nsIPermissionManager
      */

@@ -29,7 +29,7 @@ interface mozIStorageFunction : nsISupports {
   /**
    * onFunctionCall is called when execution of a custom
    * function should occur.
-   * 
+   *
    * @param aNumArguments         The number of arguments
    * @param aFunctionArguments    The arguments passed in to the function
    *

@@ -27,7 +27,7 @@ interface nsIWebBrowserPrint : nsISupports
   const short PRINTPREVIEW_END          = 4;
 
   /**
-   * Returns a "global" PrintSettings object 
+   * Returns a "global" PrintSettings object
    * Creates a new the first time, if one doesn't exist.
    *
    * Then returns the same object each time after that.
@@ -114,7 +114,7 @@ interface nsIWebBrowserPrint : nsISupports
   void printPreviewNavigate(in short aNavType, in long aPageNum);
 
   /**
-   * Cancels the current print 
+   * Cancels the current print
    * @return void
    */
   void cancel();

@@ -40,7 +40,7 @@ interface nsINestedURI : nsISupports
    * the returned URI QIs to nsINestedURI.
    *
    * Modifying the returned URI must not in any way modify the nested URI; this
-   * means the returned URI must be either immutable or a clone.   
+   * means the returned URI must be either immutable or a clone.
    */
   readonly attribute nsIURI innermostURI;
 };

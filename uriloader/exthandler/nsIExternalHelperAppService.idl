@@ -42,7 +42,7 @@ interface nsIExternalHelperAppService : nsISupports
                                in nsIRequest aRequest,
                                in nsIInterfaceRequestor aContentContext,
                                in boolean aForceSave,
-                               [optional] in nsIInterfaceRequestor aWindowContext); 
+                               [optional] in nsIInterfaceRequestor aWindowContext);
 
   /**
    * Returns true if data from a URL with this extension combination
@@ -66,7 +66,7 @@ interface nsPIExternalAppLauncher : nsISupports
    * consumers can add temporary files they want deleted on exit.
    * @param aTemporaryFile A temporary file we should delete on exit.
    */
-  void deleteTemporaryFileOnExit(in nsIFile aTemporaryFile); 
+  void deleteTemporaryFileOnExit(in nsIFile aTemporaryFile);
   /**
    * Delete a temporary file created inside private browsing mode when
    * the private browsing mode has ended.

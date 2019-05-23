@@ -235,7 +235,7 @@ class TemporaryTypeSet;
  * Information about the set of types associated with an lvalue. There are
  * three kinds of type sets:
  *
- * - StackTypeSet are associated with TypeScripts, for arguments and values
+ * - StackTypeSet are associated with JitScripts, for arguments and values
  *   observed at property reads. These are implicitly frozen on compilation
  *   and only have constraints added to them which can trigger invalidation of
  *   TypeNewScript information.
@@ -672,7 +672,7 @@ class ConstraintTypeSet : public TypeSet {
   }
 
   // This takes a reference to AutoSweepBase to ensure we swept the owning
-  // ObjectGroup or TypeScript.
+  // ObjectGroup or JitScript.
   TypeConstraint* constraintList(const AutoSweepBase& sweep) const {
     checkMagic();
     if (constraintList_) {

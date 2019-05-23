@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 
 [scriptable, uuid(5060b801-340e-11d5-be5b-b3e063ec6a3c)]
@@ -17,7 +17,7 @@ interface nsIFindService : nsISupports
 
     attribute AString searchString;
     attribute AString replaceString;
-    
+
     attribute boolean findBackwards;
     attribute boolean wrapFind;
     attribute boolean entireWord;

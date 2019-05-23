@@ -19,12 +19,12 @@ typedef long nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-[scriptable, uuid(325e56a7-3762-4312-aec7-f1fcf84b4145)] 
+[scriptable, uuid(325e56a7-3762-4312-aec7-f1fcf84b4145)]
 interface nsIHandlerInfo : nsISupports {
     /**
      * The type of this handler info.  For MIME handlers, this is the MIME type.
      * For protocol handlers, it's the scheme.
-     * 
+     *
      * @return String representing the type.
      */
     readonly attribute ACString type;
@@ -68,25 +68,25 @@ interface nsIHandlerInfo : nsISupports {
      * Launches the application with the specified URI, in a way that
      * depends on the value of preferredAction. preferredAction must be
      * useHelperApp or useSystemDefault.
-     *  
+     *
      * @note Only the URI scheme is used to determine how to launch.  This is
      * essentially a pass-by-value operation.  This means that in the case of
      * a file: URI, the handler that is registered for file: will be launched
      * and our code will not make any decision based on the content-type or
-     * extension, though the invoked file: handler is free to do so. 
+     * extension, though the invoked file: handler is free to do so.
      *
      * @param aURI
      *        The URI to launch this application with
      *
-     * @param aWindowContext 
+     * @param aWindowContext
      *        The window to parent the dialog against, and, if a web handler
-     *        is chosen, it is loaded in this window as well.  See 
+     *        is chosen, it is loaded in this window as well.  See
      *        nsIHandlerApp.launchWithURI for more details.
      *
      * @throw NS_ERROR_INVALID_ARG if preferredAction is not valid for this
      * call. Other exceptions may be thrown.
      */
-    void launchWithURI(in nsIURI aURI, 
+    void launchWithURI(in nsIURI aURI,
                        [optional] in nsIInterfaceRequestor aWindowContext);
 
     /**
@@ -137,12 +137,12 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * Set File Extensions. Input is a comma delimited list of extensions.
      */
     void setFileExtensions(in AUTF8String aExtensions);
- 
+
     /**
      * Returns whether or not the given extension is
      * associated with this MIME info.
      *
-     * @return TRUE if the association exists. 
+     * @return TRUE if the association exists.
      */
     boolean extensionExists(in AUTF8String aExtension);
 
@@ -158,12 +158,12 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * @return The first extension.
      */
     attribute AUTF8String primaryExtension;
-    
+
     /**
      * The MIME type of this MIMEInfo.
-     * 
+     *
      * @return String representing the MIME type.
-     * 
+     *
      * @deprecated  use nsIHandlerInfo::type instead.
      */
     readonly attribute ACString MIMEType;
@@ -176,13 +176,13 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      */
     boolean equals(in nsIMIMEInfo aMIMEInfo);
 
-    /** 
+    /**
      * Returns a list of nsILocalHandlerApp objects containing
-     * handlers associated with this mimeinfo. Implemented per 
+     * handlers associated with this mimeinfo. Implemented per
      * platform using information in this object to generate the
-     * best list. Typically used for an "open with" style user 
+     * best list. Typically used for an "open with" style user
      * option.
-     * 
+     *
      * @return nsIArray of nsILocalHandlerApp
      */
     readonly attribute nsIArray possibleLocalHandlers;
@@ -225,7 +225,7 @@ interface nsIHandlerApp : nsISupports {
     /**
      * Whether or not the given handler app is logically equivalent to the
      * invokant (i.e. they represent the same app).
-     * 
+     *
      * Two apps are the same if they are both either local or web handlers
      * and their executables/URI templates and command line parameters are
      * the same.
@@ -242,19 +242,19 @@ interface nsIHandlerApp : nsISupports {
      * @param aURI
      *        The URI to launch this application with
      *
-     * @param aWindowContext 
+     * @param aWindowContext
      *
      *        Currently only relevant to web-handler apps.  If given, this
      *        represents the docshell to load the handler in and is passed
      *        through to nsIURILoader.openURI.  If this parameter is null or
-     *        not present, the web handler app implementation will attempt to 
+     *        not present, the web handler app implementation will attempt to
      *        find/create a place to load the handler and do so.  As of this
      *        writing, it tries to load the web handler in a new window using
-     *        nsIBrowserDOMWindow.openURI.  In the future, it may attempt to 
+     *        nsIBrowserDOMWindow.openURI.  In the future, it may attempt to
      *        have a more comprehensive strategy which could include handing
      *        off to the system default browser (bug 394479).
      */
-    void launchWithURI(in nsIURI aURI, 
+    void launchWithURI(in nsIURI aURI,
                        [optional] in nsIInterfaceRequestor aWindowContext);
 
 };
@@ -305,14 +305,14 @@ interface nsILocalHandlerApp : nsIHandlerApp {
      *
      * @param param the parameter to search for.
      *
-     * @return TRUE if the parameter exists in the current list. 
+     * @return TRUE if the parameter exists in the current list.
      */
     boolean parameterExists(in AString param);
 };
 
 /**
  * nsIWebHandlerApp is a web-based handler, as speced by the WhatWG HTML5
- * draft.  Currently, only GET-based handlers are supported.  At some point, 
+ * draft.  Currently, only GET-based handlers are supported.  At some point,
  * we probably want to work with WhatWG to spec out and implement POST-based
  * handlers as well.
  */
@@ -321,7 +321,7 @@ interface nsIWebHandlerApp : nsIHandlerApp {
 
     /**
      * Template used to construct the URI to GET.  Template is expected to have
-     * a %s in it, and the escaped URI to be handled is inserted in place of 
+     * a %s in it, and the escaped URI to be handled is inserted in place of
      * that %s, as per the HTML5 spec.
      */
     attribute AUTF8String uriTemplate;
@@ -339,27 +339,27 @@ interface nsIDBusHandlerApp : nsIHandlerApp {
      * If its not set,  NS_ERROR_FAILURE will be returned by LaunchWithURI
      */
     attribute AUTF8String service;
-    
+
     /**
-     * Objpath defines the object path of the dbus service that should handle 
-     * this protocol. If its not set,  NS_ERROR_FAILURE will be returned 
+     * Objpath defines the object path of the dbus service that should handle
+     * this protocol. If its not set,  NS_ERROR_FAILURE will be returned
      * by LaunchWithURI
      */
     attribute AUTF8String objectPath;
 
     /**
-     * DBusInterface defines the interface of the dbus service that should 
-     * handle this protocol. If its not set,  NS_ERROR_FAILURE will be  
+     * DBusInterface defines the interface of the dbus service that should
+     * handle this protocol. If its not set,  NS_ERROR_FAILURE will be
      * returned by LaunchWithURI
      */
     attribute AUTF8String dBusInterface;
-    
+
     /**
-     * Method defines the dbus method that should be invoked to handle this 
-     * protocol. If its not set,  NS_ERROR_FAILURE will be returned by 
+     * Method defines the dbus method that should be invoked to handle this
+     * protocol. If its not set,  NS_ERROR_FAILURE will be returned by
      * LaunchWithURI
      */
     attribute AUTF8String method;
-    
+
 };
 

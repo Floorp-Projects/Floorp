@@ -19,7 +19,7 @@ interface nsIProfileLock : nsISupports
      * The main profile directory.
      */
     readonly attribute nsIFile directory;
-    
+
     /**
      * A directory corresponding to the main profile directory that exists for
      * the purpose of storing data on the local filesystem, including cache
