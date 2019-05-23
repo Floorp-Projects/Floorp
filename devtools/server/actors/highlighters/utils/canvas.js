@@ -27,7 +27,8 @@ const { getComputedStyle } = require("./markup");
 //
 // This canvas size value is the safest we can use because most GPUs can handle it.
 // It's also far from the maximum canvas memory allocation limit (4096x4096x4 is
-// 67.108.864 bytes, where the limit is 500.000.000 bytes, see MaxAllocSizeDoNotUseDirectly in:
+// 67.108.864 bytes, where the limit is 500.000.000 bytes, see
+// MaxAllocSizeDoNotUseDirectly in:
 // https://searchfox.org/mozilla-central/source/modules/libpref/init/StaticPrefList.h).
 //
 // Note:
