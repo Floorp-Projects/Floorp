@@ -1954,7 +1954,7 @@ server_main(
         if (enabledVersions.max < SSL_LIBRARY_VERSION_TLS_1_3) {
             errExit("You tried enabling 0RTT without enabling TLS 1.3!");
         }
-        rv = SSL_SetupAntiReplay(10 * PR_USEC_PER_SEC, 7, 14);
+        rv = SSL_InitAntiReplay(PR_Now(), 10L * PR_USEC_PER_SEC, 7, 14);
         if (rv != SECSuccess) {
             errExit("error configuring anti-replay ");
         }

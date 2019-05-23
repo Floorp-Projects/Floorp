@@ -40,8 +40,6 @@ SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra);
 SSLKEAType SSLInt_GetKEAType(SSLNamedGroup group);
 SECStatus SSLInt_HasPendingHandshakeData(PRFileDesc *fd, PRBool *pending);
-void SSLInt_SetTicketLifetime(uint32_t lifetime);
 SECStatus SSLInt_SetSocketMaxEarlyDataSize(PRFileDesc *fd, uint32_t size);
-void SSLInt_RolloverAntiReplay(void);
 
 #endif  // ndef libssl_internals_h_
