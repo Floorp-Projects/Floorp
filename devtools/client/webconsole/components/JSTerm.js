@@ -506,6 +506,7 @@ class JSTerm extends Component {
    * @param {Object} response
    *        The message received from the server.
    */
+  /* eslint-disable complexity */
   async _executeResultCallback(response) {
     if (!this.webConsoleUI) {
       return null;
@@ -578,6 +579,7 @@ class JSTerm extends Component {
 
     return null;
   }
+  /* eslint-enable complexity */
 
   screenshotNotify(results) {
     const wrappedResults = results.map(message => ({ message, type: "logMessage" }));

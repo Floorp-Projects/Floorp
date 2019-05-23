@@ -103,6 +103,7 @@ exports.getCustomTreeMapDisplays = function() {
  * @param {snapshotState | diffingState} state
  * @return {String}
  */
+/* eslint-disable complexity */
 exports.getStatusText = function(state) {
   assert(state, "Must have a state");
 
@@ -170,6 +171,7 @@ exports.getStatusText = function(state) {
       return "";
   }
 };
+/* eslint-enable complexity */
 
 /**
  * Returns a string representing a readable form of the snapshot's state;
@@ -178,6 +180,7 @@ exports.getStatusText = function(state) {
  * @param {snapshotState | diffingState} state
  * @return {String}
  */
+/* eslint-disable complexity */
 exports.getStatusTextFull = function(state) {
   assert(!!state, "Must have a state");
 
@@ -245,6 +248,7 @@ exports.getStatusTextFull = function(state) {
       return "";
   }
 };
+/* eslint-enable complexity */
 
 /**
  * Return true if the snapshot is in a diffable state, false otherwise.
