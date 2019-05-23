@@ -1553,8 +1553,8 @@ static MOZ_ALWAYS_INLINE bool SetObjectElementOperation(
     int32_t i = JSID_TO_INT(id);
     if ((uint32_t)i >= length) {
       // Annotate script if provided with information (e.g. baseline)
-      if (script && script->hasICScript() && IsSetElemPC(pc)) {
-        script->icScript()->noteHasDenseAdd(script->pcToOffset(pc));
+      if (script && script->hasJitScript() && IsSetElemPC(pc)) {
+        script->jitScript()->noteHasDenseAdd(script->pcToOffset(pc));
       }
     }
   }

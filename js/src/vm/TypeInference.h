@@ -38,7 +38,6 @@ class HeapTypeSetKey;
 
 namespace jit {
 
-class ICScript;
 struct IonScript;
 class TempAllocator;
 

@@ -47,9 +47,9 @@ class BaselineInspector {
     MOZ_ASSERT(script);
   }
 
-  bool hasICScript() const { return script->hasICScript(); }
+  bool hasJitScript() const { return script->hasJitScript(); }
 
-  ICScript* icScript() const;
+  JitScript* jitScript() const;
 
  private:
 #ifdef DEBUG
@@ -63,7 +63,7 @@ class BaselineInspector {
   ICInspectorType makeICInspector(jsbytecode* pc,
                                   ICStub::Kind expectedFallbackKind) {
     ICEntry* ent = nullptr;
-    if (hasICScript()) {
+    if (hasJitScript()) {
       ent = &icEntryFromPC(pc);
       MOZ_ASSERT(ent->fallbackStub()->kind() == expectedFallbackKind);
     }

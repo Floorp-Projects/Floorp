@@ -2248,12 +2248,12 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
   {
     jsbytecode* pc;
     JSScript* script = cx->currentScript(&pc);
-    if (script && script->hasICScript()) {
+    if (script && script->hasJitScript()) {
       switch (JSOp(*pc)) {
         case JSOP_GETPROP:
         case JSOP_CALLPROP:
         case JSOP_LENGTH:
-          script->icScript()->noteAccessedGetter(script->pcToOffset(pc));
+          script->jitScript()->noteAccessedGetter(script->pcToOffset(pc));
           break;
         default:
           break;

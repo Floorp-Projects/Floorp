@@ -7,6 +7,7 @@
 #ifndef jit_JitScript_h
 #define jit_JitScript_h
 
+#include "jit/BaselineIC.h"
 #include "js/UniquePtr.h"
 #include "vm/TypeInference.h"
 
@@ -14,16 +15,60 @@ class JSScript;
 
 namespace js {
 
-namespace jit {
-
-class ICScript;
-
-}  // namespace jit
-
-// JitScript stores type inference and JIT data for a script. Scripts with a
-// JitScript can run in the Baseline Interpreter.
-class JitScript {
+// [SMDOC] JitScript
+//
+// JitScript stores type inference data, Baseline ICs and other JIT-related data
+// for a script. Scripts with a JitScript can run in the Baseline Interpreter.
+//
+// IC Data
+// -------
+//
+// JitScript contains IC data used by Baseline (Interpreter and JIT). Ion has
+// its own IC chains stored in IonScript.
+//
+// For each IC we store an ICEntry, which points to the first ICStub in the
+// chain. Note that multiple stubs in the same zone can share Baseline IC code.
+// This works because the stub data is stored in the ICStub instead of baked in
+// in the stub code.
+//
+// Storing this separate from BaselineScript allows us to use the same ICs in
+// the Baseline Interpreter and Baseline JIT. It also simplifies debug mode OSR
+// because the JitScript can be reused when we have to recompile the
+// BaselineScript.
+//
+// JitScript contains the following IC data structures:
+//
+// * Fallback stub space: this stores all fallback stubs and the "can GC" stubs.
+//   These stubs are never purged before destroying the JitScript. (Other stubs
+//   are stored in the optimized stub space stored in JitZone and can be
+//   discarded more eagerly. See JitScript::purgeOptimizedStubs.)
+//
+// * List of IC entries, in the following order:
+//
+//   - Type monitor IC for |this|.
+//   - Type monitor IC for each formal argument.
+//   - IC for each JOF_IC bytecode op.
+//
+// Memory Layout
+// -------------
+//
+// JitScript has various trailing (variable-length) arrays. The memory layout is
+// as follows:
+//
+//  Item                    | Offset
+//  ------------------------+------------------------
+//  JitScript               | 0
+//  ICEntry[]               | sizeof(JitScript)
+//  StackTypeSet[]          | typeSetOffset_
+//  uint32_t[]              | bytecodeTypeMapOffset_
+//    (= bytecode type map) |
+//
+// These offsets are also used to compute numICEntries and numTypeSets.
+class alignas(uintptr_t) JitScript final {
   friend class ::JSScript;
+
+  // Allocated space for fallback IC stubs.
+  jit::FallbackICStubSpace fallbackStubSpace_ = {};
 
   // The freeze constraints added to stack type sets will only directly
   // invalidate the script containing those stack type sets. This Vector
@@ -31,13 +76,11 @@ class JitScript {
   // them as well.
   RecompileInfoVector inlinedCompilations_;
 
-  // ICScript and JitScript have the same lifetimes, so we store a pointer to
-  // ICScript here to not increase sizeof(JSScript).
-  using ICScriptPtr = js::UniquePtr<js::jit::ICScript>;
-  ICScriptPtr icScript_;
+  // Offset of the StackTypeSet array.
+  uint32_t typeSetOffset_ = 0;
 
-  // Number of TypeSets in typeArray_.
-  uint32_t numTypeSets_;
+  // Offset of the bytecode type map.
+  uint32_t bytecodeTypeMapOffset_ = 0;
 
   // This field is used to avoid binary searches for the sought entry when
   // bytecode map queries are in linear order.
@@ -57,15 +100,14 @@ class JitScript {
   };
   Flags flags_ = {};  // Zero-initialize flags.
 
-  // Variable-size array. This is followed by the bytecode type map.
-  StackTypeSet typeArray_[1];
+  jit::ICEntry* icEntries() {
+    uint8_t* base = reinterpret_cast<uint8_t*>(this);
+    return reinterpret_cast<jit::ICEntry*>(base + offsetOfICEntries());
+  }
 
   StackTypeSet* typeArrayDontCheckGeneration() {
-    // Ensure typeArray_ is the last data member of JitScript.
-    static_assert(sizeof(JitScript) ==
-                      sizeof(typeArray_) + offsetof(JitScript, typeArray_),
-                  "typeArray_ must be the last member of JitScript");
-    return const_cast<StackTypeSet*>(typeArray_);
+    uint8_t* base = reinterpret_cast<uint8_t*>(this);
+    return reinterpret_cast<StackTypeSet*>(base + typeSetOffset_);
   }
 
   uint32_t typesGeneration() const { return uint32_t(flags_.typesGeneration); }
@@ -75,7 +117,18 @@ class JitScript {
   }
 
  public:
-  JitScript(JSScript* script, ICScriptPtr&& icScript, uint32_t numTypeSets);
+  JitScript(JSScript* script, uint32_t typeSetOffset,
+            uint32_t bytecodeTypeMapOffset);
+
+#ifdef DEBUG
+  ~JitScript() {
+    // The contents of the fallback stub space are removed and freed
+    // separately after the next minor GC. See prepareForDestruction.
+    MOZ_ASSERT(fallbackStubSpace_.isEmpty());
+  }
+#endif
+
+  MOZ_MUST_USE bool initICEntries(JSContext* cx, JSScript* script);
 
   bool hasFreezeConstraints(const js::AutoSweepJitScript& sweep) const {
     MOZ_ASSERT(sweep.jitScript() == this);
@@ -103,18 +156,18 @@ class JitScript {
     return inlinedCompilations_.append(info);
   }
 
-  uint32_t numTypeSets() const { return numTypeSets_; }
+  uint32_t numICEntries() const {
+    return (typeSetOffset_ - offsetOfICEntries()) / sizeof(jit::ICEntry);
+  }
+  uint32_t numTypeSets() const {
+    return (bytecodeTypeMapOffset_ - typeSetOffset_) / sizeof(StackTypeSet);
+  }
 
   uint32_t* bytecodeTypeMapHint() { return &bytecodeTypeMapHint_; }
 
   bool active() const { return flags_.active; }
   void setActive() { flags_.active = true; }
   void resetActive() { flags_.active = false; }
-
-  jit::ICScript* icScript() const {
-    MOZ_ASSERT(icScript_);
-    return icScript_.get();
-  }
 
   /* Array of type sets for variables and JOF_TYPESET ops. */
   StackTypeSet* typeArray(const js::AutoSweepJitScript& sweep) {
@@ -123,8 +176,8 @@ class JitScript {
   }
 
   uint32_t* bytecodeTypeMap() {
-    MOZ_ASSERT(numTypeSets_ > 0);
-    return reinterpret_cast<uint32_t*>(typeArray_ + numTypeSets_);
+    uint8_t* base = reinterpret_cast<uint8_t*>(this);
+    return reinterpret_cast<uint32_t*>(base + bytecodeTypeMapOffset_);
   }
 
   inline StackTypeSet* thisTypes(const AutoSweepJitScript& sweep,
@@ -188,22 +241,53 @@ class JitScript {
 
   void destroy(Zone* zone);
 
-  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-    // Note: icScript_ size is reported in jit::AddSizeOfBaselineData.
-    return mallocSizeOf(this);
-  }
-
-  static constexpr size_t offsetOfICScript() {
-    // Note: icScript_ is a UniquePtr that stores the raw pointer. If that ever
-    // changes and this assertion fails, we should stop using UniquePtr.
-    static_assert(sizeof(icScript_) == sizeof(uintptr_t),
-                  "JIT code assumes icScript_ is pointer-sized");
-    return offsetof(JitScript, icScript_);
-  }
+  static constexpr size_t offsetOfICEntries() { return sizeof(JitScript); }
 
 #ifdef DEBUG
   void printTypes(JSContext* cx, HandleScript script);
 #endif
+
+  void prepareForDestruction(Zone* zone) {
+    // When the script contains pointers to nursery things, the store buffer can
+    // contain entries that point into the fallback stub space. Since we can
+    // destroy scripts outside the context of a GC, this situation could result
+    // in us trying to mark invalid store buffer entries.
+    //
+    // Defer freeing any allocated blocks until after the next minor GC.
+    fallbackStubSpace_.freeAllAfterMinorGC(zone);
+  }
+
+  jit::FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
+
+  void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* data,
+                              size_t* fallbackStubs) const {
+    *data += mallocSizeOf(this);
+
+    // |data| already includes the ICStubSpace itself, so use
+    // sizeOfExcludingThis.
+    *fallbackStubs += fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
+  }
+
+  jit::ICEntry& icEntry(size_t index) {
+    MOZ_ASSERT(index < numICEntries());
+    return icEntries()[index];
+  }
+
+  void noteAccessedGetter(uint32_t pcOffset);
+  void noteHasDenseAdd(uint32_t pcOffset);
+
+  void trace(JSTracer* trc);
+  void purgeOptimizedStubs(JSScript* script);
+
+  jit::ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
+
+  jit::ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
+  jit::ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
+                                         jit::ICEntry* prevLookedUpEntry);
+
+  jit::ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
+  jit::ICEntry& icEntryFromPCOffset(uint32_t pcOffset,
+                                    jit::ICEntry* prevLookedUpEntry);
 };
 
 // Ensures no JitScripts are purged in the current zone.
