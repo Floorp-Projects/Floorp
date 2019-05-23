@@ -5,7 +5,7 @@
 #
 
 
-# Copyright 1996-2018 by
+# Copyright (C) 1996-2019 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -21,6 +21,9 @@ SEP       := /
 BUILD_DIR := $(TOP_DIR)/builds/beos
 PLATFORM  := beos
 
+# This is used for `make refdoc' and `make refdoc-venv'
+#
+BIN := bin
 
 # The directory where all library files are placed.
 #

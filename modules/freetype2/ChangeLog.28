@@ -2489,8 +2489,8 @@
 
 	Based on ideas taken from
 
-	  http://pkgs.fedoraproject.org/cgit/rpms/freetype.git/tree/freetype-multilib.patch
-	  http://pkgs.fedoraproject.org/cgit/rpms/freetype.git/tree/freetype-2.5.3-freetype-config-prefix.patch
+	  https://pkgs.fedoraproject.org/cgit/rpms/freetype.git/tree/freetype-multilib.patch
+	  https://pkgs.fedoraproject.org/cgit/rpms/freetype.git/tree/freetype-2.5.3-freetype-config-prefix.patch
 
 	* builds/unix/freetype-config.in: Rewritten.  Use `pkg-config' to
 	set output variables if program is available.
@@ -3120,7 +3120,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2016-2018 by
+Copyright (C) 2016-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

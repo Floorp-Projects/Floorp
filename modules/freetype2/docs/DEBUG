@@ -88,14 +88,13 @@ debugging its code:
     for example as in
 
       #undef  FT_COMPONENT
-      #define FT_COMPONENT  trace_io
+      #define FT_COMPONENT  io
 
-    The  value  of the  FT_COMPONENT  macro  is an  enumeration  named
-    `trace_XXXX' where `XXXX' is one of the component names defined in
-    the internal  file `internal/fttrace.h'.   If you  modify FreeType
-    source and insert new `trace_XXXX'  macro, you must register it in
-    `fttrace.h'. If  you insert or  remove many trace macros,  you can
-    check   the    undefined   or   the   unused    trace   macro   by
+    The  value  of the  FT_COMPONENT  macro  is  one  of the component
+    names  defined in the internal  file `internal/fttrace.h'.  If you
+    modify FreeType source and insert new FT_COMPONENT macro, you must
+    register it  in `fttrace.h'.  If  you insert or  remove many trace
+    macros, you can check the undefined or the unused trace  macro  by
     `src/tools/chktrcmp.py'.
 
     Each such component is assigned a `debug level', ranging from 0 to
@@ -138,8 +137,8 @@ behaviour of FreeType at runtime.
       component1:level1 component2:level2 component3:level3 ...
 
     where `componentX' is the name  of a tracing component, as defined
-    in `fttrace.h', but without the  `trace_' prefix.  `levelX' is the
-    corresponding level to use at runtime.
+    in `fttrace.h'.  `levelX' is  the corresponding level  to  use  at
+    runtime.
 
     `any'  is a  special component  name that  will be  interpreted as
     `any/all components'.  For example, the following definitions
@@ -191,7 +190,7 @@ behaviour of FreeType at runtime.
 
 ------------------------------------------------------------------------
 
-Copyright 2002-2018 by
+Copyright (C) 2002-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,
