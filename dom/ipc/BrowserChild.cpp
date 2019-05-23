@@ -132,6 +132,7 @@
 #include "nsWebBrowser.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "MMPrinter.h"
+#include "mozilla/ResultExtensions.h"
 
 #ifdef XP_WIN
 #  include "mozilla/plugins/PluginWidgetChild.h"
@@ -543,8 +544,9 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent) {
   MOZ_ASSERT(docShell);
 
   const uint32_t notifyMask =
-      nsIWebProgress::NOTIFY_PROGRESS | nsIWebProgress::NOTIFY_STATUS |
-      nsIWebProgress::NOTIFY_REFRESH | nsIWebProgress::NOTIFY_CONTENT_BLOCKING;
+      nsIWebProgress::NOTIFY_STATE_ALL | nsIWebProgress::NOTIFY_PROGRESS |
+      nsIWebProgress::NOTIFY_STATUS | nsIWebProgress::NOTIFY_REFRESH |
+      nsIWebProgress::NOTIFY_CONTENT_BLOCKING;
 
   mStatusFilter = new nsBrowserStatusFilter();
 
@@ -3474,7 +3476,50 @@ NS_IMETHODIMP BrowserChild::OnStateChange(nsIWebProgress* aWebProgress,
                                           nsIRequest* aRequest,
                                           uint32_t aStateFlags,
                                           nsresult aStatus) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!IPCOpen() || !mShouldSendWebProgressEventsToParent) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (!docShell) {
+    return NS_OK;
+  }
+
+  RefPtr<Document> document;
+  if (nsCOMPtr<nsPIDOMWindowOuter> outerWindow = do_GetInterface(docShell)) {
+    document = outerWindow->GetExtantDoc();
+  } else {
+    return NS_OK;
+  }
+
+  Maybe<WebProgressData> webProgressData;
+  Maybe<WebProgressStateChangeData> stateChangeData;
+  RequestData requestData;
+
+  MOZ_TRY(PrepareProgressListenerData(aWebProgress, aRequest, webProgressData,
+                                      requestData));
+
+  if (webProgressData->isTopLevel()) {
+    stateChangeData.emplace();
+
+    stateChangeData->isNavigating() = docShell->GetIsNavigating();
+    stateChangeData->mayEnableCharacterEncodingMenu() =
+        docShell->GetMayEnableCharacterEncodingMenu();
+
+    if (document && aStateFlags & nsIWebProgressListener::STATE_STOP) {
+      document->GetContentType(stateChangeData->contentType());
+      document->GetCharacterSet(stateChangeData->charset());
+      stateChangeData->documentURI() = document->GetDocumentURIObject();
+    } else {
+      stateChangeData->contentType().SetIsVoid(true);
+      stateChangeData->charset().SetIsVoid(true);
+    }
+  }
+
+  Unused << SendOnStateChange(webProgressData, requestData, aStateFlags,
+                              aStatus, stateChangeData);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP BrowserChild::OnProgressChange(nsIWebProgress* aWebProgress,
