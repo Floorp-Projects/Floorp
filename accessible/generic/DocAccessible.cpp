@@ -435,6 +435,9 @@ void DocAccessible::Shutdown() {
   mDependentIDsHashes.Clear();
   mNodeToAccessibleMap.Clear();
 
+  mAnchorJumpElm = nullptr;
+  mInvalidationList.Clear();
+
   for (auto iter = mAccessibleCache.Iter(); !iter.Done(); iter.Next()) {
     Accessible* accessible = iter.Data();
     MOZ_ASSERT(accessible);

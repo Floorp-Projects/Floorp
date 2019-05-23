@@ -4554,7 +4554,7 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
     }
   }
 
-  TypeScript::SetThis(cx, script, TypeSet::ObjectType(group));
+  TypeScript::MonitorThisType(cx, script, TypeSet::ObjectType(group));
 
   MIRGraph graph(&temp);
   InlineScriptTree* inlineScriptTree =

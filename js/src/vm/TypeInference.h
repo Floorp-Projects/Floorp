@@ -307,11 +307,14 @@ class TypeScript {
     return reinterpret_cast<uint32_t*>(typeArray_ + numTypeSets_);
   }
 
-  static inline StackTypeSet* ThisTypes(JSScript* script);
-  static inline StackTypeSet* ArgTypes(JSScript* script, unsigned i);
+  inline StackTypeSet* thisTypes(const AutoSweepTypeScript& sweep,
+                                 JSScript* script);
+  inline StackTypeSet* argTypes(const AutoSweepTypeScript& sweep,
+                                JSScript* script, unsigned i);
 
   /* Get the type set for values observed at an opcode. */
-  static inline StackTypeSet* BytecodeTypes(JSScript* script, jsbytecode* pc);
+  inline StackTypeSet* bytecodeTypes(const AutoSweepTypeScript& sweep,
+                                     JSScript* script, jsbytecode* pc);
 
   template <typename TYPESET>
   static inline TYPESET* BytecodeTypes(JSScript* script, jsbytecode* pc,
@@ -325,27 +328,33 @@ class TypeScript {
    * always monitor JOF_TYPESET opcodes in the interpreter and stub calls,
    * and only look at barriers when generating JIT code for the script.
    */
-  static inline void Monitor(JSContext* cx, JSScript* script, jsbytecode* pc,
-                             const js::Value& val);
-  static inline void Monitor(JSContext* cx, JSScript* script, jsbytecode* pc,
-                             TypeSet::Type type);
-  static inline void Monitor(JSContext* cx, const js::Value& rval);
+  static void MonitorBytecodeType(JSContext* cx, JSScript* script,
+                                  jsbytecode* pc, const js::Value& val);
+  static void MonitorBytecodeType(JSContext* cx, JSScript* script,
+                                  jsbytecode* pc, TypeSet::Type type);
 
-  static inline void Monitor(JSContext* cx, JSScript* script, jsbytecode* pc,
-                             StackTypeSet* types, const js::Value& val);
+  static inline void MonitorBytecodeType(JSContext* cx, JSScript* script,
+                                         jsbytecode* pc, StackTypeSet* types,
+                                         const js::Value& val);
 
+ private:
+  static void MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
+                                      jsbytecode* pc, StackTypeSet* types,
+                                      TypeSet::Type type);
+
+ public:
   /* Monitor an assignment at a SETELEM on a non-integer identifier. */
   static inline void MonitorAssign(JSContext* cx, HandleObject obj, jsid id);
 
   /* Add a type for a variable in a script. */
-  static inline void SetThis(JSContext* cx, JSScript* script,
-                             TypeSet::Type type);
-  static inline void SetThis(JSContext* cx, JSScript* script,
-                             const js::Value& value);
-  static inline void SetArgument(JSContext* cx, JSScript* script, unsigned arg,
-                                 TypeSet::Type type);
-  static inline void SetArgument(JSContext* cx, JSScript* script, unsigned arg,
-                                 const js::Value& value);
+  static inline void MonitorThisType(JSContext* cx, JSScript* script,
+                                     TypeSet::Type type);
+  static inline void MonitorThisType(JSContext* cx, JSScript* script,
+                                     const js::Value& value);
+  static inline void MonitorArgType(JSContext* cx, JSScript* script,
+                                    unsigned arg, TypeSet::Type type);
+  static inline void MonitorArgType(JSContext* cx, JSScript* script,
+                                    unsigned arg, const js::Value& value);
 
   /*
    * Freeze all the stack type sets in a script, for a compilation. Returns
@@ -356,8 +365,6 @@ class TypeScript {
                              JSScript* script, TemporaryTypeSet** pThisTypes,
                              TemporaryTypeSet** pArgTypes,
                              TemporaryTypeSet** pBytecodeTypes);
-
-  static void Purge(JSContext* cx, HandleScript script);
 
   void destroy(Zone* zone);
 

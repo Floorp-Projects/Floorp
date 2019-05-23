@@ -26,10 +26,6 @@ public:
                        const SkDescriptor*);
     ~SkScalerContext_DW() override;
 
-    // The IDWriteFontFace4 interface is only available in DWrite 3,
-    // so checking if it was found is sufficient to detect DWrite 3.
-    bool isDWrite3() { return bool(getDWriteTypeface()->fDWriteFontFace4); }
-
 protected:
     unsigned generateGlyphCount() override;
     uint16_t generateCharToGlyph(SkUnichar uni) override;

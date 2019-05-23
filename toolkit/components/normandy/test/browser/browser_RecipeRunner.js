@@ -128,6 +128,27 @@ decorate_task(
 );
 
 decorate_task(
+  withStub(Uptake, "reportRunner"),
+  withStub(RecipeRunner, "loadRecipes"),
+  withStub(ActionsManager.prototype, "finalize"),
+  async function testRunEvents(
+    reportRunnerStub,
+    loadRecipesStub,
+    finalizeStub,
+  ) {
+    loadRecipesStub.returns(Promise.resolve([]));
+    const startPromise = TestUtils.topicObserved("recipe-runner:start");
+    const endPromise = TestUtils.topicObserved("recipe-runner:end");
+
+    await RecipeRunner.run();
+
+    // Will timeout if notifications were not received.
+    await startPromise;
+    await endPromise;
+  }
+);
+
+decorate_task(
   withPrefEnv({
     set: [
       ["features.normandy-remote-settings.enabled", false],

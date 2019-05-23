@@ -330,7 +330,10 @@ this.tabs = class extends ExtensionAPI {
               return Promise.reject({message: `Illegal URL: ${url}`});
             }
 
-            nativeTab.browser.loadURI(url);
+            let options = {
+              triggeringPrincipal: context.principal,
+            };
+            nativeTab.browser.loadURI(url, options);
           }
 
           if (updateProperties.active !== null) {

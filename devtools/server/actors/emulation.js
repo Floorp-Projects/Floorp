@@ -76,6 +76,10 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     return this._touchSimulator;
   },
 
+  get win() {
+    return this.docShell.chromeEventHandler.ownerGlobal;
+  },
+
   onWillNavigate({ isTopLevel }) {
     // Make sure that print simulation is stopped before navigating to another page. We
     // need to do this since the browser will cache the last state of the page in its
@@ -352,17 +356,38 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     this.targetActor.docShell.contentViewer.stopEmulatingMedium();
   },
 
+  setScreenOrientation(type, angle) {
+    if (this.win.screen.orientation.angle !== angle ||
+        this.win.screen.orientation.type !== type) {
+      this.win.document.setRDMPaneOrientation(type, angle);
+    }
+  },
+
   /**
    * Simulates the "orientationchange" event when device screen is rotated.
    *
-   * TODO: Update `window.screen.orientation` and `window.screen.angle` here.
-   * See Bug 1357774.
+   * @param {String} type
+   *        The orientation type of the rotated device.
+   * @param {Number} angle
+   *        The rotated angle of the device.
+   * @param {Boolean} deviceChange
+   *        Whether or not screen orientation change is a result of changing the device
+   *        or rotating the current device. If the latter, then dispatch the
+   *        "orientationchange" event on the content window.
    */
-  simulateScreenOrientationChange() {
-    const win = this.docShell.chromeEventHandler.ownerGlobal;
-    const { CustomEvent } = win;
+  async simulateScreenOrientationChange(type, angle, deviceChange) {
+    // Don't dispatch the "orientationchange" event if orientation change is a result
+    // of switching to a new device.
+    if (deviceChange) {
+      this.setScreenOrientation(type, angle);
+      return;
+    }
+
+    const { CustomEvent } = this.win;
     const orientationChangeEvent = new CustomEvent("orientationchange");
-    win.dispatchEvent(orientationChangeEvent);
+
+    this.setScreenOrientation(type, angle);
+    this.win.dispatchEvent(orientationChangeEvent);
   },
 });
 

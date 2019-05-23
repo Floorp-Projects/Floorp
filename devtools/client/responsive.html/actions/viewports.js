@@ -12,6 +12,7 @@ const {
   ADD_VIEWPORT,
   CHANGE_DEVICE,
   CHANGE_PIXEL_RATIO,
+  CHANGE_VIEWPORT_ANGLE,
   REMOVE_DEVICE_ASSOCIATION,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
@@ -63,6 +64,14 @@ module.exports = {
     };
   },
 
+  changeViewportAngle(id, angle) {
+    return {
+      type: CHANGE_VIEWPORT_ANGLE,
+      id,
+      angle,
+    };
+  },
+
   /**
    * Remove the viewport's device assocation.
    */
@@ -95,18 +104,6 @@ module.exports = {
    * Rotate the viewport.
    */
   rotateViewport(id) {
-    // TODO: Add `orientation` and `angle` properties to message data. See Bug 1357774.
-
-    // There is no window object to post to when ran on XPCShell as part of the unit
-    // tests and will immediately throw an error as a result.
-    try {
-      post(window, {
-        type: "viewport-orientation-change",
-      });
-    } catch (e) {
-      console.log("Unable to post message to window");
-    }
-
     return {
       type: ROTATE_VIEWPORT,
       id,

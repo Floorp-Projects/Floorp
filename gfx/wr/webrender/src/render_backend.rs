@@ -486,6 +486,16 @@ impl Document {
                     self.frame_is_valid = false;
                 }
             }
+            FrameMsg::SetIsTransformPinchZooming(is_zooming, animation_id) => {
+                let node = self.clip_scroll_tree.spatial_nodes.iter_mut()
+                    .find(|node| node.is_transform_bound_to_property(animation_id));
+                if let Some(node) = node {
+                    if node.is_pinch_zooming != is_zooming {
+                        node.is_pinch_zooming = is_zooming;
+                        self.frame_is_valid = false;
+                    }
+                }
+            }
         }
 
         DocumentOps::nop()

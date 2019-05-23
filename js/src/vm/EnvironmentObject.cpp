@@ -1574,7 +1574,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         }
 
         if (action == SET) {
-          TypeScript::SetArgument(cx, script, i, vp);
+          TypeScript::MonitorArgType(cx, script, i, vp);
         }
       }
 

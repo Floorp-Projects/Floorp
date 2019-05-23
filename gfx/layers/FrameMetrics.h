@@ -719,8 +719,8 @@ struct ScrollSnapInfo {
   ScrollSnapInfo() = default;
 
   bool operator==(const ScrollSnapInfo& aOther) const {
-    return mScrollSnapTypeX == aOther.mScrollSnapTypeX &&
-           mScrollSnapTypeY == aOther.mScrollSnapTypeY &&
+    return mScrollSnapStrictnessX == aOther.mScrollSnapStrictnessX &&
+           mScrollSnapStrictnessY == aOther.mScrollSnapStrictnessY &&
            mScrollSnapIntervalX == aOther.mScrollSnapIntervalX &&
            mScrollSnapIntervalY == aOther.mScrollSnapIntervalY &&
            mScrollSnapDestination == aOther.mScrollSnapDestination &&
@@ -733,24 +733,25 @@ struct ScrollSnapInfo {
   }
 
   bool HasScrollSnapping() const {
-    return mScrollSnapTypeY != mozilla::StyleScrollSnapStrictness::None ||
-           mScrollSnapTypeX != mozilla::StyleScrollSnapStrictness::None;
+    return mScrollSnapStrictnessY != mozilla::StyleScrollSnapStrictness::None ||
+           mScrollSnapStrictnessX != mozilla::StyleScrollSnapStrictness::None;
   }
 
   bool HasSnapPositions() const {
     return (!mSnapPositionX.IsEmpty() &&
-            mScrollSnapTypeX != mozilla::StyleScrollSnapStrictness::None) ||
+            mScrollSnapStrictnessX !=
+                mozilla::StyleScrollSnapStrictness::None) ||
            (!mSnapPositionY.IsEmpty() &&
-            mScrollSnapTypeY != mozilla::StyleScrollSnapStrictness::None);
+            mScrollSnapStrictnessY != mozilla::StyleScrollSnapStrictness::None);
   }
 
-  void InitializeScrollSnapType(WritingMode aWritingMode,
-                                const nsStyleDisplay* aDisplay);
+  void InitializeScrollSnapStrictness(WritingMode aWritingMode,
+                                      const nsStyleDisplay* aDisplay);
 
   // The scroll frame's scroll-snap-type.
-  mozilla::StyleScrollSnapStrictness mScrollSnapTypeX =
+  mozilla::StyleScrollSnapStrictness mScrollSnapStrictnessX =
       mozilla::StyleScrollSnapStrictness::None;
-  mozilla::StyleScrollSnapStrictness mScrollSnapTypeY =
+  mozilla::StyleScrollSnapStrictness mScrollSnapStrictnessY =
       mozilla::StyleScrollSnapStrictness::None;
 
   // The intervals derived from the scroll frame's scroll-snap-points.

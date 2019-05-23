@@ -45,7 +45,7 @@ JSObject* CSSPseudoElement::WrapObject(JSContext* aCx,
   return CSSPseudoElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void CSSPseudoElement::GetAnimations(const AnimationFilter& filter,
+void CSSPseudoElement::GetAnimations(const GetAnimationsOptions& aOptions,
                                      nsTArray<RefPtr<Animation>>& aRetVal) {
   Document* doc = mOriginatingElement->GetComposedDoc();
   if (doc) {

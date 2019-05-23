@@ -8,6 +8,7 @@ const { Ci } = require("chrome");
 const promise = require("promise");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
+const { getOrientation } = require("./utils/orientation");
 
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
@@ -582,9 +583,12 @@ ResponsiveUI.prototype = {
   },
 
   async onChangeDevice(event) {
-    const { userAgent, pixelRatio, touch } = event.data.device;
+    const { device, viewport } = event.data;
+    const { pixelRatio, touch, userAgent } = event.data.device;
+
     let reloadNeeded = false;
     await this.updateDPPX(pixelRatio);
+    await this.updateScreenOrientation(getOrientation(device, viewport), true);
     reloadNeeded |= await this.updateUserAgent(userAgent) &&
                     this.reloadOnChange("userAgent");
     reloadNeeded |= await this.updateTouchSimulation(touch) &&
@@ -665,15 +669,8 @@ ResponsiveUI.prototype = {
   },
 
   async onRotateViewport(event) {
-    const targetFront = await this.client.mainRoot.getTab();
-
-    // Ensure that simulateScreenOrientationChange is supported.
-    if (await targetFront.actorHasMethod("emulation",
-        "simulateScreenOrientationChange")) {
-      // TODO: From event.data, pass orientation and angle as arguments.
-      // See Bug 1357774.
-      await this.emulationFront.simulateScreenOrientationChange();
-    }
+    const { orientationType: type, angle } = event.data;
+    await this.updateScreenOrientation({ type, angle }, false);
   },
 
   /**
@@ -687,15 +684,21 @@ ResponsiveUI.prototype = {
       return;
     }
 
+    const height =
+      Services.prefs.getIntPref("devtools.responsive.viewport.height", 0);
     const pixelRatio =
       Services.prefs.getIntPref("devtools.responsive.viewport.pixelRatio", 0);
     const touchSimulationEnabled =
       Services.prefs.getBoolPref("devtools.responsive.touchSimulation.enabled", false);
     const userAgent = Services.prefs.getCharPref("devtools.responsive.userAgent", "");
+    const width =
+      Services.prefs.getIntPref("devtools.responsive.viewport.width", 0);
 
     let reloadNeeded = false;
+    const viewportOrientation = this.getInitialViewportOrientation({ width, height });
 
     await this.updateDPPX(pixelRatio);
+    await this.updateScreenOrientation(viewportOrientation, true);
 
     if (touchSimulationEnabled) {
       reloadNeeded |= await this.updateTouchSimulation(touchSimulationEnabled) &&
@@ -792,6 +795,29 @@ ResponsiveUI.prototype = {
   },
 
   /**
+   * Sets the screen orientation values of the simulated device.
+   *
+   * @param {Object} orientation
+   *        The orientation to update the current device screen to.
+   * @param {Boolean} changeDevice
+   *        Whether or not the reason for updating the screen orientation is a result
+   *        of actually rotating the device via the RDM toolbar or if the user switched to
+   *        another device.
+   */
+  async updateScreenOrientation(orientation, changeDevice = false) {
+    const targetFront = await this.client.mainRoot.getTab();
+    const simulateOrientationChangeSupported =
+    await targetFront.actorHasMethod("emulation", "simulateScreenOrientationChange");
+
+    // Ensure that simulateScreenOrientationChange is supported.
+    if (simulateOrientationChangeSupported) {
+      const { type, angle } = orientation;
+      await this.emulationFront.simulateScreenOrientationChange(type, angle,
+                                                                changeDevice);
+    }
+  },
+
+  /**
    * Helper for tests. Assumes a single viewport for now.
    */
   getViewportSize() {
@@ -820,6 +846,12 @@ ResponsiveUI.prototype = {
     return this.getViewportBrowser().messageManager;
   },
 
+  /**
+   * Helper for getting the initial viewport orientation.
+   */
+  getInitialViewportOrientation(viewport) {
+    return getOrientation(viewport, viewport);
+  },
 };
 
 EventEmitter.decorate(ResponsiveUI.prototype);

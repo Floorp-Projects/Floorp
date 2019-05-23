@@ -90,39 +90,39 @@ void ScrollMetadata::SetUsesContainerScrolling(bool aValue) {
   mUsesContainerScrolling = aValue;
 }
 
-void ScrollSnapInfo::InitializeScrollSnapType(WritingMode aWritingMode,
-                                              const nsStyleDisplay* aDisplay) {
+void ScrollSnapInfo::InitializeScrollSnapStrictness(
+    WritingMode aWritingMode, const nsStyleDisplay* aDisplay) {
   if (aDisplay->mScrollSnapType.strictness == StyleScrollSnapStrictness::None) {
     return;
   }
 
-  mScrollSnapTypeX = StyleScrollSnapStrictness::None;
-  mScrollSnapTypeY = StyleScrollSnapStrictness::None;
+  mScrollSnapStrictnessX = StyleScrollSnapStrictness::None;
+  mScrollSnapStrictnessY = StyleScrollSnapStrictness::None;
 
   switch (aDisplay->mScrollSnapType.axis) {
     case StyleScrollSnapAxis::X:
-      mScrollSnapTypeX = aDisplay->mScrollSnapType.strictness;
+      mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
       break;
     case StyleScrollSnapAxis::Y:
-      mScrollSnapTypeY = aDisplay->mScrollSnapType.strictness;
+      mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
       break;
     case StyleScrollSnapAxis::Block:
       if (aWritingMode.IsVertical()) {
-        mScrollSnapTypeX = aDisplay->mScrollSnapType.strictness;
+        mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
       } else {
-        mScrollSnapTypeY = aDisplay->mScrollSnapType.strictness;
+        mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
       }
       break;
     case StyleScrollSnapAxis::Inline:
       if (aWritingMode.IsVertical()) {
-        mScrollSnapTypeY = aDisplay->mScrollSnapType.strictness;
+        mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
       } else {
-        mScrollSnapTypeX = aDisplay->mScrollSnapType.strictness;
+        mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
       }
       break;
     case StyleScrollSnapAxis::Both:
-      mScrollSnapTypeX = aDisplay->mScrollSnapType.strictness;
-      mScrollSnapTypeY = aDisplay->mScrollSnapType.strictness;
+      mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
+      mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
       break;
   }
 }

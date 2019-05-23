@@ -258,6 +258,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
    * Get any unprocessed mutation records and process them.
    */
   getMutations(options = {}) {
+    /* eslint-disable complexity */
     return super.getMutations(options).then(mutations => {
       const emitMutations = [];
       for (const change of mutations) {
@@ -401,6 +402,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
 
       this.emit("mutations", emitMutations);
     });
+    /* eslint-enable complexity */
   }
 
   /**

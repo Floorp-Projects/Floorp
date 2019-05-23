@@ -3465,6 +3465,7 @@ void GCRuntime::decommitAllWithoutUnlocking(const AutoLockGC& lock) {
 }
 
 void GCRuntime::startDecommit() {
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DECOMMIT);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(!decommitTask.isRunning());
 

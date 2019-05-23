@@ -586,24 +586,13 @@ inline void MarkObjectStateChange(JSContext* cx, JSObject* obj) {
   }
 }
 
-/* Interface helpers for JSScript*. */
-extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
-                              TypeSet::Type type);
-extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
-                              StackTypeSet* types, TypeSet::Type type);
-extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
-                              const Value& rval);
-
 /////////////////////////////////////////////////////////////////////
 // Script interface functions
 /////////////////////////////////////////////////////////////////////
 
-/* static */ inline StackTypeSet* TypeScript::ThisTypes(JSScript* script) {
-  if (TypeScript* types = script->types()) {
-    AutoSweepTypeScript sweep(script);
-    return types->typeArray(sweep) + script->numBytecodeTypeSets();
-  }
-  return nullptr;
+inline StackTypeSet* TypeScript::thisTypes(const AutoSweepTypeScript& sweep,
+                                           JSScript* script) {
+  return typeArray(sweep) + script->numBytecodeTypeSets();
 }
 
 /*
@@ -612,14 +601,10 @@ extern void TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
  * and not types from subsequent assignments.
  */
 
-/* static */ inline StackTypeSet* TypeScript::ArgTypes(JSScript* script,
-                                                       unsigned i) {
+inline StackTypeSet* TypeScript::argTypes(const AutoSweepTypeScript& sweep,
+                                          JSScript* script, unsigned i) {
   MOZ_ASSERT(i < script->functionNonDelazifying()->nargs());
-  if (TypeScript* types = script->types()) {
-    AutoSweepTypeScript sweep(script);
-    return types->typeArray(sweep) + script->numBytecodeTypeSets() + 1 + i;
-  }
-  return nullptr;
+  return typeArray(sweep) + script->numBytecodeTypeSets() + 1 /* this */ + i;
 }
 
 template <typename TYPESET>
@@ -660,45 +645,20 @@ template <typename TYPESET>
   return typeArray + *hint;
 }
 
-/* static */ inline StackTypeSet* TypeScript::BytecodeTypes(JSScript* script,
-                                                            jsbytecode* pc) {
+inline StackTypeSet* TypeScript::bytecodeTypes(const AutoSweepTypeScript& sweep,
+                                               JSScript* script,
+                                               jsbytecode* pc) {
   MOZ_ASSERT(CurrentThreadCanAccessZone(script->zone()));
-  TypeScript* types = script->types();
-  if (!types) {
-    return nullptr;
-  }
-  AutoSweepTypeScript sweep(script);
-  uint32_t* hint = types->bytecodeTypeMapHint();
-  return BytecodeTypes(script, pc, types->bytecodeTypeMap(), hint,
-                       types->typeArray(sweep));
+  return BytecodeTypes(script, pc, bytecodeTypeMap(), bytecodeTypeMapHint(),
+                       typeArray(sweep));
 }
 
-/* static */ inline void TypeScript::Monitor(JSContext* cx, JSScript* script,
-                                             jsbytecode* pc,
-                                             const js::Value& rval) {
-  TypeMonitorResult(cx, script, pc, rval);
-}
-
-/* static */ inline void TypeScript::Monitor(JSContext* cx, JSScript* script,
-                                             jsbytecode* pc,
-                                             TypeSet::Type type) {
-  TypeMonitorResult(cx, script, pc, type);
-}
-
-/* static */ inline void TypeScript::Monitor(JSContext* cx,
-                                             const js::Value& rval) {
-  jsbytecode* pc;
-  RootedScript script(cx, cx->currentScript(&pc));
-  Monitor(cx, script, pc, rval);
-}
-
-/* static */ inline void TypeScript::Monitor(JSContext* cx, JSScript* script,
-                                             jsbytecode* pc,
-                                             StackTypeSet* types,
-                                             const js::Value& rval) {
+/* static */ inline void TypeScript::MonitorBytecodeType(
+    JSContext* cx, JSScript* script, jsbytecode* pc, StackTypeSet* types,
+    const js::Value& rval) {
   TypeSet::Type type = TypeSet::GetValueType(rval);
   if (!types->hasType(type)) {
-    TypeMonitorResult(cx, script, pc, types, type);
+    MonitorBytecodeTypeSlow(cx, script, pc, types, type);
   }
 }
 
@@ -729,15 +689,18 @@ template <typename TYPESET>
   }
 }
 
-/* static */ inline void TypeScript::SetThis(JSContext* cx, JSScript* script,
-                                             TypeSet::Type type) {
+/* static */ inline void TypeScript::MonitorThisType(JSContext* cx,
+                                                     JSScript* script,
+                                                     TypeSet::Type type) {
   cx->check(script, type);
 
-  AutoSweepTypeScript sweep(script);
-  StackTypeSet* types = ThisTypes(script);
-  if (!types) {
+  TypeScript* typeScript = script->types();
+  if (!typeScript) {
     return;
   }
+
+  AutoSweepTypeScript sweep(script);
+  StackTypeSet* types = typeScript->thisTypes(sweep, script);
 
   if (!types->hasType(type)) {
     AutoEnterAnalysis enter(cx);
@@ -748,21 +711,25 @@ template <typename TYPESET>
   }
 }
 
-/* static */ inline void TypeScript::SetThis(JSContext* cx, JSScript* script,
-                                             const js::Value& value) {
-  SetThis(cx, script, TypeSet::GetValueType(value));
+/* static */ inline void TypeScript::MonitorThisType(JSContext* cx,
+                                                     JSScript* script,
+                                                     const js::Value& value) {
+  MonitorThisType(cx, script, TypeSet::GetValueType(value));
 }
 
-/* static */ inline void TypeScript::SetArgument(JSContext* cx,
-                                                 JSScript* script, unsigned arg,
-                                                 TypeSet::Type type) {
+/* static */ inline void TypeScript::MonitorArgType(JSContext* cx,
+                                                    JSScript* script,
+                                                    unsigned arg,
+                                                    TypeSet::Type type) {
   cx->check(script->compartment(), type);
 
-  AutoSweepTypeScript sweep(script);
-  StackTypeSet* types = ArgTypes(script, arg);
-  if (!types) {
+  TypeScript* typeScript = script->types();
+  if (!typeScript) {
     return;
   }
+
+  AutoSweepTypeScript sweep(script);
+  StackTypeSet* types = typeScript->argTypes(sweep, script, arg);
 
   if (!types->hasType(type)) {
     AutoEnterAnalysis enter(cx);
@@ -773,10 +740,11 @@ template <typename TYPESET>
   }
 }
 
-/* static */ inline void TypeScript::SetArgument(JSContext* cx,
-                                                 JSScript* script, unsigned arg,
-                                                 const js::Value& value) {
-  SetArgument(cx, script, arg, TypeSet::GetValueType(value));
+/* static */ inline void TypeScript::MonitorArgType(JSContext* cx,
+                                                    JSScript* script,
+                                                    unsigned arg,
+                                                    const js::Value& value) {
+  MonitorArgType(cx, script, arg, TypeSet::GetValueType(value));
 }
 
 inline AutoKeepTypeScripts::AutoKeepTypeScripts(JSContext* cx)

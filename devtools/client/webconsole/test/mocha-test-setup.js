@@ -75,6 +75,7 @@ global.ChromeUtils = {
 
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
+/* eslint-disable complexity */
 requireHacker.global_hook("default", (path, module) => {
   switch (path) {
     // For Enzyme
@@ -138,6 +139,7 @@ requireHacker.global_hook("default", (path, module) => {
 
   return undefined;
 });
+/* eslint-enable complexity */
 
 // Configure enzyme with React 16 adapter. This needs to be done after we set the
 // requireHack hook so `require()` calls in Enzyme are handled as well.
