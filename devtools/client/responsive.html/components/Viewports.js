@@ -18,6 +18,7 @@ class Viewports extends PureComponent {
     return {
       leftAlignmentEnabled: PropTypes.bool.isRequired,
       onBrowserMounted: PropTypes.func.isRequired,
+      onChangeViewportOrientation: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       doResizeViewport: PropTypes.func.isRequired,
@@ -31,6 +32,7 @@ class Viewports extends PureComponent {
     const {
       leftAlignmentEnabled,
       onBrowserMounted,
+      onChangeViewportOrientation,
       onContentResize,
       onRemoveDeviceAssociation,
       doResizeViewport,
@@ -71,6 +73,7 @@ class Viewports extends PureComponent {
               key: viewport.id,
               leftAlignmentEnabled,
               onBrowserMounted,
+              onChangeViewportOrientation,
               onContentResize,
               onRemoveDeviceAssociation,
               doResizeViewport,

@@ -31,7 +31,7 @@
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css" type="text/css"?>
 
 # All DTD information is stored in a separate file so that it can be shared by
-# hiddenWindow.xul.
+# hiddenWindowMac.xhtml.
 <!DOCTYPE window [
 #include browser-doctype.inc
 ]>

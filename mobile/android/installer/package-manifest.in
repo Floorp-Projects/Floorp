@@ -158,13 +158,13 @@
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
 #ifdef MOZ_GECKOVIEW_JAR
-@BINPATH@/@PREF_DIR@/geckoview-prefs.js
+@BINPATH@/@PREF_DIR@/@ANDROID_CPU_ARCH@/geckoview-prefs.js
 #else
 @BINPATH@/@PREF_DIR@/mobile.js
 #endif
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 @BINPATH@/ua-update.json
-@BINPATH@/greprefs.js
+@BINPATH@/@ANDROID_CPU_ARCH@/greprefs.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
 
 ; [Layout Engine Resources]
@@ -261,7 +261,7 @@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/marionette.manifest
 @BINPATH@/components/marionette.js
-@BINPATH@/defaults/pref/marionette.js
+@BINPATH@/@PREF_DIR@/marionette.js
 #endif
 
 #ifdef PKG_LOCALE_MANIFEST

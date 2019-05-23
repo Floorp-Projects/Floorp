@@ -263,6 +263,7 @@ class TabsPanel extends TabsListBase {
     setAttributes(secondaryButton, {
       muted: tab.muted,
       soundplaying: tab.soundPlaying,
+      pictureinpicture: tab.pictureinpicture,
       hidden: !(tab.muted || tab.soundPlaying),
     });
   }

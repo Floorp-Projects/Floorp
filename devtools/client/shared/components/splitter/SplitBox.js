@@ -199,6 +199,7 @@ class SplitBox extends Component {
 
   // Rendering
 
+  /* eslint-disable complexity */
   render() {
     const { endPanelControl, splitterSize, vert } = this.state;
     const { startPanel, endPanel, minSize, maxSize } = this.props;
@@ -290,6 +291,7 @@ class SplitBox extends Component {
       )
     );
   }
+  /* eslint-enable complexity */
 }
 
 module.exports = SplitBox;

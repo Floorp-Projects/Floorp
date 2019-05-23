@@ -846,7 +846,7 @@ var UI = {
       return this.toolboxPromise;
     }
 
-    const iframe = document.createElement("iframe");
+    const iframe = document.createXULElement("iframe");
     iframe.id = "toolbox";
 
     // Compute a uid on the iframe in order to identify toolbox iframe

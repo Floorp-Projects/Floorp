@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<meta name="viewport" content="initial-scale=-1,maximum-scale=-1,width=device-width">
+<style>
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  scrollbar-width: none;
+}
+#container {
+  min-width: 1600px; /* this value should be double of viewport width */
+  min-height: 3000px;
+  position: relative;
+}
+#inner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: green;
+}
+</style>
+<div id="container">
+  <div id="inner"></div>
+</div>

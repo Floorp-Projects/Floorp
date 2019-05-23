@@ -325,6 +325,7 @@ CssComputedView.prototype = {
    * - value {Object} Depends on the type of the node
    * returns null if the node isn't anything we care about
    */
+  /* eslint-disable complexity */
   getNodeInfo: function(node) {
     if (!node) {
       return null;
@@ -428,6 +429,7 @@ CssComputedView.prototype = {
       value,
     };
   },
+  /* eslint-enable complexity */
 
   _createPropertyViews: function() {
     if (this._createViewsPromise) {
