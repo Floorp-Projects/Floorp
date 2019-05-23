@@ -625,40 +625,6 @@ void MacroAssembler::freeListAllocate(Register result, Register temp,
   }
 }
 
-void MacroAssembler::callMallocStub(size_t nbytes, Register result,
-                                    Label* fail) {
-  // These registers must match the ones in JitRuntime::generateMallocStub.
-  const Register regReturn = CallTempReg0;
-  const Register regZone = CallTempReg0;
-  const Register regNBytes = CallTempReg1;
-
-  MOZ_ASSERT(nbytes > 0);
-  MOZ_ASSERT(nbytes <= INT32_MAX);
-
-  if (regZone != result) {
-    push(regZone);
-  }
-  if (regNBytes != result) {
-    push(regNBytes);
-  }
-
-  move32(Imm32(nbytes), regNBytes);
-  movePtr(ImmPtr(GetJitContext()->realm()->zone()), regZone);
-  call(GetJitContext()->runtime->jitRuntime()->mallocStub());
-  if (regReturn != result) {
-    movePtr(regReturn, result);
-  }
-
-  if (regNBytes != result) {
-    pop(regNBytes);
-  }
-  if (regZone != result) {
-    pop(regZone);
-  }
-
-  branchTest32(Assembler::Zero, result, result, fail);
-}
-
 void MacroAssembler::callFreeStub(Register slots) {
   // This register must match the one in JitRuntime::generateFreeStub.
   const Register regSlots = CallTempReg0;
@@ -683,31 +649,14 @@ void MacroAssembler::allocateObject(Register result, Register temp,
     return nurseryAllocateObject(result, temp, allocKind, nDynamicSlots, fail);
   }
 
-  if (!nDynamicSlots) {
-    return freeListAllocate(result, temp, allocKind, fail);
+  // Fall back to calling into the VM to allocate objects in the tenured heap
+  // that have dynamic slots.
+  if (nDynamicSlots) {
+    jump(fail);
+    return;
   }
 
-  // Only NativeObject can have nDynamicSlots > 0 and reach here.
-
-  callMallocStub(nDynamicSlots * sizeof(GCPtrValue), temp, fail);
-
-  Label failAlloc;
-  Label success;
-
-  push(temp);
-  freeListAllocate(result, temp, allocKind, &failAlloc);
-
-  pop(temp);
-  storePtr(temp, Address(result, NativeObject::offsetOfSlots()));
-
-  jump(&success);
-
-  bind(&failAlloc);
-  pop(temp);
-  callFreeStub(temp);
-  jump(fail);
-
-  bind(&success);
+  return freeListAllocate(result, temp, allocKind, fail);
 }
 
 void MacroAssembler::createGCObject(Register obj, Register temp,

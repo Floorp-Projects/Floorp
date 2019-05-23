@@ -3,7 +3,7 @@ Usage: build.sh [-h] [-c|-cc] [-v] [-j <n>] [--gyp|-g] [--opt|-o]
                 [--clang|--gcc|--msvc] [--scan-build[=dir]] [--disable-tests]
                 [--pprof] [--asan] [--msan] [--ubsan[=bool,shift,...]
                 [--fuzz[=tls|oss]] [--sancov[=edge|bb|func|...]]
-                [--emit-llvm] [--no-zdefs] [--test] [--ct-verif]
+                [--emit-llvm] [--no-zdefs] [--static] [--ct-verif]
                 [--nspr|--with-nspr=<include>:<lib>|--system-nspr]
                 [--system-sqlite] [--enable-fips] [--enable-libpkix]
                 [--mozpkix-only] [-D<gyp-option>]
@@ -31,7 +31,7 @@ NSS build tool options:
     --msan           enable memory sanitizer
     --ubsan          enable undefined behavior sanitizer
                      --ubsan=bool,shift,... sets specific UB sanitizers
-    --fuzz           build fuzzing targets (this always enables test builds)
+    --fuzz           build fuzzing targets (this always enables static builds)
                      --fuzz=tls to enable TLS fuzzing mode
                      --fuzz=oss to build for OSS-Fuzz
     --sancov         do sanitize coverage builds
@@ -39,7 +39,6 @@ NSS build tool options:
     --emit-llvm      emit LLVM bitcode while building
                      (requires the gold linker, use clang-3.8 for SAW)
     --no-zdefs       don't set -Wl,-z,defs
-    --test           ignore map files and export everything we have
     --static         create static libraries and use static linking
     --ct-verif       build with valgrind for ct-verif
     --nspr           force a rebuild of NSPR
