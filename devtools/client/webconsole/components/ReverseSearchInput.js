@@ -68,6 +68,7 @@ class ReverseSearchInput extends Component {
     }
   }
 
+  /* eslint-disable complexity */
   onInputKeyDown(event) {
     const {
       keyCode,
@@ -127,6 +128,7 @@ class ReverseSearchInput extends Component {
       }
     }
   }
+  /* eslint-enable complexity */
 
   renderSearchInformation() {
     const {

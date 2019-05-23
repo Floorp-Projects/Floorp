@@ -27,7 +27,7 @@ TEST_F(APZCSnappingTester, Bug1265510) {
   SetScrollHandoff(layers[1], root);
 
   ScrollSnapInfo snap;
-  snap.mScrollSnapTypeY = StyleScrollSnapStrictness::Mandatory;
+  snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
     snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
     snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
@@ -102,7 +102,7 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch) {
 
   // Set up some basic scroll snapping
   ScrollSnapInfo snap;
-  snap.mScrollSnapTypeY = StyleScrollSnapStrictness::Mandatory;
+  snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
 
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
     snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());

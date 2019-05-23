@@ -1541,6 +1541,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
             return rv;
           }
           pos++;
+          MOZ_ASSERT(pointAfterInsertedSpaces.IsSet());
           currentPoint = pointAfterInsertedSpaces;
           pointToInsert = pointAfterInsertedSpaces;
         }
@@ -1581,6 +1582,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
+          MOZ_ASSERT(pointAfterInsertedString.IsSet());
           currentPoint = pointAfterInsertedString;
           pointToInsert = pointAfterInsertedString;
         }

@@ -1641,7 +1641,7 @@ or run without that action (ie: --no-{action})"
         '''If sccache was in use for this build, shut down the sccache server.'''
         if os.environ.get('USE_SCCACHE') == '1':
             topsrcdir = self.query_abs_dirs()['abs_src_dir']
-            sccache = os.path.join(topsrcdir, 'sccache2', 'sccache')
+            sccache = os.path.join(topsrcdir, 'sccache', 'sccache')
             if self._is_windows():
                 sccache += '.exe'
             self.run_command([sccache, '--stop-server'], cwd=topsrcdir)

@@ -213,6 +213,7 @@ SelectorAutocompleter.prototype = {
    *        '#f' requires an Id suggestion, so the state is States.ID
    *        'div > .foo' requires class suggestion, so state is States.CLASS
    */
+  /* eslint-disable complexity */
   get state() {
     if (!this.searchBox || !this.searchBox.value) {
       return null;
@@ -306,6 +307,7 @@ SelectorAutocompleter.prototype = {
     }
     return this._state;
   },
+  /* eslint-enable complexity */
 
   /**
    * Removes event listeners and cleans up references.

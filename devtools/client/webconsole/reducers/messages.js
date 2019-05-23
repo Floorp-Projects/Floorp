@@ -105,6 +105,7 @@ function cloneState(state) {
  * @param {UiState} uiState: The ui state.
  * @returns {MessageState} a new messages state.
  */
+/* eslint-disable complexity */
 function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   const {
     messagesById,
@@ -274,7 +275,9 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
 
   return state;
 }
+/* eslint-enable complexity */
 
+/* eslint-disable complexity */
 function messages(state = MessageState(), action, filtersState, prefsState, uiState) {
   const {
     messagesById,
@@ -541,6 +544,7 @@ function messages(state = MessageState(), action, filtersState, prefsState, uiSt
 
   return state;
 }
+/* eslint-enable complexity */
 
 /**
  * Returns the new current group id given the previous current group and the groupsById
@@ -784,6 +788,7 @@ function getToplevelMessageCount(state) {
  *         - visible {Boolean}: true if the message should be visible
  *         - cause {String}: if visible is false, what causes the message to be hidden.
  */
+/* eslint-disable complexity */
 function getMessageVisibility(message, {
     messagesState,
     filtersState,
@@ -954,6 +959,7 @@ function getMessageVisibility(message, {
     visible: true,
   };
 }
+/* eslint-enable complexity */
 
 function isUnfilterable(message) {
   return [

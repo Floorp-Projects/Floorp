@@ -1122,6 +1122,18 @@ bool ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx,
   return typeMonitorFallback->addMonitorStubForValue(cx, frame, types, val);
 }
 
+static MOZ_MUST_USE bool TypeMonitorResult(JSContext* cx,
+                                           ICMonitoredFallbackStub* stub,
+                                           BaselineFrame* frame,
+                                           HandleScript script, jsbytecode* pc,
+                                           HandleValue val) {
+  AutoSweepTypeScript sweep(script);
+  StackTypeSet* types = script->types()->bytecodeTypes(sweep, script, pc);
+  TypeScript::MonitorBytecodeType(cx, script, pc, types, val);
+
+  return stub->addMonitorStubForValue(cx, frame, types, val);
+}
+
 bool ICCacheIR_Updated::initUpdatingChain(JSContext* cx, ICStubSpace* space) {
   MOZ_ASSERT(firstUpdateStub_ == nullptr);
 
@@ -1502,26 +1514,29 @@ bool DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame,
                *GetNextPc(pc) == JSOP_CHECKTHISREINIT ||
                *GetNextPc(pc) == JSOP_CHECKRETURN);
     if (stub->monitorsThis()) {
-      TypeScript::SetThis(cx, script, TypeSet::UnknownType());
+      TypeScript::MonitorThisType(cx, script, TypeSet::UnknownType());
     } else {
-      TypeScript::Monitor(cx, script, pc, TypeSet::UnknownType());
+      TypeScript::MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
     }
     return true;
   }
+
+  TypeScript* typeScript = script->types();
+  AutoSweepTypeScript sweep(script);
 
   StackTypeSet* types;
   uint32_t argument;
   if (stub->monitorsArgument(&argument)) {
     MOZ_ASSERT(pc == script->code());
-    types = TypeScript::ArgTypes(script, argument);
-    TypeScript::SetArgument(cx, script, argument, value);
+    types = typeScript->argTypes(sweep, script, argument);
+    TypeScript::MonitorArgType(cx, script, argument, value);
   } else if (stub->monitorsThis()) {
     MOZ_ASSERT(pc == script->code());
-    types = TypeScript::ThisTypes(script);
-    TypeScript::SetThis(cx, script, value);
+    types = typeScript->thisTypes(sweep, script);
+    TypeScript::MonitorThisType(cx, script, value);
   } else {
-    types = TypeScript::BytecodeTypes(script, pc);
-    TypeScript::Monitor(cx, script, pc, types, value);
+    types = typeScript->bytecodeTypes(sweep, script, pc);
+    TypeScript::MonitorBytecodeType(cx, script, pc, types, value);
   }
 
   return stub->addMonitorStubForValue(cx, frame, types, value);
@@ -2086,7 +2101,6 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(frame->script());
-  StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
 
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "GetElem(%s)", CodeName[op]);
@@ -2104,7 +2118,9 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
       return false;
     }
     if (isOptimizedArgs) {
-      TypeScript::Monitor(cx, script, pc, types, res);
+      if (!TypeMonitorResult(cx, stub, frame, script, pc, res)) {
+        return false;
+      }
     }
   }
 
@@ -2115,12 +2131,10 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
     if (!GetElementOperation(cx, op, lhsCopy, rhs, res)) {
       return false;
     }
-    TypeScript::Monitor(cx, script, pc, types, res);
-  }
 
-  // Add a type monitor stub for the resulting value.
-  if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
-    return false;
+    if (!TypeMonitorResult(cx, stub, frame, script, pc, res)) {
+      return false;
+    }
   }
 
   if (attached) {
@@ -2153,7 +2167,6 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(frame->script());
-  StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
 
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "GetElemSuper(%s)", CodeName[op]);
@@ -2169,10 +2182,8 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
   if (!GetObjectElementOperation(cx, op, lhsObj, receiver, rhs, res)) {
     return false;
   }
-  TypeScript::Monitor(cx, script, pc, types, res);
 
-  // Add a type monitor stub for the resulting value.
-  if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
+  if (!TypeMonitorResult(cx, stub, frame, script, pc, res)) {
     return false;
   }
 
@@ -2683,15 +2694,7 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
 
-  StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
-  TypeScript::Monitor(cx, script, pc, types, res);
-
-  // Add a type monitor stub for the resulting value.
-  if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
-    return false;
-  }
-
-  return true;
+  return TypeMonitorResult(cx, stub, frame, script, pc, res);
 }
 
 bool FallbackICCodeCompiler::emit_GetName() {
@@ -2776,7 +2779,7 @@ bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
   // needs to be monitored once. Attach a stub to load the resulting constant
   // directly.
 
-  TypeScript::Monitor(cx, script, pc, res);
+  TypeScript::MonitorBytecodeType(cx, script, pc, res);
 
   TryAttachStub<GetIntrinsicIRGenerator>("GetIntrinsic", cx, frame, stub,
                                          BaselineCacheIRStubKind::Regular, res);
@@ -2855,14 +2858,7 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
-  TypeScript::Monitor(cx, script, pc, types, res);
-
-  // Add a type monitor stub for the resulting value.
-  if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
-    return false;
-  }
-  return true;
+  return TypeMonitorResult(cx, stub, frame, script, pc, res);
 }
 
 bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
@@ -2888,15 +2884,7 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
-  TypeScript::Monitor(cx, script, pc, types, res);
-
-  // Add a type monitor stub for the resulting value.
-  if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
-    return false;
-  }
-
-  return true;
+  return TypeMonitorResult(cx, stub, frame, script, pc, res);
 }
 
 bool FallbackICCodeCompiler::emitGetProp(bool hasReceiver) {
@@ -3767,11 +3755,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
     res.set(callArgs.rval());
   }
 
-  StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
-  TypeScript::Monitor(cx, script, pc, types, res);
-
-  // Add a type monitor stub for the resulting value.
-  if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
+  if (!TypeMonitorResult(cx, stub, frame, script, pc, res)) {
     return false;
   }
 
@@ -3892,13 +3876,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
     return false;
   }
 
-  // Add a type monitor stub for the resulting value.
-  StackTypeSet* types = TypeScript::BytecodeTypes(script, pc);
-  if (!stub->addMonitorStubForValue(cx, frame, types, res)) {
-    return false;
-  }
-
-  return true;
+  return TypeMonitorResult(cx, stub, frame, script, pc, res);
 }
 
 void ICStubCompilerBase::pushCallArguments(MacroAssembler& masm,

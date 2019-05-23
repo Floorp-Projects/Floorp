@@ -246,7 +246,7 @@ class MozMenuItem extends MozMenuItemBaseMixin(MozXULElement) {
 
 customElements.define("menuitem", MozMenuItem);
 
-const isHiddenWindow = document.documentURI == "chrome://browser/content/hiddenWindow.xul";
+const isHiddenWindow = document.documentURI == "chrome://browser/content/hiddenWindowMac.xhtml";
 
 class MozMenu extends MozMenuBaseMixin(MozElements.MozElementMixin(XULMenuElement)) {
   static get inheritedAttributes() {

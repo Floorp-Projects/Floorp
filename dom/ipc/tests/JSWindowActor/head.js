@@ -64,12 +64,13 @@ function declTest(name, cfg) {
 
     // Run the provided test
     info("browser ready");
-    await Promise.resolve(test(browser, win));
-
-    // Clean up after we're done.
-    ChromeUtils.unregisterWindowActor("Test");
-    await BrowserTestUtils.closeWindow(win);
-
-    info("Exiting test: " + name);
+    try {
+      await Promise.resolve(test(browser, win));
+    } finally {
+      // Clean up after we're done.
+      ChromeUtils.unregisterWindowActor("Test");
+      await BrowserTestUtils.closeWindow(win);
+      info("Exiting test: " + name);
+    }
   });
 }

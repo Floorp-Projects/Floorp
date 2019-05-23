@@ -120,6 +120,7 @@ function processFlagFilter(type, value) {
   }
 }
 
+/* eslint-disable complexity */
 function isFlagFilterMatch(item, { type, value, negative }) {
   if (value == null) {
     return false;
@@ -233,6 +234,7 @@ function isFlagFilterMatch(item, { type, value, negative }) {
   }
   return match;
 }
+/* eslint-enable complexity */
 
 function isSizeMatch(value, size) {
   return value >= (size - size / 10) && value <= (size + size / 10);

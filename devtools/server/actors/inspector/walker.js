@@ -728,6 +728,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *    hasLast: true if the last child of the node is included in the list.
    *    nodes: Array of DOMNodes.
    */
+  /* eslint-disable complexity */
   _getChildren: function(node, options = {}) {
     if (isNodeDead(node)) {
       return { hasFirst: true, hasLast: true, nodes: [] };
@@ -901,6 +902,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     return { hasFirst, hasLast, nodes };
   },
+  /* eslint-enable complexity */
 
   getNativeAnonymousChildren: function(rawNode) {
     // Get an anonymous walker and start on the first child.
@@ -1093,6 +1095,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param string selectorState
    *        One of "pseudo", "id", "tag", "class", "null"
    */
+  /* eslint-disable complexity */
   getSuggestionsForQuery: function(query, completing, selectorState) {
     const sugs = {
       classes: new Map(),
@@ -1235,6 +1238,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       suggestions: result,
     };
   },
+  /* eslint-enable complexity */
 
   /**
    * Add a pseudo-class lock to a node.

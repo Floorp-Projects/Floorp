@@ -59,6 +59,7 @@ class PhaseKind():
     def __init__(self, name, descr, bucket, children=[]):
         self.name = name
         self.descr = descr
+        # For telemetry
         self.bucket = bucket
         self.children = children
 
@@ -158,6 +159,7 @@ PhaseKindGraphRoots = [
             JoinParallelTasksPhaseKind
         ]),
     ]),
+    PhaseKind("DECOMMIT", "Decommit", 72),
     PhaseKind("GC_END", "End Callback", 44),
     PhaseKind("MINOR_GC", "All Minor GCs", 45, [
         MarkRootsPhaseKind,
@@ -254,8 +256,10 @@ for phaseKind in AllPhaseKinds:
             phase.name = "%s_%d" % (phaseKind.name, index + 1)
 
 # Find the maximum phase nesting.
-
 MaxPhaseNesting = max(phase.depth for phase in AllPhases) + 1
+
+# And the maximum bucket number.
+MaxBucket = max(kind.bucket for kind in AllPhaseKinds)
 
 # Generate code.
 
@@ -337,3 +341,10 @@ def generateCpp(out):
                    phaseKind.descr,
                    phase.path))
     out.write("};\n")
+
+    #
+    # Print in a comment the next available phase kind number.
+    #
+    out.write("// The next available phase kind number is: %d\n" %
+            (MaxBucket + 1))
+
