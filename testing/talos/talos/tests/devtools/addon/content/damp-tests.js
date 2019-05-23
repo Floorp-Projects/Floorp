@@ -20,10 +20,33 @@
  */
 
 module.exports = [
+  // The first cold-open test is *colder* than the other cold-open tests, it will also
+  // assess the impact of loading shared DevTools modules for the first time.
+  // This test will assert the impact of base loader/Loader.jsm modules loading,
+  // typically gDevtools/gDevToolsBrowser/Framework modules, while the others will mostly
+  // track panel-specific modules (Browser loader, but not only).
   {
     name: "inspector.cold-open",
     path: "inspector/cold-open.js",
-    description: "Measure first open toolbox on inspector panel",
+    description: "Measure first open toolbox on inspector panel (incl. shared modules)",
+    cold: true,
+  },
+  {
+    name: "debugger.cold-open",
+    path: "debugger/cold-open.js",
+    description: "Measure first open toolbox on debugger panel",
+    cold: true,
+  },
+  {
+    name: "webconsole.cold-open",
+    path: "webconsole/cold-open.js",
+    description: "Measure first open toolbox on webconsole panel",
+    cold: true,
+  },
+  {
+    name: "netmonitor.cold-open",
+    path: "netmonitor/cold-open.js",
+    description: "Measure first open toolbox on netmonitor panel",
     cold: true,
   },
   // Run all tests against "simple" document
