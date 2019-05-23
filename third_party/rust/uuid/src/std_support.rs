@@ -11,8 +11,17 @@
 
 use std::error;
 
-impl error::Error for ::BytesError {
+impl error::Error for super::BytesError {
     fn description(&self) -> &str {
         "invalid number of uuid bytes"
+    }
+}
+
+impl error::Error for super::Error {
+    fn description(&self) -> &str {
+        match *self {
+            super::Error::Bytes(ref err) => error::Error::description(err),
+            super::Error::Parse(ref err) => error::Error::description(err),
+        }
     }
 }
