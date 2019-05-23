@@ -358,7 +358,11 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
                                     nullptr,  // PerformanceStorage
                                     loadGroup);
 
-        NS_ENSURE_TRUE_VOID(NS_SUCCEEDED(rv));
+        if (NS_FAILED(rv)) {
+          LOG("create channel failed.");
+          SetReadyState(TextTrackReadyState::FailedToLoad);
+          return;
+        }
 
         channel->SetNotificationCallbacks(mListener);
 
