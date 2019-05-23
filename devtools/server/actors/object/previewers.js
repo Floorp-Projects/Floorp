@@ -355,6 +355,7 @@ function wrappedPrimitivePreviewer(className, classObj, objectActor, grip, rawOb
   return true;
 }
 
+/* eslint-disable complexity */
 function GenericObject(objectActor, grip, rawObj, specialStringBehavior = false) {
   const {obj, hooks} = objectActor;
   if (grip.preview || grip.displayString || hooks.getGripDepth() > 1) {
@@ -442,6 +443,7 @@ function GenericObject(objectActor, grip, rawObj, specialStringBehavior = false)
 
   return true;
 }
+/* eslint-enable complexity */
 
 // Preview functions that do not rely on the object class.
 previewers.Object = [
@@ -672,6 +674,7 @@ previewers.Object = [
     return true;
   },
 
+  /* eslint-disable complexity */
   function DOMEvent({obj, hooks}, grip, rawObj) {
     if (isWorker || !rawObj || !Event.isInstance(rawObj)) {
       return false;
@@ -758,6 +761,7 @@ previewers.Object = [
 
     return true;
   },
+  /* eslint-enable complexity */
 
   function DOMException({obj, hooks}, grip, rawObj) {
     if (isWorker || !rawObj || obj.class !== "DOMException") {

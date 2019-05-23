@@ -389,6 +389,7 @@ TextPropertyEditor.prototype = {
   /**
    * Populate the span based on changes to the TextProperty.
    */
+  /* eslint-disable complexity */
   update: function() {
     if (this.ruleView.isDestroyed) {
       return;
@@ -610,6 +611,7 @@ TextPropertyEditor.prototype = {
     // Update the rule property highlight.
     this.ruleView._updatePropertyHighlight(this);
   },
+  /* eslint-enable complexity */
 
   _onStartEditing: function() {
     this.element.classList.remove("ruleview-overridden");

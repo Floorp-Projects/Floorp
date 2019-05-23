@@ -113,6 +113,7 @@ class FlexItemSizingProperties extends PureComponent {
     );
   }
 
+  /* eslint-disable complexity */
   renderFlexibilitySection(flexItemSizing, mainFinalSize, properties, computedStyle) {
     const {
       mainDeltaSize,
@@ -183,6 +184,7 @@ class FlexItemSizingProperties extends PureComponent {
       )
     );
   }
+  /* eslint-enable complexity */
 
   renderMinimumSizeSection(flexItemSizing, properties, dimension) {
     const { clampState, mainMinSize, mainDeltaSize } = flexItemSizing;
