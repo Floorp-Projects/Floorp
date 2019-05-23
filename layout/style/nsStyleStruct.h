@@ -1247,69 +1247,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   }
 };
 
-struct nsStyleTextOverflowSide {
-  nsStyleTextOverflowSide() : mType(NS_STYLE_TEXT_OVERFLOW_CLIP) {}
-
-  static nsStyleTextOverflowSide Ellipsis() {
-    nsStyleTextOverflowSide side;
-    side.mType = NS_STYLE_TEXT_OVERFLOW_ELLIPSIS;
-    return side;
-  }
-
-  bool operator==(const nsStyleTextOverflowSide& aOther) const {
-    return mType == aOther.mType && (mType != NS_STYLE_TEXT_OVERFLOW_STRING ||
-                                     mString == aOther.mString);
-  }
-  bool operator!=(const nsStyleTextOverflowSide& aOther) const {
-    return !(*this == aOther);
-  }
-
-  nsString mString;
-  uint8_t mType;
-};
-
-struct nsStyleTextOverflow {
-  nsStyleTextOverflow() : mLogicalDirections(true) {}
-  bool operator==(const nsStyleTextOverflow& aOther) const {
-    return mLeft == aOther.mLeft && mRight == aOther.mRight;
-  }
-  bool operator!=(const nsStyleTextOverflow& aOther) const {
-    return !(*this == aOther);
-  }
-
-  // Returns the value to apply on the left side.
-  const nsStyleTextOverflowSide& GetLeft(uint8_t aDirection) const {
-    NS_ASSERTION(aDirection == NS_STYLE_DIRECTION_LTR ||
-                     aDirection == NS_STYLE_DIRECTION_RTL,
-                 "bad direction");
-    return !mLogicalDirections || aDirection == NS_STYLE_DIRECTION_LTR ? mLeft
-                                                                       : mRight;
-  }
-
-  // Returns the value to apply on the right side.
-  const nsStyleTextOverflowSide& GetRight(uint8_t aDirection) const {
-    NS_ASSERTION(aDirection == NS_STYLE_DIRECTION_LTR ||
-                     aDirection == NS_STYLE_DIRECTION_RTL,
-                 "bad direction");
-    return !mLogicalDirections || aDirection == NS_STYLE_DIRECTION_LTR ? mRight
-                                                                       : mLeft;
-  }
-
-  // Returns the first value that was specified.
-  const nsStyleTextOverflowSide* GetFirstValue() const {
-    return mLogicalDirections ? &mRight : &mLeft;
-  }
-
-  // Returns the second value, or null if there was only one value specified.
-  const nsStyleTextOverflowSide* GetSecondValue() const {
-    return mLogicalDirections ? nullptr : &mRight;
-  }
-
-  nsStyleTextOverflowSide mLeft;   // start side when mLogicalDirections is true
-  nsStyleTextOverflowSide mRight;  // end side when mLogicalDirections is true
-  bool mLogicalDirections;         // true when only one value was specified
-};
-
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
   explicit nsStyleTextReset(const mozilla::dom::Document&);
   nsStyleTextReset(const nsStyleTextReset& aOther);
@@ -1327,7 +1264,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
 
   nsChangeHint CalcDifference(const nsStyleTextReset& aNewData) const;
 
-  nsStyleTextOverflow mTextOverflow;  // enum, string
+  mozilla::StyleTextOverflow mTextOverflow;
 
   mozilla::StyleTextDecorationLine mTextDecorationLine;
   uint8_t mTextDecorationStyle;  // NS_STYLE_TEXT_DECORATION_STYLE_*
