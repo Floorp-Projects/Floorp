@@ -771,7 +771,7 @@ struct RealmStats {
   MACRO(Other, MallocHeap, baselineData)                      \
   MACRO(Other, MallocHeap, baselineStubsFallback)             \
   MACRO(Other, MallocHeap, ionData)                           \
-  MACRO(Other, MallocHeap, typeInferenceTypeScripts)          \
+  MACRO(Other, MallocHeap, jitScripts)                        \
   MACRO(Other, MallocHeap, typeInferenceAllocationSiteTables) \
   MACRO(Other, MallocHeap, typeInferenceArrayTypeTables)      \
   MACRO(Other, MallocHeap, typeInferenceObjectTypeTables)     \

@@ -319,7 +319,7 @@ interface nsIHttpServerIdentity : nsISupports
    *   RFC 2396, or if port is not a valid port number
    */
   string getScheme(in string host, in long port);
-  
+
   /**
    * Designates the given name as the primary name in this and adds it to this
    * if it is not already present.

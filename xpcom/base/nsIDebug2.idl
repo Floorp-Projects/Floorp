@@ -48,7 +48,7 @@ interface nsIDebug2 : nsISupports
      */
     void assertion(in string aStr,
                    in string aExpr,
-                   in string aFile, 
+                   in string aFile,
                    in long aLine);
 
     /**
@@ -68,7 +68,7 @@ interface nsIDebug2 : nsISupports
      * @param aFile file containing break request
      * @param aLine line number of break request
      */
-    void break(in string aFile, 
+    void break(in string aFile,
                in long aLine);
 
     /**
@@ -77,7 +77,7 @@ interface nsIDebug2 : nsISupports
      * @param aFile file containing abort request
      * @param aLine line number of abort request
      */
-    void abort(in string aFile, 
+    void abort(in string aFile,
                in long aLine);
 
     /**

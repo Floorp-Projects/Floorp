@@ -1156,7 +1156,7 @@ JSObject* js::CreateThisForFunctionWithProto(
     if (!script) {
       return nullptr;
     }
-    TypeScript::MonitorThisType(cx, script, TypeSet::ObjectType(res));
+    JitScript::MonitorThisType(cx, script, TypeSet::ObjectType(res));
   }
 
   return res;
@@ -1225,7 +1225,7 @@ JSObject* js::CreateThisForFunction(JSContext* cx, HandleFunction callee,
     NativeObject::clear(cx, nobj);
 
     JSScript* calleeScript = callee->nonLazyScript();
-    TypeScript::MonitorThisType(cx, calleeScript, TypeSet::ObjectType(nobj));
+    JitScript::MonitorThisType(cx, calleeScript, TypeSet::ObjectType(nobj));
 
     return nobj;
   }

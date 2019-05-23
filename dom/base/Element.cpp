@@ -3291,11 +3291,7 @@ CORSMode Element::AttrValueToCORSMode(const nsAttrValue* aValue) {
 }
 
 static const char* GetFullscreenError(CallerType aCallerType) {
-  if (!nsContentUtils::IsRequestFullscreenAllowed(aCallerType)) {
-    return "FullscreenDeniedNotInputDriven";
-  }
-
-  return nullptr;
+  return nsContentUtils::CheckRequestFullscreenAllowed(aCallerType);
 }
 
 already_AddRefed<Promise> Element::RequestFullscreen(CallerType aCallerType,

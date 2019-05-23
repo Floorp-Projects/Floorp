@@ -83,7 +83,7 @@ interface nsIAuthInformation : nsISupports
   /**
    * The authentication scheme used for this request, if applicable. If the
    * protocol for this authentication does not support schemes, this will be
-   * the empty string. Otherwise, this will be a string such as "basic" or 
+   * the empty string. Otherwise, this will be a string such as "basic" or
    * "digest". This string will always be in lowercase.
    */
   readonly attribute AUTF8String authenticationScheme;

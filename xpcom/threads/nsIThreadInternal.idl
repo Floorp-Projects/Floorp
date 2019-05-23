@@ -63,7 +63,7 @@ interface nsIThreadInternal : nsIThread
  *   };
  *
  * NOTE: The implementation of this interface must be threadsafe.
- * 
+ *
  * NOTE: It is valid to change the thread's observer during a call to an
  *       observer method.
  *
@@ -76,7 +76,7 @@ interface nsIThreadObserver : nsISupports
 {
   /**
    * This method is called after an event has been dispatched to the thread.
-   * This method may be called from any thread. 
+   * This method may be called from any thread.
    */
   void onDispatchedEvent();
 

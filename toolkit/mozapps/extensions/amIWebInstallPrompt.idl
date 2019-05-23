@@ -10,7 +10,7 @@ interface nsIVariant;
 webidl Element;
 
 /**
- * amIWebInstallPrompt is used, if available, by the default implementation of 
+ * amIWebInstallPrompt is used, if available, by the default implementation of
  * amIWebInstallInfo to display a confirmation UI to the user before running
  * installs.
  */

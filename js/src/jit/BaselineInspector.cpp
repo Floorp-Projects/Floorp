@@ -127,7 +127,10 @@ static bool GetCacheIRReceiverForNativeSetSlot(ICCacheIR_Updated* stub,
   return true;
 }
 
-ICScript* BaselineInspector::icScript() const { return script->icScript(); }
+JitScript* BaselineInspector::jitScript() const {
+  MOZ_ASSERT(script->hasJitScript());
+  return script->jitScript();
+}
 
 ICEntry& BaselineInspector::icEntryFromPC(jsbytecode* pc) {
   ICEntry* entry = maybeICEntryFromPC(pc);
@@ -136,10 +139,9 @@ ICEntry& BaselineInspector::icEntryFromPC(jsbytecode* pc) {
 }
 
 ICEntry* BaselineInspector::maybeICEntryFromPC(jsbytecode* pc) {
-  MOZ_ASSERT(hasICScript());
   MOZ_ASSERT(isValidPC(pc));
-  ICEntry* ent = icScript()->maybeICEntryFromPCOffset(script->pcToOffset(pc),
-                                                      prevLookedUpEntry);
+  ICEntry* ent = jitScript()->maybeICEntryFromPCOffset(script->pcToOffset(pc),
+                                                       prevLookedUpEntry);
   if (!ent) {
     return nullptr;
   }
@@ -155,10 +157,6 @@ bool BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc,
   // op. Empty lists indicate no receivers are known, or there was an
   // uncacheable access.
   MOZ_ASSERT(receivers.empty());
-
-  if (!hasICScript()) {
-    return true;
-  }
 
   MOZ_ASSERT(isValidPC(pc));
   const ICEntry& entry = icEntryFromPC(pc);
@@ -203,10 +201,6 @@ bool BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc,
 }
 
 ICStub* BaselineInspector::monomorphicStub(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return nullptr;
-  }
-
   // IonBuilder::analyzeNewLoopTypes may call this (via expectedResultType
   // below) on code that's unreachable, according to BytecodeAnalysis. Use
   // maybeICEntryFromPC to handle this.
@@ -227,10 +221,6 @@ ICStub* BaselineInspector::monomorphicStub(jsbytecode* pc) {
 
 bool BaselineInspector::dimorphicStub(jsbytecode* pc, ICStub** pfirst,
                                       ICStub** psecond) {
-  if (!hasICScript()) {
-    return false;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
 
   ICStub* stub = entry.firstStub();
@@ -575,10 +565,6 @@ static bool TryToSpecializeBinaryArithOp(ICStub** stubs, uint32_t nstubs,
 }
 
 MIRType BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return MIRType::None;
-  }
-
   MIRType result;
   ICStub* stubs[2];
 
@@ -610,10 +596,6 @@ MIRType BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc) {
 }
 
 bool BaselineInspector::hasSeenNonIntegerIndex(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return false;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* stub = entry.fallbackStub();
 
@@ -623,10 +605,6 @@ bool BaselineInspector::hasSeenNonIntegerIndex(jsbytecode* pc) {
 }
 
 bool BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return false;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* stub = entry.fallbackStub();
 
@@ -637,10 +615,6 @@ bool BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode* pc) {
 }
 
 bool BaselineInspector::hasSeenAccessedGetter(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return false;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* stub = entry.fallbackStub();
 
@@ -651,10 +625,6 @@ bool BaselineInspector::hasSeenAccessedGetter(jsbytecode* pc) {
 }
 
 bool BaselineInspector::hasSeenDoubleResult(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return false;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* stub = entry.fallbackStub();
 
@@ -720,10 +690,6 @@ JSObject* MaybeTemplateObject(ICStub* stub, MetaTwoByteKind kind,
 }
 
 JSObject* BaselineInspector::getTemplateObject(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return nullptr;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
     switch (stub->kind()) {
@@ -760,10 +726,6 @@ JSObject* BaselineInspector::getTemplateObject(jsbytecode* pc) {
 }
 
 ObjectGroup* BaselineInspector::getTemplateObjectGroup(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return nullptr;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
     switch (stub->kind()) {
@@ -779,10 +741,6 @@ ObjectGroup* BaselineInspector::getTemplateObjectGroup(jsbytecode* pc) {
 
 JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_NEW);
-
-  if (!hasICScript()) {
-    return nullptr;
-  }
 
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* stub = entry.firstStub();
@@ -815,10 +773,6 @@ JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
 
 JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
                                                         Native native) {
-  if (!hasICScript()) {
-    return nullptr;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
     if (stub->isCall_Native() &&
@@ -845,10 +799,6 @@ JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
 
 JSObject* BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc,
                                                            const Class* clasp) {
-  if (!hasICScript()) {
-    return nullptr;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
     if (stub->isCall_ClassHook() &&
@@ -1204,10 +1154,6 @@ bool BaselineInspector::commonGetPropFunction(
     jsbytecode* pc, jsid id, bool innerized, JSObject** holder,
     Shape** holderShape, JSFunction** commonGetter, Shape** globalShape,
     bool* isOwnProperty, ReceiverVector& receivers) {
-  if (!hasICScript()) {
-    return false;
-  }
-
   MOZ_ASSERT(IsGetPropPC(pc) || IsGetElemPC(pc) || JSOp(*pc) == JSOP_GETGNAME);
   MOZ_ASSERT(receivers.empty());
 
@@ -1286,10 +1232,6 @@ static JSFunction* GetMegamorphicGetterSetterFunction(
 
 bool BaselineInspector::megamorphicGetterSetterFunction(
     jsbytecode* pc, jsid id, bool isGetter, JSFunction** getterOrSetter) {
-  if (!hasICScript()) {
-    return false;
-  }
-
   MOZ_ASSERT(IsGetPropPC(pc) || IsGetElemPC(pc) || IsSetPropPC(pc) ||
              JSOp(*pc) == JSOP_GETGNAME || JSOp(*pc) == JSOP_INITGLEXICAL ||
              JSOp(*pc) == JSOP_INITPROP || JSOp(*pc) == JSOP_INITLOCKEDPROP ||
@@ -1451,10 +1393,6 @@ bool BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder,
                                               JSFunction** commonSetter,
                                               bool* isOwnProperty,
                                               ReceiverVector& receivers) {
-  if (!hasICScript()) {
-    return false;
-  }
-
   MOZ_ASSERT(IsSetPropPC(pc) || JSOp(*pc) == JSOP_INITGLEXICAL ||
              JSOp(*pc) == JSOP_INITPROP || JSOp(*pc) == JSOP_INITLOCKEDPROP ||
              JSOp(*pc) == JSOP_INITHIDDENPROP);
@@ -1551,10 +1489,6 @@ bool BaselineInspector::maybeInfoForProtoReadSlot(jsbytecode* pc,
   MOZ_ASSERT(receivers.empty());
   MOZ_ASSERT(!*holder);
 
-  if (!hasICScript()) {
-    return true;
-  }
-
   MOZ_ASSERT(isValidPC(pc));
   const ICEntry& entry = icEntryFromPC(pc);
 
@@ -1614,10 +1548,6 @@ static MIRType GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub) {
 }
 
 MIRType BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc) {
-  if (!hasICScript()) {
-    return MIRType::Value;
-  }
-
   const ICEntry& entry = icEntryFromPC(pc);
   MIRType type = MIRType::None;
 
@@ -1653,9 +1583,6 @@ bool BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape,
                                        uint32_t* slot,
                                        JSObject** prototypeObject) {
   MOZ_ASSERT(*pc == JSOP_INSTANCEOF);
-  if (!hasICScript()) {
-    return false;
-  }
 
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* firstStub = entry.firstStub();

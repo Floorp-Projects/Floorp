@@ -36,7 +36,7 @@ interface nsIWebBrowser : nsISupports
      * must create one chrome object for <I>each</I> browser object
      * that is instantiated. The embedder must associate the two by setting
      * this property to point to the chrome object before creating the browser
-     * window via the browser's <CODE>nsIBaseWindow</CODE> interface. 
+     * window via the browser's <CODE>nsIBaseWindow</CODE> interface.
      *
      * The chrome object must also implement <CODE>nsIEmbeddingSiteWindow</CODE>.
      *

@@ -2180,17 +2180,6 @@ void ScrollFrameHelper::ScrollToCSSPixels(
     aOrigin = nsGkAtoms::other;
   }
 
-  if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
-    if (currentCSSPixels.x == aScrollPosition.x) {
-      pt.x = current.x;
-    }
-    if (currentCSSPixels.y == aScrollPosition.y) {
-      pt.y = current.y;
-    }
-    ScrollTo(pt, aMode, aOrigin, nullptr /* range */, aSnap);
-    return;
-  }
-
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
   nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
                2 * halfPixel - 1);
@@ -2238,9 +2227,10 @@ void ScrollFrameHelper::ScrollToWithOrigin(
     mRestorePos.x = mRestorePos.y = -1;
   }
 
+  bool willSnap = false;
   if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
-    GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS, mDestination,
-                               aScrollPosition);
+    willSnap = GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS,
+                                          mDestination, aScrollPosition);
   }
 
   nsRect scrollRange = GetLayoutScrollRange();
@@ -2252,7 +2242,8 @@ void ScrollFrameHelper::ScrollToWithOrigin(
     aOrigin = nsGkAtoms::other;
   }
 
-  nsRect range = aRange ? *aRange : nsRect(aScrollPosition, nsSize(0, 0));
+  nsRect range =
+      aRange && !willSnap ? *aRange : nsRect(aScrollPosition, nsSize(0, 0));
 
   if (aMode != ScrollMode::SmoothMsd) {
     // If we get a non-smooth-scroll, reset the cached APZ scroll destination,
@@ -4313,17 +4304,6 @@ void ScrollFrameHelper::ScrollByCSSPixels(
 
   if (aOrigin == nullptr) {
     aOrigin = nsGkAtoms::other;
-  }
-
-  if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
-    if (aDelta.x == 0.0f) {
-      pt.x = current.x;
-    }
-    if (aDelta.y == 0.0f) {
-      pt.y = current.y;
-    }
-    ScrollToWithOrigin(pt, aMode, aOrigin, nullptr /* range */, aSnap);
-    return;
   }
 
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
@@ -6746,6 +6726,13 @@ static void CollectScrollPositionsForSnap(
     const nsMargin& aScrollPadding, const Maybe<nsRect>& aSnapport,
     WritingMode aWritingModeOnScroller, ScrollSnapInfo& aSnapInfo) {
   MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
+
+  // Snap positions only affect the nearest ancestor scroll container on the
+  // element's containing block chain.
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
+  if (sf) {
+    return;
+  }
 
   nsIFrame::ChildListIterator childLists(aFrame);
   for (; !childLists.IsDone(); childLists.Next()) {

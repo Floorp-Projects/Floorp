@@ -17,10 +17,10 @@ interface nsISelectionDisplay : nsISupports
    /*
    SetSelectionFlags used to set whether you want to see HRULES/IMAGES with border.
     also used to tell if the presshell is an editor right now. this should change
-    
+
     @param aToggle -either DISPLAY_(TEXT,IMAGES,FRAMES,ALL)
                     This will tell the rendering engine to draw the different
-                    selection types. 
+                    selection types.
 
    */
     void setSelectionFlags(in short toggle);
@@ -28,8 +28,8 @@ interface nsISelectionDisplay : nsISupports
    /*
    GetSelectionFlags used to get whether you want to see HRULES/IMAGES with border.
     also used to tell if the presshell is an editor right now. this should change
-   
-    @param short *aReturn - This will be filled with DISPLAY_(TEXT,IMAGE,FRAMES,ALL) 
+
+    @param short *aReturn - This will be filled with DISPLAY_(TEXT,IMAGE,FRAMES,ALL)
                             bit flags.
    */
     short getSelectionFlags();

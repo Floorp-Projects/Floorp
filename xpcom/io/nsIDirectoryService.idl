@@ -32,7 +32,7 @@ interface nsIDirectoryServiceProvider: nsISupports
   *
   * @return             The file represented by the property.
   *
-  */ 
+  */
   nsIFile getFile(in string prop, out boolean persistent);
 };
 
@@ -86,17 +86,17 @@ interface nsIDirectoryService: nsISupports
   *                        to this object. It will be released when
   *                        the service is released.
   *
-  */  
+  */
   void registerProvider(in nsIDirectoryServiceProvider prov);
-  
+
  /**
   * unregisterProvider
   *
   * Unregister a provider with the service.
   *
-  * @param prov            
+  * @param prov
   *
-  */  
+  */
   void unregisterProvider(in nsIDirectoryServiceProvider prov);
 };
 

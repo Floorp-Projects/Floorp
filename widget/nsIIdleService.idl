@@ -59,7 +59,7 @@ interface nsIIdleService : nsISupports
      * @param observer the observer that needs to be removed.
      * @param time the amount of time they were listening for.
      * @note
-     * Removing an observer will remove it once, for the idle time you specify. 
+     * Removing an observer will remove it once, for the idle time you specify.
      * If you have added an observer multiple times, you will need to remove it
      * just as many times.
      */
@@ -74,12 +74,12 @@ interface nsIIdleService : nsISupports
     attribute boolean disabled;
 };
 
-%{C++  
+%{C++
     /**
      * Observer topic notification for idle window: OBSERVER_TOPIC_IDLE.
      * Observer topic notification for active window: OBSERVER_TOPIC_ACTIVE.
      */
-    
+
     #define OBSERVER_TOPIC_IDLE "idle"
     #define OBSERVER_TOPIC_ACTIVE "active"
     #define OBSERVER_TOPIC_IDLE_DAILY "idle-daily"

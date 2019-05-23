@@ -1,8 +1,8 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */ 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 
 webidl Node;
@@ -13,7 +13,7 @@ webidl Node;
  * with the node that the pointer is positioned over.
  *
  * Embedders may implement and register their own tooltip text provider
- * service if they wish to provide different tooltip text. 
+ * service if they wish to provide different tooltip text.
  *
  * The default service returns the text stored in the TITLE
  * attribute of the node or a containing parent.

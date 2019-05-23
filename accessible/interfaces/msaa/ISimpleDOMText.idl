@@ -6,7 +6,7 @@
 
 import "objidl.idl";
 import "oaidl.idl";
-        
+
 cpp_quote("///////////////////////////////////////////////////////////////////////////////////////////////////////")
 cpp_quote("//")
 cpp_quote("// ISimpleDOMText")
@@ -57,21 +57,21 @@ interface ISimpleDOMText: IUnknown
   // Includes whitespace in DOM
   [propget] HRESULT domText([out, retval] BSTR *domText);
 
-  HRESULT get_clippedSubstringBounds([in] unsigned int startIndex, 
-                                     [in] unsigned int endIndex, 
+  HRESULT get_clippedSubstringBounds([in] unsigned int startIndex,
+                                     [in] unsigned int endIndex,
                                      [out] int *x,
                                      [out] int *y,
                                      [out] int *width,
                                      [out] int *height);
 
-  HRESULT get_unclippedSubstringBounds([in] unsigned int startIndex, 
-                                       [in] unsigned int endIndex, 
+  HRESULT get_unclippedSubstringBounds([in] unsigned int startIndex,
+                                       [in] unsigned int endIndex,
                                        [out] int *x,
                                        [out] int *y,
                                        [out] int *width,
                                        [out] int *height);
 
-  HRESULT scrollToSubstring([in] unsigned int startIndex, 
+  HRESULT scrollToSubstring([in] unsigned int startIndex,
                             [in] unsigned int endIndex);
 
   [propget] HRESULT fontFamily([out, retval] BSTR *fontFamily);

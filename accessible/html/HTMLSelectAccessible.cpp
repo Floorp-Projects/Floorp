@@ -304,7 +304,7 @@ bool HTMLComboboxAccessible::RemoveChild(Accessible* aChild) {
 }
 
 void HTMLComboboxAccessible::Shutdown() {
-  MOZ_ASSERT(mDoc->IsDefunct() || !mListAccessible);
+  MOZ_ASSERT(!mDoc || mDoc->IsDefunct() || !mListAccessible);
   if (mListAccessible) {
     mListAccessible->Shutdown();
     mListAccessible = nullptr;

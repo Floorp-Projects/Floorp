@@ -23,15 +23,15 @@ interface nsPIWidgetCocoa : nsISupports
   // Find the displayed child sheet (if aShown) or a child sheet that
   // wants to be displayed (if !aShown)
   nsIWidget GetChildSheet(in boolean aShown);
-  
+
   // Get the parent widget (if any) StandardCreate() was called with.
   nsIWidget GetRealParent();
-  
+
   // If the object implementing this interface is a sheet, this will return the
   // native NSWindow it is attached to
   readonly attribute NSWindowPtr sheetWindowParent;
 
   // True if window is a sheet
   readonly attribute boolean isSheet;
-  
+
 }; // nsPIWidgetCocoa

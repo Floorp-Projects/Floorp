@@ -31,17 +31,17 @@ interface nsIDragSession : nsISupports
    * Indicates if the drop event should be dispatched only to chrome.
    */
   attribute boolean onlyChromeDrop;
-  
+
   /**
-    * Sets the action (copy, move, link, et.c) for the current drag 
-    */ 
+    * Sets the action (copy, move, link, et.c) for the current drag
+    */
   attribute unsigned long dragAction;
-  
+
   /**
     * Get the number of items that were dropped
     */
   readonly attribute unsigned long numDropItems;
-  
+
   /**
     * The document where the drag was started, which will be null if the
     * drag originated outside the application. Useful for determining if a drop

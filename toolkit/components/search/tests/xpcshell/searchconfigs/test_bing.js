@@ -5,6 +5,7 @@
 
 const test = new SearchConfigTest({
   identifier: "bing",
+  aliases: ["@bing"],
   default: {
     // Not included anywhere.
   },
@@ -42,6 +43,8 @@ const test = new SearchConfigTest({
       "homepage": "form=MOZSPG",
       "newtab": "form=MOZTSB",
     },
+    searchUrlCode: "pc=MOZI",
+    searchFormUrlCode: "pc=MOZI",
   }],
 });
 

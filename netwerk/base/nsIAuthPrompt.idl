@@ -9,7 +9,7 @@ interface nsIPrompt;
 
 [scriptable, uuid(358089f9-ee4b-4711-82fd-bcd07fc62061)]
 interface nsIAuthPrompt : nsISupports
-{         
+{
     const uint32_t SAVE_PASSWORD_NEVER             = 0;
     const uint32_t SAVE_PASSWORD_FOR_SESSION       = 1;
     const uint32_t SAVE_PASSWORD_PERMANENTLY       = 2;
@@ -32,7 +32,7 @@ interface nsIAuthPrompt : nsISupports
                    in wstring text,
                    in wstring passwordRealm,
                    in uint32_t savePassword,
-                   in wstring defaultText, 
+                   in wstring defaultText,
                    out wstring result);
 
     /**
@@ -52,7 +52,7 @@ interface nsIAuthPrompt : nsISupports
                                       in wstring text,
                                       in wstring passwordRealm,
                                       in uint32_t savePassword,
-                                      inout wstring user, 
+                                      inout wstring user,
                                       inout wstring pwd);
 
     /**

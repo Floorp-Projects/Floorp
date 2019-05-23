@@ -52,7 +52,7 @@ interface nsISessionStore : nsISupports
   /**
    * @param aTab is the browser tab to get the value for.
    * @param aKey is the value's name.
-   * 
+   *
    * @returns A string value or an empty string if none is set.
    */
   AString getTabValue(in jsval aTab, in AString aKey);

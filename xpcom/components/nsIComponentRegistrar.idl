@@ -48,9 +48,9 @@ interface nsIComponentRegistrar : nsISupports
      *                      If aFactory is null, the contract will be associated
      *                      with a previously registered CID.
      */
-    void registerFactory(in nsCIDRef aClass, 
+    void registerFactory(in nsCIDRef aClass,
                          in string aClassName,
-                         in string aContractID, 
+                         in string aContractID,
                          in nsIFactory aFactory);
 
     /**
@@ -63,8 +63,8 @@ interface nsIComponentRegistrar : nsISupports
      *                   CID aClass.
      *
      * @throws NS_ERROR* Method failure.
-     */    
-    void unregisterFactory(in nsCIDRef aClass, 
+     */
+    void unregisterFactory(in nsCIDRef aClass,
                            in nsIFactory aFactory);
 
     /**
@@ -73,11 +73,11 @@ interface nsIComponentRegistrar : nsISupports
      *                   in this interface for binary compatibility with
      *                   Mozilla 1.9.2.
      */
-    void registerFactoryLocation(in nsCIDRef aClass, 
+    void registerFactoryLocation(in nsCIDRef aClass,
                                  in string aClassName,
-                                 in string aContractID, 
+                                 in string aContractID,
                                  in nsIFile aFile,
-                                 in string aLoaderStr, 
+                                 in string aLoaderStr,
                                  in string aType);
 
     /**
@@ -85,8 +85,8 @@ interface nsIComponentRegistrar : nsISupports
      * @status OBSOLETE: This method is no longer implemented, but preserved
      *                   in this interface for binary compatibility with
      *                   Mozilla 1.9.2.
-     */    
-    void unregisterFactoryLocation(in nsCIDRef aClass, 
+     */
+    void unregisterFactoryLocation(in nsCIDRef aClass,
                                    in nsIFile aFile);
 
     /**
@@ -95,18 +95,18 @@ interface nsIComponentRegistrar : nsISupports
      * Returns true if a factory is registered for the CID.
      *
      * @param aClass : CID queried for registeration
-     * @return       : true if a factory is registered for CID 
+     * @return       : true if a factory is registered for CID
      *                 false otherwise.
      */
     boolean isCIDRegistered(in nsCIDRef aClass);
-    
+
     /**
      * isContractIDRegistered
      *
      * Returns true if a factory is registered for the contract id.
      *
      * @param aClass : contract id queried for registeration
-     * @return       : true if a factory is registered for contract id 
+     * @return       : true if a factory is registered for contract id
      *                 false otherwise.
      */
     boolean isContractIDRegistered(in string aContractID);
@@ -117,7 +117,7 @@ interface nsIComponentRegistrar : nsISupports
      * Enumerate the list of all registered CIDs.
      *
      * @return : enumerator for CIDs.  Elements of the enumeration can be QI'ed
-     *           for the nsISupportsID interface.  From the nsISupportsID, you 
+     *           for the nsISupportsID interface.  From the nsISupportsID, you
      *           can obtain the actual CID.
      */
     nsISimpleEnumerator enumerateCIDs();
@@ -127,9 +127,9 @@ interface nsIComponentRegistrar : nsISupports
      *
      * Enumerate the list of all registered ContractIDs.
      *
-     * @return : enumerator for ContractIDs. Elements of the enumeration can be 
+     * @return : enumerator for ContractIDs. Elements of the enumeration can be
      *           QI'ed for the nsISupportsCString interface.  From  the
-     *           nsISupportsCString interface, you can obtain the actual 
+     *           nsISupportsCString interface, you can obtain the actual
      *           Contract ID string.
      */
     nsISimpleEnumerator enumerateContractIDs();

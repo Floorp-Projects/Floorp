@@ -30,6 +30,7 @@ const cols = {
   method: true,
   domain: true,
   file: true,
+  url: false,
   protocol: false,
   scheme: false,
   remoteip: false,

@@ -162,8 +162,8 @@ MethodStatus BaselineCompiler::compile() {
   AutoTraceLog logScript(logger, scriptEvent);
   AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
-  AutoKeepTypeScripts keepTypes(cx);
-  if (!script->ensureHasTypes(cx, keepTypes)) {
+  AutoKeepJitScripts keepJitScript(cx);
+  if (!script->ensureHasJitScript(cx, keepJitScript)) {
     return Method_Error;
   }
 
@@ -542,8 +542,8 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 
 template <>
 bool BaselineCompilerCodeGen::emitNextIC() {
-  // Emit a call to an IC stored in ICScript. Calls to this must match the
-  // ICEntry order in ICScript: first the non-op IC entries for |this| and
+  // Emit a call to an IC stored in JitScript. Calls to this must match the
+  // ICEntry order in JitScript: first the non-op IC entries for |this| and
   // formal arguments, then the for-op IC entries for JOF_IC ops.
 
   JSScript* script = handler.script();
@@ -553,7 +553,7 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   // to loop until we find an ICEntry for the current pc.
   const ICEntry* entry;
   do {
-    entry = &script->icScript()->icEntry(handler.icEntryIndex());
+    entry = &script->jitScript()->icEntry(handler.icEntryIndex());
     handler.moveToNextICEntry();
   } while (entry->pcOffset() < pcOffset);
 
@@ -1111,10 +1111,9 @@ void BaselineInterpreterCodeGen::emitInitFrameFields() {
   masm.storePtr(scratch1, frame.addressOfInterpreterScript());
 
   // Initialize interpreterICEntry.
-  masm.loadPtr(Address(scratch1, JSScript::offsetOfTypes()), scratch2);
-  masm.loadPtr(Address(scratch2, TypeScript::offsetOfICScript()), scratch2);
-  masm.computeEffectiveAddress(Address(scratch2, ICScript::offsetOfICEntries()),
-                               scratch2);
+  masm.loadPtr(Address(scratch1, JSScript::offsetOfJitScript()), scratch2);
+  masm.computeEffectiveAddress(
+      Address(scratch2, JitScript::offsetOfICEntries()), scratch2);
   masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
 
   // Initialize interpreterPC.
@@ -5897,7 +5896,7 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   ValueOperand retVal = regs.takeAnyValue();
   masm.loadValue(frame.addressOfStackValue(-1), retVal);
 
-  // Branch to interpret if the script does not have a TypeScript or
+  // Branch to interpret if the script does not have a JitScript or
   // BaselineScript (depending on whether the Baseline Interpreter is enabled).
   // Note that we don't relazify generator scripts, so the function is
   // guaranteed to be non-lazy.
@@ -5906,8 +5905,9 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
   Address baselineAddr(scratch1, JSScript::offsetOfBaselineScript());
   if (JitOptions.baselineInterpreter) {
-    Address typesAddr(scratch1, JSScript::offsetOfTypes());
-    masm.branchPtr(Assembler::Equal, typesAddr, ImmPtr(nullptr), &interpret);
+    Address jitScriptAddr(scratch1, JSScript::offsetOfJitScript());
+    masm.branchPtr(Assembler::Equal, jitScriptAddr, ImmPtr(nullptr),
+                   &interpret);
   } else {
     masm.branchPtr(Assembler::BelowOrEqual, baselineAddr,
                    ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
@@ -6126,7 +6126,7 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
     masm.implicitPop((fun.explicitStackSlots() + 1) * sizeof(void*));
   }
 
-  // Call into the VM to run in the C++ interpreter if there's no TypeScript or
+  // Call into the VM to run in the C++ interpreter if there's no JitScript or
   // BaselineScript.
   masm.bind(&interpret);
 
@@ -6264,10 +6264,9 @@ bool BaselineInterpreterCodeGen::emit_JSOP_JUMPTARGET() {
 
   // Compute ICEntry* and store to frame->interpreterICEntry.
   loadScript(scratch2);
-  masm.loadPtr(Address(scratch2, JSScript::offsetOfTypes()), scratch2);
-  masm.loadPtr(Address(scratch2, TypeScript::offsetOfICScript()), scratch2);
+  masm.loadPtr(Address(scratch2, JSScript::offsetOfJitScript()), scratch2);
   masm.computeEffectiveAddress(
-      BaseIndex(scratch2, scratch1, TimesOne, ICScript::offsetOfICEntries()),
+      BaseIndex(scratch2, scratch1, TimesOne, JitScript::offsetOfICEntries()),
       scratch2);
   masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
   return true;

@@ -51,16 +51,16 @@ interface nsIComponentManager : nsISupports
      * @param aDelegate : Used for aggregation
      * @param aIID : IID of interface requested
      */
-    void createInstance(in nsCIDRef aClass, 
+    void createInstance(in nsCIDRef aClass,
                         in nsISupports aDelegate,
-                        in nsIIDRef aIID, 
+                        in nsIIDRef aIID,
                         [iid_is(aIID),retval] out nsQIResult result);
 
     /**
      * createInstanceByContractID
      *
      * Create an instance of the CID that implements aContractID and return the
-     * interface aIID. 
+     * interface aIID.
      *
      * @param aContractID : aContractID of object instance requested
      * @param aDelegate : Used for aggregation
@@ -68,7 +68,7 @@ interface nsIComponentManager : nsISupports
      */
     void createInstanceByContractID(in string aContractID,
                                     in nsISupports aDelegate,
-                                    in nsIIDRef aIID, 
+                                    in nsIIDRef aIID,
                                     [iid_is(aIID),retval] out nsQIResult result);
 
     /**

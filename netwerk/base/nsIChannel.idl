@@ -56,19 +56,19 @@ interface nsIChannel : nsIRequest
      * mobile code loaded from this channel.
      *
      * NOTE: this is a strong reference to the owner, so if the owner is also
-     * holding a strong reference to the channel, care must be taken to 
+     * holding a strong reference to the channel, care must be taken to
      * explicitly drop its reference to the channel.
      */
     attribute nsISupports owner;
 
     /**
      * The notification callbacks for the channel.  This is set by clients, who
-     * wish to provide a means to receive progress, status and protocol-specific 
+     * wish to provide a means to receive progress, status and protocol-specific
      * notifications.  If this value is NULL, the channel implementation may use
      * the notification callbacks from its load group.  The channel may also
      * query the notification callbacks from its load group if its notification
      * callbacks do not supply the requested interface.
-     * 
+     *
      * Interfaces commonly requested include: nsIProgressEventSink, nsIPrompt,
      * and nsIAuthPrompt/nsIAuthPrompt2.
      *
@@ -96,8 +96,8 @@ interface nsIChannel : nsIRequest
     readonly attribute nsISupports securityInfo;
 
     /**
-     * The MIME type of the channel's content if available. 
-     * 
+     * The MIME type of the channel's content if available.
+     *
      * NOTE: the content type can often be wrongly specified (e.g., wrong file
      * extension, wrong MIME type, wrong document type stored on a server, etc.),
      * and the caller most likely wants to verify with the actual data.
@@ -204,8 +204,8 @@ interface nsIChannel : nsIRequest
      */
     const unsigned long LOAD_DOCUMENT_URI = 1 << 16;
 
-    /** 
-     * If the end consumer for this load has been retargeted after discovering 
+    /**
+     * If the end consumer for this load has been retargeted after discovering
      * its content, this flag will be set:
      */
     const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 17;

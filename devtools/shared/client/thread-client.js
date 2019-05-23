@@ -5,12 +5,24 @@
 
 "use strict";
 
-const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
+const {
+  arg,
+  DebuggerClient,
+} = require("devtools/shared/client/debugger-client");
 const eventSource = require("devtools/shared/client/event-source");
-const {ThreadStateTypes} = require("devtools/shared/client/constants");
+const { ThreadStateTypes } = require("devtools/shared/client/constants");
 
-loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
-loader.lazyRequireGetter(this, "SourceFront", "devtools/shared/fronts/source", true);
+loader.lazyRequireGetter(
+  this,
+  "ObjectClient",
+  "devtools/shared/client/object-client"
+);
+loader.lazyRequireGetter(
+  this,
+  "SourceFront",
+  "devtools/shared/fronts/source",
+  true
+);
 
 /**
  * Creates a thread client for the remote debugging protocol server. This client
@@ -50,7 +62,9 @@ ThreadClient.prototype = {
 
   _assertPaused: function(command) {
     if (!this.paused) {
-      throw Error(command + " command sent while not paused. Currently " + this._state);
+      throw Error(
+        command + " command sent while not paused. Currently " + this._state
+      );
     }
   },
 
@@ -67,36 +81,39 @@ ThreadClient.prototype = {
    *        than proceeding forwards. This parameter has no effect if the
    *        server does not support rewinding.
    */
-  _doResume: DebuggerClient.requester({
-    type: "resume",
-    resumeLimit: arg(0),
-    rewind: arg(1),
-  }, {
-    before: function(packet) {
-      this._assertPaused("resume");
-
-      // Put the client in a tentative "resuming" state so we can prevent
-      // further requests that should only be sent in the paused state.
-      this._previousState = this._state;
-      this._state = "resuming";
-
-      return packet;
+  _doResume: DebuggerClient.requester(
+    {
+      type: "resume",
+      resumeLimit: arg(0),
+      rewind: arg(1),
     },
-    after: function(response) {
-      if (response.error && this._state == "resuming") {
-        // There was an error resuming, update the state to the new one
-        // reported by the server, if given (only on wrongState), otherwise
-        // reset back to the previous state.
-        if (response.state) {
-          this._state = ThreadStateTypes[response.state];
-        } else {
-          this._state = this._previousState;
+    {
+      before: function(packet) {
+        this._assertPaused("resume");
+
+        // Put the client in a tentative "resuming" state so we can prevent
+        // further requests that should only be sent in the paused state.
+        this._previousState = this._state;
+        this._state = "resuming";
+
+        return packet;
+      },
+      after: function(response) {
+        if (response.error && this._state == "resuming") {
+          // There was an error resuming, update the state to the new one
+          // reported by the server, if given (only on wrongState), otherwise
+          // reset back to the previous state.
+          if (response.state) {
+            this._state = ThreadStateTypes[response.state];
+          } else {
+            this._state = this._previousState;
+          }
         }
-      }
-      delete this._previousState;
-      return response;
-    },
-  }),
+        delete this._previousState;
+        return response;
+      },
+    }
+  ),
 
   /**
    * Reconfigure the thread actor.
@@ -214,14 +231,17 @@ ThreadClient.prototype = {
   /**
    * Detach from the thread actor.
    */
-  detach: DebuggerClient.requester({
-    type: "detach",
-  }, {
-    after: function(response) {
-      this.client.unregisterClient(this);
-      return response;
+  detach: DebuggerClient.requester(
+    {
+      type: "detach",
     },
-  }),
+    {
+      after: function(response) {
+        this.client.unregisterClient(this);
+        return response;
+      },
+    }
+  ),
 
   /**
    * Promote multiple pause-lifetime object actors to thread-lifetime ones.

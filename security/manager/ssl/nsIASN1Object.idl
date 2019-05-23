@@ -27,7 +27,7 @@ interface nsIASN1Object : nsISupports {
   const unsigned long ASN1_INTEGER          = 2;
   const unsigned long ASN1_BIT_STRING       = 3;
   const unsigned long ASN1_OCTET_STRING     = 4;
-  const unsigned long ASN1_NULL             = 5; 
+  const unsigned long ASN1_NULL             = 5;
   const unsigned long ASN1_OBJECT_ID        = 6;
   const unsigned long ASN1_ENUMERATED       = 10;
   const unsigned long ASN1_UTF8_STRING      = 12;
@@ -39,7 +39,7 @@ interface nsIASN1Object : nsISupports {
   const unsigned long ASN1_UTC_TIME         = 23;
   const unsigned long ASN1_GEN_TIME         = 24;
   const unsigned long ASN1_VISIBLE_STRING   = 26;
-  const unsigned long ASN1_UNIVERSAL_STRING = 28; 
+  const unsigned long ASN1_UNIVERSAL_STRING = 28;
   const unsigned long ASN1_BMP_STRING       = 30;
   const unsigned long ASN1_HIGH_TAG_NUMBER  = 31;
   const unsigned long ASN1_CONTEXT_SPECIFIC = 32;

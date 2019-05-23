@@ -615,7 +615,7 @@ static bool RecompileBaselineScriptForDebugMode(
           script->filename(), script->lineno(), script->column(),
           observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
-  AutoKeepTypeScripts keepTypes(cx);
+  AutoKeepJitScripts keepJitScripts(cx);
   script->setBaselineScript(cx->runtime(), nullptr);
 
   MethodStatus status =

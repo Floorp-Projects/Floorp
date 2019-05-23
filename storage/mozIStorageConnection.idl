@@ -127,7 +127,7 @@ interface mozIStorageConnection : mozIStorageAsyncConnection {
   readonly attribute AUTF8String lastErrorString;
 
   /**
-   * The schema version of the database.  This should not be used until the 
+   * The schema version of the database.  This should not be used until the
    * database is ready.  The schema will be reported as zero if it is not set.
    */
   attribute long schemaVersion;
@@ -138,7 +138,7 @@ interface mozIStorageConnection : mozIStorageAsyncConnection {
   /**
    * Create a mozIStorageStatement for the given SQL expression.  The
    * expression may use ? to indicate sequential numbered arguments,
-   * ?1, ?2 etc. to indicate specific numbered arguments or :name and 
+   * ?1, ?2 etc. to indicate specific numbered arguments or :name and
    * $var to indicate named arguments.
    *
    * @param aSQLStatement

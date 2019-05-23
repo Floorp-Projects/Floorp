@@ -22,7 +22,7 @@
  * "number-a" is incremented by 1 and "string-b" becomes "pre".
  *
  * 1.0pre1
- * < 1.0pre2  
+ * < 1.0pre2
  *   < 1.0 == 1.0.0 == 1.0.0.0
  *     < 1.1pre == 1.1pre0 == 1.0+
  *       < 1.1pre1a

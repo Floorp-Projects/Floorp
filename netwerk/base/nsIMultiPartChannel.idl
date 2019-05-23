@@ -8,7 +8,7 @@
 interface nsIChannel;
 
 /**
- * An interface to access the the base channel 
+ * An interface to access the the base channel
  * associated with a MultiPartChannel.
  */
 

@@ -64,10 +64,10 @@ interface nsICache : nsISupports
      * If you think that you might need to modify cached data or meta data,
      * then you must open a cache entry requesting WRITE access.  Only one
      * cache entry descriptor, per cache entry, will be granted WRITE access.
-     * 
+     *
      * Usually, you will request READ_WRITE access in order to first test the
      * meta data and informational fields to determine if a write (ie. going
-     * to the net) may actually be necessary.  If you determine that it is 
+     * to the net) may actually be necessary.  If you determine that it is
      * not, then you would mark the cache entry as valid (using MarkValid) and
      * then simply read the data from the cache.
      *
@@ -121,7 +121,7 @@ interface nsICache : nsISupports
      */
     const long NOT_STREAM_BASED = 0;
     const long STREAM_BASED     = 1;
-    
+
     /**
      * The synchronous OpenCacheEntry() may be blocking or non-blocking.  If a cache entry is
      * waiting to be validated by another cache descriptor (so no new cache descriptors for that
@@ -129,7 +129,7 @@ interface nsICache : nsISupports
      * non-blocking mode.  In blocking mode, it will wait until the cache entry for the key has
      * been validated or doomed.  If the cache entry is validated, then a descriptor for that
      * entry will be created and returned.  If the cache entry was doomed, then a descriptor
-     * will be created for a new cache entry for the key. 
+     * will be created for a new cache entry for the key.
      */
     const long NON_BLOCKING = 0;
     const long BLOCKING     = 1;

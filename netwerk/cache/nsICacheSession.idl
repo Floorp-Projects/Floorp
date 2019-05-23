@@ -66,7 +66,7 @@ interface nsICacheSession : nsISupports
      * Evict all entries for this session's clientID according to its storagePolicy.
      */
     void evictEntries();
-    
+
     /**
      * Return whether any of the cache devices implied by the session storage policy
      * are currently enabled for instantiation if they don't already exist.

@@ -39,14 +39,14 @@ interface nsIInputStreamChannel : nsISupports
     attribute nsIInputStream contentStream;
 
     /**
-     * Get/set the srcdoc data string.  When the input stream channel is 
+     * Get/set the srcdoc data string.  When the input stream channel is
      * created to load a srcdoc iframe, this is set to hold the value of the
      * srcdoc attribute.
      *
      * This should be the same value used to create contentStream, but this is
      * not checked.
      *
-     * Changing the value of this attribute will not otherwise affect the 
+     * Changing the value of this attribute will not otherwise affect the
      * functionality of the channel or input stream.
      */
     attribute AString srcdocData;

@@ -21,12 +21,12 @@ interface nsIDirIndex : nsISupports
      * Entry is a directory
      */
     const unsigned long TYPE_DIRECTORY = 1;
-    
+
     /**
      * Entry is a file
      */
     const unsigned long TYPE_FILE = 2;
-    
+
     /**
      * Entry is a symlink
      */
@@ -61,7 +61,7 @@ interface nsIDirIndex : nsISupports
      * File size, with -1 meaning "unknown"
      */
     attribute long long size;
-    
+
     /**
      * Last-modified time in seconds-since-epoch.
      * -1 means unknown - this is valid, because there were no

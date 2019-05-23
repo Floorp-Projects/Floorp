@@ -15,12 +15,12 @@ interface nsIEventTarget;
 [scriptable, uuid(62b27fc1-6e8c-4225-8ad0-b9d44252973a)]
 interface nsIStreamListenerTee : nsIStreamListener
 {
-    /** 
+    /**
      * Initalize the tee.
      *
      * @param listener
      *    the original listener the tee will propagate onStartRequest,
-     *    onDataAvailable and onStopRequest notifications to, exceptions from 
+     *    onDataAvailable and onStopRequest notifications to, exceptions from
      *    the listener will be propagated back to the channel
      * @param sink
      *    the stream the data coming from the channel will be written to,
@@ -29,13 +29,13 @@ interface nsIStreamListenerTee : nsIStreamListener
      *    optional parameter, listener that gets only onStartRequest and
      *    onStopRequest notifications; exceptions threw within this optional
      *    observer are also propagated to the channel, but exceptions from
-     *    the original listener (listener parameter) are privileged 
+     *    the original listener (listener parameter) are privileged
      */
     void init(in nsIStreamListener listener,
               in nsIOutputStream sink,
               [optional] in nsIRequestObserver requestObserver);
 
-    /** 
+    /**
      * Initalize the tee like above, but with the extra parameter to make it
      * possible to copy the output asynchronously
      * @param anEventTarget
@@ -46,5 +46,5 @@ interface nsIStreamListenerTee : nsIStreamListener
                    in nsIEventTarget eventTarget,
                    in nsIOutputStream sink,
                    [optional] in nsIRequestObserver requestObserver);
-    
+
 };

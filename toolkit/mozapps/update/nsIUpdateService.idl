@@ -145,7 +145,7 @@ interface nsIUpdate : nsISupports
    * Whether the update is no longer supported on this system.
    */
   readonly attribute boolean unsupported;
-  
+
   /**
    * Allows overriding the default amount of time in seconds before prompting the
    * user to apply an update. If not specified, the value of
