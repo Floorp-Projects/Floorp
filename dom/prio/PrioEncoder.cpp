@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
 
@@ -25,6 +24,14 @@ StaticRefPtr<PrioEncoder> PrioEncoder::sSingleton;
 PublicKey PrioEncoder::sPublicKeyA = nullptr;
 /* static */
 PublicKey PrioEncoder::sPublicKeyB = nullptr;
+
+// Production keys from bug 1552315 comment#3
+/* static */
+const char* kDefaultKeyA =
+    "E780C1A9C50E3FC5A9B39469FCC92D62D2527BAE6AF76BBDEF128883FA400846";
+/* static */
+const char* kDefaultKeyB =
+    "F992B575840AEC202289FBF99D6C04FB2A37B1DA1CDEB1DF8036E1340D46C561";
 
 PrioEncoder::PrioEncoder() = default;
 PrioEncoder::~PrioEncoder() {
@@ -155,50 +162,61 @@ bool PrioEncoder::IsValidHexPublicKey(mozilla::Span<const char> aStr) {
 }
 
 /* static */
+nsresult PrioEncoder::SetKeys(const char* aKeyA, const char* aKeyB) {
+  nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyA;
+  if (aKeyA == nullptr) {
+    prioKeyA = kDefaultKeyA;
+  } else {
+    prioKeyA = aKeyA;
+  }
+
+  nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyB;
+  if (aKeyB == nullptr) {
+    prioKeyB = kDefaultKeyB;
+  } else {
+    prioKeyB = aKeyB;
+  }
+
+  // Check that both public keys are of the right length
+  // and contain only hex digits 0-9a-fA-f
+  if (!PrioEncoder::IsValidHexPublicKey(prioKeyA) ||
+      !PrioEncoder::IsValidHexPublicKey(prioKeyB)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  SECStatus prio_rv = SECSuccess;
+  prio_rv = Prio_init();
+
+  if (prio_rv != SECSuccess) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  prio_rv = PublicKey_import_hex(
+      &sPublicKeyA,
+      reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()),
+      CURVE25519_KEY_LEN_HEX);
+  if (prio_rv != SECSuccess) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  prio_rv = PublicKey_import_hex(
+      &sPublicKeyB,
+      reinterpret_cast<const unsigned char*>(prioKeyB.BeginReading()),
+      CURVE25519_KEY_LEN_HEX);
+  if (prio_rv != SECSuccess) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+/* static */
 nsresult PrioEncoder::LazyInitSingleton() {
   if (!sSingleton) {
-    nsresult rv;
-
-    nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyA;
-    rv = Preferences::GetCString("prio.publicKeyA", prioKeyA);
-    if (NS_FAILED(rv)) {
+    // Init to the default keys.
+    nsresult rv = PrioEncoder::SetKeys();
+    if (!NS_SUCCEEDED(rv)) {
       return rv;
-    }
-
-    nsAutoCStringN<CURVE25519_KEY_LEN_HEX + 1> prioKeyB;
-    rv = Preferences::GetCString("prio.publicKeyB", prioKeyB);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    // Check that both public keys are of the right length
-    // and contain only hex digits 0-9a-fA-f
-    if (!PrioEncoder::IsValidHexPublicKey(prioKeyA) ||
-        !PrioEncoder::IsValidHexPublicKey(prioKeyB)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    SECStatus prio_rv = SECSuccess;
-    prio_rv = Prio_init();
-
-    if (prio_rv != SECSuccess) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    prio_rv = PublicKey_import_hex(
-        &sPublicKeyA,
-        reinterpret_cast<const unsigned char*>(prioKeyA.BeginReading()),
-        CURVE25519_KEY_LEN_HEX);
-    if (prio_rv != SECSuccess) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    prio_rv = PublicKey_import_hex(
-        &sPublicKeyB,
-        reinterpret_cast<const unsigned char*>(prioKeyB.BeginReading()),
-        CURVE25519_KEY_LEN_HEX);
-    if (prio_rv != SECSuccess) {
-      return NS_ERROR_UNEXPECTED;
     }
 
     sSingleton = new PrioEncoder();
