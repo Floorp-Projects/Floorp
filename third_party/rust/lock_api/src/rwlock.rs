@@ -14,6 +14,9 @@ use core::ops::{Deref, DerefMut};
 #[cfg(feature = "owning_ref")]
 use owning_ref::StableAddress;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
 /// Basic operations for a reader-writer lock.
 ///
 /// Types implementing this trait can be used by `RwLock` to form a safe and
@@ -230,6 +233,35 @@ pub struct RwLock<R: RawRwLock, T: ?Sized> {
     data: UnsafeCell<T>,
 }
 
+// Copied and modified from serde
+#[cfg(feature = "serde")]
+impl<R, T> Serialize for RwLock<R, T>
+where
+    R: RawRwLock,
+    T: Serialize + ?Sized,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.read().serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, R, T> Deserialize<'de> for RwLock<R, T>
+where
+    R: RawRwLock,
+    T: Deserialize<'de> + ?Sized,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(deserializer).map(RwLock::new)
+    }
+}
+
 unsafe impl<R: RawRwLock + Send, T: ?Sized + Send> Send for RwLock<R, T> {}
 unsafe impl<R: RawRwLock + Sync, T: ?Sized + Send + Sync> Sync for RwLock<R, T> {}
 
@@ -264,7 +296,7 @@ impl<R: RawRwLock, T> RwLock<R, T> {
 
 impl<R: RawRwLock, T: ?Sized> RwLock<R, T> {
     #[inline]
-    fn read_guard(&self) -> RwLockReadGuard<R, T> {
+    fn read_guard(&self) -> RwLockReadGuard<'_, R, T> {
         RwLockReadGuard {
             rwlock: self,
             marker: PhantomData,
@@ -272,7 +304,7 @@ impl<R: RawRwLock, T: ?Sized> RwLock<R, T> {
     }
 
     #[inline]
-    fn write_guard(&self) -> RwLockWriteGuard<R, T> {
+    fn write_guard(&self) -> RwLockWriteGuard<'_, R, T> {
         RwLockWriteGuard {
             rwlock: self,
             marker: PhantomData,
@@ -292,7 +324,7 @@ impl<R: RawRwLock, T: ?Sized> RwLock<R, T> {
     /// Returns an RAII guard which will release this thread's shared access
     /// once it is dropped.
     #[inline]
-    pub fn read(&self) -> RwLockReadGuard<R, T> {
+    pub fn read(&self) -> RwLockReadGuard<'_, R, T> {
         self.raw.lock_shared();
         self.read_guard()
     }
@@ -305,7 +337,7 @@ impl<R: RawRwLock, T: ?Sized> RwLock<R, T> {
     ///
     /// This function does not block.
     #[inline]
-    pub fn try_read(&self) -> Option<RwLockReadGuard<R, T>> {
+    pub fn try_read(&self) -> Option<RwLockReadGuard<'_, R, T>> {
         if self.raw.try_lock_shared() {
             Some(self.read_guard())
         } else {
@@ -322,7 +354,7 @@ impl<R: RawRwLock, T: ?Sized> RwLock<R, T> {
     /// Returns an RAII guard which will drop the write access of this `RwLock`
     /// when dropped.
     #[inline]
-    pub fn write(&self) -> RwLockWriteGuard<R, T> {
+    pub fn write(&self) -> RwLockWriteGuard<'_, R, T> {
         self.raw.lock_exclusive();
         self.write_guard()
     }
@@ -335,7 +367,7 @@ impl<R: RawRwLock, T: ?Sized> RwLock<R, T> {
     ///
     /// This function does not block.
     #[inline]
-    pub fn try_write(&self) -> Option<RwLockWriteGuard<R, T>> {
+    pub fn try_write(&self) -> Option<RwLockWriteGuard<'_, R, T>> {
         if self.raw.try_lock_exclusive() {
             Some(self.write_guard())
         } else {
@@ -441,7 +473,7 @@ impl<R: RawRwLockTimed, T: ?Sized> RwLock<R, T> {
     /// `None` is returned. Otherwise, an RAII guard is returned which will
     /// release the shared access when it is dropped.
     #[inline]
-    pub fn try_read_for(&self, timeout: R::Duration) -> Option<RwLockReadGuard<R, T>> {
+    pub fn try_read_for(&self, timeout: R::Duration) -> Option<RwLockReadGuard<'_, R, T>> {
         if self.raw.try_lock_shared_for(timeout) {
             Some(self.read_guard())
         } else {
@@ -456,7 +488,7 @@ impl<R: RawRwLockTimed, T: ?Sized> RwLock<R, T> {
     /// `None` is returned. Otherwise, an RAII guard is returned which will
     /// release the shared access when it is dropped.
     #[inline]
-    pub fn try_read_until(&self, timeout: R::Instant) -> Option<RwLockReadGuard<R, T>> {
+    pub fn try_read_until(&self, timeout: R::Instant) -> Option<RwLockReadGuard<'_, R, T>> {
         if self.raw.try_lock_shared_until(timeout) {
             Some(self.read_guard())
         } else {
@@ -471,7 +503,7 @@ impl<R: RawRwLockTimed, T: ?Sized> RwLock<R, T> {
     /// `None` is returned. Otherwise, an RAII guard is returned which will
     /// release the exclusive access when it is dropped.
     #[inline]
-    pub fn try_write_for(&self, timeout: R::Duration) -> Option<RwLockWriteGuard<R, T>> {
+    pub fn try_write_for(&self, timeout: R::Duration) -> Option<RwLockWriteGuard<'_, R, T>> {
         if self.raw.try_lock_exclusive_for(timeout) {
             Some(self.write_guard())
         } else {
@@ -486,7 +518,7 @@ impl<R: RawRwLockTimed, T: ?Sized> RwLock<R, T> {
     /// `None` is returned. Otherwise, an RAII guard is returned which will
     /// release the exclusive access when it is dropped.
     #[inline]
-    pub fn try_write_until(&self, timeout: R::Instant) -> Option<RwLockWriteGuard<R, T>> {
+    pub fn try_write_until(&self, timeout: R::Instant) -> Option<RwLockWriteGuard<'_, R, T>> {
         if self.raw.try_lock_exclusive_until(timeout) {
             Some(self.write_guard())
         } else {
@@ -512,7 +544,7 @@ impl<R: RawRwLockRecursive, T: ?Sized> RwLock<R, T> {
     /// Returns an RAII guard which will release this thread's shared access
     /// once it is dropped.
     #[inline]
-    pub fn read_recursive(&self) -> RwLockReadGuard<R, T> {
+    pub fn read_recursive(&self) -> RwLockReadGuard<'_, R, T> {
         self.raw.lock_shared_recursive();
         self.read_guard()
     }
@@ -528,7 +560,7 @@ impl<R: RawRwLockRecursive, T: ?Sized> RwLock<R, T> {
     ///
     /// This function does not block.
     #[inline]
-    pub fn try_read_recursive(&self) -> Option<RwLockReadGuard<R, T>> {
+    pub fn try_read_recursive(&self) -> Option<RwLockReadGuard<'_, R, T>> {
         if self.raw.try_lock_shared_recursive() {
             Some(self.read_guard())
         } else {
@@ -549,7 +581,10 @@ impl<R: RawRwLockRecursiveTimed, T: ?Sized> RwLock<R, T> {
     /// lock is held at the time of the call. See the documentation for
     /// `read_recursive` for details.
     #[inline]
-    pub fn try_read_recursive_for(&self, timeout: R::Duration) -> Option<RwLockReadGuard<R, T>> {
+    pub fn try_read_recursive_for(
+        &self,
+        timeout: R::Duration,
+    ) -> Option<RwLockReadGuard<'_, R, T>> {
         if self.raw.try_lock_shared_recursive_for(timeout) {
             Some(self.read_guard())
         } else {
@@ -564,7 +599,10 @@ impl<R: RawRwLockRecursiveTimed, T: ?Sized> RwLock<R, T> {
     /// `None` is returned. Otherwise, an RAII guard is returned which will
     /// release the shared access when it is dropped.
     #[inline]
-    pub fn try_read_recursive_until(&self, timeout: R::Instant) -> Option<RwLockReadGuard<R, T>> {
+    pub fn try_read_recursive_until(
+        &self,
+        timeout: R::Instant,
+    ) -> Option<RwLockReadGuard<'_, R, T>> {
         if self.raw.try_lock_shared_recursive_until(timeout) {
             Some(self.read_guard())
         } else {
@@ -575,7 +613,7 @@ impl<R: RawRwLockRecursiveTimed, T: ?Sized> RwLock<R, T> {
 
 impl<R: RawRwLockUpgrade, T: ?Sized> RwLock<R, T> {
     #[inline]
-    fn upgradable_guard(&self) -> RwLockUpgradableReadGuard<R, T> {
+    fn upgradable_guard(&self) -> RwLockUpgradableReadGuard<'_, R, T> {
         RwLockUpgradableReadGuard {
             rwlock: self,
             marker: PhantomData,
@@ -592,7 +630,7 @@ impl<R: RawRwLockUpgrade, T: ?Sized> RwLock<R, T> {
     /// Returns an RAII guard which will release this thread's shared access
     /// once it is dropped.
     #[inline]
-    pub fn upgradable_read(&self) -> RwLockUpgradableReadGuard<R, T> {
+    pub fn upgradable_read(&self) -> RwLockUpgradableReadGuard<'_, R, T> {
         self.raw.lock_upgradable();
         self.upgradable_guard()
     }
@@ -605,7 +643,7 @@ impl<R: RawRwLockUpgrade, T: ?Sized> RwLock<R, T> {
     ///
     /// This function does not block.
     #[inline]
-    pub fn try_upgradable_read(&self) -> Option<RwLockUpgradableReadGuard<R, T>> {
+    pub fn try_upgradable_read(&self) -> Option<RwLockUpgradableReadGuard<'_, R, T>> {
         if self.raw.try_lock_upgradable() {
             Some(self.upgradable_guard())
         } else {
@@ -625,7 +663,7 @@ impl<R: RawRwLockUpgradeTimed, T: ?Sized> RwLock<R, T> {
     pub fn try_upgradable_read_for(
         &self,
         timeout: R::Duration,
-    ) -> Option<RwLockUpgradableReadGuard<R, T>> {
+    ) -> Option<RwLockUpgradableReadGuard<'_, R, T>> {
         if self.raw.try_lock_upgradable_for(timeout) {
             Some(self.upgradable_guard())
         } else {
@@ -643,7 +681,7 @@ impl<R: RawRwLockUpgradeTimed, T: ?Sized> RwLock<R, T> {
     pub fn try_upgradable_read_until(
         &self,
         timeout: R::Instant,
-    ) -> Option<RwLockUpgradableReadGuard<R, T>> {
+    ) -> Option<RwLockUpgradableReadGuard<'_, R, T>> {
         if self.raw.try_lock_upgradable_until(timeout) {
             Some(self.upgradable_guard())
         } else {
@@ -667,18 +705,29 @@ impl<R: RawRwLock, T> From<T> for RwLock<R, T> {
 }
 
 impl<R: RawRwLock, T: ?Sized + fmt::Debug> fmt::Debug for RwLock<R, T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.try_read() {
             Some(guard) => f.debug_struct("RwLock").field("data", &&*guard).finish(),
-            None => f.pad("RwLock { <locked> }"),
+            None => {
+                struct LockedPlaceholder;
+                impl fmt::Debug for LockedPlaceholder {
+                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                        f.write_str("<locked>")
+                    }
+                }
+
+                f.debug_struct("RwLock")
+                    .field("data", &LockedPlaceholder)
+                    .finish()
+            }
         }
     }
 }
 
 /// RAII structure used to release the shared read access of a lock when
 /// dropped.
-#[must_use]
-pub struct RwLockReadGuard<'a, R: RawRwLock + 'a, T: ?Sized + 'a> {
+#[must_use = "if unused the RwLock will immediately unlock"]
+pub struct RwLockReadGuard<'a, R: RawRwLock, T: ?Sized> {
     rwlock: &'a RwLock<R, T>,
     marker: PhantomData<(&'a T, R::GuardMarker)>,
 }
@@ -819,13 +868,27 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> Drop for RwLockReadGuard<'a, R, T> {
     }
 }
 
+impl<'a, R: RawRwLock + 'a, T: fmt::Debug + ?Sized + 'a> fmt::Debug for RwLockReadGuard<'a, R, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+impl<'a, R: RawRwLock + 'a, T: fmt::Display + ?Sized + 'a> fmt::Display
+    for RwLockReadGuard<'a, R, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        (**self).fmt(f)
+    }
+}
+
 #[cfg(feature = "owning_ref")]
 unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> StableAddress for RwLockReadGuard<'a, R, T> {}
 
 /// RAII structure used to release the exclusive write access of a lock when
 /// dropped.
-#[must_use]
-pub struct RwLockWriteGuard<'a, R: RawRwLock + 'a, T: ?Sized + 'a> {
+#[must_use = "if unused the RwLock will immediately unlock"]
+pub struct RwLockWriteGuard<'a, R: RawRwLock, T: ?Sized> {
     rwlock: &'a RwLock<R, T>,
     marker: PhantomData<(&'a mut T, R::GuardMarker)>,
 }
@@ -1007,20 +1070,35 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> Drop for RwLockWriteGuard<'a, R, T> 
     }
 }
 
+impl<'a, R: RawRwLock + 'a, T: fmt::Debug + ?Sized + 'a> fmt::Debug for RwLockWriteGuard<'a, R, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+impl<'a, R: RawRwLock + 'a, T: fmt::Display + ?Sized + 'a> fmt::Display
+    for RwLockWriteGuard<'a, R, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        (**self).fmt(f)
+    }
+}
+
 #[cfg(feature = "owning_ref")]
 unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> StableAddress for RwLockWriteGuard<'a, R, T> {}
 
 /// RAII structure used to release the upgradable read access of a lock when
 /// dropped.
-#[must_use]
-pub struct RwLockUpgradableReadGuard<'a, R: RawRwLockUpgrade + 'a, T: ?Sized + 'a> {
+#[must_use = "if unused the RwLock will immediately unlock"]
+pub struct RwLockUpgradableReadGuard<'a, R: RawRwLockUpgrade, T: ?Sized> {
     rwlock: &'a RwLock<R, T>,
     marker: PhantomData<(&'a T, R::GuardMarker)>,
 }
 
 unsafe impl<'a, R: RawRwLockUpgrade + 'a, T: ?Sized + Sync + 'a> Sync
     for RwLockUpgradableReadGuard<'a, R, T>
-{}
+{
+}
 
 impl<'a, R: RawRwLockUpgrade + 'a, T: ?Sized + 'a> RwLockUpgradableReadGuard<'a, R, T> {
     /// Returns a reference to the original reader-writer lock object.
@@ -1196,10 +1274,27 @@ impl<'a, R: RawRwLockUpgrade + 'a, T: ?Sized + 'a> Drop for RwLockUpgradableRead
     }
 }
 
+impl<'a, R: RawRwLockUpgrade + 'a, T: fmt::Debug + ?Sized + 'a> fmt::Debug
+    for RwLockUpgradableReadGuard<'a, R, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+impl<'a, R: RawRwLockUpgrade + 'a, T: fmt::Display + ?Sized + 'a> fmt::Display
+    for RwLockUpgradableReadGuard<'a, R, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        (**self).fmt(f)
+    }
+}
+
 #[cfg(feature = "owning_ref")]
 unsafe impl<'a, R: RawRwLockUpgrade + 'a, T: ?Sized + 'a> StableAddress
     for RwLockUpgradableReadGuard<'a, R, T>
-{}
+{
+}
 
 /// An RAII read lock guard returned by `RwLockReadGuard::map`, which can point to a
 /// subfield of the protected data.
@@ -1208,8 +1303,8 @@ unsafe impl<'a, R: RawRwLockUpgrade + 'a, T: ?Sized + 'a> StableAddress
 /// former doesn't support temporarily unlocking and re-locking, since that
 /// could introduce soundness issues if the locked object is modified by another
 /// thread.
-#[must_use]
-pub struct MappedRwLockReadGuard<'a, R: RawRwLock + 'a, T: ?Sized + 'a> {
+#[must_use = "if unused the RwLock will immediately unlock"]
+pub struct MappedRwLockReadGuard<'a, R: RawRwLock, T: ?Sized> {
     raw: &'a R,
     data: *const T,
     marker: PhantomData<&'a T>,
@@ -1218,7 +1313,8 @@ pub struct MappedRwLockReadGuard<'a, R: RawRwLock + 'a, T: ?Sized + 'a> {
 unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + Sync + 'a> Sync for MappedRwLockReadGuard<'a, R, T> {}
 unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> Send for MappedRwLockReadGuard<'a, R, T> where
     R::GuardMarker: Send
-{}
+{
+}
 
 impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> MappedRwLockReadGuard<'a, R, T> {
     /// Make a new `MappedRwLockReadGuard` for a component of the locked data.
@@ -1307,10 +1403,27 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> Drop for MappedRwLockReadGuard<'a, R
     }
 }
 
+impl<'a, R: RawRwLock + 'a, T: fmt::Debug + ?Sized + 'a> fmt::Debug
+    for MappedRwLockReadGuard<'a, R, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+impl<'a, R: RawRwLock + 'a, T: fmt::Display + ?Sized + 'a> fmt::Display
+    for MappedRwLockReadGuard<'a, R, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        (**self).fmt(f)
+    }
+}
+
 #[cfg(feature = "owning_ref")]
 unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> StableAddress
     for MappedRwLockReadGuard<'a, R, T>
-{}
+{
+}
 
 /// An RAII write lock guard returned by `RwLockWriteGuard::map`, which can point to a
 /// subfield of the protected data.
@@ -1319,8 +1432,8 @@ unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> StableAddress
 /// former doesn't support temporarily unlocking and re-locking, since that
 /// could introduce soundness issues if the locked object is modified by another
 /// thread.
-#[must_use]
-pub struct MappedRwLockWriteGuard<'a, R: RawRwLock + 'a, T: ?Sized + 'a> {
+#[must_use = "if unused the RwLock will immediately unlock"]
+pub struct MappedRwLockWriteGuard<'a, R: RawRwLock, T: ?Sized> {
     raw: &'a R,
     data: *mut T,
     marker: PhantomData<&'a mut T>,
@@ -1328,10 +1441,12 @@ pub struct MappedRwLockWriteGuard<'a, R: RawRwLock + 'a, T: ?Sized + 'a> {
 
 unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + Sync + 'a> Sync
     for MappedRwLockWriteGuard<'a, R, T>
-{}
+{
+}
 unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> Send for MappedRwLockWriteGuard<'a, R, T> where
     R::GuardMarker: Send
-{}
+{
+}
 
 impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> MappedRwLockWriteGuard<'a, R, T> {
     /// Make a new `MappedRwLockWriteGuard` for a component of the locked data.
@@ -1447,7 +1562,24 @@ impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> Drop for MappedRwLockWriteGuard<'a, 
     }
 }
 
+impl<'a, R: RawRwLock + 'a, T: fmt::Debug + ?Sized + 'a> fmt::Debug
+    for MappedRwLockWriteGuard<'a, R, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+impl<'a, R: RawRwLock + 'a, T: fmt::Display + ?Sized + 'a> fmt::Display
+    for MappedRwLockWriteGuard<'a, R, T>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        (**self).fmt(f)
+    }
+}
+
 #[cfg(feature = "owning_ref")]
 unsafe impl<'a, R: RawRwLock + 'a, T: ?Sized + 'a> StableAddress
     for MappedRwLockWriteGuard<'a, R, T>
-{}
+{
+}

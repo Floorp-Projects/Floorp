@@ -6,10 +6,10 @@ environment:
   - TARGET: nightly-i686-pc-windows-msvc
   - TARGET: nightly-x86_64-pc-windows-gnu
   - TARGET: nightly-i686-pc-windows-gnu
-  - TARGET: 1.24.0-x86_64-pc-windows-msvc
-  - TARGET: 1.24.0-i686-pc-windows-msvc
-  - TARGET: 1.24.0-x86_64-pc-windows-gnu
-  - TARGET: 1.24.0-i686-pc-windows-gnu
+  - TARGET: 1.31.0-x86_64-pc-windows-msvc
+  - TARGET: 1.31.0-i686-pc-windows-msvc
+  - TARGET: 1.31.0-x86_64-pc-windows-gnu
+  - TARGET: 1.31.0-i686-pc-windows-gnu
 
 install:
   - SET PATH=C:\Python27;C:\Python27\Scripts;%PATH%;%APPDATA%\Python\Scripts
@@ -25,5 +25,5 @@ build_script:
 
 test_script:
   - travis-cargo test
-  - travis-cargo test -- --features=deadlock_detection
+  - travis-cargo --only nightly test -- --features=deadlock_detection
   - travis-cargo doc
