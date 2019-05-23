@@ -1386,6 +1386,7 @@ class Extension extends ExtensionData {
   constructor(addonData, startupReason) {
     super(addonData.resourceURI);
 
+    this.startupStates = new Set();
     this.state = "Not started";
 
     this.sharedDataKeys = new Set();
@@ -1490,6 +1491,24 @@ class Extension extends ExtensionData {
       this.cachePermissions();
     });
     /* eslint-enable mozilla/balanced-listeners */
+  }
+
+  set state(startupState) {
+    this.startupStates.clear();
+    this.startupStates.add(startupState);
+  }
+
+  get state() {
+    return `${Array.from(this.startupStates).join(", ")}`;
+  }
+
+  async addStartupStatePromise(name, fn) {
+    this.startupStates.add(name);
+    try {
+      await fn();
+    } finally {
+      this.startupStates.delete(name);
+    }
   }
 
   get restrictSchemes() {
@@ -1743,34 +1762,17 @@ class Extension extends ExtensionData {
   }
 
   runManifest(manifest) {
-    let state = new Set();
-    let updateState = () => {
-      this.state = `Startup: Run manifest: ${Array.from(state)}`;
-    };
-
     let promises = [];
-    let addPromise = (name, promise) => {
-      if (promise) {
-        promises.push(promise);
-
-        state.add(name);
-        promise.finally(() => {
-          state.delete(name);
-          updateState();
-        });
-      }
+    let addPromise = (name, fn) => {
+      promises.push(this.addStartupStatePromise(name, fn));
     };
 
     for (let directive in manifest) {
       if (manifest[directive] !== null) {
-        addPromise(`manifest_${directive}`,
-                   Management.emit(`manifest_${directive}`, directive, this, manifest));
-
         addPromise(`asyncEmitManifestEntry("${directive}")`,
-                   Management.asyncEmitManifestEntry(this, directive));
+                   () => Management.asyncEmitManifestEntry(this, directive));
       }
     }
-    updateState();
 
     activeExtensionIDs.add(this.id);
     sharedData.set("extensions/activeIDs", activeExtensionIDs);
@@ -1973,17 +1975,12 @@ class Extension extends ExtensionData {
       // any of the "startup" listeners.
       this.emit("startup", this);
 
-      let state = new Set(["Emit startup", "Run manifest"]);
-      this.state = `Startup: ${Array.from(state)}`;
+      this.startupStates.clear();
       await Promise.all([
-        Management.emit("startup", this).finally(() => {
-          state.delete("Emit startup");
-          this.state = `Startup: ${Array.from(state)}`;
-        }),
-        this.runManifest(this.manifest).finally(() => {
-          state.delete("Run manifest");
-          this.state = `Startup: ${Array.from(state)}`;
-        }),
+        this.addStartupStatePromise("Startup: Emit startup",
+                                    () => Management.emit("startup", this)),
+        this.addStartupStatePromise("Startup: Run manifest",
+                                    () => this.runManifest(this.manifest)),
       ]);
       this.state = "Startup: Ran manifest";
 
