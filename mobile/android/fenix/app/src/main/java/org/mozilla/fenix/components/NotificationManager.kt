@@ -50,7 +50,7 @@ class NotificationManager(private val context: Context) {
             val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 
             val builder = NotificationCompat.Builder(context, RECEIVE_TABS_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification)
+                .setSmallIcon(R.drawable.ic_status_logo)
                 .setContentTitle(tab.title)
                 .setContentText(tab.url)
                 .setContentIntent(pendingIntent)

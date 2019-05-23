@@ -20,6 +20,7 @@ import mozilla.components.feature.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.manager.DeviceTuple
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import org.mozilla.fenix.R
 import org.mozilla.fenix.test.Mockable
 
 /**
@@ -68,7 +69,7 @@ class BackgroundServices(
         context,
         config,
         scopes,
-        DeviceTuple("Fenix", DeviceType.MOBILE, listOf(DeviceCapability.SEND_TAB)),
+        DeviceTuple(context.getString(R.string.app_name), DeviceType.MOBILE, listOf(DeviceCapability.SEND_TAB)),
         syncManager
     ).also {
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), true)
