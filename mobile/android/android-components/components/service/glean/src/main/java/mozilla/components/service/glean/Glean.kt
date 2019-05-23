@@ -154,6 +154,8 @@ open class GleanInternalAPI internal constructor () {
      *
      * When enabling, the core Glean metrics are recreated.
      *
+     * If the value of this flag is not actually changed, this is a no-op.
+     *
      * @param enabled When true, enable metric collection.
      */
     fun setUploadEnabled(enabled: Boolean) {
@@ -178,10 +180,9 @@ open class GleanInternalAPI internal constructor () {
      * When disabling, all pending metrics, events and queued pings are cleared.
      *
      * When enabling, the core Glean metrics are recreated.
-     *
-     * If Glean is not initialized, this is a no-op.
      */
-    private fun onChangeUploadEnabled(enabled: Boolean) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun onChangeUploadEnabled(enabled: Boolean) {
         if (enabled) {
             initializeCoreMetrics(applicationContext!!)
         } else {

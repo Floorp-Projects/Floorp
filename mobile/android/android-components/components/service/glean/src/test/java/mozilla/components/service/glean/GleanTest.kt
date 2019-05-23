@@ -41,12 +41,15 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
+import java.lang.AssertionError
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -530,7 +533,9 @@ class GleanTest {
     fun `Core metrics should be cleared and restored when disabling and enabling uploading`() {
         assertTrue(GleanInternalMetrics.os.testHasValue())
 
+        // Call this a couple of times to make sure it moves to a non-zero value
         Glean.pingMaker.getPingSeq("custom")
+        assertTrue(Glean.pingMaker.getPingSeq("custom") > 0)
 
         Glean.setUploadEnabled(false)
         assertFalse(GleanInternalMetrics.os.testHasValue())
@@ -538,19 +543,6 @@ class GleanTest {
 
         Glean.setUploadEnabled(true)
         assertTrue(GleanInternalMetrics.os.testHasValue())
-    }
-
-    @Test
-    fun `clientId is managed correctly when disabling and enabling metrics`() {
-        val originalClientId = GleanInternalMetrics.clientId.testGetValue()
-        assertNotEquals(GleanInternalAPI.KNOWN_CLIENT_ID, GleanInternalMetrics.clientId.testGetValue())
-
-        Glean.setUploadEnabled(false)
-        assertEquals(GleanInternalAPI.KNOWN_CLIENT_ID, GleanInternalMetrics.clientId.testGetValue())
-
-        Glean.setUploadEnabled(true)
-        assertNotEquals(GleanInternalAPI.KNOWN_CLIENT_ID, GleanInternalMetrics.clientId.testGetValue())
-        assertNotEquals(originalClientId, GleanInternalMetrics.clientId.testGetValue())
     }
 
     @Test
@@ -586,6 +578,18 @@ class GleanTest {
         assertEquals(0, Glean.pingStorageEngine.testGetNumPendingPings())
     }
 
+    fun `clientId is managed correctly when disabling and enabling metrics`() {
+        val originalClientId = GleanInternalMetrics.clientId.testGetValue()
+        assertNotEquals(GleanInternalAPI.KNOWN_CLIENT_ID, GleanInternalMetrics.clientId.testGetValue())
+
+        Glean.setUploadEnabled(false)
+        assertEquals(GleanInternalAPI.KNOWN_CLIENT_ID, GleanInternalMetrics.clientId.testGetValue())
+
+        Glean.setUploadEnabled(true)
+        assertNotEquals(GleanInternalAPI.KNOWN_CLIENT_ID, GleanInternalMetrics.clientId.testGetValue())
+        assertNotEquals(originalClientId, GleanInternalMetrics.clientId.testGetValue())
+    }
+
     @Test
     fun `clientId is set to known id when setting disabled from a cold start`() {
         // Recreate "cold start" values
@@ -608,5 +612,17 @@ class GleanTest {
         Glean.initialize(ApplicationProvider.getApplicationContext())
 
         assertNotEquals(GleanInternalAPI.KNOWN_CLIENT_ID, GleanInternalMetrics.clientId.testGetValue())
+    }
+
+    @Test
+    fun `calling setUploadEnabled is a no-op`() {
+        val gleanMock = mock(GleanInternalAPI::class.java)
+        val context: Context = ApplicationProvider.getApplicationContext()
+
+        gleanMock.initialize(context)
+        gleanMock.setUploadEnabled(true)
+
+        `when`(gleanMock.onChangeUploadEnabled(anyBoolean())).thenThrow(AssertionError::class.java)
+        gleanMock.setUploadEnabled(true)
     }
 }
