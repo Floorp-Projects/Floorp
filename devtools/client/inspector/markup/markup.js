@@ -895,7 +895,6 @@ MarkupView.prototype = {
   /**
    * Key shortcut listener.
    */
-  /* eslint-disable complexity */
   _onShortcut(name, event) {
     if (this._isInputOrTextarea(event.target)) {
       return;
@@ -1025,7 +1024,6 @@ MarkupView.prototype = {
     event.stopPropagation();
     event.preventDefault();
   },
-  /* eslint-enable complexity */
 
   /**
    * Check if a node is an input or textarea

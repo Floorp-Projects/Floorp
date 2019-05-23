@@ -67,7 +67,6 @@ function transformPacket(packet) {
   }
 }
 
-/* eslint-disable complexity */
 function transformConsoleAPICallPacket(packet) {
   const { message } = packet;
 
@@ -199,7 +198,6 @@ function transformConsoleAPICallPacket(packet) {
     chromeContext: message.chromeContext,
   });
 }
-/* eslint-enable complexity */
 
 function transformNavigationMessagePacket(packet) {
   const { url } = packet;
