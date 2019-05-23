@@ -78,6 +78,7 @@ class PreferenceExperimentAction extends BaseAction {
       const experimentType = isHighPopulation ? "exp-highpop" : "exp";
       await PreferenceExperiments.start({
         name: slug,
+        actionName: this.name,
         branch: branch.slug,
         preferences: branch.preferences,
         experimentType,
