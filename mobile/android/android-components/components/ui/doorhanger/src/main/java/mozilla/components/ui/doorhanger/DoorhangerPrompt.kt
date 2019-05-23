@@ -28,6 +28,7 @@ import mozilla.components.support.ktx.android.view.forEach
  * @param buttons A list of buttons to be displayed in the prompt.
  * @param onDismiss that is called when the doorhanger is dismissed.
  */
+@Deprecated("The ui-doorhanger component is getting removed.")
 class DoorhangerPrompt(
     private val title: String,
     private val icon: Drawable? = null,

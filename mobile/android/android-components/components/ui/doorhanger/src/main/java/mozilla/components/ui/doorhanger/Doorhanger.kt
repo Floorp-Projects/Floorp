@@ -18,6 +18,7 @@ import androidx.annotation.VisibleForTesting
  * A [Doorhanger] is a floating heads-up popup that can be anchored to a view. They are presented to notify the user
  * of something that is important.
  */
+@Deprecated("The ui-doorhanger component is getting removed.")
 class Doorhanger(
     private val view: View,
     private val onDismiss: (() -> Unit)? = null
