@@ -94,6 +94,9 @@ class HTMLTrackElement final : public nsGenericHTMLElement {
 
   void NotifyShutdown();
 
+  // Only load resource for the non-disabled track with media parent.
+  void MaybeDispatchLoadResource();
+
  protected:
   virtual ~HTMLTrackElement();
 
@@ -113,7 +116,6 @@ class HTMLTrackElement final : public nsGenericHTMLElement {
   void CreateTextTrack();
 
  private:
-  void DispatchLoadResource();
   // Open a new channel to the HTMLTrackElement's src attribute and call
   // mListener's LoadResource().
   void LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener);
