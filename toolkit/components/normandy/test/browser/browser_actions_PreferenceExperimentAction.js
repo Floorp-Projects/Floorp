@@ -197,8 +197,8 @@ decorate_task(
 decorate_task(
   withStub(PreferenceExperiments, "stop"),
   PreferenceExperiments.withMockExperiments([
-    {name: "seen", expired: false},
-    {name: "unseen", expired: false},
+    {name: "seen", expired: false, action: "PreferenceExperimentAction"},
+    {name: "unseen", expired: false, action: "PreferenceExperimentAction"},
   ]),
   async function stop_experiments_not_seen(stopStub) {
     const action = new PreferenceExperimentAction();
@@ -211,6 +211,25 @@ decorate_task(
 
     Assert.deepEqual(stopStub.args,
                      [["unseen", {resetValue: true, reason: "recipe-not-seen"}]]);
+  }
+);
+
+decorate_task(
+  withStub(PreferenceExperiments, "stop"),
+  PreferenceExperiments.withMockExperiments([
+    {name: "seen", expired: false, action: "SinglePreferenceExperimentAction"},
+    {name: "unseen", expired: false, action: "SinglePreferenceExperimentAction"},
+  ]),
+  async function dont_stop_experiments_for_other_action(stopStub) {
+    const action = new PreferenceExperimentAction();
+    const recipe = preferenceExperimentFactory({
+      slug: "seen",
+    });
+
+    await action.runRecipe(recipe);
+    await action.finalize();
+
+    Assert.deepEqual(stopStub.args, [], "stop not called for other action's experiments");
   }
 );
 
