@@ -4,6 +4,7 @@
 
 html {
   background: -moz-Dialog;
+  color: -moz-DialogText;
   padding: 0 1em;
   font: message-box;
   line-height: 1.6em;
