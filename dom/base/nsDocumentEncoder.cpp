@@ -263,7 +263,7 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 
   virtual bool IncludeInContext(nsINode* aNode);
 
-  void Clear();
+  void ReleaseDocumentReferenceAndInitialize(bool aClearCachedSerializer);
 
   class MOZ_STACK_CLASS AutoReleaseDocumentIfNeeded final {
    public:
@@ -272,7 +272,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 
     ~AutoReleaseDocumentIfNeeded() {
       if (mEncoder->mFlags & RequiresReinitAfterOutput) {
-        mEncoder->Clear();
+        const bool clearCachedSerializer = false;
+        mEncoder->ReleaseDocumentReferenceAndInitialize(clearCachedSerializer);
       }
     }
 
@@ -314,7 +315,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
 };
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocumentEncoder)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsDocumentEncoder, Clear())
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
+    nsDocumentEncoder, ReleaseDocumentReferenceAndInitialize(true))
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocumentEncoder)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentEncoder)
@@ -342,6 +344,8 @@ void nsDocumentEncoder::Initialize(bool aClearCachedSerializer) {
   mHaltRangeHint = false;
   mDisableContextSerialize = false;
   mEncodingScope = {};
+  mCommonParent = nullptr;
+  mNodeFixup = nullptr;
   if (aClearCachedSerializer) {
     mSerializer = nullptr;
   }
@@ -991,12 +995,11 @@ nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange,
   return rv;
 }
 
-void nsDocumentEncoder::Clear() {
+void nsDocumentEncoder::ReleaseDocumentReferenceAndInitialize(
+    bool aClearCachedSerializer) {
   mDocument = nullptr;
-  mCommonParent = nullptr;
-  mNodeFixup = nullptr;
 
-  Initialize(false);
+  Initialize(aClearCachedSerializer);
 }
 
 NS_IMETHODIMP
