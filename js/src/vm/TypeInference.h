@@ -338,6 +338,12 @@ class TypeScript {
                                          jsbytecode* pc, StackTypeSet* types,
                                          const js::Value& val);
 
+ private:
+  static void MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
+                                      jsbytecode* pc, StackTypeSet* types,
+                                      TypeSet::Type type);
+
+ public:
   /* Monitor an assignment at a SETELEM on a non-integer identifier. */
   static inline void MonitorAssign(JSContext* cx, HandleObject obj, jsid id);
 
