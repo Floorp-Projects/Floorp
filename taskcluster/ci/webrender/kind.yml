@@ -247,7 +247,7 @@ jobs:
             artifacts:
                 - type: file
                   name: public/build/wrench-debug.apk
-                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/app/build/outputs/apk/app-debug.apk
+                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/app/build/outputs/apk/debug/app-debug.apk
         run:
             using: run-task
             command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh debug'
