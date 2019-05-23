@@ -16,7 +16,7 @@
 == decorations.yaml decorations-ref.yaml
 fuzzy(1,173) == decorations-suite.yaml decorations-suite.png
 == 1658.yaml 1658-ref.yaml
-fuzzy(1,5) == split-batch.yaml split-batch-ref.yaml
+skip_on(android,debug) fuzzy(1,5) == split-batch.yaml split-batch-ref.yaml  # Android: GL error 502 at blit_framebuffer
 # Next 3 tests affected by bug 1548099 on Android
 skip_on(android) == shadow-red.yaml shadow-red-ref.yaml
 skip_on(android) fuzzy(1,735) == shadow-grey.yaml shadow-grey-ref.yaml
@@ -62,7 +62,7 @@ fuzzy(1,1) platform(linux) == two-shadows.yaml two-shadows.png
 == shadow-partial-glyph.yaml shadow-partial-glyph-ref.yaml
 fuzzy(1,107) platform(linux) == shadow-transforms.yaml shadow-transforms.png
 fuzzy(1,113) platform(linux) == raster-space.yaml raster-space.png
-skip_on(mac,>=10.14) != allow-subpixel.yaml allow-subpixel-ref.yaml
+skip_on(android,debug) skip_on(mac,>=10.14) != allow-subpixel.yaml allow-subpixel-ref.yaml  # Android: GL error 502 at blit_framebuffer
 == bg-color.yaml bg-color-ref.yaml
 != large-glyphs.yaml blank.yaml
 == snap-text-offset.yaml snap-text-offset-ref.yaml
