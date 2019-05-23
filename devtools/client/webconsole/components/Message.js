@@ -157,7 +157,6 @@ class Message extends Component {
     });
   }
 
-  /* eslint-disable complexity */
   render() {
     const {
       open,
@@ -347,7 +346,6 @@ class Message extends Component {
       attachment ? null : dom.br(),
     );
   }
-  /* eslint-enable complexity */
 }
 
 module.exports = Message;

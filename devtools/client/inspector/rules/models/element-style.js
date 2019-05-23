@@ -274,7 +274,6 @@ class ElementStyle {
    *         Which pseudo element to flag as overridden.
    *         Empty string or undefined will default to no pseudo element.
    */
-  /* eslint-disable complexity */
   updateDeclarations(pseudo = "") {
     // Gather all the text properties applied by these rules, ordered
     // from more- to less-specific. Text properties from keyframes rule are
@@ -377,7 +376,6 @@ class ElementStyle {
       }
     }
   }
-  /* eslint-enable complexity */
 
   /**
    * Adds a new declaration to the rule.

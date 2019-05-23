@@ -553,7 +553,6 @@ class Tree extends Component {
    *
    * @param {Event} e
    */
-  /* eslint-disable complexity */
   _onKeyDown(e) {
     if (this.props.focused == null) {
       return;
@@ -625,7 +624,6 @@ class Tree extends Component {
         break;
     }
   }
-  /* eslint-enable complexity */
 
   get activeElement() {
     return this.refs.tree.ownerDocument.activeElement;

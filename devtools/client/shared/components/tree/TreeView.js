@@ -270,7 +270,6 @@ define(function(require, exports, module) {
 
     // Event Handlers
 
-    /* eslint-disable complexity */
     onKeyDown(event) {
       if (!SUPPORTED_KEYS.includes(event.key)) {
         return;
@@ -353,7 +352,6 @@ define(function(require, exports, module) {
       this.treeRef.current.focus();
       event.preventDefault();
     }
-    /* eslint-enable complexity */
 
     onClickRow(nodePath, event) {
       const onClickRow = this.props.onClickRow;

@@ -550,7 +550,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   /**
    * Clear the whole alignment container along the main axis for each flex item.
    */
-  /* eslint-disable complexity */
   renderJustifyContent() {
     if (!this.flexData || !this.currentQuads.content || !this.currentQuads.content[0]) {
       return;
@@ -631,7 +630,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     this.ctx.restore();
   }
-  /* eslint-enable complexity */
 
   /**
    * Set up the canvas with the given options prior to drawing.
@@ -826,7 +824,6 @@ function getRectFromFlexItemValues(item, container) {
  *         The new Flex data object.
  * @return {Boolean} true if the flex data has changed and false otherwise.
  */
-/* eslint-disable complexity */
 function compareFlexData(oldFlexData, newFlexData) {
   if (!oldFlexData || !newFlexData) {
     return true;
@@ -887,6 +884,5 @@ function compareFlexData(oldFlexData, newFlexData) {
 
   return false;
 }
-/* eslint-enable complexity */
 
 exports.FlexboxHighlighter = FlexboxHighlighter;

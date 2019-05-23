@@ -654,7 +654,6 @@ OutputParser.prototype = {
    *        The node to which spans containing points are added.
    * @returns {Node} The container to which spans have been added.
    */
-  /* eslint-disable complexity */
   _addPolygonPointNodes: function(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
@@ -759,7 +758,6 @@ OutputParser.prototype = {
     }
     return container;
   },
-  /* eslint-enable complexity */
 
   /**
    * Parse the given circle coordinates and populate the given container appropriately
@@ -771,7 +769,6 @@ OutputParser.prototype = {
    *        The node to which the definition is added.
    * @returns {Node} The container to which the definition has been added.
    */
-  /* eslint-disable complexity */
   _addCirclePointNodes: function(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
@@ -877,7 +874,6 @@ OutputParser.prototype = {
     }
     return container;
   },
-  /* eslint-enable complexity */
 
   /**
    * Parse the given ellipse coordinates and populate the given container appropriately
@@ -889,7 +885,6 @@ OutputParser.prototype = {
    *        The node to which the definition is added.
    * @returns {Node} The container to which the definition has been added.
    */
-  /* eslint-disable complexity */
   _addEllipsePointNodes: function(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
@@ -1005,7 +1000,6 @@ OutputParser.prototype = {
     }
     return container;
   },
-  /* eslint-enable complexity */
 
   /**
    * Parse the given inset coordinates and populate the given container appropriately.
@@ -1016,7 +1010,6 @@ OutputParser.prototype = {
    *        The node to which the definition is added.
    * @returns {Node} The container to which the definition has been added.
    */
-  /* eslint-disable complexity */
   _addInsetPointNodes: function(coords, container) {
     const insetPoints = ["top", "right", "bottom", "left"];
     const tokenStream = getCSSLexer(coords);
@@ -1130,7 +1123,6 @@ OutputParser.prototype = {
 
     return container;
   },
-  /* eslint-enable complexity */
 
   /**
    * Append a angle value to the output
