@@ -2574,7 +2574,7 @@ JS_FRIEND_API void js::StopPCCountProfiling(JSContext* cx) {
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
     for (auto script = zone->cellIter<JSScript>(); !script.done();
          script.next()) {
-      if (script->hasScriptCounts() && script->types()) {
+      if (script->hasScriptCounts() && script->jitScript()) {
         if (!vec->append(script)) {
           return;
         }

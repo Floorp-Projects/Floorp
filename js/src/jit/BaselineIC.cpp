@@ -1127,9 +1127,9 @@ static MOZ_MUST_USE bool TypeMonitorResult(JSContext* cx,
                                            BaselineFrame* frame,
                                            HandleScript script, jsbytecode* pc,
                                            HandleValue val) {
-  AutoSweepTypeScript sweep(script);
-  StackTypeSet* types = script->types()->bytecodeTypes(sweep, script, pc);
-  TypeScript::MonitorBytecodeType(cx, script, pc, types, val);
+  AutoSweepJitScript sweep(script);
+  StackTypeSet* types = script->jitScript()->bytecodeTypes(sweep, script, pc);
+  JitScript::MonitorBytecodeType(cx, script, pc, types, val);
 
   return stub->addMonitorStubForValue(cx, frame, types, val);
 }
@@ -1514,29 +1514,29 @@ bool DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame,
                *GetNextPc(pc) == JSOP_CHECKTHISREINIT ||
                *GetNextPc(pc) == JSOP_CHECKRETURN);
     if (stub->monitorsThis()) {
-      TypeScript::MonitorThisType(cx, script, TypeSet::UnknownType());
+      JitScript::MonitorThisType(cx, script, TypeSet::UnknownType());
     } else {
-      TypeScript::MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
+      JitScript::MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
     }
     return true;
   }
 
-  TypeScript* typeScript = script->types();
-  AutoSweepTypeScript sweep(script);
+  JitScript* jitScript = script->jitScript();
+  AutoSweepJitScript sweep(script);
 
   StackTypeSet* types;
   uint32_t argument;
   if (stub->monitorsArgument(&argument)) {
     MOZ_ASSERT(pc == script->code());
-    types = typeScript->argTypes(sweep, script, argument);
-    TypeScript::MonitorArgType(cx, script, argument, value);
+    types = jitScript->argTypes(sweep, script, argument);
+    JitScript::MonitorArgType(cx, script, argument, value);
   } else if (stub->monitorsThis()) {
     MOZ_ASSERT(pc == script->code());
-    types = typeScript->thisTypes(sweep, script);
-    TypeScript::MonitorThisType(cx, script, value);
+    types = jitScript->thisTypes(sweep, script);
+    JitScript::MonitorThisType(cx, script, value);
   } else {
-    types = typeScript->bytecodeTypes(sweep, script, pc);
-    TypeScript::MonitorBytecodeType(cx, script, pc, types, value);
+    types = jitScript->bytecodeTypes(sweep, script, pc);
+    JitScript::MonitorBytecodeType(cx, script, pc, types, value);
   }
 
   return stub->addMonitorStubForValue(cx, frame, types, value);
@@ -2779,7 +2779,7 @@ bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
   // needs to be monitored once. Attach a stub to load the resulting constant
   // directly.
 
-  TypeScript::MonitorBytecodeType(cx, script, pc, res);
+  JitScript::MonitorBytecodeType(cx, script, pc, res);
 
   TryAttachStub<GetIntrinsicIRGenerator>("GetIntrinsic", cx, frame, stub,
                                          BaselineCacheIRStubKind::Regular, res);

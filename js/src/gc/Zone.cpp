@@ -207,16 +207,16 @@ void Zone::discardJitCode(FreeOp* fop,
 
   if (discardBaselineCode || releaseTypes) {
 #ifdef DEBUG
-    // Assert no TypeScripts are marked as active.
+    // Assert no JitScripts are marked as active.
     for (auto script = cellIter<JSScript>(); !script.done(); script.next()) {
-      if (TypeScript* types = script.unbarrieredGet()->types()) {
-        MOZ_ASSERT(!types->active());
+      if (JitScript* jitScript = script.unbarrieredGet()->jitScript()) {
+        MOZ_ASSERT(!jitScript->active());
       }
     }
 #endif
 
-    // Mark TypeScripts on the stack as active.
-    jit::MarkActiveTypeScripts(this);
+    // Mark JitScripts on the stack as active.
+    jit::MarkActiveJitScripts(this);
   }
 
   // Invalidate all Ion code in this zone.
@@ -228,7 +228,7 @@ void Zone::discardJitCode(FreeOp* fop,
 
     // Discard baseline script if it's not marked as active.
     if (discardBaselineCode && script->hasBaselineScript()) {
-      if (script->types()->active()) {
+      if (script->jitScript()->active()) {
         // ICs will be purged so the script will need to warm back up before it
         // can be inlined during Ion compilation.
         script->baselineScript()->clearIonCompiledOrInlined();
@@ -248,24 +248,24 @@ void Zone::discardJitCode(FreeOp* fop,
       script->baselineScript()->setControlFlowGraph(nullptr);
     }
 
-    // Try to release the script's TypeScript. This should happen after
+    // Try to release the script's JitScript. This should happen after
     // releasing JIT code because we can't do this when the script still has
     // JIT code.
     if (releaseTypes) {
-      script->maybeReleaseTypes();
+      script->maybeReleaseJitScript();
     }
 
     // The optimizedStubSpace will be purged below so make sure ICScript
     // doesn't point into it. We do this after (potentially) releasing types
-    // because TypeScript contains the ICScript* and there's no need to
+    // because JitScript contains the ICScript* and there's no need to
     // purge stubs if we just destroyed the Typescript.
     if (discardBaselineCode && script->hasICScript()) {
       script->icScript()->purgeOptimizedStubs(script);
     }
 
     // Finally, reset the active flag.
-    if (TypeScript* types = script->types()) {
-      types->resetActive();
+    if (JitScript* jitScript = script->jitScript()) {
+      jitScript->resetActive();
     }
   }
 

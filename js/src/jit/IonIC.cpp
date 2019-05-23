@@ -228,7 +228,7 @@ bool IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   if (!ic->idempotent()) {
     // Monitor changes to cache entry.
     if (!ic->monitoredResult()) {
-      TypeScript::MonitorBytecodeType(cx, ic->script(), ic->pc(), res);
+      JitScript::MonitorBytecodeType(cx, ic->script(), ic->pc(), res);
     }
   }
 
@@ -263,7 +263,7 @@ bool IonGetPropSuperIC::update(JSContext* cx, HandleScript outerScript,
   }
 
   // Monitor changes to cache entry.
-  TypeScript::MonitorBytecodeType(cx, ic->script(), ic->pc(), res);
+  JitScript::MonitorBytecodeType(cx, ic->script(), ic->pc(), res);
   return true;
 }
 
@@ -425,7 +425,7 @@ bool IonGetNameIC::update(JSContext* cx, HandleScript outerScript,
     }
   }
 
-  // No need to call TypeScript::Monitor, IonBuilder always inserts a type
+  // No need to call JitScript::Monitor, IonBuilder always inserts a type
   // barrier after GetName ICs.
 
   return true;

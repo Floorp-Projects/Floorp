@@ -297,7 +297,7 @@ class ICEntry {
 //   - Type monitor IC for each formal argument.
 //   - IC for each JOF_IC bytecode op.
 //
-// ICScript is stored in TypeScript and allocated/destroyed at the same time.
+// ICScript is stored in JitScript and allocated/destroyed at the same time.
 class ICScript {
   // Allocated space for fallback stubs.
   FallbackICStubSpace fallbackStubSpace_ = {};
