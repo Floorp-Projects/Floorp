@@ -17,19 +17,21 @@
 fuzzy(1,173) == decorations-suite.yaml decorations-suite.png
 == 1658.yaml 1658-ref.yaml
 fuzzy(1,5) == split-batch.yaml split-batch-ref.yaml
-== shadow-red.yaml shadow-red-ref.yaml
-fuzzy(1,735) == shadow-grey.yaml shadow-grey-ref.yaml
-fuzzy(1,663) == shadow-grey-transparent.yaml shadow-grey-ref.yaml
+# Next 3 tests affected by bug 1548099 on Android
+skip_on(android) == shadow-red.yaml shadow-red-ref.yaml
+skip_on(android) fuzzy(1,735) == shadow-grey.yaml shadow-grey-ref.yaml
+skip_on(android) fuzzy(1,663) == shadow-grey-transparent.yaml shadow-grey-ref.yaml
 == subtle-shadow.yaml subtle-shadow-ref.yaml
 == shadow-atomic.yaml shadow-atomic-ref.yaml
 == shadow-clip-rect.yaml shadow-atomic-ref.yaml
 fuzzy(1,1) platform(linux) == shadow-ordering.yaml shadow-ordering-ref.yaml
-!= synthetic-bold.yaml synthetic-bold-not-ref.yaml
-fuzzy(1,1786) options(disable-subpixel) == synthetic-bold-transparent.yaml synthetic-bold-transparent-ref.yaml
-!= synthetic-bold-transparent.yaml synthetic-bold.yaml
-!= synthetic-italics.yaml synthetic-italics-ref.yaml
-!= synthetic-italics-custom.yaml synthetic-italics-ref.yaml
-!= synthetic-italics-custom.yaml synthetic-italics.yaml
+# Next 6 tests affected by bug 1548099 on Android
+skip_on(android) != synthetic-bold.yaml synthetic-bold-not-ref.yaml
+skip_on(android) fuzzy(1,1786) options(disable-subpixel) == synthetic-bold-transparent.yaml synthetic-bold-transparent-ref.yaml
+skip_on(android) != synthetic-bold-transparent.yaml synthetic-bold.yaml
+skip_on(android) != synthetic-italics.yaml synthetic-italics-ref.yaml
+skip_on(android) != synthetic-italics-custom.yaml synthetic-italics-ref.yaml
+skip_on(android) != synthetic-italics-custom.yaml synthetic-italics.yaml
 options(disable-aa) == ahem.yaml ahem-ref.yaml
 platform(linux) == isolated-text.yaml isolated-text.png
 platform(mac) skip_on(mac,>=10.14) fuzzy(3,67) == white-opacity.yaml white-opacity.png
