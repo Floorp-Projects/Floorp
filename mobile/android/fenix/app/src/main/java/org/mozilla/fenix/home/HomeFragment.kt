@@ -48,8 +48,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.allowUndo
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
@@ -220,14 +220,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
     override fun onResume() {
         super.onResume()
-        val homeViewModel = activity?.run {
-            ViewModelProviders.of(this).get(HomeScreenViewModel::class.java)
-        }
-        homeViewModel?.layoutManagerState?.also { parcelable ->
-            sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
-        }
-        homeLayout?.progress =
-            if (homeViewModel?.motionLayoutProgress ?: 0F > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
         (activity as AppCompatActivity).supportActionBar?.hide()
 
         requireComponents.backgroundServices.accountManager.register(this, owner = this)

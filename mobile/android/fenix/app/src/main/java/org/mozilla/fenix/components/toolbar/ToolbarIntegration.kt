@@ -57,7 +57,7 @@ class ToolbarIntegration(
                     {
                         toolbar.hideKeyboard()
                         // We need to dynamically add the options here because if you do it in XML it overwrites
-                        val options = NavOptions.Builder().setPopUpTo(R.id.browserFragment, false)
+                        val options = NavOptions.Builder().setPopUpTo(R.id.homeFragment, true)
                             .setEnterAnim(R.anim.fade_in).setExitAnim(R.anim.fade_out).build()
                         val extras =
                             FragmentNavigator.Extras.Builder()
@@ -66,8 +66,10 @@ class ToolbarIntegration(
                                     "$TAB_ITEM_TRANSITION_NAME${sessionManager.selectedSession?.id}"
                                 )
                                 .build()
-                        Navigation.findNavController(toolbar)
-                            .navigate(R.id.action_browserFragment_to_homeFragment, null, options, extras)
+                        val navController = Navigation.findNavController(toolbar)
+                        if (!navController.popBackStack(R.id.homeFragment, false)) {
+                            navController.navigate(R.id.action_browserFragment_to_homeFragment, null, options, extras)
+                        }
                     },
                     isPrivate
                 )
