@@ -246,6 +246,12 @@ static const FeatureInfo sFeatureInfoArr[] = {
      GLESVersion::ES3,
      GLContext::ARB_map_buffer_range,
      {GLContext::EXT_map_buffer_range, GLContext::Extensions_End}},
+    {"multiview",
+     GLVersion::NONE,
+     GLESVersion::NONE,
+     GLContext::Extension_None,
+     {GLContext::ANGLE_multiview, GLContext::OVR_multiview2,
+      GLContext::Extensions_End}},
     {
         "occlusion_query",
         GLVersion::GL2,
