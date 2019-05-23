@@ -42,6 +42,12 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
     this.onPageHide = this.onPageHide.bind(this);
 
+    this.isNavigating = false;
+
+    this._documentURI = null;
+    this._characterSet = null;
+    this._documentContentType = null;
+
     /**
      * These are managed by the tabbrowser:
      */
@@ -352,6 +358,16 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
     return this.contentDocument ? this.contentDocument.contentType : null;
   }
 
+  set documentContentType(aContentType) {
+    if (aContentType != null) {
+      if (this.isRemoteBrowser) {
+        this._documentContentType = aContentType;
+      } else {
+        this.contentDocument.documentContentType = aContentType;
+      }
+    }
+  }
+
   set sameProcessAsFrameLoader(val) {
     this._sameProcessAsFrameLoader = Cu.getWeakReference(val);
   }
@@ -592,6 +608,12 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
   get mayEnableCharacterEncodingMenu() {
     return this.isRemoteBrowser ? this._mayEnableCharacterEncodingMenu : this.docShell.mayEnableCharacterEncodingMenu;
+  }
+
+  set mayEnableCharacterEncodingMenu(aMayEnable) {
+    if (this.isRemoteBrowser) {
+      this._mayEnableCharacterEncodingMenu = aMayEnable;
+    }
   }
 
   get contentPrincipal() {
@@ -1365,6 +1387,22 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
   get remoteWebProgressManager() {
     return this._remoteWebProgressManager;
+  }
+
+  updateForStateChange(aCharset, aDocumentURI, aContentType) {
+    if (this.isRemoteBrowser && this.messageManager) {
+      if (aCharset != null) {
+        this._characterSet = aCharset;
+      }
+
+      if (aDocumentURI != null) {
+        this._documentURI = aDocumentURI;
+      }
+
+      if (aContentType != null) {
+        this._documentContentType = aContentType;
+      }
+    }
   }
 
   purgeSessionHistory() {
