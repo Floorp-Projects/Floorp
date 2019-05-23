@@ -67,28 +67,40 @@ class Issue(object):
     """
 
     __slots__ = (
-        'linter',
-        'path',
-        'message',
-        'lineno',
-        'column',
-        'hint',
-        'source',
-        'level',
-        'rule',
-        'lineoffset',
-        'diff'
+        "linter",
+        "path",
+        "message",
+        "lineno",
+        "column",
+        "hint",
+        "source",
+        "level",
+        "rule",
+        "lineoffset",
+        "diff",
     )
 
-    def __init__(self, linter, path, message, lineno, column=None, hint=None,
-                 source=None, level=None, rule=None, lineoffset=None, diff=None):
+    def __init__(
+        self,
+        linter,
+        path,
+        message,
+        lineno,
+        column=None,
+        hint=None,
+        source=None,
+        level=None,
+        rule=None,
+        lineoffset=None,
+        diff=None,
+    ):
         self.path = path
         self.message = message
         self.lineno = int(lineno) if lineno else 0
         self.column = int(column) if column else column
         self.hint = hint
         self.source = source
-        self.level = level or 'error'
+        self.level = level or "error"
         self.linter = linter
         self.rule = rule
         self.lineoffset = lineoffset
@@ -127,10 +139,10 @@ def from_config(config, **kwargs):
     for attr in Issue.__slots__:
         attrs[attr] = kwargs.get(attr, config.get(attr))
 
-    if not attrs['linter']:
-        attrs['linter'] = config.get('name')
+    if not attrs["linter"]:
+        attrs["linter"] = config.get("name")
 
-    if not attrs['message']:
-        attrs['message'] = config.get('description')
+    if not attrs["message"]:
+        attrs["message"] = config.get("description")
 
     return Issue(**attrs)
