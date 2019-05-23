@@ -8,7 +8,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -655,9 +654,15 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             }
             ToolbarMenu.Item.SaveToCollection -> showSaveToCollection()
             ToolbarMenu.Item.OpenInFenix -> {
+                // To not get a "Display Already Acquired" error we need to force remove the engineView here
+                browserLayout?.removeView(engineView as View)
                 val intent = Intent(context, IntentReceiverActivity::class.java)
                 intent.action = Intent.ACTION_VIEW
-                intent.data = Uri.parse(getSessionById()?.url)
+                getSessionById()?.customTabConfig = null
+                getSessionById()?.let {
+                    requireComponents.core.sessionManager.select(it)
+                }
+                activity?.finish()
                 startActivity(intent)
             }
         }
