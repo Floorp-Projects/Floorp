@@ -3415,8 +3415,10 @@ static void FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap) {
   MOZ_ASSERT(added == script->numBytecodeTypeSets());
 }
 
-void js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
-                           TypeSet::Type type) {
+/* static */ void TypeScript::MonitorBytecodeType(JSContext* cx,
+                                                  JSScript* script,
+                                                  jsbytecode* pc,
+                                                  TypeSet::Type type) {
   cx->check(script, type);
 
   AutoEnterAnalysis enter(cx);
@@ -3448,15 +3450,17 @@ void js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
   types->addType(sweep, cx, type);
 }
 
-void js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
-                           const js::Value& rval) {
+/* static */ void TypeScript::MonitorBytecodeType(JSContext* cx,
+                                                  JSScript* script,
+                                                  jsbytecode* pc,
+                                                  const js::Value& rval) {
   MOZ_ASSERT(CodeSpec[*pc].format & JOF_TYPESET);
 
   if (!script->types()) {
     return;
   }
 
-  TypeMonitorResult(cx, script, pc, TypeSet::GetValueType(rval));
+  MonitorBytecodeType(cx, script, pc, TypeSet::GetValueType(rval));
 }
 
 /////////////////////////////////////////////////////////////////////
