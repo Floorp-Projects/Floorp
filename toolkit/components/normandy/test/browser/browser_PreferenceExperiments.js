@@ -203,6 +203,7 @@ decorate_task(
     await Assert.rejects(
       PreferenceExperiments.start({
         name: "test",
+        actionName: "SomeAction",
         branch: "branch",
         preferences: {
           "fake.preference": {
@@ -231,6 +232,7 @@ decorate_task(
     await Assert.rejects(
       PreferenceExperiments.start({
         name: "different",
+        actionName: "SomeAction",
         branch: "branch",
         preferences: {
           "fake.preference": {
@@ -263,6 +265,7 @@ decorate_task(
     await Assert.rejects(
       PreferenceExperiments.start({
         name: "test",
+        actionName: "SomeAction",
         branch: "branch",
         preferences: {
           "fake.preference": {
@@ -297,6 +300,7 @@ decorate_task(
 
     const experiment = {
       name: "test",
+      actionName: "SomeAction",
       branch: "branch",
       preferences: {
         "fake.preference": {
@@ -386,6 +390,7 @@ decorate_task(
 
     const experiment = {
       name: "test",
+      actionName: "SomeAction",
       branch: "branch",
       preferences: {
         "fake.preference": {
@@ -440,6 +445,7 @@ decorate_task(
     await Assert.rejects(
       PreferenceExperiments.start({
         name: "test",
+        actionName: "SomeAction",
         branch: "branch",
         preferences: {
           "fake.type_preference": {
@@ -1002,6 +1008,7 @@ decorate_task(
   async function testStartAndStopTelemetry(experiments, setActiveStub, setInactiveStub, sendEventStub) {
     await PreferenceExperiments.start({
       name: "test",
+      actionName: "SomeAction",
       branch: "branch",
       preferences: {
         "fake.preference": {
@@ -1045,6 +1052,7 @@ decorate_task(
   async function testInitTelemetryExperimentType(experiments, setActiveStub, setInactiveStub, sendEventStub) {
     await PreferenceExperiments.start({
       name: "test",
+      actionName: "SomeAction",
       branch: "branch",
       preferences: {
         "fake.preference": {
@@ -1282,6 +1290,7 @@ decorate_task(
     // start an experiment
     await PreferenceExperiments.start({
       name: "test",
+      actionName: "SomeAction",
       branch: "branch",
       preferences: {
         [prefName]: {
@@ -1333,6 +1342,7 @@ decorate_task(
     // start an experiment
     await PreferenceExperiments.start({
       name: "test",
+      actionName: "SomeAction",
       branch: "branch",
       preferences: {
         [prefName]: {
