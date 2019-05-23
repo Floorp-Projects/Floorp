@@ -50,7 +50,6 @@ import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.allowUndo
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
