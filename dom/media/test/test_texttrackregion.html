@@ -10,40 +10,43 @@
   <track src="region.vtt" kind="subtitles" id="default" default>
 </video>
 <script type="text/javascript">
+
+function runTest() {
+  var video = document.getElementById("v");
+  var trackElement = document.getElementById("default");
+  video.addEventListener("loadedmetadata", function run_tests() {
+    // Re-que run_tests() at the end of the event loop until the track
+    // element has loaded its data.
+    if (trackElement.readyState == 1) {
+      setTimeout(run_tests, 0);
+      return;
+    }
+    is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+
+    // Set mode to hidden so that the active cue lists are being updated.
+    trackElement.track.mode = "hidden";
+
+    var cues = trackElement.track.cues;
+    is(cues.length, 1, "Cue list length should be 1.");
+
+    var region = cues[0].region;
+    isnot(region, null, "Region should not be null.");
+    is(region.width, 62, "Region width should be 50.");
+    is(region.lines, 5, "Region lines should be 5.");
+    is(region.regionAnchorX, 4, "Region regionAnchorX should be 4.");
+    is(region.regionAnchorY, 78, "Region regionAnchorY should be 78.");
+    is(region.viewportAnchorX, 10, "Region viewportAnchorX should be 10.");
+    is(region.viewportAnchorY, 90, "Region viewportAnchorY should be 90.");
+    is(region.scroll, "up", "Region scroll should be 'up'");
+
+    SimpleTest.finish();
+  });
+}
+
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
-  function() {
-    var video = document.getElementById("v");
-    var trackElement = document.getElementById("default");
-    video.addEventListener("loadedmetadata", function run_tests() {
-      // Re-que run_tests() at the end of the event loop until the track
-      // element has loaded its data.
-      if (trackElement.readyState == 1) {
-        setTimeout(run_tests, 0);
-        return;
-      }
-      is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+                            runTest);
 
-      // Set mode to hidden so that the active cue lists are being updated.
-      trackElement.track.mode = "hidden";
-
-      var cues = trackElement.track.cues;
-      is(cues.length, 1, "Cue list length should be 1.");
-
-      var region = cues[0].region;
-      isnot(region, null, "Region should not be null.");
-      is(region.width, 62, "Region width should be 50.");
-      is(region.lines, 5, "Region lines should be 5.");
-      is(region.regionAnchorX, 4, "Region regionAnchorX should be 4.");
-      is(region.regionAnchorY, 78, "Region regionAnchorY should be 78.");
-      is(region.viewportAnchorX, 10, "Region viewportAnchorX should be 10.");
-      is(region.viewportAnchorY, 90, "Region viewportAnchorY should be 90.");
-      is(region.scroll, "up", "Region scroll should be 'up'");
-
-      SimpleTest.finish();
-    });
-  }
-);
 </script>
 </body>
 </html>
