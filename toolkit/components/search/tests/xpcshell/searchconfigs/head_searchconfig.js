@@ -335,6 +335,9 @@ class SearchConfigTest {
       if (rule.codes) {
         this._assertCorrectCodes(location, engine, rule);
       }
+      if (rule.searchUrlCode || rule.searchFormUrlCode) {
+        this._assertCorrectUrlCode(location, engine, rule);
+      }
     }
   }
 
@@ -392,6 +395,29 @@ class SearchConfigTest {
       const submission = engine.getSubmission("test", "text/html", purpose);
       this.assertOk(submission.uri.query.split("&").includes(code),
         `Expected "${code}" in url "${submission.uri.spec}" from purpose "${purpose}" ${location}`);
+    }
+  }
+
+  /**
+   * Asserts whether the engine is using the correct URL codes or not.
+   *
+   * @param {string} location
+   *   Debug string with locale + region information.
+   * @param {object} engine
+   *   The engine being tested.
+   * @param {object} rules
+   *   Rules to test.
+   */
+  _assertCorrectUrlCode(location, engine, rule) {
+    if (rule.searchUrlCode) {
+      const submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
+      this.assertOk(submission.uri.query.split("&").includes(rule.searchUrlCode),
+        `Expected "${rule.searchUrlCode}" in "${submission.uri.spec}"`);
+    }
+    if (rule.searchFormUrlCode) {
+      const uri = engine.searchForm;
+      this.assertOk(uri.includes(rule.searchFormUrlCode),
+        `Expected "${rule.searchFormUrlCode}" in "${uri}"`);
     }
   }
 
