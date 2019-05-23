@@ -12,6 +12,7 @@ import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
@@ -137,6 +138,16 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
         }
 
+        postponeEnterTransition()
+        val listener = object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                startPostponedEnterTransition()
+                sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this)
+                return true
+            }
+        }
+        sessionControlComponent.view.viewTreeObserver.addOnPreDrawListener(listener)
+
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
         DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
@@ -164,13 +175,6 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 view.toolbar.setCompoundDrawables(searchIcon, null, null, null)
             }
         }
-
-        postponeEnterTransition()
-        sessionControlComponent.view.getViewTreeObserver()
-            .addOnPreDrawListener {
-                startPostponedEnterTransition()
-                true
-            }
 
         view.menuButton.setOnClickListener {
             homeMenu?.menuBuilder?.build(requireContext())?.show(
@@ -242,6 +246,8 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                             homeViewModel?.layoutManagerState?.also { parcelable ->
                                 sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
                             }
+                            homeLayout?.progress =
+                                if (homeViewModel?.motionLayoutProgress ?: 0F > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
                             homeViewModel?.layoutManagerState = null
                         }
                     }
