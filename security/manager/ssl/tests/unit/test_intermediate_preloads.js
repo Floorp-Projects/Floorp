@@ -10,6 +10,7 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const {RemoteSettings} = ChromeUtils.import("resource://services-settings/remote-settings.js");
 const {TestUtils} = ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 const {TelemetryTestUtils} = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
+const {X509} = ChromeUtils.import("resource://gre/modules/psm/X509.jsm");
 
 let remoteSecSetting;
 if (AppConstants.MOZ_NEW_CERT_STORAGE) {
@@ -56,6 +57,13 @@ function clearTelemetry() {
   Services.telemetry.clearScalars();
 }
 
+function getSubjectBytes(certDERString) {
+  let bytes = stringToArray(certDERString);
+  let cert = new X509.Certificate();
+  cert.parse(bytes);
+  return btoa(arrayToString(cert.tbsCertificate.subject._der._bytes));
+}
+
 /**
  * Simulate a Remote Settings synchronization by filling up the
  * local data with fake records.
@@ -80,6 +88,7 @@ async function syncAndDownload(filenames, options = {}) {
   for (const filename of filenames) {
     const file = do_get_file(`test_intermediate_preloads/${filename}`);
     const certBytes = readFile(file);
+    const certDERBytes = atob(pemToBase64(certBytes));
 
     const record = {
       "details": {
@@ -88,7 +97,9 @@ async function syncAndDownload(filenames, options = {}) {
         "name": "",
         "created": "",
       },
+      "derHash": getHashCommon(certDERBytes, true),
       "subject": "",
+      "subjectDN": getSubjectBytes(certDERBytes),
       "attachment": {
         "hash": hashFunc(certBytes),
         "size": lengthFunc(certBytes),
@@ -97,8 +108,7 @@ async function syncAndDownload(filenames, options = {}) {
         "mimetype": "application/x-pem-file",
       },
       "whitelist": false,
-      // "pubKeyHash" is actually just the hash of the DER bytes of the certificate
-      "pubKeyHash": getHashCommon(atob(pemToBase64(certBytes)), true),
+      "pubKeyHash": "", // not used yet
       "crlite_enrolled": true,
     };
 
@@ -310,6 +320,29 @@ add_task({
   equal((await locallyDownloaded()).length, 200, "There should have been 200 downloaded");
 });
 
+add_task({
+    skip_if: () => !AppConstants.MOZ_NEW_CERT_STORAGE,
+  }, async function test_delete() {
+  Services.prefs.setBoolPref(INTERMEDIATES_ENABLED_PREF, true);
+  Services.prefs.setIntPref(INTERMEDIATES_DL_PER_POLL_PREF, 100);
+
+  let syncResult = await syncAndDownload(["int.pem", "int2.pem"]);
+  equal(syncResult, "success", "Preloading update should have run");
+
+  equal((await locallyDownloaded()).length, 2, "There should have been 2 downloads");
+
+  let localDB = await remoteSecSetting.client.openCollection();
+  let { data } = await localDB.list();
+  ok(data.length > 0, "should have some entries");
+  let subject = data[0].subjectDN;
+  let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
+  let resultsBefore = certStorage.findCertsBySubject(stringToArray(atob(subject)));
+  equal(resultsBefore.length, 1, "should find the intermediate in cert storage before");
+  // simulate a sync where we deleted the entry
+  await remoteSecSetting.client.emit("sync", { "data": { deleted: [ data[0] ] } });
+  let resultsAfter = certStorage.findCertsBySubject(stringToArray(atob(subject)));
+  equal(resultsAfter.length, 0, "shouldn't find intermediate in cert storage now");
+});
 
 function run_test() {
   server = new HttpServer();
