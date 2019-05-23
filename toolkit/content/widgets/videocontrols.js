@@ -90,45 +90,6 @@ this.VideoControlsWidget = class {
   static isPictureInPictureVideo(someVideo) {
     return someVideo.isCloningElementVisually;
   }
-
-  /**
-   * Returns true if a <video> meets the requirements to show the Picture-in-Picture
-   * toggle. Those requirements currently are:
-   *
-   * 1. The video must be 45 seconds in length or longer.
-   * 2. Neither the width or the height of the video can be less than 160px.
-   * 3. The video must have audio.
-   *
-   * This can be overridden via the
-   * media.videocontrols.picture-in-picture.video-toggle.always-show pref, which
-   * is mostly used for testing.
-   *
-   * @param {Object} prefs The preferences set that was passed to the UAWidget.
-   * @param {Element} someVideo The <video> to test.
-   * @return {Boolean}
-   */
-  static shouldShowPictureInPictureToggle(prefs, someVideo) {
-    if (prefs["media.videocontrols.picture-in-picture.video-toggle.always-show"]) {
-      return true;
-    }
-
-    const MIN_VIDEO_LENGTH = 45; // seconds
-    if (someVideo.duration < MIN_VIDEO_LENGTH) {
-      return false;
-    }
-
-    const MIN_VIDEO_DIMENSION = 160; // pixels
-    if (someVideo.videoWidth < MIN_VIDEO_DIMENSION ||
-        someVideo.videoHeight < MIN_VIDEO_DIMENSION) {
-      return false;
-    }
-
-    if (!someVideo.mozHasAudio) {
-      return false;
-    }
-
-    return true;
-  }
 };
 
 this.VideoControlsImplWidget = class {
@@ -316,13 +277,10 @@ this.VideoControlsImplWidget = class {
           this.setShowPictureInPictureMessage(true);
         }
 
-        if (this.video.readyState >= this.video.HAVE_METADATA) {
-          // According to the spec[1], at the HAVE_METADATA (or later) state, we know
-          // the video duration and dimensions, which means we can calculate whether or
-          // not to show the Picture-in-Picture toggle now.
-          //
-          // [1]: https://www.w3.org/TR/html50/embedded-content-0.html#dom-media-have_metadata
-          this.updatePictureInPictureToggleDisplay();
+        if (!this.pipToggleEnabled ||
+            this.isShowingPictureInPictureMessage ||
+            this.isAudioOnly) {
+          this.pictureInPictureToggleButton.setAttribute("hidden", true);
         }
 
         let adjustableControls = [
@@ -430,17 +388,6 @@ this.VideoControlsImplWidget = class {
         // _volumeControlWidth, since the volume slider implementation
         // depends on it.
         this.updateVolumeControls();
-      },
-
-      updatePictureInPictureToggleDisplay() {
-        if (this.pipToggleEnabled &&
-            !this.isShowingPictureInPictureMessage &&
-            !this.isAudioOnly &&
-            VideoControlsWidget.shouldShowPictureInPictureToggle(this.prefs, this.video)) {
-          this.pictureInPictureToggleButton.removeAttribute("hidden");
-        } else {
-          this.pictureInPictureToggleButton.setAttribute("hidden", true);
-        }
       },
 
       setupNewLoadState() {
@@ -597,7 +544,6 @@ this.VideoControlsImplWidget = class {
               this.muteButton.setAttribute("disabled", "true");
             }
             this.adjustControlSize();
-            this.updatePictureInPictureToggleDisplay();
             break;
           case "loadeddata":
             this.firstFrameShown = true;
@@ -2629,19 +2575,6 @@ this.NoControlsDesktopImplWidget = class {
             }
             break;
           }
-          case "loadedmetadata": {
-            this.updatePictureInPictureToggleDisplay();
-            break;
-          }
-        }
-      },
-
-      updatePictureInPictureToggleDisplay() {
-        if (this.pipToggleEnabled &&
-            VideoControlsWidget.shouldShowPictureInPictureToggle(this.prefs, this.video)) {
-          this.pictureInPictureToggleButton.removeAttribute("hidden");
-        } else {
-          this.pictureInPictureToggleButton.setAttribute("hidden", true);
         }
       },
 
@@ -2661,28 +2594,19 @@ this.NoControlsDesktopImplWidget = class {
           this.videocontrols.setAttribute("inDOMFullscreen", true);
         }
 
-        if (this.video.readyState >= this.video.HAVE_METADATA) {
-          // According to the spec[1], at the HAVE_METADATA (or later) state, we know
-          // the video duration and dimensions, which means we can calculate whether or
-          // not to show the Picture-in-Picture toggle now.
-          //
-          // [1]: https://www.w3.org/TR/html50/embedded-content-0.html#dom-media-have_metadata
-          this.updatePictureInPictureToggleDisplay();
+        if (!this.pipToggleEnabled) {
+          this.pictureInPictureToggleButton.setAttribute("hidden", true);
         }
 
         this.document.addEventListener("fullscreenchange", this, {
           capture: true,
         });
-
-        this.video.addEventListener("loadedmetadata", this);
       },
 
       terminate() {
         this.document.removeEventListener("fullscreenchange", this, {
           capture: true,
         });
-
-        this.video.removeEventListener("loadedmetadata", this);
       },
 
       get pipToggleEnabled() {

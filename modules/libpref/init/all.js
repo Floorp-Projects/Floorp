@@ -403,7 +403,6 @@ pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
 #endif
 pref("media.videocontrols.picture-in-picture.video-toggle.flyout-enabled", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.flyout-wait-ms", 5000);
-pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
 
 #ifdef MOZ_WEBRTC
 pref("media.navigator.video.enabled", true);
