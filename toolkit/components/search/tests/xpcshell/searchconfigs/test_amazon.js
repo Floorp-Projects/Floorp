@@ -94,6 +94,7 @@ const test = new SearchConfigTest({
       },
     }],
     excluded: [{regions: ["ca"]}],
+    searchUrlCode: "tag=firefox-fr-21",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.co.uk",
@@ -115,6 +116,7 @@ const test = new SearchConfigTest({
       },
     }],
     excluded: [{regions: ["au"]}],
+    searchUrlCode: "tag=firefox-uk-21",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.com",
@@ -128,6 +130,7 @@ const test = new SearchConfigTest({
       },
     }],
     excluded: [{regions: ["au", "ca", "fr", "gb"]}],
+    searchUrlCode: "tag=mozilla-20",
   }, {
     domain: "amazon.cn",
     included: [{
@@ -135,6 +138,7 @@ const test = new SearchConfigTest({
         matches: ["zh-CN"],
       },
     }],
+    searchUrlCode: "ix=sunray",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.co.jp",
@@ -143,6 +147,7 @@ const test = new SearchConfigTest({
         startsWith: ["ja"],
       },
     }],
+    searchUrlCode: "tag=mozillajapan-fx-22",
     noSuggestionsURL: true,
   }, {
     domain: "amazon.de",
@@ -170,6 +175,7 @@ const test = new SearchConfigTest({
         matches: ["it", "lij"],
       },
     }],
+    searchUrlCode: "tag=firefoxit-21",
     noSuggestionsURL: true,
   }],
 });
