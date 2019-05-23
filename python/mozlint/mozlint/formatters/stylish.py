@@ -13,17 +13,23 @@ from ..util.string import pluralize
 class StylishFormatter(object):
     """Formatter based on the eslint default."""
 
+    _indent_ = '  '
+
     # Colors later on in the list are fallbacks in case the terminal
     # doesn't support colors earlier in the list.
     # See http://www.calmar.ws/vim/256-xterm-24bit-rgb-color-chart.html
     _colors = {
         'grey': [247, 8, 7],
         'red': [1],
+        'green': [2],
         'yellow': [3],
         'brightred': [9, 1],
         'brightyellow': [11, 3],
     }
-    fmt = "  {c1}{lineno}{column}  {c2}{level}{normal}  {message}  {c1}{rule}({linter}){normal}"
+
+    fmt = """
+  {c1}{lineno}{column}  {c2}{level}{normal}  {message}  {c1}{rule}({linter}){normal}
+{diff}""".lstrip('\n')
     fmt_summary = "{t.bold}{c}\u2716 {problem} ({error}, {warning}{failure}){t.normal}"
 
     def __init__(self, disable_colors=False):
@@ -50,6 +56,21 @@ class StylishFormatter(object):
         self.max_level = max(self.max_level, len(str(err.level)))
         self.max_message = max(self.max_message, len(err.message))
 
+    def _get_colored_diff(self, diff):
+        if not diff:
+            return ""
+
+        new_diff = ''
+        for line in diff.split('\n'):
+            if line.startswith('+'):
+                new_diff += self.color('green')
+            elif line.startswith('-'):
+                new_diff += self.color('red')
+            else:
+                new_diff += self.term.normal
+            new_diff += self._indent_ + line + '\n'
+        return new_diff
+
     def __call__(self, result):
         message = []
         failed = result.failed
@@ -75,17 +96,19 @@ class StylishFormatter(object):
                 else:
                     col = "".ljust(self.max_column+1)
 
-                message.append(self.fmt.format(
-                    normal=self.term.normal,
-                    c1=self.color('grey'),
-                    c2=self.color('red') if err.level == 'error' else self.color('yellow'),
-                    lineno=str(err.lineno).rjust(self.max_lineno),
-                    column=col,
-                    level=err.level.ljust(self.max_level),
-                    message=err.message.ljust(self.max_message),
-                    rule='{} '.format(err.rule) if err.rule else '',
-                    linter=err.linter.lower(),
-                ))
+                args = {
+                    'normal': self.term.normal,
+                    'c1': self.color('grey'),
+                    'c2': self.color('red') if err.level == 'error' else self.color('yellow'),
+                    'lineno': str(err.lineno).rjust(self.max_lineno),
+                    'column': col,
+                    'level': err.level.ljust(self.max_level),
+                    'rule': '{} '.format(err.rule) if err.rule else '',
+                    'linter': err.linter.lower(),
+                    'message': err.message.ljust(self.max_message),
+                    'diff': self._get_colored_diff(err.diff).ljust(self.max_message)
+                }
+                message.append(self.fmt.format(**args).rstrip().rstrip('\n'))
 
             message.append('')  # newline
 

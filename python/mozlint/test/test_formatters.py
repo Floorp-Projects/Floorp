@@ -26,9 +26,10 @@ EXPECTED = {
         'format': """
 a/b/c.txt: line 1, Error - oh no foo (foo)
 a/b/c.txt: line 4, col 10, Error - oh no baz (baz)
+a/b/c.txt: line 5, Error - oh no foo-diff (foo-diff)
 d/e/f.txt: line 4, col 2, Warning - oh no bar (bar-not-allowed)
 
-3 problems
+4 problems
 """.strip(),
     },
     'stylish': {
@@ -37,13 +38,17 @@ d/e/f.txt: line 4, col 2, Warning - oh no bar (bar-not-allowed)
         },
         'format': """
 a/b/c.txt
-  1     error  oh no foo  (foo)
-  4:10  error  oh no baz  (baz)
+  1     error  oh no foo       (foo)
+  4:10  error  oh no baz       (baz)
+  5     error  oh no foo-diff  (foo-diff)
+  diff 1
+  - hello
+  + hello2
 
 d/e/f.txt
   4:2  warning  oh no bar  bar-not-allowed (bar)
 
-\u2716 3 problems (2 errors, 1 warning)
+\u2716 4 problems (3 errors, 1 warning)
 """.strip(),
     },
     'treeherder': {
@@ -51,6 +56,7 @@ d/e/f.txt
         'format': """
 TEST-UNEXPECTED-ERROR | a/b/c.txt:1 | oh no foo (foo)
 TEST-UNEXPECTED-ERROR | a/b/c.txt:4:10 | oh no baz (baz)
+TEST-UNEXPECTED-ERROR | a/b/c.txt:5 | oh no foo-diff (foo-diff)
 TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
 """.strip(),
     },
@@ -59,13 +65,14 @@ TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
         'format': """
 {abc}:1: foo error: oh no foo
 {abc}:4:10: baz error: oh no baz
+{abc}:5: foo-diff error: oh no foo-diff
 {def}:4:2: bar-not-allowed warning: oh no bar
 """.format(**NORMALISED_PATHS).strip(),
     },
     'summary': {
         'kwargs': {},
         'format': """
-{cwd}/a: 2 errors
+{cwd}/a: 3 errors
 {cwd}/d: 0 errors, 1 warning
 """.format(**NORMALISED_PATHS).strip(),
     },
@@ -98,6 +105,14 @@ def result(scope='module'):
             lineno=4,
             column=10,
             source="if baz:",
+        ),
+        Issue(
+            linter='foo-diff',
+            path='a/b/c.txt',
+            message="oh no foo-diff",
+            lineno=5,
+            source="if baz:",
+            diff='diff 1\n- hello\n+ hello2',
         ),
     )
     result = ResultSummary()
