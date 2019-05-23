@@ -53,7 +53,6 @@ private fun privateModeAdapterItems(tabs: List<Tab>): List<AdapterItem> {
 
     if (tabs.isNotEmpty()) {
         items.addAll(tabs.reversed().map(AdapterItem::TabItem))
-        items.add(AdapterItem.DeleteTabs)
     } else {
         items.add(AdapterItem.PrivateBrowsingDescription)
     }
