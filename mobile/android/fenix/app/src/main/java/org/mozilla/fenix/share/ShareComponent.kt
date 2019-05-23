@@ -23,7 +23,6 @@ sealed class ShareAction : Action {
     object Close : ShareAction()
     object SignInClicked : ShareAction()
     object AddNewDeviceClicked : ShareAction()
-    object HideSendTab : ShareAction()
     data class ShareDeviceClicked(val device: Device) : ShareAction()
     data class SendAllClicked(val devices: List<Device>) : ShareAction()
     data class ShareAppClicked(val packageName: String) : ShareAction()

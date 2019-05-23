@@ -9,12 +9,13 @@ import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Bundle
+import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.navigation.fragment.NavHostFragment.findNavController
-import kotlinx.android.synthetic.main.component_share.*
 import kotlinx.android.synthetic.main.fragment_share.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -81,12 +82,19 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
                 ShareAction.SignInClicked -> {
                     val directions = ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()
                     findNavController(this@ShareFragment).navigate(directions)
+                    dismiss()
                 }
                 ShareAction.AddNewDeviceClicked -> {
-                    requireComponents.useCases.tabsUseCases.addTab.invoke(ADD_NEW_DEVICES_URL, true)
-                }
-                ShareAction.HideSendTab -> {
-                    send_tab_group.visibility = View.GONE
+                    AlertDialog.Builder(
+                        ContextThemeWrapper(
+                            context,
+                            R.style.DialogStyle
+                        )
+                    ).apply {
+                        setMessage(R.string.sync_connect_device_dialog)
+                        setPositiveButton(R.string.sync_confirmation_button) { dialog, _ -> dialog.cancel() }
+                        create()
+                    }.show()
                 }
                 is ShareAction.ShareDeviceClicked -> {
                     val authAccount = requireComponents.backgroundServices.accountManager.authenticatedAccount()
@@ -96,6 +104,7 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
                             DeviceEventOutgoing.SendTab(title, url)
                         )
                     }
+                    dismiss()
                 }
                 is ShareAction.SendAllClicked -> {
                     val authAccount = requireComponents.backgroundServices.accountManager.authenticatedAccount()
@@ -107,6 +116,7 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
                             )
                         }
                     }
+                    dismiss()
                 }
                 is ShareAction.ShareAppClicked -> {
                     val intent = Intent(ACTION_SEND).apply {
@@ -116,14 +126,9 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
                         `package` = it.packageName
                     }
                     startActivity(intent)
+                    dismiss()
                 }
             }
-            dismiss()
         }
-    }
-
-    companion object {
-        // TODO Replace this link with the correct one when provided.
-        const val ADD_NEW_DEVICES_URL = "https://accounts.firefox.com/connect_another_device"
     }
 }

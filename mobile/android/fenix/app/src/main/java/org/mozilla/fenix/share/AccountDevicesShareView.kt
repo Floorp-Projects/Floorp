@@ -65,7 +65,6 @@ class AccountDevicesShareAdapter(
 
             if (shareableDevices.isEmpty()) {
                 list.add(SyncShareOption.AddNewDevice)
-                actionEmitter.onNext(ShareAction.HideSendTab)
             }
 
             val shareOptions = shareableDevices.map {

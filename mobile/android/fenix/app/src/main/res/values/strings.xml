@@ -508,6 +508,10 @@
     <string name="sync_offline">Offline</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Connect another device</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">To send a tab, sign in to Firefox on at least one other device.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Got it</string>
 
     <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
