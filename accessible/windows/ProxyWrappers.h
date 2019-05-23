@@ -8,7 +8,7 @@
 #ifndef MOZILLA_A11Y_ProxyWrappers_h
 #define MOZILLA_A11Y_ProxyWrappers_h
 
-#include "HyperTextAccessible.h"
+#include "HyperTextAccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
@@ -78,6 +78,36 @@ inline ProxyAccessible* HyperTextProxyFor(T* aWrapper) {
   auto wrapper = static_cast<HyperTextProxyAccessibleWrap*>(aWrapper);
   return wrapper->IsProxy() ? wrapper->Proxy() : nullptr;
 }
+
+/**
+ * Stub AccessibleWrap used in a content process for an embedded document
+ * residing in another content process.
+ * There is no ProxyAccessible here, since those only exist in the parent
+ * process. However, like ProxyAccessibleWrap, the only real method that
+ * gets called is GetNativeInterface, which returns a COM proxy for the
+ * document.
+ */
+class RemoteIframeDocProxyAccessibleWrap : public HyperTextAccessibleWrap {
+ public:
+  explicit RemoteIframeDocProxyAccessibleWrap(IDispatch* aCOMProxy)
+      : HyperTextAccessibleWrap(nullptr, nullptr), mCOMProxy(aCOMProxy) {
+    mType = eProxyType;
+    mBits.proxy = nullptr;
+  }
+
+  virtual void Shutdown() override {
+    mStateFlags |= eIsDefunct;
+    mCOMProxy = nullptr;
+  }
+
+  virtual void GetNativeInterface(void** aOutAccessible) override {
+    RefPtr<IDispatch> addRefed = mCOMProxy;
+    addRefed.forget(aOutAccessible);
+  }
+
+ private:
+  RefPtr<IDispatch> mCOMProxy;
+};
 
 }  // namespace a11y
 }  // namespace mozilla
