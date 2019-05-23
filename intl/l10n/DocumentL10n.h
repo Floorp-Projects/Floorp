@@ -85,6 +85,7 @@ class DocumentL10n final : public nsIObserver,
   nsCOMPtr<mozIDOMLocalization> mDOMLocalization;
   nsCOMPtr<nsIContentSink> mContentSink;
   RefPtr<l10n::Mutations> mMutations;
+  nsTHashtable<nsRefPtrHashKey<nsINode>> mRoots;
 
   already_AddRefed<Promise> MaybeWrapPromise(Promise* aPromise);
   void RegisterObservers();
@@ -142,6 +143,18 @@ class DocumentL10n final : public nsIObserver,
 
   Promise* Ready();
 
+  /**
+   * Add node to nodes observed for localization
+   * related changes.
+   */
+  void ConnectRoot(nsINode* aNode);
+
+  /**
+   * Remove node from nodes observed for localization
+   * related changes.
+   */
+  void DisconnectRoot(nsINode* aNode);
+
   void TriggerInitialDocumentTranslation();
 
   void InitialDocumentTranslationCompleted();
@@ -150,6 +163,7 @@ class DocumentL10n final : public nsIObserver,
 
   void OnChange();
  protected:
+  void DisconnectRoots();
 };
 
 }  // namespace dom

@@ -63,6 +63,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DocumentL10n)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMLocalization)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContentSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReady)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRoots)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DocumentL10n)
@@ -71,6 +72,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DocumentL10n)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMLocalization)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContentSink)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReady)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoots)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(DocumentL10n)
 
@@ -102,8 +104,8 @@ DocumentL10n::~DocumentL10n() {
 
 void DocumentL10n::DisconnectMutations() {
   if (mMutations) {
-    mDocument->RemoveMutationObserver(mMutations);
     mMutations->Disconnect();
+    DisconnectRoots();
   }
 }
 
@@ -645,7 +647,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
 
   GetTranslatables(*elem, elements, rv);
 
-  mMutations->ConnectRoot(elem);
+  ConnectRoot(elem);
 
   RefPtr<Promise> promise = TranslateElements(elements, rv);
   if (!promise) {
@@ -676,7 +678,6 @@ void DocumentL10n::InitialDocumentTranslationCompleted() {
     mContentSink->InitialDocumentTranslationCompleted();
     mContentSink = nullptr;
   }
-  mDocument->AddMutationObserverUnlessExists(mMutations);
 }
 
 Promise* DocumentL10n::Ready() { return mReady; }
@@ -685,6 +686,43 @@ void DocumentL10n::OnChange() {
   if (mDOMLocalization) {
     mDOMLocalization->OnChange();
   }
+}
+
+void DocumentL10n::ConnectRoot(nsINode* aNode) {
+  nsCOMPtr<nsIGlobalObject> global = aNode->GetOwnerGlobal();
+  if (!global) {
+    return;
+  }
+
+#ifdef DEBUG
+  for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
+    nsINode* root = iter.Get()->GetKey();
+
+    MOZ_ASSERT(
+        root != aNode && !root->Contains(aNode) && !aNode->Contains(root),
+        "Cannot add a root that overlaps with existing root.");
+  }
+#endif
+
+  mRoots.PutEntry(aNode);
+
+  aNode->AddMutationObserverUnlessExists(mMutations);
+}
+
+void DocumentL10n::DisconnectRoot(nsINode* aNode) {
+  if (mRoots.Contains(aNode)) {
+    aNode->RemoveMutationObserver(mMutations);
+    mRoots.RemoveEntry(aNode);
+  }
+}
+
+void DocumentL10n::DisconnectRoots() {
+  for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
+    nsRefPtrHashKey<nsINode>* elem = iter.Get();
+
+    elem->GetKey()->RemoveMutationObserver(mMutations);
+  }
+  mRoots.Clear();
 }
 
 void DocumentL10n::SetRootInfo(Element* aElement) {
