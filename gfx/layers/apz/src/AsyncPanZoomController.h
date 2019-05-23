@@ -718,6 +718,21 @@ class AsyncPanZoomController {
   void ClampAndSetScrollOffset(const CSSPoint& aOffset);
 
   /**
+   * Re-clamp mCompositedScrollOffset to the scroll range. This only needs to
+   * be called if the composited scroll offset changes outside of
+   * SampleCompositedAsyncTransform().
+   */
+  void ClampCompositedScrollOffset();
+
+  /**
+   * Recalculate mCompositedLayoutViewport so that it continues to enclose
+   * the composited visual viewport. This only needs to be called if the
+   * composited layout viewport changes outside of
+   * SampleCompositedAsyncTransform().
+   */
+  void RecalculateCompositedLayoutViewport();
+
+  /**
    * Scroll the scroll frame by an X,Y offset.
    * The resulting scroll offset is not clamped to the scrollable rect;
    * the caller must ensure it stays within range.
