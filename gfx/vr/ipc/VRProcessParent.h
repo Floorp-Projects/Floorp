@@ -13,6 +13,9 @@
 #include "mozilla/ipc/TaskFactory.h"
 
 namespace mozilla {
+namespace ipc {
+class SharedPreferenceSerializer;
+}
 namespace gfx {
 
 class VRChild;
@@ -31,6 +34,10 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
 
   explicit VRProcessParent(Listener* aListener);
 
+  // Launch the subprocess asynchronously. On failure, false is returned.
+  // Otherwise, true is returned, and the OnProcessLaunchComplete listener
+  // callback will be invoked either when a connection has been established, or
+  // if a connection could not be established due to an asynchronous error.
   bool Launch();
   // If the process is being launched, block until it has launched and
   // connected. If a launch task is pending, it will fire immediately.
@@ -71,6 +78,7 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   LaunchPhase mLaunchPhase;
   bool mChannelClosed;
   bool mShutdownRequested;
+  UniquePtr<mozilla::ipc::SharedPreferenceSerializer> mPrefSerializer;
 };
 
 }  // namespace gfx
