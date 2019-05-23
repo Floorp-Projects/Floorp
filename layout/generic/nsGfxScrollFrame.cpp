@@ -979,7 +979,8 @@ nscoord nsHTMLScrollFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
   // GetLogicalBaseline() impl, which synthesizes a baseline from the
   // margin-box. Otherwise, we defer to our scrolled frame, considering it
   // to be scrolled to its initial scroll position.
-  if (mHelper.mScrolledFrame->IsBlockFrameOrSubclass()) {
+  if (mHelper.mScrolledFrame->IsBlockFrameOrSubclass() ||
+      StyleDisplay()->IsContainLayout()) {
     return nsContainerFrame::GetLogicalBaseline(aWritingMode);
   }
 
