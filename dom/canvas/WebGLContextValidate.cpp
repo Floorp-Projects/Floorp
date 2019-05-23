@@ -411,6 +411,11 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
                                (GLint*)&mGLMaxArrayTextureLayers))
     mGLMaxArrayTextureLayers = 0;
 
+  (void)gl->GetPotentialInteger(LOCAL_GL_MAX_VIEWS_OVR,
+                                (GLint*)&mGLMaxMultiviewViews);
+  MOZ_ASSERT(mGLMaxMultiviewViews >= 1);
+  MOZ_ASSERT(mGLMaxMultiviewViews <= 255);
+
   gl->GetUIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS,
                    &mGLMaxFragmentTextureImageUnits);
   gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS,
@@ -676,7 +681,7 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
   return true;
 }
 
-bool WebGLContext::ValidateFramebufferTarget(GLenum target) {
+bool WebGLContext::ValidateFramebufferTarget(GLenum target) const {
   bool isValid = true;
   switch (target) {
     case LOCAL_GL_FRAMEBUFFER:
