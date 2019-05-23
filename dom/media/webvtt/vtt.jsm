@@ -1084,29 +1084,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     return parseContent(window, cuetext, PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT);
   };
 
-  function clearAllCuesDiv(overlay) {
-    while (overlay.firstChild) {
-      overlay.firstChild.remove();
-    }
-  }
-
-  // It's used to record how many cues we process in the last `processCues` run.
-  var lastDisplayedCueNums = 0;
-
   // Runs the processing model over the cues and regions passed to it.
-  // Spec https://www.w3.org/TR/webvtt1/#processing-model
-  // @parem window : JS window
-  // @param cues : the VTT cues are going to be displayed.
-  // @param overlay : A block level element (usually a div) that the computed cues
+  // @param overlay A block level element (usually a div) that the computed cues
   //                and regions will be placed into.
-  // @param controls : A Control bar element. Cues' position will be
+  // @param controls  A Control bar element. Cues' position will be
   //                 affected and repositioned according to it.
   WebVTT.processCues = function(window, cues, overlay, controls) {
-    if (!cues) {
-      LOG(`Abort processing because no cue.`);
-      clearAllCuesDiv(overlay);
-      lastDisplayedCueNums = 0;
-      return;
+    if (!window || !cues || !overlay) {
+      return null;
     }
 
     let controlBar, controlBarShown;
@@ -1122,12 +1107,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
     // Determine if we need to compute the display states of the cues. This could
     // be the case if a cue's state has been changed since the last computation or
-    // if it has not been computed yet, or the displayed cues number changes.
+    // if it has not been computed yet.
     function shouldCompute(cues) {
-      if (lastDisplayedCueNums != cues.length) {
-        return true;
-      }
-
       if (overlay.lastControlBarShownStatus != controlBarShown) {
         return true;
       }
@@ -1142,12 +1123,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
     // We don't need to recompute the cues' display states. Just reuse them.
     if (!shouldCompute(cues)) {
-      LOG(`Abort processing because no need to compute cues' display state.`);
       return;
     }
     overlay.lastControlBarShownStatus = controlBarShown;
 
-    clearAllCuesDiv(overlay);
+    // Remove all previous children.
+    while (overlay.firstChild) {
+      overlay.firstChild.remove();
+    }
     let rootOfCues = window.document.createElement("div");
     rootOfCues.style.position = "absolute";
     rootOfCues.style.left = "0";
@@ -1171,9 +1154,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     let regionNodeBoxes = {};
     let regionNodeBox;
 
-    LOG(`=== processCues, ` +
-        `lastDisplayedCueNums=${lastDisplayedCueNums}, currentCueNums=${cues.length} ===`);
-    lastDisplayedCueNums = cues.length;
+    LOG(`=== processCues ===`);
+
     for (let i = 0; i < cues.length; i++) {
       cue = cues[i];
       if (cue.region != null) {
