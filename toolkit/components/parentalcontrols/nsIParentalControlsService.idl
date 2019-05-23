@@ -49,7 +49,7 @@ interface nsIParentalControlsService : nsISupports
   /**
    * @returns true if the current user account parental controls
    * restrictions include the blocking of all file downloads.
-   */ 
+   */
   readonly attribute boolean blockFileDownloadsEnabled;
 
   /**
@@ -78,13 +78,13 @@ interface nsIParentalControlsService : nsISupports
    * @returns true if the current user account has parental controls
    * logging enabled. If true, applications should log relevent events
    * using 'log'.
-   */ 
+   */
   readonly attribute boolean loggingEnabled;
 
   /**
    * Log entry types. Additional types can be defined and implemented
    * as needed. Other possible event types might include email events,
-   * media related events, and IM events. 
+   * media related events, and IM events.
    */
   const short ePCLog_URIVisit = 1;    /* Web content */
   const short ePCLog_FileDownload = 2;  /* File downloads */

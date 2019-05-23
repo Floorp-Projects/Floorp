@@ -125,11 +125,11 @@ interface nsINetUtil : nsISupports
   const unsigned long ESCAPE_URL_REF = 1 << 9;
 
   /** %XX-escape URL path - same as escaping directory, basename and extension */
-  const unsigned long ESCAPE_URL_FILEPATH = 
+  const unsigned long ESCAPE_URL_FILEPATH =
     ESCAPE_URL_DIRECTORY | ESCAPE_URL_FILE_BASENAME | ESCAPE_URL_FILE_EXTENSION;
 
   /** %XX-escape scheme, username, password, host, path, params, query and ref */
-  const unsigned long ESCAPE_URL_MINIMAL = 
+  const unsigned long ESCAPE_URL_MINIMAL =
     ESCAPE_URL_SCHEME | ESCAPE_URL_USERNAME | ESCAPE_URL_PASSWORD |
     ESCAPE_URL_HOST   | ESCAPE_URL_FILEPATH | ESCAPE_URL_PARAM    |
     ESCAPE_URL_QUERY  | ESCAPE_URL_REF;
@@ -138,11 +138,11 @@ interface nsINetUtil : nsISupports
   const unsigned long ESCAPE_URL_FORCED = 1 << 10;
 
   /** Skip non-ascii octets, %XX-escape all others */
-  const unsigned long ESCAPE_URL_ONLY_ASCII = 1 << 11;     
+  const unsigned long ESCAPE_URL_ONLY_ASCII = 1 << 11;
 
-  /** 
+  /**
    * Skip graphic octets (0x20-0x7E) when escaping
-   * Skips all ASCII octets (0x00-0x7F) when unescaping 
+   * Skips all ASCII octets (0x00-0x7F) when unescaping
    */
   const unsigned long ESCAPE_URL_ONLY_NONASCII = 1 << 12;
 
@@ -153,7 +153,7 @@ interface nsINetUtil : nsISupports
   const unsigned long ESCAPE_URL_SKIP_CONTROL = 1 << 15;
 
   /**
-   * %XX-Escape invalid chars in a URL segment. 
+   * %XX-Escape invalid chars in a URL segment.
    *
    * @param aStr the URL to be escaped
    * @param aFlags the URL segment type flags
@@ -168,7 +168,7 @@ interface nsINetUtil : nsISupports
    *
    * @param aStr the URL to be unescaped
    * @param aFlags only ESCAPE_URL_ONLY_NONASCII and ESCAPE_URL_SKIP_CONTROL
-   *               are recognized.  If |aFlags| is 0 all escape sequences are 
+   *               are recognized.  If |aFlags| is 0 all escape sequences are
    *               unescaped
    * @return unescaped string
    */

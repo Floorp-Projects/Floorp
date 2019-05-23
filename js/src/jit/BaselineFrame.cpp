@@ -110,9 +110,9 @@ bool BaselineFrame::pushVarEnvironment(JSContext* cx, HandleScope scope) {
 
 void BaselineFrame::setInterpreterPC(jsbytecode* pc) {
   uint32_t pcOffset = script()->pcToOffset(pc);
-  ICScript* icScript = script()->icScript();
+  JitScript* jitScript = script()->jitScript();
   interpreterPC_ = pc;
-  interpreterICEntry_ = icScript->interpreterICEntryFromPCOffset(pcOffset);
+  interpreterICEntry_ = jitScript->interpreterICEntryFromPCOffset(pcOffset);
 }
 
 bool BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues) {

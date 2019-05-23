@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<title>MessagePort should not work when created from a disconnected window</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<body>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+async function runTest() {
+  let ifr = document.createElement('iframe');
+  await new Promise(resolve => {
+    ifr.onload = resolve;
+    ifr.src = 'support/empty.html';
+    document.body.appendChild(ifr);
+  });
+
+  let w = ifr.contentWindow;
+
+  let pre = new w.MessageChannel();
+  ok(!!pre, "We have a channel");
+
+  ifr.remove();
+
+  let post = new w.MessageChannel();
+  ok(!!post, "We have a channel");
+
+  // This should silently fail.
+  pre.port1.postMessage(42);
+  pre.port2.onmessage = e => {
+    ok(false, "No messages should be received!");
+  }
+
+  // This should silently fail.
+  post.port1.postMessage(42);
+  post.port2.onmessage = e => {
+    ok(false, "No messages should be received!");
+  }
+
+  // Let's use another MessagePort just to be sure no messages are received by
+  // port2.
+
+  let mc = new MessageChannel();
+  mc.port1.postMessage(42);
+  mc.port2.onmessage = e => {
+    ok(true, "Ready to complete the test");
+    SimpleTest.finish();
+  }
+}
+
+</script>
+</body>

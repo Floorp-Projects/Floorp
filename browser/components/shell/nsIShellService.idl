@@ -26,16 +26,16 @@ interface nsIShellService : nsISupports
   /**
    * Registers Firefox as the "Default Browser."
    *
-   * @param aClaimAllTypes Register Firefox as the handler for 
+   * @param aClaimAllTypes Register Firefox as the handler for
    *                       additional protocols (ftp, chrome etc)
    *                       and web documents (.html, .xhtml etc).
    * @param aForAllUsers   Whether or not Firefox should attempt
    *                       to become the default browser for all
-   *                       users on a multi-user system. 
+   *                       users on a multi-user system.
    */
   void setDefaultBrowser(in boolean aClaimAllTypes, in boolean aForAllUsers);
 
-  /** 
+  /**
    * Flags for positioning/sizing of the Desktop Background image.
    */
   const long BACKGROUND_TILE      = 1;
@@ -46,12 +46,12 @@ interface nsIShellService : nsISupports
   const long BACKGROUND_SPAN      = 6;
 
     /**
-     * Sets the desktop background image using either the HTML <IMG> 
+     * Sets the desktop background image using either the HTML <IMG>
      * element supplied or the background image of the element supplied.
      *
      * @param aImageElement Either a HTML <IMG> element or an element with
      *                      a background image from which to source the
-     *                      background image. 
+     *                      background image.
      * @param aPosition     How to place the image on the desktop
      * @param aImageName    The image name. Equivalent to the leaf name of the
      *                      location.href.
@@ -70,13 +70,13 @@ interface nsIShellService : nsISupports
   /**
    * Opens the application specified. If more than one application of the
    * given type is available on the system, the default or "preferred"
-   * application is used. 
+   * application is used.
    */
   void openApplication(in long aApplication);
 
-  /** 
-   * The desktop background color, visible when no background image is 
-   * used, or if the background image is centered and does not fill the 
+  /**
+   * The desktop background color, visible when no background image is
+   * used, or if the background image is centered and does not fill the
    * entire screen. A rgb value, where (r << 16 | g << 8 | b)
    */
   attribute unsigned long desktopBackgroundColor;

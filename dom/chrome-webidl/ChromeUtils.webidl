@@ -396,7 +396,7 @@ partial namespace ChromeUtils {
   void resetLastExternalProtocolIframeAllowed();
 
   [ChromeOnly, Throws]
-  void registerWindowActor(DOMString aName, WindowActorOptions aOptions);
+  void registerWindowActor(DOMString aName, optional WindowActorOptions aOptions);
 
   [ChromeOnly]
   void unregisterWindowActor(DOMString aName);
@@ -621,13 +621,13 @@ dictionary WindowActorOptions {
   sequence<DOMString> remoteTypes;
 
   /** This fields are used for configuring individual sides of the actor. */
-  required WindowActorSidedOptions parent;
-  required WindowActorChildOptions child;
+  WindowActorSidedOptions parent = null;
+  WindowActorChildOptions child = null;
 };
 
 dictionary WindowActorSidedOptions {
   /** The module path which should be loaded for the actor on this side. */
-  required ByteString moduleURI;
+  ByteString moduleURI;
 };
 
 dictionary WindowActorChildOptions : WindowActorSidedOptions {

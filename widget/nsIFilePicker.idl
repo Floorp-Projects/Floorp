@@ -109,14 +109,14 @@ interface nsIFilePicker : nsISupports
  /**
   * The extension that should be associated with files of the type we
   * want to work with.  On some platforms, this extension will be
-  * automatically appended to filenames the user enters, if needed.  
+  * automatically appended to filenames the user enters, if needed.
   */
   attribute AString defaultExtension;
-  
+
  /**
   * The filter which is currently selected in the File Picker dialog
   *
-  * @return Returns the index (0 based) of the selected filter in the filter list. 
+  * @return Returns the index (0 based) of the selected filter in the filter list.
   */
   attribute long filterIndex;
 

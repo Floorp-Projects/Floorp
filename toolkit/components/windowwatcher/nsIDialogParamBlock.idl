@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 interface nsIMutableArray;
 
@@ -29,9 +29,9 @@ interface nsIDialogParamBlock:  nsISupports {
     */
   wstring GetString( in int32_t inIndex );
   void SetString( in int32_t inIndex, in wstring inString);
-  
+
   /**
-   * A place where you can store an nsIMutableArray to pass nsISupports 
+   * A place where you can store an nsIMutableArray to pass nsISupports
    */
   attribute nsIMutableArray objects;
 };

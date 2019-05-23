@@ -103,7 +103,7 @@ function getCharPressPoint(doc, element, char, expected) {
  * @param midPoint, The screen coord for the longpress.
  * @return Selection state helper-result object.
  */
-function getLongPressResult(browser, midPoint) {
+async function getLongPressResult(browser, midPoint) {
   let domWinUtils = browser.contentWindow.windowUtils;
 
   // AccessibleCarets expect longtap between touchstart/end.
@@ -113,6 +113,8 @@ function getLongPressResult(browser, midPoint) {
                                      0, 1, 0);
   domWinUtils.sendTouchEventToWindow("touchend", [0], [midPoint.x], [midPoint.y],
                                      [1], [1], [0], [1], 0);
+
+  await (new Promise(resolve => browser.contentWindow.setTimeout(resolve, 0)));
 
   return { focusedElement: gActionBarHandler._targetElement,
            text: gActionBarHandler._getSelectedText(),
@@ -198,63 +200,63 @@ add_task(async function testAccessibleCarets() {
 
   // Longpress various LTR content elements. Test focused element against
   // expected, and selected text against expected.
-  let result = getLongPressResult(browser, ce_LTR_midPoint);
+  let result = await getLongPressResult(browser, ce_LTR_midPoint);
   is(result.focusedElement, ce_LTR_elem, "Focused element should match expected.");
   is(result.text, "Find", "Selected text should match expected text.");
 
-  result = getLongPressResult(browser, tc_LTR_midPoint);
+  result = await getLongPressResult(browser, tc_LTR_midPoint);
   is(result.focusedElement, null, "No focused element is expected.");
   is(result.text, "Open", "Selected text should match expected text.");
 
-  result = getLongPressResult(browser, i_LTR_midPoint);
+  result = await getLongPressResult(browser, i_LTR_midPoint);
   is(result.focusedElement, i_LTR_elem, "Focused element should match expected.");
   is(result.text, "Type", "Selected text should match expected text.");
 
-  result = getLongPressResult(browser, ta_LTR_midPoint);
+  result = await getLongPressResult(browser, ta_LTR_midPoint);
   is(result.focusedElement, ta_LTR_elem, "Focused element should match expected.");
   is(result.text, "Words", "Selected text should match expected text.");
 
-  result = getLongPressResult(browser, ip_LTR_midPoint);
+  result = await getLongPressResult(browser, ip_LTR_midPoint);
   is(result.focusedElement, ip_LTR_elem, "Focused element should match expected.");
   is(result.text, "09876543210 .-.)(wp#*103410341",
     "Selected phone number should match expected text.");
   is(result.text.length, 30,
     "Selected phone number length should match expected maximum.");
 
-  result = getLongPressResult(browser, bug1265750_midPoint);
+  result = await getLongPressResult(browser, bug1265750_midPoint);
   is(result.focusedElement, null, "Focused element should match expected.");
   is(result.text, "3 45 678 90",
     "Selected phone number should match expected text.");
 
-  result = getLongPressResult(browser, bug1338445_midPoint1);
+  result = await getLongPressResult(browser, bug1338445_midPoint1);
   is(result.focusedElement, null, "Focused element should match expected.");
   is(result.text, "012345p",
     "Selected phone number should match expected text.");
 
-  result = getLongPressResult(browser, bug1338445_midPoint2);
+  result = await getLongPressResult(browser, bug1338445_midPoint2);
   is(result.focusedElement, null, "Focused element should match expected.");
   is(result.text, "p34",
     "Selected phone number should match expected text.");
 
   // Longpress various RTL content elements. Test focused element against
   // expected, and selected text against expected.
-  result = getLongPressResult(browser, ce_RTL_midPoint);
+  result = await getLongPressResult(browser, ce_RTL_midPoint);
   is(result.focusedElement, ce_RTL_elem, "Focused element should match expected.");
   is(result.text, "איפה", "Selected text should match expected text.");
 
-  result = getLongPressResult(browser, tc_RTL_midPoint);
+  result = await getLongPressResult(browser, tc_RTL_midPoint);
   is(result.focusedElement, null, "No focused element is expected.");
   is(result.text, "תן", "Selected text should match expected text.");
 
-  result = getLongPressResult(browser, i_RTL_midPoint);
+  result = await getLongPressResult(browser, i_RTL_midPoint);
   is(result.focusedElement, i_RTL_elem, "Focused element should match expected.");
   is(result.text, "לרוץ", "Selected text should match expected text.");
 
-  result = getLongPressResult(browser, ta_RTL_midPoint);
+  result = await getLongPressResult(browser, ta_RTL_midPoint);
   is(result.focusedElement, ta_RTL_elem, "Focused element should match expected.");
   is(result.text, "הספר", "Selected text should match expected text.");
 
-  result = getLongPressResult(browser, ip_RTL_midPoint);
+  result = await getLongPressResult(browser, ip_RTL_midPoint);
   is(result.focusedElement, ip_RTL_elem, "Focused element should match expected.");
   is(result.text, "+972 3 7347514 ",
     "Selected phone number should match expected text.");
@@ -294,13 +296,13 @@ add_task(async function testAccessibleCarets_designMode() {
   is(clipboardHasText, true, "There should now be paste-able text in the clipboard.");
 
   // Toggle designMode on/off/on, check UI expectations.
-  ["on", "off"].forEach(designMode => {
+  for (let designMode of ["on", "off"]) {
     doc.designMode = designMode;
 
     // Text content in a document, whether in designMode or not, never receives focus.
     // Available ActionBar/FloatingToolbar UI actions should vary depending on mode.
 
-    let result = getLongPressResult(browser, tc_LTR_midPoint);
+    let result = await getLongPressResult(browser, tc_LTR_midPoint);
     is(result.focusedElement, null, "No focused element is expected.");
     is(result.text, "existence", "Selected text should match expected text.");
     is(UIhasActionByID("cut_action"), (designMode === "on"),
@@ -308,14 +310,14 @@ add_task(async function testAccessibleCarets_designMode() {
     is(UIhasActionByID("paste_action"), (designMode === "on"),
       "PASTE action UI Visibility should match designMode state.");
 
-    result = getLongPressResult(browser, tc_RTL_midPoint);
+    result = await getLongPressResult(browser, tc_RTL_midPoint);
     is(result.focusedElement, null, "No focused element is expected.");
     is(result.text, "אותו", "Selected text should match expected text.");
     is(UIhasActionByID("cut_action"), (designMode === "on"),
       "CUT action UI Visibility should match designMode state.");
     is(UIhasActionByID("paste_action"), (designMode === "on"),
       "PASTE action UI Visibility should match designMode state.");
-  });
+  }
 
   // Close Selection UI (ActionBar or FloatingToolbar) and complete test.
   closeSelectionUI();

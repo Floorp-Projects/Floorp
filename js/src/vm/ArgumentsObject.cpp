@@ -514,7 +514,7 @@ static bool MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
     if (arg < argsobj->initialLength() && !argsobj->isElementDeleted(arg)) {
       argsobj->setElement(cx, arg, v);
       if (arg < script->functionNonDelazifying()->nargs()) {
-        TypeScript::MonitorArgType(cx, script, arg, v);
+        JitScript::MonitorArgType(cx, script, arg, v);
       }
       return result.succeed();
     }
@@ -730,7 +730,7 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
         }
         argsobj->setElement(cx, arg, desc.value());
         if (arg < script->functionNonDelazifying()->nargs()) {
-          TypeScript::MonitorArgType(cx, script, arg, desc.value());
+          JitScript::MonitorArgType(cx, script, arg, desc.value());
         }
       }
       if (desc.hasWritable() && !desc.writable()) {

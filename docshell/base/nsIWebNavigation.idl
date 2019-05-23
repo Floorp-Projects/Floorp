@@ -145,7 +145,7 @@ interface nsIWebNavigation : nsISupports
    * document.
    */
   const unsigned long LOAD_FLAGS_CHARSET_CHANGE  = 0x0400;
- 
+
   /**
    * If this flag is set, Stop() will be called before the load starts
    * and will stop both content and network activity (the default is to
@@ -168,7 +168,7 @@ interface nsIWebNavigation : nsISupports
   /**
    * This flag specifies that this is the first load in this object.
    * Set with care, since setting incorrectly can cause us to assume that
-   * nothing was actually loaded in this object if the load ends up being 
+   * nothing was actually loaded in this object if the load ends up being
    * handled by an external application.  This flag must not be passed to
    * Reload.
    */

@@ -10,7 +10,7 @@ interface nsIInputStream;
 
 %{C++
 /**
- * The signature for the reader function passed to WriteSegments. This 
+ * The signature for the reader function passed to WriteSegments. This
  * is the "provider" of data that gets written into the stream's buffer.
  *
  * @param aOutStream stream being written to
@@ -53,10 +53,10 @@ native nsReadSegmentFun(nsReadSegmentFun);
 [scriptable, uuid(0d0acd2a-61b4-11d4-9877-00c04fa0cf4a)]
 interface nsIOutputStream : nsISupports
 {
-    /** 
+    /**
      * Close the stream. Forces the output stream to flush any buffered data.
      *
-     * @throws NS_BASE_STREAM_WOULD_BLOCK if unable to flush without blocking 
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if unable to flush without blocking
      *   the calling thread (non-blocking mode only)
      */
     void close();
@@ -64,7 +64,7 @@ interface nsIOutputStream : nsISupports
     /**
      * Flush the stream.
      *
-     * @throws NS_BASE_STREAM_WOULD_BLOCK if unable to flush without blocking 
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if unable to flush without blocking
      *   the calling thread (non-blocking mode only)
      */
     void flush();

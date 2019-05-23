@@ -25,15 +25,23 @@ add_task(async function() {
      "There were two requests due to redirect.");
 
   const [
-    initialSecurityIcon,
-    redirectSecurityIcon,
+    initialDomainSecurityIcon,
+    initialUrlSecurityIcon,
+    redirectDomainSecurityIcon,
+    redirectUrlSecurityIcon,
   ] = document.querySelectorAll(".requests-security-state-icon");
 
-  ok(initialSecurityIcon.classList.contains("security-state-insecure"),
-     "Initial request was marked insecure.");
+  ok(initialDomainSecurityIcon.classList.contains("security-state-insecure"),
+     "Initial request was marked insecure for domain column.");
 
-  ok(redirectSecurityIcon.classList.contains("security-state-secure"),
-     "Redirected request was marked secure.");
+  ok(redirectDomainSecurityIcon.classList.contains("security-state-secure"),
+     "Redirected request was marked secure for domain column.");
+
+  ok(initialUrlSecurityIcon.classList.contains("security-state-insecure"),
+    "Initial request was marked insecure for URL column.");
+
+  ok(redirectUrlSecurityIcon.classList.contains("security-state-secure"),
+    "Redirected request was marked secure for URL column.");
 
   await teardown(monitor);
 });

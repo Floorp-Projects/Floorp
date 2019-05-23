@@ -63,7 +63,7 @@ interface nsIPluginInstanceOwner : nsISupports
    * with nullptr aTarget.
    */
   NS_IMETHOD
-  GetURL(const char *aURL, const char *aTarget, 
+  GetURL(const char *aURL, const char *aTarget,
          nsIInputStream *aPostStream,
          void *aHeadersData, uint32_t aHeadersDataLen,
          bool aDoCheckLoadURIChecks) = 0;

@@ -28,7 +28,7 @@ interface nsIMacDockSupport : nsISupports
    *
    * @param aIgnoreOtherApplications If false, the application is activated
    *        only if no other application is currently active. If true, the
-   *        application activates regardless. 
+   *        application activates regardless.
    */
   void activateApplication(in boolean aIgnoreOtherApplications);
 

@@ -12,7 +12,7 @@
  *
  * Accesskeys can be attached to buttons and checkboxes by inserting
  * an & before the accesskey character. For a real &, use && instead.
- */  
+ */
 
 #include "nsISupports.idl"
 
@@ -34,11 +34,11 @@ interface nsIPrompt : nsISupports
                          in wstring text,
                          in wstring checkMsg,
                          inout boolean checkValue);
-                         
+
     const unsigned long BUTTON_POS_0              = 1;
     const unsigned long BUTTON_POS_1              = 1 << 8;
     const unsigned long BUTTON_POS_2              = 1 << 16;
-     
+
     const unsigned long BUTTON_TITLE_OK            = 1;
     const unsigned long BUTTON_TITLE_CANCEL        = 2;
     const unsigned long BUTTON_TITLE_YES           = 3;
@@ -48,7 +48,7 @@ interface nsIPrompt : nsISupports
     const unsigned long BUTTON_TITLE_REVERT        = 7;
 
     const unsigned long BUTTON_TITLE_IS_STRING     = 127;
-    
+
     const unsigned long BUTTON_POS_0_DEFAULT       = 0 << 24;
     const unsigned long BUTTON_POS_1_DEFAULT       = 1 << 24;
     const unsigned long BUTTON_POS_2_DEFAULT       = 2 << 24;
@@ -72,7 +72,7 @@ interface nsIPrompt : nsISupports
 
      boolean prompt(in wstring dialogTitle,
                     in wstring text,
-                    inout wstring value, 
+                    inout wstring value,
                     in wstring checkMsg,
                     inout boolean checkValue);
 
@@ -81,14 +81,14 @@ interface nsIPrompt : nsISupports
                             inout wstring password,
                             in wstring checkMsg,
                             inout boolean checkValue);
- 
+
      boolean promptUsernameAndPassword(in wstring dialogTitle,
                                        in wstring text,
                                        inout wstring username,
                                        inout wstring password,
                                        in wstring checkMsg,
                                        inout boolean checkValue);
-    
+
     boolean select(in wstring dialogTitle,
                    in wstring text,
                    in  uint32_t count,

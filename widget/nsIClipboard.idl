@@ -19,7 +19,7 @@ interface nsIClipboard : nsISupports
     const long kFindClipboard = 2;
     // Used to cache current selection on (nsClipboard) for macOS service menu.
     const long kSelectionCache = 3;
-    
+
    /**
     * Given a transferable, set the data on the native clipboard
     *
@@ -28,8 +28,8 @@ interface nsIClipboard : nsISupports
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
     * @result NS_Ok if no errors
     */
-  
-    void setData ( in nsITransferable aTransferable, in nsIClipboardOwner anOwner, 
+
+    void setData ( in nsITransferable aTransferable, in nsIClipboardOwner anOwner,
                     in long aWhichClipboard ) ;
 
    /**
@@ -39,7 +39,7 @@ interface nsIClipboard : nsISupports
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
     * @result NS_Ok if no errors
     */
-  
+
     void getData ( in nsITransferable aTransferable, in long aWhichClipboard ) ;
 
    /**
@@ -49,11 +49,11 @@ interface nsIClipboard : nsISupports
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
     * @result NS_OK if successful.
     */
-  
+
     void emptyClipboard ( in long aWhichClipboard ) ;
 
    /**
-    * This provides a way to give correct UI feedback about, for instance, a paste 
+    * This provides a way to give correct UI feedback about, for instance, a paste
     * should be allowed. It does _NOT_ actually retreive the data and should be a very
     * inexpensive call. All it does is check if there is data on the clipboard matching
     * any of the flavors in the given list.
@@ -61,7 +61,7 @@ interface nsIClipboard : nsISupports
     * @param  aFlavorList     An array of ASCII strings.
     * @param  aLength         The length of the aFlavorList.
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
-    * @outResult - if data is present matching one of 
+    * @outResult - if data is present matching one of
     * @result NS_OK if successful.
     */
     boolean hasDataMatchingFlavors ( [array, size_is(aLength)] in string aFlavorList,
@@ -69,10 +69,10 @@ interface nsIClipboard : nsISupports
                                      in long aWhichClipboard ) ;
 
    /**
-    * Allows clients to determine if the implementation supports the concept of a 
+    * Allows clients to determine if the implementation supports the concept of a
     * separate clipboard for selection.
-    * 
-    * @outResult - true if 
+    *
+    * @outResult - true if
     * @result NS_OK if successful.
     */
     boolean supportsSelectionClipboard ( ) ;

@@ -47,7 +47,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
   proto->mAllFrames = aInfo.allFrames();
   proto->mMatches = aInfo.matches();
   proto->mRemoteTypes = aInfo.remoteTypes();
-  proto->mChild.mModuleURI.Assign(aInfo.url());
+  proto->mChild.mModuleURI = aInfo.url();
 
   proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
   for (auto& ipc : aInfo.events()) {
@@ -111,8 +111,13 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
     proto->mRemoteTypes = aOptions.mRemoteTypes.Value();
   }
 
-  proto->mParent.mModuleURI = aOptions.mParent.mModuleURI;
-  proto->mChild.mModuleURI = aOptions.mChild.mModuleURI;
+  if (aOptions.mParent.mModuleURI.WasPassed()) {
+    proto->mParent.mModuleURI.emplace(aOptions.mParent.mModuleURI.Value());
+  }
+
+  if (aOptions.mChild.mModuleURI.WasPassed()) {
+    proto->mChild.mModuleURI.emplace(aOptions.mChild.mModuleURI.Value());
+  }
 
   // For each event declared in the source dictionary, initialize the
   // corresponding envent declaration entry in the JSWindowActorProtocol.

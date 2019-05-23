@@ -320,7 +320,7 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
   MOZ_ASSERT(jit::IsBaselineEnabled(cx));
   MOZ_ASSERT(JitOptions.baselineInterpreter);
 
-  if (script->types()) {
+  if (script->jitScript()) {
     return Method_Compiled;
   }
 
@@ -338,8 +338,8 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
     return Method_Error;
   }
 
-  AutoKeepTypeScripts keepTypes(cx);
-  if (!script->ensureHasTypes(cx, keepTypes)) {
+  AutoKeepJitScripts keepJitScript(cx);
+  if (!script->ensureHasJitScript(cx, keepJitScript)) {
     return Method_Error;
   }
 
@@ -517,7 +517,7 @@ void BaselineScript::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &templateEnv_, "baseline-template-environment");
 }
 
-void ICScript::trace(JSTracer* trc) {
+void JitScript::trace(JSTracer* trc) {
   // Mark all IC stub codes hanging off the IC stub entries.
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& ent = icEntry(i);
@@ -620,12 +620,12 @@ CompactBufferReader BaselineScript::pcMappingReader(size_t indexEntry) {
 }
 
 struct ICEntries {
-  ICScript* const icScript_;
+  JitScript* const jitScript_;
 
-  explicit ICEntries(ICScript* icScript) : icScript_(icScript) {}
+  explicit ICEntries(JitScript* jitScript) : jitScript_(jitScript) {}
 
-  size_t numEntries() const { return icScript_->numICEntries(); }
-  ICEntry& operator[](size_t index) const { return icScript_->icEntry(index); }
+  size_t numEntries() const { return jitScript_->numICEntries(); }
+  ICEntry& operator[](size_t index) const { return jitScript_->icEntry(index); }
 };
 
 struct RetAddrEntries {
@@ -712,7 +712,7 @@ uint8_t* BaselineScript::returnAddressForEntry(const RetAddrEntry& ent) {
   return method()->raw() + ent.returnOffset().offset();
 }
 
-ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
+ICEntry* JitScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
   // This method ignores prologue IC entries. There can be at most one
   // non-prologue IC per bytecode op.
 
@@ -729,14 +729,14 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
   return &entry;
 }
 
-ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset) {
+ICEntry& JitScript::icEntryFromPCOffset(uint32_t pcOffset) {
   ICEntry* entry = maybeICEntryFromPCOffset(pcOffset);
   MOZ_RELEASE_ASSERT(entry);
   return *entry;
 }
 
-ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                            ICEntry* prevLookedUpEntry) {
+ICEntry* JitScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
+                                             ICEntry* prevLookedUpEntry) {
   // Do a linear forward search from the last queried PC offset, or fallback to
   // a binary search if the last offset is too far away.
   if (prevLookedUpEntry && pcOffset >= prevLookedUpEntry->pcOffset() &&
@@ -756,14 +756,14 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
   return maybeICEntryFromPCOffset(pcOffset);
 }
 
-ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset,
-                                       ICEntry* prevLookedUpEntry) {
+ICEntry& JitScript::icEntryFromPCOffset(uint32_t pcOffset,
+                                        ICEntry* prevLookedUpEntry) {
   ICEntry* entry = maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
   MOZ_RELEASE_ASSERT(entry);
   return *entry;
 }
 
-ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
+ICEntry* JitScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
   // We have to return the entry to store in BaselineFrame::interpreterICEntry
   // when resuming in the Baseline Interpreter at pcOffset. The bytecode op at
   // pcOffset does not necessarily have an ICEntry, so we want to return the
@@ -1197,8 +1197,8 @@ void BaselineInterpreter::toggleCodeCoverageInstrumentation(bool enable) {
   toggleCodeCoverageInstrumentationUnchecked(enable);
 }
 
-void ICScript::purgeOptimizedStubs(JSScript* script) {
-  MOZ_ASSERT(script->icScript() == this);
+void JitScript::purgeOptimizedStubs(JSScript* script) {
+  MOZ_ASSERT(script->jitScript() == this);
 
   Zone* zone = script->zone();
   if (zone->isGCSweeping() && IsAboutToBeFinalizedDuringSweep(*script)) {
@@ -1294,18 +1294,18 @@ bool HasEnteredCounters(ICEntry& entry) {
 }
 
 void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
-  MOZ_ASSERT(script->hasICScript());
+  MOZ_ASSERT(script->hasJitScript());
   JSContext* cx = TlsContext.get();
   AutoStructuredSpewer spew(cx, SpewChannel::BaselineICStats, script);
   if (!spew) {
     return;
   }
 
-  ICScript* icScript = script->icScript();
+  JitScript* jitScript = script->jitScript();
   spew->property("reason", dumpReason);
   spew->beginListProperty("entries");
-  for (size_t i = 0; i < icScript->numICEntries(); i++) {
-    ICEntry& entry = icScript->icEntry(i);
+  for (size_t i = 0; i < jitScript->numICEntries(); i++) {
+    ICEntry& entry = jitScript->icEntry(i);
     if (!HasEnteredCounters(entry)) {
       continue;
     }
@@ -1343,7 +1343,7 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
 
 void jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script) {
   MOZ_ASSERT(script->hasBaselineScript());
-  MOZ_ASSERT(!script->types()->active());
+  MOZ_ASSERT(!script->jitScript()->active());
 
   BaselineScript* baseline = script->baselineScript();
   script->setBaselineScript(fop->runtime(), nullptr);
@@ -1352,13 +1352,7 @@ void jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script) {
 
 void jit::AddSizeOfBaselineData(JSScript* script,
                                 mozilla::MallocSizeOf mallocSizeOf,
-                                size_t* data, size_t* fallbackStubs) {
-  if (script->hasICScript()) {
-    // ICScript is stored in TypeScript but we report its size here and not
-    // in TypeScript::sizeOfIncludingThis.
-    script->icScript()->addSizeOfIncludingThis(mallocSizeOf, data,
-                                               fallbackStubs);
-  }
+                                size_t* data) {
   if (script->hasBaselineScript()) {
     script->baselineScript()->addSizeOfIncludingThis(mallocSizeOf, data);
   }
@@ -1416,13 +1410,13 @@ void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
 }
 #endif
 
-static void MarkActiveTypeScripts(JSContext* cx,
-                                  const JitActivationIterator& activation) {
+static void MarkActiveJitScripts(JSContext* cx,
+                                 const JitActivationIterator& activation) {
   for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
     const JSJitFrameIter& frame = iter.frame();
     switch (frame.type()) {
       case FrameType::BaselineJS:
-        frame.script()->types()->setActive();
+        frame.script()->jitScript()->setActive();
         break;
       case FrameType::Exit:
         if (frame.exitFrame()->is<LazyLinkExitFrameLayout>()) {
@@ -1430,17 +1424,17 @@ static void MarkActiveTypeScripts(JSContext* cx,
               frame.exitFrame()->as<LazyLinkExitFrameLayout>();
           JSScript* script =
               ScriptFromCalleeToken(ll->jsFrame()->calleeToken());
-          script->types()->setActive();
+          script->jitScript()->setActive();
         }
         break;
       case FrameType::Bailout:
       case FrameType::IonJS: {
-        // Keep the TypeScript and BaselineScript around, since bailouts from
+        // Keep the JitScript and BaselineScript around, since bailouts from
         // the ion jitcode need to re-enter into the Baseline code.
-        frame.script()->types()->setActive();
+        frame.script()->jitScript()->setActive();
         for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more();
              ++inlineIter) {
-          inlineIter.script()->types()->setActive();
+          inlineIter.script()->jitScript()->setActive();
         }
         break;
       }
@@ -1449,14 +1443,14 @@ static void MarkActiveTypeScripts(JSContext* cx,
   }
 }
 
-void jit::MarkActiveTypeScripts(Zone* zone) {
+void jit::MarkActiveJitScripts(Zone* zone) {
   if (zone->isAtomsZone()) {
     return;
   }
   JSContext* cx = TlsContext.get();
   for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
     if (iter->compartment()->zone() == zone) {
-      MarkActiveTypeScripts(cx, iter);
+      MarkActiveJitScripts(cx, iter);
     }
   }
 }

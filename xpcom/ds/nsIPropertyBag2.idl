@@ -34,7 +34,7 @@ interface nsIPropertyBag2 : nsIPropertyBag
    * or exists but is null.
    */
   nsIVariant  get                      (in AString prop);
- 
+
   /**
    * Check for the existence of a key.
    */

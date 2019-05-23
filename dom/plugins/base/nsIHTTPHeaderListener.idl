@@ -16,7 +16,7 @@ interface nsIHTTPHeaderListener : nsISupports
 {
   /**
    * Called for each HTTP Response header.
-   * NOTE: You must copy the values of the params.  
+   * NOTE: You must copy the values of the params.
    */
   void newResponseHeader(in string headerName, in string headerValue);
 

@@ -44,4 +44,4 @@ interface nsIImageDocument : nsISupports {
    */
   [binaryname(DOMToggleImageSize)]
   void toggleImageSize();
-};  
+};

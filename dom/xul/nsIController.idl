@@ -21,7 +21,7 @@ interface nsIController : nsISupports {
 
   Enhanced controller interface that allows for passing of parameters
   to commands.
-  
+
 */
 
 interface nsICommandParams;
@@ -29,9 +29,9 @@ interface nsICommandParams;
 [scriptable, uuid(EEC0B435-7F53-44FE-B00A-CF3EED65C01A)]
 interface nsICommandController : nsISupports
 {
-  
+
   void        getCommandStateWithParams( in string command, in nsICommandParams aCommandParams);
-    
+
   [can_run_script]
   void        doCommandWithParams(in string command, in nsICommandParams aCommandParams);
 

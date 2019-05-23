@@ -67,11 +67,11 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      * object.  The object will be released when the cache entry is destroyed.
      */
     attribute nsISupports cacheElement;
-    
+
     /**
       * Stores the Content-Length specified in the HTTP header for this
       * entry. Checked before we write to the cache entry, to prevent ever
-      * taking up space in the cache for an entry that we know up front 
+      * taking up space in the cache for an entry that we know up front
       * is going to have to be evicted anyway. See bug 588507.
       */
     attribute int64_t    predictedDataSize;
@@ -82,7 +82,7 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      * corresponding meanings.
      */
     readonly attribute nsCacheAccessMode accessGranted;
-    
+
     /**
      * Get/set the storage policy of the cache entry.  See nsICache.idl for
      * the definitions of the storage policies.
@@ -99,7 +99,7 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      * if the storage policy is not STORE_IN_MEMORY.
      */
     attribute nsISupports securityInfo;
-    
+
     /**
      * Get the size of the cache entry data, as stored. This may differ
      * from the entry's dataSize, if the entry is compressed.
@@ -107,7 +107,7 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
     readonly attribute unsigned long storageDataSize;
 
     /**
-     * Doom the cache entry this descriptor references in order to slate it for 
+     * Doom the cache entry this descriptor references in order to slate it for
      * removal.  Once doomed a cache entry cannot be undoomed.
      *
      * A descriptor with WRITE access can doom the cache entry and choose to
@@ -134,7 +134,7 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
     /**
      *  Explicitly close the descriptor (optional).
      */
-    
+
     void close();
 
     /**
@@ -144,7 +144,7 @@ interface nsICacheEntryDescriptor : nsICacheEntryInfo
      */
     string getMetaDataElement(in string key);
     void   setMetaDataElement(in string key, in string value);
-    
+
     /**
      * Visitor will be called with key/value pair for each meta data element.
      */

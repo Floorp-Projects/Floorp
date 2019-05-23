@@ -31,10 +31,10 @@ interface nsICollation : nsISupports {
   // use the primary comparison for the given locale - no flags
   const long kCollationStrengthDefault = 0;
 
-  // do not consider case differences when doing the comparison i.e. A=a) 
+  // do not consider case differences when doing the comparison i.e. A=a)
   const long kCollationCaseInsensitiveAscii = 1;
 
-  // do not consider accent differences when doing the comparison a=á) 
+  // do not consider accent differences when doing the comparison a=á)
   const long kCollationAccentInsenstive = 2;
 
   // case sensitive collation (default)
@@ -52,7 +52,7 @@ interface nsICollation : nsISupports {
 
   // allocate sort key from input string
   // returns newly allocated key, and its band its byte length
-  [noscript] void allocateRawSortKey(in long strength, 
+  [noscript] void allocateRawSortKey(in long strength,
                                      in AString stringIn,
                                      [array,size_is(outLen)] out octet key,
                                      out unsigned long outLen);

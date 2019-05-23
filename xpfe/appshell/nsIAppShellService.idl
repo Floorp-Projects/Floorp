@@ -43,7 +43,7 @@ interface nsIAppShellService : nsISupports
    */
   const long SIZE_TO_CONTENT = -1;
   nsIXULWindow createTopLevelWindow(in nsIXULWindow aParent,
-                                    in nsIURI aUrl, 
+                                    in nsIURI aUrl,
                                     in uint32_t aChromeMask,
                                     in long aInitialWidth,
                                     in long aInitialHeight,

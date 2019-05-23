@@ -5,7 +5,7 @@
 
 /**
  * This file contains an interface to the Permission Manager,
- * used to persistenly store permissions for different object types (cookies, 
+ * used to persistenly store permissions for different object types (cookies,
  * images etc) on a site-by-site basis.
  *
  * This service broadcasts the following notification when the permission list
@@ -98,7 +98,7 @@ interface nsIPermissionManager : nsISupports
    *                    session (EXPIRE_SESSION), or expire at a specified time
    *                    (EXPIRE_TIME).
    * @param expiretime  an integer representation of when this permission
-   *                    should be forgotten (milliseconds since Jan 1 1970 0:00:00). 
+   *                    should be forgotten (milliseconds since Jan 1 1970 0:00:00).
    */
   void add(in nsIURI uri,
            in ACString type,
@@ -153,7 +153,7 @@ interface nsIPermissionManager : nsISupports
    * opposite operation to the add() method.
    *
    * @param uri    the uri to remove the permission for
-   * @param type   a case-sensitive ASCII string, identifying the consumer. 
+   * @param type   a case-sensitive ASCII string, identifying the consumer.
    *               The type must have been previously registered using the
    *               add() method.
    */

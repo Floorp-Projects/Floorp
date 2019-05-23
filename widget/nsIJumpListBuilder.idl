@@ -29,13 +29,13 @@ interface nsIJumpListBuilder : nsISupports
    * the number through system preferences. User may also pin items to jump lists,
    * which take up additional slots. Applications do not have control over the
    * number of items allowed in jump lists; excess items added are dropped by the
-   * system. Item insertion priority is defined as first to last added. 
+   * system. Item insertion priority is defined as first to last added.
    *
    * Users may remove items from jump lists after they are commited. The system
    * tracks removed items between commits. A list of these items is returned by
    * a call to initListBuild. nsIJumpListBuilder does not filter entries added that
    * have been removed since the last commit. To prevent repeatedly adding entries
-   * users have removed, applications are encoraged to track removed items 
+   * users have removed, applications are encoraged to track removed items
    * internally.
    *
    * Each list is made up of an array of nsIJumpListItem representing items
@@ -49,7 +49,7 @@ interface nsIJumpListBuilder : nsISupports
 
   /**
    * Task List
-   * 
+   *
    * Tasks are common actions performed by users within the application. A task
    * can be represented by an application shortcut and associated command line
    * parameters or a URI. Task lists should generally be static lists that do not
@@ -61,7 +61,7 @@ interface nsIJumpListBuilder : nsISupports
 
   /**
    * Recent or Frequent list
-   * 
+   *
    * Recent and frequent lists are based on Window's recent document lists. The
    * lists are generated automatically by Windows. Applications that use recent
    * or frequent lists should keep document use tracking up to date by calling

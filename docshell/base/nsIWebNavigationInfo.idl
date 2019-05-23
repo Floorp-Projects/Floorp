@@ -39,7 +39,7 @@ interface nsIWebNavigationInfo : nsISupports
    * @note Other return types may be added here in the future as they become
    * relevant.
    */
-  
+
   /**
    * Returned by isTypeSupported to indicate that a type is supported via some
    * other means.

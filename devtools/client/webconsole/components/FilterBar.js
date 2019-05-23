@@ -28,7 +28,6 @@ class FilterBar extends Component {
     return {
       dispatch: PropTypes.func.isRequired,
       filter: PropTypes.object.isRequired,
-      attachRefToWebConsoleUI: PropTypes.func.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       hidePersistLogsCheckbox: PropTypes.bool.isRequired,
       showContentMessages: PropTypes.bool.isRequired,

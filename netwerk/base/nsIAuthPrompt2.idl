@@ -17,7 +17,7 @@ interface nsIAuthInformation;
  */
 [scriptable, uuid(651395EB-8612-4876-8AC0-A88D4DCE9E1E)]
 interface nsIAuthPrompt2 : nsISupports
-{         
+{
   /** @name Security Levels */
   /* @{ */
   /**

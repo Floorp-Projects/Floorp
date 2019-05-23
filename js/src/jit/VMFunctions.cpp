@@ -464,7 +464,7 @@ bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval) {
   if (rval.isUndefined()) {
     jsbytecode* pc;
     JSScript* script = cx->currentScript(&pc);
-    TypeScript::MonitorBytecodeType(cx, script, pc, rval);
+    JitScript::MonitorBytecodeType(cx, script, pc, rval);
   }
   return true;
 }
@@ -530,7 +530,7 @@ bool ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval) {
   if (rval.isUndefined()) {
     jsbytecode* pc;
     JSScript* script = cx->currentScript(&pc);
-    TypeScript::MonitorBytecodeType(cx, script, pc, rval);
+    JitScript::MonitorBytecodeType(cx, script, pc, rval);
   }
   return true;
 }
@@ -691,7 +691,7 @@ bool GetIntrinsicValue(JSContext* cx, HandlePropertyName name,
   // type info will not be reflowed. Manually monitor here.
   jsbytecode* pc;
   JSScript* script = cx->currentScript(&pc);
-  TypeScript::MonitorBytecodeType(cx, script, pc, rval);
+  JitScript::MonitorBytecodeType(cx, script, pc, rval);
 
   return true;
 }
@@ -2008,8 +2008,8 @@ bool DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
     }
   }
 
-  // Technically, we need to call TypeScript::MonitorString for this PC, however
-  // it was called when this stub was attached so it's OK.
+  // Note: we don't have to call JitScript::MonitorBytecodeType because we
+  // monitored the string-type when attaching the IC stub.
 
   res.setString(str);
   return true;

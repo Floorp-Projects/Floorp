@@ -13,17 +13,17 @@
 interface nsIProperties : nsISupports
 {
     /**
-     * Gets a property with a given name. 
+     * Gets a property with a given name.
      *
      * @throws NS_ERROR_FAILURE if a property with that name doesn't exist.
-     * @throws NS_ERROR_NO_INTERFACE if the found property fails to QI to the 
+     * @throws NS_ERROR_NO_INTERFACE if the found property fails to QI to the
      * given iid.
      */
-    void get(in string prop, in nsIIDRef iid, 
+    void get(in string prop, in nsIIDRef iid,
              [iid_is(iid),retval] out nsQIResult result);
 
     /**
-     * Sets a property with a given name to a given value. 
+     * Sets a property with a given name to a given value.
      */
     void set(in string prop, in nsISupports value);
 

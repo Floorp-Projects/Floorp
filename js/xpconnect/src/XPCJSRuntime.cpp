@@ -1828,9 +1828,9 @@ static void ReportRealmStats(const JS::RealmStats& realmStats,
                  "The IonMonkey JIT's compilation data (IonScripts).");
 
   ZRREPORT_BYTES(
-      realmJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
-      realmStats.typeInferenceTypeScripts,
-      "Type sets associated with scripts.");
+      realmJSPathPrefix + NS_LITERAL_CSTRING("jit-scripts"),
+      realmStats.jitScripts,
+      "JIT and Type Inference data associated with scripts.");
 
   ZRREPORT_BYTES(
       realmJSPathPrefix +

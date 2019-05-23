@@ -242,7 +242,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   [noscript] void ensureEventTarget(in nsIEventTarget aEventTarget);
 
- 
+
   /**
    * Verifies ancestry as permitted by the policy.
    *

@@ -118,7 +118,7 @@ const gDefaultFilters = Services.prefs.getCharPref("devtools.netmonitor.filters"
 Services.prefs.setCharPref(
   "devtools.netmonitor.visibleColumns",
   "[\"cause\",\"contentSize\",\"cookies\",\"domain\",\"duration\"," +
-  "\"endTime\",\"file\",\"latency\",\"method\",\"protocol\"," +
+  "\"endTime\",\"file\",\"url\",\"latency\",\"method\",\"protocol\"," +
   "\"remoteip\",\"responseTime\",\"scheme\",\"setCookies\"," +
   "\"startTime\",\"status\",\"transferred\",\"type\",\"waterfall\"]"
 );
@@ -128,6 +128,7 @@ Services.prefs.setCharPref("devtools.netmonitor.columnsData",
   '{"name":"method","minWidth":30,"width":5},' +
   '{"name":"domain","minWidth":30,"width":10},' +
   '{"name":"file","minWidth":30,"width":25},' +
+  '{"name":"url","minWidth":30,"width":25},' +
   '{"name":"cause","minWidth":30,"width":10},' +
   '{"name":"type","minWidth":30,"width":5},' +
   '{"name":"transferred","minWidth":30,"width":10},' +
