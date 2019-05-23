@@ -59,12 +59,12 @@
 namespace mozilla {
 
 bool WebGLContext::ValidateObject(const char* const argName,
-                                  const WebGLProgram& object) const {
+                                  const WebGLProgram& object) {
   return ValidateObject(argName, object, true);
 }
 
 bool WebGLContext::ValidateObject(const char* const argName,
-                                  const WebGLShader& object) const {
+                                  const WebGLShader& object) {
   return ValidateObject(argName, object, true);
 }
 
@@ -446,203 +446,61 @@ void WebGLContext::DepthRange(GLfloat zNear, GLfloat zFar) {
   gl->fDepthRange(zNear, zFar);
 }
 
-// -
-
-void WebGLContext::FramebufferAttach(
-    const GLenum target, const GLenum attachEnum, const TexTarget reqTexTarget,
-    const webgl::FbAttachInfo& toAttach) const {
-  if (!ValidateFramebufferTarget(target)) return;
-
-  WebGLFramebuffer* fb = mBoundDrawFramebuffer;
-  if (target == LOCAL_GL_READ_FRAMEBUFFER) {
-    fb = mBoundReadFramebuffer;
-  }
-  if (!fb) return ErrorInvalidOperation("Cannot modify framebuffer 0.");
-
-  // `rb`
-  if (toAttach.rb) {
-    if (!ValidateObject("rb", *toAttach.rb)) return;
-
-    if (!toAttach.rb->mHasBeenBound) {
-      ErrorInvalidOperation(
-          "bindRenderbuffer must be called before"
-          " attachment.");
-      return;
-    }
-  }
-
-  // `tex`
-  if (toAttach.tex) {
-    if (!ValidateObject("tex", *toAttach.tex)) return;
-    const auto texTarget = toAttach.tex->Target();
-
-    bool targetOk = bool(texTarget);
-    if (reqTexTarget) {
-      targetOk = texTarget == reqTexTarget;
-    }
-    if (!targetOk) {
-      ErrorInvalidOperation("`tex`'s binding target type is not valid.");
-      return;
-    }
-
-    GLint maxMipLevel;
-    GLint maxZLayer;
-    const char* maxMipLevelText;
-    const char* maxZLayerText;
-
-    switch (texTarget.get()) {
-      case LOCAL_GL_TEXTURE_2D:
-        maxMipLevel = FloorLog2(mGLMaxTextureSize);
-        maxMipLevelText = "log2(MAX_TEXTURE_SIZE)";
-        maxZLayer = 1;
-        maxZLayerText = "1";
-        break;
-
-      case LOCAL_GL_TEXTURE_CUBE_MAP:
-        maxMipLevel = FloorLog2(mGLMaxCubeMapTextureSize);
-        maxMipLevelText = "log2(MAX_CUBE_MAP_TEXTURE_SIZE)";
-        maxZLayer = 6;
-        maxZLayerText = "6";
-        break;
-
-      case LOCAL_GL_TEXTURE_3D:
-        maxMipLevel = FloorLog2(mGLMax3DTextureSize);
-        maxMipLevelText = "log2(MAX_3D_TEXTURE_SIZE)";
-        maxZLayer = mGLMax3DTextureSize - 1;
-        maxZLayerText = "MAX_3D_TEXTURE_SIZE";
-        break;
-
-      case LOCAL_GL_TEXTURE_2D_ARRAY:
-        maxMipLevel = FloorLog2(mGLMaxTextureSize);
-        maxMipLevelText = "log2(MAX_TEXTURE_SIZE)";
-        maxZLayer = mGLMaxArrayTextureLayers;
-        maxZLayerText = "MAX_ARRAY_TEXTURE_LAYERS";
-        break;
-
-      default:
-        MOZ_CRASH();
-    }
-    if (!IsWebGL2() &&
-        !IsExtensionEnabled(WebGLExtensionID::OES_fbo_render_mipmap)) {
-      maxMipLevel = 0;
-      maxMipLevelText = "0";
-    }
-
-    if (toAttach.mipLevel < 0)
-      return ErrorInvalidValue("`level` must be >= 0.");
-    if (toAttach.mipLevel > maxMipLevel) {
-      ErrorInvalidValue("`level` must be <= %s.", maxMipLevelText);
-      return;
-    }
-
-    if (toAttach.zLayer < 0) return ErrorInvalidValue("`layer` must be >= 0.");
-    if (toAttach.zLayerCount < 1)
-      return ErrorInvalidValue("`numViews` must be >= 1.");
-    if (AssertedCast<uint32_t>(toAttach.zLayerCount) > mGLMaxMultiviewViews)
-      return ErrorInvalidValue("`numViews` must be <= MAX_VIEWS_OVR.");
-
-    const auto lastZLayer = toAttach.zLayer + toAttach.zLayerCount;
-    if (lastZLayer > maxZLayer) {
-      const char* formatText = "`layer` must be < %s.";
-      if (toAttach.zLayerCount != 1) {
-        formatText = "`layer` + `numViews` must be <= %s.";
-      }
-      ErrorInvalidValue(formatText, maxZLayerText);
-      return;
-    }
-  }
-
-  fb->FramebufferAttach(attachEnum, toAttach);
-}
-
-void WebGLContext::FramebufferRenderbuffer(const GLenum target,
-                                           const GLenum attachEnum,
-                                           const GLenum rbTarget,
-                                           WebGLRenderbuffer* const rb) const {
+void WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment,
+                                           GLenum rbtarget,
+                                           WebGLRenderbuffer* wrb) {
   const FuncScope funcScope(*this, "framebufferRenderbuffer");
   if (IsContextLost()) return;
 
-  if (rbTarget != LOCAL_GL_RENDERBUFFER) {
-    ErrorInvalidEnumArg("rbTarget", rbTarget);
-    return;
+  if (!ValidateFramebufferTarget(target)) return;
+
+  WebGLFramebuffer* fb;
+  switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+      fb = mBoundDrawFramebuffer;
+      break;
+
+    case LOCAL_GL_READ_FRAMEBUFFER:
+      fb = mBoundReadFramebuffer;
+      break;
+
+    default:
+      MOZ_CRASH("GFX: Bad target.");
   }
 
-  const auto toAttach = webgl::FbAttachInfo{rb};
-  FramebufferAttach(target, attachEnum, 0, toAttach);
+  if (!fb) return ErrorInvalidOperation("Cannot modify framebuffer 0.");
+
+  fb->FramebufferRenderbuffer(attachment, rbtarget, wrb);
 }
 
-void WebGLContext::FramebufferTexture2D(const GLenum target,
-                                        const GLenum attachEnum,
-                                        const GLenum imageTarget,
-                                        WebGLTexture* const tex,
-                                        const GLint level) const {
+void WebGLContext::FramebufferTexture2D(GLenum target, GLenum attachment,
+                                        GLenum textarget, WebGLTexture* tobj,
+                                        GLint level) {
   const FuncScope funcScope(*this, "framebufferTexture2D");
   if (IsContextLost()) return;
 
-  TexTarget reqTexTarget = LOCAL_GL_TEXTURE_2D;
-  auto toAttach = webgl::FbAttachInfo{nullptr, tex, level, 0};
-  if (toAttach.tex) {
-    switch (imageTarget) {
-      case LOCAL_GL_TEXTURE_2D:
-        break;
-      case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-      case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-      case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-      case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-      case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-      case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        toAttach.zLayer = imageTarget - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-        reqTexTarget = LOCAL_GL_TEXTURE_CUBE_MAP;
-        break;
-      default:
-        ErrorInvalidEnumArg("texImageTarget", imageTarget);
-        return;
-    }
+  if (!ValidateFramebufferTarget(target)) return;
+
+  WebGLFramebuffer* fb;
+  switch (target) {
+    case LOCAL_GL_FRAMEBUFFER:
+    case LOCAL_GL_DRAW_FRAMEBUFFER:
+      fb = mBoundDrawFramebuffer;
+      break;
+
+    case LOCAL_GL_READ_FRAMEBUFFER:
+      fb = mBoundReadFramebuffer;
+      break;
+
+    default:
+      MOZ_CRASH("GFX: Bad target.");
   }
 
-  FramebufferAttach(target, attachEnum, reqTexTarget, toAttach);
+  if (!fb) return ErrorInvalidOperation("Cannot modify framebuffer 0.");
+
+  fb->FramebufferTexture2D(attachment, textarget, tobj, level);
 }
-
-void WebGLContext::FramebufferTextureLayer(const GLenum target,
-                                           const GLenum attachEnum,
-                                           WebGLTexture* const tex,
-                                           const GLint mipLevel,
-                                           const GLint zLayer) const {
-  const FuncScope funcScope(*this, "framebufferTextureLayer");
-  if (IsContextLost()) return;
-
-  const auto toAttach = webgl::FbAttachInfo{nullptr, tex, mipLevel, zLayer};
-  if (toAttach.tex) {
-    if (!ValidateObject("tex", *toAttach.tex))
-      return;  // Technically we need to check this first...
-
-    switch (toAttach.tex->Target().get()) {
-      case LOCAL_GL_TEXTURE_3D:
-      case LOCAL_GL_TEXTURE_2D_ARRAY:
-        break;
-      default:
-        ErrorInvalidOperation(
-            "`texture` must be a TEXTURE_3D or"
-            " TEXTURE_2D_ARRAY.");
-        return;
-    }
-  }
-
-  FramebufferAttach(target, attachEnum, 0, toAttach);
-}
-
-void WebGLContext::FramebufferTextureMultiview(
-    const GLenum target, const GLenum attachEnum, WebGLTexture* const tex,
-    const GLint mipLevel, const GLint zLayerBase,
-    const GLsizei numViewLayers) const {
-  if (IsContextLost()) return;
-
-  const auto toAttach =
-      webgl::FbAttachInfo{nullptr, tex, mipLevel, zLayerBase, numViewLayers, true};
-  FramebufferAttach(target, attachEnum, LOCAL_GL_TEXTURE_2D_ARRAY, toAttach);
-}
-
-// -
 
 void WebGLContext::FrontFace(GLenum mode) {
   const FuncScope funcScope(*this, "frontFace");

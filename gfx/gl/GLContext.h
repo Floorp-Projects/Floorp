@@ -104,7 +104,6 @@ enum class GLFeature {
   internalformat_query,
   invalidate_framebuffer,
   map_buffer_range,
-  multiview,
   occlusion_query,
   occlusion_query_boolean,
   occlusion_query2,
@@ -354,7 +353,6 @@ class GLContext : public GenericAtomicRefCounted,
     ANGLE_framebuffer_blit,
     ANGLE_framebuffer_multisample,
     ANGLE_instanced_arrays,
-    ANGLE_multiview,
     ANGLE_texture_compression_dxt3,
     ANGLE_texture_compression_dxt5,
     ANGLE_timer_query,
@@ -481,7 +479,6 @@ class GLContext : public GenericAtomicRefCounted,
     OES_texture_half_float_linear,
     OES_texture_npot,
     OES_vertex_array_object,
-    OVR_multiview2,
     Extensions_Max,
     Extensions_End
   };
@@ -3300,20 +3297,6 @@ class GLContext : public GenericAtomicRefCounted,
     BEFORE_GL_CALL;
     ASSERT_SYMBOL_PRESENT(fPrimitiveRestartIndex);
     mSymbols.fPrimitiveRestartIndex(index);
-    AFTER_GL_CALL;
-  }
-
-  // -----------------------------------------------------------------------------
-  // multiview
-
-  void fFramebufferTextureMultiview(GLenum target, GLenum attachment,
-                                    GLuint texture, GLint level,
-                                    GLint baseViewIndex,
-                                    GLsizei numViews) const {
-    BEFORE_GL_CALL;
-    ASSERT_SYMBOL_PRESENT(fFramebufferTextureMultiview);
-    mSymbols.fFramebufferTextureMultiview(target, attachment, texture, level,
-                                          baseViewIndex, numViews);
     AFTER_GL_CALL;
   }
 
