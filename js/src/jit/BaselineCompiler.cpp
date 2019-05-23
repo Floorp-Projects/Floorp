@@ -542,8 +542,8 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 
 template <>
 bool BaselineCompilerCodeGen::emitNextIC() {
-  // Emit a call to an IC stored in ICScript. Calls to this must match the
-  // ICEntry order in ICScript: first the non-op IC entries for |this| and
+  // Emit a call to an IC stored in JitScript. Calls to this must match the
+  // ICEntry order in JitScript: first the non-op IC entries for |this| and
   // formal arguments, then the for-op IC entries for JOF_IC ops.
 
   JSScript* script = handler.script();
@@ -553,7 +553,7 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   // to loop until we find an ICEntry for the current pc.
   const ICEntry* entry;
   do {
-    entry = &script->icScript()->icEntry(handler.icEntryIndex());
+    entry = &script->jitScript()->icEntry(handler.icEntryIndex());
     handler.moveToNextICEntry();
   } while (entry->pcOffset() < pcOffset);
 
@@ -1112,9 +1112,8 @@ void BaselineInterpreterCodeGen::emitInitFrameFields() {
 
   // Initialize interpreterICEntry.
   masm.loadPtr(Address(scratch1, JSScript::offsetOfJitScript()), scratch2);
-  masm.loadPtr(Address(scratch2, JitScript::offsetOfICScript()), scratch2);
-  masm.computeEffectiveAddress(Address(scratch2, ICScript::offsetOfICEntries()),
-                               scratch2);
+  masm.computeEffectiveAddress(
+      Address(scratch2, JitScript::offsetOfICEntries()), scratch2);
   masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
 
   // Initialize interpreterPC.
@@ -6266,9 +6265,8 @@ bool BaselineInterpreterCodeGen::emit_JSOP_JUMPTARGET() {
   // Compute ICEntry* and store to frame->interpreterICEntry.
   loadScript(scratch2);
   masm.loadPtr(Address(scratch2, JSScript::offsetOfJitScript()), scratch2);
-  masm.loadPtr(Address(scratch2, JitScript::offsetOfICScript()), scratch2);
   masm.computeEffectiveAddress(
-      BaseIndex(scratch2, scratch1, TimesOne, ICScript::offsetOfICEntries()),
+      BaseIndex(scratch2, scratch1, TimesOne, JitScript::offsetOfICEntries()),
       scratch2);
   masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
   return true;

@@ -255,16 +255,14 @@ void Zone::discardJitCode(FreeOp* fop,
       script->maybeReleaseJitScript();
     }
 
-    // The optimizedStubSpace will be purged below so make sure ICScript
-    // doesn't point into it. We do this after (potentially) releasing types
-    // because JitScript contains the ICScript* and there's no need to
-    // purge stubs if we just destroyed the Typescript.
-    if (discardBaselineCode && script->hasICScript()) {
-      script->icScript()->purgeOptimizedStubs(script);
-    }
-
-    // Finally, reset the active flag.
     if (JitScript* jitScript = script->jitScript()) {
+      // If we did not release the JitScript, we need to purge optimized IC
+      // stubs because the optimizedStubSpace will be purged below.
+      if (discardBaselineCode) {
+        jitScript->purgeOptimizedStubs(script);
+      }
+
+      // Finally, reset the active flag.
       jitScript->resetActive();
     }
   }
@@ -527,10 +525,11 @@ void MemoryTracker::adopt(MemoryTracker& other) {
 
 static const char* MemoryUseName(MemoryUse use) {
   switch (use) {
-#define DEFINE_CASE(Name) \
-    case MemoryUse::Name: return #Name;
-JS_FOR_EACH_MEMORY_USE(DEFINE_CASE)
-#undef DEFINE_CASE
+#  define DEFINE_CASE(Name) \
+    case MemoryUse::Name:   \
+      return #Name;
+    JS_FOR_EACH_MEMORY_USE(DEFINE_CASE)
+#  undef DEFINE_CASE
   }
 
   MOZ_CRASH("Unknown memory use");
@@ -551,8 +550,7 @@ MemoryTracker::~MemoryTracker() {
 
   fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
   for (auto r = map.all(); !r.empty(); r.popFront()) {
-    fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell,
-            r.front().value(),
+    fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell, r.front().value(),
             MemoryUseName(r.front().key().use));
   }
 

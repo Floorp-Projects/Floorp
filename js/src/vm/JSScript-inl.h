@@ -182,9 +182,4 @@ inline bool JSScript::isDebuggee() const {
   return realm_->debuggerObservesAllExecution() || hasDebugScript();
 }
 
-inline js::jit::ICScript* JSScript::icScript() const {
-  MOZ_ASSERT(hasICScript());
-  return jitScript_->icScript();
-}
-
 #endif /* vm_JSScript_inl_h */
