@@ -1084,14 +1084,25 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     return parseContent(window, cuetext, PARSE_CONTENT_MODE.DOCUMENT_FRAGMENT);
   };
 
+  function clearAllCuesDiv(overlay) {
+    while (overlay.firstChild) {
+      overlay.firstChild.remove();
+    }
+  }
+
   // Runs the processing model over the cues and regions passed to it.
-  // @param overlay A block level element (usually a div) that the computed cues
+  // Spec https://www.w3.org/TR/webvtt1/#processing-model
+  // @parem window : JS window
+  // @param cues : the VTT cues are going to be displayed.
+  // @param overlay : A block level element (usually a div) that the computed cues
   //                and regions will be placed into.
-  // @param controls  A Control bar element. Cues' position will be
+  // @param controls : A Control bar element. Cues' position will be
   //                 affected and repositioned according to it.
   WebVTT.processCues = function(window, cues, overlay, controls) {
-    if (!window || !cues || !overlay) {
-      return null;
+    if (!cues) {
+      LOG(`Abort processing because no cue.`);
+      clearAllCuesDiv(overlay);
+      return;
     }
 
     let controlBar, controlBarShown;
@@ -1123,14 +1134,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
     // We don't need to recompute the cues' display states. Just reuse them.
     if (!shouldCompute(cues)) {
+      LOG(`Abort processing because no need to compute cues' display state.`);
       return;
     }
     overlay.lastControlBarShownStatus = controlBarShown;
 
-    // Remove all previous children.
-    while (overlay.firstChild) {
-      overlay.firstChild.remove();
-    }
+    clearAllCuesDiv(overlay);
     let rootOfCues = window.document.createElement("div");
     rootOfCues.style.position = "absolute";
     rootOfCues.style.left = "0";
