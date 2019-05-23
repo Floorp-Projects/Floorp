@@ -279,9 +279,10 @@ void HTMLTrackElement::MaybeDispatchLoadResource() {
 void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   mLoadResourceDispatched = false;
 
-  // Find our 'src' url
   nsAutoString src;
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::src, src) || src.IsEmpty()) {
+    LOG(LogLevel::Info, ("%p Fail to load because no src", this));
+    SetReadyState(TextTrackReadyState::FailedToLoad);
     return;
   }
 
@@ -474,6 +475,13 @@ nsresult HTMLTrackElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                         bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
     MaybeClearAllCues();
+    // In spec, `start the track processing model` step10, while fetching is
+    // ongoing, if the track URL changes, then we have to set the `FailedToLoad`
+    // state.
+    // https://html.spec.whatwg.org/multipage/media.html#sourcing-out-of-band-text-tracks:text-track-failed-to-load-3
+    if (ReadyState() == TextTrackReadyState::Loading && aValue != aOldValue) {
+      SetReadyState(TextTrackReadyState::FailedToLoad);
+    }
   }
   return nsGenericHTMLElement::AfterSetAttr(
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
