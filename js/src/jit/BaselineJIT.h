@@ -575,7 +575,7 @@ bool BaselineCompileFromBaselineInterpreter(JSContext* cx, BaselineFrame* frame,
 void FinishDiscardBaselineScript(FreeOp* fop, JSScript* script);
 
 void AddSizeOfBaselineData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf,
-                           size_t* data, size_t* fallbackStubs);
+                           size_t* data);
 
 void ToggleBaselineProfiling(JSRuntime* runtime, bool enable);
 

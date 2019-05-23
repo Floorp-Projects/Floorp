@@ -55,7 +55,6 @@ namespace js {
 
 namespace jit {
 struct BaselineScript;
-class ICScript;
 struct IonScriptCounts;
 }  // namespace jit
 
@@ -1568,7 +1567,7 @@ class alignas(uintptr_t) SharedScriptData final {
   // Index into the scopes array of the body scope.
   uint32_t bodyScopeIndex = 0;
 
-  // Number of IC entries to allocate in ICScript for Baseline ICs.
+  // Number of IC entries to allocate in JitScript for Baseline ICs.
   uint32_t numICEntries = 0;
 
   // ES6 function length.
@@ -2467,14 +2466,6 @@ class JSScript : public js::gc::TenuredCell {
   inline void setBaselineScript(JSRuntime* rt,
                                 js::jit::BaselineScript* baselineScript);
 
-  inline js::jit::ICScript* icScript() const;
-
-  bool hasICScript() const {
-    // ICScript is stored in JitScript so we have an ICScript iff we have a
-    // JitScript.
-    return !!jitScript_;
-  }
-
   void updateJitCodeRaw(JSRuntime* rt);
 
   static size_t offsetOfBaselineScript() {
@@ -2604,6 +2595,7 @@ class JSScript : public js::gc::TenuredCell {
   /* Ensure the script has a JitScript. */
   inline bool ensureHasJitScript(JSContext* cx, js::AutoKeepJitScripts&);
 
+  bool hasJitScript() const { return jitScript_ != nullptr; }
   js::JitScript* jitScript() { return jitScript_; }
 
   void maybeReleaseJitScript();
@@ -2734,7 +2726,10 @@ class JSScript : public js::gc::TenuredCell {
    */
   size_t computedSizeOfData() const;
   size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const;
-  size_t sizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf) const;
+
+  void addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
+                          size_t* sizeOfJitScript,
+                          size_t* sizeOfBaselineFallbackStubs) const;
 
   size_t dataSize() const { return dataSize_; }
 

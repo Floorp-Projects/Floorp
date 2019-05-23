@@ -127,7 +127,10 @@ static bool GetCacheIRReceiverForNativeSetSlot(ICCacheIR_Updated* stub,
   return true;
 }
 
-ICScript* BaselineInspector::icScript() const { return script->icScript(); }
+JitScript* BaselineInspector::jitScript() const {
+  MOZ_ASSERT(script->hasJitScript());
+  return script->jitScript();
+}
 
 ICEntry& BaselineInspector::icEntryFromPC(jsbytecode* pc) {
   ICEntry* entry = maybeICEntryFromPC(pc);
@@ -136,10 +139,10 @@ ICEntry& BaselineInspector::icEntryFromPC(jsbytecode* pc) {
 }
 
 ICEntry* BaselineInspector::maybeICEntryFromPC(jsbytecode* pc) {
-  MOZ_ASSERT(hasICScript());
+  MOZ_ASSERT(hasJitScript());
   MOZ_ASSERT(isValidPC(pc));
-  ICEntry* ent = icScript()->maybeICEntryFromPCOffset(script->pcToOffset(pc),
-                                                      prevLookedUpEntry);
+  ICEntry* ent = jitScript()->maybeICEntryFromPCOffset(script->pcToOffset(pc),
+                                                       prevLookedUpEntry);
   if (!ent) {
     return nullptr;
   }
@@ -156,7 +159,7 @@ bool BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc,
   // uncacheable access.
   MOZ_ASSERT(receivers.empty());
 
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return true;
   }
 
@@ -203,7 +206,7 @@ bool BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc,
 }
 
 ICStub* BaselineInspector::monomorphicStub(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return nullptr;
   }
 
@@ -227,7 +230,7 @@ ICStub* BaselineInspector::monomorphicStub(jsbytecode* pc) {
 
 bool BaselineInspector::dimorphicStub(jsbytecode* pc, ICStub** pfirst,
                                       ICStub** psecond) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
@@ -575,7 +578,7 @@ static bool TryToSpecializeBinaryArithOp(ICStub** stubs, uint32_t nstubs,
 }
 
 MIRType BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return MIRType::None;
   }
 
@@ -610,7 +613,7 @@ MIRType BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc) {
 }
 
 bool BaselineInspector::hasSeenNonIntegerIndex(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
@@ -623,7 +626,7 @@ bool BaselineInspector::hasSeenNonIntegerIndex(jsbytecode* pc) {
 }
 
 bool BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
@@ -637,7 +640,7 @@ bool BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode* pc) {
 }
 
 bool BaselineInspector::hasSeenAccessedGetter(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
@@ -651,7 +654,7 @@ bool BaselineInspector::hasSeenAccessedGetter(jsbytecode* pc) {
 }
 
 bool BaselineInspector::hasSeenDoubleResult(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
@@ -720,7 +723,7 @@ JSObject* MaybeTemplateObject(ICStub* stub, MetaTwoByteKind kind,
 }
 
 JSObject* BaselineInspector::getTemplateObject(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return nullptr;
   }
 
@@ -760,7 +763,7 @@ JSObject* BaselineInspector::getTemplateObject(jsbytecode* pc) {
 }
 
 ObjectGroup* BaselineInspector::getTemplateObjectGroup(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return nullptr;
   }
 
@@ -780,7 +783,7 @@ ObjectGroup* BaselineInspector::getTemplateObjectGroup(jsbytecode* pc) {
 JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_NEW);
 
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return nullptr;
   }
 
@@ -815,7 +818,7 @@ JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
 
 JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
                                                         Native native) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return nullptr;
   }
 
@@ -845,7 +848,7 @@ JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
 
 JSObject* BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc,
                                                            const Class* clasp) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return nullptr;
   }
 
@@ -1204,7 +1207,7 @@ bool BaselineInspector::commonGetPropFunction(
     jsbytecode* pc, jsid id, bool innerized, JSObject** holder,
     Shape** holderShape, JSFunction** commonGetter, Shape** globalShape,
     bool* isOwnProperty, ReceiverVector& receivers) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
@@ -1286,7 +1289,7 @@ static JSFunction* GetMegamorphicGetterSetterFunction(
 
 bool BaselineInspector::megamorphicGetterSetterFunction(
     jsbytecode* pc, jsid id, bool isGetter, JSFunction** getterOrSetter) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
@@ -1451,7 +1454,7 @@ bool BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder,
                                               JSFunction** commonSetter,
                                               bool* isOwnProperty,
                                               ReceiverVector& receivers) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
@@ -1551,7 +1554,7 @@ bool BaselineInspector::maybeInfoForProtoReadSlot(jsbytecode* pc,
   MOZ_ASSERT(receivers.empty());
   MOZ_ASSERT(!*holder);
 
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return true;
   }
 
@@ -1614,7 +1617,7 @@ static MIRType GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub) {
 }
 
 MIRType BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc) {
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return MIRType::Value;
   }
 
@@ -1653,7 +1656,7 @@ bool BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape,
                                        uint32_t* slot,
                                        JSObject** prototypeObject) {
   MOZ_ASSERT(*pc == JSOP_INSTANCEOF);
-  if (!hasICScript()) {
+  if (!hasJitScript()) {
     return false;
   }
 
