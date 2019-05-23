@@ -114,7 +114,6 @@ include = [
   "WillChange",
   "TextDecorationLine",
   "TextTransform",
-  "TextOverflow",
   "MozListReversed",
   "Owned",
   "OwnedOrNull",
@@ -452,20 +451,4 @@ renaming_overrides_prefixing = true
   // initializing the fields properly.
   StyleOffsetPath() {}
  public:
-"""
-
-"TextOverflowSide" = """
- private:
-  // Private default constructor without initialization so that the helper
-  // constructor functions still work as expected. They take care of
-  // initializing the fields properly.
-  StyleTextOverflowSide() {}
- public:
-"""
-
-"TextOverflow" = """
-  StyleTextOverflow()
-    : first(StyleTextOverflowSide::Clip()),
-      second(StyleTextOverflowSide::Clip()),
-      sides_are_logical(true) {}
 """
