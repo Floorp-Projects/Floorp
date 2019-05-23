@@ -332,7 +332,6 @@ class TypeScript {
                                   jsbytecode* pc, const js::Value& val);
   static void MonitorBytecodeType(JSContext* cx, JSScript* script,
                                   jsbytecode* pc, TypeSet::Type type);
-  static inline void MonitorBytecodeType(JSContext* cx, const js::Value& rval);
 
   static inline void MonitorBytecodeType(JSContext* cx, JSScript* script,
                                          jsbytecode* pc, StackTypeSet* types,
