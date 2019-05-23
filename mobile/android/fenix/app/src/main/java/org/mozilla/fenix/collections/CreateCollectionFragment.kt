@@ -121,8 +121,9 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                 is CollectionCreationAction.SaveCollectionName -> {
                     showSavedSnackbar(it.tabs.size)
                     dismiss()
+
                     context?.let { context ->
-                        val sessionBundle = it.tabs.toSessionBundle(context)
+                        val sessionBundle = viewModel.selectedTabs.toList().toSessionBundle(context)
                         launch(Dispatchers.IO) {
                             requireComponents.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
                         }

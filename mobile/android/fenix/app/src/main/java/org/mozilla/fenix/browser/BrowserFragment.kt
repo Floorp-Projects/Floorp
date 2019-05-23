@@ -666,6 +666,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             val selectedSet = mutableSetOf(tabs)
             viewModel?.selectedTabs = selectedSet
             viewModel?.saveCollectionStep = SaveCollectionStep.SelectCollection
+            viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
             view?.let {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
                 Navigation.findNavController(it).navigate(directions)
