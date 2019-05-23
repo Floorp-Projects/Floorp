@@ -1,0 +1,12 @@
+[
+  {
+    "matchFilename": "libnptest\\.so|nptest\\.dll|Test\\.plugin",
+    "versionRange": [
+      {
+        "severity": "2"
+      }
+    ],
+    "blockID": "p9999",
+    "infoURL": "http://test.url.com/"
+  }
+]

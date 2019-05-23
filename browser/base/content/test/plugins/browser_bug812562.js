@@ -6,7 +6,7 @@ add_task(async function() {
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
-    await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins.xml", gTestBrowser);
+    await asyncSetAndUpdateBlocklist(gTestRoot + "blockNoPlugins", gTestBrowser);
     resetBlocklist();
     Services.prefs.clearUserPref("plugins.click_to_play");
     gBrowser.removeCurrentTab();
@@ -26,7 +26,7 @@ add_task(async function() {
 // Tests that the going back will reshow the notification for click-to-play
 // blocklisted plugins
 add_task(async function() {
-  await asyncSetAndUpdateBlocklist(gTestRoot + "blockPluginVulnerableUpdatable.xml", gTestBrowser);
+  await asyncSetAndUpdateBlocklist(gTestRoot + "blockPluginVulnerableUpdatable", gTestBrowser);
 
   await promiseTabLoadEvent(gBrowser.selectedTab, gTestRoot + "plugin_test.html");
 

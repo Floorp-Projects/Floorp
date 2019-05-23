@@ -186,7 +186,7 @@ var Provider = {
   init() {
     this.providers = new Set();
     let branch = Services.prefs.getBranch("browser.safebrowsing.provider.");
-    let children = branch.getChildList("", {});
+    let children = branch.getChildList("");
     for (let child of children) {
       let provider = child.split(".")[0];
       if (this.isActiveProvider(provider)) {
@@ -645,7 +645,7 @@ var Debug = {
 
   nsprlog() {
     // Turn off debugging for all the modules.
-    let children = Services.prefs.getBranch("logging.").getChildList("", {});
+    let children = Services.prefs.getBranch("logging.").getChildList("");
     for (let pref of children) {
       if (!pref.startsWith("config.")) {
         Services.prefs.clearUserPref(`logging.${pref}`);

@@ -5,6 +5,10 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 ChromeUtils.defineModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
+});
+
 // Various tests in this directory may define gTestBrowser, to use as the
 // default browser under test in some of the functions below.
 /* global gTestBrowser */
@@ -192,22 +196,112 @@ function clearAllPluginPermissions() {
   }
 }
 
+// Ported from AddonTestUtils.jsm
+let JSONBlocklistWrapper = {
+  /**
+   * Load the data from the specified files into the *real* blocklist providers.
+   * Loads using loadBlocklistRawData, which will treat this as an update.
+   *
+   * @param {nsIFile} dir
+   *        The directory in which the files live.
+   * @param {string} prefix
+   *        a prefix for the files which ought to be loaded.
+   *        This method will suffix -extensions.json and -plugins.json
+   *        to the prefix it is given, and attempt to load both.
+   *        Insofar as either exists, their data will be dumped into
+   *        the respective store, and the respective update handlers
+   *        will be called.
+   */
+  async loadBlocklistData(url) {
+    const fullURL = `${url}-plugins.json`;
+    let jsonObj;
+    try {
+      jsonObj = await (await fetch(fullURL)).json();
+    } catch (ex) {
+      ok(false, ex);
+    }
+    info(`Loaded ${fullURL}`);
+
+    return this.loadBlocklistRawData({plugins: jsonObj});
+  },
+
+  /**
+   * Load the following data into the *real* blocklist providers.
+   * While `overrideBlocklist` replaces the blocklist entirely with a mock
+   * that returns dummy data, this method instead loads data into the actual
+   * blocklist, fires update methods as would happen if this data came from
+   * an actual blocklist update, etc.
+   *
+   * @param {object} data
+   *        An object that can optionally have `extensions` and/or `plugins`
+   *        properties, each being an array of blocklist items.
+   *        This code only uses plugin blocks, that can look something like:
+   *
+   * {
+   *   "matchFilename": "libnptest\\.so|nptest\\.dll|Test\\.plugin",
+   *   "versionRange": [
+   *     {
+   *       "severity": "0",
+   *       "vulnerabilityStatus": "1"
+   *     }
+   *   ],
+   *   "blockID": "p9999"
+   * }
+   *
+   */
+  async loadBlocklistRawData(data) {
+    const bsPass = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
+    const blocklistMapping = {
+      "extensions": bsPass.ExtensionBlocklistRS,
+      "plugins": bsPass.PluginBlocklistRS,
+    };
+
+    for (const [dataProp, blocklistObj] of Object.entries(blocklistMapping)) {
+      let newData = data[dataProp];
+      if (!newData) {
+        continue;
+      }
+      if (!Array.isArray(newData)) {
+        throw new Error("Expected an array of new items to put in the " + dataProp + " blocklist!");
+      }
+      for (let item of newData) {
+        if (!item.id) {
+          item.id = uuidGen.generateUUID().number.slice(1, -1);
+        }
+        if (!item.last_modified) {
+          item.last_modified = Date.now();
+        }
+      }
+      await blocklistObj._ensureInitialized();
+      let collection = await blocklistObj._client.openCollection();
+      await collection.clear();
+      await collection.loadDump(newData);
+      // We manually call _onUpdate... which is evil, but at the moment kinto doesn't have
+      // a better abstraction unless you want to mock your own http server to do the update.
+      await blocklistObj._onUpdate();
+    }
+  },
+};
+
 // An async helper that insures a new blocklist is loaded (in both
 // processes if applicable).
 var _originalTestBlocklistURL = null;
 async function asyncSetAndUpdateBlocklist(aURL, aBrowser) {
-  // FIXME: this needs to also work with the remote settings blocklist,
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1549548
-  info("*** loading new blocklist: " + aURL);
   let doTestRemote = aBrowser ? aBrowser.isRemoteBrowser : false;
   if (!_originalTestBlocklistURL) {
     _originalTestBlocklistURL = Services.prefs.getCharPref("extensions.blocklist.url");
   }
-  Services.prefs.setCharPref("extensions.blocklist.url", aURL);
   let localPromise = TestUtils.topicObserved("plugin-blocklist-updated");
-  let blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
-                            .getService(Ci.nsITimerCallback);
-  blocklistNotifier.notify(null);
+  if (Services.prefs.getBoolPref("extensions.blocklist.useXML", true)) {
+    info("*** loading new blocklist: " + aURL + ".xml");
+    Services.prefs.setCharPref("extensions.blocklist.url", aURL + ".xml");
+    let blocklistNotifier = Cc["@mozilla.org/extensions/blocklist;1"]
+                              .getService(Ci.nsITimerCallback);
+    blocklistNotifier.notify(null);
+  } else {
+    info("*** loading blocklist using json: " + aURL);
+    await JSONBlocklistWrapper.loadBlocklistData(aURL);
+  }
   info("*** waiting on local load");
   await localPromise;
   if (doTestRemote) {

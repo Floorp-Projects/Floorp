@@ -73,6 +73,11 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // autoplay media.
   void NotifyStartDelayedAutoplayMedia();
 
+  // This function is used to mute or unmute all media within a tab. It would
+  // set the media mute property for the top level window and propagate it to
+  // other top level windows in other processes.
+  void NotifyMediaMutedChanged(bool aMuted);
+
   // Validate that the given process is allowed to perform the given
   // transaction. aSource is |nullptr| if set in the parent process.
   bool ValidateTransaction(const Transaction& aTransaction,

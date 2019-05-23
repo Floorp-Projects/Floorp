@@ -163,6 +163,8 @@ inline bool TraceLoggerSupported() { return false; }
 inline void StartTraceLogger(JSContext* cx) {}
 inline void StopTraceLogger(JSContext* cx) {}
 inline void ResetTraceLogger(void) {}
+inline void SpewTraceLoggerThread(JSContext* cx) {}
+inline void SpewTraceLoggerForCurrentProcess() {}
 inline size_t TraceLoggerDictionaryImpl::NextChunk(JSContext* cx,
                                                    size_t* dataIndex,
                                                    ImplType buffer[],

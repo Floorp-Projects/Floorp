@@ -800,6 +800,11 @@ child:
     */
     async StartDelayedAutoplayMediaComponents(BrowsingContext aContext);
 
+    /**
+    * This method is used to notifty content process to mute or unmute media.
+    */
+    async SetMediaMuted(BrowsingContext aContext, bool aMuted);
+
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
     // value for every individual BrowsingContext.
     async RegisterBrowsingContextGroup(BrowsingContextInitializer[] aInits);
