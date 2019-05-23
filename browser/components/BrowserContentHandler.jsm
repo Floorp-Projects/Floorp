@@ -553,6 +553,7 @@ nsBrowserContentHandler.prototype = {
             LaterRun.enabled = true;
             break;
           case OVERRIDE_NEW_MSTONE:
+          case OVERRIDE_NEW_BUILD_ID:
             // Check whether we will restore a session. If we will, we assume
             // that this is an "update" session. This does not take crashes
             // into account because that requires waiting for the session file
@@ -568,12 +569,6 @@ nsBrowserContentHandler.prototype = {
             }
 
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
-            break;
-          case OVERRIDE_NEW_BUILD_ID:
-            if (prefb.prefHasUserValue("app.update.postupdate")) {
-              // Send the update ping to signal that the update was successful.
-              UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
-            }
             break;
         }
       }
