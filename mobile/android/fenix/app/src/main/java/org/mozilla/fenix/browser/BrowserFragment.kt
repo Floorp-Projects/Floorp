@@ -738,6 +738,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
                 super.onLoadingStateChanged(session, loading)
             }
+
+            override fun onUrlChanged(session: Session, url: String) {
+                super.onUrlChanged(session, url)
+                updateBookmarkState(session)
+
+            }
         }
         getSessionById()?.register(observer)
         return observer
