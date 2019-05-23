@@ -150,12 +150,12 @@ abstract class Settings {
     /**
      * Setting to control whether font inflation is enabled.
      */
-    open var fontInflationEnabled: Boolean by UnsupportedSetting()
+    open var fontInflationEnabled: Boolean? by UnsupportedSetting()
 
     /**
      * Setting to control the font size factor. All font sizes will be multiplied by this factor.
      */
-    open var fontSizeFactor: Float by UnsupportedSetting()
+    open var fontSizeFactor: Float? by UnsupportedSetting()
 }
 
 /**
@@ -187,8 +187,8 @@ data class DefaultSettings(
     override var testingModeEnabled: Boolean = false,
     override var allowAutoplayMedia: Boolean = true,
     override var suspendMediaWhenInactive: Boolean = false,
-    override var fontInflationEnabled: Boolean = true,
-    override var fontSizeFactor: Float = 1.0F
+    override var fontInflationEnabled: Boolean? = null,
+    override var fontSizeFactor: Float? = null
 ) : Settings()
 
 class UnsupportedSetting<T> {

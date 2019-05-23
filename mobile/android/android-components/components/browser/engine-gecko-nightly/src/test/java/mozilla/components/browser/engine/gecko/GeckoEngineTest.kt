@@ -21,6 +21,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -89,15 +91,15 @@ class GeckoEngineTest {
         engine.settings.automaticFontSizeAdjustment = false
         verify(runtimeSettings).automaticFontSizeAdjustment = false
 
-        assertTrue(engine.settings.fontInflationEnabled)
-        engine.settings.fontInflationEnabled = true
-        verify(runtimeSettings, never()).fontInflationEnabled = true
+        assertTrue(engine.settings.fontInflationEnabled!!)
+        engine.settings.fontInflationEnabled = null
+        verify(runtimeSettings, never()).fontInflationEnabled = anyBoolean()
         engine.settings.fontInflationEnabled = false
         verify(runtimeSettings).fontInflationEnabled = false
 
         assertEquals(1.0F, engine.settings.fontSizeFactor)
-        engine.settings.fontSizeFactor = 1.0F
-        verify(runtimeSettings, never()).fontSizeFactor = 1.0F
+        engine.settings.fontSizeFactor = null
+        verify(runtimeSettings, never()).fontSizeFactor = anyFloat()
         engine.settings.fontSizeFactor = 2.0F
         verify(runtimeSettings).fontSizeFactor = 2.0F
 

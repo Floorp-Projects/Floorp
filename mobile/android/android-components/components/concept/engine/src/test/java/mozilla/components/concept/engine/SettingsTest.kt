@@ -113,8 +113,8 @@ class SettingsTest {
         assertFalse(settings.testingModeEnabled)
         assertTrue(settings.allowAutoplayMedia)
         assertFalse(settings.suspendMediaWhenInactive)
-        assertTrue(settings.fontInflationEnabled)
-        assertEquals(1.0F, settings.fontSizeFactor)
+        assertNull(settings.fontInflationEnabled)
+        assertNull(settings.fontSizeFactor)
 
         val interceptor: RequestInterceptor = mock()
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
@@ -173,7 +173,7 @@ class SettingsTest {
         assertTrue(defaultSettings.testingModeEnabled)
         assertFalse(defaultSettings.allowAutoplayMedia)
         assertTrue(defaultSettings.suspendMediaWhenInactive)
-        assertFalse(defaultSettings.fontInflationEnabled)
+        assertFalse(defaultSettings.fontInflationEnabled!!)
         assertEquals(2.0F, defaultSettings.fontSizeFactor)
     }
 }

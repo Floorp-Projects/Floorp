@@ -171,25 +171,30 @@ class GeckoEngine(
             get() = defaultSettings?.suspendMediaWhenInactive ?: false
             set(value) { defaultSettings?.suspendMediaWhenInactive = value }
 
-        override var fontInflationEnabled: Boolean
+        override var fontInflationEnabled: Boolean?
             get() = runtime.settings.fontInflationEnabled
             set(value) {
-                // Setting, even to the default value, causes an Exception if
-                // automaticFontSizeAdjustment is set to true (its default).
-                // So, let's only set if the value has changed.
-                if (value != runtime.settings.fontInflationEnabled) {
-                    runtime.settings.fontInflationEnabled = value
+                // automaticFontSizeAdjustment is set to true by default, which
+                // will cause an exception if fontInflationEnabled is set
+                // (to either true or false). We therefore need to be able to
+                // set our built-in default value to null so that the exception
+                // is only thrown if an app is configured incorrectly but not
+                // if it uses default values.
+                value?.let {
+                    runtime.settings.fontInflationEnabled = it
                 }
             }
 
-        override var fontSizeFactor: Float
+        override var fontSizeFactor: Float?
             get() = runtime.settings.fontSizeFactor
             set(value) {
-                // Setting, even to the default value, causes an Exception if
-                // automaticFontSizeAdjustment is set to true (its default).
-                // So, let's only set if the value has changed.
-                if (value != runtime.settings.fontSizeFactor) {
-                    runtime.settings.fontSizeFactor = value
+                // automaticFontSizeAdjustment is set to true by default, which
+                // will cause an exception if fontSizeFactor is set as well.
+                // We therefore need to be able to set our built-in default value
+                // to null so that the exception is only thrown if an app is
+                // configured incorrectly but not if it uses default values.
+                value?.let {
+                    runtime.settings.fontSizeFactor = it
                 }
             }
     }.apply {
