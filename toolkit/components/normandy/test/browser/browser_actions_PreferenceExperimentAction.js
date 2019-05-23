@@ -133,6 +133,7 @@ decorate_task(
 
     Assert.deepEqual(startStub.args, [[{
       name: "test",
+      actionName: "PreferenceExperimentAction",
       branch: "branch1",
       preferences: {
         "fake.preference": {
