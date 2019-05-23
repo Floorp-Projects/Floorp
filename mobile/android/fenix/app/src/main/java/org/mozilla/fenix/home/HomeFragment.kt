@@ -246,8 +246,9 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                             homeViewModel?.layoutManagerState?.also { parcelable ->
                                 sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
                             }
+                            val progress = homeViewModel?.motionLayoutProgress
                             homeLayout?.progress =
-                                if (homeViewModel?.motionLayoutProgress ?: 0F > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
+                                if (progress ?: 0F > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
                             homeViewModel?.layoutManagerState = null
                         }
                     }

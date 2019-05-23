@@ -73,6 +73,7 @@ open class HomeActivity : AppCompatActivity() {
         val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
         setSupportActionBar(navigationToolbar)
         NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
+        supportActionBar?.hide()
 
         intent
             ?.let { SafeIntent(it) }
