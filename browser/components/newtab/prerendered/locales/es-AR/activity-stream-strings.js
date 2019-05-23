@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "context_menu_title": "Abrir menú",
   "manual_migration_explanation2": "Probá Firefox con los marcadores, historial y contraseñas de otro navegador.",
   "manual_migration_cancel_button": "No gracias",
-  "manual_migration_import_button": "Importar ahora",
-  "pocket_learn_more": "Saber más"
+  "manual_migration_import_button": "Importar ahora"
 };
