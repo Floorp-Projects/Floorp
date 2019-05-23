@@ -62,7 +62,6 @@ toolkit.jar:
 #endif
    content/global/widgets.css
    content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
-   content/global/bindings/button.xml          (widgets/button.xml)
    content/global/bindings/calendar.js         (widgets/calendar.js)
    content/global/bindings/datekeeper.js       (widgets/datekeeper.js)
    content/global/bindings/datepicker.js       (widgets/datepicker.js)
@@ -77,7 +76,6 @@ toolkit.jar:
 *  content/global/bindings/textbox.xml         (widgets/textbox.xml)
    content/global/bindings/timekeeper.js       (widgets/timekeeper.js)
    content/global/bindings/timepicker.js       (widgets/timepicker.js)
-   content/global/bindings/toolbarbutton.xml   (widgets/toolbarbutton.xml)
    content/global/bindings/wizard.xml          (widgets/wizard.xml)
    content/global/elements/autocomplete-popup.js              (widgets/autocomplete-popup.js)
    content/global/elements/autocomplete-richlistitem.js       (widgets/autocomplete-richlistitem.js)
@@ -103,6 +101,7 @@ toolkit.jar:
    content/global/elements/tabbox.js           (widgets/tabbox.js)
    content/global/elements/text.js             (widgets/text.js)
    content/global/elements/textbox.js          (widgets/textbox.js)
+   content/global/elements/toolbarbutton.js    (widgets/toolbarbutton.js)
    content/global/elements/videocontrols.js    (widgets/videocontrols.js)
    content/global/elements/tree.js             (widgets/tree.js)
    content/global/elements/wizard.js           (widgets/wizard.js)

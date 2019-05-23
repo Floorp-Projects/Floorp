@@ -18,9 +18,9 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "xpcprivate.h"  // For xpc::OptionsBase
-#include "js/CompilationAndEvaluation.h"
-#include "js/SourceText.h"  // JS::Source{Ownership,Text}
+#include "xpcprivate.h"                   // xpc::OptionsBase
+#include "js/CompilationAndEvaluation.h"  // JS::Compile{,ForNonSyntacticScope}DontInflate
+#include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "js/Wrapper.h"
 
 #include "mozilla/ContentPrincipal.h"
@@ -150,9 +150,9 @@ static JSScript* PrepareScript(nsIURI* uri, JSContext* cx,
   }
 
   if (wantGlobalScript) {
-    return JS::Compile(cx, options, srcBuf);
+    return JS::CompileDontInflate(cx, options, srcBuf);
   }
-  return JS::CompileForNonSyntacticScope(cx, options, srcBuf);
+  return JS::CompileForNonSyntacticScopeDontInflate(cx, options, srcBuf);
 }
 
 static bool EvalScript(JSContext* cx, HandleObject targetObj,
