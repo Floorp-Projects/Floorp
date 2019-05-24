@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit
  * [SessionManager].
  */
 internal class SessionBundleLifecycleObserver(
-    private val storage: SessionBundleStorage,
+    @Suppress("DEPRECATION") private val storage: SessionBundleStorage,
     private val sessionManager: SessionManager
 ) : LifecycleObserver {
     private val logger = Logger("SessionBundleLifecycleObserver")
