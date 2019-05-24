@@ -129,6 +129,12 @@ void TextTrack::SetMode(TextTrackMode aValue) {
   if (mediaElement) {
     mediaElement->NotifyTextTrackModeChanged();
   }
+  // https://html.spec.whatwg.org/multipage/media.html#sourcing-out-of-band-text-tracks:start-the-track-processing-model
+  // Run the `start-the-track-processing-model` to track's corresponding track
+  // element whenever track's mode changes.
+  if (mTrackElement) {
+    mTrackElement->MaybeDispatchLoadResource();
+  }
   // Ensure the TimeMarchesOn is called in case that the mCueList
   // is empty.
   NotifyCueUpdated(nullptr);
