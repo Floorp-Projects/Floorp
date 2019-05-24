@@ -69,8 +69,14 @@ async function setViewportSizeWithInputKeys(ui) {
 }
 
 async function doInitialChecks(ui) {
-  const { innerWidth, matchesMedia } = await grabContentInfo(ui);
+  const { innerWidth, matchesMedia, outerHeight, outerWidth } = await grabContentInfo(ui);
   is(innerWidth, 110, "initial width should be 110px");
+  is(outerWidth, 110, "device's outerWidth should be 110px");
+  is(outerHeight, 500, "device's outerHeight should be 500px");
+  isnot(window.outerHeight, outerHeight,
+    "window.outerHeight should not be the size of the device's outerHeight");
+  isnot(window.outerWidth, outerWidth,
+    "window.outerWidth should not be the size of the device's outerWidth");
   ok(!matchesMedia, "media query shouldn't match.");
 }
 
@@ -99,6 +105,8 @@ function grabContentInfo(ui) {
       },
       innerWidth: content.innerWidth,
       matchesMedia: content.matchMedia("(max-device-width:100px)").matches,
+      outerHeight: content.outerHeight,
+      outerWidth: content.outerWidth,
     };
   });
 }
