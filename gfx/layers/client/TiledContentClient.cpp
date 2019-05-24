@@ -12,7 +12,6 @@
 #include "ClientLayerManager.h"       // for ClientLayerManager
 #include "gfxContext.h"               // for gfxContext, etc
 #include "gfxPlatform.h"              // for gfxPlatform
-#include "gfxPrefs.h"                 // for gfxPrefs
 #include "gfxRect.h"                  // for gfxRect
 #include "mozilla/MathAlgorithms.h"   // for Abs
 #include "mozilla/gfx/Point.h"        // for IntSize
@@ -29,6 +28,7 @@
 #include "nsMathUtils.h"          // for NS_lroundf
 #include "LayersLogging.h"
 #include "UnitTransforms.h"  // for TransformTo
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/UniquePtr.h"
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
@@ -678,7 +678,7 @@ Maybe<AcquiredBackBuffer> TileClient::AcquireBackBuffer(
   RefPtr<DrawTargetCapture> capture;
   if (aFlags & TilePaintFlags::Async) {
     capture = Factory::CreateCaptureDrawTargetForTarget(
-        target, gfxPrefs::LayersOMTPCaptureLimit());
+        target, StaticPrefs::LayersOMTPCaptureLimit());
     target = capture;
   }
 

@@ -16,7 +16,6 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
-#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "gfxVRPuppet.h"
 #include "VRManager.h"
@@ -641,7 +640,7 @@ VRSystemManagerPuppet::VRSystemManagerPuppet()
 
 /*static*/
 already_AddRefed<VRSystemManagerPuppet> VRSystemManagerPuppet::Create() {
-  if (!gfxPrefs::VREnabled() || !StaticPrefs::VRPuppetEnabled()) {
+  if (!StaticPrefs::VREnabled() || !StaticPrefs::VRPuppetEnabled()) {
     return nullptr;
   }
 

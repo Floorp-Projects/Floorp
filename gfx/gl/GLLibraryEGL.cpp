@@ -12,6 +12,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "nsDirectoryServiceDefs.h"
@@ -86,7 +87,7 @@ PRLibrary* LoadApitraceLibrary() {
 
   // Initialization of gfx prefs here is only needed during the unit tests...
   gfxPrefs::GetSingleton();
-  if (!gfxPrefs::UseApitrace()) {
+  if (!StaticPrefs::UseApitrace()) {
     return nullptr;
   }
 

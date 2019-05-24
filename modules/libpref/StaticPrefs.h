@@ -13,6 +13,7 @@
 #include "mozilla/TypeTraits.h"
 #include "MainThreadUtils.h"
 #include <atomic>
+#include <cmath>  // for M_PI
 
 namespace mozilla {
 

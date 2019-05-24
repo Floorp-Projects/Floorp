@@ -114,6 +114,7 @@
 #include "nsIContentViewer.h"
 #include "LayersLogging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsFrameSelection.h"
 #include "FrameLayerBuilder.h"
 #include "mozilla/layers/APZUtils.h"  // for apz::CalculatePendingDisplayPort
@@ -768,7 +769,7 @@ float nsLayoutUtils::GetCurrentAPZResolutionScale(PresShell* aPresShell) {
 // supported texture size. The result is in app units.
 static nscoord GetMaxDisplayPortSize(nsIContent* aContent,
                                      nsPresContext* aFallbackPrescontext) {
-  MOZ_ASSERT(!gfxPrefs::LayersTilesEnabled(),
+  MOZ_ASSERT(!StaticPrefs::LayersTilesEnabled(),
              "Do not clamp displayports if tiling is enabled");
 
   // Pick a safe maximum displayport size for sanity purposes. This is the
@@ -905,7 +906,7 @@ static nsRect GetDisplayPortFromMarginsData(
 
   if (presShell->IsDisplayportSuppressed()) {
     alignment = ScreenSize(1, 1);
-  } else if (gfxPrefs::LayersTilesEnabled()) {
+  } else if (StaticPrefs::LayersTilesEnabled()) {
     // Don't align to tiles if they are too large, because we could expand
     // the displayport by a lot which can take more paint time. It's a tradeoff
     // though because if we don't align to tiles we have more waste on upload.
@@ -927,7 +928,7 @@ static nsRect GetDisplayPortFromMarginsData(
     alignment.height = 128;
   }
 
-  if (gfxPrefs::LayersTilesEnabled()) {
+  if (StaticPrefs::LayersTilesEnabled()) {
     // Expand the rect by the margins
     screenRect.Inflate(aMarginsData->mMargins);
   } else {
@@ -1139,7 +1140,7 @@ static bool GetDisplayPortImpl(
     result = GetDisplayPortFromMarginsData(aContent, marginsData, aMultiplier);
   }
 
-  if (!gfxPrefs::LayersTilesEnabled()) {
+  if (!StaticPrefs::LayersTilesEnabled()) {
     // Perform the desired error handling if the displayport dimensions
     // exceeds the maximum allowed size
     nscoord maxSize = GetMaxDisplayPortSize(aContent, nullptr);
@@ -9893,7 +9894,7 @@ bool nsLayoutUtils::ShouldHandleMetaViewport(const Document* aDocument) {
       MOZ_ASSERT(metaViewportOverride ==
                  nsIDocShell::META_VIEWPORT_OVERRIDE_NONE);
       // The META_VIEWPORT_OVERRIDE_NONE case means that there is no override
-      // and we rely solely on the gfxPrefs.
+      // and we rely solely on the StaticPrefs.
       return StaticPrefs::MetaViewportEnabled();
   }
 }
