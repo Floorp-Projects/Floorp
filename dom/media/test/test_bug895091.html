@@ -1,60 +1,60 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=895091
+-->
 <head>
+  <meta charset='utf-8'>
   <title>Test for Bug 895091 - Integrating vtt.js</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="manifest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<video id="v" src="seek.webm" preload="metadata">
-  <track src="long.vtt" kind="subtitles" id="track1">
-  <track src="long.vtt" kind="subtitles" id="track2">
-</video>
-<script type="text/javascript">
-/**
- * This test is used to ensure that we can load two track elements with large
- * amount of cues at same time. In this test, both tracks are disable by default,
- * we have to enable them in order to start loading.
- */
-var trackElement = document.getElementById("track1");
-var trackElementTwo = document.getElementById("track2");
-
-async function runTest() {
-  enableBothTracks();
-  await waitUntilBothTracksLoaded();
-  checkTrackReadyStateShouldBeLoaded();
-  checkCuesAmount();
-  SimpleTest.finish();
-}
-
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-onload = runTest;
 
-/**
- * The following are test helper functions.
- */
-function enableBothTracks() {
-  // All tracks are `disable` on default. As we won't start loading for disabled
-  // tracks, we have to change their mode in order to start loading.
+var video = document.createElement("video");
+video.src = "seek.webm";
+video.preload = "metadata";
+
+var trackElement = document.createElement("track");
+trackElement.src = "long.vtt";
+trackElement.kind = "subtitles";
+
+var trackElementTwo = document.createElement("track");
+trackElementTwo.src = "long.vtt";
+trackElementTwo.kind = "subtitles";
+
+document.getElementById("content").appendChild(video);
+video.appendChild(trackElement);
+video.appendChild(trackElementTwo);
+
+video.addEventListener("loadedmetadata", function run_tests() {
+  // Re-que run_tests() at the end of the event loop until the track
+  // element has loaded its data.
+  if (trackElement.readyState == 1 || trackElementTwo.readyState == 1) {
+    setTimeout(run_tests, 0);
+    return;
+  }
+
+  // Set mode to hidden so that the active cue lists are being updated.
   trackElement.track.mode = "hidden";
   trackElementTwo.track.mode = "hidden";
-}
 
-async function waitUntilBothTracksLoaded() {
-  info(`wait until both tracks finish loading`);
-  await Promise.all([once(trackElement, "load"), once(trackElementTwo, "load")]);
-}
-
-function checkTrackReadyStateShouldBeLoaded() {
   is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
   is(trackElementTwo.readyState, 2, "Track::ReadyState should be set to LOADED.");
-}
 
-function checkCuesAmount() {
   is(trackElement.track.cues.length, 2000, "Cue list length should be 2000.");
   is(trackElementTwo.track.cues.length, 2000, "Cue list length should be 2000.");
-}
+
+  SimpleTest.finish();
+});
 </script>
+</pre>
 </body>
 </html>

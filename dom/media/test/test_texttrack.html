@@ -1,158 +1,126 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=833386
+-->
 <head>
+  <meta charset='utf-8'>
   <title>Test for Bug 833386 - TextTrackList</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="manifest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<video id="v">
-<script type="text/javascript">
-/**
- * This test is used to check different things.
- * (1) the default value of track element's attributes
- * (2) readonly attributes can't be modifted
- * (3) the order of tracks in the media element's track list
- */
-var enabledTrackElement = null;
-
-async function runTest() {
-  addFourTextTrackElementsToVideo();
-  startLoadingVideo();
-  await waitUntilEnableTrackLoaded();
-  checkTracksStatus();
-  SimpleTest.finish();
-}
-
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-onload = runTest;
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
+  function() {
+    var video = document.createElement("video");
 
-/**
- * The following are test helper functions.
- */
-function addFourTextTrackElementsToVideo() {
-  let video = document.getElementById("v");
-  isnot(video.textTracks, undefined,
-        "HTMLMediaElement::TextTrack() property should be available.")
+    isnot(video.textTracks, undefined, "HTMLMediaElement::TextTrack() property should be available.")
 
-  let trackList = video.textTracks;
-  is(trackList.length, 0, "Length should be 0.");
+    var trackList = video.textTracks;
+    is(trackList.length, 0, "Length should be 0.");
 
-  ok(typeof video.addTextTrack == "function",
-     "HTMLMediaElement::AddTextTrack() function should be available.")
+    ok(typeof video.addTextTrack == "function", "HTMLMediaElement::AddTextTrack() function should be available.")
+    video.addTextTrack("subtitles", "third", "en-CA");
+    is(trackList.length, 1, "Length should be 1.");
 
-  // Insert some tracks in an order that is not sorted, we will test if they
-  // are sorted later.
-  info(`- Add a track element with label 'third' -`);
-  video.addTextTrack("subtitles", "third", "en-CA");
-  is(trackList.length, 1, "Length should be 1.");
+    var textTrack = video.textTracks[0];
+    is(textTrack.label, "third", "Label should be set to third.");
+    is(textTrack.language, "en-CA", "Language should be en-CA.");
+    is(textTrack.kind, "subtitles", "Default kind should be subtitles.");
+    is(textTrack.mode, "hidden", "Default mode should be hidden.");
 
-  let textTrack = video.textTracks[0];
-  checkAttributesDefaultValue(textTrack);
-  checkTextTrackMode(textTrack);
-  checkReadOnlyAttributes(textTrack);
+    // Mode should not allow a bogus value.
+    textTrack.mode = 'bogus';
+    is(textTrack.mode, 'hidden', "Mode should be not allow a bogus value.");
 
-  info(`- Add a track element with label 'first' -`);
-  let trackOne = document.createElement("track");
-  video.appendChild(trackOne);
-  trackOne.label = "first";
-  trackOne.src = "basic.vtt";
-  trackOne.default = true;
-  trackOne.id = "2";
-  // The automatic track selection would choose the first track element with
-  // `default` attribute, so this track would be enable later.
-  enabledTrackElement = trackOne;
+    // Should allow all these values for mode.
+    checkMode("showing", "Mode should allow \"showing\"");
+    checkMode("disabled", "Mode should allow \"disabled\"");
+    checkMode("hidden", "Mode should allow \"hidden\"");
 
-  info(`- Add a track element with label 'fourth' -`);
-  video.addTextTrack("subtitles", "fourth", "en-CA");
+    // All below are read-only properties and so should not allow setting.
+    textTrack.label = "French subtitles";
+    is(textTrack.label, "third", "Label is read-only so should still be \"label\".");
 
-  info(`- Add a track element with label 'second' -`);
-  let trackTwo = document.createElement("track");
-  video.appendChild(trackTwo);
-  trackTwo.label = "second";
-  trackTwo.src = "basic.vtt";
-  // Although this track has `default` attribute as well, it won't be enable by
-  // the automatic track selection because it's not the first default track in
-  // the media element's track list.
-  trackTwo.default = true;
-}
+    textTrack.language = "en";
+    is(textTrack.language, "en-CA", "Language is read-only so should still be \"en-CA\".");
 
-function checkAttributesDefaultValue(track) {
-  is(track.label, "third", "Label should be set to third.");
-  is(track.language, "en-CA", "Language should be en-CA.");
-  is(track.kind, "subtitles", "Default kind should be subtitles.");
-  is(track.mode, "hidden", "Default mode should be hidden.");
-}
+    textTrack.kind = "captions";
+    is(textTrack.kind, "subtitles", "Kind is read-only so should still be \"subtitles\"");
 
-function checkTextTrackMode(track) {
-  // Mode should not allow a bogus value.
-  track.mode = 'bogus';
-  is(track.mode, 'hidden', "Mode should be not allow a bogus value.");
-
-  // Should allow all these values for mode.
-  changeTextTrackMode("showing");
-  changeTextTrackMode("disabled");
-  changeTextTrackMode("hidden");
-
-  function changeTextTrackMode(mode) {
-    track.mode = mode;
-    is(track.mode, mode, `Mode should allow \"${mode}\"`);
-  }
-}
-
-function checkReadOnlyAttributes(track) {
-  // All below are read-only properties and so should not allow setting.
-  track.label = "French subtitles";
-  is(track.label, "third", "Label is read-only so should still be \"label\".");
-  track.language = "en";
-  is(track.language, "en-CA", "Language is read-only so should still be \"en-CA\".");
-  track.kind = "captions";
-  is(track.kind, "subtitles", "Kind is read-only so should still be \"subtitles\"");
-}
-
-function startLoadingVideo() {
-  let video = document.getElementById("v");
-  video.src = "seek.webm";
-  video.preload = "metadata";
-}
-
-async function waitUntilEnableTrackLoaded() {
-  info(`wait until the enabled track finishes loading`);
-  await once(enabledTrackElement, "load");
-  is(enabledTrackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
-}
-
-function checkTracksStatus() {
-  // We're testing two things here,
-  // (1) the tracks created from a track element have a default mode 'disabled'
-  // and tracks created from 'addTextTrack' method have a default
-  // mode of 'hidden'.
-  // (2) we're testing that the tracks are sorted properly. For the tracks to
-  // be sorted the first two tracks, added through a TrackElement, must occupy
-  // the first two indexes in their TrackElement tree order. The second two
-  // tracks, added through the 'addTextTrack' method, will occupy the last two
-  // indexes in the order that they were added in.
-  let trackData = [
-    { label: "first", mode: "showing", id: "2" },
-    { label: "second", mode: "disabled", id: "" },
-    { label: "third", mode: "hidden", id: "" },
-    { label: "fourth", mode: "hidden", id: "" }
-  ];
-  let video = document.getElementById("v");
-  is(video.textTracks.length, trackData.length,
-     `TextTracks length should be ${trackData.length}`);
-  for (let i = 0; i < trackData.length; i++) {
-    let track = video.textTracks[i];
-    isnot(track, null, `Video should have a text track at index ${i}`);
-    let info = trackData[i];
-    for (let key in info) {
-      is(track[key], info[key],
-         `Track at index ${i} should have a '${key}' property with a value of '${info[key]}'.`);
+    function checkMode(value, message) {
+      textTrack.mode = value;
+      is(textTrack.mode, value, message);
     }
-  }
-}
 
+    // Insert some tracks in an order that is not sorted, we will test if they
+    // are sorted later.
+    var trackOne = document.createElement("track");
+    trackOne.label = "first";
+    trackOne.src = "basic.vtt";
+    trackOne.default = true;
+    trackOne.id = "2";
+    video.appendChild(trackOne);
+
+    video.addTextTrack("subtitles", "fourth", "en-CA");
+
+    var trackTwo = document.createElement("track");
+    trackTwo.label = "second";
+    trackTwo.src = "basic.vtt";
+    trackTwo.default = true;
+    video.appendChild(trackTwo);
+
+    video.src = "seek.webm";
+    video.preload = "metadata";
+
+    document.getElementById("content").appendChild(video);
+
+    video.addEventListener("loadedmetadata", function run_tests() {
+      // Re-que run_tests() at the end of the event loop until the track
+      // element has loaded its data.
+      if (trackOne.readyState == 1 || trackTwo.readyState == 1) {
+        setTimeout(run_tests, 0);
+        return;
+      }
+      is(trackOne.readyState, 2, "First Track::ReadyState should be set to LOADED.");
+      is(trackTwo.readyState, 2, "Second Track::ReadyState should be set to LOADED.");
+
+      // We're testing two things here, firstly that tracks created from a track
+      // element have a default mode 'disabled' and tracks created with the
+      // 'addTextTrack' method have a default mode of 'hidden'.
+      // Secondly we're testing that the tracks are sorted properly.
+      // For the tracks to be sorted the first two tracks, added through a
+      // TrackElement, must occupy the first two indexes in their TrackElement
+      // tree order. The second two tracks, added through the 'addTextTrack'
+      // method, will occupy the last two indexes in the order that they were
+      // added in.
+      var trackData = [
+        { label: "first", mode: "showing", id: "2" },
+        { label: "second", mode: "disabled", id: "" },
+        { label: "third", mode: "hidden", id: "" },
+        { label: "fourth", mode: "hidden", id: "" }
+      ];
+      is(video.textTracks.length, trackData.length, "TextTracks length should be " + trackData.length);
+      for (var i = 0; i < trackData.length; i++) {
+        var track = video.textTracks[i];
+        isnot(track, null, "Video should have a text track at index " + i);
+        var info = trackData[i];
+        for (var key in info) {
+          is(track[key], info[key], "Track at index " + i + " should have a '" + key + "'' property " +
+                                    "with a value of '" + info[key] + "'.");
+        }
+      }
+      SimpleTest.finish();
+    });
+});
 </script>
+</pre>
 </body>
 </html>

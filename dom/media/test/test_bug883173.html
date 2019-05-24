@@ -1,39 +1,59 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=883173
+-->
 <head>
+  <meta charset='utf-8'>
   <title>Test for Bug 883173 - TextTrackCue(List) Sorting</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<video id="v" src="seek.webm" preload="metadata">
-  <track src="bug883173.vtt" kind="subtitles" id="default" default>
-</video>
-<script type="text/javascript">
-/**
- * This test is used to ensure that the cues in the cue list should be sorted by
- * cues' start time and end time, not the present order in the file.
- */
-function runTest() {
-  let trackElement = document.getElementById("default");
-  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
-
-  let expected = [[1, 3], [1, 2], [2, 4], [2, 3], [3, 4]];
-  let cueList = trackElement.track.cues;
-  is(cueList.length, expected.length, "Cue list length should be 5.");
-
-  for (let i = 0; i < expected.length; i++) {
-    is(cueList[i].startTime, expected[i][0],
-       `Cue's start time should be ${expected[i][0]}`);
-    is(cueList[i].endTime, expected[i][1],
-       `Cue's end time should be ${expected[i][1]}`);
-  }
-
-  SimpleTest.finish();
-}
-
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-onload = runTest;
+
+var video = document.createElement("video");
+video.src = "seek.webm";
+video.preload = "metadata";
+
+var trackElement = document.createElement("track");
+trackElement.src = "bug883173.vtt";
+trackElement.kind = "subtitles";
+
+document.getElementById("content").appendChild(video);
+video.appendChild(trackElement);
+video.addEventListener("loadedmetadata",
+  function run_tests() {
+    // Re-queue run_tests() at the end of the event loop until the track
+    // element has loaded its data.
+    if (trackElement.readyState == 1) {
+      setTimeout(run_tests, 0);
+      return;
+    }
+    is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+
+    // Set mode to hidden so that the active cue lists are being updated.
+    trackElement.track.mode = "hidden";
+
+    var expected = [[1, 3], [1, 2], [2, 4], [2, 3], [3, 4]];
+    var cueList = trackElement.track.cues;
+    is(cueList.length, expected.length, "Cue list length should be 5.");
+
+    for (var i = 0; i < expected.length; i++) {
+      is(cueList[i].startTime, expected[i][0], "Cue's start time should be " + expected[i][0]);
+      is(cueList[i].endTime, expected[i][1], "Cue's end time should be " + expected[i][1]);
+    }
+
+    SimpleTest.finish();
+  }
+);
 </script>
+</pre>
 </body>
 </html>
