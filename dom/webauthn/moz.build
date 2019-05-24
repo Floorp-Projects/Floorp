@@ -61,6 +61,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/crypto',
     '/security/manager/ssl',
+    '/third_party/rust',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':

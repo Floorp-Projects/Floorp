@@ -28,7 +28,7 @@ extern crate audioipc_client;
 #[cfg(feature = "cubeb-remoting")]
 extern crate audioipc_server;
 extern crate env_logger;
-extern crate u2fhid;
+extern crate authenticator;
 extern crate gkrust_utils;
 extern crate log;
 #[cfg(feature = "new_cert_storage")]
