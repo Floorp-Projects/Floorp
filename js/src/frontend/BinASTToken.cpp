@@ -19,7 +19,7 @@ namespace js {
 namespace frontend {
 
 const BinaryASTSupport::CharSlice BINASTKIND_DESCRIPTIONS[] = {
-#define WITH_VARIANT(_, SPEC_NAME, _2) \
+#define WITH_VARIANT(_, SPEC_NAME) \
   BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
     FOR_EACH_BIN_KIND(WITH_VARIANT)
 #undef WITH_VARIANT
