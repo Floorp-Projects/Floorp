@@ -20,7 +20,6 @@ nsPrintSettings::nsPrintSettings()
       mScaling(1.0),
       mPrintBGColors(false),
       mPrintBGImages(false),
-      mPrintFrameTypeUsage(kUseInternalDefault),
       mPrintFrameType(kFramesAsIs),
       mHowToEnableFrameUI(kFrameEnableNone),
       mIsCancelled(false),
@@ -537,18 +536,6 @@ NS_IMETHODIMP nsPrintSettings::SetFooterStrRight(const nsAString& aTitle) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetPrintFrameTypeUsage(
-    int16_t* aPrintFrameTypeUsage) {
-  NS_ENSURE_ARG_POINTER(aPrintFrameTypeUsage);
-  *aPrintFrameTypeUsage = mPrintFrameTypeUsage;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPrintFrameTypeUsage(
-    int16_t aPrintFrameTypeUsage) {
-  mPrintFrameTypeUsage = aPrintFrameTypeUsage;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrintSettings::GetPrintFrameType(int16_t* aPrintFrameType) {
   NS_ENSURE_ARG_POINTER(aPrintFrameType);
   *aPrintFrameType = (int32_t)mPrintFrameType;
@@ -799,7 +786,6 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mURL = rhs.mURL;
   mHowToEnableFrameUI = rhs.mHowToEnableFrameUI;
   mIsCancelled = rhs.mIsCancelled;
-  mPrintFrameTypeUsage = rhs.mPrintFrameTypeUsage;
   mPrintFrameType = rhs.mPrintFrameType;
   mPrintSilent = rhs.mPrintSilent;
   mShrinkToFit = rhs.mShrinkToFit;

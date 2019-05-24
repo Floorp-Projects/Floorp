@@ -3862,7 +3862,7 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
 
   mAreas = aState.mFrame->GetImplicitNamedAreas();
 
-  if (aState.mFrame->HasSubgridItems()) {
+  if (aState.mFrame->HasSubgridItems() || aState.mFrame->IsSubgrid()) {
     if (auto* uts = aState.mFrame->GetUsedTrackSizes()) {
       uts->mCanResolveLineRangeSize = {false, false};
       uts->mSizes[eLogicalAxisInline].ClearAndRetainStorage();

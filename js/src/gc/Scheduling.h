@@ -313,21 +313,6 @@
 #include "js/HashTable.h"
 
 namespace js {
-
-#define JS_FOR_EACH_INTERNAL_MEMORY_USE(_)      \
-  _(ArrayBufferContents)                        \
-  _(StringContents)
-
-#define JS_FOR_EACH_MEMORY_USE(_)               \
-  JS_FOR_EACH_PUBLIC_MEMORY_USE(_)              \
-  JS_FOR_EACH_INTERNAL_MEMORY_USE(_)
-
-enum class MemoryUse : uint8_t {
-#define DEFINE_MEMORY_USE(Name) Name,
-  JS_FOR_EACH_MEMORY_USE(DEFINE_MEMORY_USE)
-#undef DEFINE_MEMORY_USE
-};
-
 namespace gc {
 
 struct Cell;
@@ -711,8 +696,19 @@ class MemoryTracker {
   void untrackMemory(Cell* cell, size_t nbytes, MemoryUse use);
 
   struct Key {
-    Cell* cell;
-    MemoryUse use;
+    Key(Cell* cell, MemoryUse use);
+    Cell* cell() const;
+    MemoryUse use() const;
+
+   private:
+#  ifdef JS_64BIT
+    // Pack this into a single word on 64 bit platforms.
+    uintptr_t cell_ : 56;
+    uintptr_t use_ : 8;
+#  else
+    uintptr_t cell_ : 32;
+    uintptr_t use_ : 8;
+#  endif
   };
 
   struct Hasher {

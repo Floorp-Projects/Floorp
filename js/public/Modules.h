@@ -9,6 +9,8 @@
 #ifndef js_Modules_h
 #define js_Modules_h
 
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+
 #include <stdint.h>  // uint32_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
@@ -87,10 +89,17 @@ extern JS_PUBLIC_API bool FinishDynamicModuleImport(
  * Parse the given source buffer as a module in the scope of the current global
  * of cx and return a source text module record.
  */
-extern JS_PUBLIC_API bool CompileModule(JSContext* cx,
-                                        const ReadOnlyCompileOptions& options,
-                                        SourceText<char16_t>& srcBuf,
-                                        MutableHandle<JSObject*> moduleRecord);
+extern JS_PUBLIC_API JSObject* CompileModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf);
+
+/**
+ * Parse the given source buffer as a module in the scope of the current global
+ * of cx and return a source text module record.
+ */
+extern JS_PUBLIC_API JSObject* CompileModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf);
 
 /**
  * Set a private value associated with a source text module record.

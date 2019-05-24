@@ -587,7 +587,7 @@ nsresult TextEditor::ExtendSelectionForDelete(nsIEditor::EDirection* aAction) {
 
         if (insertionPoint.IsInTextNode()) {
           const nsTextFragment* data =
-              insertionPoint.GetContainerAsText()->GetText();
+              &insertionPoint.GetContainerAsText()->TextFragment();
           uint32_t offset = insertionPoint.Offset();
           if ((offset > 1 && NS_IS_LOW_SURROGATE(data->CharAt(offset - 1)) &&
                NS_IS_HIGH_SURROGATE(data->CharAt(offset - 2))) ||

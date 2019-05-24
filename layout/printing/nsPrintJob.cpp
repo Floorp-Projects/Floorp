@@ -153,9 +153,8 @@ static const char* gPrintFrameTypeStr[] = {"kNoFrames", "kFramesAsIs",
                                            "kSelectedFrame", "kEachFrameSep"};
 static const char* gFrameHowToEnableStr[] = {
     "kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
-static const char* gPrintRangeStr[] = {"kRangeAllPages",
-                                       "kRangeSpecifiedPageRange",
-                                       "kRangeSelection", "kRangeFocusFrame"};
+static const char* gPrintRangeStr[] = {
+    "kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection"};
 
 // This processes the selection on aOrigDoc and creates an inverted selection on
 // aDoc, which it then deletes. If the start or end of the inverted selection
@@ -987,55 +986,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     // we want to view every page in PrintPreview each time
     printData->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
   } else {
-    // Always check and set the print settings first and then fall back
-    // onto the PrintService if there isn't a PrintSettings
-    //
-    // Posiible Usage values:
-    //   nsIPrintSettings::kUseInternalDefault
-    //   nsIPrintSettings::kUseSettingWhenPossible
-    //
-    // NOTE: The consts are the same for PrintSettings and PrintSettings
-    int16_t printFrameTypeUsage = nsIPrintSettings::kUseSettingWhenPossible;
-    printData->mPrintSettings->GetPrintFrameTypeUsage(&printFrameTypeUsage);
-
-    // Ok, see if we are going to use our value and override the default
-    if (printFrameTypeUsage == nsIPrintSettings::kUseSettingWhenPossible) {
-      // Get the Print Options/Settings PrintFrameType to see what is preferred
-      int16_t printFrameType = nsIPrintSettings::kEachFrameSep;
-      printData->mPrintSettings->GetPrintFrameType(&printFrameType);
-
-      // Don't let anybody do something stupid like try to set it to
-      // kNoFrames when we are printing a FrameSet
-      if (printFrameType == nsIPrintSettings::kNoFrames) {
-        printData->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
-        printData->mPrintSettings->SetPrintFrameType(
-            printData->mPrintFrameType);
-      } else {
-        // First find out from the PrinService what options are available
-        // to us for Printing FrameSets
-        int16_t howToEnableFrameUI;
-        printData->mPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
-        if (howToEnableFrameUI != nsIPrintSettings::kFrameEnableNone) {
-          switch (howToEnableFrameUI) {
-            case nsIPrintSettings::kFrameEnableAll:
-              printData->mPrintFrameType = printFrameType;
-              break;
-
-            case nsIPrintSettings::kFrameEnableAsIsAndEach:
-              if (printFrameType != nsIPrintSettings::kSelectedFrame) {
-                printData->mPrintFrameType = printFrameType;
-              } else {  // revert back to a good value
-                printData->mPrintFrameType = nsIPrintSettings::kEachFrameSep;
-              }
-              break;
-          }  // switch
-          printData->mPrintSettings->SetPrintFrameType(
-              printData->mPrintFrameType);
-        }
-      }
-    } else {
-      printData->mPrintSettings->GetPrintFrameType(&printData->mPrintFrameType);
-    }
+    printData->mPrintSettings->GetPrintFrameType(&printData->mPrintFrameType);
   }
 
   if (printData->mPrintFrameType == nsIPrintSettings::kEachFrameSep) {
