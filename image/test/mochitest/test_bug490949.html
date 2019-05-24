@@ -44,7 +44,7 @@ RemoteCanvas.prototype.load = function(cb) {
     // Here is where the magic happens... add a listener to the
     // frame's onload event - it will call handleEvent
     iframe.addEventListener("load", this, true);
-    //append to the end of the page
+    // append to the end of the page
     window.document.body.appendChild(iframe);
 };
 
@@ -60,7 +60,7 @@ RemoteCanvas.prototype.handleEvent = function() {
     // SpecialPowers.snapshotRect method
     var remoteWindow = ldrFrame.contentWindow;
 
-    //Draw canvas
+    // Draw canvas
     canvas.style.width = RemoteCanvas.CANVAS_WIDTH + "px";
     canvas.style.height = RemoteCanvas.CANVAS_HEIGHT + "px";
     canvas.width = RemoteCanvas.CANVAS_WIDTH;

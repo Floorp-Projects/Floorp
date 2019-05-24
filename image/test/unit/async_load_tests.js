@@ -40,7 +40,7 @@ function checkClone(other_listener, aRequest)
   do_test_pending();
 
   // For as long as clone notification is synchronous, we can't test the clone state reliably.
-  var listener = new ImageListener(null, function(foo, bar) { do_test_finished(); } /*getCloneStopCallback(other_listener)*/);
+  var listener = new ImageListener(null, function(foo, bar) { do_test_finished(); } /* getCloneStopCallback(other_listener)*/);
   listener.synchronous = false;
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
@@ -123,7 +123,7 @@ function getChannelLoadImageStopCallback(streamlistener, next)
 function checkSecondChannelLoad()
 {
   do_test_pending();
-  var channel = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+  var channel = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
   var channellistener = new ChannelListener();
   channel.asyncOpen(channellistener);
 
@@ -148,7 +148,7 @@ function run_loadImageWithChannel_tests()
   gCurrentLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
 
   do_test_pending();
-  var channel =  NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
+  var channel =  NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
   var channellistener = new ChannelListener();
   channel.asyncOpen(channellistener);
 

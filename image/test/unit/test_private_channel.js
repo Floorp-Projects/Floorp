@@ -37,8 +37,8 @@ function setup_chan(path, isPrivate, callback) {
   var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
   var principal = Services.scriptSecurityManager
                           .createCodebasePrincipal(uri, {privateBrowsingId: isPrivate ? 1 : 0});
-  var chan =  NetUtil.newChannel({uri: uri, loadingPrincipal: principal,
-                                  securityFlags: securityFlags,
+  var chan =  NetUtil.newChannel({uri, loadingPrincipal: principal,
+                                  securityFlags,
                                   contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE});
   chan.notificationCallbacks = isPrivate ? privateLoadContext
                                          : nonPrivateLoadContext;
