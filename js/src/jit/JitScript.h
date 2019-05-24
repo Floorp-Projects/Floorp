@@ -21,10 +21,9 @@ namespace js {
 // for a script. Scripts with a JitScript can run in the Baseline Interpreter.
 //
 // IC Data
-// -------
-//
-// JitScript contains IC data used by Baseline (Interpreter and JIT). Ion has
-// its own IC chains stored in IonScript.
+// =======
+// All IC data for Baseline (Interpreter and JIT) is stored in JitScript. Ion
+// has its own IC chains stored in IonScript.
 //
 // For each IC we store an ICEntry, which points to the first ICStub in the
 // chain. Note that multiple stubs in the same zone can share Baseline IC code.
@@ -49,9 +48,20 @@ namespace js {
 //   - Type monitor IC for each formal argument.
 //   - IC for each JOF_IC bytecode op.
 //
-// Memory Layout
-// -------------
+// Type Inference Data
+// ===================
+// JitScript also contains Type Inference data, most importantly:
 //
+// * An array of StackTypeSets for type monitoring of |this|, formal arguments,
+//   JOF_TYPESET ops. These TypeSets record the types we observed and have
+//   constraints to trigger invalidation of Ion code when the TypeSets change.
+//
+// * The bytecode type map to map from StackTypeSet index to bytecode offset.
+//
+// * List of Ion compilations inlining this script, for invalidation.
+//
+// Memory Layout
+// =============
 // JitScript has various trailing (variable-length) arrays. The memory layout is
 // as follows:
 //
