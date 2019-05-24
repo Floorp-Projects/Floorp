@@ -99,6 +99,7 @@ class MozFramebuffer;
 namespace webgl {
 class AvailabilityRunnable;
 struct CachedDrawFetchLimits;
+struct FbAttachInfo;
 struct FormatInfo;
 class FormatUsageAuthority;
 struct FormatUsageInfo;
@@ -598,11 +599,24 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   void DrawBuffers(const dom::Sequence<GLenum>& buffers);
   void Flush();
   void Finish();
+
+ private:
+  void FramebufferAttach(GLenum target, GLenum attachEnum,
+                         TexTarget reqTexTarget,
+                         const webgl::FbAttachInfo& toAttach) const;
+
+ public:
   void FramebufferRenderbuffer(GLenum target, GLenum attachment,
-                               GLenum rbTarget, WebGLRenderbuffer* rb);
+                               GLenum rbTarget, WebGLRenderbuffer* rb) const;
   void FramebufferTexture2D(GLenum target, GLenum attachment,
                             GLenum texImageTarget, WebGLTexture* tex,
-                            GLint level);
+                            GLint level) const;
+  void FramebufferTextureLayer(GLenum target, GLenum attachment,
+                               WebGLTexture* tex, GLint level,
+                               GLint layer) const;
+  void FramebufferTextureMultiview(GLenum target, GLenum attachment,
+                                   WebGLTexture* texture, GLint level,
+                                   GLint baseViewIndex, GLsizei numViews) const;
 
   void FrontFace(GLenum mode);
   already_AddRefed<WebGLActiveInfo> GetActiveAttrib(const WebGLProgram& prog,
@@ -1533,6 +1547,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   uint32_t mGLMaxCubeMapTextureSize = 0;
   uint32_t mGLMax3DTextureSize = 0;
   uint32_t mGLMaxArrayTextureLayers = 0;
+  uint32_t mGLMaxMultiviewViews = 1;
   uint32_t mGLMaxRenderbufferSize = 0;
 
  public:
@@ -1738,7 +1753,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   //////
  public:
   bool ValidateObjectAllowDeleted(const char* const argName,
-                                  const WebGLContextBoundObject& object) {
+                                  const WebGLContextBoundObject& object) const {
     if (!object.IsCompatibleWithContext(this)) {
       ErrorInvalidOperation(
           "%s: Object from different WebGL context (or older"
@@ -1752,7 +1767,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
   bool ValidateObject(const char* const argName,
                       const WebGLDeletableObject& object,
-                      const bool isShaderOrProgram = false) {
+                      const bool isShaderOrProgram = false) const {
     if (!ValidateObjectAllowDeleted(argName, object)) return false;
 
     if (isShaderOrProgram) {
@@ -1789,8 +1804,10 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
   // Program and Shader are incomplete, so we can't inline the conversion to
   // WebGLDeletableObject here.
-  bool ValidateObject(const char* const argName, const WebGLProgram& object);
-  bool ValidateObject(const char* const argName, const WebGLShader& object);
+  bool ValidateObject(const char* const argName,
+                      const WebGLProgram& object) const;
+  bool ValidateObject(const char* const argName,
+                      const WebGLShader& object) const;
 
   ////
 
@@ -1821,7 +1838,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   WebGLRefPtr<WebGLProgram> mCurrentProgram;
   RefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
 
-  bool ValidateFramebufferTarget(GLenum target);
+  bool ValidateFramebufferTarget(GLenum target) const;
   bool ValidateInvalidateFramebuffer(GLenum target,
                                      const dom::Sequence<GLenum>& attachments,
                                      ErrorResult* const out_rv,
@@ -1835,6 +1852,10 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   WebGLRefPtr<WebGLTransformFeedback> mBoundTransformFeedback;
   WebGLRefPtr<WebGLVertexArray> mBoundVertexArray;
 
+ public:
+  const auto& BoundReadFb() const { return mBoundReadFramebuffer; }
+
+ protected:
   LinkedList<WebGLBuffer> mBuffers;
   LinkedList<WebGLFramebuffer> mFramebuffers;
   LinkedList<WebGLProgram> mPrograms;

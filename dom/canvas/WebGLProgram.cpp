@@ -535,6 +535,15 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
     }
   }
 
+  const auto& vertShader = prog->VertShader();
+  MOZ_RELEASE_ASSERT(vertShader);
+  MOZ_RELEASE_ASSERT(vertShader->Validator());
+  const auto& handle = vertShader->Validator()->mHandle;
+  const auto numViews = sh::GetVertexShaderNumViews(handle);
+  if (numViews != -1) {
+    info->zLayerCount = AssertedCast<uint8_t>(numViews);
+  }
+
   return info;
 }
 

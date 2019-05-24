@@ -1,3 +1,15 @@
+commit 1d5494fc3e856d4d722e266d2b2075debac5146f
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Thu Apr 25 14:57:26 2019 -0700
+
+    Emit OVR_multiview2 on ESSL/GLSL outputs.
+    
+    Add ARB_shader_viewport_layer_array support to
+    SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER.
+    
+    Bug: angleproject:3404
+    Change-Id: Ia89517d0cc92400ce47c9118e8c1abf8285aec41
+
 commit 5814bb88b10ef903abcf297f2de72619d853b4e9
 Author: Lee Salzman <lsalzman@mozilla.com>
 Date:   Tue Apr 30 23:42:31 2019 -0400

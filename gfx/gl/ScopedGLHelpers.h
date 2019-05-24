@@ -122,7 +122,7 @@ struct ScopedFramebuffer : public ScopedGLWrapper<ScopedFramebuffer> {
 
  public:
   explicit ScopedFramebuffer(GLContext* aGL);
-  GLuint FB() { return mFB; }
+  const auto& FB() const { return mFB; }
 
  protected:
   void UnwrapImpl();

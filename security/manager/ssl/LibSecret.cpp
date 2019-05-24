@@ -84,6 +84,8 @@ typedef SecretService* (*secret_service_get_sync_fn)(SecretServiceFlags,
                                                      GCancellable*, GError**);
 typedef gint (*secret_service_lock_sync_fn)(SecretService*, GList*,
                                             GCancellable*, GList**, GError**);
+typedef gint (*secret_service_unlock_sync_fn)(SecretService*, GList*,
+                                              GCancellable*, GList**, GError**);
 typedef gboolean (*secret_password_clear_sync_fn)(const SecretSchema*,
                                                   GCancellable*, GError**, ...);
 typedef gchar* (*secret_password_lookup_sync_fn)(const SecretSchema*,
@@ -99,6 +101,7 @@ static secret_collection_for_alias_sync_fn secret_collection_for_alias_sync =
     nullptr;
 static secret_service_get_sync_fn secret_service_get_sync = nullptr;
 static secret_service_lock_sync_fn secret_service_lock_sync = nullptr;
+static secret_service_unlock_sync_fn secret_service_unlock_sync = nullptr;
 static secret_password_clear_sync_fn secret_password_clear_sync = nullptr;
 static secret_password_lookup_sync_fn secret_password_lookup_sync = nullptr;
 static secret_password_store_sync_fn secret_password_store_sync = nullptr;
@@ -127,6 +130,7 @@ nsresult MaybeLoadLibSecret() {
     FIND_FUNCTION_SYMBOL(secret_collection_for_alias_sync);
     FIND_FUNCTION_SYMBOL(secret_service_get_sync);
     FIND_FUNCTION_SYMBOL(secret_service_lock_sync);
+    FIND_FUNCTION_SYMBOL(secret_service_unlock_sync);
     FIND_FUNCTION_SYMBOL(secret_password_clear_sync);
     FIND_FUNCTION_SYMBOL(secret_password_lookup_sync);
     FIND_FUNCTION_SYMBOL(secret_password_store_sync);
@@ -185,6 +189,7 @@ LibSecret::~LibSecret() {
     secret_collection_for_alias_sync = nullptr;
     secret_service_get_sync = nullptr;
     secret_service_lock_sync = nullptr;
+    secret_service_unlock_sync = nullptr;
     secret_password_clear_sync = nullptr;
     secret_password_lookup_sync = nullptr;
     secret_password_store_sync = nullptr;
@@ -260,11 +265,27 @@ nsresult LibSecret::Lock() {
 }
 
 nsresult LibSecret::Unlock() {
-  // Accessing the secret service unlocks it. So calling this separately isn't
-  // actually necessary.
+  MOZ_ASSERT(secret_service_unlock_sync);
+  if (!secret_service_unlock_sync) {
+    return NS_ERROR_FAILURE;
+  }
+  // Accessing the secret service might unlock it.
   ScopedSecretService ss;
   ScopedSecretCollection sc;
   if (NS_FAILED(GetScopedServices(ss, sc))) {
+    return NS_ERROR_FAILURE;
+  }
+  GError* raw_error = nullptr;
+  GList* collections = nullptr;
+  ScopedGList collectionList(g_list_append(collections, sc.get()));
+  int numLocked = secret_service_unlock_sync(ss.get(), collectionList.get(),
+                                             nullptr,  // GCancellable
+                                             nullptr,  // list of unlocked items
+                                             &raw_error);
+  ScopedGError error(raw_error);
+  if (numLocked != 1) {
+    MOZ_LOG(gLibSecretLog, LogLevel::Debug,
+            ("Couldn't unlock secret collection"));
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

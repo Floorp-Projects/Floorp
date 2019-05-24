@@ -445,6 +445,13 @@ struct GLContextSymbols final {
 
   // NV_primitive_restart
   void(GLAPIENTRY* fPrimitiveRestartIndex)(GLuint);
+
+  // OVR_multiview2
+  void(GLAPIENTRY* fFramebufferTextureMultiview)(GLenum target,
+                                                 GLenum attachment,
+                                                 GLuint texture, GLint level,
+                                                 GLint baseViewIndex,
+                                                 GLsizei numViews);
 };
 
 }  // namespace gl

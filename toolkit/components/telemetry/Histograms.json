@@ -1073,6 +1073,17 @@
     "bug_numbers": [1226196],
     "description": "Resident memory size (KB)"
   },
+  "MEMORY_RESIDENT_PEAK": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["memshrink-telemetry-alerts@mozilla.com", "kgupta@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 32768,
+    "high": 16777216,
+    "n_buckets": 100,
+    "bug_numbers": [1551648],
+    "description": "Peak resident memory size (KB)"
+  },
   "MEMORY_TOTAL": {
     "record_in_processes": ["main"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com", "erahm@mozilla.com"],

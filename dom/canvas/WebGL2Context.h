@@ -58,8 +58,6 @@ class WebGL2Context : public WebGLContext {
   void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
                        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                        GLbitfield mask, GLenum filter);
-  void FramebufferTextureLayer(GLenum target, GLenum attachment,
-                               WebGLTexture* texture, GLint level, GLint layer);
 
   virtual JS::Value GetFramebufferAttachmentParameter(JSContext* cx,
                                                       GLenum target,
