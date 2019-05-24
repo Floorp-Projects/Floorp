@@ -1401,7 +1401,9 @@ def pgo_flags(compiler, build_env, target):
 
     if compiler.type in ('clang-cl', 'clang'):
         profdata = os.path.join(topobjdir, 'merged.profdata')
+        prefix = ''
         if compiler.type == 'clang-cl':
+            prefix = '/clang:'
             if target.cpu == 'x86_64':
                 gen_ldflags = ['clang_rt.profile-x86_64.lib']
             elif target.cpu == 'x86':
@@ -1409,15 +1411,16 @@ def pgo_flags(compiler, build_env, target):
             else:
                 gen_ldflags = None
         else:
-            gen_ldflags = ['-fprofile-instr-generate']
+            gen_ldflags = ['-fprofile-generate']
 
         if gen_ldflags:
             return namespace(
-                gen_cflags=['-fprofile-instr-generate'],
+                gen_cflags=[prefix + '-fprofile-generate'],
                 gen_ldflags=gen_ldflags,
-                use_cflags=['-fprofile-instr-use=%s' % profdata,
-                            '-Wno-error=profile-instr-out-of-date',
-                            '-Wno-error=profile-instr-unprofiled'],
+                use_cflags=[prefix + '-fprofile-use=%s' % profdata,
+                            # Some error messages about mismatched profile data
+                            # come in via -Wbackend-plugin, so disable those too.
+                            '-Wno-error=backend-plugin'],
                 use_ldflags=[],
             )
 
