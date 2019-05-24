@@ -1097,7 +1097,7 @@ enum class BinASTInterfaceAndField: uint16_t {
                                         }
                                         // Keep the simple name of sums and lists if there is one.
                                         match *alias_type.spec() {
-                                            TypeSpec::TypeSum(ref contents ) => {
+                                            TypeSpec::TypeSum(_) => {
                                                 if optional {
                                                     Cow::from(format!("OPTIONAL_SUM({name})", name = name.to_cpp_enum_case()))
                                                 } else {
@@ -1632,8 +1632,8 @@ impl CPPExporter {
     MOZ_TRY(tokenizer_->enterList(length, context, guard));{empty_check}
 {init}
 
-    const Context childContext(context.arrayElement());
     for (uint32_t i = 0; i < length; ++i) {{
+        const Context childContext(Context(ListContext(context.as<FieldContext>().position, BinASTList::{content_kind})));
 {call}
 {append}    }}
 
@@ -1641,6 +1641,7 @@ impl CPPExporter {
     return result;
 }}\n",
             first_line = first_line,
+            content_kind = parser.name.to_class_cases(),
             empty_check =
                 if parser.supports_empty {
                     "".to_string()
@@ -1963,7 +1964,9 @@ impl CPPExporter {
 
         let mut fields_implem = String::new();
         for field in interface.contents().fields() {
-            let context = "fieldContext++";
+            let context = format!("Context(FieldContext(BinASTInterfaceAndField::{kind}__{field}))",
+                kind = name.to_cpp_enum_case(),
+                field = field.name().to_cpp_enum_case());
 
             let rules_for_this_field = rules_for_this_interface.by_field.get(field.name())
                 .cloned()
@@ -2165,7 +2168,7 @@ impl CPPExporter {
 {{
     MOZ_ASSERT(kind == BinASTKind::{kind});
     BINJS_TRY(CheckRecursionLimit(cx_));
-{maybe_field_context}{check_fields}
+{check_fields}
 {pre}{fields_implem}
 {post}    return result;
 }}
@@ -2177,11 +2180,6 @@ impl CPPExporter {
                 post = build_result.newline_if_not_empty(),
                 kind = name.to_cpp_enum_case(),
                 first_line = first_line,
-                maybe_field_context = if interface.contents().fields().len() > 0 {
-                    "    Context fieldContext = Context::firstField(kind);\n"
-                } else {
-                    ""
-                },
             ));
         }
     }
