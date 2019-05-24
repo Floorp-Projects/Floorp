@@ -8743,11 +8743,12 @@ class CGSetterCall(CGPerSignatureCall):
 
 class CGAbstractBindingMethod(CGAbstractStaticMethod):
     """
-    Common class to generate the JSNatives for all our methods, getters, and
-    setters.  This will generate the function declaration and unwrap the
-    |this| object.  Subclasses are expected to override the generate_code
-    function to do the rest of the work.  This function should return a
-    CGThing which is already properly indented.
+    Common class to generate some of our class hooks.  This will generate the
+    function declaration, get a reference to the JS object for our binding
+    object (which might be an argument of the class hook or something we get
+    from a JS::CallArgs), and unwrap into the right C++ type. Subclasses are
+    expected to override the generate_code function to do the rest of the work.
+    This function should return a CGThing which is already properly indented.
 
     getThisObj should be code for getting a JSObject* for the binding
     object.  "" can be passed in if the binding object is already stored in
@@ -8755,14 +8756,21 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
 
     callArgs should be code for getting a JS::CallArgs into a variable
     called 'args'.  This can be "" if there is already such a variable
-    around.
+    around or if the body does not need a JS::CallArgs.
+
     """
     def __init__(self, descriptor, name, args, getThisObj,
                  callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);\n"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args,
                                         canRunScript=True)
 
-        self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");\n' % descriptor.interface.identifier.name
+        # This can't ever happen, because we only use this for class hooks.
+        self.unwrapFailureCode = fill(
+            """
+            MOZ_CRASH("Unexpected object in '${name}' hook");
+            return false;
+            """,
+            name=name)
 
         if getThisObj == "":
             self.getThisObj = None
