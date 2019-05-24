@@ -530,6 +530,7 @@ const startupPhases = {
     { // bug 1003968
       path: "XREAppDist:searchplugins",
       condition: WIN,
+      ignoreIfUnused: true, // with WebRender enabled this may happen during "before becoming idle"
       stat: 1,
     },
     {
@@ -642,6 +643,12 @@ const startupPhases = {
       path: "XCurProcD:omni.ja",
       condition: WIN,
       stat: 7,
+    },
+    { // bug 1003968
+      path: "XREAppDist:searchplugins",
+      condition: WIN,
+      ignoreIfUnused: true, // with WebRender enabled this may happen during "before handling user events"
+      stat: 1,
     },
   ],
 };
