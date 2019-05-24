@@ -25,7 +25,7 @@ class AllSessionsObserverTest {
             add(session2)
         }
 
-        val observer: Session.Observer = mock()
+        val observer: AllSessionsObserver.Observer = mock()
 
         AllSessionsObserver(sessionManager, observer)
             .start()
@@ -38,7 +38,7 @@ class AllSessionsObserverTest {
     fun `Observer will be registered on added Sessions`() {
         val sessionManager = SessionManager(engine = mock())
 
-        val observer: Session.Observer = mock()
+        val observer: AllSessionsObserver.Observer = mock()
 
         AllSessionsObserver(sessionManager, observer)
             .start()
@@ -63,7 +63,7 @@ class AllSessionsObserverTest {
             add(session2)
         }
 
-        val observer: Session.Observer = mock()
+        val observer: AllSessionsObserver.Observer = mock()
 
         AllSessionsObserver(sessionManager, observer)
             .start()
@@ -81,7 +81,7 @@ class AllSessionsObserverTest {
     fun `Observer gets registered when Sessions get restored`() {
         val sessionManager = SessionManager(engine = mock())
 
-        val observer: Session.Observer = mock()
+        val observer: AllSessionsObserver.Observer = mock()
         AllSessionsObserver(sessionManager, observer)
             .start()
 
@@ -110,7 +110,7 @@ class AllSessionsObserverTest {
             add(session2)
         }
 
-        val observer: Session.Observer = mock()
+        val observer: AllSessionsObserver.Observer = mock()
         AllSessionsObserver(sessionManager, observer)
             .start()
 
@@ -131,7 +131,7 @@ class AllSessionsObserverTest {
             add(session1)
         }
 
-        val observer: Session.Observer = mock()
+        val observer: AllSessionsObserver.Observer = mock()
 
         val allObserver = AllSessionsObserver(sessionManager, observer).apply {
             start()

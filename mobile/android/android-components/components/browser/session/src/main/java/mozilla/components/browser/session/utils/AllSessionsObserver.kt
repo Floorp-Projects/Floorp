@@ -15,7 +15,7 @@ import mozilla.components.browser.session.SessionManager
  */
 class AllSessionsObserver(
     private val sessionManager: SessionManager,
-    private val sessionObserver: Session.Observer
+    private val sessionObserver: Observer
 ) {
     private val observer = Observer(this)
     private val registeredSessions: MutableSet<Session> = mutableSetOf()
@@ -38,18 +38,25 @@ class AllSessionsObserver(
         if (session !in registeredSessions) {
             session.register(sessionObserver)
             registeredSessions.add(session)
+            sessionObserver.onRegisteredToSession(session)
         }
     }
 
     internal fun unregisterSession(session: Session) {
         registeredSessions.remove(session)
         session.unregister(sessionObserver)
+        sessionObserver.onUnregisteredFromSession(session)
     }
 
     internal fun unregisterAllSessions() {
         registeredSessions.toList().forEach { session ->
             unregisterSession(session)
         }
+    }
+
+    interface Observer : Session.Observer {
+        fun onRegisteredToSession(session: Session) = Unit
+        fun onUnregisteredFromSession(session: Session) = Unit
     }
 }
 

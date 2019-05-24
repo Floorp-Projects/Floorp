@@ -7,6 +7,7 @@ package mozilla.components.browser.icons.extension
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.utils.AllSessionsObserver
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.WebExtension
 
@@ -23,7 +24,7 @@ internal class IconSessionObserver(
     private val icons: BrowserIcons,
     private val sessionManager: SessionManager,
     private val extension: WebExtension
-) : Session.Observer {
+) : AllSessionsObserver.Observer {
     override fun onLoadingStateChanged(session: Session, loading: Boolean) {
         if (loading) {
             registerMessageHandler(session)
