@@ -7,7 +7,6 @@
 
 #include "TouchManager.h"
 
-#include "gfxPrefs.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/PresShell.h"
 #include "nsIFrame.h"
