@@ -56,10 +56,8 @@ JitScript::JitScript(JSScript* script, uint32_t typeSetOffset,
       bytecodeTypeMapOffset_(bytecodeTypeMapOffset) {
   setTypesGeneration(script->zone()->types.generation);
 
-  StackTypeSet* array = typeArrayDontCheckGeneration();
-  for (uint32_t i = 0, len = numTypeSets(); i < len; i++) {
-    new (&array[i]) StackTypeSet();
-  }
+  uint8_t* base = reinterpret_cast<uint8_t*>(this);
+  DefaultInitializeElements<StackTypeSet>(base + typeSetOffset, numTypeSets());
 
   FillBytecodeTypeMap(script, bytecodeTypeMap());
 }
