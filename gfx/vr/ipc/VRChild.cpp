@@ -105,23 +105,6 @@ void VRChild::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 void VRChild::Init() {
-  // Build a list of prefs the VR process will need. Note that because we
-  // limit the VR process to prefs contained in gfxPrefs, we can simplify
-  // the message in two ways: one, we only need to send its index in gfxPrefs
-  // rather than its name, and two, we only need to send prefs that don't
-  // have their default value.
-  // Todo: Consider to make our own vrPrefs that we are interested in VR
-  // process.
-  nsTArray<GfxPrefSetting> prefs;
-  for (auto pref : gfxPrefs::all()) {
-    if (pref->HasDefaultValue()) {
-      continue;
-    }
-
-    GfxPrefValue value;
-    pref->GetCachedValue(&value);
-    prefs.AppendElement(GfxPrefSetting(pref->Index(), value));
-  }
   nsTArray<GfxVarUpdate> updates = gfxVars::FetchNonDefaultVars();
 
   DevicePrefs devicePrefs;
@@ -133,7 +116,7 @@ void VRChild::Init() {
   devicePrefs.advancedLayers() = gfxConfig::GetValue(Feature::ADVANCED_LAYERS);
   devicePrefs.useD2D1() = gfxConfig::GetValue(Feature::DIRECT2D);
 
-  SendInit(prefs, updates, devicePrefs);
+  SendInit(updates, devicePrefs);
 
   if (!sOpenVRControllerManifestManager) {
     sOpenVRControllerManifestManager = new OpenVRControllerManifestManager();
