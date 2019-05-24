@@ -95,7 +95,9 @@ enum class ZealMode {
   _(ArrayBufferContents)                   \
   _(StringContents)                        \
   _(ObjectElements)                        \
-  _(ObjectSlots)
+  _(ObjectSlots)                           \
+  _(ScriptPrivateData)                     \
+  _(LazyScriptData)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \

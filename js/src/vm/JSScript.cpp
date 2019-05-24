@@ -3760,6 +3760,7 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
                                        uint32_t nscopenotes,
                                        uint32_t nresumeoffsets) {
   cx->check(script);
+  MOZ_ASSERT(!script->data_);
 
   uint32_t dataSize;
 
@@ -3772,6 +3773,8 @@ bool JSScript::createPrivateScriptData(JSContext* cx, HandleScript script,
 
   script->data_ = data;
   script->dataSize_ = dataSize;
+  AddCellMemory(script, dataSize, MemoryUse::ScriptPrivateData);
+
   return true;
 }
 
@@ -4068,8 +4071,9 @@ void JSScript::finalize(FreeOp* fop) {
 #endif
 
   if (data_) {
-    AlwaysPoison(data_, 0xdb, computedSizeOfData(), MemCheckKind::MakeNoAccess);
-    fop->free_(data_);
+    size_t size = computedSizeOfData();
+    AlwaysPoison(data_, 0xdb, size, MemCheckKind::MakeNoAccess);
+    fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
   }
 
   freeScriptData();
@@ -4927,7 +4931,12 @@ void JSScript::traceChildren(JSTracer* trc) {
   }
 }
 
-void LazyScript::finalize(FreeOp* fop) { fop->free_(lazyData_); }
+void LazyScript::finalize(FreeOp* fop) {
+  if (lazyData_) {
+    fop->free_(this, lazyData_, lazyData_->allocationSize(),
+               MemoryUse::LazyScriptData);
+  }
+}
 
 size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
   size_t nlivefixed = numAlwaysLiveFixedSlots();
@@ -5161,6 +5170,10 @@ bool JSScript::formalLivesInArgumentsObject(unsigned argSlot) {
   return size;
 }
 
+inline size_t LazyScriptData::allocationSize() const {
+  return AllocationSize(numClosedOverBindings_, numInnerFunctions_);
+}
+
 // Placement-new elements of an array. This should optimize away for types with
 // trivial default initiation.
 template <typename T>
@@ -5256,6 +5269,10 @@ LazyScript::LazyScript(JSFunction* fun, ScriptSourceObject& sourceObject,
   MOZ_ASSERT(function_->compartment() == sourceObject_->compartment());
   MOZ_ASSERT(sourceStart <= sourceEnd);
   MOZ_ASSERT(toStringStart <= sourceStart);
+
+  if (data) {
+    AddCellMemory(this, data->allocationSize(), MemoryUse::LazyScriptData);
+  }
 }
 
 void LazyScript::initScript(JSScript* script) {
