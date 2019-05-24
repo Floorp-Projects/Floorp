@@ -127,6 +127,8 @@
     <string name="preferences_sign_in_description">Sync bookmarks, history, and more with your Firefox Account</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox Account</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Reconnect to resume syncing</string>
     <!-- Preference for language -->
     <string name="preferences_language">Language</string>
     <!-- Preference for data choices -->
@@ -202,6 +204,10 @@
     <string name="preferences_sync_sign_in">Sign in</string>
     <!-- Preference for account creation -->
     <string name="preferences_sync_create_account">Create an account</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Sign in to reconnect</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Remove account</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
