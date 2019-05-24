@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that our U2F implementation interacts OK with the Google polyfill</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    // We want to run our test script at toplevel, because that's where the
+    // polyfill runs.  But we also need to wait until the pref is set, so go
+    // ahead and use a dynamically created script element.
+    SimpleTest.waitForExplicitFinish();
+    SpecialPowers.pushPrefEnv({ "set": [["security.webauth.u2f", true]] },
+                              doTest);
+
+    function doTest() {
+        var s = document.createElement("script");
+        s.textContent = `
+          'use strict';
+          var savedU2f = u2f;
+          var savedRegister = savedU2f.register;
+          var savedSign = savedU2f.sign;
+          var u2f = u2f || {};
+          u2f.register = function() {};
+          u2f.sign = function() {};
+          is(u2f, savedU2f, "Should still have the right object");
+          is(u2f.register, savedRegister, "Should not allow overriding 'sign'");
+          is(u2f.sign, savedSign, "Should not allow overriding 'sign'");
+          SimpleTest.finish();
+        `;
+        document.documentElement.appendChild(s);
+    }
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

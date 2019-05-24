@@ -5252,7 +5252,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "NeedsSubjectPrincipal" or
               identifier == "NeedsCallerType" or
               identifier == "StaticClassOverride" or
-              identifier == "NonEnumerable"):
+              identifier == "NonEnumerable" or
+              identifier == "Unexposed"):
             # Known attributes that we don't need to do anything with here
             pass
         else:
