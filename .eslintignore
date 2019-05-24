@@ -14,7 +14,6 @@ obj*/**
 # We ignore all these directories by default, until we get them enabled.
 # If you are enabling a directory, please add directory specific exclusions
 # below.
-image/**
 layout/**
 netwerk/cookie/test/browser/**
 netwerk/test/browser/**

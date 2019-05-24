@@ -229,14 +229,12 @@ AnimationTest.prototype.setupPolledImage = function ()
 
       this.cleanUpAndFinish();
     }
-  } else {
-    if (!gIsRefImageLoaded) {
+  } else if (!gIsRefImageLoaded) {
       this.myImage = new Image();
       this.myImage.onload = reuseImageCallback;
       document.getElementById(this.imageElementId).setAttribute('src',
         this.referenceElementId);
     }
-  }
 }
 
 AnimationTest.prototype.checkImage = function ()

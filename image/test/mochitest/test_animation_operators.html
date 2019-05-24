@@ -138,7 +138,7 @@ function startTest(i)
                  testData.op + " " + testData.test + " " + testData.reference);
       RemoveFinishDependency();
     }
-    var iframe = { element: element, loaded: false };
+    var iframe = { element, loaded: false };
 
     return iframe;
   }

@@ -193,7 +193,7 @@ function makeDataURLFromAsync(encoder, mimetype, expected) {
 
         var asyncReader =
         {
-            onInputStreamReady: function(stream)
+            onInputStreamReady(stream)
             {
                 binarystream.setInputStream(stream);
                 var available = 0;
