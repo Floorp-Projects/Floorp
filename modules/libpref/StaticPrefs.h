@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/gfx/LoggingConstants.h"
 #include "MainThreadUtils.h"
 #include <atomic>
 #include <cmath>  // for M_PI
