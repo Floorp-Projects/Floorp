@@ -188,12 +188,15 @@ class Zone : public JS::shadow::Zone,
     DiscardBaselineCode
   };
 
-  enum ShouldReleaseTypes : bool { KeepTypes = false, ReleaseTypes };
+  enum ShouldDiscardJitScripts : bool {
+    KeepJitScripts = false,
+    DiscardJitScripts
+  };
 
   void discardJitCode(
       js::FreeOp* fop,
       ShouldDiscardBaselineCode discardBaselineCode = DiscardBaselineCode,
-      ShouldReleaseTypes releaseTypes = KeepTypes);
+      ShouldDiscardJitScripts discardJitScripts = KeepJitScripts);
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* typePool, size_t* regexpZone,
@@ -750,8 +753,7 @@ class ZoneAllocPolicy {
 // Associate malloc memory with a GC thing. This call must be matched by a
 // following call to RemoveCellMemory with the same size and use. The total
 // amount of malloc memory associated with a zone is used to trigger GC.
-inline void AddCellMemory(gc::TenuredCell* cell, size_t nbytes,
-                          MemoryUse use) {
+inline void AddCellMemory(gc::TenuredCell* cell, size_t nbytes, MemoryUse use) {
   if (nbytes) {
     cell->zone()->addCellMemory(cell, nbytes, use);
   }
