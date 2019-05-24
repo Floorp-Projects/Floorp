@@ -89,8 +89,12 @@ def make_task_description(config, jobs):
         # update the dependencies with the dependencies of the signing task
         dependencies.update(dep_job.dependencies)
 
-        bucket_scope = get_beetmover_bucket_scope(config)
-        action_scope = get_beetmover_action_scope(config)
+        bucket_scope = get_beetmover_bucket_scope(
+            config, job_release_type=attributes.get('release-type')
+        )
+        action_scope = get_beetmover_action_scope(
+            config, job_release_type=attributes.get('release-type')
+        )
 
         task = {
             'label': label,
