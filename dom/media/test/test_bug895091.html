@@ -12,24 +12,19 @@
   <track src="long.vtt" kind="subtitles" id="track2">
 </video>
 <script type="text/javascript">
-
+/**
+ * This test is used to ensure that we can load two track elements with large
+ * amount of cues at same time. In this test, both tracks are disable by default,
+ * we have to enable them in order to start loading.
+ */
 var trackElement = document.getElementById("track1");
 var trackElementTwo = document.getElementById("track2");
 
 async function runTest() {
   enableBothTracks();
   await waitUntilBothTracksLoaded();
-
-  // Set mode to hidden so that the active cue lists are being updated.
-  trackElement.track.mode = "hidden";
-  trackElementTwo.track.mode = "hidden";
-
-  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
-  is(trackElementTwo.readyState, 2, "Track::ReadyState should be set to LOADED.");
-
-  is(trackElement.track.cues.length, 2000, "Cue list length should be 2000.");
-  is(trackElementTwo.track.cues.length, 2000, "Cue list length should be 2000.");
-
+  checkTrackReadyStateShouldBeLoaded();
+  checkCuesAmount();
   SimpleTest.finish();
 }
 
@@ -51,6 +46,15 @@ async function waitUntilBothTracksLoaded() {
   await Promise.all([once(trackElement, "load"), once(trackElementTwo, "load")]);
 }
 
+function checkTrackReadyStateShouldBeLoaded() {
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+  is(trackElementTwo.readyState, 2, "Track::ReadyState should be set to LOADED.");
+}
+
+function checkCuesAmount() {
+  is(trackElement.track.cues.length, 2000, "Cue list length should be 2000.");
+  is(trackElementTwo.track.cues.length, 2000, "Cue list length should be 2000.");
+}
 </script>
 </body>
 </html>
