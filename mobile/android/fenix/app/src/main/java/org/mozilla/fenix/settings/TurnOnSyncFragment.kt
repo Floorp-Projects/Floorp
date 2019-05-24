@@ -20,12 +20,12 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requireComponents.analytics.metrics.track(Event.SyncOpened)
+        requireComponents.analytics.metrics.track(Event.SyncAuthOpened)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        requireComponents.analytics.metrics.track(Event.SyncClosed)
+        requireComponents.analytics.metrics.track(Event.SyncAuthClosed)
     }
 
     override fun onResume() {
@@ -56,7 +56,7 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
             // session history stack.
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
-            requireComponents.analytics.metrics.track(Event.SyncSignIn)
+            requireComponents.analytics.metrics.track(Event.SyncAuthSignIn)
             view?.let {
                 (activity as HomeActivity).openToBrowser(BrowserDirection.FromTurnOnSync)
             }
@@ -68,7 +68,7 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
         // Currently the same as sign in, as FxA handles this, however we want to emit a different telemetry event
         return Preference.OnPreferenceClickListener {
             requireComponents.services.accountsAuthFeature.beginAuthentication()
-            requireComponents.analytics.metrics.track(Event.SyncCreateAccount)
+            requireComponents.analytics.metrics.track(Event.SyncAuthCreateAccount)
             view?.let {
                 (activity as HomeActivity).openToBrowser(BrowserDirection.FromTurnOnSync)
             }
@@ -80,7 +80,7 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
         return Preference.OnPreferenceClickListener {
             val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairInstructionsFragment()
             Navigation.findNavController(view!!).navigate(directions)
-            requireComponents.analytics.metrics.track(Event.SyncScanPairing)
+            requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
 
             true
         }

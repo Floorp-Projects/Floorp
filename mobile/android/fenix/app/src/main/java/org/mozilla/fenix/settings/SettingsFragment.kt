@@ -203,7 +203,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
 
     private fun getClickListenerForSignIn(): OnPreferenceClickListener {
         return OnPreferenceClickListener {
-            requireComponents.analytics.metrics.track(Event.SyncOpened)
             val directions = SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment()
             Navigation.findNavController(view!!).navigate(directions)
             true

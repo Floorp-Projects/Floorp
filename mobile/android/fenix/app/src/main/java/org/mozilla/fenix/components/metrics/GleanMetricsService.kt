@@ -26,7 +26,8 @@ import kotlinx.coroutines.runBlocking
 import org.mozilla.fenix.GleanMetrics.QrScanner
 import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.ErrorPage
-import org.mozilla.fenix.GleanMetrics.Sync
+import org.mozilla.fenix.GleanMetrics.SyncAccount
+import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.utils.Settings
@@ -192,26 +193,32 @@ private val Event.wrapper
             { ErrorPage.visitedError },
             { ErrorPage.visitedErrorKeys.valueOf(it) }
         )
-        is Event.SyncOpened -> EventWrapper<NoExtraKeys>(
-            { Sync.opened.record(it) }
+        is Event.SyncAuthOpened -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.opened.record(it) }
         )
-        is Event.SyncClosed -> EventWrapper<NoExtraKeys>(
-            { Sync.closed.record(it) }
+        is Event.SyncAuthClosed -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.closed.record(it) }
         )
-        is Event.SyncSignIn -> EventWrapper<NoExtraKeys>(
-            { Sync.signIn.record(it) }
+        is Event.SyncAuthSignIn -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.signIn.record(it) }
         )
-        is Event.SyncScanPairing -> EventWrapper<NoExtraKeys>(
-            { Sync.scanPairing.record(it) }
+        is Event.SyncAuthScanPairing -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.scanPairing.record(it) }
         )
-        is Event.SyncCreateAccount -> EventWrapper<NoExtraKeys>(
-            { Sync.createAccount.record(it) }
+        is Event.SyncAuthCreateAccount -> EventWrapper<NoExtraKeys>(
+            { SyncAuth.createAccount.record(it) }
         )
-        is Event.SyncSyncNow -> EventWrapper<NoExtraKeys>(
-            { Sync.syncNow.record(it) }
+        is Event.SyncAccountOpened -> EventWrapper<NoExtraKeys>(
+            { SyncAccount.opened.record(it) }
         )
-        is Event.SyncSignOut -> EventWrapper<NoExtraKeys>(
-            { Sync.signOut.record(it) }
+        is Event.SyncAccountClosed -> EventWrapper<NoExtraKeys>(
+            { SyncAccount.closed.record(it) }
+        )
+        is Event.SyncAccountSyncNow -> EventWrapper<NoExtraKeys>(
+            { SyncAccount.syncNow.record(it) }
+        )
+        is Event.SyncAccountSignOut -> EventWrapper<NoExtraKeys>(
+            { SyncAccount.signOut.record(it) }
         )
 
         // Don't track other events with Glean

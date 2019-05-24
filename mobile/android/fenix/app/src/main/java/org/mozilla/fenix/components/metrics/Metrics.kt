@@ -81,13 +81,15 @@ sealed class Event {
     object QRScannerNavigationDenied : Event()
     object LibraryOpened : Event()
     object LibraryClosed : Event()
-    object SyncOpened : Event()
-    object SyncClosed : Event()
-    object SyncSignIn : Event()
-    object SyncScanPairing : Event()
-    object SyncCreateAccount : Event()
-    object SyncSyncNow : Event()
-    object SyncSignOut : Event()
+    object SyncAuthOpened : Event()
+    object SyncAuthClosed : Event()
+    object SyncAuthSignIn : Event()
+    object SyncAuthScanPairing : Event()
+    object SyncAuthCreateAccount : Event()
+    object SyncAccountOpened : Event()
+    object SyncAccountClosed : Event()
+    object SyncAccountSyncNow : Event()
+    object SyncAccountSignOut : Event()
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(

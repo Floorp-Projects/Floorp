@@ -45,11 +45,13 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         job = Job()
         (activity as AppCompatActivity).title = getString(R.string.preferences_account_settings)
         (activity as AppCompatActivity).supportActionBar?.show()
+        requireComponents.analytics.metrics.track(Event.SyncAccountOpened)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         job.cancel()
+        requireComponents.analytics.metrics.track(Event.SyncAccountClosed)
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -97,7 +99,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
 
     private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
-            requireComponents.analytics.metrics.track(Event.SyncSignOut)
+            requireComponents.analytics.metrics.track(Event.SyncAccountSignOut)
             launch {
                 accountManager.logoutAsync().await()
                 Navigation.findNavController(view!!).popBackStack()
@@ -109,7 +111,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
     private fun getClickListenerForSyncNow(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
             // Trigger a sync.
-            requireComponents.analytics.metrics.track(Event.SyncSyncNow)
+            requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
             requireComponents.backgroundServices.syncManager.syncNow()
             // Poll for device events.
             launch {
@@ -182,7 +184,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
             }
         }
     }
-
 
     private val deviceConstellationObserver = object : DeviceConstellationObserver {
         override fun onDevicesUpdate(constellation: ConstellationState) {

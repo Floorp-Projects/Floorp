@@ -138,31 +138,31 @@ events:
     expires: "2020-03-01"
 
 crash_reporter:
-    opened:
-      type: event
-      description: >
-        The crash reporter was displayed
-      bugs:
-      - 1040
-      data_reviews:
-      - TBD
-      notification_emails:
-      - fenix-core@mozilla.com
-      expires: "2020-03-01"
-    closed:
-      type: event
-      description: >
-        The crash reporter was closed
-      extra_keys:
-        crash_submitted:
-          description: "A boolean that tells us whether or not the user submitted a crash report"
-      bugs:
-      - 1040
-      data_reviews:
-      - TBD
-      notification_emails:
-      - fenix-core@mozilla.com
-      expires: "2020-03-01"
+  opened:
+    type: event
+    description: >
+      The crash reporter was displayed
+    bugs:
+    - 1040
+    data_reviews:
+    - TBD
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  closed:
+    type: event
+    description: >
+      The crash reporter was closed
+    extra_keys:
+      crash_submitted:
+        description: "A boolean that tells us whether or not the user submitted a crash report"
+    bugs:
+    - 1040
+    data_reviews:
+    - TBD
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
 
 context_menu:
   item_tapped:
@@ -345,9 +345,9 @@ metrics:
   mozilla_products:
     type: string_list
     description: >
-     A list of all the Mozilla products installed on device. We currently scan for: Firefox, Firefox Beta,
-      Firefox Aurora, Firefox Nightly, Firefox Fdroid, Firefox Lite, Reference Browser, Reference Browser Debug,
-      Fenix, Focus, and Lockbox.
+      A list of all the Mozilla products installed on device. We currently scan for: Firefox, Firefox Beta,
+       Firefox Aurora, Firefox Nightly, Firefox Fdroid, Firefox Lite, Reference Browser, Reference Browser Debug,
+       Fenix, Focus, and Lockbox.
     send_in_pings:
     - metrics
     bugs:
@@ -746,11 +746,11 @@ error_page:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
 
-sync:
+sync_auth:
   opened:
     type: event
     description: >
-      A user opened the sync page
+      A user opened the sync authentication page
     bugs:
     - 1190
     data_reviews:
@@ -772,7 +772,7 @@ sync:
   sign_in:
     type: event
     description: >
-      A user pressed the sign in button on the sync page
+      A user pressed the sign in button on the sync authentication page
     bugs:
     - 1190
     data_reviews:
@@ -783,7 +783,7 @@ sync:
   scan_pairing:
     type: event
     description: >
-      A user pressed the scan pairing button on the sync page
+      A user pressed the scan pairing button on the sync authentication page
     bugs:
     - 1190
     data_reviews:
@@ -794,7 +794,31 @@ sync:
   create_account:
     type: event
     description: >
-      A user pressed the create account button on the sync page
+      A user pressed the create account button on the sync authentication page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
+sync_account:
+  opened:
+    type: event
+    description: >
+      A user opened the sync account page
+    bugs:
+    - 1190
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  closed:
+    type: event
+    description: >
+      A user closed the sync account page
     bugs:
     - 1190
     data_reviews:
@@ -805,7 +829,7 @@ sync:
   sync_now:
     type: event
     description: >
-      A user pressed the sync now button on the sync page
+      A user pressed the sync now button on the sync account page
     bugs:
     - 1190
     data_reviews:
@@ -816,7 +840,7 @@ sync:
   sign_out:
     type: event
     description: >
-      A user pressed the sign out button on the sync page
+      A user pressed the sign out button on the sync account page
     bugs:
     - 1190
     data_reviews:
