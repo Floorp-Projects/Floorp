@@ -81,10 +81,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             "action": "store_true",
             "default": False,
         }],
-        [["--scm-level"], {
-            "dest": "scm_level",
-            "help": "dummy option",
-        }],
         [["--branch"], {
             "dest": "branch",
             "help": "dummy option",

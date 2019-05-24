@@ -568,14 +568,6 @@ BUILD_BASE_CONFIG_OPTIONS = [
         "type": "string",
         "dest": "branch",
         "help": "This sets the branch we will be building this for."}],
-    [['--scm-level'], {
-        "action": "store",
-        "type": "int",
-        "dest": "scm_level",
-        "default": 1,
-        "help": "This sets the SCM level for the branch being built."
-                " See https://www.mozilla.org/en-US/about/"
-                "governance/policies/commit/access-policy/"}],
     [['--enable-pgo'], {
         "action": "store_true",
         "dest": "pgo_build",

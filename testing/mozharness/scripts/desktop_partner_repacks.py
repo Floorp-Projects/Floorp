@@ -85,7 +85,6 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
         if os.getenv('UPSTREAM_TASKIDS'):
             self.info('Overriding taskIds with %s' % os.getenv('UPSTREAM_TASKIDS'))
             self.config['taskIds'] = os.getenv('UPSTREAM_TASKIDS').split()
-        self.config['scm_level'] = os.environ.get('MOZ_SCM_LEVEL', '1')
 
         if 'version' not in self.config:
             self.fatal("Version (-v) not supplied.")
