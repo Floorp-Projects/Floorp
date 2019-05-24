@@ -15473,20 +15473,21 @@ class CGBindingImplClass(CGClass):
                      []),
                     {"infallible": True}))
 
-        wrapArgs = [Argument('JSContext*', 'aCx'),
-                    Argument('JS::Handle<JSObject*>', 'aGivenProto')]
-        if not descriptor.wrapperCache:
-            wrapReturnType = "bool"
-            wrapArgs.append(Argument('JS::MutableHandle<JSObject*>',
-                                     'aReflector'))
-        else:
-            wrapReturnType = "JSObject*"
-        self.methodDecls.insert(0,
-                                ClassMethod(wrapMethodName, wrapReturnType,
-                                            wrapArgs, virtual=descriptor.wrapperCache,
-                                            breakAfterReturnDecl=" ",
-                                            override=descriptor.wrapperCache,
-                                            body=self.getWrapObjectBody()))
+        if descriptor.concrete:
+            wrapArgs = [Argument('JSContext*', 'aCx'),
+                        Argument('JS::Handle<JSObject*>', 'aGivenProto')]
+            if not descriptor.wrapperCache:
+                wrapReturnType = "bool"
+                wrapArgs.append(Argument('JS::MutableHandle<JSObject*>',
+                                         'aReflector'))
+            else:
+                wrapReturnType = "JSObject*"
+            self.methodDecls.insert(0,
+                                    ClassMethod(wrapMethodName, wrapReturnType,
+                                                wrapArgs, virtual=descriptor.wrapperCache,
+                                                breakAfterReturnDecl=" ",
+                                                override=descriptor.wrapperCache,
+                                                body=self.getWrapObjectBody()))
         if descriptor.hasCEReactions():
             self.methodDecls.insert(0,
                                     ClassMethod("GetDocGroup", "DocGroup*", [],
@@ -15570,7 +15571,9 @@ class CGExampleClass(CGBindingImplClass):
 
     def define(self):
         # Just override CGClass and do our own thing
-        ctordtor = dedent("""
+        nativeType = self.nativeLeafName(self.descriptor)
+
+        ctordtor = fill("""
             ${nativeType}::${nativeType}()
             {
                 // Add |MOZ_COUNT_CTOR(${nativeType});| for a non-refcounted object.
@@ -15580,10 +15583,11 @@ class CGExampleClass(CGBindingImplClass):
             {
                 // Add |MOZ_COUNT_DTOR(${nativeType});| for a non-refcounted object.
             }
-            """)
+            """,
+            nativeType=nativeType)
 
         if self.parentIface:
-            ccImpl = dedent("""
+            ccImpl = fill("""
 
                 // Only needed for refcounted objects.
                 # error "If you don't have members that need cycle collection,
@@ -15596,9 +15600,11 @@ class CGExampleClass(CGBindingImplClass):
                 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
                 NS_INTERFACE_MAP_END_INHERITING(${parentType})
 
-                """)
+                """,
+                nativeType=nativeType,
+                parentType=self.nativeLeafName(self.parentDesc))
         else:
-            ccImpl = dedent("""
+            ccImpl = fill("""
 
                 // Only needed for refcounted objects.
                 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(${nativeType})
@@ -15609,31 +15615,35 @@ class CGExampleClass(CGBindingImplClass):
                   NS_INTERFACE_MAP_ENTRY(nsISupports)
                 NS_INTERFACE_MAP_END
 
-                """)
+                """,
+                nativeType=nativeType)
 
-        if self.descriptor.wrapperCache:
-            reflectorArg = ""
-            reflectorPassArg = ""
-            returnType = "JSObject*"
-        else:
-            reflectorArg = ", JS::MutableHandle<JSObject*> aReflector"
-            reflectorPassArg = ", aReflector"
-            returnType = "bool"
-        classImpl = ccImpl + ctordtor + "\n" + dedent("""
-            ${returnType}
-            ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto${reflectorArg})
-            {
-              return ${ifaceName}_Binding::Wrap(aCx, this, aGivenProto${reflectorPassArg});
-            }
+        classImpl = ccImpl + ctordtor + "\n"
+        if self.descriptor.concrete:
+            if self.descriptor.wrapperCache:
+                reflectorArg = ""
+                reflectorPassArg = ""
+                returnType = "JSObject*"
+            else:
+                reflectorArg = ", JS::MutableHandle<JSObject*> aReflector"
+                reflectorPassArg = ", aReflector"
+                returnType = "bool"
+            classImpl += fill(
+                """
+                ${returnType}
+                ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto${reflectorArg})
+                {
+                  return ${ifaceName}_Binding::Wrap(aCx, this, aGivenProto${reflectorPassArg});
+                }
 
-            """)
-        return string.Template(classImpl).substitute(
-            ifaceName=self.descriptor.name,
-            nativeType=self.nativeLeafName(self.descriptor),
-            parentType=self.nativeLeafName(self.parentDesc) if self.parentIface else "",
-            returnType=returnType,
-            reflectorArg=reflectorArg,
-            reflectorPassArg=reflectorPassArg)
+                """,
+                returnType=returnType,
+                nativeType=nativeType,
+                reflectorArg=reflectorArg,
+                ifaceName=self.descriptor.name,
+                reflectorPassArg=reflectorPassArg)
+
+        return classImpl
 
     @staticmethod
     def nativeLeafName(descriptor):
