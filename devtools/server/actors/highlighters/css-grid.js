@@ -136,6 +136,9 @@ const gCachedGridPattern = new Map();
  *
  * @param {String} options.color
  *        The color that should be used to draw the highlighter for this grid.
+ * @param {Number} options.globalAlpha
+ *        The alpha (transparency) value that should be used to draw the highlighter for
+ *        this grid.
  * @param {Boolean} options.showAllGridAreas
  *        Shows all the grid area highlights for the current grid if isShown is
  *        true.
@@ -494,6 +497,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     return this.canvas.getCanvasContext("2d");
   }
 
+  get globalAlpha() {
+    return this.options.globalAlpha || 1;
+  }
+
   getElement(id) {
     return this.markup.getElement(this.ID_CLASS_PREFIX + id);
   }
@@ -550,7 +557,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     ctx.strokeStyle = this.color;
-    ctx.globalAlpha = GRID_GAP_ALPHA;
+    ctx.globalAlpha = GRID_GAP_ALPHA * this.globalAlpha;
     ctx.stroke();
     ctx.restore();
 
@@ -880,6 +887,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.ctx.save();
     this.ctx.translate(offset - canvasX, offset - canvasY);
     this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
+    this.ctx.globalAlpha = this.globalAlpha;
     this.ctx.strokeStyle = this.color;
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
@@ -1210,6 +1218,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.ctx.lineWidth = 2 * displayPixelRatio;
     this.ctx.strokeStyle = this.color;
     this.ctx.fillStyle = "white";
+    this.ctx.globalAlpha = this.globalAlpha;
 
     // See param definitions of drawBubbleRect.
     const radius = 2 * displayPixelRatio;
@@ -1449,7 +1458,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
 
     this.ctx.strokeStyle = this.color;
-    this.ctx.globalAlpha = GRID_LINES_PROPERTIES[lineType].alpha;
+    this.ctx.globalAlpha = GRID_LINES_PROPERTIES[lineType].alpha * this.globalAlpha;
 
     if (GRID_LINES_PROPERTIES[lineType].lineWidth) {
       this.ctx.lineWidth = GRID_LINES_PROPERTIES[lineType].lineWidth * devicePixelRatio;
