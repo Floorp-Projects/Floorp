@@ -20,6 +20,9 @@ sealed class MediaState {
 
     /**
      * Playing: [media] of [session] is currently playing.
+     *
+     * @property session The [Session] with currently playing media.
+     * @property media The playing [Media] of the [Session].
      */
     data class Playing(
         val session: Session,
@@ -28,6 +31,9 @@ sealed class MediaState {
 
     /**
      * Paused: [media] of [session] is currently paused.
+     *
+     * @property session The [Session] with currently paused media.
+     * @property media The paused [Media] of the [Session].
      */
     data class Paused(
         val session: Session,

@@ -29,6 +29,8 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
+import mozilla.components.feature.media.notification.MediaNotificationFeature
+import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.HistoryDelegate
@@ -84,6 +86,12 @@ open class DefaultComponents(private val applicationContext: Context) {
 
             RecordingDevicesNotificationFeature(applicationContext, sessionManager = this)
                 .enable()
+            val stateMachine = MediaStateMachine(sessionManager = this)
+
+            MediaNotificationFeature(applicationContext, stateMachine)
+                .enable()
+
+            stateMachine.start()
         }
     }
 
