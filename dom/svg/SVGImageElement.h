@@ -95,6 +95,8 @@ class SVGImageElement : public SVGImageElementBase,
 
   already_AddRefed<Promise> Decode(ErrorResult& aRv);
 
+  static nsCSSPropertyID GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum);
+
  protected:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
 

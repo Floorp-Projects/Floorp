@@ -15,6 +15,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "imgINotificationObserver.h"
+#include "SVGGeometryProperty.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
@@ -30,6 +31,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
+namespace SVGT = SVGGeometryProperty::Tags;
 
 // ---------------------------------------------------------------------
 // nsQueryFrame methods
@@ -177,7 +179,8 @@ gfx::Matrix nsSVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
                                                      int32_t aNativeHeight) {
   float x, y, width, height;
   SVGImageElement* element = static_cast<SVGImageElement*>(GetContent());
-  element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      element, &x, &y, &width, &height);
 
   Matrix viewBoxTM = SVGContentUtils::GetViewBoxTransform(
       width, height, 0, 0, aNativeWidth, aNativeHeight,
@@ -189,13 +192,34 @@ gfx::Matrix nsSVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
 gfx::Matrix nsSVGImageFrame::GetVectorImageTransform() {
   float x, y, width, height;
   SVGImageElement* element = static_cast<SVGImageElement*>(GetContent());
-  element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      element, &x, &y, &width, &height);
 
   // No viewBoxTM needed here -- our height/width overrides any concept of
   // "native size" that the SVG image has, and it will handle viewBox and
   // preserveAspectRatio on its own once we give it a region to draw into.
 
   return gfx::Matrix::Translation(x, y);
+}
+
+bool nsSVGImageFrame::GetIntrinsicImageSize(
+    mozilla::gfx::Size& aIntrinsicSize) const {
+  if (!mImageContainer) {
+    return false;
+  }
+
+  int32_t width, height;
+  if (NS_FAILED(mImageContainer->GetWidth(&width))) {
+    return false;
+  }
+
+  if (NS_FAILED(mImageContainer->GetHeight(&height))) {
+    return false;
+  }
+
+  aIntrinsicSize = {float(width), float(height)};
+
+  return true;
 }
 
 bool nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
@@ -241,7 +265,8 @@ void nsSVGImageFrame::PaintSVG(gfxContext& aContext,
 
   float x, y, width, height;
   SVGImageElement* imgElem = static_cast<SVGImageElement*>(GetContent());
-  imgElem->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      imgElem, &x, &y, &width, &height);
   NS_ASSERTION(width > 0 && height > 0,
                "Should only be painting things with valid width/height");
 
@@ -347,8 +372,8 @@ nsIFrame* nsSVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint) {
 
   Rect rect;
   SVGImageElement* element = static_cast<SVGImageElement*>(GetContent());
-  element->GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width, &rect.height,
-                                   nullptr);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      element, &rect.x, &rect.y, &rect.width, &rect.height);
 
   if (!rect.Contains(ToPoint(aPoint))) {
     return nullptr;
@@ -402,7 +427,8 @@ void nsSVGImageFrame::ReflowSVG() {
 
   float x, y, width, height;
   SVGImageElement* element = static_cast<SVGImageElement*>(GetContent());
-  element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      element, &x, &y, &width, &height);
 
   Rect extent(x, y, width, height);
 
