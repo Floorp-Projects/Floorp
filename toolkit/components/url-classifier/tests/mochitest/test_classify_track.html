@@ -30,6 +30,7 @@
 
     return new Promise(function(resolve, reject) {
       var track = document.createElement("track");
+      track.track.mode = "hidden";
       track.src = validtrack_url;
       video.appendChild(track);
 
@@ -59,6 +60,7 @@
 
     return new Promise(function(resolve, reject) {
       var track = document.createElement("track");
+      track.track.mode = "hidden";
       track.src = malware_url;
       video.appendChild(track);
 
@@ -88,7 +90,7 @@
 
     return new Promise(function(resolve, reject) {
       var track = document.createElement("track");
-
+      track.track.mode = "hidden";
       // Add a query string parameter here to avoid url classifier bypass classify
       // because of cache.
       track.src = malware_url + "?testsbon";
