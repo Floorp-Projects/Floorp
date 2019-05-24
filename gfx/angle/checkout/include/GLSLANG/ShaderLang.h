@@ -230,7 +230,7 @@ const ShCompileOptions SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW = UINT64_C
 
 // With the flag enabled the GLSL/ESSL vertex shader is modified to include code for viewport
 // selection in the following way:
-// - Code to enable the extension NV_viewport_array2 is included.
+// - Code to enable the extension ARB_shader_viewport_layer_array/NV_viewport_array2 is included.
 // - Code to select the viewport index or layer is inserted at the beginning of main after
 // ViewID_OVR's initialization.
 // - A declaration of the uniform multiviewBaseViewLayerIndex.

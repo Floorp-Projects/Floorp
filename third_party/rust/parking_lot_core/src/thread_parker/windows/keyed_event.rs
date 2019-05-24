@@ -5,18 +5,26 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::Instant;
-use std::ptr;
-use std::mem;
-
-use winapi::shared::minwindef::{TRUE, ULONG};
-use winapi::shared::ntdef::NTSTATUS;
-use winapi::shared::ntstatus::{STATUS_SUCCESS, STATUS_TIMEOUT};
-use winapi::um::handleapi::CloseHandle;
-use winapi::um::libloaderapi::{GetModuleHandleA, GetProcAddress};
-use winapi::um::winnt::{ACCESS_MASK, GENERIC_READ, GENERIC_WRITE, LPCSTR};
-use winapi::um::winnt::{BOOLEAN, HANDLE, LARGE_INTEGER, PHANDLE, PLARGE_INTEGER, PVOID};
+use core::{mem, ptr};
+use std::{
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Instant,
+};
+use winapi::{
+    shared::{
+        minwindef::{TRUE, ULONG},
+        ntdef::NTSTATUS,
+        ntstatus::{STATUS_SUCCESS, STATUS_TIMEOUT},
+    },
+    um::{
+        handleapi::CloseHandle,
+        libloaderapi::{GetModuleHandleA, GetProcAddress},
+        winnt::{
+            ACCESS_MASK, BOOLEAN, GENERIC_READ, GENERIC_WRITE, HANDLE, LARGE_INTEGER, LPCSTR,
+            PHANDLE, PLARGE_INTEGER, PVOID,
+        },
+    },
+};
 
 const STATE_UNPARKED: usize = 0;
 const STATE_PARKED: usize = 1;
@@ -40,73 +48,82 @@ pub struct KeyedEvent {
 }
 
 impl KeyedEvent {
+    #[inline]
     unsafe fn wait_for(&self, key: PVOID, timeout: PLARGE_INTEGER) -> NTSTATUS {
         (self.NtWaitForKeyedEvent)(self.handle, key, 0, timeout)
     }
 
+    #[inline]
     unsafe fn release(&self, key: PVOID) -> NTSTATUS {
         (self.NtReleaseKeyedEvent)(self.handle, key, 0, ptr::null_mut())
     }
 
     #[allow(non_snake_case)]
-    pub unsafe fn create() -> Option<KeyedEvent> {
-        let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as LPCSTR);
-        if ntdll.is_null() {
-            return None;
-        }
+    pub fn create() -> Option<KeyedEvent> {
+        unsafe {
+            let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as LPCSTR);
+            if ntdll.is_null() {
+                return None;
+            }
 
-        let NtCreateKeyedEvent = GetProcAddress(ntdll, b"NtCreateKeyedEvent\0".as_ptr() as LPCSTR);
-        if NtCreateKeyedEvent.is_null() {
-            return None;
-        }
-        let NtReleaseKeyedEvent =
-            GetProcAddress(ntdll, b"NtReleaseKeyedEvent\0".as_ptr() as LPCSTR);
-        if NtReleaseKeyedEvent.is_null() {
-            return None;
-        }
-        let NtWaitForKeyedEvent =
-            GetProcAddress(ntdll, b"NtWaitForKeyedEvent\0".as_ptr() as LPCSTR);
-        if NtWaitForKeyedEvent.is_null() {
-            return None;
-        }
+            let NtCreateKeyedEvent =
+                GetProcAddress(ntdll, b"NtCreateKeyedEvent\0".as_ptr() as LPCSTR);
+            if NtCreateKeyedEvent.is_null() {
+                return None;
+            }
+            let NtReleaseKeyedEvent =
+                GetProcAddress(ntdll, b"NtReleaseKeyedEvent\0".as_ptr() as LPCSTR);
+            if NtReleaseKeyedEvent.is_null() {
+                return None;
+            }
+            let NtWaitForKeyedEvent =
+                GetProcAddress(ntdll, b"NtWaitForKeyedEvent\0".as_ptr() as LPCSTR);
+            if NtWaitForKeyedEvent.is_null() {
+                return None;
+            }
 
-        let NtCreateKeyedEvent: extern "system" fn(
-            KeyedEventHandle: PHANDLE,
-            DesiredAccess: ACCESS_MASK,
-            ObjectAttributes: PVOID,
-            Flags: ULONG,
-        ) -> NTSTATUS = mem::transmute(NtCreateKeyedEvent);
-        let mut handle = mem::uninitialized();
-        let status = NtCreateKeyedEvent(
-            &mut handle,
-            GENERIC_READ | GENERIC_WRITE,
-            ptr::null_mut(),
-            0,
-        );
-        if status != STATUS_SUCCESS {
-            return None;
-        }
+            let NtCreateKeyedEvent: extern "system" fn(
+                KeyedEventHandle: PHANDLE,
+                DesiredAccess: ACCESS_MASK,
+                ObjectAttributes: PVOID,
+                Flags: ULONG,
+            ) -> NTSTATUS = mem::transmute(NtCreateKeyedEvent);
+            let mut handle = mem::uninitialized();
+            let status = NtCreateKeyedEvent(
+                &mut handle,
+                GENERIC_READ | GENERIC_WRITE,
+                ptr::null_mut(),
+                0,
+            );
+            if status != STATUS_SUCCESS {
+                return None;
+            }
 
-        Some(KeyedEvent {
-            handle,
-            NtReleaseKeyedEvent: mem::transmute(NtReleaseKeyedEvent),
-            NtWaitForKeyedEvent: mem::transmute(NtWaitForKeyedEvent),
-        })
+            Some(KeyedEvent {
+                handle,
+                NtReleaseKeyedEvent: mem::transmute(NtReleaseKeyedEvent),
+                NtWaitForKeyedEvent: mem::transmute(NtWaitForKeyedEvent),
+            })
+        }
     }
 
-    pub unsafe fn prepare_park(&'static self, key: &AtomicUsize) {
+    #[inline]
+    pub fn prepare_park(&'static self, key: &AtomicUsize) {
         key.store(STATE_PARKED, Ordering::Relaxed);
     }
 
-    pub unsafe fn timed_out(&'static self, key: &AtomicUsize) -> bool {
+    #[inline]
+    pub fn timed_out(&'static self, key: &AtomicUsize) -> bool {
         key.load(Ordering::Relaxed) == STATE_TIMED_OUT
     }
 
+    #[inline]
     pub unsafe fn park(&'static self, key: &AtomicUsize) {
         let status = self.wait_for(key as *const _ as PVOID, ptr::null_mut());
         debug_assert_eq!(status, STATUS_SUCCESS);
     }
 
+    #[inline]
     pub unsafe fn park_until(&'static self, key: &AtomicUsize, timeout: Instant) -> bool {
         let now = Instant::now();
         if timeout <= now {
@@ -152,6 +169,7 @@ impl KeyedEvent {
         false
     }
 
+    #[inline]
     pub unsafe fn unpark_lock(&'static self, key: &AtomicUsize) -> UnparkHandle {
         // If the state was STATE_PARKED then we need to wake up the thread
         if key.swap(STATE_UNPARKED, Ordering::Relaxed) == STATE_PARKED {
@@ -169,6 +187,7 @@ impl KeyedEvent {
 }
 
 impl Drop for KeyedEvent {
+    #[inline]
     fn drop(&mut self) {
         unsafe {
             let ok = CloseHandle(self.handle);
@@ -188,6 +207,7 @@ pub struct UnparkHandle {
 impl UnparkHandle {
     // Wakes up the parked thread. This should be called after the queue lock is
     // released to avoid blocking the queue for too long.
+    #[inline]
     pub unsafe fn unpark(self) {
         if !self.key.is_null() {
             let status = self.keyed_event.release(self.key as PVOID);

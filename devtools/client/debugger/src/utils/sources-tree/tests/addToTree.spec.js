@@ -78,6 +78,70 @@ describe("sources-tree", () => {
       expect(source1Node.name).toBe("source1.js");
     });
 
+    it("builds a path-based tree for webpack URLs", () => {
+      const source1 = makeMockSource("webpack:///foo/source1.js", "actor1");
+      const tree = createDirectoryNode("root", "", []);
+
+      addToTree(tree, source1, "http://example.com/", "");
+      expect(tree.contents).toHaveLength(1);
+
+      const base = tree.contents[0];
+      expect(base.name).toBe("webpack://");
+      expect(base.contents).toHaveLength(1);
+
+      const fooNode = base.contents[0];
+      expect(fooNode.name).toBe("foo");
+      expect(fooNode.contents).toHaveLength(1);
+
+      const source1Node = fooNode.contents[0];
+      expect(source1Node.name).toBe("source1.js");
+    });
+
+    it("builds a path-based tree for webpack URLs with absolute path", () => {
+      const source1 = makeMockSource(
+        "webpack:////Users/foo/source1.js",
+        "actor1"
+      );
+      const tree = createDirectoryNode("root", "", []);
+
+      addToTree(tree, source1, "http://example.com/", "");
+      expect(tree.contents).toHaveLength(1);
+
+      const base = tree.contents[0];
+      expect(base.name).toBe("webpack://");
+      expect(base.contents).toHaveLength(1);
+
+      const emptyNode = base.contents[0];
+      expect(emptyNode.name).toBe("");
+      expect(emptyNode.contents).toHaveLength(1);
+
+      const userNode = emptyNode.contents[0];
+      expect(userNode.name).toBe("Users");
+      expect(userNode.contents).toHaveLength(1);
+
+      const fooNode = userNode.contents[0];
+      expect(fooNode.name).toBe("foo");
+      expect(fooNode.contents).toHaveLength(1);
+
+      const source1Node = fooNode.contents[0];
+      expect(source1Node.name).toBe("source1.js");
+    });
+
+    it("handles url with no filename", function() {
+      const source1 = makeMockSource("http://example.com/", "actor1");
+      const tree = createDirectoryNode("root", "", []);
+
+      addToTree(tree, source1, "http://example.com/", "");
+      expect(tree.contents).toHaveLength(1);
+
+      const base = tree.contents[0];
+      expect(base.name).toBe("example.com");
+      expect(base.contents).toHaveLength(1);
+
+      const indexNode = base.contents[0];
+      expect(indexNode.name).toBe("(index)");
+    });
+
     it("does not mangle encoded URLs", () => {
       const sourceName = // eslint-disable-next-line max-len
         "B9724220.131821496;dc_ver=42.111;sz=468x60;u_sd=2;dc_adk=2020465299;ord=a53rpc;dc_rfl=1,https%3A%2F%2Fdavidwalsh.name%2F$0;xdt=1";
@@ -291,39 +355,6 @@ describe("sources-tree", () => {
       sources.forEach(source =>
         addToTree(tree, source, "https://unpkg.com/", "FakeThread")
       );
-      expect(formatTree(tree)).toMatchSnapshot();
-    });
-
-    it.skip("uses debuggeeUrl as default", () => {
-      const testData = [
-        {
-          url: "components/TodoTextInput.js",
-        },
-        {
-          url: "components/Header.js",
-        },
-        {
-          url: "reducers/index.js",
-        },
-        {
-          url: "components/TodoItem.js",
-        },
-        {
-          url: "resource://gre/modules/ExtensionContent.jsm",
-        },
-        {
-          url:
-            "https://voz37vlg5.codesandbox.io/static/js/components/TodoItem.js",
-        },
-        {
-          url: "index.js",
-        },
-      ];
-
-      const domain = "http://localhost:4242";
-      const sources = createSourcesList(testData);
-      const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source => addToTree(tree, source, domain, "FakeThread"));
       expect(formatTree(tree)).toMatchSnapshot();
     });
   });

@@ -7385,6 +7385,9 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     if (!initializerExpr) {
       return null();
     }
+
+    handler_.checkAndSetIsDirectRHSAnonFunction(initializerExpr);
+
     wholeInitializerPos = pos();
     wholeInitializerPos.begin = firstTokenPos.begin;
   } else {

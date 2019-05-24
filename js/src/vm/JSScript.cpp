@@ -3962,7 +3962,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
 #ifdef JS_STRUCTURED_SPEW
   // We want this to happen after line number initialization to allow filtering
   // to work.
-  script->setSpewEnabled(StructuredSpewer::enabled(script));
+  script->setSpewEnabled(cx->spewer().enabled(script));
 #endif
 
 #ifdef DEBUG

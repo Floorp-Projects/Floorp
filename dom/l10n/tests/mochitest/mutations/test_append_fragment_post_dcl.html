@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test L10n Mutations for appending a fragment after DOMContentLoaded</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("DOMContentLoaded", function() {
+    let frag = document.createDocumentFragment();
+    let elem = document.createElement("div");
+    document.l10n.setAttributes(elem, "crash-reports-title");
+    frag.appendChild(elem);
+
+    let elem2 = document.createElement("div");
+    document.l10n.setAttributes(elem2, "crash-reports-title");
+    frag.appendChild(elem2);
+
+    is(elem.textContent.length, 0);
+    is(elem2.textContent.length, 0);
+
+    let verifyL10n = () => {
+      if (elem.textContent.length > 0 && elem2.textContent.length > 0) {
+        window.removeEventListener("MozAfterPaint", verifyL10n);
+        SimpleTest.finish();
+      }
+    };
+    window.addEventListener("MozAfterPaint", verifyL10n);
+    document.body.appendChild(frag);
+  });
+  </script>
+</head>
+<body>
+</body>
+</html>

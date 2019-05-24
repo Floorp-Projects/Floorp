@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// clang-format off
+
 #ifndef GLCONSTS_H_
 #define GLCONSTS_H_
 
@@ -7000,3 +7002,5 @@
 #define LOCAL_WGL_VIDEO_OUT_STACKED_FIELDS_2_1               0x20CC
 
 #endif // GLCONSTS_H_
+
+// clang-format on

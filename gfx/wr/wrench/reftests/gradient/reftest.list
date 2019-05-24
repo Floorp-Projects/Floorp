@@ -18,7 +18,7 @@ platform(linux,mac) fuzzy(1,35000) == linear-stops.yaml linear-stops-ref.png
 fuzzy(1,20000) == linear.yaml linear-ref.yaml
 fuzzy(1,20000) == linear-reverse.yaml linear-ref.yaml
 
-fuzzy(1,15200) == linear-aligned-clip.yaml linear-aligned-clip-ref.yaml
+skip_on(android,debug) fuzzy(1,15200) == linear-aligned-clip.yaml linear-aligned-clip-ref.yaml  # Android: GL error 502 at blit_framebuffer
 
 platform(linux,mac) fuzzy(1,80000) == radial-circle.yaml radial-circle-ref.png
 platform(linux,mac) fuzzy(1,80000) == radial-ellipse.yaml radial-ellipse-ref.png

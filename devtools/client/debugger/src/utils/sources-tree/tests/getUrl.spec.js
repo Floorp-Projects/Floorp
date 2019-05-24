@@ -88,10 +88,20 @@ describe("getUrl", () => {
   it("creates a group name for webpack", () => {
     const urlObject = getURL(
       createMockSource({
-        url: "webpack://src/component.jsx",
+        url: "webpack:///src/component.jsx",
         id: "c3",
       })
     );
     expect(urlObject.group).toBe("webpack://");
+  });
+
+  it("creates a group name for angular source", () => {
+    const urlObject = getURL(
+      createMockSource({
+        url: "ng://src/component.jsx",
+        id: "c3",
+      })
+    );
+    expect(urlObject.group).toBe("ng://");
   });
 });

@@ -37,7 +37,7 @@ uint32_t CPU::GetCacheType() {
   // Copy the content of the cache type register to a core register.
   __asm__ __volatile__ ("mrs %[ctr], ctr_el0"  // NOLINT
                         : [ctr] "=r" (cache_type_register));
-  VIXL_ASSERT(is_uint32(cache_type_register));
+  VIXL_ASSERT(IsUint32(cache_type_register));
   return cache_type_register;
 #else
   // This will lead to a cache with 1 byte long lines, which is fine since

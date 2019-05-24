@@ -410,6 +410,12 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_MAX_VARYING_VECTORS:
       return JS::Int32Value(mGLMaxFragmentInputVectors);
 
+    case LOCAL_GL_MAX_VIEWS_OVR:
+      if (IsExtensionEnabled(WebGLExtensionID::OVR_multiview2)) {
+        return JS::NumberValue(mGLMaxMultiviewViews);
+      }
+      break;
+
     case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS: {
       uint32_t length = mCompressedTextureFormats.Length();
       JSObject* obj = dom::Uint32Array::Create(

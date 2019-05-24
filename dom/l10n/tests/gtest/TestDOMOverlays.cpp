@@ -16,7 +16,7 @@ using mozilla::NullPrincipal;
 using namespace mozilla::dom;
 using namespace mozilla::dom::l10n;
 
-already_AddRefed<Document> SetUpDocument() {
+static already_AddRefed<Document> SetUpDocument() {
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
   nsCOMPtr<nsIPrincipal> principal =
