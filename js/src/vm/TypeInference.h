@@ -31,7 +31,6 @@
 namespace js {
 
 class TypeConstraint;
-class JitScript;
 class TypeZone;
 class CompilerConstraintList;
 class HeapTypeSetKey;
@@ -39,6 +38,7 @@ class HeapTypeSetKey;
 namespace jit {
 
 struct IonScript;
+class JitScript;
 class TempAllocator;
 
 }  // namespace jit
@@ -88,7 +88,7 @@ class MOZ_RAII AutoSweepObjectGroup : public AutoSweepBase {
 class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
 #ifdef DEBUG
   Zone* zone_;
-  JitScript* jitScript_;
+  jit::JitScript* jitScript_;
 #endif
 
  public:
@@ -96,7 +96,7 @@ class MOZ_RAII AutoSweepJitScript : public AutoSweepBase {
 #ifdef DEBUG
   inline ~AutoSweepJitScript();
 
-  JitScript* jitScript() const { return jitScript_; }
+  jit::JitScript* jitScript() const { return jitScript_; }
   Zone* zone() const { return zone_; }
 #endif
 };

@@ -14,6 +14,7 @@
 class JSScript;
 
 namespace js {
+namespace jit {
 
 // [SMDOC] JitScript
 //
@@ -78,7 +79,7 @@ class alignas(uintptr_t) JitScript final {
   friend class ::JSScript;
 
   // Allocated space for fallback IC stubs.
-  jit::FallbackICStubSpace fallbackStubSpace_ = {};
+  FallbackICStubSpace fallbackStubSpace_ = {};
 
   // The freeze constraints added to stack type sets will only directly
   // invalidate the script containing those stack type sets. This Vector
@@ -110,9 +111,9 @@ class alignas(uintptr_t) JitScript final {
   };
   Flags flags_ = {};  // Zero-initialize flags.
 
-  jit::ICEntry* icEntries() {
+  ICEntry* icEntries() {
     uint8_t* base = reinterpret_cast<uint8_t*>(this);
-    return reinterpret_cast<jit::ICEntry*>(base + offsetOfICEntries());
+    return reinterpret_cast<ICEntry*>(base + offsetOfICEntries());
   }
 
   StackTypeSet* typeArrayDontCheckGeneration() {
@@ -168,7 +169,7 @@ class alignas(uintptr_t) JitScript final {
   }
 
   uint32_t numICEntries() const {
-    return (typeSetOffset_ - offsetOfICEntries()) / sizeof(jit::ICEntry);
+    return (typeSetOffset_ - offsetOfICEntries()) / sizeof(ICEntry);
   }
   uint32_t numTypeSets() const {
     return (bytecodeTypeMapOffset_ - typeSetOffset_) / sizeof(StackTypeSet);
@@ -268,7 +269,7 @@ class alignas(uintptr_t) JitScript final {
     fallbackStubSpace_.freeAllAfterMinorGC(zone);
   }
 
-  jit::FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
+  FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* data,
                               size_t* fallbackStubs) const {
@@ -279,7 +280,7 @@ class alignas(uintptr_t) JitScript final {
     *fallbackStubs += fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
   }
 
-  jit::ICEntry& icEntry(size_t index) {
+  ICEntry& icEntry(size_t index) {
     MOZ_ASSERT(index < numICEntries());
     return icEntries()[index];
   }
@@ -290,15 +291,14 @@ class alignas(uintptr_t) JitScript final {
   void trace(JSTracer* trc);
   void purgeOptimizedStubs(JSScript* script);
 
-  jit::ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
+  ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
 
-  jit::ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
-  jit::ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                         jit::ICEntry* prevLookedUpEntry);
+  ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
+  ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
+                                    ICEntry* prevLookedUpEntry);
 
-  jit::ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
-  jit::ICEntry& icEntryFromPCOffset(uint32_t pcOffset,
-                                    jit::ICEntry* prevLookedUpEntry);
+  ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
+  ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry);
 };
 
 // Ensures no JitScripts are purged in the current zone.
@@ -314,6 +314,7 @@ class MOZ_RAII AutoKeepJitScripts {
   inline ~AutoKeepJitScripts();
 };
 
+}  // namespace jit
 }  // namespace js
 
 #endif /* jit_JitScript_h */
