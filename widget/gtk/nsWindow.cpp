@@ -4242,8 +4242,7 @@ LayoutDeviceIntSize nsWindow::GetSafeWindowSize(LayoutDeviceIntSize aSize) {
   LayoutDeviceIntSize result = aSize;
   int32_t maxSize = 32767;
   if (mLayerManager && mLayerManager->AsKnowsCompositor()) {
-    maxSize = std::min(maxSize,
-                       mLayerManager->AsKnowsCompositor()->GetMaxTextureSize());
+    maxSize = std::min(maxSize, mLayerManager->AsKnowsCompositor()->GetMaxTextureSize());
   }
   if (result.width > maxSize) {
     result.width = maxSize;

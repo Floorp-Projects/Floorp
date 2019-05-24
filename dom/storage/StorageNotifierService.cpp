@@ -75,8 +75,8 @@ void StorageNotifierService::Broadcast(StorageEvent* aEvent,
 
     // No reasons to continue if the principal of the event doesn't match with
     // the window's one.
-    if (!StorageUtils::PrincipalsEqual(
-            aEvent->GetPrincipal(), observer->GetEffectiveStoragePrincipal())) {
+    if (!StorageUtils::PrincipalsEqual(aEvent->GetPrincipal(),
+                                       observer->GetEffectiveStoragePrincipal())) {
       continue;
     }
 

@@ -76,7 +76,7 @@ class FontList {
    * do not appear in this master list, but are referred to as aliases (see
    * SetAliases below); the alias list need not be populated before the font
    * list is shared to content processes and used.
-   *
+   * 
    * Only used in the parent process.
    */
   void SetFamilyNames(const nsTArray<Family::InitData>& aFamilies);
@@ -182,12 +182,12 @@ class FontList {
    * to use std::atomic<> for these.
    */
   struct Header {
-    std::atomic<uint32_t> mAllocated;   // Space allocated from this block;
-                                        // must be first field in Header
-    uint32_t mGeneration;               // Font-list generation ID
-    uint32_t mFamilyCount;              // Number of font families in the list
-    std::atomic<uint32_t> mBlockCount;  // Total number of blocks that exist
-    std::atomic<uint32_t> mAliasCount;  // Number of family aliases
+    std::atomic<uint32_t> mAllocated;    // Space allocated from this block;
+                                         // must be first field in Header
+    uint32_t mGeneration;                // Font-list generation ID
+    uint32_t mFamilyCount;               // Number of font families in the list
+    std::atomic<uint32_t> mBlockCount;   // Total number of blocks that exist
+    std::atomic<uint32_t> mAliasCount;   // Number of family aliases
     std::atomic<uint32_t> mLocalFaceCount;  // Number of local face names
     Pointer mFamilies;    // Pointer to array of |mFamilyCount| families
     Pointer mAliases;     // Pointer to array of |mAliasCount| aliases
@@ -254,9 +254,9 @@ class FontList {
     }
 
     RefPtr<mozilla::ipc::SharedMemoryBasic> mShmem;
-    void* mAddr;  // Address where the shared memory block is mapped in this
-                  // process; avoids virtual call to mShmem->memory() each time
-                  // we need to convert between Pointer and a real C++ pointer.
+    void* mAddr; // Address where the shared memory block is mapped in this
+                 // process; avoids virtual call to mShmem->memory() each time
+                 // we need to convert between Pointer and a real C++ pointer.
   };
 
   Header& GetHeader() {

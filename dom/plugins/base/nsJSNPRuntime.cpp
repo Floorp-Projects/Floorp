@@ -66,7 +66,9 @@ struct GCPolicy<nsJSObjWrapper*> {
     (*wrapper)->trace(trc);
   }
 
-  static bool isValid(const nsJSObjWrapper*& wrapper) { return true; }
+  static bool isValid(const nsJSObjWrapper *&wrapper) {
+    return true;
+  }
 };
 }  // namespace JS
 

@@ -55,13 +55,11 @@ void SVGImageContext::MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
     haveContextPaint = true;
     contextPaint->SetStroke(style->mStroke.GetColor(aFromComputedStyle));
   }
-  if (style->mMozContextProperties.bits &
-      StyleContextPropertyBits_FILL_OPACITY) {
+  if (style->mMozContextProperties.bits & StyleContextPropertyBits_FILL_OPACITY) {
     haveContextPaint = true;
     contextPaint->SetFillOpacity(style->mFillOpacity);
   }
-  if (style->mMozContextProperties.bits &
-      StyleContextPropertyBits_STROKE_OPACITY) {
+  if (style->mMozContextProperties.bits & StyleContextPropertyBits_STROKE_OPACITY) {
     haveContextPaint = true;
     contextPaint->SetStrokeOpacity(style->mStrokeOpacity);
   }

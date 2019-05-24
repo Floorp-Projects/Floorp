@@ -134,8 +134,8 @@ void WebGLShader::CompileShader() {
     PrintLongString(mCleanSource.BeginReading(), mCleanSource.Length());
   }
 
-  const bool success = Translate(mCleanSource, mValidator.get(),
-                                 &mValidationLog, &mTranslatedSource);
+  const bool success = Translate(mCleanSource, mValidator.get(), &mValidationLog,
+                        &mTranslatedSource);
 
   if (MOZ_UNLIKELY(kDumpShaders)) {
     printf_stderr("\n==== \\/ \\/ \\/ ====\n");

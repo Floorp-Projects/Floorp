@@ -5,10 +5,10 @@
 
 #include "mozilla/HTMLEditorController.h"
 
-#include "mozilla/EditorCommands.h"    // for StyleUpdatingCommand, etc
-#include "mozilla/mozalloc.h"          // for operator new
-#include "nsControllerCommandTable.h"  // for nsControllerCommandTable
-#include "nsError.h"                   // for NS_OK
+#include "mozilla/EditorCommands.h"      // for StyleUpdatingCommand, etc
+#include "mozilla/mozalloc.h"            // for operator new
+#include "nsControllerCommandTable.h"    // for nsControllerCommandTable
+#include "nsError.h"                     // for NS_OK
 
 namespace mozilla {
 

@@ -1153,7 +1153,8 @@ bool CustomCounterStyle::IsBullet() {
 void CustomCounterStyle::GetNegative(NegativeType& aResult) {
   if (!(mFlags & FLAG_NEGATIVE_INITED)) {
     mFlags |= FLAG_NEGATIVE_INITED;
-    if (!Servo_CounterStyleRule_GetNegative(mRule, &mNegative.before,
+    if (!Servo_CounterStyleRule_GetNegative(mRule,
+                                            &mNegative.before,
                                             &mNegative.after)) {
       if (IsExtendsSystem()) {
         GetExtends()->GetNegative(mNegative);

@@ -45,9 +45,9 @@
 #if ARCH_AARCH64 == 1
 // Those values are copied from the auto generated
 // config file produced by stand alone dav1d build.
-#  define HAVE_AS_FUNC 0
-#  define HAVE_GETAUXVAL 1
-#  define PIC 3
+#define HAVE_AS_FUNC 0
+#define HAVE_GETAUXVAL 1
+#define PIC 3
 #endif
 
 // The following macros are defined from autoconf

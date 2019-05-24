@@ -766,7 +766,9 @@ class WorkerPrivate : public RelativeTimeline {
     return mLoadInfo.mServiceWorkersTestingInWindow;
   }
 
-  bool IsWatchedByDevtools() const { return mLoadInfo.mWatchedByDevtools; }
+  bool IsWatchedByDevtools() const {
+    return mLoadInfo.mWatchedByDevtools;
+  }
 
   // Determine if the worker is currently loading its top level script.
   bool IsLoadingWorkerScript() const { return mLoadingWorkerScript; }

@@ -1756,8 +1756,8 @@ bool gfxPlatformFontList::LoadFontInfo() {
   uint32_t i, endIndex = mNumFamilies;
   fontlist::FontList* list = SharedFontList();
   bool loadCmaps =
-      !list && (!UsesSystemFallback() ||
-                gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback());
+    !list && (!UsesSystemFallback() ||
+              gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback());
 
   // for each font family, load in various font info
   for (i = mStartIndex; i < endIndex; i++) {

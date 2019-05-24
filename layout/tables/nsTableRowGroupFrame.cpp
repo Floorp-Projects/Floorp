@@ -240,8 +240,8 @@ void nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   DisplayOutsetBoxShadow(aBuilder, aLists.BorderBackground());
 
   for (nsTableRowFrame* row = GetFirstRow(); row; row = row->GetNextRow()) {
-    if (!aBuilder->GetDirtyRect().Intersects(row->GetVisualOverflowRect() +
-                                             row->GetNormalPosition())) {
+    if (!aBuilder->GetDirtyRect().Intersects(
+            row->GetVisualOverflowRect() + row->GetNormalPosition())) {
       continue;
     }
     row->PaintCellBackgroundsForFrame(this, aBuilder, aLists,

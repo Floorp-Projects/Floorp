@@ -114,7 +114,7 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
   screen->GetColorDepth(&colorDepth);
   screen->GetPixelDepth(&pixelDepth);
   orientation =
-      static_cast<hal::ScreenOrientation>(bridge->GetScreenOrientation());
+    static_cast<hal::ScreenOrientation>(bridge->GetScreenOrientation());
   angle = bridge->GetScreenAngle();
 
   *aScreenConfiguration =

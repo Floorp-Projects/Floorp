@@ -24,11 +24,13 @@ enum class CellColor : uint8_t {
   Black = uint8_t(MarkColor::Black)
 };
 
-static constexpr CellColor AllCellColors[] = {CellColor::White, CellColor::Gray,
-                                              CellColor::Black};
+static constexpr CellColor AllCellColors[] = {
+  CellColor::White, CellColor::Gray, CellColor::Black
+};
 
-static constexpr CellColor MarkedCellColors[] = {CellColor::Gray,
-                                                 CellColor::Black};
+static constexpr CellColor MarkedCellColors[] = {
+  CellColor::Gray, CellColor::Black
+};
 
 inline CellColor GetCellColor(Cell* cell) {
   if (cell->isMarkedBlack()) {
@@ -57,7 +59,7 @@ inline CellColor ExpectedKeyAndDelegateColor(CellColor keyColor,
   return Max(keyColor, delegateColor);
 }
 
-}  // namespace gc
-}  // namespace js
+} // namespace gc
+} // namespace js
 
 #endif /* gc_Verifier_h */

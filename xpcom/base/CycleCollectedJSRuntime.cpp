@@ -93,7 +93,7 @@
 #endif
 
 #if defined(XP_MACOSX)
-#  include "nsMacUtilsImpl.h"
+# include "nsMacUtilsImpl.h"
 #endif
 
 #include "nsIException.h"
