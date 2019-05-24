@@ -43,10 +43,8 @@ jobs:
         attributes:
             release-type: nightly
         worker:
-            # XXX Temporarily ship Nightly to the alpha track while we ensure it's
-            # correctly built of mozilla-beta
-            # See also https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
-            google-play-track: alpha
+            # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
+            google-play-track: beta
         treeherder:
             symbol: pub(gp-n)
 
