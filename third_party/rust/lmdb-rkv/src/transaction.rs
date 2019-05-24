@@ -5,7 +5,7 @@ use std::marker::PhantomData ;
 use ffi;
 
 use cursor::{RoCursor, RwCursor};
-use environment::Environment;
+use environment::{Environment, Stat};
 use database::Database;
 use error::{Error, Result, lmdb_result};
 use flags::{DatabaseFlags, EnvironmentFlags, WriteFlags};
@@ -101,6 +101,15 @@ pub trait Transaction : Sized {
             lmdb_result(ffi::mdb_dbi_flags(self.txn(), db.dbi(), &mut flags))?;
         }
         Ok(DatabaseFlags::from_bits_truncate(flags))
+    }
+
+    /// Retrieves database statistics.
+    fn stat(&self, db: Database) -> Result<Stat> {
+        unsafe {
+            let mut stat = Stat::new();
+            lmdb_try!(ffi::mdb_stat(self.txn(), db.dbi(), stat.mdb_stat()));
+            Ok(stat)
+        }
     }
 }
 
@@ -651,6 +660,96 @@ mod test {
         for i in 0..n {
             assert_eq!(format!("{}{}", val, i).as_bytes(),
                        txn.get(db, &format!("{}{}", key, i)).unwrap());
+        }
+    }
+
+    #[test]
+    fn test_stat() {
+        let dir = TempDir::new("test").unwrap();
+        let env = Environment::new().open(dir.path()).unwrap();
+        let db = env.create_db(None, DatabaseFlags::empty()).unwrap();
+
+        let mut txn = env.begin_rw_txn().unwrap();
+        txn.put(db, b"key1", b"val1", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key2", b"val2", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key3", b"val3", WriteFlags::empty()).unwrap();
+        txn.commit().unwrap();
+
+        {
+            let txn = env.begin_ro_txn().unwrap();
+            let stat = txn.stat(db).unwrap();
+            assert_eq!(stat.entries(), 3);
+        }
+
+        let mut txn = env.begin_rw_txn().unwrap();
+        txn.del(db, b"key1", None).unwrap();
+        txn.del(db, b"key2", None).unwrap();
+        txn.commit().unwrap();
+
+        {
+            let txn = env.begin_ro_txn().unwrap();
+            let stat = txn.stat(db).unwrap();
+            assert_eq!(stat.entries(), 1);
+        }
+
+        let mut txn = env.begin_rw_txn().unwrap();
+        txn.put(db, b"key4", b"val4", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key5", b"val5", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key6", b"val6", WriteFlags::empty()).unwrap();
+        txn.commit().unwrap();
+
+        {
+            let txn = env.begin_ro_txn().unwrap();
+            let stat = txn.stat(db).unwrap();
+            assert_eq!(stat.entries(), 4);
+        }
+    }
+
+    #[test]
+    fn test_stat_dupsort() {
+        let dir = TempDir::new("test").unwrap();
+        let env = Environment::new().open(dir.path()).unwrap();
+        let db = env.create_db(None, DatabaseFlags::DUP_SORT).unwrap();
+
+        let mut txn = env.begin_rw_txn().unwrap();
+        txn.put(db, b"key1", b"val1", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key1", b"val2", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key1", b"val3", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key2", b"val1", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key2", b"val2", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key2", b"val3", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key3", b"val1", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key3", b"val2", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key3", b"val3", WriteFlags::empty()).unwrap();
+        txn.commit().unwrap();
+
+        {
+            let txn = env.begin_ro_txn().unwrap();
+            let stat = txn.stat(db).unwrap();
+            assert_eq!(stat.entries(), 9);
+        }
+
+        let mut txn = env.begin_rw_txn().unwrap();
+        txn.del(db, b"key1", Some(b"val2")).unwrap();
+        txn.del(db, b"key2", None).unwrap();
+        txn.commit().unwrap();
+
+        {
+            let txn = env.begin_ro_txn().unwrap();
+            let stat = txn.stat(db).unwrap();
+            assert_eq!(stat.entries(), 5);
+        }
+
+        let mut txn = env.begin_rw_txn().unwrap();
+        txn.put(db, b"key4", b"val1", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key4", b"val2", WriteFlags::empty()).unwrap();
+        txn.put(db, b"key4", b"val3", WriteFlags::empty()).unwrap();
+        txn.commit().unwrap();
+
+        {
+            let txn = env.begin_ro_txn().unwrap();
+            let stat = txn.stat(db).unwrap();
+            assert_eq!(stat.entries(), 8);
         }
     }
 

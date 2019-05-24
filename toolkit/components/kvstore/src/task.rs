@@ -86,6 +86,76 @@ macro_rules! task_done {
 /// declare the type of `GetOrCreateTask::result`.
 type RkvStoreTuple = (Arc<RwLock<Rkv>>, SingleStore);
 
+// The threshold for active resizing.
+const RESIZE_RATIO: f32 = 0.85;
+
+/// The threshold (50 MB) to switch the resizing policy from the double size to
+/// the constant increment for active resizing.
+const INCREMENTAL_RESIZE_THRESHOLD: usize = 52_428_800;
+
+/// The incremental resize step (5 MB)
+const INCREMENTAL_RESIZE_STEP: usize = 5_242_880;
+
+/// The LMDB disk page size and mask.
+const PAGE_SIZE: usize = 4096;
+const PAGE_SIZE_MASK: usize = 0b_1111_1111_1111;
+
+/// Round the non-zero size to the multiple of page size greater or equal.
+///
+/// It does not handle the special cases such as size zero and overflow,
+/// because even if that happens (extremely unlikely though), LMDB will
+/// ignore the new size if it's smaller than the current size.
+///
+/// E.g:
+///     [   1 -  4096] -> 4096,
+///     [4097 -  8192] -> 8192,
+///     [8193 - 12286] -> 12286,
+fn round_to_pagesize(size: usize) -> usize {
+    if size & PAGE_SIZE_MASK == 0 {
+        size
+    } else {
+        (size & !PAGE_SIZE_MASK) + PAGE_SIZE
+    }
+}
+
+/// Kvstore employes two auto resizing strategies: active and passive resizing.
+/// They work together to liberate consumers from having to guess the "proper"
+/// size of the store upfront. See more detail about this in Bug 1543861.
+///
+/// Active resizing that is performed at the store startup.
+///
+/// It either increases the size in double, or by a constant size if its size
+/// reaches INCREMENTAL_RESIZE_THRESHOLD.
+///
+/// Note that on Linux / MAC OSX, the increased size would only take effect if
+/// there is a write transaction committed afterwards.
+fn active_resize(env: &Rkv) -> Result<(), StoreError> {
+    let info = env.info()?;
+    let current_size = info.map_size();
+    let size;
+
+    if current_size < INCREMENTAL_RESIZE_THRESHOLD {
+        size = current_size << 1;
+    } else {
+        size = current_size + INCREMENTAL_RESIZE_STEP;
+    }
+
+    env.set_map_size(size)?;
+    Ok(())
+}
+
+/// Passive resizing that is performed when the MAP_FULL error occurs. It
+/// increases the store with a `wanted` size.
+///
+/// Note that the `wanted` size must be rounded to a multiple of page size
+/// by using `round_to_pagesize`.
+fn passive_resize(env: &Rkv, wanted: usize) -> Result<(), StoreError> {
+    let info = env.info()?;
+    let current_size = info.map_size();
+    env.set_map_size(current_size + wanted)?;
+    Ok(())
+}
+
 pub struct GetOrCreateTask {
     callback: AtomicCell<Option<ThreadBoundRefPtr<nsIKeyValueDatabaseCallback>>>,
     thread: AtomicCell<Option<ThreadBoundRefPtr<nsIThread>>>,
@@ -122,11 +192,17 @@ impl Task for GetOrCreateTask {
         // use the ? operator to simplify the implementation.
         self.result
             .store(Some(|| -> Result<RkvStoreTuple, KeyValueError> {
+                let store;
                 let mut writer = Manager::singleton().write()?;
                 let rkv = writer.get_or_create(Path::new(str::from_utf8(&self.path)?), Rkv::new)?;
-                let store = rkv
-                    .write()?
-                    .open_single(str::from_utf8(&self.name)?, StoreOptions::create())?;
+                {
+                    let env = rkv.read()?;
+                    let load_ratio = env.load_ratio()?;
+                    if load_ratio > RESIZE_RATIO {
+                        active_resize(&env)?;
+                    }
+                    store = env.open_single(str::from_utf8(&self.name)?, StoreOptions::create())?;
+                }
                 Ok((rkv, store))
             }()));
     }
@@ -167,13 +243,40 @@ impl Task for PutTask {
         // We do the work within a closure that returns a Result so we can
         // use the ? operator to simplify the implementation.
         self.result.store(Some(|| -> Result<(), KeyValueError> {
-            let key = str::from_utf8(&self.key)?;
             let env = self.rkv.read()?;
-            let mut writer = env.write()?;
+            let key = str::from_utf8(&self.key)?;
+            let v = Value::from(&self.value);
+            let mut resized = false;
 
-            self.store
-                .put(&mut writer, key, &Value::from(&self.value))?;
-            writer.commit()?;
+            // Use a loop here in case we want to retry from a recoverable
+            // error such as `lmdb::Error::MapFull`.
+            loop {
+                let mut writer = env.write()?;
+
+                match self.store.put(&mut writer, key, &v) {
+                    Ok(_) => (),
+
+                    // Only handle the first MapFull error via passive resizing.
+                    // Propogate the subsequent MapFull error.
+                    Err(StoreError::LmdbError(lmdb::Error::MapFull)) if !resized => {
+                        // abort the failed transaction for resizing.
+                        writer.abort();
+
+                        // calculate the size of pairs and resize the store accordingly.
+                        let pair_size = key.len()
+                            + v.serialized_size().map_err(StoreError::from)? as usize;
+                        let wanted = round_to_pagesize(pair_size);
+                        passive_resize(&env, wanted)?;
+                        resized = true;
+                        continue;
+                    },
+
+                    Err(err) => return Err(KeyValueError::StoreError(err)),
+                }
+
+                writer.commit()?;
+                break;
+            }
 
             Ok(())
         }()));
@@ -205,6 +308,21 @@ impl WriteManyTask {
             result: AtomicCell::default(),
         }
     }
+
+    fn calc_pair_size(&self) -> Result<usize, StoreError> {
+        let mut total = 0;
+
+        for (key, value) in self.pairs.iter() {
+            if let Some(val) = value {
+                total += key.len();
+                total += Value::from(val)
+                    .serialized_size()
+                    .map_err(StoreError::from)? as usize;
+            }
+        }
+
+        Ok(total)
+    }
 }
 
 impl Task for WriteManyTask {
@@ -213,27 +331,57 @@ impl Task for WriteManyTask {
         // use the ? operator to simplify the implementation.
         self.result.store(Some(|| -> Result<(), KeyValueError> {
             let env = self.rkv.read()?;
-            let mut writer = env.write()?;
+            let mut resized = false;
 
-            for (key, value) in self.pairs.iter() {
-                let key = str::from_utf8(key)?;
-                match value {
-                    Some(val) => self.store.put(&mut writer, key, &Value::from(val))?,
-                    None => {
-                        match self.store.delete(&mut writer, key) {
-                            Ok(_) => (),
+            // Use a loop here in case we want to retry from a recoverable
+            // error such as `lmdb::Error::MapFull`.
+            'outer: loop {
+                let mut writer = env.write()?;
 
-                            // LMDB fails with an error if the key to delete wasn't found,
-                            // and Rkv returns that error, but we ignore it, as we expect most
-                            // of our consumers to want this behavior.
-                            Err(StoreError::LmdbError(lmdb::Error::NotFound)) => (),
+                for (key, value) in self.pairs.iter() {
+                    let key = str::from_utf8(key)?;
+                    match value {
+                        // To put.
+                        Some(val) => {
+                            match self.store.put(&mut writer, key, &Value::from(val)) {
+                                Ok(_) => (),
 
-                            Err(err) => return Err(KeyValueError::StoreError(err)),
-                        };
+                                // Only handle the first MapFull error via passive resizing.
+                                // Propogate the subsequent MapFull error.
+                                Err(StoreError::LmdbError(lmdb::Error::MapFull)) if !resized => {
+                                    // Abort the failed transaction for resizing.
+                                    writer.abort();
+
+                                    // Calculate the size of pairs and resize accordingly.
+                                    let pair_size = self.calc_pair_size()?;
+                                    let wanted = round_to_pagesize(pair_size);
+                                    passive_resize(&env, wanted)?;
+                                    resized = true;
+                                    continue 'outer;
+                                },
+
+                                Err(err) => return Err(KeyValueError::StoreError(err)),
+                            }
+                        },
+                        // To delete.
+                        None => {
+                            match self.store.delete(&mut writer, key) {
+                                Ok(_) => (),
+
+                                // LMDB fails with an error if the key to delete wasn't found,
+                                // and Rkv returns that error, but we ignore it, as we expect most
+                                // of our consumers to want this behavior.
+                                Err(StoreError::LmdbError(lmdb::Error::NotFound)) => (),
+
+                                Err(err) => return Err(KeyValueError::StoreError(err)),
+                            };
+                        }
                     }
                 }
+
+                writer.commit()?;
+                break;  // 'outer: loop
             }
-            writer.commit()?;
 
             Ok(())
         }()));

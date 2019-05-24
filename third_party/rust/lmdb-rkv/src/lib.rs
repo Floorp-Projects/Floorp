@@ -3,10 +3,11 @@
 
 #![cfg_attr(test, feature(test))]
 #![deny(missing_docs)]
-#![doc(html_root_url = "https://docs.rs/lmdb-rkv/0.11.2")]
+#![doc(html_root_url = "https://docs.rs/lmdb-rkv/0.11.4")]
 
 extern crate libc;
 extern crate lmdb_rkv_sys as ffi;
+extern crate byteorder;
 
 #[cfg(test)] extern crate rand;
 #[cfg(test)] extern crate tempdir;
@@ -21,7 +22,12 @@ pub use cursor::{
     IterDup,
 };
 pub use database::Database;
-pub use environment::{Environment, Stat, EnvironmentBuilder};
+pub use environment::{
+    Environment,
+    EnvironmentBuilder,
+    Info,
+    Stat,
+};
 pub use error::{Error, Result};
 pub use flags::*;
 pub use transaction::{
@@ -62,9 +68,7 @@ mod transaction;
 #[cfg(test)]
 mod test_utils {
 
-    extern crate byteorder;
-
-    use self::byteorder::{ByteOrder, LittleEndian};
+    use byteorder::{ByteOrder, LittleEndian};
     use tempdir::TempDir;
 
     use super::*;
