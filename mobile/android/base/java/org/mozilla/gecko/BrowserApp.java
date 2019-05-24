@@ -1143,7 +1143,7 @@ public class BrowserApp extends GeckoApp
             // User clicked a new link to be opened in Firefox.
             // We returned from Picture-in-picture mode and now must try to open that link.
             if (startingIntentAfterPip != null) {
-                getApplication().startActivity(startingIntentAfterPip);
+                startActivity(startingIntentAfterPip);
                 startingIntentAfterPip = null;
             } else {
                 // Get if the user pressed in the PIP window to return to full app or closed it entirely
