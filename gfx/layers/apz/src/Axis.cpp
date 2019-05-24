@@ -23,7 +23,6 @@
 #include "nsPrintfCString.h"                // for nsPrintfCString
 #include "nsThreadUtils.h"                  // for NS_DispatchToMainThread, etc
 #include "nscore.h"                         // for NS_IMETHOD
-#include "gfxPrefs.h"                       // for the preferences
 
 #define AXIS_LOG(...)
 // #define AXIS_LOG(...) printf_stderr("AXIS: " __VA_ARGS__)

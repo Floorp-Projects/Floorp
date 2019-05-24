@@ -23,7 +23,7 @@
 #include "gfxImageSurface.h"        // for gfxImageSurface
 #include "gfxMatrix.h"              // for gfxMatrix
 #include "gfxPlatform.h"            // for gfxPlatform
-#include "gfxPrefs.h"               // for gfxPrefs
+
 #include "gfxPoint.h"               // for IntSize, gfxPoint
 #include "gfxRect.h"                // for gfxRect
 #include "gfxUtils.h"               // for gfxUtils

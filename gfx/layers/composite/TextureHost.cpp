@@ -36,7 +36,7 @@
 #include "mozilla/Unused.h"
 #include <limits>
 #include "../opengl/CompositorOGL.h"
-#include "gfxPrefs.h"
+
 #include "gfxUtils.h"
 #include "IPDLActor.h"
 

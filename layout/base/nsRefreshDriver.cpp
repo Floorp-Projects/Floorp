@@ -64,7 +64,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/Telemetry.h"
-#include "gfxPrefs.h"
+
 #include "BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/layout/VsyncChild.h"
@@ -990,9 +990,6 @@ static void CreateVsyncRefreshTimer() {
   MOZ_ASSERT(NS_IsMainThread());
 
   PodArrayZero(sJankLevels);
-  // Sometimes, gfxPrefs is not initialized here. Make sure the gfxPrefs is
-  // ready.
-  gfxPrefs::GetSingleton();
 
   if (gfxPlatform::IsInLayoutAsapMode()) {
     return;

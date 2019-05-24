@@ -3,7 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "gtest/gtest.h"
 #include "TestLayers.h"
