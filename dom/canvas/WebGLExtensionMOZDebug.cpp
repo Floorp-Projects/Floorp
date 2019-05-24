@@ -20,7 +20,7 @@ WebGLExtensionMOZDebug::~WebGLExtensionMOZDebug() {}
 void WebGLExtensionMOZDebug::GetParameter(JSContext* cx, GLenum pname,
                                           JS::MutableHandle<JS::Value> retval,
                                           ErrorResult& er) const {
-  if (mIsLost) return;
+  if (mIsLost || !mContext) return;
   const WebGLContext::FuncScope funcScope(*mContext, "MOZ_debug.getParameter");
   MOZ_ASSERT(!mContext->IsContextLost());
 
