@@ -74,9 +74,9 @@ class OnboardingThemePickerViewHolder(private val view: View) : RecyclerView.Vie
 
         with(Settings.getInstance(view.context)) {
             when {
-                this.shouldFollowDeviceTheme -> radioFollowDeviceTheme.isChecked = true
                 this.shouldUseLightTheme -> radioLightTheme.isChecked = true
-                else -> radioDarkTheme.isChecked = true
+                this.shouldUseDarkTheme -> radioDarkTheme.isChecked = true
+                else -> radioFollowDeviceTheme.isChecked = true
             }
         }
     }
