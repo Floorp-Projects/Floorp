@@ -126,8 +126,7 @@ inline void TraceEdge(JSTracer* trc, WriteBarriered<T>* thingp,
 }
 
 template <typename T>
-inline void TraceEdge(JSTracer* trc, WeakHeapPtr<T>* thingp,
-                      const char* name) {
+inline void TraceEdge(JSTracer* trc, WeakHeapPtr<T>* thingp, const char* name) {
   gc::TraceEdgeInternal(trc, gc::ConvertToBase(thingp->unsafeGet()), name);
 }
 
@@ -161,8 +160,7 @@ inline void TraceRoot(JSTracer* trc, T* thingp, const char* name) {
 }
 
 template <typename T>
-inline void TraceRoot(JSTracer* trc, WeakHeapPtr<T>* thingp,
-                      const char* name) {
+inline void TraceRoot(JSTracer* trc, WeakHeapPtr<T>* thingp, const char* name) {
   TraceRoot(trc, thingp->unsafeGet(), name);
 }
 
@@ -213,8 +211,7 @@ void TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name) {
 // Trace an edge that crosses compartment boundaries. If the compartment of the
 // destination thing is not being GC'd, then the edge will not be traced.
 void TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src,
-                               WriteBarriered<Value>* dst,
-                               const char* name);
+                               WriteBarriered<Value>* dst, const char* name);
 
 // As above but with manual barriers.
 template <typename T>

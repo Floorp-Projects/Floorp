@@ -8,7 +8,7 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "js/CompilationAndEvaluation.h"  // JS::Compile{,{,Utf8{File,Path}}DontInflate}
-#include "js/SourceText.h"  // JS::Source{Ownership,Text}
+#include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
 struct ScriptObjectFixture : public JSAPITest {

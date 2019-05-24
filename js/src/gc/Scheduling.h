@@ -699,15 +699,16 @@ class MemoryTracker {
     Key(Cell* cell, MemoryUse use);
     Cell* cell() const;
     MemoryUse use() const;
+
    private:
-#ifdef JS_64BIT
+#  ifdef JS_64BIT
     // Pack this into a single word on 64 bit platforms.
     uintptr_t cell_ : 56;
     uintptr_t use_ : 8;
-#else
+#  else
     uintptr_t cell_ : 32;
     uintptr_t use_ : 8;
-#endif
+#  endif
   };
 
   struct Hasher {

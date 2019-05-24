@@ -110,10 +110,7 @@ class ArenaCellIter {
         traceKind(JS::TraceKind::Null),
         initialized(false) {}
 
-  explicit ArenaCellIter(Arena* arena)
-      : initialized(false) {
-    init(arena);
-  }
+  explicit ArenaCellIter(Arena* arena) : initialized(false) { init(arena); }
 
   void init(Arena* arena) {
     MOZ_ASSERT(!initialized);
@@ -395,9 +392,7 @@ class ZoneCellIter : protected ZoneAllCellIter<T> {
     return cell;
   }
 
-  T* get() const {
-    return reinterpret_cast<T*>(getCell());
-  }
+  T* get() const { return reinterpret_cast<T*>(getCell()); }
 
   TenuredCell* unbarrieredGetCell() const { return Base::getCell(); }
   T* unbarrieredGet() const { return Base::get(); }

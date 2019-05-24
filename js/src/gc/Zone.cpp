@@ -551,8 +551,7 @@ MemoryTracker::~MemoryTracker() {
   fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
   for (auto r = map.all(); !r.empty(); r.popFront()) {
     fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell(),
-            r.front().value(),
-            MemoryUseName(r.front().key().use()));
+            r.front().value(), MemoryUseName(r.front().key().use()));
   }
 
   MOZ_CRASH();
@@ -610,11 +609,11 @@ void MemoryTracker::fixupAfterMovingGC() {
 }
 
 inline MemoryTracker::Key::Key(Cell* cell, MemoryUse use)
-    : cell_(uint64_t(cell)), use_(uint64_t(use))
-{
-#ifdef JS_64BIT
-  static_assert(sizeof(Key) == 8, "MemoryTracker::Key should be packed into 8 bytes");
-#endif
+    : cell_(uint64_t(cell)), use_(uint64_t(use)) {
+#  ifdef JS_64BIT
+  static_assert(sizeof(Key) == 8,
+                "MemoryTracker::Key should be packed into 8 bytes");
+#  endif
   MOZ_ASSERT(this->cell() == cell);
   MOZ_ASSERT(this->use() == use);
 }

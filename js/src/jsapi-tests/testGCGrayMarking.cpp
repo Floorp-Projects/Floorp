@@ -162,15 +162,14 @@ enum MarkKeyOrDelegate : bool { MarkKey = true, MarkDelegate = false };
 bool TestJSWeakMaps() {
   for (auto keyOrDelegateColor : MarkedCellColors) {
     for (auto mapColor : MarkedCellColors) {
-      for (auto markKeyOrDelegate : { MarkKey, MarkDelegate }) {
-        CellColor expected = ExpectedWeakMapValueColor(keyOrDelegateColor,
-                                                       mapColor);
+      for (auto markKeyOrDelegate : {MarkKey, MarkDelegate}) {
+        CellColor expected =
+            ExpectedWeakMapValueColor(keyOrDelegateColor, mapColor);
         CHECK(TestJSWeakMap(markKeyOrDelegate, keyOrDelegateColor, mapColor,
                             expected));
 #ifdef JS_GC_ZEAL
-        CHECK(TestJSWeakMapWithGrayUnmarking(markKeyOrDelegate,
-                                             keyOrDelegateColor, mapColor,
-                                             expected));
+        CHECK(TestJSWeakMapWithGrayUnmarking(
+            markKeyOrDelegate, keyOrDelegateColor, mapColor, expected));
 #endif
       }
     }
@@ -189,14 +188,13 @@ bool TestInternalWeakMaps() {
 
       CellColor keyOrDelegateColor =
           ExpectedKeyAndDelegateColor(keyMarkColor, delegateMarkColor);
-      CellColor expected = ExpectedWeakMapValueColor(keyOrDelegateColor,
-                                                     CellColor::Black);
+      CellColor expected =
+          ExpectedWeakMapValueColor(keyOrDelegateColor, CellColor::Black);
       CHECK(TestInternalWeakMap(keyMarkColor, delegateMarkColor, expected));
 
 #ifdef JS_GC_ZEAL
       CHECK(TestInternalWeakMapWithGrayUnmarking(keyMarkColor,
-                                                 delegateMarkColor,
-                                                 expected));
+                                                 delegateMarkColor, expected));
 #endif
     }
   }
@@ -310,11 +308,11 @@ bool TestJSWeakMapWithGrayUnmarking(MarkKeyOrDelegate markKey,
 
 static void MaybeExposeObject(JSObject* object, CellColor color) {
   if (color == CellColor::Black) {
-      JS::ExposeObjectToActiveJS(object);
+    JS::ExposeObjectToActiveJS(object);
   }
 }
 
-#endif // JS_GC_ZEAL
+#endif  // JS_GC_ZEAL
 
 bool CreateJSWeakMapObjects(JSObject** weakMapOut, JSObject** keyOut,
                             JSObject** valueOut) {
@@ -433,7 +431,7 @@ bool TestInternalWeakMapWithGrayUnmarking(CellColor keyMarkColor,
   return true;
 }
 
-#endif // JS_GC_ZEAL
+#endif  // JS_GC_ZEAL
 
 bool CreateInternalWeakMapObjects(UniquePtr<GCManagedObjectWeakMap>* weakMapOut,
                                   JSObject** keyOut, JSObject** valueOut) {
