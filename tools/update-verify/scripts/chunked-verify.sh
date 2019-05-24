@@ -21,7 +21,7 @@ else
   EXTRA_PARAMS=""
 fi
 $PYTHON $MY_DIR/chunked-verify.py --chunks $chunks --this-chunk $thisChunk \
---verify-config $VERIFY_CONFIG $EXTRA_PARAMS \
+--verify-config $VERIFY_CONFIG --diff-summary $PWD/diff-summary.log $EXTRA_PARAMS \
 2>&1 | tee $SCRIPTS_DIR/../verify_log.txt
 
 print_failed_msg()

@@ -512,7 +512,6 @@ impl<'a> DisplayListFlattener<'a> {
             &prim_list.prim_instances,
             *self.pipeline_clip_chain_stack.last().unwrap(),
             &self.prim_store.pictures,
-            &self.clip_scroll_tree,
         );
 
         let pic_index = self.prim_store.pictures.alloc().init(PicturePrimitive::new_image(
