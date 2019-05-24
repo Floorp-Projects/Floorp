@@ -10,7 +10,6 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkerParameters
 import androidx.work.testing.WorkManagerTestInitHelper
-import mozilla.components.service.glean.GleanInternalAPI
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -27,7 +26,6 @@ import java.util.concurrent.TimeUnit
 @RunWith(RobolectricTestRunner::class)
 class ExperimentsUpdaterTest {
     private var context: Context = ApplicationProvider.getApplicationContext()
-    private var glean: GleanInternalAPI = mock()
     private lateinit var configuration: Configuration
     private lateinit var experiments: ExperimentsInternalAPI
     private lateinit var experimentStorage: FlatFileExperimentStorage
@@ -61,8 +59,7 @@ class ExperimentsUpdaterTest {
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = valuesProvider
 
-        `when`(glean.isInitialized()).thenReturn(true)
-        `when`(experiments.getGlean()).thenReturn(glean)
+        `when`(experiments.isGleanInitialized()).thenReturn(true)
         experimentStorage = storage
         `when`(experiments.getExperimentsStorage(context)).thenReturn(storage)
 

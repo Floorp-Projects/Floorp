@@ -23,7 +23,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
-import mozilla.components.service.glean.GleanInternalAPI
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.mockito.ArgumentMatchers.anyString
@@ -41,7 +40,6 @@ import org.mockito.Mockito.times
 @RunWith(RobolectricTestRunner::class)
 class ExperimentsTest {
     private var context: Context = ApplicationProvider.getApplicationContext()
-    private var glean: GleanInternalAPI = mock()
     private lateinit var configuration: Configuration
     private lateinit var experiments: ExperimentsInternalAPI
     private lateinit var experimentStorage: FlatFileExperimentStorage
@@ -79,8 +77,7 @@ class ExperimentsTest {
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = valuesProvider
 
-        `when`(glean.isInitialized()).thenReturn(true)
-        `when`(experiments.getGlean()).thenReturn(glean)
+        `when`(experiments.isGleanInitialized()).thenReturn(true)
         experimentStorage = storage
         `when`(experiments.getExperimentsStorage(context)).thenReturn(storage)
 
@@ -113,7 +110,7 @@ class ExperimentsTest {
 
         experiments.initialize(context, configuration)
 
-        verify(glean).isInitialized()
+        verify(experiments).isGleanInitialized()
         verify(experimentStorage).retrieve()
         verify(experimentsUpdater).initialize(any())
         verify(experimentSource).getExperiments(any())
@@ -123,11 +120,11 @@ class ExperimentsTest {
     fun `initialize experiments before glean`() {
         resetExperiments()
 
-        `when`(glean.isInitialized()).thenReturn(false)
+        `when`(experiments.isGleanInitialized()).thenReturn(false)
         experiments.initialize(context, configuration)
 
         // Glean was not initialized yet, so no other initialization should have happened.
-        verify(glean).isInitialized()
+        verify(experiments).isGleanInitialized()
         assertEquals(experiments.isInitialized, false)
         verifyZeroInteractions(experimentStorage)
         // Make sure the updater is only interacted with once, from resetExperiments()
@@ -799,8 +796,7 @@ class ExperimentsTest {
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = ValuesProvider()
 
-        `when`(glean.isInitialized()).thenReturn(true)
-        `when`(experiments.getGlean()).thenReturn(glean)
+        `when`(experiments.isGleanInitialized()).thenReturn(true)
         `when`(experiments.getExperimentsStorage(context)).thenReturn(experimentStorage)
 
         experimentsUpdater = spy(ExperimentsUpdater(context, experiments))

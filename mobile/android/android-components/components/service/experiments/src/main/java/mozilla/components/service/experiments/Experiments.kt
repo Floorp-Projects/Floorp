@@ -8,7 +8,6 @@ import android.content.Context
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.service.glean.Glean
 import androidx.annotation.VisibleForTesting
-import mozilla.components.service.glean.GleanInternalAPI
 import java.io.File
 
 /**
@@ -58,7 +57,7 @@ open class ExperimentsInternalAPI internal constructor() {
         }
 
         // Any code below might trigger recording into Glean, so make sure Glean is initialized.
-        if (!getGlean().isInitialized()) {
+        if (!isGleanInitialized()) {
             logger.error("Glean library must be initialized first")
             return
         }
@@ -89,8 +88,8 @@ open class ExperimentsInternalAPI internal constructor() {
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getGlean(): GleanInternalAPI {
-        return Glean
+    internal fun isGleanInitialized(): Boolean {
+        return Glean.isInitialized()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
