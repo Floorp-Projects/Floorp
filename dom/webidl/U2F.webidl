@@ -11,7 +11,7 @@
 
 [NoInterfaceObject]
 interface GlobalU2F {
-  [SecureContext, Throws, Pref="security.webauth.u2f"]
+  [SecureContext, Throws, Pref="security.webauth.u2f", Replaceable]
   readonly attribute U2F u2f;
 };
 
@@ -79,17 +79,29 @@ interface U2F {
   const unsigned short DEVICE_INELIGIBLE = 4;
   const unsigned short TIMEOUT = 5;
 
-  [Throws]
-  void register (DOMString appId,
-                 sequence<RegisterRequest> registerRequests,
-                 sequence<RegisteredKey> registeredKeys,
-                 U2FRegisterCallback callback,
-                 optional long? opt_timeoutSeconds);
+  // Returns a Function.  It's readonly + [LenientSetter] to keep the Google
+  // U2F polyfill from stomping on the value.
+  [LenientSetter, Pure, Cached, Throws]
+  readonly attribute object register;
 
-  [Throws]
-  void sign (DOMString appId,
-             DOMString challenge,
-             sequence<RegisteredKey> registeredKeys,
-             U2FSignCallback callback,
-             optional long? opt_timeoutSeconds);
+  // A way to generate the actual implementation of register()
+  [Unexposed, Throws, BinaryName="Register"]
+  void register_impl(DOMString appId,
+                     sequence<RegisterRequest> registerRequests,
+                     sequence<RegisteredKey> registeredKeys,
+                     U2FRegisterCallback callback,
+                     optional long? opt_timeoutSeconds);
+
+  // Returns a Function.  It's readonly + [LenientSetter] to keep the Google
+  // U2F polyfill from stomping on the value.
+  [LenientSetter, Pure, Cached, Throws]
+  readonly attribute object sign;
+
+  // A way to generate the actual implementation of sign()
+  [Unexposed, Throws, BinaryName="Sign"]
+  void sign_impl (DOMString appId,
+                  DOMString challenge,
+                  sequence<RegisteredKey> registeredKeys,
+                  U2FSignCallback callback,
+                  optional long? opt_timeoutSeconds);
 };
