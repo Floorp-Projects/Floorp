@@ -482,6 +482,8 @@ void IPDLParamTraits<nsIInputStream*>::Write(IPC::Message* aMsg,
         }
         found = true;
         break;
+      default:
+        break;
     }
 
     // Try the actor's manager.
