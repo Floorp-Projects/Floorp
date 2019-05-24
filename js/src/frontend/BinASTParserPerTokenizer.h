@@ -57,7 +57,6 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
   using BinASTFields = typename Tokenizer::BinASTFields;
   using Chars = typename Tokenizer::Chars;
-  using RootContext = BinASTTokenReaderBase::RootContext;
   using Context = BinASTTokenReaderBase::Context;
 
  public:
