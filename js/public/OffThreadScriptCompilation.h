@@ -12,6 +12,7 @@
 #define js_OffThreadScriptCompilation_h
 
 #include "mozilla/Range.h"   // mozilla::Range
+#include "mozilla/Utf8.h"    // mozilla::Utf8Unit
 #include "mozilla/Vector.h"  // mozilla::Vector
 
 #include <stddef.h>  // size_t
@@ -67,6 +68,15 @@ extern JS_PUBLIC_API bool CompileOffThread(
     SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
     void* callbackData);
 
+// NOTE: Unlike for the normal sync compilation functions, this function NEVER
+//       INFLATES TO UTF-16.  Therefore, it is ALWAYS invoking experimental
+//       UTF-8 support.  Inflate to UTF-16 yourself and use the other overload
+//       if you're unable to take a risk using unstable functionality.
+extern JS_PUBLIC_API bool CompileOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
+    void* callbackData);
+
 extern JS_PUBLIC_API JSScript* FinishOffThreadScript(JSContext* cx,
                                                      OffThreadToken* token);
 
@@ -76,6 +86,15 @@ extern JS_PUBLIC_API void CancelOffThreadScript(JSContext* cx,
 extern JS_PUBLIC_API bool CompileOffThreadModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
+    void* callbackData);
+
+// NOTE: Unlike for the normal sync compilation functions, this function NEVER
+//       INFLATES TO UTF-16.  Therefore, it is ALWAYS invoking experimental
+//       UTF-8 support.  Inflate to UTF-16 yourself and use the other overload
+//       if you're unable to take a risk using unstable functionality.
+extern JS_PUBLIC_API bool CompileOffThreadModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
     void* callbackData);
 
 extern JS_PUBLIC_API JSObject* FinishOffThreadModule(JSContext* cx,

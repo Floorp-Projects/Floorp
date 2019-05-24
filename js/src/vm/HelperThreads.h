@@ -18,6 +18,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 
 #include "jsapi.h"
@@ -611,10 +612,20 @@ bool StartOffThreadParseScript(JSContext* cx,
                                JS::SourceText<char16_t>& srcBuf,
                                JS::OffThreadCompileCallback callback,
                                void* callbackData);
+bool StartOffThreadParseScript(JSContext* cx,
+                               const JS::ReadOnlyCompileOptions& options,
+                               JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+                               JS::OffThreadCompileCallback callback,
+                               void* callbackData);
 
 bool StartOffThreadParseModule(JSContext* cx,
                                const JS::ReadOnlyCompileOptions& options,
                                JS::SourceText<char16_t>& srcBuf,
+                               JS::OffThreadCompileCallback callback,
+                               void* callbackData);
+bool StartOffThreadParseModule(JSContext* cx,
+                               const JS::ReadOnlyCompileOptions& options,
+                               JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                JS::OffThreadCompileCallback callback,
                                void* callbackData);
 
@@ -741,22 +752,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   }
 
   void runTask() override;
-};
-
-struct ScriptParseTask : public ParseTask {
-  JS::SourceText<char16_t> data;
-
-  ScriptParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
-                  JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx) override;
-};
-
-struct ModuleParseTask : public ParseTask {
-  JS::SourceText<char16_t> data;
-
-  ModuleParseTask(JSContext* cx, JS::SourceText<char16_t>& srcBuf,
-                  JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx) override;
 };
 
 struct ScriptDecodeTask : public ParseTask {
