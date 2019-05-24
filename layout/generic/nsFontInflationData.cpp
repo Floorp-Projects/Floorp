@@ -258,7 +258,7 @@ void nsFontInflationData::UpdateISize(const ReflowInput& aReflowInput) {
         if (content && kid == content->GetPrimaryFrame()) {
           uint32_t len = nsTextFrameUtils::
               ComputeApproximateLengthWithWhitespaceCompression(
-                  content->AsText(), kid->StyleText());
+                  content, kid->StyleText());
           if (len != 0) {
             return kid;
           }
@@ -295,8 +295,7 @@ static uint32_t DoCharCountOfLargestOption(nsIFrame* aContainer) {
         if (optionChild->IsTextFrame()) {
           optionResult += nsTextFrameUtils::
               ComputeApproximateLengthWithWhitespaceCompression(
-                  optionChild->GetContent()->AsText(),
-                  optionChild->StyleText());
+                  optionChild->GetContent(), optionChild->StyleText());
         }
       }
     }
@@ -335,7 +334,7 @@ void nsFontInflationData::ScanTextIn(nsIFrame* aFrame) {
         if (content && kid == content->GetPrimaryFrame()) {
           uint32_t len = nsTextFrameUtils::
               ComputeApproximateLengthWithWhitespaceCompression(
-                  content->AsText(), kid->StyleText());
+                  content, kid->StyleText());
           if (len != 0) {
             nscoord fontSize = kid->StyleFont()->mFont.size;
             if (fontSize > 0) {
