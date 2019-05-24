@@ -7,9 +7,9 @@
 #include "ClientLayerManager.h"
 #include "GeckoProfiler.h"       // for AUTO_PROFILER_LABEL
 #include "gfxEnv.h"              // for gfxEnv
-#include "gfxPrefs.h"            // for gfxPrefs::LayersTile...
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/Hal.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/BrowserChild.h"  // for BrowserChild
 #include "mozilla/dom/TabGroup.h"      // for TabGroup
 #include "mozilla/hal_sandbox/PHal.h"  // for ScreenConfiguration

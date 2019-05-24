@@ -52,7 +52,7 @@ bool IsImmersiveContentActive(const mozilla::gfx::VRBrowserState& aState) {
 already_AddRefed<VRService> VRService::Create() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!gfxPrefs::VRServiceEnabled()) {
+  if (!StaticPrefs::VRServiceEnabled()) {
     return nullptr;
   }
 
@@ -73,7 +73,7 @@ VRService::VRService()
 #if defined(XP_WIN)
       mMutex(NULL),
 #endif
-      mVRProcessEnabled(gfxPrefs::VRProcessEnabled()) {
+      mVRProcessEnabled(StaticPrefs::VRProcessEnabled()) {
   // When we have the VR process, we map the memory
   // of mAPIShmem from GPU process.
   // If we don't have the VR process, we will instantiate

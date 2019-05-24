@@ -11,6 +11,7 @@
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/Unused.h"
 #include "ProcessUtils.h"
@@ -81,7 +82,7 @@ bool VRProcessParent::WaitForLaunch() {
     return !!mVRChild;
   }
 
-  int32_t timeoutMs = gfxPrefs::VRProcessTimeoutMs();
+  int32_t timeoutMs = StaticPrefs::VRProcessTimeoutMs();
 
   // If one of the following environment variables are set we can effectively
   // ignore the timeout - as we can guarantee the compositor process will be

@@ -12,6 +12,7 @@
 #include "base/task.h"               // for CancelableTask, etc
 #include "gfxPrefs.h"                // for gfxPrefs
 #include "InputBlockState.h"         // for TouchBlockState
+#include "mozilla/StaticPrefs.h"     // for StaticPrefs
 #include "nsDebug.h"                 // for NS_WARNING
 #include "nsMathUtils.h"             // for NS_hypot
 
@@ -291,7 +292,7 @@ nsEventStatus GestureEventListener::HandleInputTouchMove() {
 
     // The user has performed a double tap, but not lifted her finger.
     case GESTURE_SECOND_SINGLE_TOUCH_DOWN: {
-      // If touch has moved noticeably (within gfxPrefs::APZMaxTapTime()),
+      // If touch has moved noticeably (within StaticPrefs::APZMaxTapTime()),
       // change state.
       if (MoveDistanceIsLarge()) {
         CancelLongTapTimeoutTask();
