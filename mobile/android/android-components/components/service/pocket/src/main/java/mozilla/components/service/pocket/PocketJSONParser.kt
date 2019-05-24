@@ -15,7 +15,7 @@ import org.json.JSONObject
 /**
  * Holds functions that parse the JSON returned by the Pocket API and converts them to more usable Kotlin types.
  */
-internal class PocketJSONParser {
+class PocketJSONParser internal constructor() {
 
     /**
      * @return The videos, removing entries that are invalid, or null on error; the list will never be empty.
@@ -69,5 +69,12 @@ internal class PocketJSONParser {
 
     companion object {
         @VisibleForTesting(otherwise = PRIVATE) const val KEY_VIDEO_RECOMMENDATIONS_INNER = "recommendations"
+
+        /**
+         * Returns a new instance of [PocketJSONParser].
+         */
+        fun newInstance(): PocketJSONParser {
+            return PocketJSONParser()
+        }
     }
 }

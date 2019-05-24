@@ -138,6 +138,11 @@ class PocketJSONParserTest {
     fun `WHEN parsing global video recommendations for an invalid JSON String THEN null is returned`() {
         assertNull(parser.jsonToGlobalVideoRecommendations("{!!}}"))
     }
+
+    @Test
+    fun `WHEN newInstance is called THEN no exception is thrown`() {
+        PocketJSONParser.newInstance()
+    }
 }
 
 private fun replaceFirstAuthorsList(fullJSONStr: String, replacedAuthors: JSONObject): String {
