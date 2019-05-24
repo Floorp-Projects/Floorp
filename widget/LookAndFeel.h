@@ -134,6 +134,11 @@ class LookAndFeel {
     eColorID__moz_eventreerow,
     eColorID__moz_oddtreerow,
 
+    // colors needed by the Linux Gtk theme
+
+    // used to button text, when button is pressed
+    eColorID__moz_gtk_buttonactivetext,
+
     // colors needed by the Mac OS X theme
 
     // foreground color of :hover:active buttons
