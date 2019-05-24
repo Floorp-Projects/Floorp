@@ -9,6 +9,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "builtin/Promise.h"
 #include "frontend/BytecodeCompilation.h"
@@ -41,6 +42,7 @@ using mozilla::Maybe;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 using mozilla::Unused;
+using mozilla::Utf8Unit;
 
 using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
@@ -508,14 +510,25 @@ void ParseTask::runTask() {
   cx->atomsZoneFreeLists().clear();
 }
 
-ScriptParseTask::ScriptParseTask(JSContext* cx,
-                                 JS::SourceText<char16_t>& srcBuf,
-                                 JS::OffThreadCompileCallback callback,
-                                 void* callbackData)
+template <typename Unit>
+struct ScriptParseTask : public ParseTask {
+  JS::SourceText<Unit> data;
+
+  ScriptParseTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
+                  JS::OffThreadCompileCallback callback, void* callbackData);
+  void parse(JSContext* cx) override;
+};
+
+template <typename Unit>
+ScriptParseTask<Unit>::ScriptParseTask(JSContext* cx,
+                                       JS::SourceText<Unit>& srcBuf,
+                                       JS::OffThreadCompileCallback callback,
+                                       void* callbackData)
     : ParseTask(ParseTaskKind::Script, cx, callback, callbackData),
       data(std::move(srcBuf)) {}
 
-void ScriptParseTask::parse(JSContext* cx) {
+template <typename Unit>
+void ScriptParseTask<Unit>::parse(JSContext* cx) {
   MOZ_ASSERT(cx->helperThread());
 
   JSScript* script;
@@ -543,20 +556,31 @@ void ScriptParseTask::parse(JSContext* cx) {
   }
 }
 
-ModuleParseTask::ModuleParseTask(JSContext* cx,
-                                 JS::SourceText<char16_t>& srcBuf,
-                                 JS::OffThreadCompileCallback callback,
-                                 void* callbackData)
+template <typename Unit>
+struct ModuleParseTask : public ParseTask {
+  JS::SourceText<Unit> data;
+
+  ModuleParseTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
+                  JS::OffThreadCompileCallback callback, void* callbackData);
+  void parse(JSContext* cx) override;
+};
+
+template <typename Unit>
+ModuleParseTask<Unit>::ModuleParseTask(JSContext* cx,
+                                       JS::SourceText<Unit>& srcBuf,
+                                       JS::OffThreadCompileCallback callback,
+                                       void* callbackData)
     : ParseTask(ParseTaskKind::Module, cx, callback, callbackData),
       data(std::move(srcBuf)) {}
 
-void ModuleParseTask::parse(JSContext* cx) {
+template <typename Unit>
+void ModuleParseTask<Unit>::parse(JSContext* cx) {
   MOZ_ASSERT(cx->helperThread());
 
   Rooted<ScriptSourceObject*> sourceObject(cx);
 
   ModuleObject* module =
-      frontend::CompileModule(cx, options, data, &sourceObject.get());
+      frontend::ParseModule(cx, options, data, &sourceObject.get());
   if (module) {
     scripts.infallibleAppend(module->script());
     if (sourceObject) {
@@ -821,28 +845,33 @@ static JSObject* CreateGlobalForOffThreadParse(JSContext* cx,
                             JS::DontFireOnNewGlobalHook, realmOptions);
 }
 
-static bool QueueOffThreadParseTask(JSContext* cx, ParseTask* task) {
+static bool QueueOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task) {
   AutoLockHelperThreadState lock;
 
   bool mustWait = OffThreadParsingMustWaitForGC(cx->runtime());
 
+  // Append null first, then overwrite it on  success, to avoid having two
+  // |task| pointers (one ostensibly "unique") in flight at once.  (Obviously it
+  // would be better if these vectors stored unique pointers themselves....)
   auto& queue = mustWait ? HelperThreadState().parseWaitingOnGC(lock)
                          : HelperThreadState().parseWorklist(lock);
-  if (!queue.append(task)) {
+  if (!queue.append(nullptr)) {
     ReportOutOfMemory(cx);
     return false;
   }
 
+  queue.back() = task.release();
+
   if (!mustWait) {
-    task->activate(cx->runtime());
+    queue.back()->activate(cx->runtime());
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
   }
 
   return true;
 }
 
-bool StartOffThreadParseTask(JSContext* cx, ParseTask* task,
-                             const ReadOnlyCompileOptions& options) {
+static bool StartOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task,
+                                    const ReadOnlyCompileOptions& options) {
   // Suppress GC so that calls below do not trigger a new incremental GC
   // which could require barriers on the atoms zone.
   gc::AutoSuppressGC nogc(cx);
@@ -864,7 +893,7 @@ bool StartOffThreadParseTask(JSContext* cx, ParseTask* task,
     return false;
   }
 
-  if (!QueueOffThreadParseTask(cx, task)) {
+  if (!QueueOffThreadParseTask(cx, std::move(task))) {
     return false;
   }
 
@@ -872,19 +901,50 @@ bool StartOffThreadParseTask(JSContext* cx, ParseTask* task,
   return true;
 }
 
+template <typename Unit>
+static bool StartOffThreadParseScriptInternal(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  auto task = cx->make_unique<ScriptParseTask<Unit>>(cx, srcBuf, callback,
+                                                     callbackData);
+  if (!task) {
+    return false;
+  }
+
+  return StartOffThreadParseTask(cx, std::move(task), options);
+}
+
 bool js::StartOffThreadParseScript(JSContext* cx,
                                    const ReadOnlyCompileOptions& options,
                                    JS::SourceText<char16_t>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
                                    void* callbackData) {
-  auto task =
-      cx->make_unique<ScriptParseTask>(cx, srcBuf, callback, callbackData);
-  if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
+  return StartOffThreadParseScriptInternal(cx, options, srcBuf, callback,
+                                           callbackData);
+}
+
+bool js::StartOffThreadParseScript(JSContext* cx,
+                                   const ReadOnlyCompileOptions& options,
+                                   JS::SourceText<Utf8Unit>& srcBuf,
+                                   JS::OffThreadCompileCallback callback,
+                                   void* callbackData) {
+  return StartOffThreadParseScriptInternal(cx, options, srcBuf, callback,
+                                           callbackData);
+}
+
+template <typename Unit>
+static bool StartOffThreadParseModuleInternal(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  auto task = cx->make_unique<ModuleParseTask<Unit>>(cx, srcBuf, callback,
+                                                     callbackData);
+  if (!task) {
     return false;
   }
 
-  Unused << task.release();
-  return true;
+  return StartOffThreadParseTask(cx, std::move(task), options);
 }
 
 bool js::StartOffThreadParseModule(JSContext* cx,
@@ -892,14 +952,17 @@ bool js::StartOffThreadParseModule(JSContext* cx,
                                    JS::SourceText<char16_t>& srcBuf,
                                    JS::OffThreadCompileCallback callback,
                                    void* callbackData) {
-  auto task =
-      cx->make_unique<ModuleParseTask>(cx, srcBuf, callback, callbackData);
-  if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
-    return false;
-  }
+  return StartOffThreadParseModuleInternal(cx, options, srcBuf, callback,
+                                           callbackData);
+}
 
-  Unused << task.release();
-  return true;
+bool js::StartOffThreadParseModule(JSContext* cx,
+                                   const ReadOnlyCompileOptions& options,
+                                   JS::SourceText<Utf8Unit>& srcBuf,
+                                   JS::OffThreadCompileCallback callback,
+                                   void* callbackData) {
+  return StartOffThreadParseModuleInternal(cx, options, srcBuf, callback,
+                                           callbackData);
 }
 
 bool js::StartOffThreadDecodeScript(JSContext* cx,
@@ -909,12 +972,11 @@ bool js::StartOffThreadDecodeScript(JSContext* cx,
                                     void* callbackData) {
   auto task =
       cx->make_unique<ScriptDecodeTask>(cx, range, callback, callbackData);
-  if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
+  if (!task) {
     return false;
   }
 
-  Unused << task.release();
-  return true;
+  return StartOffThreadParseTask(cx, std::move(task), options);
 }
 
 bool js::StartOffThreadDecodeMultiScripts(JSContext* cx,
@@ -924,12 +986,11 @@ bool js::StartOffThreadDecodeMultiScripts(JSContext* cx,
                                           void* callbackData) {
   auto task = cx->make_unique<MultiScriptsDecodeTask>(cx, sources, callback,
                                                       callbackData);
-  if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
+  if (!task) {
     return false;
   }
 
-  Unused << task.release();
-  return true;
+  return StartOffThreadParseTask(cx, std::move(task), options);
 }
 
 #if defined(JS_BUILD_BINAST)
@@ -945,12 +1006,11 @@ bool js::StartOffThreadDecodeBinAST(JSContext* cx,
 
   auto task = cx->make_unique<BinASTDecodeTask>(cx, buf, length, callback,
                                                 callbackData);
-  if (!task || !StartOffThreadParseTask(cx, task.get(), options)) {
+  if (!task) {
     return false;
   }
 
-  Unused << task.release();
-  return true;
+  return StartOffThreadParseTask(cx, std::move(task), options);
 }
 
 #endif /* JS_BUILD_BINAST */

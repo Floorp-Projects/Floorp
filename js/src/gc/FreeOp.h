@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
+#include "gc/GCEnum.h"                // js::MemoryUse
 #include "jit/ExecutableAllocator.h"  // jit::JitPoisonRangeVector
 #include "js/AllocPolicy.h"           // SystemAllocPolicy
 #include "js/MemoryFunctions.h"       // JSFreeOp
@@ -18,8 +19,6 @@
 struct JSRuntime;
 
 namespace js {
-
-enum class MemoryUse : uint8_t;
 
 /*
  * A FreeOp can do one thing: free memory. For convenience, it has delete_

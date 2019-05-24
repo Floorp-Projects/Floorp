@@ -550,8 +550,8 @@ MemoryTracker::~MemoryTracker() {
 
   fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
   for (auto r = map.all(); !r.empty(); r.popFront()) {
-    fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell, r.front().value(),
-            MemoryUseName(r.front().key().use));
+    fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell(),
+            r.front().value(), MemoryUseName(r.front().key().use()));
   }
 
   MOZ_CRASH();
@@ -600,21 +600,38 @@ void MemoryTracker::fixupAfterMovingGC() {
   // because that would create a difference between debug and release builds.
   for (Map::Enum e(map); !e.empty(); e.popFront()) {
     const Key& key = e.front().key();
-    Cell* cell = key.cell;
+    Cell* cell = key.cell();
     if (cell->isForwarded()) {
       cell = gc::RelocationOverlay::fromCell(cell)->forwardingAddress();
-      e.rekeyFront(Key{cell, key.use});
+      e.rekeyFront(Key{cell, key.use()});
     }
   }
 }
 
+inline MemoryTracker::Key::Key(Cell* cell, MemoryUse use)
+    : cell_(uint64_t(cell)), use_(uint64_t(use)) {
+#  ifdef JS_64BIT
+  static_assert(sizeof(Key) == 8,
+                "MemoryTracker::Key should be packed into 8 bytes");
+#  endif
+  MOZ_ASSERT(this->cell() == cell);
+  MOZ_ASSERT(this->use() == use);
+}
+
+inline Cell* MemoryTracker::Key::cell() const {
+  return reinterpret_cast<Cell*>(cell_);
+}
+inline MemoryUse MemoryTracker::Key::use() const {
+  return static_cast<MemoryUse>(use_);
+}
+
 inline HashNumber MemoryTracker::Hasher::hash(const Lookup& l) {
-  return mozilla::HashGeneric(DefaultHasher<Cell*>::hash(l.cell),
-                              DefaultHasher<unsigned>::hash(unsigned(l.use)));
+  return mozilla::HashGeneric(DefaultHasher<Cell*>::hash(l.cell()),
+                              DefaultHasher<unsigned>::hash(unsigned(l.use())));
 }
 
 inline bool MemoryTracker::Hasher::match(const Key& k, const Lookup& l) {
-  return k.cell == l.cell && k.use == l.use;
+  return k.cell() == l.cell() && k.use() == l.use();
 }
 
 inline void MemoryTracker::Hasher::rekey(Key& k, const Key& newKey) {

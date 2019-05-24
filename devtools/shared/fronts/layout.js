@@ -113,6 +113,13 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
   }
 
   /**
+   * Get whether or not the grid is a subgrid.
+   */
+  get isSubgrid() {
+    return !!this._form.isSubgrid;
+  }
+
+  /**
    * Get the writing mode of the grid container.
    * Added in Firefox 60.
    */
