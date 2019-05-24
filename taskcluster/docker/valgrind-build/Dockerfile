@@ -13,6 +13,7 @@ VOLUME /builds/worker/tooltool-cache
 # that make for even larger docker images.
 RUN apt-get install \
     dbus-1-dbg \
+    libatk-bridge2.0-0-dbg \
     libatk1.0-dbg \
     libcairo2-dbg \
     libdbus-glib-1-2-dbg \
@@ -22,12 +23,18 @@ RUN apt-get install \
     libgl1-mesa-glx-dbg \
     libglapi-mesa-dbg \
     libglib2.0-0-dbg \
+    libgdk-pixbuf2.0-0-dbg \
     libgtk-3-0-dbg \
     libice6-dbg \
+    libicu48-dbg \
+    libjson0-dbg \
     libpango1.0-0-dbg \
     libpcre3-dbg \
     libpixman-1-0-dbg \
     libsm6-dbg \
+    libvorbis-dbg \
+    libwayland-client0-dbg \
+    libwayland-cursor0-dbg \
     libx11-6-dbg \
     libx11-xcb1-dbg \
     libxau6-dbg \
