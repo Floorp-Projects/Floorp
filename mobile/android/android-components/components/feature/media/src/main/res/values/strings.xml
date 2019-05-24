@@ -11,5 +11,5 @@
     <!-- Title of notification shown when the device's microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_microphone">Microphone is on</string>
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
-    <string name="mozac_feature_media_sharing_camera_and_microphone">Camera and microphone is on</string>
+    <string name="mozac_feature_media_sharing_camera_and_microphone">Camera and microphone are on</string>
 </resources>
