@@ -1088,6 +1088,25 @@ struct ParamTraits<nsILoadInfo::CrossOriginPolicy>
     : EnumSerializer<nsILoadInfo::CrossOriginPolicy,
                      CrossOriginPolicyValidator> {};
 
+// Helper class for reading bitfields.
+// If T has bitfields members, derive ParamTraits<T> from BitfieldHelper<T>.
+template <typename ParamType>
+struct BitfieldHelper {
+  // We need this helper because we can't get the address of a bitfield to
+  // pass directly to ReadParam. So instead we read it into a temporary bool
+  // and set the bitfield using a setter function
+  static bool ReadBoolForBitfield(const Message* aMsg, PickleIterator* aIter,
+                                  ParamType* aResult,
+                                  void (ParamType::*aSetter)(bool)) {
+    bool value;
+    if (ReadParam(aMsg, aIter, &value)) {
+      (aResult->*aSetter)(value);
+      return true;
+    }
+    return false;
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __IPC_GLUE_IPCMESSAGEUTILS_H__ */
