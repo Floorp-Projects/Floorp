@@ -269,7 +269,7 @@ impl<'a, 'b, 'c> TransEnv<'a, 'b, 'c> {
         };
         let ga = pos.ins().global_value(native_pointer_type(), gv);
         pos.ins()
-            .load(native_pointer_type(), ir::MemFlags::new(), ga, 0)
+            .load(ir::types::I32, ir::MemFlags::new(), ga, 0)
     }
 
     /// Get a `FuncRef` for the given symbolic address.
