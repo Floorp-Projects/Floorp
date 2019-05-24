@@ -52,6 +52,7 @@ job-defaults:
 
 raptor-tp6-1-firefox:
     description: "Raptor tp6-1 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-1-firefox
     treeherder-symbol: Rap(tp6-1)
     mozharness:
@@ -72,6 +73,7 @@ raptor-tp6-1-firefox-profiling:
 
 raptor-tp6-2-firefox:
     description: "Raptor tp6-2 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-2-firefox
     treeherder-symbol: Rap(tp6-2)
     mozharness:
@@ -92,6 +94,7 @@ raptor-tp6-2-firefox-profiling:
 
 raptor-tp6-3-firefox:
     description: "Raptor tp6-3 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-3-firefox
     treeherder-symbol: Rap(tp6-3)
     run-on-projects:
@@ -121,6 +124,7 @@ raptor-tp6-3-firefox-profiling:
 
 raptor-tp6-4-firefox:
     description: "Raptor tp6-4 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-4-firefox
     treeherder-symbol: Rap(tp6-4)
     mozharness:
@@ -141,6 +145,7 @@ raptor-tp6-4-firefox-profiling:
 
 raptor-tp6-5-firefox:
     description: "Raptor tp6-5 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-5-firefox
     treeherder-symbol: Rap(tp6-5)
     mozharness:
@@ -161,6 +166,7 @@ raptor-tp6-5-firefox-profiling:
 
 raptor-tp6-6-firefox:
     description: "Raptor tp6-6 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-6-firefox
     treeherder-symbol: Rap(tp6-6)
     mozharness:
@@ -181,6 +187,7 @@ raptor-tp6-6-firefox-profiling:
 
 raptor-tp6-7-firefox:
     description: "Raptor tp6-7 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-7-firefox
     treeherder-symbol: Rap(tp6-7)
     mozharness:
@@ -201,6 +208,7 @@ raptor-tp6-7-firefox-profiling:
 
 raptor-tp6-8-firefox:
     description: "Raptor tp6-8 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-8-firefox
     treeherder-symbol: Rap(tp6-8)
     run-on-projects: ['try', 'mozilla-central']
@@ -222,6 +230,7 @@ raptor-tp6-8-firefox-profiling:
 
 raptor-tp6-9-firefox:
     description: "Raptor tp6-9 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-9-firefox
     treeherder-symbol: Rap(tp6-9)
     run-on-projects: ['try', 'mozilla-central']
@@ -243,6 +252,7 @@ raptor-tp6-9-firefox-profiling:
 
 raptor-tp6-10-firefox:
     description: "Raptor tp6-10 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-10-firefox
     treeherder-symbol: Rap(tp6-10)
     run-on-projects: ['try', 'mozilla-central']
@@ -264,6 +274,7 @@ raptor-tp6-10-firefox-profiling:
 
 raptor-tp6-binast-1-firefox:
     description: "Raptor tp6-binast-1 on Firefox"
+    variants: ["fission"]
     try-name: raptor-tp6-binast-1
     treeherder-symbol: Rap(tp6-b-1)
     run-on-projects: ['try', 'mozilla-central']
@@ -1051,6 +1062,7 @@ raptor-tp6m-14-fenix-cold:
 
 raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"
+    variants: ["fission"]
     try-name: raptor-speedometer-firefox
     treeherder-symbol: Rap(sp)
     mozharness:
@@ -1231,6 +1243,7 @@ raptor-speedometer-refbrow:
 
 raptor-stylebench-firefox:
     description: "Raptor StyleBench on Firefox"
+    variants: ["fission"]
     try-name: raptor-stylebench-firefox
     treeherder-symbol: Rap(sb)
     mozharness:
@@ -1251,6 +1264,7 @@ raptor-stylebench-firefox-profiling:
 
 raptor-motionmark-htmlsuite-firefox:
     description: "Raptor MotionMark HtmlSuite on Firefox"
+    variants: ["fission"]
     try-name: raptor-motionmark-htmlsuite-firefox
     treeherder-symbol: Rap(mm-h)
     mozharness:
@@ -1271,6 +1285,7 @@ raptor-motionmark-htmlsuite-firefox-profiling:
 
 raptor-motionmark-animometer-firefox:
     description: "Raptor MotionMark Animometer on Firefox"
+    variants: ["fission"]
     try-name: raptor-motionmark-animometer-firefox
     treeherder-symbol: Rap(mm-a)
     mozharness:
@@ -1291,6 +1306,7 @@ raptor-motionmark-animometer-firefox-profiling:
 
 raptor-webaudio-firefox:
     description: "Raptor WebAudio on Firefox"
+    variants: ["fission"]
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap(wa)
     mozharness:
@@ -1311,6 +1327,7 @@ raptor-webaudio-firefox-profiling:
 
 raptor-sunspider-firefox:
     description: "Raptor SunSpider on Firefox"
+    variants: ["fission"]
     try-name: raptor-sunspider-firefox
     treeherder-symbol: Rap(ss)
     mozharness:
@@ -1331,6 +1348,7 @@ raptor-sunspider-firefox-profiling:
 
 raptor-unity-webgl-firefox:
     description: "Raptor Unity WebGL on Firefox"
+    variants: ["fission"]
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
     mozharness:
@@ -1402,6 +1420,7 @@ raptor-unity-webgl-refbrow:
 
 raptor-wasm-misc-cranelift-firefox:
     description: "Raptor WASM Misc on Firefox with Cranelift"
+    variants: ["fission"]
     try-name: raptor-wasm-misc-cranelift-firefox
     treeherder-symbol: Rap(wm-c)
     run-on-projects: ['mozilla-central', 'try']
@@ -1415,6 +1434,7 @@ raptor-wasm-misc-cranelift-firefox:
 
 raptor-wasm-misc-firefox:
     description: "Raptor WASM Misc on Firefox"
+    variants: ["fission"]
     try-name: raptor-wasm-misc-firefox
     treeherder-symbol: Rap(wm)
     mozharness:
@@ -1441,6 +1461,7 @@ raptor-wasm-misc-firefox-profiling:
 
 raptor-wasm-misc-baseline-firefox:
     description: "Raptor WASM Misc on Firefox with baseline JIT"
+    variants: ["fission"]
     try-name: raptor-wasm-misc-baseline-firefox
     treeherder-symbol: Rap(wm-b)
     mozharness:
@@ -1467,6 +1488,7 @@ raptor-wasm-misc-baseline-firefox-profiling:
 
 raptor-wasm-misc-ion-firefox:
     description: "Raptor WASM Misc on Firefox with ION Monkey"
+    variants: ["fission"]
     try-name: raptor-wasm-misc-ion-firefox
     treeherder-symbol: Rap(wm-i)
     mozharness:
@@ -1493,6 +1515,7 @@ raptor-wasm-misc-ion-firefox-profiling:
 
 raptor-assorted-dom-firefox:
     description: "Raptor Assorted-Dom on Firefox"
+    variants: ["fission"]
     try-name: raptor-assorted-dom-firefox
     treeherder-symbol: Rap(dom)
     max-run-time:
@@ -1524,6 +1547,7 @@ raptor-assorted-dom-firefox-profiling:
 
 raptor-wasm-godot-firefox:
     description: "Raptor Wasm Godot on Firefox"
+    variants: ["fission"]
     try-name: raptor-wasm-godot-firefox
     treeherder-symbol: Rap(godot)
     max-run-time:
@@ -1549,6 +1573,7 @@ raptor-wasm-godot-firefox-profiling:
 
 raptor-wasm-godot-baseline-firefox:
     description: "Raptor Wasm Godot on Firefox with baseline JIT"
+    variants: ["fission"]
     try-name: raptor-wasm-godot-baseline-firefox
     treeherder-symbol: Rap(godot-b)
     max-run-time:
@@ -1574,6 +1599,7 @@ raptor-wasm-godot-baseline-firefox-profiling:
 
 raptor-wasm-godot-cranelift-firefox:
     description: "Raptor WASM Godot on Firefox with Cranelift"
+    variants: ["fission"]
     try-name: raptor-wasm-godot-cranelift-firefox
     treeherder-symbol: Rap(godot-c)
     run-on-projects: ['mozilla-central', 'try']
@@ -1599,6 +1625,7 @@ raptor-wasm-godot-cranelift-firefox-profiling:
 
 raptor-wasm-godot-ion-firefox:
     description: "Raptor WASM godot on Firefox with ION Monkey"
+    variants: ["fission"]
     try-name: raptor-wasm-godot-ion-firefox
     treeherder-symbol: Rap(godot-i)
     max-run-time:
@@ -1624,6 +1651,7 @@ raptor-wasm-godot-ion-firefox-profiling:
 
 raptor-youtube-playback-firefox:
     description: "Raptor YouTube Playback on Firefox"
+    variants: ["fission"]
     try-name: raptor-youtube-playback-firefox
     treeherder-symbol: Rap(ytp)
     run-on-projects: ['mozilla-central', 'try']
