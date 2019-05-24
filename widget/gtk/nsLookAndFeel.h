@@ -65,6 +65,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nscolor mButtonText = kBlack;
   nscolor mButtonHoverText = kBlack;
   nscolor mButtonHoverFace = kWhite;
+  nscolor mButtonActiveText = kBlack;
   nscolor mFrameOuterLightBorder = kBlack;
   nscolor mFrameInnerDarkBorder = kBlack;
   nscolor mOddCellBackground = kWhite;
