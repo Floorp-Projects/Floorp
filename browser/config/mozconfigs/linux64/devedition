@@ -10,7 +10,7 @@ ac_add_options --with-branding=browser/branding/aurora
 export MOZ_LTO=1
 ac_add_options --enable-profile-use
 ac_add_options --with-pgo-jarlog=/builds/worker/fetches/en-US.log
-ac_add_options --with-pgo-profile-path=/builds/worker/fetches/default.profraw
+ac_add_options --with-pgo-profile-path=/builds/worker/fetches
 
 # Enable MOZ_ALLOW_LEGACY_EXTENSIONS
 ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"

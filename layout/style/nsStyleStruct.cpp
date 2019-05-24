@@ -2956,6 +2956,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mTransformBox(StyleGeometryBox::BorderBox),
       mOffsetPath(StyleOffsetPath::None()),
       mOffsetDistance(LengthPercentage::Zero()),
+      mOffsetRotate{true, StyleAngle{0.0}},
       mTransformOrigin{LengthPercentage::FromPercentage(0.5),
                        LengthPercentage::FromPercentage(0.5),
                        {0.}},
@@ -3021,6 +3022,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mTransformBox(aSource.mTransformBox),
       mOffsetPath(aSource.mOffsetPath),
       mOffsetDistance(aSource.mOffsetDistance),
+      mOffsetRotate(aSource.mOffsetRotate),
       mTransformOrigin(aSource.mTransformOrigin),
       mChildPerspective(aSource.mChildPerspective),
       mPerspectiveOrigin(aSource.mPerspectiveOrigin),
@@ -3061,15 +3063,14 @@ static inline nsChangeHint CompareTransformValues(
 }
 
 static inline nsChangeHint CompareMotionValues(
-    const StyleOffsetPath& aOffsetPath, const LengthPercentage& aOffsetDistance,
-    const StyleOffsetPath& aNewOffsetPath,
-    const LengthPercentage& aNewOffsetDistance) {
-  if (aOffsetPath == aNewOffsetPath) {
-    if (aOffsetDistance == aNewOffsetDistance) {
+    const nsStyleDisplay& aDisplay, const nsStyleDisplay& aNewDisplay) {
+  if (aDisplay.mOffsetPath == aNewDisplay.mOffsetPath) {
+    if (aDisplay.mOffsetDistance == aNewDisplay.mOffsetDistance &&
+        aDisplay.mOffsetRotate == aNewDisplay.mOffsetRotate) {
       return nsChangeHint(0);
     }
 
-    if (aOffsetPath.IsNone()) {
+    if (aDisplay.mOffsetPath.IsNone()) {
       return nsChangeHint_NeutralChange;
     }
   }
@@ -3079,7 +3080,7 @@ static inline nsChangeHint CompareMotionValues(
   // Set the same hints as what we use for transform because motion path is
   // a kind of transform and will be combined with other transforms.
   nsChangeHint result = nsChangeHint_UpdateTransformLayer;
-  if (!aOffsetPath.IsNone() && !aNewOffsetPath.IsNone()) {
+  if (!aDisplay.mOffsetPath.IsNone() && !aNewDisplay.mOffsetPath.IsNone()) {
     result |= nsChangeHint_UpdatePostTransformOverflow;
   } else {
     result |= nsChangeHint_UpdateOverflow;
@@ -3208,9 +3209,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     transformHint |= CompareTransformValues(mRotate, aNewData.mRotate);
     transformHint |= CompareTransformValues(mTranslate, aNewData.mTranslate);
     transformHint |= CompareTransformValues(mScale, aNewData.mScale);
-    transformHint |=
-        CompareMotionValues(mOffsetPath, mOffsetDistance, aNewData.mOffsetPath,
-                            aNewData.mOffsetDistance);
+    transformHint |= CompareMotionValues(*this, aNewData);
 
     if (mTransformOrigin != aNewData.mTransformOrigin) {
       transformHint |= nsChangeHint_UpdateTransformLayer |

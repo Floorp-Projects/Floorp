@@ -8747,6 +8747,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     other_values: [ "10px", "10%", "190%", "-280%", "calc(30px + 40%)" ],
     invalid_values: [ "none", "45deg" ]
   };
+
+  gCSSProperties["offset-rotate"] = {
+    domProp: "offsetRotate",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "reverse", "0deg", "0rad reverse", "-45deg", "5turn auto" ],
+    invalid_values: [ "none", "10px", "reverse 0deg reverse", "reverse auto" ]
+  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {

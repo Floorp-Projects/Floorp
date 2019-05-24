@@ -145,11 +145,11 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     RUNTIME_LICENSE_WHITELIST = [
         'Apache-2.0',
         'Apache-2.0 WITH LLVM-exception',
-        'BSD-2-Clause',
-        # BSD-3-Clause is ok, but packages using it must be added to the
-        # appropriate section of about:licenses. To encourage people to remember
-        # to do that, we do not whitelist the license itself and we require the
-        # packages to be added to RUNTIME_LICENSE_PACKAGE_WHITELIST below.
+        # BSD-2-Clause and BSD-3-Clause are ok, but packages using them
+        # must be added to the appropriate section of about:licenses.
+        # To encourage people to remember to do that, we do not whitelist
+        # the licenses themselves, and we require the packages to be added
+        # to RUNTIME_LICENSE_PACKAGE_WHITELIST below.
         'CC0-1.0',
         'ISC',
         'MIT',
@@ -172,6 +172,10 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     # This whitelist should only be used for packages that use an acceptable
     # license, but that also need to explicitly mentioned in about:license.
     RUNTIME_LICENSE_PACKAGE_WHITELIST = {
+        'BSD-2-Clause': [
+            'arrayref',
+            'Inflector',
+        ],
         'BSD-3-Clause': [
         ]
     }

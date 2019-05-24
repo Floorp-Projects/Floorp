@@ -9951,7 +9951,7 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
     return Nothing();
   }
 
-  gfx::Float angle = 0.0;
+  double directionAngle = 0.0;
   Point point;
   if (display->mOffsetPath.IsPath()) {
     const Span<const StylePathCommand>& path =
@@ -9999,15 +9999,21 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
     }
     Point tangent;
     point = gfxPath->ComputePointAtLength(usedDistance, &tangent);
-    // Bug 1429301 - Implement offset-rotate for motion path.
-    // After implement offset-rotate, |angle| will be adjusted more.
-    // For now, the default value of offset-rotate is "auto", so we use the
-    // directional tangent vector.
-    angle = atan2(tangent.y, tangent.x);
+    directionAngle = (double)atan2(tangent.y, tangent.x);  // In Radian.
   } else {
     // Bug 1480665: Implement ray() function.
     NS_WARNING("Unsupported offset-path value");
   }
+
+  const StyleOffsetRotate& rotate = display->mOffsetRotate;
+  // If |rotate.auto_| is true, the element should be rotated by the angle of
+  // the direction (i.e. directional tangent vector) of the offset-path, and the
+  // computed value of <angle> is added to this.
+  // Otherwise, the element has a constant clockwise rotation transformation
+  // applied to it by the specified rotation angle. (i.e. Don't need to
+  // consider the direction of the path.)
+  gfx::Float angle = static_cast<gfx::Float>(
+      (rotate.auto_ ? directionAngle : 0.0) + rotate.angle.ToRadians());
 
   // Compute the offset for motion path translate.
   // We need to resolve transform-origin here to calculate the correct path

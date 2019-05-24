@@ -157,7 +157,6 @@ pub struct FrameBuildingState<'a> {
     pub segment_builder: SegmentBuilder,
     pub surfaces: &'a mut Vec<SurfaceInfo>,
     pub dirty_region_stack: Vec<DirtyRegion>,
-    pub clip_chain_stack: ClipChainStack,
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -425,7 +424,6 @@ impl FrameBuilder {
             segment_builder: SegmentBuilder::new(),
             surfaces,
             dirty_region_stack: Vec::new(),
-            clip_chain_stack: ClipChainStack::new(),
         };
 
         let root_render_task = RenderTask::new_picture(
