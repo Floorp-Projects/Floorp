@@ -378,14 +378,14 @@ static Directionality GetDirectionFromText(const char* aText,
   return eDir_NotSet;
 }
 
-static Directionality GetDirectionFromText(const nsTextFragment* aFrag,
+static Directionality GetDirectionFromText(const Text* aTextNode,
                                            uint32_t* aFirstStrong = nullptr) {
-  if (aFrag->Is2b()) {
-    return GetDirectionFromText(aFrag->Get2b(), aFrag->GetLength(),
-                                aFirstStrong);
+  const nsTextFragment* frag = &aTextNode->TextFragment();
+  if (frag->Is2b()) {
+    return GetDirectionFromText(frag->Get2b(), frag->GetLength(), aFirstStrong);
   }
 
-  return GetDirectionFromText(aFrag->Get1b(), aFrag->GetLength(), aFirstStrong);
+  return GetDirectionFromText(frag->Get1b(), frag->GetLength(), aFirstStrong);
 }
 
 static nsTextNode* WalkDescendantsAndGetDirectionFromText(
@@ -405,12 +405,12 @@ static nsTextNode* WalkDescendantsAndGetDirectionFromText(
       for (uint32_t i = 0; i < assignedNodes.Length(); ++i) {
         nsIContent* assignedNode = assignedNodes[i]->AsContent();
         if (assignedNode->NodeType() == nsINode::TEXT_NODE) {
+          auto text = static_cast<nsTextNode*>(assignedNode);
           if (assignedNode != aSkip) {
-            Directionality textNodeDir =
-                GetDirectionFromText(assignedNode->GetText());
+            Directionality textNodeDir = GetDirectionFromText(text);
             if (textNodeDir != eDir_NotSet) {
               *aDirectionality = textNodeDir;
-              return static_cast<nsTextNode*>(assignedNode);
+              return text;
             }
           }
         } else if (assignedNode->IsElement() &&
@@ -426,10 +426,11 @@ static nsTextNode* WalkDescendantsAndGetDirectionFromText(
     }
 
     if (child->NodeType() == nsINode::TEXT_NODE && child != aSkip) {
-      Directionality textNodeDir = GetDirectionFromText(child->GetText());
+      auto text = static_cast<nsTextNode*>(child);
+      Directionality textNodeDir = GetDirectionFromText(text);
       if (textNodeDir != eDir_NotSet) {
         *aDirectionality = textNodeDir;
-        return static_cast<nsTextNode*>(child);
+        return text;
       }
     }
     child = child->GetNextNode(aRoot);
@@ -1052,7 +1053,7 @@ void SetAncestorDirectionIfAuto(nsTextNode* aTextNode, Directionality aDir,
   }
 }
 
-bool TextNodeWillChangeDirection(nsIContent* aTextNode, Directionality* aOldDir,
+bool TextNodeWillChangeDirection(nsTextNode* aTextNode, Directionality* aOldDir,
                                  uint32_t aOffset) {
   if (!NodeAffectsDirAutoAncestor(aTextNode)) {
     nsTextNodeDirectionalityMap::EnsureMapIsClearFor(aTextNode);
@@ -1060,13 +1061,13 @@ bool TextNodeWillChangeDirection(nsIContent* aTextNode, Directionality* aOldDir,
   }
 
   uint32_t firstStrong;
-  *aOldDir = GetDirectionFromText(aTextNode->GetText(), &firstStrong);
+  *aOldDir = GetDirectionFromText(aTextNode, &firstStrong);
   return (aOffset <= firstStrong);
 }
 
 void TextNodeChangedDirection(nsTextNode* aTextNode, Directionality aOldDir,
                               bool aNotify) {
-  Directionality newDir = GetDirectionFromText(aTextNode->GetText());
+  Directionality newDir = GetDirectionFromText(aTextNode);
   if (newDir == eDir_NotSet) {
     if (aOldDir != eDir_NotSet && aTextNode->HasTextNodeDirectionalityMap()) {
       // This node used to have a strong directional character but no
@@ -1102,7 +1103,7 @@ void SetDirectionFromNewTextNode(nsTextNode* aTextNode) {
     aTextNode->SetAncestorHasDirAuto();
   }
 
-  Directionality dir = GetDirectionFromText(aTextNode->GetText());
+  Directionality dir = GetDirectionFromText(aTextNode);
   if (dir != eDir_NotSet) {
     SetAncestorDirectionIfAuto(aTextNode, dir);
   }
@@ -1114,7 +1115,7 @@ void ResetDirectionSetByTextNode(nsTextNode* aTextNode) {
     return;
   }
 
-  Directionality dir = GetDirectionFromText(aTextNode->GetText());
+  Directionality dir = GetDirectionFromText(aTextNode);
   if (dir != eDir_NotSet && aTextNode->HasTextNodeDirectionalityMap()) {
     nsTextNodeDirectionalityMap::ResetTextNodeDirection(aTextNode, aTextNode);
   }
