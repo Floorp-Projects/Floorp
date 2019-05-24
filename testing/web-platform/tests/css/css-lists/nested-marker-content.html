@@ -1,0 +1,17 @@
+<!doctype html>
+<title>CSS Test: Nested ::marker with `content` property generates another ::marker</title>
+<link rel="help" href="https://drafts.csswg.org/css-lists/#list-item">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1539171">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1543758">
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<link rel="author" href="https://mozilla.org" title="Mozilla">
+<link rel="match" href="nested-marker-content-ref.html">
+<style>
+  ul { margin-left: 100px; font: 16px / 1 monospace; }
+  ::marker {
+    display: list-item;
+    content: "Foo";
+  }
+</style>
+<ul>
+  <li>Bar
