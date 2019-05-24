@@ -35,9 +35,6 @@ interface WindowOrWorkerGlobalScope {
   long setInterval(DOMString handler, optional long timeout = 0, any... unused);
   void clearInterval(optional long handle = 0);
 
-  // microtask queuing
-  void queueMicrotask(VoidFunction callback);
-
   // ImageBitmap
   [Throws]
   Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage);
