@@ -4609,20 +4609,6 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
-  Once,
-  "gfx.webrender.all.qualified",
-  WebRenderAllQualified,
-  bool, true
-)
-
-VARCACHE_PREF(
-  Once,
-  "gfx.webrender.all.qualified.default",
-  WebRenderAllQualifiedDefault,
-  bool, false
-)
-
-VARCACHE_PREF(
   Live,
   "gfx.webrender.blob-images",
   WebRenderBlobImages,
