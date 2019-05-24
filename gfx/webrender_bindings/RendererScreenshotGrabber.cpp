@@ -13,7 +13,7 @@ void RendererScreenshotGrabber::MaybeGrabScreenshot(
     Renderer* aRenderer, const gfx::IntSize& aWindowSize) {
   if (ProfilerScreenshots::IsEnabled()) {
     if (!mProfilerScreenshots) {
-      mProfilerScreenshots = MakeUnique<ProfilerScreenshots>();
+      mProfilerScreenshots = new ProfilerScreenshots();
     }
 
     GrabScreenshot(aRenderer, aWindowSize);
@@ -25,7 +25,7 @@ void RendererScreenshotGrabber::MaybeGrabScreenshot(
 void RendererScreenshotGrabber::MaybeProcessQueue(Renderer* aRenderer) {
   if (ProfilerScreenshots::IsEnabled()) {
     if (!mProfilerScreenshots) {
-      mProfilerScreenshots = MakeUnique<ProfilerScreenshots>();
+      mProfilerScreenshots = new ProfilerScreenshots();
     }
 
     ProcessQueue(aRenderer);
