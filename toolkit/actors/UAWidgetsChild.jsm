@@ -58,6 +58,7 @@ class UAWidgetsChild extends ActorChild {
         widgetName = "VideoControlsWidget";
         prefKeys = [
           "media.videocontrols.picture-in-picture.video-toggle.enabled",
+          "media.videocontrols.picture-in-picture.video-toggle.always-show",
         ];
         break;
       case "input":
