@@ -156,8 +156,6 @@ class BasePrincipal : public nsJSPrincipals {
 
   PrincipalKind Kind() const { return mKind; }
 
-  already_AddRefed<BasePrincipal> CloneForcingFirstPartyDomain(nsIURI* aURI);
-
   already_AddRefed<BasePrincipal> CloneForcingOriginAttributes(
       const OriginAttributes& aOriginAttributes);
 

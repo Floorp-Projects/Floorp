@@ -5694,7 +5694,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
   // eabled the first time a timeout fires that was created while
   // popups were enabled and with a delay less than
   // "dom.disable_open_click_delay".
-  nsAutoPopupStatePusher popupStatePusher(timeout->mPopupState);
+  AutoPopupStatePusher popupStatePusher(timeout->mPopupState);
 
   // Clear the timeout's popup state, if any, to prevent interval
   // timeouts from repeatedly opening poups.

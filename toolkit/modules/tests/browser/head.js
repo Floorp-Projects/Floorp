@@ -65,7 +65,7 @@ function promiseEnterStringIntoFindField(findbar, str) {
     let event = document.createEvent("KeyboardEvent");
     event.initKeyEvent("keypress", true, true, null, false, false,
                        false, false, 0, str.charCodeAt(i));
-    findbar._findField.inputField.dispatchEvent(event);
+    findbar._findField.dispatchEvent(event);
   }
   return promise;
 }

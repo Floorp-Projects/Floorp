@@ -517,21 +517,21 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       packet.why = reason;
 
       const {
-        generatedSourceActor,
-        generatedLine,
-        generatedColumn,
+        sourceActor,
+        line,
+        column,
       } = this.sources.getFrameLocation(frame);
 
-      if (!generatedSourceActor) {
+      if (!sourceActor) {
         // If the frame location is in a source that not pass the 'allowSource'
         // check and thus has no actor, we do not bother pausing.
         return undefined;
       }
 
       packet.frame.where = {
-        actor: generatedSourceActor.actorID,
-        line: generatedLine,
-        column: generatedColumn,
+        actor: sourceActor.actorID,
+        line: line,
+        column: column,
       };
       const pkt = onPacket(packet);
 
@@ -559,9 +559,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   _makeOnEnterFrame: function({ thread, pauseAndRespond }) {
     return frame => {
-      const { generatedSourceActor } = this.sources.getFrameLocation(frame);
+      const { sourceActor } = this.sources.getFrameLocation(frame);
 
-      const url = generatedSourceActor.url;
+      const url = sourceActor.url;
       if (this.sources.isBlackBoxed(url)) {
         return undefined;
       }
@@ -593,10 +593,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   _makeOnPop: function({ thread, pauseAndRespond, startLocation, steppingType }) {
     const result = function(completion) {
       // onPop is called with 'this' set to the current frame.
-      const generatedLocation = thread.sources.getFrameLocation(this);
+      const location = thread.sources.getFrameLocation(this);
 
-      const { generatedSourceActor } = generatedLocation;
-      const url = generatedSourceActor.url;
+      const { sourceActor } = location;
+      const url = sourceActor.url;
 
       if (thread.sources.isBlackBoxed(url)) {
         return undefined;
@@ -613,12 +613,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           // replaying, as we can't use its contents after resuming.
           const ncompletion = thread.dbg.replaying ? null : completion;
           const { onStep, onPop } = thread._makeSteppingHooks(
-            generatedLocation, "next", false, ncompletion
+            location, "next", false, ncompletion
           );
           if (thread.dbg.replaying) {
-            const parentGeneratedLocation = thread.sources.getFrameLocation(parentFrame);
+            const parentLocation = thread.sources.getFrameLocation(parentFrame);
             const offsets =
-              thread._findReplayingStepOffsets(parentGeneratedLocation, parentFrame,
+              thread._findReplayingStepOffsets(parentLocation, parentFrame,
                                                /* rewinding = */ false);
             parentFrame.setReplayingOnStep(onStep, offsets);
           } else {
@@ -646,12 +646,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // When stepping out, we don't want to stop at a breakpoint that
     // happened to be set exactly at the spot where we stepped out.
-    // See bug 970469.  We record the generated location here and check
+    // See bug 970469.  We record the location here and check
     // it when a breakpoint is hit.  Furthermore we store this on the
     // function because, while we could store it directly on the
     // frame, if we did we'd also have to find the appropriate spot to
     // clear it.
-    result.generatedLocation = startLocation;
+    result.location = startLocation;
 
     return result;
   },
@@ -664,27 +664,27 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return false;
     }
 
-    const generatedLocation = this.sources.getScriptOffsetLocation(script, offset);
+    const location = this.sources.getScriptOffsetLocation(script, offset);
 
-    if (!startLocation || startLocation.generatedUrl !== generatedLocation.generatedUrl) {
+    if (!startLocation || startLocation.url !== location.url) {
       return true;
     }
 
     // TODO(logan): When we remove points points, this can be removed too as
     // we assert that we're at a different frame offset from the last time
     // we paused.
-    const lineChanged = startLocation.generatedLine !== generatedLocation.generatedLine;
+    const lineChanged = startLocation.line !== location.line;
     const columnChanged =
-      startLocation.generatedColumn !== generatedLocation.generatedColumn;
+      startLocation.column !== location.column;
     if (!lineChanged && !columnChanged) {
       return false;
     }
 
     // When pause points are specified for the source,
     // we should pause when we are at a stepOver pause point
-    const pausePoints = generatedLocation.generatedSourceActor.pausePoints;
+    const pausePoints = location.sourceActor.pausePoints;
     const pausePoint = pausePoints &&
-      findPausePointForLocation(pausePoints, generatedLocation);
+      findPausePointForLocation(pausePoints, location);
 
     if (pausePoint) {
       return pausePoint.step;
@@ -698,15 +698,15 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return function() {
       // onStep is called with 'this' set to the current frame.
 
-      const generatedLocation = thread.sources.getFrameLocation(this);
+      const location = thread.sources.getFrameLocation(this);
 
       // Always continue execution if either:
       //
       // 1. We are in a source mapped region, but inside a null mapping
-      //    (doesn't correlate to any region of generated source)
+      //    (doesn't correlate to any region of source)
       // 2. The source we are in is black boxed.
-      if (generatedLocation.generatedUrl == null
-          || thread.sources.isBlackBoxed(generatedLocation.generatedUrl)) {
+      if (location.url == null
+          || thread.sources.isBlackBoxed(location.url)) {
         return undefined;
       }
 
@@ -838,9 +838,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       steppingType = "next";
     }
 
-    const generatedLocation = this.sources.getFrameLocation(this.youngestFrame);
+    const location = this.sources.getFrameLocation(this.youngestFrame);
     const { onEnterFrame, onPop, onStep } = this._makeSteppingHooks(
-      generatedLocation,
+      location,
       steppingType,
       rewinding
     );
@@ -859,7 +859,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
           if (stepFrame.script) {
             if (this.dbg.replaying) {
               const offsets =
-                this._findReplayingStepOffsets(generatedLocation, stepFrame, rewinding);
+                this._findReplayingStepOffsets(location, stepFrame, rewinding);
               stepFrame.setReplayingOnStep(onStep, offsets);
             } else {
               stepFrame.onStep = onStep;
@@ -1480,8 +1480,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   onDebuggerStatement: function(frame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
-    const { generatedSourceActor } = this.sources.getFrameLocation(frame);
-    const url = generatedSourceActor ? generatedSourceActor.url : null;
+    const { sourceActor } = this.sources.getFrameLocation(frame);
+    const url = sourceActor ? sourceActor.url : null;
 
     if (this.skipBreakpoints || this.sources.isBlackBoxed(url) || frame.onStep) {
       return undefined;
@@ -1569,8 +1569,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
-    const { generatedSourceActor } = this.sources.getFrameLocation(youngestFrame);
-    const url = generatedSourceActor ? generatedSourceActor.url : null;
+    const { sourceActor } = this.sources.getFrameLocation(youngestFrame);
+    const url = sourceActor ? sourceActor.url : null;
 
     // Don't pause on exceptions thrown while inside an evaluation being done on
     // behalf of the client.
@@ -1772,7 +1772,7 @@ this.reportError = function(error, prefix = "") {
 };
 
 function findPausePointForLocation(pausePoints, location) {
-  const { generatedLine: line, generatedColumn: column } = location;
+  const { line: line, column: column } = location;
   return pausePoints[line] && pausePoints[line][column];
 }
 

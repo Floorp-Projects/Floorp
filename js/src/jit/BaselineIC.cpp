@@ -156,16 +156,12 @@ class MOZ_RAII FallbackStubAllocator {
   }
 };
 
-}  // namespace jit
-
-bool JitScript::initICEntries(JSContext* cx, JSScript* script) {
+bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
+                                                JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
   MOZ_ASSERT(jit::IsBaselineEnabled(cx));
 
   MOZ_ASSERT(numICEntries() == script->numICEntries());
-
-  // TODO(bug 1551796): move JitScript into jit namespace so we don't need this.
-  using namespace js::jit;
 
   FallbackStubAllocator alloc(cx, fallbackStubSpace_);
 
@@ -216,11 +212,23 @@ bool JitScript::initICEntries(JSContext* cx, JSScript* script) {
     }
   }
 
-  jsbytecode const* pcEnd = script->codeEnd();
+  // Index of the next bytecode type map entry to initialize.
+  uint32_t typeMapIndex = 0;
+  uint32_t* const typeMap = bytecodeTypeMap();
 
-  // Add ICEntries and fallback stubs for JOF_IC bytecode ops.
+  // For JOF_IC ops: initialize ICEntries and fallback stubs.
+  // For JOF_TYPESET ops: initialize bytecode type map entries.
+  jsbytecode const* pcEnd = script->codeEnd();
   for (jsbytecode* pc = script->code(); pc < pcEnd; pc = GetNextPc(pc)) {
     JSOp op = JSOp(*pc);
+
+    // Note: if the script is very large there will be more JOF_TYPESET ops
+    // than bytecode type sets. See JSScript::MaxBytecodeTypeSets.
+    if ((CodeSpec[op].format & JOF_TYPESET) &&
+        typeMapIndex < JSScript::MaxBytecodeTypeSets) {
+      typeMap[typeMapIndex] = script->pcToOffset(pc);
+      typeMapIndex++;
+    }
 
     // Assert the frontend stored the correct IC index in jump target ops.
     MOZ_ASSERT_IF(BytecodeIsJumpTarget(op), GET_ICINDEX(pc) == icEntryIndex);
@@ -499,13 +507,12 @@ bool JitScript::initICEntries(JSContext* cx, JSScript* script) {
     }
   }
 
-  // Assert all ICEntries have been initialized.
+  // Assert all ICEntries and type map entries have been initialized.
   MOZ_ASSERT(icEntryIndex == numICEntries());
+  MOZ_ASSERT(typeMapIndex == script->numBytecodeTypeSets());
 
   return true;
 }
-
-namespace jit {
 
 ICStubConstIterator& ICStubConstIterator::operator++() {
   MOZ_ASSERT(currentStub_ != nullptr);
@@ -1285,19 +1292,6 @@ void ICStubCompilerBase::PushStubPayload(MacroAssembler& masm,
   pushStubPayload(masm, scratch);
   masm.adjustFrame(sizeof(intptr_t));
 }
-
-}  // namespace jit
-
-void JitScript::noteAccessedGetter(uint32_t pcOffset) {
-  jit::ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  jit::ICFallbackStub* stub = entry.fallbackStub();
-
-  if (stub->isGetProp_Fallback()) {
-    stub->toGetProp_Fallback()->noteAccessedGetter();
-  }
-}
-
-namespace jit {
 
 // TypeMonitor_Fallback
 //
@@ -2485,19 +2479,6 @@ bool FallbackICCodeCompiler::emit_SetElem() {
                       HandleValue, HandleValue, HandleValue);
   return tailCallVM<Fn, DoSetElemFallback>(masm);
 }
-
-}  // namespace jit
-
-void JitScript::noteHasDenseAdd(uint32_t pcOffset) {
-  jit::ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  jit::ICFallbackStub* stub = entry.fallbackStub();
-
-  if (stub->isSetElem_Fallback()) {
-    stub->toSetElem_Fallback()->noteHasDenseAdd();
-  }
-}
-
-namespace jit {
 
 template <typename T>
 void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,

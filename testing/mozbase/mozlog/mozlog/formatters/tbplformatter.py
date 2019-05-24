@@ -180,19 +180,24 @@ class TbplFormatter(BaseFormatter):
         if message and message[-1] == "\n":
             message = message[:-1]
 
+        status = data["status"]
+
         if "expected" in data:
-            if not message:
-                message = "- expected %s" % data["expected"]
-            failure_line = "TEST-UNEXPECTED-%s | %s | %s %s\n" % (
-                data["status"], data["test"], data["subtest"],
-                message)
-            if data["expected"] != "PASS":
-                info_line = "TEST-INFO | expected %s\n" % data["expected"]
-                return failure_line + info_line
-            return failure_line
+            if status in data.get("known_intermittent", []):
+                status = "TEST-KNOWN-INTERMITTENT-%s" % status
+            else:
+                if not message:
+                    message = "- expected %s" % data["expected"]
+                failure_line = "TEST-UNEXPECTED-%s | %s | %s %s\n" % (
+                    status, data["test"], data["subtest"],
+                    message)
+                if data["expected"] != "PASS":
+                    info_line = "TEST-INFO | expected %s\n" % data["expected"]
+                    return failure_line + info_line
+                return failure_line
 
         return "TEST-%s | %s | %s %s\n" % (
-            data["status"], data["test"], data["subtest"],
+            status, data["test"], data["subtest"],
             message)
 
     def test_end(self, data):
@@ -226,29 +231,34 @@ class TbplFormatter(BaseFormatter):
                 screenshot_msg = ("\nREFTEST   IMAGE: data:image/png;base64,%s" %
                                   screenshots[0]["screenshot"])
 
+        status = data['status']
+
         if "expected" in data:
-            message = data.get("message", "")
-            if not message:
-                message = "expected %s" % data["expected"]
-            if "stack" in data:
-                message += "\n%s" % data["stack"]
-            if message and message[-1] == "\n":
-                message = message[:-1]
-
-            message += screenshot_msg
-
-            failure_line = "TEST-UNEXPECTED-%s | %s | %s\n" % (
-                data["status"], test_id, message)
-
-            if data["expected"] not in ("PASS", "OK"):
-                expected_msg = "expected %s | " % data["expected"]
+            if status in data.get("known_intermittent", []):
+                status = "TEST-KNOWN-INTERMITTENT-%s" % status
             else:
-                expected_msg = ""
-            info_line = "TEST-INFO %s%s\n" % (expected_msg, duration_msg)
+                message = data.get("message", "")
+                if not message:
+                    message = "expected %s" % data["expected"]
+                if "stack" in data:
+                    message += "\n%s" % data["stack"]
+                if message and message[-1] == "\n":
+                    message = message[:-1]
 
-            return failure_line + info_line
+                message += screenshot_msg
 
-        sections = ["TEST-%s" % data['status'], test_id]
+                failure_line = "TEST-UNEXPECTED-%s | %s | %s\n" % (
+                    data["status"], test_id, message)
+
+                if data["expected"] not in ("PASS", "OK"):
+                    expected_msg = "expected %s | " % data["expected"]
+                else:
+                    expected_msg = ""
+                info_line = "TEST-INFO %s%s\n" % (expected_msg, duration_msg)
+
+                return failure_line + info_line
+
+        sections = ["TEST-%s" % status, test_id]
         if duration_msg:
             sections.append(duration_msg)
         rv.append(' | '.join(sections) + '\n')

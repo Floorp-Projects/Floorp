@@ -44,6 +44,13 @@ GeckoViewStartup.prototype = {
           ],
         });
 
+        GeckoViewUtils.addLazyGetter(this, "GeckoViewRecordingMedia", {
+          module: "resource://gre/modules/GeckoViewMedia.jsm",
+          observers: [
+            "recording-device-events",
+          ],
+        });
+
         GeckoViewUtils.addLazyGetter(this, "GeckoViewConsole", {
           module: "resource://gre/modules/GeckoViewConsole.jsm",
         });

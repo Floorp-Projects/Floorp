@@ -6,6 +6,7 @@
 #  include <mozilla/Unused.h>
 #  include <mozilla/Atomics.h>
 #  include <mozilla/DebugOnly.h>
+#  include <mozilla/Sprintf.h>
 #  include <ByteWriter.h>
 
 /**

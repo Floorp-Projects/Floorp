@@ -1241,7 +1241,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       // Reset popup state while opening a modal dialog, and firing
       // events about the dialog, to prevent the current state from
       // being active the whole time a modal dialog is open.
-      nsAutoPopupStatePusher popupStatePusher(PopupBlocker::openAbused);
+      AutoPopupStatePusher popupStatePusher(PopupBlocker::openAbused);
 
       newChrome->ShowAsModal();
     }

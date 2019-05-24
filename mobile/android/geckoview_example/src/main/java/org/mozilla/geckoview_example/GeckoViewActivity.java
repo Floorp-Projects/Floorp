@@ -6,6 +6,8 @@
 package org.mozilla.geckoview_example;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.NotificationListener;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.BasicSelectionActionDelegate;
 import org.mozilla.geckoview.ContentBlocking;
@@ -19,8 +21,13 @@ import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebRequestError;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.DownloadManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -29,8 +36,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -48,6 +56,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -59,6 +68,7 @@ public class GeckoViewActivity extends AppCompatActivity {
     private static final String FULL_ACCESSIBILITY_TREE_EXTRA = "full_accessibility_tree";
     private static final String SEARCH_URI_BASE = "https://www.google.com/search?q=";
     private static final String ACTION_SHUTDOWN = "org.mozilla.geckoview_example.SHUTDOWN";
+    private static final String CHANNEL_ID = "GeckoViewExample";
     private static final int REQUEST_FILE_PICKER = 1;
     private static final int REQUEST_PERMISSIONS = 2;
     private static final int REQUEST_WRITE_EXTERNAL_STORAGE = 3;
@@ -103,7 +113,7 @@ public class GeckoViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Log.i(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() +
               " - application start");
-
+        createNotificationChannel();
         setContentView(R.layout.geckoview_activity);
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
 
@@ -171,6 +181,23 @@ public class GeckoViewActivity extends AppCompatActivity {
         mLocationView.setCommitListener(mCommitListener);
     }
 
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.app_name);
+            String description = getString(R.string.activity_label);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+
     private GeckoSession createSession() {
         GeckoSession session = new GeckoSession(new GeckoSessionSettings.Builder()
                 .useMultiprocess(mUseMultiprocess)
@@ -199,6 +226,8 @@ public class GeckoViewActivity extends AppCompatActivity {
         final ExamplePermissionDelegate permission = new ExamplePermissionDelegate();
         permission.androidPermissionRequestCode = REQUEST_PERMISSIONS;
         session.setPermissionDelegate(permission);
+
+        session.setMediaDelegate(new ExampleMediaDelegate(this));
 
         session.setSelectionActionDelegate(new BasicSelectionActionDelegate(this));
 
@@ -991,6 +1020,71 @@ public class GeckoViewActivity extends AppCompatActivity {
             if ((event.categories & ContentBlocking.AT_CONTENT) != 0) {
                 mBlockedContent++;
             }
+        }
+    }
+
+    private class ExampleMediaDelegate
+            implements GeckoSession.MediaDelegate {
+        private Integer mLastNotificationId = 100;
+        private Integer mNotificationId;
+        final private Activity mActivity;
+
+        public ExampleMediaDelegate(Activity activity) {
+            mActivity = activity;
+        }
+
+        @Override
+        public void onRecordingStatusChanged(@NonNull GeckoSession session, RecordingDevice[] devices) {
+            String message;
+            int icon;
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(mActivity);
+            RecordingDevice camera = null;
+            RecordingDevice microphone = null;
+
+            for (RecordingDevice device : devices) {
+                if (device.type == RecordingDevice.Type.CAMERA) {
+                    camera = device;
+                } else if (device.type == RecordingDevice.Type.MICROPHONE) {
+                    microphone = device;
+                }
+            }
+            if (camera != null && microphone != null) {
+                Log.d(LOGTAG, "ExampleDeviceDelegate:onRecordingDeviceEvent display alert_mic_camera");
+                message = getResources().getString(R.string.device_sharing_camera_and_mic);
+                icon = R.drawable.alert_mic_camera;
+            } else if (camera != null) {
+                Log.d(LOGTAG, "ExampleDeviceDelegate:onRecordingDeviceEvent display alert_camera");
+                message = getResources().getString(R.string.device_sharing_camera);
+                icon = R.drawable.alert_camera;
+            } else if (microphone != null){
+                Log.d(LOGTAG, "ExampleDeviceDelegate:onRecordingDeviceEvent display alert_mic");
+                message = getResources().getString(R.string.device_sharing_microphone);
+                icon = R.drawable.alert_mic;
+            } else {
+                Log.d(LOGTAG, "ExampleDeviceDelegate:onRecordingDeviceEvent dismiss any notifications");
+                if (mNotificationId != null) {
+                    notificationManager.cancel(mNotificationId);
+                    mNotificationId = null;
+                }
+                return;
+            }
+            if (mNotificationId == null) {
+                mNotificationId = ++mLastNotificationId;
+            }
+
+            Intent intent = new Intent(mActivity, GeckoViewActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(mActivity.getApplicationContext(), 0, intent, 0);
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(mActivity.getApplicationContext(), CHANNEL_ID)
+                    .setSmallIcon(icon)
+                    .setContentTitle(getResources().getString(R.string.app_name))
+                    .setContentText(message)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setContentIntent(pendingIntent)
+                    .setCategory(NotificationCompat.CATEGORY_SERVICE);
+
+            notificationManager.notify(mNotificationId, builder.build());
         }
     }
 }
