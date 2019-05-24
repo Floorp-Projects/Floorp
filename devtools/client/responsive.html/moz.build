@@ -9,7 +9,6 @@ DIRS += [
     'browser',
     'components',
     'images',
-    'middleware',
     'reducers',
     'utils',
 ]
