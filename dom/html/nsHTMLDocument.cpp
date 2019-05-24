@@ -10,7 +10,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLAllCollection.h"
-#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "nsCommandManager.h"
 #include "nsCOMPtr.h"
 #include "nsGlobalWindow.h"
@@ -780,116 +779,6 @@ Element* nsHTMLDocument::GetUnfocusedKeyEventTarget() {
   return Document::GetUnfocusedKeyEventTarget();
 }
 
-already_AddRefed<nsIURI> nsHTMLDocument::GetDomainURI() {
-  nsIPrincipal* principal = NodePrincipal();
-
-  nsCOMPtr<nsIURI> uri;
-  principal->GetDomain(getter_AddRefs(uri));
-  if (uri) {
-    return uri.forget();
-  }
-
-  principal->GetURI(getter_AddRefs(uri));
-  return uri.forget();
-}
-
-void nsHTMLDocument::GetDomain(nsAString& aDomain) {
-  nsCOMPtr<nsIURI> uri = GetDomainURI();
-
-  if (!uri) {
-    aDomain.Truncate();
-    return;
-  }
-
-  nsAutoCString hostName;
-  nsresult rv = nsContentUtils::GetHostOrIPv6WithBrackets(uri, hostName);
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(hostName, aDomain);
-  } else {
-    // If we can't get the host from the URI (e.g. about:, javascript:,
-    // etc), just return an empty string.
-    aDomain.Truncate();
-  }
-}
-
-already_AddRefed<nsIURI> nsHTMLDocument::CreateInheritingURIForHost(
-    const nsACString& aHostString) {
-  if (aHostString.IsEmpty()) {
-    return nullptr;
-  }
-
-  // Create new URI
-  nsCOMPtr<nsIURI> uri = GetDomainURI();
-  if (!uri) {
-    return nullptr;
-  }
-
-  nsresult rv;
-  rv = NS_MutateURI(uri)
-           .SetUserPass(EmptyCString())
-           .SetPort(-1)  // we want to reset the port number if needed.
-           .SetHostPort(aHostString)
-           .Finalize(uri);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return uri.forget();
-}
-
-already_AddRefed<nsIURI> nsHTMLDocument::RegistrableDomainSuffixOfInternal(
-    const nsAString& aNewDomain, nsIURI* aOrigHost) {
-  if (NS_WARN_IF(!aOrigHost)) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> newURI =
-      CreateInheritingURIForHost(NS_ConvertUTF16toUTF8(aNewDomain));
-  if (!newURI) {
-    // Error: failed to parse input domain
-    return nullptr;
-  }
-
-  // Check new domain - must be a superdomain of the current host
-  // For example, a page from foo.bar.com may set domain to bar.com,
-  // but not to ar.com, baz.com, or fi.foo.bar.com.
-  nsAutoCString current;
-  nsAutoCString domain;
-  if (NS_FAILED(aOrigHost->GetAsciiHost(current))) {
-    current.Truncate();
-  }
-  if (NS_FAILED(newURI->GetAsciiHost(domain))) {
-    domain.Truncate();
-  }
-
-  bool ok = current.Equals(domain);
-  if (current.Length() > domain.Length() && StringEndsWith(current, domain) &&
-      current.CharAt(current.Length() - domain.Length() - 1) == '.') {
-    // We're golden if the new domain is the current page's base domain or a
-    // subdomain of it.
-    nsCOMPtr<nsIEffectiveTLDService> tldService =
-        do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-    if (!tldService) {
-      return nullptr;
-    }
-
-    nsAutoCString currentBaseDomain;
-    ok = NS_SUCCEEDED(
-        tldService->GetBaseDomain(aOrigHost, 0, currentBaseDomain));
-    NS_ASSERTION(StringEndsWith(domain, currentBaseDomain) ==
-                     (domain.Length() >= currentBaseDomain.Length()),
-                 "uh-oh!  slight optimization wasn't valid somehow!");
-    ok = ok && domain.Length() >= currentBaseDomain.Length();
-  }
-
-  if (!ok) {
-    // Error: illegal domain
-    return nullptr;
-  }
-
-  return CreateInheritingURIForHost(domain);
-}
-
 bool nsHTMLDocument::IsRegistrableDomainSuffixOfOrEqualTo(
     const nsAString& aHostSuffixString, const nsACString& aOrigHost) {
   // https://html.spec.whatwg.org/multipage/browsers.html#is-a-registrable-domain-suffix-of-or-is-equal-to
@@ -910,44 +799,6 @@ bool nsHTMLDocument::IsRegistrableDomainSuffixOfOrEqualTo(
     return false;
   }
   return true;
-}
-
-void nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
-  if (mSandboxFlags & SANDBOXED_DOMAIN) {
-    // We're sandboxed; disallow setting domain
-    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  if (!FeaturePolicyUtils::IsFeatureAllowed(
-          this, NS_LITERAL_STRING("document-domain"))) {
-    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  if (aDomain.IsEmpty()) {
-    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri = GetDomainURI();
-  if (!uri) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  // Check new domain - must be a superdomain of the current host
-  // For example, a page from foo.bar.com may set domain to bar.com,
-  // but not to ar.com, baz.com, or fi.foo.bar.com.
-
-  nsCOMPtr<nsIURI> newURI = RegistrableDomainSuffixOfInternal(aDomain, uri);
-  if (!newURI) {
-    // Error: illegal domain
-    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return;
-  }
-
-  rv = NodePrincipal()->SetDomain(newURI);
 }
 
 mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> nsHTMLDocument::Open(
