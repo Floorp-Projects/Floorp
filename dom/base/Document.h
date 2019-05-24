@@ -3266,6 +3266,8 @@ class Document : public nsINode,
                                            ErrorResult& rv);
   void GetInputEncoding(nsAString& aInputEncoding) const;
   already_AddRefed<Location> GetLocation() const;
+  void GetDomain(nsAString& aDomain);
+  void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);
   void GetCookie(nsAString& aCookie, mozilla::ErrorResult& rv);
   void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
   void GetReferrer(nsAString& aReferrer) const;
@@ -3906,6 +3908,12 @@ class Document : public nsINode,
   // aSheetSet as the preferred set in the CSSLoader.
   void EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
                                        bool aUpdateCSSLoader);
+
+  already_AddRefed<nsIURI> GetDomainURI();
+  already_AddRefed<nsIURI> CreateInheritingURIForHost(
+      const nsACString& aHostString);
+  already_AddRefed<nsIURI> RegistrableDomainSuffixOfInternal(
+      const nsAString& aHostSuffixString, nsIURI* aOrigHost);
 
  private:
   void RecordContentBlockingLog(
