@@ -9,13 +9,9 @@
     <!-- Preference for developers -->
     <string name="preference_leakcanary" translatable="false">LeakCanary</string>
 
-    <!-- Strings not ready for translation -->
-    <string name="sessions_intro_description" translatable="false">Sessions help you return to the sites you visit often and those you\'ve just discovered. Start browsing and they\'ll begin to appear here.</string>
-    <!-- About content. Sentences are separated by two new lines. The first and second parameters are the name of the
-    application. (For example: Fenix) -->
+    <!-- About content. The first and second parameters are the name of the application. (For example: Fenix) -->
     <string name="about_content" translatable="false">
-        %1$s puts you in control.
-        \n\n%1$s is produced by Mozilla.
+        1$s is produced by Mozilla.
     </string>
 
     <!-- Onboarding -->
