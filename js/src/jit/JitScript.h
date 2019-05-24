@@ -138,7 +138,8 @@ class alignas(uintptr_t) JitScript final {
   }
 #endif
 
-  MOZ_MUST_USE bool initICEntries(JSContext* cx, JSScript* script);
+  MOZ_MUST_USE bool initICEntriesAndBytecodeTypeMap(JSContext* cx,
+                                                    JSScript* script);
 
   bool hasFreezeConstraints(const js::AutoSweepJitScript& sweep) const {
     MOZ_ASSERT(sweep.jitScript() == this);
