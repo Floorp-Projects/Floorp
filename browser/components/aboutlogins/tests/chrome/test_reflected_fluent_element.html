@@ -6,8 +6,7 @@ Test the reflected-fluent-element component
 <head>
   <meta charset="utf-8">
   <title>Test the reflected-fluent-element component</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="reflected-fluent-element.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="aboutlogins_common.js"></script>
 
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
@@ -75,6 +74,7 @@ add_task(async function setup() {
   for (let scriptSrc of ["login-filter.js", "login-item.js", "login-list.js"]) {
     let scriptEl = document.createElement("script");
     scriptEl.setAttribute("src", scriptSrc);
+    scriptEl.setAttribute("type", "module");
     document.head.appendChild(scriptEl);
   }
 });
