@@ -63,10 +63,16 @@ add_task({
   const profile = do_get_profile();
   const revocations = profile.clone();
   revocations.append("revocations.txt");
-  const before = revocations.lastModifiedTime;
+  const before = revocations.exists() ? revocations.lastModifiedTime : null;
 
   await OneCRLBlocklistClient.emit("sync", { data: {
     current: [{
+      issuerName: "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
+      serialNumber: "a0X7/7DlTaedpgrIJg25iBPOkIM=",
+    }],
+    deleted: [],
+    updated: [],
+    created: [{
       issuerName: "MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
       serialNumber: "a0X7/7DlTaedpgrIJg25iBPOkIM=",
     }],
