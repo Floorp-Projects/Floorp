@@ -41,7 +41,6 @@ dependencies {
     implementation project(':browser-session')
     implementation project(':concept-engine')
     implementation project(':ui-icons')
-    implementation project(':ui-doorhanger')
     implementation project(':support-ktx')
 
     implementation Dependencies.androidx_room_runtime
