@@ -14,6 +14,7 @@ using nsSizeMode from "nsIWidgetListener.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
+using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
 
 namespace mozilla {
 namespace dom {
@@ -43,6 +44,11 @@ child:
    * should move focus to the next or previous focusable element or document.
    */
   async MoveFocus(bool forward, bool forDocumentNavigation);
+
+  /**
+   * Send the child the COM proxy for the embedded document accessible.
+   */
+  async SetEmbeddedDocAccessibleCOMProxy(IDispatchHolder aCOMProxy);
 
 parent:
   // Destroy the remote web browser due to the nsFrameLoader going away.

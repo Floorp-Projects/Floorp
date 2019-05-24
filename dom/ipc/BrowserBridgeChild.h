@@ -11,6 +11,11 @@
 #include "mozilla/dom/BrowserChild.h"
 
 namespace mozilla {
+
+namespace a11y {
+class RemoteIframeDocProxyAccessibleWrap;
+}
+
 namespace dom {
 class BrowsingContext;
 class ContentChild;
@@ -44,6 +49,12 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+  a11y::RemoteIframeDocProxyAccessibleWrap* GetEmbeddedDocAccessible() {
+    return mEmbeddedDocAccessible;
+  }
+#endif
+
   static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
 
   static BrowserBridgeChild* GetFrom(nsIContent* aContent);
@@ -63,6 +74,9 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   mozilla::ipc::IPCResult RecvMoveFocus(const bool& aForward,
                                         const bool& aForDocumentNavigation);
 
+  mozilla::ipc::IPCResult RecvSetEmbeddedDocAccessibleCOMProxy(
+      const IDispatchHolder& aCOMProxy);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
@@ -72,6 +86,9 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   bool mIPCOpen;
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<BrowsingContext> mBrowsingContext;
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+  RefPtr<a11y::RemoteIframeDocProxyAccessibleWrap> mEmbeddedDocAccessible;
+#endif
 };
 
 }  // namespace dom
