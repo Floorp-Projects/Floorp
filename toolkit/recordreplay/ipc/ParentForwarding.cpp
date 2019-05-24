@@ -340,10 +340,6 @@ class MiddlemanProtocol : public ipc::IToplevelProtocol {
     return MsgProcessed;
   }
 
-  virtual int32_t GetProtocolTypeId() override {
-    MOZ_CRASH("MiddlemanProtocol::GetProtocolTypeId");
-  }
-
   virtual void OnChannelClose() override {
     MOZ_RELEASE_ASSERT(mSide == ipc::ChildSide);
     BeginShutdown();
