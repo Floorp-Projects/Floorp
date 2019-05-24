@@ -22,6 +22,11 @@
                 android:defaultValue="true"
                 android:enabled="false"
                 android:title="@string/preferences_sync_history" />
+
+        <androidx.preference.EditTextPreference
+                android:key="@string/pref_key_sync_device_name"
+                android:title="@string/preferences_sync_device_name" />
+
     </PreferenceCategory>
 
     <androidx.preference.Preference

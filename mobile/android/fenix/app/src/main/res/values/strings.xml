@@ -153,6 +153,8 @@
     <string name="preferences_sync_bookmarks">Bookmarks</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Sign out</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Device name</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing">Syncing…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
