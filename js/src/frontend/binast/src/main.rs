@@ -1,6 +1,7 @@
 extern crate binjs_meta;
 extern crate clap;
 extern crate env_logger;
+extern crate inflector;
 extern crate itertools;
 #[macro_use] extern crate log;
 extern crate webidl;
@@ -23,6 +24,16 @@ use std::rc::Rc;
 use clap::{ App, Arg };
 
 use itertools::Itertools;
+
+/// An extension of `ToCases` to produce macro-style names, e.g. `FOO_BAR`
+/// from `FooBar` or `foo_bar`.
+trait ToCases2: ToCases {
+    fn to_cpp_macro_case(&self) -> String {
+        use inflector::cases::screamingsnakecase::to_screaming_snake_case;
+        to_screaming_snake_case(&self.to_cpp_enum_case())
+    }
+}
+impl<T: ToCases> ToCases2 for T {}
 
 /// Rules for generating the code for parsing a single field
 /// of a node.
@@ -959,13 +970,14 @@ impl CPPExporter {
         let kind_limit = node_names.len();
         buffer.push_str(&format!("\n#define FOR_EACH_BIN_KIND(F) \\\n{nodes}\n",
             nodes = node_names.iter()
-                .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
+                .map(|name| format!("    F({enum_name}, \"{spec_name}\", {macro_name})",
                     enum_name = name.to_cpp_enum_case(),
-                    spec_name = name))
+                    spec_name = name,
+                    macro_name = name.to_cpp_macro_case()))
                 .format(" \\\n")));
         buffer.push_str("
 enum class BinASTKind: uint16_t {
-#define EMIT_ENUM(name, _) name,
+#define EMIT_ENUM(name, _1, _2) name,
     FOR_EACH_BIN_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
 };
@@ -1023,6 +1035,135 @@ enum class BinASTInterfaceAndField: uint16_t {
 };
 ");
 
+        buffer.push_str("
+// Strongly typed iterations through the fields of interfaces.
+//
+// Each of these macros accepts the following arguments:
+// - F: callback
+// - PRIMITIVE: wrapper for primitive type names - called as `PRIMITIVE(typename)`
+// - INTERFACE: wrapper for non-optional interface type names - called as `INTERFACE(typename)`
+// - OPTIONAL_INTERFACE: wrapper for optional interface type names - called as `OPTIONAL_INTERFACE(typename)` where
+//      `typename` is the name of the interface (e.g. no `Maybe` prefix)
+// - LIST: wrapper for list types - called as `LIST(list_typename, element_typename)`
+// - SUM: wrapper for non-optional type names - called as `SUM(typename)`
+// - OPTIONAL_SUM: wrapper for optional sum type names - called as `OPTIONAL_SUM(typename)` where
+//      `typename` is the name of the sum (e.g. no `Maybe` prefix)
+// - STRING_ENUM: wrapper for non-optional string enum types - called as `STRING_ENUNM(typename)`
+// - OPTIONAL_STRING_ENUM: wrapper for optional string enum type names - called as `OPTIONAL_STRING_ENUM(typename)` where
+//      `typename` is the name of the string enum (e.g. no `Maybe` prefix)
+");
+        for (interface_name, interface) in self.syntax.interfaces_by_name().iter().sorted_by_key(|a| a.0) {
+            use std::borrow::Cow;
+            let interface_enum_name = interface_name.to_cpp_enum_case();
+            let interface_spec_name = interface_name.clone();
+            let interface_macro_name = interface.name().to_cpp_macro_case();
+            buffer.push_str(&format!("\n\n
+// Strongly typed iteration through the fields of interface {interface_enum_name}.
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_{interface_macro_name}(F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, STRING_ENUM, OPTIONAL_STRING_ENUM) \\\n{nodes}\n",
+                interface_macro_name = interface_macro_name,
+                interface_enum_name = interface_enum_name.clone(),
+                nodes = interface.contents().fields()
+                    .iter()
+                    .enumerate()
+                    .map(|(i, field)| {
+                        fn get_field_type_name(spec: &Spec, type_: &Type, make_optional: bool) -> Cow<'static, str> {
+                            let optional = make_optional || type_.is_optional();
+                            match *type_.spec() {
+                                TypeSpec::Boolean if optional => Cow::from("PRIMITIVE(MaybeBoolean)"),
+                                TypeSpec::Boolean => Cow::from("PRIMITIVE(Boolean)"),
+                                TypeSpec::String if optional => Cow::from("PRIMITIVE(MaybeString)"),
+                                TypeSpec::String => Cow::from("PRIMITIVE(String)"),
+                                TypeSpec::Number if optional => Cow::from("PRIMITIVE(MaybeNumber)"),
+                                TypeSpec::Number => Cow::from("PRIMITIVE(Number)"),
+                                TypeSpec::UnsignedLong if optional => Cow::from("PRIMITIVE(MaybeUnsignedLong)"),
+                                TypeSpec::UnsignedLong => Cow::from("PRIMITIVE(UnsignedLong)"),
+                                TypeSpec::Offset if optional => Cow::from("PRIMITIVE(MaybeLazy)"),
+                                TypeSpec::Offset => Cow::from("PRIMITIVE(Lazy)"),
+                                TypeSpec::Void if optional => Cow::from("PRIMITIVE(MaybeVoid)"),
+                                TypeSpec::Void => Cow::from("PRIMITIVE(Void)"),
+                                TypeSpec::IdentifierName if optional => Cow::from("PRIMITIVE(MaybeIdentifierName)"),
+                                TypeSpec::IdentifierName => Cow::from("PRIMITIVE(IdentifierName)"),
+                                TypeSpec::PropertyKey if optional => Cow::from("PRIMITIVE(MaybePropertyKey)"),
+                                TypeSpec::PropertyKey => Cow::from("PRIMITIVE(PropertyKey)"),
+                                TypeSpec::Array { ref contents, .. } => Cow::from(
+                                    format!("LIST({name}, {contents})",
+                                        name = TypeName::type_(type_),
+                                        contents = TypeName::type_(contents),
+                                )),
+                                TypeSpec::NamedType(ref name) => match spec.get_type_by_name(name).expect("By now, all types MUST exist") {
+                                    NamedType::Typedef(alias_type) => {
+                                        if alias_type.is_optional() {
+                                            return get_field_type_name(spec, alias_type.as_ref(), true)
+                                        }
+                                        // Keep the simple name of sums and lists if there is one.
+                                        match *alias_type.spec() {
+                                            TypeSpec::TypeSum(ref contents ) => {
+                                                if optional {
+                                                    Cow::from(format!("OPTIONAL_SUM({name})", name = name.to_cpp_enum_case()))
+                                                } else {
+                                                    Cow::from(format!("SUM({name})", name = name.to_cpp_enum_case()))
+                                                }
+                                            }
+                                            TypeSpec::Array { ref contents, .. } => {
+                                                let contents = TypeName::type_(contents);
+                                                if optional {
+                                                    Cow::from(format!("OPTIONAL_LIST({name}, {contents})",
+                                                        name = name.to_cpp_enum_case(),
+                                                        contents = contents))
+                                                } else {
+                                                    Cow::from(format!("LIST({name}, {contents})",
+                                                        name = name.to_cpp_enum_case(),
+                                                        contents = contents))
+                                                }
+                                            }
+                                            _ => {
+                                                get_field_type_name(spec, alias_type.as_ref(), optional)
+                                            }
+                                        }
+                                    }
+                                    NamedType::StringEnum(_) if type_.is_optional() => Cow::from(
+                                        format!("OPTIONAL_STRING_ENUM({name})",
+                                            name = TypeName::type_(type_))),
+                                    NamedType::StringEnum(_) => Cow::from(
+                                        format!("STRING_ENUM({name})",
+                                            name = TypeName::type_(type_))),
+                                    NamedType::Interface(ref interface) if type_.is_optional() => Cow::from(
+                                        format!("OPTIONAL_INTERFACE({name})",
+                                            name = interface.name().to_class_cases())),
+                                    NamedType::Interface(ref interface) => Cow::from(
+                                        format!("INTERFACE({name})",
+                                            name = interface.name().to_class_cases())),
+                                }
+                                TypeSpec::TypeSum(ref contents) if type_.is_optional() => {
+                                    // We need to make sure that we don't count the `optional` part twice.
+                                    // FIXME: The problem seems to only show up in this branch, but it looks like
+                                    // it might (should?) appear in other branches, too.
+                                    let non_optional_type = Type::sum(contents.types()).required();
+                                    let name = TypeName::type_(&non_optional_type);
+                                    Cow::from(format!("OPTIONAL_SUM({name})", name = name))
+                                }
+                                TypeSpec::TypeSum(_) => Cow::from(format!("SUM({name})", name = TypeName::type_(type_))),
+                            }
+                        }
+                        let field_type_name = get_field_type_name(&self.syntax, field.type_(), false);
+                        format!("    F({interface_enum_name}, {field_enum_name}, {field_index}, {field_type}, \"{interface_spec_name}::{field_spec_name}\")",
+                            interface_enum_name = interface_enum_name,
+                            field_enum_name = field.name().to_cpp_enum_case(),
+                            field_index = i,
+                            interface_spec_name = interface_spec_name,
+                            field_spec_name = field.name().to_str(),
+                            field_type = field_type_name
+                        )
+                    })
+                    .format(" \\\n")));
+            buffer.push_str(&format!("
+// The number of fields of interface {interface_spec_name}.
+const size_t BINAST_NUMBER_OF_FIELDS_IN_INTERFACE_{interface_macro_name} = {len};",
+                interface_spec_name = interface_spec_name,
+                interface_macro_name = interface_macro_name,
+                len = interface.contents().fields().len()));
+        }
+
         let total_number_of_fields: usize = self.syntax.interfaces_by_name()
             .values()
             .map(|interface| interface.contents().fields().len())
@@ -1057,7 +1198,60 @@ enum class BinASTVariant: uint16_t {
         buffer.push_str(&format!("\n// The number of distinct values of BinASTVariant.\nconst size_t BINASTVARIANT_LIMIT = {};\n\n\n",
             variants_limit));
 
+        buffer.push_str(&format!("\n#define FOR_EACH_BIN_STRING_ENUM(F) \\\n{nodes}\n",
+            nodes = self.syntax.string_enums_by_name()
+                .keys()
+                .sorted()
+                .into_iter()
+                .map(|name| format!("    F({enum_name}, \"{spec_name}\")",
+                    enum_name = name.to_cpp_enum_case(),
+                    spec_name = name.to_str()))
+                .format(" \\\n")));
+
+        buffer.push_str("
+enum class BinASTStringEnum: uint16_t {
+#define EMIT_ENUM(name, _) name,
+    FOR_EACH_BIN_STRING_ENUM(EMIT_ENUM)
+#undef EMIT_ENUM
+};
+");
+        buffer.push_str(&format!("\n// The number of distinct values of BinASTStringEnum.\nconst size_t BINASTSTRINGENUM_LIMIT = {};\n\n\n",
+            self.syntax.string_enums_by_name().len()));
+
+       buffer.push_str(&format!("\n#define FOR_EACH_BIN_LIST(F) \\\n{nodes}\n",
+            nodes = self.list_parsers_to_generate.iter()
+                .sorted_by_key(|data| &data.name)
+                .into_iter()
+                .map(|data| format!("    F({list_name}, {content_name}, \"{spec_name}\")",
+                    list_name = data.name.to_cpp_enum_case(),
+                    content_name = data.elements.to_cpp_enum_case(),
+                    spec_name = data.name.to_str()))
+                .format(" \\\n")));
+        buffer.push_str("
+enum class BinASTList: uint16_t {
+#define EMIT_ENUM(name, _content, _user) name,
+    FOR_EACH_BIN_LIST(EMIT_ENUM)
+#undef EMIT_ENUM
+};
+");
         buffer.push_str(&format!("\n// The number of distinct list types in the grammar. Used typically to maintain a probability table per list type.\nconst size_t BINAST_NUMBER_OF_LIST_TYPES = {};\n\n\n", self.list_parsers_to_generate.len()));
+
+        buffer.push_str(&format!("\n#define FOR_EACH_BIN_SUM(F) \\\n{nodes}\n",
+            nodes = self.syntax.resolved_sums_of_interfaces_by_name()
+                .iter()
+                .sorted_by(|a, b| a.0.cmp(&b.0))
+                .into_iter()
+                .map(|(name, _)| format!("    F({name}, \"{spec_name}\")",
+                    name = name.to_cpp_enum_case(),
+                    spec_name = name.to_str()))
+                .format(" \\\n")));
+        buffer.push_str("
+enum class BinASTSum: uint16_t {
+#define EMIT_ENUM(name, _user) name,
+    FOR_EACH_BIN_SUM(EMIT_ENUM)
+#undef EMIT_ENUM
+};
+");
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
         buffer.push_str("\n");
