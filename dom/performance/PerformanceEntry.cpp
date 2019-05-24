@@ -6,7 +6,6 @@
 
 #include "PerformanceEntry.h"
 #include "MainThreadUtils.h"
-#include "mozilla/dom/PerformanceEntryBinding.h"
 #include "nsIURI.h"
 
 using namespace mozilla::dom;
@@ -26,11 +25,6 @@ PerformanceEntry::PerformanceEntry(nsISupports* aParent, const nsAString& aName,
     : mParent(aParent), mName(aName), mEntryType(aEntryType) {}
 
 PerformanceEntry::~PerformanceEntry() {}
-
-JSObject* PerformanceEntry::WrapObject(JSContext* aCx,
-                                       JS::Handle<JSObject*> aGivenProto) {
-  return mozilla::dom::PerformanceEntry_Binding::Wrap(aCx, this, aGivenProto);
-}
 
 size_t PerformanceEntry::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
