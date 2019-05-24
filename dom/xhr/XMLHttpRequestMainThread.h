@@ -526,7 +526,29 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
       }
 
       bool operator<(const HeaderEntry& aOther) const {
-        return mName < aOther.mName;
+        if (!IsLowercaseResponseHeader()) {
+          return mName < aOther.mName;
+        }
+        uint32_t selfLen = mName.Length();
+        uint32_t otherLen = aOther.mName.Length();
+        uint32_t min = XPCOM_MIN(selfLen, otherLen);
+        for (uint32_t i = 0; i < min; ++i) {
+          unsigned char self = mName[i];
+          unsigned char other = aOther.mName[i];
+          MOZ_ASSERT(!(self >= 'A' && self <= 'Z'));
+          MOZ_ASSERT(!(other >= 'A' && other <= 'Z'));
+          if (self == other) {
+            continue;
+          }
+          if (self >= 'a' && self <= 'z') {
+            self -= 0x20;
+          }
+          if (other >= 'a' && other <= 'z') {
+            other -= 0x20;
+          }
+          return self < other;
+        }
+        return selfLen < otherLen;
       }
     };
 
