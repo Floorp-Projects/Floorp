@@ -2334,62 +2334,140 @@ static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
 #endif
 
 /**
- * The version string used in compatibility.ini is in the form
- * <appversion>_<appbuildid>/<aplatformbuildidid>. The build IDs are in the form
- * <year><month><day><hour><minute><second>. We need to be able to turn this
- * into something that can be compared by the version comparator. Build IDs are
- * numeric so normally we could just use those as part of the version but they
- * are larger than 32-bit integers so we must split them into two parts.
- * So we generate a version string of the format:
- * <appversion>.<appbuilddate>.<appbuildtime>.<platformbuilddate>.<platformbuildtime>
- * This doesn't compare correctly so
- * we have to make the build ids separate version parts instead. We also have
- * to split up the build ids as they are too large for the version comparator's
- * brain.
+ * Extracts the various parts of a compatibility version string.
+ *
+ * Compatibility versions are of the form
+ * "<appversion>_<appbuildid>/<platformbuildid>". The toolkit version comparator
+ * can only handle 32-bit numbers and in the normal case build IDs are larger
+ * than this. So if the build ID is numeric we split it into two version parts.
  */
+static void ExtractCompatVersionInfo(const nsACString& aCompatVersion,
+                                     nsACString& aAppVersion,
+                                     nsACString& aAppBuildID,
+                                     nsACString& aPlatformBuildID) {
+  int32_t underscorePos = aCompatVersion.FindChar('_');
+  int32_t slashPos = aCompatVersion.FindChar('/');
 
-// Build ID dates are 8 digits, build ID times are 6 digits.
-#define BUILDID_DATE_LENGTH 8
-#define BUILDID_TIME_LENGTH 6
-#define BUILDID_LENGTH BUILDID_DATE_LENGTH + BUILDID_TIME_LENGTH
-
-static void GetBuildIDVersions(const nsACString& aFullVersion, int32_t aPos,
-                               nsACString& aBuildVersions) {
-  // Extract the date part then the time part.
-  aBuildVersions.Assign(
-      Substring(aFullVersion, aPos, BUILDID_DATE_LENGTH) +
-      NS_LITERAL_CSTRING(".") +
-      Substring(aFullVersion, aPos + BUILDID_DATE_LENGTH, BUILDID_TIME_LENGTH));
-}
-
-static Version GetComparableVersion(const nsCString& aVersionStr) {
-  // We'll find the position of the '_' and '/' characters. The length from the
-  // '_' character to the '/' character will be the length of a build ID plus
-  // one for the '_' character. Similarly the length from the '/' character to
-  // the end of the string will be the same.
-  const uint32_t kExpectedLength = BUILDID_LENGTH + 1;
-
-  int32_t underscorePos = aVersionStr.FindChar('_');
-  int32_t slashPos = aVersionStr.FindChar('/');
   if (underscorePos == kNotFound || slashPos == kNotFound ||
-      (slashPos - underscorePos) != kExpectedLength ||
-      (aVersionStr.Length() - slashPos) != kExpectedLength) {
+      slashPos < underscorePos) {
     NS_WARNING(
         "compatibility.ini Version string does not match the expected format.");
-    return Version(aVersionStr.get());
+
+    // Fall back to just using the entire string as the version.
+    aAppVersion = aCompatVersion;
+    aAppBuildID.Truncate(0);
+    aPlatformBuildID.Truncate(0);
+    return;
   }
 
-  nsCString appBuild, platBuild;
-  NS_NAMED_LITERAL_CSTRING(dot, ".");
+  aAppVersion = Substring(aCompatVersion, 0, underscorePos);
+  aAppBuildID = Substring(aCompatVersion, underscorePos + 1, slashPos - (underscorePos + 1));
+  aPlatformBuildID = Substring(aCompatVersion, slashPos + 1);
+}
 
-  const nsACString& version = Substring(aVersionStr, 0, underscorePos);
+static bool IsNewIDLower(nsACString& oldID, nsACString& newID) {
+  // For Mozilla builds the build ID is a numeric date string. But it is too
+  // large a number for the version comparator to handle so try to just compare
+  // them as integer values first.
 
-  GetBuildIDVersions(aVersionStr, underscorePos + 1, /* outparam */ appBuild);
-  GetBuildIDVersions(aVersionStr, slashPos + 1, /* outparam */ platBuild);
+  // ToInteger64 succeeds if the strings contain trailing non-digits so first
+  // check that all the characters are digits.
+  bool isNumeric = true;
+  const char* pos = oldID.BeginReading();
+  const char* end = oldID.EndReading();
+  while (pos != end) {
+    if (!IsAsciiDigit(*pos)) {
+      isNumeric = false;
+      break;
+    }
+    pos++;
+  }
 
-  const nsACString& fullVersion = version + dot + appBuild + dot + platBuild;
+  if (isNumeric) {
+    pos = newID.BeginReading();
+    end = newID.EndReading();
+    while (pos != end) {
+      if (!IsAsciiDigit(*pos)) {
+        isNumeric = false;
+        break;
+      }
+      pos++;
+    }
+  }
 
-  return Version(PromiseFlatCString(fullVersion).get());
+  if (isNumeric) {
+    nsresult rv;
+    uint64_t oldVal;
+    uint64_t newVal;
+    oldVal = oldID.ToInteger64(&rv);
+
+    if (NS_SUCCEEDED(rv)) {
+      newVal = newID.ToInteger64(&rv);
+
+      if (NS_SUCCEEDED(rv)) {
+        // We have simple numbers for both IDs.
+        return newVal < oldVal;
+      }
+    }
+  }
+
+  // If either could not be parsed as a number then something (likely a Linux
+  // distribution could have modified the build ID in some way. We don't know
+  // what format this may be so let's just fall back to assuming that it's a
+  // valid toolkit version.
+  return Version(PromiseFlatCString(newID).get()) <
+         Version(PromiseFlatCString(oldID).get());
+}
+
+/**
+ * Checks whether the compatibility versions from the previous and current
+ * application match. Returns true if there has been no change, false otherwise.
+ * The aDowngrade parameter is set to true if the old version is "newer" than
+ * the new version.
+ */
+bool CheckCompatVersions(const nsACString& aOldCompatVersion,
+                         const nsACString& aNewCompatVersion,
+                         bool* aIsDowngrade) {
+  // Quick path for the common case.
+  if (aOldCompatVersion.Equals(aNewCompatVersion)) {
+    *aIsDowngrade = false;
+    return true;
+  }
+
+  // The versions differ for some reason so we will only ever return false from
+  // here onwards. We just have to figure out if this is a downgrade or not.
+
+  nsCString oldVersion;
+  nsCString oldAppBuildID;
+  nsCString oldPlatformBuildID;
+  ExtractCompatVersionInfo(aOldCompatVersion, oldVersion, oldAppBuildID,
+                           oldPlatformBuildID);
+
+  nsCString newVersion;
+  nsCString newAppBuildID;
+  nsCString newPlatformBuildID;
+  ExtractCompatVersionInfo(aNewCompatVersion, newVersion, newAppBuildID,
+                           newPlatformBuildID);
+
+  // In most cases the app version will differ and this is an easy check.
+  if (Version(newVersion.get()) < Version(oldVersion.get())) {
+    *aIsDowngrade = true;
+    return false;
+  }
+
+  // Fall back to build ID comparison.
+  if (IsNewIDLower(oldAppBuildID, newAppBuildID)) {
+    *aIsDowngrade = true;
+    return false;
+  }
+
+  if (IsNewIDLower(oldPlatformBuildID, newPlatformBuildID)) {
+    *aIsDowngrade = true;
+    return false;
+  }
+
+  *aIsDowngrade = false;
+  return false;
 }
 
 /**
@@ -2423,10 +2501,7 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     return false;
   }
 
-  if (!aVersion.Equals(aLastVersion)) {
-    Version current = GetComparableVersion(aVersion);
-    Version last = GetComparableVersion(aLastVersion);
-    *aIsDowngrade = last > current;
+  if (!CheckCompatVersions(aLastVersion, aVersion, aIsDowngrade)) {
     return false;
   }
 
@@ -2475,12 +2550,18 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   return true;
 }
 
-static void BuildVersion(nsCString& aBuf) {
-  aBuf.Assign(gAppData->version);
+void BuildCompatVersion(const char* aAppVersion, const char* aAppBuildID,
+                        const char* aToolkitBuildID, nsACString& aBuf) {
+  aBuf.Assign(aAppVersion);
   aBuf.Append('_');
-  aBuf.Append(gAppData->buildID);
+  aBuf.Append(aAppBuildID);
   aBuf.Append('/');
-  aBuf.Append(gToolkitBuildID);
+  aBuf.Append(aToolkitBuildID);
+}
+
+static void BuildVersion(nsCString& aBuf) {
+  BuildCompatVersion(gAppData->version, gAppData->buildID, gToolkitBuildID,
+                     aBuf);
 }
 
 static void WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
