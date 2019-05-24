@@ -798,11 +798,17 @@ def set_tier(config, tests):
                                          'macosx1014-64-qr/debug',
                                          'android-em-4.3-arm7-api-16/opt',
                                          'android-em-4.3-arm7-api-16/debug',
+                                         'android-em-4.3-arm7-api-16-beta/debug',
+                                         'android-em-4.3-arm7-api-16-release/debug',
                                          'android-em-4.3-arm7-api-16/pgo',
-                                         'android-em-4.2-x86/opt',
+                                         'android-em-4.3-arm7-api-16-beta/pgo',
+                                         'android-em-4.3-arm7-api-16-release/pgo',
                                          'android-em-7.0-x86_64/opt',
+                                         'android-em-7.0-x86_64-beta/opt',
+                                         'android-em-7.0-x86_64-release/opt',
                                          'android-em-7.0-x86_64/debug',
-                                         'android-em-7.0-x86/opt']:
+                                         'android-em-7.0-x86_64-beta/debug',
+                                         'android-em-7.0-x86_64-release/debug']:
                 test['tier'] = 1
             else:
                 test['tier'] = 2
