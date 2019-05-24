@@ -28,9 +28,10 @@
 
 # Dialog units are used so the UI displays correctly with the system's DPI
 # settings.
-!define PROFILE_CLEANUP_LABEL_TOP "39u"
+!define PROFILE_CLEANUP_LABEL_TOP "35u"
 !define PROFILE_CLEANUP_LABEL_LEFT "0"
 !define PROFILE_CLEANUP_LABEL_WIDTH "100%"
+!define PROFILE_CLEANUP_LABEL_HEIGHT "80u"
 !define PROFILE_CLEANUP_LABEL_ALIGN "center"
 !define PROFILE_CLEANUP_CHECKBOX_LEFT "center"
 !define PROFILE_CLEANUP_CHECKBOX_WIDTH "100%"
