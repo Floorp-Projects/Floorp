@@ -69,8 +69,10 @@ void WebGLExtensionCompressedTextureASTC::GetSupportedProfiles(
     dom::Nullable<nsTArray<nsString> >& retval) const {
   retval.SetNull();
   if (mIsLost) {
-    mContext->ErrorInvalidOperation("%s: Extension is lost.",
-                                    "drawElementsInstancedANGLE");
+    if (mContext) {
+      mContext->ErrorInvalidOperation("%s: Extension is lost.",
+                                      "drawElementsInstancedANGLE");
+    }
     return;
   }
 
