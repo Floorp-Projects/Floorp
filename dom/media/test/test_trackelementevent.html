@@ -6,12 +6,11 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
+<video id="v" src="seek.webm" preload="auto">
 <script type="text/javascript">
 
 function runTest() {
-  var video = document.createElement("video");
-  video.src = "seek.webm";
-  video.preload = "auto";
+  var video = document.getElementById("v");
 
   var trackOne = document.createElement("track");
   trackOne.src = "basic.vtt";
@@ -50,7 +49,6 @@ function runTest() {
   trackThree.addEventListener("load", shouldNotBeCalled);
   trackThree.addEventListener("error", trackThreeEvent);
 
-  document.appendChild(video);
   video.appendChild(trackOne);
   video.appendChild(trackTwo);
   video.appendChild(trackThree);

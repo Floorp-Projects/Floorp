@@ -6,10 +6,11 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
+<video id="v" src="seek.webm" preload="metadata">
 <script type="text/javascript">
 
 function runTest() {
-  var video = document.createElement("video");
+  var video = document.getElementById("v");
 
   // Check if adding a text track manually sets the TextTrackList correctly.
 
@@ -21,18 +22,11 @@ function runTest() {
       video.textTracks,
       "The Track's TextTrackList should be the Video's TextTrackList.");
 
-
-  // Check if loading a Track via a TrackElement sets the TextTrackList correctly.
-  video.src = "seek.webm";
-  video.preload = "auto";
-
   var trackElement = document.createElement("track");
   trackElement.src = "basic.vtt";
   trackElement.kind = "subtitles";
 
   video.appendChild(trackElement);
-  document.appendChild(video);
-
   video.addEventListener("loadedmetadata", function run_tests() {
     // Re-que run_tests() at the end of the event loop until the track
     // element has loaded its data.
