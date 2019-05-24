@@ -94,7 +94,7 @@
 VARCACHE_PREF(
   Live,
   "accessibility.monoaudio.enable",
-   accessibility_monoaudio_enable,
+  accessibility_monoaudio_enable,
   RelaxedAtomicBool, false
 )
 
@@ -108,14 +108,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "fuzzing.enabled",
-   fuzzing_enabled,
+  fuzzing_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "fuzzing.necko.enabled",
-   fuzzing_necko_enabled,
+  fuzzing_necko_enabled,
   RelaxedAtomicBool, false
 )
 #endif
@@ -132,7 +132,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "clipboard.autocopy",
-   clipboard_autocopy,
+  clipboard_autocopy,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -150,7 +150,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.animations-api.autoremove.enabled",
-   dom_animations_api_autoremove_enabled,
+  dom_animations_api_autoremove_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -164,7 +164,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.animations-api.compositing.enabled",
-   dom_animations_api_compositing_enabled,
+  dom_animations_api_compositing_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -173,7 +173,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.animations-api.core.enabled",
-   dom_animations_api_core_enabled,
+  dom_animations_api_core_enabled,
   bool, true
 )
 
@@ -191,7 +191,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.animations-api.getAnimations.enabled",
-   dom_animations_api_getAnimations_enabled,
+  dom_animations_api_getAnimations_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -206,7 +206,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.animations-api.implicit-keyframes.enabled",
-   dom_animations_api_implicit_keyframes_enabled,
+  dom_animations_api_implicit_keyframes_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -220,7 +220,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.animations-api.timelines.enabled",
-   dom_animations_api_timelines_enabled,
+  dom_animations_api_timelines_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -230,8 +230,8 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.compositionevent.text.dispatch_only_system_group_in_content",
-   dom_compositionevent_text_dispatch_only_system_group_in_content,
-   bool, true
+  dom_compositionevent_text_dispatch_only_system_group_in_content,
+  bool, true
 )
 
 // How long a content process can take before closing its IPC channel
@@ -246,7 +246,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.ipc.tabs.shutdownTimeoutSecs",
-   dom_ipc_tabs_shutdownTimeoutSecs,
+  dom_ipc_tabs_shutdownTimeoutSecs,
   RelaxedAtomicUint32, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -257,7 +257,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.event.clipboardevents.enabled",
-   dom_event_clipboardevents_enabled,
+  dom_event_clipboardevents_enabled,
   bool, true
 )
 
@@ -266,7 +266,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.keyboardevent.keypress.set_keycode_and_charcode_to_same_value",
-   dom_keyboardevent_keypress_set_keycode_and_charcode_to_same_value,
+  dom_keyboardevent_keypress_set_keycode_and_charcode_to_same_value,
   bool, true
 )
 
@@ -276,7 +276,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.input_events.conform_to_level_1",
-   dom_input_events_conform_to_level_1,
+  dom_input_events_conform_to_level_1,
   bool, true
 )
 
@@ -285,7 +285,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.input.skip_cursor_move_for_same_value_set",
-   dom_input_skip_cursor_move_for_same_value_set,
+  dom_input_skip_cursor_move_for_same_value_set,
   bool, true
 )
 
@@ -294,7 +294,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.webcomponents.shadowdom.report_usage",
-   dom_webcomponents_shadowdom_report_usage,
+  dom_webcomponents_shadowdom_report_usage,
   bool, false
 )
 
@@ -305,7 +305,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.mutation-events.cssom.disabled",
-   dom_mutation_events_cssom_disabled,
+  dom_mutation_events_cssom_disabled,
   bool, true
 )
 
@@ -318,7 +318,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.link.disabled_attribute.enabled",
-   dom_link_disabled_attribute_enabled,
+  dom_link_disabled_attribute_enabled,
   bool, true
 )
 
@@ -355,7 +355,7 @@ PREF("dom.serviceWorkers.parent_intercept", bool, false)
 VARCACHE_PREF(
   Live,
   "dom.payments.request.enabled",
-   dom_payments_request_enabled,
+  dom_payments_request_enabled,
   bool, false
 )
 
@@ -372,7 +372,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.payments.response.timeout",
-   dom_payments_response_timeout,
+  dom_payments_response_timeout,
   uint32_t, 5000
 )
 
@@ -380,14 +380,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.caches.enabled",
-   dom_caches_enabled,
+  dom_caches_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "dom.caches.testing.enabled",
-   dom_caches_testing_enabled,
+  dom_caches_testing_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -395,21 +395,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.performance.enable_user_timing_logging",
-   dom_performance_enable_user_timing_logging,
+  dom_performance_enable_user_timing_logging,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "dom.webnotifications.enabled",
-   dom_webnotifications_enabled,
+  dom_webnotifications_enabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "dom.webnotifications.allowinsecure",
-   dom_webnotifications_allowinsecure,
+  dom_webnotifications_allowinsecure,
   RelaxedAtomicBool, false
 )
 
@@ -421,7 +421,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.webnotifications.requireuserinteraction",
-   dom_webnotifications_requireuserinteraction,
+  dom_webnotifications_requireuserinteraction,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -429,7 +429,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.webnotifications.serviceworker.enabled",
-   dom_webnotifications_serviceworker_enabled,
+  dom_webnotifications_serviceworker_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -441,7 +441,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.webnotifications.requireinteraction.enabled",
-   dom_webnotifications_requireinteraction_enabled,
+  dom_webnotifications_requireinteraction_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -449,14 +449,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.serviceWorkers.enabled",
-   dom_serviceWorkers_enabled,
+  dom_serviceWorkers_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "dom.serviceWorkers.testing.enabled",
-   dom_serviceWorkers_testing_enabled,
+  dom_serviceWorkers_testing_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -476,7 +476,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.storageManager.enabled",
-   dom_storageManager_enabled,
+  dom_storageManager_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -487,7 +487,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.promise_rejection_events.enabled",
-   dom_promise_rejection_events_enabled,
+  dom_promise_rejection_events_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -495,7 +495,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.push.enabled",
-   dom_push_enabled,
+  dom_push_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -507,7 +507,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.webkitBlink.dirPicker.enabled",
-   dom_webkitBlink_dirPicker_enabled,
+  dom_webkitBlink_dirPicker_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -521,7 +521,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.netinfo.enabled",
-   dom_netinfo_enabled,
+  dom_netinfo_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -529,7 +529,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.fetchObserver.enabled",
-   dom_fetchObserver_enabled,
+  dom_fetchObserver_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -538,7 +538,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.enable_performance",
-   dom_enable_performance,
+  dom_enable_performance,
   RelaxedAtomicBool, true
 )
 
@@ -546,7 +546,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.enable_performance_observer",
-   dom_enable_performance_observer,
+  dom_enable_performance_observer,
   RelaxedAtomicBool, true
 )
 
@@ -554,7 +554,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.enable_resource_timing",
-   dom_enable_resource_timing,
+  dom_enable_resource_timing,
   bool, true
 )
 
@@ -562,7 +562,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.enable_performance_navigation_timing",
-   dom_enable_performance_navigation_timing,
+  dom_enable_performance_navigation_timing,
   bool, true
 )
 
@@ -570,7 +570,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.performance.enable_notify_performance_timing",
-   dom_performance_enable_notify_performance_timing,
+  dom_performance_enable_notify_performance_timing,
   bool, false
 )
 
@@ -586,7 +586,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.indexedDB.storageOption.enabled",
-   dom_indexedDB_storageOption_enabled,
+  dom_indexedDB_storageOption_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -594,14 +594,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.script_loader.binast_encoding.enabled",
-   dom_script_loader_binast_encoding_enabled,
+  dom_script_loader_binast_encoding_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "dom.script_loader.binast_encoding.domain.restrict",
-   dom_script_loader_binast_encoding_domain_restrict,
+  dom_script_loader_binast_encoding_domain_restrict,
   bool, true
 )
 #endif
@@ -613,7 +613,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.script_loader.bytecode_cache.enabled",
-   dom_script_loader_bytecode_cache_enabled,
+  dom_script_loader_bytecode_cache_enabled,
   bool, true
 )
 
@@ -635,7 +635,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.script_loader.bytecode_cache.strategy",
-   dom_script_loader_bytecode_cache_strategy,
+  dom_script_loader_bytecode_cache_strategy,
   int32_t, 0
 )
 
@@ -657,14 +657,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.worker.canceling.timeoutMilliseconds",
-   dom_worker_canceling_timeoutMilliseconds,
+  dom_worker_canceling_timeoutMilliseconds,
   RelaxedAtomicUint32, 30000 /* 30 seconds */
 )
 
 VARCACHE_PREF(
   Live,
   "dom.worker.use_medium_high_event_queue",
-   dom_worker_use_medium_high_event_queue,
+  dom_worker_use_medium_high_event_queue,
   RelaxedAtomicBool, true
 )
 
@@ -680,7 +680,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.dom.window.dump.enabled",
-   browser_dom_window_dump_enabled,
+  browser_dom_window_dump_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -689,7 +689,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.xhr.standard_content_type_normalization",
-   dom_xhr_standard_content_type_normalization,
+  dom_xhr_standard_content_type_normalization,
   RelaxedAtomicBool, true
 )
 
@@ -697,7 +697,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.block_external_protocol_in_iframes",
-   dom_block_external_protocol_in_iframes,
+  dom_block_external_protocol_in_iframes,
   bool, true
 )
 
@@ -706,7 +706,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.delay.block_external_protocol_in_iframes",
-   dom_delay_block_external_protocol_in_iframes,
+  dom_delay_block_external_protocol_in_iframes,
   uint32_t, 10 // in seconds
 )
 
@@ -714,7 +714,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.block_multiple_popups",
-   dom_block_multiple_popups,
+  dom_block_multiple_popups,
   bool, true
 )
 
@@ -728,7 +728,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.targetBlankNoOpener.enabled",
-   dom_targetBlankNoOpener_enabled,
+  dom_targetBlankNoOpener_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -736,7 +736,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.disable_open_during_load",
-   dom_disable_open_during_load,
+  dom_disable_open_during_load,
   bool, false
 )
 
@@ -744,7 +744,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.storage_access.enabled",
-   dom_storage_access_enabled,
+  dom_storage_access_enabled,
   bool, false
 )
 
@@ -752,14 +752,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.prototype_document_cache.enabled",
-   dom_prototype_document_cache_enabled,
+  dom_prototype_document_cache_enabled,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "dom.storage_access.auto_grants.delayed",
-   dom_storage_access_auto_grants_delayed,
+  dom_storage_access_auto_grants_delayed,
   bool, true
 )
 
@@ -767,7 +767,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.window.open.noreferrer.enabled",
-   dom_window_open_noreferrer_enabled,
+  dom_window_open_noreferrer_enabled,
   bool, true
 )
 
@@ -776,7 +776,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.file.createInChild",
-   dom_file_createInChild,
+  dom_file_createInChild,
   RelaxedAtomicBool, false
 )
 
@@ -784,7 +784,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.allow_cut_copy",
-   dom_allow_cut_copy,
+  dom_allow_cut_copy,
   bool, true
 )
 
@@ -792,7 +792,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.forms.autocomplete.formautofill",
-   dom_forms_autocomplete_formautofill,
+  dom_forms_autocomplete_formautofill,
   bool, false
 )
 
@@ -800,7 +800,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.requestIdleCallback.enabled",
-   dom_requestIdleCallback_enabled,
+  dom_requestIdleCallback_enabled,
   bool, true
 )
 
@@ -808,28 +808,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.placeholder.show_on_focus",
-   dom_placeholder_show_on_focus,
+  dom_placeholder_show_on_focus,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "dom.presentation.testing.simulate-receiver",
-   dom_presentation_testing_simulate_receiver,
+  dom_presentation_testing_simulate_receiver,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "dom.largeAllocation.forceEnable",
-   dom_largeAllocation_forceEnable,
+  dom_largeAllocation_forceEnable,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "dom.metaElement.setCookie.allowed",
-   dom_metaElement_setCookie_allowed,
+  dom_metaElement_setCookie_allowed,
   bool, false
 )
 
@@ -853,7 +853,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "extensions.allowPrivateBrowsingByDefault",
-   extensions_allowPrivateBrowsingByDefault,
+  extensions_allowPrivateBrowsingByDefault,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -863,7 +863,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "extensions.cookiesBehavior.overrideOnTopLevel",
-   extensions_cookiesBehavior_overrideOnTopLevel,
+  extensions_cookiesBehavior_overrideOnTopLevel,
   bool, false
 )
 
@@ -874,28 +874,28 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "full-screen-api.enabled",
-   full_screen_api_enabled,
+  full_screen_api_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "full-screen-api.unprefix.enabled",
-   full_screen_api_unprefix_enabled,
+  full_screen_api_unprefix_enabled,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "full-screen-api.allow-trusted-requests-only",
-   full_screen_api_allow_trusted_requests_only,
+  full_screen_api_allow_trusted_requests_only,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "full-screen-api.mouse-event-allow-left-button-only",
-   full_screen_api_mouse_event_allow_left_button_only,
+  full_screen_api_mouse_event_allow_left_button_only,
   bool, true
 )
 
@@ -906,14 +906,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.display.focus_ring_on_anything",
-   browser_display_focus_ring_on_anything,
+  browser_display_focus_ring_on_anything,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "browser.display.focus_ring_width",
-   browser_display_focus_ring_width,
+  browser_display_focus_ring_width,
   uint32_t, 1
 )
 
@@ -921,14 +921,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.display.focus_ring_style",
-   browser_display_focus_ring_style,
+  browser_display_focus_ring_style,
   uint32_t, 1
 )
 
 VARCACHE_PREF(
   Live,
   "browser.display.use_system_colors",
-   browser_display_use_system_colors,
+  browser_display_use_system_colors,
   bool, true
 )
 
@@ -938,20 +938,20 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.display.document_color_use",
-   browser_display_document_color_use,
+  browser_display_document_color_use,
   uint32_t, 0
 )
 VARCACHE_PREF(
   Live,
   "browser.display.use_focus_colors",
-   browser_display_use_focus_colors,
+  browser_display_use_focus_colors,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "browser.underline_anchors",
-   browser_underline_anchors,
+  browser_underline_anchors,
   bool, true
 )
 
@@ -959,7 +959,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.autofocus",
-   browser_autofocus,
+  browser_autofocus,
   bool, true
 )
 
@@ -980,28 +980,28 @@ PREF("browser.visited_color", String, "")
 VARCACHE_PREF(
   Live,
   "browser.display.use_document_fonts",
-   browser_display_use_document_fonts,
+  browser_display_use_document_fonts,
   RelaxedAtomicInt32, 1
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.font_rendering.opentype_svg.enabled",
-   gfx_font_rendering_opentype_svg_enabled,
+  gfx_font_rendering_opentype_svg_enabled,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.offscreencanvas.enabled",
-   gfx_offscreencanvas_enabled,
+  gfx_offscreencanvas_enabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "gfx.font_ahem_antialias_none",
-   gfx_font_ahem_antialias_none,
+  gfx_font_ahem_antialias_none,
   RelaxedAtomicBool, false
 )
 
@@ -1013,7 +1013,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "gfx.omta.background-color",
-   gfx_omta_background_color,
+  gfx_omta_background_color,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1026,7 +1026,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "html5.offmainthread",
-   html5_offmainthread,
+  html5_offmainthread,
   bool, true
 )
 
@@ -1036,7 +1036,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "html5.flushtimer.initialdelay",
-   html5_flushtimer_initialdelay,
+  html5_flushtimer_initialdelay,
   RelaxedAtomicInt32, 16
 )
 
@@ -1045,7 +1045,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "html5.flushtimer.subsequentdelay",
-   html5_flushtimer_subsequentdelay,
+  html5_flushtimer_subsequentdelay,
   RelaxedAtomicInt32, 16
 )
 
@@ -1057,7 +1057,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.cursor.block.enabled",
-   layout_cursor_block_enabled,
+  layout_cursor_block_enabled,
   bool, true
 )
 
@@ -1066,7 +1066,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.cursor.block.max-size",
-   layout_cursor_block_max_size,
+  layout_cursor_block_max_size,
   uint32_t, 32
 )
 
@@ -1076,7 +1076,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.enabled",
-   layout_accessiblecaret_enabled,
+  layout_accessiblecaret_enabled,
   bool, false
 )
 
@@ -1087,7 +1087,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.enabled_on_touch",
-   layout_accessiblecaret_enabled_on_touch,
+  layout_accessiblecaret_enabled_on_touch,
   bool, true
 )
 
@@ -1095,7 +1095,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.always_tilt",
-   layout_accessiblecaret_always_tilt,
+  layout_accessiblecaret_always_tilt,
   bool, false
 )
 
@@ -1106,7 +1106,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content",
-   layout_accessiblecaret_caret_shown_when_long_tapping_on_empty_content,
+  layout_accessiblecaret_caret_shown_when_long_tapping_on_empty_content,
   bool, false
 )
 
@@ -1117,7 +1117,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.script_change_update_mode",
-   layout_accessiblecaret_script_change_update_mode,
+  layout_accessiblecaret_script_change_update_mode,
   int32_t, 0
 )
 
@@ -1126,7 +1126,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.allow_dragging_across_other_caret",
-   layout_accessiblecaret_allow_dragging_across_other_caret,
+  layout_accessiblecaret_allow_dragging_across_other_caret,
   bool, true
 )
 
@@ -1134,7 +1134,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.hapticfeedback",
-   layout_accessiblecaret_hapticfeedback,
+  layout_accessiblecaret_hapticfeedback,
   bool, false
 )
 
@@ -1142,7 +1142,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.extend_selection_for_phone_number",
-   layout_accessiblecaret_extend_selection_for_phone_number,
+  layout_accessiblecaret_extend_selection_for_phone_number,
   bool, false
 )
 
@@ -1151,7 +1151,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.hide_carets_for_mouse_input",
-   layout_accessiblecaret_hide_carets_for_mouse_input,
+  layout_accessiblecaret_hide_carets_for_mouse_input,
   bool, true
 )
 
@@ -1160,21 +1160,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.width",
-   layout_accessiblecaret_width,
+  layout_accessiblecaret_width,
   float, 34.0f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.height",
-   layout_accessiblecaret_height,
+  layout_accessiblecaret_height,
   float, 36.0f
 )
 
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.margin-left",
-   layout_accessiblecaret_margin_left,
+  layout_accessiblecaret_margin_left,
   float, -18.5f
 )
 
@@ -1183,7 +1183,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.accessiblecaret.use_long_tap_injector",
-   layout_accessiblecaret_use_long_tap_injector,
+  layout_accessiblecaret_use_long_tap_injector,
   bool, false
 )
 
@@ -1191,7 +1191,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.parsing.parallel",
-   layout_css_parsing_parallel,
+  layout_css_parsing_parallel,
   bool, true
 )
 
@@ -1204,7 +1204,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.use-counters.enabled",
-   layout_css_use_counters_enabled,
+  layout_css_use_counters_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1221,7 +1221,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.font-display.enabled",
-   layout_css_font_display_enabled,
+  layout_css_font_display_enabled,
   bool, true
 )
 
@@ -1229,7 +1229,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.prefixes.webkit",
-   layout_css_prefixes_webkit,
+  layout_css_prefixes_webkit,
   bool, true
 )
 
@@ -1239,7 +1239,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.prefixes.device-pixel-ratio-webkit",
-   layout_css_prefixes_device_pixel_ratio_webkit,
+  layout_css_prefixes_device_pixel_ratio_webkit,
   bool, true
 )
 
@@ -1248,7 +1248,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.simple-moz-gradient.enabled",
-   layout_css_simple_moz_gradient_enabled,
+  layout_css_simple_moz_gradient_enabled,
   bool, true
 )
 
@@ -1256,7 +1256,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.offset-logical-properties.enabled",
-   layout_css_offset_logical_properties_enabled,
+  layout_css_offset_logical_properties_enabled,
   bool, false
 )
 
@@ -1269,7 +1269,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.control-characters.visible",
-   layout_css_control_characters_visible,
+  layout_css_control_characters_visible,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1278,7 +1278,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.visited_links_enabled",
-   layout_css_visited_links_enabled,
+  layout_css_visited_links_enabled,
   bool, true
 )
 
@@ -1286,7 +1286,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.webkit-appearance.enabled",
-   layout_css_webkit_appearance_enabled,
+  layout_css_webkit_appearance_enabled,
   bool, true
 )
 
@@ -1294,7 +1294,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.moz-document.content.enabled",
-   layout_css_moz_document_content_enabled,
+  layout_css_moz_document_content_enabled,
   bool, false
 )
 
@@ -1306,7 +1306,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.supports-selector.enabled",
-   layout_css_supports_selector_enabled,
+  layout_css_supports_selector_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1321,7 +1321,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.moz-document.url-prefix-hack.enabled",
-   layout_css_moz_document_url_prefix_hack_enabled,
+  layout_css_moz_document_url_prefix_hack_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1329,7 +1329,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.xul-display-values.content.enabled",
-   layout_css_xul_display_values_content_enabled,
+  layout_css_xul_display_values_content_enabled,
   bool, false
 )
 
@@ -1338,7 +1338,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.xul-box-display-values.content.enabled",
-   layout_css_xul_box_display_values_content_enabled,
+  layout_css_xul_box_display_values_content_enabled,
   bool, false
 )
 
@@ -1347,7 +1347,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.xul-tree-pseudos.content.enabled",
-   layout_css_xul_tree_pseudos_content_enabled,
+  layout_css_xul_tree_pseudos_content_enabled,
   bool, false
 )
 
@@ -1360,7 +1360,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.grid-template-subgrid-value.enabled",
-   layout_css_grid_template_subgrid_value_enabled,
+  layout_css_grid_template_subgrid_value_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1369,7 +1369,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.line-height-moz-block-height.content.enabled",
-   layout_css_line_height_moz_block_height_content_enabled,
+  layout_css_line_height_moz_block_height_content_enabled,
   bool, false
 )
 
@@ -1377,7 +1377,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.font-variations.enabled",
-   layout_css_font_variations_enabled,
+  layout_css_font_variations_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -1385,7 +1385,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.emulate-moz-box-with-flex",
-   layout_css_emulate_moz_box_with_flex,
+  layout_css_emulate_moz_box_with_flex,
   bool, false
 )
 
@@ -1393,7 +1393,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.unknown-webkit-pseudo-element",
-   layout_css_unknown_webkit_pseudo_element,
+  layout_css_unknown_webkit_pseudo_element,
   bool, true
 )
 
@@ -1401,7 +1401,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.clip-path-path.enabled",
-   layout_css_clip_path_path_enabled,
+  layout_css_clip_path_path_enabled,
   bool, false
 )
 
@@ -1409,7 +1409,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.column-span.enabled",
-   layout_css_column_span_enabled,
+  layout_css_column_span_enabled,
   bool, false
 )
 
@@ -1422,7 +1422,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.contain.enabled",
-   layout_css_contain_enabled,
+  layout_css_contain_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1431,7 +1431,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.step-position-jump.enabled",
-   layout_css_step_position_jump_enabled,
+  layout_css_step_position_jump_enabled,
   bool, true
 )
 
@@ -1443,16 +1443,16 @@ VARCACHE_PREF(
 #endif
 VARCACHE_PREF(
   Live,
-   "layout.dynamic-reflow-roots.enabled",
-   layout_dynamic_reflow_roots_enabled,
+  "layout.dynamic-reflow-roots.enabled",
+  layout_dynamic_reflow_roots_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
-   "layout.lower_priority_refresh_driver_during_load",
-   layout_lower_priority_refresh_driver_during_load,
+  "layout.lower_priority_refresh_driver_during_load",
+  layout_lower_priority_refresh_driver_during_load,
   bool, true
 )
 
@@ -1460,14 +1460,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-anchoring.enabled",
-   layout_css_scroll_anchoring_enabled,
+  layout_css_scroll_anchoring_enabled,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-anchoring.highlight",
-   layout_css_scroll_anchoring_highlight,
+  layout_css_scroll_anchoring_highlight,
   bool, false
 )
 
@@ -1475,7 +1475,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.scroll-snap-v1.enabled",
-   layout_css_scroll_snap_v1_enabled,
+  layout_css_scroll_snap_v1_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -1483,7 +1483,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.shared-memory-ua-sheets.enabled",
-   layout_css_shared_memory_ua_sheets_enabled,
+  layout_css_shared_memory_ua_sheets_enabled,
   bool, false
 )
 
@@ -1495,7 +1495,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.resizeobserver.enabled",
-   layout_css_resizeobserver_enabled,
+  layout_css_resizeobserver_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1509,7 +1509,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "layout.css.getBoxQuads.enabled",
-   layout_css_getBoxQuads_enabled,
+  layout_css_getBoxQuads_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1525,7 +1525,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "xul.panel-animations.enabled",
-   xul_panel_animations_enabled,
+  xul_panel_animations_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1557,7 +1557,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "javascript.options.gc_on_memory_pressure",
-   javascript_options_gc_on_memory_pressure,
+  javascript_options_gc_on_memory_pressure,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1565,7 +1565,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "javascript.options.compact_on_user_inactive",
-   javascript_options_compact_on_user_inactive,
+  javascript_options_compact_on_user_inactive,
   bool, true
 )
 
@@ -1579,22 +1579,22 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "javascript.options.compact_on_user_inactive_delay",
-   javascript_options_compact_on_user_inactive_delay,
-   uint32_t, PREF_VALUE
+  javascript_options_compact_on_user_inactive_delay,
+  uint32_t, PREF_VALUE
 )
 #undef PREF_VALUE
 
 VARCACHE_PREF(
   Live,
   "javascript.options.mem.log",
-   javascript_options_mem_log,
+  javascript_options_mem_log,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "javascript.options.mem.notify",
-   javascript_options_mem_notify,
+  javascript_options_mem_notify,
   bool, false
 )
 
@@ -1602,7 +1602,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "javascript.options.streams",
-   javascript_options_streams,
+  javascript_options_streams,
   RelaxedAtomicBool, false
 )
 
@@ -1610,21 +1610,21 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "javascript.options.bigint",
-   javascript_options_bigint,
+  javascript_options_bigint,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "javascript.options.experimental.fields",
-   javascript_options_experimental_fields,
+  javascript_options_experimental_fields,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "javascript.options.experimental.await_fix",
-   javascript_options_experimental_await_fix,
+  javascript_options_experimental_await_fix,
   RelaxedAtomicBool, false
 )
 
@@ -1636,7 +1636,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.ipc.cancel_content_js_when_navigating",
-   dom_ipc_cancel_content_js_when_navigating,
+  dom_ipc_cancel_content_js_when_navigating,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1652,7 +1652,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.cache_size",
-   MediaCacheSize,
+  MediaCacheSize,
   RelaxedAtomicUint32, 512000 // Measured in KiB
 )
 // Size of file backed MediaCache while on a connection which is cellular (3G, etc),
@@ -1660,7 +1660,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.cache_size.cellular",
-   MediaCacheCellularSize,
+  MediaCacheCellularSize,
   RelaxedAtomicUint32, 32768 // Measured in KiB
 )
 
@@ -1670,7 +1670,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.memory_cache_max_size",
-   MediaMemoryCacheMaxSize,
+  MediaMemoryCacheMaxSize,
   uint32_t, 8192      // Measured in KiB
 )
 
@@ -1679,7 +1679,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.memory_caches_combined_limit_kb",
-   MediaMemoryCachesCombinedLimitKb,
+  MediaMemoryCachesCombinedLimitKb,
   uint32_t, 524288
 )
 
@@ -1688,7 +1688,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.memory_caches_combined_limit_pc_sysmem",
-   MediaMemoryCachesCombinedLimitPcSysmem,
+  MediaMemoryCachesCombinedLimitPcSysmem,
   uint32_t, 5         // A percentage
 )
 
@@ -1697,13 +1697,13 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.cache_resume_threshold",
-   MediaCacheResumeThreshold,
+  MediaCacheResumeThreshold,
   RelaxedAtomicUint32, 30
 )
 VARCACHE_PREF(
   Live,
   "media.cache_resume_threshold.cellular",
-   MediaCacheCellularResumeThreshold,
+  MediaCacheCellularResumeThreshold,
   RelaxedAtomicUint32, 10
 )
 
@@ -1713,13 +1713,13 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.cache_readahead_limit",
-   MediaCacheReadaheadLimit,
+  MediaCacheReadaheadLimit,
   RelaxedAtomicUint32, 60
 )
 VARCACHE_PREF(
   Live,
   "media.cache_readahead_limit.cellular",
-   MediaCacheCellularReadaheadLimit,
+  MediaCacheCellularReadaheadLimit,
   RelaxedAtomicUint32, 30
 )
 
@@ -1727,7 +1727,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.resampling.enabled",
-   MediaResamplingEnabled,
+  MediaResamplingEnabled,
   RelaxedAtomicBool, false
 )
 
@@ -1740,7 +1740,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.forcestereo.enabled",
-   MediaForcestereoEnabled,
+  MediaForcestereoEnabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1749,7 +1749,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ruin-av-sync.enabled",
-   MediaRuinAvSyncEnabled,
+  MediaRuinAvSyncEnabled,
   RelaxedAtomicBool, false
 )
 
@@ -1775,7 +1775,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.eme.enabled",
-   MediaEmeEnabled,
+  MediaEmeEnabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1783,7 +1783,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.clearkey.persistent-license.enabled",
-   MediaClearkeyPersistentLicenseEnabled,
+  MediaClearkeyPersistentLicenseEnabled,
   bool, false
 )
 
@@ -1794,7 +1794,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.gmp.insecure.allow",
-   MediaGmpInsecureAllow,
+  MediaGmpInsecureAllow,
   RelaxedAtomicBool, false
 )
 #endif
@@ -1805,7 +1805,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.use-blank-decoder",
-   MediaUseBlankDecoder,
+  MediaUseBlankDecoder,
   RelaxedAtomicBool, false
 )
 
@@ -1817,7 +1817,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.gpu-process-decoder",
-   MediaGpuProcessDecoder,
+  MediaGpuProcessDecoder,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1834,7 +1834,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.rdd-process.enabled",
-   MediaRddProcessEnabled,
+  MediaRddProcessEnabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1842,7 +1842,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.rdd-process.startup_timeout_ms",
-   MediaRddProcessStartupTimeoutMs,
+  MediaRddProcessStartupTimeoutMs,
   RelaxedAtomicInt32, 5000
 )
 
@@ -1858,7 +1858,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.rdd-vorbis.enabled",
-   MediaRddVorbisEnabled,
+  MediaRddVorbisEnabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1869,14 +1869,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.android-media-codec.enabled",
-   MediaAndroidMediaCodecEnabled,
+  MediaAndroidMediaCodecEnabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.android-media-codec.preferred",
-   MediaAndroidMediaCodecPreferred,
+  MediaAndroidMediaCodecPreferred,
   RelaxedAtomicBool, true
 )
 
@@ -1890,28 +1890,28 @@ VARCACHE_PREF(
 // media.peerconnection.enabled
 VARCACHE_PREF(
   Live,
-              "media.navigator.enabled",
-              media_navigator_enabled,
-              bool, true
-              )
+  "media.navigator.enabled",
+  media_navigator_enabled,
+  bool, true
+)
 
 // This pref turns off [SecureContext] on the navigator.mediaDevices object, for
 // more compatible legacy behavior.
 VARCACHE_PREF(
   Live,
-              "media.devices.insecure.enabled",
-              media_devices_insecure_enabled,
-              bool, true
-              )
+  "media.devices.insecure.enabled",
+  media_devices_insecure_enabled,
+  bool, true
+)
 
 // If the above pref is also enabled, this pref enabled getUserMedia() support
 // in http, bypassing the instant NotAllowedError you get otherwise.
 VARCACHE_PREF(
   Live,
-              "media.getusermedia.insecure.enabled",
-              media_getusermedia_insecure_enabled,
-              bool, false
-              )
+  "media.getusermedia.insecure.enabled",
+  media_getusermedia_insecure_enabled,
+  bool, false
+)
 
 //---------------------------------------------------------------------------
 // WebRTC prefs
@@ -1922,10 +1922,10 @@ VARCACHE_PREF(
 // See also media.navigator.enabled
 VARCACHE_PREF(
   Live,
-              "media.peerconnection.enabled",
-              media_peerconnection_enabled,
-              bool, true
-              )
+  "media.peerconnection.enabled",
+  media_peerconnection_enabled,
+  bool, true
+)
 
 #ifdef MOZ_WEBRTC
 #ifdef ANDROID
@@ -1933,7 +1933,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.navigator.hardware.vp8_encode.acceleration_remote_enabled",
-   MediaNavigatorHardwareVp8encodeAccelerationRemoteEnabled,
+  MediaNavigatorHardwareVp8encodeAccelerationRemoteEnabled,
   bool, true
 )
 
@@ -1954,7 +1954,7 @@ PREF("media.navigator.hardware.vp8_decode.acceleration_enabled", bool, false)
 VARCACHE_PREF(
   Live,
   "media.navigator.mediadatadecoder_vpx_enabled",
-   MediaNavigatorMediadatadecoderVPXEnabled,
+  MediaNavigatorMediadatadecoderVPXEnabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1970,7 +1970,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.navigator.mediadatadecoder_h264_enabled",
-   MediaNavigatorMediadatadecoderH264Enabled,
+  MediaNavigatorMediadatadecoderH264Enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -1981,7 +1981,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.omx.enabled",
-   MediaOmxEnabled,
+  MediaOmxEnabled,
   bool, false
 )
 #endif
@@ -1996,7 +1996,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ffmpeg.enabled",
-   MediaFfmpegEnabled,
+  MediaFfmpegEnabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2004,7 +2004,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.libavcodec.allow-obsolete",
-   MediaLibavcodecAllowObsolete,
+  MediaLibavcodecAllowObsolete,
   bool, false
 )
 
@@ -2014,7 +2014,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ffvpx.enabled",
-   MediaFfvpxEnabled,
+  MediaFfvpxEnabled,
   RelaxedAtomicBool, true
 )
 #endif
@@ -2023,7 +2023,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ffmpeg.low-latency.enabled",
-   MediaFfmpegLowLatencyEnabled,
+  MediaFfmpegLowLatencyEnabled,
   RelaxedAtomicBool, false
 )
 #endif
@@ -2033,7 +2033,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.wmf.enabled",
-   MediaWmfEnabled,
+  MediaWmfEnabled,
   RelaxedAtomicBool, true
 )
 
@@ -2041,7 +2041,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.decoder-doctor.wmf-disabled-is-failure",
-   MediaDecoderDoctorWmfDisabledIsFailure,
+  MediaDecoderDoctorWmfDisabledIsFailure,
   bool, false
 )
 
@@ -2056,7 +2056,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.decoder.recycle.enabled",
-   MediaDecoderRecycleEnabled,
+  MediaDecoderRecycleEnabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2065,34 +2065,34 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.decoder.skip-to-next-key-frame.enabled",
-   MediaDecoderSkipToNextKeyFrameEnabled,
+  MediaDecoderSkipToNextKeyFrameEnabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.gmp.decoder.enabled",
-   MediaGmpDecoderEnabled,
+  MediaGmpDecoderEnabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.eme.audio.blank",
-   MediaEmeAudioBlank,
+  MediaEmeAudioBlank,
   RelaxedAtomicBool, false
 )
 VARCACHE_PREF(
   Live,
   "media.eme.video.blank",
-   MediaEmeVideoBlank,
+  MediaEmeVideoBlank,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.eme.chromium-api.video-shmems",
-   MediaEmeChromiumApiVideoShmems,
+  MediaEmeChromiumApiVideoShmems,
   RelaxedAtomicUint32, 6
 )
 
@@ -2100,7 +2100,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.suspend-bkgnd-video.enabled",
-   MediaSuspendBkgndVideoEnabled,
+  MediaSuspendBkgndVideoEnabled,
   RelaxedAtomicBool, true
 )
 
@@ -2109,42 +2109,42 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.suspend-bkgnd-video.delay-ms",
-   MediaSuspendBkgndVideoDelayMs,
+  MediaSuspendBkgndVideoDelayMs,
   RelaxedAtomicUint32, 10000
 )
 
 VARCACHE_PREF(
   Live,
   "media.dormant-on-pause-timeout-ms",
-   MediaDormantOnPauseTimeoutMs,
+  MediaDormantOnPauseTimeoutMs,
   RelaxedAtomicInt32, 5000
 )
 
 VARCACHE_PREF(
   Live,
   "media.webspeech.synth.force_global_queue",
-   MediaWebspeechSynthForceGlobalQueue,
+  MediaWebspeechSynthForceGlobalQueue,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.webspeech.test.enable",
-   MediaWebspeechTestEnable,
+  MediaWebspeechTestEnable,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.webspeech.test.fake_fsm_events",
-   MediaWebspeechTextFakeFsmEvents,
+  MediaWebspeechTextFakeFsmEvents,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.webspeech.test.fake_recognition_service",
-   MediaWebspeechTextFakeRecognitionService,
+  MediaWebspeechTextFakeRecognitionService,
   bool, false
 )
 
@@ -2152,7 +2152,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.webspeech.recognition.enable",
-   MediaWebspeechRecognitionEnable,
+  MediaWebspeechRecognitionEnable,
   bool, false
 )
 #endif
@@ -2160,7 +2160,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.webspeech.recognition.force_enable",
-   MediaWebspeechRecognitionForceEnable,
+  MediaWebspeechRecognitionForceEnable,
   bool, false
 )
 
@@ -2172,7 +2172,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.encoder.webm.enabled",
-   MediaEncoderWebMEnabled,
+  MediaEncoderWebMEnabled,
   RelaxedAtomicBool, true
 )
 #undef PREF_VALUE
@@ -2186,7 +2186,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.audio-max-decode-error",
-   MediaAudioMaxDecodeError,
+  MediaAudioMaxDecodeError,
   uint32_t, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2200,7 +2200,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.video-max-decode-error",
-   MediaVideoMaxDecodeError,
+  MediaVideoMaxDecodeError,
   uint32_t, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2209,7 +2209,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.opus.enabled",
-   MediaOpusEnabled,
+  MediaOpusEnabled,
   RelaxedAtomicBool, true
 )
 
@@ -2217,7 +2217,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.wave.enabled",
-   MediaWaveEnabled,
+  MediaWaveEnabled,
   RelaxedAtomicBool, true
 )
 
@@ -2225,7 +2225,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.ogg.enabled",
-   MediaOggEnabled,
+  MediaOggEnabled,
   RelaxedAtomicBool, true
 )
 
@@ -2233,7 +2233,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.webm.enabled",
-   MediaWebMEnabled,
+  MediaWebMEnabled,
   RelaxedAtomicBool, true
 )
 
@@ -2250,7 +2250,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.av1.enabled",
-   MediaAv1Enabled,
+  MediaAv1Enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2258,7 +2258,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.av1.use-dav1d",
-   MediaAv1UseDav1d,
+  MediaAv1UseDav1d,
 #if defined(XP_WIN) && !defined(_ARM64_)
   RelaxedAtomicBool, true
 #elif defined(XP_MACOSX)
@@ -2273,7 +2273,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.flac.enabled",
-   MediaFlacEnabled,
+  MediaFlacEnabled,
   bool, true
 )
 
@@ -2286,7 +2286,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.hls.enabled",
-   MediaHlsEnabled,
+  MediaHlsEnabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2297,7 +2297,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.hls.max-allocations",
-   MediaHlsMaxAllocations,
+  MediaHlsMaxAllocations,
   uint32_t, 20
 )
 #endif
@@ -2310,7 +2310,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.mp4.enabled",
-   MediaMp4Enabled,
+  MediaMp4Enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2321,7 +2321,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.playback.warnings-as-errors",
-   MediaPlaybackWarningsAsErrors,
+  MediaPlaybackWarningsAsErrors,
   RelaxedAtomicBool, false
 )
 
@@ -2330,7 +2330,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.resume-bkgnd-video-on-tabhover",
-   MediaResumeBkgndVideoOnTabhover,
+  MediaResumeBkgndVideoOnTabhover,
   bool, true
 )
 
@@ -2342,7 +2342,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.videocontrols.lock-video-orientation",
-   MediaVideocontrolsLockVideoOrientation,
+  MediaVideocontrolsLockVideoOrientation,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2351,84 +2351,84 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.seamless-looping",
-   MediaSeamlessLooping,
+  MediaSeamlessLooping,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.autoplay.block-event.enabled",
-   MediaBlockEventEnabled,
+  MediaBlockEventEnabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.media-capabilities.enabled",
-   MediaCapabilitiesEnabled,
+  MediaCapabilitiesEnabled,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.media-capabilities.screen.enabled",
-   MediaCapabilitiesScreenEnabled,
+  MediaCapabilitiesScreenEnabled,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.vp9.fps",
-   MediaBenchmarkVp9Fps,
+  MediaBenchmarkVp9Fps,
   RelaxedAtomicUint32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.vp9.threshold",
-   MediaBenchmarkVp9Threshold,
+  MediaBenchmarkVp9Threshold,
   RelaxedAtomicUint32, 150
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.vp9.versioncheck",
-   MediaBenchmarkVp9Versioncheck,
+  MediaBenchmarkVp9Versioncheck,
   RelaxedAtomicUint32, 0
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.frames",
-   MediaBenchmarkFrames,
+  MediaBenchmarkFrames,
   RelaxedAtomicUint32, 300
 )
 
 VARCACHE_PREF(
   Live,
   "media.benchmark.timeout",
-   MediaBenchmarkTimeout,
+  MediaBenchmarkTimeout,
   RelaxedAtomicUint32, 1000
 )
 
 VARCACHE_PREF(
   Live,
   "media.test.video-suspend",
-   MediaTestVideoSuspend,
+  MediaTestVideoSuspend,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "media.autoplay.allow-muted",
-   MediaAutoplayAllowMuted,
+  MediaAutoplayAllowMuted,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "media.autoplay.blackList-override-default",
-   MediaAutoplayBlackListOverrideDefault,
+  MediaAutoplayBlackListOverrideDefault,
   RelaxedAtomicBool, true
 )
 
@@ -2445,7 +2445,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.auth.subresource-http-auth-allow",
-   network_auth_subresource_http_auth_allow,
+  network_auth_subresource_http_auth_allow,
   uint32_t, 2
 )
 
@@ -2457,7 +2457,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.auth.subresource-img-cross-origin-http-auth-allow",
-   network_auth_subresource_img_cross_origin_http_auth_allow,
+  network_auth_subresource_img_cross_origin_http_auth_allow,
   bool, false
 )
 
@@ -2467,7 +2467,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.auth.non-web-content-triggered-resources-http-auth-allow",
-   network_auth_non_web_content_triggered_resources_http_auth_allow,
+  network_auth_non_web_content_triggered_resources_http_auth_allow,
   bool, false
 )
 
@@ -2485,7 +2485,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.cookie.staleThreshold",
-   network_cookie_staleThreshold,
+  network_cookie_staleThreshold,
   uint32_t, 60
 )
 
@@ -2505,7 +2505,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.predictor.enabled",
-   network_predictor_enabled,
+  network_predictor_enabled,
   bool, true
 )
 
@@ -2514,123 +2514,123 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.cookieSettings.unblocked_for_testing",
-   network_cookieSettings_unblocked_for_testing,
+  network_cookieSettings_unblocked_for_testing,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "network.predictor.enable-hover-on-ssl",
-   network_predictor_enable_hover_on_ssl,
+  network_predictor_enable_hover_on_ssl,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "network.predictor.enable-prefetch",
-   network_predictor_enable_prefetch,
+  network_predictor_enable_prefetch,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "network.predictor.page-degradation.day",
-   network_predictor_page_degradation_day,
+  network_predictor_page_degradation_day,
   int32_t, 0
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.page-degradation.week",
-   network_predictor_page_degradation_week,
+  network_predictor_page_degradation_week,
   int32_t, 5
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.page-degradation.month",
-   network_predictor_page_degradation_month,
+  network_predictor_page_degradation_month,
   int32_t, 10
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.page-degradation.year",
-   network_predictor_page_degradation_year,
+  network_predictor_page_degradation_year,
   int32_t, 25
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.page-degradation.max",
-   network_predictor_page_degradation_max,
+  network_predictor_page_degradation_max,
   int32_t, 50
 )
 
 VARCACHE_PREF(
   Live,
   "network.predictor.subresource-degradation.day",
-   network_predictor_subresource_degradation_day,
+  network_predictor_subresource_degradation_day,
   int32_t, 1
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.subresource-degradation.week",
-   network_predictor_subresource_degradation_week,
+  network_predictor_subresource_degradation_week,
   int32_t, 10
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.subresource-degradation.month",
-   network_predictor_subresource_degradation_month,
+  network_predictor_subresource_degradation_month,
   int32_t, 25
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.subresource-degradation.year",
-   network_predictor_subresource_degradation_year,
+  network_predictor_subresource_degradation_year,
   int32_t, 50
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.subresource-degradation.max",
-   network_predictor_subresource_degradation_max,
+  network_predictor_subresource_degradation_max,
   int32_t, 100
 )
 
 VARCACHE_PREF(
   Live,
   "network.predictor.prefetch-rolling-load-count",
-   network_predictor_prefetch_rolling_load_count,
+  network_predictor_prefetch_rolling_load_count,
   int32_t, 10
 )
 
 VARCACHE_PREF(
   Live,
   "network.predictor.prefetch-min-confidence",
-   network_predictor_prefetch_min_confidence,
+  network_predictor_prefetch_min_confidence,
   int32_t, 100
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.preconnect-min-confidence",
-   network_predictor_preconnect_min_confidence,
+  network_predictor_preconnect_min_confidence,
   int32_t, 90
 )
 VARCACHE_PREF(
   Live,
   "network.predictor.preresolve-min-confidence",
-   network_predictor_preresolve_min_confidence,
+  network_predictor_preresolve_min_confidence,
   int32_t, 60
 )
 
 VARCACHE_PREF(
   Live,
   "network.predictor.prefetch-force-valid-for",
-   network_predictor_prefetch_force_valid_for,
+  network_predictor_prefetch_force_valid_for,
   int32_t, 10
 )
 
 VARCACHE_PREF(
   Live,
   "network.predictor.max-resources-per-entry",
-   network_predictor_max_resources_per_entry,
+  network_predictor_max_resources_per_entry,
   int32_t, 100
 )
 
@@ -2639,7 +2639,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.predictor.max-uri-length",
-   network_predictor_max_uri_length,
+  network_predictor_max_uri_length,
   uint32_t, 500
 )
 
@@ -2649,7 +2649,7 @@ PREF("network.predictor.cleaned-up", bool, false)
 VARCACHE_PREF(
   Live,
   "network.predictor.doing-tests",
-   network_predictor_doing_tests,
+  network_predictor_doing_tests,
   bool, false
 )
 
@@ -2664,16 +2664,16 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.delay.tracking.load",
-   network_delay_tracking_load,
-   uint32_t, 0
+  network_delay_tracking_load,
+  uint32_t, 0
 )
 
 // Max time to shutdown the resolver threads
 VARCACHE_PREF(
   Live,
   "network.dns.resolver_shutdown_timeout_ms",
-   network_dns_resolver_shutdown_timeout_ms,
-   uint32_t, 2000
+  network_dns_resolver_shutdown_timeout_ms,
+  uint32_t, 2000
 )
 
 // Some requests during a page load are marked as "tail", mainly trackers, but not only.
@@ -2682,8 +2682,8 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "network.http.tailing.enabled",
-   network_http_tailing_enabled,
-   bool, true
+  network_http_tailing_enabled,
+  bool, true
 )
 
 //---------------------------------------------------------------------------
@@ -2711,14 +2711,14 @@ PREF("preferences.allow.omt-write", bool, true)
 VARCACHE_PREF(
   Live,
   "browser.contentblocking.allowlist.storage.enabled",
-   browser_contentblocking_allowlist_storage_enabled,
+  browser_contentblocking_allowlist_storage_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "browser.contentblocking.allowlist.annotations.enabled",
-   browser_contentblocking_allowlist_annotations_enabled,
+  browser_contentblocking_allowlist_annotations_enabled,
   bool, true
 )
 
@@ -2727,14 +2727,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.contentblocking.originlog.length",
-   browser_contentblocking_originlog_length,
+  browser_contentblocking_originlog_length,
   uint32_t, 32
 )
 
 VARCACHE_PREF(
   Live,
   "browser.contentblocking.rejecttrackers.control-center.ui.enabled",
-   browser_contentblocking_rejecttrackers_control_center_ui_enabled,
+  browser_contentblocking_rejecttrackers_control_center_ui_enabled,
   bool, false
 )
 
@@ -2748,7 +2748,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.annotate_channels.strict_list.enabled",
-   privacy_annotate_channels_strict_list_enabled,
+  privacy_annotate_channels_strict_list_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2757,7 +2757,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.trackingprotection.annotate_channels",
-   privacy_trackingprotection_annotate_channels,
+  privacy_trackingprotection_annotate_channels,
   bool, true
 )
 
@@ -2765,7 +2765,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.trackingprotection.fingerprinting.enabled",
-   privacy_trackingprotection_fingerprinting_enabled,
+  privacy_trackingprotection_fingerprinting_enabled,
   bool, false
 )
 
@@ -2773,7 +2773,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.trackingprotection.fingerprinting.annotate.enabled",
-   privacy_trackingprotection_fingerprinting_annotate_enabled,
+  privacy_trackingprotection_fingerprinting_annotate_enabled,
   bool, true
 )
 
@@ -2781,7 +2781,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.trackingprotection.cryptomining.enabled",
-   privacy_trackingprotection_cryptomining_enabled,
+  privacy_trackingprotection_cryptomining_enabled,
   bool, false
 )
 
@@ -2789,7 +2789,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.trackingprotection.cryptomining.annotate.enabled",
-   privacy_trackingprotection_cryptomining_annotate_enabled,
+  privacy_trackingprotection_cryptomining_annotate_enabled,
   bool, true
 )
 
@@ -2797,7 +2797,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.spoof_english",
-   privacy_spoof_english,
+  privacy_spoof_english,
   RelaxedAtomicUint32, 0
 )
 
@@ -2805,7 +2805,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.donottrackheader.enabled",
-   privacy_donottrackheader_enabled,
+  privacy_donottrackheader_enabled,
   bool, false
 )
 
@@ -2821,7 +2821,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.trackingprotection.lower_network_priority",
-   privacy_trackingprotection_lower_network_priority,
+  privacy_trackingprotection_lower_network_priority,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -2830,7 +2830,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.restrict3rdpartystorage.expiration",
-   privacy_restrict3rdpartystorage_expiration,
+  privacy_restrict3rdpartystorage_expiration,
   uint32_t, 2592000 // 30 days (in seconds)
 )
 
@@ -2838,7 +2838,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.userInteraction.expiration",
-   privacy_userInteraction_expiration,
+  privacy_userInteraction_expiration,
   uint32_t, 2592000 // 30 days (in seconds)
 )
 
@@ -2846,7 +2846,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.userInteraction.document.interval",
-   privacy_userInteraction_document_interval,
+  privacy_userInteraction_document_interval,
   uint32_t, 1800 // 30 minutes (in seconds)
 )
 
@@ -2859,7 +2859,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.documentCookies.maxage",
-   privacy_documentCookies_maxage,
+  privacy_documentCookies_maxage,
   uint32_t, PREF_VALUE // (in seconds, set to 0 to disable)
 )
 #undef PREF_VALUE
@@ -2868,35 +2868,35 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.resistFingerprinting",
-   privacy_resistFingerprinting,
+  privacy_resistFingerprinting,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts",
-   privacy_resistFingerprinting_autoDeclineNoUserInputCanvasPrompts,
+  privacy_resistFingerprinting_autoDeclineNoUserInputCanvasPrompts,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "privacy.storagePrincipal.enabledForTrackers",
-   privacy_storagePrincipal_enabledForTrackers,
+  privacy_storagePrincipal_enabledForTrackers,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "privacy.window.maxInnerWidth",
-   privacy_window_maxInnerWidth,
+  privacy_window_maxInnerWidth,
   int32_t, 1000
 )
 
 VARCACHE_PREF(
   Live,
   "privacy.window.maxInnerHeight",
-   privacy_window_maxInnerHeight,
+  privacy_window_maxInnerHeight,
   int32_t, 1000
 )
 
@@ -2905,7 +2905,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.event.handling-user-input-time-limit",
-   dom_event_handling_user_input_time_limit,
+  dom_event_handling_user_input_time_limit,
   uint32_t, 1000
 )
 
@@ -2913,7 +2913,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.safebrowsing.passwords.enabled",
-   browser_safebrowsing_passwords_enabled,
+  browser_safebrowsing_passwords_enabled,
   bool, false
 )
 
@@ -2921,7 +2921,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.safebrowsing.malware.enabled",
-   browser_safebrowsing_malware_enabled,
+  browser_safebrowsing_malware_enabled,
   bool, true
 )
 
@@ -2929,7 +2929,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.safebrowsing.phishing.enabled",
-   browser_safebrowsing_phishing_enabled,
+  browser_safebrowsing_phishing_enabled,
   bool, true
 )
 
@@ -2937,7 +2937,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.safebrowsing.blockedURIs.enabled",
-   browser_safebrowsing_blockedURIs_enabled,
+  browser_safebrowsing_blockedURIs_enabled,
   bool, true
 )
 
@@ -2945,7 +2945,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "browser.safebrowsing.prefixset_max_array_size",
-   browser_safebrowsing_prefixset_max_array_size,
+  browser_safebrowsing_prefixset_max_array_size,
   RelaxedAtomicUint32, 512*1024
 )
 
@@ -2962,16 +2962,16 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "ui.use_standins_for_native_colors",
-   ui_use_standins_for_native_colors,
-   RelaxedAtomicBool, false
+  ui_use_standins_for_native_colors,
+  RelaxedAtomicBool, false
 )
 
 // Disable page loading activity cursor by default.
 VARCACHE_PREF(
   Live,
   "ui.use_activity_cursor",
-   ui_use_activity_cursor,
-   bool, false
+  ui_use_activity_cursor,
+  bool, false
 )
 
 //---------------------------------------------------------------------------
@@ -2981,7 +2981,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "channelclassifier.allowlist_example",
-   channelclassifier_allowlist_example,
+  channelclassifier_allowlist_example,
   bool, false
 )
 
@@ -2992,7 +2992,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "security.csp.enable",
-   security_csp_enable,
+  security_csp_enable,
   bool, true
 )
 
@@ -3000,14 +3000,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "security.csp.enableStrictDynamic",
-   security_csp_enableStrictDynamic,
+  security_csp_enableStrictDynamic,
   bool, true
 )
 
 VARCACHE_PREF(
   Live,
   "security.csp.reporting.script-sample.max-length",
-   security_csp_reporting_script_sample_max_length,
+  security_csp_reporting_script_sample_max_length,
   int32_t, 40
 )
 
@@ -3018,7 +3018,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "view_source.editor.external",
-   view_source_editor_external,
+  view_source_editor_external,
   bool, false
 )
 
@@ -3029,7 +3029,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "devtools.enabled",
-   devtools_enabled,
+  devtools_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -3041,7 +3041,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "devtools.console.stdout.chrome",
-   devtools_console_stdout_chrome,
+  devtools_console_stdout_chrome,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -3049,7 +3049,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "devtools.console.stdout.content",
-   devtools_console_stdout_content,
+  devtools_console_stdout_content,
   RelaxedAtomicBool, false
 )
 
@@ -3067,7 +3067,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.security.featurePolicy.enabled",
-   dom_security_featurePolicy_enabled,
+  dom_security_featurePolicy_enabled,
   bool, PREF_VALUE
 )
 
@@ -3075,7 +3075,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.security.featurePolicy.header.enabled",
-   dom_security_featurePolicy_header_enabled,
+  dom_security_featurePolicy_header_enabled,
   bool, PREF_VALUE
 )
 
@@ -3083,7 +3083,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.security.featurePolicy.webidl.enabled",
-   dom_security_featurePolicy_webidl_enabled,
+  dom_security_featurePolicy_webidl_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -3095,14 +3095,14 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "plugins.flashBlock.enabled",
-   plugins_flashBlock_enabled,
+  plugins_flashBlock_enabled,
   bool, false
 )
 
 VARCACHE_PREF(
   Live,
   "plugins.http_https_only",
-   plugins_http_https_only,
+  plugins_http_https_only,
   bool, true
 )
 
@@ -3118,7 +3118,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.reporting.enabled",
-   dom_reporting_enabled,
+  dom_reporting_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -3126,7 +3126,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.reporting.testing.enabled",
-   dom_reporting_testing_enabled,
+  dom_reporting_testing_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -3138,7 +3138,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.reporting.featurePolicy.enabled",
-   dom_reporting_featurePolicy_enabled,
+  dom_reporting_featurePolicy_enabled,
   RelaxedAtomicBool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -3146,7 +3146,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.reporting.header.enabled",
-   dom_reporting_header_enabled,
+  dom_reporting_header_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -3154,7 +3154,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.reporting.cleanup.timeout",
-   dom_reporting_cleanup_timeout,
+  dom_reporting_cleanup_timeout,
   uint32_t, 3600
 )
 
@@ -3162,7 +3162,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.reporting.delivering.timeout",
-   dom_reporting_delivering_timeout,
+  dom_reporting_delivering_timeout,
   uint32_t, 5
 )
 
@@ -3170,7 +3170,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.reporting.delivering.maxFailures",
-   dom_reporting_delivering_maxFailures,
+  dom_reporting_delivering_maxFailures,
   uint32_t, 3
 )
 
@@ -3178,7 +3178,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.reporting.delivering.maxReports",
-   dom_reporting_delivering_maxReports,
+  dom_reporting_delivering_maxReports,
   uint32_t, 100
 )
 
@@ -3193,7 +3193,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "dom.w3c_touch_events.legacy_apis.enabled",
-   dom_w3c_touch_events_legacy_apis_enabled,
+  dom_w3c_touch_events_legacy_apis_enabled,
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
@@ -3201,7 +3201,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "medium_high_event_queue.enabled",
-   medium_high_event_queue_enabled,
+  medium_high_event_queue_enabled,
   RelaxedAtomicBool, true
 )
 
@@ -3209,7 +3209,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "security.fileuri.strict_origin_policy",
-   security_fileuri_strict_origin_policy,
+  security_fileuri_strict_origin_policy,
   RelaxedAtomicBool, true
 )
 
@@ -3219,7 +3219,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "privacy.trackingprotection.origin_telemetry.enabled",
-   privacy_trackingprotection_origin_telemetry_enabled,
+  privacy_trackingprotection_origin_telemetry_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -3229,7 +3229,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "telemetry.origin_telemetry_test_mode.enabled",
-   telemetry_origin_telemetry_test_mode_enabled,
+  telemetry_origin_telemetry_test_mode_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -3237,537 +3237,2996 @@ VARCACHE_PREF(
 // Start of previous gfxPrefs
 //---------------------------------------------------------------------------
 
-VARCACHE_PREF(Live, "accessibility.browsewithcaret", AccessibilityBrowseWithCaret, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.gpu-process.enabled",            GPUProcessEnabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "accessibility.browsewithcaret",
+  AccessibilityBrowseWithCaret,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.gpu-process.enabled",
+  GPUProcessEnabled,
+  RelaxedAtomicBool, false
+)
+
 // The apz prefs are explained in AsyncPanZoomController.cpp
-VARCACHE_PREF(Live, "apz.allow_double_tap_zooming",          APZAllowDoubleTapZooming, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "apz.allow_immediate_handoff",           APZAllowImmediateHandoff, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "apz.allow_zooming",                     APZAllowZooming, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.android.chrome_fling_physics.enabled", APZUseChromeFlingPhysics, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.android.chrome_fling_physics.friction", APZChromeFlingPhysicsFriction, AtomicFloat, 0.015f);
-VARCACHE_PREF(Live, "apz.android.chrome_fling_physics.inflexion", APZChromeFlingPhysicsInflexion, AtomicFloat, 0.35f);
-VARCACHE_PREF(Live, "apz.android.chrome_fling_physics.stop_threshold", APZChromeFlingPhysicsStopThreshold, AtomicFloat, 0.1f);
-VARCACHE_PREF(Live, "apz.autoscroll.enabled",                APZAutoscrollEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.axis_lock.breakout_angle",          APZAxisBreakoutAngle, AtomicFloat, float(M_PI / 8.0) /* 22.5 degrees */);
-VARCACHE_PREF(Live, "apz.axis_lock.breakout_threshold",      APZAxisBreakoutThreshold, AtomicFloat, 1.0f / 32.0f);
-VARCACHE_PREF(Live, "apz.axis_lock.direct_pan_angle",        APZAllowedDirectPanAngle, AtomicFloat, float(M_PI / 3.0) /* 60 degrees */);
-VARCACHE_PREF(Live, "apz.axis_lock.lock_angle",              APZAxisLockAngle, AtomicFloat, float(M_PI / 6.0) /* 30 degrees */);
-VARCACHE_PREF(Live, "apz.axis_lock.mode",                    APZAxisLockMode, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "apz.content_response_timeout",          APZContentResponseTimeout, RelaxedAtomicInt32, 400);
-VARCACHE_PREF(Live, "apz.danger_zone_x",                     APZDangerZoneX, RelaxedAtomicInt32, 50);
-VARCACHE_PREF(Live, "apz.danger_zone_y",                     APZDangerZoneY, RelaxedAtomicInt32, 100);
-VARCACHE_PREF(Live, "apz.disable_for_scroll_linked_effects", APZDisableForScrollLinkedEffects, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.displayport_expiry_ms",             APZDisplayPortExpiryTime, RelaxedAtomicUint32, 15000);
-VARCACHE_PREF(Live, "apz.drag.enabled",                      APZDragEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.drag.initial.enabled",              APZDragInitiationEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.drag.touch.enabled",                APZTouchDragEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.enlarge_displayport_when_clipped",  APZEnlargeDisplayPortWhenClipped, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.fixed-margin-override.enabled",     APZFixedMarginOverrideEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.fixed-margin-override.bottom",      APZFixedMarginOverrideBottom, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "apz.fixed-margin-override.top",         APZFixedMarginOverrideTop, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "apz.fling_accel_base_mult",             APZFlingAccelBaseMultiplier, AtomicFloat, 1.0f);
-VARCACHE_PREF(Live, "apz.fling_accel_interval_ms",           APZFlingAccelInterval, RelaxedAtomicInt32, 500);
-VARCACHE_PREF(Live, "apz.fling_accel_supplemental_mult",     APZFlingAccelSupplementalMultiplier, AtomicFloat, 1.0f);
-VARCACHE_PREF(Live, "apz.fling_accel_min_velocity",          APZFlingAccelMinVelocity, AtomicFloat, 1.5f);
-VARCACHE_PREF(Once, "apz.fling_curve_function_x1",           APZCurveFunctionX1, AtomicFloat, 0.0f);
-VARCACHE_PREF(Once, "apz.fling_curve_function_x2",           APZCurveFunctionX2, AtomicFloat, 1.0f);
-VARCACHE_PREF(Once, "apz.fling_curve_function_y1",           APZCurveFunctionY1, AtomicFloat, 0.0f);
-VARCACHE_PREF(Once, "apz.fling_curve_function_y2",           APZCurveFunctionY2, AtomicFloat, 1.0f);
-VARCACHE_PREF(Live, "apz.fling_curve_threshold_inches_per_ms", APZCurveThreshold, AtomicFloat, -1.0f);
-VARCACHE_PREF(Live, "apz.fling_friction",                    APZFlingFriction, AtomicFloat, 0.002f);
-VARCACHE_PREF(Live, "apz.fling_min_velocity_threshold",      APZFlingMinVelocityThreshold, AtomicFloat, 0.5f);
-VARCACHE_PREF(Live, "apz.fling_stop_on_tap_threshold",       APZFlingStopOnTapThreshold, AtomicFloat, 0.05f);
-VARCACHE_PREF(Live, "apz.fling_stopped_threshold",           APZFlingStoppedThreshold, AtomicFloat, 0.01f);
-VARCACHE_PREF(Live, "apz.frame_delay.enabled",               APZFrameDelayEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "apz.keyboard.enabled",                  APZKeyboardEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.keyboard.passive-listeners",        APZKeyboardPassiveListeners, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.max_tap_time",                      APZMaxTapTime, RelaxedAtomicInt32, 300);
-VARCACHE_PREF(Live, "apz.max_velocity_inches_per_ms",        APZMaxVelocity, AtomicFloat, -1.0f);
-VARCACHE_PREF(Once, "apz.max_velocity_queue_size",           APZMaxVelocityQueueSize, RelaxedAtomicUint32, 5);
-VARCACHE_PREF(Live, "apz.min_skate_speed",                   APZMinSkateSpeed, AtomicFloat, 1.0f);
-VARCACHE_PREF(Live, "apz.minimap.enabled",                   APZMinimap, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.one_touch_pinch.enabled",           APZOneTouchPinchEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "apz.overscroll.enabled",                APZOverscrollEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.overscroll.min_pan_distance_ratio", APZMinPanDistanceRatio, AtomicFloat, 1.0f);
-VARCACHE_PREF(Live, "apz.overscroll.spring_stiffness",       APZOverscrollSpringStiffness, AtomicFloat, 0.001f);
-VARCACHE_PREF(Live, "apz.overscroll.stop_distance_threshold", APZOverscrollStopDistanceThreshold, AtomicFloat, 5.0f);
-VARCACHE_PREF(Live, "apz.paint_skipping.enabled",            APZPaintSkipping, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "apz.peek_messages.enabled",             APZPeekMessages, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "apz.pinch_lock.mode",                   APZPinchLockMode, RelaxedAtomicInt32, 1);
-VARCACHE_PREF(Live, "apz.pinch_lock.scroll_lock_threshold",  APZPinchLockScrollLockThreshold, AtomicFloat, 1.0f / 32.0f);
-VARCACHE_PREF(Live, "apz.pinch_lock.span_breakout_threshold", APZPinchLockSpanBreakoutThreshold, AtomicFloat, 1.0f / 32.0f);
-VARCACHE_PREF(Live, "apz.pinch_lock.span_lock_threshold",    APZPinchLockSpanLockThreshold, AtomicFloat, 1.0f / 32.0f);
-VARCACHE_PREF(Once, "apz.pinch_lock.buffer_max_age",         APZPinchLockBufferMaxAge, RelaxedAtomicInt32, 50);
-VARCACHE_PREF(Live, "apz.popups.enabled",                    APZPopupsEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.printtree",                         APZPrintTree, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.record_checkerboarding",            APZRecordCheckerboarding, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.second_tap_tolerance",              APZSecondTapTolerance, AtomicFloat, 0.5f);
-VARCACHE_PREF(Live, "apz.test.fails_with_native_injection",  APZTestFailsWithNativeInjection, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.test.logging_enabled",              APZTestLoggingEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "apz.touch_move_tolerance",              APZTouchMoveTolerance, AtomicFloat, 0.1f);
-VARCACHE_PREF(Live, "apz.touch_start_tolerance",             APZTouchStartTolerance, AtomicFloat, 1.0f/4.5f);
-VARCACHE_PREF(Live, "apz.velocity_bias",                     APZVelocityBias, AtomicFloat, 0.0f);
-VARCACHE_PREF(Live, "apz.velocity_relevance_time_ms",        APZVelocityRelevanceTime, RelaxedAtomicUint32, 150);
-VARCACHE_PREF(Live, "apz.x_skate_highmem_adjust",            APZXSkateHighMemAdjust, AtomicFloat, 0.0f);
-VARCACHE_PREF(Live, "apz.x_skate_size_multiplier",           APZXSkateSizeMultiplier, AtomicFloat, 1.5f);
-VARCACHE_PREF(Live, "apz.x_stationary_size_multiplier",      APZXStationarySizeMultiplier, AtomicFloat, 3.0f);
-VARCACHE_PREF(Live, "apz.y_skate_highmem_adjust",            APZYSkateHighMemAdjust, AtomicFloat, 0.0f);
-VARCACHE_PREF(Live, "apz.y_skate_size_multiplier",           APZYSkateSizeMultiplier, AtomicFloat, 2.5f);
-VARCACHE_PREF(Live, "apz.y_stationary_size_multiplier",      APZYStationarySizeMultiplier, AtomicFloat, 3.5f);
-VARCACHE_PREF(Live, "apz.zoom_animation_duration_ms",        APZZoomAnimationDuration, RelaxedAtomicInt32, 250);
-VARCACHE_PREF(Live, "apz.scale_repaint_delay_ms",            APZScaleRepaintDelay, RelaxedAtomicInt32, 500);
-VARCACHE_PREF(Live, "apz.relative-update.enabled",           APZRelativeUpdate, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "apz.allow_double_tap_zooming",
+  APZAllowDoubleTapZooming,
+  RelaxedAtomicBool, true
+)
 
-VARCACHE_PREF(Live, "browser.ui.scroll-toolbar-threshold",   ToolbarScrollThreshold, RelaxedAtomicInt32, 10);
-VARCACHE_PREF(Live, "browser.ui.zoom.force-user-scalable",   ForceUserScalable, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "browser.viewport.desktopWidth",         DesktopViewportWidth, RelaxedAtomicInt32, 980);
+VARCACHE_PREF(
+  Live,
+  "apz.allow_immediate_handoff",
+  APZAllowImmediateHandoff,
+  RelaxedAtomicBool, true
+)
 
-VARCACHE_PREF(Live, "dom.ipc.plugins.asyncdrawing.enabled",  PluginAsyncDrawingEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "dom.meta-viewport.enabled",             MetaViewportEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "dom.vr.enabled",                        VREnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "dom.vr.autoactivate.enabled",           VRAutoActivateEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "dom.vr.controller_trigger_threshold",   VRControllerTriggerThreshold, AtomicFloat, 0.1f);
-VARCACHE_PREF(Once, "dom.vr.external.enabled",               VRExternalEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "dom.vr.external.notdetected.timeout",   VRExternalNotDetectedTimeout, RelaxedAtomicInt32, 60000);
-VARCACHE_PREF(Live, "dom.vr.external.quit.timeout",          VRExternalQuitTimeout, RelaxedAtomicInt32, 10000);
-VARCACHE_PREF(Live, "dom.vr.navigation.timeout",             VRNavigationTimeout, RelaxedAtomicInt32, 1000);
-VARCACHE_PREF(Once, "dom.vr.oculus.enabled",                 VROculusEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "dom.vr.oculus.invisible.enabled",       VROculusInvisibleEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "dom.vr.oculus.present.timeout",         VROculusPresentTimeout, RelaxedAtomicInt32, 500);
-VARCACHE_PREF(Live, "dom.vr.oculus.quit.timeout",            VROculusQuitTimeout, RelaxedAtomicInt32, 10000);
-VARCACHE_PREF(Once, "dom.vr.openvr.enabled",                 VROpenVREnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "dom.vr.openvr.action_input",             VROpenVRActionInputEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "dom.vr.osvr.enabled",                   VROSVREnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "dom.vr.controller.enumerate.interval",  VRControllerEnumerateInterval, RelaxedAtomicInt32, 1000);
-VARCACHE_PREF(Live, "dom.vr.display.enumerate.interval",     VRDisplayEnumerateInterval, RelaxedAtomicInt32, 5000);
-VARCACHE_PREF(Live, "dom.vr.inactive.timeout",               VRInactiveTimeout, RelaxedAtomicInt32, 5000);
-VARCACHE_PREF(Live, "dom.vr.poseprediction.enabled",         VRPosePredictionEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "dom.vr.require-gesture",                VRRequireGesture, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "dom.vr.puppet.enabled",                 VRPuppetEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "dom.vr.puppet.submitframe",             VRPuppetSubmitFrame, RelaxedAtomicUint32, 0);
-VARCACHE_PREF(Live, "dom.vr.display.rafMaxDuration",         VRDisplayRafMaxDuration, RelaxedAtomicUint32, 50);
-VARCACHE_PREF(Once, "dom.vr.process.enabled",                VRProcessEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "dom.vr.process.startup_timeout_ms",     VRProcessTimeoutMs, RelaxedAtomicInt32, 5000);
-VARCACHE_PREF(Once, "dom.vr.service.enabled",                VRServiceEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "dom.w3c_pointer_events.enabled",        PointerEventsEnabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "apz.allow_zooming",
+  APZAllowZooming,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "general.smoothScroll",                  SmoothScrollEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "general.smoothScroll.currentVelocityWeighting",
-              SmoothScrollCurrentVelocityWeighting, AtomicFloat, 0.25);
-VARCACHE_PREF(Live, "general.smoothScroll.durationToIntervalRatio",
-              SmoothScrollDurationToIntervalRatio, RelaxedAtomicInt32, 200);
-VARCACHE_PREF(Live, "general.smoothScroll.lines.durationMaxMS",
-              LineSmoothScrollMaxDurationMs, RelaxedAtomicInt32, 150);
-VARCACHE_PREF(Live, "general.smoothScroll.lines.durationMinMS",
-              LineSmoothScrollMinDurationMs, RelaxedAtomicInt32, 150);
-VARCACHE_PREF(Live, "general.smoothScroll.mouseWheel",       WheelSmoothScrollEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "general.smoothScroll.mouseWheel.durationMaxMS",
-              WheelSmoothScrollMaxDurationMs, RelaxedAtomicInt32, 400);
-VARCACHE_PREF(Live, "general.smoothScroll.mouseWheel.durationMinMS",
-              WheelSmoothScrollMinDurationMs, RelaxedAtomicInt32, 200);
-VARCACHE_PREF(Live, "general.smoothScroll.other.durationMaxMS",
-              OtherSmoothScrollMaxDurationMs, RelaxedAtomicInt32, 150);
-VARCACHE_PREF(Live, "general.smoothScroll.other.durationMinMS",
-              OtherSmoothScrollMinDurationMs, RelaxedAtomicInt32, 150);
-VARCACHE_PREF(Live, "general.smoothScroll.pages",            PageSmoothScrollEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "general.smoothScroll.pages.durationMaxMS",
-              PageSmoothScrollMaxDurationMs, RelaxedAtomicInt32, 150);
-VARCACHE_PREF(Live, "general.smoothScroll.pages.durationMinMS",
-              PageSmoothScrollMinDurationMs, RelaxedAtomicInt32, 150);
-VARCACHE_PREF(Live, "general.smoothScroll.pixels.durationMaxMS",
-              PixelSmoothScrollMaxDurationMs, RelaxedAtomicInt32, 150);
-VARCACHE_PREF(Live, "general.smoothScroll.pixels.durationMinMS",
-              PixelSmoothScrollMinDurationMs, RelaxedAtomicInt32, 150);
-VARCACHE_PREF(Live, "general.smoothScroll.stopDecelerationWeighting",
-              SmoothScrollStopDecelerationWeighting, AtomicFloat, 0.4f);
+VARCACHE_PREF(
+  Live,
+  "apz.android.chrome_fling_physics.enabled",
+  APZUseChromeFlingPhysics,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "general.smoothScroll.msdPhysics.enabled",
-              SmoothScrollMSDPhysicsEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "general.smoothScroll.msdPhysics.continuousMotionMaxDeltaMS",
-              SmoothScrollMSDPhysicsContinuousMotionMaxDeltaMS, RelaxedAtomicInt32, 120);
-VARCACHE_PREF(Live, "general.smoothScroll.msdPhysics.motionBeginSpringConstant",
-              SmoothScrollMSDPhysicsMotionBeginSpringConstant, RelaxedAtomicInt32, 1250);
-VARCACHE_PREF(Live, "general.smoothScroll.msdPhysics.slowdownMinDeltaMS",
-              SmoothScrollMSDPhysicsSlowdownMinDeltaMS, RelaxedAtomicInt32, 12);
-VARCACHE_PREF(Live, "general.smoothScroll.msdPhysics.slowdownMinDeltaRatio",
-              SmoothScrollMSDPhysicsSlowdownMinDeltaRatio, AtomicFloat, 1.3f);
-VARCACHE_PREF(Live, "general.smoothScroll.msdPhysics.slowdownSpringConstant",
-              SmoothScrollMSDPhysicsSlowdownSpringConstant, RelaxedAtomicInt32, 2000);
-VARCACHE_PREF(Live, "general.smoothScroll.msdPhysics.regularSpringConstant",
-              SmoothScrollMSDPhysicsRegularSpringConstant, RelaxedAtomicInt32, 1000);
+VARCACHE_PREF(
+  Live,
+  "apz.android.chrome_fling_physics.friction",
+  APZChromeFlingPhysicsFriction,
+  AtomicFloat, 0.015f
+)
 
-VARCACHE_PREF(Once, "gfx.android.rgb16.force",               AndroidRGB16Force, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.apitrace.enabled",                  UseApitrace, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "apz.android.chrome_fling_physics.inflexion",
+  APZChromeFlingPhysicsInflexion,
+  AtomicFloat, 0.35f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.android.chrome_fling_physics.stop_threshold",
+  APZChromeFlingPhysicsStopThreshold,
+  AtomicFloat, 0.1f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.autoscroll.enabled",
+  APZAutoscrollEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.axis_lock.breakout_angle",
+  APZAxisBreakoutAngle,
+  AtomicFloat, float(M_PI / 8.0) /* 22.5 degrees */
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.axis_lock.breakout_threshold",
+  APZAxisBreakoutThreshold,
+  AtomicFloat, 1.0f / 32.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.axis_lock.direct_pan_angle",
+  APZAllowedDirectPanAngle,
+  AtomicFloat, float(M_PI / 3.0) /* 60 degrees */
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.axis_lock.lock_angle",
+  APZAxisLockAngle,
+  AtomicFloat, float(M_PI / 6.0) /* 30 degrees */
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.axis_lock.mode",
+  APZAxisLockMode,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.content_response_timeout",
+  APZContentResponseTimeout,
+  RelaxedAtomicInt32, 400
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.danger_zone_x",
+  APZDangerZoneX,
+  RelaxedAtomicInt32, 50
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.danger_zone_y",
+  APZDangerZoneY,
+  RelaxedAtomicInt32, 100
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.disable_for_scroll_linked_effects",
+  APZDisableForScrollLinkedEffects,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.displayport_expiry_ms",
+  APZDisplayPortExpiryTime,
+  RelaxedAtomicUint32, 15000
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.drag.enabled",
+  APZDragEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.drag.initial.enabled",
+  APZDragInitiationEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.drag.touch.enabled",
+  APZTouchDragEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.enlarge_displayport_when_clipped",
+  APZEnlargeDisplayPortWhenClipped,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fixed-margin-override.enabled",
+  APZFixedMarginOverrideEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fixed-margin-override.bottom",
+  APZFixedMarginOverrideBottom,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fixed-margin-override.top",
+  APZFixedMarginOverrideTop,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_accel_base_mult",
+  APZFlingAccelBaseMultiplier,
+  AtomicFloat, 1.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_accel_interval_ms",
+  APZFlingAccelInterval,
+  RelaxedAtomicInt32, 500
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_accel_supplemental_mult",
+  APZFlingAccelSupplementalMultiplier,
+  AtomicFloat, 1.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_accel_min_velocity",
+  APZFlingAccelMinVelocity,
+  AtomicFloat, 1.5f
+)
+
+VARCACHE_PREF(
+  Once,
+  "apz.fling_curve_function_x1",
+  APZCurveFunctionX1,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Once,
+  "apz.fling_curve_function_x2",
+  APZCurveFunctionX2,
+  AtomicFloat, 1.0f
+)
+
+VARCACHE_PREF(
+  Once,
+  "apz.fling_curve_function_y1",
+  APZCurveFunctionY1,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Once,
+  "apz.fling_curve_function_y2",
+  APZCurveFunctionY2,
+  AtomicFloat, 1.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_curve_threshold_inches_per_ms",
+  APZCurveThreshold,
+  AtomicFloat, -1.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_friction",
+  APZFlingFriction,
+  AtomicFloat, 0.002f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_min_velocity_threshold",
+  APZFlingMinVelocityThreshold,
+  AtomicFloat, 0.5f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_stop_on_tap_threshold",
+  APZFlingStopOnTapThreshold,
+  AtomicFloat, 0.05f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.fling_stopped_threshold",
+  APZFlingStoppedThreshold,
+  AtomicFloat, 0.01f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.frame_delay.enabled",
+  APZFrameDelayEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "apz.keyboard.enabled",
+  APZKeyboardEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.keyboard.passive-listeners",
+  APZKeyboardPassiveListeners,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.max_tap_time",
+  APZMaxTapTime,
+  RelaxedAtomicInt32, 300
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.max_velocity_inches_per_ms",
+  APZMaxVelocity,
+  AtomicFloat, -1.0f
+)
+
+VARCACHE_PREF(
+  Once,
+  "apz.max_velocity_queue_size",
+  APZMaxVelocityQueueSize,
+  RelaxedAtomicUint32, 5
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.min_skate_speed",
+  APZMinSkateSpeed,
+  AtomicFloat, 1.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.minimap.enabled",
+  APZMinimap,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.one_touch_pinch.enabled",
+  APZOneTouchPinchEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.overscroll.enabled",
+  APZOverscrollEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.overscroll.min_pan_distance_ratio",
+  APZMinPanDistanceRatio,
+  AtomicFloat, 1.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.overscroll.spring_stiffness",
+  APZOverscrollSpringStiffness,
+  AtomicFloat, 0.001f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.overscroll.stop_distance_threshold",
+  APZOverscrollStopDistanceThreshold,
+  AtomicFloat, 5.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.paint_skipping.enabled",
+  APZPaintSkipping,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.peek_messages.enabled",
+  APZPeekMessages,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.pinch_lock.mode",
+  APZPinchLockMode,
+  RelaxedAtomicInt32, 1
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.pinch_lock.scroll_lock_threshold",
+  APZPinchLockScrollLockThreshold,
+  AtomicFloat, 1.0f / 32.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.pinch_lock.span_breakout_threshold",
+  APZPinchLockSpanBreakoutThreshold,
+  AtomicFloat, 1.0f / 32.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.pinch_lock.span_lock_threshold",
+  APZPinchLockSpanLockThreshold,
+  AtomicFloat, 1.0f / 32.0f
+)
+
+VARCACHE_PREF(
+  Once,
+  "apz.pinch_lock.buffer_max_age",
+  APZPinchLockBufferMaxAge,
+  RelaxedAtomicInt32, 50
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.popups.enabled",
+  APZPopupsEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.printtree",
+  APZPrintTree,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.record_checkerboarding",
+  APZRecordCheckerboarding,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.second_tap_tolerance",
+  APZSecondTapTolerance,
+  AtomicFloat, 0.5f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.test.fails_with_native_injection",
+  APZTestFailsWithNativeInjection,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.test.logging_enabled",
+  APZTestLoggingEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.touch_move_tolerance",
+  APZTouchMoveTolerance,
+  AtomicFloat, 0.1f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.touch_start_tolerance",
+  APZTouchStartTolerance,
+  AtomicFloat, 1.0f/4.5f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.velocity_bias",
+  APZVelocityBias,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.velocity_relevance_time_ms",
+  APZVelocityRelevanceTime,
+  RelaxedAtomicUint32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.x_skate_highmem_adjust",
+  APZXSkateHighMemAdjust,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.x_skate_size_multiplier",
+  APZXSkateSizeMultiplier,
+  AtomicFloat, 1.5f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.x_stationary_size_multiplier",
+  APZXStationarySizeMultiplier,
+  AtomicFloat, 3.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.y_skate_highmem_adjust",
+  APZYSkateHighMemAdjust,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.y_skate_size_multiplier",
+  APZYSkateSizeMultiplier,
+  AtomicFloat, 2.5f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.y_stationary_size_multiplier",
+  APZYStationarySizeMultiplier,
+  AtomicFloat, 3.5f
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.zoom_animation_duration_ms",
+  APZZoomAnimationDuration,
+  RelaxedAtomicInt32, 250
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.scale_repaint_delay_ms",
+  APZScaleRepaintDelay,
+  RelaxedAtomicInt32, 500
+)
+
+VARCACHE_PREF(
+  Live,
+  "apz.relative-update.enabled",
+  APZRelativeUpdate,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "browser.ui.scroll-toolbar-threshold",
+  ToolbarScrollThreshold,
+  RelaxedAtomicInt32, 10
+)
+
+VARCACHE_PREF(
+  Live,
+  "browser.ui.zoom.force-user-scalable",
+  ForceUserScalable,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "browser.viewport.desktopWidth",
+  DesktopViewportWidth,
+  RelaxedAtomicInt32, 980
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "dom.ipc.plugins.asyncdrawing.enabled",
+  PluginAsyncDrawingEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.meta-viewport.enabled",
+  MetaViewportEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.enabled",
+  VREnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.autoactivate.enabled",
+  VRAutoActivateEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.controller_trigger_threshold",
+  VRControllerTriggerThreshold,
+  AtomicFloat, 0.1f
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.external.enabled",
+  VRExternalEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.external.notdetected.timeout",
+  VRExternalNotDetectedTimeout,
+  RelaxedAtomicInt32, 60000
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.external.quit.timeout",
+  VRExternalQuitTimeout,
+  RelaxedAtomicInt32, 10000
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.navigation.timeout",
+  VRNavigationTimeout,
+  RelaxedAtomicInt32, 1000
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.oculus.enabled",
+  VROculusEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.oculus.invisible.enabled",
+  VROculusInvisibleEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.oculus.present.timeout",
+  VROculusPresentTimeout,
+  RelaxedAtomicInt32, 500
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.oculus.quit.timeout",
+  VROculusQuitTimeout,
+  RelaxedAtomicInt32, 10000
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.openvr.enabled",
+  VROpenVREnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.openvr.action_input",
+  VROpenVRActionInputEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.osvr.enabled",
+  VROSVREnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.controller.enumerate.interval",
+  VRControllerEnumerateInterval,
+  RelaxedAtomicInt32, 1000
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.display.enumerate.interval",
+  VRDisplayEnumerateInterval,
+  RelaxedAtomicInt32, 5000
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.inactive.timeout",
+  VRInactiveTimeout,
+  RelaxedAtomicInt32, 5000
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.poseprediction.enabled",
+  VRPosePredictionEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.require-gesture",
+  VRRequireGesture,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.puppet.enabled",
+  VRPuppetEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.puppet.submitframe",
+  VRPuppetSubmitFrame,
+  RelaxedAtomicUint32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.vr.display.rafMaxDuration",
+  VRDisplayRafMaxDuration,
+  RelaxedAtomicUint32, 50
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.process.enabled",
+  VRProcessEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.process.startup_timeout_ms",
+  VRProcessTimeoutMs,
+  RelaxedAtomicInt32, 5000
+)
+
+VARCACHE_PREF(
+  Once,
+  "dom.vr.service.enabled",
+  VRServiceEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.w3c_pointer_events.enabled",
+  PointerEventsEnabled,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll",
+  SmoothScrollEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.currentVelocityWeighting",
+  SmoothScrollCurrentVelocityWeighting,
+  AtomicFloat, 0.25
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.durationToIntervalRatio",
+  SmoothScrollDurationToIntervalRatio,
+  RelaxedAtomicInt32, 200
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.lines.durationMaxMS",
+  LineSmoothScrollMaxDurationMs,
+  RelaxedAtomicInt32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.lines.durationMinMS",
+  LineSmoothScrollMinDurationMs,
+  RelaxedAtomicInt32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.mouseWheel",
+  WheelSmoothScrollEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.mouseWheel.durationMaxMS",
+  WheelSmoothScrollMaxDurationMs,
+  RelaxedAtomicInt32, 400
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.mouseWheel.durationMinMS",
+  WheelSmoothScrollMinDurationMs,
+  RelaxedAtomicInt32, 200
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.other.durationMaxMS",
+  OtherSmoothScrollMaxDurationMs,
+  RelaxedAtomicInt32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.other.durationMinMS",
+  OtherSmoothScrollMinDurationMs,
+  RelaxedAtomicInt32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.pages",
+  PageSmoothScrollEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.pages.durationMaxMS",
+  PageSmoothScrollMaxDurationMs,
+  RelaxedAtomicInt32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.pages.durationMinMS",
+  PageSmoothScrollMinDurationMs,
+  RelaxedAtomicInt32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.pixels.durationMaxMS",
+  PixelSmoothScrollMaxDurationMs,
+  RelaxedAtomicInt32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.pixels.durationMinMS",
+  PixelSmoothScrollMinDurationMs,
+  RelaxedAtomicInt32, 150
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.stopDecelerationWeighting",
+  SmoothScrollStopDecelerationWeighting,
+  AtomicFloat, 0.4f
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.msdPhysics.enabled",
+  SmoothScrollMSDPhysicsEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.msdPhysics.continuousMotionMaxDeltaMS",
+  SmoothScrollMSDPhysicsContinuousMotionMaxDeltaMS,
+  RelaxedAtomicInt32, 120
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.msdPhysics.motionBeginSpringConstant",
+  SmoothScrollMSDPhysicsMotionBeginSpringConstant,
+  RelaxedAtomicInt32, 1250
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.msdPhysics.slowdownMinDeltaMS",
+  SmoothScrollMSDPhysicsSlowdownMinDeltaMS,
+  RelaxedAtomicInt32, 12
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.msdPhysics.slowdownMinDeltaRatio",
+  SmoothScrollMSDPhysicsSlowdownMinDeltaRatio,
+  AtomicFloat, 1.3f
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.msdPhysics.slowdownSpringConstant",
+  SmoothScrollMSDPhysicsSlowdownSpringConstant,
+  RelaxedAtomicInt32, 2000
+)
+
+VARCACHE_PREF(
+  Live,
+  "general.smoothScroll.msdPhysics.regularSpringConstant",
+  SmoothScrollMSDPhysicsRegularSpringConstant,
+  RelaxedAtomicInt32, 1000
+)
+
+
+VARCACHE_PREF(
+  Once,
+  "gfx.android.rgb16.force",
+  AndroidRGB16Force,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.apitrace.enabled",
+  UseApitrace,
+  RelaxedAtomicBool, false
+)
+
 #if defined(RELEASE_OR_BETA)
 // "Skip" means this is locked to the default value in beta and release.
-VARCACHE_PREF(Skip, "gfx.blocklist.all",                     BlocklistAll, RelaxedAtomicInt32, 0);
+VARCACHE_PREF(
+  Skip,
+  "gfx.blocklist.all",
+  BlocklistAll,
+  RelaxedAtomicInt32, 0
+)
+
 #else
-VARCACHE_PREF(Once, "gfx.blocklist.all",                     BlocklistAll, RelaxedAtomicInt32, 0);
+VARCACHE_PREF(
+  Once,
+  "gfx.blocklist.all",
+  BlocklistAll,
+  RelaxedAtomicInt32, 0
+)
+
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
 // Overrides the glClear color used when the surface origin is not (0, 0)
 // Used for drawing a border around the content.
-VARCACHE_PREF(Live, "gfx.compositor.override.clear-color.r", CompositorOverrideClearColorR, AtomicFloat, 0.0f);
-VARCACHE_PREF(Live, "gfx.compositor.override.clear-color.g", CompositorOverrideClearColorG, AtomicFloat, 0.0f);
-VARCACHE_PREF(Live, "gfx.compositor.override.clear-color.b", CompositorOverrideClearColorB, AtomicFloat, 0.0f);
-VARCACHE_PREF(Live, "gfx.compositor.override.clear-color.a", CompositorOverrideClearColorA, AtomicFloat, 0.0f);
+VARCACHE_PREF(
+  Live,
+  "gfx.compositor.override.clear-color.r",
+  CompositorOverrideClearColorR,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.compositor.override.clear-color.g",
+  CompositorOverrideClearColorG,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.compositor.override.clear-color.b",
+  CompositorOverrideClearColorB,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.compositor.override.clear-color.a",
+  CompositorOverrideClearColorA,
+  AtomicFloat, 0.0f
+)
+
 #endif // defined(MOZ_WIDGET_ANDROID)
-VARCACHE_PREF(Live, "gfx.compositor.clearstate",             CompositorClearState, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.compositor.glcontext.opaque",       CompositorGLContextOpaque, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "gfx.compositor.clearstate",
+  CompositorClearState,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.compositor.glcontext.opaque",
+  CompositorGLContextOpaque,
+  RelaxedAtomicBool, false
+)
+
 // 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
-VARCACHE_PREF(Live, "gfx.canvas.max-size",                   MaxCanvasSize, RelaxedAtomicInt32, 0x7fff);
+VARCACHE_PREF(
+  Live,
+  "gfx.canvas.max-size",
+  MaxCanvasSize,
+  RelaxedAtomicInt32, 0x7fff
+)
 
-VARCACHE_PREF(Live, "gfx.color_management.enablev4",         CMSEnableV4, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.color_management.mode",             CMSMode, RelaxedAtomicInt32,-1);
+
+VARCACHE_PREF(
+  Live,
+  "gfx.color_management.enablev4",
+  CMSEnableV4,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.color_management.mode",
+  CMSMode,
+  RelaxedAtomicInt32, -1
+)
+
 // The zero default here should match QCMS_INTENT_DEFAULT from qcms.h
-VARCACHE_PREF(Live, "gfx.color_management.rendering_intent", CMSRenderingIntent, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "gfx.content.always-paint",              AlwaysPaint, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "gfx.color_management.rendering_intent",
+  CMSRenderingIntent,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.content.always-paint",
+  AlwaysPaint,
+  RelaxedAtomicBool, false
+)
+
 // Size in megabytes
-VARCACHE_PREF(Once, "gfx.content.skia-font-cache-size",      SkiaContentFontCacheSize, RelaxedAtomicInt32, 5);
+VARCACHE_PREF(
+  Once,
+  "gfx.content.skia-font-cache-size",
+  SkiaContentFontCacheSize,
+  RelaxedAtomicInt32, 5
+)
 
-VARCACHE_PREF(Once, "gfx.device-reset.limit",                DeviceResetLimitCount, RelaxedAtomicInt32, 10);
-VARCACHE_PREF(Once, "gfx.device-reset.threshold-ms",         DeviceResetThresholdMilliseconds, RelaxedAtomicInt32, -1);
 
-VARCACHE_PREF(Once, "gfx.direct2d.disabled",                 Direct2DDisabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.direct2d.force-enabled",            Direct2DForceEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.direct2d.destroy-dt-on-paintthread",Direct2DDestroyDTOnPaintThread, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "gfx.direct3d11.reuse-decoder-device",   Direct3D11ReuseDecoderDevice, RelaxedAtomicInt32, -1);
-VARCACHE_PREF(Live, "gfx.direct3d11.allow-keyed-mutex",      Direct3D11AllowKeyedMutex, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "gfx.direct3d11.use-double-buffering",   Direct3D11UseDoubleBuffering, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.direct3d11.enable-debug-layer",     Direct3D11EnableDebugLayer, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.direct3d11.break-on-error",         Direct3D11BreakOnError, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.direct3d11.sleep-on-create-device", Direct3D11SleepOnCreateDevice, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "gfx.downloadable_fonts.keep_color_bitmaps", KeepColorBitmaps, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.downloadable_fonts.validate_variation_tables", ValidateVariationTables, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "gfx.downloadable_fonts.otl_validation", ValidateOTLTables, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "gfx.draw-color-bars",                   CompositorDrawColorBars, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.e10s.hide-plugins-for-scroll",      HidePluginsForScroll, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "gfx.e10s.font-list.shared",             SharedFontList, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Once,
+  "gfx.device-reset.limit",
+  DeviceResetLimitCount,
+  RelaxedAtomicInt32, 10
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.device-reset.threshold-ms",
+  DeviceResetThresholdMilliseconds,
+  RelaxedAtomicInt32, -1
+)
+
+
+VARCACHE_PREF(
+  Once,
+  "gfx.direct2d.disabled",
+  Direct2DDisabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.direct2d.force-enabled",
+  Direct2DForceEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.direct2d.destroy-dt-on-paintthread",
+  Direct2DDestroyDTOnPaintThread,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.direct3d11.reuse-decoder-device",
+  Direct3D11ReuseDecoderDevice,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.direct3d11.allow-keyed-mutex",
+  Direct3D11AllowKeyedMutex,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.direct3d11.use-double-buffering",
+  Direct3D11UseDoubleBuffering,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.direct3d11.enable-debug-layer",
+  Direct3D11EnableDebugLayer,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.direct3d11.break-on-error",
+  Direct3D11BreakOnError,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.direct3d11.sleep-on-create-device",
+  Direct3D11SleepOnCreateDevice,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.downloadable_fonts.keep_color_bitmaps",
+  KeepColorBitmaps,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.downloadable_fonts.validate_variation_tables",
+  ValidateVariationTables,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.downloadable_fonts.otl_validation",
+  ValidateOTLTables,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.draw-color-bars",
+  CompositorDrawColorBars,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.e10s.hide-plugins-for-scroll",
+  HidePluginsForScroll,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.e10s.font-list.shared",
+  SharedFontList,
+  RelaxedAtomicBool, false
+)
+
 #if defined(XP_MACOSX)
-VARCACHE_PREF(Live,"gfx.font_rendering.coretext.enabled",    CoreTextEnabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "gfx.font_rendering.coretext.enabled",
+  CoreTextEnabled,
+  RelaxedAtomicBool, false
+)
 #endif
-VARCACHE_PREF(Live, "gfx.layerscope.enabled",                LayerScopeEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.layerscope.port",                   LayerScopePort, RelaxedAtomicInt32, 23456);
+
+VARCACHE_PREF(
+  Live,
+  "gfx.layerscope.enabled",
+  LayerScopeEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.layerscope.port",
+  LayerScopePort,
+  RelaxedAtomicInt32, 23456
+)
+
 // Note that        "gfx.logging.level" is defined in Logging.h.
-VARCACHE_PREF(Live, "gfx.logging.level",                     GfxLoggingLevel, RelaxedAtomicInt32, mozilla::gfx::LOG_DEFAULT);
-VARCACHE_PREF(Once, "gfx.logging.crash.length",              GfxLoggingCrashLength, RelaxedAtomicUint32, 16);
-VARCACHE_PREF(Live, "gfx.logging.painted-pixel-count.enabled",GfxLoggingPaintedPixelCountEnabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "gfx.logging.level",
+  GfxLoggingLevel,
+  RelaxedAtomicInt32, mozilla::gfx::LOG_DEFAULT
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.logging.crash.length",
+  GfxLoggingCrashLength,
+  RelaxedAtomicUint32, 16
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.logging.painted-pixel-count.enabled",
+  GfxLoggingPaintedPixelCountEnabled,
+  RelaxedAtomicBool, false
+)
+
 // The maximums here are quite conservative, we can tighten them if problems show up.
-VARCACHE_PREF(Once, "gfx.logging.texture-usage.enabled",     GfxLoggingTextureUsageEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.logging.peak-texture-usage.enabled",GfxLoggingPeakTextureUsageEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.logging.slow-frames.enabled",       LoggingSlowFramesEnabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Once,
+  "gfx.logging.texture-usage.enabled",
+  GfxLoggingTextureUsageEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.logging.peak-texture-usage.enabled",
+  GfxLoggingPeakTextureUsageEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.logging.slow-frames.enabled",
+  LoggingSlowFramesEnabled,
+  RelaxedAtomicBool, false
+)
+
 // Use gfxPlatform::MaxAllocSize instead of the pref directly
-VARCACHE_PREF(Once, "gfx.max-alloc-size",                    MaxAllocSizeDoNotUseDirectly, RelaxedAtomicInt32, (int32_t)500000000);
+VARCACHE_PREF(
+  Once,
+  "gfx.max-alloc-size",
+  MaxAllocSizeDoNotUseDirectly,
+  RelaxedAtomicInt32, (int32_t)500000000
+)
+
 // Use gfxPlatform::MaxTextureSize instead of the pref directly
-VARCACHE_PREF(Once, "gfx.max-texture-size",                  MaxTextureSizeDoNotUseDirectly, RelaxedAtomicInt32, (int32_t)32767);
-VARCACHE_PREF(Live, "gfx.partialpresent.force",              PartialPresent, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "gfx.perf-warnings.enabled",             PerfWarnings, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.testing.device-reset",              DeviceResetForTesting, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "gfx.testing.device-fail",               DeviceFailForTesting, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.text.disable-aa",                   DisableAllTextAA, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.ycbcr.accurate-conversion",         YCbCrAccurateConversion, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Once,
+  "gfx.max-texture-size",
+  MaxTextureSizeDoNotUseDirectly,
+  RelaxedAtomicInt32, (int32_t)32767
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.partialpresent.force",
+  PartialPresent,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.perf-warnings.enabled",
+  PerfWarnings,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.testing.device-reset",
+  DeviceResetForTesting,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.testing.device-fail",
+  DeviceFailForTesting,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.text.disable-aa",
+  DisableAllTextAA,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.ycbcr.accurate-conversion",
+  YCbCrAccurateConversion,
+  RelaxedAtomicBool, false
+)
+
 
 // Disable surface sharing due to issues with compatible FBConfigs on
 // NVIDIA drivers as described in bug 1193015.
-VARCACHE_PREF(Live, "gfx.use-glx-texture-from-pixmap",       UseGLXTextureFromPixmap, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.use-iosurface-textures",            UseIOSurfaceTextures, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.use-mutex-on-present",              UseMutexOnPresent, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.use-surfacetexture-textures",       UseSurfaceTextureTextures, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.allow-texture-direct-mapping",      AllowTextureDirectMapping, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "gfx.vsync.collect-scroll-transforms",   CollectScrollTransforms, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.vsync.compositor.unobserve-count",  CompositorUnobserveCount, RelaxedAtomicInt32, 10);
+VARCACHE_PREF(
+  Live,
+  "gfx.use-glx-texture-from-pixmap",
+  UseGLXTextureFromPixmap,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Once, "gfx.webrender.all",                     WebRenderAll, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.webrender.all.qualified",           WebRenderAllQualified, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once,
-              "gfx.webrender.all.qualified.default",
-              WebRenderAllQualifiedDefault,
-              bool,
-              false);
-VARCACHE_PREF(Live, "gfx.webrender.blob-images",             WebRenderBlobImages, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "gfx.webrender.blob.invalidation",       WebRenderBlobInvalidation, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.webrender.blob.paint-flashing",     WebRenderBlobPaintFlashing, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.webrender.dl.dump-parent",          WebRenderDLDumpParent, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.webrender.dl.dump-content",         WebRenderDLDumpContent, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.webrender.enabled",                 WebRenderEnabledDoNotUseDirectly, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.webrender.force-disabled",          WebRenderForceDisabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.webrender.highlight-painted-layers",WebRenderHighlightPaintedLayers, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.webrender.late-scenebuild-threshold", WebRenderLateSceneBuildThreshold, RelaxedAtomicInt32, 4);
-VARCACHE_PREF(Live, "gfx.webrender.max-filter-ops-per-chain", WebRenderMaxFilterOpsPerChain, RelaxedAtomicUint32, 64);
-VARCACHE_PREF(Live, "gfx.webrender.picture-caching",         WebRenderPictureCaching, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "gfx.webrender.split-render-roots",      WebRenderSplitRenderRoots, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gfx.webrender.start-debug-server",      WebRenderStartDebugServer, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Once,
+  "gfx.use-iosurface-textures",
+  UseIOSurfaceTextures,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.use-mutex-on-present",
+  UseMutexOnPresent,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.use-surfacetexture-textures",
+  UseSurfaceTextureTextures,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.allow-texture-direct-mapping",
+  AllowTextureDirectMapping,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.vsync.collect-scroll-transforms",
+  CollectScrollTransforms,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.vsync.compositor.unobserve-count",
+  CompositorUnobserveCount,
+  RelaxedAtomicInt32, 10
+)
+
+
+VARCACHE_PREF(
+  Once,
+  "gfx.webrender.all",
+  WebRenderAll,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.webrender.all.qualified",
+  WebRenderAllQualified,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.webrender.all.qualified.default",
+  WebRenderAllQualifiedDefault,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.blob-images",
+  WebRenderBlobImages,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.blob.invalidation",
+  WebRenderBlobInvalidation,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.blob.paint-flashing",
+  WebRenderBlobPaintFlashing,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.dl.dump-parent",
+  WebRenderDLDumpParent,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.dl.dump-content",
+  WebRenderDLDumpContent,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.webrender.enabled",
+  WebRenderEnabledDoNotUseDirectly,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.webrender.force-disabled",
+  WebRenderForceDisabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.highlight-painted-layers",
+  WebRenderHighlightPaintedLayers,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.late-scenebuild-threshold",
+  WebRenderLateSceneBuildThreshold,
+  RelaxedAtomicInt32, 4
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.max-filter-ops-per-chain",
+  WebRenderMaxFilterOpsPerChain,
+  RelaxedAtomicUint32, 64
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.picture-caching",
+  WebRenderPictureCaching,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.webrender.split-render-roots",
+  WebRenderSplitRenderRoots,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gfx.webrender.start-debug-server",
+  WebRenderStartDebugServer,
+  RelaxedAtomicBool, false
+)
+
 
 // Use vsync events generated by hardware
-VARCACHE_PREF(Once, "gfx.work-around-driver-bugs",           WorkAroundDriverBugs, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Once,
+  "gfx.work-around-driver-bugs",
+  WorkAroundDriverBugs,
+  RelaxedAtomicBool, true
+)
 
-VARCACHE_PREF(Live, "gl.allow-high-power",                   GLAllowHighPower, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "gl.ignore-dx-interop2-blacklist",       IgnoreDXInterop2Blacklist, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gl.msaa-level",                         MSAALevel, RelaxedAtomicUint32, 2);
+
+VARCACHE_PREF(
+  Live,
+  "gl.allow-high-power",
+  GLAllowHighPower,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "gl.ignore-dx-interop2-blacklist",
+  IgnoreDXInterop2Blacklist,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gl.msaa-level",
+  MSAALevel,
+  RelaxedAtomicUint32, 2
+)
+
 #if defined(XP_MACOSX)
-VARCACHE_PREF(Live, "gl.multithreaded",                      GLMultithreaded, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "gl.multithreaded",
+  GLMultithreaded,
+  RelaxedAtomicBool, false
+)
+
 #endif
-VARCACHE_PREF(Live, "gl.require-hardware",                   RequireHardwareGL, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "gl.use-tls-is-current",                 UseTLSIsCurrent, RelaxedAtomicInt32, 0);
+VARCACHE_PREF(
+  Live,
+  "gl.require-hardware",
+  RequireHardwareGL,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "image.animated.decode-on-demand.threshold-kb", ImageAnimatedDecodeOnDemandThresholdKB, RelaxedAtomicUint32, 20480);
-VARCACHE_PREF(Live, "image.animated.decode-on-demand.batch-size", ImageAnimatedDecodeOnDemandBatchSize, RelaxedAtomicUint32, 6);
-VARCACHE_PREF(Live, "image.animated.decode-on-demand.recycle", ImageAnimatedDecodeOnDemandRecycle, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "image.animated.resume-from-last-displayed", ImageAnimatedResumeFromLastDisplayed, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "image.cache.factor2.threshold-surfaces", ImageCacheFactor2ThresholdSurfaces, RelaxedAtomicInt32, -1);
-VARCACHE_PREF(Live, "image.cache.max-rasterized-svg-threshold-kb", ImageCacheMaxRasterizedSVGThresholdKB, RelaxedAtomicInt32, 90*1024);
-VARCACHE_PREF(Once, "image.cache.size",                      ImageCacheSize, RelaxedAtomicInt32, 5*1024*1024);
-VARCACHE_PREF(Once, "image.cache.timeweight",                ImageCacheTimeWeight, RelaxedAtomicInt32, 500);
-VARCACHE_PREF(Live, "image.decode-immediately.enabled",      ImageDecodeImmediatelyEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "image.downscale-during-decode.enabled", ImageDownscaleDuringDecodeEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "image.infer-src-animation.threshold-ms", ImageInferSrcAnimationThresholdMS, RelaxedAtomicUint32, 2000);
-VARCACHE_PREF(Live, "image.layout_network_priority",         ImageLayoutNetworkPriority, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "image.mem.decode_bytes_at_a_time",      ImageMemDecodeBytesAtATime, RelaxedAtomicUint32, 200000);
-VARCACHE_PREF(Live, "image.mem.discardable",                 ImageMemDiscardable, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "image.mem.animated.discardable",        ImageMemAnimatedDiscardable, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "image.mem.animated.use_heap",           ImageMemAnimatedUseHeap, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "image.mem.debug-reporting",             ImageMemDebugReporting, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "image.mem.shared",                      ImageMemShared, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "image.mem.surfacecache.discard_factor", ImageMemSurfaceCacheDiscardFactor, RelaxedAtomicUint32, 1);
-VARCACHE_PREF(Once, "image.mem.surfacecache.max_size_kb",    ImageMemSurfaceCacheMaxSizeKB, RelaxedAtomicUint32, 100 * 1024);
-VARCACHE_PREF(Once, "image.mem.surfacecache.min_expiration_ms", ImageMemSurfaceCacheMinExpirationMS, RelaxedAtomicUint32, 60*1000);
-VARCACHE_PREF(Once, "image.mem.surfacecache.size_factor",    ImageMemSurfaceCacheSizeFactor, RelaxedAtomicUint32, 64);
-VARCACHE_PREF(Live, "image.mem.volatile.min_threshold_kb",   ImageMemVolatileMinThresholdKB, RelaxedAtomicInt32, -1);
-VARCACHE_PREF(Once, "image.multithreaded_decoding.limit",    ImageMTDecodingLimit, RelaxedAtomicInt32, -1);
-VARCACHE_PREF(Once, "image.multithreaded_decoding.idle_timeout", ImageMTDecodingIdleTimeout, RelaxedAtomicInt32, -1);
-VARCACHE_PREF(Live, "image.webp.enabled",                    ImageWebPEnabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "gl.use-tls-is-current",
+  UseTLSIsCurrent,
+  RelaxedAtomicInt32, 0
+)
 
-VARCACHE_PREF(Once, "layers.acceleration.disabled",          LayersAccelerationDisabledDoNotUseDirectly, RelaxedAtomicBool, false);
+
+VARCACHE_PREF(
+  Live,
+  "image.animated.decode-on-demand.threshold-kb",
+  ImageAnimatedDecodeOnDemandThresholdKB,
+  RelaxedAtomicUint32, 20480
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.animated.decode-on-demand.batch-size",
+  ImageAnimatedDecodeOnDemandBatchSize,
+  RelaxedAtomicUint32, 6
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.animated.decode-on-demand.recycle",
+  ImageAnimatedDecodeOnDemandRecycle,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.animated.resume-from-last-displayed",
+  ImageAnimatedResumeFromLastDisplayed,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.cache.factor2.threshold-surfaces",
+  ImageCacheFactor2ThresholdSurfaces,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.cache.max-rasterized-svg-threshold-kb",
+  ImageCacheMaxRasterizedSVGThresholdKB,
+  RelaxedAtomicInt32, 90*1024
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.cache.size",
+  ImageCacheSize,
+  RelaxedAtomicInt32, 5*1024*1024
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.cache.timeweight",
+  ImageCacheTimeWeight,
+  RelaxedAtomicInt32, 500
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.decode-immediately.enabled",
+  ImageDecodeImmediatelyEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.downscale-during-decode.enabled",
+  ImageDownscaleDuringDecodeEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.infer-src-animation.threshold-ms",
+  ImageInferSrcAnimationThresholdMS,
+  RelaxedAtomicUint32, 2000
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.layout_network_priority",
+  ImageLayoutNetworkPriority,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.mem.decode_bytes_at_a_time",
+  ImageMemDecodeBytesAtATime,
+  RelaxedAtomicUint32, 200000
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.mem.discardable",
+  ImageMemDiscardable,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.mem.animated.discardable",
+  ImageMemAnimatedDiscardable,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.mem.animated.use_heap",
+  ImageMemAnimatedUseHeap,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.mem.debug-reporting",
+  ImageMemDebugReporting,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.mem.shared",
+  ImageMemShared,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.mem.surfacecache.discard_factor",
+  ImageMemSurfaceCacheDiscardFactor,
+  RelaxedAtomicUint32, 1
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.mem.surfacecache.max_size_kb",
+  ImageMemSurfaceCacheMaxSizeKB,
+  RelaxedAtomicUint32, 100 * 1024
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.mem.surfacecache.min_expiration_ms",
+  ImageMemSurfaceCacheMinExpirationMS,
+  RelaxedAtomicUint32, 60*1000
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.mem.surfacecache.size_factor",
+  ImageMemSurfaceCacheSizeFactor,
+  RelaxedAtomicUint32, 64
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.mem.volatile.min_threshold_kb",
+  ImageMemVolatileMinThresholdKB,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.multithreaded_decoding.limit",
+  ImageMTDecodingLimit,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Once,
+  "image.multithreaded_decoding.idle_timeout",
+  ImageMTDecodingIdleTimeout,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Live,
+  "image.webp.enabled",
+  ImageWebPEnabled,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Once,
+  "layers.acceleration.disabled",
+  LayersAccelerationDisabledDoNotUseDirectly,
+  RelaxedAtomicBool, false
+)
+
 // Instead, use gfxConfig::IsEnabled(Feature::HW_COMPOSITING).
 
-VARCACHE_PREF(Live, "layers.acceleration.draw-fps",          LayersDrawFPS, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.acceleration.draw-fps.print-histogram",  FPSPrintHistogram, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.acceleration.draw-fps.write-to-file", WriteFPSToFile, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.acceleration.force-enabled",     LayersAccelerationForceEnabledDoNotUseDirectly, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.advanced.basic-layer.enabled",          LayersAdvancedBasicLayerEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.amd-switchable-gfx.enabled",     LayersAMDSwitchableGfxEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.async-pan-zoom.enabled",         AsyncPanZoomEnabledDoNotUseDirectly, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "layers.bench.enabled",                  LayersBenchEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.bufferrotation.enabled",         BufferRotationEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "layers.child-process-shutdown",         ChildProcessShutdown, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Live,
+  "layers.acceleration.draw-fps",
+  LayersDrawFPS,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.acceleration.draw-fps.print-histogram",
+  FPSPrintHistogram,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.acceleration.draw-fps.write-to-file",
+  WriteFPSToFile,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.acceleration.force-enabled",
+  LayersAccelerationForceEnabledDoNotUseDirectly,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.advanced.basic-layer.enabled",
+  LayersAdvancedBasicLayerEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.amd-switchable-gfx.enabled",
+  LayersAMDSwitchableGfxEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.async-pan-zoom.enabled",
+  AsyncPanZoomEnabledDoNotUseDirectly,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.bench.enabled",
+  LayersBenchEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.bufferrotation.enabled",
+  BufferRotationEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.child-process-shutdown",
+  ChildProcessShutdown,
+  RelaxedAtomicBool, true
+)
+
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
 // If MOZ_GFX_OPTIMIZE_MOBILE is defined, we force component alpha off
 // and ignore the preference.
-VARCACHE_PREF(Skip, "layers.componentalpha.enabled",         ComponentAlphaEnabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Skip,
+  "layers.componentalpha.enabled",
+  ComponentAlphaEnabled,
+  RelaxedAtomicBool, false
+)
+
 #else
 // If MOZ_GFX_OPTIMIZE_MOBILE is not defined, we actually take the
 // preference value, defaulting to true.
-VARCACHE_PREF(Once, "layers.componentalpha.enabled",         ComponentAlphaEnabled, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Once,
+  "layers.componentalpha.enabled",
+  ComponentAlphaEnabled,
+  RelaxedAtomicBool, true
+)
+
 #endif
-VARCACHE_PREF(Once, "layers.d3d11.force-warp",               LayersD3D11ForceWARP, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.deaa.enabled",                   LayersDEAAEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.draw-bigimage-borders",          DrawBigImageBorders, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.draw-borders",                   DrawLayerBorders, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.draw-tile-borders",              DrawTileBorders, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.draw-layer-info",                DrawLayerInfo, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.dump",                           LayersDump, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.dump-texture",                   LayersDumpTexture, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Once,
+  "layers.d3d11.force-warp",
+  LayersD3D11ForceWARP,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.deaa.enabled",
+  LayersDEAAEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.draw-bigimage-borders",
+  DrawBigImageBorders,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.draw-borders",
+  DrawLayerBorders,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.draw-tile-borders",
+  DrawTileBorders,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.draw-layer-info",
+  DrawLayerInfo,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.dump",
+  LayersDump,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.dump-texture",
+  LayersDumpTexture,
+  RelaxedAtomicBool, false
+)
+
 #ifdef MOZ_DUMP_PAINTING
-VARCACHE_PREF(Live, "layers.dump-client-layers",             DumpClientLayers, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.dump-decision",                  LayersDumpDecision, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.dump-host-layers",               DumpHostLayers, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "layers.dump-client-layers",
+  DumpClientLayers,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.dump-decision",
+  LayersDumpDecision,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.dump-host-layers",
+  DumpHostLayers,
+  RelaxedAtomicBool, false
+)
+
 #endif
 
 // 0 is "no change" for contrast, positive values increase it, negative values
 // decrease it until we hit mid gray at -1 contrast, after that it gets weird.
-VARCACHE_PREF(Live, "layers.effect.contrast",                LayersEffectContrast, AtomicFloat, 0.0f);
-VARCACHE_PREF(Live, "layers.effect.grayscale",               LayersEffectGrayscale, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.effect.invert",                  LayersEffectInvert, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.enable-tiles",                   LayersTilesEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.enable-tiles-if-skia-pomtp",     LayersTilesEnabledIfSkiaPOMTP, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.flash-borders",                  FlashLayerBorders, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.force-shmem-tiles",              ForceShmemTiles, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.gpu-process.allow-software",     GPUProcessAllowSoftware, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.gpu-process.force-enabled",      GPUProcessForceEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.gpu-process.ipc_reply_timeout_ms", GPUProcessIPCReplyTimeoutMs, RelaxedAtomicInt32, 10000);
-VARCACHE_PREF(Live, "layers.gpu-process.max_restarts",       GPUProcessMaxRestarts, RelaxedAtomicInt32, 1);
+VARCACHE_PREF(
+  Live,
+  "layers.effect.contrast",
+  LayersEffectContrast,
+  AtomicFloat, 0.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.effect.grayscale",
+  LayersEffectGrayscale,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.effect.invert",
+  LayersEffectInvert,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.enable-tiles",
+  LayersTilesEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.enable-tiles-if-skia-pomtp",
+  LayersTilesEnabledIfSkiaPOMTP,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.flash-borders",
+  FlashLayerBorders,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.force-shmem-tiles",
+  ForceShmemTiles,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.gpu-process.allow-software",
+  GPUProcessAllowSoftware,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.gpu-process.force-enabled",
+  GPUProcessForceEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.gpu-process.ipc_reply_timeout_ms",
+  GPUProcessIPCReplyTimeoutMs,
+  RelaxedAtomicInt32, 10000
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.gpu-process.max_restarts",
+  GPUProcessMaxRestarts,
+  RelaxedAtomicInt32, 1
+)
+
 // Note: This pref will only be used if it is less than layers.gpu-process.max_restarts.
-VARCACHE_PREF(Live, "layers.gpu-process.max_restarts_with_decoder", GPUProcessMaxRestartsWithDecoder, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Once, "layers.gpu-process.startup_timeout_ms", GPUProcessTimeoutMs, RelaxedAtomicInt32, 5000);
-VARCACHE_PREF(Live, "layers.low-precision-buffer",           UseLowPrecisionBuffer, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.low-precision-opacity",          LowPrecisionOpacity, AtomicFloat, 1.0f);
-VARCACHE_PREF(Live, "layers.low-precision-resolution",       LowPrecisionResolution, AtomicFloat, 0.25f);
-VARCACHE_PREF(Live, "layers.max-active",                     MaxActiveLayers, RelaxedAtomicInt32, -1);
-VARCACHE_PREF(Once, "layers.mlgpu.enabled",                  AdvancedLayersEnabledDoNotUseDirectly, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.mlgpu.enable-buffer-cache",      AdvancedLayersEnableBufferCache, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "layers.mlgpu.enable-buffer-sharing",    AdvancedLayersEnableBufferSharing, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "layers.mlgpu.enable-clear-view",        AdvancedLayersEnableClearView, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "layers.mlgpu.enable-cpu-occlusion",     AdvancedLayersEnableCPUOcclusion, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "layers.mlgpu.enable-depth-buffer",      AdvancedLayersEnableDepthBuffer, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.mlgpu.enable-invalidation",      AdvancedLayersUseInvalidation, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "layers.mlgpu.enable-on-windows7",       AdvancedLayersEnableOnWindows7, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.mlgpu.enable-container-resizing", AdvancedLayersEnableContainerResizing, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "layers.offmainthreadcomposition.force-disabled", LayersOffMainThreadCompositionForceDisabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.offmainthreadcomposition.frame-rate", LayersCompositionFrameRate, RelaxedAtomicInt32,-1);
-VARCACHE_PREF(Once, "layers.omtp.capture-limit",             LayersOMTPCaptureLimit, RelaxedAtomicUint32, 25 * 1024 * 1024);
-VARCACHE_PREF(Live, "layers.omtp.dump-capture",              LayersOMTPDumpCapture, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.omtp.paint-workers",             LayersOMTPPaintWorkers, RelaxedAtomicInt32, 1);
-VARCACHE_PREF(Live, "layers.omtp.release-capture-on-main-thread", LayersOMTPReleaseCaptureOnMainThread, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.orientation.sync.timeout",       OrientationSyncMillis, RelaxedAtomicUint32, (uint32_t)0);
-VARCACHE_PREF(Once, "layers.prefer-opengl",                  LayersPreferOpenGL, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.progressive-paint",              ProgressivePaint, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.shared-buffer-provider.enabled", PersistentBufferProviderSharedEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.single-tile.enabled",            LayersSingleTileEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "layers.force-synchronous-resize",       LayersForceSynchronousResize, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Live,
+  "layers.gpu-process.max_restarts_with_decoder",
+  GPUProcessMaxRestartsWithDecoder,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.gpu-process.startup_timeout_ms",
+  GPUProcessTimeoutMs,
+  RelaxedAtomicInt32, 5000
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.low-precision-buffer",
+  UseLowPrecisionBuffer,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.low-precision-opacity",
+  LowPrecisionOpacity,
+  AtomicFloat, 1.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.low-precision-resolution",
+  LowPrecisionResolution,
+  AtomicFloat, 0.25f
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.max-active",
+  MaxActiveLayers,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.mlgpu.enabled",
+  AdvancedLayersEnabledDoNotUseDirectly,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.mlgpu.enable-buffer-cache",
+  AdvancedLayersEnableBufferCache,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.mlgpu.enable-buffer-sharing",
+  AdvancedLayersEnableBufferSharing,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.mlgpu.enable-clear-view",
+  AdvancedLayersEnableClearView,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.mlgpu.enable-cpu-occlusion",
+  AdvancedLayersEnableCPUOcclusion,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.mlgpu.enable-depth-buffer",
+  AdvancedLayersEnableDepthBuffer,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.mlgpu.enable-invalidation",
+  AdvancedLayersUseInvalidation,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.mlgpu.enable-on-windows7",
+  AdvancedLayersEnableOnWindows7,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.mlgpu.enable-container-resizing",
+  AdvancedLayersEnableContainerResizing,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.offmainthreadcomposition.force-disabled",
+  LayersOffMainThreadCompositionForceDisabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.offmainthreadcomposition.frame-rate",
+  LayersCompositionFrameRate,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.omtp.capture-limit",
+  LayersOMTPCaptureLimit,
+  RelaxedAtomicUint32, 25 * 1024 * 1024
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.omtp.dump-capture",
+  LayersOMTPDumpCapture,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.omtp.paint-workers",
+  LayersOMTPPaintWorkers,
+  RelaxedAtomicInt32, 1
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.omtp.release-capture-on-main-thread",
+  LayersOMTPReleaseCaptureOnMainThread,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.orientation.sync.timeout",
+  OrientationSyncMillis,
+  RelaxedAtomicUint32, (uint32_t)0
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.prefer-opengl",
+  LayersPreferOpenGL,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.progressive-paint",
+  ProgressivePaint,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.shared-buffer-provider.enabled",
+  PersistentBufferProviderSharedEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.single-tile.enabled",
+  LayersSingleTileEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.force-synchronous-resize",
+  LayersForceSynchronousResize,
+  RelaxedAtomicBool, true
+)
+
 
 // We allow for configurable and rectangular tile size to avoid wasting memory on devices whose
 // screen size does not align nicely to the default tile size. Although layers can be any size,
 // they are often the same size as the screen, especially for width.
-VARCACHE_PREF(Once, "layers.tile-width",                     LayersTileWidth, RelaxedAtomicInt32, 256);
-VARCACHE_PREF(Once, "layers.tile-height",                    LayersTileHeight, RelaxedAtomicInt32, 256);
-VARCACHE_PREF(Once, "layers.tile-initial-pool-size",         LayersTileInitialPoolSize, RelaxedAtomicUint32, (uint32_t)50);
-VARCACHE_PREF(Once, "layers.tile-pool-unused-size",          LayersTilePoolUnusedSize, RelaxedAtomicUint32, (uint32_t)10);
-VARCACHE_PREF(Once, "layers.tile-pool-shrink-timeout",       LayersTilePoolShrinkTimeout, RelaxedAtomicUint32, (uint32_t)50);
-VARCACHE_PREF(Once, "layers.tile-pool-clear-timeout",        LayersTilePoolClearTimeout, RelaxedAtomicUint32, (uint32_t)5000);
-VARCACHE_PREF(Once, "layers.tiles.adjust",                   LayersTilesAdjust, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "layers.tiles.retain-back-buffer",       LayersTileRetainBackBuffer, RelaxedAtomicBool, true);
-VARCACHE_PREF(Once, "layers.tiles.edge-padding",             TileEdgePaddingEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.tiles.fade-in.enabled",          LayerTileFadeInEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.tiles.fade-in.duration-ms",      LayerTileFadeInDuration, RelaxedAtomicUint32, 250);
-VARCACHE_PREF(Live, "layers.transaction.warning-ms",         LayerTransactionWarning, RelaxedAtomicUint32, 200);
-VARCACHE_PREF(Once, "layers.uniformity-info",                UniformityInfo, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "layers.use-image-offscreen-surfaces",   UseImageOffscreenSurfaces, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "layers.draw-mask-debug",                DrawMaskLayer, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Once,
+  "layers.tile-width",
+  LayersTileWidth,
+  RelaxedAtomicInt32, 256
+)
 
-VARCACHE_PREF(Live, "layers.geometry.opengl.enabled",        OGLLayerGeometry, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.geometry.basic.enabled",         BasicLayerGeometry, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layers.geometry.d3d11.enabled",         D3D11LayerGeometry, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Once,
+  "layers.tile-height",
+  LayersTileHeight,
+  RelaxedAtomicInt32, 256
+)
 
-VARCACHE_PREF(Live, "layout.animation.prerender.partial", PartiallyPrerenderAnimatedContent, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.animation.prerender.viewport-ratio-limit-x", AnimationPrerenderViewportRatioLimitX, AtomicFloat, 1.125f);
-VARCACHE_PREF(Live, "layout.animation.prerender.viewport-ratio-limit-y", AnimationPrerenderViewportRatioLimitY, AtomicFloat, 1.125f);
-VARCACHE_PREF(Live, "layout.animation.prerender.absolute-limit-x", AnimationPrerenderAbsoluteLimitX, RelaxedAtomicUint32, 4096);
-VARCACHE_PREF(Live, "layout.animation.prerender.absolute-limit-y", AnimationPrerenderAbsoluteLimitY, RelaxedAtomicUint32, 4096);
+VARCACHE_PREF(
+  Once,
+  "layers.tile-initial-pool-size",
+  LayersTileInitialPoolSize,
+  RelaxedAtomicUint32, (uint32_t)50
+)
 
-VARCACHE_PREF(Live, "layout.css.paint-order.enabled",        PaintOrderEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.css.scroll-behavior.damping-ratio", ScrollBehaviorDampingRatio, AtomicFloat, 1.0f);
-VARCACHE_PREF(Live, "layout.css.scroll-behavior.enabled",    ScrollBehaviorEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "layout.css.scroll-behavior.spring-constant", ScrollBehaviorSpringConstant, AtomicFloat, 250.0f);
-VARCACHE_PREF(Live, "layout.css.scroll-snap.prediction-max-velocity", ScrollSnapPredictionMaxVelocity, RelaxedAtomicInt32, 2000);
-VARCACHE_PREF(Live, "layout.css.scroll-snap.prediction-sensitivity", ScrollSnapPredictionSensitivity, AtomicFloat, 0.750f);
-VARCACHE_PREF(Live, "layout.css.scroll-snap.proximity-threshold", ScrollSnapProximityThreshold, RelaxedAtomicInt32, 200);
-VARCACHE_PREF(Live, "layout.css.touch_action.enabled",       TouchActionEnabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Once,
+  "layers.tile-pool-unused-size",
+  LayersTilePoolUnusedSize,
+  RelaxedAtomicUint32, (uint32_t)10
+)
 
-VARCACHE_PREF(Live, "layout.display-list.build-twice",       LayoutDisplayListBuildTwice, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.display-list.retain",            LayoutRetainDisplayList, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "layout.display-list.retain.chrome",     LayoutRetainDisplayListChrome, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.display-list.retain.verify",     LayoutVerifyRetainDisplayList, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.display-list.retain.verify.order", LayoutVerifyRetainDisplayListOrder, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.display-list.rebuild-frame-limit", LayoutRebuildFrameLimit, RelaxedAtomicUint32, 500);
-VARCACHE_PREF(Live, "layout.display-list.dump",              LayoutDumpDisplayList, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.display-list.dump-content",      LayoutDumpDisplayListContent, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.display-list.dump-parent",       LayoutDumpDisplayListParent, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.display-list.show-rebuild-area", LayoutDisplayListShowArea, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.display-list.flatten-transform", LayoutFlattenTransform, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Once,
+  "layers.tile-pool-shrink-timeout",
+  LayersTilePoolShrinkTimeout,
+  RelaxedAtomicUint32, (uint32_t)50
+)
 
-VARCACHE_PREF(Live, "layout.frame_rate",                     LayoutFrameRate, RelaxedAtomicInt32, -1);
-VARCACHE_PREF(Live, "layout.min-active-layer-size",          LayoutMinActiveLayerSize, int, 64);
-VARCACHE_PREF(Once, "layout.paint_rects_separately",         LayoutPaintRectsSeparately, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Once,
+  "layers.tile-pool-clear-timeout",
+  LayersTilePoolClearTimeout,
+  RelaxedAtomicUint32, (uint32_t)5000
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.tiles.adjust",
+  LayersTilesAdjust,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.tiles.retain-back-buffer",
+  LayersTileRetainBackBuffer,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.tiles.edge-padding",
+  TileEdgePaddingEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.tiles.fade-in.enabled",
+  LayerTileFadeInEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.tiles.fade-in.duration-ms",
+  LayerTileFadeInDuration,
+  RelaxedAtomicUint32, 250
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.transaction.warning-ms",
+  LayerTransactionWarning,
+  RelaxedAtomicUint32, 200
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.uniformity-info",
+  UniformityInfo,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "layers.use-image-offscreen-surfaces",
+  UseImageOffscreenSurfaces,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.draw-mask-debug",
+  DrawMaskLayer,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "layers.geometry.opengl.enabled",
+  OGLLayerGeometry,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.geometry.basic.enabled",
+  BasicLayerGeometry,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layers.geometry.d3d11.enabled",
+  D3D11LayerGeometry,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "layout.animation.prerender.partial",
+  PartiallyPrerenderAnimatedContent,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.animation.prerender.viewport-ratio-limit-x",
+  AnimationPrerenderViewportRatioLimitX,
+  AtomicFloat, 1.125f
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.animation.prerender.viewport-ratio-limit-y",
+  AnimationPrerenderViewportRatioLimitY,
+  AtomicFloat, 1.125f
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.animation.prerender.absolute-limit-x",
+  AnimationPrerenderAbsoluteLimitX,
+  RelaxedAtomicUint32, 4096
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.animation.prerender.absolute-limit-y",
+  AnimationPrerenderAbsoluteLimitY,
+  RelaxedAtomicUint32, 4096
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "layout.css.paint-order.enabled",
+  PaintOrderEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.css.scroll-behavior.damping-ratio",
+  ScrollBehaviorDampingRatio,
+  AtomicFloat, 1.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.css.scroll-behavior.enabled",
+  ScrollBehaviorEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.css.scroll-behavior.spring-constant",
+  ScrollBehaviorSpringConstant,
+  AtomicFloat, 250.0f
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.css.scroll-snap.prediction-max-velocity",
+  ScrollSnapPredictionMaxVelocity,
+  RelaxedAtomicInt32, 2000
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.css.scroll-snap.prediction-sensitivity",
+  ScrollSnapPredictionSensitivity,
+  AtomicFloat, 0.750f
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.css.scroll-snap.proximity-threshold",
+  ScrollSnapProximityThreshold,
+  RelaxedAtomicInt32, 200
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.css.touch_action.enabled",
+  TouchActionEnabled,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.build-twice",
+  LayoutDisplayListBuildTwice,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.retain",
+  LayoutRetainDisplayList,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.retain.chrome",
+  LayoutRetainDisplayListChrome,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.retain.verify",
+  LayoutVerifyRetainDisplayList,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.retain.verify.order",
+  LayoutVerifyRetainDisplayListOrder,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.rebuild-frame-limit",
+  LayoutRebuildFrameLimit,
+  RelaxedAtomicUint32, 500
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.dump",
+  LayoutDumpDisplayList,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.dump-content",
+  LayoutDumpDisplayListContent,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.dump-parent",
+  LayoutDumpDisplayListParent,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.show-rebuild-area",
+  LayoutDisplayListShowArea,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.display-list.flatten-transform",
+  LayoutFlattenTransform,
+  RelaxedAtomicBool, true
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "layout.frame_rate",
+  LayoutFrameRate,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.min-active-layer-size",
+  LayoutMinActiveLayerSize,
+  int, 64
+)
+
+VARCACHE_PREF(
+  Once,
+  "layout.paint_rects_separately",
+  LayoutPaintRectsSeparately,
+  RelaxedAtomicBool, true
+)
 
 // This and code dependent on it should be removed once containerless scrolling looks stable.
-VARCACHE_PREF(Live, "layout.scroll.root-frame-containers",   LayoutUseContainersForRootFrames,RelaxedAtomicBool, false);
-// This pref is to be set by test code only.
-VARCACHE_PREF(Live, "layout.scrollbars.always-layerize-track", AlwaysLayerizeScrollbarTrackTestOnly, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "layout.smaller-painted-layers",         LayoutSmallerPaintedLayers, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "layout.scroll.root-frame-containers",
+  LayoutUseContainersForRootFrames,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Once, "media.hardware-video-decoding.force-enabled",
-                                                              HardwareVideoDecodingForceEnabled, RelaxedAtomicBool, false);
+// This pref is to be set by test code only.
+VARCACHE_PREF(
+  Live,
+  "layout.scrollbars.always-layerize-track",
+  AlwaysLayerizeScrollbarTrackTestOnly,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "layout.smaller-painted-layers",
+  LayoutSmallerPaintedLayers,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Once,
+  "media.hardware-video-decoding.force-enabled",
+  HardwareVideoDecodingForceEnabled,
+  RelaxedAtomicBool, false
+)
+
 #ifdef XP_WIN
-VARCACHE_PREF(Live, "media.wmf.dxva.d3d11.enabled", PDMWMFAllowD3D11, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "media.wmf.dxva.max-videos", PDMWMFMaxDXVAVideos, RelaxedAtomicUint32, 8);
-VARCACHE_PREF(Live, "media.wmf.use-nv12-format", PDMWMFUseNV12Format, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "media.wmf.force.allow-p010-format", PDMWMFForceAllowP010Format, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "media.wmf.use-sync-texture", PDMWMFUseSyncTexture, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "media.wmf.low-latency.enabled", PDMWMFLowLatencyEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "media.wmf.low-latency.force-disabled", PDMWMFLowLatencyForceDisabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "media.wmf.skip-blacklist", PDMWMFSkipBlacklist, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "media.wmf.deblacklisting-for-telemetry-in-gpu-process", PDMWMFDeblacklistingForTelemetryInGPUProcess, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "media.wmf.amd.highres.enabled", PDMWMFAMDHighResEnabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "media.wmf.allow-unsupported-resolutions", PDMWMFAllowUnsupportedResolutions, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "media.wmf.vp9.enabled", MediaWmfVp9Enabled, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Live,
+  "media.wmf.dxva.d3d11.enabled",
+  PDMWMFAllowD3D11,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.dxva.max-videos",
+  PDMWMFMaxDXVAVideos,
+  RelaxedAtomicUint32, 8
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.use-nv12-format",
+  PDMWMFUseNV12Format,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.force.allow-p010-format",
+  PDMWMFForceAllowP010Format,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "media.wmf.use-sync-texture",
+  PDMWMFUseSyncTexture,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.low-latency.enabled",
+  PDMWMFLowLatencyEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.low-latency.force-disabled",
+  PDMWMFLowLatencyForceDisabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.skip-blacklist",
+  PDMWMFSkipBlacklist,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.deblacklisting-for-telemetry-in-gpu-process",
+  PDMWMFDeblacklistingForTelemetryInGPUProcess,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.amd.highres.enabled",
+  PDMWMFAMDHighResEnabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "media.wmf.allow-unsupported-resolutions",
+  PDMWMFAllowUnsupportedResolutions,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "media.wmf.vp9.enabled",
+  MediaWmfVp9Enabled,
+  RelaxedAtomicBool, true
+)
+
 #endif
 
 // These affect how line scrolls from wheel events will be accelerated.
-VARCACHE_PREF(Live, "mousewheel.acceleration.factor",        MouseWheelAccelerationFactor, RelaxedAtomicInt32, -1);
-VARCACHE_PREF(Live, "mousewheel.acceleration.start",         MouseWheelAccelerationStart, RelaxedAtomicInt32, -1);
+VARCACHE_PREF(
+  Live,
+  "mousewheel.acceleration.factor",
+  MouseWheelAccelerationFactor,
+  RelaxedAtomicInt32, -1
+)
+
+VARCACHE_PREF(
+  Live,
+  "mousewheel.acceleration.start",
+  MouseWheelAccelerationStart,
+  RelaxedAtomicInt32, -1
+)
+
 
 // This affects whether events will be routed through APZ or not.
-VARCACHE_PREF(Live, "mousewheel.system_scroll_override_on_root_content.enabled",
-                                                              MouseWheelHasRootScrollDeltaOverride, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "mousewheel.system_scroll_override_on_root_content.horizontal.factor",
-                                                              MouseWheelRootScrollHorizontalFactor, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "mousewheel.system_scroll_override_on_root_content.vertical.factor",
-                                                              MouseWheelRootScrollVerticalFactor, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "mousewheel.transaction.ignoremovedelay",MouseWheelIgnoreMoveDelayMs, RelaxedAtomicInt32, (int32_t)100);
-VARCACHE_PREF(Live, "mousewheel.transaction.timeout",        MouseWheelTransactionTimeoutMs, RelaxedAtomicInt32, (int32_t)1500);
+VARCACHE_PREF(
+  Live,
+  "mousewheel.system_scroll_override_on_root_content.enabled",
+  MouseWheelHasRootScrollDeltaOverride,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "nglayout.debug.widget_update_flashing", WidgetUpdateFlashing, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "mousewheel.system_scroll_override_on_root_content.horizontal.factor",
+  MouseWheelRootScrollHorizontalFactor,
+  RelaxedAtomicInt32, 0
+)
 
-VARCACHE_PREF(Live, "print.font-variations-as-paths",        PrintFontVariationsAsPaths, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Live,
+  "mousewheel.system_scroll_override_on_root_content.vertical.factor",
+  MouseWheelRootScrollVerticalFactor,
+  RelaxedAtomicInt32, 0
+)
 
-VARCACHE_PREF(Live, "privacy.resistFingerprinting",          ResistFingerprinting, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "mousewheel.transaction.ignoremovedelay",
+  MouseWheelIgnoreMoveDelayMs,
+  RelaxedAtomicInt32, (int32_t)100
+)
 
-VARCACHE_PREF(Once, "slider.snapMultiplier",                 SliderSnapMultiplier, RelaxedAtomicInt32, 0);
+VARCACHE_PREF(
+  Live,
+  "mousewheel.transaction.timeout",
+  MouseWheelTransactionTimeoutMs,
+  RelaxedAtomicInt32, (int32_t)1500
+)
 
-VARCACHE_PREF(Live, "test.events.async.enabled",             TestEventsAsyncEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "test.mousescroll",                      MouseScrollTestingEnabled, RelaxedAtomicBool, false);
 
-VARCACHE_PREF(Live, "toolkit.scrollbox.horizontalScrollDistance", ToolkitHorizontalScrollDistance, RelaxedAtomicInt32, 5);
-VARCACHE_PREF(Live, "toolkit.scrollbox.verticalScrollDistance",   ToolkitVerticalScrollDistance, RelaxedAtomicInt32, 3);
+VARCACHE_PREF(
+  Live,
+  "nglayout.debug.widget_update_flashing",
+  WidgetUpdateFlashing,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "ui.click_hold_context_menus.delay",     UiClickHoldContextMenusDelay, RelaxedAtomicInt32, 500);
+
+VARCACHE_PREF(
+  Live,
+  "print.font-variations-as-paths",
+  PrintFontVariationsAsPaths,
+  RelaxedAtomicBool, true
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "privacy.resistFingerprinting",
+  ResistFingerprinting,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Once,
+  "slider.snapMultiplier",
+  SliderSnapMultiplier,
+  RelaxedAtomicInt32, 0
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "test.events.async.enabled",
+  TestEventsAsyncEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "test.mousescroll",
+  MouseScrollTestingEnabled,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "toolkit.scrollbox.horizontalScrollDistance",
+  ToolkitHorizontalScrollDistance,
+  RelaxedAtomicInt32, 5
+)
+
+VARCACHE_PREF(
+  Live,
+  "toolkit.scrollbox.verticalScrollDistance",
+  ToolkitVerticalScrollDistance,
+  RelaxedAtomicInt32, 3
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "ui.click_hold_context_menus.delay",
+  UiClickHoldContextMenusDelay,
+  RelaxedAtomicInt32, 500
+)
+
 
 // WebGL (for pref access from Worker threads)
-VARCACHE_PREF(Live, "webgl.1.allow-core-profiles",           WebGL1AllowCoreProfile, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "webgl.1.allow-core-profiles",
+  WebGL1AllowCoreProfile,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "webgl.all-angle-options",               WebGLAllANGLEOptions, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.angle.force-d3d11",               WebGLANGLEForceD3D11, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.angle.try-d3d11",                 WebGLANGLETryD3D11, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.angle.force-warp",                WebGLANGLEForceWARP, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.can-lose-context-in-foreground",  WebGLCanLoseContextInForeground, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "webgl.default-low-power",               WebGLDefaultLowPower, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.default-no-alpha",                WebGLDefaultNoAlpha, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.disable-angle",                   WebGLDisableANGLE, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.disable-wgl",                     WebGLDisableWGL, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.disable-extensions",              WebGLDisableExtensions, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.dxgl.enabled",                    WebGLDXGLEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.dxgl.needs-finish",               WebGLDXGLNeedsFinish, RelaxedAtomicBool, false);
 
-VARCACHE_PREF(Live, "webgl.disable-fail-if-major-performance-caveat",
-              WebGLDisableFailIfMajorPerformanceCaveat, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.disable-DOM-blit-uploads",
-              WebGLDisableDOMBlitUploads, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "webgl.all-angle-options",
+  WebGLAllANGLEOptions,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "webgl.disabled",                        WebGLDisabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "webgl.angle.force-d3d11",
+  WebGLANGLEForceD3D11,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "webgl.enable-draft-extensions",         WebGLDraftExtensionsEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.enable-privileged-extensions",    WebGLPrivilegedExtensionsEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.enable-surface-texture",          WebGLSurfaceTextureEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.enable-webgl2",                   WebGL2Enabled, RelaxedAtomicBool, true);
-VARCACHE_PREF(Live, "webgl.force-enabled",                   WebGLForceEnabled, RelaxedAtomicBool, false);
-VARCACHE_PREF(Once, "webgl.force-layers-readback",           WebGLForceLayersReadback, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.force-index-validation",          WebGLForceIndexValidation, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "webgl.lose-context-on-memory-pressure", WebGLLoseContextOnMemoryPressure, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.max-contexts",                    WebGLMaxContexts, RelaxedAtomicUint32, 32);
-VARCACHE_PREF(Live, "webgl.max-contexts-per-principal",      WebGLMaxContextsPerPrincipal, RelaxedAtomicUint32, 16);
-VARCACHE_PREF(Live, "webgl.max-warnings-per-context",        WebGLMaxWarningsPerContext, RelaxedAtomicUint32, 32);
-VARCACHE_PREF(Live, "webgl.min_capability_mode",             WebGLMinCapabilityMode, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.msaa-force",                      WebGLForceMSAA, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.msaa-samples",                    WebGLMsaaSamples, RelaxedAtomicUint32, 4);
-VARCACHE_PREF(Live, "webgl.prefer-16bpp",                    WebGLPrefer16bpp, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.allow-immediate-queries",         WebGLImmediateQueries, RelaxedAtomicBool, false);
-VARCACHE_PREF(Live, "webgl.allow-fb-invalidation",           WebGLFBInvalidation, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "webgl.angle.try-d3d11",
+  WebGLANGLETryD3D11,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "webgl.perf.max-warnings",                    WebGLMaxPerfWarnings, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "webgl.perf.max-acceptable-fb-status-invals", WebGLMaxAcceptableFBStatusInvals, RelaxedAtomicInt32, 0);
-VARCACHE_PREF(Live, "webgl.perf.spew-frame-allocs",          WebGLSpewFrameAllocs, RelaxedAtomicBool, true);
+VARCACHE_PREF(
+  Live,
+  "webgl.angle.force-warp",
+  WebGLANGLEForceWARP,
+  RelaxedAtomicBool, false
+)
 
-VARCACHE_PREF(Live, "widget.window-transforms.disabled",     WindowTransformsDisabled, RelaxedAtomicBool, false);
+VARCACHE_PREF(
+  Live,
+  "webgl.can-lose-context-in-foreground",
+  WebGLCanLoseContextInForeground,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.default-low-power",
+  WebGLDefaultLowPower,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.default-no-alpha",
+  WebGLDefaultNoAlpha,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.disable-angle",
+  WebGLDisableANGLE,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.disable-wgl",
+  WebGLDisableWGL,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.disable-extensions",
+  WebGLDisableExtensions,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.dxgl.enabled",
+  WebGLDXGLEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.dxgl.needs-finish",
+  WebGLDXGLNeedsFinish,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "webgl.disable-fail-if-major-performance-caveat",
+  WebGLDisableFailIfMajorPerformanceCaveat,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.disable-DOM-blit-uploads",
+  WebGLDisableDOMBlitUploads,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "webgl.disabled",
+  WebGLDisabled,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "webgl.enable-draft-extensions",
+  WebGLDraftExtensionsEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.enable-privileged-extensions",
+  WebGLPrivilegedExtensionsEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.enable-surface-texture",
+  WebGLSurfaceTextureEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.enable-webgl2",
+  WebGL2Enabled,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.force-enabled",
+  WebGLForceEnabled,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "webgl.force-layers-readback",
+  WebGLForceLayersReadback,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.force-index-validation",
+  WebGLForceIndexValidation,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.lose-context-on-memory-pressure",
+  WebGLLoseContextOnMemoryPressure,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.max-contexts",
+  WebGLMaxContexts,
+  RelaxedAtomicUint32, 32
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.max-contexts-per-principal",
+  WebGLMaxContextsPerPrincipal,
+  RelaxedAtomicUint32, 16
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.max-warnings-per-context",
+  WebGLMaxWarningsPerContext,
+  RelaxedAtomicUint32, 32
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.min_capability_mode",
+  WebGLMinCapabilityMode,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.msaa-force",
+  WebGLForceMSAA,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.msaa-samples",
+  WebGLMsaaSamples,
+  RelaxedAtomicUint32, 4
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.prefer-16bpp",
+  WebGLPrefer16bpp,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.allow-immediate-queries",
+  WebGLImmediateQueries,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.allow-fb-invalidation",
+  WebGLFBInvalidation,
+  RelaxedAtomicBool, false
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "webgl.perf.max-warnings",
+  WebGLMaxPerfWarnings,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.perf.max-acceptable-fb-status-invals",
+  WebGLMaxAcceptableFBStatusInvals,
+  RelaxedAtomicInt32, 0
+)
+
+VARCACHE_PREF(
+  Live,
+  "webgl.perf.spew-frame-allocs",
+  WebGLSpewFrameAllocs,
+  RelaxedAtomicBool, true
+)
+
+
+VARCACHE_PREF(
+  Live,
+  "widget.window-transforms.disabled",
+  WindowTransformsDisabled,
+  RelaxedAtomicBool, false
+)
+
 
 //---------------------------------------------------------------------------
 // End of old gfxPrefs
