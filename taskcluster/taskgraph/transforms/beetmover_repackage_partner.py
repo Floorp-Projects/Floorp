@@ -140,10 +140,13 @@ def populate_scopes_and_worker_type(config, job, bucket_scope, partner_public=Fa
 
 @transforms.add
 def split_public_and_private(config, jobs):
-    public_bucket_scope = get_beetmover_bucket_scope(config)
+
     partner_config = get_partner_config_by_kind(config, config.kind)
 
     for job in jobs:
+        public_bucket_scope = get_beetmover_bucket_scope(
+            config, job_release_type=job.get('attributes', {}).get('release-type')
+        )
         partner_bucket_scope = add_scope_prefix(config, job['partner-bucket-scope'])
         partner, subpartner, _ = job['extra']['repack_id'].split('/')
 

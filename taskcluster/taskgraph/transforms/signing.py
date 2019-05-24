@@ -131,7 +131,8 @@ def make_task_description(config, jobs):
             attributes['chunk_locales'] = dep_job.attributes.get('chunk_locales')
 
         signing_cert_scope = get_signing_cert_scope_per_platform(
-            build_platform, is_nightly, config, release_type=dep_job.attributes.get('release-type')
+            build_platform, is_nightly, config,
+            job_release_type=dep_job.attributes.get('release-type')
         )
         worker_type = get_worker_type_for_scope(config, signing_cert_scope)
 
