@@ -91,10 +91,10 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-4a.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-4b.html float-in-rtl-vrl-4-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-4c.html float-in-rtl-vrl-4-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4-ref.html # Bug 1392106
-fuzzy-if(OSX==1010,0-28,0-11) fuzzy-if(Android,0-16,0-2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
-fuzzy-if(OSX==1010,0-28,0-11) fuzzy-if(winWidget,0-137,0-3) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
-fuzzy-if(OSX==1010,0-103,0-802) fuzzy-if(winWidget,0-135,0-700) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
-fuzzy-if(OSX==1010,0-103,0-802) fuzzy-if(winWidget,0-135,0-700) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX,0-28,0-11) fuzzy-if(Android,0-16,0-2) == orthogonal-floats-1a.html orthogonal-floats-1-ref.html
+fuzzy-if(OSX,0-28,0-11) fuzzy-if(winWidget,0-137,0-3) == orthogonal-floats-1b.html orthogonal-floats-1-ref.html
+fuzzy-if(winWidget,0-135,0-700) == orthogonal-floats-1c.html orthogonal-floats-1-ref.html
+fuzzy-if(winWidget,0-135,0-700) == orthogonal-floats-1d.html orthogonal-floats-1-ref.html
 
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == logical-float-side-1.html logical-float-side-1-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == logical-float-side-2.html logical-float-side-2-ref.html # Bug 1392106

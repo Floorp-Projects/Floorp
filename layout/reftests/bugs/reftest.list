@@ -816,7 +816,7 @@ fuzzy-if(skiaContent,0-1,0-600) == 393649-1.html 393649-1-ref.html
 == 393671-2.html 393671-2-ref.html
 == 393671-3.html 393671-3-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 393760-1.xml 393760-1-ref.xml # Bug 1392106
-fuzzy-if(skiaContent,0-1,0-500) == 393760-2.xml 393760-2-ref.xml
+fuzzy-if(skiaContent,0-2,0-500) == 393760-2.xml 393760-2-ref.xml
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
@@ -954,7 +954,7 @@ fuzzy-if(winWidget,0-123,0-1600) == 409659-1a.html 409659-1-ref.html  # Bug 1128
 fuzzy-if(winWidget,0-123,0-1900) == 409659-1d.html 409659-1-ref.html  # Bug 1128229
 == 410621-1.html 410621-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 411059-1.html 411059-1-ref.html # Bug 1392106
-fuzzy-if(webrender&&!gtkWidget,127-129,652-770) == 411334-1.xml 411334-1-ref.xml
+fuzzy-if(webrender&&winWidget,127-129,652-770) == 411334-1.xml 411334-1-ref.xml
 == 411367-1.html 411367-1-ref.html
 == 411367-2.html 411367-2-ref.html
 == 411367-3.html 411367-3-ref.html
@@ -1425,8 +1425,8 @@ fuzzy-if(Android,0-5,0-1656) fuzzy-if(skiaContent,0-1,0-1200) == 512410.html 512
 == 512631-1.html 512631-1-ref.html
 == 513153-1a.html 513153-1-ref.html
 == 513153-1b.html 513153-1-ref.html
-fuzzy-if(webrender&&winWidget,82-82,76-76) fuzzy-if(webrender&&cocoaWidget,0-34,0-103) == 513153-2a.html 513153-2-ref.html
-fuzzy-if(webrender&&cocoaWidget,34-34,103-103) == 513153-2b.html 513153-2-ref.html
+fuzzy-if(webrender&&winWidget,82-82,76-76) fuzzy-if(webrender&&OSX,34-34,138-138) == 513153-2a.html 513153-2-ref.html
+fuzzy-if(webrender&&OSX,34-34,138-138) == 513153-2b.html 513153-2-ref.html
 == 513318-1.xul 513318-1-ref.xul
 fails-if(Android&&(!asyncPan)) != 513318-2.xul 513318-2-ref.xul
 == 514917-1.html 514917-1-ref.html
@@ -1697,7 +1697,7 @@ fuzzy-if(skiaContent,0-1,0-65536) == 654950-1.html 654950-1-ref.html # Quartz al
 == 655836-1.html 655836-1-ref.html
 != 656875.html about:blank
 == 658952.html 658952-ref.html
-fuzzy-if(skiaContent,0-10,0-919) fuzzy-if(webrender&&cocoaWidget,54-54,831-831) == 660682-1.html 660682-1-ref.html
+fuzzy-if(skiaContent,0-10,0-919) fuzzy-if(webrender&&cocoaWidget,2-2,4-4) == 660682-1.html 660682-1-ref.html
 pref(layout.css.xul-tree-pseudos.content.enabled,true) fuzzy-if(d2d,0-1,0-256) skip-if(Android) fuzzy-if(skiaContent,0-1,0-68000) == 664127-1.xul 664127-1-ref.xul # Android: Intermittent failures - bug 1019131
 == 665597-1.html 665597-1-ref.html
 == 665597-2.html 665597-2-ref.html

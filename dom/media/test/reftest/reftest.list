@@ -1,4 +1,4 @@
-skip-if(Android) fuzzy-if(OSX,0-62,0-76799) fuzzy-if(winWidget,0-62,0-76799) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-70,0-600) HTTP(..) == short.mp4.firstframe.html short.mp4.firstframe-ref.html
+skip-if(Android) fuzzy-if(OSX,0-68,0-76800) fuzzy-if(winWidget,0-62,0-76799) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-70,0-600) HTTP(..) == short.mp4.firstframe.html short.mp4.firstframe-ref.html
 skip-if(Android) fuzzy-if(OSX,0-60,0-76797) fuzzy-if(winWidget,0-60,0-76797) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-60,0-1800) HTTP(..) == short.mp4.lastframe.html short.mp4.lastframe-ref.html
 skip-if(Android) skip-if(winWidget) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-55,0-4281) fuzzy-if(OSX,55-55,4173-4173) HTTP(..) == bipbop_300_215kbps.mp4.lastframe.html bipbop_300_215kbps.mp4.lastframe-ref.html
 skip-if(Android) fuzzy-if(OSX,0-25,0-175921) fuzzy-if(winWidget,0-71,0-179198) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu))&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI)),0-255,0-179500) HTTP(..) == gizmo.mp4.seek.html gizmo.mp4.55thframe-ref.html

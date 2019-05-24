@@ -1,5 +1,5 @@
 Importing revision: 15f199c91a72b0d51bf0a12b3b77827ecb5051ff
-from repository: https://github.com/web-platform-tests/wpt.git
+from repository: https://github.com/neerjapancholi/web-platform-tests.git
 Importing css-conditional/OWNERS to css-conditional/OWNERS
 Importing css-conditional/at-media-whitespace-optional-001.html to css-conditional/at-media-whitespace-optional-001.html
 Importing css-conditional/reference/background-lime.html to css-conditional/reference/background-lime.html

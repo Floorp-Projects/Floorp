@@ -25,8 +25,8 @@ skip selectors/focus-within-shadow-*.html
 # Fuzzy
 fuzzy-if(OSX||Android,0-78,0-197) css-values/ch-unit-001.html
 fuzzy(0-50,0-160) css-values/ch-unit-002.html
-fuzzy-if(Android,78-78,179-179) fuzzy-if(OSX,63-71,6-86) css-values/ch-unit-003.html
-fuzzy(0-78,0-197) fails-if(webrender&&cocoaWidget) css-values/ch-unit-004.html
+fuzzy-if(Android,0-78,0-179) css-values/ch-unit-003.html
+fuzzy(0-78,0-197) css-values/ch-unit-004.html
 
 # Bug 435426
 fails css-values/attr-*.html
@@ -97,38 +97,40 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/sizing-or
 
 # Fuzzy
 fuzzy-if(OSX||winWidget,0-255,0-480) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/abs-pos-non-replaced-v??-???.xht
-fuzzy-if(winWidget,0-114,0-600) fuzzy-if(OSX&&!webrender,255-255,100-200) css-writing-modes/baseline-inline-non-replaced-00?.xht
+fuzzy-if(OSX||winWidget,0-255,0-600) css-writing-modes/baseline-inline-non-replaced-00?.xht
 fuzzy-if(OSX||winWidget,0-255,0-1540) css-writing-modes/block-flow-direction-???-0??.xht
 fuzzy-if(OSX,0-255,0-200)  css-writing-modes/box-offsets-rel-pos-vlr-005.xht
 fuzzy-if(OSX,0-255,0-200)  css-writing-modes/box-offsets-rel-pos-vrl-004.xht
-fuzzy-if(winWidget,0-114,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100)  css-writing-modes/caption-side-v??-00?.xht
-fuzzy-if(webrender&&cocoaWidget,7-7,2-2) css-writing-modes/different-block-flow-dir-002.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-114,0-300)  css-writing-modes/caption-side-v??-00?.xht
+css-writing-modes/different-block-flow-dir-002.xht
 fuzzy-if(OSX||winWidget,0-215,0-780)  css-writing-modes/central-baseline-alignment-00?.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) css-writing-modes/direction-v??-00?.xht
-fuzzy-if(winWidget,0-135,0-904) fuzzy-if(OSX&&!webrender,255-255,200-200) css-writing-modes/float-contiguous-v??-01?.xht
-fuzzy-if(winWidget,0-135,0-904) css-writing-modes/float-contiguous-vlr-013.xht
-fuzzy-if(winWidget,0-135,0-904) css-writing-modes/float-contiguous-vrl-012.xht
-fuzzy-if(winWidget,0-109,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100) css-writing-modes/float-shrink-to-fit-vlr-009.xht
-fuzzy-if(winWidget,0-109,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100) css-writing-modes/float-shrink-to-fit-vrl-008.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) css-writing-modes/direction-v??-00?.xht
+fuzzy-if(OSX||winWidget,0-255,0-904)  css-writing-modes/float-contiguous-v??-01?.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-109,0-300)  css-writing-modes/float-shrink-to-fit-vlr-009.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-109,0-300)  css-writing-modes/float-shrink-to-fit-vrl-008.xht
+fuzzy-if(!webrender&&OSX,255-255,49-150) fuzzy-if(winWidget,0-108,0-300)  css-writing-modes/float-v??-0??.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-62,0-404) fuzzy-if(webrender&&winWidget,92-92,100-100) css-writing-modes/height-width-inline-non-replaced-v??-00?.xht
 fuzzy-if(winWidget,0-108,0-300) fuzzy-if(OSX&&!webrender,255-255,49-150) css-writing-modes/float-v??-0??.xht
 fuzzy-if(winWidget,0-62,0-404) fuzzy-if(OSX&&!webrender,255-255,100-100) css-writing-modes/height-width-inline-non-replaced-v??-00?.xht
 fuzzy-if(OSX||winWidget,0-218,0-621)  css-writing-modes/inline-block-alignment-orthogonal-v??-00?.xht
-fuzzy-if(winWidget,0-135,0-1080) fuzzy-if(OSX&&!webrender,255-255,432-432) css-writing-modes/inline-block-alignment-slr-009.xht
-fuzzy-if(winWidget,0-112,0-960)  fuzzy-if(OSX&&!webrender,255-255,432-432) css-writing-modes/inline-block-alignment-srl-008.xht
+fuzzy-if(!webrender&&OSX,255-255,432-432) fuzzy-if(winWidget,0-135,0-1080) css-writing-modes/inline-block-alignment-slr-009.xht
+fuzzy-if(!webrender&&OSX,255-255,432-432) fuzzy-if(winWidget,0-112,0-960)  css-writing-modes/inline-block-alignment-srl-008.xht
+
 fuzzy-if(OSX||winWidget,0-213,0-1540) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/line-box-direction-???-0??.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/row-progression-???-0??.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) css-writing-modes/table-column-order-00?.xht
 fuzzy-if(winWidget,0-110,0-1200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/table-column-order-slr-007.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) css-writing-modes/table-column-order-srl-006.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-align-v??-0??.xht
-fuzzy-if(winWidget,0-215,0-780) fuzzy-if(OSX&&!webrender,255-255,192-330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-baseline-???-00?.xht
-fuzzy-if(winWidget,0-215,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-baseline-vlr-005.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-align-v??-0??.xht
+fuzzy-if(OSX||winWidget,0-255,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-baseline-???-00?.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-combine-upright-decorations-001.html
 fuzzy-if(winWidget,0-215,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-baseline-vrl-004.xht
 fuzzy-if(OSX&&!webrender,255-255,100-100) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-combine-upright-decorations-001.html
 fuzzy-if(OSX||winWidget,0-255,0-480) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-indent-v??-0??.xht
-fuzzy-if(OSX||winWidget,0-255,0-960) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-orientation-016.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/vertical-alignment-*.xht
-fuzzy-if(winWidget,0-158,0-624) fuzzy-if(OSX&&!webrender,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/writing-mode-vertical-??-00?.*
+fuzzy-if(!webrender&&OSX,255-255,64-64) fuzzy-if(winWidget,0-226,0-960) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-orientation-016.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/vertical-alignment-*.xht
+
+fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/writing-mode-vertical-??-00?.*
 fuzzy(0-255,0-960) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-combine-upright-value-all-00?.html
 
 # Bug 1167911
@@ -155,7 +157,7 @@ css-writing-modes/flexbox_align-items-stretch-writing-modes.html
 
 # Bug 1179952
 fails css-writing-modes/inline-block-alignment-00?.xht
-fuzzy-if(winWidget,0-112,0-960) fuzzy-if(OSX&&!webrender,255-255,432-432) css-writing-modes/inline-block-alignment-006.xht
+fuzzy-if(!webrender&&OSX,255-255,432-432) fuzzy-if(winWidget,0-112,0-960) css-writing-modes/inline-block-alignment-006.xht
 fails css-writing-modes/inline-table-alignment-00?.xht
 
 # Bug 1227616
@@ -253,9 +255,9 @@ fuzzy(0-225,0-2529) css-multicol/multicol-nested-margin-004.xht
 fuzzy(0-225,0-2529) css-multicol/multicol-nested-margin-005.xht
 fuzzy(0-135,0-142) css-multicol/multicol-overflow-000.xht
 fuzzy(0-204,0-1844) fuzzy-if(skiaContent,0-208,0-1844) css-multicol/multicol-overflowing-001.xht
-fuzzy-if(OSX,0-61,0-2) fuzzy-if(skiaContent,0-64,0-2) css-multicol/multicol-reduce-000.xht
-fuzzy-if(OSX,0-11,0-20) css-multicol/multicol-rule-000.xht
-fuzzy(0-135,0-1584) css-multicol/multicol-rule-001.xht
+fuzzy-if(skiaContent,0-64,0-2) css-multicol/multicol-reduce-000.xht
+css-multicol/multicol-rule-000.xht
+fuzzy-if(!OSX,0-135,0-1584) css-multicol/multicol-rule-001.xht
 fails-if(!OSX) random-if(OSX) css-multicol/multicol-rule-002.xht
 css-multicol/multicol-rule-003.xht
 # Bug 1548100
@@ -266,7 +268,7 @@ fuzzy(0-106,0-354) css-multicol/multicol-rule-dotted-000.xht
 fuzzy(0-106,0-354) css-multicol/multicol-rule-double-000.xht
 css-multicol/multicol-rule-fraction-001.xht
 css-multicol/multicol-rule-fraction-002.xht
-fuzzy-if(OSX||winWidget||Android,0-113,0-792) css-multicol/multicol-rule-fraction-003.xht
+fuzzy-if(winWidget||Android,0-113,0-792) css-multicol/multicol-rule-fraction-003.xht
 fuzzy(0-127,0-500) css-multicol/multicol-rule-groove-000.xht
 fuzzy(0-94,0-256) css-multicol/multicol-rule-hidden-000.xht
 fuzzy(0-127,0-500) css-multicol/multicol-rule-inset-000.xht
