@@ -9,10 +9,10 @@ var PERMISSIONS_FILE_NAME = "permissions.sqlite";
 
 var CONTRACT_ID = "@mozilla.org/browser/nav-history-service;1";
 var factory = {
-  createInstance: function() {
+  createInstance() {
     throw new Error("There is no history service");
   },
-  lockFactory: function() {
+  lockFactory() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
@@ -102,14 +102,14 @@ add_task(function test() {
 
     return {
       id: thisId,
-      host: host,
-      type: type,
-      permission: permission,
-      expireType: expireType,
-      expireTime: expireTime,
-      modificationTime: modificationTime,
-      appId: appId,
-      isInBrowserElement: isInBrowserElement
+      host,
+      type,
+      permission,
+      expireType,
+      expireTime,
+      modificationTime,
+      appId,
+      isInBrowserElement
     };
   }
 
@@ -174,7 +174,7 @@ add_task(function test() {
   let found = expected.map((it) => 0);
 
   // This will force the permission-manager to reload the data.
-  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk", "");
+  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
 
   // Force initialization of the nsPermissionManager
   for (let permission of Services.perms.enumerator) {
@@ -207,7 +207,7 @@ add_task(function test() {
 
   // Check to make sure that all of the tables which we care about are present
   {
-    let db = Services.storage.openDatabase(GetPermissionsFile(profile));
+    db = Services.storage.openDatabase(GetPermissionsFile(profile));
     Assert.ok(db.tableExists("moz_perms"));
     Assert.ok(db.tableExists("moz_hosts"));
     Assert.ok(!db.tableExists("moz_hosts_is_backup"));

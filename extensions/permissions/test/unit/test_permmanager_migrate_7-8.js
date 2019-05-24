@@ -93,12 +93,12 @@ add_task(async function test() {
 
     return {
       id: thisId,
-      origin: origin,
-      type: type,
-      permission: permission,
-      expireType: expireType,
-      expireTime: expireTime,
-      modificationTime: modificationTime
+      origin,
+      type,
+      permission,
+      expireType,
+      expireTime,
+      modificationTime
     };
   }
 
@@ -123,14 +123,14 @@ add_task(async function test() {
 
     return {
       id: thisId,
-      host: host,
-      type: type,
-      permission: permission,
-      expireType: expireType,
-      expireTime: expireTime,
-      modificationTime: modificationTime,
-      appId: appId,
-      isInBrowserElement: isInBrowserElement
+      host,
+      type,
+      permission,
+      expireType,
+      expireTime,
+      modificationTime,
+      appId,
+      isInBrowserElement
     };
   }
 
@@ -201,7 +201,7 @@ add_task(async function test() {
   await PlacesTestUtils.addVisits(Services.io.newURI("https://localhost:8080"));
 
   // This will force the permission-manager to reload the data.
-  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk", "");
+  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
 
   // Force initialization of the nsPermissionManager
   for (let permission of Services.perms.enumerator) {
@@ -234,7 +234,7 @@ add_task(async function test() {
 
   // Check to make sure that all of the tables which we care about are present
   {
-    let db = Services.storage.openDatabase(GetPermissionsFile(profile));
+    db = Services.storage.openDatabase(GetPermissionsFile(profile));
     Assert.ok(db.tableExists("moz_perms"));
     Assert.ok(db.tableExists("moz_hosts"));
     Assert.ok(!db.tableExists("moz_hosts_is_backup"));

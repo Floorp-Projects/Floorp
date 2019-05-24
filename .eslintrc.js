@@ -130,5 +130,36 @@ module.exports = {
       ...mochitestTestPaths.map(path => `${path}/**/*.js`),
       ...chromeTestPaths.map(path => `${path}/**/*.js`),
     ],
+  }, {
+    "files": [
+      "extensions/permissions/test/**",
+      "extensions/spellcheck/**",
+      "extensions/universalchardet/tests/**",
+    ],
+    "rules": {
+      "mozilla/reject-importGlobalProperties": "off",
+      "mozilla/use-default-preference-values": "off",
+      "mozilla/use-services": "off",
+      "no-array-constructor": "off",
+      "no-undef": "off",
+      "no-unused-vars": "off",
+      "no-redeclare": "off",
+      "no-global-assign": "off",
+
+      // Not enabling the rules below for now pending prettier roll-out.
+      "brace-style": "off",
+      "comma-dangle": "off",
+      "linebreak-style": "off",
+      "no-tabs": "off",
+      "no-mixed-spaces-and-tabs": "off",
+      "no-multi-spaces": "off",
+      "no-trailing-spaces": "off",
+      "padded-blocks": "off",
+      "quotes": "off",
+      "semi": "off",
+      "space-infix-ops": "off",
+
+
+    }
   }]
 };
