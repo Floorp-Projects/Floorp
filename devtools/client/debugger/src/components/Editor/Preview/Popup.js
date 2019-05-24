@@ -6,6 +6,7 @@
 
 import React, { Component } from "react";
 import { connect } from "../../../utils/connect";
+import { isTesting } from "devtools-environment";
 
 import Reps from "devtools-reps";
 const {
@@ -83,8 +84,10 @@ export class Popup extends Component<Props, State> {
 
     // Don't clear the current preview if mouse is hovered on
     // the current preview's element (target) or the popup element
+    // Note, we disregard while testing because it is impossible to hover
     const currentTarget = preview.target;
     if (
+      isTesting() ||
       currentTarget.matches(":hover") ||
       (this.popup && this.popup.matches(":hover"))
     ) {
