@@ -102,6 +102,12 @@
     <color name="library_reading_list_icon_background">#FCE98F</color>
     <color name="library_reading_list_icon">#8A201F</color>
 
+    <color name="tab_circle_icon_background">#FFDDBD</color>
+    <color name="tab_circle_icon_foreground">#7C1504</color>
+
+    <color name="collection_circle_icon_background">#D1FFEE</color>
+    <color name="collection_circle_icon_foreground">#084036</color>
+
     <!-- Quick action buttons-->
     <color name="quick_action_share_icon">#174291</color>
     <color name="quick_action_share_icon_background">#b9f0fd</color>

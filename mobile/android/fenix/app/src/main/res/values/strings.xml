@@ -565,4 +565,18 @@
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Delete browsing data</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">Open Tabs</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%s tabs</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Browsing history and site data</string>
+    <!-- Subtitle for the data and history items item in Delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%s addresses</string>
+    <!-- Title for the collections item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_collections_title">Collections</string>
+    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
+        number of collections that will be deleted -->
+    <string name="preferences_delete_browsing_data_collections_subtitle">%s collections</string>
 </resources>

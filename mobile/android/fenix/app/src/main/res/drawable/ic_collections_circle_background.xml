@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <size
+                android:width="40dp"
+                android:height="40dp" />
+            <solid android:color="@color/collection_circle_icon_background" />
+        </shape>
+    </item>
+    <item
+        android:bottom="8dp"
+        android:left="8dp"
+        android:right="8dp"
+        android:top="8dp">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <path
+                android:fillColor="@color/collection_circle_icon_foreground"
+                android:fillType="evenOdd"
+                android:pathData="M13,14.6449L14.2772,13.309C14.6588,12.9098 15.2918,12.8955 15.691,13.2772C16.0902,13.6588 16.1045,14.2918 15.7228,14.691L12.7903,17.7585C12.4026,18.1641 11.7571,18.1713 11.3604,17.7746L8.2929,14.7071C7.9024,14.3166 7.9024,13.6834 8.2929,13.2929C8.6834,12.9024 9.3166,12.9024 9.7071,13.2929L11,14.5858L11,11C11,10.4477 11.4477,10 12,10C12.5523,10 13,10.4477 13,11L13,14.6449ZM20,8L4,8L4,19C4,19.5523 4.4477,20 5,20L19,20C19.5523,20 20,19.5523 20,19L20,8ZM18.7908,6L17.333,4.3401C17.1432,4.1239 16.8694,4 16.5817,4L7.8284,4C7.5632,4 7.3089,4.1054 7.1213,4.2929L5.4142,6L18.7908,6ZM2,19L2,7.8284C2,7.0328 2.3161,6.2697 2.8787,5.7071L5.7071,2.8787C6.2697,2.3161 7.0328,2 7.8284,2L16.5817,2C17.4448,2 18.2662,2.3718 18.8358,3.0203L21.2541,5.7739C21.7349,6.3213 22,7.025 22,7.7536L22,19C22,20.6569 20.6569,22 19,22L5,22C3.3431,22 2,20.6569 2,19Z"
+                android:strokeWidth="1"
+                android:strokeColor="#00000000" />
+        </vector>
+    </item>
+</layer-list>

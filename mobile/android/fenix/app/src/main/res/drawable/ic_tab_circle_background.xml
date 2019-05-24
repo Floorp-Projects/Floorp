@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <size
+                android:width="40dp"
+                android:height="40dp" />
+            <solid android:color="@color/tab_circle_icon_background" />
+        </shape>
+    </item>
+    <item
+        android:bottom="8dp"
+        android:left="8dp"
+        android:right="8dp"
+        android:top="8dp">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <path
+                android:fillColor="@color/tab_circle_icon_foreground"
+                android:fillType="evenOdd"
+                android:pathData="M15.2222,22L5.7778,22C3.6914,22 2,20.3086 2,18.2222L2,8.7778C2,6.6914 3.6914,5 5.7778,5L15.2222,5C17.3086,5 19,6.6914 19,8.7778L19,18.2222C19,20.3086 17.3086,22 15.2222,22ZM5.8571,7C4.8315,7 4,7.8315 4,8.8571L4,18.1429C4,19.1685 4.8315,20 5.8571,20L15.1429,20C16.1685,20 17,19.1685 17,18.1429L17,8.8571C17,7.8315 16.1685,7 15.1429,7L5.8571,7ZM6,4C6,2.8954 6.8954,2 8,2L15.9866,2C19.3004,2 21.9866,4.6863 21.9866,8C21.9866,8.008 21.9866,8.008 21.9866,8.016L21.9632,16.0027C21.96,17.1073 21.062,18.0003 19.9573,17.9973L19.9866,8.0107L19.9866,8C19.9866,5.7909 18.1958,4 15.9866,4L6,4Z"
+                android:strokeWidth="1"
+                android:strokeColor="#00000000" />
+        </vector>
+    </item>
+</layer-list>

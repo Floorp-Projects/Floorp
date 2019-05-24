@@ -26,7 +26,7 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
         attrs.let {
             context.theme.obtainStyledAttributes(
                 it,
-                R.styleable.LibraryListItem,
+                R.styleable.DeleteBrowsingDataItem,
                 0, 0
             ).apply {
                 try {
