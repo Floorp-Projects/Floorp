@@ -50,16 +50,12 @@ extern mozilla::LazyLogModule gUserInteractionPRLog;
 
 static LazyLogModule gBrowsingContextLog("BrowsingContext");
 
-template <template <typename> class PtrType>
-using BrowsingContextMap =
-    HashMap<uint64_t, PtrType<BrowsingContext>, DefaultHasher<uint64_t>,
-            InfallibleAllocPolicy>;
+typedef nsDataHashtable<nsUint64HashKey, BrowsingContext*> BrowsingContextMap;
 
-static StaticAutoPtr<BrowsingContextMap<WeakPtr>> sBrowsingContexts;
+static StaticAutoPtr<BrowsingContextMap> sBrowsingContexts;
 
 static void Register(BrowsingContext* aBrowsingContext) {
-  MOZ_ALWAYS_TRUE(
-      sBrowsingContexts->putNew(aBrowsingContext->Id(), aBrowsingContext));
+  sBrowsingContexts->Put(aBrowsingContext->Id(), aBrowsingContext);
 
   aBrowsingContext->Group()->Register(aBrowsingContext);
 }
@@ -75,7 +71,7 @@ BrowsingContext* BrowsingContext::Top() {
 /* static */
 void BrowsingContext::Init() {
   if (!sBrowsingContexts) {
-    sBrowsingContexts = new BrowsingContextMap<WeakPtr>();
+    sBrowsingContexts = new BrowsingContextMap();
     ClearOnShutdown(&sBrowsingContexts);
   }
 }
@@ -85,11 +81,7 @@ LogModule* BrowsingContext::GetLog() { return gBrowsingContextLog; }
 
 /* static */
 already_AddRefed<BrowsingContext> BrowsingContext::Get(uint64_t aId) {
-  if (BrowsingContextMap<WeakPtr>::Ptr abc = sBrowsingContexts->lookup(aId)) {
-    return do_AddRef(abc->value().get());
-  }
-
-  return nullptr;
+  return do_AddRef(sBrowsingContexts->Get(aId));
 }
 
 CanonicalBrowsingContext* BrowsingContext::Canonical() {
@@ -361,7 +353,7 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
 bool BrowsingContext::IsCached() { return Group()->IsContextCached(this); }
 
 bool BrowsingContext::HasOpener() const {
-  return sBrowsingContexts->has(mOpenerId);
+  return sBrowsingContexts->Contains(mOpenerId);
 }
 
 void BrowsingContext::GetChildren(Children& aChildren) {
@@ -528,7 +520,7 @@ BrowsingContext::~BrowsingContext() {
   MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->IsContextCached(this));
 
   if (sBrowsingContexts) {
-    sBrowsingContexts->remove(Id());
+    sBrowsingContexts->Remove(Id());
   }
 }
 
@@ -569,6 +561,10 @@ bool BrowsingContext::GetUserGestureActivation() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
+  if (sBrowsingContexts) {
+    sBrowsingContexts->Remove(tmp->Id());
+  }
+
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mGroup,
                                   mEmbedderElement)
   if (XRE_IsParentProcess()) {
