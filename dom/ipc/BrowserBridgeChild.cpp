@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+#  include "mozilla/a11y/ProxyAccessible.h"
+#  include "mozilla/a11y/ProxyWrappers.h"
+#endif
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "nsFocusManager.h"
@@ -24,7 +28,13 @@ BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader,
       mFrameLoader(aFrameLoader),
       mBrowsingContext(aBrowsingContext) {}
 
-BrowserBridgeChild::~BrowserBridgeChild() {}
+BrowserBridgeChild::~BrowserBridgeChild() {
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+  if (mEmbeddedDocAccessible) {
+    mEmbeddedDocAccessible->Shutdown();
+  }
+#endif
+}
 
 void BrowserBridgeChild::NavigateByKey(bool aForward,
                                        bool aForDocumentNavigation) {
@@ -110,6 +120,21 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
                  : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD));
   fm->MoveFocus(nullptr, owner, type, nsIFocusManager::FLAG_BYKEY,
                 getter_AddRefs(dummy));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+BrowserBridgeChild::RecvSetEmbeddedDocAccessibleCOMProxy(
+    const a11y::IDispatchHolder& aCOMProxy) {
+#if defined(ACCESSIBILITY) && defined(XP_WIN)
+  MOZ_ASSERT(!aCOMProxy.IsNull());
+  if (mEmbeddedDocAccessible) {
+    mEmbeddedDocAccessible->Shutdown();
+  }
+  RefPtr<IDispatch> comProxy(aCOMProxy.Get());
+  mEmbeddedDocAccessible =
+      new a11y::RemoteIframeDocProxyAccessibleWrap(comProxy);
+#endif
   return IPC_OK();
 }
 
