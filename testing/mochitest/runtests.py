@@ -2575,6 +2575,7 @@ toolbar#nav-bar {
         # for test manifest parsing.
         mozinfo.update({
             "e10s": options.e10s,
+            "fission": self.extraPrefs.get('fission.autostart', False),
             "headless": options.headless,
             "serviceworker_e10s": self.extraPrefs.get(
                 'dom.serviceWorkers.parent_intercept', False),
