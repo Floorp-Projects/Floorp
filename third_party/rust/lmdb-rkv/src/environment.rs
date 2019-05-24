@@ -10,7 +10,10 @@ use std::sync::Mutex;
 
 use ffi;
 
-use error::{Result, lmdb_result};
+use byteorder::{ByteOrder, NativeEndian};
+
+use cursor::Cursor;
+use error::{Error, Result, lmdb_result};
 use database::Database;
 use transaction::{RoTransaction, RwTransaction, Transaction};
 use flags::{DatabaseFlags, EnvironmentFlags};
@@ -158,17 +161,108 @@ impl Environment {
     /// Retrieves statistics about this environment.
     pub fn stat(&self) -> Result<Stat> {
         unsafe {
-            let mut stat = Stat(mem::zeroed());
-            lmdb_try!(ffi::mdb_env_stat(self.env(), &mut stat.0));
+            let mut stat = Stat::new();
+            lmdb_try!(ffi::mdb_env_stat(self.env(), stat.mdb_stat()));
             Ok(stat)
+        }
+    }
+
+    /// Retrieves info about this environment.
+    pub fn info(&self) -> Result<Info> {
+        unsafe {
+            let mut info = Info(mem::zeroed());
+            lmdb_try!(ffi::mdb_env_info(self.env(), &mut info.0));
+            Ok(info)
+        }
+    }
+
+    /// Retrieves the total number of pages on the freelist.
+    ///
+    /// Along with `Environment::info()`, this can be used to calculate the exact number
+    /// of used pages as well as free pages in this environment.
+    ///
+    /// ```ignore
+    /// let env = Environment::new().open("/tmp/test").unwrap();
+    /// let info = env.info().unwrap();
+    /// let stat = env.stat().unwrap();
+    /// let freelist = env.freelist().unwrap();
+    /// let last_pgno = info.last_pgno() + 1; // pgno is 0 based.
+    /// let total_pgs = info.map_size() / stat.page_size() as usize;
+    /// let pgs_in_use = last_pgno - freelist;
+    /// let pgs_free = total_pgs - pgs_in_use;
+    /// ```
+    ///
+    /// Note:
+    ///
+    /// * LMDB stores all the freelists in the designated database 0 in each environment,
+    ///   and the freelist count is stored at the beginning of the value as `libc::size_t`
+    ///   in the native byte order.
+    ///
+    /// * It will create a read transaction to traverse the freelist database.
+    pub fn freelist(&self) -> Result<size_t> {
+        let mut freelist: size_t = 0;
+        let db = Database::freelist_db();
+        let txn = self.begin_ro_txn()?;
+        let mut cursor = txn.open_ro_cursor(db)?;
+
+        for result in cursor.iter() {
+            let (_key, value) = result?;
+            if value.len() < mem::size_of::<size_t>() {
+                return Err(Error::Corrupted);
+            }
+
+            let s = &value[..mem::size_of::<size_t>()];
+            if cfg!(target_pointer_width = "64") {
+                freelist += NativeEndian::read_u64(s) as size_t;
+            } else {
+                freelist += NativeEndian::read_u32(s) as size_t;
+            }
+        }
+
+        Ok(freelist)
+    }
+
+    /// Sets the size of the memory map to use for the environment.
+    ///
+    /// This could be used to resize the map when the environment is already open.
+    ///
+    /// Note:
+    ///
+    /// * No active transactions allowed when performing resizing in this process.
+    ///
+    /// * The size should be a multiple of the OS page size. Any attempt to set
+    ///   a size smaller than the space already consumed by the environment will
+    ///   be silently changed to the current size of the used space.
+    ///
+    /// * In the multi-process case, once a process resizes the map, other
+    ///   processes need to either re-open the environment, or call set_map_size
+    ///   with size 0 to update the environment. Otherwise, new transaction creation
+    ///   will fail with `Error::MapResized`.
+    pub fn set_map_size(&self, size: size_t) -> Result<()> {
+        unsafe {
+            lmdb_result(ffi::mdb_env_set_mapsize(self.env(), size))
         }
     }
 }
 
 /// Environment statistics.
 ///
-/// Contains information about the size and layout of an LMDB environment.
+/// Contains information about the size and layout of an LMDB environment or database.
 pub struct Stat(ffi::MDB_stat);
+
+impl Stat {
+    /// Create a new Stat with zero'd inner struct `ffi::MDB_stat`.
+    pub(crate) fn new() -> Stat {
+        unsafe {
+            Stat(mem::zeroed())
+        }
+    }
+
+    /// Returns a mut pointer to `ffi::MDB_stat`.
+    pub(crate) fn mdb_stat(&mut self) -> *mut ffi::MDB_stat {
+        &mut self.0
+    }
+}
 
 impl Stat {
     /// Size of a database page. This is the same for all databases in the environment.
@@ -205,6 +299,43 @@ impl Stat {
     #[inline]
     pub fn entries(&self) -> usize {
         self.0.ms_entries
+    }
+}
+
+/// Environment information.
+///
+/// Contains environment information about the map size, readers, last txn id etc.
+pub struct Info(ffi::MDB_envinfo);
+
+impl Info {
+    /// Size of memory map.
+    #[inline]
+    pub fn map_size(&self) -> usize {
+        self.0.me_mapsize
+    }
+
+    /// Last used page number
+    #[inline]
+    pub fn last_pgno(&self) -> usize {
+        self.0.me_last_pgno
+    }
+
+    /// Last transaction ID
+    #[inline]
+    pub fn last_txnid(&self) -> usize {
+        self.0.me_last_txnid
+    }
+
+    /// Max reader slots in the environment
+    #[inline]
+    pub fn max_readers(&self) -> u32 {
+        self.0.me_maxreaders
+    }
+
+    /// Max reader slots used in the environment
+    #[inline]
+    pub fn num_readers(&self) -> u32 {
+        self.0.me_numreaders
     }
 }
 
@@ -461,5 +592,76 @@ mod test {
         assert_eq!(stat.leaf_pages(), 1);
         assert_eq!(stat.overflow_pages(), 0);
         assert_eq!(stat.entries(), 64);
+    }
+
+    #[test]
+    fn test_info() {
+        let map_size = 1024 * 1024;
+        let dir = TempDir::new("test").unwrap();
+        let env = Environment::new()
+            .set_map_size(map_size)
+            .open(dir.path())
+            .unwrap();
+
+        let info = env.info().unwrap();
+        assert_eq!(info.map_size(), map_size);
+        assert_eq!(info.last_pgno(), 1);
+        assert_eq!(info.last_txnid(), 0);
+        // The default max readers is 126.
+        assert_eq!(info.max_readers(), 126);
+        assert_eq!(info.num_readers(), 0);
+    }
+
+    #[test]
+    fn test_freelist() {
+        let dir = TempDir::new("test").unwrap();
+        let env = Environment::new().open(dir.path()).unwrap();
+
+        let db = env.open_db(None).unwrap();
+        let mut freelist = env.freelist().unwrap();
+        assert_eq!(freelist, 0);
+
+        // Write a few small values.
+        for i in 0..64 {
+            let mut value = [0u8; 8];
+            LittleEndian::write_u64(&mut value, i);
+            let mut tx = env.begin_rw_txn().expect("begin_rw_txn");
+            tx.put(db, &value, &value, WriteFlags::default()).expect("tx.put");
+            tx.commit().expect("tx.commit")
+        }
+        let mut tx = env.begin_rw_txn().expect("begin_rw_txn");
+        tx.clear_db(db).expect("clear");
+        tx.commit().expect("tx.commit");
+
+        // Freelist should not be empty after clear_db.
+        freelist = env.freelist().unwrap();
+        assert!(freelist > 0);
+    }
+
+    #[test]
+    fn test_set_map_size() {
+        let dir = TempDir::new("test").unwrap();
+        let env = Environment::new().open(dir.path()).unwrap();
+
+        let mut info = env.info().unwrap();
+        let default_size = info.map_size();
+
+        // Resizing to 0 merely reloads the map size
+        env.set_map_size(0).unwrap();
+        info = env.info().unwrap();
+        assert_eq!(info.map_size(), default_size);
+
+        env.set_map_size(2 * default_size).unwrap();
+        info = env.info().unwrap();
+        assert_eq!(info.map_size(), 2 * default_size);
+
+        env.set_map_size(4 * default_size).unwrap();
+        info = env.info().unwrap();
+        assert_eq!(info.map_size(), 4 * default_size);
+
+        // Decreasing is also fine if the space hasn't been consumed.
+        env.set_map_size(2 * default_size).unwrap();
+        info = env.info().unwrap();
+        assert_eq!(info.map_size(), 2 * default_size);
     }
 }

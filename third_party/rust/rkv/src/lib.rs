@@ -216,6 +216,7 @@ pub mod value;
 pub use lmdb::{
     Cursor,
     Database,
+    Info,
     Iter as LmdbIter,
     RoCursor,
     Stat,

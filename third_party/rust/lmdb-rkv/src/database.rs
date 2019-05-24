@@ -31,6 +31,12 @@ impl Database {
         Ok(Database { dbi: dbi })
     }
 
+    pub(crate) fn freelist_db() -> Database {
+        Database {
+            dbi: 0,
+        }
+    }
+
     /// Returns the underlying LMDB database handle.
     ///
     /// The caller **must** ensure that the handle is not used after the lifetime of the
