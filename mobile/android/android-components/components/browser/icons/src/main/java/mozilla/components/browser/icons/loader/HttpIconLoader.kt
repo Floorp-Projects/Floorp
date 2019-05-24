@@ -14,8 +14,10 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import mozilla.components.support.ktx.kotlin.toUri
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 private const val CONNECT_TIMEOUT = 2L // Seconds
@@ -27,6 +29,7 @@ private const val READ_TIMEOUT = 10L // Seconds
 class HttpIconLoader(
     private val httpClient: Client
 ) : IconLoader {
+    private val logger = Logger("HttpIconLoader")
     private val failureCache = FailureCache()
 
     override fun load(context: Context, request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
@@ -46,13 +49,18 @@ class HttpIconLoader(
             redirect = Request.Redirect.FOLLOW,
             useCaches = true)
 
-        val response = httpClient.fetch(downloadRequest)
+        val response = try {
+            httpClient.fetch(downloadRequest)
+        } catch (e: IOException) {
+            logger.debug("IOException while trying to download icon resource", e)
+            return IconLoader.Result.NoResult
+        }
 
         return if (response.isSuccess) {
             response.toIconLoaderResult()
         } else {
             failureCache.rememberFailure(resource.url)
-            return IconLoader.Result.NoResult
+            IconLoader.Result.NoResult
         }
     }
 

@@ -14,6 +14,7 @@ import mozilla.components.lib.fetch.okhttp.OkHttpClient
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
@@ -22,11 +23,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
+import java.io.IOException
 
 @RunWith(RobolectricTestRunner::class)
 class HttpIconLoaderTest {
@@ -176,5 +179,20 @@ class HttpIconLoaderTest {
 
         // Second load does not try to fetch again.
         verify(client, never()).fetch(any())
+    }
+
+    @Test
+    fun `Loader will return NoResult for IOExceptions happening during fetch`() {
+        val client: Client = mock()
+        doThrow(IOException("Mock")).`when`(client).fetch(any())
+
+        val loader = HttpIconLoader(client)
+
+        val resource = IconRequest.Resource(
+            url = "https://www.example.org",
+            type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
+        )
+
+        assertEquals(IconLoader.Result.NoResult, loader.load(testContext, mock(), resource))
     }
 }
