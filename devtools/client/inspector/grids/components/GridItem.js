@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { createRef, PureComponent } = require("devtools/client/shared/vendor/react");
+const { createElement, createRef, Fragment, PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -24,6 +24,7 @@ class GridItem extends PureComponent {
     return {
       getSwatchColorPickerTooltip: PropTypes.func.isRequired,
       grid: PropTypes.shape(Types.grid).isRequired,
+      grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
       onHideBoxModelHighlighter: PropTypes.func.isRequired,
       onSetGridOverlayColor: PropTypes.func.isRequired,
       onShowBoxModelHighlighterForNode: PropTypes.func.isRequired,
@@ -93,6 +94,34 @@ class GridItem extends PureComponent {
     nodeFront.scrollIntoView().catch(e => console.error(e));
   }
 
+  renderSubgrids() {
+    const { grid, grids } = this.props;
+
+    if (!grid.subgrids.length) {
+      return null;
+    }
+
+    const subgrids = grids.filter(g => grid.subgrids.includes(g.id));
+
+    return (
+      dom.ul({},
+        subgrids.map(g => {
+          return createElement(GridItem, {
+            key: g.id,
+            getSwatchColorPickerTooltip: this.props.getSwatchColorPickerTooltip,
+            grid: g,
+            grids,
+            onHideBoxModelHighlighter: this.props.onHideBoxModelHighlighter,
+            onSetGridOverlayColor: this.props.onSetGridOverlayColor,
+            onShowBoxModelHighlighterForNode: this.props.onShowBoxModelHighlighterForNode,
+            onToggleGridHighlighter: this.props.onToggleGridHighlighter,
+            setSelectedNode: this.props.setSelectedNode,
+          });
+        })
+      )
+    );
+  }
+
   render() {
     const {
       grid,
@@ -100,7 +129,7 @@ class GridItem extends PureComponent {
       onShowBoxModelHighlighterForNode,
     } = this.props;
 
-    return (
+    return createElement(Fragment, null,
       dom.li({},
         dom.label({},
           dom.input(
@@ -142,7 +171,8 @@ class GridItem extends PureComponent {
           },
           grid.color
         )
-      )
+      ),
+      this.renderSubgrids()
     );
   }
 }

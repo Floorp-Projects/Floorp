@@ -9,6 +9,7 @@
 #include "js/Modules.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include <stdint.h>  // uint32_t
 
@@ -24,6 +25,8 @@
 #include "vm/Runtime.h"                 // JSRuntime
 
 #include "vm/JSContext-inl.h"  // JSContext::{c,releaseC}heck
+
+using mozilla::Utf8Unit;
 
 using js::AssertHeapIsIdle;
 using js::ModuleObject;
@@ -80,16 +83,27 @@ JS_PUBLIC_API bool JS::FinishDynamicModuleImport(
                                        promise);
 }
 
-JS_PUBLIC_API bool JS::CompileModule(JSContext* cx,
-                                     const ReadOnlyCompileOptions& options,
-                                     SourceText<char16_t>& srcBuf,
-                                     MutableHandle<JSObject*> module) {
+template <typename Unit>
+static JSObject* CompileModuleHelper(JSContext* cx,
+                                     const JS::ReadOnlyCompileOptions& options,
+                                     JS::SourceText<Unit>& srcBuf) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  module.set(js::frontend::CompileModule(cx, options, srcBuf));
-  return !!module;
+  return js::frontend::CompileModule(cx, options, srcBuf);
+}
+
+JS_PUBLIC_API JSObject* JS::CompileModule(JSContext* cx,
+                                          const ReadOnlyCompileOptions& options,
+                                          SourceText<char16_t>& srcBuf) {
+  return CompileModuleHelper(cx, options, srcBuf);
+}
+
+JS_PUBLIC_API JSObject* JS::CompileModule(JSContext* cx,
+                                          const ReadOnlyCompileOptions& options,
+                                          SourceText<Utf8Unit>& srcBuf) {
+  return CompileModuleHelper(cx, options, srcBuf);
 }
 
 JS_PUBLIC_API void JS::SetModulePrivate(JSObject* module, const Value& value) {

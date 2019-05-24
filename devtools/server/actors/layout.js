@@ -5,6 +5,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
+const Services = require("Services");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const {
   flexboxSpec,
@@ -16,10 +17,14 @@ const { getStringifiableFragments } =
   require("devtools/server/actors/utils/css-grid-utils");
 
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "findGridParentContainerForNode", "devtools/server/actors/inspector/utils", true);
 loader.lazyRequireGetter(this, "getCSSStyleRules", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "isCssPropertyKnown", "devtools/server/actors/css-properties", true);
 loader.lazyRequireGetter(this, "parseDeclarations", "devtools/shared/css/parsing-utils", true);
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
+
+const SUBGRID_ENABLED =
+  Services.prefs.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
 
 /**
  * Set of actors the expose the CSS layout information to the devtools protocol clients.
@@ -274,7 +279,12 @@ const GridActor = ActorClassWithSpec(gridSpec, {
     this.gridFragments = getStringifiableFragments(gridFragments);
 
     // Record writing mode and text direction for use by the grid outline.
-    const { direction, writingMode } = CssLogic.getComputedStyle(this.containerEl);
+    const {
+      direction,
+      gridTemplateColumns,
+      gridTemplateRows,
+      writingMode,
+    } = CssLogic.getComputedStyle(this.containerEl);
 
     const form = {
       actor: this.actorID,
@@ -288,6 +298,11 @@ const GridActor = ActorClassWithSpec(gridSpec, {
     // cases.
     if (this.walker.hasNode(this.containerEl)) {
       form.containerNodeActorID = this.walker.getNode(this.containerEl).actorID;
+    }
+
+    if (SUBGRID_ENABLED) {
+      form.isSubgrid = gridTemplateRows === "subgrid" ||
+                       gridTemplateColumns === "subgrid";
     }
 
     return form;
@@ -455,36 +470,6 @@ function isNodeDead(node) {
   return !node || (node.rawNode && Cu.isDeadWrapper(node.rawNode));
 }
 
-/**
- * If the provided node is a grid item, then return its parent grid.
- *
- * @param  {DOMNode} node
- *         The node that is supposedly a grid item.
- * @return {DOMNode|null}
- *         The parent grid if found, null otherwise.
- */
-function findGridParentContainerForNode(node) {
-  try {
-    while ((node = node.parentNode)) {
-      const display = node.ownerGlobal.getComputedStyle(node).display;
-
-      if (display.includes("grid")) {
-        return node;
-      } else if (display === "contents") {
-        // Continue walking up the tree since the parent node is a content element.
-        continue;
-      }
-
-      break;
-    }
-  } catch (e) {
-    // Getting the parentNode can fail when the supplied node is in shadow DOM.
-  }
-
-  return null;
-}
-
-exports.findGridParentContainerForNode = findGridParentContainerForNode;
 exports.FlexboxActor = FlexboxActor;
 exports.FlexItemActor = FlexItemActor;
 exports.GridActor = GridActor;

@@ -1030,12 +1030,13 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
   // empty T.
   template <typename RootingContext>
   Rooted(const RootingContext& cx, CtorDispatcher, detail::FallbackOverload)
-    : Rooted(cx, SafelyInitialized<T>()) {}
+      : Rooted(cx, SafelyInitialized<T>()) {}
 
   // If T can be constructed with a cx, then define another constructor for it
   // that will be preferred.
   template <typename RootingContext,
-            typename = typename std::enable_if<std::is_constructible<T, RootingContext>::value>::type>
+            typename = typename std::enable_if<
+                std::is_constructible<T, RootingContext>::value>::type>
   Rooted(const RootingContext& cx, CtorDispatcher, detail::PreferredOverload)
       : Rooted(cx, T(cx)) {}
 

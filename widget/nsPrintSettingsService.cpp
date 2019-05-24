@@ -135,7 +135,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
 
   aSettings->GetHowToEnableFrameUI(&data->howToEnableFrameUI());
   aSettings->GetIsCancelled(&data->isCancelled());
-  aSettings->GetPrintFrameTypeUsage(&data->printFrameTypeUsage());
   aSettings->GetPrintFrameType(&data->printFrameType());
   aSettings->GetPrintSilent(&data->printSilent());
   aSettings->GetShrinkToFit(&data->shrinkToFit());
@@ -243,7 +242,6 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
 
   settings->SetHowToEnableFrameUI(data.howToEnableFrameUI());
   settings->SetIsCancelled(data.isCancelled());
-  settings->SetPrintFrameTypeUsage(data.printFrameTypeUsage());
   settings->SetPrintFrameType(data.printFrameType());
   settings->SetPrintSilent(data.printSilent());
   settings->SetShrinkToFit(data.shrinkToFit());

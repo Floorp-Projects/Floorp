@@ -8,6 +8,7 @@
 #define frontend_BytecodeCompiler_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "NamespaceImports.h"
 
@@ -120,14 +121,24 @@ MOZ_MUST_USE bool CompileLazyBinASTFunction(JSContext* cx,
 
 #endif  // JS_BUILD_BINAST
 
+// Compile a module of the given source using the given options.
 ModuleObject* CompileModule(JSContext* cx,
                             const JS::ReadOnlyCompileOptions& options,
                             JS::SourceText<char16_t>& srcBuf);
-
 ModuleObject* CompileModule(JSContext* cx,
                             const JS::ReadOnlyCompileOptions& options,
-                            JS::SourceText<char16_t>& srcBuf,
-                            ScriptSourceObject** sourceObjectOut);
+                            JS::SourceText<mozilla::Utf8Unit>& srcBuf);
+
+// Parse a module of the given source.  This is an internal API; if you want to
+// compile a module as a user, use CompileModule above.
+ModuleObject* ParseModule(JSContext* cx,
+                          const JS::ReadOnlyCompileOptions& options,
+                          JS::SourceText<char16_t>& srcBuf,
+                          ScriptSourceObject** sourceObjectOut);
+ModuleObject* ParseModule(JSContext* cx,
+                          const JS::ReadOnlyCompileOptions& options,
+                          JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+                          ScriptSourceObject** sourceObjectOut);
 
 //
 // Compile a single function. The source in srcBuf must match the ECMA-262

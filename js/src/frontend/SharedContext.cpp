@@ -163,8 +163,7 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       isSetter_(fun->isSetter()),
       isMethod_(fun->isMethod()),
       kind_(fun->kind()),
-      explicitName_(fun->explicitName())
-{
+      explicitName_(fun->explicitName()) {
   // Functions created at parse time may be set singleton after parsing and
   // baked into JIT code, so they must be allocated tenured. They are held by
   // the JSScript so cannot be collected during a minor GC anyway.
@@ -195,7 +194,8 @@ void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
   thisBinding_ = ThisBinding::Function;
 }
 
-void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing, JSFunction* fun,
+void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
+                                                JSFunction* fun,
                                                 FunctionSyntaxKind kind) {
   SharedContext* sc = enclosing->sc();
   useAsm = sc->isFunctionBox() && sc->asFunctionBox()->useAsmOrInsideUseAsm();

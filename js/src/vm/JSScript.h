@@ -84,7 +84,7 @@ class ModuleSharedContext;
 
 namespace gc {
 void SweepLazyScripts(GCParallelTask* task);
-} // namespace gc
+}  // namespace gc
 
 namespace detail {
 
