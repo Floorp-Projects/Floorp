@@ -20,21 +20,6 @@
 using namespace js;
 using namespace js::jit;
 
-static void FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap) {
-  uint32_t added = 0;
-  for (jsbytecode* pc = script->code(); pc < script->codeEnd();
-       pc += GetBytecodeLength(pc)) {
-    JSOp op = JSOp(*pc);
-    if (CodeSpec[op].format & JOF_TYPESET) {
-      bytecodeMap[added++] = script->pcToOffset(pc);
-      if (added == script->numBytecodeTypeSets()) {
-        break;
-      }
-    }
-  }
-  MOZ_ASSERT(added == script->numBytecodeTypeSets());
-}
-
 static size_t NumTypeSets(JSScript* script) {
   // We rely on |num| not overflowing below.
   static_assert(JSScript::MaxBytecodeTypeSets == UINT16_MAX,
@@ -58,8 +43,6 @@ JitScript::JitScript(JSScript* script, uint32_t typeSetOffset,
 
   uint8_t* base = reinterpret_cast<uint8_t*>(this);
   DefaultInitializeElements<StackTypeSet>(base + typeSetOffset, numTypeSets());
-
-  FillBytecodeTypeMap(script, bytecodeTypeMap());
 }
 
 bool JSScript::createJitScript(JSContext* cx) {
@@ -122,7 +105,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   auto prepareForDestruction = mozilla::MakeScopeExit(
       [&] { jitScript->prepareForDestruction(cx->zone()); });
 
-  if (!jitScript->initICEntries(cx, this)) {
+  if (!jitScript->initICEntriesAndBytecodeTypeMap(cx, this)) {
     return false;
   }
 
