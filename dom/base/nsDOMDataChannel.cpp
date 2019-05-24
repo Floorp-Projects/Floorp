@@ -142,9 +142,7 @@ mozilla::dom::Nullable<uint16_t> nsDOMDataChannel::GetMaxRetransmits() const {
   return mDataChannel->GetMaxRetransmits();
 }
 
-bool nsDOMDataChannel::Negotiated() const {
-  return mDataChannel->GetNegotiated();
-}
+bool nsDOMDataChannel::Negotiated() const { return mDataChannel->GetNegotiated(); }
 
 bool nsDOMDataChannel::Ordered() const { return mDataChannel->GetOrdered(); }
 

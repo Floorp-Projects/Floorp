@@ -162,7 +162,7 @@ struct ArrayOps<int64_t> {
   }
 
   static JS::Result<int64_t> convertValue(JSContext* cx, HandleValue v,
-                                          MutableHandleValue result) {
+                                           MutableHandleValue result) {
     BigInt* bi = ToBigInt(cx, v);
     if (!bi) {
       return cx->alreadyReportedError();
@@ -193,7 +193,7 @@ struct ArrayOps<uint64_t> {
   }
 
   static JS::Result<uint64_t> convertValue(JSContext* cx, HandleValue v,
-                                           MutableHandleValue result) {
+                                            MutableHandleValue result) {
     BigInt* bi = ToBigInt(cx, v);
     if (!bi) {
       return cx->alreadyReportedError();

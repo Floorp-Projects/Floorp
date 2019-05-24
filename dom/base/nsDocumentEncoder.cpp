@@ -617,20 +617,19 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
       return rv;
     }
     Element* originalElement = aOriginalNode.AsElement();
-    rv = mSerializer->AppendElementStart(node->AsElement(), originalElement,
-                                         aStr);
+    rv = mSerializer->AppendElementStart(node->AsElement(), originalElement, aStr);
     return rv;
   }
 
   switch (node->NodeType()) {
     case nsINode::TEXT_NODE: {
       rv = mSerializer->AppendText(static_cast<nsIContent*>(node), aStartOffset,
-                                   aEndOffset, aStr);
+                              aEndOffset, aStr);
       break;
     }
     case nsINode::CDATA_SECTION_NODE: {
       rv = mSerializer->AppendCDATASection(static_cast<nsIContent*>(node),
-                                           aStartOffset, aEndOffset, aStr);
+                                      aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsINode::PROCESSING_INSTRUCTION_NODE: {
@@ -641,7 +640,7 @@ nsresult nsDocumentEncoder::SerializeNodeStart(nsINode& aOriginalNode,
     }
     case nsINode::COMMENT_NODE: {
       rv = mSerializer->AppendComment(static_cast<Comment*>(node), aStartOffset,
-                                      aEndOffset, aStr);
+                                 aEndOffset, aStr);
       break;
     }
     case nsINode::DOCUMENT_TYPE_NODE: {

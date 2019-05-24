@@ -69,7 +69,7 @@ ProcessRuntime::ProcessRuntime(GeckoProcessType aProcessType)
     }
     nsAutoHandle curThreadImpToken(rawCurThreadImpToken);
 
-#  if defined(DEBUG)
+#if defined(DEBUG)
     // Ensure that our current token is still an impersonation token (ie, we
     // have not yet called RevertToSelf() on this thread).
     DWORD len;
@@ -77,7 +77,7 @@ ProcessRuntime::ProcessRuntime(GeckoProcessType aProcessType)
     MOZ_ASSERT(::GetTokenInformation(rawCurThreadImpToken, TokenType,
                                      &tokenType, sizeof(tokenType), &len) &&
                len == sizeof(tokenType) && tokenType == TokenImpersonation);
-#  endif  // defined(DEBUG)
+#endif  // defined(DEBUG)
 
     // Create an impersonation token based on the current thread's token
     HANDLE rawMtaThreadImpToken = nullptr;
@@ -89,26 +89,22 @@ ProcessRuntime::ProcessRuntime(GeckoProcessType aProcessType)
     nsAutoHandle mtaThreadImpToken(rawMtaThreadImpToken);
 
     SandboxTarget::Instance()->RegisterSandboxStartCallback([]() -> void {
-      EnsureMTA(
-          []() -> void {
-            // This is a security risk if it fails, so we release assert
-            MOZ_RELEASE_ASSERT(::RevertToSelf(),
-                               "mscom::ProcessRuntime RevertToSelf failed");
-          },
-          EnsureMTA::Option::ForceDispatch);
+      EnsureMTA([]() -> void {
+        // This is a security risk if it fails, so we release assert
+        MOZ_RELEASE_ASSERT(::RevertToSelf(),
+                           "mscom::ProcessRuntime RevertToSelf failed");
+      }, EnsureMTA::Option::ForceDispatch);
     });
 
     // Impersonate and initialize.
-    EnsureMTA(
-        [this, rawMtaThreadImpToken]() -> void {
-          if (!::SetThreadToken(nullptr, rawMtaThreadImpToken)) {
-            mInitResult = HRESULT_FROM_WIN32(::GetLastError());
-            return;
-          }
+    EnsureMTA([this, rawMtaThreadImpToken]() -> void {
+      if (!::SetThreadToken(nullptr, rawMtaThreadImpToken)) {
+        mInitResult = HRESULT_FROM_WIN32(::GetLastError());
+        return;
+      }
 
-          InitInsideApartment();
-        },
-        EnsureMTA::Option::ForceDispatch);
+      InitInsideApartment();
+    }, EnsureMTA::Option::ForceDispatch);
 
     return;
   }

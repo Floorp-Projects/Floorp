@@ -13,10 +13,9 @@ namespace mozilla {
 namespace dom {
 
 SerializedStackHolder::SerializedStackHolder()
-    : mHolder(StructuredCloneHolder::CloningSupported,
-              StructuredCloneHolder::TransferringNotSupported,
-              StructuredCloneHolder::StructuredCloneScope::
-                  SameProcessDifferentThread) {}
+  : mHolder(StructuredCloneHolder::CloningSupported,
+            StructuredCloneHolder::TransferringNotSupported,
+            StructuredCloneHolder::StructuredCloneScope::SameProcessDifferentThread) {}
 
 void SerializedStackHolder::WriteStack(JSContext* aCx,
                                        JS::HandleObject aStack) {
@@ -38,8 +37,8 @@ void SerializedStackHolder::SerializeWorkerStack(JSContext* aCx,
                                                  JS::HandleObject aStack) {
   MOZ_ASSERT(aWorkerPrivate->IsOnCurrentThread());
 
-  RefPtr<StrongWorkerRef> workerRef =
-      StrongWorkerRef::Create(aWorkerPrivate, "WorkerErrorReport");
+  RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+      aWorkerPrivate, "WorkerErrorReport");
   if (workerRef) {
     mWorkerRef = new ThreadSafeWorkerRef(workerRef);
   } else {
@@ -79,7 +78,8 @@ JSObject* SerializedStackHolder::ReadStack(JSContext* aCx) {
   }
 
   JS::RootedValue stackValue(aCx);
-  mHolder.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackValue, IgnoreErrors());
+  mHolder.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackValue,
+               IgnoreErrors());
   return stackValue.isObject() ? &stackValue.toObject() : nullptr;
 }
 
@@ -92,8 +92,8 @@ UniquePtr<SerializedStackHolder> GetCurrentStackForNetMonitor(JSContext* aCx) {
   return stack;
 }
 
-void NotifyNetworkMonitorAlternateStack(
-    nsISupports* aChannel, UniquePtr<SerializedStackHolder> aStackHolder) {
+void NotifyNetworkMonitorAlternateStack(nsISupports* aChannel,
+                                        UniquePtr<SerializedStackHolder> aStackHolder) {
   if (!aStackHolder) {
     return;
   }
@@ -121,8 +121,8 @@ void ConvertSerializedStackToJSON(UniquePtr<SerializedStackHolder> aStackHolder,
   }
 
   JS::RootedObject converted(cx);
-  converted = JS::ConvertSavedFrameToPlainObject(
-      cx, savedFrame, JS::SavedFrameSelfHosted::Exclude);
+  converted = JS::ConvertSavedFrameToPlainObject(cx, savedFrame,
+                                                 JS::SavedFrameSelfHosted::Exclude);
   if (!converted) {
     JS_ClearPendingException(cx);
     return;

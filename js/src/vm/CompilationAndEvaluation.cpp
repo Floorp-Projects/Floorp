@@ -563,9 +563,8 @@ JS_PUBLIC_API bool JS::Evaluate(JSContext* cx,
 
   size_t length = srcBuf.length();
   auto chars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(srcBuf.get(), length), &length,
-                                  js::MallocArena)
-          .get());
+      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(srcBuf.get(), length),
+                                  &length, js::MallocArena).get());
   if (!chars) {
     return false;
   }

@@ -1032,16 +1032,17 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
   if (existingEntry) {
     // aFontFace already has a user font entry, so we update its attributes
     // rather than creating a new one.
-    existingEntry->UpdateAttributes(
-        weight, stretch, italicStyle, featureSettings, variationSettings,
-        languageOverride, unicodeRanges, fontDisplay, rangeFlags);
+    existingEntry->UpdateAttributes(weight, stretch, italicStyle,
+                                    featureSettings, variationSettings,
+                                    languageOverride, unicodeRanges,
+                                    fontDisplay, rangeFlags);
     // If the family name has changed, remove the entry from its current family
     // and clear the mFamilyName field so it can be reset when added to a new
     // family.
     if (!existingEntry->mFamilyName.IsEmpty() &&
         existingEntry->mFamilyName != aFamilyName) {
       gfxUserFontFamily* family =
-          set->GetUserFontSet()->LookupFamily(existingEntry->mFamilyName);
+        set->GetUserFontSet()->LookupFamily(existingEntry->mFamilyName);
       if (family) {
         family->RemoveFontEntry(existingEntry);
       }

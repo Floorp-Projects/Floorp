@@ -129,8 +129,8 @@ class ThrottledEventQueue::Inner final : public nsISupports {
         mName(aName),
         mPriority(aPriority),
         mIsPaused(false) {
-    MOZ_ASSERT(mName, "Must pass a valid name!");
-  }
+          MOZ_ASSERT(mName, "Must pass a valid name!");
+        }
 
   ~Inner() {
 #ifdef DEBUG
@@ -254,7 +254,8 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
  public:
   static already_AddRefed<Inner> Create(nsISerialEventTarget* aBaseTarget,
-                                        const char* aName, uint32_t aPriority) {
+                                        const char* aName,
+                                        uint32_t aPriority) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(ClearOnShutdown_Internal::sCurrentShutdownPhase ==
                ShutdownPhase::NotInShutdown);

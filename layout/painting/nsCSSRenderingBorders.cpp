@@ -3753,8 +3753,7 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
     const auto& width = aStyleBorder.mBorderImageWidth.Get(s);
     switch (width.tag) {
       case StyleBorderImageSideWidth::Tag::LengthPercentage:
-        value =
-            std::max(0, width.AsLengthPercentage().Resolve(borderDimension));
+        value = std::max(0, width.AsLengthPercentage().Resolve(borderDimension));
         break;
       case StyleBorderImageSideWidth::Tag::Number:
         value = width.AsNumber() * borderWidths.Side(s);

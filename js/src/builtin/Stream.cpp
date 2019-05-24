@@ -3484,7 +3484,9 @@ class MOZ_RAII AutoClearUnderlyingSource {
     }
   }
 
-  void reset() { controller_ = nullptr; }
+  void reset() {
+    controller_ = nullptr;
+  }
 };
 
 /**

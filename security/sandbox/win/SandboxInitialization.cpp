@@ -48,19 +48,17 @@ static BOOL WINAPI patched_DuplicateHandle(
                               dwDesiredAccess, bInheritHandle, dwOptions);
 }
 
-typedef BOOL(WINAPI* ApiSetQueryApiSetPresence_func)(PCUNICODE_STRING,
-                                                     PBOOLEAN);
-static WindowsDllInterceptor::FuncHookType<ApiSetQueryApiSetPresence_func>
-    stub_ApiSetQueryApiSetPresence;
+typedef BOOL (WINAPI* ApiSetQueryApiSetPresence_func)(PCUNICODE_STRING, PBOOLEAN);
+static WindowsDllInterceptor::FuncHookType<ApiSetQueryApiSetPresence_func> stub_ApiSetQueryApiSetPresence;
 
 static const WCHAR gApiSetNtUserWindowStation[] =
-    L"ext-ms-win-ntuser-windowstation-l1-1-0";
+  L"ext-ms-win-ntuser-windowstation-l1-1-0";
 
 static BOOL WINAPI patched_ApiSetQueryApiSetPresence(
     PCUNICODE_STRING aNamespace, PBOOLEAN aPresent) {
-  if (aNamespace && aPresent &&
-      !wcsncmp(aNamespace->Buffer, gApiSetNtUserWindowStation,
-               aNamespace->Length / sizeof(WCHAR))) {
+  if (aNamespace && aPresent && !wcsncmp(aNamespace->Buffer,
+                                         gApiSetNtUserWindowStation,
+                                         aNamespace->Length / sizeof(WCHAR))) {
     *aPresent = FALSE;
     return TRUE;
   }
@@ -101,9 +99,10 @@ static void EnableApiQueryInterception() {
   }
 
   gApiQueryIntercept.Init(L"Api-ms-win-core-apiquery-l1-1-0.dll");
-  DebugOnly<bool> hookSetOk = stub_ApiSetQueryApiSetPresence.Set(
-      gApiQueryIntercept, "ApiSetQueryApiSetPresence",
-      &patched_ApiSetQueryApiSetPresence);
+  DebugOnly<bool> hookSetOk =
+    stub_ApiSetQueryApiSetPresence.Set(gApiQueryIntercept,
+                                       "ApiSetQueryApiSetPresence",
+                                       &patched_ApiSetQueryApiSetPresence);
   MOZ_ASSERT(hookSetOk);
 }
 

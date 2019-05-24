@@ -525,7 +525,7 @@ nsresult gfxDWriteFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
     fontlist::FontList* sharedFontList = pfl->SharedFontList();
     if (!IsUserFont() && mShmemFace) {
-      mShmemFace->SetCharacterMap(sharedFontList, charmap);  // async
+      mShmemFace->SetCharacterMap(sharedFontList, charmap); // async
       if (!TrySetShmemCharacterMap()) {
         // Temporarily retain charmap, until the shared version is
         // ready for use.

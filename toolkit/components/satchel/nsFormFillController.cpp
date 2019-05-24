@@ -299,8 +299,7 @@ nsFormFillController::MarkAsLoginManagerField(HTMLInputElement* aInput) {
   }
 
   if (!mLoginManagerAC) {
-    mLoginManagerAC =
-        do_GetService("@mozilla.org/login-manager/autocompletesearch;1");
+    mLoginManagerAC = do_GetService("@mozilla.org/login-manager/autocompletesearch;1");
   }
 
   return NS_OK;
@@ -709,8 +708,7 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
     // MarkAsLoginManagerField wasn't called because password manager is
     // disabled.
     if (!mLoginManagerAC) {
-      mLoginManagerAC =
-          do_GetService("@mozilla.org/login-manager/autocompletesearch;1");
+      mLoginManagerAC = do_GetService("@mozilla.org/login-manager/autocompletesearch;1");
     }
 
     if (NS_WARN_IF(!mLoginManagerAC)) {
@@ -720,8 +718,7 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
     // XXX aPreviousResult shouldn't ever be a historyResult type, since we're
     // not letting satchel manage the field?
     mLastListener = aListener;
-    rv = mLoginManagerAC->StartSearch(aSearchString, aPreviousResult,
-                                      mFocusedInput, this);
+    rv = mLoginManagerAC->StartSearch(aSearchString, aPreviousResult, mFocusedInput, this);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch: non-login field"));

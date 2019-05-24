@@ -517,4 +517,4 @@ void TabListener::RemoveListeners() {
   }
 }
 
-TabListener::~TabListener() { RemoveListeners(); }
+TabListener::~TabListener() { RemoveListeners();}

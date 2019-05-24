@@ -240,7 +240,7 @@ struct GridTemplateAreasValue final {
 }  // namespace mozilla
 
 enum nsCSSUnit : uint32_t {
-  eCSSUnit_Null = 0,  // (n/a) null unit, value is not specified
+  eCSSUnit_Null = 0,     // (n/a) null unit, value is not specified
 
   eCSSUnit_Integer = 70,     // (int) simple value
   eCSSUnit_Enumerated = 71,  // (int) value has enumerated meaning
