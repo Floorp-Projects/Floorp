@@ -196,7 +196,7 @@ void Zone::sweepWeakMaps() {
 
 void Zone::discardJitCode(FreeOp* fop,
                           ShouldDiscardBaselineCode discardBaselineCode,
-                          ShouldReleaseTypes releaseTypes) {
+                          ShouldDiscardJitScripts discardJitScripts) {
   if (!jitZone()) {
     return;
   }
@@ -205,7 +205,7 @@ void Zone::discardJitCode(FreeOp* fop,
     return;
   }
 
-  if (discardBaselineCode || releaseTypes) {
+  if (discardBaselineCode || discardJitScripts) {
 #ifdef DEBUG
     // Assert no JitScripts are marked as active.
     for (auto script = cellIter<JSScript>(); !script.done(); script.next()) {
@@ -251,7 +251,7 @@ void Zone::discardJitCode(FreeOp* fop,
     // Try to release the script's JitScript. This should happen after
     // releasing JIT code because we can't do this when the script still has
     // JIT code.
-    if (releaseTypes) {
+    if (discardJitScripts) {
       script->maybeReleaseJitScript();
     }
 
