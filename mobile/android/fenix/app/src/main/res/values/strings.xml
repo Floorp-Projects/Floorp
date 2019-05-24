@@ -152,7 +152,7 @@
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Sign out</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing">Syncing</string>
+    <string name="sync_syncing">Syncing…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Sync failed. Last success: %s</string>
     <!-- Label summary showing never synced -->
