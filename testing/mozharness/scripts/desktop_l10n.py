@@ -64,15 +64,6 @@ class DesktopSingleLocale(LocalesMixin, AutomationMixin,
          "dest": "en_us_installer_url",
          "type": "string",
          "help": "Specify the url of the en-us binary"}
-    ], [
-        ['--scm-level'], {  # Ignored on desktop for now: see Bug 1414678.
-         "action": "store",
-         "type": "int",
-         "dest": "scm_level",
-         "default": 1,
-         "help": "This sets the SCM level for the branch being built."
-                 " See https://www.mozilla.org/en-US/about/"
-                 "governance/policies/commit/access-policy/"}
     ]]
 
     def __init__(self, require_config_file=True):

@@ -125,7 +125,6 @@ $GECKO_PATH/mach python $GECKO_PATH/testing/${MOZHARNESS_SCRIPT} \
   $actions \
   $options \
   --log-level=debug \
-  --scm-level=$MOZ_SCM_LEVEL \
   --work-dir=$WORKSPACE/build \
   --branch=${MH_BRANCH} \
   --build-pool=${MH_BUILD_POOL}

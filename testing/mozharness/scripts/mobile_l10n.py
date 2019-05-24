@@ -50,15 +50,6 @@ class MobileSingleLocale(LocalesMixin, TooltoolMixin, AutomationMixin,
          "type": "string",
          "help": "Override the tags set for all repos"
          }
-    ], [
-        ['--scm-level'],
-        {"action": "store",
-         "type": "int",
-         "dest": "scm_level",
-         "default": 1,
-         "help": "This sets the SCM level for the branch being built."
-                 " See https://www.mozilla.org/en-US/about/"
-                 "governance/policies/commit/access-policy/"}
     ]]
 
     def __init__(self, require_config_file=True):
