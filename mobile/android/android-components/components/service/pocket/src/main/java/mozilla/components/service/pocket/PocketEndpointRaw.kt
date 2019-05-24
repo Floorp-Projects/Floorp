@@ -10,14 +10,16 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
+import mozilla.components.service.pocket.Arguments.assertIsNotBlank
 import mozilla.components.service.pocket.ext.fetchBodyOrNull
 
 /**
  * Make requests to the Pocket endpoint and returns the raw JSON data: this class is intended to be very dumb.
  *
  * @see [PocketEndpoint], which wraps this to make it more practical.
+ * @see [newInstance] to retrieve an instance.
  */
-internal class PocketEndpointRaw(
+class PocketEndpointRaw internal constructor(
     private val client: Client,
     private val urls: PocketURLs,
     private val userAgent: String
@@ -40,4 +42,27 @@ internal class PocketEndpointRaw(
         )
         return client.fetchBodyOrNull(request)
     }
+
+    companion object {
+
+        /**
+         * Returns a new instance of [PocketEndpointRaw].
+         *
+         * @param client the HTTP client to use for network requests.
+         * @param pocketApiKey the API key for Pocket network requests.
+         * @param userAgent the user agent for network requests.
+         *
+         * @throws IllegalArgumentException if the provided API key or user agent is deemed invalid.
+         */
+        fun newInstance(client: Client, pocketApiKey: String, userAgent: String): PocketEndpointRaw {
+            assertIsValidApiKey(pocketApiKey)
+            Arguments.assertIsValidUserAgent(userAgent)
+
+            return PocketEndpointRaw(client, PocketURLs(pocketApiKey), userAgent)
+        }
+    }
+}
+
+private fun assertIsValidApiKey(apiKey: String) {
+    assertIsNotBlank(apiKey, "API key")
 }

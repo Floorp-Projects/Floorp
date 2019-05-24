@@ -52,15 +52,8 @@ class PocketEndpoint internal constructor(
          * @throws IllegalArgumentException if the provided API key or user agent is deemed invalid.
          */
         fun newInstance(client: Client, pocketApiKey: String, userAgent: String): PocketEndpoint {
-            assertIsValidApiKey(pocketApiKey)
-            Arguments.assertIsValidUserAgent(userAgent)
-
-            val endpoint = PocketEndpointRaw(client, PocketURLs(pocketApiKey), userAgent)
-            return PocketEndpoint(endpoint, PocketJSONParser())
+            val rawEndpoint = PocketEndpointRaw.newInstance(client, pocketApiKey, userAgent)
+            return PocketEndpoint(rawEndpoint, PocketJSONParser())
         }
     }
-}
-
-private fun assertIsValidApiKey(apiKey: String) {
-    Arguments.assertIsNotBlank(apiKey, "API key")
 }

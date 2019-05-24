@@ -23,6 +23,9 @@ import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 
+private const val VALID_API_KEY = "apiKey"
+private const val VALID_USER_AGENT = "userAgent"
+
 private val TEST_URL = "https://mozilla.org".toUri()
 
 // From Firefox for Fire TV
@@ -112,5 +115,20 @@ class PocketEndpointRawTest {
         assertResponseIsClosed(client, successResponse) {
             endpoint.getGlobalVideoRecommendations()
         }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `WHEN newInstance is called with a blank API key THEN an exception is thrown`() {
+        PocketEndpointRaw.newInstance(client, " ", VALID_USER_AGENT)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `WHEN newInstance is called with a blank user agent THEN an exception is thrown`() {
+        PocketEndpoint.newInstance(client, VALID_API_KEY, " ")
+    }
+
+    @Test
+    fun `WHEN newInstance is called with valid args THEN no exception is thrown`() {
+        PocketEndpoint.newInstance(client, VALID_API_KEY, VALID_USER_AGENT)
     }
 }
