@@ -750,8 +750,10 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 #undef REPORT_DATA_STORE
 
 static const char* const WR_ROLLOUT_PREF = "gfx.webrender.all.qualified";
-static const char* const WR_ROLLOUT_PREF_DEFAULT =
+static const bool WR_ROLLOUT_PREF_DEFAULTVALUE = true;
+static const char* const WR_ROLLOUT_DEFAULT_PREF =
     "gfx.webrender.all.qualified.default";
+static const bool WR_ROLLOUT_DEFAULT_PREF_DEFAULTVALUE = false;
 static const char* const WR_ROLLOUT_PREF_OVERRIDE =
     "gfx.webrender.all.qualified.gfxPref-default-override";
 static const char* const WR_ROLLOUT_HW_QUALIFIED_OVERRIDE =
@@ -819,7 +821,7 @@ class WrRolloutPrefShutdownSaver : public nsIObserver {
 
     bool defaultValue =
         Preferences::GetBool(WR_ROLLOUT_PREF, false, PrefValueKind::Default);
-    Preferences::SetBool(WR_ROLLOUT_PREF_DEFAULT, defaultValue);
+    Preferences::SetBool(WR_ROLLOUT_DEFAULT_PREF, defaultValue);
   }
 };
 
@@ -2520,29 +2522,41 @@ static bool CalculateWrQualifiedPrefValue() {
     // Clear the mirror of the default value of the rollout pref on scope exit,
     // if we have one. This ensures the user doesn't mess with the pref.
     // If we need it again, we'll re-create it on shutdown.
-    Preferences::ClearUser(WR_ROLLOUT_PREF_DEFAULT);
+    Preferences::ClearUser(WR_ROLLOUT_DEFAULT_PREF);
   });
 
   if (!Preferences::HasUserValue(WR_ROLLOUT_PREF) &&
-      Preferences::HasUserValue(WR_ROLLOUT_PREF_DEFAULT)) {
+      Preferences::HasUserValue(WR_ROLLOUT_DEFAULT_PREF)) {
     // The user has not set a user pref, and we have a default value set by the
-    // shutdown observer. We should use that instead of the StaticPrefs's
-    // default, as if Normandy had a chance to set it before startup, that is
-    // the value StaticPrefs would return, rather than the default set by
-    // DECL_GFX_PREF.
-    return StaticPrefs::WebRenderAllQualifiedDefault();
+    // shutdown observer. Let's use this as it should be the value Normandy set
+    // before startup. WR_ROLLOUT_DEFAULT_PREF should only be set on shutdown by
+    // the shutdown observer.
+    // Normandy runs *during* startup, but *after* this code here runs (hence
+    // the need for the workaround).
+    // To have a value stored in the WR_ROLLOUT_DEFAULT_PREF pref here, during
+    // the previous run Normandy must have set a default value on the in-memory
+    // pref, and on shutdown we stored the default value in this
+    // WR_ROLLOUT_DEFAULT_PREF user pref. Then once the user restarts, we
+    // observe this pref. Normandy is the only way a default (not user) value
+    // can be set for this pref.
+    return Preferences::GetBool(WR_ROLLOUT_DEFAULT_PREF,
+                                WR_ROLLOUT_DEFAULT_PREF_DEFAULTVALUE);
   }
 
   // We don't have a user value for the rollout pref, and we don't have the
   // value of the rollout pref at last shutdown stored. So we should fallback
-  // to using whatever default is stored in the gfxPref. *But* if we're running
+  // to using the default. *But* if we're running
   // under the Marionette pref rollout work-around test, we may want to override
   // the default value expressed here, so we can test the "default disabled;
   // rollout pref enabled" case.
+  // Note that those preferences can't be defined in all.js nor
+  // StaticPrefsList.h as they would create the pref, leading SaveRolloutPref()
+  // above to abort early as the pref would have a valid type.
+  //  We also don't want those prefs to appear in about:config.
   if (Preferences::HasUserValue(WR_ROLLOUT_PREF_OVERRIDE)) {
     return Preferences::GetBool(WR_ROLLOUT_PREF_OVERRIDE);
   }
-  return StaticPrefs::WebRenderAllQualified();
+  return Preferences::GetBool(WR_ROLLOUT_PREF, WR_ROLLOUT_PREF_DEFAULTVALUE);
 }
 
 static FeatureState& WebRenderHardwareQualificationStatus(
