@@ -540,7 +540,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 emitSessionChanges()
             }
         }
-        requireComponents.core.sessionManager.register(observer)
+        requireComponents.core.sessionManager.register(observer, this)
         return observer
     }
 

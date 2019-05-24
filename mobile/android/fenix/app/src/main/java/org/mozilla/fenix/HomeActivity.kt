@@ -248,7 +248,7 @@ open class HomeActivity : AppCompatActivity() {
 
             override fun onSessionAdded(session: Session) {
                 super.onSessionAdded(session)
-                session.register(singleSessionObserver)
+                session.register(singleSessionObserver, this@HomeActivity)
             }
 
             override fun onSessionRemoved(session: Session) {
@@ -259,10 +259,10 @@ open class HomeActivity : AppCompatActivity() {
             override fun onSessionsRestored() {
                 super.onSessionsRestored()
                 components.core.sessionManager.sessions.forEach {
-                    it.register(singleSessionObserver)
+                    it.register(singleSessionObserver, this@HomeActivity)
                 }
             }
-        }.also { components.core.sessionManager.register(it) }
+        }.also { components.core.sessionManager.register(it, this) }
     }
 
     companion object {
