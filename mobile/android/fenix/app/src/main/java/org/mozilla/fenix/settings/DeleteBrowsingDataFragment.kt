@@ -133,16 +133,16 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     }
 
     private fun deleteSelected() {
-        val openTabs = view!!.open_tabs_item!!.isChecked
-        val browsingData = view!!.browsing_data_item!!.isChecked
-        val collections = view!!.collections_item!!.isChecked
+        val openTabsChecked = view!!.open_tabs_item!!.isChecked
+        val browsingDataChecked = view!!.browsing_data_item!!.isChecked
+        val collectionsChecked = view!!.collections_item!!.isChecked
 
         startDeletion()
         launch(Dispatchers.IO) {
             var jobs = mutableListOf<Deferred<Unit>>()
-            if (openTabs) jobs.add(deleteTabsAsync())
-            if (browsingData) jobs.add(deleteBrowsingDataAsync())
-            if (collections) jobs.add(deleteCollectionsAsync())
+            if (openTabsChecked) jobs.add(deleteTabsAsync())
+            if (browsingDataChecked) jobs.add(deleteBrowsingDataAsync())
+            if (collectionsChecked) jobs.add(deleteCollectionsAsync())
 
             jobs.awaitAll()
 

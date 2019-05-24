@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
 
@@ -47,6 +48,7 @@ class SwipeToDeleteCallback(
     ) {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
         val icon = ContextCompat.getDrawable(recyclerView.context, R.drawable.ic_delete)
+        icon?.setTint(R.attr.destructive.getColorFromAttr(recyclerView.context))
 
         val backgroundDrawable = when {
             viewHolder is TabInCollectionViewHolder && viewHolder.isLastTab -> {
