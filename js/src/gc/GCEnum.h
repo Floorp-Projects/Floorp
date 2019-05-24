@@ -13,7 +13,7 @@
 
 #include <stdint.h>
 
-#include "js/MemoryFunctions.h" // JS_FOR_EACH_PUBLIC_MEMORY_USE
+#include "js/MemoryFunctions.h"  // JS_FOR_EACH_PUBLIC_MEMORY_USE
 
 namespace js {
 namespace gc {
@@ -91,12 +91,12 @@ enum class ZealMode {
 
 } /* namespace gc */
 
-#define JS_FOR_EACH_INTERNAL_MEMORY_USE(_)      \
-  _(ArrayBufferContents)                        \
+#define JS_FOR_EACH_INTERNAL_MEMORY_USE(_) \
+  _(ArrayBufferContents)                   \
   _(StringContents)
 
-#define JS_FOR_EACH_MEMORY_USE(_)               \
-  JS_FOR_EACH_PUBLIC_MEMORY_USE(_)              \
+#define JS_FOR_EACH_MEMORY_USE(_)  \
+  JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
   JS_FOR_EACH_INTERNAL_MEMORY_USE(_)
 
 enum class MemoryUse : uint8_t {
