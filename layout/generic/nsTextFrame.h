@@ -11,7 +11,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/Text.h"
+#include "mozilla/dom/CharacterData.h"
 #include "nsFrame.h"
 #include "nsFrameSelection.h"
 #include "nsSplittableFrame.h"
@@ -156,13 +156,6 @@ class nsTextFrame : public nsFrame {
   nsresult GetFrameName(nsAString& aResult) const final;
   void ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const;
 #endif
-
-  // Returns this text frame's content's text fragment.
-  //
-  // Assertions in Init() ensure we only ever get a Text node as content.
-  const nsTextFragment* TextFragment() const {
-    return &mContent->AsText()->TextFragment();
-  }
 
   ContentOffsets CalcContentOffsetsFromFramePoint(const nsPoint& aPoint) final;
   ContentOffsets GetCharacterOffsetAtFramePoint(const nsPoint& aPoint);

@@ -340,8 +340,8 @@ template bool nsTextFrameUtils::IsSkippableCharacterForTransformText(
     char16_t aChar);
 
 uint32_t nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
-    Text* aText, const nsStyleText* aStyleText) {
-  const nsTextFragment* frag = &aText->TextFragment();
+    nsIContent* aContent, const nsStyleText* aStyleText) {
+  const nsTextFragment* frag = aContent->GetText();
   // This is an approximation so we don't really need anything
   // too fancy here.
   uint32_t len;
