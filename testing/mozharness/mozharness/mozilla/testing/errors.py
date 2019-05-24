@@ -124,6 +124,7 @@ TestPassed = [
 HarnessErrorList = [
     {'substr': 'TEST-UNEXPECTED', 'level': ERROR, },
     {'substr': 'PROCESS-CRASH', 'level': ERROR, },
+    {'substr': 'A content process crashed', 'level': ERROR, },
     {'regex': re.compile('''ERROR: (Address|Leak)Sanitizer'''), 'level': ERROR, },
     {'regex': re.compile('''thread '([^']+)' panicked'''), 'level': ERROR, },
     {'substr': 'pure virtual method called', 'level': ERROR, },
