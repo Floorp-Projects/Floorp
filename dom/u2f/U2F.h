@@ -98,11 +98,17 @@ class U2F final : public WebAuthnManagerBase, public nsWrapperCache {
                 const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
                 ErrorResult& aRv);
 
+  void GetRegister(JSContext* aCx, JS::MutableHandle<JSObject*> aRegisterFunc,
+                   ErrorResult& aRv);
+
   void Sign(const nsAString& aAppId, const nsAString& aChallenge,
             const Sequence<RegisteredKey>& aRegisteredKeys,
             U2FSignCallback& aCallback,
             const Optional<Nullable<int32_t>>& opt_aTimeoutSeconds,
             ErrorResult& aRv);
+
+  void GetSign(JSContext* aCx, JS::MutableHandle<JSObject*> aSignFunc,
+               ErrorResult& aRv);
 
   // WebAuthnManagerBase
 
