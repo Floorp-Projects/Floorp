@@ -1410,6 +1410,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceArrayExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ArrayExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Elements};
@@ -1417,9 +1418,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceArrayExpression(
 #endif  // defined(DEBUG)
 
   BINJS_MOZ_TRY_DECL(
-      elements,
-      parseListOfOptionalSpreadElementOrExpression(Context(
-          FieldContext(BinASTInterfaceAndField::ArrayExpression__Elements))));
+      elements, parseListOfOptionalSpreadElementOrExpression(fieldContext++));
 
   if (elements->empty()) {
     elements->setHasNonConstInitializer();
@@ -1459,6 +1458,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBlockScope(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssertedBlockScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::DeclaredNames,
@@ -1467,15 +1467,9 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBlockScope(
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Block;
 
-  MOZ_TRY(parseListOfAssertedDeclaredName(
-      scopeKind,
-      Context(FieldContext(
-          BinASTInterfaceAndField::AssertedBlockScope__DeclaredNames))));
+  MOZ_TRY(parseListOfAssertedDeclaredName(scopeKind, fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      hasDirectEval,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedBlockScope__HasDirectEval))));
+  BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool(fieldContext++));
   if (hasDirectEval) {
     pc_->sc()->setHasDirectEval();
     pc_->sc()->setBindingsAccessedDynamically();
@@ -1520,6 +1514,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundName(
     AssertedScopeKind scopeKind, const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssertedBoundName);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Name,
@@ -1529,13 +1524,9 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundName(
   const bool allowDuplicateName = false;
 
   RootedAtom name(cx_);
-  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(Context(FieldContext(
-                        BinASTInterfaceAndField::AssertedBoundName__Name))));
+  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      isCaptured,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedBoundName__IsCaptured))));
+  BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool(fieldContext++));
   ParseContext::Scope* scope;
   DeclarationKind declKind;
   MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
@@ -1576,6 +1567,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundNamesScope(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssertedBoundNamesScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::BoundNames,
@@ -1584,15 +1576,9 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundNamesScope(
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Catch;
 
-  MOZ_TRY(parseListOfAssertedBoundName(
-      scopeKind,
-      Context(FieldContext(
-          BinASTInterfaceAndField::AssertedBoundNamesScope__BoundNames))));
+  MOZ_TRY(parseListOfAssertedBoundName(scopeKind, fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      hasDirectEval,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedBoundNamesScope__HasDirectEval))));
+  BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool(fieldContext++));
   if (hasDirectEval) {
     pc_->sc()->setHasDirectEval();
     pc_->sc()->setBindingsAccessedDynamically();
@@ -1638,6 +1624,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(
     AssertedScopeKind scopeKind, const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssertedDeclaredName);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {BinASTField::Name, BinASTField::Kind,
@@ -1647,22 +1634,16 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(
   const bool allowDuplicateName = false;
 
   RootedAtom name(cx_);
-  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(Context(FieldContext(
-                        BinASTInterfaceAndField::AssertedDeclaredName__Name))));
+  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      kind_, parseAssertedDeclaredKind(Context(FieldContext(
-                 BinASTInterfaceAndField::AssertedDeclaredName__Kind))));
+  BINJS_MOZ_TRY_DECL(kind_, parseAssertedDeclaredKind(fieldContext++));
   if (kind_ == AssertedDeclaredKind::NonConstLexical) {
     return raiseError("Let is not supported in this preview release");
   }
   if (kind_ == AssertedDeclaredKind::ConstLexical) {
     return raiseError("Const is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      isCaptured,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedDeclaredName__IsCaptured))));
+  BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool(fieldContext++));
   ParseContext::Scope* scope;
   DeclarationKind declKind;
   MOZ_TRY(getDeclaredScope(scopeKind, kind_, scope, declKind));
@@ -1705,6 +1686,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedParameterScope(
     MutableHandle<GCVector<JSAtom*>> positionalParams, const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssertedParameterScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {BinASTField::ParamNames,
@@ -1715,22 +1697,15 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedParameterScope(
   const auto scopeKind = AssertedScopeKind::Parameter;
 
   MOZ_TRY(parseListOfAssertedMaybePositionalParameterName(
-      scopeKind, positionalParams,
-      Context(FieldContext(
-          BinASTInterfaceAndField::AssertedParameterScope__ParamNames))));
+      scopeKind, positionalParams, fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      hasDirectEval,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedParameterScope__HasDirectEval))));
+  BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool(fieldContext++));
   if (hasDirectEval) {
     pc_->sc()->setHasDirectEval();
     pc_->sc()->setBindingsAccessedDynamically();
   }
   BINJS_MOZ_TRY_DECL(isSimpleParameterList,
-                     tokenizer_->readBool(Context(FieldContext(
-                         BinASTInterfaceAndField::
-                             AssertedParameterScope__IsSimpleParameterList))));
+                     tokenizer_->readBool(fieldContext++));
   (void)isSimpleParameterList;
   if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
@@ -1748,6 +1723,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(
     MutableHandle<GCVector<JSAtom*>> positionalParams, const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssertedPositionalParameterName);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {BinASTField::Index, BinASTField::Name,
@@ -1756,16 +1732,10 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(
 #endif  // defined(DEBUG)
   bool allowDuplicateName = !pc_->sc()->strict();
 
-  BINJS_MOZ_TRY_DECL(
-      index,
-      tokenizer_->readUnsignedLong(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedPositionalParameterName__Index))));
+  BINJS_MOZ_TRY_DECL(index, tokenizer_->readUnsignedLong(fieldContext++));
 
   RootedAtom name(cx_);
-  MOZ_TRY_VAR(
-      name,
-      tokenizer_->readIdentifierName(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedPositionalParameterName__Name))));
+  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(fieldContext++));
   // `positionalParams` vector can be shorter than the actual
   // parameter length. Resize on demand.
   // (see also ListOfAssertedMaybePositionalParameterName)
@@ -1788,10 +1758,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(
         "index");
   }
   positionalParams.get()[index] = name;
-  BINJS_MOZ_TRY_DECL(isCaptured,
-                     tokenizer_->readBool(Context(FieldContext(
-                         BinASTInterfaceAndField::
-                             AssertedPositionalParameterName__IsCaptured))));
+  BINJS_MOZ_TRY_DECL(isCaptured, tokenizer_->readBool(fieldContext++));
   ParseContext::Scope* scope;
   DeclarationKind declKind;
   MOZ_TRY(getBoundScope(scopeKind, scope, declKind));
@@ -1832,6 +1799,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedScriptGlobalScope(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssertedScriptGlobalScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::DeclaredNames,
@@ -1840,15 +1808,9 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedScriptGlobalScope(
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Global;
 
-  MOZ_TRY(parseListOfAssertedDeclaredName(
-      scopeKind,
-      Context(FieldContext(
-          BinASTInterfaceAndField::AssertedScriptGlobalScope__DeclaredNames))));
+  MOZ_TRY(parseListOfAssertedDeclaredName(scopeKind, fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      hasDirectEval,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedScriptGlobalScope__HasDirectEval))));
+  BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool(fieldContext++));
   if (hasDirectEval) {
     pc_->sc()->setHasDirectEval();
     pc_->sc()->setBindingsAccessedDynamically();
@@ -1893,6 +1855,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedVarScope(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssertedVarScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::DeclaredNames,
@@ -1901,15 +1864,9 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedVarScope(
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Var;
 
-  MOZ_TRY(parseListOfAssertedDeclaredName(
-      scopeKind,
-      Context(FieldContext(
-          BinASTInterfaceAndField::AssertedVarScope__DeclaredNames))));
+  MOZ_TRY(parseListOfAssertedDeclaredName(scopeKind, fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      hasDirectEval,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::AssertedVarScope__HasDirectEval))));
+  BINJS_MOZ_TRY_DECL(hasDirectEval, tokenizer_->readBool(fieldContext++));
   if (hasDirectEval) {
     pc_->sc()->setHasDirectEval();
     pc_->sc()->setBindingsAccessedDynamically();
@@ -1929,6 +1886,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceAssignmentExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssignmentExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Binding,
@@ -1936,14 +1894,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceAssignmentExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      binding, parseAssignmentTarget(Context(FieldContext(
-                   BinASTInterfaceAndField::AssignmentExpression__Binding))));
+  BINJS_MOZ_TRY_DECL(binding, parseAssignmentTarget(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      expression,
-      parseExpression(Context(FieldContext(
-          BinASTInterfaceAndField::AssignmentExpression__Expression))));
+  BINJS_MOZ_TRY_DECL(expression, parseExpression(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newAssignment(ParseNodeKind::AssignExpr,
                                                 binding, expression));
@@ -1957,6 +1910,7 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::AssignmentTargetIdentifier);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Name};
@@ -1964,9 +1918,7 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(
 #endif  // defined(DEBUG)
 
   RootedAtom name(cx_);
-  MOZ_TRY_VAR(name,
-              tokenizer_->readIdentifierName(Context(FieldContext(
-                  BinASTInterfaceAndField::AssignmentTargetIdentifier__Name))));
+  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(fieldContext++));
 
   BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                pc_->innermostScope()->id()));
@@ -1989,6 +1941,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBinaryExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::BinaryExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -1996,17 +1949,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBinaryExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      operator_, parseBinaryOperator(Context(FieldContext(
-                     BinASTInterfaceAndField::BinaryExpression__Operator))));
+  BINJS_MOZ_TRY_DECL(operator_, parseBinaryOperator(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(left,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::BinaryExpression__Left))));
+  BINJS_MOZ_TRY_DECL(left, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(right,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::BinaryExpression__Right))));
+  BINJS_MOZ_TRY_DECL(right, parseExpression(fieldContext++));
 
   ParseNodeKind pnk;
   switch (operator_) {
@@ -2133,6 +2080,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingIdentifier(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::BindingIdentifier);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Name};
@@ -2140,8 +2088,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingIdentifier(
 #endif  // defined(DEBUG)
 
   RootedAtom name(cx_);
-  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(Context(FieldContext(
-                        BinASTInterfaceAndField::BindingIdentifier__Name))));
+  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
                                           tokenizer_->pos(start), cx_));
@@ -2186,6 +2133,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBlock(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::Block);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Scope,
@@ -2196,12 +2144,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBlock(
   ParseContext::Scope currentScope(cx_, pc_, usedNames_);
   BINJS_TRY(currentScope.init(pc_));
 
-  MOZ_TRY(parseAssertedBlockScope(
-      Context(FieldContext(BinASTInterfaceAndField::Block__Scope))));
+  MOZ_TRY(parseAssertedBlockScope(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(statements,
-                     parseListOfStatement(Context(FieldContext(
-                         BinASTInterfaceAndField::Block__Statements))));
+  BINJS_MOZ_TRY_DECL(statements, parseListOfStatement(fieldContext++));
 
   MOZ_TRY(checkClosedVars(currentScope));
   BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, pc_));
@@ -2215,14 +2160,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBreakStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::BreakStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Label};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   RootedAtom label(cx_);
-  MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(Context(FieldContext(
-                         BinASTInterfaceAndField::BreakStatement__Label))));
+  MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(fieldContext++));
 
   if (label) {
     if (!IsIdentifier(label)) {
@@ -2255,6 +2200,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::CallExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Callee,
@@ -2262,13 +2208,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(callee,
-                     parseExpressionOrSuper(Context(FieldContext(
-                         BinASTInterfaceAndField::CallExpression__Callee))));
+  BINJS_MOZ_TRY_DECL(callee, parseExpressionOrSuper(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(arguments,
-                     parseArguments(Context(FieldContext(
-                         BinASTInterfaceAndField::CallExpression__Arguments))));
+  BINJS_MOZ_TRY_DECL(arguments, parseArguments(fieldContext++));
 
   auto op = JSOP_CALL;
 
@@ -2333,6 +2275,7 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::CatchClause);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -2343,18 +2286,14 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
   ParseContext::Scope currentScope(cx_, pc_, usedNames_);
   BINJS_TRY(currentScope.init(pc_));
 
-  MOZ_TRY(parseAssertedBoundNamesScope(Context(
-      FieldContext(BinASTInterfaceAndField::CatchClause__BindingScope))));
+  MOZ_TRY(parseAssertedBoundNamesScope(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(binding,
-                     parseBinding(Context(FieldContext(
-                         BinASTInterfaceAndField::CatchClause__Binding))));
+  BINJS_MOZ_TRY_DECL(binding, parseBinding(fieldContext++));
   if (!currentScope.lookupDeclaredName(
           binding->template as<NameNode>().atom())) {
     return raiseError("Missing catch variable in scope");
   }
-  BINJS_MOZ_TRY_DECL(body, parseBlock(Context(FieldContext(
-                               BinASTInterfaceAndField::CatchClause__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseBlock(fieldContext++));
 
   MOZ_TRY(checkClosedVars(currentScope));
   BINJS_TRY_DECL(bindings, NewLexicalScopeData(cx_, currentScope, alloc_, pc_));
@@ -2386,6 +2325,7 @@ BinASTParser<Tok>::parseInterfaceCompoundAssignmentExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::CompoundAssignmentExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -2393,20 +2333,12 @@ BinASTParser<Tok>::parseInterfaceCompoundAssignmentExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      operator_,
-      parseCompoundAssignmentOperator(Context(FieldContext(
-          BinASTInterfaceAndField::CompoundAssignmentExpression__Operator))));
+  BINJS_MOZ_TRY_DECL(operator_,
+                     parseCompoundAssignmentOperator(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      binding,
-      parseSimpleAssignmentTarget(Context(FieldContext(
-          BinASTInterfaceAndField::CompoundAssignmentExpression__Binding))));
+  BINJS_MOZ_TRY_DECL(binding, parseSimpleAssignmentTarget(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      expression,
-      parseExpression(Context(FieldContext(
-          BinASTInterfaceAndField::CompoundAssignmentExpression__Expression))));
+  BINJS_MOZ_TRY_DECL(expression, parseExpression(fieldContext++));
 
   ParseNodeKind pnk;
   switch (operator_) {
@@ -2458,6 +2390,7 @@ BinASTParser<Tok>::parseInterfaceComputedMemberAssignmentTarget(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ComputedMemberAssignmentTarget);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Object,
@@ -2465,15 +2398,9 @@ BinASTParser<Tok>::parseInterfaceComputedMemberAssignmentTarget(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      object,
-      parseExpressionOrSuper(Context(FieldContext(
-          BinASTInterfaceAndField::ComputedMemberAssignmentTarget__Object))));
+  BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(expression,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::
-                             ComputedMemberAssignmentTarget__Expression))));
+  BINJS_MOZ_TRY_DECL(expression, parseExpression(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newPropertyByValue(object, expression,
                                                      tokenizer_->offset()));
@@ -2487,6 +2414,7 @@ BinASTParser<Tok>::parseInterfaceComputedMemberExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ComputedMemberExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Object,
@@ -2494,14 +2422,9 @@ BinASTParser<Tok>::parseInterfaceComputedMemberExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      object, parseExpressionOrSuper(Context(FieldContext(
-                  BinASTInterfaceAndField::ComputedMemberExpression__Object))));
+  BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      expression,
-      parseExpression(Context(FieldContext(
-          BinASTInterfaceAndField::ComputedMemberExpression__Expression))));
+  BINJS_MOZ_TRY_DECL(expression, parseExpression(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newPropertyByValue(object, expression,
                                                      tokenizer_->offset()));
@@ -2523,6 +2446,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceConditionalExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ConditionalExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -2530,19 +2454,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceConditionalExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      test, parseExpression(Context(FieldContext(
-                BinASTInterfaceAndField::ConditionalExpression__Test))));
+  BINJS_MOZ_TRY_DECL(test, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      consequent,
-      parseExpression(Context(FieldContext(
-          BinASTInterfaceAndField::ConditionalExpression__Consequent))));
+  BINJS_MOZ_TRY_DECL(consequent, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      alternate,
-      parseExpression(Context(FieldContext(
-          BinASTInterfaceAndField::ConditionalExpression__Alternate))));
+  BINJS_MOZ_TRY_DECL(alternate, parseExpression(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newConditional(test, consequent, alternate));
   return result;
@@ -2554,14 +2470,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceContinueStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ContinueStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Label};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   RootedAtom label(cx_);
-  MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(Context(FieldContext(
-                         BinASTInterfaceAndField::ContinueStatement__Label))));
+  MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(fieldContext++));
 
   if (label) {
     if (!IsIdentifier(label)) {
@@ -2594,6 +2510,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDataProperty(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::DataProperty);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Name,
@@ -2601,12 +2518,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDataProperty(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(name, parsePropertyName(Context(FieldContext(
-                               BinASTInterfaceAndField::DataProperty__Name))));
+  BINJS_MOZ_TRY_DECL(name, parsePropertyName(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(expression,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::DataProperty__Expression))));
+  BINJS_MOZ_TRY_DECL(expression, parseExpression(fieldContext++));
 
   if (!handler_.isUsableAsObjectPropertyName(name)) {
     return raiseError("DataProperty key kind");
@@ -2662,6 +2576,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDirective(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::Directive);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::RawValue};
@@ -2669,8 +2584,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDirective(
 #endif  // defined(DEBUG)
 
   RootedAtom rawValue(cx_);
-  MOZ_TRY_VAR(rawValue, tokenizer_->readAtom(Context(FieldContext(
-                            BinASTInterfaceAndField::Directive__RawValue))));
+  MOZ_TRY_VAR(rawValue, tokenizer_->readAtom(fieldContext++));
 
   TokenPos pos = tokenizer_->pos(start);
   BINJS_TRY_DECL(result, handler_.newStringLiteral(rawValue, pos));
@@ -2683,6 +2597,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDoWhileStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::DoWhileStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Test, BinASTField::Body};
@@ -2690,13 +2605,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDoWhileStatement(
 #endif  // defined(DEBUG)
   ParseContext::Statement stmt(pc_, StatementKind::DoLoop);
 
-  BINJS_MOZ_TRY_DECL(test,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::DoWhileStatement__Test))));
+  BINJS_MOZ_TRY_DECL(test, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(body,
-                     parseStatement(Context(FieldContext(
-                         BinASTInterfaceAndField::DoWhileStatement__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseStatement(fieldContext++));
 
   BINJS_TRY_DECL(
       result, handler_.newDoWhileStatement(body, test, tokenizer_->pos(start)));
@@ -2730,6 +2641,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::EagerFunctionDeclaration);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[6] = {
@@ -2739,33 +2651,20 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Statement;
 
-  BINJS_MOZ_TRY_DECL(
-      isAsync,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::EagerFunctionDeclaration__IsAsync))));
+  BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool(fieldContext++));
   if (isAsync) {
     return raiseError(
         "Async function is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      isGenerator,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::EagerFunctionDeclaration__IsGenerator))));
+  BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool(fieldContext++));
   if (isGenerator) {
     return raiseError("Generator is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      name, parseBindingIdentifier(Context(FieldContext(
-                BinASTInterfaceAndField::EagerFunctionDeclaration__Name))));
+  BINJS_MOZ_TRY_DECL(name, parseBindingIdentifier(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      length, tokenizer_->readUnsignedLong(Context(FieldContext(
-                  BinASTInterfaceAndField::EagerFunctionDeclaration__Length))));
+  BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      directives,
-      parseListOfDirective(Context(FieldContext(
-          BinASTInterfaceAndField::EagerFunctionDeclaration__Directives))));
+  BINJS_MOZ_TRY_DECL(directives, parseListOfDirective(fieldContext++));
 
   BINJS_MOZ_TRY_DECL(funbox,
                      buildFunctionBox(isGenerator ? GeneratorKind::Generator
@@ -2791,10 +2690,8 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
   BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
-  MOZ_TRY(parseFunctionOrMethodContents(
-      length, &params, &body,
-      Context(FieldContext(
-          BinASTInterfaceAndField::EagerFunctionDeclaration__Contents))));
+  MOZ_TRY(
+      parseFunctionOrMethodContents(length, &params, &body, fieldContext++));
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
@@ -2810,6 +2707,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::EagerFunctionExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[6] = {
@@ -2819,33 +2717,20 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Expression;
 
-  BINJS_MOZ_TRY_DECL(
-      isAsync,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::EagerFunctionExpression__IsAsync))));
+  BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool(fieldContext++));
   if (isAsync) {
     return raiseError(
         "Async function is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      isGenerator,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::EagerFunctionExpression__IsGenerator))));
+  BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool(fieldContext++));
   if (isGenerator) {
     return raiseError("Generator is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      name, parseOptionalBindingIdentifier(Context(FieldContext(
-                BinASTInterfaceAndField::EagerFunctionExpression__Name))));
+  BINJS_MOZ_TRY_DECL(name, parseOptionalBindingIdentifier(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      length, tokenizer_->readUnsignedLong(Context(FieldContext(
-                  BinASTInterfaceAndField::EagerFunctionExpression__Length))));
+  BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      directives,
-      parseListOfDirective(Context(FieldContext(
-          BinASTInterfaceAndField::EagerFunctionExpression__Directives))));
+  BINJS_MOZ_TRY_DECL(directives, parseListOfDirective(fieldContext++));
 
   BINJS_MOZ_TRY_DECL(funbox,
                      buildFunctionBox(isGenerator ? GeneratorKind::Generator
@@ -2871,10 +2756,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
   BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
-  MOZ_TRY(parseFunctionExpressionContents(
-      length, &params, &body,
-      Context(FieldContext(
-          BinASTInterfaceAndField::EagerFunctionExpression__Contents))));
+  MOZ_TRY(
+      parseFunctionExpressionContents(length, &params, &body, fieldContext++));
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
@@ -2890,6 +2773,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::EagerGetter);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -2902,12 +2786,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
   const auto accessorType = AccessorType::Getter;
   const uint32_t length = 0;
 
-  BINJS_MOZ_TRY_DECL(name, parsePropertyName(Context(FieldContext(
-                               BinASTInterfaceAndField::EagerGetter__Name))));
+  BINJS_MOZ_TRY_DECL(name, parsePropertyName(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(directives,
-                     parseListOfDirective(Context(FieldContext(
-                         BinASTInterfaceAndField::EagerGetter__Directives))));
+  BINJS_MOZ_TRY_DECL(directives, parseListOfDirective(fieldContext++));
 
   BINJS_MOZ_TRY_DECL(funbox,
                      buildFunctionBox(isGenerator ? GeneratorKind::Generator
@@ -2933,9 +2814,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
   BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
-  MOZ_TRY(parseGetterContents(
-      length, &params, &body,
-      Context(FieldContext(BinASTInterfaceAndField::EagerGetter__Contents))));
+  MOZ_TRY(parseGetterContents(length, &params, &body, fieldContext++));
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
@@ -2953,6 +2832,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::EagerMethod);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[6] = {
@@ -2963,29 +2843,20 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
   const auto syntax = FunctionSyntaxKind::Method;
   const auto accessorType = AccessorType::None;
 
-  BINJS_MOZ_TRY_DECL(isAsync,
-                     tokenizer_->readBool(Context(FieldContext(
-                         BinASTInterfaceAndField::EagerMethod__IsAsync))));
+  BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool(fieldContext++));
   if (isAsync) {
     return raiseError(
         "Async function is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(isGenerator,
-                     tokenizer_->readBool(Context(FieldContext(
-                         BinASTInterfaceAndField::EagerMethod__IsGenerator))));
+  BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool(fieldContext++));
   if (isGenerator) {
     return raiseError("Generator is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(name, parsePropertyName(Context(FieldContext(
-                               BinASTInterfaceAndField::EagerMethod__Name))));
+  BINJS_MOZ_TRY_DECL(name, parsePropertyName(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      length, tokenizer_->readUnsignedLong(Context(
-                  FieldContext(BinASTInterfaceAndField::EagerMethod__Length))));
+  BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(directives,
-                     parseListOfDirective(Context(FieldContext(
-                         BinASTInterfaceAndField::EagerMethod__Directives))));
+  BINJS_MOZ_TRY_DECL(directives, parseListOfDirective(fieldContext++));
 
   BINJS_MOZ_TRY_DECL(funbox,
                      buildFunctionBox(isGenerator ? GeneratorKind::Generator
@@ -3011,9 +2882,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
   BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
-  MOZ_TRY(parseFunctionOrMethodContents(
-      length, &params, &body,
-      Context(FieldContext(BinASTInterfaceAndField::EagerMethod__Contents))));
+  MOZ_TRY(
+      parseFunctionOrMethodContents(length, &params, &body, fieldContext++));
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
@@ -3031,6 +2901,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::EagerSetter);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[4] = {
@@ -3043,16 +2914,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
   const bool isAsync = false;
   const auto accessorType = AccessorType::Setter;
 
-  BINJS_MOZ_TRY_DECL(name, parsePropertyName(Context(FieldContext(
-                               BinASTInterfaceAndField::EagerSetter__Name))));
+  BINJS_MOZ_TRY_DECL(name, parsePropertyName(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      length, tokenizer_->readUnsignedLong(Context(
-                  FieldContext(BinASTInterfaceAndField::EagerSetter__Length))));
+  BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(directives,
-                     parseListOfDirective(Context(FieldContext(
-                         BinASTInterfaceAndField::EagerSetter__Directives))));
+  BINJS_MOZ_TRY_DECL(directives, parseListOfDirective(fieldContext++));
 
   BINJS_MOZ_TRY_DECL(funbox,
                      buildFunctionBox(isGenerator ? GeneratorKind::Generator
@@ -3078,9 +2944,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
   BINJS_TRY(lexicalScope.init(pc_));
   ListNode* params;
   ListNode* body;
-  MOZ_TRY(parseSetterContents(
-      length, &params, &body,
-      Context(FieldContext(BinASTInterfaceAndField::EagerSetter__Contents))));
+  MOZ_TRY(parseSetterContents(length, &params, &body, fieldContext++));
   MOZ_TRY(prependDirectivesToBody(body, directives));
   BINJS_TRY_DECL(lexicalScopeData,
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
@@ -3110,16 +2974,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceExpressionStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ExpressionStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      expression,
-      parseExpression(Context(FieldContext(
-          BinASTInterfaceAndField::ExpressionStatement__Expression))));
+  BINJS_MOZ_TRY_DECL(expression, parseExpression(fieldContext++));
 
   BINJS_TRY_DECL(result,
                  handler_.newExprStatement(expression, tokenizer_->offset()));
@@ -3132,6 +2994,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInOfBinding(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ForInOfBinding);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Kind,
@@ -3140,13 +3003,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInOfBinding(
 #endif  // defined(DEBUG)
   AutoVariableDeclarationKind kindGuard(this);
 
-  BINJS_MOZ_TRY_DECL(
-      kind_, parseVariableDeclarationKind(Context(
-                 FieldContext(BinASTInterfaceAndField::ForInOfBinding__Kind))));
+  BINJS_MOZ_TRY_DECL(kind_, parseVariableDeclarationKind(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(binding,
-                     parseBinding(Context(FieldContext(
-                         BinASTInterfaceAndField::ForInOfBinding__Binding))));
+  BINJS_MOZ_TRY_DECL(binding, parseBinding(fieldContext++));
 
   // Restored by `kindGuard`.
   variableDeclarationKind_ = kind_;
@@ -3174,6 +3033,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ForInStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {BinASTField::Left, BinASTField::Right,
@@ -3188,17 +3048,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInStatement(
   ParseContext::Scope scope(cx_, pc_, usedNames_);
   BINJS_TRY(scope.init(pc_));
 
-  BINJS_MOZ_TRY_DECL(
-      left, parseForInOfBindingOrAssignmentTarget(Context(
-                FieldContext(BinASTInterfaceAndField::ForInStatement__Left))));
+  BINJS_MOZ_TRY_DECL(left,
+                     parseForInOfBindingOrAssignmentTarget(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(right,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::ForInStatement__Right))));
+  BINJS_MOZ_TRY_DECL(right, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      body, parseStatement(Context(
-                FieldContext(BinASTInterfaceAndField::ForInStatement__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseStatement(fieldContext++));
 
   BINJS_TRY_DECL(forHead,
                  handler_.newForInOrOfHead(ParseNodeKind::ForIn, left, right,
@@ -3228,6 +3083,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ForStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[4] = {BinASTField::Init, BinASTField::Test,
@@ -3244,18 +3100,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForStatement(
   BINJS_TRY(scope.init(pc_));
 
   BINJS_MOZ_TRY_DECL(
-      init, parseOptionalVariableDeclarationOrExpression(Context(
-                FieldContext(BinASTInterfaceAndField::ForStatement__Init))));
+      init, parseOptionalVariableDeclarationOrExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(test, parseOptionalExpression(Context(FieldContext(
-                               BinASTInterfaceAndField::ForStatement__Test))));
+  BINJS_MOZ_TRY_DECL(test, parseOptionalExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(update,
-                     parseOptionalExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::ForStatement__Update))));
+  BINJS_MOZ_TRY_DECL(update, parseOptionalExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(body, parseStatement(Context(FieldContext(
-                               BinASTInterfaceAndField::ForStatement__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseStatement(fieldContext++));
 
   BINJS_TRY_DECL(
       forHead, handler_.newForHead(init, test, update, tokenizer_->pos(start)));
@@ -3301,6 +3152,7 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseInterfaceFormalParameters(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::FormalParameters);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Items,
@@ -3308,13 +3160,9 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseInterfaceFormalParameters(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(items,
-                     parseListOfParameter(Context(FieldContext(
-                         BinASTInterfaceAndField::FormalParameters__Items))));
+  BINJS_MOZ_TRY_DECL(items, parseListOfParameter(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(rest,
-                     parseOptionalBinding(Context(FieldContext(
-                         BinASTInterfaceAndField::FormalParameters__Rest))));
+  BINJS_MOZ_TRY_DECL(rest, parseOptionalBinding(fieldContext++));
 
   auto result = items;
   if (rest) {
@@ -3362,6 +3210,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::FunctionExpressionContents);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[6] = {BinASTField::IsFunctionNameCaptured,
@@ -3373,11 +3222,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      isFunctionNameCaptured,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::
-              FunctionExpressionContents__IsFunctionNameCaptured))));
+  BINJS_MOZ_TRY_DECL(isFunctionNameCaptured,
+                     tokenizer_->readBool(fieldContext++));
   // Per spec, isFunctionNameCaptured can be true for anonymous
   // function.  Check isFunctionNameCaptured only for named
   // function.
@@ -3385,30 +3231,18 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(
       isFunctionNameCaptured) {
     captureFunctionName();
   }
-  BINJS_MOZ_TRY_DECL(isThisCaptured,
-                     tokenizer_->readBool(Context(FieldContext(
-                         BinASTInterfaceAndField::
-                             FunctionExpressionContents__IsThisCaptured))));
+  BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool(fieldContext++));
   // TODO: Use this in BinASTParser::buildFunction.
   (void)isThisCaptured;
   Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
-  MOZ_TRY(parseAssertedParameterScope(
-      &positionalParams,
-      Context(FieldContext(BinASTInterfaceAndField::
-                               FunctionExpressionContents__ParameterScope))));
+  MOZ_TRY(parseAssertedParameterScope(&positionalParams, fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      params,
-      parseFormalParameters(Context(FieldContext(
-          BinASTInterfaceAndField::FunctionExpressionContents__Params))));
+  BINJS_MOZ_TRY_DECL(params, parseFormalParameters(fieldContext++));
   MOZ_TRY(checkFunctionLength(funLength));
   MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
-  MOZ_TRY(parseAssertedVarScope(Context(FieldContext(
-      BinASTInterfaceAndField::FunctionExpressionContents__BodyScope))));
+  MOZ_TRY(parseAssertedVarScope(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      body, parseFunctionBody(Context(FieldContext(
-                BinASTInterfaceAndField::FunctionExpressionContents__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseFunctionBody(fieldContext++));
 
   *paramsOut = params;
   *bodyOut = body;
@@ -3453,6 +3287,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionOrMethodContents(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::FunctionOrMethodContents);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[5] = {
@@ -3461,29 +3296,18 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionOrMethodContents(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      isThisCaptured,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::FunctionOrMethodContents__IsThisCaptured))));
+  BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool(fieldContext++));
   // TODO: Use this in BinASTParser::buildFunction.
   (void)isThisCaptured;
   Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
-  MOZ_TRY(parseAssertedParameterScope(
-      &positionalParams,
-      Context(FieldContext(
-          BinASTInterfaceAndField::FunctionOrMethodContents__ParameterScope))));
+  MOZ_TRY(parseAssertedParameterScope(&positionalParams, fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      params, parseFormalParameters(Context(FieldContext(
-                  BinASTInterfaceAndField::FunctionOrMethodContents__Params))));
+  BINJS_MOZ_TRY_DECL(params, parseFormalParameters(fieldContext++));
   MOZ_TRY(checkFunctionLength(funLength));
   MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
-  MOZ_TRY(parseAssertedVarScope(Context(FieldContext(
-      BinASTInterfaceAndField::FunctionOrMethodContents__BodyScope))));
+  MOZ_TRY(parseAssertedVarScope(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      body, parseFunctionBody(Context(FieldContext(
-                BinASTInterfaceAndField::FunctionOrMethodContents__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseFunctionBody(fieldContext++));
 
   *paramsOut = params;
   *bodyOut = body;
@@ -3527,6 +3351,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceGetterContents(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::GetterContents);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -3534,19 +3359,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceGetterContents(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      isThisCaptured,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::GetterContents__IsThisCaptured))));
+  BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool(fieldContext++));
   // TODO: Use this in BinASTParser::buildFunction.
   (void)isThisCaptured;
-  MOZ_TRY(parseAssertedVarScope(Context(
-      FieldContext(BinASTInterfaceAndField::GetterContents__BodyScope))));
+  MOZ_TRY(parseAssertedVarScope(fieldContext++));
 
   BINJS_TRY_DECL(params, handler_.newParamsBody(tokenizer_->pos(start)));
-  BINJS_MOZ_TRY_DECL(
-      body, parseFunctionBody(Context(
-                FieldContext(BinASTInterfaceAndField::GetterContents__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseFunctionBody(fieldContext++));
 
   *paramsOut = params;
   *bodyOut = body;
@@ -3584,6 +3403,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIdentifierExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::IdentifierExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Name};
@@ -3591,8 +3411,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIdentifierExpression(
 #endif  // defined(DEBUG)
 
   RootedAtom name(cx_);
-  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(Context(FieldContext(
-                        BinASTInterfaceAndField::IdentifierExpression__Name))));
+  MOZ_TRY_VAR(name, tokenizer_->readIdentifierName(fieldContext++));
 
   BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                pc_->innermostScope()->id()));
@@ -3607,6 +3426,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIfStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::IfStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -3614,16 +3434,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIfStatement(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(test, parseExpression(Context(FieldContext(
-                               BinASTInterfaceAndField::IfStatement__Test))));
+  BINJS_MOZ_TRY_DECL(test, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(consequent,
-                     parseStatement(Context(FieldContext(
-                         BinASTInterfaceAndField::IfStatement__Consequent))));
+  BINJS_MOZ_TRY_DECL(consequent, parseStatement(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(alternate,
-                     parseOptionalStatement(Context(FieldContext(
-                         BinASTInterfaceAndField::IfStatement__Alternate))));
+  BINJS_MOZ_TRY_DECL(alternate, parseOptionalStatement(fieldContext++));
 
   BINJS_TRY_DECL(result,
                  handler_.newIfStatement(start, test, consequent, alternate));
@@ -3636,6 +3451,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLabelledStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::LabelledStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Label,
@@ -3644,15 +3460,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLabelledStatement(
 #endif  // defined(DEBUG)
 
   RootedAtom label(cx_);
-  MOZ_TRY_VAR(label, tokenizer_->readAtom(Context(FieldContext(
-                         BinASTInterfaceAndField::LabelledStatement__Label))));
+  MOZ_TRY_VAR(label, tokenizer_->readAtom(fieldContext++));
   if (!IsIdentifier(label)) {
     return raiseError("Invalid identifier");
   }
   ParseContext::LabelStatement stmt(pc_, label);
-  BINJS_MOZ_TRY_DECL(body,
-                     parseStatement(Context(FieldContext(
-                         BinASTInterfaceAndField::LabelledStatement__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseStatement(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newLabeledStatement(label->asPropertyName(),
                                                       body, start));
@@ -3685,6 +3498,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::LazyFunctionDeclaration);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[7] = {
@@ -3695,38 +3509,23 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Statement;
 
-  BINJS_MOZ_TRY_DECL(
-      isAsync,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::LazyFunctionDeclaration__IsAsync))));
+  BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool(fieldContext++));
   if (isAsync) {
     return raiseError(
         "Async function is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      isGenerator,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::LazyFunctionDeclaration__IsGenerator))));
+  BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool(fieldContext++));
   if (isGenerator) {
     return raiseError("Generator is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      name, parseBindingIdentifier(Context(FieldContext(
-                BinASTInterfaceAndField::LazyFunctionDeclaration__Name))));
+  BINJS_MOZ_TRY_DECL(name, parseBindingIdentifier(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      length, tokenizer_->readUnsignedLong(Context(FieldContext(
-                  BinASTInterfaceAndField::LazyFunctionDeclaration__Length))));
+  BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      directives,
-      parseListOfDirective(Context(FieldContext(
-          BinASTInterfaceAndField::LazyFunctionDeclaration__Directives))));
+  BINJS_MOZ_TRY_DECL(directives, parseListOfDirective(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      contentsSkip,
-      tokenizer_->readSkippableSubTree(Context(FieldContext(
-          BinASTInterfaceAndField::LazyFunctionDeclaration__ContentsSkip))));
+  BINJS_MOZ_TRY_DECL(contentsSkip,
+                     tokenizer_->readSkippableSubTree(fieldContext++));
   // Don't parse the contents until we delazify.
 
   BINJS_MOZ_TRY_DECL(funbox,
@@ -3767,6 +3566,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::LazyFunctionExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[7] = {
@@ -3777,37 +3577,23 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Expression;
 
-  BINJS_MOZ_TRY_DECL(
-      isAsync, tokenizer_->readBool(Context(FieldContext(
-                   BinASTInterfaceAndField::LazyFunctionExpression__IsAsync))));
+  BINJS_MOZ_TRY_DECL(isAsync, tokenizer_->readBool(fieldContext++));
   if (isAsync) {
     return raiseError(
         "Async function is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      isGenerator,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::LazyFunctionExpression__IsGenerator))));
+  BINJS_MOZ_TRY_DECL(isGenerator, tokenizer_->readBool(fieldContext++));
   if (isGenerator) {
     return raiseError("Generator is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      name, parseOptionalBindingIdentifier(Context(FieldContext(
-                BinASTInterfaceAndField::LazyFunctionExpression__Name))));
+  BINJS_MOZ_TRY_DECL(name, parseOptionalBindingIdentifier(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      length, tokenizer_->readUnsignedLong(Context(FieldContext(
-                  BinASTInterfaceAndField::LazyFunctionExpression__Length))));
+  BINJS_MOZ_TRY_DECL(length, tokenizer_->readUnsignedLong(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      directives,
-      parseListOfDirective(Context(FieldContext(
-          BinASTInterfaceAndField::LazyFunctionExpression__Directives))));
+  BINJS_MOZ_TRY_DECL(directives, parseListOfDirective(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      contentsSkip,
-      tokenizer_->readSkippableSubTree(Context(FieldContext(
-          BinASTInterfaceAndField::LazyFunctionExpression__ContentsSkip))));
+  BINJS_MOZ_TRY_DECL(contentsSkip,
+                     tokenizer_->readSkippableSubTree(fieldContext++));
   // Don't parse the contents until we delazify.
 
   BINJS_MOZ_TRY_DECL(funbox,
@@ -3873,15 +3659,14 @@ BinASTParser<Tok>::parseInterfaceLiteralBooleanExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::LiteralBooleanExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Value};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      value, tokenizer_->readBool(Context(FieldContext(
-                 BinASTInterfaceAndField::LiteralBooleanExpression__Value))));
+  BINJS_MOZ_TRY_DECL(value, tokenizer_->readBool(fieldContext++));
 
   BINJS_TRY_DECL(result,
                  handler_.newBooleanLiteral(value, tokenizer_->pos(start)));
@@ -3917,15 +3702,14 @@ BinASTParser<Tok>::parseInterfaceLiteralNumericExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::LiteralNumericExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Value};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      value, tokenizer_->readDouble(Context(FieldContext(
-                 BinASTInterfaceAndField::LiteralNumericExpression__Value))));
+  BINJS_MOZ_TRY_DECL(value, tokenizer_->readDouble(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newNumber(value, DecimalPoint::HasDecimal,
                                             tokenizer_->pos(start)));
@@ -3938,6 +3722,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralPropertyName(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::LiteralPropertyName);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Value};
@@ -3945,9 +3730,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralPropertyName(
 #endif  // defined(DEBUG)
 
   RootedAtom value(cx_);
-  MOZ_TRY_VAR(value,
-              tokenizer_->readAtom(Context(FieldContext(
-                  BinASTInterfaceAndField::LiteralPropertyName__Value))));
+  MOZ_TRY_VAR(value, tokenizer_->readAtom(fieldContext++));
 
   ParseNode* result;
   uint32_t index;
@@ -3968,6 +3751,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::LiteralRegExpExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Pattern,
@@ -3976,13 +3760,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
 #endif  // defined(DEBUG)
 
   RootedAtom pattern(cx_);
-  MOZ_TRY_VAR(pattern,
-              tokenizer_->readAtom(Context(FieldContext(
-                  BinASTInterfaceAndField::LiteralRegExpExpression__Pattern))));
+  MOZ_TRY_VAR(pattern, tokenizer_->readAtom(fieldContext++));
   Chars flags(cx_);
-  MOZ_TRY(tokenizer_->readChars(
-      flags,
-      Context(FieldContext(BinASTInterfaceAndField::BreakStatement__Label))));
+  MOZ_TRY(tokenizer_->readChars(flags, fieldContext++));
 
   RegExpFlags reflags = RegExpFlag::NoFlags;
   for (auto c : flags) {
@@ -4016,6 +3796,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralStringExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::LiteralStringExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Value};
@@ -4023,9 +3804,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralStringExpression(
 #endif  // defined(DEBUG)
 
   RootedAtom value(cx_);
-  MOZ_TRY_VAR(value,
-              tokenizer_->readAtom(Context(FieldContext(
-                  BinASTInterfaceAndField::LiteralStringExpression__Value))));
+  MOZ_TRY_VAR(value, tokenizer_->readAtom(fieldContext++));
 
   BINJS_TRY_DECL(result,
                  handler_.newStringLiteral(value, tokenizer_->pos(start)));
@@ -4046,6 +3825,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceNewExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::NewExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Callee,
@@ -4053,13 +3833,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceNewExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(callee,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::NewExpression__Callee))));
+  BINJS_MOZ_TRY_DECL(callee, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(arguments,
-                     parseArguments(Context(FieldContext(
-                         BinASTInterfaceAndField::NewExpression__Arguments))));
+  BINJS_MOZ_TRY_DECL(arguments, parseArguments(fieldContext++));
 
   BINJS_TRY_DECL(result,
                  handler_.newNewExpression(tokenizer_->pos(start).begin, callee,
@@ -4099,15 +3875,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceObjectExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ObjectExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Properties};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      properties, parseListOfObjectProperty(Context(FieldContext(
-                      BinASTInterfaceAndField::ObjectExpression__Properties))));
+  BINJS_MOZ_TRY_DECL(properties, parseListOfObjectProperty(fieldContext++));
 
   auto result = properties;
   return result;
@@ -4119,6 +3894,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceReturnStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ReturnStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Expression};
@@ -4131,9 +3907,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceReturnStatement(
 
   pc_->functionBox()->usesReturn = true;
 
-  BINJS_MOZ_TRY_DECL(
-      expression, parseOptionalExpression(Context(FieldContext(
-                      BinASTInterfaceAndField::ReturnStatement__Expression))));
+  BINJS_MOZ_TRY_DECL(expression, parseOptionalExpression(fieldContext++));
 
   BINJS_TRY_DECL(
       result, handler_.newReturnStatement(expression, tokenizer_->pos(start)));
@@ -4146,6 +3920,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceScript(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::Script);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -4153,16 +3928,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceScript(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  MOZ_TRY(parseAssertedScriptGlobalScope(
-      Context(FieldContext(BinASTInterfaceAndField::Script__Scope))));
+  MOZ_TRY(parseAssertedScriptGlobalScope(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(directives,
-                     parseListOfDirective(Context(FieldContext(
-                         BinASTInterfaceAndField::Script__Directives))));
+  BINJS_MOZ_TRY_DECL(directives, parseListOfDirective(fieldContext++));
   forceStrictIfNecessary(pc_->sc(), directives);
-  BINJS_MOZ_TRY_DECL(statements,
-                     parseListOfStatement(Context(FieldContext(
-                         BinASTInterfaceAndField::Script__Statements))));
+  BINJS_MOZ_TRY_DECL(statements, parseListOfStatement(fieldContext++));
 
   MOZ_TRY(checkClosedVars(pc_->varScope()));
   MOZ_TRY(prependDirectivesToBody(/* body = */ statements, directives));
@@ -4208,6 +3978,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceSetterContents(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::SetterContents);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[5] = {
@@ -4216,30 +3987,19 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceSetterContents(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      isThisCaptured,
-      tokenizer_->readBool(Context(FieldContext(
-          BinASTInterfaceAndField::SetterContents__IsThisCaptured))));
+  BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool(fieldContext++));
   // TODO: Use this in BinASTParser::buildFunction.
   (void)isThisCaptured;
   Rooted<GCVector<JSAtom*>> positionalParams(cx_, GCVector<JSAtom*>(cx_));
-  MOZ_TRY(parseAssertedParameterScope(
-      &positionalParams,
-      Context(FieldContext(
-          BinASTInterfaceAndField::SetterContents__ParameterScope))));
+  MOZ_TRY(parseAssertedParameterScope(&positionalParams, fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(param,
-                     parseParameter(Context(FieldContext(
-                         BinASTInterfaceAndField::SetterContents__Param))));
+  BINJS_MOZ_TRY_DECL(param, parseParameter(fieldContext++));
   BINJS_TRY_DECL(params, handler_.newParamsBody(param->pn_pos));
   handler_.addList(params, param);
   MOZ_TRY(checkPositionalParameterIndices(positionalParams, params));
-  MOZ_TRY(parseAssertedVarScope(Context(
-      FieldContext(BinASTInterfaceAndField::SetterContents__BodyScope))));
+  MOZ_TRY(parseAssertedVarScope(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      body, parseFunctionBody(Context(
-                FieldContext(BinASTInterfaceAndField::SetterContents__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseFunctionBody(fieldContext++));
 
   *paramsOut = params;
   *bodyOut = body;
@@ -4253,15 +4013,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceShorthandProperty(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ShorthandProperty);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Name};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(name,
-                     parseIdentifierExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::ShorthandProperty__Name))));
+  BINJS_MOZ_TRY_DECL(name, parseIdentifierExpression(fieldContext++));
 
   MOZ_ASSERT(name->isKind(ParseNodeKind::Name));
   MOZ_ASSERT(!handler_.isUsableAsObjectPropertyName(name));
@@ -4289,6 +4048,7 @@ BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::StaticMemberAssignmentTarget);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Object,
@@ -4297,18 +4057,12 @@ BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(
 #endif  // defined(DEBUG)
   size_t nameStart;
 
-  BINJS_MOZ_TRY_DECL(
-      object,
-      parseExpressionOrSuper(Context(FieldContext(
-          BinASTInterfaceAndField::StaticMemberAssignmentTarget__Object))));
+  BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper(fieldContext++));
 
   RootedAtom property(cx_);
   {
     nameStart = tokenizer_->offset();
-    MOZ_TRY_VAR(
-        property,
-        tokenizer_->readPropertyKey(Context(FieldContext(
-            BinASTInterfaceAndField::StaticMemberAssignmentTarget__Property))));
+    MOZ_TRY_VAR(property, tokenizer_->readPropertyKey(fieldContext++));
   }
 
   BINJS_TRY_DECL(name, handler_.newPropertyName(property->asPropertyName(),
@@ -4323,6 +4077,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceStaticMemberExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::StaticMemberExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Object,
@@ -4331,17 +4086,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceStaticMemberExpression(
 #endif  // defined(DEBUG)
   size_t nameStart;
 
-  BINJS_MOZ_TRY_DECL(
-      object, parseExpressionOrSuper(Context(FieldContext(
-                  BinASTInterfaceAndField::StaticMemberExpression__Object))));
+  BINJS_MOZ_TRY_DECL(object, parseExpressionOrSuper(fieldContext++));
 
   RootedAtom property(cx_);
   {
     nameStart = tokenizer_->offset();
-    MOZ_TRY_VAR(
-        property,
-        tokenizer_->readPropertyKey(Context(FieldContext(
-            BinASTInterfaceAndField::StaticMemberExpression__Property))));
+    MOZ_TRY_VAR(property, tokenizer_->readPropertyKey(fieldContext++));
   }
 
   BINJS_TRY_DECL(name, handler_.newPropertyName(property->asPropertyName(),
@@ -4389,6 +4139,7 @@ JS::Result<CaseClause*> BinASTParser<Tok>::parseInterfaceSwitchCase(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::SwitchCase);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Test,
@@ -4396,12 +4147,9 @@ JS::Result<CaseClause*> BinASTParser<Tok>::parseInterfaceSwitchCase(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(test, parseExpression(Context(FieldContext(
-                               BinASTInterfaceAndField::SwitchCase__Test))));
+  BINJS_MOZ_TRY_DECL(test, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(consequent,
-                     parseListOfStatement(Context(FieldContext(
-                         BinASTInterfaceAndField::SwitchCase__Consequent))));
+  BINJS_MOZ_TRY_DECL(consequent, parseListOfStatement(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newCaseOrDefault(start, test, consequent));
   return result;
@@ -4437,15 +4185,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchDefault(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::SwitchDefault);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Consequent};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(consequent,
-                     parseListOfStatement(Context(FieldContext(
-                         BinASTInterfaceAndField::SwitchDefault__Consequent))));
+  BINJS_MOZ_TRY_DECL(consequent, parseListOfStatement(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newCaseOrDefault(start, nullptr, consequent));
   return result;
@@ -4457,6 +4204,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::SwitchStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Discriminant,
@@ -4464,14 +4212,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchStatement(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      discriminant,
-      parseExpression(Context(FieldContext(
-          BinASTInterfaceAndField::SwitchStatement__Discriminant))));
+  BINJS_MOZ_TRY_DECL(discriminant, parseExpression(fieldContext++));
   ParseContext::Statement stmt(pc_, StatementKind::Switch);
-  BINJS_MOZ_TRY_DECL(cases,
-                     parseListOfSwitchCase(Context(FieldContext(
-                         BinASTInterfaceAndField::SwitchStatement__Cases))));
+  BINJS_MOZ_TRY_DECL(cases, parseListOfSwitchCase(fieldContext++));
 
   BINJS_TRY_DECL(scope, handler_.newLexicalScope(nullptr, cases));
   BINJS_TRY_DECL(result, handler_.newSwitchStatement(start, discriminant, scope,
@@ -4486,6 +4229,7 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::SwitchStatementWithDefault);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[4] = {
@@ -4494,25 +4238,13 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      discriminant,
-      parseExpression(Context(FieldContext(
-          BinASTInterfaceAndField::SwitchStatementWithDefault__Discriminant))));
+  BINJS_MOZ_TRY_DECL(discriminant, parseExpression(fieldContext++));
   ParseContext::Statement stmt(pc_, StatementKind::Switch);
-  BINJS_MOZ_TRY_DECL(preDefaultCases,
-                     parseListOfSwitchCase(Context(FieldContext(
-                         BinASTInterfaceAndField::
-                             SwitchStatementWithDefault__PreDefaultCases))));
+  BINJS_MOZ_TRY_DECL(preDefaultCases, parseListOfSwitchCase(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      defaultCase,
-      parseSwitchDefault(Context(FieldContext(
-          BinASTInterfaceAndField::SwitchStatementWithDefault__DefaultCase))));
+  BINJS_MOZ_TRY_DECL(defaultCase, parseSwitchDefault(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(postDefaultCases,
-                     parseListOfSwitchCase(Context(FieldContext(
-                         BinASTInterfaceAndField::
-                             SwitchStatementWithDefault__PostDefaultCases))));
+  BINJS_MOZ_TRY_DECL(postDefaultCases, parseListOfSwitchCase(fieldContext++));
 
   // Concatenate `preDefaultCase`, `defaultCase`, `postDefaultCase`
   auto cases = preDefaultCases;
@@ -4569,15 +4301,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThrowStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::ThrowStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[1] = {BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      expression, parseExpression(Context(FieldContext(
-                      BinASTInterfaceAndField::ThrowStatement__Expression))));
+  BINJS_MOZ_TRY_DECL(expression, parseExpression(fieldContext++));
 
   BINJS_TRY_DECL(
       result, handler_.newThrowStatement(expression, tokenizer_->pos(start)));
@@ -4590,6 +4321,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryCatchStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::TryCatchStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Body,
@@ -4602,14 +4334,10 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryCatchStatement(
     ParseContext::Statement stmt(pc_, StatementKind::Try);
     ParseContext::Scope scope(cx_, pc_, usedNames_);
     BINJS_TRY(scope.init(pc_));
-    MOZ_TRY_VAR(body, parseBlock(Context(FieldContext(
-                          BinASTInterfaceAndField::TryCatchStatement__Body))));
+    MOZ_TRY_VAR(body, parseBlock(fieldContext++));
   }
 
-  BINJS_MOZ_TRY_DECL(
-      catchClause,
-      parseCatchClause(Context(FieldContext(
-          BinASTInterfaceAndField::TryCatchStatement__CatchClause))));
+  BINJS_MOZ_TRY_DECL(catchClause, parseCatchClause(fieldContext++));
 
   BINJS_TRY_DECL(result,
                  handler_.newTryStatement(start, body, catchClause,
@@ -4623,6 +4351,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryFinallyStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::TryFinallyStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -4635,24 +4364,17 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryFinallyStatement(
     ParseContext::Statement stmt(pc_, StatementKind::Try);
     ParseContext::Scope scope(cx_, pc_, usedNames_);
     BINJS_TRY(scope.init(pc_));
-    MOZ_TRY_VAR(body,
-                parseBlock(Context(FieldContext(
-                    BinASTInterfaceAndField::TryFinallyStatement__Body))));
+    MOZ_TRY_VAR(body, parseBlock(fieldContext++));
   }
 
-  BINJS_MOZ_TRY_DECL(
-      catchClause,
-      parseOptionalCatchClause(Context(FieldContext(
-          BinASTInterfaceAndField::TryFinallyStatement__CatchClause))));
+  BINJS_MOZ_TRY_DECL(catchClause, parseOptionalCatchClause(fieldContext++));
 
   ParseNode* finalizer;
   {
     ParseContext::Statement stmt(pc_, StatementKind::Finally);
     ParseContext::Scope scope(cx_, pc_, usedNames_);
     BINJS_TRY(scope.init(pc_));
-    MOZ_TRY_VAR(finalizer,
-                parseBlock(Context(FieldContext(
-                    BinASTInterfaceAndField::TryFinallyStatement__Finalizer))));
+    MOZ_TRY_VAR(finalizer, parseBlock(fieldContext++));
   }
 
   BINJS_TRY_DECL(result,
@@ -4666,6 +4388,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUnaryExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::UnaryExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Operator,
@@ -4673,13 +4396,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUnaryExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(operator_,
-                     parseUnaryOperator(Context(FieldContext(
-                         BinASTInterfaceAndField::UnaryExpression__Operator))));
+  BINJS_MOZ_TRY_DECL(operator_, parseUnaryOperator(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(operand,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::UnaryExpression__Operand))));
+  BINJS_MOZ_TRY_DECL(operand, parseExpression(fieldContext++));
 
   ParseNodeKind pnk;
   switch (operator_) {
@@ -4735,6 +4454,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUpdateExpression(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::UpdateExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[3] = {
@@ -4742,17 +4462,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUpdateExpression(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      isPrefix, tokenizer_->readBool(Context(FieldContext(
-                    BinASTInterfaceAndField::UpdateExpression__IsPrefix))));
+  BINJS_MOZ_TRY_DECL(isPrefix, tokenizer_->readBool(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      operator_, parseUpdateOperator(Context(FieldContext(
-                     BinASTInterfaceAndField::UpdateExpression__Operator))));
+  BINJS_MOZ_TRY_DECL(operator_, parseUpdateOperator(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(operand,
-                     parseSimpleAssignmentTarget(Context(FieldContext(
-                         BinASTInterfaceAndField::UpdateExpression__Operand))));
+  BINJS_MOZ_TRY_DECL(operand, parseSimpleAssignmentTarget(fieldContext++));
 
   ParseNodeKind pnk;
   switch (operator_) {
@@ -4775,6 +4489,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclaration(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::VariableDeclaration);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Kind,
@@ -4783,9 +4498,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclaration(
 #endif  // defined(DEBUG)
   AutoVariableDeclarationKind kindGuard(this);
 
-  BINJS_MOZ_TRY_DECL(kind_,
-                     parseVariableDeclarationKind(Context(FieldContext(
-                         BinASTInterfaceAndField::VariableDeclaration__Kind))));
+  BINJS_MOZ_TRY_DECL(kind_, parseVariableDeclarationKind(fieldContext++));
   // Restored by `kindGuard`.
   variableDeclarationKind_ = kind_;
   ParseNodeKind declarationListKind;
@@ -4798,12 +4511,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclaration(
     case VariableDeclarationKind::Const:
       return raiseError("Const is not supported in this preview release");
   }
-  BINJS_MOZ_TRY_DECL(
-      declarators,
-      parseListOfVariableDeclarator(
-          declarationListKind,
-          Context(FieldContext(
-              BinASTInterfaceAndField::VariableDeclaration__Declarators))));
+  BINJS_MOZ_TRY_DECL(declarators, parseListOfVariableDeclarator(
+                                      declarationListKind, fieldContext++));
 
   // By specification, the list may not be empty.
   if (declarators->empty()) {
@@ -4845,6 +4554,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclarator(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::VariableDeclarator);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Binding,
@@ -4852,13 +4562,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclarator(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(
-      binding, parseBinding(Context(FieldContext(
-                   BinASTInterfaceAndField::VariableDeclarator__Binding))));
+  BINJS_MOZ_TRY_DECL(binding, parseBinding(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(init,
-                     parseOptionalExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::VariableDeclarator__Init))));
+  BINJS_MOZ_TRY_DECL(init, parseOptionalExpression(fieldContext++));
 
   ParseNode* result;
   if (binding->isKind(ParseNodeKind::Name)) {
@@ -4894,6 +4600,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWhileStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::WhileStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Test, BinASTField::Body};
@@ -4901,13 +4608,9 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWhileStatement(
 #endif  // defined(DEBUG)
   ParseContext::Statement stmt(pc_, StatementKind::WhileLoop);
 
-  BINJS_MOZ_TRY_DECL(
-      test, parseExpression(Context(
-                FieldContext(BinASTInterfaceAndField::WhileStatement__Test))));
+  BINJS_MOZ_TRY_DECL(test, parseExpression(fieldContext++));
 
-  BINJS_MOZ_TRY_DECL(
-      body, parseStatement(Context(
-                FieldContext(BinASTInterfaceAndField::WhileStatement__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseStatement(fieldContext++));
 
   BINJS_TRY_DECL(result, handler_.newWhileStatement(start, test, body));
   return result;
@@ -4919,6 +4622,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWithStatement(
     const Context& context) {
   MOZ_ASSERT(kind == BinASTKind::WithStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
+  Context fieldContext = Context::firstField(kind);
 
 #if defined(DEBUG)
   const BinASTField expected_fields[2] = {BinASTField::Object,
@@ -4926,13 +4630,10 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWithStatement(
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
-  BINJS_MOZ_TRY_DECL(object,
-                     parseExpression(Context(FieldContext(
-                         BinASTInterfaceAndField::WithStatement__Object))));
+  BINJS_MOZ_TRY_DECL(object, parseExpression(fieldContext++));
 
   ParseContext::Statement stmt(pc_, StatementKind::With);
-  BINJS_MOZ_TRY_DECL(body, parseStatement(Context(FieldContext(
-                               BinASTInterfaceAndField::WithStatement__Body))));
+  BINJS_MOZ_TRY_DECL(body, parseStatement(fieldContext++));
 
   pc_->sc()->setBindingsAccessedDynamically();
   BINJS_TRY_DECL(result, handler_.newWithStatement(start, object, body));
@@ -5216,9 +4917,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseArguments(
   BINJS_TRY_DECL(result, handler_.newList(ParseNodeKind::Arguments,
                                           tokenizer_->pos(start)));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::Arguments)));
     BINJS_MOZ_TRY_DECL(item, parseSpreadElementOrExpression(childContext));
     handler_.addList(/* list = */ result, /* kid = */ item);
   }
@@ -5237,9 +4937,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseFunctionBody(
   MOZ_TRY(tokenizer_->enterList(length, context, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::FunctionBody)));
     BINJS_MOZ_TRY_DECL(item, parseStatement(childContext));
     handler_.addStatementToList(result, item);
   }
@@ -5259,10 +4958,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseListOfAssertedBoundName(
   (void)start;
   auto result = Ok();
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(
-        Context(ListContext(context.as<FieldContext>().position,
-                            BinASTList::ListOfAssertedBoundName)));
     MOZ_TRY(parseAssertedBoundName(scopeKind, childContext));
     // Nothing to do here.
   }
@@ -5282,10 +4979,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseListOfAssertedDeclaredName(
   (void)start;
   auto result = Ok();
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(
-        Context(ListContext(context.as<FieldContext>().position,
-                            BinASTList::ListOfAssertedDeclaredName)));
     MOZ_TRY(parseAssertedDeclaredName(scopeKind, childContext));
     // Nothing to do here.
   }
@@ -5315,10 +5010,8 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
   // We resize `positionalParams` vector on demand, to keep the vector
   // length match to the known maximum positional parameter index + 1.
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(
-        ListContext(context.as<FieldContext>().position,
-                    BinASTList::ListOfAssertedMaybePositionalParameterName)));
     MOZ_TRY(parseAssertedMaybePositionalParameterName(
         scopeKind, positionalParams, childContext));
     // Nothing to do here.
@@ -5338,9 +5031,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfDirective(
   MOZ_TRY(tokenizer_->enterList(length, context, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::ListOfDirective)));
     BINJS_MOZ_TRY_DECL(item, parseDirective(childContext));
     handler_.addStatementToList(result, item);
   }
@@ -5359,10 +5051,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfObjectProperty(
   MOZ_TRY(tokenizer_->enterList(length, context, guard));
   BINJS_TRY_DECL(result, handler_.newObjectLiteral(start));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(
-        Context(ListContext(context.as<FieldContext>().position,
-                            BinASTList::ListOfObjectProperty)));
     BINJS_MOZ_TRY_DECL(item, parseObjectProperty(childContext));
     if (!item->isConstant()) result->setHasNonConstInitializer();
     result->appendWithoutOrderAssumption(item);
@@ -5383,10 +5073,8 @@ BinASTParser<Tok>::parseListOfOptionalSpreadElementOrExpression(
   MOZ_TRY(tokenizer_->enterList(length, context, guard));
   BINJS_TRY_DECL(result, handler_.newArrayLiteral(start));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(
-        ListContext(context.as<FieldContext>().position,
-                    BinASTList::ListOfOptionalSpreadElementOrExpression)));
     BINJS_MOZ_TRY_DECL(item,
                        parseOptionalSpreadElementOrExpression(childContext));
     if (item) {
@@ -5410,9 +5098,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfParameter(
   MOZ_TRY(tokenizer_->enterList(length, context, guard));
   BINJS_TRY_DECL(result, handler_.newParamsBody(tokenizer_->pos(start)));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::ListOfParameter)));
     BINJS_MOZ_TRY_DECL(item, parseParameter(childContext));
     handler_.addList(/* list = */ result, /* kid = */ item);
   }
@@ -5431,9 +5118,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfStatement(
   MOZ_TRY(tokenizer_->enterList(length, context, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::ListOfStatement)));
     BINJS_MOZ_TRY_DECL(item, parseStatement(childContext));
     handler_.addStatementToList(result, item);
   }
@@ -5452,9 +5138,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfSwitchCase(
   MOZ_TRY(tokenizer_->enterList(length, context, guard));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(Context(ListContext(
-        context.as<FieldContext>().position, BinASTList::ListOfSwitchCase)));
     BINJS_MOZ_TRY_DECL(item, parseSwitchCase(childContext));
     handler_.addCaseStatementToList(result, item);
   }
@@ -5474,10 +5159,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfVariableDeclarator(
   BINJS_TRY_DECL(result, handler_.newDeclarationList(declarationListKind,
                                                      tokenizer_->pos(start)));
 
+  const Context childContext(context.arrayElement());
   for (uint32_t i = 0; i < length; ++i) {
-    const Context childContext(
-        Context(ListContext(context.as<FieldContext>().position,
-                            BinASTList::ListOfVariableDeclarator)));
     BINJS_MOZ_TRY_DECL(item, parseVariableDeclarator(childContext));
     result->appendWithoutOrderAssumption(item);
   }
