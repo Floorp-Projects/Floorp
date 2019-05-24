@@ -22,7 +22,7 @@ add_task(async _ => {
   // A cookie domain
   Services.cookies.add(".example.com", "/test", "foo", "bar",
     false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie2.SAMESITE_UNSET);
+    Ci.nsICookie2.SAMESITE_NONE);
 
   // Cleaning up.
   await ForgetAboutSite.removeDataFromDomain("example.com");
