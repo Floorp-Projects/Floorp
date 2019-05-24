@@ -213,15 +213,12 @@ void nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
                       &wrapperReflowInput, myWM, wrapperOffset, borderBoxSize,
                       0);
 
-    if (!aReflowInput.mStyleDisplay->IsContainLayout()) {
-      nsSize contentBoxSize =
-          LogicalSize(myWM, contentBoxISize, contentBoxBSize)
-              .GetPhysicalSize(myWM);
-      aDesiredSize.SetBlockStartAscent(
-          wrappersDesiredSize.BlockStartAscent() +
-          outerWrapperFrame->BStart(aReflowInput.GetWritingMode(),
-                                    contentBoxSize));
-    }  // else: we're layout-contained, and so we have no baseline.
+    nsSize contentBoxSize = LogicalSize(myWM, contentBoxISize, contentBoxBSize)
+                                .GetPhysicalSize(myWM);
+    aDesiredSize.SetBlockStartAscent(
+        wrappersDesiredSize.BlockStartAscent() +
+        outerWrapperFrame->BStart(aReflowInput.GetWritingMode(),
+                                  contentBoxSize));
   }
 
   LogicalSize logicalDesiredSize(myWM, borderBoxISize, borderBoxBSize);

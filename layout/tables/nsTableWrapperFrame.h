@@ -70,9 +70,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
   bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
                                  BaselineSharingGroup aBaselineGroup,
                                  nscoord* aBaseline) const override {
-    if (StyleDisplay()->IsContainLayout()) {
-      return false;
-    }
     auto innerTable = InnerTableFrame();
     nscoord offset;
     if (innerTable->GetNaturalBaselineBOffset(aWM, aBaselineGroup, &offset)) {
