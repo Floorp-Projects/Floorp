@@ -338,7 +338,8 @@ uint64_t HTMLTextFieldAccessible::NativeState() const {
     return state | states::SUPPORTS_AUTOCOMPLETION | states::HASPOPUP;
 
   // Ordinal XUL textboxes don't support autocomplete.
-  if (!BindingOrWidgetParent() && Preferences::GetBool("browser.formfill.enable")) {
+  if (!BindingOrWidgetParent() &&
+      Preferences::GetBool("browser.formfill.enable")) {
     // Check to see if autocompletion is allowed on this input. We don't expose
     // it for password fields even though the entire password can be remembered
     // for a page if the user asks it to be. However, the kind of autocomplete

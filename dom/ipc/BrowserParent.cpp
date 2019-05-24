@@ -137,9 +137,9 @@ using namespace mozilla::widget;
 using namespace mozilla::jsipc;
 using namespace mozilla::gfx;
 
-using mozilla::Unused;
 using mozilla::LazyLogModule;
 using mozilla::StaticAutoPtr;
+using mozilla::Unused;
 
 LazyLogModule gBrowserFocusLog("BrowserFocus");
 

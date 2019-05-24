@@ -16,7 +16,7 @@
 #include "MediaInfo.h"
 #include "VPXDecoder.h"
 #include "gfxPrefs.h"
-#include "nsIXULRuntime.h" // for BrowserTabsRemoteAutostart
+#include "nsIXULRuntime.h"  // for BrowserTabsRemoteAutostart
 #include "mozilla/CDMProxy.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/GpuDecoderModule.h"
@@ -345,8 +345,7 @@ void PDMFactory::CreatePDMs() {
     return;
   }
 
-  if (StaticPrefs::MediaRddProcessEnabled()
-      && BrowserTabsRemoteAutostart()) {
+  if (StaticPrefs::MediaRddProcessEnabled() && BrowserTabsRemoteAutostart()) {
     m = new RemoteDecoderModule;
     StartupPDM(m);
   }

@@ -75,8 +75,12 @@ class AltSvcMapping;
  * FRAMECHECK_STRICT - we also do not allow case 2) and 3) from
  *                     FRAMECHECK_BARELY.
  */
-enum FrameCheckLevel { FRAMECHECK_LAX, FRAMECHECK_BARELY,
-                       FRAMECHECK_STRICT_CHUNKED, FRAMECHECK_STRICT };
+enum FrameCheckLevel {
+  FRAMECHECK_LAX,
+  FRAMECHECK_BARELY,
+  FRAMECHECK_STRICT_CHUNKED,
+  FRAMECHECK_STRICT
+};
 
 //-----------------------------------------------------------------------------
 // nsHttpHandler - protocol handler for HTTP and HTTPS

@@ -65,9 +65,8 @@ void RestoreCheckpointAndResume(size_t aCheckpoint) {
   MOZ_RELEASE_ASSERT(IsReplaying());
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
-  MOZ_RELEASE_ASSERT(
-      aCheckpoint == gRewindInfo->mLastCheckpoint ||
-      aCheckpoint < gRewindInfo->mLastCheckpoint);
+  MOZ_RELEASE_ASSERT(aCheckpoint == gRewindInfo->mLastCheckpoint ||
+                     aCheckpoint < gRewindInfo->mLastCheckpoint);
 
   // Make sure we don't lose pending main thread callbacks due to rewinding.
   {
@@ -82,8 +81,7 @@ void RestoreCheckpointAndResume(size_t aCheckpoint) {
   {
     // Rewind heap memory to the target checkpoint, which must have been saved.
     AutoDisallowMemoryChanges disallow;
-    size_t newCheckpoint =
-        gRewindInfo->mSavedCheckpoints.back().mCheckpoint;
+    size_t newCheckpoint = gRewindInfo->mSavedCheckpoints.back().mCheckpoint;
     RestoreMemoryToLastSavedCheckpoint();
     while (aCheckpoint < newCheckpoint) {
       gRewindInfo->mSavedCheckpoints.back().ReleaseContents();
@@ -97,9 +95,8 @@ void RestoreCheckpointAndResume(size_t aCheckpoint) {
   FixupFreeRegionsAfterRewind();
 
   double end = CurrentTime();
-  PrintSpew("Restore #%d -> #%d %.2fs\n",
-            (int)gRewindInfo->mLastCheckpoint, (int)aCheckpoint,
-            (end - start) / 1000000.0);
+  PrintSpew("Restore #%d -> #%d %.2fs\n", (int)gRewindInfo->mLastCheckpoint,
+            (int)aCheckpoint, (end - start) / 1000000.0);
 
   // Finally, let threads restore themselves to their stacks at the checkpoint
   // we are rewinding to.

@@ -974,10 +974,14 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 
 static const char* StateToString(cubeb_state aState) {
   switch (aState) {
-    case CUBEB_STATE_STARTED: return "STARTED";
-    case CUBEB_STATE_STOPPED: return "STOPPED";
-    case CUBEB_STATE_DRAINED: return "DRAINED";
-    case CUBEB_STATE_ERROR: return "ERROR";
+    case CUBEB_STATE_STARTED:
+      return "STARTED";
+    case CUBEB_STATE_STOPPED:
+      return "STOPPED";
+    case CUBEB_STATE_DRAINED:
+      return "DRAINED";
+    case CUBEB_STATE_ERROR:
+      return "ERROR";
     default:
       MOZ_CRASH("Unexpected state!");
   }
@@ -985,7 +989,8 @@ static const char* StateToString(cubeb_state aState) {
 
 void AudioCallbackDriver::StateCallback(cubeb_state aState) {
   MOZ_ASSERT(!OnGraphThread());
-  LOG(LogLevel::Debug, ("AudioCallbackDriver State: %s", StateToString(aState)));
+  LOG(LogLevel::Debug,
+      ("AudioCallbackDriver State: %s", StateToString(aState)));
 
   // Clear the flag for the not running
   // states: stopped, drained, error.

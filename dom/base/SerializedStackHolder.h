@@ -59,8 +59,8 @@ UniquePtr<SerializedStackHolder> GetCurrentStackForNetMonitor(JSContext* aCx);
 // thread. This call is synchronous, and aChannel and aStackHolder will not be
 // used afterward. aChannel is an nsISupports object because this can be used
 // with either nsIChannel or nsIWebSocketChannel.
-void NotifyNetworkMonitorAlternateStack(nsISupports* aChannel,
-                                        UniquePtr<SerializedStackHolder> aStackHolder);
+void NotifyNetworkMonitorAlternateStack(
+    nsISupports* aChannel, UniquePtr<SerializedStackHolder> aStackHolder);
 
 // Read back the saved frame stack and store it in a string as JSON.
 // This must be called on the main thread.

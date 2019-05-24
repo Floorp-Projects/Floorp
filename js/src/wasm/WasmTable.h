@@ -41,9 +41,10 @@ STATIC_ASSERT_ANYREF_IS_JSOBJECT;
 typedef GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy> TableAnyRefVector;
 
 class Table : public ShareableBase<Table> {
-  using InstanceSet = JS::WeakCache<GCHashSet<
-      WeakHeapPtrWasmInstanceObject,
-      MovableCellHasher<WeakHeapPtrWasmInstanceObject>, SystemAllocPolicy>>;
+  using InstanceSet =
+      JS::WeakCache<GCHashSet<WeakHeapPtrWasmInstanceObject,
+                              MovableCellHasher<WeakHeapPtrWasmInstanceObject>,
+                              SystemAllocPolicy>>;
   using UniqueFuncRefArray = UniquePtr<FunctionTableElem[], JS::FreePolicy>;
 
   WeakHeapPtrWasmTableObject maybeObject_;

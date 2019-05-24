@@ -81,13 +81,11 @@ void TabGroup::EnsureThrottledEventQueues() {
   for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
     TaskCategory category = static_cast<TaskCategory>(i);
     if (category == TaskCategory::Worker) {
-      mEventTargets[i] =
-          ThrottledEventQueue::Create(mEventTargets[i],
-                                      "TabGroup worker queue");
+      mEventTargets[i] = ThrottledEventQueue::Create(mEventTargets[i],
+                                                     "TabGroup worker queue");
     } else if (category == TaskCategory::Timer) {
       mEventTargets[i] =
-          ThrottledEventQueue::Create(mEventTargets[i],
-                                      "TabGroup timer queue");
+          ThrottledEventQueue::Create(mEventTargets[i], "TabGroup timer queue");
     }
   }
 }

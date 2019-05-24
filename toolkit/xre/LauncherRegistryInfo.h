@@ -43,9 +43,9 @@ class LauncherRegistryInfo final {
   LauncherResult<EnabledState> IsEnabled();
   LauncherResult<bool> IsTelemetryEnabled();
   LauncherVoidResult ReflectTelemetryPrefToRegistry(const bool aEnable);
-  LauncherResult<ProcessType> Check(const ProcessType aDesiredType,
-                                    const CheckOption aOption =
-                                      CheckOption::Default);
+  LauncherResult<ProcessType> Check(
+      const ProcessType aDesiredType,
+      const CheckOption aOption = CheckOption::Default);
   LauncherVoidResult DisableDueToFailure();
 
  private:

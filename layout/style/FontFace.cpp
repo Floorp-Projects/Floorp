@@ -315,8 +315,7 @@ void FontFace::SetDisplay(const nsAString& aValue, ErrorResult& aRv) {
   }
 }
 
-void FontFace::DescriptorUpdated()
-{
+void FontFace::DescriptorUpdated() {
   // If we haven't yet initialized mUserFontEntry, no need to do anything here;
   // we'll respect the updated descriptor when the time comes to create it.
   if (!mUserFontEntry) {
@@ -326,7 +325,7 @@ void FontFace::DescriptorUpdated()
   // Behind the scenes, this will actually update the existing entry and return
   // it, rather than create a new one.
   RefPtr<gfxUserFontEntry> newEntry =
-    mFontFaceSet->FindOrCreateUserFontEntryFromFontFace(this);
+      mFontFaceSet->FindOrCreateUserFontEntryFromFontFace(this);
   SetUserFontEntry(newEntry);
 
   if (mInFontFaceSet) {

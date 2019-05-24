@@ -141,15 +141,13 @@ static void NotifySubdocumentInvalidation(
 }
 
 static void SetChildrenChangedRecursive(Layer* aLayer) {
-  ForEachNode<ForwardIterator>(
-      aLayer,
-      [](Layer* layer) {
-        ContainerLayer* container = layer->AsContainerLayer();
-        if (container) {
-          container->SetChildrenChanged(true);
-          container->SetInvalidCompositeRect(nullptr);
-        }
-      });
+  ForEachNode<ForwardIterator>(aLayer, [](Layer* layer) {
+    ContainerLayer* container = layer->AsContainerLayer();
+    if (container) {
+      container->SetChildrenChanged(true);
+      container->SetInvalidCompositeRect(nullptr);
+    }
+  });
 }
 
 struct LayerPropertiesBase : public LayerProperties {

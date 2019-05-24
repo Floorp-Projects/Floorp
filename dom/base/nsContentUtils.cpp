@@ -4180,10 +4180,9 @@ void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise) {
   RefPtr<Element> target = &aFrameElement;
   bool defaultAction = true;
   if (aCanRaise) {
-    DispatchEventOnlyToChrome(target->OwnerDoc(), target,
-                              NS_LITERAL_STRING("framefocusrequested"),
-                              CanBubble::eYes, Cancelable::eYes,
-                              &defaultAction);
+    DispatchEventOnlyToChrome(
+        target->OwnerDoc(), target, NS_LITERAL_STRING("framefocusrequested"),
+        CanBubble::eYes, Cancelable::eYes, &defaultAction);
   }
   if (!defaultAction) {
     return;

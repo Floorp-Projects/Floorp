@@ -104,7 +104,6 @@ struct CGResumeOffsetList {
   void finish(mozilla::Span<uint32_t> array);
 };
 
-
 static constexpr size_t MaxBytecodeLength = INT32_MAX;
 static constexpr size_t MaxSrcNotesLength = INT32_MAX;
 
