@@ -64,3 +64,66 @@ dictionary MozActorDestroyCallbacks {
   [ChromeOnly] MozActorDestroyCallback willDestroy;
   [ChromeOnly] MozActorDestroyCallback didDestroy;
 };
+
+/*
+ * Used by ChromeUtils.registerWindowActor() to register JS window actor.
+ */
+dictionary WindowActorOptions {
+  /**
+   * If this is set to `true`, allow this actor to be created for subframes,
+   * and not just toplevel window globals.
+   */
+  boolean allFrames = false;
+
+  /**
+   * If this is set to `true`, allow this actor to be created for window
+   * globals loaded in chrome browsing contexts, such as those used to load the
+   * tabbrowser.
+   */
+  boolean includeChrome = false;
+
+  /**
+   * An array of URL match patterns (as accepted by the MatchPattern
+   * class in MatchPattern.webidl) which restrict which pages the actor
+   * may be instantiated for. If this is defined, only documents URL which match
+   * are allowed to have the given actor created for them. Other
+   * documents will fail to have their actor constructed, returning nullptr.
+   **/
+  sequence<DOMString> matches;
+
+  /**
+   * Optional list of regular expressions for remoteTypes which are
+   * allowed to instantiate this actor. If not passed, all content
+   * processes are allowed to instantiate the actor.
+   **/
+  sequence<DOMString> remoteTypes;
+
+  /** This fields are used for configuring individual sides of the actor. */
+  WindowActorSidedOptions parent = null;
+  WindowActorChildOptions child = null;
+};
+
+dictionary WindowActorSidedOptions {
+  /** The module path which should be loaded for the actor on this side. */
+  ByteString moduleURI;
+};
+
+dictionary WindowActorChildOptions : WindowActorSidedOptions {
+  /**
+   * Events which this actor wants to be listening to. When these events fire,
+   * it will trigger actor creation, and then forward the event to the actor.
+   */
+  record<DOMString, AddEventListenerOptions> events;
+
+ /**
+  * Array of observer topics to listen to. A observer will be added for each
+  * topic in the list.
+  *
+  * Observers in the list much use the nsGlobalWindowInner object as their topic,
+  * and the events will only be dispatched to the corresponding window actor. If
+  * additional observer notifications are needed with different listening
+  * conditions, please file a bug in DOM requesting support for the subject
+  * required to be added to JS WindowActor objects.
+  **/
+  sequence<ByteString> observers;
+};
