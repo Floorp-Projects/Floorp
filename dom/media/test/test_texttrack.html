@@ -3,13 +3,16 @@
 <head>
   <title>Test for Bug 833386 - TextTrackList</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <video id="v">
 <script type="text/javascript">
 
-function runTest() {
+var enabledTrackElement = null;
+
+async function runTest() {
   var video = document.getElementById("v");
 
   isnot(video.textTracks, undefined, "HTMLMediaElement::TextTrack() property should be available.")
@@ -18,6 +21,10 @@ function runTest() {
   is(trackList.length, 0, "Length should be 0.");
 
   ok(typeof video.addTextTrack == "function", "HTMLMediaElement::AddTextTrack() function should be available.")
+
+  // Insert some tracks in an order that is not sorted, we will test if they
+  // are sorted later.
+  info(`- Add a track element with label 'third' -`);
   video.addTextTrack("subtitles", "third", "en-CA");
   is(trackList.length, 1, "Length should be 1.");
 
@@ -51,67 +58,83 @@ function runTest() {
     is(textTrack.mode, value, message);
   }
 
-  // Insert some tracks in an order that is not sorted, we will test if they
-  // are sorted later.
+  info(`- Add a track element with label 'first' -`);
   var trackOne = document.createElement("track");
   trackOne.label = "first";
   trackOne.src = "basic.vtt";
   trackOne.default = true;
   trackOne.id = "2";
+  // The automatic track selection would choose the first track element with
+  // `default` attribute, so this track would be enable later.
+  enabledTrackElement = trackOne;
   video.appendChild(trackOne);
 
+  info(`- Add a track element with label 'fourth' -`);
   video.addTextTrack("subtitles", "fourth", "en-CA");
 
+  info(`- Add a track element with label 'second' -`);
   var trackTwo = document.createElement("track");
   trackTwo.label = "second";
   trackTwo.src = "basic.vtt";
+  // Although this track has `default` attribute as well, it won't be enable by
+  // the automatic track selection because it's not the first default track in
+  // the media element's track list.
   trackTwo.default = true;
   video.appendChild(trackTwo);
 
-  video.src = "seek.webm";
-  video.preload = "metadata";
-
-  video.addEventListener("loadedmetadata", function run_tests() {
-    // Re-que run_tests() at the end of the event loop until the track
-    // element has loaded its data.
-    if (trackOne.readyState == 1 || trackTwo.readyState == 1) {
-      setTimeout(run_tests, 0);
-      return;
-    }
-    is(trackOne.readyState, 2, "First Track::ReadyState should be set to LOADED.");
-    is(trackTwo.readyState, 2, "Second Track::ReadyState should be set to LOADED.");
-
-    // We're testing two things here, firstly that tracks created from a track
-    // element have a default mode 'disabled' and tracks created with the
-    // 'addTextTrack' method have a default mode of 'hidden'.
-    // Secondly we're testing that the tracks are sorted properly.
-    // For the tracks to be sorted the first two tracks, added through a
-    // TrackElement, must occupy the first two indexes in their TrackElement
-    // tree order. The second two tracks, added through the 'addTextTrack'
-    // method, will occupy the last two indexes in the order that they were
-    // added in.
-    var trackData = [
-      { label: "first", mode: "showing", id: "2" },
-      { label: "second", mode: "disabled", id: "" },
-      { label: "third", mode: "hidden", id: "" },
-      { label: "fourth", mode: "hidden", id: "" }
-    ];
-    is(video.textTracks.length, trackData.length, "TextTracks length should be " + trackData.length);
-    for (var i = 0; i < trackData.length; i++) {
-      var track = video.textTracks[i];
-      isnot(track, null, "Video should have a text track at index " + i);
-      var info = trackData[i];
-      for (var key in info) {
-        is(track[key], info[key], "Track at index " + i + " should have a '" + key + "'' property " +
-                                  "with a value of '" + info[key] + "'.");
-      }
-    }
-    SimpleTest.finish();
-  });
+  startLoadingVideo();
+  await waitUntilEnableTrackLoaded();
+  checkTracksStatus();
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
 onload = runTest;
+
+/**
+ * The following are test helper functions.
+ */
+function startLoadingVideo() {
+  let video = document.getElementById("v");
+  video.src = "seek.webm";
+  video.preload = "metadata";
+}
+
+async function waitUntilEnableTrackLoaded() {
+  info(`wait until the enabled track finishes loading`);
+  await once(enabledTrackElement, "load");
+  is(enabledTrackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+}
+
+function checkTracksStatus() {
+  // We're testing two things here,
+  // (1) the tracks created from a track element have a default mode 'disabled'
+  // and tracks created from 'addTextTrack' method have a default
+  // mode of 'hidden'.
+  // (2) we're testing that the tracks are sorted properly. For the tracks to
+  // be sorted the first two tracks, added through a TrackElement, must occupy
+  // the first two indexes in their TrackElement tree order. The second two
+  // tracks, added through the 'addTextTrack' method, will occupy the last two
+  // indexes in the order that they were added in.
+  let trackData = [
+    { label: "first", mode: "showing", id: "2" },
+    { label: "second", mode: "disabled", id: "" },
+    { label: "third", mode: "hidden", id: "" },
+    { label: "fourth", mode: "hidden", id: "" }
+  ];
+  let video = document.getElementById("v");
+  is(video.textTracks.length, trackData.length,
+     `TextTracks length should be ${trackData.length}`);
+  for (let i = 0; i < trackData.length; i++) {
+    let track = video.textTracks[i];
+    isnot(track, null, `Video should have a text track at index ${i}`);
+    let info = trackData[i];
+    for (let key in info) {
+      is(track[key], info[key],
+         `Track at index ${i} should have a '${key}' property with a value of '${info[key]}'.`);
+    }
+  }
+}
 
 </script>
 </body>
