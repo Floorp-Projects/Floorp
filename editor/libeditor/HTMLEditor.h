@@ -268,6 +268,8 @@ class HTMLEditor final : public TextEditor,
   }
   bool IsObjectResizerEnabled() const { return mIsObjectResizingEnabled; }
 
+  Element* GetResizerTarget() const { return mResizedObject; }
+
   /**
    * Enable/disable inline table editor, e.g., adding new row or column,
    * removing existing row or column.
