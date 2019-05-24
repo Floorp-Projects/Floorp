@@ -184,7 +184,6 @@ async function doTest(aBrowser) {
       audioSource.setAttribute("type", "audio/ogg");
       audioTrack.setAttribute("src", trackURL);
       audioTrack.setAttribute("kind", "subtitles");
-      audioTrack.setAttribute("default", true);
 
       audio.appendChild(audioSource);
       audio.appendChild(audioTrack);
