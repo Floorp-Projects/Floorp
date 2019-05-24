@@ -80,7 +80,7 @@ function permission_observer(generator, now, type) {
 }
 
 permission_observer.prototype = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     Assert.equal(topic, "perm-changed");
 
     // "deleted" means a permission was deleted. aPermission is the deleted permission.
@@ -88,7 +88,7 @@ permission_observer.prototype = {
     // "changed" means a permission was altered. aPermission is the new permission.
     // "cleared" means the entire permission list was cleared. aPermission is null.
     if (data == "added") {
-      var perm = subject.QueryInterface(Ci.nsIPermission);
+      let perm = subject.QueryInterface(Ci.nsIPermission);
       this.adds++;
       switch (this.adds) {
         case 1:
@@ -114,7 +114,7 @@ permission_observer.prototype = {
       }
 
     } else if (data == "deleted") {
-      var perm = subject.QueryInterface(Ci.nsIPermission);
+      let perm = subject.QueryInterface(Ci.nsIPermission);
       this.deletes++;
       switch (this.deletes) {
         case 1:
@@ -138,4 +138,3 @@ permission_observer.prototype = {
     do_run_generator(this.generator);
   },
 };
-

@@ -111,7 +111,7 @@ function run_test() {
   }
 
   // This will force the permission-manager to reload the data.
-  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk", "");
+  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
 
   let earliestNow = Number(Date.now());
   // Initialize the permission manager service
