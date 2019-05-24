@@ -86,8 +86,12 @@ def make_beetmover_checksums_description(config, jobs):
             treeherder['symbol'] = 'BMcs({})'.format(dep_job.attributes.get('locale'))
             attributes['locale'] = dep_job.attributes.get('locale')
 
-        bucket_scope = get_beetmover_bucket_scope(config)
-        action_scope = get_beetmover_action_scope(config)
+        bucket_scope = get_beetmover_bucket_scope(
+            config, job_release_type=attributes.get('release-type')
+        )
+        action_scope = get_beetmover_action_scope(
+            config, job_release_type=attributes.get('release-type')
+        )
 
         task = {
             'label': label,
