@@ -108,6 +108,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
+    private var findBookmarkJob: Job? = null
     private lateinit var job: Job
 
     var customTabSessionId: String? = null
@@ -742,7 +743,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             override fun onUrlChanged(session: Session, url: String) {
                 super.onUrlChanged(session, url)
                 updateBookmarkState(session)
-
             }
         }
         getSessionById()?.register(observer)
@@ -769,7 +769,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     private fun updateBookmarkState(session: Session) {
-        launch {
+        if (findBookmarkJob?.isActive == true) findBookmarkJob?.cancel()
+        findBookmarkJob = launch {
             val found = findBookmarkedURL(session)
             launch(Main) {
                 getManagedEmitter<QuickActionChange>()
