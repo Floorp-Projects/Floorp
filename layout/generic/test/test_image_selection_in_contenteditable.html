@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1551185
+-->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1551185</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <style>
+      #editor:focus {
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1551185">Mozilla Bug 1551185</a>
+    <p id="display"></p>
+    <div id="editor"><img id="img1" src="blue-32x32.png"><img id="img2" src="blue-32x32.png"></div>
+    <div id="content" style="display: none"></div>
+    <pre id="test">
+      <script type="application/javascript">
+        SimpleTest.waitForExplicitFinish();
+        SimpleTest.waitForFocus(() => {
+          let selection = window.getSelection();
+          let selectionController =
+              SpecialPowers.wrap(window)
+                           .docShell
+                           .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                           .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
+                           .QueryInterface(SpecialPowers.Ci.nsISelectionController);
+          let editor = document.getElementById("editor");
+          let img1 = document.getElementById("img1");
+          let img2 = document.getElementById("img2");
+          // First, take snapshot without selection.
+          selection.removeAllRanges();
+          const kSnapshotWithoutSelection = snapshotWindow(window);
+          // Next, take snapshot of selected both images.
+          selection.setBaseAndExtent(editor, 0, editor, 2);
+          const kSnapshotBothImagesSelected = snapshotWindow(window);
+          // Next, take snapshot of selected the last image.
+          selection.setBaseAndExtent(editor, 1, editor, 2);
+          const kSnapshotLastImageSelected = snapshotWindow(window);
+
+          editor.contentEditable = true;
+          editor.focus();
+
+          document.execCommand("enableObjectResizing", false, false);
+          selection.collapse(editor, 2);
+          selectionController.characterMove(false, true);
+          // When object resizing is disabled, <img> elements should be rendered
+          // as selected if they are in selection ranges.
+          assertSnapshots(snapshotWindow(window), kSnapshotLastImageSelected, true, null,
+                          "Selects only the last image when object resizing is disabled", "");
+          selectionController.characterMove(false, true);
+          assertSnapshots(snapshotWindow(window), kSnapshotBothImagesSelected, true, null,
+                          "Selects both the images when object resizing is disabled", "");
+
+          document.execCommand("enableObjectResizing", false, true);
+          selection.collapse(editor, 2);
+          // When an <img> element is selected, it should become target of resizers.
+          // At this time, the image shouldn't be rendered as selected but there should
+          // be resizers.  I.e., shouldn't match with kSnapshotWithoutSelection nor
+          // kSnapshotLastImageSelected.
+          selectionController.characterMove(false, true);
+          assertSnapshots(snapshotWindow(window), kSnapshotLastImageSelected, false, null,
+                          "Selects only the last image when object resizing is enabled",
+                          "(compared with the last image selected snapshot)");
+          assertSnapshots(snapshotWindow(window), kSnapshotWithoutSelection, false, null,
+                          "Selects only the last image when object resizing is enabled",
+                          "(compared without no selection)");
+          // If not only one <img> element is selected, selected <img> elements should
+          // be rendered as selected normally.
+          selectionController.characterMove(false, true);
+          assertSnapshots(snapshotWindow(window), kSnapshotBothImagesSelected, true, null,
+                          "Selects both the images when object resizing is enabled");
+
+          SimpleTest.finish();
+        });
+      </script>
+    </pre>
+  </body>
+</html>
