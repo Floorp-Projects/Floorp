@@ -11,7 +11,6 @@
 #include "AsyncPanZoomController.h"
 #include "GeneratedJNIWrappers.h"
 #include "GenericFlingAnimation.h"
-#include "gfxPrefs.h"
 #include "OverscrollHandoffState.h"
 #include "SimpleVelocityTracker.h"
 #include "ViewConfiguration.h"

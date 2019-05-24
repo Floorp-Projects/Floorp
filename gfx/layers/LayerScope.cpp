@@ -21,7 +21,7 @@
 
 #include "gfxContext.h"
 #include "gfxUtils.h"
-#include "gfxPrefs.h"
+
 #include "nsIWidget.h"
 
 #include "GLContext.h"

@@ -39,8 +39,6 @@
 #include "nsIContentPolicy.h"
 #include "SVGObserverUtils.h"
 
-#include "gfxPrefs.h"
-
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"

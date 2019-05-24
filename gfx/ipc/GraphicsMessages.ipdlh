@@ -17,19 +17,6 @@ using mozilla::gfx::D3D11Checks::VideoFormatOptionSet from "mozilla/gfx/D3D11Che
 namespace mozilla {
 namespace gfx {
 
-union GfxPrefValue {
-  bool;
-  int32_t;
-  uint32_t;
-  float;
-  nsCString;
-};
-
-struct GfxPrefSetting {
-  int32_t index;
-  GfxPrefValue value;
-};
-
 struct D3D11DeviceStatus
 {
   bool isWARP;

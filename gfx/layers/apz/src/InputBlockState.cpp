@@ -9,7 +9,7 @@
 #include "APZUtils.h"
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "ScrollAnimationPhysics.h"  // for kScrollSeriesTimeoutMs
-#include "gfxPrefs.h"                // for gfxPrefs
+
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Telemetry.h"                // for Telemetry
 #include "mozilla/layers/IAPZCTreeManager.h"  // for AllowedTouchBehavior
