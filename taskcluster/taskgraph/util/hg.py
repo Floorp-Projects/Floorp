@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 import requests
 import subprocess
@@ -34,7 +34,11 @@ def find_hg_revision_push_info(repository, revision):
             )
         )
     pushid = pushes.keys()[0]
-    return {'pushdate': pushes[pushid]['date'], 'pushid': pushid}
+    return {
+        'pushdate': pushes[pushid]['date'],
+        'pushid': pushid,
+        'user': pushes[pushid]['user'],
+    }
 
 
 def get_hg_revision_branch(root, revision):
