@@ -18,7 +18,7 @@ async function checkInstallConfirmation(...names) {
   let notificationCount = 0;
   let observer = {
     observe(aSubject, aTopic, aData) {
-      var installInfo = aSubject.wrappedJSObject;
+      let installInfo = aSubject.wrappedJSObject;
       isnot(installInfo.browser, null, "Notification should have non-null browser");
 
       is(installInfo.installs.length, 1, "Got one AddonInstall instance as expected");
@@ -53,90 +53,111 @@ async function checkInstallConfirmation(...names) {
 
   is(notificationCount, names.length, `Saw ${names.length} addon-install-started notification`);
   Services.obs.removeObserver(observer, "addon-install-started");
-
-  executeSoon(run_next_test);
 }
 
-async function test() {
-  waitForExplicitFinish();
-
-  let aWindow = await open_manager("addons://list/extension");
-  gManagerWindow = aWindow;
-  run_next_test();
-}
-
-async function end_test() {
-  await close_manager(gManagerWindow);
-  finish();
+function getViewContainer(gManagerWindow) {
+  if (gManagerWindow.useHtmlViews) {
+    return gManagerWindow.document.getElementById("category-box");
+  }
+  return gManagerWindow.document.getElementById("view-port");
 }
 
 // Simulates dropping a URL onto the manager
-add_test(function test_drop_url() {
-  var url = TESTROOT + "addons/browser_dragdrop1.xpi";
-
-  checkInstallConfirmation("Drag Drop test 1");
-
-  var viewContainer = gManagerWindow.document.getElementById("view-port");
-  var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-               [[{type: "text/x-moz-url", data: url}]],
-               "copy", gManagerWindow);
+add_task(async function test_drop_url() {
+  let url = TESTROOT + "addons/browser_dragdrop1.xpi";
+  gManagerWindow = await open_manager("addons://list/extension");
+  let promise = checkInstallConfirmation("Drag Drop test 1");
+  let viewContainer = getViewContainer(gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
+                                         [[{type: "text/x-moz-url", data: url}]],
+                                         "copy", gManagerWindow);
   is(effect, "copy", "Drag should be accepted");
+  await promise;
+  await close_manager(gManagerWindow);
 });
 
 // Simulates dropping a file onto the manager
-add_test(function test_drop_file() {
-  var fileurl = get_addon_file_url("browser_dragdrop1.xpi");
-
-  checkInstallConfirmation("Drag Drop test 1");
-
-  var viewContainer = gManagerWindow.document.getElementById("view-port");
-  var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-               [[{type: "application/x-moz-file", data: fileurl.file}]],
-               "copy", gManagerWindow);
+add_task(async function test_drop_file() {
+  let fileurl = get_addon_file_url("browser_dragdrop1.xpi");
+  gManagerWindow = await open_manager("addons://list/extension");
+  await wait_for_view_load(gManagerWindow);
+  let promise = checkInstallConfirmation("Drag Drop test 1");
+  let viewContainer = getViewContainer(gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
+                                         [[{type: "application/x-moz-file", data: fileurl.file}]],
+                                         "copy", gManagerWindow);
   is(effect, "copy", "Drag should be accepted");
+  await promise;
+  await close_manager(gManagerWindow);
 });
 
 // Simulates dropping two urls onto the manager
-add_test(function test_drop_multiple_urls() {
-  var url1 = TESTROOT + "addons/browser_dragdrop1.xpi";
-  var url2 = TESTROOT2 + "addons/browser_dragdrop2.xpi";
-
-  checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
-
-  var viewContainer = gManagerWindow.document.getElementById("view-port");
-  var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-               [[{type: "text/x-moz-url", data: url1}],
-                [{type: "text/x-moz-url", data: url2}]],
-               "copy", gManagerWindow);
+add_task(async function test_drop_multiple_urls() {
+  let url1 = TESTROOT + "addons/browser_dragdrop1.xpi";
+  let url2 = TESTROOT2 + "addons/browser_dragdrop2.xpi";
+  gManagerWindow = await open_manager("addons://list/extension");
+  await wait_for_view_load(gManagerWindow);
+  let promise = checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
+  let viewContainer = getViewContainer(gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
+                                         [[{type: "text/x-moz-url", data: url1}],
+                                           [{type: "text/x-moz-url", data: url2}]],
+                                         "copy", gManagerWindow);
   is(effect, "copy", "Drag should be accepted");
+  await promise;
+  await close_manager(gManagerWindow);
 });
 
 // Simulates dropping two files onto the manager
-add_test(function test_drop_multiple_files() {
-  var fileurl1 = get_addon_file_url("browser_dragdrop1.xpi");
-  var fileurl2 = get_addon_file_url("browser_dragdrop2.xpi");
-
-  checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
-
-  var viewContainer = gManagerWindow.document.getElementById("view-port");
-  var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-               [[{type: "application/x-moz-file", data: fileurl1.file}],
-                [{type: "application/x-moz-file", data: fileurl2.file}]],
-               "copy", gManagerWindow);
+add_task(async function test_drop_multiple_files() {
+  let fileurl1 = get_addon_file_url("browser_dragdrop1.xpi");
+  let fileurl2 = get_addon_file_url("browser_dragdrop2.xpi");
+  gManagerWindow = await open_manager("addons://list/extension");
+  await wait_for_view_load(gManagerWindow);
+  let promise = checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
+  let viewContainer = getViewContainer(gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
+                                         [[{type: "application/x-moz-file", data: fileurl1.file}],
+                                           [{type: "application/x-moz-file", data: fileurl2.file}]],
+                                         "copy", gManagerWindow);
   is(effect, "copy", "Drag should be accepted");
+  await promise;
+  await close_manager(gManagerWindow);
 });
 
 // Simulates dropping a file and a url onto the manager (weird, but should still work)
-add_test(function test_drop_file_and_url() {
-  var url = TESTROOT + "addons/browser_dragdrop1.xpi";
-  var fileurl = get_addon_file_url("browser_dragdrop2.xpi");
-
-  checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
-
-  var viewContainer = gManagerWindow.document.getElementById("view-port");
-  var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
-               [[{type: "text/x-moz-url", data: url}],
-                [{type: "application/x-moz-file", data: fileurl.file}]],
-               "copy", gManagerWindow);
+add_task(async function test_drop_file_and_url() {
+  let url = TESTROOT + "addons/browser_dragdrop1.xpi";
+  let fileurl = get_addon_file_url("browser_dragdrop2.xpi");
+  gManagerWindow = await open_manager("addons://list/extension");
+  await wait_for_view_load(gManagerWindow);
+  let promise = checkInstallConfirmation("Drag Drop test 1", "Drag Drop test 2");
+  let viewContainer = getViewContainer(gManagerWindow);
+  let effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
+                                         [[{type: "text/x-moz-url", data: url}],
+                                           [{type: "application/x-moz-file", data: fileurl.file}]],
+                                         "copy", gManagerWindow);
   is(effect, "copy", "Drag should be accepted");
+  await promise;
+  await close_manager(gManagerWindow);
+});
+
+// Test that drag-and-drop of an incompatible addon generates
+// an error.
+add_task(async function test_drop_incompat_file() {
+  let gManagerWindow = await open_manager("addons://list/extension");
+  await wait_for_view_load(gManagerWindow);
+
+  let errorPromise = TestUtils.topicObserved("addon-install-failed");
+
+  let url = `${TESTROOT}/addons/browser_dragdrop_incompat.xpi`;
+  let viewContainer = getViewContainer(gManagerWindow);
+  EventUtils.synthesizeDrop(viewContainer, viewContainer,
+                            [[{type: "text/x-moz-url", data: url}]],
+                            "copy", gManagerWindow);
+
+  await errorPromise;
+  ok(true, "Got addon-install-failed event");
+
+  await close_manager(gManagerWindow);
 });
