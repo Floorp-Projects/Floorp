@@ -53,7 +53,7 @@ class CompositorScreenshotGrabberImpl final {
   nsTArray<RefPtr<AsyncReadbackBuffer>> mAvailableBuffers;
   Maybe<QueueItem> mCurrentFrameQueueItem;
   nsTArray<QueueItem> mQueue;
-  UniquePtr<ProfilerScreenshots> mProfilerScreenshots;
+  RefPtr<ProfilerScreenshots> mProfilerScreenshots;
   const IntSize mBufferSize;
 };
 
@@ -205,7 +205,7 @@ void CompositorScreenshotGrabberImpl::ReturnBuffer(
 void CompositorScreenshotGrabberImpl::ProcessQueue() {
   if (!mQueue.IsEmpty()) {
     if (!mProfilerScreenshots) {
-      mProfilerScreenshots = MakeUnique<ProfilerScreenshots>();
+      mProfilerScreenshots = new ProfilerScreenshots();
     }
     for (const auto& item : mQueue) {
       mProfilerScreenshots->SubmitScreenshot(
