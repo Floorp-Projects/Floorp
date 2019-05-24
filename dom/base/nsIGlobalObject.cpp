@@ -5,9 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIGlobalObject.h"
-#include "mozilla/CycleCollectedJSContext.h"
+
 #include "mozilla/dom/BlobURLProtocolHandler.h"
-#include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "nsContentUtils.h"
@@ -23,7 +22,6 @@ using mozilla::dom::ServiceWorker;
 using mozilla::dom::ServiceWorkerDescriptor;
 using mozilla::dom::ServiceWorkerRegistration;
 using mozilla::dom::ServiceWorkerRegistrationDescriptor;
-using mozilla::dom::VoidFunction;
 
 nsIGlobalObject::~nsIGlobalObject() {
   UnlinkHostObjectURIs();
@@ -213,29 +211,4 @@ nsPIDOMWindowInner* nsIGlobalObject::AsInnerWindow() {
 size_t nsIGlobalObject::ShallowSizeOfExcludingThis(MallocSizeOf aSizeOf) const {
   size_t rtn = mHostObjectURIs.ShallowSizeOfExcludingThis(aSizeOf);
   return rtn;
-}
-
-class QueuedMicrotask : public MicroTaskRunnable {
- public:
-  QueuedMicrotask(nsIGlobalObject* aGlobal, VoidFunction& aCallback)
-      : mGlobal(aGlobal), mCallback(&aCallback) {}
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Run(AutoSlowOperation& aAso) final {
-    IgnoredErrorResult rv;
-    MOZ_KnownLive(mCallback)->Call(static_cast<ErrorResult&>(rv));
-  }
-
-  bool Suppressed() final { return mGlobal->IsInSyncOperation(); }
-
- private:
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<VoidFunction> mCallback;
-};
-
-void nsIGlobalObject::QueueMicrotask(VoidFunction& aCallback) {
-  CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
-  if (context) {
-    RefPtr<MicroTaskRunnable> mt = new QueuedMicrotask(this, aCallback);
-    context->DispatchToMicroTask(mt.forget());
-  }
 }
