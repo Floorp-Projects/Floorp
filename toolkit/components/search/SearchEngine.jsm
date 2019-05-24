@@ -389,7 +389,10 @@ function getInternalAliases(engine) {
     return [];
   }
   for (let [name, aliases] of ENGINE_ALIASES) {
-    if (engine._shortName == name) {
+    // This may match multiple engines (amazon vs amazondotcom), they
+    // shouldn't be installed together but if they are the first
+    // is picked.
+    if (engine._shortName.startsWith(name)) {
       return aliases;
     }
   }
