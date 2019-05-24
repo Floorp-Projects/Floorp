@@ -36,6 +36,8 @@ Allowed actions, and subfields:
       expected [As for status] - Status that the test was expected to get,
                                  or absent if the test got the expected status
       extra - Dictionary of harness-specific extra information e.g. debug info
+      known_intermittent - List of known intermittent statuses that should
+                           not fail a test. eg. ['FAIL', 'TIMEOUT']
 
   test_status
       test - ID for the test
@@ -43,6 +45,8 @@ Allowed actions, and subfields:
       status [PASS | FAIL | TIMEOUT | NOTRUN | SKIP] - test status
       expected [As for status] - Status that the subtest was expected to get,
                                  or absent if the subtest got the expected status
+      known_intermittent - List of known intermittent statuses that should
+                           not fail a test. eg. ['FAIL', 'TIMEOUT']
 
   process_output
       process - PID of the process
@@ -356,7 +360,7 @@ class StructuredLogger(object):
                 Unicode("message", default=None, optional=True),
                 Unicode("stack", default=None, optional=True),
                 Dict(Any, "extra", default=None, optional=True),
-                List(SubStatus, "expected_intermittent", default=None,
+                List(SubStatus, "known_intermittent", default=None,
                      optional=True))
     def test_status(self, data):
         """
@@ -389,7 +393,7 @@ class StructuredLogger(object):
                 Unicode("message", default=None, optional=True),
                 Unicode("stack", default=None, optional=True),
                 Dict(Any, "extra", default=None, optional=True),
-                List(Status, "expected_intermittent", default=None,
+                List(Status, "known_intermittent", default=None,
                      optional=True))
     def test_end(self, data):
         """
