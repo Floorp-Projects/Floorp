@@ -28,6 +28,7 @@
 #include "mozilla/AutoRestore.h"      // for AutoRestore
 #include "mozilla/ClearOnShutdown.h"  // for ClearOnShutdown
 #include "mozilla/DebugOnly.h"        // for DebugOnly
+#include "mozilla/StaticPrefs.h"      // for StaticPrefs
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/gfx/2D.h"         // for DrawTarget
 #include "mozilla/gfx/GPUChild.h"   // for GfxPrefValue
@@ -294,7 +295,7 @@ static int32_t CalculateCompositionFrameRate() {
   // DEFAULT_FRAME_RATE in nsRefreshDriver.cpp.
   // TODO: This should actually return the vsync rate.
   const int32_t defaultFrameRate = 60;
-  int32_t compositionFrameRatePref = gfxPrefs::LayersCompositionFrameRate();
+  int32_t compositionFrameRatePref = StaticPrefs::LayersCompositionFrameRate();
   if (compositionFrameRatePref < 0) {
     // Use the same frame rate for composition as for layout.
     int32_t layoutFrameRatePref = gfxPrefs::LayoutFrameRate();
@@ -1793,7 +1794,7 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     return mWrBridge;
   }
 
-  if (gfxPrefs::WebRenderSplitRenderRoots()) {
+  if (StaticPrefs::WebRenderSplitRenderRoots()) {
     apis.AppendElement(
         apis[0]->CreateDocument(aSize, 1, wr::RenderRoot::Content));
   }

@@ -737,7 +737,7 @@ pref("apz.pinch_lock.mode", 1);
 pref("apz.pinch_lock.scoll_lock_threshold", "0.03125");  // 1/32 inches
 pref("apz.pinch_lock.span_breakout_threshold", "0.03125");  // 1/32 inches
 pref("apz.pinch_lock.span_lock_threshold", "0.03125");  // 1/32 inches
-pref("apz.pinch_lock.buffer_max_age", "50"); // milliseconds
+pref("apz.pinch_lock.buffer_max_age", 50); // milliseconds
 pref("apz.popups.enabled", false);
 pref("apz.relative-update.enabled", true);
 

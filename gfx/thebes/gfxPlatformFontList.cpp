@@ -9,7 +9,6 @@
 #include "mozilla/intl/OSPreferences.h"
 
 #include "gfxPlatformFontList.h"
-#include "gfxPrefs.h"
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
 #include "SharedFontList-impl.h"
@@ -26,6 +25,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BlobImpl.h"
@@ -419,7 +419,7 @@ nsresult gfxPlatformFontList::InitFontList() {
 
   // Try to initialize the cross-process shared font list if enabled by prefs,
   // but not if we're running in Safe Mode.
-  if (gfxPrefs::SharedFontList() && !gfxPlatform::InSafeMode()) {
+  if (StaticPrefs::SharedFontList() && !gfxPlatform::InSafeMode()) {
     for (auto i = mFontEntries.Iter(); !i.Done(); i.Next()) {
       i.Data()->mShmemCharacterMap = nullptr;
       i.Data()->mShmemFace = nullptr;

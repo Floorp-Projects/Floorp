@@ -14,9 +14,9 @@
 #ifdef MOZ_WIDGET_GTK
 #  include "gfxPlatformGtk.h"  // for gfxPlatform
 #endif
-#include "gfxPrefs.h"             // for gfxPrefs
 #include "mozilla/AutoRestore.h"  // for AutoRestore
 #include "mozilla/DebugOnly.h"    // for DebugOnly
+#include "mozilla/StaticPrefs.h"  // for StaticPrefs
 #include "mozilla/gfx/2D.h"       // for DrawTarget
 #include "mozilla/gfx/Point.h"    // for IntSize
 #include "mozilla/gfx/Rect.h"     // for IntSize
@@ -255,7 +255,7 @@ void CompositorVsyncScheduler::Composite(VsyncId aId,
         mozilla::Telemetry::COMPOSITE_FRAME_ROUNDTRIP_TIME,
         compositeFrameTotal.ToMilliseconds());
   } else if (mVsyncNotificationsSkipped++ >
-             gfxPrefs::CompositorUnobserveCount()) {
+             StaticPrefs::CompositorUnobserveCount()) {
     UnobserveVsync();
   }
 }
