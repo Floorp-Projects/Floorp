@@ -38,14 +38,15 @@ var gMockPrompter = {
   // how objects get wrapped when going across xpcom boundaries.
   promptPassword(dialogTitle, text, password, checkMsg, checkValue) {
     this.numPrompts++;
-    if (this.numPrompts > 1) { // don't keep retrying a bad password
-      return false;
-    }
     equal(text,
           "Please enter your master password.",
           "password prompt text should be as expected");
     equal(checkMsg, null, "checkMsg should be null");
     ok(this.passwordToTry, "passwordToTry should be non-null");
+    if (this.passwordToTry == "DontTryThisPassword") {
+      // Cancel the prompt in this case.
+      return false;
+    }
     password.value = this.passwordToTry;
     return true;
   },
@@ -134,6 +135,31 @@ add_task(async function() {
     gMockPrompter.passwordToTry = "hunter2";
     await encrypt_decrypt_test();
     ok(gMockPrompter.numPrompts == 1, "There should've been one password prompt.");
+    await delete_all_secrets();
+  }
+
+  // Check lock/unlock behaviour.
+  // Unfortunately we can only test this automatically for the NSS key store.
+  // Uncomment the outer keystore.isNSSKeyStore to test other key stores manually.
+  if (keystore.isNSSKeyStore) {
+    await delete_all_secrets();
+    await encrypt_decrypt_test();
+    await keystore.asyncLock();
+    info("Keystore should be locked. Cancel the login request.");
+    try {
+      if (keystore.isNSSKeyStore) {
+        gMockPrompter.passwordToTry = "DontTryThisPassword";
+      }
+      await keystore.asyncUnlock();
+      ok(false, "Unlock should've rejected.");
+    } catch (e) {
+      ok(e.result == Cr.NS_ERROR_FAILURE || e.result == Cr.NS_ERROR_ABORT,
+         "Rejected login prompt.");
+    }
+    // clean up
+    if (keystore.isNSSKeyStore) {
+      gMockPrompter.passwordToTry = "hunter2";
+    }
     await delete_all_secrets();
   }
 });

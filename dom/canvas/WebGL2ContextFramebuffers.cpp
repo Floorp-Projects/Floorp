@@ -66,34 +66,6 @@ void WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1,
                                     dstY0, dstX1, dstY1, mask, filter);
 }
 
-void WebGL2Context::FramebufferTextureLayer(GLenum target, GLenum attachment,
-                                            WebGLTexture* texture, GLint level,
-                                            GLint layer) {
-  const FuncScope funcScope(*this, "framebufferTextureLayer");
-  if (IsContextLost()) return;
-
-  if (!ValidateFramebufferTarget(target)) return;
-
-  WebGLFramebuffer* fb;
-  switch (target) {
-    case LOCAL_GL_FRAMEBUFFER:
-    case LOCAL_GL_DRAW_FRAMEBUFFER:
-      fb = mBoundDrawFramebuffer;
-      break;
-
-    case LOCAL_GL_READ_FRAMEBUFFER:
-      fb = mBoundReadFramebuffer;
-      break;
-
-    default:
-      MOZ_CRASH("GFX: Bad target.");
-  }
-
-  if (!fb) return ErrorInvalidOperation("Cannot modify framebuffer 0.");
-
-  fb->FramebufferTextureLayer(attachment, texture, level, layer);
-}
-
 JS::Value WebGL2Context::GetFramebufferAttachmentParameter(
     JSContext* cx, GLenum target, GLenum attachment, GLenum pname,
     ErrorResult& out_error) {

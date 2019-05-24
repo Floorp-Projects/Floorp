@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "parking_lot"
-version = "0.6.3"
+version = "0.8.0"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "More compact and efficient implementations of the standard synchronization primitives."
 readme = "README.md"
@@ -21,15 +22,24 @@ categories = ["concurrency"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/Amanieu/parking_lot"
 [dependencies.lock_api]
-version = "0.1"
+version = "0.2"
 
 [dependencies.parking_lot_core]
-version = "0.2"
-[dev-dependencies.rand]
 version = "0.5"
+[dev-dependencies.bincode]
+version = "1.1.3"
+
+[dev-dependencies.lazy_static]
+version = "1.0"
+
+[dev-dependencies.rand]
+version = "0.6"
+[build-dependencies.rustc_version]
+version = "0.2"
 
 [features]
 deadlock_detection = ["parking_lot_core/deadlock_detection"]
-default = ["owning_ref"]
+default = []
 nightly = ["parking_lot_core/nightly", "lock_api/nightly"]
 owning_ref = ["lock_api/owning_ref"]
+serde = ["lock_api/serde"]

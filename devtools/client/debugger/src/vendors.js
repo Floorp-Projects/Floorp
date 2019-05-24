@@ -28,6 +28,7 @@ import * as fuzzaldrinPlus from "fuzzaldrin-plus";
 import * as transition from "react-transition-group/Transition";
 import * as reactAriaComponentsTabs from "react-aria-components/src/tabs";
 import * as reselect from "reselect";
+import * as whatwgUrl from "whatwg-url";
 
 // Modules imported without destructuring
 import classnames from "classnames";
@@ -51,5 +52,6 @@ export const vendored = {
   "lodash-move": move,
   "react-aria-components/src/tabs": reactAriaComponentsTabs,
   "react-transition-group/Transition": transition,
+  "whatwg-url": whatwgUrl,
   reselect,
 };

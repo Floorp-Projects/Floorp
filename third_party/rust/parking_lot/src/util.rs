@@ -5,6 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use std::time::{Duration, Instant};
+
 // Option::unchecked_unwrap
 pub trait UncheckedOptionExt<T> {
     unsafe fn unchecked_unwrap(self) -> T;
@@ -29,4 +31,14 @@ unsafe fn unreachable() -> ! {
         enum Void {}
         match *(1 as *const Void) {}
     }
+}
+
+#[inline]
+pub fn to_deadline(timeout: Duration) -> Option<Instant> {
+    #[cfg(has_checked_instant)]
+    let deadline = Instant::now().checked_add(timeout);
+    #[cfg(not(has_checked_instant))]
+    let deadline = Some(Instant::now() + timeout);
+
+    deadline
 }

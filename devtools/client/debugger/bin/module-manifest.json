@@ -15,7 +15,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -36,7 +36,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -57,7 +57,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -78,7 +78,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -99,7 +99,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -120,7 +120,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -141,7 +141,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -639,7 +639,16 @@
       "../../babel-loader/lib/index.js?ignore=src/lib!../../../packages/devtools-reps/src/object-inspector/utils/selection.js": 488,
       "../../css-loader/lib/css-base.js": 489,
       "external \"devtools/client/framework/menu\"": 490,
-      "external \"devtools/client/framework/menu-item\"": 491
+      "external \"devtools/client/framework/menu-item\"": 491,
+      "../../whatwg-url/lib/url-state-machine.js": 492,
+      "../../whatwg-url/lib/urlencoded.js": 493,
+      "../../whatwg-url/lib/utils.js": 494,
+      "../../whatwg-url/lib/infra.js": 495,
+      "../../whatwg-url/lib/URLSearchParams.js": 496,
+      "../../whatwg-url/lib/public-api.js": 497,
+      "../../whatwg-url/lib/URL.js": 498,
+      "../../whatwg-url/lib/URL-impl.js": 499,
+      "../../whatwg-url/lib/URLSearchParams-impl.js": 500
     },
     "usedIds": {
       "0": 0,
@@ -1133,7 +1142,16 @@
       "488": 488,
       "489": 489,
       "490": 490,
-      "491": 491
+      "491": 491,
+      "492": 492,
+      "493": 493,
+      "494": 494,
+      "495": 495,
+      "496": 496,
+      "497": 497,
+      "498": 498,
+      "499": 499,
+      "500": 500
     }
   },
   "chunks": {
