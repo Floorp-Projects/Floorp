@@ -12,7 +12,7 @@
 //! Generate and parse UUIDs.
 //!
 //! Provides support for Universally Unique Identifiers (UUIDs). A UUID is a
-//! unique 128-bit number, stored as 16 octets.  UUIDs are used to  assign
+//! unique 128-bit number, stored as 16 octets. UUIDs are used to  assign
 //! unique identifiers to entities without requiring a central allocating
 //! authority.
 //!
@@ -42,6 +42,14 @@
 //!   UUID based on the SHA1 hash of some data.
 //! * `serde` - adds the ability to serialize and deserialize a `Uuid` using the
 //!   `serde` crate.
+//!
+//! You need to enable one of the following Cargo features together with
+//! `v3`, `v4` or `v5` feature if you're targeting `wasm32` architecture:
+//!
+//! * `stdweb` - enables support for `OsRng` on `wasm32-unknown-unknown` via
+//!   `stdweb` combined with `cargo-web`
+//! * `wasm-bindgen` - `wasm-bindgen` enables support for `OsRng` on
+//!   `wasm32-unknown-unknown` via [`wasm-bindgen`]
 //!
 //! By default, `uuid` can be depended on with:
 //!
@@ -101,10 +109,10 @@
 //!
 //! # References
 //!
-//! * [Wikipedia: Universally Unique Identifier](
-//!     http://en.wikipedia.org/wiki/Universally_unique_identifier)
-//! * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](
-//!     http://tools.ietf.org/html/rfc4122)
+//! * [Wikipedia: Universally Unique Identifier](     http://en.wikipedia.org/wiki/Universally_unique_identifier)
+//! * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](     http://tools.ietf.org/html/rfc4122)
+//!
+//! [`wasm-bindgen`]: https://github.com/rustwasm/wasm-bindgen
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(feature = "const_fn", feature(const_fn))]
@@ -116,7 +124,7 @@
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-    html_root_url = "https://docs.rs/uuid"
+    html_root_url = "https://docs.rs/uuid/0.7.4"
 )]
 
 #[cfg(feature = "byteorder")]
@@ -131,17 +139,25 @@ extern crate rand;
 extern crate serde;
 #[cfg(all(feature = "serde", test))]
 extern crate serde_test;
+#[cfg(all(feature = "serde", test))]
+#[macro_use]
+extern crate serde_derive;
 #[cfg(feature = "sha1")]
 extern crate sha1;
 #[cfg(feature = "slog")]
 #[cfg_attr(test, macro_use)]
 extern crate slog;
+#[cfg(feature = "winapi")]
+extern crate winapi;
 
 pub mod adapter;
+pub mod builder;
 pub mod parser;
 pub mod prelude;
 #[cfg(feature = "v1")]
 pub mod v1;
+
+pub use builder::Builder;
 
 mod core_support;
 #[cfg(feature = "serde")]
@@ -154,12 +170,41 @@ mod std_support;
 mod test_util;
 #[cfg(feature = "u128")]
 mod u128_support;
-#[cfg(feature = "v3")]
+#[cfg(all(
+    feature = "v3",
+    any(
+        not(target_arch = "wasm32"),
+        all(
+            target_arch = "wasm32",
+            any(feature = "stdweb", feature = "wasm-bindgen")
+        )
+    )
+))]
 mod v3;
-#[cfg(feature = "v4")]
+#[cfg(all(
+    feature = "v4",
+    any(
+        not(target_arch = "wasm32"),
+        all(
+            target_arch = "wasm32",
+            any(feature = "stdweb", feature = "wasm-bindgen")
+        )
+    )
+))]
 mod v4;
-#[cfg(feature = "v5")]
+#[cfg(all(
+    feature = "v5",
+    any(
+        not(target_arch = "wasm32"),
+        all(
+            target_arch = "wasm32",
+            any(feature = "stdweb", feature = "wasm-bindgen")
+        )
+    )
+))]
 mod v5;
+#[cfg(all(windows, feature = "winapi"))]
+mod winapi_support;
 
 /// A 128-bit (16 byte) buffer containing the ID.
 pub type Bytes = [u8; 16];
@@ -171,6 +216,38 @@ pub type Bytes = [u8; 16];
 pub struct BytesError {
     expected: usize,
     found: usize,
+}
+
+/// A general error that can occur when handling [`Uuid`]s.
+///
+/// Although specialized error types exist in the crate,
+/// sometimes where particular error type occurred is hidden
+/// until errors need to be handled. This allows to enumerate
+/// the errors.
+///
+/// [`Uuid`]: struct.Uuid.html
+// TODO: improve the doc
+// BODY: This detail should be fine for initial merge
+
+// TODO: write tests for Error
+// BODY: not immediately blocking, but should be covered for 1.0
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum Error {
+    /// An error occurred while handling [`Uuid`] bytes.
+    ///
+    /// See [`BytesError`]
+    ///
+    /// [`BytesError`]: struct.BytesError.html
+    /// [`Uuid`]: struct.Uuid.html
+    Bytes(BytesError),
+
+    /// An error occurred while parsing a [`Uuid`] string.
+    ///
+    /// See [`parser::ParseError`]
+    ///
+    /// [`parser::ParseError`]: parser/enum.ParseError.html
+    /// [`Uuid`]: struct.Uuid.html
+    Parse(parser::ParseError),
 }
 
 /// The version of the UUID, denoting the generating algorithm.
@@ -208,7 +285,7 @@ pub enum Variant {
 }
 
 /// A Universally Unique Identifier (UUID).
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Uuid(Bytes);
 
 impl BytesError {
@@ -246,10 +323,7 @@ impl BytesError {
     #[cfg(feature = "const_fn")]
     #[inline]
     pub const fn new(expected: usize, found: usize) -> Self {
-        BytesError {
-            expected: expected,
-            found: found,
-        }
+        BytesError { expected, found }
     }
 
     /// Create a new [`UuidError`].
@@ -347,7 +421,7 @@ impl Uuid {
         Uuid::from_bytes([0; 16])
     }
 
-    /// Creates a `Uuid` from four field values.
+    /// Creates a `Uuid` from four field values in big-endian order.
     ///
     /// # Errors
     ///
@@ -418,7 +492,64 @@ impl Uuid {
         ]))
     }
 
-    /// Creates a `Uuid` using the supplied bytes.
+    /// Creates a `Uuid` from four field values in little-endian order.
+    ///
+    /// The bytes in the `d1`, `d2` and `d3` fields will
+    /// be converted into big-endian order.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use uuid::Uuid;
+    ///
+    /// let d1 = 0xAB3F1097u32;
+    /// let d2 = 0x501Eu16;
+    /// let d3 = 0xB736u16;
+    /// let d4 = [12, 3, 9, 56, 54, 43, 8, 9];
+    ///
+    /// let uuid = Uuid::from_fields_le(d1, d2, d3, &d4);
+    /// let uuid = uuid.map(|uuid| uuid.to_hyphenated().to_string());
+    ///
+    /// let expected_uuid =
+    ///     Ok(String::from("97103fab-1e50-36b7-0c03-0938362b0809"));
+    ///
+    /// assert_eq!(expected_uuid, uuid);
+    /// ```
+    pub fn from_fields_le(
+        d1: u32,
+        d2: u16,
+        d3: u16,
+        d4: &[u8],
+    ) -> Result<Uuid, BytesError> {
+        const D4_LEN: usize = 8;
+
+        let len = d4.len();
+
+        if len != D4_LEN {
+            return Err(BytesError::new(D4_LEN, len));
+        }
+
+        Ok(Uuid::from_bytes([
+            d1 as u8,
+            (d1 >> 8) as u8,
+            (d1 >> 16) as u8,
+            (d1 >> 24) as u8,
+            (d2) as u8,
+            (d2 >> 8) as u8,
+            d3 as u8,
+            (d3 >> 8) as u8,
+            d4[0],
+            d4[1],
+            d4[2],
+            d4[3],
+            d4[4],
+            d4[5],
+            d4[6],
+            d4[7],
+        ]))
+    }
+
+    /// Creates a `Uuid` using the supplied big-endian bytes.
     ///
     /// # Errors
     ///
@@ -469,78 +600,13 @@ impl Uuid {
         Ok(Uuid::from_bytes(bytes))
     }
 
-    /// Creates a `Uuid` using the supplied bytes.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// use uuid::Bytes;
-    /// use uuid::Uuid;
-    ///
-    /// let bytes: Bytes = [
-    ///     70, 235, 208, 238, 14, 109, 67, 201, 185, 13, 204, 195, 90, 145, 63,
-    ///     62,
-    /// ];
-    ///
-    /// let uuid = Uuid::from_bytes(bytes);
-    /// let uuid = uuid.to_hyphenated().to_string();
-    ///
-    /// let expected_uuid = String::from("46ebd0ee-0e6d-43c9-b90d-ccc35a913f3e");
-    ///
-    /// assert_eq!(expected_uuid, uuid);
-    /// ```
-    ///
-    /// An incorrect number of bytes:
-    ///
-    /// ```compile_fail
-    /// use uuid::Uuid;
-    /// use uuid::UuidBytes;
-    ///
-    /// let bytes: UuidBytes = [4, 54, 67, 12, 43, 2, 98, 76]; // doesn't
-    /// compile
-    ///
-    /// let uuid = Uuid::from_bytes(bytes);
-    /// ```
+    /// Creates a `Uuid` using the supplied big-endian bytes.
     #[cfg(not(feature = "const_fn"))]
     pub fn from_bytes(bytes: Bytes) -> Uuid {
         Uuid(bytes)
     }
 
-    /// Creates a `Uuid` using the supplied bytes.
-    ///
-    /// # Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// use uuid::Bytes;
-    /// use uuid::Uuid;
-    ///
-    /// let bytes: Bytes = [
-    ///     70, 235, 208, 238, 14, 109, 67, 201, 185, 13, 204, 195, 90, 145, 63,
-    ///     62,
-    /// ];
-    ///
-    /// let uuid = Uuid::from_bytes(bytes);
-    /// let uuid = uuid.to_hyphenated().to_string();
-    ///
-    /// let expected_uuid = String::from("46ebd0ee-0e6d-43c9-b90d-ccc35a913f3e");
-    ///
-    /// assert_eq!(expected_uuid, uuid);
-    /// ```
-    ///
-    /// An incorrect number of bytes:
-    ///
-    /// ```compile_fail
-    /// use uuid::Bytes;
-    /// use uuid::Uuid;
-    ///
-    /// let bytes: Bytes = [4, 54, 67, 12, 43, 2, 98, 76]; // doesn't compile
-    ///
-    /// let uuid = Uuid::from_bytes(bytes);
-    /// ```
+    /// Creates a `Uuid` using the supplied big-endian bytes.
     #[cfg(feature = "const_fn")]
     pub const fn from_bytes(bytes: Bytes) -> Uuid {
         Uuid(bytes)
@@ -558,8 +624,7 @@ impl Uuid {
     /// use uuid::Uuid;
     ///
     /// let bytes: Bytes = [
-    ///     70, 235, 208, 238, 14, 109, 67, 201, 185, 13, 204, 195, 90, 145, 63,
-    ///     62,
+    ///     70, 235, 208, 238, 14, 109, 67, 201, 185, 13, 204, 195, 90, 145, 63, 62,
     /// ];
     /// let uuid = Uuid::from_random_bytes(bytes);
     /// let uuid = uuid.to_hyphenated().to_string();
@@ -568,6 +633,10 @@ impl Uuid {
     ///
     /// assert_eq!(expected_uuid, uuid);
     /// ```
+    #[deprecated(
+        since = "0.7.2",
+        note = "please use the `uuid::Builder` instead to set the variant and version"
+    )]
     pub fn from_random_bytes(bytes: Bytes) -> Uuid {
         let mut uuid = Uuid::from_bytes(bytes);
         uuid.set_variant(Variant::RFC4122);
@@ -638,7 +707,7 @@ impl Uuid {
         }
     }
 
-    /// Returns the four field values of the UUID.
+    /// Returns the four field values of the UUID in big-endian order.
     ///
     /// These values can be passed to the `from_fields()` method to get the
     /// original `Uuid` back.
@@ -649,15 +718,14 @@ impl Uuid {
     /// * The second field value represents the second group of (four) hex
     ///   digits, taken as a big-endian `u16` value.  For V1 UUIDs, this field
     ///   represents the middle 16 bits of the timestamp.
-    /// * The third field value represents the third group of (four) hex
-    ///   digits, taken as a big-endian `u16` value.  The 4 most significant
-    ///   bits give the UUID version, and for V1 UUIDs, the last 12 bits
-    ///   represent the high 12 bits of the timestamp.
-    /// * The last field value represents the last two groups of four and
-    ///   twelve hex digits, taken in order.  The first 1-3 bits of this
-    ///   indicate the UUID variant, and for V1 UUIDs, the next 13-15 bits
-    ///   indicate the clock sequence and the last 48 bits indicate the node
-    ///   ID.
+    /// * The third field value represents the third group of (four) hex digits,
+    ///   taken as a big-endian `u16` value.  The 4 most significant bits give
+    ///   the UUID version, and for V1 UUIDs, the last 12 bits represent the
+    ///   high 12 bits of the timestamp.
+    /// * The last field value represents the last two groups of four and twelve
+    ///   hex digits, taken in order.  The first 1-3 bits of this indicate the
+    ///   UUID variant, and for V1 UUIDs, the next 13-15 bits indicate the clock
+    ///   sequence and the last 48 bits indicate the node ID.
     ///
     /// # Examples
     ///
@@ -695,49 +763,53 @@ impl Uuid {
         (d1, d2, d3, d4)
     }
 
-    /// Returns an array of 16 octets containing the UUID data.
+    /// Returns the four field values of the UUID in little-endian order.
+    ///
+    /// The bytes in the returned integer fields will
+    /// be converted from big-endian order.
     ///
     /// # Examples
     ///
     /// ```
     /// use uuid::Uuid;
     ///
-    /// let uuid = Uuid::nil();
-    /// assert_eq!(uuid.as_bytes(), &[0; 16]);
-    ///
-    /// let uuid = Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap();
+    /// let uuid = Uuid::parse_str("936DA01F-9ABD-4D9D-80C7-02AF85C822A8").unwrap();
     /// assert_eq!(
-    ///     uuid.as_bytes(),
-    ///     &[
-    ///         147, 109, 160, 31, 154, 189, 77, 157, 128, 199, 2, 175, 133, 200,
-    ///         34, 168,
-    ///     ]
+    ///     uuid.to_fields_le(),
+    ///     (
+    ///         0x1FA06D93,
+    ///         0xBD9A,
+    ///         0x9D4D,
+    ///         b"\x80\xC7\x02\xAF\x85\xC8\x22\xA8"
+    ///     )
     /// );
     /// ```
+    pub fn to_fields_le(&self) -> (u32, u16, u16, &[u8; 8]) {
+        let d1 = u32::from(self.as_bytes()[0])
+            | u32::from(self.as_bytes()[1]) << 8
+            | u32::from(self.as_bytes()[2]) << 16
+            | u32::from(self.as_bytes()[3]) << 24;
+
+        let d2 =
+            u16::from(self.as_bytes()[4]) | u16::from(self.as_bytes()[5]) << 8;
+
+        let d3 =
+            u16::from(self.as_bytes()[6]) | u16::from(self.as_bytes()[7]) << 8;
+
+        let d4: &[u8; 8] =
+            unsafe { &*(self.as_bytes()[8..16].as_ptr() as *const [u8; 8]) };
+        (d1, d2, d3, d4)
+    }
+
+    /// Returns an array of 16 octets containing the UUID data.
+    /// This method wraps [`Uuid::as_bytes`]
     #[cfg(feature = "const_fn")]
     pub const fn as_bytes(&self) -> &Bytes {
         &self.0
     }
 
     /// Returns an array of 16 octets containing the UUID data.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use uuid::Uuid;
-    ///
-    /// let uuid = Uuid::nil();
-    /// assert_eq!(uuid.as_bytes(), &[0; 16]);
-    ///
-    /// let uuid = Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap();
-    /// assert_eq!(
-    ///     uuid.as_bytes(),
-    ///     &[
-    ///         147, 109, 160, 31, 154, 189, 77, 157, 128, 199, 2, 175, 133, 200,
-    ///         34, 168
-    ///     ]
-    /// );
-    /// ```
+    /// This method wraps [`Uuid::as_bytes`]
     #[cfg(not(feature = "const_fn"))]
     pub fn as_bytes(&self) -> &Bytes {
         &self.0
@@ -923,33 +995,34 @@ impl Uuid {
     pub fn is_nil(&self) -> bool {
         self.as_bytes().iter().all(|&b| b == 0)
     }
-    // A buffer that can be used for `encode_...` calls, that is
-    // guaranteed to be long enough for any of the adapters.
-    //
-    // # Examples
-    //
-    // ```rust
-    // use uuid::Uuid;
-    //
-    // let uuid = Uuid::nil();
-    //
-    // assert_eq!(
-    //     uuid.to_simple().encode_lower(&mut Uuid::encode_buffer()),
-    //     "00000000000000000000000000000000"
-    // );
-    //
-    // assert_eq!(
-    //     uuid.to_hyphenated()
-    //         .encode_lower(&mut Uuid::encode_buffer()),
-    //     "00000000-0000-0000-0000-000000000000"
-    // );
-    //
-    // assert_eq!(
-    //     uuid.to_urn().encode_lower(&mut Uuid::encode_buffer()),
-    //     "urn:uuid:00000000-0000-0000-0000-000000000000"
-    // );
-    // ```
-    pub(crate) fn encode_buffer() -> [u8; adapter::Urn::LENGTH] {
+
+    /// A buffer that can be used for `encode_...` calls, that is
+    /// guaranteed to be long enough for any of the adapters.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use uuid::Uuid;
+    ///
+    /// let uuid = Uuid::nil();
+    ///
+    /// assert_eq!(
+    ///     uuid.to_simple().encode_lower(&mut Uuid::encode_buffer()),
+    ///     "00000000000000000000000000000000"
+    /// );
+    ///
+    /// assert_eq!(
+    ///     uuid.to_hyphenated()
+    ///         .encode_lower(&mut Uuid::encode_buffer()),
+    ///     "00000000-0000-0000-0000-000000000000"
+    /// );
+    ///
+    /// assert_eq!(
+    ///     uuid.to_urn().encode_lower(&mut Uuid::encode_buffer()),
+    ///     "urn:uuid:00000000-0000-0000-0000-000000000000"
+    /// );
+    /// ```
+    pub fn encode_buffer() -> [u8; adapter::Urn::LENGTH] {
         [0; adapter::Urn::LENGTH]
     }
 }
@@ -1192,20 +1265,14 @@ mod tests {
 
         // Valid
         assert!(Uuid::parse_str("00000000000000000000000000000000").is_ok());
-        assert!(
-            Uuid::parse_str("67e55044-10b1-426f-9247-bb680e5fe0c8").is_ok()
-        );
-        assert!(
-            Uuid::parse_str("F9168C5E-CEB2-4faa-B6BF-329BF39FA1E4").is_ok()
-        );
+        assert!(Uuid::parse_str("67e55044-10b1-426f-9247-bb680e5fe0c8").is_ok());
+        assert!(Uuid::parse_str("F9168C5E-CEB2-4faa-B6BF-329BF39FA1E4").is_ok());
         assert!(Uuid::parse_str("67e5504410b1426f9247bb680e5fe0c8").is_ok());
-        assert!(
-            Uuid::parse_str("01020304-1112-2122-3132-414243444546").is_ok()
-        );
-        assert!(
-            Uuid::parse_str("urn:uuid:67e55044-10b1-426f-9247-bb680e5fe0c8")
-                .is_ok()
-        );
+        assert!(Uuid::parse_str("01020304-1112-2122-3132-414243444546").is_ok());
+        assert!(Uuid::parse_str(
+            "urn:uuid:67e55044-10b1-426f-9247-bb680e5fe0c8"
+        )
+        .is_ok());
 
         // Nil
         let nil = Uuid::nil();
@@ -1359,6 +1426,20 @@ mod tests {
     }
 
     #[test]
+    fn test_from_fields_le() {
+        let d1: u32 = 0xa4a3a2a1;
+        let d2: u16 = 0xb2b1;
+        let d3: u16 = 0xc2c1;
+        let d4 = [0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8];
+
+        let u = Uuid::from_fields_le(d1, d2, d3, &d4).unwrap();
+
+        let expected = "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8";
+        let result = u.to_simple().to_string();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_as_fields() {
         let u = test_util::new();
         let (d1, d2, d3, d4) = u.as_fields();
@@ -1383,6 +1464,38 @@ mod tests {
         assert_eq!(d1_in, d1_out);
         assert_eq!(d2_in, d2_out);
         assert_eq!(d3_in, d3_out);
+        assert_eq!(d4_in, d4_out);
+    }
+
+    #[test]
+    fn test_fields_le_roundtrip() {
+        let d1_in: u32 = 0xa4a3a2a1;
+        let d2_in: u16 = 0xb2b1;
+        let d3_in: u16 = 0xc2c1;
+        let d4_in = &[0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8];
+
+        let u = Uuid::from_fields_le(d1_in, d2_in, d3_in, d4_in).unwrap();
+        let (d1_out, d2_out, d3_out, d4_out) = u.to_fields_le();
+
+        assert_eq!(d1_in, d1_out);
+        assert_eq!(d2_in, d2_out);
+        assert_eq!(d3_in, d3_out);
+        assert_eq!(d4_in, d4_out);
+    }
+
+    #[test]
+    fn test_fields_le_are_actually_le() {
+        let d1_in: u32 = 0xa1a2a3a4;
+        let d2_in: u16 = 0xb1b2;
+        let d3_in: u16 = 0xc1c2;
+        let d4_in = &[0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8];
+
+        let u = Uuid::from_fields(d1_in, d2_in, d3_in, d4_in).unwrap();
+        let (d1_out, d2_out, d3_out, d4_out) = u.to_fields_le();
+
+        assert_eq!(d1_in, d1_out.swap_bytes());
+        assert_eq!(d2_in, d2_out.swap_bytes());
+        assert_eq!(d3_in, d3_out.swap_bytes());
         assert_eq!(d4_in, d4_out);
     }
 
@@ -1436,6 +1549,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_from_random_bytes() {
         let b = [
             0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2, 0xd3,

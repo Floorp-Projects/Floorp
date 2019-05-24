@@ -31,7 +31,10 @@ impl Uuid {
 
         rng.fill_bytes(&mut bytes);
 
-        Self::from_random_bytes(bytes)
+        Builder::from_bytes(bytes)
+            .set_variant(Variant::RFC4122)
+            .set_version(Version::Random)
+            .build()
     }
 }
 

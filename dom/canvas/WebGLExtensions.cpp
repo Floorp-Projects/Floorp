@@ -72,4 +72,38 @@ bool WebGLExtensionFBORenderMipmap::IsSupported(
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFBORenderMipmap, OES_fbo_render_mipmap)
 
+// -
+
+WebGLExtensionMultiview::WebGLExtensionMultiview(WebGLContext* const webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+}
+
+WebGLExtensionMultiview::~WebGLExtensionMultiview() = default;
+
+bool WebGLExtensionMultiview::IsSupported(const WebGLContext* const webgl) {
+  if (!webgl->IsWebGL2()) return false;
+  if (!gfxPrefs::WebGLDraftExtensionsEnabled()) return false;
+
+  const auto& gl = webgl->gl;
+  return gl->IsSupported(gl::GLFeature::multiview);
+}
+
+void WebGLExtensionMultiview::FramebufferTextureMultiviewOVR(
+    const GLenum target, const GLenum attachment, WebGLTexture* const texture,
+    const GLint level, const GLint baseViewIndex,
+    const GLsizei numViews) const {
+  const WebGLContext::FuncScope funcScope(*mContext,
+                                          "framebufferTextureMultiviewOVR");
+  if (mIsLost) {
+    mContext->ErrorInvalidOperation("Extension is lost.");
+    return;
+  }
+
+  mContext->FramebufferTextureMultiview(target, attachment, texture, level,
+                                        baseViewIndex, numViews);
+}
+
+IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionMultiview, OVR_multiview2)
+
 }  // namespace mozilla

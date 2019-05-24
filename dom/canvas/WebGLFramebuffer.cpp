@@ -51,44 +51,31 @@ bool WebGLFBAttachPoint::IsDeleteRequested() const {
              : Renderbuffer() ? Renderbuffer()->IsDeleteRequested() : false;
 }
 
-void WebGLFBAttachPoint::Clear() {
-  mRenderbufferPtr = nullptr;
-  mTexturePtr = nullptr;
-  mTexImageTarget = 0;
-  mTexImageLevel = 0;
-  mTexImageLayer = 0;
-}
+void WebGLFBAttachPoint::Clear() { Set(nullptr, {}); }
 
-void WebGLFBAttachPoint::SetTexImage(gl::GLContext* const gl,
-                                     WebGLTexture* const tex,
-                                     TexImageTarget target, GLint level,
-                                     GLint layer) {
-  Clear();
+void WebGLFBAttachPoint::Set(gl::GLContext* const gl,
+                             const webgl::FbAttachInfo& toAttach) {
+  mRenderbufferPtr = toAttach.rb;
+  mTexturePtr = toAttach.tex;
+  mTexImageLayer = AssertedCast<uint32_t>(toAttach.zLayer);
+  mTexImageZLayerCount = AssertedCast<uint8_t>(toAttach.zLayerCount);
+  mTexImageLevel = AssertedCast<uint8_t>(toAttach.mipLevel);
+  mIsMultiview = toAttach.isMultiview;
 
-  mTexturePtr = tex;
-  mTexImageTarget = target;
-  mTexImageLevel = level;
-  mTexImageLayer = layer;
-
-  if (!mDeferAttachment) {
-    DoAttachment(gl);
-  }
-}
-
-void WebGLFBAttachPoint::SetRenderbuffer(gl::GLContext* const gl,
-                                         WebGLRenderbuffer* const rb) {
-  Clear();
-
-  mRenderbufferPtr = rb;
-
-  if (!mDeferAttachment) {
+  if (gl && !mDeferAttachment) {
     DoAttachment(gl);
   }
 }
 
 const webgl::ImageInfo* WebGLFBAttachPoint::GetImageInfo() const {
-  if (mTexturePtr)
-    return &mTexturePtr->ImageInfoAt(mTexImageTarget, mTexImageLevel);
+  if (mTexturePtr) {
+    const auto target = Texture()->Target();
+    uint8_t face = 0;
+    if (target == LOCAL_GL_TEXTURE_CUBE_MAP) {
+      face = Layer() % 6;
+    }
+    return &mTexturePtr->ImageInfoAtFace(face, mTexImageLevel);
+  }
   if (mRenderbufferPtr) return &mRenderbufferPtr->ImageInfo();
   return nullptr;
 }
@@ -99,6 +86,7 @@ bool WebGLFBAttachPoint::IsComplete(WebGLContext* webgl,
 
   const auto fnWriteErrorInfo = [&](const char* const text) {
     WebGLContext::EnumName(mAttachmentPoint, out_info);
+    out_info->AppendLiteral(": ");
     out_info->AppendASCII(text);
   };
 
@@ -117,7 +105,9 @@ bool WebGLFBAttachPoint::IsComplete(WebGLContext* webgl,
     // because immutable textures are *always* texture-complete. We need to
     // check immutable textures though, because checking completeness is also
     // when we zero invalidated/no-data tex images.
-    const bool complete = [&]() {
+    const auto attachedMipLevel = MipLevel();
+
+    const bool withinValidMipLevels = [&]() {
       const bool ensureInit = false;
       const auto texCompleteness = tex->CalcCompletenessInfo(ensureInit);
       if (!texCompleteness)  // OOM
@@ -126,10 +116,18 @@ bool WebGLFBAttachPoint::IsComplete(WebGLContext* webgl,
 
       const auto baseLevel = tex->BaseMipmapLevel();
       const auto maxLevel = baseLevel + texCompleteness->levels - 1;
-      return baseLevel <= mTexImageLevel && mTexImageLevel <= maxLevel;
+      return baseLevel <= attachedMipLevel && attachedMipLevel <= maxLevel;
     }();
-    if (!complete) {
-      fnWriteErrorInfo("Attached texture is not texture-complete.");
+    if (!withinValidMipLevels) {
+      fnWriteErrorInfo("Attached mip level is invalid for texture.");
+      return false;
+    }
+
+    const auto& levelInfo = tex->ImageInfoAtFace(0, attachedMipLevel);
+    const auto faceDepth = levelInfo.mDepth * tex->FaceCount();
+    const bool withinValidZLayers = Layer() + ZLayerCount() - 1 < faceDepth;
+    if (!withinValidZLayers) {
+      fnWriteErrorInfo("Attached z layer is invalid for texture.");
       return false;
     }
   }
@@ -216,32 +214,38 @@ void WebGLFBAttachPoint::DoAttachment(gl::GLContext* const gl) const {
 
   const auto& texName = Texture()->mGLName;
 
-  switch (mTexImageTarget.get()) {
+  switch (Texture()->Target().get()) {
     case LOCAL_GL_TEXTURE_2D:
-    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+    case LOCAL_GL_TEXTURE_CUBE_MAP: {
+      TexImageTarget imageTarget = LOCAL_GL_TEXTURE_2D;
+      if (Texture()->Target() == LOCAL_GL_TEXTURE_CUBE_MAP) {
+        imageTarget = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + Layer();
+      }
+
       if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        gl->fFramebufferTexture2D(
-            LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
-            mTexImageTarget.get(), texName, mTexImageLevel);
-        gl->fFramebufferTexture2D(
-            LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
-            mTexImageTarget.get(), texName, mTexImageLevel);
+        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                  LOCAL_GL_DEPTH_ATTACHMENT, imageTarget.get(),
+                                  texName, MipLevel());
+        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                  LOCAL_GL_STENCIL_ATTACHMENT,
+                                  imageTarget.get(), texName, MipLevel());
       } else {
         gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, mAttachmentPoint,
-                                  mTexImageTarget.get(), texName,
-                                  mTexImageLevel);
+                                  imageTarget.get(), texName, MipLevel());
       }
       break;
+    }
 
     case LOCAL_GL_TEXTURE_2D_ARRAY:
     case LOCAL_GL_TEXTURE_3D:
-      gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER, mAttachmentPoint,
-                                   texName, mTexImageLevel, mTexImageLayer);
+      if (ZLayerCount() != 1) {
+        gl->fFramebufferTextureMultiview(LOCAL_GL_FRAMEBUFFER, mAttachmentPoint,
+                                         texName, MipLevel(), Layer(),
+                                         ZLayerCount());
+      } else {
+        gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER, mAttachmentPoint,
+                                     texName, MipLevel(), Layer());
+      }
       break;
   }
 }
@@ -308,7 +312,7 @@ JS::Value WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
       if (mTexturePtr) {
         GLenum face = 0;
         if (mTexturePtr->Target() == LOCAL_GL_TEXTURE_CUBE_MAP) {
-          face = ImageTarget().get();
+          face = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + Layer();
         }
         return JS::Int32Value(face);
       }
@@ -317,13 +321,20 @@ JS::Value WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
       //////
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER:
-      if (webgl->IsWebGL2() && mTexturePtr) {
-        int32_t layer = 0;
-        if (ImageTarget() == LOCAL_GL_TEXTURE_2D_ARRAY ||
-            ImageTarget() == LOCAL_GL_TEXTURE_3D) {
-          layer = Layer();
-        }
-        return JS::Int32Value(layer);
+      if (webgl->IsWebGL2()) {
+        return JS::Int32Value(AssertedCast<int32_t>(Layer()));
+      }
+      break;
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR:
+      if (webgl->IsExtensionEnabled(WebGLExtensionID::OVR_multiview2)) {
+        return JS::Int32Value(AssertedCast<int32_t>(Layer()));
+      }
+      break;
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR:
+      if (webgl->IsExtensionEnabled(WebGLExtensionID::OVR_multiview2)) {
+        return JS::Int32Value(ZLayerCount());
       }
       break;
 
@@ -674,6 +685,20 @@ FBStatus WebGLFramebuffer::PrecheckFramebufferStatus(
     if (depthOrStencilCount > 1) return LOCAL_GL_FRAMEBUFFER_UNSUPPORTED;
   }
 
+  {
+    const WebGLFBAttachPoint* example = nullptr;
+    for (const auto& x : mAttachments) {
+      if (!x->HasAttachment()) continue;
+      if (!example) {
+        example = x;
+        continue;
+      }
+      if (x->ZLayerCount() != example->ZLayerCount()) {
+        return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_VIEW_TARGETS_OVR;
+      }
+    }
+  }
+
   return LOCAL_GL_FRAMEBUFFER_COMPLETE;
 }
 
@@ -733,6 +758,12 @@ bool WebGLFramebuffer::ValidateForColorRead(
     uint32_t* const out_height) const {
   if (!mColorReadBuffer) {
     mContext->ErrorInvalidOperation("READ_BUFFER must not be NONE.");
+    return false;
+  }
+
+  if (mColorReadBuffer->ZLayerCount() > 1) {
+    mContext->GenerateError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION,
+                            "The READ_BUFFER attachment has multiple views.");
     return false;
   }
 
@@ -841,18 +872,15 @@ void WebGLFramebuffer::ResolveAttachmentData() const {
       };
 
       if (imageInfo->mDepth > 1) {
-        // Todo: Use glClearTexImage.
         const auto& tex = cur->Texture();
+        const gl::ScopedFramebuffer scopedFB(gl);
+        const gl::ScopedBindFramebuffer scopedBindFB(gl, scopedFB.FB());
         for (uint32_t z = 0; z < imageInfo->mDepth; z++) {
           gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
                                        cur->mAttachmentPoint, tex->mGLName,
                                        cur->MipLevel(), z);
           fnClearBuffer();
         }
-
-        gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
-                                     cur->mAttachmentPoint, tex->mGLName,
-                                     cur->MipLevel(), cur->Layer());
       } else {
         fnClearBuffer();
       }
@@ -979,6 +1007,8 @@ FBStatus WebGLFramebuffer::CheckFramebufferStatus() const {
       info.width = std::min(info.width, imageInfo->mWidth);
       info.height = std::min(info.height, imageInfo->mHeight);
       info.hasFloat32 |= fnIsFloat32(*imageInfo->mFormat->format);
+      info.zLayerCount = cur->ZLayerCount();
+      info.isMultiview = cur->IsMultiview();
     }
     mCompletenessInfo = Some(std::move(info));
     return LOCAL_GL_FRAMEBUFFER_COMPLETE;
@@ -1103,9 +1133,8 @@ void WebGLFramebuffer::ReadBuffer(GLenum attachPoint) {
 
 ////
 
-void WebGLFramebuffer::FramebufferRenderbuffer(GLenum attachEnum,
-                                               GLenum rbtarget,
-                                               WebGLRenderbuffer* rb) {
+void WebGLFramebuffer::FramebufferAttach(const GLenum attachEnum,
+                                         const webgl::FbAttachInfo& toAttach) {
   MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
              mContext->mBoundReadFramebuffer == this);
 
@@ -1117,199 +1146,14 @@ void WebGLFramebuffer::FramebufferRenderbuffer(GLenum attachEnum,
   }
   const auto& attach = maybeAttach.value();
 
-  // `rbTarget`
-  if (rbtarget != LOCAL_GL_RENDERBUFFER) {
-    mContext->ErrorInvalidEnumInfo("rbtarget", rbtarget);
-    return;
-  }
-
-  // `rb`
-  if (rb) {
-    if (!mContext->ValidateObject("rb", *rb)) return;
-
-    if (!rb->mHasBeenBound) {
-      mContext->ErrorInvalidOperation(
-          "bindRenderbuffer must be called before"
-          " attachment to %04x",
-          attachEnum);
-      return;
-    }
-  }
-  // End of validation.
-
   const auto& gl = mContext->gl;
   gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGLName);
   if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-    mDepthAttachment.SetRenderbuffer(gl, rb);
-    mStencilAttachment.SetRenderbuffer(gl, rb);
+    mDepthAttachment.Set(gl, toAttach);
+    mStencilAttachment.Set(gl, toAttach);
   } else {
-    attach->SetRenderbuffer(gl, rb);
+    attach->Set(gl, toAttach);
   }
-  InvalidateCaches();
-}
-
-void WebGLFramebuffer::FramebufferTexture2D(GLenum attachEnum,
-                                            GLenum texImageTarget,
-                                            WebGLTexture* tex, GLint level) {
-  MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-             mContext->mBoundReadFramebuffer == this);
-
-  // `attachment`
-  const auto maybeAttach = GetAttachPoint(attachEnum);
-  if (!maybeAttach || !maybeAttach.value()) {
-    mContext->ErrorInvalidEnum("Bad `attachment`: 0x%x.", attachEnum);
-    return;
-  }
-  const auto& attach = maybeAttach.value();
-
-  // `texImageTarget`
-  if (texImageTarget != LOCAL_GL_TEXTURE_2D &&
-      (texImageTarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
-       texImageTarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
-    mContext->ErrorInvalidEnumInfo("texImageTarget", texImageTarget);
-    return;
-  }
-
-  // `texture`
-  if (tex) {
-    if (!mContext->ValidateObject("texture", *tex)) return;
-
-    if (!tex->Target()) {
-      mContext->ErrorInvalidOperation("`texture` has never been bound.");
-      return;
-    }
-
-    const TexTarget destTexTarget = TexImageTargetToTexTarget(texImageTarget);
-    if (tex->Target() != destTexTarget) {
-      mContext->ErrorInvalidOperation("Mismatched texture and texture target.");
-      return;
-    }
-  }
-
-  // `level`
-  if (level < 0)
-    return mContext->ErrorInvalidValue("`level` must not be negative.");
-
-  if (mContext->IsWebGL2() ||
-      mContext->IsExtensionEnabled(WebGLExtensionID::OES_fbo_render_mipmap)) {
-    /* GLES 3.0.4 p208:
-     *   If textarget is one of TEXTURE_CUBE_MAP_POSITIVE_X,
-     *   TEXTURE_CUBE_MAP_POSITIVE_Y, TEXTURE_CUBE_MAP_POSITIVE_Z,
-     *   TEXTURE_CUBE_MAP_NEGATIVE_X, TEXTURE_CUBE_MAP_NEGATIVE_Y,
-     *   or TEXTURE_CUBE_MAP_NEGATIVE_Z, then level must be greater
-     *   than or equal to zero and less than or equal to log2 of the
-     *   value of MAX_CUBE_MAP_TEXTURE_SIZE. If textarget is TEXTURE_2D,
-     *   level must be greater than or equal to zero and no larger than
-     *   log2 of the value of MAX_TEXTURE_SIZE. Otherwise, an
-     *   INVALID_VALUE error is generated.
-     */
-
-    if (texImageTarget == LOCAL_GL_TEXTURE_2D) {
-      if (uint32_t(level) > FloorLog2(mContext->mGLMaxTextureSize))
-        return mContext->ErrorInvalidValue("`level` is too large.");
-    } else {
-      MOZ_ASSERT(texImageTarget >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
-                 texImageTarget <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
-
-      if (uint32_t(level) > FloorLog2(mContext->mGLMaxCubeMapTextureSize))
-        return mContext->ErrorInvalidValue("`level` is too large.");
-    }
-  } else if (level != 0) {
-    return mContext->ErrorInvalidValue("`level` must be 0.");
-  }
-
-  // End of validation.
-
-  const auto& gl = mContext->gl;
-  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGLName);
-  if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-    mDepthAttachment.SetTexImage(gl, tex, texImageTarget, level);
-    mStencilAttachment.SetTexImage(gl, tex, texImageTarget, level);
-  } else {
-    attach->SetTexImage(gl, tex, texImageTarget, level);
-  }
-
-  InvalidateCaches();
-}
-
-void WebGLFramebuffer::FramebufferTextureLayer(GLenum attachEnum,
-                                               WebGLTexture* tex, GLint level,
-                                               GLint layer) {
-  MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
-             mContext->mBoundReadFramebuffer == this);
-
-  // `attachment`
-  const auto maybeAttach = GetAttachPoint(attachEnum);
-  if (!maybeAttach || !maybeAttach.value()) {
-    mContext->ErrorInvalidEnum("Bad `attachment`: 0x%x.", attachEnum);
-    return;
-  }
-  const auto& attach = maybeAttach.value();
-
-  // `level`, `layer`
-  if (layer < 0) return mContext->ErrorInvalidValue("`layer` must be >= 0.");
-
-  if (level < 0) return mContext->ErrorInvalidValue("`level` must be >= 0.");
-
-  // `texture`
-  GLenum texImageTarget = LOCAL_GL_TEXTURE_3D;
-  if (tex) {
-    if (!mContext->ValidateObject("texture", *tex)) return;
-
-    if (!tex->Target()) {
-      mContext->ErrorInvalidOperation("`texture` has never been bound.");
-      return;
-    }
-
-    texImageTarget = tex->Target().get();
-    switch (texImageTarget) {
-      case LOCAL_GL_TEXTURE_3D:
-        if (uint32_t(layer) >= mContext->mGLMax3DTextureSize) {
-          mContext->ErrorInvalidValue("`layer` must be < %s.",
-                                      "MAX_3D_TEXTURE_SIZE");
-          return;
-        }
-
-        if (uint32_t(level) > FloorLog2(mContext->mGLMax3DTextureSize)) {
-          mContext->ErrorInvalidValue("`level` must be <= log2(%s).",
-                                      "MAX_3D_TEXTURE_SIZE");
-          return;
-        }
-        break;
-
-      case LOCAL_GL_TEXTURE_2D_ARRAY:
-        if (uint32_t(layer) >= mContext->mGLMaxArrayTextureLayers) {
-          mContext->ErrorInvalidValue("`layer` must be < %s.",
-                                      "MAX_ARRAY_TEXTURE_LAYERS");
-          return;
-        }
-
-        if (uint32_t(level) > FloorLog2(mContext->mGLMaxTextureSize)) {
-          mContext->ErrorInvalidValue("`level` must be <= log2(%s).",
-                                      "MAX_TEXTURE_SIZE");
-          return;
-        }
-        break;
-
-      default:
-        mContext->ErrorInvalidOperation(
-            "`texture` must be a TEXTURE_3D or"
-            " TEXTURE_2D_ARRAY.");
-        return;
-    }
-  }
-
-  // End of validation.
-
-  const auto& gl = mContext->gl;
-  gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGLName);
-  if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-    mDepthAttachment.SetTexImage(gl, tex, texImageTarget, level, layer);
-    mStencilAttachment.SetTexImage(gl, tex, texImageTarget, level, layer);
-  } else {
-    attach->SetTexImage(gl, tex, texImageTarget, level, layer);
-  }
-
   InvalidateCaches();
 }
 
@@ -1417,6 +1261,12 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
   const webgl::FormatInfo* srcStencilFormat;
 
   if (srcFB) {
+    const auto& info = *srcFB->GetCompletenessInfo();
+    if (info.zLayerCount != 1) {
+      webgl->GenerateError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION,
+                           "Source framebuffer cannot have multiple views.");
+      return;
+    }
     srcColorFormat = nullptr;
     if (srcFB->mColorReadBuffer) {
       const auto& imageInfo = srcFB->mColorReadBuffer->GetImageInfo();

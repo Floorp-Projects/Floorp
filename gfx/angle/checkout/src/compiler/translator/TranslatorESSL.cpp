@@ -124,9 +124,6 @@ void TranslatorESSL::writeExtensionBehavior(ShCompileOptions compileOptions)
 {
     TInfoSinkBase &sink                   = getInfoSink().obj;
     const TExtensionBehavior &extBehavior = getExtensionBehavior();
-    const bool isMultiviewExtEmulated =
-        (compileOptions & (SH_INITIALIZE_BUILTINS_FOR_INSTANCED_MULTIVIEW |
-                           SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER)) != 0u;
     for (TExtensionBehavior::const_iterator iter = extBehavior.begin(); iter != extBehavior.end();
          ++iter)
     {
@@ -144,16 +141,9 @@ void TranslatorESSL::writeExtensionBehavior(ShCompileOptions compileOptions)
                 sink << "#extension GL_NV_draw_buffers : " << GetBehaviorString(iter->second)
                      << "\n";
             }
-            else if (isMultiview && isMultiviewExtEmulated)
+            else if (isMultiview)
             {
-                if (getShaderType() == GL_VERTEX_SHADER &&
-                    (compileOptions & SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER) != 0u)
-                {
-                    // Emit the NV_viewport_array2 extension in a vertex shader if the
-                    // SH_SELECT_VIEW_IN_NV_GLSL_VERTEX_SHADER option is set and the
-                    // OVR_multiview2 extension is requested.
-                    sink << "#extension GL_NV_viewport_array2 : require\n";
-                }
+                EmitMultiviewGLSL(*this, compileOptions, iter->second, sink);
             }
             else if (iter->first == TExtension::EXT_geometry_shader)
             {

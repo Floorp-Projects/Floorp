@@ -40,6 +40,7 @@ var gObserver = new MutationObserver(newRecords => {
 });
 
 function setupAsynchronousObserver(t, options) {
+
   gRecords = [];
   t.add_cleanup(() => {
     gObserver.disconnect();
@@ -647,5 +648,17 @@ promise_test(async t => {
   );
 }, 'Animations automatically removed are reported');
 
-runTest();
+setup({explicit_done: true});
+SpecialPowers.pushPrefEnv(
+  {
+    set: [
+      ["dom.animations-api.autoremove.enabled", true],
+      ["dom.animations-api.implicit-keyframes.enabled", true],
+    ],
+  },
+  function() {
+    runTest();
+    done();
+  }
+);
 </script>

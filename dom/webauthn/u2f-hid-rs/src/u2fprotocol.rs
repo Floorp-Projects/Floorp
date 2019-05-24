@@ -6,7 +6,7 @@
 
 extern crate std;
 
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, RngCore};
 use std::ffi::CString;
 use std::io;
 use std::io::{Read, Write};
@@ -214,7 +214,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use rand::{thread_rng, Rng};
+    use rand::{thread_rng, RngCore};
 
     use super::{init_device, send_apdu, sendrecv, U2FDevice};
     use consts::{CID_BROADCAST, SW_NO_ERROR, U2FHID_INIT, U2FHID_MSG, U2FHID_PING};

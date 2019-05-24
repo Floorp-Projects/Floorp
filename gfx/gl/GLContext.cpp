@@ -79,6 +79,7 @@ static const char* const sExtensionNames[] = {
     "GL_ANGLE_framebuffer_blit",
     "GL_ANGLE_framebuffer_multisample",
     "GL_ANGLE_instanced_arrays",
+    "GL_ANGLE_multiview",
     "GL_ANGLE_texture_compression_dxt3",
     "GL_ANGLE_texture_compression_dxt5",
     "GL_ANGLE_timer_query",
@@ -204,7 +205,8 @@ static const char* const sExtensionNames[] = {
     "GL_OES_texture_half_float",
     "GL_OES_texture_half_float_linear",
     "GL_OES_texture_npot",
-    "GL_OES_vertex_array_object"};
+    "GL_OES_vertex_array_object",
+    "GL_OVR_multiview2"};
 
 static bool ShouldUseTLSIsCurrent(bool useTLSIsCurrent) {
   if (gfxPrefs::UseTLSIsCurrent() == 0) return useTLSIsCurrent;
@@ -1382,6 +1384,17 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
             END_SYMBOLS
         };
         fnLoadForFeature(symbols, GLFeature::invalidate_framebuffer);
+    }
+
+    if (IsSupported(GLFeature::multiview)) {
+        const SymLoadStruct symbols[] = {
+            { (PRFuncPtr*) &mSymbols.fFramebufferTextureMultiview, {{
+              "glFramebufferTextureMultiviewOVR",
+              "glFramebufferTextureMultiviewLayeredANGLE"
+            }} },
+            END_SYMBOLS
+        };
+        fnLoadForFeature(symbols, GLFeature::multiview);
     }
 
     if (IsSupported(GLFeature::prim_restart)) {

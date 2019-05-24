@@ -16,7 +16,7 @@ const EXCLUDED_FILES = {
   "devtools-launchpad": "devtools/shared/flags",
 };
 
-const mappings =  Object.assign(
+const mappings = Object.assign(
   {
     "./source-editor": "devtools/client/shared/sourceeditor/editor",
     "../editor/source-editor": "devtools/client/shared/sourceeditor/editor",
@@ -64,6 +64,7 @@ const VENDORS = [
   "react-aria-components/src/tabs",
   "react-transition-group/Transition",
   "reselect",
+  "whatwg-url",
   "Svg",
 ];
 
@@ -73,13 +74,13 @@ const moduleMapping = {
 };
 
 /*
-* Updates devtools-modules imports such as
-* `import { Telemetry } from "devtools-modules"`
-* so that we can customize how we resolve certain modules in the package
-*
-* In the case of multiple declarations we need to move
-* the telemetry module into its own import.
-*/
+ * Updates devtools-modules imports such as
+ * `import { Telemetry } from "devtools-modules"`
+ * so that we can customize how we resolve certain modules in the package
+ *
+ * In the case of multiple declarations we need to move
+ * the telemetry module into its own import.
+ */
 function updateDevtoolsModulesImport(path, t) {
   const specifiers = path.node.specifiers;
 
@@ -106,9 +107,9 @@ function updateDevtoolsModulesImport(path, t) {
 }
 
 /**
-* This Babel plugin is used to transpile a single Debugger module into a module that
-* can be loaded in Firefox via the regular DevTools loader.
-*/
+ * This Babel plugin is used to transpile a single Debugger module into a module that
+ * can be loaded in Firefox via the regular DevTools loader.
+ */
 function transformMC({ types: t }) {
   return {
     visitor: {

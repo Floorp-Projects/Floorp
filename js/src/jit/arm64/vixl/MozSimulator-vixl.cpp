@@ -89,8 +89,8 @@ void Simulator::ResetState() {
   }
   // Set FP registers to a value that is a NaN in both 32-bit and 64-bit FP.
   uint64_t nan_bits = UINT64_C(0x7ff0dead7f8beef1);
-  VIXL_ASSERT(IsSignallingNaN(rawbits_to_double(nan_bits & kDRegMask)));
-  VIXL_ASSERT(IsSignallingNaN(rawbits_to_float(nan_bits & kSRegMask)));
+  VIXL_ASSERT(IsSignallingNaN(RawbitsToDouble(nan_bits & kDRegMask)));
+  VIXL_ASSERT(IsSignallingNaN(RawbitsToFloat(nan_bits & kSRegMask)));
   for (unsigned i = 0; i < kNumberOfFPRegisters; i++) {
     set_dreg_bits(i, nan_bits);
   }

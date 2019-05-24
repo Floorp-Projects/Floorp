@@ -10,12 +10,8 @@
 //! standard library. It also provides a `ReentrantMutex` type.
 
 #![warn(missing_docs)]
-#![cfg_attr(feature = "nightly", feature(const_fn))]
-#![cfg_attr(feature = "nightly", feature(integer_atomics))]
+#![warn(rust_2018_idioms)]
 #![cfg_attr(feature = "nightly", feature(asm))]
-
-extern crate lock_api;
-extern crate parking_lot_core;
 
 mod condvar;
 mod elision;
@@ -32,13 +28,15 @@ pub mod deadlock;
 #[cfg(not(feature = "deadlock_detection"))]
 mod deadlock;
 
-pub use condvar::{Condvar, WaitTimeoutResult};
-pub use mutex::{MappedMutexGuard, Mutex, MutexGuard};
-pub use once::{Once, OnceState, ONCE_INIT};
-pub use raw_mutex::RawMutex;
-pub use raw_rwlock::RawRwLock;
-pub use remutex::{MappedReentrantMutexGuard, RawThreadId, ReentrantMutex, ReentrantMutexGuard};
-pub use rwlock::{
+pub use self::condvar::{Condvar, WaitTimeoutResult};
+pub use self::mutex::{MappedMutexGuard, Mutex, MutexGuard};
+pub use self::once::{Once, OnceState};
+pub use self::raw_mutex::RawMutex;
+pub use self::raw_rwlock::RawRwLock;
+pub use self::remutex::{
+    MappedReentrantMutexGuard, RawThreadId, ReentrantMutex, ReentrantMutexGuard,
+};
+pub use self::rwlock::{
     MappedRwLockReadGuard, MappedRwLockWriteGuard, RwLock, RwLockReadGuard,
     RwLockUpgradableReadGuard, RwLockWriteGuard,
 };
