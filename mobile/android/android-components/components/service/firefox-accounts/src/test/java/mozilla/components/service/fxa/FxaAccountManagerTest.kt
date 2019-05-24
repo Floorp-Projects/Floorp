@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.AccessTokenInfo
 import mozilla.components.concept.sync.AccountObserver
@@ -27,9 +26,9 @@ import mozilla.components.service.fxa.manager.FailedToLoadAccountException
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.test.any
-import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -74,6 +73,13 @@ class TestableFxaAccountManager(
 class FxaAccountManagerTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
+
+    @After
+    fun cleanup() {
+        // This registry is global, so we need to clear it between test runs, otherwise different
+        // manager instances will be kept around.
+        authErrorRegistry.unregisterObservers()
+    }
 
     @Test
     fun `state transitions`() {
@@ -184,6 +190,111 @@ class FxaAccountManagerTest {
         // Assert that persistence callback is interacting with the storage layer.
         account.persistenceCallback!!.persist("test")
         verify(accountStorage).write("test")
+    }
+
+    @Test
+    fun `restored account state persistence, ensureCapabilities hit an intermittent error`() = runBlocking {
+        val accountStorage: AccountStorage = mock()
+        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
+        val constellation: DeviceConstellation = mock()
+        val account = StatePersistenceTestableAccount(profile, constellation)
+
+        val manager = TestableFxaAccountManager(
+                context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
+                listOf(DeviceCapability.SEND_TAB), this.coroutineContext
+        ) {
+            account
+        }
+
+        val fxaNetworkError = CompletableDeferred<Unit>()
+        fxaNetworkError.completeExceptionally(FxaNetworkException("fxa 500"))
+        `when`(constellation.ensureCapabilitiesAsync(any())).thenReturn(fxaNetworkError)
+        // We have an account at the start.
+        `when`(accountStorage.read()).thenReturn(account)
+
+        assertNull(account.persistenceCallback)
+        manager.initAsync().await()
+
+        // Assert that persistence callback is set.
+        assertNotNull(account.persistenceCallback)
+
+        // Assert that ensureCapabilities fired, but not the device initialization (since we're restoring).
+        verify(constellation).ensureCapabilitiesAsync(listOf(DeviceCapability.SEND_TAB))
+        verify(constellation, never()).initDeviceAsync(any(), any(), any())
+
+        // Assert that periodic account refresh started.
+        verify(constellation).startPeriodicRefresh()
+
+        // Assert that persistence callback is interacting with the storage layer.
+        account.persistenceCallback!!.persist("test")
+        verify(accountStorage).write("test")
+    }
+
+    @Test
+    fun `restored account state persistence, hit an auth error`() = runBlocking {
+        val accountStorage: AccountStorage = mock()
+        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
+        val constellation: DeviceConstellation = mock()
+        val account = StatePersistenceTestableAccount(profile, constellation)
+
+        val accountObserver: AccountObserver = mock()
+        val manager = TestableFxaAccountManager(
+                context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
+                listOf(DeviceCapability.SEND_TAB), this.coroutineContext
+        ) {
+            account
+        }
+
+        manager.register(accountObserver)
+
+        // Hit a 401 while we're restoring account.
+        val fxa401 = CompletableDeferred<Unit>()
+        fxa401.completeExceptionally(FxaUnauthorizedException("401"))
+        `when`(constellation.ensureCapabilitiesAsync(any())).thenReturn(fxa401)
+        // We have an account at the start.
+        `when`(accountStorage.read()).thenReturn(account)
+
+        assertNull(account.persistenceCallback)
+
+        assertFalse(manager.accountNeedsReauth())
+        verify(accountObserver, never()).onAuthenticationProblems()
+
+        manager.initAsync().await()
+
+        assertTrue(manager.accountNeedsReauth())
+        verify(accountObserver, times(1)).onAuthenticationProblems()
+    }
+
+    @Test(expected = FxaPanicException::class)
+    fun `restored account state persistence, hit an fxa panic which is re-thrown`() = runBlocking {
+        val accountStorage: AccountStorage = mock()
+        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
+        val constellation: DeviceConstellation = mock()
+        val account = StatePersistenceTestableAccount(profile, constellation)
+
+        val accountObserver: AccountObserver = mock()
+        val manager = TestableFxaAccountManager(
+                context, Config.release("dummyId", "http://auth-url/redirect"), arrayOf("profile"), accountStorage,
+                listOf(DeviceCapability.SEND_TAB), this.coroutineContext
+        ) {
+            account
+        }
+
+        manager.register(accountObserver)
+
+        // Hit a panic while we're restoring account.
+        val fxaPanic = CompletableDeferred<Unit>()
+        fxaPanic.completeExceptionally(FxaPanicException("panic!"))
+        `when`(constellation.ensureCapabilitiesAsync(any())).thenReturn(fxaPanic)
+        // We have an account at the start.
+        `when`(accountStorage.read()).thenReturn(account)
+
+        assertNull(account.persistenceCallback)
+
+        assertFalse(manager.accountNeedsReauth())
+        verify(accountObserver, never()).onAuthenticationProblems()
+
+        manager.initAsync().await()
     }
 
     @Test
@@ -466,6 +577,61 @@ class FxaAccountManagerTest {
         assertEquals(profile, manager.accountProfile())
     }
 
+    @Test(expected = FxaPanicException::class)
+    fun `fxa panic during initDevice flow`() = runBlocking {
+        val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+        val accountStorage = mock<AccountStorage>()
+        val accountObserver: AccountObserver = mock()
+        val manager = prepareHappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, this.coroutineContext)
+
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
+
+        reset(accountObserver)
+        assertEquals("auth://url", manager.beginAuthenticationAsync().await())
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        val fxaPanic = CompletableDeferred<Unit>()
+        fxaPanic.completeExceptionally(FxaPanicException("panic!"))
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(fxaPanic)
+
+        manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
+    }
+
+    @Test(expected = FxaPanicException::class)
+    fun `fxa panic during pairing flow`() = runBlocking {
+        val mockAccount: OAuthAccount = mock()
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+        val accountStorage = mock<AccountStorage>()
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
+
+        val fxaPanic = CompletableDeferred<String>()
+        fxaPanic.completeExceptionally(FxaPanicException("panic!"))
+
+        `when`(mockAccount.beginPairingFlow(any(), any())).thenReturn(fxaPanic)
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitCompletedDeferrable())
+        // There's no account at the start.
+        `when`(accountStorage.read()).thenReturn(null)
+
+        val manager = TestableFxaAccountManager(
+                context,
+                Config.release("dummyId", "bad://url"),
+                arrayOf("profile", "test-scope"),
+                accountStorage, coroutineContext = coroutineContext
+        ) {
+            mockAccount
+        }
+
+        manager.initAsync().await()
+        manager.beginAuthenticationAsync("http://pairing.com").await()
+        Unit
+    }
+
     @Test
     fun `happy pairing authentication and profile flow`() = runBlocking {
         val mockAccount: OAuthAccount = mock()
@@ -608,6 +774,55 @@ class FxaAccountManagerTest {
     }
 
     @Test
+    fun `authentication issues are propagated via AccountObserver`() = runBlocking {
+        val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
+        val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
+        val accountStorage = mock<AccountStorage>()
+        val accountObserver: AccountObserver = mock()
+        val manager = prepareHappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, this.coroutineContext)
+
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
+
+        reset(accountObserver)
+        assertEquals("auth://url", manager.beginAuthenticationAsync().await())
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
+
+        manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
+
+        verify(accountObserver, never()).onAuthenticationProblems()
+        assertFalse(manager.accountNeedsReauth())
+
+        // At this point, we're logged in. Trigger a 401.
+        authErrorRegistry.notifyObservers {
+            runBlocking(this@runBlocking.coroutineContext) {
+                onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED, FxaUnauthorizedException("401"))).await()
+            }
+        }
+
+        verify(accountObserver, times(1)).onAuthenticationProblems()
+        assertTrue(manager.accountNeedsReauth())
+
+        // Able to re-authenticate.
+        reset(accountObserver)
+        assertEquals("auth://url", manager.beginAuthenticationAsync().await())
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
+
+        verify(accountObserver).onAuthenticated(mockAccount)
+        verify(accountObserver, never()).onAuthenticationProblems()
+        assertFalse(manager.accountNeedsReauth())
+    }
+
+    @Test
     fun `unhappy profile fetching flow`() = runBlocking {
         val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
@@ -653,10 +868,6 @@ class FxaAccountManagerTest {
         verify(accountStorage, times(1)).read()
         verify(accountStorage, never()).clear()
 
-//        val captor = argumentCaptor<FxaException>()
-//        verify(accountObserver, times(1)).onError(captor.capture())
-//        assertEquals(fxaException.message, captor.value.message)
-
         verify(accountObserver, times(1)).onAuthenticated(mockAccount)
         verify(accountObserver, never()).onProfileUpdated(any())
         verify(accountObserver, never()).onLoggedOut()
@@ -678,6 +889,101 @@ class FxaAccountManagerTest {
         verify(accountObserver, never()).onAuthenticated(any())
         verify(accountObserver, never()).onLoggedOut()
         assertEquals(profile, manager.accountProfile())
+    }
+
+    @Test
+    fun `profile fetching flow hit an auth problem`() = runBlocking {
+        val accountStorage = mock<AccountStorage>()
+        val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
+
+        val exceptionalProfile = CompletableDeferred<Profile>()
+        val fxaException = FxaUnauthorizedException("401")
+        exceptionalProfile.completeExceptionally(fxaException)
+
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(exceptionalProfile)
+        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitCompletedDeferrable())
+        // There's no account at the start.
+        `when`(accountStorage.read()).thenReturn(null)
+
+        val manager = TestableFxaAccountManager(
+                context,
+                Config.release("dummyId", "bad://url"),
+                arrayOf("profile", "test-scope"),
+                accountStorage, coroutineContext = this.coroutineContext
+        ) {
+            mockAccount
+        }
+
+        val accountObserver: AccountObserver = mock()
+
+        manager.register(accountObserver)
+        manager.initAsync().await()
+
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
+        verify(accountObserver, never()).onAuthenticationProblems()
+        assertFalse(manager.accountNeedsReauth())
+
+        reset(accountObserver)
+        assertEquals("auth://url", manager.beginAuthenticationAsync().await())
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
+
+        assertTrue(manager.accountNeedsReauth())
+        verify(accountObserver, times(1)).onAuthenticationProblems()
+    }
+
+    @Test(expected = FxaPanicException::class)
+    fun `profile fetching flow hit an fxa panic, which is re-thrown`() = runBlocking {
+        val accountStorage = mock<AccountStorage>()
+        val mockAccount: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
+
+        val exceptionalProfile = CompletableDeferred<Profile>()
+        val fxaException = FxaPanicException("500")
+        exceptionalProfile.completeExceptionally(fxaException)
+
+        `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(unitCompletedDeferrable())
+        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(exceptionalProfile)
+        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitCompletedDeferrable())
+        // There's no account at the start.
+        `when`(accountStorage.read()).thenReturn(null)
+
+        val manager = TestableFxaAccountManager(
+                context,
+                Config.release("dummyId", "bad://url"),
+                arrayOf("profile", "test-scope"),
+                accountStorage, coroutineContext = this.coroutineContext
+        ) {
+            mockAccount
+        }
+
+        val accountObserver: AccountObserver = mock()
+
+        manager.register(accountObserver)
+        manager.initAsync().await()
+
+        // We start off as logged-out, but the event won't be called (initial default state is assumed).
+        verify(accountObserver, never()).onLoggedOut()
+        verify(accountObserver, never()).onAuthenticated(any())
+        verify(accountObserver, never()).onAuthenticationProblems()
+        assertFalse(manager.accountNeedsReauth())
+
+        reset(accountObserver)
+        assertEquals("auth://url", manager.beginAuthenticationAsync().await())
+        assertNull(manager.authenticatedAccount())
+        assertNull(manager.accountProfile())
+
+        manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
     }
 
     private fun prepareHappyAuthenticationFlow(

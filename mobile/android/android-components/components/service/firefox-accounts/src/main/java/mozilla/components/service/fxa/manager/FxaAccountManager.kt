@@ -14,7 +14,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthExceptionType
@@ -63,7 +62,7 @@ class FailedToLoadAccountException(cause: Exception?) : Exception(cause)
 val authErrorRegistry = ObserverRegistry<AuthErrorObserver>()
 
 interface AuthErrorObserver {
-    fun onAuthError(e: AuthException)
+    fun onAuthErrorAsync(e: AuthException): Deferred<Unit>
 }
 
 /**
@@ -110,7 +109,8 @@ open class FxaAccountManager(
     syncManager: SyncManager? = null,
     // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
     // That is, we want to ensure a sequential execution flow, but on a background thread.
-    val coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()
+    val coroutineContext: CoroutineContext = Executors
+            .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logger = Logger("FirefoxAccountStateMachine")
 
@@ -135,10 +135,8 @@ open class FxaAccountManager(
     }
 
     private class FxaAuthErrorObserver(val manager: FxaAccountManager) : AuthErrorObserver {
-        override fun onAuthError(e: AuthException) {
-            CoroutineScope(manager.coroutineContext).launch {
-                manager.processQueueAsync(Event.AuthenticationError(e)).await()
-            }
+        override fun onAuthErrorAsync(e: AuthException): Deferred<Unit> {
+            return manager.processQueueAsync(Event.AuthenticationError(e))
         }
     }
     private val fxaAuthErrorObserver = FxaAuthErrorObserver(this)
@@ -322,7 +320,7 @@ open class FxaAccountManager(
             state = transitionInto
 
             stateActions(state, toProcess)?.let { successiveEvent ->
-                logger.info( "Ran '$toProcess' side-effects for state $state, got successive event $successiveEvent")
+                logger.info("Ran '$toProcess' side-effects for state $state, got successive event $successiveEvent")
                 eventQueue.add(successiveEvent)
             }
         } while (!eventQueue.isEmpty())
@@ -331,7 +329,7 @@ open class FxaAccountManager(
     /**
      * Side-effects matrix. Defines non-pure operations that must take place for state+event combinations.
      */
-    @Suppress("ComplexMethod", "ReturnCount")
+    @Suppress("ComplexMethod", "ReturnCount", "ThrowsCount")
     private suspend fun stateActions(forState: AccountState, via: Event): Event? {
         // We're about to enter a new state ('forState') via some event ('via').
         // States will have certain side-effects associated with different event transitions.

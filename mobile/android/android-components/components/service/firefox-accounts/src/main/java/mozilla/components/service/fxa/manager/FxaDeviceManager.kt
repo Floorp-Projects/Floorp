@@ -73,7 +73,7 @@ internal open class PollingDeviceManager(
                 throw e
             } catch (e: FxaUnauthorizedException) {
                 // Propagate auth errors.
-                authErrorRegistry.notifyObservers { onAuthError(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
+                authErrorRegistry.notifyObservers { onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
                 return@async
             } catch (e: FxaException) {
                 // Ignore intermittent errors.
@@ -104,7 +104,7 @@ internal open class PollingDeviceManager(
                 throw e
             } catch (e: FxaUnauthorizedException) {
                 // Propagate auth errors.
-                authErrorRegistry.notifyObservers { onAuthError(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
+                authErrorRegistry.notifyObservers { onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
                 return@async
             } catch (e: FxaException) {
                 // Ignore intermittent errors.

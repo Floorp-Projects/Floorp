@@ -237,7 +237,7 @@ class WorkManagerSyncWorker(
                     // Notify auth error observers that we saw an auth-related error while syncing.
                     if (status.exception is AuthException) {
                         authErrorRegistry.notifyObservers {
-                            onAuthError(status.exception as AuthException)
+                            onAuthErrorAsync(status.exception as AuthException)
                         }
                     }
 
