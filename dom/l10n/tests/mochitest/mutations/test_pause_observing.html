@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test L10n Mutations for Pause/Resume Observing</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("DOMContentLoaded", function() {
+    let elem1 = document.createElement("div");
+    let elem2 = document.createElement("div");
+    let elem3 = document.createElement("div");
+    is(elem1.textContent.length, 0);
+    is(elem2.textContent.length, 0);
+    is(elem3.textContent.length, 0);
+
+    document.l10n.setAttributes(elem1, "crash-reports-title");
+    document.l10n.setAttributes(elem2, "crash-reports-title");
+    document.l10n.setAttributes(elem3, "crash-reports-title");
+
+    let verifyL10n = () => {
+      if (elem1.textContent.length > 0 &&
+          elem2.textContent.length == 0 &&
+          elem3.textContent.length > 0) {
+        window.removeEventListener("MozAfterPaint", verifyL10n);
+        SimpleTest.finish();
+      }
+    };
+    window.addEventListener("MozAfterPaint", verifyL10n);
+    document.body.appendChild(elem1);
+    document.l10n.pauseObserving();
+    document.body.appendChild(elem2);
+    document.l10n.resumeObserving();
+    document.body.appendChild(elem3);
+  });
+  </script>
+</head>
+<body>
+</body>
+</html>

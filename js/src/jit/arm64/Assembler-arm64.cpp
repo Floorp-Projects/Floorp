@@ -391,7 +391,7 @@ void Assembler::PatchWrite_NearCall(CodeLocationLabel start,
   ptrdiff_t relTarget = (Instruction*)toCall.raw() - dest;
   ptrdiff_t relTarget00 = relTarget >> 2;
   MOZ_RELEASE_ASSERT((relTarget & 0x3) == 0);
-  MOZ_RELEASE_ASSERT(vixl::is_int26(relTarget00));
+  MOZ_RELEASE_ASSERT(vixl::IsInt26(relTarget00));
 
   // printf("patching %p with call to %p\n", start.raw(), toCall.raw());
   bl(dest, relTarget00);
@@ -420,7 +420,7 @@ void Assembler::ToggleToJmp(CodeLocationLabel inst_) {
 
   // Refer to instruction layout in ToggleToCmp().
   int imm19 = (int)i->Bits(23, 5);
-  MOZ_ASSERT(vixl::is_int19(imm19));
+  MOZ_ASSERT(vixl::IsInt19(imm19));
 
   b(i, imm19, Always);
 
@@ -434,7 +434,7 @@ void Assembler::ToggleToCmp(CodeLocationLabel inst_) {
   int imm19 = i->ImmCondBranch();
   // bit 23 is reserved, and the simulator throws an assertion when this happens
   // It'll be messy to decode, but we can steal bit 30 or bit 31.
-  MOZ_ASSERT(vixl::is_int18(imm19));
+  MOZ_ASSERT(vixl::IsInt18(imm19));
 
   // 31 - 64-bit if set, 32-bit if unset. (OK!)
   // 30 - sub if set, add if unset. (OK!)
@@ -497,7 +497,7 @@ void Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled) {
     //   ldr x17, [pc, offset]
     //   blr x17
     int32_t offset = (int)load->ImmPCRawOffset();
-    MOZ_ASSERT(vixl::is_int19(offset));
+    MOZ_ASSERT(vixl::IsInt19(offset));
     ldr(load, ScratchReg2_64, int32_t(offset));
     blr(call, ScratchReg2_64);
   }

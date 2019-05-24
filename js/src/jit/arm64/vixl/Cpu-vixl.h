@@ -46,7 +46,7 @@ class CPU {
   // Handle tagged pointers.
   template <typename T>
   static T SetPointerTag(T pointer, uint64_t tag) {
-    VIXL_ASSERT(is_uintn(kAddressTagWidth, tag));
+    VIXL_ASSERT(IsUintN(kAddressTagWidth, tag));
 
     // Use C-style casts to get static_cast behaviour for integral types (T),
     // and reinterpret_cast behaviour for other types.

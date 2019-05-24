@@ -13,6 +13,28 @@ use core::{fmt, str};
 use parser;
 use prelude::*;
 
+impl From<super::BytesError> for super::Error {
+    fn from(err: super::BytesError) -> Self {
+        super::Error::Bytes(err)
+    }
+}
+
+impl fmt::Debug for Uuid {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::LowerHex::fmt(self, f)
+    }
+}
+
+impl fmt::Display for super::Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            super::Error::Bytes(ref err) => fmt::Display::fmt(&err, f),
+            super::Error::Parse(ref err) => fmt::Display::fmt(&err, f),
+        }
+    }
+}
+
 impl fmt::Display for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::LowerHex::fmt(self, f)

@@ -1,81 +1,98 @@
 uuid
-====
+---------
 
-[![Build Status](https://travis-ci.org/uuid-rs/uuid.svg?branch=master)](https://travis-ci.org/uuid-rs/uuid) 
-[![Appveyor Status](https://ci.appveyor.com/api/projects/status/github/uuid-rs/uuid?branch=master&svg=true)](https://ci.appveyor.com/project/KodrAus/uuid) 
-[![Latest Version](https://img.shields.io/crates/v/uuid.svg)](https://crates.io/crates/uuid) 
+[![Latest Version](https://img.shields.io/crates/v/uuid.svg)](https://crates.io/crates/uuid)
 [![Join the chat at https://gitter.im/uuid-rs/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/uuid-rs/Lobby?utm_source=badge&utm_medium=badge&utm_content=badge)
 ![Minimum rustc version](https://img.shields.io/badge/rustc-1.22.0+-yellow.svg)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/uuid-rs/uuid?branch=master&svg=true)](https://ci.appveyor.com/project/uuid-rs/uuid/branch/master)
+[![Build Status](https://travis-ci.org/uuid-rs/uuid.svg?branch=master)](https://travis-ci.org/uuid-rs/uuid)
+[![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/uuid-rs/uuid.svg)](https://isitmaintained.com/project/uuid-rs/uuid "Average time to resolve an issue")
+[![Percentage of issues still open](https://isitmaintained.com/badge/open/uuid-rs/uuid.svg)](https://isitmaintained.com/project/uuid-rs/uuid "Percentage of issues still open")
 
-A Rust library to generate and parse UUIDs.
+---
 
-Provides support for Universally Unique Identifiers (UUIDs). A UUID is a unique
-128-bit number, stored as 16 octets. UUIDs are used to assign unique identifiers
-to entities without requiring a central allocating authority.
+Generate and parse UUIDs.
+
+Provides support for Universally Unique Identifiers (UUIDs). A UUID is a
+unique 128-bit number, stored as 16 octets. UUIDs are used to  assign
+unique identifiers to entities without requiring a central allocating
+authority.
 
 They are particularly useful in distributed systems, though can be used in
-disparate areas, such as databases and network protocols. Typically a UUID is
-displayed in a readable string form as a sequence of hexadecimal digits,
+disparate areas, such as databases and network protocols.  Typically a UUID
+is displayed in a readable string form as a sequence of hexadecimal digits,
 separated into groups by hyphens.
 
-The uniqueness property is not strictly guaranteed, however for all practical
-purposes, it can be assumed that an unintentional collision would be extremely
-unlikely.
+The uniqueness property is not strictly guaranteed, however for all
+practical purposes, it can be assumed that an unintentional collision would
+be extremely unlikely.
 
-[Documentation](https://docs.rs/uuid)
+## Dependencies
 
-## Usage
+By default, this crate depends on nothing but `std` and cannot generate
+[`Uuid`]s. You need to enable the following Cargo features to enable
+various pieces of functionality:
 
-Add this to your `Cargo.toml`:
+* `v1` - adds the `Uuid::new_v1` function and the ability to create a V1
+  using an implementation of `uuid::v1::ClockSequence` (usually
+`uuid::v1::Context`) and a timestamp from `time::timespec`.
+* `v3` - adds the `Uuid::new_v3` function and the ability to create a V3
+  UUID based on the MD5 hash of some data.
+* `v4` - adds the `Uuid::new_v4` function and the ability to randomly
+  generate a `Uuid`.
+* `v5` - adds the `Uuid::new_v5` function and the ability to create a V5
+  UUID based on the SHA1 hash of some data.
+* `serde` - adds the ability to serialize and deserialize a `Uuid` using the
+  `serde` crate.
+
+You need to enable one of the following Cargo features together with
+`v3`, `v4` or `v5` feature if you're targeting `wasm32` architecture:
+
+* `stdweb` - enables support for `OsRng` on `wasm32-unknown-unknown` via
+  `stdweb` combined with `cargo-web`
+* `wasm-bindgen` - `wasm-bindgen` enables support for `OsRng` on
+  `wasm32-unknown-unknown` via [`wasm-bindgen`]
+
+By default, `uuid` can be depended on with:
 
 ```toml
 [dependencies]
 uuid = "0.7"
 ```
 
-and this to your crate root:
+To activate various features, use syntax like:
 
-```rust
-extern crate uuid;
+```toml
+[dependencies]
+uuid = { version = "0.7", features = ["serde", "v4"] }
+```
+
+You can disable default features with:
+
+```toml
+[dependencies]
+uuid = { version = "0.7", default-features = false }
 ```
 
 ## Examples
 
-To parse a simple UUID, then print the version and urn string format:
+To parse a UUID given in the simple format and print it as a urn:
 
 ```rust
-extern crate uuid;
 use uuid::Uuid;
 
 fn main() {
-    let my_uuid = Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap();
-    println!("Parsed a version {} UUID.", my_uuid.get_version_num());
-    println!("{}", my_uuid);
+    let my_uuid =
+        Uuid::parse_str("936DA01F9ABD4d9d80C702AF85C822A8").unwrap();
+    println!("{}", my_uuid.to_urn());
 }
 ```
 
-The library supports 5 versions of UUID:
+To create a new random (V4) UUID and print it out in hexadecimal form:
 
-Name     | Version
----------|----------
-Mac      | Version 1: MAC address
-Dce      | Version 2: DCE Security
-Md5      | Version 3: MD5 hash
-Random   | Version 4: Random
-Sha1     | Version 5: SHA-1 hash
+```ignore,rust
+// Note that this requires the `v4` feature enabled in the uuid crate.
 
-To create a new random (V4) UUID and print it out in hexadecimal form, first
-you'll need to change how you depend on `uuid`:
-
-```toml
-[dependencies]
-uuid = { version = "0.7", features = ["v4"] }
-```
-
-Next, you'll write:
-
-```rust
-extern crate uuid;
 use uuid::Uuid;
 
 fn main() {
@@ -84,26 +101,35 @@ fn main() {
 }
 ```
 
-To create a new sha1-hash based (V5) UUID and print it out in hexadecimal form,
-you'll also need to change how you depend on `uuid`:
+## Strings
 
-```toml
-[dependencies]
-uuid = { version = "0.7", features = ["v5"] }
-```
+Examples of string representations:
 
-Next, you'll write:
-
-```rust
-extern crate uuid;
-use uuid::Uuid;
-
-fn main() {
-    let my_uuid = Uuid::new_v5(&Uuid::NAMESPACE_DNS, "foo".as_bytes());
-    println!("{}", my_uuid);
-}
-```
+* simple: `936DA01F9ABD4d9d80C702AF85C822A8`
+* hyphenated: `550e8400-e29b-41d4-a716-446655440000`
+* urn: `urn:uuid:F9168C5E-CEB2-4faa-B6BF-329BF39FA1E4`
 
 ## References
 
-[Wikipedia: Universally Unique Identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier)
+* [Wikipedia: Universally Unique Identifier](     http://en.wikipedia.org/wiki/Universally_unique_identifier)
+* [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](     http://tools.ietf.org/html/rfc4122)
+
+[`wasm-bindgen`]: https://github.com/rustwasm/wasm-bindgen
+
+[`Uuid`]: https://docs.rs/uuid/0.7.4/uuid/struct.Uuid.html
+
+---
+# License
+
+Licensed under either of
+
+* Apache License, Version 2.0, (LICENSE-APACHE or https://www.apache.org/licenses/LICENSE-2.0)
+* MIT license (LICENSE-MIT or https://opensource.org/licenses/MIT)
+
+at your option.
+
+## Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall
+be dual licensed as above, without any additional terms or conditions.

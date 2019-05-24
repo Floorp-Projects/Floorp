@@ -187,6 +187,8 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST = {
         # MIT
         'deque': '6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb',
+        # we're whitelisting this fuchsia crate because it doesn't get built in the final product but has a license-file that needs ignoring
+        'fuchsia-cprng' : '03b114f53e6587a398931762ee11e2395bfdba252a329940e2c8c9e81813845b',
     }
 
     @staticmethod

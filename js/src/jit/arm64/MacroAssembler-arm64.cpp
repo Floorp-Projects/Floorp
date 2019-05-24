@@ -675,7 +675,7 @@ void MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
   ptrdiff_t relTarget = (int)calleeOffset - ((int)callerOffset - 4);
   ptrdiff_t relTarget00 = relTarget >> 2;
   MOZ_RELEASE_ASSERT((relTarget & 0x3) == 0);
-  MOZ_RELEASE_ASSERT(vixl::is_int26(relTarget00));
+  MOZ_RELEASE_ASSERT(vixl::IsInt26(relTarget00));
   bl(inst, relTarget00);
   AutoFlushICache::flush(uintptr_t(inst), 4);
 }

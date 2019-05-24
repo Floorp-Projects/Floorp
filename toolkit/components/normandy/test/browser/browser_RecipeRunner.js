@@ -455,3 +455,129 @@ decorate_task(
     }
   }
 );
+
+decorate_task(
+  withPrefEnv({
+    set: [
+      ["features.normandy-remote-settings.enabled", false],
+    ],
+  }),
+  withStub(RecipeRunner, "run"),
+  async function testRunOnSyncRemoteSettings(
+    runStub,
+  ) {
+    const rsClient = RecipeRunner._remoteSettingsClientForTesting;
+
+    // Runner disabled + pref off.
+    RecipeRunner.disable();
+    await rsClient.emit("sync", {});
+    ok(!runStub.called, "run() should not be called if disabled");
+    runStub.reset();
+
+    // Runner enabled + pref off.
+    RecipeRunner.enable();
+    await rsClient.emit("sync", {});
+    ok(!runStub.called, "run() should not be called if pref not set");
+    runStub.reset();
+
+    await SpecialPowers.pushPrefEnv({ set: [["features.normandy-remote-settings.enabled", true]] });
+
+    // Runner enabled + pref on.
+    await rsClient.emit("sync", {});
+    ok(runStub.called, "run() should be called if pref is set");
+    runStub.reset();
+
+    // Runner disabled + pref on.
+    RecipeRunner.disable();
+    await rsClient.emit("sync", {});
+    ok(!runStub.called, "run() should not be called if disabled with pref set");
+    runStub.reset();
+
+    // Runner re-enabled + pref on.
+    RecipeRunner.enable();
+    await rsClient.emit("sync", {});
+    ok(runStub.called, "run() should be called at most once if runner is re-enabled");
+    runStub.reset();
+
+    await SpecialPowers.pushPrefEnv({ set: [["features.normandy-remote-settings.enabled", false]] });
+
+    // Runner enabled + pref off.
+    await rsClient.emit("sync", {});
+    ok(!runStub.called, "run() should not be called if pref is unset");
+    runStub.reset();
+
+    // Runner disabled + pref off.
+    RecipeRunner.disable();
+    await rsClient.emit("sync", {});
+    ok(!runStub.called, "run() should still not be called if disabled");
+    RecipeRunner.enable();
+  }
+);
+
+decorate_task(
+  withStub(RecipeRunner, "loadRecipes"),
+  async function testRunCanRunOnlyOnce(
+    loadRecipesStub,
+  ) {
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    loadRecipesStub.returns(new Promise((resolve) => setTimeout(() => resolve([]), 10)));
+
+    // // Run 2 in parallel.
+    await Promise.all([
+      RecipeRunner.run(),
+      RecipeRunner.run(),
+    ]);
+
+    is(loadRecipesStub.callCount, 1, "run() is no-op if already running");
+  }
+);
+
+decorate_task(
+  withPrefEnv({
+    set: [
+      ["features.normandy-remote-settings.enabled", true],
+    ],
+  }),
+  withStub(RecipeRunner, "loadRecipes"),
+  withStub(ActionsManager.prototype, "finalize"),
+  withStub(Uptake, "reportRunner"),
+  async function testSyncDelaysTimer(
+    loadRecipesStub,
+    finalizeStub,
+    reportRecipeStub,
+  ) {
+    loadRecipesStub.returns(Promise.resolve([]));
+    // Set a timer interval as small as possible so that the UpdateTimerManager
+    // will pick the recipe runner as the most imminent timer to run on `notify()`.
+    Services.prefs.setIntPref("app.normandy.run_interval_seconds", 1);
+    // This will refresh the timer interval.
+    RecipeRunner.unregisterTimer();
+    RecipeRunner.registerTimer();
+
+    // Simulate timer notification.
+    const service = Cc["@mozilla.org/updates/timer-manager;1"].getService(Ci.nsITimerCallback);
+    const newTimer = () => {
+      const t = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      t.initWithCallback(() => { }, 10, Ci.nsITimer.TYPE_ONE_SHOT);
+      return t;
+    };
+    // Run timer once, to make sure this test works as expected.
+    const startTime = Date.now();
+    const endPromise = TestUtils.topicObserved("recipe-runner:end");
+    service.notify(newTimer());
+    await endPromise; // will timeout if run() not called.
+    const timerLatency = Date.now() - startTime;
+
+    // Run once from sync event.
+    const rsClient = RecipeRunner._remoteSettingsClientForTesting;
+    await rsClient.emit("sync", {}); // waits for listeners to run.
+
+    // Run timer again.
+    service.notify(newTimer());
+    // Wait at least as long as the latency we had above. Ten times as a margin.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise((resolve) => setTimeout(resolve, timerLatency * 10));
+
+    is(loadRecipesStub.callCount, 2, "run() does not run again from timer after sync");
+  }
+);
