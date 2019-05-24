@@ -1200,6 +1200,7 @@ class XPCShellTests(object):
             fixedInfo[k] = v
         self.mozInfo = fixedInfo
 
+        self.mozInfo['fission'] = prefs.get('fission.autostart', False)
         self.mozInfo['serviceworker_e10s'] = prefs.get(
             'dom.serviceWorkers.parent_intercept', False)
 
