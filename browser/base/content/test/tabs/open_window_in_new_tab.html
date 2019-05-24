@@ -1,0 +1,8 @@
+<!doctype html>
+<script>
+function openWindow() {
+  window.childWindow = window.open(location.href + "?opened", "", "");
+}
+</script>
+<button id="open" onclick="openWindow()">Open window</button>
+<button id="focus" onclick="window.childWindow.focus()">Focus window</button>

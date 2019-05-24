@@ -638,16 +638,8 @@ MOZ_MUST_USE bool BailoutIonToBaseline(
     bool invalidate, BaselineBailoutInfo** bailoutInfo,
     const ExceptionBailoutInfo* exceptionInfo);
 
-// Mark JitScripts on the stack as active, so that they are not discarded
-// during GC.
-void MarkActiveJitScripts(Zone* zone);
-
 MethodStatus BaselineCompile(JSContext* cx, JSScript* script,
                              bool forceDebugInstrumentation = false);
-
-#ifdef JS_STRUCTURED_SPEW
-void JitSpewBaselineICStats(JSScript* script, const char* dumpReason);
-#endif
 
 static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
 

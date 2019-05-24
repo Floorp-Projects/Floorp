@@ -81,6 +81,24 @@ const CookieCleaner = {
 
 };
 
+const CertCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    let overrideService = Cc["@mozilla.org/security/certoverride;1"]
+                            .getService(Ci.nsICertOverrideService);
+    return new Promise(aResolve => {
+      overrideService.clearValidityOverride(aHost, -1);
+      aResolve();
+    });
+  },
+
+  deleteAll() {
+    return new Promise(aResolve => {
+      Cu.reportError("CertCleaner.deleteAll is not implemented");
+      aResolve();
+    });
+  },
+};
+
 const NetworkCacheCleaner = {
   deleteByHost(aHost, aOriginAttributes) {
     return new Promise(aResolve => {
@@ -818,6 +836,9 @@ const ReportsCleaner = {
 
 // Here the map of Flags-Cleaner.
 const FLAGS_MAP = [
+  { flag: Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS,
+    cleaner: CertCleaner },
+
  { flag: Ci.nsIClearDataService.CLEAR_COOKIES,
    cleaner: CookieCleaner },
 

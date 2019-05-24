@@ -249,7 +249,11 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     if (isSpace || ch == '\n') {
       if (offset > wordStart && aSink) {
         if (!(aFlags & BREAK_SUPPRESS_INSIDE)) {
-          if (wordHasComplexChar) {
+          if (mStrictness == LineBreaker::Strictness::Anywhere) {
+            memset(breakState.Elements() + wordStart,
+                   gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL,
+                   offset - wordStart);
+          } else if (wordHasComplexChar) {
             // Save current start-of-word state because GetJISx4051Breaks will
             // set it to false
             uint8_t currentStart = breakState[wordStart];
@@ -407,8 +411,12 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     mAfterBreakableSpace = isBreakableSpace;
 
     if (isSpace) {
-      if (offset > wordStart && wordHasComplexChar) {
-        if (aSink && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
+      if (offset > wordStart && aSink && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
+        if (mStrictness == LineBreaker::Strictness::Anywhere) {
+          memset(breakState.Elements() + wordStart,
+                 gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL,
+                 offset - wordStart);
+        } else if (wordHasComplexChar) {
           // Save current start-of-word state because GetJISx4051Breaks will
           // set it to false
           uint8_t currentStart = breakState[wordStart];
@@ -417,9 +425,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
               mScriptIsChineseOrJapanese, breakState.Elements() + wordStart);
           breakState[wordStart] = currentStart;
         }
-        wordHasComplexChar = false;
       }
 
+      wordHasComplexChar = false;
       ++offset;
       if (offset >= aLength) break;
       wordStart = offset;

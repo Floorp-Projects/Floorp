@@ -244,6 +244,14 @@ select {
   overflow-clip-box: padding-box !important; /* bug 992447 */
 }
 
+%ifdef MOZ_WIDGET_GTK
+/* Comboboxes use button styles on Gtk so it's safe to
+ * use a button style here. */
+select:active:hover {
+  color: -moz-gtk-buttonactivetext;
+}
+%endif
+
 /* Need the "select[size][multiple]" selector to override the settings on
    'select[size="1"]', eg if one has <select size="1" multiple> */
 
@@ -696,8 +704,13 @@ button:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
+%ifdef MOZ_WIDGET_GTK
+  color: -moz-gtk-buttonactivetext;
+%else
   color: ButtonText;
+%endif
 }
+
 
 button::-moz-focus-inner,
 input[type="color"]::-moz-focus-inner,

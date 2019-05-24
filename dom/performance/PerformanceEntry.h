@@ -29,9 +29,6 @@ class PerformanceEntry : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceEntry)
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
   nsISupports* GetParentObject() const { return mParent; }
 
   void GetName(nsAString& aName) const { aName = mName; }

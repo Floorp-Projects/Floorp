@@ -194,7 +194,7 @@ bool HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
                            WidgetMouseEvent::eReal);
     event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
 
-    nsAutoPopupStatePusher popupStatePusher(
+    AutoPopupStatePusher popupStatePusher(
         aIsTrustedEvent ? PopupBlocker::openAllowed : PopupBlocker::openAbused);
 
     EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,

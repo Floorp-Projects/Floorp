@@ -12,7 +12,7 @@
 
 [package]
 name = "devd-rs"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Greg V <greg@unrelenting.technology>"]
 description = "An interface to devd, the device hotplug daemon on FreeBSD and DragonFlyBSD"
 homepage = "https://github.com/myfreeweb/devd-rs"
@@ -25,4 +25,4 @@ repository = "https://github.com/myfreeweb/devd-rs"
 version = "0"
 
 [dependencies.nom]
-version = "3.2"
+version = "4"

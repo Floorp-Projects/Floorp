@@ -73,11 +73,6 @@ bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
 
 void MIDIPort::UnsetIPCPort() { mPort = nullptr; }
 
-JSObject* MIDIPort::WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) {
-  return MIDIPort_Binding::Wrap(aCx, this, aGivenProto);
-}
-
 void MIDIPort::GetId(nsString& aRetVal) const {
   MOZ_ASSERT(mPort);
   aRetVal = mPort->MIDIPortInterface::Id();

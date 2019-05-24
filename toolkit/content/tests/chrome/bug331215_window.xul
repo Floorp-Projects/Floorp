@@ -85,7 +85,7 @@
             charCode: code,
             bubbles: true
           });
-          gFindBar._findField.inputField.dispatchEvent(ev);
+          gFindBar._findField.dispatchEvent(ev);
         }
       });
     }

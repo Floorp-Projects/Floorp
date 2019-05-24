@@ -129,6 +129,8 @@ nsINode* CSSFontFaceRuleDecl::GetParentObject() {
 
 JSObject* CSSFontFaceRuleDecl::WrapObject(JSContext* cx,
                                           JS::Handle<JSObject*> aGivenProto) {
+  // If this changes to use a different type, remove the 'concrete'
+  // annotation from CSSStyleDeclaration.
   return CSSStyleDeclaration_Binding::Wrap(cx, this, aGivenProto);
 }
 

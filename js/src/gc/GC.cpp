@@ -637,7 +637,8 @@ inline size_t Arena::finalize(FreeOp* fop, AllocKind thingKind,
 template <typename T>
 static inline bool FinalizeTypedArenas(FreeOp* fop, Arena** src,
                                        SortedArenaList& dest,
-                                       AllocKind thingKind, SliceBudget& budget) {
+                                       AllocKind thingKind,
+                                       SliceBudget& budget) {
   // When operating in the foreground, take the lock at the top.
   Maybe<AutoLockGC> maybeLock;
   if (fop->onMainThread()) {
@@ -4351,7 +4352,7 @@ static void DiscardJITCodeForGC(JSRuntime* rt) {
     gcstats::AutoPhase ap(rt->gc.stats(),
                           gcstats::PhaseKind::MARK_DISCARD_CODE);
     zone->discardJitCode(rt->defaultFreeOp(), Zone::DiscardBaselineCode,
-                         Zone::ReleaseTypes);
+                         Zone::DiscardJitScripts);
   }
 }
 

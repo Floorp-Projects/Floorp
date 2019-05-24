@@ -444,14 +444,14 @@ void PopupBlocker::ResetLastExternalProtocolIframeAllowed() {
 }  // namespace dom
 }  // namespace mozilla
 
-nsAutoPopupStatePusherInternal::nsAutoPopupStatePusherInternal(
+AutoPopupStatePusherInternal::AutoPopupStatePusherInternal(
     mozilla::dom::PopupBlocker::PopupControlState aState, bool aForce)
     : mOldState(
           mozilla::dom::PopupBlocker::PushPopupControlState(aState, aForce)) {
   mozilla::dom::PopupBlocker::PopupStatePusherCreated();
 }
 
-nsAutoPopupStatePusherInternal::~nsAutoPopupStatePusherInternal() {
+AutoPopupStatePusherInternal::~AutoPopupStatePusherInternal() {
   mozilla::dom::PopupBlocker::PopPopupControlState(mOldState);
   mozilla::dom::PopupBlocker::PopupStatePusherDestroyed();
 }

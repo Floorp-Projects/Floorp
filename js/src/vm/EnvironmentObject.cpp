@@ -1574,7 +1574,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         }
 
         if (action == SET) {
-          JitScript::MonitorArgType(cx, script, i, vp);
+          jit::JitScript::MonitorArgType(cx, script, i, vp);
         }
       }
 

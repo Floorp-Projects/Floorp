@@ -517,14 +517,6 @@ void BaselineScript::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &templateEnv_, "baseline-template-environment");
 }
 
-void JitScript::trace(JSTracer* trc) {
-  // Mark all IC stub codes hanging off the IC stub entries.
-  for (size_t i = 0; i < numICEntries(); i++) {
-    ICEntry& ent = icEntry(i);
-    ent.trace(trc);
-  }
-}
-
 /* static */
 void BaselineScript::writeBarrierPre(Zone* zone, BaselineScript* script) {
   if (zone->needsIncrementalBarrier()) {
@@ -619,15 +611,6 @@ CompactBufferReader BaselineScript::pcMappingReader(size_t indexEntry) {
   return CompactBufferReader(dataStart, dataEnd);
 }
 
-struct ICEntries {
-  JitScript* const jitScript_;
-
-  explicit ICEntries(JitScript* jitScript) : jitScript_(jitScript) {}
-
-  size_t numEntries() const { return jitScript_->numICEntries(); }
-  ICEntry& operator[](size_t index) const { return jitScript_->icEntry(index); }
-};
-
 struct RetAddrEntries {
   BaselineScript* const baseline_;
 
@@ -667,30 +650,6 @@ RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
   return retAddrEntry(loc);
 }
 
-static bool ComputeBinarySearchMid(ICEntries entries, uint32_t pcOffset,
-                                   size_t* loc) {
-  return BinarySearchIf(
-      entries, 0, entries.numEntries(),
-      [pcOffset](const ICEntry& entry) {
-        uint32_t entryOffset = entry.pcOffset();
-        if (pcOffset < entryOffset) {
-          return -1;
-        }
-        if (entryOffset < pcOffset) {
-          return 1;
-        }
-        if (entry.isForPrologue()) {
-          // Prologue ICEntries are used for function argument type checks.
-          // Ignore these entries and return 1 because these entries appear in
-          // the ICEntry list before the other ICEntry (if any) at offset 0.
-          MOZ_ASSERT(entryOffset == 0);
-          return 1;
-        }
-        return 0;
-      },
-      loc);
-}
-
 static bool ComputeBinarySearchMid(RetAddrEntries entries, uint32_t pcOffset,
                                    size_t* loc) {
   return BinarySearchIf(
@@ -710,82 +669,6 @@ static bool ComputeBinarySearchMid(RetAddrEntries entries, uint32_t pcOffset,
 
 uint8_t* BaselineScript::returnAddressForEntry(const RetAddrEntry& ent) {
   return method()->raw() + ent.returnOffset().offset();
-}
-
-ICEntry* JitScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
-  // This method ignores prologue IC entries. There can be at most one
-  // non-prologue IC per bytecode op.
-
-  size_t mid;
-  if (!ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid)) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(mid < numICEntries());
-
-  ICEntry& entry = icEntry(mid);
-  MOZ_ASSERT(!entry.isForPrologue());
-  MOZ_ASSERT(entry.pcOffset() == pcOffset);
-  return &entry;
-}
-
-ICEntry& JitScript::icEntryFromPCOffset(uint32_t pcOffset) {
-  ICEntry* entry = maybeICEntryFromPCOffset(pcOffset);
-  MOZ_RELEASE_ASSERT(entry);
-  return *entry;
-}
-
-ICEntry* JitScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                             ICEntry* prevLookedUpEntry) {
-  // Do a linear forward search from the last queried PC offset, or fallback to
-  // a binary search if the last offset is too far away.
-  if (prevLookedUpEntry && pcOffset >= prevLookedUpEntry->pcOffset() &&
-      (pcOffset - prevLookedUpEntry->pcOffset()) <= 10) {
-    ICEntry* firstEntry = &icEntry(0);
-    ICEntry* lastEntry = &icEntry(numICEntries() - 1);
-    ICEntry* curEntry = prevLookedUpEntry;
-    while (curEntry >= firstEntry && curEntry <= lastEntry) {
-      if (curEntry->pcOffset() == pcOffset && !curEntry->isForPrologue()) {
-        return curEntry;
-      }
-      curEntry++;
-    }
-    return nullptr;
-  }
-
-  return maybeICEntryFromPCOffset(pcOffset);
-}
-
-ICEntry& JitScript::icEntryFromPCOffset(uint32_t pcOffset,
-                                        ICEntry* prevLookedUpEntry) {
-  ICEntry* entry = maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
-  MOZ_RELEASE_ASSERT(entry);
-  return *entry;
-}
-
-ICEntry* JitScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
-  // We have to return the entry to store in BaselineFrame::interpreterICEntry
-  // when resuming in the Baseline Interpreter at pcOffset. The bytecode op at
-  // pcOffset does not necessarily have an ICEntry, so we want to return the
-  // first ICEntry for which the following is true:
-  //
-  //    !entry.isForPrologue() && entry.pcOffset() >= pcOffset
-  //
-  // Fortunately, ComputeBinarySearchMid returns exactly this entry.
-
-  size_t mid;
-  ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid);
-
-  if (mid < numICEntries()) {
-    ICEntry& entry = icEntry(mid);
-    MOZ_ASSERT(!entry.isForPrologue());
-    MOZ_ASSERT(entry.pcOffset() >= pcOffset);
-    return &entry;
-  }
-
-  // Resuming at a pc after the last ICEntry. Just return nullptr:
-  // BaselineFrame::interpreterICEntry will never be used in this case.
-  return nullptr;
 }
 
 RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
@@ -1197,150 +1080,6 @@ void BaselineInterpreter::toggleCodeCoverageInstrumentation(bool enable) {
   toggleCodeCoverageInstrumentationUnchecked(enable);
 }
 
-void JitScript::purgeOptimizedStubs(JSScript* script) {
-  MOZ_ASSERT(script->jitScript() == this);
-
-  Zone* zone = script->zone();
-  if (zone->isGCSweeping() && IsAboutToBeFinalizedDuringSweep(*script)) {
-    // We're sweeping and the script is dead. Don't purge optimized stubs
-    // because (1) accessing CacheIRStubInfo pointers in ICStubs is invalid
-    // because we may have swept them already when we started (incremental)
-    // sweeping and (2) it's unnecessary because this script will be finalized
-    // soon anyway.
-    return;
-  }
-
-  JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
-
-  for (size_t i = 0; i < numICEntries(); i++) {
-    ICEntry& entry = icEntry(i);
-    ICStub* lastStub = entry.firstStub();
-    while (lastStub->next()) {
-      lastStub = lastStub->next();
-    }
-
-    if (lastStub->isFallback()) {
-      // Unlink all stubs allocated in the optimized space.
-      ICStub* stub = entry.firstStub();
-      ICStub* prev = nullptr;
-
-      while (stub->next()) {
-        if (!stub->allocatedInFallbackSpace()) {
-          lastStub->toFallbackStub()->unlinkStub(zone, prev, stub);
-          stub = stub->next();
-          continue;
-        }
-
-        prev = stub;
-        stub = stub->next();
-      }
-
-      if (lastStub->isMonitoredFallback()) {
-        // Monitor stubs can't make calls, so are always in the
-        // optimized stub space.
-        ICTypeMonitor_Fallback* lastMonStub =
-            lastStub->toMonitoredFallbackStub()->maybeFallbackMonitorStub();
-        if (lastMonStub) {
-          lastMonStub->resetMonitorStubChain(zone);
-        }
-      }
-    } else if (lastStub->isTypeMonitor_Fallback()) {
-      lastStub->toTypeMonitor_Fallback()->resetMonitorStubChain(zone);
-    } else {
-      MOZ_CRASH("Unknown fallback stub");
-    }
-  }
-
-#ifdef DEBUG
-  // All remaining stubs must be allocated in the fallback space.
-  for (size_t i = 0; i < numICEntries(); i++) {
-    ICEntry& entry = icEntry(i);
-    ICStub* stub = entry.firstStub();
-    while (stub->next()) {
-      MOZ_ASSERT(stub->allocatedInFallbackSpace());
-      stub = stub->next();
-    }
-  }
-#endif
-}
-
-#ifdef JS_STRUCTURED_SPEW
-static bool GetStubEnteredCount(ICStub* stub, uint32_t* count) {
-  switch (stub->kind()) {
-    case ICStub::CacheIR_Regular:
-      *count = stub->toCacheIR_Regular()->enteredCount();
-      return true;
-    case ICStub::CacheIR_Updated:
-      *count = stub->toCacheIR_Updated()->enteredCount();
-      return true;
-    case ICStub::CacheIR_Monitored:
-      *count = stub->toCacheIR_Monitored()->enteredCount();
-      return true;
-    default:
-      return false;
-  }
-}
-
-bool HasEnteredCounters(ICEntry& entry) {
-  ICStub* stub = entry.firstStub();
-  while (stub && !stub->isFallback()) {
-    uint32_t count;
-    if (GetStubEnteredCount(stub, &count)) {
-      return true;
-    }
-    stub = stub->next();
-  }
-  return false;
-}
-
-void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
-  MOZ_ASSERT(script->hasJitScript());
-  JSContext* cx = TlsContext.get();
-  AutoStructuredSpewer spew(cx, SpewChannel::BaselineICStats, script);
-  if (!spew) {
-    return;
-  }
-
-  JitScript* jitScript = script->jitScript();
-  spew->property("reason", dumpReason);
-  spew->beginListProperty("entries");
-  for (size_t i = 0; i < jitScript->numICEntries(); i++) {
-    ICEntry& entry = jitScript->icEntry(i);
-    if (!HasEnteredCounters(entry)) {
-      continue;
-    }
-
-    uint32_t pcOffset = entry.pcOffset();
-    jsbytecode* pc = entry.pc(script);
-
-    unsigned column;
-    unsigned int line = PCToLineNumber(script, pc, &column);
-
-    spew->beginObject();
-    spew->property("op", CodeName[*pc]);
-    spew->property("pc", pcOffset);
-    spew->property("line", line);
-    spew->property("column", column);
-
-    spew->beginListProperty("counts");
-    ICStub* stub = entry.firstStub();
-    while (stub && !stub->isFallback()) {
-      uint32_t count;
-      if (GetStubEnteredCount(stub, &count)) {
-        spew->value(count);
-      } else {
-        spew->value("?");
-      }
-      stub = stub->next();
-    }
-    spew->endList();
-    spew->property("fallback_count", entry.fallbackStub()->enteredCount());
-    spew->endObject();
-  }
-  spew->endList();
-}
-#endif
-
 void jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script) {
   MOZ_ASSERT(script->hasBaselineScript());
   MOZ_ASSERT(!script->jitScript()->active());
@@ -1409,51 +1148,6 @@ void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
   }
 }
 #endif
-
-static void MarkActiveJitScripts(JSContext* cx,
-                                 const JitActivationIterator& activation) {
-  for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
-    const JSJitFrameIter& frame = iter.frame();
-    switch (frame.type()) {
-      case FrameType::BaselineJS:
-        frame.script()->jitScript()->setActive();
-        break;
-      case FrameType::Exit:
-        if (frame.exitFrame()->is<LazyLinkExitFrameLayout>()) {
-          LazyLinkExitFrameLayout* ll =
-              frame.exitFrame()->as<LazyLinkExitFrameLayout>();
-          JSScript* script =
-              ScriptFromCalleeToken(ll->jsFrame()->calleeToken());
-          script->jitScript()->setActive();
-        }
-        break;
-      case FrameType::Bailout:
-      case FrameType::IonJS: {
-        // Keep the JitScript and BaselineScript around, since bailouts from
-        // the ion jitcode need to re-enter into the Baseline code.
-        frame.script()->jitScript()->setActive();
-        for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more();
-             ++inlineIter) {
-          inlineIter.script()->jitScript()->setActive();
-        }
-        break;
-      }
-      default:;
-    }
-  }
-}
-
-void jit::MarkActiveJitScripts(Zone* zone) {
-  if (zone->isAtomsZone()) {
-    return;
-  }
-  JSContext* cx = TlsContext.get();
-  for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
-    if (iter->compartment()->zone() == zone) {
-      MarkActiveJitScripts(cx, iter);
-    }
-  }
-}
 
 void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t profilerEnterToggleOffset,

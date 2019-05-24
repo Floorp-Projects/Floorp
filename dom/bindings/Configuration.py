@@ -401,10 +401,21 @@ class Descriptor(DescriptorProvider):
 
         # If we're concrete, we need to crawl our ancestor interfaces and mark
         # them as having a concrete descendant.
-        self.concrete = (not self.interface.isExternal() and
-                         not self.interface.isCallback() and
-                         not self.interface.isNamespace() and
-                         desc.get('concrete', True))
+        concreteDefault = (not self.interface.isExternal() and
+                           not self.interface.isCallback() and
+                           # Exclude interfaces that are used as the RHS of
+                           # "implements", because those would typically not be
+                           # concrete.
+                           not self.interface.isConsequential() and
+                           not self.interface.isNamespace() and
+                           # We're going to assume that leaf interfaces are
+                           # concrete; otherwise what's the point?  Also
+                           # interfaces with constructors had better be
+                           # concrete; otherwise how can you construct them?
+                           (not self.interface.hasChildInterfaces() or
+                            self.interface.ctor() is not None))
+
+        self.concrete = desc.get('concrete', concreteDefault)
         self.hasUnforgeableMembers = (self.concrete and
                                       any(MemberIsUnforgeable(m, self) for m in
                                           self.interface.members))
@@ -730,7 +741,7 @@ class Descriptor(DescriptorProvider):
     def isMaybeCrossOriginObject(self):
         # If we're isGlobal and have cross-origin members, we're a Window, and
         # that's not a cross-origin object.  The WindowProxy is.
-        return self.hasCrossOriginMembers and not self.isGlobal()
+        return self.concrete and self.hasCrossOriginMembers and not self.isGlobal()
 
     def needsHeaderInclude(self):
         """

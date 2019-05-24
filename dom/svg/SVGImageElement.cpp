@@ -17,6 +17,7 @@
 #include "mozilla/dom/SVGImageElementBinding.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "nsContentUtils.h"
+#include "SVGGeometryProperty.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
 
@@ -54,6 +55,8 @@ NS_IMPL_ISUPPORTS_INHERITED(SVGImageElement, SVGImageElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
+namespace SVGT = SVGGeometryProperty::Tags;
+
 SVGImageElement::SVGImageElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGImageElementBase(std::move(aNodeInfo)) {
@@ -63,6 +66,22 @@ SVGImageElement::SVGImageElement(
 
 SVGImageElement::~SVGImageElement() { DestroyImageLoadingContent(); }
 
+nsCSSPropertyID SVGImageElement::GetCSSPropertyIdForAttrEnum(
+    uint8_t aAttrEnum) {
+  switch (aAttrEnum) {
+    case ATTR_X:
+      return eCSSProperty_x;
+    case ATTR_Y:
+      return eCSSProperty_y;
+    case ATTR_WIDTH:
+      return eCSSProperty_width;
+    case ATTR_HEIGHT:
+      return eCSSProperty_height;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown attr enum");
+      return eCSSProperty_UNKNOWN;
+  }
+}
 //----------------------------------------------------------------------
 // nsINode methods
 
@@ -232,7 +251,10 @@ bool SVGImageElement::GetGeometryBounds(
     Rect* aBounds, const StrokeOptions& aStrokeOptions,
     const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   Rect rect;
-  GetAnimatedLengthValues(&rect.x, &rect.y, &rect.width, &rect.height, nullptr);
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      this, &rect.x, &rect.y, &rect.width, &rect.height);
 
   if (rect.IsEmpty()) {
     // Rendering of the element disabled
@@ -248,7 +270,9 @@ already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
   // hit-testing against it. For that we just pretend to be a rectangle.
 
   float x, y, width, height;
-  GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::X, SVGT::Y, SVGT::Width, SVGT::Height>(
+      this, &x, &y, &width, &height);
 
   if (width <= 0 || height <= 0) {
     return nullptr;
@@ -269,10 +293,13 @@ already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
 
 /* virtual */
 bool SVGImageElement::HasValidDimensions() const {
-  return mLengthAttributes[ATTR_WIDTH].IsExplicitlySet() &&
-         mLengthAttributes[ATTR_WIDTH].GetAnimValInSpecifiedUnits() > 0 &&
-         mLengthAttributes[ATTR_HEIGHT].IsExplicitlySet() &&
-         mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0;
+  float width, height;
+
+  MOZ_ASSERT(GetPrimaryFrame());
+  SVGGeometryProperty::ResolveAll<SVGT::Width, SVGT::Height>(this, &width,
+                                                             &height);
+
+  return width > 0 && height > 0;
 }
 
 SVGElement::LengthAttributesInfo SVGImageElement::GetLengthInfo() {

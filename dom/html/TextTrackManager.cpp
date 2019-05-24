@@ -240,40 +240,39 @@ void TextTrackManager::UpdateCueDisplay() {
   mUpdateCueDisplayDispatched = false;
 
   if (!mMediaElement || !mTextTracks || IsShutdown()) {
+    WEBVTT_LOG("Abort UpdateCueDisplay.");
     return;
   }
 
   nsIFrame* frame = mMediaElement->GetPrimaryFrame();
   nsVideoFrame* videoFrame = do_QueryFrame(frame);
   if (!videoFrame) {
+    WEBVTT_LOG("Abort UpdateCueDisplay, because of no video frame.");
     return;
   }
 
   nsCOMPtr<nsIContent> overlay = videoFrame->GetCaptionOverlay();
-  nsCOMPtr<nsIContent> controls = videoFrame->GetVideoControls();
   if (!overlay) {
+    WEBVTT_LOG("Abort UpdateCueDisplay, because of no overlay.");
     return;
+  }
+
+  nsPIDOMWindowInner* window = mMediaElement->OwnerDoc()->GetInnerWindow();
+  if (!window) {
+    WEBVTT_LOG("Abort UpdateCueDisplay, because of no window.");
   }
 
   nsTArray<RefPtr<TextTrackCue>> showingCues;
   mTextTracks->GetShowingCues(showingCues);
 
-  if (showingCues.Length() > 0) {
-    WEBVTT_LOG("UpdateCueDisplay, processCues, showingCuesNum=%zu",
-               showingCues.Length());
-    RefPtr<nsVariantCC> jsCues = new nsVariantCC();
-
-    jsCues->SetAsArray(nsIDataType::VTYPE_INTERFACE, &NS_GET_IID(EventTarget),
-                       showingCues.Length(),
-                       static_cast<void*>(showingCues.Elements()));
-    nsPIDOMWindowInner* window = mMediaElement->OwnerDoc()->GetInnerWindow();
-    if (window) {
-      sParserWrapper->ProcessCues(window, jsCues, overlay, controls);
-    }
-  } else if (overlay->Length() > 0) {
-    WEBVTT_LOG("UpdateCueDisplay EmptyString");
-    nsContentUtils::SetNodeTextContent(overlay, EmptyString(), true);
-  }
+  WEBVTT_LOG("UpdateCueDisplay, processCues, showingCuesNum=%zu",
+             showingCues.Length());
+  RefPtr<nsVariantCC> jsCues = new nsVariantCC();
+  jsCues->SetAsArray(nsIDataType::VTYPE_INTERFACE, &NS_GET_IID(EventTarget),
+                     showingCues.Length(),
+                     static_cast<void*>(showingCues.Elements()));
+  nsCOMPtr<nsIContent> controls = videoFrame->GetVideoControls();
+  sParserWrapper->ProcessCues(window, jsCues, overlay, controls);
 }
 
 void TextTrackManager::NotifyCueAdded(TextTrackCue& aCue) {

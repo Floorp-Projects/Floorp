@@ -102,11 +102,11 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
     form.displayName = formatDisplayName(this.frame);
     form.arguments = this._args();
     if (this.frame.script) {
-      const generatedLocation = this.threadActor.sources.getFrameLocation(this.frame);
+      const location = this.threadActor.sources.getFrameLocation(this.frame);
       form.where = {
-        actor: generatedLocation.generatedSourceActor.actorID,
-        line: generatedLocation.generatedLine,
-        column: generatedLocation.generatedColumn,
+        actor: location.sourceActor.actorID,
+        line: location.line,
+        column: location.column,
       };
     }
 
