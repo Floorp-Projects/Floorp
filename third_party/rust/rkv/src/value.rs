@@ -12,6 +12,7 @@ use arrayref::array_ref;
 use bincode::{
     deserialize,
     serialize,
+    serialized_size,
 };
 use ordered_float::OrderedFloat;
 
@@ -176,10 +177,22 @@ impl<'s> Value<'s> {
             Value::Str(v) => serialize(&(Type::Str.to_tag(), v)),
             Value::Json(v) => serialize(&(Type::Json.to_tag(), v)),
             Value::Blob(v) => serialize(&(Type::Blob.to_tag(), v)),
-            Value::Uuid(v) => {
-                // Processed above to avoid verbose duplication of error transforms.
-                serialize(&(Type::Uuid.to_tag(), v))
-            },
+            Value::Uuid(v) => serialize(&(Type::Uuid.to_tag(), v)),
+        }
+        .map_err(DataError::EncodingError)
+    }
+
+    pub fn serialized_size(&self) -> Result<u64, DataError> {
+        match self {
+            Value::Bool(v) => serialized_size(&(Type::Bool.to_tag(), *v)),
+            Value::U64(v) => serialized_size(&(Type::U64.to_tag(), *v)),
+            Value::I64(v) => serialized_size(&(Type::I64.to_tag(), *v)),
+            Value::F64(v) => serialized_size(&(Type::F64.to_tag(), v.0)),
+            Value::Instant(v) => serialized_size(&(Type::Instant.to_tag(), *v)),
+            Value::Str(v) => serialized_size(&(Type::Str.to_tag(), v)),
+            Value::Json(v) => serialized_size(&(Type::Json.to_tag(), v)),
+            Value::Blob(v) => serialized_size(&(Type::Blob.to_tag(), v)),
+            Value::Uuid(v) => serialized_size(&(Type::Uuid.to_tag(), v)),
         }
         .map_err(DataError::EncodingError)
     }
@@ -214,5 +227,39 @@ impl<'s> From<&'s OwnedValue> for Value<'s> {
             OwnedValue::Json(v) => Value::Json(v),
             OwnedValue::Blob(v) => Value::Blob(v),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ordered_float::OrderedFloat;
+
+    #[test]
+    fn test_value_serialized_size() {
+        // | Value enum    | tag: 1 byte   |     value_payload        |
+        // |----------------------------------------------------------|
+        // |   I64         |     1         |       8                  |
+        // |   U64         |     1         |       8                  |
+        // |   Bool        |     1         |       1                  |
+        // |   Instant     |     1         |       8                  |
+        // |   F64         |     1         |       8                  |
+        // |   Uuid        |     1         |       16                 |
+        // | Str/Blob/Json |     1         |(8: len + sizeof(payload))|
+        assert_eq!(Value::I64(-1000).serialized_size().unwrap(), 9);
+        assert_eq!(Value::U64(1000u64).serialized_size().unwrap(), 9);
+        assert_eq!(Value::Bool(true).serialized_size().unwrap(), 2);
+        assert_eq!(Value::Instant(1_558_020_865_224).serialized_size().unwrap(), 9);
+        assert_eq!(Value::F64(OrderedFloat(10000.1)).serialized_size().unwrap(), 9);
+        assert_eq!(Value::Str("hello!").serialized_size().unwrap(), 15);
+        assert_eq!(Value::Str("¡Hola").serialized_size().unwrap(), 15);
+        assert_eq!(Value::Blob(b"hello!").serialized_size().unwrap(), 15);
+        assert_eq!(
+            uuid(b"\x9f\xe2\xc4\xe9\x3f\x65\x4f\xdb\xb2\x4c\x02\xb1\x52\x59\x71\x6c")
+                .unwrap()
+                .serialized_size()
+                .unwrap(),
+            17
+        );
     }
 }
