@@ -134,7 +134,6 @@ impl PrimitiveOpacity {
 pub struct SpaceMapper<F, T> {
     kind: CoordinateSpaceMapping<F, T>,
     pub ref_spatial_node_index: SpatialNodeIndex,
-    ref_world_inv_transform: CoordinateSpaceMapping<WorldPixel, T>,
     pub current_target_spatial_node_index: SpatialNodeIndex,
     pub bounds: TypedRect<f32, T>,
     visible_face: VisibleFace,
@@ -144,16 +143,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     pub fn new(
         ref_spatial_node_index: SpatialNodeIndex,
         bounds: TypedRect<f32, T>,
-        clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
         SpaceMapper {
             kind: CoordinateSpaceMapping::Local,
             ref_spatial_node_index,
-            ref_world_inv_transform: clip_scroll_tree
-                .get_world_transform(ref_spatial_node_index)
-                .inverse()
-                .unwrap()
-                .with_destination::<T>(),
             current_target_spatial_node_index: ref_spatial_node_index,
             bounds,
             visible_face: VisibleFace::Front,
@@ -166,7 +159,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         bounds: TypedRect<f32, T>,
         clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
-        let mut mapper = SpaceMapper::new(ref_spatial_node_index, bounds, clip_scroll_tree);
+        let mut mapper = Self::new(ref_spatial_node_index, bounds);
         mapper.set_target_spatial_node(target_node_index, clip_scroll_tree);
         mapper
     }
@@ -192,9 +185,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             CoordinateSpaceMapping::ScaleOffset(scale_offset)
         } else {
             let transform = clip_scroll_tree
-                .get_world_transform(target_node_index)
-                .post_mul_transform(&self.ref_world_inv_transform)
-                .with_source::<F>();
+                .get_relative_transform(target_node_index, self.ref_spatial_node_index)
+                .into_transform()
+                .with_source::<F>()
+                .with_destination::<T>();
             CoordinateSpaceMapping::Transform(transform)
         };
 
@@ -1795,7 +1789,6 @@ impl PrimitiveStore {
         let mut map_local_to_raster = SpaceMapper::new(
             surface.raster_spatial_node_index,
             RasterRect::max_rect(),
-            frame_context.clip_scroll_tree,
         );
 
         let mut surface_rect = PictureRect::zero();
@@ -1988,13 +1981,18 @@ impl PrimitiveStore {
                     }
                 }
 
+                frame_state.clip_store.set_active_clips(
+                    prim_instance.local_clip_rect,
+                    prim_instance.spatial_node_index,
+                    frame_state.clip_chain_stack.current_clips(),
+                    &frame_context.clip_scroll_tree,
+                    &mut frame_state.data_stores.clip,
+                );
+
                 let clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
-                        frame_state.clip_chain_stack.current_clips(),
                         local_rect,
-                        prim_instance.local_clip_rect,
-                        prim_instance.spatial_node_index,
                         &map_local_to_surface,
                         &map_surface_to_world,
                         &frame_context.clip_scroll_tree,
@@ -2564,15 +2562,6 @@ impl PrimitiveStore {
             Some((pic_context_for_children, mut pic_state_for_children, mut prim_list)) => {
                 let is_passthrough = pic_context_for_children.is_passthrough;
 
-                // Similar to the logic in the visibility pass, push either the
-                // picture clip chain or a new root, depending on whether this
-                // picture is backed by a surface.
-                if pic_context_for_children.is_composite {
-                    frame_state.clip_chain_stack.push_surface();
-                } else {
-                    frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
-                }
-
                 self.prepare_primitives(
                     &mut prim_list,
                     &pic_context_for_children,
@@ -2582,13 +2571,6 @@ impl PrimitiveStore {
                     data_stores,
                     scratch,
                 );
-
-                // And now undo the clip stack logic above.
-                if pic_context_for_children.is_composite {
-                    frame_state.clip_chain_stack.pop_surface();
-                } else {
-                    frame_state.clip_chain_stack.pop_clip();
-                }
 
                 // Restore the dependencies (borrow check dance)
                 self.pictures[pic_context_for_children.pic_index.0]
@@ -2607,9 +2589,6 @@ impl PrimitiveStore {
         };
 
         if !is_passthrough {
-            // Push the per-primitive clip chain onto the current active stack
-            frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
-
             prim_instance.update_clip_task(
                 pic_context.raster_spatial_node_index,
                 pic_context,
@@ -2620,9 +2599,6 @@ impl PrimitiveStore {
                 data_stores,
                 scratch,
             );
-
-            // Pop the primitive clip chain.
-            frame_state.clip_chain_stack.pop_clip();
 
             if prim_instance.is_chased() {
                 println!("\tconsidered visible and ready with local pos {:?}", prim_instance.prim_origin);
@@ -3663,16 +3639,19 @@ impl PrimitiveInstance {
                 // Build a clip chain for the smaller segment rect. This will
                 // often manage to eliminate most/all clips, and sometimes
                 // clip the segment completely.
+                frame_state.clip_store.set_active_clips_from_clip_chain(
+                    &prim_info.clip_chain,
+                    self.spatial_node_index,
+                    &frame_context.clip_scroll_tree,
+                );
+
                 let segment_clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
-                        frame_state.clip_chain_stack.current_clips(),
                         segment.local_rect.translate(&LayoutVector2D::new(
                             self.prim_origin.x,
                             self.prim_origin.y,
                         )),
-                        self.local_clip_rect,
-                        self.spatial_node_index,
                         &pic_state.map_local_to_pic,
                         &pic_state.map_pic_to_world,
                         &frame_context.clip_scroll_tree,

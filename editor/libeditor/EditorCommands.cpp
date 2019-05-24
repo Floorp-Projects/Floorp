@@ -29,7 +29,7 @@ class nsISupports;
 
 namespace mozilla {
 
-using namespace detail;
+using detail::Any;
 
 /******************************************************************************
  * mozilla::EditorCommand
