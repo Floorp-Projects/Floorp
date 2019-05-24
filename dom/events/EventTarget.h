@@ -12,7 +12,6 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "nsAtom.h"
-#include "WindowProxyHolder.h"
 
 class nsPIDOMWindowOuter;
 class nsIGlobalObject;
@@ -35,6 +34,7 @@ class EventListener;
 class EventListenerOptionsOrBoolean;
 class EventHandlerNonNull;
 class GlobalObject;
+class WindowProxyHolder;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID                           \

@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "nsGlobalWindowInner.h"
