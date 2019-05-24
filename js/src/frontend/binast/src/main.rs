@@ -994,7 +994,13 @@ enum class BinASTField: uint16_t {
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct values of BinASTField.\nconst size_t BINASTFIELD_LIMIT = {};\n\n\n", field_limit));
+        buffer.push_str(&format!("\n// The number of distinct values of BinASTField.\nconst size_t BINASTFIELD_LIMIT = {};\n", field_limit));
+
+        let total_number_of_fields: usize = self.syntax.interfaces_by_name()
+            .values()
+            .map(|interface| interface.contents().fields().len())
+            .sum();
+        buffer.push_str(&format!("\n// The total number of fields across all interfaces. Used typically to maintain a probability table per field.\nconst size_t BINAST_TOTAL_NUMBER_OF_FIELDS = {};\n\n\n", total_number_of_fields));
 
         if self.rules.hpp_tokens_variants_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_variants_doc.reindent(""));
@@ -1023,6 +1029,8 @@ enum class BinASTVariant: uint16_t {
 ");
         buffer.push_str(&format!("\n// The number of distinct values of BinASTVariant.\nconst size_t BINASTVARIANT_LIMIT = {};\n\n\n",
             variants_limit));
+
+        buffer.push_str(&format!("\n// The total number of lists across all interfaces. Used typically to maintain a probability table per field.\nconst size_t BINAST_TOTAL_NUMBER_OF_LISTS = {};\n\n\n", self.list_parsers_to_generate.len()));
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
         buffer.push_str("\n");
