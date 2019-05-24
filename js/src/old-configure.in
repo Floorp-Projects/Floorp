@@ -106,12 +106,6 @@ else
     AC_PROG_RANLIB
     MOZ_PATH_PROGS(AS, $AS as, $CC)
     AC_CHECK_PROGS(STRIP, strip, :)
-    if test -z "$HOST_CC"; then
-        HOST_CC='$(CC)'
-    fi
-    if test -z "$HOST_CXX"; then
-        HOST_CXX='$(CXX)'
-    fi
 fi
 
 MOZ_TOOL_VARIABLES
@@ -561,8 +555,6 @@ case "$target" in
         WIN32_GUI_EXE_LDFLAGS=-mwindows
     else
         TARGET_COMPILER_ABI=msvc
-        HOST_CC='$(CC)'
-        HOST_CXX='$(CXX)'
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
