@@ -1,21 +1,12 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=881976
--->
 <head>
-  <meta charset='utf-8'>
   <title>Test for Bug 881976 - TextTrackCue Computed Position</title>
-  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<p id="display"></p>
-<div id="content">
-</div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
+<script type="text/javascript">
   SimpleTest.waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
     function() {
@@ -41,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=881976
       trackElement.kind = "subtitles";
 
       video.appendChild(trackElement);
-      document.getElementById("content").appendChild(video);
+      document.appendChild(video);
 
       video.addEventListener("loadedmetadata", function run_tests() {
         // Re-que run_tests() at the end of the event loop until the track
@@ -61,6 +52,5 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=881976
     }
   );
 </script>
-</pre>
 </body>
 </html>
