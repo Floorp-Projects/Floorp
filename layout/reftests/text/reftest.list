@@ -154,7 +154,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 444656.html 444656-ref.h
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy-if(skiaContent,0-1,0-600) == 475092-sub.html 475092-ref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,0-90,0-3100) fuzzy-if(webrender&&cocoaWidget,95-95,404-404) == 475092-pos.html 475092-sub.html # bug 482596
+fails-if(Android) fuzzy-if(skiaContent&&!Android,0-90,0-3100) fuzzy-if(webrender&&cocoaWidget,72-72,353-353) == 475092-pos.html 475092-sub.html # bug 482596
 == 476378-soft-hyphen-fallback.html 476378-soft-hyphen-fallback-ref.html
 # Test for bug 484954
 == rgba-text.html rgba-text-ref.html

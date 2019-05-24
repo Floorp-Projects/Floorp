@@ -11,7 +11,7 @@ fuzzy-if(webrender,0-1,0-6) == rotatey-1a.html rotatey-1-ref.html
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-fuzzy-if(gtkWidget||winWidget,0-8,0-376) fuzzy-if(Android,0-8,0-441) fuzzy-if(cocoaWidget,0-17,0-4) fuzzy-if(skiaContent,0-16,0-286) fuzzy-if(webrender&&winWidget,92-92,240-291) fuzzy-if(webrender&&cocoaWidget,126-126,380-380) == preserve3d-1a.html preserve3d-1-ref.html
+fuzzy-if(gtkWidget||winWidget,0-8,0-376) fuzzy-if(Android,0-8,0-441) fuzzy-if(cocoaWidget,0-17,0-4) fuzzy-if(skiaContent,0-16,0-286) fuzzy-if(webrender&&winWidget,92-92,240-291) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank
 == preserve3d-2a.html preserve3d-2-ref.html
@@ -70,7 +70,7 @@ fuzzy(0-3,0-99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAc
 fuzzy(0-3,0-99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
 == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
-fuzzy-if(gtkWidget,0-128,0-100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),0-143,0-100) fuzzy-if(winWidget||OSX<1010,0-141,0-100) == preserves3d-nested.html preserves3d-nested-ref.html
+fuzzy-if(gtkWidget,0-128,0-100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),0-143,0-100) fuzzy-if(winWidget||OSX,0-141,0-100) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy-if(skiaContent,0-1,0-1) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
 fuzzy-if(skiaContent,0-1,0-1) fuzzy-if(cocoaWidget,0-128,0-9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
 == animate-backface-hidden.html about:blank

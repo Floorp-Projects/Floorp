@@ -26,9 +26,9 @@ fuzzy-if(Android,0-255,0-400) == fixed-table-layout-010-vlr.html fixed-table-lay
 == fixed-table-layout-016-vlr.html fixed-table-layout-002-ref.html
 fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(Android,0-1,0-63) == fixed-table-layout-017-vlr.html fixed-table-layout-017-ref.html
 fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(Android,0-1,0-63) == fixed-table-layout-018-vlr.html fixed-table-layout-017-ref.html
-fuzzy-if(skiaContent,0-1,0-90) == fixed-table-layout-021-vlr.html fixed-table-layout-021-ref.html
-fuzzy-if(skiaContent,0-1,0-90) == fixed-table-layout-022-vlr.html fixed-table-layout-022-ref.html
-fuzzy-if(skiaContent,0-1,0-90) == fixed-table-layout-023-vlr.html fixed-table-layout-023-ref.html
+fuzzy-if(skiaContent,0-1,0-102) == fixed-table-layout-021-vlr.html fixed-table-layout-021-ref.html
+fuzzy-if(skiaContent,0-1,0-102) == fixed-table-layout-022-vlr.html fixed-table-layout-022-ref.html
+fuzzy-if(skiaContent,0-1,0-102) == fixed-table-layout-023-vlr.html fixed-table-layout-023-ref.html
 == fixed-table-layout-025-vlr.html fixed-table-layout-025-ref.html
 == fixed-table-layout-026-vlr.html fixed-table-layout-025-ref.html
 == fixed-table-layout-027-vlr.html fixed-table-layout-025-ref.html
@@ -52,9 +52,9 @@ fuzzy-if(Android,0-255,0-400) == fixed-table-layout-010-vrl.html fixed-table-lay
 == fixed-table-layout-016-vrl.html fixed-table-layout-002-ref.html
 fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(Android,0-1,0-63) == fixed-table-layout-017-vrl.html fixed-table-layout-017-ref.html
 fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(Android,0-1,0-63) == fixed-table-layout-018-vrl.html fixed-table-layout-017-ref.html
-fuzzy-if(skiaContent,0-1,0-90) == fixed-table-layout-021-vrl.html fixed-table-layout-021-ref.html
-fuzzy-if(skiaContent,0-1,0-90) == fixed-table-layout-022-vrl.html fixed-table-layout-022-ref.html
-fuzzy-if(skiaContent,0-1,0-90) == fixed-table-layout-023-vrl.html fixed-table-layout-023-ref.html
+fuzzy-if(skiaContent,0-1,0-102) == fixed-table-layout-021-vrl.html fixed-table-layout-021-ref.html
+fuzzy-if(skiaContent,0-1,0-102) == fixed-table-layout-022-vrl.html fixed-table-layout-022-ref.html
+fuzzy-if(skiaContent,0-1,0-102) == fixed-table-layout-023-vrl.html fixed-table-layout-023-ref.html
 == fixed-table-layout-025-vrl.html fixed-table-layout-025-ref.html
 == fixed-table-layout-026-vrl.html fixed-table-layout-025-ref.html
 == fixed-table-layout-027-vrl.html fixed-table-layout-025-ref.html
