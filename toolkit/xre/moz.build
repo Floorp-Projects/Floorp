@@ -258,3 +258,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 if CONFIG['MOZ_IPDL_TESTS']:
     DEFINES['MOZ_IPDL_TESTS'] = True
+
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['test/gtest']
