@@ -239,7 +239,7 @@ class alignas(uintptr_t) JitScript final {
                              TemporaryTypeSet** pArgTypes,
                              TemporaryTypeSet** pBytecodeTypes);
 
-  void destroy(Zone* zone);
+  static void Destroy(Zone* zone, JitScript* script);
 
   static constexpr size_t offsetOfICEntries() { return sizeof(JitScript); }
 

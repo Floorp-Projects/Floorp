@@ -167,14 +167,15 @@ void JSScript::maybeReleaseJitScript() {
 
   MOZ_ASSERT(!hasIonScript());
 
-  jitScript_->destroy(zone());
+  JitScript::Destroy(zone(), jitScript_);
   jitScript_ = nullptr;
   updateJitCodeRaw(runtimeFromMainThread());
 }
 
-void JitScript::destroy(Zone* zone) {
-  prepareForDestruction(zone);
-  js_delete(this);
+/* static */
+void JitScript::Destroy(Zone* zone, JitScript* script) {
+  script->prepareForDestruction(zone);
+  js_delete(script);
 }
 
 #ifdef DEBUG
