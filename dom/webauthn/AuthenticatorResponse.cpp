@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/WebAuthenticationBinding.h"
 #include "mozilla/dom/AuthenticatorResponse.h"
 
 namespace mozilla {
@@ -41,11 +40,6 @@ AuthenticatorResponse::AuthenticatorResponse(nsPIDOMWindowInner* aParent)
 
 AuthenticatorResponse::~AuthenticatorResponse() {
   mozilla::DropJSObjects(this);
-}
-
-JSObject* AuthenticatorResponse::WrapObject(JSContext* aCx,
-                                            JS::Handle<JSObject*> aGivenProto) {
-  return AuthenticatorResponse_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 void AuthenticatorResponse::GetClientDataJSON(

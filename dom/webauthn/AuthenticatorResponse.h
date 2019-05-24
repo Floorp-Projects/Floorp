@@ -31,9 +31,6 @@ class AuthenticatorResponse : public nsISupports, public nsWrapperCache {
  public:
   nsISupports* GetParentObject() const { return mParent; }
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
   void GetFormat(nsString& aRetVal) const;
 
   void GetClientDataJSON(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal);
