@@ -2619,7 +2619,6 @@ var CustomizableUIInternal = {
               viewNode.removeEventListener(eventName, widget[handler]);
             }
           }
-          delete viewNode._addedEventListeners;
         }
       }
       if (widgetNode && widget.onDestroyed) {
