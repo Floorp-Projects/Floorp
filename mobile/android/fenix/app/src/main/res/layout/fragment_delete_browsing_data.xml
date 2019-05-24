@@ -2,61 +2,79 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<ScrollView
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-
-    <LinearLayout
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:indeterminate="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-        <org.mozilla.fenix.settings.DeleteBrowsingDataItem
-            android:id="@+id/open_tabs_item"
+        android:layout_height="8dp"
+        android:translationY="-3dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+    <ScrollView
+        android:id="@+id/delete_browsing_data_wrapper"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:contentDescription="@string/library_bookmarks"
-            android:focusable="true"
-            app:deleteBrowsingDataItemIcon="@drawable/ic_tab_circle_background"
-            app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_tabs_title"
-            app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_tabs_subtitle" />
-        <org.mozilla.fenix.settings.DeleteBrowsingDataItem
-            android:id="@+id/browsing_data_item"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:contentDescription="@string/library_bookmarks"
-            android:focusable="true"
-            app:deleteBrowsingDataItemIcon="@drawable/library_icon_history_circle_background"
-            app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_browsing_data_title"
-            app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_browsing_data_subtitle" />
-        <org.mozilla.fenix.settings.DeleteBrowsingDataItem
-            android:id="@+id/collections_item"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:contentDescription="@string/library_bookmarks"
-            android:focusable="true"
-            app:deleteBrowsingDataItemIcon="@drawable/ic_collections_circle_background"
-            app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_collections_title"
-            app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_collections_subtitle" />
-        <Button android:id="@+id/delete_data"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_margin="12dp"
-            android:backgroundTint="?attr/neutral"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:text="@string/preferences_delete_browsing_data_button"
-            android:textAllCaps="false"
-            android:textColor="?attr/accentHighContrast"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-</ScrollView>
+            android:orientation="vertical">
+            <org.mozilla.fenix.settings.DeleteBrowsingDataItem
+                android:id="@+id/open_tabs_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:contentDescription="@string/library_bookmarks"
+                android:focusable="true"
+                app:deleteBrowsingDataItemIcon="@drawable/ic_tab_circle_background"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_tabs_title"
+                app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_tabs_subtitle" />
+            <org.mozilla.fenix.settings.DeleteBrowsingDataItem
+                android:id="@+id/browsing_data_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:contentDescription="@string/library_bookmarks"
+                android:focusable="true"
+                app:deleteBrowsingDataItemIcon="@drawable/library_icon_history_circle_background"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_browsing_data_title"
+                app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_browsing_data_subtitle" />
+            <org.mozilla.fenix.settings.DeleteBrowsingDataItem
+                android:id="@+id/collections_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:contentDescription="@string/library_bookmarks"
+                android:focusable="true"
+                app:deleteBrowsingDataItemIcon="@drawable/ic_collections_circle_background"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_collections_title"
+                app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_collections_subtitle" />
+            <Button android:id="@+id/delete_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_margin="12dp"
+                android:backgroundTint="?attr/neutral"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:text="@string/preferences_delete_browsing_data_button"
+                android:textAllCaps="false"
+                android:textColor="?attr/accentHighContrast"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
