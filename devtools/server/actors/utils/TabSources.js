@@ -7,7 +7,7 @@
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");
-const { GeneratedLocation } = require("devtools/server/actors/common");
+const { SourceLocation } = require("devtools/server/actors/common");
 
 loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/source", true);
 loader.lazyRequireGetter(this, "isEvalSource", "devtools/server/actors/source", true);
@@ -323,7 +323,7 @@ TabSources.prototype = {
    */
   getScriptOffsetLocation: function(script, offset) {
     const {lineNumber, columnNumber} = script.getOffsetMetadata(offset);
-    return new GeneratedLocation(
+    return new SourceLocation(
       this.createSourceActor(script.source),
       lineNumber,
       columnNumber
@@ -341,7 +341,7 @@ TabSources.prototype = {
    */
   getFrameLocation: function(frame) {
     if (!frame || !frame.script) {
-      return new GeneratedLocation();
+      return new SourceLocation();
     }
     return this.getScriptOffsetLocation(frame.script, frame.offset);
   },
