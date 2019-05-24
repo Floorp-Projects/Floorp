@@ -289,6 +289,357 @@ enum class BinASTField : uint16_t {
 // The number of distinct values of BinASTField.
 const size_t BINASTFIELD_LIMIT = 69;
 
+#define FOR_EACH_BIN_INTERFACE_AND_FIELD(F)                                   \
+  F(ForInStatement__Left, "ForInStatement::left")                             \
+  F(ForInStatement__Right, "ForInStatement::right")                           \
+  F(ForInStatement__Body, "ForInStatement::body")                             \
+  F(AssertedRestParameterName__Name, "AssertedRestParameterName::name")       \
+  F(AssertedRestParameterName__IsCaptured,                                    \
+    "AssertedRestParameterName::isCaptured")                                  \
+  F(ExportLocals__NamedExports, "ExportLocals::namedExports")                 \
+  F(SwitchDefault__Consequent, "SwitchDefault::consequent")                   \
+  F(ArrowExpressionContentsWithExpression__ParameterScope,                    \
+    "ArrowExpressionContentsWithExpression::parameterScope")                  \
+  F(ArrowExpressionContentsWithExpression__Params,                            \
+    "ArrowExpressionContentsWithExpression::params")                          \
+  F(ArrowExpressionContentsWithExpression__BodyScope,                         \
+    "ArrowExpressionContentsWithExpression::bodyScope")                       \
+  F(ArrowExpressionContentsWithExpression__Body,                              \
+    "ArrowExpressionContentsWithExpression::body")                            \
+  F(Export__Declaration, "Export::declaration")                               \
+  F(AssignmentExpression__Binding, "AssignmentExpression::binding")           \
+  F(AssignmentExpression__Expression, "AssignmentExpression::expression")     \
+  F(LazyFunctionExpression__IsAsync, "LazyFunctionExpression::isAsync")       \
+  F(LazyFunctionExpression__IsGenerator,                                      \
+    "LazyFunctionExpression::isGenerator")                                    \
+  F(LazyFunctionExpression__Name, "LazyFunctionExpression::name")             \
+  F(LazyFunctionExpression__Length, "LazyFunctionExpression::length")         \
+  F(LazyFunctionExpression__Directives, "LazyFunctionExpression::directives") \
+  F(LazyFunctionExpression__ContentsSkip,                                     \
+    "LazyFunctionExpression::contents_skip")                                  \
+  F(LazyFunctionExpression__Contents, "LazyFunctionExpression::contents")     \
+  F(ExportFromSpecifier__Name, "ExportFromSpecifier::name")                   \
+  F(ExportFromSpecifier__ExportedName, "ExportFromSpecifier::exportedName")   \
+  F(VariableDeclarator__Binding, "VariableDeclarator::binding")               \
+  F(VariableDeclarator__Init, "VariableDeclarator::init")                     \
+  F(FunctionExpressionContents__IsFunctionNameCaptured,                       \
+    "FunctionExpressionContents::isFunctionNameCaptured")                     \
+  F(FunctionExpressionContents__IsThisCaptured,                               \
+    "FunctionExpressionContents::isThisCaptured")                             \
+  F(FunctionExpressionContents__ParameterScope,                               \
+    "FunctionExpressionContents::parameterScope")                             \
+  F(FunctionExpressionContents__Params, "FunctionExpressionContents::params") \
+  F(FunctionExpressionContents__BodyScope,                                    \
+    "FunctionExpressionContents::bodyScope")                                  \
+  F(FunctionExpressionContents__Body, "FunctionExpressionContents::body")     \
+  F(ImportNamespace__ModuleSpecifier, "ImportNamespace::moduleSpecifier")     \
+  F(ImportNamespace__DefaultBinding, "ImportNamespace::defaultBinding")       \
+  F(ImportNamespace__NamespaceBinding, "ImportNamespace::namespaceBinding")   \
+  F(ClassElement__IsStatic, "ClassElement::isStatic")                         \
+  F(ClassElement__Method, "ClassElement::method")                             \
+  F(ClassDeclaration__Name, "ClassDeclaration::name")                         \
+  F(ClassDeclaration__Super, "ClassDeclaration::super")                       \
+  F(ClassDeclaration__Elements, "ClassDeclaration::elements")                 \
+  F(ObjectExpression__Properties, "ObjectExpression::properties")             \
+  F(WhileStatement__Test, "WhileStatement::test")                             \
+  F(WhileStatement__Body, "WhileStatement::body")                             \
+  F(CallExpression__Callee, "CallExpression::callee")                         \
+  F(CallExpression__Arguments, "CallExpression::arguments")                   \
+  F(ComputedPropertyName__Expression, "ComputedPropertyName::expression")     \
+  F(ImportSpecifier__Name, "ImportSpecifier::name")                           \
+  F(ImportSpecifier__Binding, "ImportSpecifier::binding")                     \
+  F(ConditionalExpression__Test, "ConditionalExpression::test")               \
+  F(ConditionalExpression__Consequent, "ConditionalExpression::consequent")   \
+  F(ConditionalExpression__Alternate, "ConditionalExpression::alternate")     \
+  F(Module__Scope, "Module::scope")                                           \
+  F(Module__Directives, "Module::directives")                                 \
+  F(Module__Items, "Module::items")                                           \
+  F(ArrayAssignmentTarget__Elements, "ArrayAssignmentTarget::elements")       \
+  F(ArrayAssignmentTarget__Rest, "ArrayAssignmentTarget::rest")               \
+  F(ArrayBinding__Elements, "ArrayBinding::elements")                         \
+  F(ArrayBinding__Rest, "ArrayBinding::rest")                                 \
+  F(DataProperty__Name, "DataProperty::name")                                 \
+  F(DataProperty__Expression, "DataProperty::expression")                     \
+  F(LiteralStringExpression__Value, "LiteralStringExpression::value")         \
+  F(SwitchCase__Test, "SwitchCase::test")                                     \
+  F(SwitchCase__Consequent, "SwitchCase::consequent")                         \
+  F(LazyArrowExpressionWithExpression__IsAsync,                               \
+    "LazyArrowExpressionWithExpression::isAsync")                             \
+  F(LazyArrowExpressionWithExpression__Length,                                \
+    "LazyArrowExpressionWithExpression::length")                              \
+  F(LazyArrowExpressionWithExpression__ContentsSkip,                          \
+    "LazyArrowExpressionWithExpression::contents_skip")                       \
+  F(LazyArrowExpressionWithExpression__Contents,                              \
+    "LazyArrowExpressionWithExpression::contents")                            \
+  F(WithStatement__Object, "WithStatement::object")                           \
+  F(WithStatement__Body, "WithStatement::body")                               \
+  F(SetterContents__IsThisCaptured, "SetterContents::isThisCaptured")         \
+  F(SetterContents__ParameterScope, "SetterContents::parameterScope")         \
+  F(SetterContents__Param, "SetterContents::param")                           \
+  F(SetterContents__BodyScope, "SetterContents::bodyScope")                   \
+  F(SetterContents__Body, "SetterContents::body")                             \
+  F(ReturnStatement__Expression, "ReturnStatement::expression")               \
+  F(YieldStarExpression__Expression, "YieldStarExpression::expression")       \
+  F(AwaitExpression__Expression, "AwaitExpression::expression")               \
+  F(AssertedBoundNamesScope__BoundNames,                                      \
+    "AssertedBoundNamesScope::boundNames")                                    \
+  F(AssertedBoundNamesScope__HasDirectEval,                                   \
+    "AssertedBoundNamesScope::hasDirectEval")                                 \
+  F(AssertedPositionalParameterName__Index,                                   \
+    "AssertedPositionalParameterName::index")                                 \
+  F(AssertedPositionalParameterName__Name,                                    \
+    "AssertedPositionalParameterName::name")                                  \
+  F(AssertedPositionalParameterName__IsCaptured,                              \
+    "AssertedPositionalParameterName::isCaptured")                            \
+  F(AssignmentTargetIdentifier__Name, "AssignmentTargetIdentifier::name")     \
+  F(LazyMethod__IsAsync, "LazyMethod::isAsync")                               \
+  F(LazyMethod__IsGenerator, "LazyMethod::isGenerator")                       \
+  F(LazyMethod__Name, "LazyMethod::name")                                     \
+  F(LazyMethod__Length, "LazyMethod::length")                                 \
+  F(LazyMethod__Directives, "LazyMethod::directives")                         \
+  F(LazyMethod__ContentsSkip, "LazyMethod::contents_skip")                    \
+  F(LazyMethod__Contents, "LazyMethod::contents")                             \
+  F(TemplateElement__RawValue, "TemplateElement::rawValue")                   \
+  F(Block__Scope, "Block::scope")                                             \
+  F(Block__Statements, "Block::statements")                                   \
+  F(LiteralPropertyName__Value, "LiteralPropertyName::value")                 \
+  F(LiteralRegExpExpression__Pattern, "LiteralRegExpExpression::pattern")     \
+  F(LiteralRegExpExpression__Flags, "LiteralRegExpExpression::flags")         \
+  F(UnaryExpression__Operator, "UnaryExpression::operator")                   \
+  F(UnaryExpression__Operand, "UnaryExpression::operand")                     \
+  F(ContinueStatement__Label, "ContinueStatement::label")                     \
+  F(ForOfStatement__Left, "ForOfStatement::left")                             \
+  F(ForOfStatement__Right, "ForOfStatement::right")                           \
+  F(ForOfStatement__Body, "ForOfStatement::body")                             \
+  F(AssertedParameterName__Name, "AssertedParameterName::name")               \
+  F(AssertedParameterName__IsCaptured, "AssertedParameterName::isCaptured")   \
+  F(SwitchStatementWithDefault__Discriminant,                                 \
+    "SwitchStatementWithDefault::discriminant")                               \
+  F(SwitchStatementWithDefault__PreDefaultCases,                              \
+    "SwitchStatementWithDefault::preDefaultCases")                            \
+  F(SwitchStatementWithDefault__DefaultCase,                                  \
+    "SwitchStatementWithDefault::defaultCase")                                \
+  F(SwitchStatementWithDefault__PostDefaultCases,                             \
+    "SwitchStatementWithDefault::postDefaultCases")                           \
+  F(ExportFrom__NamedExports, "ExportFrom::namedExports")                     \
+  F(ExportFrom__ModuleSpecifier, "ExportFrom::moduleSpecifier")               \
+  F(ClassExpression__Name, "ClassExpression::name")                           \
+  F(ClassExpression__Super, "ClassExpression::super")                         \
+  F(ClassExpression__Elements, "ClassExpression::elements")                   \
+  F(IfStatement__Test, "IfStatement::test")                                   \
+  F(IfStatement__Consequent, "IfStatement::consequent")                       \
+  F(IfStatement__Alternate, "IfStatement::alternate")                         \
+  F(AssertedVarScope__DeclaredNames, "AssertedVarScope::declaredNames")       \
+  F(AssertedVarScope__HasDirectEval, "AssertedVarScope::hasDirectEval")       \
+  F(BreakStatement__Label, "BreakStatement::label")                           \
+  F(LazyArrowExpressionWithFunctionBody__IsAsync,                             \
+    "LazyArrowExpressionWithFunctionBody::isAsync")                           \
+  F(LazyArrowExpressionWithFunctionBody__Length,                              \
+    "LazyArrowExpressionWithFunctionBody::length")                            \
+  F(LazyArrowExpressionWithFunctionBody__Directives,                          \
+    "LazyArrowExpressionWithFunctionBody::directives")                        \
+  F(LazyArrowExpressionWithFunctionBody__ContentsSkip,                        \
+    "LazyArrowExpressionWithFunctionBody::contents_skip")                     \
+  F(LazyArrowExpressionWithFunctionBody__Contents,                            \
+    "LazyArrowExpressionWithFunctionBody::contents")                          \
+  F(AssertedBoundName__Name, "AssertedBoundName::name")                       \
+  F(AssertedBoundName__IsCaptured, "AssertedBoundName::isCaptured")           \
+  F(LabelledStatement__Label, "LabelledStatement::label")                     \
+  F(LabelledStatement__Body, "LabelledStatement::body")                       \
+  F(ThrowStatement__Expression, "ThrowStatement::expression")                 \
+  F(AssignmentTargetPropertyProperty__Name,                                   \
+    "AssignmentTargetPropertyProperty::name")                                 \
+  F(AssignmentTargetPropertyProperty__Binding,                                \
+    "AssignmentTargetPropertyProperty::binding")                              \
+  F(SwitchStatement__Discriminant, "SwitchStatement::discriminant")           \
+  F(SwitchStatement__Cases, "SwitchStatement::cases")                         \
+  F(LiteralNumericExpression__Value, "LiteralNumericExpression::value")       \
+  F(GetterContents__IsThisCaptured, "GetterContents::isThisCaptured")         \
+  F(GetterContents__BodyScope, "GetterContents::bodyScope")                   \
+  F(GetterContents__Body, "GetterContents::body")                             \
+  F(ArrayExpression__Elements, "ArrayExpression::elements")                   \
+  F(VariableDeclaration__Kind, "VariableDeclaration::kind")                   \
+  F(VariableDeclaration__Declarators, "VariableDeclaration::declarators")     \
+  F(StaticMemberExpression__Object, "StaticMemberExpression::object")         \
+  F(StaticMemberExpression__Property, "StaticMemberExpression::property")     \
+  F(AssignmentTargetWithInitializer__Binding,                                 \
+    "AssignmentTargetWithInitializer::binding")                               \
+  F(AssignmentTargetWithInitializer__Init,                                    \
+    "AssignmentTargetWithInitializer::init")                                  \
+  F(SpreadElement__Expression, "SpreadElement::expression")                   \
+  F(AssertedScriptGlobalScope__DeclaredNames,                                 \
+    "AssertedScriptGlobalScope::declaredNames")                               \
+  F(AssertedScriptGlobalScope__HasDirectEval,                                 \
+    "AssertedScriptGlobalScope::hasDirectEval")                               \
+  F(FunctionOrMethodContents__IsThisCaptured,                                 \
+    "FunctionOrMethodContents::isThisCaptured")                               \
+  F(FunctionOrMethodContents__ParameterScope,                                 \
+    "FunctionOrMethodContents::parameterScope")                               \
+  F(FunctionOrMethodContents__Params, "FunctionOrMethodContents::params")     \
+  F(FunctionOrMethodContents__BodyScope,                                      \
+    "FunctionOrMethodContents::bodyScope")                                    \
+  F(FunctionOrMethodContents__Body, "FunctionOrMethodContents::body")         \
+  F(BindingWithInitializer__Binding, "BindingWithInitializer::binding")       \
+  F(BindingWithInitializer__Init, "BindingWithInitializer::init")             \
+  F(Import__ModuleSpecifier, "Import::moduleSpecifier")                       \
+  F(Import__DefaultBinding, "Import::defaultBinding")                         \
+  F(Import__NamedImports, "Import::namedImports")                             \
+  F(BinaryExpression__Operator, "BinaryExpression::operator")                 \
+  F(BinaryExpression__Left, "BinaryExpression::left")                         \
+  F(BinaryExpression__Right, "BinaryExpression::right")                       \
+  F(YieldExpression__Expression, "YieldExpression::expression")               \
+  F(ObjectBinding__Properties, "ObjectBinding::properties")                   \
+  F(ExportDefault__Body, "ExportDefault::body")                               \
+  F(TryFinallyStatement__Body, "TryFinallyStatement::body")                   \
+  F(TryFinallyStatement__CatchClause, "TryFinallyStatement::catchClause")     \
+  F(TryFinallyStatement__Finalizer, "TryFinallyStatement::finalizer")         \
+  F(LiteralBooleanExpression__Value, "LiteralBooleanExpression::value")       \
+  F(EagerFunctionExpression__IsAsync, "EagerFunctionExpression::isAsync")     \
+  F(EagerFunctionExpression__IsGenerator,                                     \
+    "EagerFunctionExpression::isGenerator")                                   \
+  F(EagerFunctionExpression__Name, "EagerFunctionExpression::name")           \
+  F(EagerFunctionExpression__Length, "EagerFunctionExpression::length")       \
+  F(EagerFunctionExpression__Directives,                                      \
+    "EagerFunctionExpression::directives")                                    \
+  F(EagerFunctionExpression__Contents, "EagerFunctionExpression::contents")   \
+  F(LazySetter__Name, "LazySetter::name")                                     \
+  F(LazySetter__Length, "LazySetter::length")                                 \
+  F(LazySetter__Directives, "LazySetter::directives")                         \
+  F(LazySetter__ContentsSkip, "LazySetter::contents_skip")                    \
+  F(LazySetter__Contents, "LazySetter::contents")                             \
+  F(AssignmentTargetPropertyIdentifier__Binding,                              \
+    "AssignmentTargetPropertyIdentifier::binding")                            \
+  F(AssignmentTargetPropertyIdentifier__Init,                                 \
+    "AssignmentTargetPropertyIdentifier::init")                               \
+  F(EagerSetter__Name, "EagerSetter::name")                                   \
+  F(EagerSetter__Length, "EagerSetter::length")                               \
+  F(EagerSetter__Directives, "EagerSetter::directives")                       \
+  F(EagerSetter__Contents, "EagerSetter::contents")                           \
+  F(BindingPropertyIdentifier__Binding, "BindingPropertyIdentifier::binding") \
+  F(BindingPropertyIdentifier__Init, "BindingPropertyIdentifier::init")       \
+  F(ExpressionStatement__Expression, "ExpressionStatement::expression")       \
+  F(NewExpression__Callee, "NewExpression::callee")                           \
+  F(NewExpression__Arguments, "NewExpression::arguments")                     \
+  F(DoWhileStatement__Test, "DoWhileStatement::test")                         \
+  F(DoWhileStatement__Body, "DoWhileStatement::body")                         \
+  F(ComputedMemberExpression__Object, "ComputedMemberExpression::object")     \
+  F(ComputedMemberExpression__Expression,                                     \
+    "ComputedMemberExpression::expression")                                   \
+  F(ArrowExpressionContentsWithFunctionBody__ParameterScope,                  \
+    "ArrowExpressionContentsWithFunctionBody::parameterScope")                \
+  F(ArrowExpressionContentsWithFunctionBody__Params,                          \
+    "ArrowExpressionContentsWithFunctionBody::params")                        \
+  F(ArrowExpressionContentsWithFunctionBody__BodyScope,                       \
+    "ArrowExpressionContentsWithFunctionBody::bodyScope")                     \
+  F(ArrowExpressionContentsWithFunctionBody__Body,                            \
+    "ArrowExpressionContentsWithFunctionBody::body")                          \
+  F(FormalParameters__Items, "FormalParameters::items")                       \
+  F(FormalParameters__Rest, "FormalParameters::rest")                         \
+  F(ShorthandProperty__Name, "ShorthandProperty::name")                       \
+  F(EagerGetter__Name, "EagerGetter::name")                                   \
+  F(EagerGetter__Directives, "EagerGetter::directives")                       \
+  F(EagerGetter__Contents, "EagerGetter::contents")                           \
+  F(ComputedMemberAssignmentTarget__Object,                                   \
+    "ComputedMemberAssignmentTarget::object")                                 \
+  F(ComputedMemberAssignmentTarget__Expression,                               \
+    "ComputedMemberAssignmentTarget::expression")                             \
+  F(UpdateExpression__IsPrefix, "UpdateExpression::isPrefix")                 \
+  F(UpdateExpression__Operator, "UpdateExpression::operator")                 \
+  F(UpdateExpression__Operand, "UpdateExpression::operand")                   \
+  F(EagerArrowExpressionWithExpression__IsAsync,                              \
+    "EagerArrowExpressionWithExpression::isAsync")                            \
+  F(EagerArrowExpressionWithExpression__Length,                               \
+    "EagerArrowExpressionWithExpression::length")                             \
+  F(EagerArrowExpressionWithExpression__Contents,                             \
+    "EagerArrowExpressionWithExpression::contents")                           \
+  F(TryCatchStatement__Body, "TryCatchStatement::body")                       \
+  F(TryCatchStatement__CatchClause, "TryCatchStatement::catchClause")         \
+  F(ForStatement__Init, "ForStatement::init")                                 \
+  F(ForStatement__Test, "ForStatement::test")                                 \
+  F(ForStatement__Update, "ForStatement::update")                             \
+  F(ForStatement__Body, "ForStatement::body")                                 \
+  F(LazyGetter__Name, "LazyGetter::name")                                     \
+  F(LazyGetter__Directives, "LazyGetter::directives")                         \
+  F(LazyGetter__ContentsSkip, "LazyGetter::contents_skip")                    \
+  F(LazyGetter__Contents, "LazyGetter::contents")                             \
+  F(AssertedParameterScope__ParamNames, "AssertedParameterScope::paramNames") \
+  F(AssertedParameterScope__HasDirectEval,                                    \
+    "AssertedParameterScope::hasDirectEval")                                  \
+  F(AssertedParameterScope__IsSimpleParameterList,                            \
+    "AssertedParameterScope::isSimpleParameterList")                          \
+  F(BindingIdentifier__Name, "BindingIdentifier::name")                       \
+  F(LazyFunctionDeclaration__IsAsync, "LazyFunctionDeclaration::isAsync")     \
+  F(LazyFunctionDeclaration__IsGenerator,                                     \
+    "LazyFunctionDeclaration::isGenerator")                                   \
+  F(LazyFunctionDeclaration__Name, "LazyFunctionDeclaration::name")           \
+  F(LazyFunctionDeclaration__Length, "LazyFunctionDeclaration::length")       \
+  F(LazyFunctionDeclaration__Directives,                                      \
+    "LazyFunctionDeclaration::directives")                                    \
+  F(LazyFunctionDeclaration__ContentsSkip,                                    \
+    "LazyFunctionDeclaration::contents_skip")                                 \
+  F(LazyFunctionDeclaration__Contents, "LazyFunctionDeclaration::contents")   \
+  F(BindingPropertyProperty__Name, "BindingPropertyProperty::name")           \
+  F(BindingPropertyProperty__Binding, "BindingPropertyProperty::binding")     \
+  F(CompoundAssignmentExpression__Operator,                                   \
+    "CompoundAssignmentExpression::operator")                                 \
+  F(CompoundAssignmentExpression__Binding,                                    \
+    "CompoundAssignmentExpression::binding")                                  \
+  F(CompoundAssignmentExpression__Expression,                                 \
+    "CompoundAssignmentExpression::expression")                               \
+  F(CatchClause__BindingScope, "CatchClause::bindingScope")                   \
+  F(CatchClause__Binding, "CatchClause::binding")                             \
+  F(CatchClause__Body, "CatchClause::body")                                   \
+  F(Script__Scope, "Script::scope")                                           \
+  F(Script__Directives, "Script::directives")                                 \
+  F(Script__Statements, "Script::statements")                                 \
+  F(AssertedBlockScope__DeclaredNames, "AssertedBlockScope::declaredNames")   \
+  F(AssertedBlockScope__HasDirectEval, "AssertedBlockScope::hasDirectEval")   \
+  F(EagerFunctionDeclaration__IsAsync, "EagerFunctionDeclaration::isAsync")   \
+  F(EagerFunctionDeclaration__IsGenerator,                                    \
+    "EagerFunctionDeclaration::isGenerator")                                  \
+  F(EagerFunctionDeclaration__Name, "EagerFunctionDeclaration::name")         \
+  F(EagerFunctionDeclaration__Length, "EagerFunctionDeclaration::length")     \
+  F(EagerFunctionDeclaration__Directives,                                     \
+    "EagerFunctionDeclaration::directives")                                   \
+  F(EagerFunctionDeclaration__Contents, "EagerFunctionDeclaration::contents") \
+  F(ObjectAssignmentTarget__Properties, "ObjectAssignmentTarget::properties") \
+  F(ExportAllFrom__ModuleSpecifier, "ExportAllFrom::moduleSpecifier")         \
+  F(Directive__RawValue, "Directive::rawValue")                               \
+  F(ForInOfBinding__Kind, "ForInOfBinding::kind")                             \
+  F(ForInOfBinding__Binding, "ForInOfBinding::binding")                       \
+  F(TemplateExpression__Tag, "TemplateExpression::tag")                       \
+  F(TemplateExpression__Elements, "TemplateExpression::elements")             \
+  F(EagerArrowExpressionWithFunctionBody__IsAsync,                            \
+    "EagerArrowExpressionWithFunctionBody::isAsync")                          \
+  F(EagerArrowExpressionWithFunctionBody__Length,                             \
+    "EagerArrowExpressionWithFunctionBody::length")                           \
+  F(EagerArrowExpressionWithFunctionBody__Directives,                         \
+    "EagerArrowExpressionWithFunctionBody::directives")                       \
+  F(EagerArrowExpressionWithFunctionBody__Contents,                           \
+    "EagerArrowExpressionWithFunctionBody::contents")                         \
+  F(IdentifierExpression__Name, "IdentifierExpression::name")                 \
+  F(StaticMemberAssignmentTarget__Object,                                     \
+    "StaticMemberAssignmentTarget::object")                                   \
+  F(StaticMemberAssignmentTarget__Property,                                   \
+    "StaticMemberAssignmentTarget::property")                                 \
+  F(EagerMethod__IsAsync, "EagerMethod::isAsync")                             \
+  F(EagerMethod__IsGenerator, "EagerMethod::isGenerator")                     \
+  F(EagerMethod__Name, "EagerMethod::name")                                   \
+  F(EagerMethod__Length, "EagerMethod::length")                               \
+  F(EagerMethod__Directives, "EagerMethod::directives")                       \
+  F(EagerMethod__Contents, "EagerMethod::contents")                           \
+  F(AssertedDeclaredName__Name, "AssertedDeclaredName::name")                 \
+  F(AssertedDeclaredName__Kind, "AssertedDeclaredName::kind")                 \
+  F(AssertedDeclaredName__IsCaptured, "AssertedDeclaredName::isCaptured")     \
+  F(ExportLocalSpecifier__Name, "ExportLocalSpecifier::name")                 \
+  F(ExportLocalSpecifier__ExportedName, "ExportLocalSpecifier::exportedName")
+
+enum class BinASTInterfaceAndField : uint16_t {
+#define EMIT_ENUM(name, _) name,
+  FOR_EACH_BIN_INTERFACE_AND_FIELD(EMIT_ENUM)
+#undef EMIT_ENUM
+};
+
 // The total number of fields across all interfaces. Used typically to maintain
 // a probability table per field.
 const size_t BINAST_TOTAL_NUMBER_OF_FIELDS = 275;
@@ -369,9 +720,9 @@ enum class BinASTVariant : uint16_t {
 // The number of distinct values of BinASTVariant.
 const size_t BINASTVARIANT_LIMIT = 49;
 
-// The total number of lists across all interfaces. Used typically to maintain a
-// probability table per field.
-const size_t BINAST_TOTAL_NUMBER_OF_LISTS = 22;
+// The number of distinct list types in the grammar. Used typically to maintain
+// a probability table per list type.
+const size_t BINAST_NUMBER_OF_LIST_TYPES = 22;
 
 /**
  * Return a string describing a `BinASTKind`.
