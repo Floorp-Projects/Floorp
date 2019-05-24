@@ -34,22 +34,25 @@ class AsyncMessageToChild : public Runnable {
  public:
   AsyncMessageToChild(const JSWindowActorMessageMeta& aMetadata,
                       ipc::StructuredCloneData&& aData,
-                      WindowGlobalChild* aChild)
+                      WindowGlobalParent* aManager)
       : mozilla::Runnable("WindowGlobalChild::HandleAsyncMessage"),
         mMetadata(aMetadata),
         mData(std::move(aData)),
-        mChild(aChild) {}
+        mManager(aManager) {}
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread.");
-    mChild->ReceiveRawMessage(mMetadata, std::move(mData));
+    RefPtr<WindowGlobalChild> child = mManager->GetChildActor();
+    if (child) {
+      child->ReceiveRawMessage(mMetadata, std::move(mData));
+    }
     return NS_OK;
   }
 
  private:
   JSWindowActorMessageMeta mMetadata;
   ipc::StructuredCloneData mData;
-  RefPtr<WindowGlobalChild> mChild;
+  RefPtr<WindowGlobalParent> mManager;
 };
 
 }  // anonymous namespace
@@ -63,9 +66,8 @@ void JSWindowActorParent::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
   }
 
   if (mManager->IsInProcess()) {
-    RefPtr<WindowGlobalChild> wgc = mManager->GetChildActor();
     nsCOMPtr<nsIRunnable> runnable =
-        new AsyncMessageToChild(aMeta, std::move(aData), wgc);
+        new AsyncMessageToChild(aMeta, std::move(aData), mManager);
     NS_DispatchToMainThread(runnable.forget());
     return;
   }
