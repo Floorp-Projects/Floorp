@@ -345,6 +345,11 @@ hpp:
       const char* describeBinASTField(const BinASTField& field);
 
       /**
+       * Return a string describing a `BinASTInterfaceAndField`.
+       */
+      const char* describeBinASTInterfaceAndField(const BinASTInterfaceAndField& field);
+
+      /**
        * Return a string describing a `BinASTVariant`.
        */
       const char* describeBinASTVariant(const BinASTVariant& variant);
