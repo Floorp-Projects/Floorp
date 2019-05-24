@@ -30,7 +30,6 @@ fun <T> JSONArray?.toList(): List<T> {
     return array.asSequence().map { it as T }.toList()
 }
 
-// #2305: inline this function when Android gradle plugin v3.4.0 is released
 /**
  * Returns a list containing only the non-null results of applying the given [transform] function
  * to each element in the original collection as returned by [getFromArray]. If [getFromArray]
@@ -41,7 +40,7 @@ fun <T> JSONArray?.toList(): List<T> {
  * jsonArray.mapNotNull(JSONArray::getJSONObject) { jsonObj -> jsonObj.getString("author") }
  * ```
  */
-fun <T, R : Any> JSONArray.mapNotNull(getFromArray: JSONArray.(index: Int) -> T, transform: (T) -> R?): List<R> {
+inline fun <T, R : Any> JSONArray.mapNotNull(getFromArray: JSONArray.(index: Int) -> T, transform: (T) -> R?): List<R> {
     val transformedResults = mutableListOf<R>()
     for (i in 0 until this.length()) {
         try {
