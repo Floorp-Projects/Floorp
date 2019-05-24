@@ -69,7 +69,7 @@ class nsTextControlFrame final : public nsContainerFrame,
   bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
                                  BaselineSharingGroup aBaselineGroup,
                                  nscoord* aBaseline) const override {
-    if (StyleDisplay()->IsContainLayout() || !IsSingleLineTextControl()) {
+    if (!IsSingleLineTextControl()) {
       return false;
     }
     NS_ASSERTION(mFirstBaseline != NS_INTRINSIC_ISIZE_UNKNOWN,
@@ -337,7 +337,7 @@ class nsTextControlFrame final : public nsContainerFrame,
   nsString mCachedValue;
 
   // Our first baseline, or NS_INTRINSIC_ISIZE_UNKNOWN if we have a pending
-  // Reflow (or if we're contain:layout, which means we have no baseline).
+  // Reflow.
   nscoord mFirstBaseline;
 
   // these packed bools could instead use the high order bits on mState, saving

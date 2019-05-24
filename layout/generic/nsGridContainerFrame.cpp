@@ -7039,10 +7039,8 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
   } else {
     RemoveStateBits(NS_STATE_GRID_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER);
   }
-  if (gridReflowInput.mIter.AtEnd() ||
-      aReflowInput.mStyleDisplay->IsContainLayout()) {
-    // We have no grid items, or we're layout-contained. So, we have no
-    // baseline, and our parent should synthesize a baseline if needed.
+  if (gridReflowInput.mIter.AtEnd()) {
+    // We have no grid items, our parent should synthesize a baseline if needed.
     AddStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE);
   } else {
     RemoveStateBits(NS_STATE_GRID_SYNTHESIZE_BASELINE);
