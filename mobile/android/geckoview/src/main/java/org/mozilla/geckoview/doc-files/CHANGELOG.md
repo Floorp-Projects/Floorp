@@ -104,6 +104,11 @@ exclude: true
 
 [68.25]: ../StorageController.html
 
+- Added [`onRecordingStatusChanged`][68.26] to [`MediaDelegate`][68.27] to handle events related to the status of recording devices.
+
+[68.26]: ./GeckoSession.MediaDelegate.html#onRecordingStatusChanged-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice:A-
+[68.27]: ./GeckoSession.MediaDelegate.html
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -310,4 +315,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 6078967e45c80550c5d17189856d3d3206b8540f
+[api-version]: 5a26cbe99d38ca771058fef5b84d2ae033e161b4

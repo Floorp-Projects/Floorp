@@ -49,6 +49,7 @@ import android.os.Parcelable;
 import android.os.SystemClock;
 import android.support.annotation.AnyThread;
 import android.support.annotation.IntDef;
+import android.support.annotation.LongDef;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
@@ -868,6 +869,7 @@ public class GeckoSession implements Parcelable {
                         "GeckoView:MediaRateChanged",
                         "GeckoView:MediaFullscreenChanged",
                         "GeckoView:MediaError",
+                        "GeckoView:MediaRecordingStatusChanged",
                     }
             ) {
         @Override
@@ -885,6 +887,14 @@ public class GeckoSession implements Parcelable {
                     delegate.onMediaRemove(GeckoSession.this, mMediaElements.get(key));
                 }
                 mMediaElements.clear();
+                return;
+            } else if ("GeckoView:MediaRecordingStatusChanged".equals(event)) {
+                final GeckoBundle[] deviceBundles = message.getBundleArray("devices");
+                final MediaDelegate.RecordingDevice[] devices = new MediaDelegate.RecordingDevice[deviceBundles.length];
+                for (int i = 0; i < deviceBundles.length; i++) {
+                    devices[i] = new MediaDelegate.RecordingDevice(deviceBundles[i]);
+                }
+                delegate.onRecordingStatusChanged(GeckoSession.this, devices);
                 return;
             }
 
@@ -1012,7 +1022,7 @@ public class GeckoSession implements Parcelable {
 
     /**
      * Get the current prompt delegate for this GeckoSession.
-     * @return PromptDelegate instance or null if using default delegate.
+     * @return PermissionDelegate instance or null if using default delegate.
      */
     @UiThread
     public @Nullable PermissionDelegate getPermissionDelegate() {
@@ -4952,6 +4962,93 @@ public class GeckoSession implements Parcelable {
      * GeckoSession applications implement this interface to handle media events.
      */
     public interface MediaDelegate {
+
+        class RecordingDevice {
+
+            /*
+             * Default status flags for this RecordingDevice.
+             */
+            public static class Status {
+                public static final long RECORDING = 0;
+                public static final long INACTIVE = 1 << 0;
+
+                // Do not instantiate this class.
+                protected Status() {}
+            }
+
+            /*
+             * Default device types for this RecordingDevice.
+             */
+            public static class Type {
+                public static final long CAMERA = 0;
+                public static final long MICROPHONE = 1 << 0;
+
+                // Do not instantiate this class.
+                protected Type() {}
+            }
+
+            @Retention(RetentionPolicy.SOURCE)
+            @LongDef(flag = true,
+                    value = { Status.RECORDING, Status.INACTIVE })
+            /* package */ @interface RecordingStatus {}
+
+            @Retention(RetentionPolicy.SOURCE)
+            @LongDef(flag = true,
+                    value = {Type.CAMERA, Type.MICROPHONE})
+            /* package */ @interface DeviceType {}
+
+            /**
+             * The recording device is camera.
+             */
+            public static final int TYPE_CAMERA = 0;
+
+            /**
+             * The recording device is microphone.
+             */
+            public static final int TYPE_MICROPHONE = 1;
+
+            /**
+             * A long giving the current recording status, must be either Status.RECORDING,
+             * Status.PAUSED or Status.INACTIVE.
+             */
+            public final @RecordingStatus long status;
+
+            /**
+             * A long giving the type of the recording device, must be either Type.CAMERA or Type.MICROPHONE.
+             */
+            public final @DeviceType long type;
+
+            private static @DeviceType long getTypeFromString(final String type) {
+                if ("microphone".equals(type)) {
+                    return Type.MICROPHONE;
+                } else if ("camera".equals(type)) {
+                    return Type.CAMERA;
+                } else {
+                    throw new IllegalArgumentException("String: " + type + " is not a valid recording device string");
+                }
+            }
+
+            private static @RecordingStatus long getStatusFromString(final String type) {
+                if ("recording".equals(type)) {
+                    return Status.RECORDING;
+                } else {
+                    return Status.INACTIVE;
+                }
+            }
+
+            /* package */ RecordingDevice(final GeckoBundle media) {
+                status = getStatusFromString(media.getString("status"));
+                type = getTypeFromString(media.getString("type"));
+            }
+
+            /**
+             * Empty constructor for tests.
+             */
+            protected RecordingDevice() {
+                status = Status.INACTIVE;
+                type = Type.CAMERA;
+            }
+        }
         /**
          * An HTMLMediaElement has been created.
          * @param session Session instance.
@@ -4967,6 +5064,16 @@ public class GeckoSession implements Parcelable {
          */
         @UiThread
         default void onMediaRemove(@NonNull GeckoSession session, @NonNull MediaElement element) {}
+
+        /**
+         * A recording device has changed state.
+         * Any change to the recording state of the devices microphone or camera will call this
+         * delegate method. The argument provides details of the active recording devices.
+         * @param session The session that the event has originated from.
+         * @param devices The list of active devices and their recording state.
+         */
+        @UiThread
+        default void onRecordingStatusChanged(@NonNull GeckoSession session, @NonNull RecordingDevice[] devices) {}
     }
 
     /**
