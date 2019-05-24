@@ -88,6 +88,8 @@ class nsSVGImageFrame final : public mozilla::SVGGeometryFrame,
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
                            PostDestroyData& aPostDestroyData) override;
 
+  bool GetIntrinsicImageSize(mozilla::gfx::Size& aIntrinsicSize) const;
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGImage"), aResult);

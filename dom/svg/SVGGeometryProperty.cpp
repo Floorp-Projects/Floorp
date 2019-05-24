@@ -8,6 +8,7 @@
 #include "SVGCircleElement.h"
 #include "SVGEllipseElement.h"
 #include "SVGForeignObjectElement.h"
+#include "SVGImageElement.h"
 #include "SVGRectElement.h"
 
 namespace mozilla {
@@ -63,6 +64,9 @@ nsCSSPropertyID AttrEnumToCSSPropId(const SVGElement* aElement,
   if (aElement->IsSVGElement(nsGkAtoms::ellipse)) {
     return SVGEllipseElement::GetCSSPropertyIdForAttrEnum(aAttrEnum);
   }
+  if (aElement->IsSVGElement(nsGkAtoms::image)) {
+    return SVGImageElement::GetCSSPropertyIdForAttrEnum(aAttrEnum);
+  }
   if (aElement->IsSVGElement(nsGkAtoms::foreignObject)) {
     return SVGForeignObjectElement::GetCSSPropertyIdForAttrEnum(aAttrEnum);
   }
@@ -79,6 +83,7 @@ bool ElementMapsLengthsToStyle(SVGElement const* aElement) {
   return aElement->IsSVGElement(nsGkAtoms::rect) ||
          aElement->IsSVGElement(nsGkAtoms::circle) ||
          aElement->IsSVGElement(nsGkAtoms::ellipse) ||
+         aElement->IsSVGElement(nsGkAtoms::image) ||
          aElement->IsSVGElement(nsGkAtoms::foreignObject);
 }
 
