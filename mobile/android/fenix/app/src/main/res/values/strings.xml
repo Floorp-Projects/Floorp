@@ -550,5 +550,5 @@
     <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">Automatic Font Sizing</string>
     <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Font size will automatically match your system settings. Disable for manual control.</string>
+    <string name="preference_accessibility_auto_size_summary">Font size will match your Android settings. Disable to manage font size here.</string>
 </resources>
