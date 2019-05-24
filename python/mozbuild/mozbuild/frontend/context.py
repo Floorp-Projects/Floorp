@@ -446,7 +446,6 @@ class CompileFlags(BaseCompileFlags):
             ('DSO_PIC', context.config.substs.get('DSO_PIC_CFLAGS'),
              ('CXXFLAGS', 'CFLAGS')),
             ('RTL', None, ('CXXFLAGS', 'CFLAGS')),
-            ('PROFILE_GEN_DYN_CFLAGS', None, ('PROFILE_GEN_DYN_CFLAGS',)),
             ('OS_COMPILE_CFLAGS', context.config.substs.get('OS_COMPILE_CFLAGS'),
              ('CFLAGS',)),
             ('OS_COMPILE_CXXFLAGS', context.config.substs.get('OS_COMPILE_CXXFLAGS'),
@@ -1189,7 +1188,7 @@ SUBCONTEXTS = {cls.__name__: cls for cls in SUBCONTEXTS}
 #   (storage_type, input_types, docs)
 
 VARIABLES = {
-    'SOURCES': (ContextDerivedTypedListWithItems(Path, StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List, 'pgo_generate_only': bool})), list,
+    'SOURCES': (ContextDerivedTypedListWithItems(Path, StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List})), list,
         """Source code files.
 
         This variable contains a list of source code files to compile.

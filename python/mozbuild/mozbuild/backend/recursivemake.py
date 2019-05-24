@@ -479,10 +479,6 @@ class RecursiveMakeBackend(CommonBackend):
                 f = mozpath.relpath(f, base)
                 for var in variables:
                     backend_file.write('%s += %s\n' % (var, f))
-        elif isinstance(obj, PgoGenerateOnlySources):
-            assert obj.canonical_suffix == '.cpp'
-            for f in sorted(obj.files):
-                backend_file.write('PGO_GEN_ONLY_CPPSRCS += %s\n' % f)
         elif isinstance(obj, (HostSources, HostGeneratedSources)):
             suffix_map = {
                 '.c': 'HOST_CSRCS',
@@ -1370,7 +1366,7 @@ class RecursiveMakeBackend(CommonBackend):
         build_target = self._build_target_for_obj(obj)
         self._compile_graph[build_target]
 
-        objs, pgo_gen_objs, no_pgo_objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
+        objs, no_pgo_objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
 
         obj_target = obj.name
         if isinstance(obj, Program):
@@ -1392,8 +1388,6 @@ class RecursiveMakeBackend(CommonBackend):
                 if not is_unit_test and not isinstance(obj, SimpleProgram):
                     profile_gen_objs = [o if o in no_pgo_objs else '%s.%s' %
                                         (mozpath.splitext(o)[0], 'i_o') for o in objs]
-                    profile_gen_objs += ['%s.%s' % (mozpath.splitext(o)[0], 'i_o')
-                                         for o in pgo_gen_objs]
 
         def write_obj_deps(target, objs_ref, pgo_objs_ref):
             if pgo_objs_ref:

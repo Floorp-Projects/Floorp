@@ -96,9 +96,6 @@ if __name__ == '__main__':
                     env['PATH'] = '%s;%s' % (vcdir, env['PATH'])
                     break
 
-        # Add MOZ_OBJDIR to the env so that cygprofile.cpp can use it.
-        env["MOZ_OBJDIR"] = build.topobjdir
-
         # Write to an output file if we're running in automation
         process_args = {}
         if 'UPLOAD_PATH' in env:
