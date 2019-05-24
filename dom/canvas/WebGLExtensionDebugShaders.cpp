@@ -22,7 +22,7 @@ WebGLExtensionDebugShaders::~WebGLExtensionDebugShaders() {}
 void WebGLExtensionDebugShaders::GetTranslatedShaderSource(
     const WebGLShader& shader, nsAString& retval) const {
   retval.SetIsVoid(true);
-  if (mIsLost) return;
+  if (mIsLost || !mContext) return;
 
   const WebGLContext::FuncScope funcScope(*mContext,
                                           "getShaderTranslatedSource");

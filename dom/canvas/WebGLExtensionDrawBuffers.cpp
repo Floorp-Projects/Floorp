@@ -27,7 +27,9 @@ WebGLExtensionDrawBuffers::~WebGLExtensionDrawBuffers() {}
 void WebGLExtensionDrawBuffers::DrawBuffersWEBGL(
     const dom::Sequence<GLenum>& buffers) {
   if (mIsLost) {
-    mContext->ErrorInvalidOperation("drawBuffersWEBGL: Extension is lost.");
+    if (mContext) {
+      mContext->ErrorInvalidOperation("drawBuffersWEBGL: Extension is lost.");
+    }
     return;
   }
 
