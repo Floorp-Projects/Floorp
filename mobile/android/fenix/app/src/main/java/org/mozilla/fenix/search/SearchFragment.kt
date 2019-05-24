@@ -18,6 +18,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.browser.search.SearchEngine
@@ -233,7 +234,7 @@ class SearchFragment : Fragment(), BackHandler {
                         getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.UpdateQuery(it.query))
                     }
                     is SearchAction.EditingCanceled -> {
-                        activity?.onBackPressed()
+                        Navigation.findNavController(toolbar_wrapper).navigateUp()
                     }
                 }
             }
