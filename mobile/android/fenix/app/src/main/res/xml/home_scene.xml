@@ -67,14 +67,7 @@
             <KeyAttribute
                 motion:motionTarget="@id/homeDividerShadow"
                 motion:framePosition="90"
-                android:alpha="0">
-                <CustomAttribute
-                    motion:attributeName="layoutMarginStart"
-                    motion:customPixelDimension="0dp" />
-                <CustomAttribute
-                    motion:attributeName="layoutMarginEnd"
-                    motion:customPixelDimension="0dp" />
-            </KeyAttribute>
+                android:alpha="0" />
 
             <KeyAttribute
                 motion:motionTarget="@id/toolbar_wrapper"
