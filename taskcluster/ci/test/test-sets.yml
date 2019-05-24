@@ -463,9 +463,6 @@ android-hw-arm7-opt-unittests:
 android-hw-arm7-debug-unittests:
     - mochitest-media
 
-android-hw-aarch64-opt-unittests:
-    - jittest
-
 android-hw-arm7-raptor:
     - raptor-speedometer-geckoview
     - raptor-speedometer-refbrow
