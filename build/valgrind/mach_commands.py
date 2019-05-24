@@ -189,9 +189,10 @@ class MachCommands(MachCommandBase):
                              '(reached {timeout} second limit)')
                 elif exitcode != 0:
                     status = 2  # turns the TBPL job red
-                    self.log(logging.ERROR, 'valgrind-fail-errors', {},
-                             'TEST-UNEXPECTED-FAIL | valgrind-test | non-zero exit code'
-                             'from Valgrind')
+                    self.log(logging.ERROR, 'valgrind-fail-errors',
+                             {'exitcode': exitcode},
+                             'TEST-UNEXPECTED-FAIL | valgrind-test | non-zero exit code '
+                             'from Valgrind: {exitcode}')
 
                 httpd.stop()
 
