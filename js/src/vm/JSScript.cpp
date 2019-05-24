@@ -4069,10 +4069,6 @@ void JSScript::finalize(FreeOp* fop) {
 
   fop->runtime()->geckoProfiler().onScriptFinalized(this);
 
-  if (jitScript_) {
-    jitScript_->destroy(zone());
-  }
-
   jit::DestroyJitScripts(fop, this);
 
   destroyScriptCounts();
