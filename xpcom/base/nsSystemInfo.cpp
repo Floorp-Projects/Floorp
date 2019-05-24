@@ -168,12 +168,13 @@ nsresult GetHDDInfo(const char* aSpecialDirName, nsAutoCString& aModel,
     queryParameters.PropertyId = StorageDeviceSeekPenaltyProperty;
     bytesRead = 0;
     DEVICE_SEEK_PENALTY_DESCRIPTOR seekPenaltyDescriptor = {
-      sizeof(DEVICE_SEEK_PENALTY_DESCRIPTOR)};
-    if (::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY, &queryParameters,
-          sizeof(queryParameters), &seekPenaltyDescriptor,
-          sizeof(seekPenaltyDescriptor), &bytesRead, nullptr)) {
-      // It is possible that the disk has TrimEnabled, but also IncursSeekPenalty;
-      // In this case, this is an HDD
+        sizeof(DEVICE_SEEK_PENALTY_DESCRIPTOR)};
+    if (::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
+                          &queryParameters, sizeof(queryParameters),
+                          &seekPenaltyDescriptor, sizeof(seekPenaltyDescriptor),
+                          &bytesRead, nullptr)) {
+      // It is possible that the disk has TrimEnabled, but also
+      // IncursSeekPenalty; In this case, this is an HDD
       if (seekPenaltyDescriptor.IncursSeekPenalty) {
         isSSD = false;
       }

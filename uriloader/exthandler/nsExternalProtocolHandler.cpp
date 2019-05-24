@@ -407,7 +407,7 @@ NS_IMETHODIMP nsExtProtocolChannel::SetClassifierMatchedInfo(
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::SetClassifierMatchedTrackingInfo(
-    const nsACString &aLists, const nsACString &aFullHashes) {
+    const nsACString& aLists, const nsACString& aFullHashes) {
   // nothing to do
   return NS_OK;
 }

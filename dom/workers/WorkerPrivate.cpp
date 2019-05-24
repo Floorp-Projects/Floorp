@@ -310,7 +310,8 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
                                  UniquePtr<SerializedStackHolder> aOriginStack,
                                  const nsAString& aScriptURL)
       : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
-        mScriptURL(aScriptURL), mOriginStack(aOriginStack.release()) {}
+        mScriptURL(aScriptURL),
+        mOriginStack(aOriginStack.release()) {}
 
  private:
   // We can't implement PreRun effectively, because at the point when that would
@@ -2178,10 +2179,9 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   mMainThreadEventTargetForMessaging =
       ThrottledEventQueue::Create(target, "Worker queue for messaging");
   if (StaticPrefs::dom_worker_use_medium_high_event_queue()) {
-    mMainThreadEventTarget =
-        ThrottledEventQueue::Create(GetMainThreadSerialEventTarget(),
-                                    "Worker queue",
-                                    nsIRunnablePriority::PRIORITY_MEDIUMHIGH);
+    mMainThreadEventTarget = ThrottledEventQueue::Create(
+        GetMainThreadSerialEventTarget(), "Worker queue",
+        nsIRunnablePriority::PRIORITY_MEDIUMHIGH);
   } else {
     mMainThreadEventTarget = mMainThreadEventTargetForMessaging;
   }

@@ -1649,11 +1649,11 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
   return NS_OK;
 }
 
-nsresult WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal,
-                                  uint64_t aInnerWindowID,
-                                  nsITransportProvider* aTransportProvider,
-                                  const nsACString& aNegotiatedExtensions,
-                                  UniquePtr<SerializedStackHolder> aOriginStack) {
+nsresult WebSocketImpl::AsyncOpen(
+    nsIPrincipal* aPrincipal, uint64_t aInnerWindowID,
+    nsITransportProvider* aTransportProvider,
+    const nsACString& aNegotiatedExtensions,
+    UniquePtr<SerializedStackHolder> aOriginStack) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
   MOZ_ASSERT_IF(!aTransportProvider, aNegotiatedExtensions.IsEmpty());
 

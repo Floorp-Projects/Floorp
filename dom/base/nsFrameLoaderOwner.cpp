@@ -47,7 +47,8 @@ void nsFrameLoaderOwner::ChangeRemoteness(
     // Policy, do not preserve the browsing context. Otherwise, save off the
     // browsing context and use it when creating our new FrameLoader.
     if (!aOptions.mReplaceBrowsingContext && !isChromeRemoteToLocal &&
-        mozilla::Preferences::GetBool("fission.preserve_browsing_contexts", false)) {
+        mozilla::Preferences::GetBool("fission.preserve_browsing_contexts",
+                                      false)) {
       bc = mFrameLoader->GetBrowsingContext();
       mFrameLoader->SkipBrowsingContextDetach();
     }

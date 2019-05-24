@@ -173,7 +173,8 @@ class QuotaManager final : public BackgroundThreadObject {
   /**
    * For use when creating an origin directory. It's possible that origin usage
    * is already being tracked due to a call to EnsureQuotaForOrigin, and in that
-   * case we need to update the existing OriginInfo rather than create a new one.
+   * case we need to update the existing OriginInfo rather than create a new
+   * one.
    */
   void NoteOriginDirectoryCreated(PersistenceType aPersistenceType,
                                   const nsACString& aGroup,

@@ -1095,8 +1095,9 @@ static bool AssignProperty(JSContext* cx, HandleObject dst, HandleObject src,
          JS_DefineProperty(cx, dst, property, v, JSPROP_ENUMERATE);
 }
 
-JS_PUBLIC_API JSObject* ConvertSavedFrameToPlainObject
-    (JSContext* cx, HandleObject savedFrameArg, SavedFrameSelfHosted selfHosted) {
+JS_PUBLIC_API JSObject* ConvertSavedFrameToPlainObject(
+    JSContext* cx, HandleObject savedFrameArg,
+    SavedFrameSelfHosted selfHosted) {
   MOZ_ASSERT(savedFrameArg);
 
   RootedObject savedFrame(cx, savedFrameArg);
@@ -1119,7 +1120,7 @@ JS_PUBLIC_API JSObject* ConvertSavedFrameToPlainObject
       return nullptr;
     }
 
-    const char* parentProperties[] = { "parent", "asyncParent" };
+    const char* parentProperties[] = {"parent", "asyncParent"};
     foundParent = false;
     for (const char* prop : parentProperties) {
       if (!JS_GetProperty(cx, savedFrame, prop, &v)) {

@@ -554,25 +554,23 @@ const jsid* SliceRootedIdVector(const JS::PersistentRootedIdVector* v,
 
 void DestroyRootedIdVector(JS::PersistentRootedIdVector* v) { delete v; }
 
-JS::MutableHandleIdVector GetMutableHandleIdVector(JS::PersistentRootedIdVector* v) {
+JS::MutableHandleIdVector GetMutableHandleIdVector(
+    JS::PersistentRootedIdVector* v) {
   return JS::MutableHandleIdVector(v);
 }
 
-JS::PersistentRootedObjectVector* CreateRootedObjectVector(
-    JSContext* aCx) {
+JS::PersistentRootedObjectVector* CreateRootedObjectVector(JSContext* aCx) {
   JS::PersistentRootedObjectVector* vec =
       new JS::PersistentRootedObjectVector(aCx);
   return vec;
 }
 
 bool AppendToRootedObjectVector(JS::PersistentRootedObjectVector* v,
-                                          JSObject* obj) {
+                                JSObject* obj) {
   return v->append(obj);
 }
 
-void DeleteRootedObjectVector(JS::PersistentRootedObjectVector* v) {
-  delete v;
-}
+void DeleteRootedObjectVector(JS::PersistentRootedObjectVector* v) { delete v; }
 
 #if defined(__linux__)
 #  include <malloc.h>
