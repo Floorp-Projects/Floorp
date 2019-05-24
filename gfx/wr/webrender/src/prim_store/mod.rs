@@ -134,7 +134,6 @@ impl PrimitiveOpacity {
 pub struct SpaceMapper<F, T> {
     kind: CoordinateSpaceMapping<F, T>,
     pub ref_spatial_node_index: SpatialNodeIndex,
-    ref_world_inv_transform: CoordinateSpaceMapping<WorldPixel, T>,
     pub current_target_spatial_node_index: SpatialNodeIndex,
     pub bounds: TypedRect<f32, T>,
     visible_face: VisibleFace,
@@ -144,16 +143,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     pub fn new(
         ref_spatial_node_index: SpatialNodeIndex,
         bounds: TypedRect<f32, T>,
-        clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
         SpaceMapper {
             kind: CoordinateSpaceMapping::Local,
             ref_spatial_node_index,
-            ref_world_inv_transform: clip_scroll_tree
-                .get_world_transform(ref_spatial_node_index)
-                .inverse()
-                .unwrap()
-                .with_destination::<T>(),
             current_target_spatial_node_index: ref_spatial_node_index,
             bounds,
             visible_face: VisibleFace::Front,
@@ -166,7 +159,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         bounds: TypedRect<f32, T>,
         clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
-        let mut mapper = SpaceMapper::new(ref_spatial_node_index, bounds, clip_scroll_tree);
+        let mut mapper = Self::new(ref_spatial_node_index, bounds);
         mapper.set_target_spatial_node(target_node_index, clip_scroll_tree);
         mapper
     }
@@ -192,9 +185,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
             CoordinateSpaceMapping::ScaleOffset(scale_offset)
         } else {
             let transform = clip_scroll_tree
-                .get_world_transform(target_node_index)
-                .post_mul_transform(&self.ref_world_inv_transform)
-                .with_source::<F>();
+                .get_relative_transform(target_node_index, self.ref_spatial_node_index)
+                .into_transform()
+                .with_source::<F>()
+                .with_destination::<T>();
             CoordinateSpaceMapping::Transform(transform)
         };
 
@@ -1793,7 +1787,6 @@ impl PrimitiveStore {
         let mut map_local_to_raster = SpaceMapper::new(
             surface.raster_spatial_node_index,
             RasterRect::max_rect(),
-            frame_context.clip_scroll_tree,
         );
 
         let mut surface_rect = PictureRect::zero();
