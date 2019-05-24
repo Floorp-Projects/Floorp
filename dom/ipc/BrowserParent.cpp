@@ -19,7 +19,6 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/FrameCrashedEvent.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PaymentRequestParent.h"
@@ -137,9 +136,9 @@ using namespace mozilla::widget;
 using namespace mozilla::jsipc;
 using namespace mozilla::gfx;
 
-using mozilla::Unused;
 using mozilla::LazyLogModule;
 using mozilla::StaticAutoPtr;
+using mozilla::Unused;
 
 LazyLogModule gBrowserFocusLog("BrowserFocus");
 
@@ -673,7 +672,6 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (frameLoader) {
-    nsCOMPtr<Element> frameElement(mFrameElement);
     ReceiveMessage(CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr, nullptr,
                    nullptr);
 
@@ -684,38 +682,9 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
       frameLoader->DestroyComplete();
     }
 
-    if (why == AbnormalShutdown && os) {
-      os->NotifyObservers(ToSupports(frameLoader), "oop-frameloader-crashed",
-                          nullptr);
-      RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(frameElement);
-      if (owner) {
-        RefPtr<nsFrameLoader> currentFrameLoader = owner->GetFrameLoader();
-        // It's possible that the frameloader owner has already moved on
-        // and created a new frameloader. If so, we don't fire the event,
-        // since the frameloader owner has clearly moved on.
-        if (currentFrameLoader == frameLoader) {
-          nsString eventName;
-          MessageChannel* channel = GetIPCChannel();
-          if (channel && !channel->DoBuildIDsMatch()) {
-            eventName = NS_LITERAL_STRING("oop-browser-buildid-mismatch");
-          } else {
-            eventName = NS_LITERAL_STRING("oop-browser-crashed");
-          }
-
-          dom::FrameCrashedEventInit init;
-          init.mBubbles = true;
-          init.mCancelable = true;
-          init.mBrowsingContextId = mBrowsingContext->Id();
-          init.mIsTopFrame = !mBrowsingContext->GetParent();
-
-          RefPtr<dom::FrameCrashedEvent> event =
-              dom::FrameCrashedEvent::Constructor(frameElement->OwnerDoc(),
-                                                  eventName, init);
-          event->SetTrusted(true);
-          EventDispatcher::DispatchDOMEvent(frameElement, nullptr, event,
-                                            nullptr, nullptr);
-        }
-      }
+    // If this was a crash, tell our nsFrameLoader to fire crash events.
+    if (why == AbnormalShutdown) {
+      frameLoader->MaybeNotifyCrashed(GetIPCChannel());
     }
   }
 
