@@ -14,7 +14,7 @@
 typedef long nsCookieStatus;
 typedef long nsCookiePolicy;
 
-[scriptable, uuid(adf0db5e-211e-45a3-be14-4486ac430a58)]
+[builtinclass, scriptable, uuid(adf0db5e-211e-45a3-be14-4486ac430a58)]
 interface nsICookie : nsISupports {
 
     /**
