@@ -120,9 +120,9 @@ fuzzy(0-225,0-2529) == css-multicol/multicol-nested-margin-004.xht css-multicol/
 fuzzy(0-225,0-2529) == css-multicol/multicol-nested-margin-005.xht css-multicol/multicol-nested-margin-004-ref.xht
 fuzzy(0-135,0-142) == css-multicol/multicol-overflow-000.xht css-multicol/multicol-overflow-000-ref.xht
 fuzzy(0-204,0-1844) fuzzy-if(skiaContent,0-208,0-1844) == css-multicol/multicol-overflowing-001.xht css-multicol/multicol-overflowing-001-ref.xht
-fuzzy-if(OSX,0-61,0-2) fuzzy-if(skiaContent,0-64,0-2) == css-multicol/multicol-reduce-000.xht css-multicol/multicol-reduce-000-ref.xht
-fuzzy-if(OSX,0-11,0-20) == css-multicol/multicol-rule-000.xht css-multicol/multicol-rule-000-ref.xht
-fuzzy(0-135,0-1584) == css-multicol/multicol-rule-001.xht css-multicol/multicol-rule-001-ref.xht
+fuzzy-if(skiaContent,0-64,0-2) == css-multicol/multicol-reduce-000.xht css-multicol/multicol-reduce-000-ref.xht
+== css-multicol/multicol-rule-000.xht css-multicol/multicol-rule-000-ref.xht
+fuzzy-if(!OSX,0-135,0-1584) == css-multicol/multicol-rule-001.xht css-multicol/multicol-rule-001-ref.xht
 fails-if(!OSX) random-if(OSX) == css-multicol/multicol-rule-002.xht css-multicol/multicol-rule-ref.xht
 == css-multicol/multicol-rule-003.xht css-multicol/multicol-rule-003-ref.xht
 pref(layout.css.column-span.enabled,true) fails == css-multicol/multicol-rule-004.xht css-multicol/multicol-rule-004-ref.xht
@@ -134,7 +134,7 @@ fuzzy(0-106,0-354) == css-multicol/multicol-rule-dotted-000.xht css-multicol/mul
 fuzzy(0-106,0-354) == css-multicol/multicol-rule-double-000.xht css-multicol/multicol-rule-double-000-ref.xht
 == css-multicol/multicol-rule-fraction-001.xht css-multicol/multicol-rule-fraction-001-ref.xht
 == css-multicol/multicol-rule-fraction-002.xht css-multicol/multicol-rule-fraction-002-ref.xht
-fuzzy-if(OSX||winWidget||Android,0-113,0-792) == css-multicol/multicol-rule-fraction-003.xht css-multicol/multicol-rule-fraction-3-ref.xht
+fuzzy-if(winWidget||Android,0-113,0-792) == css-multicol/multicol-rule-fraction-003.xht css-multicol/multicol-rule-fraction-3-ref.xht
 fuzzy(0-127,0-500) == css-multicol/multicol-rule-groove-000.xht css-multicol/multicol-rule-groove-000-ref.xht
 fuzzy(0-94,0-256) == css-multicol/multicol-rule-hidden-000.xht css-multicol/multicol-rule-hidden-000-ref.xht
 fuzzy(0-127,0-500) == css-multicol/multicol-rule-inset-000.xht css-multicol/multicol-rule-ridge-000-ref.xht
@@ -222,8 +222,8 @@ fails == css-values/attr-px-valid.html css-values/reference/200-200-green.html
 == css-values/calc-parenthesis-stack.html css-values/reference/all-green.html
 fuzzy-if(OSX||Android,0-78,0-197) == css-values/ch-unit-001.html css-values/reference/ch-unit-001-ref.html
 fuzzy(0-50,0-160) == css-values/ch-unit-002.html css-values/reference/ch-unit-002-ref.html
-fuzzy-if(Android,78-78,179-179) fuzzy-if(OSX,63-71,6-86) == css-values/ch-unit-003.html css-values/reference/ch-unit-001-ref.html
-fuzzy(0-78,0-197) fails-if(webrender&&cocoaWidget) == css-values/ch-unit-004.html css-values/reference/ch-unit-001-ref.html
+fuzzy-if(Android,0-78,0-179) == css-values/ch-unit-003.html css-values/reference/ch-unit-001-ref.html
+fuzzy(0-78,0-197) == css-values/ch-unit-004.html css-values/reference/ch-unit-001-ref.html
 skip == css-values/ex-calc-expression-001.html css-values/ex-calc-expression-001-ref.html
 skip == css-values/ic-unit-001.html css-values/reference/ic-unit-001-ref.html
 skip == css-values/ic-unit-002.html css-values/reference/ic-unit-002-ref.html
@@ -509,10 +509,10 @@ fuzzy-if(OSX||winWidget,0-255,0-480) random-if(/^Windows\x20NT\x206\.1/.test(htt
 == css-writing-modes/background-size-document-root-vrl-004.html css-writing-modes/background-size-document-root-vrl-002-ref.xht
 == css-writing-modes/background-size-document-root-vrl-006.html css-writing-modes/background-size-document-root-vrl-002-ref.xht
 == css-writing-modes/background-size-document-root-vrl-008.html css-writing-modes/background-size-document-root-vrl-002-ref.xht
-fuzzy-if(winWidget,0-114,0-600) fuzzy-if(OSX&&!webrender,255-255,100-200) == css-writing-modes/baseline-inline-non-replaced-002.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-114,0-600) fuzzy-if(OSX&&!webrender,255-255,100-200) == css-writing-modes/baseline-inline-non-replaced-003.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-114,0-600) fuzzy-if(OSX&&!webrender,255-255,100-200) == css-writing-modes/baseline-inline-non-replaced-004.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-114,0-600) fuzzy-if(OSX&&!webrender,255-255,100-200) == css-writing-modes/baseline-inline-non-replaced-005.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,0-255,0-600) == css-writing-modes/baseline-inline-non-replaced-002.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,0-255,0-600) == css-writing-modes/baseline-inline-non-replaced-003.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,0-255,0-600) == css-writing-modes/baseline-inline-non-replaced-004.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,0-255,0-600) == css-writing-modes/baseline-inline-non-replaced-005.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/baseline-inline-replaced-002.xht css-writing-modes/baseline-inline-replaced-002-ref.xht
 == css-writing-modes/baseline-inline-replaced-003.xht css-writing-modes/baseline-inline-replaced-002-ref.xht
 == css-writing-modes/bidi-embed-001.html css-writing-modes/reference/bidi-embed-001.html
@@ -682,10 +682,10 @@ skip == css-writing-modes/block-plaintext-006.html css-writing-modes/reference/b
 fuzzy-if(OSX,0-255,0-200) == css-writing-modes/box-offsets-rel-pos-vlr-005.xht css-writing-modes/box-offsets-rel-pos-vlr-005-ref.xht
 == css-writing-modes/box-offsets-rel-pos-vrl-002.xht css-writing-modes/abs-pos-non-replaced-vrl-012-ref.xht
 fuzzy-if(OSX,0-255,0-200) == css-writing-modes/box-offsets-rel-pos-vrl-004.xht css-writing-modes/box-offsets-rel-pos-vrl-004-ref.xht
-fuzzy-if(winWidget,0-114,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100) == css-writing-modes/caption-side-vlr-003.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-114,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100) == css-writing-modes/caption-side-vlr-005.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-114,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100) == css-writing-modes/caption-side-vrl-002.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-114,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100) == css-writing-modes/caption-side-vrl-004.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-114,0-300) == css-writing-modes/caption-side-vlr-003.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-114,0-300) == css-writing-modes/caption-side-vlr-005.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-114,0-300) == css-writing-modes/caption-side-vrl-002.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-114,0-300) == css-writing-modes/caption-side-vrl-004.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(OSX||winWidget,0-215,0-780) == css-writing-modes/central-baseline-alignment-002.xht css-writing-modes/central-baseline-alignment-002-ref.xht
 fuzzy-if(OSX||winWidget,0-215,0-780) == css-writing-modes/central-baseline-alignment-003.xht css-writing-modes/central-baseline-alignment-002-ref.xht
 == css-writing-modes/clearance-calculations-vrl-002.xht css-writing-modes/clearance-calculations-vrl-002-ref.xht
@@ -717,11 +717,11 @@ fails == css-writing-modes/contiguous-floated-table-vrl-004.xht reference/ref-fi
 fails == css-writing-modes/contiguous-floated-table-vrl-006.xht reference/ref-filled-green-100px-square.xht
 fails == css-writing-modes/contiguous-floated-table-vrl-008.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/different-block-flow-dir-001.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(webrender&&cocoaWidget,7-7,2-2) == css-writing-modes/different-block-flow-dir-002.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) == css-writing-modes/direction-vlr-003.xht css-writing-modes/direction-vlr-003-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) == css-writing-modes/direction-vlr-005.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) == css-writing-modes/direction-vrl-002.xht css-writing-modes/direction-vrl-002-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) == css-writing-modes/direction-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
+== css-writing-modes/different-block-flow-dir-002.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) == css-writing-modes/direction-vlr-003.xht css-writing-modes/direction-vlr-003-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) == css-writing-modes/direction-vlr-005.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) == css-writing-modes/direction-vrl-002.xht css-writing-modes/direction-vrl-002-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) == css-writing-modes/direction-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
 == css-writing-modes/flexbox_align-items-stretch-writing-modes.html css-writing-modes/flexbox_align-items-stretch-writing-modes-ref.html
 == css-writing-modes/float-clear-vlr-003.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-clear-vlr-005.xht reference/ref-filled-green-100px-square.xht
@@ -735,14 +735,14 @@ fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) == css-
 == css-writing-modes/float-contiguous-vlr-005.xht css-writing-modes/inline-replaced-vrl-004-ref.xht
 == css-writing-modes/float-contiguous-vlr-007.xht css-writing-modes/float-contiguous-vlr-007-ref.xht
 == css-writing-modes/float-contiguous-vlr-009.xht css-writing-modes/float-contiguous-vlr-009-ref.xht
-fuzzy-if(winWidget,0-135,0-904) fuzzy-if(OSX&&!webrender,255-255,200-200) == css-writing-modes/float-contiguous-vlr-011.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-135,0-904) == css-writing-modes/float-contiguous-vlr-013.xht css-writing-modes/float-contiguous-vrl-012-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-904) == css-writing-modes/float-contiguous-vlr-011.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,0-255,0-904) == css-writing-modes/float-contiguous-vlr-013.xht css-writing-modes/float-contiguous-vrl-012-ref.xht
 == css-writing-modes/float-contiguous-vrl-002.xht css-writing-modes/inline-replaced-vrl-004-ref.xht
 == css-writing-modes/float-contiguous-vrl-004.xht css-writing-modes/inline-replaced-vrl-004-ref.xht
 == css-writing-modes/float-contiguous-vrl-006.xht css-writing-modes/float-contiguous-vrl-006-ref.xht
 == css-writing-modes/float-contiguous-vrl-008.xht css-writing-modes/float-contiguous-vrl-008-ref.xht
-fuzzy-if(winWidget,0-135,0-904) fuzzy-if(OSX&&!webrender,255-255,200-200) == css-writing-modes/float-contiguous-vrl-010.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-135,0-904) == css-writing-modes/float-contiguous-vrl-012.xht css-writing-modes/float-contiguous-vrl-012-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-904) == css-writing-modes/float-contiguous-vrl-010.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,0-255,0-904) == css-writing-modes/float-contiguous-vrl-012.xht css-writing-modes/float-contiguous-vrl-012-ref.xht
 fails == css-writing-modes/float-lft-orthog-htb-in-vlr-002.xht css-writing-modes/float-lft-orthog-htb-in-vlr-002-ref.xht
 fails == css-writing-modes/float-lft-orthog-htb-in-vrl-002.xht css-writing-modes/float-lft-orthog-htb-in-vrl-002-ref.xht
 fails == css-writing-modes/float-lft-orthog-vlr-in-htb-002.xht css-writing-modes/float-lft-orthog-vlr-in-htb-002-ref.xht
@@ -754,11 +754,11 @@ fails == css-writing-modes/float-rgt-orthog-vrl-in-htb-003.xht css-writing-modes
 == css-writing-modes/float-shrink-to-fit-vlr-003.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-shrink-to-fit-vlr-005.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-shrink-to-fit-vlr-007.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-109,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100) == css-writing-modes/float-shrink-to-fit-vlr-009.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-109,0-300) == css-writing-modes/float-shrink-to-fit-vlr-009.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-shrink-to-fit-vrl-002.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-shrink-to-fit-vrl-004.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-shrink-to-fit-vrl-006.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-109,0-300) fuzzy-if(OSX&&!webrender,255-255,100-100) == css-writing-modes/float-shrink-to-fit-vrl-008.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,100-100) fuzzy-if(winWidget,0-109,0-300) == css-writing-modes/float-shrink-to-fit-vrl-008.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-shrink-to-fit-vrl-vlr-016.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(winWidget,0-108,0-300) fuzzy-if(OSX&&!webrender,255-255,49-150) == css-writing-modes/float-vlr-003.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(winWidget,0-108,0-300) fuzzy-if(OSX&&!webrender,255-255,49-150) == css-writing-modes/float-vlr-005.xht reference/ref-filled-green-100px-square.xht
@@ -788,14 +788,14 @@ fails == css-writing-modes/inline-block-alignment-002.xht css-writing-modes/inli
 fails == css-writing-modes/inline-block-alignment-003.xht css-writing-modes/inline-block-alignment-003-ref.xht
 fails == css-writing-modes/inline-block-alignment-004.xht css-writing-modes/inline-block-alignment-002-ref.xht
 fails == css-writing-modes/inline-block-alignment-005.xht css-writing-modes/inline-block-alignment-003-ref.xht
-fuzzy-if(winWidget,0-112,0-960) fuzzy-if(OSX&&!webrender,255-255,432-432) == css-writing-modes/inline-block-alignment-006.xht css-writing-modes/inline-block-alignment-006-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,432-432) fuzzy-if(winWidget,0-112,0-960) == css-writing-modes/inline-block-alignment-006.xht css-writing-modes/inline-block-alignment-006-ref.xht
 fails == css-writing-modes/inline-block-alignment-007.xht css-writing-modes/inline-block-alignment-006-ref.xht
 fuzzy-if(OSX||winWidget,0-218,0-621) == css-writing-modes/inline-block-alignment-orthogonal-vlr-003.xht css-writing-modes/inline-block-alignment-orthogonal-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,0-218,0-621) == css-writing-modes/inline-block-alignment-orthogonal-vlr-005.xht css-writing-modes/inline-block-alignment-orthogonal-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,0-218,0-621) == css-writing-modes/inline-block-alignment-orthogonal-vrl-002.xht css-writing-modes/inline-block-alignment-orthogonal-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,0-218,0-621) == css-writing-modes/inline-block-alignment-orthogonal-vrl-004.xht css-writing-modes/inline-block-alignment-orthogonal-vrl-002-ref.xht
-fuzzy-if(winWidget,0-135,0-1080) fuzzy-if(OSX&&!webrender,255-255,432-432) == css-writing-modes/inline-block-alignment-slr-009.xht css-writing-modes/inline-block-alignment-slr-009-ref.xht
-fuzzy-if(winWidget,0-112,0-960) fuzzy-if(OSX&&!webrender,255-255,432-432) == css-writing-modes/inline-block-alignment-srl-008.xht css-writing-modes/inline-block-alignment-006-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,432-432) fuzzy-if(winWidget,0-135,0-1080) == css-writing-modes/inline-block-alignment-slr-009.xht css-writing-modes/inline-block-alignment-slr-009-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,432-432) fuzzy-if(winWidget,0-112,0-960) == css-writing-modes/inline-block-alignment-srl-008.xht css-writing-modes/inline-block-alignment-006-ref.xht
 == css-writing-modes/inline-replaced-vlr-003.xht css-writing-modes/inline-replaced-vrl-002-ref.xht
 == css-writing-modes/inline-replaced-vlr-005.xht css-writing-modes/inline-replaced-vrl-004-ref.xht
 == css-writing-modes/inline-replaced-vrl-002.xht css-writing-modes/inline-replaced-vrl-002-ref.xht
@@ -1052,32 +1052,32 @@ fails == css-writing-modes/table-progression-vlr-004.html css-writing-modes/tabl
 fails == css-writing-modes/table-progression-vrl-002.html css-writing-modes/table-progression-002-ref.html
 fails == css-writing-modes/table-progression-vrl-003.html css-writing-modes/table-progression-001-ref.html
 fails == css-writing-modes/table-progression-vrl-004.html css-writing-modes/table-progression-002-ref.html
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-003.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-005.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-007.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-009.xht css-writing-modes/text-align-vlr-009-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-011.xht css-writing-modes/text-align-vlr-009-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-013.xht css-writing-modes/text-align-vlr-009-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-015.xht css-writing-modes/direction-vlr-003-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-017.xht css-writing-modes/direction-vlr-003-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-019.xht css-writing-modes/direction-vlr-003-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-002.xht css-writing-modes/direction-vrl-004-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-006.xht css-writing-modes/direction-vrl-004-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-008.xht css-writing-modes/text-align-vrl-008-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-010.xht css-writing-modes/text-align-vrl-008-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-012.xht css-writing-modes/text-align-vrl-008-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-014.xht css-writing-modes/direction-vrl-002-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-016.xht css-writing-modes/direction-vrl-002-ref.xht
-fuzzy-if(winWidget,0-75,0-404) fuzzy-if(OSX&&!webrender,255-255,200-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-018.xht css-writing-modes/direction-vrl-002-ref.xht
-fuzzy-if(winWidget,0-215,0-780) fuzzy-if(OSX&&!webrender,255-255,192-330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-slr-009.xht css-writing-modes/text-baseline-slr-009-ref.xht
-fuzzy-if(winWidget,0-215,0-780) fuzzy-if(OSX&&!webrender,255-255,192-330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-srl-008.xht css-writing-modes/text-baseline-vrl-006-ref.xht
-fuzzy-if(winWidget,0-215,0-780) fuzzy-if(OSX&&!webrender,255-255,192-330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vlr-003.xht css-writing-modes/text-baseline-vrl-002-ref.xht
-fuzzy-if(winWidget,0-215,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vlr-005.xht css-writing-modes/text-baseline-vrl-002-ref.xht
-fuzzy-if(winWidget,0-215,0-780) fuzzy-if(OSX&&!webrender,255-255,192-330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vlr-007.xht css-writing-modes/text-baseline-vrl-006-ref.xht
-fuzzy-if(winWidget,0-215,0-780) fuzzy-if(OSX&&!webrender,255-255,192-330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vrl-002.xht css-writing-modes/text-baseline-vrl-002-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-003.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-005.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-007.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-009.xht css-writing-modes/text-align-vlr-009-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-011.xht css-writing-modes/text-align-vlr-009-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-013.xht css-writing-modes/text-align-vlr-009-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-015.xht css-writing-modes/direction-vlr-003-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-017.xht css-writing-modes/direction-vlr-003-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vlr-019.xht css-writing-modes/direction-vlr-003-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-002.xht css-writing-modes/direction-vrl-004-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-006.xht css-writing-modes/direction-vrl-004-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-008.xht css-writing-modes/text-align-vrl-008-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-010.xht css-writing-modes/text-align-vrl-008-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-012.xht css-writing-modes/text-align-vrl-008-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-014.xht css-writing-modes/direction-vrl-002-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-016.xht css-writing-modes/direction-vrl-002-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,200-200) fuzzy-if(winWidget,0-75,0-404) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-align-vrl-018.xht css-writing-modes/direction-vrl-002-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-slr-009.xht css-writing-modes/text-baseline-slr-009-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-srl-008.xht css-writing-modes/text-baseline-vrl-006-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vlr-003.xht css-writing-modes/text-baseline-vrl-002-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vlr-005.xht css-writing-modes/text-baseline-vrl-002-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vlr-007.xht css-writing-modes/text-baseline-vrl-006-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vrl-002.xht css-writing-modes/text-baseline-vrl-002-ref.xht
 fuzzy-if(winWidget,0-215,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vrl-004.xht css-writing-modes/text-baseline-vrl-002-ref.xht
-fuzzy-if(winWidget,0-215,0-780) fuzzy-if(OSX&&!webrender,255-255,192-330) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vrl-006.xht css-writing-modes/text-baseline-vrl-006-ref.xht
+fuzzy-if(OSX||winWidget,0-255,0-780) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-baseline-vrl-006.xht css-writing-modes/text-baseline-vrl-006-ref.xht
 fuzzy-if(OSX&&!webrender,255-255,100-100) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-combine-upright-decorations-001.html css-writing-modes/reference/text-combine-upright-decorations-001.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-combine-upright-inherit-all-001.html css-writing-modes/reference/text-combine-upright-inherit-all-001.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-combine-upright-inherit-all-002.html css-writing-modes/reference/text-combine-upright-inherit-all-002.html
@@ -1123,7 +1123,7 @@ fuzzy-if(OSX||winWidget,0-255,0-480) random-if(/^Windows\x20NT\x206\.1/.test(htt
 fuzzy-if(OSX||winWidget,0-255,0-480) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-indent-vrl-012.xht css-writing-modes/text-indent-vrl-012-ref.xht
 fuzzy-if(OSX||winWidget,0-255,0-480) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-indent-vrl-014.xht css-writing-modes/text-indent-vrl-010-ref.xht
 fuzzy-if(OSX||winWidget,0-255,0-480) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-indent-vrl-016.xht css-writing-modes/text-indent-vrl-012-ref.xht
-fuzzy-if(OSX||winWidget,0-255,0-960) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-016.xht css-writing-modes/text-orientation-016-ref.xht
+fuzzy-if(!webrender&&OSX,255-255,64-64) fuzzy-if(winWidget,0-226,0-960) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-016.xht css-writing-modes/text-orientation-016-ref.xht
 == css-writing-modes/text-orientation-mixed-srl-016.xht css-writing-modes/text-orientation-mixed-srl-016-ref.xht
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-mixed-vlr-100.html css-writing-modes/text-orientation-mixed-vlr-100-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-mixed-vrl-100.html css-writing-modes/text-orientation-mixed-vrl-100-ref.html
@@ -1132,30 +1132,30 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-o
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/text-orientation-upright-srl-018.xht css-writing-modes/text-orientation-mixed-srl-016-ref.xht
 == css-writing-modes/text-orientation-upright-vlr-100.html css-writing-modes/text-orientation-upright-vlr-100-ref.html
 == css-writing-modes/text-orientation-upright-vrl-100.html css-writing-modes/text-orientation-upright-vrl-100-ref.html
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-002.xht css-writing-modes/vertical-alignment-002-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-003.xht css-writing-modes/vertical-alignment-002-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-004.xht css-writing-modes/vertical-alignment-004-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-005.xht css-writing-modes/vertical-alignment-004-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-006.xht css-writing-modes/vertical-alignment-006-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-007.xht css-writing-modes/vertical-alignment-006-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-008.xht css-writing-modes/vertical-alignment-008-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-009.xht css-writing-modes/vertical-alignment-008-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-029.xht css-writing-modes/vertical-alignment-008-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-031.xht css-writing-modes/vertical-alignment-006-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-033.xht css-writing-modes/vertical-alignment-004-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-035.xht css-writing-modes/vertical-alignment-002-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-041.xht css-writing-modes/vertical-alignment-slr-049-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-028.xht css-writing-modes/vertical-alignment-002-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-030.xht css-writing-modes/vertical-alignment-004-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-032.xht css-writing-modes/vertical-alignment-006-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-034.xht css-writing-modes/vertical-alignment-008-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-040.xht css-writing-modes/vertical-alignment-vrl-026-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-002.xht css-writing-modes/vertical-alignment-002-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-003.xht css-writing-modes/vertical-alignment-002-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-004.xht css-writing-modes/vertical-alignment-004-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-005.xht css-writing-modes/vertical-alignment-004-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-006.xht css-writing-modes/vertical-alignment-006-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-007.xht css-writing-modes/vertical-alignment-006-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-008.xht css-writing-modes/vertical-alignment-008-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-009.xht css-writing-modes/vertical-alignment-008-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-029.xht css-writing-modes/vertical-alignment-008-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-031.xht css-writing-modes/vertical-alignment-006-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-033.xht css-writing-modes/vertical-alignment-004-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-035.xht css-writing-modes/vertical-alignment-002-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-slr-041.xht css-writing-modes/vertical-alignment-slr-049-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-028.xht css-writing-modes/vertical-alignment-002-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-030.xht css-writing-modes/vertical-alignment-004-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-032.xht css-writing-modes/vertical-alignment-006-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-034.xht css-writing-modes/vertical-alignment-008-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-srl-040.xht css-writing-modes/vertical-alignment-vrl-026-ref.xht
 fails == css-writing-modes/vertical-alignment-vlr-023.xht css-writing-modes/vertical-alignment-vrl-022-ref.xht
 fails == css-writing-modes/vertical-alignment-vlr-025.xht css-writing-modes/vertical-alignment-vrl-022-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-vlr-027.xht css-writing-modes/vertical-alignment-vrl-026-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-vlr-027.xht css-writing-modes/vertical-alignment-vrl-026-ref.xht
 fails == css-writing-modes/vertical-alignment-vrl-022.xht css-writing-modes/vertical-alignment-vrl-022-ref.xht
 fails == css-writing-modes/vertical-alignment-vrl-024.xht css-writing-modes/vertical-alignment-vrl-022-ref.xht
-fuzzy-if(winWidget,0-223,0-720) fuzzy-if(OSX&&!webrender,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-vrl-026.xht css-writing-modes/vertical-alignment-vrl-026-ref.xht
+fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-vrl-026.xht css-writing-modes/vertical-alignment-vrl-026-ref.xht
 fails == css-writing-modes/wm-propagation-body-006.xht css-writing-modes/block-flow-direction-025-ref.xht
 fails == css-writing-modes/wm-propagation-body-008.xht css-writing-modes/block-flow-direction-025-ref.xht
 fails == css-writing-modes/wm-propagation-body-010.xht css-writing-modes/wm-propagation-body-003-ref.xht
@@ -1163,10 +1163,10 @@ fails == css-writing-modes/wm-propagation-body-011.xht css-writing-modes/wm-prop
 fails == css-writing-modes/wm-propagation-body-015.xht css-writing-modes/block-flow-direction-025-ref.xht
 == css-writing-modes/writing-mode-horizontal-001l.html css-writing-modes/reference/writing-mode-horizontal-001l-ref.html
 == css-writing-modes/writing-mode-horizontal-001r.html css-writing-modes/reference/writing-mode-horizontal-001r-ref.html
-fuzzy-if(winWidget,0-158,0-624) fuzzy-if(OSX&&!webrender,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-lr-002.xht css-writing-modes/reftest/writing-mode-vertical-lr-002-ref.xht
-fuzzy-if(winWidget,0-158,0-624) fuzzy-if(OSX&&!webrender,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-001.xht css-writing-modes/reftest/writing-mode-vertical-rl-001-ref.xht
-fuzzy-if(winWidget,0-158,0-624) fuzzy-if(OSX&&!webrender,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-002.xht css-writing-modes/reftest/writing-mode-vertical-rl-002-ref.xht
-fuzzy-if(winWidget,0-158,0-624) fuzzy-if(OSX&&!webrender,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
+fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-lr-002.xht css-writing-modes/reftest/writing-mode-vertical-lr-002-ref.xht
+fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-001.xht css-writing-modes/reftest/writing-mode-vertical-rl-001-ref.xht
+fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-002.xht css-writing-modes/reftest/writing-mode-vertical-rl-002-ref.xht
+fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
 skip == selectors/any-link-dynamic-001.html selectors/any-link-dynamic-001-ref.html
 needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-001.html selectors/focus-within-001-ref.html
 needs-focus random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == selectors/focus-within-002.html selectors/focus-within-001-ref.html

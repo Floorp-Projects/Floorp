@@ -158,10 +158,10 @@ HTTP(..) == font-redirect.html order-1-ref.html
 == dynamic-duplicate-rule-1c.html dynamic-duplicate-rule-1-ref.html
 
 # Test for COLR and CPAL support
-== color-1a.html color-1-ref.html
+fails-if(OSX) == color-1a.html color-1-ref.html
 != color-1a.html color-1-notref.html
-== color-1b.html color-1-ref.html
-== color-2a.html color-2-ref.html
+fails-if(OSX) == color-1b.html color-1-ref.html
+fails-if(OSX) == color-2a.html color-2-ref.html
 != color-2a.html color-2-notref.html
 
 pref(gfx.downloadable_fonts.woff2.enabled,true) == woff2-1.html woff2-1-ref.html

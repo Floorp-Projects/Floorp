@@ -5,7 +5,7 @@ fuzzy-if(Android,0-16,0-244) fuzzy-if(webrender,0-47,0-6) == marker-basic.html m
 skip-if(Android) fuzzy-if(webrender,0-47,0-18) == bidi-simple.html bidi-simple-ref.html # Fails on Android due to anti-aliasing
 skip-if(!gtkWidget) fuzzy-if(gtkWidget,0-124,0-289) == bidi-simple-scrolled.html bidi-simple-scrolled-ref.html # Fails on Windows and OSX due to anti-aliasing
 fuzzy-if(Android,0-24,0-4000) fuzzy-if(cocoaWidget,0-1,0-40) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-149,0-1836) == scroll-rounding.html scroll-rounding-ref.html # bug 760264
-fuzzy(0-16,0-454) fails-if(gtkWidget) fuzzy-if(webrender&&!gtkWidget,50-85,454-499) skip-if(OSX&&!isDebugBuild&&verify) == anonymous-block.html anonymous-block-ref.html # gtkWidget:bug 1309103, fuzzy: subpixel aa
+fuzzy(0-16,0-454) fails-if(gtkWidget) fuzzy-if(webrender&&winWidget,50-85,454-499) fuzzy-if(webrender&&OSX,7-7,143-143) skip-if(OSX&&!isDebugBuild&&verify) == anonymous-block.html anonymous-block-ref.html # gtkWidget:bug 1309103, fuzzy: subpixel aa
 fuzzy-if(webrender,0-47,0-3) == false-marker-overlap.html false-marker-overlap-ref.html
 == visibility-hidden.html visibility-hidden-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-1724) fuzzy-if(gtkWidget,0-10,0-8) fuzzy-if(webrender,0-47,0-24) == block-padding.html block-padding-ref.html

@@ -17,7 +17,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == displaystyle-1.html disp
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == displaystyle-2.html displaystyle-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == displaystyle-3.html displaystyle-3-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == displaystyle-4.html displaystyle-4-ref.html # Bug 1392106
-random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(webrender&&!gtkWidget,114-255,265-304) == mirror-op-1.html mirror-op-1-ref.html
+random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(webrender&&winWidget,114-255,265-304) fuzzy-if(webrender&&OSX,87-87,242-242) == mirror-op-1.html mirror-op-1-ref.html
 != mirror-op-2.html mirror-op-2-ref.html
 != mirror-op-3.html mirror-op-3-ref.html
 != mirror-op-4.html mirror-op-4-ref.html
@@ -129,7 +129,7 @@ fails-if(gtkWidget||Android) random-if(winWidget) == semantics-1.xhtml semantics
 == mstyle-1.xhtml mstyle-1-ref.xhtml
 == mstyle-2.xhtml mstyle-2-ref.xhtml
 fuzzy-if(OSX,0-16,0-8) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mstyle-3.xhtml mstyle-3-ref.xhtml # Bug 1392106
-== mstyle-4.xhtml mstyle-4-ref.xhtml
+fuzzy-if(OSX,0-1,0-4) == mstyle-4.xhtml mstyle-4-ref.xhtml
 == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
 != scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
