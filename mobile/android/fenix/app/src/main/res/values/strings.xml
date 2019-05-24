@@ -506,7 +506,7 @@
     <string name="sync_send_to_all">Send to all devices</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Reconnect to Sync</string>
-    <!-- An option from the share dialog to reconnect to sync -->
+    <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Offline</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Connect another device</string>

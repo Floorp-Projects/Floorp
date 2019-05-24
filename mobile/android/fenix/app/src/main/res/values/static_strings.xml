@@ -20,19 +20,19 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header" translatable="false">Welcome to %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header" translatable="false">Already have an account?</string>
     <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_feature_section_header" translatable="false">Get to know %s</string>
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header" translatable="false">Choose your theme</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description" translatable="false">Save some battery and your eyesight by enabling dark mode.</string>
     <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header" translatable="false">Get the most out of %s.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated -->
@@ -46,7 +46,7 @@
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header" translatable="false">Protect yourself</string>
     <!-- text for the tracking protection card description
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_tracking_protection_description" translatable="false">%s helps stop websites from tracking you online, making it
         harder for ads to follow you around the web
     </string>
@@ -60,8 +60,8 @@
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header" translatable="false">Your Privacy</string>
     <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app defined in app_name (for example: Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description" translatable="false">We\'ve designed %s to give you control over what you share
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description" translatable="false">We’ve designed %s to give you control over what you share
         online and what you share with us.
     </string>
     <!-- Text for the button to read the privacy notice -->
