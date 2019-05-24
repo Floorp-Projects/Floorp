@@ -885,7 +885,7 @@ PluginInstanceParent* PluginModuleChromeParent::GetManagingInstance(
     mozilla::ipc::IProtocol* aProtocol) {
   MOZ_ASSERT(aProtocol);
   mozilla::ipc::IProtocol* listener = aProtocol;
-  switch (listener->GetProtocolTypeId()) {
+  switch (listener->GetProtocolId()) {
     case PPluginInstanceMsgStart:
       // In this case, aProtocol is the instance itself. Just cast it.
       return static_cast<PluginInstanceParent*>(aProtocol);

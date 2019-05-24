@@ -98,7 +98,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   if (mInProcess) {
     // In the in-process case, we can get it from the other side's
     // WindowGlobalChild.
-    MOZ_ASSERT(Manager()->GetProtocolTypeId() == PInProcessMsgStart);
+    MOZ_ASSERT(Manager()->GetProtocolId() == PInProcessMsgStart);
     RefPtr<WindowGlobalChild> otherSide = GetChildActor();
     if (otherSide && otherSide->WindowGlobal()) {
       // Get the toplevel window from the other side.
@@ -110,7 +110,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
     }
   } else {
     // In the cross-process case, we can get the frame element from our manager.
-    MOZ_ASSERT(Manager()->GetProtocolTypeId() == PBrowserMsgStart);
+    MOZ_ASSERT(Manager()->GetProtocolId() == PBrowserMsgStart);
     frameElement = static_cast<BrowserParent*>(Manager())->GetOwnerElement();
   }
 

@@ -406,7 +406,7 @@ Maybe<IProtocol*> IProtocol::ReadActor(const IPC::Message* aMessage,
     return Nothing();
   }
 
-  if (listener->GetProtocolTypeId() != aProtocolTypeId) {
+  if (listener->GetProtocolId() != aProtocolTypeId) {
     MismatchedActorTypeError(aActorDescription);
     return Nothing();
   }
@@ -702,8 +702,7 @@ void IProtocol::DestroySubtree(ActorDestroyReason aWhy) {
 
 IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,
                                      Side aSide)
-    : IProtocol(aSide, MakeUnique<ToplevelState>(aName, this, aSide)),
-      mProtocolId(aProtoId),
+    : IProtocol(aProtoId, aSide, MakeUnique<ToplevelState>(aName, this, aSide)),
       mOtherPid(mozilla::ipc::kInvalidProcessId),
       mIsMainThreadProtocol(false) {}
 

@@ -141,7 +141,7 @@ static IProtocol* GetOtherInProcessActor(IProtocol* aActor) {
   // Discover the manager of aActor which is PInProcess.
   IProtocol* current = aActor;
   while (current) {
-    if (current->GetProtocolTypeId() == PInProcessMsgStart) {
+    if (current->GetProtocolId() == PInProcessMsgStart) {
       break;  // Found the correct actor.
     }
     current = current->Manager();
@@ -173,7 +173,7 @@ static IProtocol* GetOtherInProcessActor(IProtocol* aActor) {
   if (otherActor) {
     MOZ_ASSERT(otherActor->GetSide() != UnknownSide, "bad unknown side");
     MOZ_ASSERT(otherActor->GetSide() != aActor->GetSide(), "Wrong side!");
-    MOZ_ASSERT(otherActor->GetProtocolTypeId() == aActor->GetProtocolTypeId(),
+    MOZ_ASSERT(otherActor->GetProtocolId() == aActor->GetProtocolId(),
                "Wrong type of protocol!");
   }
 
