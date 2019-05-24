@@ -506,33 +506,19 @@ static void ConvertToNativeNewlines(nsString& aString) {
 #endif
 }
 
-static void AppendString(nsAString& aString, nsIContent* aContent) {
-  NS_ASSERTION(aContent->IsText(), "aContent is not a text node!");
-  const nsTextFragment* text = aContent->GetText();
-  if (!text) {
-    return;
-  }
-  text->AppendTo(aString);
+static void AppendString(nsAString& aString, Text* aText) {
+  aText->TextFragment().AppendTo(aString);
 }
 
-static void AppendSubString(nsAString& aString, nsIContent* aContent,
-                            uint32_t aXPOffset, uint32_t aXPLength) {
-  NS_ASSERTION(aContent->IsText(), "aContent is not a text node!");
-  const nsTextFragment* text = aContent->GetText();
-  if (!text) {
-    return;
-  }
-  text->AppendTo(aString, int32_t(aXPOffset), int32_t(aXPLength));
+static void AppendSubString(nsAString& aString, Text* aText, uint32_t aXPOffset,
+                            uint32_t aXPLength) {
+  aText->TextFragment().AppendTo(aString, int32_t(aXPOffset),
+                                 int32_t(aXPLength));
 }
 
 #if defined(XP_WIN)
-static uint32_t CountNewlinesInXPLength(nsIContent* aContent,
-                                        uint32_t aXPLength) {
-  NS_ASSERTION(aContent->IsText(), "aContent is not a text node!");
-  const nsTextFragment* text = aContent->GetText();
-  if (!text) {
-    return 0;
-  }
+static uint32_t CountNewlinesInXPLength(Text* aText, uint32_t aXPLength) {
+  const nsTextFragment* text = &aText->TextFragment();
   // For automated tests, we should abort on debug build.
   MOZ_ASSERT(aXPLength == UINT32_MAX || aXPLength <= text->GetLength(),
              "aXPLength is out-of-bounds");
@@ -546,13 +532,9 @@ static uint32_t CountNewlinesInXPLength(nsIContent* aContent,
   return newlines;
 }
 
-static uint32_t CountNewlinesInNativeLength(nsIContent* aContent,
+static uint32_t CountNewlinesInNativeLength(Text* aText,
                                             uint32_t aNativeLength) {
-  NS_ASSERTION(aContent->IsText(), "aContent is not a text node!");
-  const nsTextFragment* text = aContent->GetText();
-  if (!text) {
-    return 0;
-  }
+  const nsTextFragment* text = &aText->TextFragment();
   // For automated tests, we should abort on debug build.
   MOZ_ASSERT(
       (aNativeLength == UINT32_MAX || aNativeLength <= text->GetLength() * 2),
@@ -584,8 +566,9 @@ uint32_t ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
   if (aStartOffset == aEndOffset) {
     return 0;
   }
-  return GetTextLength(aContent, LINE_BREAK_TYPE_NATIVE, aEndOffset) -
-         GetTextLength(aContent, LINE_BREAK_TYPE_NATIVE, aStartOffset);
+  return GetTextLength(aContent->AsText(), LINE_BREAK_TYPE_NATIVE, aEndOffset) -
+         GetTextLength(aContent->AsText(), LINE_BREAK_TYPE_NATIVE,
+                       aStartOffset);
 }
 
 /* static */
@@ -594,7 +577,7 @@ uint32_t ContentEventHandler::GetNativeTextLength(nsIContent* aContent,
   if (NS_WARN_IF(!aContent->IsText())) {
     return 0;
   }
-  return GetTextLength(aContent, LINE_BREAK_TYPE_NATIVE, aMaxLength);
+  return GetTextLength(aContent->AsText(), LINE_BREAK_TYPE_NATIVE, aMaxLength);
 }
 
 /* static */
@@ -731,8 +714,7 @@ nsresult ContentEventHandler::GenerateFlatTextContent(
   }
 
   if (startNode == endNode && startNode->IsText()) {
-    nsIContent* content = startNode->AsContent();
-    AppendSubString(aString, content, aRawRange.StartOffset(),
+    AppendSubString(aString, startNode->AsText(), aRawRange.StartOffset(),
                     aRawRange.EndOffset() - aRawRange.StartOffset());
     ConvertToNativeNewlines(aString);
     return NS_OK;
@@ -752,18 +734,17 @@ nsresult ContentEventHandler::GenerateFlatTextContent(
     if (!node->IsContent()) {
       continue;
     }
-    nsIContent* content = node->AsContent();
 
-    if (content->IsText()) {
-      if (content == startNode) {
-        AppendSubString(aString, content, aRawRange.StartOffset(),
-                        content->TextLength() - aRawRange.StartOffset());
-      } else if (content == endNode) {
-        AppendSubString(aString, content, 0, aRawRange.EndOffset());
+    if (node->IsText()) {
+      if (node == startNode) {
+        AppendSubString(aString, node->AsText(), aRawRange.StartOffset(),
+                        node->AsText()->TextLength() - aRawRange.StartOffset());
+      } else if (node == endNode) {
+        AppendSubString(aString, node->AsText(), 0, aRawRange.EndOffset());
       } else {
-        AppendString(aString, content);
+        AppendString(aString, node->AsText());
       }
-    } else if (ShouldBreakLineBefore(content, mRootContent)) {
+    } else if (ShouldBreakLineBefore(node->AsContent(), mRootContent)) {
       aString.Append(char16_t('\n'));
     }
   }
@@ -1001,7 +982,7 @@ nsresult ContentEventHandler::ExpandToClusterBoundary(nsIContent* aContent,
   }
 
   // If the frame isn't available, we only can check surrogate pair...
-  const nsTextFragment* text = aContent->GetText();
+  const nsTextFragment* text = &aContent->AsText()->TextFragment();
   NS_ENSURE_TRUE(text, NS_ERROR_FAILURE);
   if (NS_IS_LOW_SURROGATE(text->CharAt(*aXPOffset)) &&
       NS_IS_HIGH_SURROGATE(text->CharAt(*aXPOffset - 1))) {
@@ -1864,7 +1845,7 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
       }
       // Assign the characters whose rects are computed by the call of
       // nsTextFrame::GetCharacterRectsInRange().
-      AppendSubString(chars, firstContent, firstFrame.mOffsetInNode,
+      AppendSubString(chars, firstContent->AsText(), firstFrame.mOffsetInNode,
                       charRects.Length());
       if (NS_WARN_IF(chars.Length() != charRects.Length())) {
         return NS_ERROR_UNEXPECTED;
