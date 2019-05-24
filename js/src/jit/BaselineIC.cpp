@@ -156,17 +156,12 @@ class MOZ_RAII FallbackStubAllocator {
   }
 };
 
-}  // namespace jit
-
 bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
                                                 JSScript* script) {
   MOZ_ASSERT(cx->realm()->jitRealm());
   MOZ_ASSERT(jit::IsBaselineEnabled(cx));
 
   MOZ_ASSERT(numICEntries() == script->numICEntries());
-
-  // TODO(bug 1551796): move JitScript into jit namespace so we don't need this.
-  using namespace js::jit;
 
   FallbackStubAllocator alloc(cx, fallbackStubSpace_);
 
@@ -518,8 +513,6 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
 
   return true;
 }
-
-namespace jit {
 
 ICStubConstIterator& ICStubConstIterator::operator++() {
   MOZ_ASSERT(currentStub_ != nullptr);
@@ -1300,18 +1293,14 @@ void ICStubCompilerBase::PushStubPayload(MacroAssembler& masm,
   masm.adjustFrame(sizeof(intptr_t));
 }
 
-}  // namespace jit
-
 void JitScript::noteAccessedGetter(uint32_t pcOffset) {
-  jit::ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  jit::ICFallbackStub* stub = entry.fallbackStub();
+  ICEntry& entry = icEntryFromPCOffset(pcOffset);
+  ICFallbackStub* stub = entry.fallbackStub();
 
   if (stub->isGetProp_Fallback()) {
     stub->toGetProp_Fallback()->noteAccessedGetter();
   }
 }
-
-namespace jit {
 
 // TypeMonitor_Fallback
 //
@@ -2500,18 +2489,14 @@ bool FallbackICCodeCompiler::emit_SetElem() {
   return tailCallVM<Fn, DoSetElemFallback>(masm);
 }
 
-}  // namespace jit
-
 void JitScript::noteHasDenseAdd(uint32_t pcOffset) {
-  jit::ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  jit::ICFallbackStub* stub = entry.fallbackStub();
+  ICEntry& entry = icEntryFromPCOffset(pcOffset);
+  ICFallbackStub* stub = entry.fallbackStub();
 
   if (stub->isSetElem_Fallback()) {
     stub->toSetElem_Fallback()->noteHasDenseAdd();
   }
 }
-
-namespace jit {
 
 template <typename T>
 void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
