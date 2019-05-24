@@ -38,10 +38,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     ]
     RCINCLUDE = 'mozglue.rc'
 
-    if CONFIG['MOZ_PGO'] and CONFIG['CC_TYPE'] == 'clang-cl':
-        SOURCES += ['cygprofile.cpp']
-        SOURCES['cygprofile.cpp'].pgo_generate_only = True
-
 if CONFIG['MOZ_WIDGET_TOOLKIT']:
 
     if CONFIG['MOZ_MEMORY'] and FORCE_SHARED_LIB:

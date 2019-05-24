@@ -232,19 +232,12 @@ class CommonBackend(BuildBackend):
         no_pgo_objs = []
 
         seen_objs = set()
-        seen_pgo_gen_only_objs = set()
         seen_libs = set()
 
         def add_objs(lib):
-            seen_pgo_gen_only_objs.update(lib.pgo_gen_only_objs)
-
             for o in lib.objs:
                 if o in seen_objs:
                     continue
-
-                # The front end should keep pgo generate-only objects and
-                # normal objects separate.
-                assert o not in seen_pgo_gen_only_objs
 
                 seen_objs.add(o)
                 objs.append(o)
@@ -294,8 +287,7 @@ class CommonBackend(BuildBackend):
                 seen_libs.add(lib)
                 os_libs.append(lib)
 
-        return (objs, sorted(seen_pgo_gen_only_objs), no_pgo_objs, \
-                shared_libs, os_libs, static_libs)
+        return (objs, no_pgo_objs, shared_libs, os_libs, static_libs)
 
     def _make_list_file(self, kind, objdir, objs, name):
         if not objs:
