@@ -7771,7 +7771,7 @@ nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
   AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
                                                       aEvent, GetDocument());
 
-  nsAutoPopupStatePusher popupStatePusher(
+  AutoPopupStatePusher popupStatePusher(
       PopupBlocker::GetEventPopupControlState(aEvent));
 
   // FIXME. If the event was reused, we need to clear the old target,

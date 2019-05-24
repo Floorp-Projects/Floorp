@@ -695,7 +695,7 @@ nsresult HTMLFormElement::SubmitSubmission(
   nsCOMPtr<nsIDocShell> docShell;
 
   {
-    nsAutoPopupStatePusher popupStatePusher(mSubmitPopupState);
+    AutoPopupStatePusher popupStatePusher(mSubmitPopupState);
 
     AutoHandlingUserInputStatePusher userInpStatePusher(
         aFormSubmission->IsInitiatedFromUserInput(), nullptr, doc);

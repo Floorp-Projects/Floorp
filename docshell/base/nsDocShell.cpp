@@ -3952,7 +3952,7 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
   } else {
     popupState = PopupBlocker::openOverridden;
   }
-  nsAutoPopupStatePusher statePusher(popupState);
+  AutoPopupStatePusher statePusher(popupState);
 
   bool forceAllowDataURI = loadFlags & LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
 
@@ -12460,7 +12460,7 @@ class OnLinkClickEvent : public Runnable {
                    nsIContentSecurityPolicy* aCsp);
 
   NS_IMETHOD Run() override {
-    nsAutoPopupStatePusher popupStatePusher(mPopupState);
+    AutoPopupStatePusher popupStatePusher(mPopupState);
 
     // We need to set up an AutoJSAPI here for the following reason: When we
     // do OnLinkClickSync we'll eventually end up in
