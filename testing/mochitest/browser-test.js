@@ -530,9 +530,8 @@ Tester.prototype = {
   },
 
   async promiseMainWindowReady() {
-    if (window.gBrowserInit && !gBrowserInit.idleTasksFinished) {
-      await this.TestUtils.topicObserved("browser-idle-startup-tasks-finished",
-                                         subject => subject === window);
+    if (window.gBrowserInit) {
+      await window.gBrowserInit.idleTasksFinishedPromise;
     }
   },
 

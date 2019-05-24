@@ -1357,7 +1357,8 @@ var delayedStartupPromise = new Promise(resolve => {
 
 var gBrowserInit = {
   delayedStartupFinished: false,
-  idleTasksFinished: false,
+  idleTasksFinishedPromise: null,
+  idleTaskPromiseResolve: null,
 
   _tabToAdopt: undefined,
 
@@ -1986,7 +1987,7 @@ var gBrowserInit = {
     // timeouts) should execute in order. Note that this observer notification is
     // not guaranteed to fire, since the window could close before we get here.
     scheduleIdleTask(() => {
-      this.idleTasksFinished = true;
+      this.idleTaskPromiseResolve();
       Services.obs.notifyObservers(window, "browser-idle-startup-tasks-finished");
     });
   },
@@ -2158,6 +2159,10 @@ var gBrowserInit = {
     window.browserDOMWindow = null;
   },
 };
+
+gBrowserInit.idleTasksFinishedPromise = new Promise(resolve => {
+  gBrowserInit.idleTaskPromiseResolve = resolve;
+});
 
 function HandleAppCommandEvent(evt) {
   switch (evt.command) {
