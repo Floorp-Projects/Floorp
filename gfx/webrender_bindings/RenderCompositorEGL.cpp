@@ -59,22 +59,31 @@ RenderCompositorEGL::~RenderCompositorEGL() { DestroyEGLSurface(); }
 
 bool RenderCompositorEGL::BeginFrame() {
 #ifdef MOZ_WAYLAND
-  if (mWidget->AsX11() &&
-      mWidget->AsX11()->WaylandRequestsUpdatingEGLSurface()) {
-    // Destroy EGLSurface if it exists.
+  bool newSurface =
+      mWidget->AsX11() && mWidget->AsX11()->WaylandRequestsUpdatingEGLSurface();
+  if (newSurface) {
+    // Destroy EGLSurface if it exists and create a new one. We will set the
+    // swap interval after MakeCurrent() has been called.
     DestroyEGLSurface();
     mEGLSurface = CreateEGLSurface();
-    if (mEGLSurface) {
-      const auto* egl = gl::GLLibraryEGL::Get();
-      // Make eglSwapBuffers() non-blocking on wayland
-      egl->fSwapInterval(gl::EGL_DISPLAY(), 0);
-    }
   }
 #endif
   if (!MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     return false;
   }
+
+#ifdef MOZ_WAYLAND
+  if (newSurface) {
+    // We have a new EGL surface, which on wayland needs to be configured for
+    // non-blocking buffer swaps. We need MakeCurrent() to set our current EGL
+    // context before we call eglSwapInterval, which is why we do it here rather
+    // than where the surface was created.
+    const auto* egl = gl::GLLibraryEGL::Get();
+    // Make eglSwapBuffers() non-blocking on wayland.
+    egl->fSwapInterval(gl::EGL_DISPLAY(), 0);
+  }
+#endif
 
 #ifdef MOZ_WIDGET_ANDROID
   java::GeckoSurfaceTexture::DestroyUnused((int64_t)gl());
