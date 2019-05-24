@@ -91,7 +91,6 @@ hpp:
       #define frontend_BinASTParser_h
 
       #include "mozilla/Maybe.h"
-      #include "mozilla/Variant.h"
 
       #include "frontend/BCEParserHandle.h"
       #include "frontend/BinASTParserPerTokenizer.h"
@@ -123,9 +122,6 @@ hpp:
         using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
         using Chars = typename Tokenizer::Chars;
         using Context = typename BinASTTokenReaderBase::Context;
-        using ListContext = typename BinASTTokenReaderBase::ListContext;
-        using FieldContext = typename BinASTTokenReaderBase::FieldContext;
-        using RootContext = typename BinASTTokenReaderBase::RootContext;
 
        public:
         // Auto-generated types.
@@ -347,11 +343,6 @@ hpp:
        * Return a string describing a `BinASTField`.
        */
       const char* describeBinASTField(const BinASTField& field);
-
-      /**
-       * Return a string describing a `BinASTInterfaceAndField`.
-       */
-      const char* describeBinASTInterfaceAndField(const BinASTInterfaceAndField& field);
 
       /**
        * Return a string describing a `BinASTVariant`.
@@ -641,7 +632,7 @@ BreakStatement:
       block:
         replace: |
           RootedAtom label(cx_);
-          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(Context(FieldContext(BinASTInterfaceAndField::BreakStatement__Label))));
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(fieldContext++));
 
   build: |
     if (label) {
@@ -785,7 +776,7 @@ ContinueStatement:
       block:
         replace: |
           RootedAtom label(cx_);
-          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(Context(FieldContext(BinASTInterfaceAndField::ContinueStatement__Label))));
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(fieldContext++));
 
   build: |
     if (label) {
@@ -1298,7 +1289,7 @@ LiteralRegExpExpression:
       block:
         replace: |
           Chars flags(cx_);
-          MOZ_TRY(tokenizer_->readChars(flags, Context(FieldContext(BinASTInterfaceAndField::BreakStatement__Label))));
+          MOZ_TRY(tokenizer_->readChars(flags, fieldContext++));
   build: |
     RegExpFlags reflags = RegExpFlag::NoFlags;
     for (auto c : flags) {
