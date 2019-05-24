@@ -15,7 +15,7 @@ job-defaults:
             default: []
     run-on-projects:
         by-test-platform:
-            android-em-4.3-arm7-api-16/opt: ['try']
+            android-em-4.*/.*: ['try', 'mozilla-central']  # bug 1548659
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     mozharness:
@@ -64,6 +64,7 @@ crashtest:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
+            android-em-4.*/.*: 2  # bug 1548659
             default: default
 
 jsreftest:
@@ -97,6 +98,7 @@ jsreftest:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
+            android-em-4.*/.*: 2  # bug 1548659
             default: default
 
 reftest:
