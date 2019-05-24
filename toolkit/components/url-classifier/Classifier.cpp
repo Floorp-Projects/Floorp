@@ -922,17 +922,17 @@ nsresult Classifier::ScanStoreDir(nsIFile* aDirectory,
       continue;
     }
 
-    nsCString leafName;
+    nsAutoCString leafName;
     rv = file->GetNativeLeafName(leafName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Both v2 and v4 contain .pset file
-    nsCString suffix(NS_LITERAL_CSTRING(".pset"));
-
-    int32_t dot = leafName.RFind(suffix);
-    if (dot != -1) {
-      leafName.Cut(dot, suffix.Length());
-      aTables.AppendElement(leafName);
+    // Check both V2 and V4 prefix files
+    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".pset"))) {
+      aTables.AppendElement(
+          Substring(leafName, 0, leafName.Length() - strlen(".pset")));
+    } else if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".vlpset"))) {
+      aTables.AppendElement(
+          Substring(leafName, 0, leafName.Length() - strlen(".vlpset")));
     }
   }
   NS_ENSURE_SUCCESS(rv, rv);
