@@ -1920,14 +1920,14 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // Methods support :first-letter style
 
   nsFirstLetterFrame* CreateFloatingLetterFrame(
-      nsFrameConstructorState& aState, mozilla::dom::Text* aTextContent,
+      nsFrameConstructorState& aState, nsIContent* aTextContent,
       nsIFrame* aTextFrame, nsContainerFrame* aParentFrame,
       ComputedStyle* aParentComputedStyle, ComputedStyle* aComputedStyle,
       nsFrameList& aResult);
 
   void CreateLetterFrame(nsContainerFrame* aBlockFrame,
                          nsContainerFrame* aBlockContinuation,
-                         mozilla::dom::Text* aTextContent,
+                         nsIContent* aTextContent,
                          nsContainerFrame* aParentFrame, nsFrameList& aResult);
 
   void WrapFramesInFirstLetterFrame(nsContainerFrame* aBlockFrame,

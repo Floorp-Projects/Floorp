@@ -888,7 +888,8 @@ nsresult nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect) {
       child = child->GetPreviousSibling();
       if (child && child->IsText()) {
         rootNode = child;
-        numChildren = child->AsText()->TextDataLength();
+        const nsTextFragment* fragment = child->GetText();
+        numChildren = fragment ? fragment->GetLength() : 0;
       }
     }
   }
