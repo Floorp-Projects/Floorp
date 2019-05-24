@@ -128,6 +128,10 @@ mochitest-browser-chrome:
             macosx.*64-ccov/debug: 10800
             linux.*/debug: 5400
             default: 3600
+    virtualization:
+        by-test-platform:
+            windows10-64(?:-pgo|-shippable)?-qr/.*: virtual-with-gpu
+            default: virtual
     mozharness:
         mochitest-flavor: browser
         chunked: true
