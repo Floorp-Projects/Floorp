@@ -50,8 +50,7 @@ parent:
   async PAPZInputBridge(LayersId aLayersId);
 
   // Sent by the UI process to initiate core settings.
-  async Init(GfxPrefSetting[] prefs,
-             GfxVarUpdate[] vars,
+  async Init(GfxVarUpdate[] vars,
              DevicePrefs devicePrefs,
              LayerTreeIdMapping[] mapping);
 
@@ -63,8 +62,7 @@ parent:
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
   // Forward GPU process its endpoints to the VR process.
   async InitVR(Endpoint<PVRGPUChild> endpoint);
-  // Called to update a gfx preference or variable.
-  async UpdatePref(GfxPrefSetting pref);
+  // Called to update a gfx variable.
   async UpdateVar(GfxVarUpdate var);
 
   async PreferenceUpdate(Pref pref);

@@ -37,8 +37,7 @@ class GPUParent final : public PGPUParent {
   PAPZInputBridgeParent* AllocPAPZInputBridgeParent(const LayersId& aLayersId);
   bool DeallocPAPZInputBridgeParent(PAPZInputBridgeParent* aActor);
 
-  mozilla::ipc::IPCResult RecvInit(nsTArray<GfxPrefSetting>&& prefs,
-                                   nsTArray<GfxVarUpdate>&& vars,
+  mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
                                    const DevicePrefs& devicePrefs,
                                    nsTArray<LayerTreeIdMapping>&& mappings);
   mozilla::ipc::IPCResult RecvInitCompositorManager(
@@ -55,7 +54,6 @@ class GPUParent final : public PGPUParent {
       Endpoint<PUiCompositorControllerParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<PProfilerChild>&& aEndpoint);
-  mozilla::ipc::IPCResult RecvUpdatePref(const GfxPrefSetting& pref);
   mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref);
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& pref);
   mozilla::ipc::IPCResult RecvNewContentCompositorManager(
