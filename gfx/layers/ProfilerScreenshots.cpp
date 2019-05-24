@@ -84,10 +84,12 @@ void ProfilerScreenshots::SubmitScreenshot(
   IntSize scaledSize = aScaledSize;
   TimeStamp timeStamp = aTimeStamp;
 
+  RefPtr<ProfilerScreenshots> self = this;
+
   mThread->Dispatch(NS_NewRunnableFunction(
       "ProfilerScreenshots::SubmitScreenshot",
-      [this, backingSurface, sourceThread, windowIdentifier, originalSize,
-       scaledSize, timeStamp]() {
+      [self{std::move(self)}, backingSurface, sourceThread, windowIdentifier,
+       originalSize, scaledSize, timeStamp]() {
         // Create a new surface that wraps backingSurface's data but has the
         // correct size.
         {
@@ -114,7 +116,7 @@ void ProfilerScreenshots::SubmitScreenshot(
         }
 
         // Return backingSurface back to the surface pool.
-        ReturnSurface(backingSurface);
+        self->ReturnSurface(backingSurface);
       }));
 #endif
 }

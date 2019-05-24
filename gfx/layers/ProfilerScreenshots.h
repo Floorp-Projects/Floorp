@@ -34,9 +34,10 @@ namespace layers {
  * This class manages that thread and recycles memory buffers.
  */
 class ProfilerScreenshots final {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfilerScreenshots)
+
  public:
   ProfilerScreenshots();
-  ~ProfilerScreenshots();
 
   /**
    * Returns whether the profiler is currently active and is running with the
@@ -75,6 +76,8 @@ class ProfilerScreenshots final {
       const std::function<bool(gfx::DataSourceSurface*)>& aPopulateSurface);
 
  private:
+  ~ProfilerScreenshots();
+
   /**
    * Recycle a surface from mAvailableSurfaces or create a new one if all
    * surfaces are currently in use, up to some maximum limit.
