@@ -10,34 +10,26 @@
   <track src="bug883173.vtt" kind="subtitles" id="default" default>
 </video>
 <script type="text/javascript">
-SimpleTest.waitForExplicitFinish();
-let video = document.getElementById("v");
-video.addEventListener("loadedmetadata",
-  function run_tests() {
-     let trackElement = document.getElementById("default");
-    // Re-queue run_tests() at the end of the event loop until the track
-    // element has loaded its data.
-    if (trackElement.readyState == 1) {
-      setTimeout(run_tests, 0);
-      return;
-    }
-    is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
 
-    // Set mode to hidden so that the active cue lists are being updated.
-    trackElement.track.mode = "hidden";
+function runTest() {
+  let trackElement = document.getElementById("default");
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
 
-    var expected = [[1, 3], [1, 2], [2, 4], [2, 3], [3, 4]];
-    var cueList = trackElement.track.cues;
-    is(cueList.length, expected.length, "Cue list length should be 5.");
+  var expected = [[1, 3], [1, 2], [2, 4], [2, 3], [3, 4]];
+  var cueList = trackElement.track.cues;
+  is(cueList.length, expected.length, "Cue list length should be 5.");
 
-    for (var i = 0; i < expected.length; i++) {
-      is(cueList[i].startTime, expected[i][0], "Cue's start time should be " + expected[i][0]);
-      is(cueList[i].endTime, expected[i][1], "Cue's end time should be " + expected[i][1]);
-    }
-
-    SimpleTest.finish();
+  for (var i = 0; i < expected.length; i++) {
+    is(cueList[i].startTime, expected[i][0], "Cue's start time should be " + expected[i][0]);
+    is(cueList[i].endTime, expected[i][1], "Cue's end time should be " + expected[i][1]);
   }
-);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+onload = runTest;
+
 </script>
 </body>
 </html>

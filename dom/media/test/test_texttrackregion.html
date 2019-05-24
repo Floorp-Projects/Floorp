@@ -3,6 +3,7 @@
 <head>
   <title>Test for Bug 917945 - VTTRegion</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="manifest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -10,42 +11,43 @@
   <track src="region.vtt" kind="subtitles" id="default" default>
 </video>
 <script type="text/javascript">
+var trackElement = document.getElementById("default");
 
-function runTest() {
-  var video = document.getElementById("v");
-  var trackElement = document.getElementById("default");
-  video.addEventListener("loadedmetadata", function run_tests() {
-    // Re-que run_tests() at the end of the event loop until the track
-    // element has loaded its data.
-    if (trackElement.readyState == 1) {
-      setTimeout(run_tests, 0);
-      return;
-    }
-    is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+async function runTest() {
+  await waitUntiTrackLoaded();
 
-    // Set mode to hidden so that the active cue lists are being updated.
-    trackElement.track.mode = "hidden";
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
 
-    var cues = trackElement.track.cues;
-    is(cues.length, 1, "Cue list length should be 1.");
+  // Set mode to hidden so that the active cue lists are being updated.
+  trackElement.track.mode = "hidden";
 
-    var region = cues[0].region;
-    isnot(region, null, "Region should not be null.");
-    is(region.width, 62, "Region width should be 50.");
-    is(region.lines, 5, "Region lines should be 5.");
-    is(region.regionAnchorX, 4, "Region regionAnchorX should be 4.");
-    is(region.regionAnchorY, 78, "Region regionAnchorY should be 78.");
-    is(region.viewportAnchorX, 10, "Region viewportAnchorX should be 10.");
-    is(region.viewportAnchorY, 90, "Region viewportAnchorY should be 90.");
-    is(region.scroll, "up", "Region scroll should be 'up'");
+  var cues = trackElement.track.cues;
+  is(cues.length, 1, "Cue list length should be 1.");
 
-    SimpleTest.finish();
-  });
+  var region = cues[0].region;
+  isnot(region, null, "Region should not be null.");
+  is(region.width, 62, "Region width should be 50.");
+  is(region.lines, 5, "Region lines should be 5.");
+  is(region.regionAnchorX, 4, "Region regionAnchorX should be 4.");
+  is(region.regionAnchorY, 78, "Region regionAnchorY should be 78.");
+  is(region.viewportAnchorX, 10, "Region viewportAnchorX should be 10.");
+  is(region.viewportAnchorY, 90, "Region viewportAnchorY should be 90.");
+  is(region.scroll, "up", "Region scroll should be 'up'");
+
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
                             runTest);
+/**
+ * The following are test helper functions.
+ */
+async function waitUntiTrackLoaded() {
+  info(`wait until the track finishes loading`);
+  await once(trackElement, "load");
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+}
 
 </script>
 </body>
