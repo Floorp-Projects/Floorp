@@ -6,7 +6,9 @@
 
 #include "ContentBlockingLog.h"
 
+#include "nsTArray.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/RandomNum.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -112,6 +114,7 @@ void ContentBlockingLog::ReportLog() {
   }
   LOG("ContentBlockingLog::ReportLog [this=%p]", this);
 
+  nsTArray<HashNumber> lookupTable;
   for (const auto& originEntry : mLog) {
     if (!originEntry.mData) {
       continue;
@@ -160,7 +163,13 @@ void ContentBlockingLog::ReportLog() {
         }
       }
 
-      for (const nsCString& hash : logEntry.mTrackingFullHashes) {
+      for (const auto& hash : logEntry.mTrackingFullHashes) {
+        HashNumber key = AddToHash(HashString(hash.get(), hash.Length()),
+                                   static_cast<uint32_t>(metricId));
+        if (lookupTable.Contains(key)) {
+          continue;
+        }
+        lookupTable.AppendElement(key);
         ReportOriginSingleHash(metricId, hash);
       }
       break;
