@@ -1293,15 +1293,6 @@ void ICStubCompilerBase::PushStubPayload(MacroAssembler& masm,
   masm.adjustFrame(sizeof(intptr_t));
 }
 
-void JitScript::noteAccessedGetter(uint32_t pcOffset) {
-  ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  ICFallbackStub* stub = entry.fallbackStub();
-
-  if (stub->isGetProp_Fallback()) {
-    stub->toGetProp_Fallback()->noteAccessedGetter();
-  }
-}
-
 // TypeMonitor_Fallback
 //
 
@@ -2487,15 +2478,6 @@ bool FallbackICCodeCompiler::emit_SetElem() {
   using Fn = bool (*)(JSContext*, BaselineFrame*, ICSetElem_Fallback*, Value*,
                       HandleValue, HandleValue, HandleValue);
   return tailCallVM<Fn, DoSetElemFallback>(masm);
-}
-
-void JitScript::noteHasDenseAdd(uint32_t pcOffset) {
-  ICEntry& entry = icEntryFromPCOffset(pcOffset);
-  ICFallbackStub* stub = entry.fallbackStub();
-
-  if (stub->isSetElem_Fallback()) {
-    stub->toSetElem_Fallback()->noteHasDenseAdd();
-  }
 }
 
 template <typename T>

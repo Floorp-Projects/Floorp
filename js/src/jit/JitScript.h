@@ -314,6 +314,14 @@ class MOZ_RAII AutoKeepJitScripts {
   inline ~AutoKeepJitScripts();
 };
 
+// Mark JitScripts on the stack as active, so that they are not discarded
+// during GC.
+void MarkActiveJitScripts(Zone* zone);
+
+#ifdef JS_STRUCTURED_SPEW
+void JitSpewBaselineICStats(JSScript* script, const char* dumpReason);
+#endif
+
 }  // namespace jit
 }  // namespace js
 
