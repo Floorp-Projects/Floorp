@@ -21,6 +21,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/dom/EffectsInfo.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -215,6 +216,14 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
 
   if (!mLayersId.IsValid()) {
     return nullptr;
+  }
+
+  if (RefPtr<RemoteBrowser> remoteBrowser =
+          GetFrameLoader()->GetRemoteBrowser()) {
+    // Generate an effects update notifying the browser it is visible
+    aBuilder->AddEffectUpdate(remoteBrowser, EffectsInfo::FullyVisible());
+    // FrameLayerBuilder will take care of notifying the browser when it is no
+    // longer visible
   }
 
   RefPtr<Layer> layer =
