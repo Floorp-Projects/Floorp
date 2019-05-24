@@ -1,4 +1,4 @@
-[![crates.io](https://img.shields.io/crates/v/systemstat.svg)](https://crates.io/crates/systemstat)
+[![crates.io](https://img.shields.io/crates/v/devd-rs.svg)](https://crates.io/crates/devd-rs)
 [![unlicense](https://img.shields.io/badge/un-license-green.svg?style=flat)](http://unlicense.org)
 
 # devd-rs
@@ -23,3 +23,5 @@ By participating in this project you agree to follow the [Contributor Code of Co
 
 This is free and unencumbered software released into the public domain.  
 For more information, please refer to the `UNLICENSE` file or [unlicense.org](http://unlicense.org).
+
+It is also available under the MIT License.
