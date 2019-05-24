@@ -1470,7 +1470,7 @@ js_option('--enable-profile-use',
           help='Use a generated profile during the build')
 
 js_option('--with-pgo-profile-path',
-          help='Path to the (unmerged) profile path to use during the build',
+          help='Path to the directory with unmerged profile data to use during the build',
           nargs=1)
 
 imply_option('MOZ_PGO',
@@ -1481,6 +1481,7 @@ set_config('MOZ_PROFILE_USE',
 
 
 @depends('--with-pgo-profile-path', '--enable-profile-use', 'LLVM_PROFDATA')
+@imports('os')
 def pgo_profile_path(path, pgo_use, profdata):
     if not path:
         return
@@ -1488,6 +1489,10 @@ def pgo_profile_path(path, pgo_use, profdata):
         die('Pass --enable-profile-use to use --with-pgo-profile-path.')
     if path and not profdata:
         die('LLVM_PROFDATA must be set to process the pgo profile.')
+    if not os.path.isdir(path[0]):
+        die('Argument to --with-pgo-profile-path must be a directory.')
+    if not os.path.isabs(path[0]):
+        die('Argument to --with-pgo-profile-path must be an absolute path.')
     return path[0]
 
 
