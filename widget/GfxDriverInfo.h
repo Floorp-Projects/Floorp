@@ -145,6 +145,8 @@ enum DriverVendor {
   DriverMesaSWRast,
   // A generic ID to be provided when we can't determine the DRI driver on Mesa.
   DriverMesaUnknown,
+  // Wildcard for all non-Mesa drivers.
+  DriverNonMesaAll,
 
   DriverVendorMax
 };
