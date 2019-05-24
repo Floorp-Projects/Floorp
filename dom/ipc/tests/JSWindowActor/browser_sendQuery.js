@@ -12,3 +12,17 @@ declTest("sendQuery testing", {
     is(result, 30);
   },
 });
+
+declTest("sendQuery in-process early lifetime", {
+    url: "about:mozilla",
+    allFrames: true,
+
+    async test(browser) {
+        let iframe = browser.contentDocument.createElement("iframe");
+        browser.contentDocument.body.appendChild(iframe);
+        let wgc = iframe.contentWindow.getWindowGlobalChild();
+        let actorChild = wgc.getActor("Test");
+        let {result} = await actorChild.sendQuery("asyncMul", {a: 10, b: 20});
+        is(result, 200);
+    },
+});
