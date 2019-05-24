@@ -2,8 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<Button xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/finish_button"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -12,18 +11,9 @@
     android:backgroundTint="?accent"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?android:attr/selectableItemBackground"
-    android:padding="10dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:clickable="false"
-        android:focusable="false"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:text="@string/onboarding_finish"
-        android:textColor="?contrastText"
-        android:textSize="16sp" />
-</FrameLayout>
+    android:gravity="center"
+    android:text="@string/onboarding_finish"
+    android:textAllCaps="false"
+    android:textColor="?contrastText"
+    android:textSize="16sp"
+    android:textStyle="bold" />

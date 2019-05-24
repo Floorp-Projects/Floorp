@@ -2,47 +2,43 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/onboarding_card"
     style="@style/OnboardingCardDark"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
+
     <TextView
         android:id="@+id/header_text"
-        android:drawableStart="@drawable/ic_onboarding_firefox_accounts"
-        android:drawablePadding="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="14dp"
+        android:drawableStart="@drawable/ic_onboarding_firefox_accounts"
+        android:drawablePadding="12dp"
         android:text="@string/onboarding_firefox_account_header"
         android:textAppearance="@style/Header16TextStyle"
-        android:textColor="@color/onboarding_card_primary_text_dark"/>
-    <FrameLayout
+        android:textColor="@color/onboarding_card_primary_text_dark" />
+
+    <Button
         android:id="@+id/turn_on_sync_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:background="@drawable/button_background"
-        android:backgroundTint="@color/onboarding_card_button_background_dark"
         android:clickable="true"
         android:focusable="true"
-        android:foreground="?android:attr/selectableItemBackground"
-        android:padding="10dp">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:clickable="false"
-            android:focusable="false"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="@string/onboarding_firefox_account_sign_in"
-            android:textColor="?neutral"
-            android:textSize="14sp" />
-    </FrameLayout>
-    <FrameLayout
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="@string/onboarding_firefox_account_sign_in"
+        android:textAllCaps="false"
+        android:textColor="?neutral"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/onboarding_card_button_background_dark" />
+
+    <Button
         android:id="@+id/stay_signed_in_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -51,40 +47,28 @@
         android:backgroundTint="@color/onboarding_card_button_background_dark"
         android:clickable="true"
         android:focusable="true"
-        android:foreground="?android:attr/selectableItemBackground"
+        android:gravity="center"
         android:padding="10dp"
-        android:visibility="gone">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:clickable="false"
-            android:focusable="false"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:text="@string/onboarding_firefox_account_stay_signed_in"
-            android:textColor="?neutral"
-            android:textSize="14sp" />
-    </FrameLayout>
-    <FrameLayout
+        android:text="@string/onboarding_firefox_account_stay_signed_in"
+        android:textAllCaps="false"
+        android:textColor="?neutral"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <Button
         android:id="@+id/sign_out_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:background="@drawable/button_background"
+        android:backgroundTint="@color/onboarding_card_button_background_dark"
         android:clickable="true"
         android:focusable="true"
-        android:foreground="?android:attr/selectableItemBackground"
         android:padding="10dp"
-        android:visibility="gone">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:clickable="false"
-            android:focusable="false"
-            android:gravity="center"
-            android:text="@string/onboarding_firefox_account_sign_out"
-            android:textColor="?neutral"
-            android:textSize="12sp" />
-    </FrameLayout>
+        android:text="@string/onboarding_firefox_account_sign_out"
+        android:textAllCaps="false"
+        android:textColor="?neutral"
+        android:textSize="12sp"
+        android:visibility="gone" />
 </LinearLayout>
