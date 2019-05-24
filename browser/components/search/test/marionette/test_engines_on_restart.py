@@ -34,7 +34,7 @@ class TestEnginesOnRestart(MarionetteTestCase):
             return self.marionette.execute_async_script(textwrap.dedent(script))
 
     def test_engines(self):
-        self.assertEqual("google", self.get_default_search_engine())
+        self.assertTrue(self.get_default_search_engine().startswith("google"))
         self.marionette.set_pref("intl.locale.requested", "kk_KZ")
         self.marionette.restart(clean=False, in_app=True)
-        self.assertEqual("google", self.get_default_search_engine())
+        self.assertTrue(self.get_default_search_engine().startswith("google"))
