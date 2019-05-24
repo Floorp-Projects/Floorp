@@ -60,7 +60,6 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
                         R.string.browser_menu_your_library
                     )
 
-
                     icon.background = resources.getDrawable(iconId, context.theme)
                     title.text = resources.getString(titleId)
                     subtitle.text = resources.getString(subtitleId)

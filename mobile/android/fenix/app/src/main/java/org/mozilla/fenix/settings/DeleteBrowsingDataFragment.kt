@@ -6,7 +6,6 @@ package org.mozilla.fenix.settings
 
 import android.content.DialogInterface
 import android.os.Bundle
-import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +13,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.*
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -22,16 +22,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import kotlin.coroutines.CoroutineContext
 
+@SuppressWarnings("TooManyFunctions")
 class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     private lateinit var sessionObserver: SessionManager.Observer
+    private var tabCollections: List<TabCollection> = listOf()
 
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
@@ -72,6 +76,11 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         }
 
         requireComponents.core.sessionManager.register(sessionObserver, owner = this)
+        requireComponents.core.tabCollectionStorage.apply {
+            getCollections().observe(this@DeleteBrowsingDataFragment, Observer {
+                this@DeleteBrowsingDataFragment.tabCollections = it
+            })
+        }
 
         view?.open_tabs_item?.onCheckListener = { _ -> updateDeleteButton() }
         view?.browsing_data_item?.onCheckListener = { _ -> updateDeleteButton() }
@@ -124,15 +133,15 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     }
 
     private fun deleteSelected() {
-        val open_tabs = view!!.open_tabs_item!!.isChecked
-        val browsing_data = view!!.browsing_data_item!!.isChecked
+        val openTabs = view!!.open_tabs_item!!.isChecked
+        val browsingData = view!!.browsing_data_item!!.isChecked
         val collections = view!!.collections_item!!.isChecked
 
         startDeletion()
         launch(Dispatchers.IO) {
             var jobs = mutableListOf<Deferred<Unit>>()
-            if (open_tabs) jobs.add(deleteTabsAsync())
-            if (browsing_data) jobs.add(deleteBrowsingDataAsync())
+            if (openTabs) jobs.add(deleteTabsAsync())
+            if (browsingData) jobs.add(deleteBrowsingDataAsync())
             if (collections) jobs.add(deleteCollectionsAsync())
 
             jobs.awaitAll()
@@ -141,21 +150,20 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
                 finishDeletion()
             }
         }
-
     }
 
     fun startDeletion() {
         progress_bar.visibility = View.VISIBLE
         delete_browsing_data_wrapper.isEnabled = false
         delete_browsing_data_wrapper.isClickable = false
-        delete_browsing_data_wrapper.alpha = 0.6f
+        delete_browsing_data_wrapper.alpha = DISABLED_ALPHA
     }
 
     fun finishDeletion() {
         progress_bar.visibility = View.GONE
         delete_browsing_data_wrapper.isEnabled = true
         delete_browsing_data_wrapper.isClickable = true
-        delete_browsing_data_wrapper.alpha = 1f
+        delete_browsing_data_wrapper.alpha = ENABLED_ALPHA
 
         updateTabCount()
         updateHistoryCount()
@@ -163,13 +171,13 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     }
 
     private fun updateDeleteButton() {
-        val open_tabs = view!!.open_tabs_item!!.isChecked
-        val browsing_data = view!!.browsing_data_item!!.isChecked
+        val openTabs = view!!.open_tabs_item!!.isChecked
+        val browsingData = view!!.browsing_data_item!!.isChecked
         val collections = view!!.collections_item!!.isChecked
-        val enabled = open_tabs || browsing_data || collections
+        val enabled = openTabs || browsingData || collections
 
         view?.delete_data?.isEnabled = enabled
-        view?.delete_data?.alpha = if (enabled) 1f else 0.6f
+        view?.delete_data?.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
     }
 
     private fun updateTabCount() {
@@ -221,9 +229,16 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     }
 
     private fun deleteCollectionsAsync() = async(Dispatchers.IO) {
-        val count = requireComponents.core.tabCollectionStorage.getTabCollectionsCount()
-        val data = requireComponents.core.tabCollectionStorage.getCollections(count).value?.forEach {
-            requireComponents.core.tabCollectionStorage.removeCollection(it)
+        while (requireComponents.core.tabCollectionStorage.getTabCollectionsCount() != tabCollections.size) {
+            delay(DELAY_IN_MILLIS)
         }
+
+        tabCollections.forEach { requireComponents.core.tabCollectionStorage.removeCollection(it) }
+    }
+
+    companion object {
+        private const val ENABLED_ALPHA = 1f
+        private const val DISABLED_ALPHA = 0.6f
+        private const val DELAY_IN_MILLIS = 500L
     }
 }
