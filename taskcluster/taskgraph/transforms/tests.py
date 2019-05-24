@@ -154,7 +154,30 @@ def runs_on_central(test):
     return match_run_on_projects('mozilla-central', test['run-on-projects'])
 
 
+def fission_filter(test):
+    return (
+        runs_on_central(test) and
+        test.get('e10s') in (True, 'both') and
+        get_mobile_project(test) != 'fennec'
+    )
+
+
 TEST_VARIANTS = {
+    'fission': {
+        'description': "{description} with fission enabled",
+        'filterfn': fission_filter,
+        'suffix': 'fis',
+        'replace': {
+            'e10s': True,
+            'run-on-projects': ['try', 'ash'],
+        },
+        'merge': {
+            'tier': 2,
+            'mozharness': {
+                'extra-options': ['--setpref="fission.autostart=true"'],
+            },
+        },
+    },
     'serviceworker': {
         'description': "{description} with serviceworker-e10s redesign enabled",
         'filterfn': runs_on_central,
@@ -985,7 +1008,7 @@ def handle_run_on_projects(config, tests):
 @transforms.add
 def split_variants(config, tests):
     for test in tests:
-        variants = test.pop('variants')
+        variants = test.pop('variants') or []
 
         yield copy.deepcopy(test)
 

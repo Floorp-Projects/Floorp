@@ -11,6 +11,7 @@ job-defaults:
             windows10-aarch64/.*: 2
             linux64-ccov/.*: 3
             default: default
+    variants: ['fission']
     virtualization:
         by-test-platform:
             windows10-64-ccov/.*: virtual
