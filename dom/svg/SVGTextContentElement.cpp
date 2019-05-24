@@ -83,7 +83,7 @@ Maybe<int32_t> SVGTextContentElement::GetNonLayoutDependentNumberOfChars() {
       return Nothing();
     }
 
-    const nsTextFragment* text = &n->AsText()->TextFragment();
+    const nsTextFragment* text = static_cast<nsTextNode*>(n)->GetText();
     uint32_t length = text->GetLength();
 
     if (text->Is2b()) {

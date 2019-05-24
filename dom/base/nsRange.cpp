@@ -2875,7 +2875,7 @@ void nsRange::CollectClientRectsAndText(
       if (node == startContainer) {
         int32_t offset = startContainer == endContainer
                              ? static_cast<int32_t>(aEndOffset)
-                             : content->AsText()->TextDataLength();
+                             : content->GetText()->GetLength();
         GetPartialTextRect(aCollector, aTextList, content,
                            static_cast<int32_t>(aStartOffset), offset,
                            aClampToEdge, aFlushLayout);
@@ -2989,7 +2989,7 @@ nsresult nsRange::GetUsedFontFaces(nsLayoutUtils::UsedFontFaceList& aResult,
       if (node == startContainer) {
         int32_t offset = startContainer == endContainer
                              ? mEnd.Offset()
-                             : content->AsText()->TextDataLength();
+                             : content->GetText()->GetLength();
         nsLayoutUtils::GetFontFacesForText(frame, mStart.Offset(), offset, true,
                                            aResult, fontFaces, aMaxRanges,
                                            aSkipCollapsedWhitespace);
