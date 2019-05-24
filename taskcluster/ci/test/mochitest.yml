@@ -302,7 +302,7 @@ mochitest-media:
     run-on-projects:
         by-test-platform:
             android-hw-.*-api-16/opt: ['try']
-            android-em-4.3-arm7-api-16/opt: ['try']
+            android-em-4.*/.*: ['try']  # bug 1553955
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     variants:
@@ -339,8 +339,9 @@ mochitest-media:
                 default: true
     tier:
         by-test-platform:
-            android-hw.*: 2
+            android-em.*: 2
             windows10-aarch64.*: 2
+            android-hw.*: 1
             default: default
 
 mochitest-plain-headless:
