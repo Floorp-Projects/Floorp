@@ -34,6 +34,8 @@
 #include "LayerState.h"
 #include "FrameMetrics.h"
 #include "ImgDrawResult.h"
+#include "mozilla/dom/EffectsInfo.h"
+#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/UniquePtr.h"
@@ -429,6 +431,9 @@ class nsDisplayListBuilder {
   typedef mozilla::gfx::CompositorHitTestInfo CompositorHitTestInfo;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
   typedef mozilla::Maybe<mozilla::layers::ScrollDirection> MaybeScrollDirection;
+  typedef mozilla::dom::EffectsInfo EffectsInfo;
+  typedef mozilla::layers::LayersId LayersId;
+  typedef mozilla::dom::RemoteBrowser RemoteBrowser;
 
   /**
    * @param aReferenceFrame the frame at the root of the subtree; its origin
@@ -1039,6 +1044,15 @@ class nsDisplayListBuilder {
 
   void RemoveModifiedWindowRegions();
   void ClearRetainedWindowRegions();
+
+  const nsDataHashtable<nsPtrHashKey<RemoteBrowser>, EffectsInfo>&
+  GetEffectUpdates() const {
+    return mEffectsUpdates;
+  }
+
+  void AddEffectUpdate(RemoteBrowser* aBrowser, EffectsInfo aUpdate) {
+    mEffectsUpdates.Put(aBrowser, aUpdate);
+  }
 
   /**
    * Allocate memory in our arena. It will only be freed when this display list
@@ -1894,6 +1908,8 @@ class nsDisplayListBuilder {
   nsTHashtable<nsPtrHashKey<nsIFrame>> mAGRBudgetSet;
 
   nsTArray<nsIFrame*> mModifiedFramesDuringBuilding;
+
+  nsDataHashtable<nsPtrHashKey<RemoteBrowser>, EffectsInfo> mEffectsUpdates;
 
   // Relative to mCurrentFrame.
   nsRect mVisibleRect;

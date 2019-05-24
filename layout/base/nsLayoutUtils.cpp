@@ -3541,6 +3541,17 @@ void PrintHitTestInfoStats(nsDisplayList& aList) {
 }
 #endif
 
+// Apply a batch of effects updates generated during a paint to their
+// respective remote browsers.
+static void ApplyEffectsUpdates(
+    const nsDataHashtable<nsPtrHashKey<RemoteBrowser>, EffectsInfo>& aUpdates) {
+  for (auto iter = aUpdates.ConstIter(); !iter.Done(); iter.Next()) {
+    auto browser = iter.Key();
+    auto update = iter.Data();
+    browser->UpdateEffects(update);
+  }
+}
+
 nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
                                    nsIFrame* aFrame,
                                    const nsRegion& aDirtyRegion,
@@ -4087,6 +4098,13 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
     // Disable partial updates for the following paint as well, as we now have
     // a plugin-specific display list.
     builder.SetDisablePartialUpdates(true);
+  }
+
+  // Apply effects updates if we were actually painting
+  if (isForPainting) {
+    if (nsIWidget* widget = aFrame->GetNearestWidget()) {
+      ApplyEffectsUpdates(builder.GetEffectUpdates());
+    }
   }
 
   builder.Check();
