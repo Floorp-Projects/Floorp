@@ -24,12 +24,17 @@ class TestParent extends JSWindowActorParent {
         aMessage.data.toParent = true;
         this.sendAsyncMessage("done", aMessage.data);
         break;
+      case "asyncMul":
+        let {a, b} = aMessage.data;
+        return { result: a * b };
 
       case "event":
         Services.obs.notifyObservers(
           this, "test-js-window-actor-parent-event", aMessage.data.type);
         break;
     }
+
+    return undefined;
   }
 
   show() {
