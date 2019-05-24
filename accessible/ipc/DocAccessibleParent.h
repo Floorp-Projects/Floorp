@@ -268,6 +268,7 @@ class DocAccessibleParent : public ProxyAccessible,
 
 #  if defined(MOZ_SANDBOX)
   mscom::PreservedStreamPtr mParentProxyStream;
+  mscom::PreservedStreamPtr mDocProxyStream;
 #  endif  // defined(MOZ_SANDBOX)
 #endif    // defined(XP_WIN)
 
