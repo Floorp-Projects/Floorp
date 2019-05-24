@@ -429,6 +429,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case eColorID__moz_buttonhovertext:
       aColor = mButtonHoverText;
       break;
+    case eColorID__moz_gtk_buttonactivetext:
+      aColor = mButtonActiveText;
+      break;
     case eColorID__moz_menuhover:
       aColor = mMenuHover;
       break;
@@ -1005,20 +1008,21 @@ void nsLookAndFeel::EnsureInit() {
   style = GetStyleContext(MOZ_GTK_BUTTON);
   {
     GtkStyleContext* labelStyle = CreateStyleForWidget(labelWidget, style);
-
     GetSystemFontInfo(labelStyle, &mButtonFontName, &mButtonFontStyle);
-
-    gtk_style_context_get_border_color(style, GTK_STATE_FLAG_NORMAL, &color);
-    mButtonDefault = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_NORMAL, &color);
-    mButtonText = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_PRELIGHT, &color);
-    mButtonHoverText = GDK_RGBA_TO_NS_RGBA(color);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
-                                           &color);
-    mButtonHoverFace = GDK_RGBA_TO_NS_RGBA(color);
     g_object_unref(labelStyle);
   }
+
+  gtk_style_context_get_border_color(style, GTK_STATE_FLAG_NORMAL, &color);
+  mButtonDefault = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
+  mButtonText = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
+  mButtonHoverText = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_ACTIVE, &color);
+  mButtonActiveText = GDK_RGBA_TO_NS_RGBA(color);
+  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
+                                         &color);
+  mButtonHoverFace = GDK_RGBA_TO_NS_RGBA(color);
 
   // Combobox text color
   style = GetStyleContext(MOZ_GTK_COMBOBOX_ENTRY_TEXTAREA);

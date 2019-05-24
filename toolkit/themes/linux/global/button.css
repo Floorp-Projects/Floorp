@@ -37,6 +37,12 @@ button:hover:not(:-moz-any(:active,[disabled="true"],[open="true"],[checked="tru
   color: -moz-buttonhovertext;
 }
 
+/* .......... active state .......... */
+
+button:not([disabled="true"]):-moz-any(:hover:active,[open="true"]) {
+  color: -moz-gtk-buttonactivetext;
+}
+
 /* .......... disabled state .......... */
 
 button[disabled="true"] {

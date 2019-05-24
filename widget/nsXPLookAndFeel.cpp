@@ -177,6 +177,7 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.-moz_menubarhovertext",
     "ui.-moz_eventreerow",
     "ui.-moz_oddtreerow",
+    "ui.-moz-gtk-buttonactivetext",
     "ui.-moz-mac-buttonactivetext",
     "ui.-moz_mac_chrome_active",
     "ui.-moz_mac_chrome_inactive",
@@ -646,6 +647,7 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
       result = NS_RGB(0x00, 0x00, 0x00);
       break;
     case eColorID__moz_oddtreerow:
+    case eColorID__moz_gtk_buttonactivetext:
       result = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case eColorID__moz_mac_chrome_active:

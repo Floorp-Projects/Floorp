@@ -64,10 +64,13 @@
   -moz-appearance: toolbarbutton;
 }
 
-#placesMenu > menu:active,
-#placesMenu > menu:hover,
-#placesMenu > menu[open] {
+#placesMenu > menu:hover {
   color: ButtonText;
+}
+
+#placesMenu > menu:active,
+#placesMenu > menu[open] {
+  color: -moz-gtk-buttonactivetext;
 }
 
 #placesMenu > menu::after {
