@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **service-pocket**
+  * Added `PocketEndpointRaw` and `PocketJSONParser` for low-level access.
+
 * **browser-menu**
   * Added `BrowserMenuHighlightableItem`. Its `highlight` property allows you to set the background and an image that appears on the right.
   
