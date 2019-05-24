@@ -37,7 +37,7 @@ import org.mozilla.fenix.R.string.pref_key_help
 import org.mozilla.fenix.R.string.pref_key_language
 import org.mozilla.fenix.R.string.pref_key_leakcanary
 import org.mozilla.fenix.R.string.pref_key_make_default_browser
-import org.mozilla.fenix.R.string.pref_key_privacy_policy
+import org.mozilla.fenix.R.string.pref_key_privacy_notice
 import org.mozilla.fenix.R.string.pref_key_rate
 import org.mozilla.fenix.R.string.pref_key_remote_debugging
 import org.mozilla.fenix.R.string.pref_key_search_engine_settings
@@ -45,6 +45,7 @@ import org.mozilla.fenix.R.string.pref_key_sign_in
 import org.mozilla.fenix.R.string.pref_key_site_permissions
 import org.mozilla.fenix.R.string.pref_key_theme
 import org.mozilla.fenix.R.string.pref_key_tracking_protection_settings
+import org.mozilla.fenix.R.string.pref_key_your_rights
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -163,9 +164,18 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             resources.getString(pref_key_theme) -> {
                 navigateToThemeSettings()
             }
-            resources.getString(pref_key_privacy_policy) -> {
+            resources.getString(pref_key_privacy_notice) -> {
                 requireContext().apply {
                     val intent = SupportUtils.createCustomTabIntent(this, SupportUtils.PRIVACY_NOTICE_URL)
+                    startActivity(intent)
+                }
+            }
+            resources.getString(pref_key_your_rights) -> {
+                requireContext().apply {
+                    val intent = SupportUtils.createCustomTabIntent(
+                        this,
+                        SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.YOUR_RIGHTS)
+                    )
                     startActivity(intent)
                 }
             }

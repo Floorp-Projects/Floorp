@@ -98,7 +98,11 @@
             android:title="@string/preferences_about" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_info"
-            android:key="@string/pref_key_privacy_policy"
-            android:title="@string/preferences_privacy_policy" />
+            android:key="@string/pref_key_privacy_notice"
+            android:title="@string/preferences_privacy_notice" />
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_info"
+            android:key="@string/pref_key_your_rights"
+            android:title="@string/preferences_your_rights" />
     </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>

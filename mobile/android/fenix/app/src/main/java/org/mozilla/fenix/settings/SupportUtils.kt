@@ -24,7 +24,8 @@ object SupportUtils {
         internal val topicStr: String
     ) {
         HELP("firefox-android-help"),
-        PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing")
+        PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
+        YOUR_RIGHTS("your-rights")
     }
 
     fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {
