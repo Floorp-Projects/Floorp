@@ -51,6 +51,10 @@ branches = [
   l10n = "components/feature/findinpage/src/main/res/values-{android_locale}/strings.xml"
 
 [[paths]]
+  reference = "components/feature/media/src/main/res/values/strings.xml"
+  l10n = "components/feature/media/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
   reference = "components/feature/readerview/src/main/res/values/strings.xml"
   l10n = "components/feature/readerview/src/main/res/values-{android_locale}/strings.xml"
 
