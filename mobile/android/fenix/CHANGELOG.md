@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #2318 - Added Firefox Accounts Pairing feature to "Turn On Sync" options
 - #2390 - Adds Onboarding for Fenix
 - #2531 - Adds link to privacy policy in settings
+- #225 - Adds the ability to delete all browsing data
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP
