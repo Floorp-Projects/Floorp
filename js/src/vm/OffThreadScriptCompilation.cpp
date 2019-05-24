@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Range.h"       // mozilla::Range
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 #include "mozilla/Vector.h"      // mozilla::Vector
 
 #include <stddef.h>  // size_t
@@ -21,6 +22,8 @@
 #include "vm/Runtime.h"    // js::CanUseExtraThreads
 
 using namespace js;
+
+using mozilla::Utf8Unit;
 
 using JS::ReadOnlyCompileOptions;
 
@@ -89,6 +92,15 @@ JS_PUBLIC_API bool JS::CompileOffThread(JSContext* cx,
   return StartOffThreadParseScript(cx, options, srcBuf, callback, callbackData);
 }
 
+JS_PUBLIC_API bool JS::CompileOffThread(JSContext* cx,
+                                        const ReadOnlyCompileOptions& options,
+                                        JS::SourceText<Utf8Unit>& srcBuf,
+                                        OffThreadCompileCallback callback,
+                                        void* callbackData) {
+  MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));
+  return StartOffThreadParseScript(cx, options, srcBuf, callback, callbackData);
+}
+
 JS_PUBLIC_API JSScript* JS::FinishOffThreadScript(JSContext* cx,
                                                   JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
@@ -107,6 +119,14 @@ JS_PUBLIC_API void JS::CancelOffThreadScript(JSContext* cx,
 JS_PUBLIC_API bool JS::CompileOffThreadModule(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
+    void* callbackData) {
+  MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));
+  return StartOffThreadParseModule(cx, options, srcBuf, callback, callbackData);
+}
+
+JS_PUBLIC_API bool JS::CompileOffThreadModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
     void* callbackData) {
   MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));
   return StartOffThreadParseModule(cx, options, srcBuf, callback, callbackData);
