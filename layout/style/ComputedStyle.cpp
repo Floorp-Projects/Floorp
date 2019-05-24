@@ -374,8 +374,6 @@ Maybe<StyleStructID> ComputedStyle::LookupStruct(const nsACString& aName) {
 ComputedStyle* ComputedStyle::GetCachedLazyPseudoStyle(
     PseudoStyleType aPseudo) const {
   MOZ_ASSERT(PseudoStyle::IsPseudoElement(aPseudo));
-  MOZ_ASSERT(!IsLazilyCascadedPseudoElement(),
-             "Lazy pseudos can't inherit lazy pseudos");
 
   if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(aPseudo)) {
     return nullptr;

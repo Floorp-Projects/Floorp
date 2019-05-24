@@ -724,6 +724,91 @@ Chunk* ChunkPool::remove(Chunk* chunk) {
   return chunk;
 }
 
+// We could keep the chunk pool sorted, but that's likely to be more expensive.
+// This sort is nlogn, but keeping it sorted is likely to be m*n, with m being
+// the number of operations (likely higher than n).
+void ChunkPool::sort() {
+  // Only sort if the list isn't already sorted.
+  if (!isSorted()) {
+    head_ = mergeSort(head(), count());
+
+    // Fixup prev pointers.
+    Chunk* prev = nullptr;
+    for (Chunk* cur = head_; cur; cur = cur->info.next) {
+      cur->info.prev = prev;
+      prev = cur;
+    }
+  }
+
+  MOZ_ASSERT(verify());
+  MOZ_ASSERT(isSorted());
+}
+
+Chunk* ChunkPool::mergeSort(Chunk* list, size_t count) {
+  MOZ_ASSERT(bool(list) == bool(count));
+
+  if (count < 2) {
+    return list;
+  }
+
+  size_t half = count / 2;
+
+  // Split;
+  Chunk* front = list;
+  Chunk* back;
+  {
+    Chunk* cur = list;
+    for (size_t i = 0; i < half - 1; i++) {
+      MOZ_ASSERT(cur);
+      cur = cur->info.next;
+    }
+    back = cur->info.next;
+    cur->info.next = nullptr;
+  }
+
+  front = mergeSort(front, half);
+  back = mergeSort(back, count - half);
+
+  // Merge
+  list = nullptr;
+  Chunk** cur = &list;
+  while (front || back) {
+    if (!front) {
+      *cur = back;
+      break;
+    }
+    if (!back) {
+      *cur = front;
+      break;
+    }
+
+    // Note that the sort is stable due to the <= here. Nothing depends on
+    // this but it could.
+    if (front->info.numArenasFree <= back->info.numArenasFree) {
+      *cur = front;
+      front = front->info.next;
+      cur = &(*cur)->info.next;
+    } else {
+      *cur = back;
+      back = back->info.next;
+      cur = &(*cur)->info.next;
+    }
+  }
+
+  return list;
+}
+
+bool ChunkPool::isSorted() const {
+  uint32_t last = 1;
+  for (Chunk* cursor = head_; cursor; cursor = cursor->info.next) {
+    if (cursor->info.numArenasFree < last) {
+      return false;
+    }
+    last = cursor->info.numArenasFree;
+  }
+  return true;
+}
+
 #ifdef DEBUG
 bool ChunkPool::contains(Chunk* chunk) const {
   verify();
@@ -3492,6 +3577,7 @@ void GCRuntime::startDecommit() {
     // thread could modify it concurrently. Instead, we build and pass an
     // explicit Vector containing the Chunks we want to visit.
     MOZ_ASSERT(availableChunks(lock).verify());
+    availableChunks(lock).sort();
     for (ChunkPool::Iter iter(availableChunks(lock)); !iter.done();
          iter.next()) {
       if (!toDecommit.append(iter.get())) {
