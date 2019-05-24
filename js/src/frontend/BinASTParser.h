@@ -13,6 +13,7 @@
 #define frontend_BinASTParser_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Variant.h"
 
 #include "frontend/BCEParserHandle.h"
 #include "frontend/BinASTParserPerTokenizer.h"
@@ -44,6 +45,9 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
   using Chars = typename Tokenizer::Chars;
   using Context = typename BinASTTokenReaderBase::Context;
+  using ListContext = typename BinASTTokenReaderBase::ListContext;
+  using FieldContext = typename BinASTTokenReaderBase::FieldContext;
+  using RootContext = typename BinASTTokenReaderBase::RootContext;
 
  public:
   // Auto-generated types.
