@@ -1126,6 +1126,11 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     // In this case, we don't get aParentDoc and aParentID.
     MOZ_ASSERT(!aParentDoc && !aParentID);
     MOZ_ASSERT(embedderID);
+#  ifdef XP_WIN
+    MOZ_ASSERT(!aDocCOMProxy.IsNull());
+    RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
+    doc->SetCOMInterface(proxy);
+#  endif
     mozilla::ipc::IPCResult added = embedderDoc->AddChildDoc(doc, embedderID);
     if (!added) {
 #  ifdef DEBUG
