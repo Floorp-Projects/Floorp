@@ -73,29 +73,15 @@ function step4() {
 
   gFuchsiaSelected = snapshotWindow(gIframe.contentWindow, false);
 
-  if (gIframe.contentDocument.queryCommandState("enableObjectResizing")) {
-    assert_different(gBlueNotSelected, gBlueSelected,
-                     "selecting image should add drag points");
-  } else {
-    assert_equal(gBlueNotSelected, gBlueSelected,
-                 "selecting image should not change anything visually");
-  }
-  assert_different(gBlueSelected, gFuchsiaSelected,
-                   "different images should appear different");
+  // FYI: test_image_selection_in_contenteditable.html tests the detail.
+  assertSnapshots(gBlueNotSelected, gBlueSelected, false, null,
+                  "blue image without selection",
+                  "blue image which is selected or added resizers");
+  assertSnapshots(gBlueSelected, gFuchsiaSelected, false, null,
+                  "blue image which is selected",
+                  "fuchsia image which is selected");
 
   SimpleTest.finish();
-}
-
-function assert_equal(shot1, shot2, desc)
-{
-  var [correct, s1, s2] = compareSnapshots(shot1, shot2, true);
-  ok(correct, desc + (correct ? "" : "\nRESULT: " + s2));
-}
-
-function assert_different(shot1, shot2, desc)
-{
-  var [correct, s1, s2] = compareSnapshots(shot1, shot2, false);
-  ok(correct, desc);
 }
 
 </script>
