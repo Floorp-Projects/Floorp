@@ -70,6 +70,7 @@ include = [
   "OverflowWrap",
   "TimingFunction",
   "OffsetPath",
+  "OffsetRotate",
   "UnicodeRange",
   "UserSelect",
   "Float",
