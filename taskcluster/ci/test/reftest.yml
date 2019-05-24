@@ -11,8 +11,8 @@ job-defaults:
             default: null
     variants:
         by-test-platform:
-            linux64/debug: ['serviceworker']
-            default: []
+            linux64/debug: ['fission', 'serviceworker']
+            default: ['fission']
     run-on-projects:
         by-test-platform:
             android-em-4.*/.*: ['try', 'mozilla-central']  # bug 1548659

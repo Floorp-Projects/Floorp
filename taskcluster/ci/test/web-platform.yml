@@ -12,8 +12,8 @@ job-defaults:
             default: 5400
     variants:
         by-test-platform:
-            linux64/debug: ['serviceworker']
-            default: []
+            linux64/debug: ['fission', 'serviceworker']
+            default: ['fission']
     virtualization:
         by-test-platform:
             windows10-64(?:-pgo|-shippable)?-qr/.*: virtual-with-gpu
@@ -201,6 +201,7 @@ test-verify-wpt:
     suite:
         category: test-verify
         name: test-verify-wpt
+    variants: []
     schedules-component: test-verify-wpt
     treeherder-symbol: TVw
     max-run-time: 10800
