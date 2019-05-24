@@ -2361,7 +2361,8 @@ class MethodDefiner(PropertyDefiner):
                        m.isMethod() and m.isStatic() == static and
                        MemberIsUnforgeable(m, descriptor) == unforgeable and
                        (not crossOriginOnly or m.getExtendedAttribute("CrossOriginCallable")) and
-                       not m.isIdentifierLess()]
+                       not m.isIdentifierLess() and
+                       not m.getExtendedAttribute("Unexposed")]
         else:
             methods = []
         self.chrome = []
@@ -9635,11 +9636,19 @@ class CGMemberJITInfo(CGThing):
                 argTypes=argTypes,
                 slotAssert=slotAssert)
 
+        # Unexposed things are meant to be used from C++ directly, so we make
+        # their jitinfo non-static.  That way C++ can get at it.
+        if self.member.getExtendedAttribute("Unexposed"):
+            storageClass = "extern"
+        else:
+            storageClass = "static"
+
         return fill(
             """
-            static const JSJitInfo ${infoName} = ${jitInfo};
+            ${storageClass} const JSJitInfo ${infoName} = ${jitInfo};
             $*{slotAssert}
             """,
+            storageClass=storageClass,
             infoName=infoName,
             jitInfo=jitInfoInitializer(False),
             slotAssert=slotAssert)
