@@ -105,7 +105,6 @@ sm-compacting-win32/debug:
 
 sm-plain-win64-aarch64/opt:
     description: "Spidermonkey Plain win64-aarch64 opt"
-    run-on-projects: ['mozilla-central', 'try']
     index:
         job-name: sm-plain-win64-aarch64-opt
     treeherder:
