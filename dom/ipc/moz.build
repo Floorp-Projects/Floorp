@@ -50,6 +50,7 @@ EXPORTS.mozilla.dom += [
     'CPOWManagerGetter.h',
     'CSPMessageUtils.h',
     'DocShellMessageUtils.h',
+    'EffectsInfo.h',
     'FilePickerParent.h',
     'JSWindowActor.h',
     'JSWindowActorChild.h',

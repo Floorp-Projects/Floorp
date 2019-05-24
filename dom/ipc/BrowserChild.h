@@ -842,6 +842,7 @@ class BrowserChild final : public BrowserChildBase,
   int64_t mBeforeUnloadListeners;
   CSSRect mUnscaledOuterRect;
   Maybe<bool> mLayersConnected;
+  EffectsInfo mEffectsInfo;
   bool mDidFakeShow;
   bool mNotified;
   bool mTriedBrowserInit;
