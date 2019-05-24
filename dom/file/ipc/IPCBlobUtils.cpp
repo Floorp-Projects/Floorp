@@ -261,7 +261,7 @@ nsresult SerializeUntyped(BlobImpl* aBlobImpl, IProtocol* aActor,
   }
 
   // We always need the toplevel protocol
-  switch (manager->GetProtocolTypeId()) {
+  switch (manager->GetProtocolId()) {
     case PBackgroundMsgStart:
       if (manager->GetSide() == mozilla::ipc::ParentSide) {
         return SerializeInternal(

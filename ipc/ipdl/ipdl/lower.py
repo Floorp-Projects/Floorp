@@ -3388,7 +3388,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ]
         else:
             ctor.memberinits = [
-                ExprMemberInit(ExprVar('mozilla::ipc::IProtocol'), [side])
+                ExprMemberInit(ExprVar('mozilla::ipc::IProtocol'),
+                               [_protocolId(ptype), side])
             ]
 
         ctor.addcode('MOZ_COUNT_CTOR(${clsname});\n', clsname=self.clsname)
@@ -3602,13 +3603,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ])
 
         clearsubtreevar = ExprVar('ClearSubtree')
-
-        # int32_t GetProtocolTypeId() { return PFoo; }
-        gettypetag = MethodDefn(
-            MethodDecl('GetProtocolTypeId', ret=_actorTypeTagType(),
-                       methodspec=MethodSpec.OVERRIDE))
-        gettypetag.addstmt(StmtReturn(_protocolId(ptype)))
-        self.cls.addstmts([gettypetag, Whitespace.NL])
 
         if ptype.isToplevel():
             # OnChannelClose()

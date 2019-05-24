@@ -153,6 +153,8 @@ enum class LinkStatus : uint8_t {
   Destroyed,
 };
 
+typedef IPCMessageStart ProtocolId;
+
 class IToplevelProtocol;
 class ActorLifecycleProxy;
 
@@ -268,8 +270,8 @@ class IProtocol : public HasResultCodes {
   typedef IPC::Message Message;
   typedef IPC::MessageInfo MessageInfo;
 
-  explicit IProtocol(Side aSide)
-      : IProtocol(aSide, MakeUnique<ManagedState>(this)) {}
+  explicit IProtocol(ProtocolId aProtoId, Side aSide)
+      : IProtocol(aProtoId, aSide, MakeUnique<ManagedState>(this)) {}
 
   int32_t Register(IProtocol* aRouted) { return mState->Register(aRouted); }
   int32_t RegisterID(IProtocol* aRouted, int32_t aId) {
@@ -330,7 +332,7 @@ class IProtocol : public HasResultCodes {
                                    Message*& aReply) = 0;
   virtual Result OnCallReceived(const Message& aMessage, Message*& aReply) = 0;
 
-  virtual int32_t GetProtocolTypeId() = 0;
+  ProtocolId GetProtocolId() const { return mProtocolId; }
 
   int32_t Id() const { return mId; }
   IProtocol* Manager() const { return mManager; }
@@ -364,8 +366,9 @@ class IProtocol : public HasResultCodes {
   ActorLifecycleProxy* GetLifecycleProxy() { return mLifecycleProxy; }
 
  protected:
-  IProtocol(Side aSide, UniquePtr<ProtocolState> aState)
+  IProtocol(ProtocolId aProtoId, Side aSide, UniquePtr<ProtocolState> aState)
       : mId(0),
+        mProtocolId(aProtoId),
         mSide(aSide),
         mLinkStatus(LinkStatus::Inactive),
         mLifecycleProxy(nullptr),
@@ -433,7 +436,7 @@ class IProtocol : public HasResultCodes {
   // The actor has been freed after this method returns.
   virtual void ActorDealloc() {
     if (Manager()) {
-      Manager()->DeallocManagee(GetProtocolTypeId(), this);
+      Manager()->DeallocManagee(mProtocolId, this);
     }
   }
 
@@ -442,14 +445,13 @@ class IProtocol : public HasResultCodes {
 
  private:
   int32_t mId;
+  ProtocolId mProtocolId;
   Side mSide;
   LinkStatus mLinkStatus;
   ActorLifecycleProxy* mLifecycleProxy;
   IProtocol* mManager;
   UniquePtr<ProtocolState> mState;
 };
-
-typedef IPCMessageStart ProtocolId;
 
 #define IPC_OK() mozilla::ipc::IPCResult::Ok()
 #define IPC_FAIL(actor, why) \
@@ -552,8 +554,6 @@ class IToplevelProtocol : public IProtocol {
   void SetTransport(UniquePtr<Transport> aTrans) { mTrans = std::move(aTrans); }
 
   Transport* GetTransport() const { return mTrans.get(); }
-
-  ProtocolId GetProtocolId() const { return mProtocolId; }
 
   base::ProcessId OtherPid() const final;
   void SetOtherProcessId(base::ProcessId aOtherPid);
@@ -684,7 +684,6 @@ class IToplevelProtocol : public IProtocol {
  private:
   base::ProcessId OtherPidMaybeInvalid() const;
 
-  ProtocolId mProtocolId;
   UniquePtr<Transport> mTrans;
   base::ProcessId mOtherPid;
   bool mIsMainThreadProtocol;
