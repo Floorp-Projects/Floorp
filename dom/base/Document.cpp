@@ -6044,6 +6044,12 @@ void Document::GetDomain(nsAString& aDomain) {
 }
 
 void Document::SetDomain(const nsAString& aDomain, ErrorResult& rv) {
+  if (!GetBrowsingContext()) {
+    // If our browsing context is null; disallow setting domain
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
   if (mSandboxFlags & SANDBOXED_DOMAIN) {
     // We're sandboxed; disallow setting domain
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
