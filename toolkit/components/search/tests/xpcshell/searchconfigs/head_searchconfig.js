@@ -223,9 +223,6 @@ class SearchConfigTest {
 
   /**
    * Helper function to find an engine from within a list.
-   * Due to Amazon's current complex setup with three different identifiers,
-   * if the identifier is 'amazon', then we do a startsWith match. Otherwise
-   * we expect the names to equal.
    *
    * @param {Array} engines
    *   The list of engines to check.
@@ -235,10 +232,7 @@ class SearchConfigTest {
    *   Returns the engine if found, null otherwise.
    */
   _findEngine(engines, identifier) {
-    if (identifier == "amazon") {
-      return engines.find(engine => engine.identifier.startsWith(identifier));
-    }
-    return engines.find(engine => engine.identifier == identifier);
+    return engines.find(engine => engine.identifier.startsWith(identifier));
   }
 
   /**
