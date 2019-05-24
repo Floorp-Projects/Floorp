@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import kotlinx.android.synthetic.main.delete_browsing_data_item.view.*
 import org.mozilla.fenix.R
@@ -16,11 +17,27 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
+
+    val titleView: TextView
+        get() = title
+
+    val subtitleView: TextView
+        get() = subtitle
+
+    val isChecked: Boolean
+        get() = checkbox.isChecked
+
+    var onCheckListener: ((Boolean) -> Unit)? = null
+
     init {
         LayoutInflater.from(context).inflate(R.layout.delete_browsing_data_item, this, true)
 
         setOnClickListener {
             checkbox.isChecked = !checkbox.isChecked
+        }
+
+        checkbox.setOnCheckedChangeListener { _, isChecked ->
+            onCheckListener?.invoke(isChecked)
         }
 
         attrs.let {
