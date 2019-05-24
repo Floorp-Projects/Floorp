@@ -423,9 +423,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     is SearchAction.ToolbarLongClicked -> {
                         getSessionById()?.let { session ->
                             session.copyUrl(requireContext())
-                            FenixSnackbar.make(view!!, Snackbar.LENGTH_LONG)
-                                .setText(resources.getString(R.string.url_copied))
-                                .show()
+                            view?.rootView?.let {
+                                FenixSnackbar.make(it, Snackbar.LENGTH_LONG)
+                                    .setText(resources.getString(R.string.url_copied))
+                                    .show()
+                            }
                         }
                     }
                 }
@@ -507,7 +509,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                         requireComponents.analytics.metrics.track(Event.AddBookmark)
                         view?.let {
                             FenixSnackbar.make(
-                                it,
+                                it.rootView,
                                 Snackbar.LENGTH_LONG
                             )
                                 .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
