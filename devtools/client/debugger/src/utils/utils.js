@@ -60,19 +60,23 @@ export function downloadFile(content: SourceContent, fileName: string) {
     return;
   }
 
-  const data = content.value;
   const { body } = document;
   if (!body) {
     return;
   }
 
+  const data = content.value;
   const a = document.createElement("a");
-  body.appendChild(a);
-  a.className = "download-anchor";
-  a.href = window.URL.createObjectURL(
+  const href = window.URL.createObjectURL(
     new Blob([data], { type: "text/javascript" })
   );
+
+  body.appendChild(a);
+  a.className = "download-anchor";
+  a.href = href;
   a.setAttribute("download", fileName);
   a.click();
   body.removeChild(a);
+
+  window.URL.revokeObjectURL(href);
 }
