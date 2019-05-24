@@ -33,6 +33,12 @@
         <attr name="listItemIcon" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="DeleteBrowsingDataItem">
+        <attr name="deleteBrowsingDataItemTitle" format="reference" />
+        <attr name="deleteBrowsingDataItemSubtitle" format="reference" />
+        <attr name="deleteBrowsingDataItemIcon" format="reference" />
+    </declare-styleable>
+
     <declare-styleable name="OnboardingRadioButton">
         <attr name="onboardingKey" format="reference" />
     </declare-styleable>

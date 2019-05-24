@@ -8,12 +8,43 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <org.mozilla.fenix.settings.DeleteBrowsingDataItem
+            android:id="@+id/openTabsItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:contentDescription="@string/library_bookmarks"
+            android:focusable="true"
+            app:listItemIcon="@drawable/bookmarks_circle_background_outline"
+            app:listItemTitle="@string/library_bookmarks" />
+        <org.mozilla.fenix.settings.DeleteBrowsingDataItem
+            android:id="@+id/browsingDataItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:contentDescription="@string/library_bookmarks"
+            android:focusable="true"
+            app:listItemIcon="@drawable/bookmarks_circle_background_outline"
+            app:listItemTitle="@string/library_bookmarks" />
+        <org.mozilla.fenix.settings.DeleteBrowsingDataItem
+            android:id="@+id/collectionsItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:contentDescription="@string/library_bookmarks"
+            android:focusable="true"
+            app:listItemIcon="@drawable/bookmarks_circle_background_outline"
+            app:listItemTitle="@string/library_bookmarks" />
 
 
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </ScrollView>
