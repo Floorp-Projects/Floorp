@@ -40,7 +40,7 @@ const bootstrap = {
     // toolbox session id.
     this.telemetry.toolOpened("responsive", -1, this);
 
-    const store = this.store = Store({ telemetry: this.telemetry });
+    const store = this.store = Store();
     const provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, document.querySelector("#root"));
     message.post(window, "init:done");
