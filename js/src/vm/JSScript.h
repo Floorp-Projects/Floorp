@@ -2987,6 +2987,7 @@ class alignas(uintptr_t) LazyScriptData final {
   // Size to allocate
   static size_t AllocationSize(uint32_t numClosedOverBindings,
                                uint32_t numInnerFunctions);
+  size_t allocationSize() const;
 
   // Translate an offset into a concrete pointer.
   template <typename T>
