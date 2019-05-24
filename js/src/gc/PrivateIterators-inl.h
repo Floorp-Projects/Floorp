@@ -20,16 +20,14 @@ namespace gc {
 
 class ArenaCellIterUnderGC : public ArenaCellIter {
  public:
-  explicit ArenaCellIterUnderGC(Arena* arena)
-      : ArenaCellIter(arena) {
+  explicit ArenaCellIterUnderGC(Arena* arena) : ArenaCellIter(arena) {
     MOZ_ASSERT(CurrentThreadIsPerformingGC());
   }
 };
 
 class ArenaCellIterUnderFinalize : public ArenaCellIter {
  public:
-  explicit ArenaCellIterUnderFinalize(Arena* arena)
-      : ArenaCellIter(arena) {
+  explicit ArenaCellIterUnderFinalize(Arena* arena) : ArenaCellIter(arena) {
     MOZ_ASSERT(CurrentThreadIsGCSweeping());
   }
 };

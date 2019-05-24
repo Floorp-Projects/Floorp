@@ -3227,8 +3227,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(
   // Per spec, isFunctionNameCaptured can be true for anonymous
   // function.  Check isFunctionNameCaptured only for named
   // function.
-  if (pc_->functionBox()->isNamedLambda() &&
-      isFunctionNameCaptured) {
+  if (pc_->functionBox()->isNamedLambda() && isFunctionNameCaptured) {
     captureFunctionName();
   }
   BINJS_MOZ_TRY_DECL(isThisCaptured, tokenizer_->readBool(fieldContext++));
