@@ -34,6 +34,7 @@ class nsPIDOMWindowInner;
 namespace mozilla {
 class DOMEventTargetHelper;
 namespace dom {
+class VoidFunction;
 class ServiceWorker;
 class ServiceWorkerRegistration;
 class ServiceWorkerRegistrationDescriptor;
@@ -156,6 +157,8 @@ class nsIGlobalObject : public nsISupports,
   // Returns a pointer to this object as an inner window if this is one or
   // nullptr otherwise.
   nsPIDOMWindowInner* AsInnerWindow();
+
+  void QueueMicrotask(mozilla::dom::VoidFunction& aCallback);
 
  protected:
   virtual ~nsIGlobalObject();
