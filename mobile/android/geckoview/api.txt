@@ -519,6 +519,27 @@ package org.mozilla.geckoview {
   public static interface GeckoSession.MediaDelegate {
     method @UiThread default public void onMediaAdd(@NonNull GeckoSession, @NonNull MediaElement);
     method @UiThread default public void onMediaRemove(@NonNull GeckoSession, @NonNull MediaElement);
+    method @UiThread default public void onRecordingStatusChanged(@NonNull GeckoSession, @NonNull GeckoSession.MediaDelegate.RecordingDevice[]);
+  }
+
+  public static class GeckoSession.MediaDelegate.RecordingDevice {
+    ctor protected RecordingDevice();
+    field public static final int TYPE_CAMERA = 0;
+    field public static final int TYPE_MICROPHONE = 1;
+    field public final long status;
+    field public final long type;
+  }
+
+  public static class GeckoSession.MediaDelegate.RecordingDevice.Status {
+    ctor protected Status();
+    field public static final long INACTIVE = 1L;
+    field public static final long RECORDING = 0L;
+  }
+
+  public static class GeckoSession.MediaDelegate.RecordingDevice.Type {
+    ctor protected Type();
+    field public static final long CAMERA = 0L;
+    field public static final long MICROPHONE = 1L;
   }
 
   public static interface GeckoSession.NavigationDelegate {
