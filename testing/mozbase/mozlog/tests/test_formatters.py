@@ -35,6 +35,7 @@ suite 1
 ~~~~~~~
 Ran 4 checks (1 subtests, 3 tests)
 Expected results: 4
+Unexpected results: 0
 OK
 """.lstrip(b'\n')),
         ('mach', {'verbose': True}, b"""
@@ -52,6 +53,7 @@ suite 1
 ~~~~~~~
 Ran 4 checks (1 subtests, 3 tests)
 Expected results: 4
+Unexpected results: 0
 OK
 """.lstrip(b'\n')),
     ],
@@ -126,6 +128,62 @@ test_baz
   UNEXPECTED-PASS test_baz
 """.lstrip(b'\n')),
     ],
+
+    'KNOWN-INTERMITTENT': [
+        ('mach', {}, b"""
+ 0:00.00 SUITE_START: running 3 tests
+ 0:00.00 TEST_START: test_foo
+ 0:00.00 TEST_END: FAIL
+KNOWN-INTERMITTENT-FAIL test_foo
+ 0:00.00 TEST_START: test_bar
+ 0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
+KNOWN-INTERMITTENT-PASS a subtest
+ 0:00.00 TEST_START: test_baz
+ 0:00.00 TEST_END: FAIL
+ 0:00.00 SUITE_END
+
+suite 1
+~~~~~~~
+Ran 4 checks (1 subtests, 3 tests)
+Expected results: 4 (2 known intermittents)
+Unexpected results: 0
+
+Known Intermittent Results
+--------------------------
+test_foo
+  KNOWN-INTERMITTENT-FAIL test_foo
+test_bar
+  KNOWN-INTERMITTENT-PASS a subtest
+OK
+""".lstrip(b'\n')),
+        ('mach', {'verbose': True}, b"""
+ 0:00.00 SUITE_START: running 3 tests
+ 0:00.00 TEST_START: test_foo
+ 0:00.00 TEST_END: FAIL
+KNOWN-INTERMITTENT-FAIL test_foo
+ 0:00.00 TEST_START: test_bar
+ 0:00.00 KNOWN-INTERMITTENT-PASS a subtest
+ 0:00.00 TEST_END: Test OK. Subtests passed 1/1. Unexpected 0
+KNOWN-INTERMITTENT-PASS a subtest
+ 0:00.00 TEST_START: test_baz
+ 0:00.00 TEST_END: FAIL
+ 0:00.00 SUITE_END
+
+suite 1
+~~~~~~~
+Ran 4 checks (1 subtests, 3 tests)
+Expected results: 4 (2 known intermittents)
+Unexpected results: 0
+
+Known Intermittent Results
+--------------------------
+test_foo
+  KNOWN-INTERMITTENT-FAIL test_foo
+test_bar
+  KNOWN-INTERMITTENT-PASS a subtest
+OK
+""".lstrip(b'\n')),
+    ],
 }
 
 
@@ -194,6 +252,31 @@ def test_fail(name, opts, expected):
     logger.test_end('test_bar', 'OK')
     logger.test_start('test_baz')
     logger.test_end('test_baz', 'PASS', 'FAIL')
+    logger.suite_end()
+
+    result = buf.getvalue()
+    print("Dumping result for copy/paste:")
+    print(result)
+    assert result == expected
+
+@pytest.mark.parametrize("name,opts,expected", FORMATS['KNOWN-INTERMITTENT'],
+                         ids=ids('KNOWN-INTERMITTENT'))
+def test_known_intermittent(name, opts, expected):
+    buf = BytesIO()
+    fmt = formatters[name](**opts)
+    logger = StructuredLogger('test_logger')
+    logger.add_handler(StreamHandler(buf, fmt))
+
+    logger.suite_start(['test_foo', 'test_bar', 'test_baz'])
+    logger.test_start('test_foo')
+    logger.test_end('test_foo', 'FAIL', 'PASS', known_intermittent=['FAIL'])
+    logger.test_start('test_bar')
+    logger.test_status('test_bar', 'a subtest', 'PASS', 'FAIL',
+                       known_intermittent=['PASS'])
+    logger.test_end('test_bar', 'OK')
+    logger.test_start('test_baz')
+    logger.test_end('test_baz', 'FAIL', 'FAIL', 'expected 0 got 1',
+                    known_intermittent=['PASS'])
     logger.suite_end()
 
     result = buf.getvalue()

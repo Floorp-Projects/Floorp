@@ -14,6 +14,7 @@
 class JSScript;
 
 namespace js {
+namespace jit {
 
 // [SMDOC] JitScript
 //
@@ -21,10 +22,9 @@ namespace js {
 // for a script. Scripts with a JitScript can run in the Baseline Interpreter.
 //
 // IC Data
-// -------
-//
-// JitScript contains IC data used by Baseline (Interpreter and JIT). Ion has
-// its own IC chains stored in IonScript.
+// =======
+// All IC data for Baseline (Interpreter and JIT) is stored in JitScript. Ion
+// has its own IC chains stored in IonScript.
 //
 // For each IC we store an ICEntry, which points to the first ICStub in the
 // chain. Note that multiple stubs in the same zone can share Baseline IC code.
@@ -49,9 +49,20 @@ namespace js {
 //   - Type monitor IC for each formal argument.
 //   - IC for each JOF_IC bytecode op.
 //
-// Memory Layout
-// -------------
+// Type Inference Data
+// ===================
+// JitScript also contains Type Inference data, most importantly:
 //
+// * An array of StackTypeSets for type monitoring of |this|, formal arguments,
+//   JOF_TYPESET ops. These TypeSets record the types we observed and have
+//   constraints to trigger invalidation of Ion code when the TypeSets change.
+//
+// * The bytecode type map to map from StackTypeSet index to bytecode offset.
+//
+// * List of Ion compilations inlining this script, for invalidation.
+//
+// Memory Layout
+// =============
 // JitScript has various trailing (variable-length) arrays. The memory layout is
 // as follows:
 //
@@ -68,7 +79,7 @@ class alignas(uintptr_t) JitScript final {
   friend class ::JSScript;
 
   // Allocated space for fallback IC stubs.
-  jit::FallbackICStubSpace fallbackStubSpace_ = {};
+  FallbackICStubSpace fallbackStubSpace_ = {};
 
   // The freeze constraints added to stack type sets will only directly
   // invalidate the script containing those stack type sets. This Vector
@@ -100,9 +111,9 @@ class alignas(uintptr_t) JitScript final {
   };
   Flags flags_ = {};  // Zero-initialize flags.
 
-  jit::ICEntry* icEntries() {
+  ICEntry* icEntries() {
     uint8_t* base = reinterpret_cast<uint8_t*>(this);
-    return reinterpret_cast<jit::ICEntry*>(base + offsetOfICEntries());
+    return reinterpret_cast<ICEntry*>(base + offsetOfICEntries());
   }
 
   StackTypeSet* typeArrayDontCheckGeneration() {
@@ -128,7 +139,8 @@ class alignas(uintptr_t) JitScript final {
   }
 #endif
 
-  MOZ_MUST_USE bool initICEntries(JSContext* cx, JSScript* script);
+  MOZ_MUST_USE bool initICEntriesAndBytecodeTypeMap(JSContext* cx,
+                                                    JSScript* script);
 
   bool hasFreezeConstraints(const js::AutoSweepJitScript& sweep) const {
     MOZ_ASSERT(sweep.jitScript() == this);
@@ -157,7 +169,7 @@ class alignas(uintptr_t) JitScript final {
   }
 
   uint32_t numICEntries() const {
-    return (typeSetOffset_ - offsetOfICEntries()) / sizeof(jit::ICEntry);
+    return (typeSetOffset_ - offsetOfICEntries()) / sizeof(ICEntry);
   }
   uint32_t numTypeSets() const {
     return (bytecodeTypeMapOffset_ - typeSetOffset_) / sizeof(StackTypeSet);
@@ -239,7 +251,7 @@ class alignas(uintptr_t) JitScript final {
                              TemporaryTypeSet** pArgTypes,
                              TemporaryTypeSet** pBytecodeTypes);
 
-  void destroy(Zone* zone);
+  static void Destroy(Zone* zone, JitScript* script);
 
   static constexpr size_t offsetOfICEntries() { return sizeof(JitScript); }
 
@@ -257,7 +269,7 @@ class alignas(uintptr_t) JitScript final {
     fallbackStubSpace_.freeAllAfterMinorGC(zone);
   }
 
-  jit::FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
+  FallbackICStubSpace* fallbackStubSpace() { return &fallbackStubSpace_; }
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* data,
                               size_t* fallbackStubs) const {
@@ -268,7 +280,7 @@ class alignas(uintptr_t) JitScript final {
     *fallbackStubs += fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
   }
 
-  jit::ICEntry& icEntry(size_t index) {
+  ICEntry& icEntry(size_t index) {
     MOZ_ASSERT(index < numICEntries());
     return icEntries()[index];
   }
@@ -279,15 +291,14 @@ class alignas(uintptr_t) JitScript final {
   void trace(JSTracer* trc);
   void purgeOptimizedStubs(JSScript* script);
 
-  jit::ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
+  ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
 
-  jit::ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
-  jit::ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
-                                         jit::ICEntry* prevLookedUpEntry);
+  ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
+  ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
+                                    ICEntry* prevLookedUpEntry);
 
-  jit::ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
-  jit::ICEntry& icEntryFromPCOffset(uint32_t pcOffset,
-                                    jit::ICEntry* prevLookedUpEntry);
+  ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
+  ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry);
 };
 
 // Ensures no JitScripts are purged in the current zone.
@@ -303,6 +314,15 @@ class MOZ_RAII AutoKeepJitScripts {
   inline ~AutoKeepJitScripts();
 };
 
+// Mark JitScripts on the stack as active, so that they are not discarded
+// during GC.
+void MarkActiveJitScripts(Zone* zone);
+
+#ifdef JS_STRUCTURED_SPEW
+void JitSpewBaselineICStats(JSScript* script, const char* dumpReason);
+#endif
+
+}  // namespace jit
 }  // namespace js
 
 #endif /* jit_JitScript_h */

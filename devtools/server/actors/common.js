@@ -105,16 +105,16 @@ ActorPool.prototype = {
 exports.ActorPool = ActorPool;
 
 /**
- * A GeneratedLocation represents a location in a generated source.
+ * A SourceLocation represents a location in a source.
  *
  * @param SourceActor actor
- *        A SourceActor representing a generated source.
+ *        A SourceActor representing a source.
  * @param Number line
  *        A line within the given source.
  * @param Number column
  *        A column within the given line.
  */
-function GeneratedLocation(actor, line, column, lastColumn) {
+function SourceLocation(actor, line, column, lastColumn) {
   this._connection = actor ? actor.conn : null;
   this._actorID = actor ? actor.actorID : undefined;
   this._line = line;
@@ -122,66 +122,47 @@ function GeneratedLocation(actor, line, column, lastColumn) {
   this._lastColumn = (lastColumn !== undefined) ? lastColumn : column + 1;
 }
 
-GeneratedLocation.prototype = {
-  get originalSourceActor() {
-    throw new Error();
-  },
+SourceLocation.prototype = {
 
-  get originalUrl() {
-    throw new Error("Shouldn't access originalUrl from a GeneratedLocation");
-  },
-
-  get originalLine() {
-    throw new Error("Shouldn't access originalLine from a GeneratedLocation");
-  },
-
-  get originalColumn() {
-    throw new Error("Shouldn't access originalColumn from a GeneratedLocation");
-  },
-
-  get originalName() {
-    throw new Error("Shouldn't access originalName from a GeneratedLocation");
-  },
-
-  get generatedSourceActor() {
+  get sourceActor() {
     return this._connection ? this._connection.getActor(this._actorID) : null;
   },
 
-  get generatedUrl() {
-    return this.generatedSourceActor.url;
+  get url() {
+    return this.sourceActor.url;
   },
 
-  get generatedLine() {
+  get line() {
     return this._line;
   },
 
-  get generatedColumn() {
+  get column() {
     return this._column;
   },
 
-  get generatedLastColumn() {
+  get lastColumn() {
     return this._lastColumn;
   },
 
   equals: function(other) {
-    return this.generatedSourceActor.url == other.generatedSourceActor.url &&
-           this.generatedLine === other.generatedLine &&
-           (this.generatedColumn === undefined ||
-            other.generatedColumn === undefined ||
-            this.generatedColumn === other.generatedColumn);
+    return this.sourceActor.url == other.sourceActor.url &&
+           this.line === other.line &&
+           (this.column === undefined ||
+            other.column === undefined ||
+            this.column === other.column);
   },
 
   toJSON: function() {
     return {
-      source: this.generatedSourceActor.form(),
-      line: this.generatedLine,
-      column: this.generatedColumn,
-      lastColumn: this.generatedLastColumn,
+      source: this.sourceActor.form(),
+      line: this.line,
+      column: this.column,
+      lastColumn: this.lastColumn,
     };
   },
 };
 
-exports.GeneratedLocation = GeneratedLocation;
+exports.SourceLocation = SourceLocation;
 
 /**
  * A method decorator that ensures the actor is in the expected state before

@@ -196,7 +196,7 @@ void Zone::sweepWeakMaps() {
 
 void Zone::discardJitCode(FreeOp* fop,
                           ShouldDiscardBaselineCode discardBaselineCode,
-                          ShouldReleaseTypes releaseTypes) {
+                          ShouldDiscardJitScripts discardJitScripts) {
   if (!jitZone()) {
     return;
   }
@@ -205,11 +205,11 @@ void Zone::discardJitCode(FreeOp* fop,
     return;
   }
 
-  if (discardBaselineCode || releaseTypes) {
+  if (discardBaselineCode || discardJitScripts) {
 #ifdef DEBUG
     // Assert no JitScripts are marked as active.
     for (auto script = cellIter<JSScript>(); !script.done(); script.next()) {
-      if (JitScript* jitScript = script.unbarrieredGet()->jitScript()) {
+      if (jit::JitScript* jitScript = script.unbarrieredGet()->jitScript()) {
         MOZ_ASSERT(!jitScript->active());
       }
     }
@@ -251,11 +251,11 @@ void Zone::discardJitCode(FreeOp* fop,
     // Try to release the script's JitScript. This should happen after
     // releasing JIT code because we can't do this when the script still has
     // JIT code.
-    if (releaseTypes) {
+    if (discardJitScripts) {
       script->maybeReleaseJitScript();
     }
 
-    if (JitScript* jitScript = script->jitScript()) {
+    if (jit::JitScript* jitScript = script->jitScript()) {
       // If we did not release the JitScript, we need to purge optimized IC
       // stubs because the optimizedStubSpace will be purged below.
       if (discardBaselineCode) {

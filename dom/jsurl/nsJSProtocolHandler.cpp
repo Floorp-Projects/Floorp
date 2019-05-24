@@ -217,7 +217,7 @@ nsresult nsJSThunk::EvaluateScript(
   }
 
   // Push our popup control state
-  nsAutoPopupStatePusher popupStatePusher(aPopupState);
+  AutoPopupStatePusher popupStatePusher(aPopupState);
 
   // Make sure we still have the same inner window as we used to.
   nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(global);

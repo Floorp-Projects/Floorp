@@ -18,12 +18,13 @@ use io::{BufRead, BufReader};
 
 pub use result::*;
 pub use data::*;
+use nom::types::CompleteStr;
 
 const SOCKET_PATH: &'static str = "/var/run/devd.seqpacket.pipe";
 
 pub fn parse_devd_event(e: String) -> Result<Event> {
-    match parser::event(e.as_bytes()) {
-        parser::IResult::Done(_, x) => Ok(x),
+    match parser::event(CompleteStr(e.as_str())) {
+        Ok((_, x)) => Ok(x),
         _ => Err(Error::Parse),
     }
 }

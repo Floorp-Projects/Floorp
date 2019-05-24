@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ReportBody.h"
-#include "mozilla/dom/ReportingBinding.h"
 #include "nsPIDOMWindow.h"
 
 namespace mozilla {
@@ -25,11 +24,6 @@ ReportBody::ReportBody(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {
 }
 
 ReportBody::~ReportBody() = default;
-
-JSObject* ReportBody::WrapObject(JSContext* aCx,
-                                 JS::Handle<JSObject*> aGivenProto) {
-  return ReportBody_Binding::Wrap(aCx, this, aGivenProto);
-}
 
 }  // namespace dom
 }  // namespace mozilla

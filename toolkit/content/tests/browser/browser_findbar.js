@@ -185,7 +185,7 @@ add_task(async function e10sLostKeys() {
     // We can't afford to wait for the promise to resolve, by then the
     // find bar is visible and focused, so sending characters to the
     // content browser wouldn't work.
-    isnot(document.activeElement, findBar._findField.inputField,
+    isnot(document.activeElement, findBar._findField,
       "findbar is not yet focused");
     EventUtils.synthesizeKey("a");
     EventUtils.synthesizeKey("b");
@@ -194,7 +194,7 @@ add_task(async function e10sLostKeys() {
   });
 
   await BrowserTestUtils.waitForCondition(() => findBar._findField.value.length == 3);
-  is(document.activeElement, findBar._findField.inputField,
+  is(document.activeElement, findBar._findField,
     "findbar is now focused");
   is(findBar._findField.value, "abc", "abc fully entered as find query");
 

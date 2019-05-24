@@ -17,9 +17,6 @@ class AudioContext;
 
 class AudioScheduledSourceNode : public AudioNode {
  public:
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
-
   virtual void Start(double aWhen, ErrorResult& aRv) = 0;
   virtual void Stop(double aWhen, ErrorResult& aRv) = 0;
 

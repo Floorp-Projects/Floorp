@@ -52,6 +52,8 @@ using mozilla::PodArrayZero;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
+using js::jit::JitScript;
+
 #ifdef DEBUG
 
 static inline jsid id___proto__(JSContext* cx) {

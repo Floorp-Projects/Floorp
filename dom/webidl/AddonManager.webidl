@@ -83,7 +83,7 @@ interface AddonManager : EventTarget {
 };
 
 [ChromeOnly,Exposed=Window,HeaderFile="mozilla/AddonManagerWebAPI.h"]
-interface AddonManagerPermissions {
-  static boolean isHostPermitted(DOMString host);
+namespace AddonManagerPermissions {
+  boolean isHostPermitted(DOMString host);
 };
 
