@@ -88,9 +88,7 @@ class BrowsingContextBase {
 // Trees of BrowsingContexts should only ever contain nodes of the
 // same BrowsingContext::Type. This is enforced by asserts in the
 // BrowsingContext::Create* methods.
-class BrowsingContext : public nsWrapperCache,
-                        public SupportsWeakPtr<BrowsingContext>,
-                        public BrowsingContextBase {
+class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
  public:
   enum class Type { Chrome, Content };
 
