@@ -533,7 +533,7 @@ bool ShouldTestTipTsf() {
   }
 
   mozilla::DynamicallyLinkedFunctionPtr<decltype(&SHGetKnownFolderPath)>
-    pSHGetKnownFolderPath(L"shell32.dll", "SHGetKnownFolderPath");
+      pSHGetKnownFolderPath(L"shell32.dll", "SHGetKnownFolderPath");
   if (!pSHGetKnownFolderPath) {
     return false;
   }
@@ -563,7 +563,7 @@ static BOOLEAN gIsPresent;
 
 bool HasApiSetQueryApiSetPresence() {
   mozilla::DynamicallyLinkedFunctionPtr<decltype(&ApiSetQueryApiSetPresence)>
-    func(L"Api-ms-win-core-apiquery-l1-1-0.dll", "ApiSetQueryApiSetPresence");
+      func(L"Api-ms-win-core-apiquery-l1-1-0.dll", "ApiSetQueryApiSetPresence");
   if (!func) {
     return false;
   }
@@ -832,7 +832,10 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
 #endif
       TEST_DETOUR_SKIP_EXEC(kernel32.dll, BaseThreadInitThunk) &&
       TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) &&
-      MAYBE_TEST_HOOK_PARAMS(HasApiSetQueryApiSetPresence(), Api-ms-win-core-apiquery-l1-1-0.dll, ApiSetQueryApiSetPresence, Equals, FALSE, &gEmptyUnicodeString, &gIsPresent) &&
+      MAYBE_TEST_HOOK_PARAMS(HasApiSetQueryApiSetPresence(),
+                             Api - ms - win - core - apiquery - l1 - 1 - 0.dll,
+                             ApiSetQueryApiSetPresence, Equals, FALSE,
+                             &gEmptyUnicodeString, &gIsPresent) &&
       TestTenByteDetour()) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
 

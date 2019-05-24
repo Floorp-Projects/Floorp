@@ -437,8 +437,8 @@ inline void JSFlatString::finalize(js::FreeOp* fop) {
 inline size_t JSFlatString::allocSize() const {
   MOZ_ASSERT(!isInline());
 
-  size_t charSize = hasLatin1Chars() ? sizeof(JS::Latin1Char)
-                                     : sizeof(char16_t);
+  size_t charSize =
+      hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
   size_t count = isExtensible() ? asExtensible().capacity() : length();
   return (count + 1) * charSize;
 }

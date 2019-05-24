@@ -16,9 +16,10 @@ namespace mozilla {
 namespace webgl {
 
 class ShaderValidator final {
-public:
+ public:
   const ShHandle mHandle;
-private:
+
+ private:
   const ShCompileOptions mCompileOptions;
   const int mMaxVaryingVectors;
   bool mHasRun;

@@ -3642,8 +3642,8 @@ static bool DescendIntoChild(nsDisplayListBuilder* aBuilder,
     }
 
     nsDisplayTableBackgroundSet* tableBGs = aBuilder->GetTableBackgroundSet();
-    if (tableBGs &&
-        tableBGs->GetDirtyRect().Intersects(normalPositionOverflowRelativeToTable)) {
+    if (tableBGs && tableBGs->GetDirtyRect().Intersects(
+                        normalPositionOverflowRelativeToTable)) {
       return true;
     }
   }

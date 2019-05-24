@@ -21,7 +21,7 @@ namespace recordreplay {
 struct Message;
 
 namespace parent {
-  class ChildProcessInfo;
+class ChildProcessInfo;
 }
 
 namespace js {

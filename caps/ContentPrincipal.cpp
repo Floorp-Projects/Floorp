@@ -49,8 +49,7 @@ NS_IMPL_CI_INTERFACE_GETTER(ContentPrincipal, nsIPrincipal, nsISerializable)
 
 ContentPrincipal::ContentPrincipal() : BasePrincipal(eCodebasePrincipal) {}
 
-ContentPrincipal::~ContentPrincipal() {
-}
+ContentPrincipal::~ContentPrincipal() {}
 
 nsresult ContentPrincipal::Init(nsIURI* aCodebase,
                                 const OriginAttributes& aOriginAttributes,

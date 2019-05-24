@@ -102,7 +102,7 @@ class HTMLTextFieldAccessible final : public HyperTextAccessibleWrap {
    * HTML:input@type="number".
    */
   nsIContent* BindingOrWidgetParent() const {
-    nsIContent * el = mContent->GetBindingParent();
+    nsIContent* el = mContent->GetBindingParent();
     if (el) {
       return el;
     }
