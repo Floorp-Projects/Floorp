@@ -406,7 +406,6 @@ desktop-instrumentation:
 android-common-tests:
     - crashtest
     - geckoview-junit
-    - jsreftest
     - mochitest
     - mochitest-chrome
     - mochitest-gpu
@@ -458,9 +457,12 @@ marionette-headless:
 
 android-hw-arm7-opt-unittests:
     - jittest
+    - jsreftest
     - mochitest-media
 
 android-hw-arm7-debug-unittests:
+    - jittest
+    - jsreftest
     - mochitest-media
 
 android-hw-arm7-raptor:
