@@ -14,10 +14,6 @@ function promiseTimeout(delay) {
   });
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function do_test() {
   // setup a profile.
   do_get_profile();
@@ -46,7 +42,7 @@ add_task(async function do_test() {
   Services.prefs.setCharPref("permissions.manager.defaultsUrl", "file://" + file.path);
 
   // This will force the permission-manager to reload the data.
-  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk", "");
+  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
 
   let pm = Cc["@mozilla.org/permissionmanager;1"].
            getService(Ci.nsIPermissionManager);
