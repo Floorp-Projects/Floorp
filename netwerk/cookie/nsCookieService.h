@@ -344,7 +344,8 @@ class nsCookieService final : public nsICookieService,
                             nsDependentCSubstring& aTokenValue,
                             bool& aEqualsFound);
   static bool ParseAttributes(nsDependentCString& aCookieHeader,
-                              nsCookieAttributes& aCookie);
+                              nsCookieAttributes& aCookie,
+                              bool& aAcceptedByParser);
   bool RequireThirdPartyCheck();
   static bool CheckDomain(nsCookieAttributes& aCookie, nsIURI* aHostURI,
                           const nsCString& aBaseDomain, bool aRequireHostMatch);
