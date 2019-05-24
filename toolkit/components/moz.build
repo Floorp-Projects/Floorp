@@ -23,6 +23,7 @@ DIRS += [
     'backgroundhangmonitor',
     'bitsdownload',
     'browser',
+    'certviewer',
     'cleardata',
     'clearsitedata',
     'cloudstorage',

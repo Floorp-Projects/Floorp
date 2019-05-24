@@ -103,6 +103,27 @@ const allCertificateUsages = {
 
 const NO_FLAGS = 0;
 
+// Convert a string to an array of bytes consisting of the char code at each
+// index.
+function stringToArray(s) {
+  let a = [];
+  for (let i = 0; i < s.length; i++) {
+    a.push(s.charCodeAt(i));
+  }
+  return a;
+}
+
+// Converts an array of bytes to a JS string using fromCharCode on each byte.
+function arrayToString(a) {
+  let s = "";
+  for (let b of a) {
+    s += String.fromCharCode(b);
+  }
+  return s;
+}
+
+
+
 // Commonly certificates are represented as PEM. The format is roughly as
 // follows:
 //
