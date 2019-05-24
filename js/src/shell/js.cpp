@@ -10718,11 +10718,18 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
   if (JS::TraceLoggerSupported()) {
     JS::StartTraceLogger(cx);
   }
-  auto stopTraceLogger = MakeScopeExit([&] {
+#ifdef JS_STRUCTURED_SPEW
+  cx->spewer().enableSpewing();
+#endif
+
+  auto exitShell = MakeScopeExit([&] {
     if (JS::TraceLoggerSupported()) {
       JS::SpewTraceLoggerForCurrentProcess();
       JS::StopTraceLogger(cx);
     }
+#ifdef JS_STRUCTURED_SPEW
+    cx->spewer().disableSpewing();
+#endif
   });
 
   if (op->getBoolOption("wasm-compile-and-serialize")) {

@@ -491,6 +491,8 @@ class SyntaxParseHandler {
     return true;
   }
 
+  void checkAndSetIsDirectRHSAnonFunction(Node pn) {}
+
   FunctionNodeType newFunction(FunctionSyntaxKind syntaxKind,
                                const TokenPos& pos) {
     switch (syntaxKind) {

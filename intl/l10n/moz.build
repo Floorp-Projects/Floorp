@@ -17,6 +17,7 @@ TESTING_JS_MODULES += [
 
 XPIDL_SOURCES += [
     'mozIDOMLocalization.idl',
+    'mozILocalization.idl',
 ]
 
 XPIDL_MODULE = 'locale'

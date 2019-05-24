@@ -154,6 +154,7 @@ class WebGLTexture final : public nsWrapperCache,
 
   const auto& Immutable() const { return mImmutable; }
   const auto& BaseMipmapLevel() const { return mBaseMipmapLevel; }
+  const auto& FaceCount() const { return mFaceCount; }
 
   // We can just max this out to 31, which is the number of unsigned bits in
   // GLsizei.
@@ -208,7 +209,6 @@ class WebGLTexture final : public nsWrapperCache,
                                  uint32_t width, uint32_t height,
                                  uint32_t depth,
                                  webgl::ImageInfo** const out_imageInfo);
-  bool ValidateCopyTexImageForFeedback(uint32_t level, GLint layer = 0) const;
 
   bool ValidateUnpack(const webgl::TexUnpackBlob* blob, bool isFunc3D,
                       const webgl::PackingInfo& srcPI) const;
@@ -278,6 +278,7 @@ class WebGLTexture final : public nsWrapperCache,
     }
   }
 
+ public:
   auto& ImageInfoAtFace(uint8_t face, uint32_t level) {
     MOZ_ASSERT(face < mFaceCount);
     MOZ_ASSERT(level < kMaxLevelCount);
@@ -289,7 +290,6 @@ class WebGLTexture final : public nsWrapperCache,
     return const_cast<WebGLTexture*>(this)->ImageInfoAtFace(face, level);
   }
 
- public:
   auto& ImageInfoAt(TexImageTarget texImageTarget, GLint level) {
     const auto& face = FaceForTarget(texImageTarget);
     return ImageInfoAtFace(face, level);

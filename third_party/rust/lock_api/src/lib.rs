@@ -28,14 +28,14 @@
 //!
 //! ```
 //! use lock_api::{RawMutex, Mutex, GuardSend};
-//! use std::sync::atomic::{AtomicBool, Ordering, ATOMIC_BOOL_INIT};
+//! use std::sync::atomic::{AtomicBool, Ordering};
 //!
 //! // 1. Define our raw lock type
 //! pub struct RawSpinlock(AtomicBool);
 //!
 //! // 2. Implement RawMutex for this type
 //! unsafe impl RawMutex for RawSpinlock {
-//!     const INIT: RawSpinlock = RawSpinlock(ATOMIC_BOOL_INIT);
+//!     const INIT: RawSpinlock = RawSpinlock(AtomicBool::new(false));
 //!
 //!     // A spinlock guard can be sent to another thread and unlocked there
 //!     type GuardMarker = GuardSend;
@@ -85,13 +85,11 @@
 
 #![no_std]
 #![warn(missing_docs)]
+#![warn(rust_2018_idioms)]
 #![cfg_attr(feature = "nightly", feature(const_fn))]
 
 #[macro_use]
 extern crate scopeguard;
-
-#[cfg(feature = "owning_ref")]
-extern crate owning_ref;
 
 /// Marker type which indicates that the Guard type for a lock is `Send`.
 pub struct GuardSend(());
@@ -100,10 +98,10 @@ pub struct GuardSend(());
 pub struct GuardNoSend(*mut ());
 
 mod mutex;
-pub use mutex::*;
+pub use crate::mutex::*;
 
 mod remutex;
-pub use remutex::*;
+pub use crate::remutex::*;
 
 mod rwlock;
-pub use rwlock::*;
+pub use crate::rwlock::*;

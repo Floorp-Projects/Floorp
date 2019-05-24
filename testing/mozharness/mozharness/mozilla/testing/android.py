@@ -302,6 +302,11 @@ class AndroidMixin(object):
                 self.info("Found Android bogomips: %d" % bogomips)
                 break
 
+    def logcat_path(self):
+        logcat_filename = 'logcat-%s.log' % self.device_serial
+        return os.path.join(self.query_abs_dirs()['abs_blob_upload_dir'],
+                            logcat_filename)
+
     def logcat_start(self):
         """
            Start recording logcat. Writes logcat to the upload directory.
@@ -310,10 +315,7 @@ class AndroidMixin(object):
         # corresponding device is stopped. Output is written directly to
         # the blobber upload directory so that it is uploaded automatically
         # at the end of the job.
-        logcat_filename = 'logcat-%s.log' % self.device_serial
-        logcat_path = os.path.join(self.abs_dirs['abs_blob_upload_dir'],
-                                   logcat_filename)
-        self.logcat_file = open(logcat_path, 'w')
+        self.logcat_file = open(self.logcat_path(), 'w')
         logcat_cmd = [self.adb_path, '-s', self.device_serial, 'logcat', '-v',
                       'threadtime', 'Trace:S', 'StrictMode:S',
                       'ExchangeService:S']
@@ -330,19 +332,19 @@ class AndroidMixin(object):
             self.logcat_proc.kill()
             self.logcat_file.close()
 
-    def install_apk(self, apk):
+    def install_apk(self, apk, replace=False):
         """
            Install the specified apk.
         """
         import mozdevice
         try:
-            self.device.install_app(apk)
+            self.device.install_app(apk, replace=replace)
         except (mozdevice.ADBError, mozdevice.ADBTimeoutError), e:
             self.info('Failed to install %s on %s: %s %s' %
-                      (self.installer_path, self.device_name,
+                      (apk, self.device_name,
                        type(e).__name__, e))
             self.fatal('INFRA-ERROR: Failed to install %s' %
-                       os.path.basename(self.installer_path),
+                       os.path.basename(apk),
                        EXIT_STATUS_DICT[TBPL_RETRY])
 
     def is_boot_completed(self):
