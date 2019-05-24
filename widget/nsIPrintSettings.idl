@@ -70,18 +70,11 @@ interface nsIPrintSettings : nsISupports
   const long kRangeAllPages           = 0;
   const long kRangeSpecifiedPageRange = 1;
   const long kRangeSelection          = 2;
-  const long kRangeFocusFrame         = 3;
 
   /* Justification Enums */
   const long kJustLeft   = 0;
   const long kJustCenter = 1;
   const long kJustRight  = 2;
-
-  /**
-   * FrameSet Default Type Constants
-   */
-  const short kUseInternalDefault    = 0;
-  const short kUseSettingWhenPossible = 1;
 
   /**
    * Page Size Type Constants
@@ -215,7 +208,6 @@ interface nsIPrintSettings : nsISupports
   attribute short   howToEnableFrameUI;  /* indicates how to enable the frameset UI            */
   attribute boolean isCancelled;         /* indicates whether the print job has been cancelled */
   readonly attribute boolean saveOnCancel;        /* indicates whether the print settings should be saved after a cancel */
-  attribute short   printFrameTypeUsage; /* indicates whether to use the interal value or not  */
   attribute short   printFrameType;
   attribute boolean printSilent;         /* print without putting up the dialog */
   attribute boolean shrinkToFit;         /* shrinks content to fit on page      */

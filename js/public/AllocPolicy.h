@@ -35,7 +35,8 @@ class AllocPolicyBase {
     return js_pod_arena_calloc<T>(arenaId, numElems);
   }
   template <typename T>
-  T* maybe_pod_arena_realloc(arena_id_t arenaId, T* p, size_t oldSize, size_t newSize) {
+  T* maybe_pod_arena_realloc(arena_id_t arenaId, T* p, size_t oldSize,
+                             size_t newSize) {
     return js_pod_arena_realloc<T>(arenaId, p, oldSize, newSize);
   }
   template <typename T>
@@ -47,7 +48,8 @@ class AllocPolicyBase {
     return maybe_pod_arena_calloc<T>(arenaId, numElems);
   }
   template <typename T>
-  T* pod_arena_realloc(arena_id_t arenaId, T* p, size_t oldSize, size_t newSize) {
+  T* pod_arena_realloc(arena_id_t arenaId, T* p, size_t oldSize,
+                       size_t newSize) {
     return maybe_pod_arena_realloc<T>(arenaId, p, oldSize, newSize);
   }
 
@@ -143,7 +145,8 @@ class TempAllocPolicy : public AllocPolicyBase {
   }
 
   template <typename T>
-  T* pod_arena_realloc(arena_id_t arenaId, T* prior, size_t oldSize, size_t newSize) {
+  T* pod_arena_realloc(arena_id_t arenaId, T* prior, size_t oldSize,
+                       size_t newSize) {
     T* p2 = this->maybe_pod_arena_realloc<T>(arenaId, prior, oldSize, newSize);
     if (MOZ_UNLIKELY(!p2)) {
       p2 = onOutOfMemoryTyped<T>(arenaId, AllocFunction::Realloc, newSize,

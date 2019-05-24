@@ -13,6 +13,12 @@
 class nsIContent;
 struct nsStyleText;
 
+namespace mozilla {
+namespace dom {
+class Text;
+}
+}  // namespace mozilla
+
 #define BIG_TEXT_NODE_SIZE 4096
 
 #define CH_NBSP 160
@@ -133,7 +139,7 @@ class nsTextFrameUtils {
   }
 
   static uint32_t ComputeApproximateLengthWithWhitespaceCompression(
-      nsIContent* aContent, const nsStyleText* aStyleText);
+      mozilla::dom::Text* aText, const nsStyleText* aStyleText);
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrameUtils::Flags)
