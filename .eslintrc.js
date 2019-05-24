@@ -158,8 +158,40 @@ module.exports = {
       "quotes": "off",
       "semi": "off",
       "space-infix-ops": "off",
+    }
+  }, {
+    "files": [
+      "image/**",
+    ],
+    "rules": {
+      "mozilla/consistent-if-bracing": "off",
+      "mozilla/use-chromeutils-generateqi": "off",
+      "mozilla/use-services": "off",
+      "no-array-constructor": "off",
+      "no-implied-eval": "off",
+      "no-redeclare": "off",
+      "no-self-assign": "off",
+      "no-throw-literal": "off",
+      "no-undef": "off",
+      "no-unneeded-ternary": "off",
+      "no-unused-vars": "off",
 
-
+      // Not enabling the rules below for now pending prettier roll-out.
+      "brace-style": "off",
+      "comma-dangle": "off",
+      "comma-spacing": "off",
+      "key-spacing": "off",
+      "keyword-spacing": "off",
+      "no-extra-semi": "off",
+      "no-tabs": "off",
+      "no-mixed-spaces-and-tabs": "off",
+      "no-multi-spaces": "off",
+      "no-trailing-spaces": "off",
+      "padded-blocks": "off",
+      "quotes": "off",
+      "semi": "off",
+      "space-before-function-paren": "off",
+      "space-infix-ops": "off",
     }
   }]
 };

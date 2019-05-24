@@ -23,14 +23,14 @@ var obs = Cc["@mozilla.org/observer-service;1"].getService();
 obs = obs.QueryInterface(Ci.nsIObserverService);
 
 var observer = {
-  QueryInterface: function (aIID) {
+  QueryInterface (aIID) {
     if (aIID.equals(Ci.nsISupports) ||
         aIID.equals(Ci.nsIObserver))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     ok(topic == "net:failed-to-process-uri-content", "wrong topic");
     subject = subject.QueryInterface(Ci.nsIURI);
     is(subject.asciiSpec, "http://mochi.test:8888/tests/image/test/mochitest/invalid.jpg", "wrong subject");

@@ -646,18 +646,18 @@ var testData =
 for(var i=0; i<testData.length; ++i) {
     var dict = testData[i];
 
-    var imgFile = do_get_file(dict["refImage"]);
+    var imgFile = do_get_file(dict.refImage);
     var istream = getFileInputStream(imgFile);
     var refBytes = streamToArray(istream);
 
-    imgFile = do_get_file(dict["preImage"]);
+    imgFile = do_get_file(dict.preImage);
     istream = getFileInputStream(imgFile);
 
     var buffer = NetUtil.readInputStreamToString(istream, istream.available());
     var container = imgTools.decodeImageFromBuffer(buffer, buffer.length,
-                                                   dict["preImageMimeType"]);
+                                                   dict.preImageMimeType);
 
-    istream = imgTools.encodeImage(container, dict["refImageMimeType"]);
+    istream = imgTools.encodeImage(container, dict.refImageMimeType);
 
     var sstream = Cc["@mozilla.org/storagestream;1"].
 	          createInstance(Ci.nsIStorageStream);
@@ -666,7 +666,7 @@ for(var i=0; i<testData.length; ++i) {
     var bostream = Cc["@mozilla.org/network/buffered-output-stream;1"].
 	           createInstance(Ci.nsIBufferedOutputStream);
 
-    //use a tiny buffer to make sure the image data doesn't fully fit in it
+    // use a tiny buffer to make sure the image data doesn't fully fit in it
     bostream.init(ostream, 8);
 
     bostream.writeFrom(istream, istream.available());
