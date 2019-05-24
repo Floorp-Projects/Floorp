@@ -37,10 +37,9 @@ cppunit:
         by-test-platform:
             android-em.*: xlarge
             default: default
-    tier: default
     run-on-projects:
         by-test-platform:
-            android-em-4.3-arm7-api-16/opt: []  # bug 1548659
+            android-em-4.3-arm7-api-16/opt: ['try']
             default: built-projects
 
 gtest:
