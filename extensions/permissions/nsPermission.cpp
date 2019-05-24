@@ -112,8 +112,19 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost,
     return NS_OK;
   }
 
+  return MatchesPrincipalForPermission(principal, aExactHost, aMatches);
+}
+
+NS_IMETHODIMP
+nsPermission::MatchesPrincipalForPermission(nsIPrincipal* aPrincipal,
+                                            bool aExactHost, bool* aMatches) {
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ENSURE_ARG_POINTER(aMatches);
+
+  *aMatches = false;
+
   // If the principals are equal, then they match.
-  if (mPrincipal->Equals(principal)) {
+  if (mPrincipal->Equals(aPrincipal)) {
     *aMatches = true;
     return NS_OK;
   }
@@ -126,7 +137,7 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost,
 
   // Compare their OriginAttributes
   const mozilla::OriginAttributes& theirAttrs =
-      principal->OriginAttributesRef();
+      aPrincipal->OriginAttributesRef();
   const mozilla::OriginAttributes& ourAttrs = mPrincipal->OriginAttributesRef();
 
   if (theirAttrs != ourAttrs) {
@@ -134,7 +145,7 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost,
   }
 
   nsCOMPtr<nsIURI> theirURI;
-  nsresult rv = principal->GetURI(getter_AddRefs(theirURI));
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(theirURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> ourURI;
