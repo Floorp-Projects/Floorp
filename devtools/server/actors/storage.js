@@ -571,7 +571,7 @@ StorageActors.createActor({
       case cookie.SAMESITE_STRICT:
         return COOKIE_SAMESITE.STRICT;
     }
-    // cookie.SAMESITE_UNSET
+    // cookie.SAMESITE_NONE
     return COOKIE_SAMESITE.UNSET;
   },
 
