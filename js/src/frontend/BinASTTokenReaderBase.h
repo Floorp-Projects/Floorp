@@ -7,6 +7,8 @@
 #ifndef frontend_BinASTTokenReaderBase_h
 #define frontend_BinASTTokenReaderBase_h
 
+#include "mozilla/Variant.h"
+
 #include <string.h>
 
 #include "frontend/BinASTToken.h"
@@ -27,53 +29,29 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
   template <typename T>
   using ErrorResult = mozilla::GenericErrorResult<T>;
 
-  // The context in which we read a token.
-  struct Context {
-    // Construct a context for a root node.
-    constexpr static Context topLevel() {
-      return Context(BinASTKind::_Null, 0, ElementOf::TaggedTuple);
-    }
+  // Part of variant `Context`
+  // Reading the root of the tree, before we enter any tagged tuple.
+  struct RootContext {};
 
-    Context arrayElement() const {
-      return Context(kind, fieldIndex, ElementOf::Array);
-    }
-
-    // Construct a context for a field of a tagged tuple.
-    constexpr static Context firstField(BinASTKind kind) {
-      return Context(kind, 0, ElementOf::TaggedTuple);
-    }
-
-    const Context operator++(int) {
-      MOZ_ASSERT(elementOf == ElementOf::TaggedTuple);
-      Context result = *this;
-      fieldIndex++;
-      return result;
-    }
-
-    // The kind of the tagged tuple containing the token.
-    //
-    // If the parent is the root, use `BinASTKind::_Null`.
-    BinASTKind kind;
-
-    // The index of the token as a field of the parent.
-    uint8_t fieldIndex;
-
-    enum class ElementOf {
-      // This token is an element of an array.
-      Array,
-
-      // This token is a field of a tagged tuple.
-      TaggedTuple,
-    };
-    ElementOf elementOf;
-
-    Context() = delete;
-
-   private:
-    constexpr Context(BinASTKind kind_, uint8_t fieldIndex_,
-                      ElementOf elementOf_)
-        : kind(kind_), fieldIndex(fieldIndex_), elementOf(elementOf_) {}
+  // Part of variant `Context`
+  // Reading an element from a list.
+  struct ListContext {
+    const BinASTInterfaceAndField position;
+    const BinASTList content;
+    ListContext(const BinASTInterfaceAndField position,
+                const BinASTList content)
+        : position(position), content(content) {}
   };
+
+  // Part of variant `Context`
+  // Reading a field from an interface.
+  struct FieldContext {
+    const BinASTInterfaceAndField position;
+    FieldContext(const BinASTInterfaceAndField position) : position(position) {}
+  };
+
+  // The context in which we read a token.
+  typedef mozilla::Variant<RootContext, ListContext, FieldContext> Context;
 
   // The information needed to skip a subtree.
   class SkippableSubTree {
