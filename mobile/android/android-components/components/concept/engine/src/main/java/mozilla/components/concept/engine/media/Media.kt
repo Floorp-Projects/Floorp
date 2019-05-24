@@ -137,4 +137,6 @@ abstract class Media(
             notifyObservers(block)
         }
     }
+
+    override fun toString(): String = "Media($playbackState)"
 }
