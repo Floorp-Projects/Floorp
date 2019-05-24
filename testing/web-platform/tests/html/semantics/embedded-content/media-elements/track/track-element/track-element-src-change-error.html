@@ -30,9 +30,7 @@
                     assert_equals(cues[cues.length-1].text, 'I said Bear is coming now!!!! Tab separators.', "Last cue content check");
                     ++stage;
                     testTrack.src = ""; // this should fail
-                    // CuesList will be cleared in the next tick. Spec claims that this should happen immediately,
-                    // but all implementations are doing this asynchronously.
-                    assert_equals(cues.length, 4, "Number of cues immediately after 'src' mutation with the empty URL");
+                    assert_equals(cues.length, 0, "cues list is reset immediately after 'src' mutation with the new URL");
                     // This should raise onError event. If no, we'll know about this after some time.
                     timer = t.step_timeout(t.unreached_func("'error' event is not fired when an empty URL is set"), 100);
                     break;
