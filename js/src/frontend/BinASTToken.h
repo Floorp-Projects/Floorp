@@ -289,6 +289,10 @@ enum class BinASTField : uint16_t {
 // The number of distinct values of BinASTField.
 const size_t BINASTFIELD_LIMIT = 69;
 
+// The total number of fields across all interfaces. Used typically to maintain
+// a probability table per field.
+const size_t BINAST_TOTAL_NUMBER_OF_FIELDS = 275;
+
 /**
  * The different variants of Binary AST string enums, as per
  * the specifications of Binary AST, as a single macro and
@@ -364,6 +368,10 @@ enum class BinASTVariant : uint16_t {
 
 // The number of distinct values of BinASTVariant.
 const size_t BINASTVARIANT_LIMIT = 49;
+
+// The total number of lists across all interfaces. Used typically to maintain a
+// probability table per field.
+const size_t BINAST_TOTAL_NUMBER_OF_LISTS = 22;
 
 /**
  * Return a string describing a `BinASTKind`.
