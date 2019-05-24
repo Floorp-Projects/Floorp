@@ -89,7 +89,7 @@ class RendererScreenshotGrabber final {
   /**
    * Our handle to the profiler screenshots object.
    */
-  UniquePtr<mozilla::layers::ProfilerScreenshots> mProfilerScreenshots;
+  RefPtr<mozilla::layers::ProfilerScreenshots> mProfilerScreenshots;
 };
 
 }  // namespace wr
