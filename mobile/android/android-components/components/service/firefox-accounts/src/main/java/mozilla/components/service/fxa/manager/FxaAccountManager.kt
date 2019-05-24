@@ -13,6 +13,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthException
@@ -106,22 +107,45 @@ open class FxaAccountManager(
     private val config: Config,
     private val scopes: Array<String>,
     private val deviceTuple: DeviceTuple,
-    syncManager: SyncManager? = null
+    syncManager: SyncManager? = null,
+    // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
+    // That is, we want to ensure a sequential execution flow, but on a background thread.
+    val coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logger = Logger("FirefoxAccountStateMachine")
 
+    // This is used during 'beginAuthenticationAsync' call, which returns a Deferred<String>.
+    // 'deferredAuthUrl' is set on this observer and returned, and resolved once state machine goes
+    // through its motions. This allows us to keep around only one observer in the registry.
+    private val fxaOAuthObserver = FxaOAuthObserver()
+    private class FxaOAuthObserver : OAuthObserver {
+        lateinit var deferredAuthUrl: CompletableDeferred<String>
+
+        override fun onBeginOAuthFlow(authUrl: String) {
+            deferredAuthUrl.complete(authUrl)
+        }
+
+        override fun onError(error: FxaException) {
+            deferredAuthUrl.completeExceptionally(error)
+        }
+    }
     private val oauthObservers = object : Observable<OAuthObserver> by ObserverRegistry() {}
+    init {
+        oauthObservers.register(fxaOAuthObserver)
+    }
+
+    private class FxaAuthErrorObserver(val manager: FxaAccountManager) : AuthErrorObserver {
+        override fun onAuthError(e: AuthException) {
+            CoroutineScope(manager.coroutineContext).launch {
+                manager.processQueueAsync(Event.AuthenticationError(e)).await()
+            }
+        }
+    }
+    private val fxaAuthErrorObserver = FxaAuthErrorObserver(this)
 
     init {
         syncManager?.let { this.register(SyncManagerIntegration(it)) }
-
-        authErrorRegistry.register(object : AuthErrorObserver {
-            override fun onAuthError(e: AuthException) {
-                CoroutineScope(coroutineContext).launch {
-                    processQueueAsync(Event.AuthenticationError(e)).await()
-                }
-            }
-        })
+        authErrorRegistry.register(fxaAuthErrorObserver)
     }
 
     private class FxaStatePersistenceCallback(
@@ -194,12 +218,6 @@ open class FxaAccountManager(
         }
     }
 
-    private val job = SupervisorJob()
-    // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
-    // That is, we want to ensure a sequential execution flow, but on a background thread.
-    private val coroutineContext: CoroutineContext
-        get() = Executors.newSingleThreadExecutor().asCoroutineDispatcher() + job
-
     // 'account' is initialized during processing of an 'Init' event.
     // Note on threading: we use a single-threaded executor, so there's no concurrent access possible.
     // However, that executor doesn't guarantee that it'll always use the same thread, and so vars
@@ -260,17 +278,8 @@ open class FxaAccountManager(
     fun beginAuthenticationAsync(pairingUrl: String? = null): Deferred<String> {
         val deferredAuthUrl: CompletableDeferred<String> = CompletableDeferred()
 
-        oauthObservers.register(object : OAuthObserver {
-            override fun onBeginOAuthFlow(authUrl: String) {
-                oauthObservers.unregister(this)
-                deferredAuthUrl.complete(authUrl)
-            }
-
-            override fun onError(error: FxaException) {
-                oauthObservers.unregister(this)
-                deferredAuthUrl.completeExceptionally(error)
-            }
-        })
+        // Observer will 'complete' this deferred once state machine resolves its events.
+        fxaOAuthObserver.deferredAuthUrl = deferredAuthUrl
 
         val event = if (pairingUrl != null) Event.Pair(pairingUrl) else Event.Authenticate
         processQueueAsync(event)
@@ -290,7 +299,7 @@ open class FxaAccountManager(
     }
 
     override fun close() {
-        job.cancel()
+        coroutineContext.cancel()
         account.close()
     }
 
