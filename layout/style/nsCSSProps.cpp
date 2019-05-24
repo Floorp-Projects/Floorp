@@ -376,11 +376,6 @@ const KTableEntry nsCSSProps::kTextEmphasisStyleShapeKTable[] = {
     {eCSSKeyword_sesame, NS_STYLE_TEXT_EMPHASIS_STYLE_SESAME},
     {eCSSKeyword_UNKNOWN, -1}};
 
-const KTableEntry nsCSSProps::kTextOverflowKTable[] = {
-    {eCSSKeyword_clip, NS_STYLE_TEXT_OVERFLOW_CLIP},
-    {eCSSKeyword_ellipsis, NS_STYLE_TEXT_OVERFLOW_ELLIPSIS},
-    {eCSSKeyword_UNKNOWN, -1}};
-
 // keyword tables for SVG properties
 
 const KTableEntry nsCSSProps::kFilterFunctionKTable[] = {

@@ -33,4 +33,11 @@ cd /builds/worker/checkouts/gecko
 mkdir -p $PGO_RUNDIR
 mv $MOZ_FETCHES_DIR/firefox $PGO_RUNDIR
 ./mach python build/pgo/profileserver.py --binary $PGO_RUNDIR/firefox/firefox
-tar -acvf $UPLOAD_PATH/profdata.tar.xz default.profraw en-US.log
+
+# Fail the build if for some reason we didn't collect any profile data.
+if test -z "$(find . -maxdepth 1 -name '*.profraw' -print -quit)"; then
+    echo "ERROR: no profile data produced"
+    exit 1
+fi
+
+tar -acvf $UPLOAD_PATH/profdata.tar.xz *.profraw en-US.log

@@ -84,11 +84,19 @@ class ChunkPool {
   void push(Chunk* chunk);
   Chunk* remove(Chunk* chunk);
 
+  void sort();
+
+ private:
+  Chunk* mergeSort(Chunk* list, size_t count);
+  bool isSorted() const;
+
 #ifdef DEBUG
+ public:
   bool contains(Chunk* chunk) const;
   bool verify() const;
 #endif
 
+ public:
   // Pool mutation does not invalidate an Iter unless the mutation
   // is of the Chunk currently being visited by the Iter.
   class Iter {

@@ -360,7 +360,7 @@ this.RemoteSecuritySettings = class RemoteSecuritySettings {
 
     async removeCerts(recordsToRemove) {
       let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(Ci.nsICertStorage);
-      let hashes = recordsToRemove.map(record => record.pubKeyHash);
+      let hashes = recordsToRemove.map(record => record.derHash);
       let result = await new Promise((resolve) => {
           certStorage.removeCertsByHashes(hashes, resolve);
       }).catch((err) => err);
