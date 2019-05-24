@@ -410,7 +410,7 @@ NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 
 #define GFX_PREF_GRAPHITE_SHAPING "gfx.font_rendering.graphite.enabled"
 #if defined(XP_MACOSX)
-#  define GFX_PREF_CORETEXT_SHAPING "gfx.font_rendering.coretext.enabled"
+#define GFX_PREF_CORETEXT_SHAPING "gfx.font_rendering.coretext.enabled"
 #endif
 
 #define BIDI_NUMERAL_PREF "bidi.numeral"

@@ -14,9 +14,10 @@
 
 using namespace mozilla;
 
-void PrioritizedEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                                     EventQueuePriority aPriority,
-                                     const MutexAutoLock& aProofOfLock) {
+void PrioritizedEventQueue::PutEvent(
+    already_AddRefed<nsIRunnable>&& aEvent, EventQueuePriority aPriority,
+    const MutexAutoLock& aProofOfLock) {
+
   // Double check the priority with a QI.
   RefPtr<nsIRunnable> event(aEvent);
   EventQueuePriority priority = aPriority;
@@ -255,7 +256,8 @@ already_AddRefed<nsIRunnable> PrioritizedEventQueue::GetEvent(
   return event.forget();
 }
 
-bool PrioritizedEventQueue::IsEmpty(const MutexAutoLock& aProofOfLock) {
+bool PrioritizedEventQueue::IsEmpty(
+    const MutexAutoLock& aProofOfLock) {
   // Just check IsEmpty() on the sub-queues. Don't bother checking the idle
   // deadline since that only determines whether an idle event is ready or not.
   return mHighQueue->IsEmpty(aProofOfLock) &&
@@ -266,7 +268,8 @@ bool PrioritizedEventQueue::IsEmpty(const MutexAutoLock& aProofOfLock) {
          mIdleQueue->IsEmpty(aProofOfLock);
 }
 
-bool PrioritizedEventQueue::HasReadyEvent(const MutexAutoLock& aProofOfLock) {
+bool PrioritizedEventQueue::HasReadyEvent(
+    const MutexAutoLock& aProofOfLock) {
   mHasPendingEventsPromisedIdleEvent = false;
 
   EventQueuePriority queue = SelectQueue(false, aProofOfLock);
@@ -306,7 +309,8 @@ bool PrioritizedEventQueue::HasPendingHighPriorityEvents(
   return !mHighQueue->IsEmpty(aProofOfLock);
 }
 
-size_t PrioritizedEventQueue::Count(const MutexAutoLock& aProofOfLock) const {
+size_t PrioritizedEventQueue::Count(
+    const MutexAutoLock& aProofOfLock) const {
   MOZ_CRASH("unimplemented");
 }
 

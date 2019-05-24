@@ -233,8 +233,7 @@ void GetEncodedOriginStrings(
     nsAutoJSString jsStr;
     ASSERT_TRUE(jsStr.init(aCx, encodingVal));
 
-    nsPrintfCString encoding(aEncoding.get(),
-                             i % TelemetryOrigin::SizeOfPrioDatasPerMetric());
+    nsPrintfCString encoding(aEncoding.get(), i % TelemetryOrigin::SizeOfPrioDatasPerMetric());
     ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == encoding)
     << "Actual 'encoding' (" << NS_ConvertUTF16toUTF8(jsStr).get()
     << ") must match expected (" << encoding << ")";

@@ -956,7 +956,8 @@ void ArrayBufferObject::releaseData(FreeOp* fop) {
       break;
     case MAPPED:
       gc::DeallocateMappedContent(dataPointer(), byteLength());
-      RemoveCellMemory(this, associatedBytes(), MemoryUse::ArrayBufferContents);
+      RemoveCellMemory(this, associatedBytes(),
+                       MemoryUse::ArrayBufferContents);
       break;
     case WASM:
       WasmArrayRawBuffer::Release(dataPointer());

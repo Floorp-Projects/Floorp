@@ -1618,6 +1618,7 @@ class HashTable : private AllocPolicy {
 
   static char* createTable(AllocPolicy& aAllocPolicy, uint32_t aCapacity,
                            FailureBehavior aReportFailure = ReportFailure) {
+
     FakeSlot* fake =
         aReportFailure
             ? aAllocPolicy.template pod_malloc<FakeSlot>(aCapacity)

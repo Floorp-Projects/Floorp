@@ -292,10 +292,9 @@ class WasmMemoryObject : public NativeObject {
   static bool grow(JSContext* cx, unsigned argc, Value* vp);
   static uint32_t growShared(HandleWasmMemoryObject memory, uint32_t delta);
 
-  using InstanceSet =
-      JS::WeakCache<GCHashSet<WeakHeapPtrWasmInstanceObject,
-                              MovableCellHasher<WeakHeapPtrWasmInstanceObject>,
-                              SystemAllocPolicy>>;
+  using InstanceSet = JS::WeakCache<GCHashSet<
+      WeakHeapPtrWasmInstanceObject,
+      MovableCellHasher<WeakHeapPtrWasmInstanceObject>, SystemAllocPolicy>>;
   bool hasObservers() const;
   InstanceSet& observers() const;
   InstanceSet* getOrCreateObservers(JSContext* cx);

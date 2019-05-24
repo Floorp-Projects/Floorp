@@ -80,7 +80,7 @@ class WritingMode;
 class ServoElementSnapshotTable;
 enum class StyleContentType : uint8_t;
 
-template <typename T>
+template<typename T>
 struct StyleForgottenArcSlicePtr;
 
 struct AnimationPropertySegment;

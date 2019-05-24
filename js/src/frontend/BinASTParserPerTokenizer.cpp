@@ -275,7 +275,7 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
 
   traceListHead_ = funbox;
   if (pc_) {
-    funbox->initWithEnclosingParseContext(pc_, fun, syntax);
+    funbox->initWithEnclosingParseContext(pc_, fun,syntax);
   } else {
     funbox->initFromLazyFunction(fun);
   }

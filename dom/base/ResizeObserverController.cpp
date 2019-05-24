@@ -59,9 +59,8 @@ void ResizeObserverNotificationHelper::Unregister() {
   }
 
   nsRefreshDriver* refreshDriver = GetRefreshDriver();
-  MOZ_RELEASE_ASSERT(
-      refreshDriver,
-      "We should not leave a dangling reference to the observer around");
+  MOZ_RELEASE_ASSERT(refreshDriver,
+                     "We should not leave a dangling reference to the observer around");
 
   bool rv = refreshDriver->RemoveRefreshObserver(this, FlushType::Display);
   MOZ_DIAGNOSTIC_ASSERT(rv, "Should remove the observer successfully");

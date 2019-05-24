@@ -31,11 +31,9 @@ static LazyLogModule gTrustDomainPRLog("CSTrustDomain");
 CSTrustDomain::CSTrustDomain(UniqueCERTCertList& certChain)
     : mCertChain(certChain),
 #ifdef MOZ_NEW_CERT_STORAGE
-      mCertBlocklist(do_GetService(NS_CERT_STORAGE_CID)) {
-}
+      mCertBlocklist(do_GetService(NS_CERT_STORAGE_CID)) {}
 #else
-      mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID)) {
-}
+      mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID)) {}
 #endif
 
 Result CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,

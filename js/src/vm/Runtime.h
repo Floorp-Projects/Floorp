@@ -535,7 +535,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   void incrementNumDebuggeeRealms();
   void decrementNumDebuggeeRealms();
 
-  size_t numDebuggeeRealms() const { return numDebuggeeRealms_; }
+  size_t numDebuggeeRealms() const {
+    return numDebuggeeRealms_;
+  }
 
   void incrementNumDebuggeeRealmsObservingCoverage();
   void decrementNumDebuggeeRealmsObservingCoverage();

@@ -896,8 +896,8 @@ struct DefaultHasher<jsid> {
 namespace js {
 
 using BaseShapeSet =
-    JS::WeakCache<JS::GCHashSet<WeakHeapPtr<UnownedBaseShape*>, StackBaseShape,
-                                SystemAllocPolicy>>;
+    JS::WeakCache<JS::GCHashSet<WeakHeapPtr<UnownedBaseShape*>,
+                                StackBaseShape, SystemAllocPolicy>>;
 
 class Shape : public gc::TenuredCell {
   friend class ::JSObject;

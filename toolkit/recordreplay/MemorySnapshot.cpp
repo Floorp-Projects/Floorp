@@ -170,7 +170,8 @@ struct DirtyPageSet {
   InfallibleVector<DirtyPage, 256, AllocPolicy<MemoryKind::DirtyPageSet>>
       mPages;
 
-  explicit DirtyPageSet(size_t aCheckpoint) : mCheckpoint(aCheckpoint) {}
+  explicit DirtyPageSet(size_t aCheckpoint)
+      : mCheckpoint(aCheckpoint) {}
 };
 
 // Worklist used by each snapshot thread.

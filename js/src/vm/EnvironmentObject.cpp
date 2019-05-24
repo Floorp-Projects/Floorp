@@ -1787,8 +1787,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       return env.as<CallObject>().callee().nonLazyScript()->bodyScope();
     }
     if (env.is<ModuleEnvironmentObject>()) {
-      JSScript* script =
-          env.as<ModuleEnvironmentObject>().module().maybeScript();
+      JSScript* script = env.as<ModuleEnvironmentObject>().module().maybeScript();
       return script ? script->bodyScope() : nullptr;
     }
     if (isNonExtensibleLexicalEnvironment(env)) {

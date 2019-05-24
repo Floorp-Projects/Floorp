@@ -22,7 +22,8 @@ namespace detail {
 template <typename T>
 class UnsafeBareWeakHeapPtr : public ReadBarriered<T> {
  public:
-  UnsafeBareWeakHeapPtr() : ReadBarriered<T>(JS::SafelyInitialized<T>()) {}
+  UnsafeBareWeakHeapPtr()
+      : ReadBarriered<T>(JS::SafelyInitialized<T>()) {}
   MOZ_IMPLICIT UnsafeBareWeakHeapPtr(const T& v) : ReadBarriered<T>(v) {}
   explicit UnsafeBareWeakHeapPtr(const UnsafeBareWeakHeapPtr& v)
       : ReadBarriered<T>(v) {}
@@ -180,7 +181,8 @@ class NurseryAwareHashMap {
 namespace JS {
 template <typename T>
 struct GCPolicy<js::detail::UnsafeBareWeakHeapPtr<T>> {
-  static void trace(JSTracer* trc, js::detail::UnsafeBareWeakHeapPtr<T>* thingp,
+  static void trace(JSTracer* trc,
+                    js::detail::UnsafeBareWeakHeapPtr<T>* thingp,
                     const char* name) {
     js::TraceEdge(trc, thingp, name);
   }

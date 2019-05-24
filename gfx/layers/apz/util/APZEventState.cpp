@@ -176,8 +176,8 @@ void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
                                      const CSSToLayoutDeviceScale& aScale,
                                      Modifiers aModifiers,
                                      int32_t aClickCount) {
-  APZES_LOG("Handling single tap at %s with %d\n", Stringify(aPoint).c_str(),
-            mTouchEndCancelled);
+  APZES_LOG("Handling single tap at %s with %d\n",
+            Stringify(aPoint).c_str(), mTouchEndCancelled);
 
   RefPtr<nsIContent> touchRollup = GetTouchRollup();
   mTouchRollup = nullptr;

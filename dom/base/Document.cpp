@@ -6871,7 +6871,7 @@ static Maybe<LayoutDeviceToScreenScale> ParseScaleString(
 }
 
 Maybe<LayoutDeviceToScreenScale> Document::ParseScaleInHeader(
-    nsAtom* aHeaderField) {
+  nsAtom* aHeaderField) {
   MOZ_ASSERT(aHeaderField == nsGkAtoms::viewport_initial_scale ||
              aHeaderField == nsGkAtoms::viewport_maximum_scale ||
              aHeaderField == nsGkAtoms::viewport_minimum_scale);

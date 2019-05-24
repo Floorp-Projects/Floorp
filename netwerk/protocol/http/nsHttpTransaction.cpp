@@ -1143,8 +1143,9 @@ void nsHttpTransaction::Close(nsresult reason) {
         // response that ends on exactly a chunk boundary also as partial.
         // Here a response must have the last 0-size chunk.
         if ((clevel == FRAMECHECK_STRICT) ||
-            (mChunkedDecoder && (mChunkedDecoder->GetChunkRemaining() ||
-                                 (clevel == FRAMECHECK_STRICT_CHUNKED))) ||
+            (mChunkedDecoder &&
+             (mChunkedDecoder->GetChunkRemaining() ||
+              (clevel == FRAMECHECK_STRICT_CHUNKED))) ||
             (!mChunkedDecoder && !mContentDecoding && mContentDecodingCheck)) {
           reason = NS_ERROR_NET_PARTIAL_TRANSFER;
           LOG(("Partial transfer, incomplete HTTP response received: %s",

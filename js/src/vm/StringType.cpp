@@ -577,7 +577,8 @@ JSFlatString* JSRope::flattenInternal(JSContext* maybecx) {
       // Remove memory association for left node we're about to make into a
       // dependent string.
       if (left.isTenured()) {
-        RemoveCellMemory(&left, left.allocSize(), MemoryUse::StringContents);
+        RemoveCellMemory(&left, left.allocSize(),
+                         MemoryUse::StringContents);
       }
 
       if (IsSame<CharT, char16_t>::value) {
@@ -664,7 +665,8 @@ finish_node : {
     str->d.s.u3.capacity = wholeCapacity;
 
     if (str->isTenured()) {
-      AddCellMemory(str, str->asFlat().allocSize(), MemoryUse::StringContents);
+      AddCellMemory(str, str->asFlat().allocSize(),
+                    MemoryUse::StringContents);
     }
 
     return &this->asFlat();
@@ -1474,7 +1476,8 @@ JSFlatString* JSExternalString::ensureFlat(JSContext* cx) {
   finalize(cx->runtime()->defaultFreeOp());
 
   MOZ_ASSERT(isTenured());
-  AddCellMemory(this, (n + 1) * sizeof(char16_t), MemoryUse::StringContents);
+  AddCellMemory(this, (n + 1) * sizeof(char16_t),
+                MemoryUse::StringContents);
 
   // Transform the string into a non-external, flat string. Note that the
   // resulting string will still be in an AllocKind::EXTERNAL_STRING arena,

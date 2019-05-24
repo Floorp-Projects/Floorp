@@ -129,7 +129,8 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
     MOZ_ASSERT(aReadbackSize.isSome());
     MOZ_ASSERT(aReadbackFormat.isSome());
     wr_renderer_readback(mRenderer, aReadbackSize.ref().width,
-                         aReadbackSize.ref().height, aReadbackFormat.ref(),
+                         aReadbackSize.ref().height,
+                         aReadbackFormat.ref(),
                          &aReadbackBuffer.ref()[0],
                          aReadbackBuffer.ref().length());
   }

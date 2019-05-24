@@ -35,8 +35,10 @@ static LazyLogModule gUrlClassifierPrefixSetLog("UrlClassifierPrefixSet");
 NS_IMPL_ISUPPORTS(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet,
                   nsIMemoryReporter)
 
+
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
-    : mLock("nsUrlClassifierPrefixSet.mLock"), mTotalPrefixes(0) {}
+    : mLock("nsUrlClassifierPrefixSet.mLock"),
+      mTotalPrefixes(0) {}
 
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Init(const nsACString& aName) {

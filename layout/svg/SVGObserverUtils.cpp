@@ -1174,8 +1174,7 @@ static nsSVGPaintingProperty* GetOrCreateClipPathObserver(
   if (svgStyleReset->mClipPath.GetType() != StyleShapeSourceType::Image) {
     return nullptr;
   }
-  const css::URLValue* url =
-      svgStyleReset->mClipPath.ShapeImage().GetURLValue();
+  const css::URLValue* url = svgStyleReset->mClipPath.ShapeImage().GetURLValue();
   MOZ_ASSERT(url);
   RefPtr<URLAndReferrerInfo> pathURI =
       ResolveURLUsingLocalRef(aClippedFrame, url);

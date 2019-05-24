@@ -451,8 +451,7 @@ CompositorD3D11::CreateRenderTargetFromSource(
 
 bool CompositorD3D11::ShouldAllowFrameRecording() const {
 #ifdef MOZ_GECKO_PROFILER
-  return mAllowFrameRecording ||
-         profiler_feature_active(ProfilerFeature::Screenshots);
+  return mAllowFrameRecording || profiler_feature_active(ProfilerFeature::Screenshots);
 #else
   return mAllowFrameRecording;
 #endif

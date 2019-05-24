@@ -46,8 +46,8 @@ struct AtomHasher {
                                       const Lookup& lookup);
 };
 
-using AtomSet =
-    JS::GCHashSet<WeakHeapPtr<JSAtom*>, AtomHasher, SystemAllocPolicy>;
+using AtomSet = JS::GCHashSet<WeakHeapPtr<JSAtom*>, AtomHasher,
+                              SystemAllocPolicy>;
 
 // This class is a wrapper for AtomSet that is used to ensure the AtomSet is
 // not modified. It should only expose read-only methods from AtomSet.
