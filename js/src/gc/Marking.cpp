@@ -441,9 +441,9 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 namespace js {
 namespace gc {
 
-#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type)                          \
-  template void TraceEdgeInternal<type>(JSTracer*, type*, const char*);     \
-  template void TraceRangeInternal<type>(JSTracer*, size_t len, type*,      \
+#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type)                      \
+  template void TraceEdgeInternal<type>(JSTracer*, type*, const char*); \
+  template void TraceRangeInternal<type>(JSTracer*, size_t len, type*,  \
                                          const char*);
 
 #define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, _3) \
@@ -738,10 +738,10 @@ JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
 
   // Mark the argument, as DoMarking above.
   ApplyGCThingTyped(thing, [gcmarker](auto thing) {
-                             MOZ_ASSERT(ShouldMark(gcmarker, thing));
-                             CheckTracedThing(gcmarker, thing);
-                             gcmarker->traverse(thing);
-                           });
+    MOZ_ASSERT(ShouldMark(gcmarker, thing));
+    CheckTracedThing(gcmarker, thing);
+    gcmarker->traverse(thing);
+  });
 }
 
 // The simplest traversal calls out to the fully generic traceChildren function
@@ -3104,8 +3104,7 @@ size_t js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
   }
 
   if (dst->isFlat() && !dst->isInline()) {
-    AddCellMemory(dst, dst->asFlat().allocSize(),
-                  MemoryUse::StringContents);
+    AddCellMemory(dst, dst->asFlat().allocSize(), MemoryUse::StringContents);
   }
 
   return size;

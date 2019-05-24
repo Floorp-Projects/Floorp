@@ -465,10 +465,12 @@ nsresult nsJSUtils::CompileModule(JSContext* aCx,
 
   NS_ENSURE_TRUE(xpc::Scriptability::Get(aEvaluationGlobal).Allowed(), NS_OK);
 
-  if (!JS::CompileModule(aCx, aCompileOptions, aSrcBuf, aModule)) {
+  JSObject* module = JS::CompileModule(aCx, aCompileOptions, aSrcBuf);
+  if (!module) {
     return NS_ERROR_FAILURE;
   }
 
+  aModule.set(module);
   return NS_OK;
 }
 

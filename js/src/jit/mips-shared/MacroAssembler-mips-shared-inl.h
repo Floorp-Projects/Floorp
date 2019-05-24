@@ -30,9 +30,7 @@ void MacroAssembler::move16SignExtend(Register src, Register dest) {
   ma_seh(dest, src);
 }
 
-void MacroAssembler::loadAbiReturnAddress(Register dest) {
-  movePtr(ra, dest);
-}
+void MacroAssembler::loadAbiReturnAddress(Register dest) { movePtr(ra, dest); }
 
 // ===============================================================
 // Logical instructions
