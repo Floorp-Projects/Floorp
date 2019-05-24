@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -82,10 +83,16 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         updateTabCount()
         updateHistoryCount()
         updateCollectionsCount()
+        updateDeleteButton()
     }
 
     private fun updateDeleteButton() {
+        view?.delete_data?.isEnabled =
+            view!!.open_tabs_item!!.isChecked
+            || view!!.browsing_data_item!!.isChecked
+            || view!!.collections_item!!.isChecked
 
+        Log.e("wat", view?.delete_data?.isEnabled.toString())
     }
 
     private fun updateTabCount() {

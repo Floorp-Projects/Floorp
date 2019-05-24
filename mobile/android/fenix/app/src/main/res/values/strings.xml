@@ -579,4 +579,6 @@
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
     <string name="preferences_delete_browsing_data_collections_subtitle">%d collections</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Delete browsing data</string>
 </resources>
