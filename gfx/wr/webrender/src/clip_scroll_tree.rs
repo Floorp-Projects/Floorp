@@ -217,29 +217,6 @@ impl<Src, Dst> CoordinateSpaceMapping<Src, Dst> {
             }
         }
     }
-
-    pub fn with_destination<NewDst>(self) -> CoordinateSpaceMapping<Src, NewDst> {
-        match self {
-            CoordinateSpaceMapping::Local => CoordinateSpaceMapping::Local,
-            CoordinateSpaceMapping::ScaleOffset(scale_offset) => CoordinateSpaceMapping::ScaleOffset(scale_offset),
-            CoordinateSpaceMapping::Transform(transform) => CoordinateSpaceMapping::Transform(
-                transform.with_destination::<NewDst>()
-            ),
-        }
-    }
-
-    pub fn post_mul_transform<NewDst>(
-        &self, other: &CoordinateSpaceMapping<Dst, NewDst>
-    ) -> TypedTransform3D<f32, Src, NewDst>
-    where Self: Clone
-    {
-        let matrix = self.clone().into_transform();
-        match *other {
-            CoordinateSpaceMapping::Local => matrix.with_destination::<NewDst>(),
-            CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => matrix.post_mul(&scale_offset.to_transform()),
-            CoordinateSpaceMapping::Transform(ref transform) => matrix.post_mul(transform),
-        }
-    }
 }
 
 impl ClipScrollTree {
