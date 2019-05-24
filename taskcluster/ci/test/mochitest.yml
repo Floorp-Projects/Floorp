@@ -15,7 +15,7 @@ job-defaults:
             default: []
     run-on-projects:
         by-test-platform:
-            android-em-4.*/.*: ['try', 'mozilla-central']  # bug 1548659
+            android-em-4.3-arm7-api-16/opt: ['try']
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     mozharness:
@@ -177,7 +177,6 @@ mochitest-chrome:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
-            android-em-4.*/.*: 2  # bug 1548659
             default: default
     instance-size:
         by-test-platform:
@@ -265,7 +264,6 @@ mochitest-gpu:
     tier:
         by-test-platform:
             windows10-aarch64.*: 2
-            android-em-4.*/.*: 2  # bug 1548659
             default: default
     instance-size:
         by-test-platform:
@@ -273,10 +271,6 @@ mochitest-gpu:
             default: default
     virtualization: virtual-with-gpu
     e10s: true
-    run-on-projects:
-        by-test-platform:
-            android-em-4.*/.*: ['try', 'mozilla-central']
-            default: default
     mozharness:
         mochitest-flavor: plain
         extra-options:
