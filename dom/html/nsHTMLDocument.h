@@ -141,8 +141,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   // WebIDL API
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
-  void GetDomain(nsAString& aDomain);
-  void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);
   bool IsRegistrableDomainSuffixOfOrEqualTo(const nsAString& aHostSuffixString,
                                             const nsACString& aOrigHost);
   void NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
@@ -223,12 +221,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   nsIContent* MatchId(nsIContent* aContent, const nsAString& aId);
 
   static void DocumentWriteTerminationFunc(nsISupports* aRef);
-
-  already_AddRefed<nsIURI> GetDomainURI();
-  already_AddRefed<nsIURI> CreateInheritingURIForHost(
-      const nsACString& aHostString);
-  already_AddRefed<nsIURI> RegistrableDomainSuffixOfInternal(
-      const nsAString& aHostSuffixString, nsIURI* aOrigHost);
 
   void WriteCommon(const nsAString& aText, bool aNewlineTerminate,
                    mozilla::ErrorResult& aRv);

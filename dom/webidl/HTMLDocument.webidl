@@ -6,8 +6,6 @@
 
 [OverrideBuiltins]
 interface HTMLDocument : Document {
-           [SetterThrows]
-           attribute DOMString domain;
   // DOM tree accessors
   [Throws]
   getter object (DOMString name);
