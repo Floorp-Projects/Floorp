@@ -7,6 +7,7 @@ package org.mozilla.fenix.components.toolbar
 import android.content.Context
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
@@ -18,7 +19,7 @@ import org.mozilla.fenix.ext.components
 
 class DefaultToolbarMenu(
     private val context: Context,
-    private val sessionId: String?,
+    private val hasSyncError: Boolean = false,
     private val requestDesktopStateProvider: () -> Boolean = { false },
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
@@ -103,10 +104,21 @@ class DefaultToolbarMenu(
                 onItemTapped.invoke(ToolbarMenu.Item.Help)
             },
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_settings),
-                R.drawable.ic_settings,
-                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
+            BrowserMenuHighlightableItem(
+                label = context.getString(R.string.browser_menu_settings),
+                imageResource = R.drawable.ic_settings,
+                iconTintColorResource = if (hasSyncError)
+                    R.color.sync_error_text_color else
+                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, context),
+                textColorResource = if (hasSyncError)
+                    R.color.sync_error_text_color else
+                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, context),
+                highlight = if (hasSyncError) {
+                    BrowserMenuHighlightableItem.Highlight(
+                        imageResource = R.drawable.ic_alert,
+                        backgroundResource = R.color.sync_error_color
+                    )
+                } else null
             ) {
                 onItemTapped.invoke(ToolbarMenu.Item.Settings)
             },

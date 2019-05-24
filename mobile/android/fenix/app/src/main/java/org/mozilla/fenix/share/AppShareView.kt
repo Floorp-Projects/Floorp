@@ -10,7 +10,6 @@ import android.content.Intent.ACTION_SEND
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -109,7 +108,6 @@ class AppShareItemViewHolder(
 
     init {
         itemView.setOnClickListener {
-            Log.d("Jonathan", "${shareItem?.name} clicked.")
             shareItem?.let {
                 actionEmitter.onNext(ShareAction.ShareAppClicked(it))
             }

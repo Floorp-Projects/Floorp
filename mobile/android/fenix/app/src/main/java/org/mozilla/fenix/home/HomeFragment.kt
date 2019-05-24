@@ -77,6 +77,7 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.allowUndo
+import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
@@ -682,6 +683,10 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         Mode.Normal
     }
 
+    override fun onAuthenticationProblems() {
+        Settings.getInstance(context!!).setHasAuthenticationProblem(true)
+        emitAccountChanges()
+    }
     override fun onAuthenticated(account: OAuthAccount) { emitAccountChanges() }
     override fun onError(error: Exception) { emitAccountChanges() }
     override fun onLoggedOut() { emitAccountChanges() }

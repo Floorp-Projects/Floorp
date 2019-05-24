@@ -9,8 +9,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
@@ -50,6 +52,7 @@ import org.mozilla.fenix.R.string.pref_key_tracking_protection_settings
 import org.mozilla.fenix.R.string.pref_key_your_rights
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
@@ -66,12 +69,15 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         job = Job()
         setupAccountUI()
         updateSignInVisibility()
+        displayAccountErrorIfNecessary()
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
             try {
                 context?.let {
-                    it.components.analytics.metrics.track(Event.PreferenceToggled
-                    (key, sharedPreferences.getBoolean(key, false), it))
+                    it.components.analytics.metrics.track(
+                        Event.PreferenceToggled
+                            (key, sharedPreferences.getBoolean(key, false), it)
+                    )
                 }
             } catch (e: IllegalArgumentException) {
                 // The event is not tracked
@@ -123,6 +129,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         setupPreferences()
         setupAccountUI()
         updateSignInVisibility()
+        displayAccountErrorIfNecessary()
     }
 
     @Suppress("ComplexMethod")
@@ -171,7 +178,12 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 navigateToAbout()
             }
             resources.getString(pref_key_account) -> {
-                navigateToAccountSettings()
+                if (org.mozilla.fenix.utils.Settings.getInstance(preference.context).preferences
+                        .getBoolean(context!!.getPreferenceKey(R.string.pref_key_sync_problem), false)) {
+                    navigateToSyncProblem()
+                } else {
+                    navigateToAccountSettings()
+                }
             }
             resources.getString(pref_key_delete_browsing_data) -> {
                 navigateToDeleteBrowsingData()
@@ -302,6 +314,11 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         Navigation.findNavController(view!!).navigate(directions)
     }
 
+    private fun navigateToSyncProblem() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToSyncProblemFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
     private fun navigateToAccountSettings() {
         val directions =
             SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
@@ -316,6 +333,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onAuthenticated(account: OAuthAccount) {
         updateAuthState(account)
         updateSignInVisibility()
+        displayAccountErrorIfNecessary()
     }
 
     override fun onError(error: Exception) {
@@ -329,16 +347,25 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onLoggedOut() {
         updateAuthState()
         updateSignInVisibility()
+        displayAccountErrorIfNecessary()
     }
 
     override fun onProfileUpdated(profile: Profile) {
         updateAccountProfile(profile)
     }
 
+    override fun onAuthenticationProblems() {
+        org.mozilla.fenix.utils.Settings.getInstance(context!!).setHasAuthenticationProblem(true)
+        displayAccountErrorIfNecessary()
+    }
+
     // --- Account UI helpers ---
     private fun updateAuthState(account: OAuthAccount? = null) {
         // Cache the user's auth state to improve performance of sign in visibility
         org.mozilla.fenix.utils.Settings.getInstance(context!!).setHasCachedAccount(account != null)
+
+        // Unset sync problems
+        org.mozilla.fenix.utils.Settings.getInstance(context!!).setHasAuthenticationProblem(false)
     }
 
     private fun updateSignInVisibility() {
@@ -363,12 +390,59 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         }
     }
 
-    private fun updateAccountProfile(profile: Profile) {
+    private fun updateAccountProfile(profile: Profile, error: Boolean = false) {
         launch {
             val preferenceFirefoxAccount =
-                findPreference<Preference>(context!!.getPreferenceKey(pref_key_account))
-            preferenceFirefoxAccount?.title = profile.displayName.orEmpty()
-            preferenceFirefoxAccount?.summary = profile.email.orEmpty()
+                findPreference<AccountPreference>(context!!.getPreferenceKey(pref_key_account))
+
+            preferenceFirefoxAccount?.title?.setTextColor(
+                R.attr.primaryText.getColorFromAttr(context!!)
+            )
+            preferenceFirefoxAccount?.title?.text = profile.displayName.orEmpty()
+            preferenceFirefoxAccount?.title?.visibility =
+                if (preferenceFirefoxAccount?.title?.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+            preferenceFirefoxAccount?.summary?.setTextColor(
+                R.attr.primaryText.getColorFromAttr(context!!)
+            )
+            preferenceFirefoxAccount?.summary?.text = profile.email.orEmpty()
+
+            preferenceFirefoxAccount?.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_shortcuts)
+            preferenceFirefoxAccount?.errorIcon?.visibility = View.GONE
+            preferenceFirefoxAccount?.background?.background = null
+        }
+    }
+
+    private fun displayAccountErrorIfNecessary() {
+        if (!org.mozilla.fenix.utils.Settings.getInstance(context!!).hasSyncProblem) { return }
+
+        launch {
+            val preferenceFirefoxAccount =
+                findPreference<AccountPreference>(context!!.getPreferenceKey(pref_key_account))
+
+            preferenceFirefoxAccount?.title?.setTextColor(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.sync_error_text_color
+                )
+            )
+            preferenceFirefoxAccount?.title?.text = context!!.getString(R.string.preferences_account_sync_error)
+            preferenceFirefoxAccount?.title?.visibility =
+                if (preferenceFirefoxAccount?.title?.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+            preferenceFirefoxAccount?.summary?.setTextColor(
+                ContextCompat.getColor(
+                    context!!,
+                    R.color.sync_error_text_color
+                )
+            )
+            preferenceFirefoxAccount?.summary?.text =
+                requireComponents.backgroundServices.accountManager.accountProfile()?.email.orEmpty()
+
+            preferenceFirefoxAccount?.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_account_warning)
+            preferenceFirefoxAccount?.errorIcon?.visibility = View.VISIBLE
+            preferenceFirefoxAccount?.background?.background =
+                ContextCompat.getDrawable(context!!, R.color.sync_error_color)
         }
     }
 }

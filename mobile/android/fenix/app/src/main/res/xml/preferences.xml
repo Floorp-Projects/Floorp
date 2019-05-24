@@ -19,10 +19,9 @@
         app:iconSpaceReserved="false"
         app:isPreferenceVisible="false">
 
-        <androidx.preference.Preference
+        <org.mozilla.fenix.settings.AccountPreference
             android:icon="@drawable/ic_shortcuts"
-            android:key="@string/pref_key_account"
-            android:title="@string/preferences_account_default_name" />
+            android:key="@string/pref_key_account"/>
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory
