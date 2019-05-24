@@ -173,14 +173,14 @@ BreakpointActor.prototype = {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     const {
-      generatedSourceActor,
-      generatedLine,
-      generatedColumn,
+      sourceActor,
+      line,
+      column,
     } = this.threadActor.sources.getFrameLocation(frame);
-    const url = generatedSourceActor.url;
+    const url = sourceActor.url;
 
     if (
-      this.threadActor.sources.isBlackBoxed(url, generatedLine, generatedColumn) ||
+      this.threadActor.sources.isBlackBoxed(url, line, column) ||
       this.threadActor.skipBreakpoints ||
       frame.onStep
     ) {
@@ -189,11 +189,11 @@ BreakpointActor.prototype = {
 
     // If we're trying to pop this frame, and we see a breakpoint at
     // the spot at which popping started, ignore it.  See bug 970469.
-    const locationAtFinish = frame.onPop && frame.onPop.generatedLocation;
+    const locationAtFinish = frame.onPop && frame.onPop.location;
     if (
       locationAtFinish &&
-      locationAtFinish.generatedLine === generatedLine &&
-      locationAtFinish.generatedColumn === generatedColumn
+      locationAtFinish.line === line &&
+      locationAtFinish.column === column
     ) {
       return undefined;
     }
@@ -239,8 +239,8 @@ BreakpointActor.prototype = {
 
       const message = {
         filename: url,
-        lineNumber: generatedLine,
-        columnNumber: generatedColumn,
+        lineNumber: line,
+        columnNumber: column,
         level: "logPoint",
         arguments: value,
       };
