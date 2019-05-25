@@ -66,6 +66,10 @@ $col4-header-font-size: 14;
         font-size: 17px;
         line-height: 24px;
       }
+
+      .excerpt {
+        @include limit-visibile-lines(3, 24, 15);
+      }
     }
 
     &.ds-card-grid-divisible-by-4 .title {

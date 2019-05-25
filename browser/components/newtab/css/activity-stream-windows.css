@@ -1265,20 +1265,26 @@ main {
       .context-menu > ul > li.separator {
         border-bottom: 1px solid var(--newtab-border-secondary-color);
         margin: 5px 0; }
-      .context-menu > ul > li > a {
+      .context-menu > ul > li > a,
+      .context-menu > ul > li > button {
         align-items: center;
         color: inherit;
         cursor: pointer;
         display: flex;
+        width: 100%;
         line-height: 16px;
         outline: none;
+        border: 0;
         padding: 3px 12px;
         white-space: nowrap; }
-        .context-menu > ul > li > a:-moz-any(:focus, :hover) {
+        .context-menu > ul > li > a:-moz-any(:focus, :hover),
+        .context-menu > ul > li > button:-moz-any(:focus, :hover) {
           background: var(--newtab-element-hover-color); }
-        .context-menu > ul > li > a:active {
+        .context-menu > ul > li > a:active,
+        .context-menu > ul > li > button:active {
           background: var(--newtab-element-active-color); }
-        .context-menu > ul > li > a.disabled {
+        .context-menu > ul > li > a.disabled,
+        .context-menu > ul > li > button.disabled {
           opacity: 0.4;
           pointer-events: none; }
 
@@ -1951,11 +1957,19 @@ main {
       .ds-column-12 .ds-card-grid.ds-card-grid-divisible-by-3 .title {
         font-size: 17px;
         line-height: 24px; }
+      .ds-column-9 .ds-card-grid.ds-card-grid-divisible-by-3 .excerpt,
+      .ds-column-10 .ds-card-grid.ds-card-grid-divisible-by-3 .excerpt,
+      .ds-column-11 .ds-card-grid.ds-card-grid-divisible-by-3 .excerpt,
+      .ds-column-12 .ds-card-grid.ds-card-grid-divisible-by-3 .excerpt {
+        font-size: 15px;
+        -webkit-line-clamp: 3;
+        line-height: 24px; }
     .ds-column-9 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
     .ds-column-10 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
     .ds-column-11 .ds-card-grid.ds-card-grid-divisible-by-4 .title,
     .ds-column-12 .ds-card-grid.ds-card-grid-divisible-by-4 .title {
       font-size: 15px;
+      -webkit-line-clamp: 3;
       line-height: 20px; }
   .ds-card-grid.empty {
     grid-template-columns: auto; }
@@ -1968,8 +1982,9 @@ main {
     line-height: 1.538;
     margin: 8px 0; }
   .ds-hero .excerpt {
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 15px;
+    -webkit-line-clamp: 3;
+    line-height: 24px;
     color: #0C0C0D;
     margin: 0 0 10px; }
     [lwt-newtab-brighttext] .ds-hero .excerpt {
@@ -2036,6 +2051,7 @@ main {
       justify-content: space-between; }
       .ds-hero .wrapper .meta header {
         font-size: 22px;
+        -webkit-line-clamp: 4;
         line-height: 28px;
         color: #0C0C0D;
         margin-bottom: 0; }
@@ -2051,6 +2067,7 @@ main {
       .ds-hero .wrapper .meta .source {
         font-size: 13px;
         color: #737373;
+        -webkit-line-clamp: 1;
         margin-bottom: 0; }
         [lwt-newtab-brighttext] .ds-hero .wrapper .meta .source {
           color: #B1B1B3; }
@@ -2152,6 +2169,7 @@ main {
         .ds-column-11 .ds-hero .wrapper .meta header,
         .ds-column-12 .ds-hero .wrapper .meta header {
           font-size: 22px;
+          -webkit-line-clamp: 3;
           line-height: 28px; }
         .ds-column-9 .ds-hero .wrapper .meta .source,
         .ds-column-10 .ds-hero .wrapper .meta .source,
@@ -2186,6 +2204,7 @@ main {
       .ds-column-11 .ds-hero .cards .ds-card .title,
       .ds-column-12 .ds-hero .cards .ds-card .title {
         font-size: 14px;
+        -webkit-line-clamp: 3;
         line-height: 20px; }
         [lwt-newtab-brighttext] .ds-column-9 .ds-hero .cards .ds-card .title, [lwt-newtab-brighttext]
         .ds-column-10 .ds-hero .cards .ds-card .title, [lwt-newtab-brighttext]
@@ -2213,6 +2232,7 @@ main {
     position: relative; }
   .ds-list:not(.ds-list-full-width) .ds-list-item-title {
     font-size: 14px;
+    -webkit-line-clamp: 3;
     line-height: 20px; }
   .ds-list:not(.ds-list-full-width) .ds-list-image {
     min-width: 80px;
@@ -2325,6 +2345,7 @@ main {
 
 .ds-list-full-width .ds-list-item-title {
   font-size: 17px;
+  -webkit-line-clamp: 3;
   line-height: 24px; }
 
 .ds-list-full-width .ds-list-image {
@@ -2350,6 +2371,7 @@ main {
     height: 100%; }
   .ds-list-item .ds-list-item-excerpt {
     font-size: 14px;
+    -webkit-line-clamp: 2;
     line-height: 20px;
     color: #737373;
     margin: 4px 0 8px; }
@@ -2362,10 +2384,10 @@ main {
   .ds-list-item .ds-list-item-info,
   .ds-list-item .ds-list-item-context {
     font-size: 14px;
+    -webkit-line-clamp: 1;
     line-height: 20px;
     color: #737373;
-    font-size: 13px;
-    -webkit-line-clamp: 1; }
+    font-size: 13px; }
     [lwt-newtab-brighttext] .ds-list-item .ds-list-item-info, [lwt-newtab-brighttext]
     .ds-list-item .ds-list-item-context {
       color: #B1B1B3; }
@@ -2601,9 +2623,6 @@ main {
       border-radius: 4px;
       box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15); }
   .ds-card .ds-card-link {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     height: 100%; }
     .ds-card .ds-card-link:focus {
       box-shadow: 0 0 0 5px rgba(10, 132, 255, 0.3);
@@ -2636,19 +2655,21 @@ main {
   .ds-card .meta {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    padding: 12px; }
+    padding: 12px 16px; }
     .ds-card .meta .info-wrap {
       flex-grow: 1;
       margin: 0 0 12px; }
     .ds-card .meta .title {
       font-size: 17px;
+      -webkit-line-clamp: 3;
       line-height: 24px;
       font-weight: 600; }
     .ds-card .meta .excerpt {
       font-size: 14px;
+      -webkit-line-clamp: 3;
       line-height: 20px; }
     .ds-card .meta .source {
+      -webkit-line-clamp: 1;
       margin-bottom: 2px; }
     .ds-card .meta .context,
     .ds-card .meta .source {

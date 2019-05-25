@@ -75,10 +75,10 @@ describe("ErrorBoundaryFallback", () => {
     assert.calledWithExactly(fakeWindow.location.reload, true);
   });
 
-  it("should render .reload-button as an <a> element with an href attr", () => {
+  it("should render .reload-button as an <A11yLinkButton>", () => {
     const wrapper = shallow(<ErrorBoundaryFallback />);
 
-    assert.lengthOf(wrapper.find(".reload-button[href]"), 1);
+    assert.lengthOf(wrapper.find("A11yLinkButton.reload-button"), 1);
   });
 
   it("should render error_fallback_default_refresh_suggestion FormattedMessage",

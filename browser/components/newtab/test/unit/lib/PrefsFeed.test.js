@@ -195,32 +195,4 @@ describe("PrefsFeed", () => {
       assert.calledWith(feed._prefs.set, PRERENDER_PREF_NAME, false);
     });
   });
-  describe("migration code", () => {
-    it("should migrate prefs on init", async () => {
-      sandbox.stub(feed, "_migratePrefs");
-
-      await feed.init();
-
-      assert.calledOnce(feed._migratePrefs);
-    });
-    it("should migrate user set values", () => {
-      FAKE_PREFS.set("collapseTopSites", true);
-
-      feed._migratePrefs();
-
-      assert.calledOnce(feed.store.dispatch);
-      assert.calledWithExactly(feed.store.dispatch, ac.OnlyToMain({
-        type: at.UPDATE_SECTION_PREFS,
-        data: {id: "topsites", value: {collapsed: true}},
-      }));
-    });
-    it("should reset any migrated prefs", () => {
-      FAKE_PREFS.set("collapseTopSites", true);
-
-      feed._migratePrefs();
-
-      assert.calledOnce(feed._prefs.reset);
-      assert.calledWithExactly(feed._prefs.reset, "collapseTopSites");
-    });
-  });
 });
