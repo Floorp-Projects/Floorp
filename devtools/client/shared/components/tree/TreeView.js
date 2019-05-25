@@ -241,11 +241,30 @@ define(function(require, exports, module) {
 
     componentDidUpdate() {
       const selected = this.getSelectedRow();
-      if (!selected && this.rows.length > 0) {
-        this.selectRow(this.rows[
-          Math.min(this.state.lastSelectedIndex, this.rows.length - 1)
-        ], { alignTo: "top" });
+      if (selected) {
+        return;
       }
+
+      const rows = this.visibleRows;
+      if (rows.length === 0) {
+        return;
+      }
+
+      this.selectRow(rows[
+        Math.min(this.state.lastSelectedIndex, rows.length - 1)
+      ], { alignTo: "top" });
+    }
+
+    /**
+     * Get rows that are currently visible. Some rows can be filtered and made
+     * invisible, in which case, when navigating around the tree we need to
+     * ignore the ones that are not reachable by the user.
+     */
+    get visibleRows() {
+      return this.rows.filter(row => {
+        const rowEl = findDOMNode(row);
+        return rowEl && rowEl.offsetParent;
+      });
     }
 
     // Node expand/collapse
@@ -281,7 +300,8 @@ define(function(require, exports, module) {
         return;
       }
 
-      const index = this.rows.indexOf(row);
+      const rows = this.visibleRows;
+      const index = rows.indexOf(row);
       switch (event.key) {
         case "ArrowRight":
           const { hasChildren, open } = row.props.member;
@@ -293,7 +313,7 @@ define(function(require, exports, module) {
           if (row && row.props.member.open) {
             this.toggle(this.state.selected);
           } else {
-            const parentRow = this.rows.slice(0, index).reverse().find(
+            const parentRow = rows.slice(0, index).reverse().find(
               r => r.props.member.level < row.props.member.level);
             if (parentRow) {
               this.selectRow(parentRow, { alignTo: "top" });
@@ -301,19 +321,19 @@ define(function(require, exports, module) {
           }
           break;
         case "ArrowDown":
-          const nextRow = this.rows[index + 1];
+          const nextRow = rows[index + 1];
           if (nextRow) {
             this.selectRow(nextRow, { alignTo: "bottom" });
           }
           break;
         case "ArrowUp":
-          const previousRow = this.rows[index - 1];
+          const previousRow = rows[index - 1];
           if (previousRow) {
             this.selectRow(previousRow, { alignTo: "top" });
           }
           break;
         case "Home":
-          const firstRow = this.rows[0];
+          const firstRow = rows[0];
 
           if (firstRow) {
             this.selectRow(firstRow, { alignTo: "top" });
@@ -321,7 +341,7 @@ define(function(require, exports, module) {
           break;
 
         case "End":
-          const lastRow = this.rows[this.rows.length - 1];
+          const lastRow = rows[rows.length - 1];
           if (lastRow) {
             this.selectRow(lastRow, { alignTo: "bottom" });
           }
@@ -370,7 +390,7 @@ define(function(require, exports, module) {
       }
 
       this.selectRow(
-        this.rows.find(row => row.props.member.path === nodePath),
+        this.visibleRows.find(row => row.props.member.path === nodePath),
         { preventAutoScroll: true });
     }
 
@@ -382,10 +402,11 @@ define(function(require, exports, module) {
     }
 
     getSelectedRow() {
-      if (!this.state.selected || this.rows.length === 0) {
+      const rows = this.visibleRows;
+      if (!this.state.selected || rows.length === 0) {
         return null;
       }
-      return this.rows.find(row => this.isSelected(row.props.member.path));
+      return rows.find(row => this.isSelected(row.props.member.path));
     }
 
     getSelectedRowIndex() {
@@ -395,7 +416,7 @@ define(function(require, exports, module) {
         return 0;
       }
 
-      return this.rows.indexOf(row);
+      return this.visibleRows.indexOf(row);
     }
 
     _scrollIntoView(row, options = {}) {
@@ -570,20 +591,7 @@ define(function(require, exports, module) {
           member: member,
           columns: this.state.columns,
           id: member.path,
-          ref: row => {
-            if (!row) {
-              return;
-            }
-
-            const rowEl = findDOMNode(row);
-            if (!rowEl || !rowEl.offsetParent) {
-              // offsetParent returns null when the element has style.display
-              // set to none (done by TreeView filtering).
-              return;
-            }
-
-            this.rows.push(row);
-          },
+          ref: row => row && this.rows.push(row),
           onClick: this.onClickRow.bind(this, member.path),
           onContextMenu: this.onContextMenu.bind(this, member),
         });
