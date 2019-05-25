@@ -1671,6 +1671,11 @@ void DrawTargetSkia::CopySurface(SourceSurface* aSurface,
   mCanvas->restore();
 }
 
+static inline SkPixelGeometry GetSkPixelGeometry() {
+  return Factory::GetBGRSubpixelOrder() ? kBGR_H_SkPixelGeometry
+                                        : kRGB_H_SkPixelGeometry;
+}
+
 bool DrawTargetSkia::Init(const IntSize& aSize, SurfaceFormat aFormat) {
   if (size_t(std::max(aSize.width, aSize.height)) > GetMaxSurfaceSize()) {
     return false;
@@ -1680,7 +1685,8 @@ bool DrawTargetSkia::Init(const IntSize& aSize, SurfaceFormat aFormat) {
   // cairo
   SkImageInfo info = MakeSkiaImageInfo(aSize, aFormat);
   size_t stride = SkAlign4(info.minRowBytes());
-  mSurface = SkSurface::MakeRaster(info, stride, nullptr);
+  SkSurfaceProps props(0, GetSkPixelGeometry());
+  mSurface = SkSurface::MakeRaster(info, stride, &props);
   if (!mSurface) {
     return false;
   }
@@ -1724,8 +1730,9 @@ bool DrawTargetSkia::Init(unsigned char* aData, const IntSize& aSize,
   MOZ_ASSERT((aFormat != SurfaceFormat::B8G8R8X8) || aUninitialized ||
              VerifyRGBXFormat(aData, aSize, aStride, aFormat));
 
+  SkSurfaceProps props(0, GetSkPixelGeometry());
   mSurface = SkSurface::MakeRasterDirect(MakeSkiaImageInfo(aSize, aFormat),
-                                         aData, aStride);
+                                         aData, aStride, &props);
   if (!mSurface) {
     return false;
   }
