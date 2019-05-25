@@ -27,6 +27,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Vector.h"
 
 class nsIURI;
@@ -181,17 +182,22 @@ class ScriptLoader final : public nsISupports {
   }
 
   /**
-   * Convert the given buffer to a UTF-16 string.
+   * Convert the given buffer to a UTF-16 string.  If the buffer begins with a
+   * BOM, it is interpreted as that encoding; otherwise the first of |aChannel|,
+   * |aHintCharset|, or |aDocument| that provides a recognized encoding is used,
+   * or Windows-1252 if none of them do.
+   *
+   * Encoding errors in the buffer are converted to replacement characters, so
+   * allocation failure is the only way this function can fail.
+   *
    * @param aChannel     Channel corresponding to the data. May be null.
    * @param aData        The data to convert
    * @param aLength      Length of the data
-   * @param aHintCharset Hint for the character set (e.g., from a charset
-   *                     attribute). May be the empty string.
-   * @param aDocument    Document which the data is loaded for. Must not be
-   *                     null.
-   * @param aBufOut      [out] char16_t array allocated by ConvertToUTF16 and
-   *                     containing data converted to unicode.  Caller must
-   *                     js_free() this data when no longer needed.
+   * @param aHintCharset Character set hint (e.g., from a charset attribute).
+   * @param aDocument    Document which the data is loaded for. May be null.
+   * @param aBufOut      [out] fresh char16_t array containing data converted to
+   *                     Unicode.  Caller must js_free() this data when finished
+   *                     with it.
    * @param aLengthOut   [out] Length of array returned in aBufOut in number
    *                     of char16_t code units.
    */
@@ -215,6 +221,31 @@ class ScriptLoader final : public nsISupports {
     }
     return rv;
   };
+
+  /**
+   * Convert the given buffer to a UTF-8 string.  If the buffer begins with a
+   * BOM, it is interpreted as that encoding; otherwise the first of |aChannel|,
+   * |aHintCharset|, or |aDocument| that provides a recognized encoding is used,
+   * or Windows-1252 if none of them do.
+   *
+   * Encoding errors in the buffer are converted to replacement characters, so
+   * allocation failure is the only way this function can fail.
+   *
+   * @param aChannel     Channel corresponding to the data. May be null.
+   * @param aData        The data to convert
+   * @param aLength      Length of the data
+   * @param aHintCharset Character set hint (e.g., from a charset attribute).
+   * @param aDocument    Document which the data is loaded for. May be null.
+   * @param aBufOut      [out] fresh Utf8Unit array containing data converted to
+   *                     Unicode.  Caller must js_free() this data when finished
+   *                     with it.
+   * @param aLengthOut   [out] Length of array returned in aBufOut in UTF-8 code
+   *                     units (i.e. in bytes).
+   */
+  static nsresult ConvertToUTF8(nsIChannel* aChannel, const uint8_t* aData,
+                                uint32_t aLength, const nsAString& aHintCharset,
+                                Document* aDocument, Utf8Unit*& aBufOut,
+                                size_t& aLengthOut);
 
   /**
    * Handle the completion of a stream.  This is called by the
