@@ -1758,6 +1758,13 @@ class GFX2D_API Factory {
 
   static bool DoesBackendSupportDataDrawtarget(BackendType aType);
 
+  static void SetBGRSubpixelOrder(bool aBGR);
+  static bool GetBGRSubpixelOrder();
+
+ private:
+  static bool mBGRSubpixelOrder;
+
+ public:
 #ifdef USE_SKIA
   static already_AddRefed<DrawTarget> CreateDrawTargetWithSkCanvas(
       SkCanvas* aCanvas);
