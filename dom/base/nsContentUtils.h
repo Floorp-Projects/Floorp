@@ -2892,6 +2892,9 @@ class nsContentUtils {
   // of permissions. Private Browsing is considered to be more limiting
   // then session scoping
   enum class StorageAccess {
+    // The storage should be partitioned for third-party resources. if the
+    // caller is unable to do it, deny the storage access.
+    ePartitionForeignOrDeny = -2,
     // The storage should be partitioned for third-party trackers. if the caller
     // is unable to do it, deny the storage access.
     ePartitionTrackersOrDeny = -1,
