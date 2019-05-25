@@ -1,6 +1,6 @@
-/* import-globals-from storageprincipal_head.js */
+/* import-globals-from partitionedstorage_head.js */
 
-StoragePrincipalHelper.runTest("HTTP Cookies",
+PartitionedStorageHelper.runTest("HTTP Cookies",
   async (win3rdParty, win1stParty, allowed) => {
     await win3rdParty.fetch("cookies.sjs?3rd").then(r => r.text());
     await win3rdParty.fetch("cookies.sjs").then(r => r.text()).then(text => {
@@ -27,7 +27,7 @@ StoragePrincipalHelper.runTest("HTTP Cookies",
     });
   });
 
-StoragePrincipalHelper.runTest("DOM Cookies",
+PartitionedStorageHelper.runTest("DOM Cookies",
   async (win3rdParty, win1stParty, allowed) => {
     win3rdParty.document.cookie = "foo=3rd";
     is(win3rdParty.document.cookie, "foo=3rd", "3rd party cookie set");
