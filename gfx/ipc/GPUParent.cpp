@@ -342,6 +342,11 @@ mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUParent::RecvPreferenceUpdate(const Pref& aPref) {
+  Preferences::SetPreference(aPref);
+  return IPC_OK();
+}
+
 static void CopyFeatureChange(Feature aFeature, Maybe<FeatureFailure>* aOut) {
   FeatureState& feature = gfxConfig::GetFeature(aFeature);
   if (feature.DisabledByDefault() || feature.IsEnabled()) {
