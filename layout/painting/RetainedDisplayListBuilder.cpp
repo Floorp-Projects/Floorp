@@ -8,7 +8,7 @@
 #include "RetainedDisplayListBuilder.h"
 
 #include "DisplayListChecker.h"
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
@@ -1278,7 +1278,7 @@ bool RetainedDisplayListBuilder::ComputeRebuildRegion(
  * A simple early exit heuristic to avoid slow partial display list rebuilds.
  */
 static bool ShouldBuildPartial(nsTArray<nsIFrame*>& aModifiedFrames) {
-  if (aModifiedFrames.Length() > StaticPrefs::LayoutRebuildFrameLimit()) {
+  if (aModifiedFrames.Length() > gfxPrefs::LayoutRebuildFrameLimit()) {
     return false;
   }
 

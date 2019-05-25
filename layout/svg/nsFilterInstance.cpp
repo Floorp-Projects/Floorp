@@ -17,7 +17,7 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
-
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/Unused.h"
 #include "mozilla/gfx/Filters.h"
@@ -146,7 +146,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
   // If there are too many filters to render, then just pretend that we
   // succeeded, and don't render any of them.
   if (instance.mFilterDescription.mPrimitives.Length() >
-      StaticPrefs::WebRenderMaxFilterOpsPerChain()) {
+      gfxPrefs::WebRenderMaxFilterOpsPerChain()) {
     return true;
   }
 

@@ -175,11 +175,6 @@ mozilla::ipc::IPCResult RDDParent::RecvRequestMemoryReport(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult RDDParent::RecvPreferenceUpdate(const Pref& aPref) {
-  Preferences::SetPreference(aPref);
-  return IPC_OK();
-}
-
 void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down RDD process early due to a crash!");

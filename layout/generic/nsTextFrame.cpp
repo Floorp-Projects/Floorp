@@ -9,7 +9,7 @@
 #include "nsTextFrame.h"
 
 #include "gfx2DGlue.h"
-
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedStyle.h"
@@ -6692,7 +6692,7 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
         return;
       }
       params.drawMode |= DrawMode::GLYPH_STROKE;
-      if (StaticPrefs::PaintOrderEnabled()) {
+      if (gfxPrefs::PaintOrderEnabled()) {
         // Check the paint-order property; if we find stroke before fill,
         // then change mode to GLYPH_STROKE_UNDERNEATH.
         uint32_t paintOrder = aFrame->StyleSVG()->mPaintOrder;

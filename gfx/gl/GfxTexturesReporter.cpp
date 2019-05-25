@@ -8,7 +8,7 @@
 #include <sstream>
 #include "nsExceptionHandler.h"
 #include "GfxTexturesReporter.h"
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -59,7 +59,7 @@ void GfxTexturesReporter::UpdateAmount(MemoryUse action, size_t amount) {
         "GFX: Current texture usage greater than update amount.");
     sAmount -= amount;
 
-    if (StaticPrefs::GfxLoggingTextureUsageEnabled()) {
+    if (gfxPrefs::GfxLoggingTextureUsageEnabled()) {
       printf_stderr("Current texture usage: %s\n",
                     FormatBytes(sAmount).c_str());
     }
@@ -67,7 +67,7 @@ void GfxTexturesReporter::UpdateAmount(MemoryUse action, size_t amount) {
     sAmount += amount;
     if (sAmount > sPeakAmount) {
       sPeakAmount.exchange(sAmount);
-      if (StaticPrefs::GfxLoggingPeakTextureUsageEnabled()) {
+      if (gfxPrefs::GfxLoggingPeakTextureUsageEnabled()) {
         printf_stderr("Peak texture usage: %s\n",
                       FormatBytes(sPeakAmount).c_str());
       }

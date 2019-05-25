@@ -5,7 +5,7 @@
 
 #include "WebGL2Context.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/ArrayUtils.h"
@@ -31,7 +31,7 @@ UniquePtr<webgl::FormatUsageAuthority> WebGL2Context::CreateFormatUsage(
 }
 
 /*static*/
-bool WebGL2Context::IsSupported() { return StaticPrefs::WebGL2Enabled(); }
+bool WebGL2Context::IsSupported() { return gfxPrefs::WebGL2Enabled(); }
 
 /*static*/
 WebGL2Context* WebGL2Context::Create() { return new WebGL2Context(); }

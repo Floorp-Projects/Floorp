@@ -7,7 +7,7 @@
 #include "CompositionRecorder.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/gfxVars.h"
+#include "gfxPrefs.h"
 
 #include <ctime>
 #include <iomanip>
@@ -37,7 +37,7 @@ void CompositionRecorder::WriteCollectedFrames() {
   std::time_t t = std::time(nullptr);
   std::tm tm = *std::localtime(&t);
   std::stringstream str;
-  str << gfxVars::LayersWindowRecordingPath() << "windowrecording-"
+  str << gfxPrefs::LayersWindowRecordingPath() << "windowrecording-"
       << std::put_time(&tm, "%Y%m%d%H%M%S");
 
 #ifdef XP_WIN

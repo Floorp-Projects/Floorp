@@ -10,7 +10,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
@@ -20,6 +19,8 @@
 #include "nsXPCOMCIDInternal.h"
 #include "prsystem.h"
 #include "nsIXULRuntime.h"
+
+#include "gfxPrefs.h"
 
 #include "Decoder.h"
 #include "IDecodingTask.h"
@@ -353,7 +354,7 @@ class IOThreadIniter final : public Runnable {
 
 DecodePool::DecodePool() : mMutex("image::IOThread") {
   // Determine the number of threads we want.
-  int32_t prefLimit = StaticPrefs::ImageMTDecodingLimit();
+  int32_t prefLimit = gfxPrefs::ImageMTDecodingLimit();
   uint32_t limit;
   if (prefLimit <= 0) {
     int32_t numCores = NumberOfCores();
@@ -383,7 +384,7 @@ DecodePool::DecodePool() : mMutex("image::IOThread") {
   uint32_t idleLimit;
 
   // The timeout period before shutting down idle threads.
-  int32_t prefIdleTimeout = StaticPrefs::ImageMTDecodingIdleTimeout();
+  int32_t prefIdleTimeout = gfxPrefs::ImageMTDecodingIdleTimeout();
   TimeDuration idleTimeout;
   if (prefIdleTimeout <= 0) {
     idleTimeout = TimeDuration::Forever();

@@ -74,7 +74,7 @@
 #include "d3dkmtQueryStatistics.h"
 
 #include "base/thread.h"
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 #include "gfxConfig.h"
 #include "VsyncSource.h"
 #include "DriverCrashGuard.h"
@@ -1354,7 +1354,7 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
       d3d11.Disable(FeatureStatus::Blacklisted, "Blacklisted, see bug 1351349",
                     NS_LITERAL_CSTRING("FEATURE_FAILURE_BUG_1351349"));
 #else
-      StaticPrefs::SetCompositorClearState(true);
+      gfxPrefs::SetCompositorClearState(true);
 #endif
     }
   }
@@ -1367,7 +1367,7 @@ void gfxWindowsPlatform::InitializeD3D11Config() {
   }
 
   // Check if the user really, really wants WARP.
-  if (StaticPrefs::LayersD3D11ForceWARP()) {
+  if (gfxPrefs::LayersD3D11ForceWARP()) {
     // Force D3D11 on even if we disabled it.
     d3d11.UserForceEnable("User force-enabled WARP");
   }
@@ -1384,14 +1384,14 @@ void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
 
   FeatureState& al = gfxConfig::GetFeature(Feature::ADVANCED_LAYERS);
   al.SetDefaultFromPref(
-      StaticPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefName(),
+      gfxPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefName(),
       true /* aIsEnablePref */,
-      StaticPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefDefault());
+      gfxPrefs::GetAdvancedLayersEnabledDoNotUseDirectlyPrefDefault());
 
   // Windows 7 has an extra pref since it uses totally different buffer paths
   // that haven't been performance tested yet.
   if (al.IsEnabled() && !IsWin8OrLater()) {
-    if (StaticPrefs::AdvancedLayersEnableOnWindows7()) {
+    if (gfxPrefs::AdvancedLayersEnableOnWindows7()) {
       al.UserEnable("Enabled for Windows 7 via user-preference");
     } else {
       al.Disable(FeatureStatus::Disabled,
@@ -1543,8 +1543,8 @@ void gfxWindowsPlatform::InitializeD2DConfig() {
     return;
   }
 
-  d2d1.SetDefaultFromPref(StaticPrefs::GetDirect2DDisabledPrefName(), false,
-                          StaticPrefs::GetDirect2DDisabledPrefDefault());
+  d2d1.SetDefaultFromPref(gfxPrefs::GetDirect2DDisabledPrefName(), false,
+                          gfxPrefs::GetDirect2DDisabledPrefDefault());
 
   nsCString message;
   nsCString failureId;
@@ -1553,7 +1553,7 @@ void gfxWindowsPlatform::InitializeD2DConfig() {
     d2d1.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
 
-  if (!d2d1.IsEnabled() && StaticPrefs::Direct2DForceEnabled()) {
+  if (!d2d1.IsEnabled() && gfxPrefs::Direct2DForceEnabled()) {
     d2d1.UserForceEnable("Force-enabled via user-preference");
   }
 }
@@ -1637,7 +1637,7 @@ bool gfxWindowsPlatform::InitGPUProcessSupport() {
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     // Don't use the GPU process if not using D3D11, unless software
     // compositor is allowed
-    if (StaticPrefs::GPUProcessAllowSoftware()) {
+    if (gfxPrefs::GPUProcessAllowSoftware()) {
       return gpuProc.IsEnabled();
     }
     gpuProc.Disable(FeatureStatus::Unavailable,
@@ -1944,7 +1944,7 @@ gfxWindowsPlatform::CreateHardwareVsyncSource() {
 void gfxWindowsPlatform::GetAcceleratedCompositorBackends(
     nsTArray<LayersBackend>& aBackends) {
   if (gfxConfig::IsEnabled(Feature::OPENGL_COMPOSITING) &&
-      StaticPrefs::LayersPreferOpenGL()) {
+      gfxPrefs::LayersPreferOpenGL()) {
     aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
   }
 

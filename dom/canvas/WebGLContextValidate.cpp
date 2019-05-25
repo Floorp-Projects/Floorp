@@ -8,11 +8,11 @@
 #include <algorithm>
 #include "GLSLANG/ShaderLang.h"
 #include "CanvasUtils.h"
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "jsfriendapi.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "WebGLActiveInfo.h"
@@ -288,10 +288,9 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
     return false;
   }
 
-  mDisableExtensions = StaticPrefs::WebGLDisableExtensions();
-  mLoseContextOnMemoryPressure =
-      StaticPrefs::WebGLLoseContextOnMemoryPressure();
-  mCanLoseContextInForeground = StaticPrefs::WebGLCanLoseContextInForeground();
+  mDisableExtensions = gfxPrefs::WebGLDisableExtensions();
+  mLoseContextOnMemoryPressure = gfxPrefs::WebGLLoseContextOnMemoryPressure();
+  mCanLoseContextInForeground = gfxPrefs::WebGLCanLoseContextInForeground();
 
   // These are the default values, see 6.2 State tables in the
   // OpenGL ES 2.0.25 spec.
@@ -488,7 +487,7 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
                // Last resort, just check the global preference
                nsContentUtils::ShouldResistFingerprinting());
 
-  if (StaticPrefs::WebGLMinCapabilityMode()) {
+  if (gfxPrefs::WebGLMinCapabilityMode()) {
     bool ok = true;
 
     ok &= RestrictCap(&mGLMaxVertexTextureImageUnits,
@@ -665,7 +664,7 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
 
   mNeedsIndexValidation =
       !gl->IsSupported(gl::GLFeature::robust_buffer_access_behavior);
-  switch (StaticPrefs::WebGLForceIndexValidation()) {
+  switch (gfxPrefs::WebGLForceIndexValidation()) {
     case -1:
       mNeedsIndexValidation = false;
       break;
@@ -673,7 +672,7 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
       mNeedsIndexValidation = true;
       break;
     default:
-      MOZ_ASSERT(StaticPrefs::WebGLForceIndexValidation() == 0);
+      MOZ_ASSERT(gfxPrefs::WebGLForceIndexValidation() == 0);
       break;
   }
 

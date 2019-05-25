@@ -10,7 +10,7 @@
 
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
-
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"

@@ -50,6 +50,7 @@
 #include "nsStyleChangeList.h"
 #include <algorithm>
 
+#include "gfxPrefs.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 

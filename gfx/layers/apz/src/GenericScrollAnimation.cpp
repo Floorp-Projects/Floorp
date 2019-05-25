@@ -8,6 +8,7 @@
 
 #include "AsyncPanZoomController.h"
 #include "FrameMetrics.h"
+#include "gfxPrefs.h"
 #include "nsPoint.h"
 #include "ScrollAnimationPhysics.h"
 #include "ScrollAnimationBezierPhysics.h"
@@ -20,7 +21,7 @@ GenericScrollAnimation::GenericScrollAnimation(
     AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
     const ScrollAnimationBezierPhysicsSettings& aSettings)
     : mApzc(aApzc), mFinalDestination(aInitialPosition) {
-  if (StaticPrefs::SmoothScrollMSDPhysicsEnabled()) {
+  if (gfxPrefs::SmoothScrollMSDPhysicsEnabled()) {
     mAnimationPhysics = MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
   } else {
     mAnimationPhysics =

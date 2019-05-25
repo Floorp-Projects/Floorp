@@ -8,8 +8,8 @@
 
 #include "prlink.h"
 #include "prenv.h"
+#include "gfxPrefs.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 
 #include "mozilla/gfx/Quaternion.h"
 
@@ -526,7 +526,7 @@ void VRSystemManagerExternal::OpenShmem() {
 
 #elif defined(XP_WIN)
   if (mShmemFile == NULL) {
-    if (StaticPrefs::VRProcessEnabled()) {
+    if (gfxPrefs::VRProcessEnabled()) {
       mShmemFile =
           CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0,
                              sizeof(VRExternalShmem), kShmemName);
@@ -624,11 +624,11 @@ already_AddRefed<VRSystemManagerExternal> VRSystemManagerExternal::Create(
     VRExternalShmem* aAPIShmem /* = nullptr*/) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!StaticPrefs::VREnabled()) {
+  if (!gfxPrefs::VREnabled()) {
     return nullptr;
   }
 
-  if ((!StaticPrefs::VRExternalEnabled() && aAPIShmem == nullptr)
+  if ((!gfxPrefs::VRExternalEnabled() && aAPIShmem == nullptr)
 #if defined(XP_WIN)
       || !XRE_IsGPUProcess()
 #endif

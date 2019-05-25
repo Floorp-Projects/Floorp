@@ -46,7 +46,6 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TouchEvents.h"
@@ -70,6 +69,7 @@
 #endif
 
 #include "Layers.h"
+#include "gfxPrefs.h"
 
 #include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/dom/Element.h"
@@ -470,7 +470,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                         new DisplayPortPropertyData(displayport, aPriority),
                         nsINode::DeleteProperty<DisplayPortPropertyData>);
 
-  if (StaticPrefs::LayoutUseContainersForRootFrames()) {
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
     if (rootScrollFrame && aElement == rootScrollFrame->GetContent() &&
         nsLayoutUtils::UsesAsyncScrolling(rootScrollFrame)) {

@@ -6,6 +6,7 @@
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
 #include "WebGLExtensions.h"
+#include "gfxPrefs.h"
 #include "GLContext.h"
 
 #include "nsString.h"
@@ -81,7 +82,7 @@ bool WebGLContext::IsExtensionSupported(dom::CallerType callerType,
     allowPrivilegedExts = true;
   }
 
-  if (StaticPrefs::WebGLPrivilegedExtensionsEnabled()) {
+  if (gfxPrefs::WebGLPrivilegedExtensionsEnabled()) {
     allowPrivilegedExts = true;
   }
 

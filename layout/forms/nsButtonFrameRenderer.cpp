@@ -18,7 +18,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "Layers.h"
-
+#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 
