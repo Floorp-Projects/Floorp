@@ -162,14 +162,17 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             }
         }
 
-        view.engineView.asView().apply {
-            (layoutParams as CoordinatorLayout.LayoutParams).apply {
-                setMargins(
-                    0,
-                    0,
-                    0,
-                    (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt() +
-                        QUICK_ACTION_SHEET_HANDLE_HEIGHT)
+        if (customTabSessionId == null) {
+            view.engineView.asView().apply {
+                (layoutParams as CoordinatorLayout.LayoutParams).apply {
+                    setMargins(
+                        0,
+                        0,
+                        0,
+                        (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt() +
+                            QUICK_ACTION_SHEET_HANDLE_HEIGHT
+                    )
+                }
             }
         }
 

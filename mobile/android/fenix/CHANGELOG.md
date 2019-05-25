@@ -60,4 +60,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1994 - Made app state persist better when rotating the screen
 - #654 - Updated Refresh button to turn into Stop button while menu is open.
 - [AC #2725](https://github.com/mozilla-mobile/android-components/issues/2725) Updated tracking protectionPolicy to [recommend](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L156)
+- #2789 Custom tabs is not covering the full screen size.
 ### Removed
