@@ -10,7 +10,9 @@
 #include "VRChild.h"
 #include "VRGPUChild.h"
 #include "VRGPUParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/MemoryReportingProcess.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace gfx {
@@ -36,6 +38,7 @@ VRProcessManager::VRProcessManager() : mProcess(nullptr), mVRChild(nullptr) {
 
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
+  Preferences::AddStrongObserver(mObserver, "");
 }
 
 VRProcessManager::~VRProcessManager() {
@@ -122,6 +125,13 @@ void VRProcessManager::OnProcessLaunchComplete(VRProcessParent* aParent) {
     return;
   }
 
+  // Flush any pref updates that happened during launch and weren't
+  // included in the blobs set up in LaunchGPUProcess.
+  for (const mozilla::dom::Pref& pref : mQueuedPrefs) {
+    Unused << NS_WARN_IF(!mVRChild->SendPreferenceUpdate(pref));
+  }
+  mQueuedPrefs.Clear();
+
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::VRProcessStatus,
                                      NS_LITERAL_CSTRING("Running"));
 }
@@ -177,6 +187,8 @@ VRProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
                                     const char16_t* aData) {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     mManager->OnXPCOMShutdown();
+  } else if (!strcmp(aTopic, "nsPref:changed")) {
+    mManager->OnPreferenceChange(aData);
   }
   return NS_OK;
 }
@@ -188,10 +200,30 @@ void VRProcessManager::CleanShutdown() { DestroyProcess(); }
 void VRProcessManager::OnXPCOMShutdown() {
   if (mObserver) {
     nsContentUtils::UnregisterShutdownObserver(mObserver);
+    Preferences::RemoveObserver(mObserver, "");
     mObserver = nullptr;
   }
 
   CleanShutdown();
+}
+
+void VRProcessManager::OnPreferenceChange(const char16_t* aData) {
+  // A pref changed. If it's not on the blacklist, inform child processes.
+  if (!dom::ContentParent::ShouldSyncPreference(aData)) {
+    return;
+  }
+
+  // We know prefs are ASCII here.
+  NS_LossyConvertUTF16toASCII strData(aData);
+
+  mozilla::dom::Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
+  Preferences::GetPreference(&pref);
+  if (!!mVRChild) {
+    MOZ_ASSERT(mQueuedPrefs.IsEmpty());
+    mVRChild->SendPreferenceUpdate(pref);
+  } else {
+    mQueuedPrefs.AppendElement(pref);
+  }
 }
 
 VRChild* VRProcessManager::GetVRChild() { return mProcess->GetActor(); }
