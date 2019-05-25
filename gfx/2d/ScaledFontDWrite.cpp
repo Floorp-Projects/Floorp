@@ -489,6 +489,9 @@ bool ScaledFontDWrite::GetWRFontInstanceOptions(
   } else {
     options.flags |= wr::FontInstanceFlags_SUBPIXEL_POSITION;
   }
+  if (Factory::GetBGRSubpixelOrder()) {
+    options.flags |= wr::FontInstanceFlags_SUBPIXEL_BGR;
+  }
   options.bg_color = wr::ToColorU(Color());
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());

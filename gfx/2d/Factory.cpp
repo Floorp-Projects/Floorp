@@ -210,6 +210,8 @@ StaticMutex Factory::mDeviceLock;
 StaticMutex Factory::mDTDependencyLock;
 #endif
 
+bool Factory::mBGRSubpixelOrder = false;
+
 DrawEventRecorder* Factory::mRecorder;
 
 mozilla::gfx::Config* Factory::sConfig = nullptr;
@@ -656,6 +658,10 @@ already_AddRefed<SourceSurface> Factory::CreateDualSourceSurface(
 
   return newSource.forget();
 }
+
+void Factory::SetBGRSubpixelOrder(bool aBGR) { mBGRSubpixelOrder = aBGR; }
+
+bool Factory::GetBGRSubpixelOrder() { return mBGRSubpixelOrder; }
 
 #ifdef MOZ_ENABLE_FREETYPE
 void Factory::SetFTLibrary(FT_Library aFTLibrary) { mFTLibrary = aFTLibrary; }
