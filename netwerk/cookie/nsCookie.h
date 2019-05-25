@@ -59,15 +59,13 @@ class nsCookie final : public nsICookie2 {
   // in nsCookie.cpp.
   static int64_t GenerateUniqueCreationTime(int64_t aCreationTime);
 
-  // public helper to create an nsCookie object. use |operator delete|
-  // to destroy an object created by this method.
-  static nsCookie* Create(const nsACString& aName, const nsACString& aValue,
-                          const nsACString& aHost, const nsACString& aPath,
-                          int64_t aExpiry, int64_t aLastAccessed,
-                          int64_t aCreationTime, bool aIsSession,
-                          bool aIsSecure, bool aIsHttpOnly,
-                          const OriginAttributes& aOriginAttributes,
-                          int32_t aSameSite);
+  // public helper to create an nsCookie object.
+  static already_AddRefed<nsCookie> Create(
+      const nsACString& aName, const nsACString& aValue,
+      const nsACString& aHost, const nsACString& aPath, int64_t aExpiry,
+      int64_t aLastAccessed, int64_t aCreationTime, bool aIsSession,
+      bool aIsSecure, bool aIsHttpOnly,
+      const OriginAttributes& aOriginAttributes, int32_t aSameSite);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
