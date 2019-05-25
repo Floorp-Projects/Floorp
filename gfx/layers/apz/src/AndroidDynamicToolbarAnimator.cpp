@@ -10,6 +10,7 @@
 
 #include "APZCTreeManager.h"
 #include "FrameMetrics.h"
+#include "gfxPrefs.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/gfx/2D.h"
@@ -23,7 +24,6 @@
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 
 namespace {
@@ -200,10 +200,10 @@ nsEventStatus AndroidDynamicToolbarAnimator::ReceiveInputEvent(
           }
           mControllerLastDragDirection = direction;
         }
-        // NOTE: StaticPrefs::ToolbarScrollThreshold() returns a percentage as
-        // an int32_t. So multiply it by 0.01f to convert.
+        // NOTE: gfxPrefs::ToolbarScrollThreshold() returns a percentage as an
+        // int32_t. So multiply it by 0.01f to convert.
         const uint32_t dragThreshold =
-            Abs(std::lround(0.01f * StaticPrefs::ToolbarScrollThreshold() *
+            Abs(std::lround(0.01f * gfxPrefs::ToolbarScrollThreshold() *
                             mControllerCompositionHeight));
         if ((Abs(mControllerTotalDistance.value) > dragThreshold) &&
             (delta != 0)) {

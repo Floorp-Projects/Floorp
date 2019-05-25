@@ -5,6 +5,7 @@
 
 #include "WebGLFormats.h"
 
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "GLDefs.h"
 #include "mozilla/gfx/Logging.h"

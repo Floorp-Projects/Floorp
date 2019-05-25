@@ -7,9 +7,9 @@
 #include "ClientLayerManager.h"
 #include "GeckoProfiler.h"       // for AUTO_PROFILER_LABEL
 #include "gfxEnv.h"              // for gfxEnv
+#include "gfxPrefs.h"            // for gfxPrefs::LayersTile...
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/Hal.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/BrowserChild.h"  // for BrowserChild
 #include "mozilla/dom/TabGroup.h"      // for TabGroup
 #include "mozilla/hal_sandbox/PHal.h"  // for ScreenConfiguration
@@ -244,7 +244,7 @@ bool ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget,
     // enabled in this process; it may be enabled in the parent process,
     // and the parent process expects unique sequence numbers.
     ++mPaintSequenceNumber;
-    if (StaticPrefs::APZTestLoggingEnabled()) {
+    if (gfxPrefs::APZTestLoggingEnabled()) {
       mApzTestData.StartNewPaint(mPaintSequenceNumber);
     }
   }
@@ -280,7 +280,7 @@ bool ClientLayerManager::EndTransactionInternal(
   AUTO_PROFILER_TRACING("Paint", "Rasterize", GRAPHICS);
 
   Maybe<TimeStamp> startTime;
-  if (StaticPrefs::LayersDrawFPS()) {
+  if (gfxPrefs::LayersDrawFPS()) {
     startTime = Some(TimeStamp::Now());
   }
 
@@ -310,7 +310,7 @@ bool ClientLayerManager::EndTransactionInternal(
 
   // Skip the painting if the device is in device-reset status.
   if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
-    if (StaticPrefs::AlwaysPaint() && XRE_IsContentProcess()) {
+    if (gfxPrefs::AlwaysPaint() && XRE_IsContentProcess()) {
       TimeStamp start = TimeStamp::Now();
       root->RenderLayer();
       mLastPaintTime = TimeStamp::Now() - start;
@@ -545,7 +545,7 @@ float ClientLayerManager::RequestProperty(const nsAString& aProperty) {
 
 void ClientLayerManager::StartNewRepaintRequest(
     SequenceNumber aSequenceNumber) {
-  if (StaticPrefs::APZTestLoggingEnabled()) {
+  if (gfxPrefs::APZTestLoggingEnabled()) {
     mApzTestData.StartNewRepaintRequest(aSequenceNumber);
   }
 }
@@ -615,7 +615,7 @@ void ClientLayerManager::FlushRendering() {
   if (mWidget) {
     if (CompositorBridgeChild* remoteRenderer = mWidget->GetRemoteRenderer()) {
       if (mWidget->SynchronouslyRepaintOnResize() ||
-          StaticPrefs::LayersForceSynchronousResize()) {
+          gfxPrefs::LayersForceSynchronousResize()) {
         remoteRenderer->SendFlushRendering();
       } else {
         remoteRenderer->SendFlushRenderingAsync();
@@ -696,7 +696,7 @@ void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
     refreshStart = mTransactionStart;
   }
 
-  if (StaticPrefs::AlwaysPaint() && XRE_IsContentProcess()) {
+  if (gfxPrefs::AlwaysPaint() && XRE_IsContentProcess()) {
     mForwarder->SendPaintTime(mLatestTransactionId, mLastPaintTime);
   }
 
@@ -863,7 +863,7 @@ ClientLayerManager::CreatePersistentBufferProvider(const gfx::IntSize& aSize,
   // instead of being sent to the compositor, in which case rendering into
   // shared memory is wasteful.
   if (IsCompositingCheap() &&
-      StaticPrefs::PersistentBufferProviderSharedEnabled()) {
+      gfxPrefs::PersistentBufferProviderSharedEnabled()) {
     RefPtr<PersistentBufferProvider> provider =
         PersistentBufferProviderShared::Create(aSize, aFormat,
                                                AsShadowForwarder());

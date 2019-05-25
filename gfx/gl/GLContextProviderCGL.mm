@@ -9,7 +9,7 @@
 #include "nsIWidget.h"
 #include <OpenGL/gl.h>
 #include "gfxFailure.h"
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 #include "prenv.h"
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/MacIOSurface.h"
@@ -98,7 +98,7 @@ bool GLContextCGL::MakeCurrentImpl() const {
     // If swapInt is 1, then glSwapBuffers will block and wait for a vblank signal.
     // When we're iterating as fast as possible, however, we want a non-blocking
     // glSwapBuffers, which will happen when swapInt==0.
-    GLint swapInt = StaticPrefs::LayoutFrameRate() == 0 ? 0 : 1;
+    GLint swapInt = gfxPrefs::LayoutFrameRate() == 0 ? 0 : 1;
     [mContext setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
   }
   return true;
@@ -202,7 +202,7 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWi
     return nullptr;
   }
 
-  GLint opaque = StaticPrefs::CompositorGLContextOpaque();
+  GLint opaque = gfxPrefs::CompositorGLContextOpaque();
   [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
 
   RefPtr<GLContextCGL> glContext =
@@ -226,7 +226,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   std::vector<NSOpenGLPixelFormatAttribute> attribs;
 
-  if (!StaticPrefs::GLAllowHighPower()) {
+  if (!gfxPrefs::GLAllowHighPower()) {
     flags &= ~CreateContextFlags::HIGH_POWER;
   }
   if (flags & CreateContextFlags::ALLOW_OFFLINE_RENDERER ||
@@ -236,7 +236,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
     attribs.push_back(NSOpenGLPFAAllowOfflineRenderers);
   }
 
-  if (StaticPrefs::RequireHardwareGL()) {
+  if (gfxPrefs::RequireHardwareGL()) {
     attribs.push_back(NSOpenGLPFAAccelerated);
   }
 
@@ -260,7 +260,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   RefPtr<GLContextCGL> glContext = new GLContextCGL(flags, SurfaceCaps::Any(), context, true);
 
-  if (StaticPrefs::GLMultithreaded()) {
+  if (gfxPrefs::GLMultithreaded()) {
     CGLEnable(glContext->GetCGLContext(), kCGLCEMPEngine);
   }
   return glContext.forget();

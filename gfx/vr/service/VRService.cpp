@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRService.h"
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 #include "../gfxVRMutex.h"
 #include "base/thread.h"  // for Thread
 #include <cstring>        // for memcmp
@@ -52,7 +52,7 @@ bool IsImmersiveContentActive(const mozilla::gfx::VRBrowserState& aState) {
 already_AddRefed<VRService> VRService::Create() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!StaticPrefs::VRServiceEnabled()) {
+  if (!gfxPrefs::VRServiceEnabled()) {
     return nullptr;
   }
 
@@ -73,7 +73,7 @@ VRService::VRService()
 #if defined(XP_WIN)
       mMutex(NULL),
 #endif
-      mVRProcessEnabled(StaticPrefs::VRProcessEnabled()) {
+      mVRProcessEnabled(gfxPrefs::VRProcessEnabled()) {
   // When we have the VR process, we map the memory
   // of mAPIShmem from GPU process.
   // If we don't have the VR process, we will instantiate
@@ -292,7 +292,7 @@ void VRService::ServiceInitialize() {
     memset(&mSystemState, 0, sizeof(mSystemState));
     mSystemState.enumerationCompleted = true;
     mSystemState.displayState.minRestartInterval =
-        StaticPrefs::VRExternalNotDetectedTimeout();
+        gfxPrefs::VRExternalNotDetectedTimeout();
     mSystemState.displayState.shutdown = true;
     PushState(mSystemState);
   }
@@ -309,7 +309,7 @@ void VRService::ServiceShutdown() {
   mSystemState.displayState.shutdown = true;
   if (mSession && mSession->ShouldQuit()) {
     mSystemState.displayState.minRestartInterval =
-        StaticPrefs::VRExternalQuitTimeout();
+        gfxPrefs::VRExternalQuitTimeout();
   }
   PushState(mSystemState);
   mSession = nullptr;

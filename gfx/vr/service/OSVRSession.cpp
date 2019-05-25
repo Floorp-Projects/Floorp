@@ -6,9 +6,9 @@
 
 #include "OSVRSession.h"
 #include "prenv.h"
+#include "gfxPrefs.h"
 #include "nsString.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/SharedLibrary.h"
 #include "mozilla/gfx/Quaternion.h"
 
@@ -209,7 +209,7 @@ OSVRSession::OSVRSession()
 OSVRSession::~OSVRSession() { Shutdown(); }
 
 bool OSVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
-  if (!StaticPrefs::VREnabled() || !StaticPrefs::VROSVREnabled()) {
+  if (!gfxPrefs::VREnabled() || !gfxPrefs::VROSVREnabled()) {
     return false;
   }
   if (mOSVRInitialized) {

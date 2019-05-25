@@ -10,11 +10,11 @@
 #include "gfxConfig.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "GLContextProvider.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/VideoDecoderManagerChild.h"
@@ -109,6 +109,8 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);
 
+  // Ensure gfxPrefs are initialized.
+  gfxPrefs::GetSingleton();
   gfxConfig::Init();
   gfxVars::Initialize();
   gfxPlatform::InitNullMetadata();
@@ -172,8 +174,13 @@ bool GPUParent::DeallocPAPZInputBridgeParent(PAPZInputBridgeParent* aActor) {
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvInit(
-    nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
-    nsTArray<LayerTreeIdMapping>&& aMappings) {
+    nsTArray<GfxPrefSetting>&& prefs, nsTArray<GfxVarUpdate>&& vars,
+    const DevicePrefs& devicePrefs, nsTArray<LayerTreeIdMapping>&& aMappings) {
+  const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
+  for (auto& setting : prefs) {
+    gfxPrefs::Pref* pref = globalPrefs[setting.index()];
+    pref->SetCachedValue(setting.value());
+  }
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -259,7 +266,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   }
 #ifdef XP_WIN
   else {
-    if (StaticPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
+    if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
       // This is needed to avoid freezing the window on a device crash on double
       // buffering, see bug 1549674.
       widget::WinCompositorWindowThread::Start();
@@ -323,13 +330,15 @@ mozilla::ipc::IPCResult GPUParent::RecvInitProfiler(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
-  gfxVars::ApplyUpdate(aUpdate);
+mozilla::ipc::IPCResult GPUParent::RecvUpdatePref(
+    const GfxPrefSetting& setting) {
+  gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
+  pref->SetCachedValue(setting.value());
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUParent::RecvPreferenceUpdate(const Pref& aPref) {
-  Preferences::SetPreference(aPref);
+mozilla::ipc::IPCResult GPUParent::RecvUpdateVar(const GfxVarUpdate& aUpdate) {
+  gfxVars::ApplyUpdate(aUpdate);
   return IPC_OK();
 }
 
@@ -473,7 +482,7 @@ mozilla::ipc::IPCResult GPUParent::RecvRequestMemoryReport(
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvShutdownVR() {
-  if (StaticPrefs::VRProcessEnabled()) {
+  if (gfxPrefs::VRProcessEnabled()) {
     VRGPUChild::Shutdown();
   }
   return IPC_OK();
@@ -514,7 +523,7 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
     wr::RenderThread::ShutDown();
   }
 #ifdef XP_WIN
-  else if (StaticPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
+  else if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
     widget::WinCompositorWindowThread::ShutDown();
   }
 #endif
@@ -549,6 +558,7 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   LayerTreeOwnerTracker::Shutdown();
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
+  gfxPrefs::DestroySingleton();
   CrashReporterClient::DestroySingleton();
   XRE_ShutdownChildProcess();
 }

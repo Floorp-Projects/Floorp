@@ -517,18 +517,18 @@ static void TestIntersectionLogicalHelper(nscoord x1, nscoord y1, nscoord w1,
   mozilla::LogicalRect r2(mozilla::WritingMode(), rect2.X(), rect2.Y(),
                           rect2.Width(), rect2.Height());
   EXPECT_TRUE(isNonEmpty == r1.IntersectRect(r1, r2));
-  EXPECT_TRUE(rectDebug.IsEqualEdges(nsRect(
-      r1.IStart(mozilla::WritingMode()), r1.BStart(mozilla::WritingMode()),
-      r1.ISize(mozilla::WritingMode()), r1.BSize(mozilla::WritingMode()))));
+  EXPECT_TRUE(rectDebug.IsEqualEdges(
+      nsRect(r1.IStart(WritingMode()), r1.BStart(WritingMode()),
+             r1.ISize(WritingMode()), r1.BSize(WritingMode()))));
 
   mozilla::LogicalRect r3(mozilla::WritingMode(), rect1.X(), rect1.Y(),
                           rect1.Width(), rect1.Height());
   mozilla::LogicalRect r4(mozilla::WritingMode(), rect2.X(), rect2.Y(),
                           rect2.Width(), rect2.Height());
   EXPECT_TRUE(isNonEmpty == r4.IntersectRect(r3, r4));
-  EXPECT_TRUE(rectDebug.IsEqualEdges(nsRect(
-      r4.IStart(mozilla::WritingMode()), r4.BStart(mozilla::WritingMode()),
-      r4.ISize(mozilla::WritingMode()), r4.BSize(mozilla::WritingMode()))));
+  EXPECT_TRUE(rectDebug.IsEqualEdges(
+      nsRect(r4.IStart(WritingMode()), r4.BStart(WritingMode()),
+             r4.ISize(WritingMode()), r4.BSize(WritingMode()))));
 
   mozilla::LogicalRect r5(mozilla::WritingMode(), rect1.X(), rect1.Y(),
                           rect1.Width(), rect1.Height());
@@ -536,9 +536,9 @@ static void TestIntersectionLogicalHelper(nscoord x1, nscoord y1, nscoord w1,
                           rect2.Width(), rect2.Height());
   mozilla::LogicalRect r7(mozilla::WritingMode(), 0, 0, 1, 1);
   EXPECT_TRUE(isNonEmpty == r7.IntersectRect(r5, r6));
-  EXPECT_TRUE(rectDebug.IsEqualEdges(nsRect(
-      r7.IStart(mozilla::WritingMode()), r7.BStart(mozilla::WritingMode()),
-      r7.ISize(mozilla::WritingMode()), r7.BSize(mozilla::WritingMode()))));
+  EXPECT_TRUE(rectDebug.IsEqualEdges(
+      nsRect(r7.IStart(WritingMode()), r7.BStart(WritingMode()),
+             r7.ISize(WritingMode()), r7.BSize(WritingMode()))));
 }
 
 static void TestIntersectionLogical(nscoord x1, nscoord y1, nscoord w1,

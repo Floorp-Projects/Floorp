@@ -8,7 +8,7 @@
 
 #include "prlink.h"
 #include "prenv.h"
-
+#include "gfxPrefs.h"
 #include "nsIGlobalObject.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
@@ -96,7 +96,7 @@ void VRDisplayClient::FireEvents() {
   // Check if we need to trigger onvrdisplayactivate event
   if (!bLastEventWasMounted && mDisplayInfo.mDisplayState.isMounted) {
     bLastEventWasMounted = true;
-    if (StaticPrefs::VRAutoActivateEnabled()) {
+    if (gfxPrefs::VRAutoActivateEnabled()) {
       vm->FireDOMVRDisplayMountedEvent(mDisplayInfo.mDisplayID);
     }
   }
@@ -104,7 +104,7 @@ void VRDisplayClient::FireEvents() {
   // Check if we need to trigger onvrdisplaydeactivate event
   if (bLastEventWasMounted && !mDisplayInfo.mDisplayState.isMounted) {
     bLastEventWasMounted = false;
-    if (StaticPrefs::VRAutoActivateEnabled()) {
+    if (gfxPrefs::VRAutoActivateEnabled()) {
       vm->FireDOMVRDisplayUnmountedEvent(mDisplayInfo.mDisplayID);
     }
   }
