@@ -2477,6 +2477,11 @@ impl Renderer {
         mem::replace(&mut self.pipeline_info, PipelineInfo::default())
     }
 
+    /// Returns the Epoch of the current frame in a pipeline.
+    pub fn current_epoch(&self, document_id: DocumentId, pipeline_id: PipelineId) -> Option<Epoch> {
+        self.pipeline_info.epochs.get(&(pipeline_id, document_id)).cloned()
+    }
+
     // update the program cache with new binaries, e.g. when some of the lazy loaded
     // shader programs got activated in the mean time
     pub fn update_program_cache(&mut self, cached_programs: Rc<ProgramCache>) {
