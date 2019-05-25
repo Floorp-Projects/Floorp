@@ -13,6 +13,7 @@ test_newtab({
       "Topsite tippytop icon not found");
 
     const contextMenuItems = content.openContextMenuAndGetOptions(siteSelector).map(v => v.textContent);
+
     Assert.equal(contextMenuItems.length, 5, "Number of options is correct");
 
     const expectedItemsText = ["Pin", "Edit", "Open in a New Window", "Open in a New Private Window", "Dismiss"];
@@ -41,7 +42,7 @@ test_newtab({
     const contextMenuItems = content.openContextMenuAndGetOptions(siteSelector);
     Assert.equal(contextMenuItems[4].textContent, "Dismiss", "'Dismiss' is the 5th item in the context menu list");
 
-    contextMenuItems[4].querySelector("a").click();
+    contextMenuItems[4].querySelector("button").click();
 
     // Wait for the topsite to be dismissed and the second one to replace it
     await ContentTaskUtils.waitForCondition(() => content.document.querySelector(siteSelector).getAttribute("href") === secondTopSite,
@@ -65,7 +66,7 @@ test_newtab({
     is(contextMenuItems.length, 2, "Search TopSites should only have Unpin and Dismiss");
 
     // Unpin
-    contextMenuItems[0].querySelector("a").click();
+    contextMenuItems[0].querySelector("button").click();
 
     await ContentTaskUtils.waitForCondition(() => content.document.querySelectorAll(siteSelector).length === 1,
       "1 search topsite displayed after we unpin the other one");

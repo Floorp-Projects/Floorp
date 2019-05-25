@@ -234,7 +234,7 @@ add_task(async function test_cfr_pin_tab_notification_show() {
   document.getElementById("contextual-feature-recommendation-notification").button.click();
   await hidePanel;
 
-  BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab.pinned, "Primary action should pin tab");
+  await BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab.pinned, "Primary action should pin tab");
   Assert.ok(gBrowser.selectedTab.pinned, "Current tab should be pinned");
   gBrowser.unpinTab(gBrowser.selectedTab);
 
@@ -383,23 +383,23 @@ add_task(async function test_matchPattern() {
   await BrowserTestUtils.loadURI(browser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
-  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Registered pattern matched the current location");
+  await BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Registered pattern matched the current location");
 
   await BrowserTestUtils.loadURI(browser, "about:config");
   await BrowserTestUtils.browserLoaded(browser, false, "about:config");
 
-  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Navigated to a new page but not a match");
+  await BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Navigated to a new page but not a match");
 
   await BrowserTestUtils.loadURI(browser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
-  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Navigated to a location that matches the pattern but within 15 mins");
+  await BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "Navigated to a location that matches the pattern but within 15 mins");
 
   await BrowserTestUtils.loadURI(browser, "http://www.example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://www.example.com/");
 
-  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("www.example.com").length === 1, "www.example.com is a different host that also matches the pattern.");
-  BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "www.example.com is a different host that also matches the pattern.");
+  await BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("www.example.com").length === 1, "www.example.com is a different host that also matches the pattern.");
+  await BrowserTestUtils.waitForCondition(() => frequentVisitsTrigger._visits.get("example.com").length === 1, "www.example.com is a different host that also matches the pattern.");
 });
 
 add_task(async function test_providerNames() {
