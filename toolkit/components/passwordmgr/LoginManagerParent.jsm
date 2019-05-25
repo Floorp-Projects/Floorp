@@ -449,7 +449,7 @@ var LoginManagerParent = {
     // password, allow the user to select from a list of applicable
     // logins to update the password for.
     if (!usernameField && oldPasswordField && logins.length > 0) {
-      var prompter = getPrompter();
+      let prompter = getPrompter();
 
       if (logins.length == 1) {
         var oldLogin = logins[0];
@@ -520,11 +520,11 @@ var LoginManagerParent = {
       // Change password if needed.
       if (existingLogin.password != formLogin.password) {
         log("...passwords differ, prompting to change.");
-        prompter = getPrompter();
+        let prompter = getPrompter();
         prompter.promptToChangePassword(existingLogin, formLogin, dismissedPrompt);
       } else if (!existingLogin.username && formLogin.username) {
         log("...empty username update, prompting to change.");
-        prompter = getPrompter();
+        let prompter = getPrompter();
         prompter.promptToChangePassword(existingLogin, formLogin, dismissedPrompt);
       } else {
         recordLoginUse(existingLogin);
@@ -534,7 +534,7 @@ var LoginManagerParent = {
     }
 
     // Prompt user to save login (via dialog or notification bar)
-    prompter = getPrompter();
+    let prompter = getPrompter();
     prompter.promptToSavePassword(formLogin, dismissedPrompt);
   },
 
