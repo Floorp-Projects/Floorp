@@ -8507,6 +8507,12 @@ nsContentUtils::StorageAccess nsContentUtils::InternalStorageAllowedCheck(
     return StorageAccess::ePartitionTrackersOrDeny;
   }
 
+  // We want to have a partitioned storage for all third parties.
+  if (aRejectedReason ==
+      nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) {
+    return StorageAccess::ePartitionForeignOrDeny;
+  }
+
   return StorageAccess::eDeny;
 }
 
