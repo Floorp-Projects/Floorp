@@ -27,6 +27,7 @@ class ContentProcessSession {
   destroy() {
     this.messageManager.removeMessageListener("remote:request", this);
     this.messageManager.removeMessageListener("remote:destroy", this);
+    this.domains.clear();
   }
 
   // Domain event listener

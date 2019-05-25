@@ -29,6 +29,8 @@ class Runtime extends ContentProcessDomain {
 
   destructor() {
     this.disable();
+
+    super.destructor();
   }
 
   // commands
