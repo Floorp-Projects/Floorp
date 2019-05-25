@@ -289,40 +289,4 @@ describe("ASRouterPreferences", () => {
       assert.notCalled(callback);
     });
   });
-  describe("_migratePrefs", () => {
-    beforeEach(() => {
-      sandbox.stub(global.Services.prefs, "setBoolPref");
-      sandbox.stub(global.Services.prefs, "clearUserPref");
-    });
-    it("should not do anything if userpref was not modified", () => {
-      ASRouterPreferences.init();
-
-      assert.notCalled(global.Services.prefs.getBoolPref);
-      assert.notCalled(global.Services.prefs.setBoolPref);
-    });
-    it("should not do migration if newPref was modified", () => {
-      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
-
-      ASRouterPreferences.init();
-
-      assert.notCalled(global.Services.prefs.getBoolPref);
-      assert.notCalled(global.Services.prefs.setBoolPref);
-      assert.calledOnce(global.Services.prefs.clearUserPref);
-      assert.calledWith(global.Services.prefs.clearUserPref, "browser.newtabpage.activity-stream.asrouter.userprefs.cfr");
-    });
-    it("should migrate userprefs.cfr", () => {
-      const hasUserValueStub = sandbox.stub(global.Services.prefs, "prefHasUserValue");
-      hasUserValueStub.onCall(0).returns(true);
-      hasUserValueStub.returns(false);
-
-      ASRouterPreferences.init();
-
-      assert.calledOnce(global.Services.prefs.getBoolPref);
-      assert.calledWith(global.Services.prefs.getBoolPref, "browser.newtabpage.activity-stream.asrouter.userprefs.cfr");
-      assert.calledOnce(global.Services.prefs.setBoolPref);
-      assert.calledWith(global.Services.prefs.setBoolPref, CFR_USER_PREF_ADDONS, false);
-      assert.calledOnce(global.Services.prefs.clearUserPref);
-      assert.calledWith(global.Services.prefs.clearUserPref, "browser.newtabpage.activity-stream.asrouter.userprefs.cfr");
-    });
-  });
 });

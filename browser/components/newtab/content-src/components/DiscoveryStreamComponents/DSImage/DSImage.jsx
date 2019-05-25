@@ -78,13 +78,13 @@ export class DSImage extends React.PureComponent {
             this.state.containerHeight * 2
           );
 
-          img = (<img crossOrigin="anonymous"
+          img = (<img alt="" crossOrigin="anonymous"
             onError={this.onOptimizedImageError}
             src={source}
             srcSet={`${source2x} 2x`} />);
         }
       } else if (!this.state.nonOptimizedImageFailed) {
-        img = (<img crossOrigin="anonymous"
+        img = (<img alt="" crossOrigin="anonymous"
           onError={this.onNonOptimizedImageError}
           src={this.props.source} />);
       } else {

@@ -14,7 +14,7 @@ $card-header-in-hero-line-height: 20;
   }
 
   .excerpt {
-    @include limit-visibile-lines(3, 20, 14);
+    @include limit-visibile-lines(3, 24, 15);
     @include dark-theme-only {
       color: $grey-10;
     }
@@ -147,6 +147,7 @@ $card-header-in-hero-line-height: 20;
 
         font-size: 13px;
         color: $grey-50;
+        -webkit-line-clamp: 1;
         margin-bottom: 0;
       }
     }

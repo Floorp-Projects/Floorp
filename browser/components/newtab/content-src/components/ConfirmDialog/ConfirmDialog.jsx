@@ -56,7 +56,7 @@ export class _ConfirmDialog extends React.PureComponent {
     }
 
     return (<div className="confirmation-dialog">
-      <div className="modal-overlay" onClick={this._handleCancelBtn} />
+      <div className="modal-overlay" onClick={this._handleCancelBtn} role="presentation" />
       <div className="modal">
         <section className="modal-message">
           {this.props.data.icon && <span className={`icon icon-spacer icon-${this.props.data.icon}`} />}

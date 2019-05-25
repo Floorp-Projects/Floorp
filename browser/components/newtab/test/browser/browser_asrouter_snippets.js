@@ -1,10 +1,11 @@
 "use strict";
 
 const {ASRouter} = ChromeUtils.import("resource://activity-stream/lib/ASRouter.jsm");
+const {SnippetsTestMessageProvider} = ChromeUtils.import("resource://activity-stream/lib/SnippetsTestMessageProvider.jsm");
 
 test_newtab({
   async before() {
-    let data = ASRouter.state.messages.find(m => m.id === "SIMPLE_BELOW_SEARCH_TEST_1");
+    let data = SnippetsTestMessageProvider.getMessages().find(m => m.id === "SIMPLE_BELOW_SEARCH_TEST_1");
     ASRouter.messageChannel.sendAsyncMessage("ASRouter:parent-to-child", {type: "SET_MESSAGE", data});
   },
   test: async function test_simple_below_search_snippet() {
@@ -21,7 +22,7 @@ test_newtab({
 
 test_newtab({
   async before() {
-    let data = ASRouter.state.messages.find(m => m.id === "SIMPLE_TEST_1");
+    let data = SnippetsTestMessageProvider.getMessages().find(m => m.id === "SIMPLE_TEST_1");
     ASRouter.messageChannel.sendAsyncMessage("ASRouter:parent-to-child", {type: "SET_MESSAGE", data});
   },
   test: async function test_simple_snippet() {

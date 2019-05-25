@@ -24,13 +24,16 @@
         margin: $context-menu-outer-padding 0;
       }
 
-      > a {
+      > a,
+      > button {
         align-items: center;
         color: inherit;
         cursor: pointer;
         display: flex;
+        width: 100%;
         line-height: 16px;
         outline: none;
+        border: 0;
         padding: $context-menu-item-padding;
         white-space: nowrap;
 

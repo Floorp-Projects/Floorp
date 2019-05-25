@@ -61,7 +61,7 @@ test_highlights(
     const contextMenu = content.document.querySelector(".card-outer .context-menu");
     ok(contextMenu && !contextMenu.hidden, "Should find a visible context menu");
 
-    const removeBookmarkBtn = contextMenu.querySelector("a .icon-bookmark-added");
+    const removeBookmarkBtn = contextMenu.querySelector("button .icon-bookmark-added");
     removeBookmarkBtn.click();
 
     await ContentTaskUtils.waitForCondition(() => content.document.querySelectorAll(".card-context-icon.icon-bookmark-added").length === 0,

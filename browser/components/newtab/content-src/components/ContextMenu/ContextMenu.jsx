@@ -37,11 +37,11 @@ export class ContextMenu extends React.PureComponent {
   }
 
   render() {
-    return (<span className="context-menu" onClick={this.onClick}>
-      <ul role="menu" className="context-menu-list">
+    return (<span role="menu" className="context-menu" onClick={this.onClick} onKeyDown={this.onClick} tabIndex="0" >
+      <ul className="context-menu-list">
         {this.props.options.map((option, i) => (option.type === "separator" ?
           (<li key={i} className="separator" />) :
-          (option.type !== "empty" && <ContextMenuItem key={i} option={option} hideContext={this.hideContext} />)
+          (option.type !== "empty" && <ContextMenuItem key={i} option={option} hideContext={this.hideContext} tabIndex="0" />)
         ))}
       </ul>
     </span>);
@@ -81,11 +81,11 @@ export class ContextMenuItem extends React.PureComponent {
   render() {
     const {option} = this.props;
     return (
-      <li role="menuitem" className="context-menu-item">
-        <a onClick={this.onClick} onKeyDown={this.onKeyDown} tabIndex="0" className={option.disabled ? "disabled" : ""}>
+      <li role="menuitem" className="context-menu-item" >
+        <button className={option.disabled ? "disabled" : ""} onClick={this.onClick} onKeyDown={this.onKeyDown} tabIndex="0" >
           {option.icon && <span className={`icon icon-spacer icon-${option.icon}`} />}
           {option.label}
-        </a>
+        </button>
       </li>);
   }
 }

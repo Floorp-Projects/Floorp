@@ -38,7 +38,7 @@ describe("<ContextMenu>", () => {
     const onUpdate = sinon.spy();
     const onClick = sinon.spy();
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} onUpdate={onUpdate} options={[{label: "item1", onClick}]} />);
-    wrapper.find(".context-menu-item a").simulate("click");
+    wrapper.find(".context-menu-item button").simulate("click");
     assert.calledOnce(onUpdate);
     assert.calledOnce(onClick);
   });
@@ -50,6 +50,6 @@ describe("<ContextMenu>", () => {
   it("should add disabled className to any disabled options", () => {
     const options = [{label: "item1", icon: "icon1", disabled: true}, {type: "separator"}];
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
-    assert.lengthOf(wrapper.find(".context-menu-item a.disabled"), 1);
+    assert.lengthOf(wrapper.find(".context-menu-item button.disabled"), 1);
   });
 });

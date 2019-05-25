@@ -368,7 +368,6 @@ this.ActivityStream = class ActivityStream {
 
   init() {
     try {
-      this._migratePrefs();
       this._updateDynamicPrefs();
       this._defaultPrefs.init();
 
@@ -420,29 +419,6 @@ this.ActivityStream = class ActivityStream {
     // Give the callback the current value then clear the pref
     cbIfNotDefault(Services.prefs[prefGetter](oldPrefName));
     Services.prefs.clearUserPref(oldPrefName);
-  }
-
-  _migratePrefs() {
-    // Do a one time migration of Tiles about:newtab prefs that have been modified
-    this._migratePref("browser.newtabpage.rows", rows => {
-      // Just disable top sites if rows are not desired
-      if (rows <= 0) {
-        Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.topsites", false);
-      } else {
-        Services.prefs.setIntPref("browser.newtabpage.activity-stream.topSitesRows", rows);
-      }
-    });
-
-    this._migratePref("browser.newtabpage.activity-stream.showTopSites", value => {
-      if (value === false) {
-        Services.prefs.setBoolPref("browser.newtabpage.activity-stream.feeds.topsites", false);
-      }
-    });
-
-    // Old activity stream topSitesCount pref showed 6 per row
-    this._migratePref("browser.newtabpage.activity-stream.topSitesCount", count => {
-      Services.prefs.setIntPref("browser.newtabpage.activity-stream.topSitesRows", Math.ceil(count / 6));
-    });
   }
 
   uninit() {
