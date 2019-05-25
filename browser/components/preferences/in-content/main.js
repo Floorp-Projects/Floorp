@@ -1361,6 +1361,13 @@ var gMainPane = {
         Cu.reportError(error);
         await this.updateReadPrefs();
         await this.reportUpdatePrefWriteError(error);
+        return;
+      }
+
+      // If the value was changed to false the user should be given the option
+      // to discard an update if there is one.
+      if (!updateAutoValue) {
+        await this.checkUpdateInProgress();
       }
     }
   },
@@ -1376,6 +1383,40 @@ var gMainPane = {
                        Services.prompt.BUTTON_TITLE_OK);
     Services.prompt.confirmEx(window, title, message, buttonFlags,
                               null, null, null, null, {});
+  },
+
+  async checkUpdateInProgress() {
+    let um = Cc["@mozilla.org/updates/update-manager;1"].
+             getService(Ci.nsIUpdateManager);
+    if (!um.activeUpdate) {
+      return;
+    }
+
+    let [
+      title, message, okButton, cancelButton,
+    ] = await document.l10n.formatValues([
+      {id: "update-in-progress-title"},
+      {id: "update-in-progress-message"},
+      {id: "update-in-progress-ok-button"},
+      {id: "update-in-progress-cancel-button"},
+    ]);
+
+    // Continue is the cancel button which is BUTTON_POS_1 and is set as the
+    // default so pressing escape or using a platform standard method of closing
+    // the UI will not discard the update.
+    let buttonFlags =
+      (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
+      (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1) +
+      Ci.nsIPrompt.BUTTON_POS_1_DEFAULT;
+
+    let rv = Services.prompt.confirmEx(window, title, message, buttonFlags,
+      okButton, cancelButton, null, null, {});
+    if (rv != 1) {
+      let aus = Cc["@mozilla.org/updates/update-service;1"].
+                getService(Ci.nsIApplicationUpdateService);
+      aus.stopDownload();
+      um.cleanupActiveUpdate();
+    }
   },
 
   /**
