@@ -151,7 +151,7 @@ object Deps {
     const val androidx_recyclerview = "androidx.recyclerview:recyclerview:${Versions.androidx_recyclerview}"
     const val androidx_core = "androidx.core:core:${Versions.androidx_core}"
     const val androidx_transition = "androidx.transition:transition:${Versions.androidx_transition}"
-    const val google_material = "com.google.android.material:material:{${Versions.google_material}"
+    const val google_material = "com.google.android.material:material:${Versions.google_material}"
 
     const val autodispose = "com.uber.autodispose:autodispose:${Versions.autodispose}"
     const val autodispose_android = "com.uber.autodispose:autodispose-android:${Versions.autodispose}"

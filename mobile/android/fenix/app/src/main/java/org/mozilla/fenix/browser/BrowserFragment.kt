@@ -425,6 +425,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                             session.copyUrl(requireContext())
                             view?.rootView?.let {
                                 FenixSnackbar.make(it, Snackbar.LENGTH_LONG)
+                                    .setAnchorView(toolbarComponent.uiView.view)
                                     .setText(resources.getString(R.string.url_copied))
                                     .show()
                             }
@@ -512,6 +513,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                                 it.rootView,
                                 Snackbar.LENGTH_LONG
                             )
+                                .setAnchorView(toolbarComponent.uiView.view)
                                 .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                                     Navigation.findNavController(
                                         requireActivity(),
