@@ -90,8 +90,9 @@ interface nsICookieService : nsISupports
   const uint32_t BEHAVIOR_LIMIT_FOREIGN  = 3; // reject third-party cookies unless the
                                               // eTLD already has at least one cookie
   const uint32_t BEHAVIOR_REJECT_TRACKER = 4; // reject trackers
+  const uint32_t BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN = 5; // reject trackers, partition third-party cookies
   // When adding a new cookie behavior, please increase this value!
-  const uint32_t BEHAVIOR_LAST           = 4;
+  const uint32_t BEHAVIOR_LAST           = 5;
 
   /*
    * Possible values for the "network.cookie.lifetimePolicy" preference.
