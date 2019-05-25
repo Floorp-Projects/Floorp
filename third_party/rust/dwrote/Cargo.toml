@@ -12,8 +12,8 @@
 
 [package]
 name = "dwrote"
-version = "0.8.0"
-authors = ["Vladimir Vukicevic <vladimir@pobox.com>"]
+version = "0.9.0"
+authors = ["The Servo Project Developers", "Vladimir Vukicevic <vladimir@pobox.com>"]
 description = "Lightweight binding to DirectWrite."
 license = "MPL-2.0"
 repository = "https://github.com/servo/dwrote-rs"
