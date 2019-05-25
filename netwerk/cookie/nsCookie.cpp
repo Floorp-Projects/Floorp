@@ -75,13 +75,12 @@ int64_t nsCookie::GenerateUniqueCreationTime(int64_t aCreationTime) {
   return ++gLastCreationTime;
 }
 
-nsCookie* nsCookie::Create(const nsACString& aName, const nsACString& aValue,
-                           const nsACString& aHost, const nsACString& aPath,
-                           int64_t aExpiry, int64_t aLastAccessed,
-                           int64_t aCreationTime, bool aIsSession,
-                           bool aIsSecure, bool aIsHttpOnly,
-                           const OriginAttributes& aOriginAttributes,
-                           int32_t aSameSite) {
+// static
+already_AddRefed<nsCookie> nsCookie::Create(
+    const nsACString& aName, const nsACString& aValue, const nsACString& aHost,
+    const nsACString& aPath, int64_t aExpiry, int64_t aLastAccessed,
+    int64_t aCreationTime, bool aIsSession, bool aIsSecure, bool aIsHttpOnly,
+    const OriginAttributes& aOriginAttributes, int32_t aSameSite) {
   // Ensure mValue contains a valid UTF-8 sequence. Otherwise XPConnect will
   // truncate the string after the first invalid octet.
   nsAutoCString aUTF8Value;
@@ -111,9 +110,11 @@ nsCookie* nsCookie::Create(const nsACString& aName, const nsACString& aValue,
   }
 
   // construct the cookie. placement new, oh yeah!
-  return new (place) nsCookie(
+  RefPtr<nsCookie> cookie = new (place) nsCookie(
       name, value, host, path, end, aExpiry, aLastAccessed, aCreationTime,
       aIsSession, aIsSecure, aIsHttpOnly, aOriginAttributes, aSameSite);
+
+  return cookie.forget();
 }
 
 size_t nsCookie::SizeOfIncludingThis(
