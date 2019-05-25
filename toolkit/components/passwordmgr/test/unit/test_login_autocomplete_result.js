@@ -1,5 +1,5 @@
 const {LoginAutoCompleteResult} = ChromeUtils.import("resource://gre/modules/LoginAutoCompleteResult.jsm");
-var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                          Ci.nsILoginInfo, "init");
 
 const PREF_INSECURE_FIELD_WARNING_ENABLED = "security.insecure_field_warning.contextual.enabled";
