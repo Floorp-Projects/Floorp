@@ -139,7 +139,7 @@ FocusTarget::FocusTarget(PresShell* aRootPresShell,
 
   // Check if there are key event listeners that could prevent default or change
   // the focus or selection of the page.
-  if (gfxPrefs::APZKeyboardPassiveListeners()) {
+  if (StaticPrefs::APZKeyboardPassiveListeners()) {
     mFocusHasKeyEventListeners =
         HasListenersForNonPassiveKeyEvents(keyEventTarget.get());
   } else {

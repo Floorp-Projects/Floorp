@@ -1005,7 +1005,7 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
   context.SetMatrix(matrixAutoSaveRestore.Matrix());
   aPaintChild();
 
-  if (gfxPrefs::DrawMaskLayer()) {
+  if (StaticPrefs::DrawMaskLayer()) {
     gfxContextAutoSaveRestore saver(&context);
 
     context.NewPath();

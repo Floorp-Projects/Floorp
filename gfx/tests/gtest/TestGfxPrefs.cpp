@@ -22,21 +22,6 @@ TEST(GfxPrefs, Singleton)
   ASSERT_TRUE(gfxPrefs::SingletonExists());
 }
 
-TEST(GfxPrefs, LiveValues)
-{
-  gfxPrefs::GetSingleton();
-  ASSERT_TRUE(gfxPrefs::SingletonExists());
-
-  // Live boolean, default false
-  ASSERT_FALSE(gfxPrefs::LayersDumpTexture());
-
-  // Live int32_t, default 23456
-  ASSERT_TRUE(gfxPrefs::LayerScopePort() == 23456);
-
-  // Live uint32_t, default 2
-  ASSERT_TRUE(gfxPrefs::MSAALevel() == 2);
-}
-
 TEST(GfxPrefs, OnceValues)
 {
   gfxPrefs::GetSingleton();
@@ -46,13 +31,13 @@ TEST(GfxPrefs, OnceValues)
   ASSERT_TRUE(gfxPrefs::WorkAroundDriverBugs());
 
   // Once boolean, default false
-  ASSERT_FALSE(gfxPrefs::LayersDump());
+  ASSERT_FALSE(gfxPrefs::UseApitrace());
 
   // Once uint32_t, default 5
   ASSERT_TRUE(gfxPrefs::APZMaxVelocityQueueSize() == 5);
 
-  // Once float, default -1 (should be OK with ==)
-  ASSERT_TRUE(gfxPrefs::APZMaxVelocity() == -1.0f);
+  // Once float, default 0 (should be OK with ==)
+  ASSERT_TRUE(gfxPrefs::APZCurveFunctionX1() == 0.0f);
 }
 
 TEST(GfxPrefs, Set)
@@ -61,25 +46,18 @@ TEST(GfxPrefs, Set)
   ASSERT_TRUE(gfxPrefs::SingletonExists());
 
   // Once boolean, default false
-  ASSERT_FALSE(gfxPrefs::LayersDump());
-  gfxPrefs::SetLayersDump(true);
-  ASSERT_TRUE(gfxPrefs::LayersDump());
-  gfxPrefs::SetLayersDump(false);
-  ASSERT_FALSE(gfxPrefs::LayersDump());
+  ASSERT_FALSE(gfxPrefs::UseApitrace());
+  gfxPrefs::SetUseApitrace(true);
+  ASSERT_TRUE(gfxPrefs::UseApitrace());
+  gfxPrefs::SetUseApitrace(false);
+  ASSERT_FALSE(gfxPrefs::UseApitrace());
 
-  // Live boolean, default false
-  ASSERT_FALSE(gfxPrefs::LayersDumpTexture());
-  gfxPrefs::SetLayersDumpTexture(true);
-  ASSERT_TRUE(gfxPrefs::LayersDumpTexture());
-  gfxPrefs::SetLayersDumpTexture(false);
-  ASSERT_FALSE(gfxPrefs::LayersDumpTexture());
-
-  // Once float, default -1
-  ASSERT_TRUE(gfxPrefs::APZMaxVelocity() == -1.0f);
-  gfxPrefs::SetAPZMaxVelocity(1.75f);
-  ASSERT_TRUE(gfxPrefs::APZMaxVelocity() == 1.75f);
-  gfxPrefs::SetAPZMaxVelocity(-1.0f);
-  ASSERT_TRUE(gfxPrefs::APZMaxVelocity() == -1.0f);
+  // Once float, default 0
+  ASSERT_TRUE(gfxPrefs::APZCurveFunctionX1() == 0.0f);
+  gfxPrefs::SetAPZCurveFunctionX1(1.75f);
+  ASSERT_TRUE(gfxPrefs::APZCurveFunctionX1() == 1.75f);
+  gfxPrefs::SetAPZCurveFunctionX1(0.0f);
+  ASSERT_TRUE(gfxPrefs::APZCurveFunctionX1() == 0.0f);
 }
 
 // Randomly test the function we use in nsExceptionHandler.cpp here:

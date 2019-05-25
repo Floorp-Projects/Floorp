@@ -266,7 +266,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   }
 #ifdef XP_WIN
   else {
-    if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
+    if (StaticPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
       // This is needed to avoid freezing the window on a device crash on double
       // buffering, see bug 1549674.
       widget::WinCompositorWindowThread::Start();
@@ -528,7 +528,7 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
     wr::RenderThread::ShutDown();
   }
 #ifdef XP_WIN
-  else if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
+  else if (StaticPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
     widget::WinCompositorWindowThread::ShutDown();
   }
 #endif

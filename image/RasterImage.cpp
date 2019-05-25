@@ -1320,7 +1320,7 @@ bool RasterImage::CanDownscaleDuringDecode(const IntSize& aSize,
   // available, this image isn't transient, we have all the source data and know
   // our size, and the flags allow us to do it.
   if (!mHasSize || mTransient || !HaveSkia() ||
-      !gfxPrefs::ImageDownscaleDuringDecodeEnabled() ||
+      !StaticPrefs::ImageDownscaleDuringDecodeEnabled() ||
       !(aFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING)) {
     return false;
   }

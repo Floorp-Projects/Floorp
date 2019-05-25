@@ -223,11 +223,11 @@ D3D11RecycleAllocator::D3D11RecycleAllocator(
     gfx::SurfaceFormat aPreferredFormat)
     : TextureClientRecycleAllocator(aAllocator),
       mDevice(aDevice),
-      mCanUseNV12(gfxPrefs::PDMWMFUseNV12Format() &&
+      mCanUseNV12(StaticPrefs::PDMWMFUseNV12Format() &&
                   gfx::DeviceManagerDx::Get()->CanUseNV12()),
-      mCanUseP010(gfxPrefs::PDMWMFUseNV12Format() &&
+      mCanUseP010(StaticPrefs::PDMWMFUseNV12Format() &&
                   gfx::DeviceManagerDx::Get()->CanUseP010()),
-      mCanUseP016(gfxPrefs::PDMWMFUseNV12Format() &&
+      mCanUseP016(StaticPrefs::PDMWMFUseNV12Format() &&
                   gfx::DeviceManagerDx::Get()->CanUseP016()) {
   SetPreferredSurfaceFormat(aPreferredFormat);
 }

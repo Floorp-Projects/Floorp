@@ -37,7 +37,7 @@ WinCompositorWidget::WinCompositorWidget(
 
   // mNotDeferEndRemoteDrawing is set on the main thread during init,
   // but is only accessed after on the compositor thread.
-  mNotDeferEndRemoteDrawing = gfxPrefs::LayersCompositionFrameRate() == 0 ||
+  mNotDeferEndRemoteDrawing = StaticPrefs::LayersCompositionFrameRate() == 0 ||
                               gfxPlatform::IsInLayoutAsapMode() ||
                               gfxPlatform::ForceSoftwareVsync();
 }

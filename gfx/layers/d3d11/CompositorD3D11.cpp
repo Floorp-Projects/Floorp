@@ -122,7 +122,7 @@ void CompositorD3D11::SetVertexBuffer(ID3D11Buffer* aBuffer) {
 }
 
 bool CompositorD3D11::SupportsLayerGeometry() const {
-  return gfxPrefs::D3D11LayerGeometry();
+  return StaticPrefs::D3D11LayerGeometry();
 }
 
 bool CompositorD3D11::UpdateDynamicVertexBuffer(
@@ -201,7 +201,7 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
         (IDXGIFactory2**)getter_AddRefs(dxgiFactory2));
 
 #if (_WIN32_WINDOWS_MAXVER >= 0x0A00)
-    if (gfxPrefs::Direct3D11UseDoubleBuffering() && SUCCEEDED(hr) &&
+    if (StaticPrefs::Direct3D11UseDoubleBuffering() && SUCCEEDED(hr) &&
         dxgiFactory2 && IsWindows10OrGreater()) {
       // DXGI_SCALING_NONE is not available on Windows 7 with Platform Update.
       // This looks awful for things like the awesome bar and browser window
@@ -290,10 +290,10 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
 }
 
 bool CanUsePartialPresents(ID3D11Device* aDevice) {
-  if (gfxPrefs::PartialPresent() > 0) {
+  if (StaticPrefs::PartialPresent() > 0) {
     return true;
   }
-  if (gfxPrefs::PartialPresent() < 0) {
+  if (StaticPrefs::PartialPresent() < 0) {
     return false;
   }
   if (DeviceManagerDx::Get()->IsWARP()) {
@@ -1200,7 +1200,7 @@ void CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     }
   }
 
-  if (gfxPrefs::LayersDrawFPS()) {
+  if (StaticPrefs::LayersDrawFPS()) {
     uint32_t pixelsPerFrame = 0;
     for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
       pixelsPerFrame += iter.Get().Width() * iter.Get().Height();
@@ -1245,7 +1245,7 @@ void CompositorD3D11::EndFrame() {
 
   if (oldSize == mSize) {
     Present();
-    if (gfxPrefs::CompositorClearState()) {
+    if (StaticPrefs::CompositorClearState()) {
       mContext->ClearState();
     }
   } else {

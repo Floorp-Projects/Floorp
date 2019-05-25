@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gfxPrefs.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventStateManager.h"
@@ -11,6 +10,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
@@ -656,12 +656,12 @@ bool WidgetMouseEvent::IsMiddleClickPasteEnabled() {
 /* static */
 double WidgetWheelEvent::ComputeOverriddenDelta(double aDelta,
                                                 bool aIsForVertical) {
-  if (!gfxPrefs::MouseWheelHasRootScrollDeltaOverride()) {
+  if (!StaticPrefs::MouseWheelHasRootScrollDeltaOverride()) {
     return aDelta;
   }
   int32_t intFactor = aIsForVertical
-                          ? gfxPrefs::MouseWheelRootScrollVerticalFactor()
-                          : gfxPrefs::MouseWheelRootScrollHorizontalFactor();
+                          ? StaticPrefs::MouseWheelRootScrollVerticalFactor()
+                          : StaticPrefs::MouseWheelRootScrollHorizontalFactor();
   // Making the scroll speed slower doesn't make sense. So, ignore odd factor
   // which is less than 1.0.
   if (intFactor <= 100) {
