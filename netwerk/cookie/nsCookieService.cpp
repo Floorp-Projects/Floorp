@@ -4032,8 +4032,7 @@ CookieStatus nsCookieService::CheckPrefs(
   // context, when anti-tracking protection is enabled and when we don't have
   // access to the first-party cookie jar.
   if (aIsForeign && aIsTrackingResource && !aFirstPartyStorageAccessGranted &&
-      aCookieSettings->GetCookieBehavior() ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+      aCookieSettings->GetRejectThirdPartyTrackers()) {
     if (StoragePartitioningEnabled(aInputRejectedReason, aCookieSettings)) {
       MOZ_ASSERT(!aOriginAttrs.mFirstPartyDomain.IsEmpty(),
                  "We must have a StoragePrincipal here!");
