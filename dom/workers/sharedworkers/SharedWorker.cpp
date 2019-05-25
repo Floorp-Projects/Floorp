@@ -68,7 +68,8 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     return nullptr;
   }
 
-  if (storageAllowed == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+  if (storageAllowed ==
+          nsContentUtils::StorageAccess::ePartitionTrackersOrDeny &&
       !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
@@ -122,7 +123,8 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   // Here, the StoragePrincipal is always equal to the SharedWorker's principal
   // because the channel is not opened yet, and, because of this, it's not
   // classified. We need to force the correct originAttributes.
-  if (storageAllowed == nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+  if (storageAllowed ==
+      nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) {
     nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(window);
     if (!sop) {
       aRv.Throw(NS_ERROR_FAILURE);
