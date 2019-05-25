@@ -14,21 +14,30 @@
                               doTest);
 
     function doTest() {
+        // Need a new global for the pref to really take effect.
+        var iframe = document.createElement("iframe");
+        document.documentElement.appendChild(iframe);
+        var win = iframe.contentWindow;
         var s = document.createElement("script");
         s.textContent = `
           'use strict';
-          var savedU2f = u2f;
-          var savedRegister = savedU2f.register;
-          var savedSign = savedU2f.sign;
-          var u2f = u2f || {};
-          u2f.register = function() {};
-          u2f.sign = function() {};
-          is(u2f, savedU2f, "Should still have the right object");
-          is(u2f.register, savedRegister, "Should not allow overriding 'sign'");
-          is(u2f.sign, savedSign, "Should not allow overriding 'sign'");
-          SimpleTest.finish();
+          try {
+            var savedU2f = u2f;
+            var savedRegister = savedU2f.register;
+            var savedSign = savedU2f.sign;
+            var u2f = u2f || {};
+            u2f.register = function() {};
+            u2f.sign = function() {};
+            parent.is(u2f, savedU2f, "Should still have the right object");
+            parent.is(u2f.register, savedRegister, "Should not allow overriding 'sign'");
+            parent.is(u2f.sign, savedSign, "Should not allow overriding 'sign'");
+          } catch (e) {
+            parent.ok(false, "Threw an exception: " + e);
+          } finally {
+            parent.SimpleTest.finish();
+          }
         `;
-        document.documentElement.appendChild(s);
+        win.document.documentElement.appendChild(s);
     }
   </script>
 </head>

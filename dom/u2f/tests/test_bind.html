@@ -14,10 +14,15 @@
         // failure!  Run the actual code we want off something that will report
         // errors properly.
         SimpleTest.executeSoon(function() {
-            is(typeof(u2f.register.bind(u2f)), "function",
+            // Need a new global for the pref to really take effect.
+            var iframe = document.createElement("iframe");
+            document.documentElement.appendChild(iframe);
+            var win = iframe.contentWindow;
+            is(typeof(win.u2f.register.bind(win.u2f)), "function",
                "Should be able to bind u2f.register");
-            is(typeof(u2f.sign.bind(u2f)), "function",
+            is(typeof(win.u2f.sign.bind(win.u2f)), "function",
                "Should be able to bind u2f.sign");
+            iframe.remove();
             SimpleTest.finish();
         });
     }
