@@ -20,6 +20,8 @@ class Page extends ContentProcessDomain {
 
   destructor() {
     this.disable();
+
+    super.destructor();
   }
 
   // commands

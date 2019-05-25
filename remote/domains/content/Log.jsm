@@ -17,6 +17,8 @@ class Log extends ContentProcessDomain {
 
   destructor() {
     this.disable();
+
+    super.destructor();
   }
 
   enable() {
