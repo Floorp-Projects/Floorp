@@ -24,7 +24,7 @@ const ARC_SLICE_CANARY: u64 = 0xf3f3f3f3f3f3f3f3;
 /// cbindgen:derive-eq=false
 /// cbindgen:derive-neq=false
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, Eq, ToShmem)]
+#[derive(Clone, Debug, Eq, PartialEq, ToShmem)]
 pub struct ArcSlice<T>(#[shmem(field_bound)] ThinArc<u64, T>);
 
 impl<T> Deref for ArcSlice<T> {
