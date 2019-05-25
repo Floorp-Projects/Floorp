@@ -1,3 +1,6 @@
+// dummy origin, this is used to be a counter of page loads.
+ORIGIN("PAGELOAD", "PAGELOAD")
+
 ORIGIN("advertstream.com", "lzPiT1FuoHNMKQ1Hw8AaTi68TokOB24ciFBqmCk62ek=")
 ORIGIN("kitaramedia.com", "r+U9PL3uMrjCKe8/T8goY9MHPA+6JckC3R+/1R9TQKA=")
 ORIGIN("questionmarket.com", "3KCO/qN+KmApmfH3RaXAmdR65Z/TRfrr6pds7aDKn1c=")
