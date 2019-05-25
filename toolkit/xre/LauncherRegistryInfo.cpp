@@ -105,9 +105,9 @@ LauncherVoidResult LauncherRegistryInfo::ReflectTelemetryPrefToRegistry(
 
   DWORD value = aEnable ? 1UL : 0UL;
   DWORD len = sizeof(value);
-  LSTATUS result = ::RegSetValueExW(mRegKey.get(), valueName.c_str(), 0,
-                                    REG_DWORD, reinterpret_cast<PBYTE>(&value),
-                                    len);
+  LSTATUS result =
+      ::RegSetValueExW(mRegKey.get(), valueName.c_str(), 0, REG_DWORD,
+                       reinterpret_cast<PBYTE>(&value), len);
   if (result != ERROR_SUCCESS) {
     return LAUNCHER_ERROR_FROM_WIN32(result);
   }
@@ -443,9 +443,9 @@ LauncherResult<bool> LauncherRegistryInfo::GetTelemetrySetting() {
   DWORD value;
   DWORD valueLen = sizeof(value);
   DWORD type;
-  LSTATUS result = ::RegQueryValueExW(
-      mRegKey.get(), telemetryValueName.c_str(), nullptr, &type,
-      reinterpret_cast<PBYTE>(&value), &valueLen);
+  LSTATUS result =
+      ::RegQueryValueExW(mRegKey.get(), telemetryValueName.c_str(), nullptr,
+                         &type, reinterpret_cast<PBYTE>(&value), &valueLen);
   if (result == ERROR_FILE_NOT_FOUND) {
     // Value does not exist, treat as false
     return false;

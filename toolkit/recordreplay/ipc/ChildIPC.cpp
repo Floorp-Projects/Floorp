@@ -120,9 +120,9 @@ static void ChannelMessageHandler(Message::UniquePtr aMsg) {
       js::CharBuffer* buf = new js::CharBuffer();
       buf->append(nmsg.Buffer(), nmsg.BufferSize());
       PauseMainThreadAndInvokeCallback([=]() {
-          js::ManifestStart(*buf);
-          delete buf;
-        });
+        js::ManifestStart(*buf);
+        delete buf;
+      });
       break;
     }
     case MessageType::MiddlemanCallResponse: {
@@ -150,8 +150,8 @@ static void ListenForCheckpointThreadMain(void*) {
     uint8_t data = 0;
     ssize_t rv = HANDLE_EINTR(read(gCheckpointReadFd, &data, 1));
     if (rv > 0) {
-      NS_DispatchToMainThread(NewRunnableFunction("NewCheckpoint",
-                                                  NewCheckpoint));
+      NS_DispatchToMainThread(
+          NewRunnableFunction("NewCheckpoint", NewCheckpoint));
     } else {
       MOZ_RELEASE_ASSERT(errno == EIO);
       MOZ_RELEASE_ASSERT(HasDivergedFromRecording());
@@ -488,8 +488,8 @@ static void PaintFromMainThread() {
 
   if (IsMainChild() && gDrawTargetBuffer) {
     memcpy(gGraphicsShmem, gDrawTargetBuffer, gDrawTargetBufferSize);
-    gChannel->SendMessage(PaintMessage(GetLastCheckpoint(),
-                                       gPaintWidth, gPaintHeight));
+    gChannel->SendMessage(
+        PaintMessage(GetLastCheckpoint(), gPaintWidth, gPaintHeight));
   }
 }
 
@@ -579,7 +579,7 @@ bool CurrentRepaintCannotFail() {
 void ManifestFinished(const js::CharBuffer& aBuffer) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   ManifestFinishedMessage* msg =
-    ManifestFinishedMessage::New(aBuffer.begin(), aBuffer.length());
+      ManifestFinishedMessage::New(aBuffer.begin(), aBuffer.length());
   PauseMainThreadAndInvokeCallback([=]() {
     gChannel->SendMessage(std::move(*msg));
     free(msg);

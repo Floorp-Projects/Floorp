@@ -130,8 +130,9 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
   // list build if we hit them.
   static const uint32_t kMaxEdgeRatio = 5;
   const bool initializeDAG = !aList->mDAG.Length();
-  if (!aKeepLinked && !initializeDAG && aList->mDAG.mDirectPredecessorList.Length() >
-                            (aList->mDAG.mNodesInfo.Length() * kMaxEdgeRatio)) {
+  if (!aKeepLinked && !initializeDAG &&
+      aList->mDAG.mDirectPredecessorList.Length() >
+          (aList->mDAG.mNodesInfo.Length() * kMaxEdgeRatio)) {
     return false;
   }
 
@@ -227,7 +228,9 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
       if (!PreProcessDisplayList(
               item->GetChildren(), SelectAGRForFrame(f, aAGR), aUpdated,
               item->GetPerFrameKey(), aNestingDepth + 1, keepLinked)) {
-        MOZ_RELEASE_ASSERT(!aKeepLinked, "Can't early return since we need to move the out list back");
+        MOZ_RELEASE_ASSERT(
+            !aKeepLinked,
+            "Can't early return since we need to move the out list back");
         return false;
       }
     }
@@ -1201,8 +1204,7 @@ static void AddFramesForContainingBlock(nsIFrame* aBlock,
 // ancestors must also be visited).
 static void FindContainingBlocks(nsIFrame* aFrame,
                                  nsTArray<nsIFrame*>& aExtraFrames) {
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetDisplayListParent(f)) {
+  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetDisplayListParent(f)) {
     if (f->ForceDescendIntoIfVisible()) return;
     f->SetForceDescendIntoIfVisible(true);
     CRR_LOG("Considering OOFs for %p\n", f);

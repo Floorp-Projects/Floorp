@@ -55,11 +55,7 @@ class nsMacUtilsImpl final : public nsIMacUtils {
   static StaticMutex sCachedAppPathMutex;
 #endif
 
-  enum TCSMStatus {
-    TCSM_Unknown = 0,
-    TCSM_Available,
-    TCSM_Unavailable
-  };
+  enum TCSMStatus { TCSM_Unknown = 0, TCSM_Available, TCSM_Unavailable };
   static mozilla::Atomic<nsMacUtilsImpl::TCSMStatus> sTCSMStatus;
 
   static nsresult EnableTCSM();

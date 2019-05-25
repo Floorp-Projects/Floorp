@@ -590,6 +590,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
   // Also used for controlling time during tests
   void SetTestSampleTime(const Maybe<TimeStamp>& aTime);
+
  private:
   Maybe<TimeStamp> mTestSampleTime;
 

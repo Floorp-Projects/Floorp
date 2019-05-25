@@ -55,9 +55,7 @@ class BrowserHost : public RemoteBrowser,
   ContentParent* GetContentParent() const {
     return mRoot ? mRoot->Manager() : nullptr;
   }
-  TabId GetTabId() const {
-    return mId;
-  }
+  TabId GetTabId() const { return mId; }
 
   BrowserHost* AsBrowserHost() override { return this; }
   BrowserBridgeHost* AsBrowserBridgeHost() override { return nullptr; }

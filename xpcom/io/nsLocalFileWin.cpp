@@ -1695,12 +1695,12 @@ nsresult nsLocalFile::CopySingleFile(nsIFile* aSourceFile, nsIFile* aDestParent,
 
     // Pass the flag COPY_FILE_NO_BUFFERING to CopyFileEx as we may be copying
     // to a SMBV2 remote drive. Without this parameter subsequent append mode
-    // file writes can cause the resultant file to become corrupt. We only need to
-    // do this if the major version of Windows is > 5(Only Windows Vista and above
-    // can support SMBV2).  With a 7200RPM hard drive:
-    // Copying a 1KB file with COPY_FILE_NO_BUFFERING takes about 30-60ms.
-    // Copying a 1KB file without COPY_FILE_NO_BUFFERING takes < 1ms.
-    // So we only use COPY_FILE_NO_BUFFERING when we have a remote drive.
+    // file writes can cause the resultant file to become corrupt. We only need
+    // to do this if the major version of Windows is > 5(Only Windows Vista and
+    // above can support SMBV2).  With a 7200RPM hard drive: Copying a 1KB file
+    // with COPY_FILE_NO_BUFFERING takes about 30-60ms. Copying a 1KB file
+    // without COPY_FILE_NO_BUFFERING takes < 1ms. So we only use
+    // COPY_FILE_NO_BUFFERING when we have a remote drive.
     DWORD dwCopyFlags = COPY_FILE_ALLOW_DECRYPTED_DESTINATION;
     bool path1Remote, path2Remote;
     if (!IsRemoteFilePath(filePath.get(), path1Remote) ||
