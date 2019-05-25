@@ -58,7 +58,7 @@ class OkHttpClient(
     }
 }
 
-private fun okhttp3.OkHttpClient.rebuildFor(request: Request, context: Context?): okhttp3.OkHttpClient {
+private fun OkHttpClient.rebuildFor(request: Request, context: Context?): OkHttpClient {
     @Suppress("ComplexCondition")
     if (request.connectTimeout != null ||
         request.readTimeout != null ||
@@ -105,11 +105,9 @@ private fun createRequestBuilderWithBody(request: Request): RequestBuilder {
         RequestBody.create(null, body.useStream { it.readBytes() })
     }
 
-    val requestBuilder = RequestBuilder()
+    return RequestBuilder()
         .url(request.url)
         .method(request.method.name, requestBody)
-
-    return requestBuilder
 }
 
 private fun RequestBuilder.addHeadersFrom(request: Request, defaultHeaders: Headers) {
