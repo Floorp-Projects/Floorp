@@ -83,21 +83,7 @@ nsresult nsSVGForeignObjectFrame::AttributeChanged(int32_t aNameSpaceID,
                                                    nsAtom* aAttribute,
                                                    int32_t aModType) {
   if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
-      nsLayoutUtils::PostRestyleEvent(
-          mContent->AsElement(), RestyleHint{0},
-          nsChangeHint_InvalidateRenderingObservers);
-      nsSVGUtils::ScheduleReflowSVG(this);
-      // XXXjwatt: why mark intrinsic widths dirty? can't we just use eResize?
-      RequestReflow(IntrinsicDirty::StyleChange);
-    } else if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
-      // make sure our cached transform matrix gets (lazily) updated
-      mCanvasTM = nullptr;
-      nsLayoutUtils::PostRestyleEvent(
-          mContent->AsElement(), RestyleHint{0},
-          nsChangeHint_InvalidateRenderingObservers);
-      nsSVGUtils::ScheduleReflowSVG(this);
-    } else if (aAttribute == nsGkAtoms::transform) {
+    if (aAttribute == nsGkAtoms::transform) {
       // We don't invalidate for transform changes (the layers code does that).
       // Also note that SVGTransformableElement::GetAttributeChangeHint will
       // return nsChangeHint_UpdateOverflow for "transform" attribute changes
@@ -112,6 +98,18 @@ nsresult nsSVGForeignObjectFrame::AttributeChanged(int32_t aNameSpaceID,
   }
 
   return NS_OK;
+}
+
+void nsSVGForeignObjectFrame::DidSetComputedStyle(
+    ComputedStyle* aOldComputedStyle) {
+  if (aOldComputedStyle) {
+    if (StyleSVGReset()->mX != aOldComputedStyle->StyleSVGReset()->mX ||
+        StyleSVGReset()->mY != aOldComputedStyle->StyleSVGReset()->mY) {
+      // Invalidate cached transform matrix.
+      mCanvasTM = nullptr;
+      nsSVGUtils::ScheduleReflowSVG(this);
+    }
+  }
 }
 
 void nsSVGForeignObjectFrame::Reflow(nsPresContext* aPresContext,

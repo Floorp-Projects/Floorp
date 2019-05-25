@@ -85,6 +85,8 @@ class nsSVGForeignObjectFrame final : public nsContainerFrame,
   // Return our ::-moz-svg-foreign-content anonymous box.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
+  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+
  protected:
   // implementation helpers:
   void DoReflow();
