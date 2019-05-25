@@ -121,6 +121,8 @@ class CollectionCreationUIView(
     @Suppress("ComplexMethod")
     override fun updateView() = Consumer<CollectionCreationState> {
         step = it.saveCollectionStep
+        selectedTabs = it.selectedTabs
+
         when (it.saveCollectionStep) {
             is SaveCollectionStep.SelectTabs -> {
                 back_button.setOnClickListener {
@@ -133,7 +135,6 @@ class CollectionCreationUIView(
                 val constraint = selectTabsConstraints
                 constraint.applyTo(view.collection_constraint_layout)
 
-                this.selectedTabs = it.selectedTabs
                 collectionCreationTabListAdapter.updateData(it.tabs, it.selectedTabs)
 
                 back_button.text = view.context.getString(R.string.create_collection_select_tabs)

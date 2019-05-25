@@ -123,7 +123,7 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     dismiss()
 
                     context?.let { context ->
-                        val sessionBundle = viewModel.selectedTabs.toList().toSessionBundle(context)
+                        val sessionBundle = it.tabs.toList().toSessionBundle(context)
                         launch(Dispatchers.IO) {
                             requireComponents.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
                         }

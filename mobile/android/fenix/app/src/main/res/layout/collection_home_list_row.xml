@@ -3,86 +3,102 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools" android:id="@+id/item_collection"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:clickable="true"
-        android:clipToPadding="false"
-        android:focusable="true"
-        android:foreground="?android:attr/selectableItemBackground"
-        android:background="@drawable/rounded_all_corners"
-        android:elevation="5dp">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/item_collection"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:background="@drawable/rounded_all_corners"
+    android:clickable="true"
+    android:clipToPadding="false"
+    android:elevation="5dp"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp">
 
         <ImageView
-                android:id="@+id/collection_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="16dp"
-                android:tint="@null"
-                android:src="@drawable/ic_tab_collection"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
+            android:id="@+id/collection_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_tab_collection"
+            android:tint="@null"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/collection_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="17dp"
             android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
             android:ellipsize="end"
+            android:gravity="start"
             android:maxLines="1"
             android:minLines="1"
+            android:text="The quick brown fox jumped over the lazy dog"
             android:textAppearance="@style/Header16TextStyle"
-            android:drawableEnd="@drawable/ic_chevron_down"
-            android:drawablePadding="8dp"
+            app:layout_constraintEnd_toStartOf="@id/chevron"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toEndOf="@+id/collection_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_default="wrap" />
+
+        <ImageView
+            android:id="@+id/chevron"
+            android:layout_width="10dp"
+            android:layout_height="6dp"
             android:layout_marginEnd="16dp"
-            app:layout_constraintStart_toEndOf="@id/collection_icon"
-            app:layout_constraintTop_toTopOf="parent" android:text="The quick brown fox jumps over the lazy dog"/>
+            android:background="@drawable/ic_chevron_down"
+            android:contentDescription="@string/tab_menu"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toStartOf="@+id/collection_share_button"
+            app:layout_constraintStart_toEndOf="@+id/collection_title"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-                android:id="@+id/collection_description"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:minLines="2"
-                android:textAppearance="@style/SubtitleTextStyle"
-                app:layout_constraintStart_toStartOf="@id/collection_title"
-                app:layout_constraintTop_toBottomOf="@id/collection_share_button"
-                app:layout_constraintEnd_toStartOf="@id/collection_share_button"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+            android:id="@+id/collection_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:minLines="2"
+            android:textAppearance="@style/SubtitleTextStyle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/collection_share_button"
+            app:layout_constraintStart_toStartOf="@id/collection_title"
+            app:layout_constraintTop_toBottomOf="@id/collection_share_button" />
 
         <ImageButton
-                android:id="@+id/collection_share_button"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginStart="16dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/tab_menu"
-                android:src="@drawable/ic_hollow_share"
-                android:layout_marginEnd="30dp"
-                app:layout_constraintEnd_toStartOf="@id/collection_overflow_button"
-                app:layout_constraintTop_toTopOf="@id/collection_icon"/>
+            android:id="@+id/collection_share_button"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="30dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/tab_menu"
+            android:src="@drawable/ic_hollow_share"
+            app:layout_constraintEnd_toStartOf="@id/collection_overflow_button"
+            app:layout_constraintTop_toTopOf="@id/collection_icon" />
 
         <ImageButton
-                android:id="@+id/collection_overflow_button"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/tab_menu"
-                android:src="@drawable/ic_menu"
-                android:layout_marginEnd="4.5dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/collection_icon"/>
+            android:id="@+id/collection_overflow_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="4.5dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/tab_menu"
+            android:src="@drawable/ic_menu"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

@@ -21,6 +21,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
@@ -54,6 +55,7 @@ class CollectionViewHolder(
         }
 
         collection_overflow_button.run {
+            increaseTapArea(buttonIncreaseDps)
             setOnClickListener {
                 collectionMenu.menuBuilder
                     .build(view.context)
@@ -62,6 +64,7 @@ class CollectionViewHolder(
         }
 
         collection_share_button.run {
+            increaseTapArea(buttonIncreaseDps)
             setOnClickListener {
                 actionEmitter.onNext(CollectionAction.ShareTabs(collection))
             }
@@ -107,21 +110,13 @@ class CollectionViewHolder(
             view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_top_corners)
             view.collection_description.visibility = View.GONE
 
-            view.collection_title.setCompoundDrawablesWithIntrinsicBounds(
-                null,
-                null,
-                ContextCompat.getDrawable(view.context, R.drawable.ic_chevron_up),
-                null)
+            view.chevron.setBackgroundResource(R.drawable.ic_chevron_up)
         } else {
             (view.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin = COLLAPSED_MARGIN
             view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_all_corners)
             view.collection_description.visibility = View.VISIBLE
 
-            view.collection_title.setCompoundDrawablesWithIntrinsicBounds(
-                null,
-                null,
-                ContextCompat.getDrawable(view.context, R.drawable.ic_chevron_down),
-                null)
+            view.chevron.setBackgroundResource(R.drawable.ic_chevron_down)
         }
 
         view.collection_icon.setColorFilter(
@@ -155,6 +150,7 @@ class CollectionViewHolder(
     }
 
     companion object {
+        const val buttonIncreaseDps = 16
         const val EXPANDED_PADDING = 60
         const val COLLAPSED_MARGIN = 12
         const val LAYOUT_ID = R.layout.collection_home_list_row
