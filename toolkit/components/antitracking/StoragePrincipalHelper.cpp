@@ -7,7 +7,9 @@
 #include "StoragePrincipalHelper.h"
 
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannel.h"
@@ -19,12 +21,15 @@ namespace {
 bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs) {
   MOZ_ASSERT(aChannel);
 
-  if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsCOMPtr<nsICookieSettings> cs;
+  if (NS_FAILED(loadInfo->GetCookieSettings(getter_AddRefs(cs)))) {
     return false;
   }
 
-  if (nsContentUtils::StorageAllowedForChannel(aChannel) !=
-      nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
     return false;
   }
 
@@ -33,16 +38,27 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs) {
     return false;
   }
 
-  MOZ_ASSERT(httpChannel->IsThirdPartyTrackingResource());
+  uint32_t rejectedReason = 0;
+  if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+          httpChannel, uri, &rejectedReason)) {
+    return false;
+  }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  // Let's use the storage principal only if we need to partition the cookie
+  // jar.  We use the lower-level AntiTrackingCommon API here to ensure this
+  // check doesn't send notifications.
+  if (!ShouldPartitionStorage(rejectedReason) ||
+      !StoragePartitioningEnabled(rejectedReason, cs)) {
+    return false;
+  }
+
   nsCOMPtr<nsIPrincipal> toplevelPrincipal = loadInfo->GetTopLevelPrincipal();
   if (!toplevelPrincipal) {
     return false;
   }
 
   nsCOMPtr<nsIURI> principalURI;
-  nsresult rv = toplevelPrincipal->GetURI(getter_AddRefs(principalURI));
+  rv = toplevelPrincipal->GetURI(getter_AddRefs(principalURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
