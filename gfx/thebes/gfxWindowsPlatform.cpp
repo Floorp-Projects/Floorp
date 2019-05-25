@@ -1229,6 +1229,8 @@ void gfxWindowsPlatform::SetupClearTypeParams() {
       dwriteGeometry = defaultRenderingParams->GetPixelGeometry();
     }
 
+    Factory::SetBGRSubpixelOrder(dwriteGeometry == DWRITE_PIXEL_GEOMETRY_BGR);
+
     if (renderMode < DWRITE_RENDERING_MODE_DEFAULT ||
         renderMode > DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC) {
       renderMode = defaultRenderingParams->GetRenderingMode();
