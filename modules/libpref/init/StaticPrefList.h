@@ -14,8 +14,10 @@
 //
 // The file is separated into sections, where the sections are determined by
 // the first segment of the prefnames within (e.g. "network.predictor.enabled"
-// is within the "Network" section). Sections should be kept in alphabetical
+// is within the "Network" section). Sections must be kept in alphabetical
 // order, but prefs within sections need not be.
+// Please follow the existing naming convention when considering adding a new
+// pref and whether you need a new section.
 //
 // Normal prefs
 // ------------
