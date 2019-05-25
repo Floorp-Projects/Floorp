@@ -6,6 +6,7 @@
 include GraphicsMessages;
 include MemoryReportTypes;
 include HangTypes;
+include PrefsTypes;
 include protocol PAPZInputBridge;
 include protocol PCompositorManager;
 include protocol PImageBridge;
@@ -65,6 +66,8 @@ parent:
   // Called to update a gfx preference or variable.
   async UpdatePref(GfxPrefSetting pref);
   async UpdateVar(GfxVarUpdate var);
+
+  async PreferenceUpdate(Pref pref);
 
   // Create a new content-process compositor bridge.
   async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
