@@ -22,6 +22,7 @@ cfg_if! {
         use api::FontInstancePlatformOptions;
         use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
         use crate::gamma_lut::GammaLut;
+        use std::mem;
     }
 }
 
@@ -448,6 +449,7 @@ impl FontContext {
         texture_type: dwrote::DWRITE_TEXTURE_TYPE,
         render_mode: FontRenderMode,
         bitmaps: bool,
+        subpixel_bgr: bool,
     ) -> Vec<u8> {
         match (texture_type, render_mode, bitmaps) {
             (dwrote::DWRITE_TEXTURE_ALIASED_1x1, _, _) => {
@@ -465,9 +467,13 @@ impl FontContext {
                 let length = pixels.len() / 3;
                 let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
                 for i in 0 .. length {
-                    bgra_pixels[i * 4 + 0] = pixels[i * 3 + 2];
-                    bgra_pixels[i * 4 + 1] = pixels[i * 3 + 1];
-                    bgra_pixels[i * 4 + 2] = pixels[i * 3 + 0];
+                    let (mut r, g, mut b) = (pixels[i * 3 + 0], pixels[i * 3 + 1], pixels[i * 3 + 2]);
+                    if subpixel_bgr {
+                        mem::swap(&mut r, &mut b);
+                    }
+                    bgra_pixels[i * 4 + 0] = b;
+                    bgra_pixels[i * 4 + 1] = g;
+                    bgra_pixels[i * 4 + 2] = r;
                     bgra_pixels[i * 4 + 3] = 0xff;
                 }
                 bgra_pixels
@@ -552,7 +558,8 @@ impl FontContext {
         }
 
         let pixels = analysis.create_alpha_texture(texture_type, bounds).or(Err(GlyphRasterError::LoadFailed))?;
-        let mut bgra_pixels = self.convert_to_bgra(&pixels, texture_type, font.render_mode, bitmaps);
+        let mut bgra_pixels = self.convert_to_bgra(&pixels, texture_type, font.render_mode, bitmaps,
+                                                   font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR));
 
         // These are the default values we use in Gecko.
         // We use a gamma value of 2.3 for gdi fonts
