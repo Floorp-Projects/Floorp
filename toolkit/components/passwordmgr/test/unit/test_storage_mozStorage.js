@@ -3,6 +3,7 @@
  * bypassing the normal password manager usage.
  */
 
+/* eslint-disable no-var */
 
 const ENCTYPE_BASE64 = 0;
 const ENCTYPE_SDR = 1;

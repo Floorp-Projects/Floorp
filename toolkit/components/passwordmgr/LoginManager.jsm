@@ -452,4 +452,4 @@ LoginManager.prototype = {
   },
 }; // end of LoginManager implementation
 
-var EXPORTED_SYMBOLS = ["LoginManager"];
+const EXPORTED_SYMBOLS = ["LoginManager"];
