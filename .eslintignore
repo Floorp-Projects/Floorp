@@ -19,7 +19,6 @@ netwerk/cookie/test/browser/**
 netwerk/test/browser/**
 netwerk/test/mochitests/**
 netwerk/test/unit*/**
-startupcache/**
 
 # We currently have no js files in these directories, so we ignore them by
 # default to aid ESLint's performance.
