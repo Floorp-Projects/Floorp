@@ -3116,6 +3116,9 @@ var ContentBlockingCategoriesPrefs = {
       case "cookieBehavior4":
         this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
         break;
+      case "cookieBehavior5":
+        this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] = Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
+        break;
       default:
         Cu.reportError(`Error: Unknown rule observed ${item}`);
       }
