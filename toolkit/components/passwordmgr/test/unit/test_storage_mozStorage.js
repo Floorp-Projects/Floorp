@@ -18,14 +18,14 @@ async function copyFile(aLeafName) {
 }
 
 function openDB(aLeafName) {
-  var dbFile = new FileUtils.File(OS.Constants.Path.profileDir);
+  let dbFile = new FileUtils.File(OS.Constants.Path.profileDir);
   dbFile.append(aLeafName);
 
   return Services.storage.openDatabase(dbFile);
 }
 
 function deleteFile(pathname, filename) {
-  var file = new FileUtils.File(pathname);
+  let file = new FileUtils.File(pathname);
   file.append(filename);
 
   // Suppress failures, this happens in the mozstorage tests on Windows
@@ -39,7 +39,7 @@ function deleteFile(pathname, filename) {
 }
 
 function reloadStorage(aInputPathName, aInputFileName) {
-  var inputFile = null;
+  let inputFile = null;
   if (aInputFileName) {
     inputFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     inputFile.initWithPath(aInputPathName);
@@ -88,17 +88,17 @@ add_task(async function test_execute() {
   try {
     var isGUID = /^\{[0-9a-f\d]{8}-[0-9a-f\d]{4}-[0-9a-f\d]{4}-[0-9a-f\d]{4}-[0-9a-f\d]{12}\}$/;
     function getGUIDforID(conn, id) {
-      var stmt = conn.createStatement("SELECT guid from moz_logins WHERE id = " + id);
+      let stmt = conn.createStatement("SELECT guid from moz_logins WHERE id = " + id);
       stmt.executeStep();
-      var guid = stmt.getString(0);
+      let guid = stmt.getString(0);
       stmt.finalize();
       return guid;
     }
 
     function getEncTypeForID(conn, id) {
-      var stmt = conn.createStatement("SELECT encType from moz_logins WHERE id = " + id);
+      let stmt = conn.createStatement("SELECT encType from moz_logins WHERE id = " + id);
       stmt.executeStep();
-      var encType = stmt.row.encType;
+      let encType = stmt.row.encType;
       stmt.finalize();
       return encType;
     }

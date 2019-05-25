@@ -258,7 +258,7 @@ LoginManager.prototype = {
     this._checkLogin(login);
 
     // Look for an existing entry.
-    var logins = this.findLogins(login.hostname, login.formSubmitURL,
+    let logins = this.findLogins(login.hostname, login.formSubmitURL,
                                  login.httpRealm);
 
     if (logins.some(l => login.matches(l, true))) {
