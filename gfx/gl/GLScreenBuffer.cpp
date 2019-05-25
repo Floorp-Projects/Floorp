@@ -88,7 +88,7 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
     factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, ipcChannel,
                                                    mFlags);
 #elif defined(MOZ_WIDGET_ANDROID)
-    if (XRE_IsParentProcess() && !gfxPrefs::WebGLSurfaceTextureEnabled()) {
+    if (XRE_IsParentProcess() && !StaticPrefs::WebGLSurfaceTextureEnabled()) {
       factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
     } else {
       factory =
@@ -117,7 +117,7 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
           SurfaceFactory_ANGLEShareHandle::Create(gl, caps, ipcChannel, flags);
     }
 
-    if (!factory && gfxPrefs::WebGLDXGLEnabled()) {
+    if (!factory && StaticPrefs::WebGLDXGLEnabled()) {
       factory =
           SurfaceFactory_D3D11Interop::Create(gl, caps, ipcChannel, flags);
     }

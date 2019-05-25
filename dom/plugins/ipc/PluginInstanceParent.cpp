@@ -314,14 +314,14 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value,
 }
 
 static inline bool AllowDirectBitmapSurfaceDrawing() {
-  if (!gfxPrefs::PluginAsyncDrawingEnabled()) {
+  if (!StaticPrefs::PluginAsyncDrawingEnabled()) {
     return false;
   }
   return gfxPlatform::GetPlatform()->SupportsPluginDirectBitmapDrawing();
 }
 
 static inline bool AllowDirectDXGISurfaceDrawing() {
-  if (!gfxPrefs::PluginAsyncDrawingEnabled()) {
+  if (!StaticPrefs::PluginAsyncDrawingEnabled()) {
     return false;
   }
 #if defined(XP_WIN)

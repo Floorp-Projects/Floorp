@@ -20,6 +20,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
@@ -901,11 +902,11 @@ void gfxPlatform::Init() {
         gfxPrefs::LayersD3D11ForceWARP());
     // WebGL prefs
     forcedPrefs.AppendPrintf(
-        "-W%d%d%d%d%d%d%d%d", gfxPrefs::WebGLANGLEForceD3D11(),
-        gfxPrefs::WebGLANGLEForceWARP(), gfxPrefs::WebGLDisabled(),
-        gfxPrefs::WebGLDisableANGLE(), gfxPrefs::WebGLDXGLEnabled(),
-        gfxPrefs::WebGLForceEnabled(), gfxPrefs::WebGLForceLayersReadback(),
-        gfxPrefs::WebGLForceMSAA());
+        "-W%d%d%d%d%d%d%d%d", StaticPrefs::WebGLANGLEForceD3D11(),
+        StaticPrefs::WebGLANGLEForceWARP(), StaticPrefs::WebGLDisabled(),
+        StaticPrefs::WebGLDisableANGLE(), StaticPrefs::WebGLDXGLEnabled(),
+        StaticPrefs::WebGLForceEnabled(), gfxPrefs::WebGLForceLayersReadback(),
+        StaticPrefs::WebGLForceMSAA());
     // Prefs that don't fit into any of the other sections
     forcedPrefs.AppendPrintf("-T%d%d%d) ", gfxPrefs::AndroidRGB16Force(),
                              0,  // SkiaGL canvas no longer supported
@@ -954,7 +955,7 @@ void gfxPlatform::Init() {
   // the (rare) cases where they're used. Note that the GPU process where
   // WebRender runs doesn't initialize gfxPlatform and performs explicit
   // initialization of the bits it needs.
-  if (!gfxVars::UseWebRender()) {
+  if (!UseWebRender()) {
     gPlatform->EnsureDevicesInitialized();
   }
   gPlatform->InitOMTPConfig();
@@ -1048,7 +1049,7 @@ void gfxPlatform::Init() {
   }
 
   RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
-  if (XRE_IsParentProcess() && gfxVars::UseWebRender()) {
+  if (XRE_IsParentProcess() && UseWebRender()) {
     RegisterStrongAsyncMemoryReporter(new WebRenderMemoryReporter());
   }
 
@@ -1153,6 +1154,9 @@ bool gfxPlatform::IsHeadless() {
   return headless;
 }
 
+/* static */
+bool gfxPlatform::UseWebRender() { return gfx::gfxVars::UseWebRender(); }
+
 static bool sLayersIPCIsUp = false;
 
 /* static */
@@ -1254,8 +1258,7 @@ void gfxPlatform::InitLayersIPC() {
   }
 
   if (XRE_IsParentProcess() || recordreplay::IsRecordingOrReplaying()) {
-    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) &&
-        gfxVars::UseWebRender()) {
+    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) && UseWebRender()) {
       wr::RenderThread::Start();
       image::ImageMemoryReporter::InitForWebRender();
     }
@@ -1274,7 +1277,7 @@ void gfxPlatform::ShutdownLayersIPC() {
   if (XRE_IsContentProcess()) {
     gfx::VRManagerChild::ShutDown();
     // cf bug 1215265.
-    if (gfxPrefs::ChildProcessShutdown()) {
+    if (StaticPrefs::ChildProcessShutdown()) {
       layers::CompositorManagerChild::Shutdown();
       layers::ImageBridgeChild::ShutDown();
     }
@@ -1292,7 +1295,7 @@ void gfxPlatform::ShutdownLayersIPC() {
     // This has to happen after shutting down the child protocols.
     layers::CompositorThreadHolder::Shutdown();
     image::ImageMemoryReporter::ShutdownForWebRender();
-    // There is a case that RenderThread exists when gfxVars::UseWebRender() is
+    // There is a case that RenderThread exists when UseWebRender() is
     // false. This could happen when WebRender was fallbacked to compositor.
     if (wr::RenderThread::Get()) {
       wr::RenderThread::ShutDown();
@@ -1840,16 +1843,16 @@ gfxFontEntry* gfxPlatform::MakePlatformFont(const nsACString& aFontName,
 
 mozilla::layers::DiagnosticTypes gfxPlatform::GetLayerDiagnosticTypes() {
   mozilla::layers::DiagnosticTypes type = DiagnosticTypes::NO_DIAGNOSTIC;
-  if (gfxPrefs::DrawLayerBorders()) {
+  if (StaticPrefs::DrawLayerBorders()) {
     type |= mozilla::layers::DiagnosticTypes::LAYER_BORDERS;
   }
-  if (gfxPrefs::DrawTileBorders()) {
+  if (StaticPrefs::DrawTileBorders()) {
     type |= mozilla::layers::DiagnosticTypes::TILE_BORDERS;
   }
-  if (gfxPrefs::DrawBigImageBorders()) {
+  if (StaticPrefs::DrawBigImageBorders()) {
     type |= mozilla::layers::DiagnosticTypes::BIGIMAGE_BORDERS;
   }
-  if (gfxPrefs::FlashLayerBorders()) {
+  if (StaticPrefs::FlashLayerBorders()) {
     type |= mozilla::layers::DiagnosticTypes::FLASH_BORDERS;
   }
   return type;
@@ -1963,12 +1966,12 @@ bool gfxPlatform::OffMainThreadCompositingEnabled() {
 
 eCMSMode gfxPlatform::GetCMSMode() {
   if (!gCMSInitialized) {
-    int32_t mode = gfxPrefs::CMSMode();
+    int32_t mode = StaticPrefs::CMSMode();
     if (mode >= 0 && mode < eCMSMode_AllCount) {
       gCMSMode = static_cast<eCMSMode>(mode);
     }
 
-    bool enableV4 = gfxPrefs::CMSEnableV4();
+    bool enableV4 = StaticPrefs::CMSEnableV4();
     if (enableV4) {
       qcms_enable_iccv4();
     }
@@ -1978,14 +1981,14 @@ eCMSMode gfxPlatform::GetCMSMode() {
 }
 
 int gfxPlatform::GetRenderingIntent() {
-  // gfxPrefs.h is using 0 as the default for the rendering
+  // StaticPrefs.h is using 0 as the default for the rendering
   // intent preference, based on that being the value for
   // QCMS_INTENT_DEFAULT.  Assert here to catch if that ever
   // changes and we can then figure out what to do about it.
   MOZ_ASSERT(QCMS_INTENT_DEFAULT == 0);
 
   /* Try to query the pref system for a rendering intent. */
-  int32_t pIntent = gfxPrefs::CMSRenderingIntent();
+  int32_t pIntent = StaticPrefs::CMSRenderingIntent();
   if ((pIntent < QCMS_INTENT_MIN) || (pIntent > QCMS_INTENT_MAX)) {
     /* If the pref is out of range, use embedded profile. */
     pIntent = -1;
@@ -2428,7 +2431,7 @@ void gfxPlatform::InitGPUProcessPrefs() {
                          NS_LITERAL_CSTRING("FEATURE_FAILURE_SAFE_MODE"));
     return;
   }
-  if (gfxPrefs::LayerScopeEnabled()) {
+  if (StaticPrefs::LayerScopeEnabled()) {
     gpuProc.ForceDisable(FeatureStatus::Blocked,
                          "LayerScope does not work in the GPU process",
                          NS_LITERAL_CSTRING("FEATURE_FAILURE_LAYERSCOPE"));
@@ -2769,7 +2772,7 @@ void gfxPlatform::InitWebRenderConfig() {
     // The parent process runs through all the real decision-making code
     // later in this function. For other processes we still want to report
     // the state of the feature for crash reports.
-    if (gfxVars::UseWebRender()) {
+    if (UseWebRender()) {
       reporter.SetSuccessful();
     }
     return;
@@ -2888,8 +2891,7 @@ void gfxPlatform::InitWebRenderConfig() {
 #ifdef XP_WIN
   if (Preferences::GetBool("gfx.webrender.dcomp-win.enabled", false)) {
     // XXX relax win version to windows 8.
-    if (IsWin10OrLater() && gfxVars::UseWebRender() &&
-        gfxVars::UseWebRenderANGLE()) {
+    if (IsWin10OrLater() && UseWebRender() && gfxVars::UseWebRenderANGLE()) {
       gfxVars::SetUseWebRenderDCompWin(true);
     }
   }
@@ -3138,7 +3140,8 @@ void gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj) {
     aObj.DefineProperty("ApzDragInput", 1);
   }
 
-  if (SupportsApzKeyboardInput() && !gfxPrefs::AccessibilityBrowseWithCaret()) {
+  if (SupportsApzKeyboardInput() &&
+      !StaticPrefs::AccessibilityBrowseWithCaret()) {
     aObj.DefineProperty("ApzKeyboardInput", 1);
   }
 
@@ -3242,7 +3245,7 @@ bool gfxPlatform::AsyncPanZoomEnabled() {
 }
 
 /*static*/
-bool gfxPlatform::PerfWarnings() { return gfxPrefs::PerfWarnings(); }
+bool gfxPlatform::PerfWarnings() { return StaticPrefs::PerfWarnings(); }
 
 void gfxPlatform::GetAcceleratedCompositorBackends(
     nsTArray<LayersBackend>& aBackends) {
@@ -3354,7 +3357,7 @@ bool gfxPlatform::SupportsApzTouchInput() const {
 }
 
 bool gfxPlatform::SupportsApzDragInput() const {
-  return gfxPrefs::APZDragEnabled();
+  return StaticPrefs::APZDragEnabled();
 }
 
 bool gfxPlatform::SupportsApzKeyboardInput() const {
@@ -3362,7 +3365,7 @@ bool gfxPlatform::SupportsApzKeyboardInput() const {
 }
 
 bool gfxPlatform::SupportsApzAutoscrolling() const {
-  return gfxPrefs::APZAutoscrollEnabled();
+  return StaticPrefs::APZAutoscrollEnabled();
 }
 
 void gfxPlatform::InitOpenGLConfig() {

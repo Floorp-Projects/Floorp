@@ -13,6 +13,7 @@
 #endif
 
 #include "mozilla/Base64.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
 #include "gfxPrefs.h"
@@ -289,7 +290,7 @@ bool VRDisplayPuppet::SubmitFrame(ID3D11Texture2D* aSource,
   VRManager* vm = VRManager::Get();
   MOZ_ASSERT(vm);
 
-  switch (gfxPrefs::VRPuppetSubmitFrame()) {
+  switch (StaticPrefs::VRPuppetSubmitFrame()) {
     case 0:
       // The VR frame is not displayed.
       break;
@@ -479,7 +480,7 @@ bool VRDisplayPuppet::SubmitFrame(MacIOSurface* aMacIOSurface,
   VRManager* vm = VRManager::Get();
   MOZ_ASSERT(vm);
 
-  switch (gfxPrefs::VRPuppetSubmitFrame()) {
+  switch (StaticPrefs::VRPuppetSubmitFrame()) {
     case 0:
       // The VR frame is not displayed.
       break;
@@ -640,7 +641,7 @@ VRSystemManagerPuppet::VRSystemManagerPuppet()
 
 /*static*/
 already_AddRefed<VRSystemManagerPuppet> VRSystemManagerPuppet::Create() {
-  if (!gfxPrefs::VREnabled() || !gfxPrefs::VRPuppetEnabled()) {
+  if (!gfxPrefs::VREnabled() || !StaticPrefs::VRPuppetEnabled()) {
     return nullptr;
   }
 

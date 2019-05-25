@@ -203,6 +203,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   static bool IsHeadless();
 
+  static bool UseWebRender();
+
   /**
    * Create an offscreen surface of the given dimensions
    * and image format.

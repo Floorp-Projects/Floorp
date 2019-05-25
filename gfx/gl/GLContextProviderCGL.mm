@@ -10,6 +10,7 @@
 #include <OpenGL/gl.h>
 #include "gfxFailure.h"
 #include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "prenv.h"
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/MacIOSurface.h"
@@ -202,7 +203,7 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWi
     return nullptr;
   }
 
-  GLint opaque = gfxPrefs::CompositorGLContextOpaque();
+  GLint opaque = StaticPrefs::CompositorGLContextOpaque();
   [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
 
   RefPtr<GLContextCGL> glContext =
@@ -226,7 +227,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   std::vector<NSOpenGLPixelFormatAttribute> attribs;
 
-  if (!gfxPrefs::GLAllowHighPower()) {
+  if (!StaticPrefs::GLAllowHighPower()) {
     flags &= ~CreateContextFlags::HIGH_POWER;
   }
   if (flags & CreateContextFlags::ALLOW_OFFLINE_RENDERER ||
@@ -236,7 +237,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
     attribs.push_back(NSOpenGLPFAAllowOfflineRenderers);
   }
 
-  if (gfxPrefs::RequireHardwareGL()) {
+  if (StaticPrefs::RequireHardwareGL()) {
     attribs.push_back(NSOpenGLPFAAccelerated);
   }
 
@@ -260,7 +261,7 @@ static already_AddRefed<GLContextCGL> CreateOffscreenFBOContext(CreateContextFla
 
   RefPtr<GLContextCGL> glContext = new GLContextCGL(flags, SurfaceCaps::Any(), context, true);
 
-  if (gfxPrefs::GLMultithreaded()) {
+  if (StaticPrefs::GLMultithreaded()) {
     CGLEnable(glContext->GetCGLContext(), kCGLCEMPEngine);
   }
   return glContext.forget();

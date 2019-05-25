@@ -192,11 +192,11 @@ void CheckerboardReportService::GetReports(
 }
 
 bool CheckerboardReportService::IsRecordingEnabled() const {
-  return gfxPrefs::APZRecordCheckerboarding();
+  return StaticPrefs::APZRecordCheckerboarding();
 }
 
 void CheckerboardReportService::SetRecordingEnabled(bool aEnabled) {
-  gfxPrefs::SetAPZRecordCheckerboarding(aEnabled);
+  StaticPrefs::SetAPZRecordCheckerboarding(aEnabled);
 }
 
 void CheckerboardReportService::FlushActiveReports() {

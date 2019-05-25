@@ -16,10 +16,8 @@
 #include "gfxFontUtils.h"
 #include "gfxMacPlatformFontList.h"
 #include "gfxFontConstants.h"
-#include "gfxPrefs.h"
 #include "gfxTextRun.h"
 #include "nsCocoaFeatures.h"
-
 #include "cairo-quartz.h"
 
 using namespace mozilla;
@@ -201,7 +199,7 @@ bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
   // so we ignore RequiresAATLayout if vertical is requested.
   auto macFontEntry = static_cast<MacOSFontEntry*>(GetFontEntry());
   if (macFontEntry->RequiresAATLayout() && !aVertical &&
-      gfxPrefs::CoreTextEnabled()) {
+      StaticPrefs::CoreTextEnabled()) {
     if (!mCoreTextShaper) {
       mCoreTextShaper = MakeUnique<gfxCoreTextShaper>(this);
     }

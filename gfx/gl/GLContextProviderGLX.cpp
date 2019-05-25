@@ -19,6 +19,7 @@
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/GtkCompositorWidget.h"
 #include "mozilla/Unused.h"
@@ -185,7 +186,7 @@ bool GLXLibrary::EnsureInitialized() {
 
   if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
       fnLoadSymbols(symbols_texturefrompixmap)) {
-    mUseTextureFromPixmap = gfxPrefs::UseGLXTextureFromPixmap();
+    mUseTextureFromPixmap = StaticPrefs::UseGLXTextureFromPixmap();
   } else {
     mUseTextureFromPixmap = false;
     NS_WARNING("Texture from pixmap disabled");

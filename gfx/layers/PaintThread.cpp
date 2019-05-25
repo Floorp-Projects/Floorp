@@ -162,7 +162,7 @@ void PaintThread::QueuePaintTask(UniquePtr<PaintTask>&& aTask) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTask);
 
-  if (gfxPrefs::LayersOMTPDumpCapture() && aTask->mCapture) {
+  if (StaticPrefs::LayersOMTPDumpCapture() && aTask->mCapture) {
     aTask->mCapture->Dump();
   }
 
@@ -207,7 +207,7 @@ void PaintThread::AsyncPaintTask(CompositorBridgeChild* aBridge,
     target->Flush();
   }
 
-  if (gfxPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
+  if (StaticPrefs::LayersOMTPReleaseCaptureOnMainThread()) {
     // This should ensure the capture drawtarget, which may hold on to
     // UnscaledFont objects, gets destroyed on the main thread (See bug
     // 1404742). This assumes (unflushed) target DrawTargets do not themselves

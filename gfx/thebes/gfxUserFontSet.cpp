@@ -7,12 +7,12 @@
 
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
 #include "nsIProtocolHandler.h"
 #include "gfxFontConstants.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxPlatformFontList.h"
@@ -186,11 +186,11 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
   explicit gfxOTSContext(gfxUserFontEntry* aUserFontEntry)
       : mUserFontEntry(aUserFontEntry) {
     // Whether to apply OTS validation to OpenType Layout tables
-    mCheckOTLTables = gfxPrefs::ValidateOTLTables();
+    mCheckOTLTables = StaticPrefs::ValidateOTLTables();
     // Whether to preserve Variation tables in downloaded fonts
-    mCheckVariationTables = gfxPrefs::ValidateVariationTables();
+    mCheckVariationTables = StaticPrefs::ValidateVariationTables();
     // Whether to preserve color bitmap glyphs
-    mKeepColorBitmaps = gfxPrefs::KeepColorBitmaps();
+    mKeepColorBitmaps = StaticPrefs::KeepColorBitmaps();
   }
 
   virtual ots::TableAction GetTableAction(uint32_t aTag) override {

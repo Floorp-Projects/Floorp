@@ -509,11 +509,11 @@ bool GLContextCrashGuard::UpdateEnvironment() {
 
 #if defined(XP_WIN)
   changed |= CheckAndUpdateBoolPref("gfx.driver-init.webgl-angle-force-d3d11",
-                                    gfxPrefs::WebGLANGLEForceD3D11());
+                                    StaticPrefs::WebGLANGLEForceD3D11());
   changed |= CheckAndUpdateBoolPref("gfx.driver-init.webgl-angle-try-d3d11",
-                                    gfxPrefs::WebGLANGLETryD3D11());
+                                    StaticPrefs::WebGLANGLETryD3D11());
   changed |= CheckAndUpdateBoolPref("gfx.driver-init.webgl-angle-force-warp",
-                                    gfxPrefs::WebGLANGLEForceWARP());
+                                    StaticPrefs::WebGLANGLEForceWARP());
   changed |= CheckAndUpdateBoolPref(
       "gfx.driver-init.webgl-angle",
       FeatureEnabled(nsIGfxInfo::FEATURE_WEBGL_ANGLE, false));
