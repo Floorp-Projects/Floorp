@@ -2,6 +2,7 @@
 
 module.exports = {
   "rules": {
+    "block-scoped-var": "error",
     "brace-style": ["error", "1tbs", {"allowSingleLine": false}],
 
     // XXX Bug 1358949 - This should be reduced down - probably to 20 or to

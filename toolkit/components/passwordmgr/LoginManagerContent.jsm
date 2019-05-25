@@ -1255,6 +1255,7 @@ var LoginManagerContent = {
     }
 
     log("_fillForm", form.elements);
+    let usernameField;
     // Will be set to one of AUTOFILL_RESULT in the `try` block.
     let autofillResult = -1;
     const AUTOFILL_RESULT = {
@@ -1288,8 +1289,8 @@ var LoginManagerContent = {
       // We do this before checking to see if logins are stored,
       // so that the user isn't prompted for a master password
       // without need.
-      var [usernameField, passwordField, ignored] =
-            this._getFormFields(form, false, recipes);
+      let passwordField;
+      [usernameField, passwordField] = this._getFormFields(form, false, recipes);
 
       // If we have a password inputElement parameter and it's not
       // the same as the one heuristically found, use the parameter

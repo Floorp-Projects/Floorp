@@ -84,6 +84,8 @@ function setLoginSavingEnabled(origin, enabled) {
 
 add_task(async function test_execute() {
   const OUTDIR = OS.Constants.Path.profileDir;
+  let testnum = 0;
+  let testdesc = "Setup of nsLoginInfo test-users";
 
   try {
     var isGUID = /^\{[0-9a-f\d]{8}-[0-9a-f\d]{4}-[0-9a-f\d]{4}-[0-9a-f\d]{4}-[0-9a-f\d]{12}\}$/;
@@ -116,8 +118,6 @@ add_task(async function test_execute() {
 
     var storage;
     var dbConnection;
-    var testnum = 0;
-    var testdesc = "Setup of nsLoginInfo test-users";
     var nsLoginInfo = new Components.Constructor(
       "@mozilla.org/login-manager/loginInfo;1",
       Ci.nsILoginInfo);
