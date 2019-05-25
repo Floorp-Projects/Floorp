@@ -50,6 +50,7 @@
 
         <org.mozilla.fenix.home.SearchView
             android:id="@+id/toolbar_wrapper"
+            android:transitionName="toolbar_wrapper_transition"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
@@ -61,21 +62,26 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/wordmark">
 
+            <ImageView
+                android:id="@+id/search_engine_icon"
+                android:transitionName="toolbar_icon_transition"
+                android:layout_margin="12dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp" />
+
             <TextView
+                android:transitionName="toolbar_transition"
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="12sp"
-                android:paddingEnd="12sp"
-                android:paddingTop="16sp"
-                android:paddingBottom="16sp"
-                android:drawablePadding="12sp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="47dp"
+                android:padding="12dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:gravity="center_vertical"
+                android:layout_gravity="center_vertical"
                 android:text="@string/search_hint"
                 android:textColor="?primaryText"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
         </org.mozilla.fenix.home.SearchView>
 
         <View

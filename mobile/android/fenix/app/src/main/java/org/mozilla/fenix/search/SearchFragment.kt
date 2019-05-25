@@ -19,6 +19,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
+import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.browser.search.SearchEngine
@@ -58,6 +59,12 @@ class SearchFragment : Fragment(), BackHandler {
     private var isPrivate = false
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
     private var permissionDidUpdate = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        postponeEnterTransition()
+        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -172,6 +179,8 @@ class SearchFragment : Fragment(), BackHandler {
                 requireComponents.analytics.metrics.track(Event.SearchShortcutMenuOpened)
             }
         }
+
+        startPostponedEnterTransition()
     }
 
     override fun onResume() {

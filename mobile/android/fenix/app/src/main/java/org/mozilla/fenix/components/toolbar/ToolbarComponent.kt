@@ -47,6 +47,7 @@ class ToolbarComponent(
     )
 
     init {
+        getView().transitionName = "toolbar_transition"
         bind()
         applyTheme()
     }

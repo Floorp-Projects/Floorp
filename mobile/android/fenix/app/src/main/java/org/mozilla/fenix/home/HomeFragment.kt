@@ -55,6 +55,7 @@ import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
 import org.mozilla.fenix.home.sessioncontrol.Mode
 import org.mozilla.fenix.home.sessioncontrol.OnboardingAction
+import org.mozilla.fenix.home.sessioncontrol.OnboardingState
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.SessionControlComponent
@@ -63,7 +64,6 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlViewModel
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
-import org.mozilla.fenix.home.sessioncontrol.OnboardingState
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -171,7 +171,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
             runBlocking(Dispatchers.Main) {
-                view.toolbar.setCompoundDrawables(searchIcon, null, null, null)
+                search_engine_icon.setImageDrawable(searchIcon)
             }
         }
 
@@ -188,7 +188,13 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             invokePendingDeleteJobs()
             onboarding.finish()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
-            Navigation.findNavController(it).navigate(directions)
+            val extras =
+                FragmentNavigator.Extras.Builder()
+                    .addSharedElement(it, "toolbar_transition")
+                    .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
+                    .addSharedElement(search_engine_icon, "toolbar_icon_transition")
+                    .build()
+            Navigation.findNavController(it).navigate(directions, extras)
 
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
