@@ -171,7 +171,7 @@ bool WebRenderLayerManager::BeginTransaction(const nsCString& aURL) {
   // enabled in this process; it may be enabled in the parent process,
   // and the parent process expects unique sequence numbers.
   ++mPaintSequenceNumber;
-  if (gfxPrefs::APZTestLoggingEnabled()) {
+  if (StaticPrefs::APZTestLoggingEnabled()) {
     mApzTestData.StartNewPaint(mPaintSequenceNumber);
   }
   return true;
@@ -692,7 +692,7 @@ void WebRenderLayerManager::FlushRendering() {
   if (WrBridge()->GetCompositorUseDComp() && !resizing) {
     cBridge->SendFlushRenderingAsync();
   } else if (mWidget->SynchronouslyRepaintOnResize() ||
-             gfxPrefs::LayersForceSynchronousResize()) {
+             StaticPrefs::LayersForceSynchronousResize()) {
     cBridge->SendFlushRendering();
   } else {
     cBridge->SendFlushRenderingAsync();
@@ -726,7 +726,7 @@ WebRenderLayerManager::CreatePersistentBufferProvider(
   // initialized with WebRender to reduce memory usage.
   gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
 
-  if (gfxPrefs::PersistentBufferProviderSharedEnabled()) {
+  if (StaticPrefs::PersistentBufferProviderSharedEnabled()) {
     RefPtr<PersistentBufferProvider> provider =
         PersistentBufferProviderShared::Create(aSize, aFormat,
                                                AsKnowsCompositor());

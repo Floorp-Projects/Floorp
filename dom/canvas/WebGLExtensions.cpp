@@ -5,9 +5,9 @@
 
 #include "WebGLExtensions.h"
 
-#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "mozilla/StaticPrefs.h"
 #include "WebGLContext.h"
 
 namespace mozilla {
@@ -62,7 +62,7 @@ WebGLExtensionFBORenderMipmap::~WebGLExtensionFBORenderMipmap() = default;
 bool WebGLExtensionFBORenderMipmap::IsSupported(
     const WebGLContext* const webgl) {
   if (webgl->IsWebGL2()) return false;
-  if (!gfxPrefs::WebGLDraftExtensionsEnabled()) return false;
+  if (!StaticPrefs::WebGLDraftExtensionsEnabled()) return false;
 
   const auto& gl = webgl->gl;
   if (!gl->IsGLES()) return true;
@@ -83,7 +83,7 @@ WebGLExtensionMultiview::~WebGLExtensionMultiview() = default;
 
 bool WebGLExtensionMultiview::IsSupported(const WebGLContext* const webgl) {
   if (!webgl->IsWebGL2()) return false;
-  if (!gfxPrefs::WebGLDraftExtensionsEnabled()) return false;
+  if (!StaticPrefs::WebGLDraftExtensionsEnabled()) return false;
 
   const auto& gl = webgl->gl;
   return gl->IsSupported(gl::GLFeature::multiview);

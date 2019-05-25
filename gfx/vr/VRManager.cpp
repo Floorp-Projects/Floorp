@@ -387,7 +387,7 @@ void VRManager::CheckForInactiveTimeout() {
     Shutdown();
   } else {
     TimeDuration duration = TimeStamp::Now() - mLastActiveTime;
-    if (duration.ToMilliseconds() > gfxPrefs::VRInactiveTimeout()) {
+    if (duration.ToMilliseconds() > StaticPrefs::VRInactiveTimeout()) {
       Shutdown();
       // We must not throttle the next enumeration request
       // after an idle timeout, as it may result in the
@@ -422,7 +422,7 @@ void VRManager::EnumerateVRDisplays() {
    */
   if (!mLastDisplayEnumerationTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastDisplayEnumerationTime;
-    if (duration.ToMilliseconds() < gfxPrefs::VRDisplayEnumerateInterval()) {
+    if (duration.ToMilliseconds() < StaticPrefs::VRDisplayEnumerateInterval()) {
       return;
     }
   }
@@ -697,7 +697,8 @@ void VRManager::ScanForControllers() {
   // have enumerated recently
   if (!mLastControllerEnumerationTime.IsNull()) {
     TimeDuration duration = TimeStamp::Now() - mLastControllerEnumerationTime;
-    if (duration.ToMilliseconds() < gfxPrefs::VRControllerEnumerateInterval()) {
+    if (duration.ToMilliseconds() <
+        StaticPrefs::VRControllerEnumerateInterval()) {
       return;
     }
   }

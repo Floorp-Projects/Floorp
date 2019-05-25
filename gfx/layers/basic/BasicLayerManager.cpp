@@ -661,7 +661,7 @@ bool BasicLayerManager::EndTransactionInternal(
 }
 
 void BasicLayerManager::FlashWidgetUpdateArea(gfxContext* aContext) {
-  if (gfxPrefs::WidgetUpdateFlashing()) {
+  if (StaticPrefs::WidgetUpdateFlashing()) {
     float r = float(rand()) / RAND_MAX;
     float g = float(rand()) / RAND_MAX;
     float b = float(rand()) / RAND_MAX;

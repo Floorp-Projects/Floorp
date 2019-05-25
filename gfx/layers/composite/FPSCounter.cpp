@@ -7,13 +7,13 @@
 #include <stddef.h>                     // for size_t
 #include "Units.h"                      // for ScreenIntRect
 #include "gfxRect.h"                    // for gfxRect
-#include "gfxPrefs.h"                   // for gfxPrefs
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/gfx/Types.h"          // for Color, SurfaceFormat
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/Effects.h"  // for Effect, EffectChain, etc
+#include "mozilla/StaticPrefs.h"     // for StaticPrefs
 #include "mozilla/TimeStamp.h"       // for TimeStamp, TimeDuration
 #include "nsPoint.h"                 // for nsIntPoint
 #include "nsRect.h"                  // for mozilla::gfx::IntRect
@@ -259,7 +259,7 @@ double FPSCounter::GetStdDev(std::map<int, int> aHistogram) {
 }
 
 void FPSCounter::PrintFPS() {
-  if (!gfxPrefs::FPSPrintHistogram()) {
+  if (!StaticPrefs::FPSPrintHistogram()) {
     return;
   }
 
@@ -308,7 +308,7 @@ void FPSCounter::PrintHistogram(std::map<int, int>& aHistogram) {
 // Write FPS timestamp data to a file only if
 // draw-fps.write-to-file is true
 nsresult FPSCounter::WriteFrameTimeStamps() {
-  if (!gfxPrefs::WriteFPSToFile()) {
+  if (!StaticPrefs::WriteFPSToFile()) {
     return NS_OK;
   }
 

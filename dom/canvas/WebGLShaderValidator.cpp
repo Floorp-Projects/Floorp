@@ -5,10 +5,10 @@
 
 #include "WebGLShaderValidator.h"
 
-#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "MurmurHash3.h"
 #include "nsPrintfCString.h"
 #include <string>
@@ -67,7 +67,7 @@ static ShCompileOptions ChooseValidatorCompileOptions(
     }
   }
 
-  if (gfxPrefs::WebGLAllANGLEOptions()) {
+  if (StaticPrefs::WebGLAllANGLEOptions()) {
     options = -1;
 
     options ^= SH_INTERMEDIATE_TREE;
