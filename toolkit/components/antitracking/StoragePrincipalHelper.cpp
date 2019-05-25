@@ -24,7 +24,7 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs) {
   }
 
   if (nsContentUtils::StorageAllowedForChannel(aChannel) !=
-      nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+      nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) {
     return false;
   }
 

@@ -305,7 +305,7 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+  if (access == nsContentUtils::StorageAccess::ePartitionTrackersOrDeny &&
       !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }

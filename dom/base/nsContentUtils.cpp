@@ -8504,7 +8504,7 @@ nsContentUtils::StorageAccess nsContentUtils::InternalStorageAllowedCheck(
   // We want to have a partitioned storage only for trackers.
   if (aRejectedReason ==
       nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
-    return StorageAccess::ePartitionedOrDeny;
+    return StorageAccess::ePartitionTrackersOrDeny;
   }
 
   return StorageAccess::eDeny;

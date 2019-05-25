@@ -301,7 +301,8 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   // We want to allow opaque origins.
   if (storagePrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
       (storageAccess == nsContentUtils::StorageAccess::eDeny ||
-       (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+       (storageAccess ==
+            nsContentUtils::StorageAccess::ePartitionTrackersOrDeny &&
         !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()))) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;

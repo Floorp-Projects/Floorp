@@ -4369,8 +4369,8 @@ Storage* nsGlobalWindowInner::GetSessionStorage(ErrorResult& aError) {
     //
     // 3. Tracking protection (BEHAVIOR_REJECT_TRACKER) is in effect and
     // IsThirdPartyTrackingResourceWindow() returned true and there wasn't a
-    // permission that allows it. This will return ePartitionedOrDeny with a
-    // reason of STATE_COOKIES_BLOCKED_TRACKER.
+    // permission that allows it. This will return ePartitionTrackersOrDeny with
+    // a reason of STATE_COOKIES_BLOCKED_TRACKER.
     //
     // In the 1st case, the user has explicitly indicated that they don't want
     // to allow any storage to the origin or all origins and so we throw an
@@ -4445,7 +4445,7 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
       nsContentUtils::StorageAllowedForWindow(this);
 
   // We allow partitioned localStorage only to some hosts.
-  if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+  if (access == nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) {
     if (!mDoc) {
       access = nsContentUtils::StorageAccess::eDeny;
     } else if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
@@ -4475,7 +4475,7 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   // LocalStorage. The previous data is lost and the 2 window.localStorage
   // objects, before and after the permission granted, will be different.
   if ((StaticPrefs::privacy_storagePrincipal_enabledForTrackers() ||
-       access != nsContentUtils::StorageAccess::ePartitionedOrDeny) &&
+       access != nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) &&
       (!mLocalStorage ||
        mLocalStorage->Type() == Storage::ePartitionedLocalStorage)) {
     RefPtr<Storage> storage;
@@ -4524,7 +4524,7 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
     MOZ_ASSERT(mLocalStorage);
   }
 
-  if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+  if (access == nsContentUtils::StorageAccess::ePartitionTrackersOrDeny &&
       !mLocalStorage) {
     nsIPrincipal* principal = GetPrincipal();
     if (!principal) {
@@ -4544,7 +4544,7 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
 
   MOZ_ASSERT_IF(
       !StaticPrefs::privacy_storagePrincipal_enabledForTrackers(),
-      (access == nsContentUtils::StorageAccess::ePartitionedOrDeny) ==
+      (access == nsContentUtils::StorageAccess::ePartitionTrackersOrDeny) ==
           (mLocalStorage->Type() == Storage::ePartitionedLocalStorage));
 
   return mLocalStorage;

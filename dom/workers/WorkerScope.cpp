@@ -409,7 +409,7 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
       return nullptr;
     }
 
-    if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+    if (access == nsContentUtils::StorageAccess::ePartitionTrackersOrDeny &&
         !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
       NS_WARNING("IndexedDB is not allowed in this worker!");
       aErrorResult = NS_ERROR_DOM_SECURITY_ERR;
