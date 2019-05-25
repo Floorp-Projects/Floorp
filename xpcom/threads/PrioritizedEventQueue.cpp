@@ -26,7 +26,7 @@ void PrioritizedEventQueue::PutEvent(
       mInputQueueState == STATE_DISABLED) {
     priority = EventQueuePriority::Normal;
   } else if (priority == EventQueuePriority::MediumHigh &&
-             !StaticPrefs::medium_high_event_queue_enabled()) {
+             !StaticPrefs::threads_medium_high_event_queue_enabled()) {
     priority = EventQueuePriority::Normal;
   }
 
