@@ -51,6 +51,7 @@
 #include "gfxPlatform.h"
 #include "gfxFont.h"
 #include "gfxBlur.h"
+#include "gfxPrefs.h"
 #include "gfxTextRun.h"
 #include "gfxUtils.h"
 
@@ -92,7 +93,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -1231,8 +1231,8 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   }
 
   // Check that the dimensions are sane
-  if (mWidth > StaticPrefs::MaxCanvasSize() ||
-      mHeight > StaticPrefs::MaxCanvasSize() || mWidth < 0 || mHeight < 0) {
+  if (mWidth > gfxPrefs::MaxCanvasSize() ||
+      mHeight > gfxPrefs::MaxCanvasSize() || mWidth < 0 || mHeight < 0) {
     SetErrorState();
     return false;
   }

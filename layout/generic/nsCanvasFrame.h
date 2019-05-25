@@ -16,6 +16,7 @@
 #include "nsIPopupContainer.h"
 #include "nsDisplayList.h"
 #include "nsIAnonymousContentCreator.h"
+#include "gfxPrefs.h"
 
 class nsPresContext;
 class gfxContext;

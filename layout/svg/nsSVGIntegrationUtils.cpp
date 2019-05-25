@@ -9,7 +9,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxDrawable.h"
-
+#include "gfxPrefs.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSClipPathInstance.h"
 #include "nsDisplayList.h"
@@ -1005,7 +1005,7 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
   context.SetMatrix(matrixAutoSaveRestore.Matrix());
   aPaintChild();
 
-  if (StaticPrefs::DrawMaskLayer()) {
+  if (gfxPrefs::DrawMaskLayer()) {
     gfxContextAutoSaveRestore saver(&context);
 
     context.NewPath();

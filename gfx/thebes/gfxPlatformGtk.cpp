@@ -18,11 +18,11 @@
 #include "gfxUserFontSet.h"
 #include "gfxUtils.h"
 #include "gfxFT2FontBase.h"
+#include "gfxPrefs.h"
 #include "gfxTextRun.h"
 #include "VsyncSource.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/StaticPrefs.h"
 #include "base/task.h"
 #include "base/thread.h"
 #include "base/message_loop.h"
@@ -291,7 +291,7 @@ double gfxPlatformGtk::GetFontScaleFactor() {
 
 bool gfxPlatformGtk::UseImageOffscreenSurfaces() {
   return GetDefaultContentBackend() != mozilla::gfx::BackendType::CAIRO ||
-         StaticPrefs::UseImageOffscreenSurfaces();
+         gfxPrefs::UseImageOffscreenSurfaces();
 }
 
 gfxImageFormat gfxPlatformGtk::GetOffscreenFormat() {

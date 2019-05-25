@@ -10,7 +10,6 @@
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"  // for gfxPlatform
 #include "mozilla/Atomics.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ipc/SharedMemory.h"  // for SharedMemory, etc
 #include "mozilla/layers/CompositableForwarder.h"
@@ -33,6 +32,7 @@
 #include "gfxUtils.h"                        // for gfxUtils::GetAsLZ4Base64Str
 #include "IPDLActor.h"
 #include "BufferTexture.h"
+#include "gfxPrefs.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/ipc/CrossProcessSemaphore.h"
 
@@ -1080,13 +1080,13 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
 #endif
 
 #ifdef XP_MACOSX
-  if (!data && StaticPrefs::UseIOSurfaceTextures()) {
+  if (!data && gfxPrefs::UseIOSurfaceTextures()) {
     data = MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);
   }
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-  if (!data && StaticPrefs::UseSurfaceTextureTextures()) {
+  if (!data && gfxPrefs::UseSurfaceTextureTextures()) {
     data = AndroidNativeWindowTextureData::Create(aSize, aFormat);
   }
 #endif
@@ -1347,7 +1347,7 @@ void TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
   AppendToString(aStream, mFlags, " [flags=", "]");
 
 #ifdef MOZ_DUMP_PAINTING
-  if (StaticPrefs::LayersDumpTexture()) {
+  if (gfxPrefs::LayersDumpTexture()) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
 

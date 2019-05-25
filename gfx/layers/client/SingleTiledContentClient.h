@@ -20,7 +20,7 @@ class ClientLayerManager;
  * This buffer provides an implementation of ValidateTile using a
  * thebes callback and can support painting using a single paint buffer.
  * Whether a single paint buffer is used is controlled by
- * StaticPrefs::PerTileDrawing().
+ * gfxPrefs::PerTileDrawing().
  */
 class ClientSingleTiledLayerBuffer : public ClientTiledLayerBuffer,
                                      public TextureClientAllocator {

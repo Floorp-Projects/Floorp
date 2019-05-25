@@ -6,7 +6,7 @@
 
 #include "ScaledFontBase.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "gfxPrefs.h"
 
 #ifdef USE_SKIA
 #  include "PathSkia.h"
@@ -36,7 +36,7 @@ Atomic<uint32_t> ScaledFont::sDeletionCounter(0);
 ScaledFont::~ScaledFont() { sDeletionCounter++; }
 
 AntialiasMode ScaledFont::GetDefaultAAMode() {
-  if (StaticPrefs::DisableAllTextAA()) {
+  if (gfxPrefs::DisableAllTextAA()) {
     return AntialiasMode::NONE;
   }
 

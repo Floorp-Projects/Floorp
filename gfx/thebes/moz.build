@@ -42,6 +42,7 @@ EXPORTS += [
     'gfxPlatform.h',
     'gfxPlatformFontList.h',
     'gfxPoint.h',
+    'gfxPrefs.h',
     'gfxQuad.h',
     'gfxQuaternion.h',
     'gfxRect.h',
@@ -179,6 +180,7 @@ SOURCES += [
     # gfxFontUtils.cpp and gfxPlatform.cpp include mac system header conflicting with point/size
     'gfxFontUtils.cpp',
     'gfxPlatform.cpp',
+    'gfxPrefs.cpp',
     'PrintTarget.cpp',
     'PrintTargetThebes.cpp',
 ]

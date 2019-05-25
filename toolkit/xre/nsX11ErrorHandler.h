@@ -5,7 +5,6 @@
 
 #ifdef MOZ_X11
 #  include <X11/Xlib.h>
-#  include "X11UndefineNone.h"  // Unset some macros defined by X.h included by Xlib.h
 
 /**
  * InstallX11ErrorHandler is not suitable for processes running with GTK3 as

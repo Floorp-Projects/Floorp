@@ -84,7 +84,7 @@ class GestureEventListener final {
 
     // A touch start with a single touch point has just happened.
     // After having gotten into this state we start timers for MAX_TAP_TIME and
-    // StaticPrefs::UiClickHoldContextMenusDelay().
+    // gfxPrefs::UiClickHoldContextMenusDelay().
     // Allowed next states: GESTURE_MULTI_TOUCH_DOWN, GESTURE_NONE,
     //                      GESTURE_FIRST_SINGLE_TOUCH_UP,
     //                      GESTURE_LONG_TOUCH_DOWN,
@@ -93,8 +93,8 @@ class GestureEventListener final {
 
     // While in GESTURE_FIRST_SINGLE_TOUCH_DOWN state a MAX_TAP_TIME timer got
     // triggered. Now we'll trigger either a single tap if a user lifts her
-    // finger or a long tap if StaticPrefs::UiClickHoldContextMenusDelay()
-    // happens first.
+    // finger or a long tap if gfxPrefs::UiClickHoldContextMenusDelay() happens
+    // first.
     // Allowed next states: GESTURE_MULTI_TOUCH_DOWN, GESTURE_NONE,
     //                      GESTURE_LONG_TOUCH_DOWN.
     GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN,

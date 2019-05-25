@@ -24,6 +24,7 @@
 #include "YCbCrUtils.h"
 #include <algorithm>
 #include "ImageContainer.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 using namespace mozilla::gfx;
@@ -367,7 +368,7 @@ bool BasicCompositor::SupportsEffect(EffectTypes aEffect) {
 }
 
 bool BasicCompositor::SupportsLayerGeometry() const {
-  return StaticPrefs::BasicLayerGeometry();
+  return gfxPrefs::BasicLayerGeometry();
 }
 
 static RefPtr<gfx::Path> BuildPathFromPolygon(const RefPtr<DrawTarget>& aDT,
@@ -1023,7 +1024,7 @@ void BasicCompositor::EndFrame() {
   // Pop aClipRectIn/bounds rect
   mRenderTarget->mDrawTarget->PopClip();
 
-  if (StaticPrefs::WidgetUpdateFlashing()) {
+  if (gfxPrefs::WidgetUpdateFlashing()) {
     float r = float(rand()) / RAND_MAX;
     float g = float(rand()) / RAND_MAX;
     float b = float(rand()) / RAND_MAX;

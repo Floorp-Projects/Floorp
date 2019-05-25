@@ -6,12 +6,11 @@
 
 #include "GPUProcessHost.h"
 #include "chrome/common/process_watcher.h"
+#include "gfxPrefs.h"
 #include "mozilla/gfx/Logging.h"
 #include "nsITimer.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 #include "VRGPUChild.h"
-#include "ProcessUtils.h"
 
 namespace mozilla {
 namespace gfx {
@@ -36,12 +35,6 @@ bool GPUProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(!mGPUChild);
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
 
-  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
-  if (!mPrefSerializer->SerializeToSharedMemory()) {
-    return false;
-  }
-  mPrefSerializer->AddSharedPrefCmdLineArgs(*this, aExtraOpts);
-
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   mSandboxLevel = Preferences::GetInt("security.sandbox.gpu.level");
 #endif
@@ -51,7 +44,6 @@ bool GPUProcessHost::Launch(StringVector aExtraOpts) {
 
   if (!GeckoChildProcessHost::AsyncLaunch(aExtraOpts)) {
     mLaunchPhase = LaunchPhase::Complete;
-    mPrefSerializer = nullptr;
     return false;
   }
   return true;
@@ -62,7 +54,7 @@ bool GPUProcessHost::WaitForLaunch() {
     return !!mGPUChild;
   }
 
-  int32_t timeoutMs = StaticPrefs::GPUProcessTimeoutMs();
+  int32_t timeoutMs = gfxPrefs::GPUProcessTimeoutMs();
 
   // If one of the following environment variables are set we can effectively
   // ignore the timeout - as we can guarantee the compositor process will be
@@ -131,7 +123,6 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(!mGPUChild);
 
   mLaunchPhase = LaunchPhase::Complete;
-  mPrefSerializer = nullptr;
 
   if (aSucceeded) {
     mProcessToken = ++sProcessTokenCounter;

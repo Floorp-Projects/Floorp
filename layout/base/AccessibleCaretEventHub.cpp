@@ -9,7 +9,7 @@
 #include "AccessibleCaretLogger.h"
 #include "AccessibleCaretManager.h"
 #include "Layers.h"
-
+#include "gfxPrefs.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -563,7 +563,7 @@ void AccessibleCaretEventHub::LaunchLongTapInjector() {
     return;
   }
 
-  int32_t longTapDelay = StaticPrefs::UiClickHoldContextMenusDelay();
+  int32_t longTapDelay = gfxPrefs::UiClickHoldContextMenusDelay();
   mLongTapInjectorTimer->InitWithNamedFuncCallback(
       FireLongTap, this, longTapDelay, nsITimer::TYPE_ONE_SHOT,
       "AccessibleCaretEventHub::LaunchLongTapInjector");

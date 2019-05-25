@@ -24,7 +24,7 @@ class WrPrefRolloutWorkAroundTestCase(MarionetteTestCase):
     '''
 
     def test_wr_rollout_workaround_on_non_qualifying_hw(self):
-        # Override the StaticPrefs so that WR is not enabled, as it would be before a rollout.
+        # Override the gfxPref so that WR is not enabled, as it would be before a rollout.
         self.marionette.set_pref(pref=gfx_rollout_override, value=False)
         # Set HW override so we behave as if we on non-qualifying hardware.
         self.marionette.set_pref(pref=hw_qualified_override, value=False)
