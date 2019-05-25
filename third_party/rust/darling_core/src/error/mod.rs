@@ -110,7 +110,7 @@ impl Error {
     ///
     /// impl FromMeta for Foo {
     ///     fn from_value(value: &Lit) -> Result<Self> {
-    ///         if let Lit::Str(ref lit_str) = value {
+    ///         if let Lit::Str(ref lit_str) = *value {
     ///             Ok(Foo(lit_str.value()))
     ///         } else {
     ///             Err(Error::unexpected_lit_type(value))
@@ -181,15 +181,6 @@ impl Error {
     /// Check if this error is associated with a span in the token stream.
     pub fn has_span(&self) -> bool {
         self.span.is_some()
-    }
-
-    /// Override the source code location of this error with a new one.
-    #[deprecated(
-        since = "0.8.3",
-        note = "Callers should not broaden error spans. Use with_span instead."
-    )]
-    pub fn set_span(&mut self, span: Span) {
-        self.span = Some(span)
     }
 
     /// Tie a span to the error if none is already present. This is used in `darling::FromMeta`
