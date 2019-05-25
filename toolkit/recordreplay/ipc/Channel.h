@@ -109,7 +109,7 @@ struct Message {
 
  protected:
   Message(MessageType aType, uint32_t aSize)
-    : mType(aType), mReceiveTime(0), mSize(aSize) {
+      : mType(aType), mReceiveTime(0), mSize(aSize) {
     MOZ_RELEASE_ASSERT(mSize >= sizeof(*this));
   }
 

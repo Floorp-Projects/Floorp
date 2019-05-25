@@ -1763,7 +1763,8 @@ nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver* aObserver) {
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetObservers(nsTArray<RefPtr<nsINavBookmarkObserver>>& aObservers) {
+nsNavBookmarks::GetObservers(
+    nsTArray<RefPtr<nsINavBookmarkObserver>>& aObservers) {
   aObservers.Clear();
 
   if (!mCanNotify) return NS_OK;

@@ -225,7 +225,6 @@ BasicCompositor::BasicCompositor(CompositorBridgeParent* aParent,
   mMaxTextureSize =
       std::min(Factory::GetMaxSurfaceSize(gfxVars::ContentBackend()),
                Factory::GetMaxSurfaceSize(BackendType::CAIRO));
-
 }
 
 BasicCompositor::~BasicCompositor() { MOZ_COUNT_DTOR(BasicCompositor); }

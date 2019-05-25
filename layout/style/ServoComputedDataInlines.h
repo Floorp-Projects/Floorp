@@ -11,9 +11,9 @@
 #include "nsStyleStruct.h"
 
 namespace mozilla {
-#define STYLE_STRUCT(name_) \
-  struct Gecko##name_ {     \
-    ServoManuallyDrop<nsStyle##name_> gecko;   \
+#define STYLE_STRUCT(name_)                  \
+  struct Gecko##name_ {                      \
+    ServoManuallyDrop<nsStyle##name_> gecko; \
   };
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT

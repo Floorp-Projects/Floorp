@@ -171,7 +171,8 @@ enum class StyleScrollbarWidth : uint8_t {
 // Shape source type
 enum class StyleShapeSourceType : uint8_t {
   None,
-  Image,  // shape-outside / clip-path only, and clip-path only uses it for <url>s
+  Image,  // shape-outside / clip-path only, and clip-path only uses it for
+          // <url>s
   Shape,
   Box,
   Path,  // SVG path function
