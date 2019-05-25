@@ -8,8 +8,9 @@
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
-
+#include "mozilla/dom/ContentParent.h"
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
 #include "RDDChild.h"
@@ -40,6 +41,7 @@ RDDProcessManager::RDDProcessManager()
 
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
+  Preferences::AddStrongObserver(mObserver, "");
 }
 
 RDDProcessManager::~RDDProcessManager() {
@@ -62,6 +64,8 @@ RDDProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
                                      const char16_t* aData) {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     mManager->OnXPCOMShutdown();
+  } else if (!strcmp(aTopic, "nsPref:changed")) {
+    mManager->OnPreferenceChange(aData);
   }
   return NS_OK;
 }
@@ -69,10 +73,30 @@ RDDProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
 void RDDProcessManager::OnXPCOMShutdown() {
   if (mObserver) {
     nsContentUtils::UnregisterShutdownObserver(mObserver);
+    Preferences::RemoveObserver(mObserver, "");
     mObserver = nullptr;
   }
 
   CleanShutdown();
+}
+
+void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
+  // A pref changed. If it's not on the blacklist, inform child processes.
+  if (!dom::ContentParent::ShouldSyncPreference(aData)) {
+    return;
+  }
+
+  // We know prefs are ASCII here.
+  NS_LossyConvertUTF16toASCII strData(aData);
+
+  mozilla::dom::Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
+  Preferences::GetPreference(&pref);
+  if (!!mRDDChild) {
+    MOZ_ASSERT(mQueuedPrefs.IsEmpty());
+    mRDDChild->SendPreferenceUpdate(pref);
+  } else {
+    mQueuedPrefs.AppendElement(pref);
+  }
 }
 
 void RDDProcessManager::LaunchRDDProcess() {
@@ -128,6 +152,13 @@ void RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost) {
 
   mRDDChild = mProcess->GetActor();
   mProcessToken = mProcess->GetProcessToken();
+
+  // Flush any pref updates that happened during launch and weren't
+  // included in the blobs set up in LaunchRDDProcess.
+  for (const mozilla::dom::Pref& pref : mQueuedPrefs) {
+    Unused << NS_WARN_IF(!mRDDChild->SendPreferenceUpdate(pref));
+  }
+  mQueuedPrefs.Clear();
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::RDDProcessStatus,
