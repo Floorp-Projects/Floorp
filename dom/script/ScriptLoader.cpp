@@ -70,9 +70,11 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsIScriptError.h"
 #include "nsIAsyncOutputStream.h"
 
@@ -3104,12 +3106,73 @@ bool ScriptLoader::ReadyToExecuteParserBlockingScripts() {
   return true;
 }
 
-/* static */
-nsresult ScriptLoader::ConvertToUTF16(nsIChannel* aChannel,
-                                      const uint8_t* aData, uint32_t aLength,
-                                      const nsAString& aHintCharset,
-                                      Document* aDocument, char16_t*& aBufOut,
-                                      size_t& aLengthOut) {
+template <typename Unit>
+struct Conversion;
+
+template <>
+struct Conversion<char16_t> {
+  static CheckedInt<size_t> MaxBufferLength(
+      const UniquePtr<Decoder>& aUnicodeDecoder, size_t aByteLength) {
+    return aUnicodeDecoder->MaxUTF16BufferLength(aByteLength);
+  }
+
+  static size_t DecodeInto(const UniquePtr<Decoder>& aUnicodeDecoder,
+                           const Span<const uint8_t>& aData, char16_t* aDest,
+                           size_t aDestLength) {
+    uint32_t result;
+    size_t read;
+    size_t written;
+    bool hadErrors;
+    Tie(result, read, written, hadErrors) = aUnicodeDecoder->DecodeToUTF16(
+        aData, MakeSpan(aDest, aDestLength), true);
+    MOZ_ASSERT(result == kInputEmpty);
+    MOZ_ASSERT(read == aData.Length());
+    MOZ_ASSERT(written <= aDestLength);
+    Unused << hadErrors;
+
+    return written;
+  }
+};
+
+template <>
+struct Conversion<Utf8Unit> {
+  static CheckedInt<size_t> MaxBufferLength(
+      const UniquePtr<Decoder>& aUnicodeDecoder, size_t aByteLength) {
+    return aUnicodeDecoder->MaxUTF8BufferLength(aByteLength);
+  }
+
+  static size_t DecodeInto(const UniquePtr<Decoder>& aUnicodeDecoder,
+                           const Span<const uint8_t>& aData, Utf8Unit* aDest,
+                           size_t aDestLength) {
+    uint32_t result;
+    size_t read;
+    size_t written;
+    bool hadErrors;
+    // Until C++ char8_t happens, our decoder APIs deal in |uint8_t| while
+    // |Utf8Unit| internally deals with |char|, so there's inevitable impedance
+    // mismatch.  :-(  The written memory will be interpreted through
+    // |char Utf8Unit::mValue| which is *permissible* because any object's
+    // memory can be interpreted as |char|.  Unfortunately, until
+    // twos-complement is mandated, we have to play fast and loose and *hope*
+    // interpreting memory storing |uint8_t| as |char| will pick up the desired
+    // wrapped-around value.  ¯\_(ツ)_/¯
+    Tie(result, read, written, hadErrors) = aUnicodeDecoder->DecodeToUTF8(
+        aData, MakeSpan(reinterpret_cast<uint8_t*>(aDest), aDestLength), true);
+    MOZ_ASSERT(result == kInputEmpty);
+    MOZ_ASSERT(read == aData.Length());
+    MOZ_ASSERT(written <= aDestLength);
+    Unused << hadErrors;
+
+    return written;
+  }
+};
+
+template <typename Unit>
+static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
+                                 uint32_t aLength,
+                                 const nsAString& aHintCharset,
+                                 Document* aDocument, Unit*& aBufOut,
+                                 size_t& aLengthOut) {
   if (!aLength) {
     aBufOut = nullptr;
     aLengthOut = 0;
@@ -3157,42 +3220,51 @@ nsresult ScriptLoader::ConvertToUTF16(nsIChannel* aChannel,
     unicodeDecoder = WINDOWS_1252_ENCODING->NewDecoderWithoutBOMHandling();
   }
 
-  CheckedInt<size_t> maxLength = unicodeDecoder->MaxUTF16BufferLength(aLength);
-  if (!maxLength.isValid()) {
+  auto signalOOM = mozilla::MakeScopeExit([&aBufOut, &aLengthOut]() {
     aBufOut = nullptr;
     aLengthOut = 0;
+  });
+
+  CheckedInt<size_t> bufferLength =
+      Conversion<Unit>::MaxBufferLength(unicodeDecoder, aLength);
+  if (!bufferLength.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  size_t unicodeLength = maxLength.value();
-
-  maxLength *= sizeof(char16_t);
-
-  if (!maxLength.isValid()) {
-    aBufOut = nullptr;
-    aLengthOut = 0;
+  CheckedInt<size_t> bufferByteSize = bufferLength * sizeof(Unit);
+  if (!bufferByteSize.isValid()) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  aBufOut = static_cast<char16_t*>(js_malloc(maxLength.value()));
+  aBufOut = static_cast<Unit*>(js_malloc(bufferByteSize.value()));
   if (!aBufOut) {
-    aLengthOut = 0;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  uint32_t result;
-  size_t read;
-  size_t written;
-  bool hadErrors;
-  Tie(result, read, written, hadErrors) = unicodeDecoder->DecodeToUTF16(
-      data, MakeSpan(aBufOut, unicodeLength), true);
-  MOZ_ASSERT(result == kInputEmpty);
-  MOZ_ASSERT(read == aLength);
-  MOZ_ASSERT(written <= unicodeLength);
-  Unused << hadErrors;
-  aLengthOut = written;
-
+  signalOOM.release();
+  aLengthOut = Conversion<Unit>::DecodeInto(unicodeDecoder, data, aBufOut,
+                                            bufferLength.value());
   return NS_OK;
+}
+
+/* static */
+nsresult ScriptLoader::ConvertToUTF16(nsIChannel* aChannel,
+                                      const uint8_t* aData, uint32_t aLength,
+                                      const nsAString& aHintCharset,
+                                      Document* aDocument, char16_t*& aBufOut,
+                                      size_t& aLengthOut) {
+  return ConvertToUnicode(aChannel, aData, aLength, aHintCharset, aDocument,
+                          aBufOut, aLengthOut);
+}
+
+/* static */
+nsresult ScriptLoader::ConvertToUTF8(nsIChannel* aChannel, const uint8_t* aData,
+                                     uint32_t aLength,
+                                     const nsAString& aHintCharset,
+                                     Document* aDocument, Utf8Unit*& aBufOut,
+                                     size_t& aLengthOut) {
+  return ConvertToUnicode(aChannel, aData, aLength, aHintCharset, aDocument,
+                          aBufOut, aLengthOut);
 }
 
 nsresult ScriptLoader::OnStreamComplete(
