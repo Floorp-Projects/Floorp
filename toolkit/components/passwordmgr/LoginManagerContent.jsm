@@ -1332,16 +1332,38 @@ var LoginManagerContent = {
       }
 
       if (!userTriggered) {
-        // Only autofill logins that match the form's action. In the above code
+        // Only autofill logins that match the form's action and hostname. In the above code
         // we have attached autocomplete for logins that don't match the form action.
+        let loginOrigin = LoginHelper.getLoginOrigin(form.ownerDocument.documentURI);
+        let formActionOrigin = LoginHelper.getFormActionOrigin(form);
         foundLogins = foundLogins.filter(l => {
-          return LoginHelper.isOriginMatching(l.formSubmitURL,
-                                              LoginHelper.getFormActionOrigin(form),
-                                              {
-                                                schemeUpgrades: LoginHelper.schemeUpgrades,
-                                                acceptWildcardMatch: true,
-                                              });
+          let formActionMatches = LoginHelper.isOriginMatching(l.formSubmitURL,
+                                                               formActionOrigin,
+                                                               {
+                                                                 schemeUpgrades: LoginHelper.schemeUpgrades,
+                                                                 acceptWildcardMatch: true,
+                                                                 acceptDifferentSubdomains: false,
+                                                               });
+          let formOriginMatches = LoginHelper.isOriginMatching(l.hostname,
+                                                               loginOrigin,
+                                                               {
+                                                                 schemeUpgrades: LoginHelper.schemeUpgrades,
+                                                                 acceptWildcardMatch: true,
+                                                                 acceptDifferentSubdomains: false,
+                                                               });
+          return formActionMatches && formOriginMatches;
         });
+
+        // Since the logins are already filtered now to only match the origin and formAction,
+        // dedupe to just the username since remaining logins may have different schemes.
+        foundLogins = LoginHelper.dedupeLogins(foundLogins,
+                                               ["username"],
+                                               [
+                                                 "scheme",
+                                                 "timePasswordChanged",
+                                               ],
+                                               loginOrigin,
+                                               formActionOrigin);
       }
 
       // Nothing to do if we have no matching logins available.
