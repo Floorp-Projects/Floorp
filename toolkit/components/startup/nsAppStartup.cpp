@@ -548,7 +548,7 @@ nsAppStartup::GetWasRestarted(bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsAppStartup::GetSecondsSinceLastOSRestart(int64_t *aResult) {
+nsAppStartup::GetSecondsSinceLastOSRestart(int64_t* aResult) {
 #if defined(XP_WIN)
   *aResult = int64_t(GetTickCount64() / 1000ull);
   return NS_OK;

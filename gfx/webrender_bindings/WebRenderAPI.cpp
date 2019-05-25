@@ -430,7 +430,10 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
     explicit Readback(layers::SynchronousTask* aTask, TimeStamp aStartTime,
                       gfx::IntSize aSize, const gfx::SurfaceFormat& aFormat,
                       const Range<uint8_t>& aBuffer)
-        : mTask(aTask), mStartTime(aStartTime), mSize(aSize), mFormat(aFormat),
+        : mTask(aTask),
+          mStartTime(aStartTime),
+          mSize(aSize),
+          mFormat(aFormat),
           mBuffer(aBuffer) {
       MOZ_COUNT_CTOR(Readback);
     }
@@ -1161,8 +1164,7 @@ void DisplayListBuilder::PushShadow(const wr::LayoutRect& aRect,
   // being re-enabled mid-shadow. The optimization is restored in PopAllShadows.
   SuspendClipLeafMerging();
   wr_dp_push_shadow(mWrState, aRect, aClip, aIsBackfaceVisible,
-                    &mCurrentSpaceAndClipChain, aShadow,
-                    aShouldInflate);
+                    &mCurrentSpaceAndClipChain, aShadow, aShouldInflate);
 }
 
 void DisplayListBuilder::PopAllShadows() {

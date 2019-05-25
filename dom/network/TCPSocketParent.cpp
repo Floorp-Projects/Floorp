@@ -43,8 +43,7 @@ using namespace net;
 
 namespace dom {
 
-static void FireInteralError(TCPSocketParent* aActor,
-                             uint32_t aLineNo) {
+static void FireInteralError(TCPSocketParent* aActor, uint32_t aLineNo) {
   MOZ_ASSERT(aActor->IPCOpen());
 
   mozilla::Unused << aActor->SendCallback(

@@ -231,9 +231,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   }
 
   // nsIGlobalJSObjectHolder
-  JSObject* GetGlobalJSObject() final {
-    return GetWrapper();
-  }
+  JSObject* GetGlobalJSObject() final { return GetWrapper(); }
   JSObject* GetGlobalJSObjectPreserveColor() const final {
     return GetWrapperPreserveColor();
   }

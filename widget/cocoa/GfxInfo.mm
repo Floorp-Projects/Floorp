@@ -236,17 +236,18 @@ void GfxInfo::AddCrashReportAnnotations() {
 }
 
 // We don't support checking driver versions on Mac.
-#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, driverVendor, device, features, blockOn, ruleId)          \
-  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, driverVendor, device, features, blockOn, DRIVER_COMPARISON_IGNORED, \
-                             V(0, 0, 0, 0), ruleId, "")
+#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, driverVendor, device, features, blockOn, \
+                                       ruleId)                                              \
+  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, driverVendor, device, features, blockOn,           \
+                             DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0), ruleId, "")
 
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
-        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
-        GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBGL_MSAA,
-        nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION, "FEATURE_FAILURE_MAC_ATI_NO_MSAA");
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll), GfxDriverInfo::allDevices,
+        nsIGfxInfo::FEATURE_WEBGL_MSAA, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION,
+        "FEATURE_FAILURE_MAC_ATI_NO_MSAA");
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),

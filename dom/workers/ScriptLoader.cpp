@@ -844,8 +844,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     // thread) explicitly, so that we can use the stack to notify the net
     // monitor about every script we load.
     if (mOriginStack) {
-      ConvertSerializedStackToJSON(std::move(mOriginStack),
-                                   mOriginStackJSON);
+      ConvertSerializedStackToJSON(std::move(mOriginStack), mOriginStackJSON);
     }
 
     if (!mWorkerPrivate->IsServiceWorker() || IsDebuggerScript()) {
@@ -2125,8 +2124,8 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   }
 
   RefPtr<ScriptLoaderRunnable> loader = new ScriptLoaderRunnable(
-      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget, aLoadInfos, clientInfo,
-      controller, aIsMainScript, aWorkerScriptType, aRv);
+      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget, aLoadInfos,
+      clientInfo, controller, aIsMainScript, aWorkerScriptType, aRv);
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 

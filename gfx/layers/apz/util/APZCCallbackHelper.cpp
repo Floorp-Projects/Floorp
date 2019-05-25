@@ -666,8 +666,7 @@ static bool PrepareForSetTargetAPZCNotification(
     nsIWidget* aWidget, const LayersId& aLayersId, nsIFrame* aRootFrame,
     const LayoutDeviceIntPoint& aRefPoint,
     nsTArray<SLGuidAndRenderRoot>* aTargets) {
-  SLGuidAndRenderRoot guid(aLayersId, 0,
-                           ScrollableLayerGuid::NULL_SCROLL_ID,
+  SLGuidAndRenderRoot guid(aLayersId, 0, ScrollableLayerGuid::NULL_SCROLL_ID,
                            wr::RenderRoot::Default);
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       aWidget, aRefPoint, aRootFrame);
@@ -818,9 +817,11 @@ void DisplayportSetListener::DidRefresh() {
 }
 
 UniquePtr<DisplayportSetListener>
-APZCCallbackHelper::SendSetTargetAPZCNotification(
-    nsIWidget* aWidget, dom::Document* aDocument, const WidgetGUIEvent& aEvent,
-    const LayersId& aLayersId, uint64_t aInputBlockId) {
+APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
+                                                  dom::Document* aDocument,
+                                                  const WidgetGUIEvent& aEvent,
+                                                  const LayersId& aLayersId,
+                                                  uint64_t aInputBlockId) {
   if (!aWidget || !aDocument) {
     return nullptr;
   }

@@ -518,8 +518,8 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
         break;
       case eMouseDown:
         pointerMessage =
-            mouseEvent->mButtons &
-                    ~nsContentUtils::GetButtonsFlagForButton(mouseEvent->mButton)
+            mouseEvent->mButtons & ~nsContentUtils::GetButtonsFlagForButton(
+                                       mouseEvent->mButton)
                 ? ePointerMove
                 : ePointerDown;
         break;

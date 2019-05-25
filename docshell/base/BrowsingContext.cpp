@@ -810,9 +810,9 @@ void BrowsingContext::Transaction::Apply(BrowsingContext* aBrowsingContext,
 }
 
 BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
-  MOZ_ASSERT(
-      !mozilla::Preferences::GetBool("fission.preserve_browsing_contexts", false) ||
-      IsContent());
+  MOZ_ASSERT(!mozilla::Preferences::GetBool(
+                 "fission.preserve_browsing_contexts", false) ||
+             IsContent());
 
   IPCInitializer init;
   init.mId = Id();
