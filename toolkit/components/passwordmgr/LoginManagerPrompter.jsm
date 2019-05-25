@@ -7,6 +7,8 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 const { PromptUtils } = ChromeUtils.import("resource://gre/modules/SharedPromptUtils.jsm");
 
+/* eslint-disable block-scoped-var */
+
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 
@@ -359,6 +361,7 @@ LoginManagerPrompter.prototype = {
                                      Cr.NS_ERROR_NOT_IMPLEMENTED);
     }
 
+    let foundLogins = null;
     var selectedLogin = null;
     var checkBox = { value: false };
     var checkBoxLabel = null;
@@ -379,7 +382,7 @@ LoginManagerPrompter.prototype = {
       }
 
       // Look for existing logins.
-      var foundLogins = Services.logins.findLogins(hostname, null, realm);
+      foundLogins = Services.logins.findLogins(hostname, null, realm);
 
       // XXX Like the original code, we can't deal with multiple
       // account selection. (bug 227632)
