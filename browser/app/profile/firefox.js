@@ -1609,6 +1609,7 @@ pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
 //     "cookieBehavior2": cookie behaviour BEHAVIOR_REJECT
 //     "cookieBehavior3": cookie behaviour BEHAVIOR_LIMIT_FOREIGN
 //     "cookieBehavior4": cookie behaviour BEHAVIOR_REJECT_TRACKER
+//     "cookieBehavior5": cookie behaviour BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
 // One value from each section must be included in the browser.contentblocking.features.strict pref.
 pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior4,cm,fp");
 
