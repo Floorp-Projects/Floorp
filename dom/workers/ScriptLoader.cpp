@@ -261,15 +261,7 @@ nsresult ChannelFromScriptURL(
 }
 
 struct ScriptLoadInfo {
-  ScriptLoadInfo()
-      : mScriptTextBuf(nullptr),
-        mScriptTextLength(0),
-        mLoadResult(NS_ERROR_NOT_INITIALIZED),
-        mLoadingFinished(false),
-        mExecutionScheduled(false),
-        mExecutionResult(false),
-        mCacheStatus(Uncached),
-        mLoadFlags(nsIRequest::LOAD_NORMAL) {}
+  ScriptLoadInfo() = default;
 
   ~ScriptLoadInfo() {
     if (mScriptTextBuf) {
@@ -295,13 +287,13 @@ struct ScriptLoadInfo {
 
   nsCOMPtr<nsIChannel> mChannel;
   Maybe<ClientInfo> mReservedClientInfo;
-  char16_t* mScriptTextBuf;
-  size_t mScriptTextLength;
+  char16_t* mScriptTextBuf = nullptr;
+  size_t mScriptTextLength = 0;
 
-  nsresult mLoadResult;
-  bool mLoadingFinished;
-  bool mExecutionScheduled;
-  bool mExecutionResult;
+  nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
+  bool mLoadingFinished = false;
+  bool mExecutionScheduled = false;
+  bool mExecutionResult = false;
 
   enum CacheStatus {
     // By default a normal script is just loaded from the network. But for
@@ -323,9 +315,9 @@ struct ScriptLoadInfo {
     Cancel
   };
 
-  CacheStatus mCacheStatus;
+  CacheStatus mCacheStatus = Uncached;
 
-  nsLoadFlags mLoadFlags;
+  nsLoadFlags mLoadFlags = nsIRequest::LOAD_NORMAL;
 
   Maybe<bool> mMutedErrorFlag;
 
