@@ -7,27 +7,25 @@
 
 "use strict";
 
-this.StoragePrincipalHelper = {
+this.DynamicFPIHelper = {
   runTest(name, callback, cleanupFunction, extraPrefs) {
     add_task(async _ => {
-      info("Starting test `" + name + "' with storage principal...");
+      info("Starting test `" + name + "' with dynamic FPI...");
 
       await SpecialPowers.flushPrefEnv();
       await SpecialPowers.pushPrefEnv({"set": [
         ["dom.storage_access.enabled", true],
-        ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER],
+        ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
-        ["privacy.storagePrincipal.enabledForTrackers", true],
+        ["privacy.storagePrincipal.enabledForTrackers", false],
         ["privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "tracking.example.com,tracking.example.org"],
       ]});
 
       if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {
         await SpecialPowers.pushPrefEnv({"set": extraPrefs });
       }
-
-      await UrlClassifierTestUtils.addTestTrackers();
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
@@ -38,7 +36,7 @@ this.StoragePrincipalHelper = {
 
       info("Creating a 3rd party content");
       await ContentTask.spawn(browser, {
-                                page: TEST_3RD_PARTY_STORAGE_PAGE,
+                                page: TEST_4TH_PARTY_STORAGE_PAGE,
                                 callback: callback.toString(),
                               },
                               async obj => {
@@ -85,7 +83,6 @@ this.StoragePrincipalHelper = {
       if (cleanupFunction) {
         await cleanupFunction();
       }
-      UrlClassifierTestUtils.cleanupTestTrackers();
     });
   },
 };
