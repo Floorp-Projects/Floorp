@@ -253,6 +253,7 @@ var LoginHelper = {
   isOriginMatching(aLoginOrigin, aSearchOrigin, aOptions = {
     schemeUpgrades: false,
     acceptWildcardMatch: false,
+    acceptDifferentSubdomains: false,
   }) {
     if (aLoginOrigin == aSearchOrigin) {
       return true;
@@ -266,18 +267,30 @@ var LoginHelper = {
       return true;
     }
 
-    if (aOptions.schemeUpgrades) {
-      try {
-        let loginURI = Services.io.newURI(aLoginOrigin);
-        let searchURI = Services.io.newURI(aSearchOrigin);
-        if (loginURI.scheme == "http" && searchURI.scheme == "https" &&
-            loginURI.hostPort == searchURI.hostPort) {
+    try {
+      let loginURI = Services.io.newURI(aLoginOrigin);
+      let searchURI = Services.io.newURI(aSearchOrigin);
+      let schemeMatches = loginURI.scheme == "http" && searchURI.scheme == "https";
+
+      if (aOptions.acceptDifferentSubdomains) {
+        let loginBaseDomain = Services.eTLD.getBaseDomain(loginURI);
+        let searchBaseDomain = Services.eTLD.getBaseDomain(searchURI);
+        if (loginBaseDomain == searchBaseDomain &&
+            (loginURI.scheme == searchURI.scheme ||
+             (aOptions.schemeUpgrades && schemeMatches))) {
           return true;
         }
-      } catch (ex) {
-        // newURI will throw for some values e.g. chrome://FirefoxAccounts
-        return false;
       }
+
+      if (aOptions.schemeUpgrades &&
+          loginURI.host == searchURI.host &&
+          schemeMatches && loginURI.port == searchURI.port) {
+        return true;
+      }
+    } catch (ex) {
+      // newURI will throw for some values e.g. chrome://FirefoxAccounts
+      // uri.host and uri.port will throw for some values e.g. javascript:
+      return false;
     }
 
     return false;
@@ -448,6 +461,59 @@ var LoginHelper = {
   },
 
   /**
+   * Remove http: logins when there is an https: login with the same username and hostPort.
+   * Sort order is preserved.
+   *
+   * @param {nsILoginInfo[]} logins
+   *        A list of logins we want to process for shadowing.
+   * @returns {nsILoginInfo[]} A subset of of the passed logins.
+   */
+  shadowHTTPLogins(logins) {
+    /**
+     * Map a (hostPort, username) to a boolean indicating whether `logins`
+     * contains an https: login for that combo.
+     */
+    let hasHTTPSByHostPortUsername = new Map();
+    for (let login of logins) {
+      let key = this.getUniqueKeyForLogin(login, ["hostPort", "username"]);
+      let hasHTTPSlogin = hasHTTPSByHostPortUsername.get(key) || false;
+      let loginURI = Services.io.newURI(login.hostname);
+      hasHTTPSByHostPortUsername.set(key, loginURI.scheme == "https" || hasHTTPSlogin);
+    }
+
+    return logins.filter((login) => {
+      let key = this.getUniqueKeyForLogin(login, ["hostPort", "username"]);
+      let loginURI = Services.io.newURI(login.hostname);
+      if (loginURI.scheme == "http" && hasHTTPSByHostPortUsername.get(key)) {
+        // If this is an http: login and we have an https: login for the
+        // (hostPort, username) combo then remove it.
+        return false;
+      }
+      return true;
+    });
+  },
+
+  /**
+   * Generate a unique key string from a login.
+   * @param {nsILoginInfo} login
+   * @param {string[]} uniqueKeys containing nsILoginInfo attribute names or "hostPort"
+   * @returns {string} to use as a key in a Map
+   */
+  getUniqueKeyForLogin(login, uniqueKeys) {
+    const KEY_DELIMITER = ":";
+    return uniqueKeys.reduce((prev, key) => {
+      let val = null;
+      if (key == "hostPort") {
+        val = Services.io.newURI(login.hostname).hostPort;
+      } else {
+        val = login[key];
+      }
+
+      return prev + KEY_DELIMITER + val;
+    }, "");
+  },
+
+  /**
    * Removes duplicates from a list of logins while preserving the sort order.
    *
    * @param {nsILoginInfo[]} logins
@@ -476,11 +542,15 @@ var LoginHelper = {
                resolveBy = ["timeLastUsed"],
                preferredOrigin = undefined,
                preferredFormActionOrigin = undefined) {
-    const KEY_DELIMITER = ":";
-
-    if (!preferredOrigin && resolveBy.includes("scheme")) {
-      throw new Error("dedupeLogins: `preferredOrigin` is required in order to " +
-                      "prefer schemes which match it.");
+    if (!preferredOrigin) {
+      if (resolveBy.includes("scheme")) {
+        throw new Error("dedupeLogins: `preferredOrigin` is required in order to " +
+                        "prefer schemes which match it.");
+      }
+      if (resolveBy.includes("subdomain")) {
+        throw new Error("dedupeLogins: `preferredOrigin` is required in order to " +
+                        "prefer subdomains which match it.");
+      }
     }
 
     let preferredOriginScheme;
@@ -499,11 +569,6 @@ var LoginHelper = {
 
     // We use a Map to easily lookup logins by their unique keys.
     let loginsByKeys = new Map();
-
-    // Generate a unique key string from a login.
-    function getKey(login, uniqueKeys) {
-      return uniqueKeys.reduce((prev, key) => prev + KEY_DELIMITER + login[key], "");
-    }
 
     /**
      * @return {bool} whether `login` is preferred over its duplicate (considering `uniqueKeys`)
@@ -556,6 +621,21 @@ var LoginHelper = {
             }
             break;
           }
+          case "subdomain": {
+            // Replace the existing login only if the new login is an exact match on the host.
+            let existingLoginURI = Services.io.newURI(existingLogin.hostname);
+            let newLoginURI = Services.io.newURI(login.hostname);
+            let preferredOriginURI = Services.io.newURI(preferredOrigin);
+            if (existingLoginURI.hostPort != preferredOriginURI.hostPort &&
+                newLoginURI.hostPort == preferredOriginURI.hostPort) {
+              return true;
+            }
+            if (existingLoginURI.host != preferredOriginURI.host &&
+                newLoginURI.host == preferredOriginURI.host) {
+              return true;
+            }
+            break;
+          }
           case "timeLastUsed":
           case "timePasswordChanged": {
             // If we find a more recent login for the same key, replace the existing one.
@@ -577,7 +657,7 @@ var LoginHelper = {
     }
 
     for (let login of logins) {
-      let key = getKey(login, uniqueKeys);
+      let key = this.getUniqueKeyForLogin(login, uniqueKeys);
 
       if (loginsByKeys.has(key)) {
         if (!isLoginPreferred(loginsByKeys.get(key), login)) {
