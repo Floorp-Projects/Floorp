@@ -48,7 +48,7 @@
 //!             .params
 //!             .into_iter()
 //!             .filter(|gp| {
-//!                 match gp {
+//!                 match *gp {
 //!                     GenericParam::Type(ref ty) => int_type_params.contains(&ty.ident),
 //!                     GenericParam::Lifetime(ref lt) => int_lifetimes.contains(&lt.lifetime),
 //!                     _ => true,

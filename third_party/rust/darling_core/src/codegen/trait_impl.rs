@@ -27,14 +27,11 @@ impl<'a> TraitImpl<'a> {
             .collect()
     }
 
-    /// Get the type parameters which are used by non-skipped fields.
+    /// Get the type parameters which are used by non-skipped, non-magic fields.
+    /// These type parameters will have a `FromMeta` bound applied to them in emitted
+    /// code.
     pub fn used_type_params(&self) -> IdentSet {
         self.type_params_matching(|f| !f.skip, |v| !v.skip)
-    }
-
-    /// Get the type parameters which are used by skipped fields.
-    pub fn skipped_type_params(&self) -> IdentSet {
-        self.type_params_matching(|f| f.skip, |v| v.skip)
     }
 
     fn type_params_matching<'b, F, V>(&'b self, field_filter: F, variant_filter: V) -> IdentSet
