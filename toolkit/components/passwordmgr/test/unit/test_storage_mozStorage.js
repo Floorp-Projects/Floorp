@@ -1,4 +1,4 @@
-/*
+/**
  * This test interfaces directly with the mozStorage password storage module,
  * bypassing the normal password manager usage.
  */

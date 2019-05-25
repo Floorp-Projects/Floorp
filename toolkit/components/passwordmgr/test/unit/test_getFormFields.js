@@ -1,10 +1,8 @@
-/*
+/**
  * Test for LoginManagerContent._getFormFields.
  */
 
 "use strict";
-
-// Services.prefs.setBoolPref("signon.debug", true);
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 

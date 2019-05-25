@@ -1,4 +1,4 @@
-/*
+/**
  * Tests notifications dispatched when modifying stored logins.
  */
 
