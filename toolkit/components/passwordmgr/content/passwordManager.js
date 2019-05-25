@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /** * =================== SAVED SIGNONS CODE =================== ***/
+/* eslint-disable-next-line no-var */
 var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+/* eslint-disable-next-line no-var */
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
