@@ -7,6 +7,7 @@
 #include "ScriptLoader.h"
 
 #include <algorithm>
+#include <type_traits>
 
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
@@ -261,11 +262,16 @@ nsresult ChannelFromScriptURL(
 }
 
 struct ScriptLoadInfo {
-  ScriptLoadInfo() = default;
+  ScriptLoadInfo() {
+    MOZ_ASSERT(mScriptIsUTF8 == false, "set by member initializer");
+    MOZ_ASSERT(mScriptLength == 0, "set by member initializer");
+    mScript.mUTF16 = nullptr;
+  }
 
   ~ScriptLoadInfo() {
-    if (mScriptTextBuf) {
-      js_free(mScriptTextBuf);
+    if (void* data = mScriptIsUTF8 ? static_cast<void*>(mScript.mUTF8)
+                                   : static_cast<void*>(mScript.mUTF16)) {
+      js_free(data);
     }
   }
 
@@ -287,10 +293,38 @@ struct ScriptLoadInfo {
 
   nsCOMPtr<nsIChannel> mChannel;
   Maybe<ClientInfo> mReservedClientInfo;
-  char16_t* mScriptTextBuf = nullptr;
-  size_t mScriptTextLength = 0;
-
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
+
+  // If |mScriptIsUTF8|, then |mUTF8| is active, otherwise |mUTF16| is active.
+  union {
+    char16_t* mUTF16;
+    Utf8Unit* mUTF8;
+  } mScript;
+  size_t mScriptLength = 0;  // in code units
+  bool mScriptIsUTF8 = false;
+
+  bool ScriptTextIsNull() const {
+    return mScriptIsUTF8 ? mScript.mUTF8 == nullptr : mScript.mUTF16 == nullptr;
+  }
+
+  void InitUTF8Script() {
+    MOZ_ASSERT(ScriptTextIsNull());
+    MOZ_ASSERT(mScriptLength == 0);
+
+    mScriptIsUTF8 = true;
+    mScript.mUTF8 = nullptr;
+    mScriptLength = 0;
+  }
+
+  void InitUTF16Script() {
+    MOZ_ASSERT(ScriptTextIsNull());
+    MOZ_ASSERT(mScriptLength == 0);
+
+    mScriptIsUTF8 = false;
+    mScript.mUTF16 = nullptr;
+    mScriptLength = 0;
+  }
+
   bool mLoadingFinished = false;
   bool mExecutionScheduled = false;
   bool mExecutionResult = false;
@@ -1120,21 +1154,31 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
     // Use the regular ScriptLoader for this grunt work! Should be just fine
     // because we're running on the main thread.
-    // Unlike <script> tags, Worker scripts are always decoded as UTF-8,
-    // per spec. So we explicitly pass in the charset hint.
-    rv = ScriptLoader::ConvertToUTF16(
-        aLoadInfo.mChannel, aString, aStringLen, NS_LITERAL_STRING("UTF-8"),
-        parentDoc, aLoadInfo.mScriptTextBuf, aLoadInfo.mScriptTextLength);
+    // Worker scripts are always decoded as UTF-8 per spec. Passing null for a
+    // channel and UTF-8 for the hint will always interpret |aString| as UTF-8.
+    if (StaticPrefs::dom_worker_script_loader_utf8_parsing_enabled()) {
+      aLoadInfo.InitUTF8Script();
+      rv = ScriptLoader::ConvertToUTF8(
+          nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
+          aLoadInfo.mScript.mUTF8, aLoadInfo.mScriptLength);
+    } else {
+      aLoadInfo.InitUTF16Script();
+      rv = ScriptLoader::ConvertToUTF16(
+          nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
+          aLoadInfo.mScript.mUTF16, aLoadInfo.mScriptLength);
+    }
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    if (!aLoadInfo.mScriptTextLength && !aLoadInfo.mScriptTextBuf) {
+    if (aLoadInfo.ScriptTextIsNull()) {
+      if (aLoadInfo.mScriptLength != 0) {
+        return NS_ERROR_FAILURE;
+      }
+
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), parentDoc,
           nsContentUtils::eDOM_PROPERTIES, "EmptyWorkerSourceWarning");
-    } else if (!aLoadInfo.mScriptTextBuf) {
-      return NS_ERROR_FAILURE;
     }
 
     // Figure out what we actually loaded.
@@ -1246,11 +1290,20 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     // May be null.
     Document* parentDoc = mWorkerPrivate->GetDocument();
 
-    MOZ_ASSERT(!loadInfo.mScriptTextBuf);
+    MOZ_ASSERT(loadInfo.ScriptTextIsNull());
 
-    nsresult rv = ScriptLoader::ConvertToUTF16(
-        nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
-        loadInfo.mScriptTextBuf, loadInfo.mScriptTextLength);
+    nsresult rv;
+    if (StaticPrefs::dom_worker_script_loader_utf8_parsing_enabled()) {
+      loadInfo.InitUTF8Script();
+      rv = ScriptLoader::ConvertToUTF8(
+          nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
+          loadInfo.mScript.mUTF8, loadInfo.mScriptLength);
+    } else {
+      loadInfo.InitUTF16Script();
+      rv = ScriptLoader::ConvertToUTF16(
+          nullptr, aString, aStringLen, NS_LITERAL_STRING("UTF-8"), parentDoc,
+          loadInfo.mScript.mUTF16, loadInfo.mScriptLength);
+    }
     if (NS_SUCCEEDED(rv) && IsMainWorkerScript()) {
       nsCOMPtr<nsIURI> finalURI;
       rv = NS_NewURI(getter_AddRefs(finalURI), loadInfo.mFullURL, nullptr,
@@ -1903,6 +1956,45 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
   return true;
 }
 
+static bool EvaluateScript(JSContext* aCx,
+                           const JS::ReadOnlyCompileOptions& aOptions,
+                           JS::SourceText<char16_t>& aSrcBuf,
+                           JS::MutableHandle<JS::Value> aResult) {
+  return JS::Evaluate(aCx, aOptions, aSrcBuf, aResult);
+}
+
+static bool EvaluateScript(JSContext* aCx,
+                           const JS::ReadOnlyCompileOptions& aOptions,
+                           JS::SourceText<Utf8Unit>& aSrcBuf,
+                           JS::MutableHandle<JS::Value> aResult) {
+  // Once evaluate-UTF-8-without-inflating is the default, these two overloads
+  // can be removed and |JS::Evaluate| can be used in the sole caller below.
+  return JS::EvaluateDontInflate(aCx, aOptions, aSrcBuf, aResult);
+}
+
+template <typename Unit>
+static bool EvaluateScriptData(JSContext* aCx,
+                               const JS::CompileOptions& aOptions,
+                               Unit*& aScriptData, size_t aScriptLength) {
+  static_assert(std::is_same<Unit, char16_t>::value ||
+                    std::is_same<Unit, Utf8Unit>::value,
+                "inferred units must be UTF-8 or UTF-16");
+
+  // Transfer script data to a local variable.
+  Unit* script = nullptr;
+  std::swap(script, aScriptData);
+
+  // Transfer the local to appropriate |SourceText|.
+  JS::SourceText<Unit> srcBuf;
+  if (!srcBuf.init(aCx, script, aScriptLength,
+                   JS::SourceOwnership::TakeOwnership)) {
+    return false;
+  }
+
+  JS::Rooted<JS::Value> unused(aCx);
+  return EvaluateScript(aCx, aOptions, srcBuf, &unused);
+}
+
 bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
                                        WorkerPrivate* aWorkerPrivate) {
   aWorkerPrivate->AssertIsOnWorkerThread();
@@ -1961,24 +2053,22 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
     MOZ_ASSERT(loadInfo.mMutedErrorFlag.isSome());
     options.setMutedErrors(loadInfo.mMutedErrorFlag.valueOr(true));
 
-    // Pass ownership of the data, first to local variables, then to the
-    // UniqueTwoByteChars moved into the |init| function.
-    size_t dataLength = 0;
-    char16_t* data = nullptr;
-
-    std::swap(dataLength, loadInfo.mScriptTextLength);
-    std::swap(data, loadInfo.mScriptTextBuf);
-
-    JS::SourceText<char16_t> srcBuf;
-    if (!srcBuf.init(aCx, JS::UniqueTwoByteChars(data), dataLength)) {
-      mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
-      return true;
-    }
-
     // Our ErrorResult still shouldn't be a failure.
     MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
-    JS::Rooted<JS::Value> unused(aCx);
-    if (!JS::Evaluate(aCx, options, srcBuf, &unused)) {
+
+    // Transfer script length to a local variable, encoding-agnostically.
+    size_t scriptLength = 0;
+    std::swap(scriptLength, loadInfo.mScriptLength);
+
+    // This transfers script data out of the active arm of |loadInfo.mScript|.
+    bool successfullyEvaluated =
+        loadInfo.mScriptIsUTF8
+            ? EvaluateScriptData(aCx, options, loadInfo.mScript.mUTF8,
+                                 scriptLength)
+            : EvaluateScriptData(aCx, options, loadInfo.mScript.mUTF16,
+                                 scriptLength);
+    MOZ_ASSERT(loadInfo.ScriptTextIsNull());
+    if (!successfullyEvaluated) {
       mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
       return true;
     }
