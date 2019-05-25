@@ -4,6 +4,7 @@
 
 package mozilla.components.support.base.observer
 
+import android.annotation.SuppressLint
 import android.view.View
 import androidx.lifecycle.GenericLifecycleObserver
 import androidx.lifecycle.Lifecycle
@@ -16,11 +17,17 @@ import java.util.WeakHashMap
  * and can automatically unregister observers if a LifecycleOwner is provided.
  */
 class ObserverRegistry<T> : Observable<T> {
-    private val observers = mutableListOf<T>()
+    private val observers = mutableSetOf<T>()
     private val lifecycleObservers = WeakHashMap<T, LifecycleBoundObserver<T>>()
     private val viewObservers = WeakHashMap<T, ViewBoundObserver<T>>()
     private val pausedObservers = Collections.newSetFromMap(WeakHashMap<T, Boolean>())
 
+    /**
+     * Registers an observer to get notified about changes. Does nothing if [observer] is already registered.
+     * This method is thread-safe.
+     *
+     * @param observer the observer to register.
+     */
     override fun register(observer: T) {
         synchronized(observers) {
             observers.add(observer)
@@ -60,6 +67,12 @@ class ObserverRegistry<T> : Observable<T> {
         }
     }
 
+    /**
+     * Unregisters an observer. Does nothing if [observer] is not registered.
+     * This method is thread-safe.
+     *
+     * @param observer the observer to unregister.
+     */
     override fun unregister(observer: T) {
         synchronized(observers) {
             observers.remove(observer)
@@ -117,6 +130,7 @@ class ObserverRegistry<T> : Observable<T> {
     /**
      * GenericLifecycleObserver implementation to bind an observer to a Lifecycle.
      */
+    @SuppressLint("RestrictedApi")
     private class LifecycleBoundObserver<T>(
         private val owner: LifecycleOwner,
         private val registry: ObserverRegistry<T>,

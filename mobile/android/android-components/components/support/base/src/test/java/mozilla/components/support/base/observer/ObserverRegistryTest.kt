@@ -5,14 +5,13 @@
 package mozilla.components.support.base.observer
 
 import android.app.Activity
+import android.view.View
+import android.view.WindowManager
 import androidx.lifecycle.GenericLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import android.content.Context
-import android.view.View
-import android.view.WindowManager
-import androidx.test.core.app.ApplicationProvider
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -28,8 +27,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class ObserverRegistryTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `registered observer gets notified`() {
@@ -240,7 +237,7 @@ class ObserverRegistryTest {
     @Test
     fun `observer will get added once view is attached`() {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
-        val view = View(context)
+        val view = View(testContext)
 
         val registry = ObserverRegistry<TestObserver>()
         val observer = TestObserver()
@@ -267,7 +264,7 @@ class ObserverRegistryTest {
     @Test
     fun `observer will get unregistered if view gets detached`() {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
-        val view = View(context)
+        val view = View(testContext)
         activity.windowManager.addView(view, WindowManager.LayoutParams(100, 100))
 
         val registry = ObserverRegistry<TestObserver>()
@@ -387,6 +384,39 @@ class ObserverRegistryTest {
         verify(registry).resumeObserver(observer)
     }
 
+    @Test
+    fun `register observer only once, notify once`() {
+        // Given
+        val observer = TestIntObserver()
+        val registry = ObserverRegistry<TestIntObserver>()
+
+        // When
+        registry.register(observer)
+        registry.register(observer)
+
+        registry.notifyObservers { somethingChanged(1) }
+
+        // Then
+        assertEquals(1, observer.notified.size)
+    }
+
+    @Test
+    fun `register observer only once, don't notify after unregister`() {
+        // Given
+        val observer = TestIntObserver()
+        val registry = ObserverRegistry<TestIntObserver>()
+
+        // When
+        registry.register(observer)
+        registry.register(observer)
+        registry.unregister(observer)
+
+        registry.notifyObservers { somethingChanged(1) }
+
+        // Then
+        assertEquals(0, observer.notified.size)
+    }
+
     private class TestObserver {
         var notified: Boolean = false
 
@@ -396,7 +426,7 @@ class ObserverRegistryTest {
     }
 
     private class TestIntObserver {
-        var notified: List<Int> = listOf()
+        val notified = mutableListOf<Int>()
 
         fun somethingChanged(value: Int) {
             notified += value
