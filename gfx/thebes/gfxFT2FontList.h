@@ -132,6 +132,8 @@ class gfxFT2FontList : public gfxPlatformFontList {
                                  const uint8_t* aFontData,
                                  uint32_t aLength) override;
 
+  void WriteCache();
+
   void GetSystemFontList(InfallibleTArray<FontListEntry>* retValue);
 
   static gfxFT2FontList* PlatformFontList() {
