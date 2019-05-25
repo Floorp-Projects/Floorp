@@ -28,7 +28,9 @@ enum class ToolbarConfiguration(val label: String) {
 }
 
 @Suppress("MagicNumber")
-class ConfigurationAdapter(val configuration: ToolbarConfiguration) : RecyclerView.Adapter<ConfigurationViewHolder>() {
+class ConfigurationAdapter(
+    private val configuration: ToolbarConfiguration
+) : RecyclerView.Adapter<ConfigurationViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ConfigurationViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_toolbar_configuration, parent, false)
         return ConfigurationViewHolder(view as TextView)
@@ -126,7 +128,7 @@ class UrlBoxProgressView(
         progressDrawable.setBounds(0, 0, w, h)
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         backgroundDrawable.draw(canvas)
         progressDrawable.draw(canvas)
     }
