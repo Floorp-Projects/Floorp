@@ -49,15 +49,16 @@ class CookieServiceParent : public PCookieServiceParent {
       const Maybe<LoadInfoArgs>& aLoadInfoArgs, const bool& aIsForeign,
       const bool& aIsTrackingResource,
       const bool& aFirstPartyStorageAccessGranted,
-      const OriginAttributes& aAttrs, const nsCString& aCookieString,
-      const nsCString& aServerTime, const bool& aFromHttp);
+      const uint32_t& aRejectedReason, const OriginAttributes& aAttrs,
+      const nsCString& aCookieString, const nsCString& aServerTime,
+      const bool& aFromHttp);
 
   mozilla::ipc::IPCResult RecvPrepareCookieList(
       const URIParams& aHost, const bool& aIsForeign,
       const bool& aIsTrackingResource,
       const bool& aFirstPartyStorageAccessGranted,
-      const bool& aIsSafeTopLevelNav, const bool& aIsSameSiteForeign,
-      const OriginAttributes& aAttrs);
+      const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
+      const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs);
 
   void SerialializeCookieList(const nsTArray<nsCookie*>& aFoundCookieList,
                               nsTArray<CookieStruct>& aCookiesList,
