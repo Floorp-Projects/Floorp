@@ -3,8 +3,13 @@ Darling
 
 [![Build Status](https://travis-ci.org/TedDriggs/darling.svg?branch=master)](https://travis-ci.org/TedDriggs/darling)
 [![Latest Version](https://img.shields.io/crates/v/darling.svg)](https://crates.io/crates/darling)
+[![Rustc Version 1.18+](https://img.shields.io/badge/rustc-1.18+-lightgray.svg)](https://blog.rust-lang.org/2017/06/08/Rust-1.18.html)
 
 `darling` is a crate for proc macro authors, which enables parsing attributes into structs. It is heavily inspired by `serde` both in its internals and in its API.
+
+# Benefits
+* Easy and declarative parsing of macro input - make your proc-macros highly controllable with minimal time investment.
+* Great validation and errors, no work required. When users of your proc-macro make a mistake, `darling` makes sure they get error markers at the right place in their source, and provides "did you mean" suggestions for misspelled fields.
 
 # Usage
 `darling` provides a set of traits which can be derived or manually implemented.
@@ -13,6 +18,11 @@ Darling
 2. `FromDeriveInput` is implemented or derived by each proc-macro crate which depends on `darling`. This is the root for input parsing; it gets access to the identity, generics, and visibility of the target type, and can specify which attribute names should be parsed or forwarded from the input AST.
 3. `FromField` is implemented or derived by each proc-macro crate which depends on `darling`. Structs deriving this trait will get access to the identity (if it exists), type, and visibility of the field.
 4. `FromVariant` is implemented or derived by each proc-macro crate which depends on `darling`. Structs deriving this trait will get access to the identity and contents of the variant, which can be transformed the same as any other `darling` input.
+
+## Additional Modules
+* `darling::ast` provides generic types for representing the AST.
+* `darling::usage` provides traits and functions for determining where type parameters and lifetimes are used in a struct or enum.
+* `darling::util` provides helper types with special `FromMeta` implementations, such as `IdentList`.
 
 # Example
 
@@ -100,3 +110,4 @@ Darling's features are built to work well for real-world projects.
 * **Skip fields**: Use `#[darling(skip)]` to mark a field that shouldn't be read from attribute meta-items.
 * **Multiple-occurrence fields**: Use `#[darling(multiple)]` on a `Vec` field to allow that field to appear multiple times in the meta-item. Each occurrence will be pushed into the `Vec`.
 * **Span access**: Use `darling::util::SpannedValue` in a struct to get access to that meta item's source code span. This can be used to emit warnings that point at a specific field from your proc macro. In addition, you can use `darling::Error::write_errors` to automatically get precise error location details in most cases.
+* **"Did you mean" suggestions**: Compile errors from derived darling trait impls include suggestions for misspelled fields.

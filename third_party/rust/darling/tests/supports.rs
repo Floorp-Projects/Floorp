@@ -28,7 +28,7 @@ pub struct StructContainer {
 }
 
 mod source {
-    use syn::{self, DeriveInput};
+    use syn::DeriveInput;
 
     pub fn newtype_enum() -> DeriveInput {
         parse_quote!{

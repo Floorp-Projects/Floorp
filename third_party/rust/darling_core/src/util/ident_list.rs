@@ -64,11 +64,12 @@ impl FromMeta for IdentList {
 mod tests {
     use super::IdentList;
     use proc_macro2::TokenStream;
+    use syn::{Attribute, Meta};
     use FromMeta;
 
     /// parse a string as a syn::Meta instance.
-    fn pm(tokens: TokenStream) -> ::std::result::Result<syn::Meta, String> {
-        let attribute: syn::Attribute = parse_quote!(#[#tokens]);
+    fn pm(tokens: TokenStream) -> ::std::result::Result<Meta, String> {
+        let attribute: Attribute = parse_quote!(#[#tokens]);
         attribute.interpret_meta().ok_or("Unable to parse".into())
     }
 

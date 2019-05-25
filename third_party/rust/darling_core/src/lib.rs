@@ -19,7 +19,7 @@ mod macros_private;
 mod macros_public;
 
 pub mod ast;
-pub mod codegen;
+pub(crate) mod codegen;
 pub mod derive;
 pub mod error;
 mod from_derive_input;
@@ -29,7 +29,7 @@ mod from_generics;
 mod from_meta;
 mod from_type_param;
 mod from_variant;
-pub mod options;
+pub(crate) mod options;
 pub mod usage;
 pub mod util;
 

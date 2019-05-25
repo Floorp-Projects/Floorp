@@ -1,23 +1,29 @@
+//! Types for "shape" validation. This allows types deriving `FromDeriveInput` etc. to declare
+//! that they only work on - for example - structs with named fields, or newtype enum variants.
+
 use proc_macro2::TokenStream;
 use quote::{ToTokens, TokenStreamExt};
 use syn::{Meta, NestedMeta};
 
 use {Error, FromMeta, Result};
 
+/// Receiver struct for shape validation. Shape validation allows a deriving type
+/// to declare that it only accepts - for example - named structs, or newtype enum
+/// variants.
+///
+/// # Usage
+/// Because `Shape` implements `FromMeta`, the name of the field where it appears is
+/// controlled by the struct that declares `Shape` as a member. That field name is
+/// shown as `ignore` below.
+///
+/// ```rust,ignore
+/// #[ignore(any, struct_named, enum_newtype)]
+/// ```
 #[derive(Debug, Clone)]
 pub struct Shape {
     enum_values: DataShape,
     struct_values: DataShape,
     any: bool,
-}
-
-impl Shape {
-    pub fn all() -> Self {
-        Shape {
-            any: true,
-            ..Default::default()
-        }
-    }
 }
 
 impl Default for Shape {
@@ -97,6 +103,8 @@ impl ToTokens for Shape {
     }
 }
 
+/// Receiver for shape information within a struct or enum context. See `Shape` for more information
+/// on valid uses of shape validation.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct DataShape {
     /// The kind of shape being described. This can be `struct_` or `enum_`.
