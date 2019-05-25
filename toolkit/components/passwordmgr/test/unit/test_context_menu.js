@@ -1,4 +1,4 @@
-/*
+/**
  * Test the password manager context menu.
  */
 
