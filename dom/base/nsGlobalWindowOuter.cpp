@@ -2294,8 +2294,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   mHasStorageAccess = false;
   nsIURI* uri = aDocument->GetDocumentURI();
   if (newInnerWindow &&
-      aDocument->CookieSettings()->GetCookieBehavior() ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+      aDocument->CookieSettings()->GetRejectThirdPartyTrackers() &&
       nsContentUtils::IsThirdPartyWindowOrChannel(newInnerWindow, nullptr,
                                                   uri) &&
       nsContentUtils::IsTrackingResourceWindow(newInnerWindow)) {
