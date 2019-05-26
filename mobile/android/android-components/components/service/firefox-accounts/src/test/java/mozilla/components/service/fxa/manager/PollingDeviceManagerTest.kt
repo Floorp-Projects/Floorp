@@ -7,6 +7,7 @@ package mozilla.components.service.fxa.manager
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.setMain
@@ -29,6 +30,7 @@ import org.mockito.Mockito.verify
 import java.util.concurrent.Executors
 
 class PollingDeviceManagerTest {
+
     internal class TestableDeviceManager(
         constellation: DeviceConstellation,
         scope: CoroutineScope,
@@ -140,6 +142,7 @@ class PollingDeviceManagerTest {
     }
 
     @Test
+    @ExperimentalCoroutinesApi
     fun `refreshing devices triggers observers`() {
         val testDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
         val testScope = CoroutineScope(testDispatcher)

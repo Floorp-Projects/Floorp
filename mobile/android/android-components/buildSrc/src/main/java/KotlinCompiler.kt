@@ -33,7 +33,6 @@ object KotlinCompiler {
         "lib-jexl",
         "samples-toolbar",
         "service-experiments",
-        "service-firefox-accounts",
         "service-fretboard",
         "service-glean",
         "support-test",
