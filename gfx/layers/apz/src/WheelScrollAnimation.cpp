@@ -8,7 +8,7 @@
 #include "ScrollAnimationBezierPhysics.h"
 
 #include "AsyncPanZoomController.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsPoint.h"
 
 namespace mozilla {
@@ -21,22 +21,22 @@ static ScrollAnimationBezierPhysicsSettings SettingsForDeltaType(
 
   switch (aDeltaType) {
     case ScrollWheelInput::SCROLLDELTA_PAGE:
-      maxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS = clamped(StaticPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(StaticPrefs::PageSmoothScrollMinDurationMs(), 0, maxMS);
       break;
     case ScrollWheelInput::SCROLLDELTA_PIXEL:
-      maxMS = clamped(gfxPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(gfxPrefs::PixelSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS = clamped(StaticPrefs::PixelSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(StaticPrefs::PixelSmoothScrollMinDurationMs(), 0, maxMS);
       break;
     case ScrollWheelInput::SCROLLDELTA_LINE:
-      maxMS = clamped(gfxPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(gfxPrefs::WheelSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS = clamped(StaticPrefs::WheelSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(StaticPrefs::WheelSmoothScrollMinDurationMs(), 0, maxMS);
       break;
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
   double intervalRatio =
-      ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
+      ((double)StaticPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
   intervalRatio = std::max(1.0, intervalRatio);
   return ScrollAnimationBezierPhysicsSettings{minMS, maxMS, intervalRatio};
 }

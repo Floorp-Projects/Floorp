@@ -14,9 +14,9 @@
 #include "mozilla/dom/VRDisplayBinding.h"
 #include "mozilla/Base64.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "Navigator.h"
-#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "gfxVR.h"
 #include "VRDisplayClient.h"
@@ -445,7 +445,7 @@ void VRDisplay::StartHandlingVRNavigationEvent() {
   mHandlingVRNavigationEventStart = TimeStamp::Now();
   ++mVRNavigationEventDepth;
   TimeDuration timeout =
-      TimeDuration::FromMilliseconds(gfxPrefs::VRNavigationTimeout());
+      TimeDuration::FromMilliseconds(StaticPrefs::VRNavigationTimeout());
   // A 0 or negative TimeDuration indicates that content may take
   // as long as it wishes to respond to the event, as long as
   // it happens before the event exits.
@@ -470,7 +470,7 @@ bool VRDisplay::IsHandlingVRNavigationEvent() {
     return false;
   }
   TimeDuration timeout =
-      TimeDuration::FromMilliseconds(gfxPrefs::VRNavigationTimeout());
+      TimeDuration::FromMilliseconds(StaticPrefs::VRNavigationTimeout());
   return timeout.ToMilliseconds() <= 0 ||
          (TimeStamp::Now() - mHandlingVRNavigationEventStart) <= timeout;
 }
@@ -494,7 +494,7 @@ already_AddRefed<Promise> VRDisplay::RequestPresent(
       isChromePresentation ? gfx::kVRGroupChrome : gfx::kVRGroupContent;
 
   if (!EventStateManager::IsHandlingUserInput() && !isChromePresentation &&
-      !IsHandlingVRNavigationEvent() && gfxPrefs::VRRequireGesture() &&
+      !IsHandlingVRNavigationEvent() && StaticPrefs::VRRequireGesture() &&
       !IsPresenting()) {
     // The WebVR API states that if called outside of a user gesture, the
     // promise must be rejected.  We allow VR presentations to start within

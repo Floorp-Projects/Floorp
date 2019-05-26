@@ -409,7 +409,8 @@ class ImageSurfaceCache {
 
     // Typically an image cache will not have too many size-varying surfaces, so
     // if we exceed the given threshold, we should consider using a subset.
-    int32_t thresholdSurfaces = gfxPrefs::ImageCacheFactor2ThresholdSurfaces();
+    int32_t thresholdSurfaces =
+        StaticPrefs::ImageCacheFactor2ThresholdSurfaces();
     if (thresholdSurfaces < 0 ||
         mSurfaces.Count() <= static_cast<uint32_t>(thresholdSurfaces)) {
       return;
@@ -1636,7 +1637,7 @@ IntSize SurfaceCache::ClampVectorSize(const IntSize& aSize) {
   // It shouldn't get here if it is significantly larger because
   // VectorImage::UseSurfaceCacheForSize should prevent us from requesting
   // a rasterized version of a surface greater than 4x the maximum.
-  int32_t maxSizeKB = gfxPrefs::ImageCacheMaxRasterizedSVGThresholdKB();
+  int32_t maxSizeKB = StaticPrefs::ImageCacheMaxRasterizedSVGThresholdKB();
   if (maxSizeKB <= 0) {
     return aSize;
   }

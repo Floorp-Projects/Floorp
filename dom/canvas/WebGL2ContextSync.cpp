@@ -67,7 +67,7 @@ GLenum WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags,
   }
 
   const bool canBeAvailable =
-      (sync.mCanBeAvailable || gfxPrefs::WebGLImmediateQueries());
+      (sync.mCanBeAvailable || StaticPrefs::WebGLImmediateQueries());
   if (!canBeAvailable) {
     if (timeout) {
       GenerateWarning(
@@ -118,7 +118,7 @@ void WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync,
   ////
 
   const bool canBeAvailable =
-      (sync.mCanBeAvailable || gfxPrefs::WebGLImmediateQueries());
+      (sync.mCanBeAvailable || StaticPrefs::WebGLImmediateQueries());
   if (!canBeAvailable && pname == LOCAL_GL_SYNC_STATUS) {
     retval.set(JS::Int32Value(LOCAL_GL_UNSIGNALED));
     return;

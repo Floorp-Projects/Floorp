@@ -10,6 +10,7 @@
 #include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/TextureD3D11.h"
@@ -448,7 +449,8 @@ bool D3D11Checks::DoesRemotePresentWork(IDXGIAdapter* adapter) {
   };
 
   auto doesP010Work = [&]() {
-    if (gfxVars::DXP010Blocked() && !gfxPrefs::PDMWMFForceAllowP010Format()) {
+    if (gfxVars::DXP010Blocked() &&
+        !StaticPrefs::PDMWMFForceAllowP010Format()) {
       return false;
     }
     UINT formatSupport;
@@ -457,7 +459,8 @@ bool D3D11Checks::DoesRemotePresentWork(IDXGIAdapter* adapter) {
   };
 
   auto doesP016Work = [&]() {
-    if (gfxVars::DXP016Blocked() && !gfxPrefs::PDMWMFForceAllowP010Format()) {
+    if (gfxVars::DXP016Blocked() &&
+        !StaticPrefs::PDMWMFForceAllowP010Format()) {
       return false;
     }
     UINT formatSupport;

@@ -823,7 +823,7 @@ bool nsBaseWidget::UseAPZ() {
           (WindowType() == eWindowType_toplevel ||
            WindowType() == eWindowType_child ||
            (WindowType() == eWindowType_popup && HasRemoteContent() &&
-            gfxPrefs::APZPopupsEnabled())));
+            StaticPrefs::APZPopupsEnabled())));
 }
 
 bool nsBaseWidget::AllowWebRenderForThisWindow() {
@@ -976,7 +976,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     UniquePtr<DisplayportSetListener> postLayerization;
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
       if (touchEvent->mMessage == eTouchStart) {
-        if (gfxPrefs::TouchActionEnabled()) {
+        if (StaticPrefs::TouchActionEnabled()) {
           APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
               this, GetDocument(), *(original->AsTouchEvent()), aInputBlockId,
               mSetAllowedTouchBehaviorCallback);
