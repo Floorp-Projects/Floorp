@@ -289,8 +289,6 @@ class gfxPrefs final {
   // will keep these in an alphabetical order to make it easier to see if a
   // method accessing a pref already exists. Just add yours in the list.
 
-  DECL_GFX_PREF(Once, "layers.windowrecording.path",           LayersWindowRecordingPath, std::string, std::string());
-
   // WARNING:
   // Please make sure that you've added your new preference to the list above
   // in alphabetical order.
