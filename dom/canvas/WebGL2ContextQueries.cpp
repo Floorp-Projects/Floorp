@@ -6,7 +6,6 @@
 #include "WebGL2Context.h"
 #include "GLContext.h"
 #include "WebGLQuery.h"
-#include "gfxPrefs.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

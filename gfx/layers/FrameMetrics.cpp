@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FrameMetrics.h"
-#include "gfxPrefs.h"
+
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
 #include "mozilla/WritingModes.h"

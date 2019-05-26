@@ -14,14 +14,13 @@
 
 #include "APZTestCommon.h"
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
+
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
 
 class APZCTreeManagerTester : public APZCTesterBase {
  protected:
   virtual void SetUp() {
-    gfxPrefs::GetSingleton();
     gfxPlatform::GetPlatform();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
     APZThreadUtils::SetControllerThread(MessageLoop::current());

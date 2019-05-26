@@ -30,7 +30,6 @@
 #include "mozilla/StaticPrefs.h"      // for StaticPrefs
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/gfx/2D.h"         // for DrawTarget
-#include "mozilla/gfx/GPUChild.h"   // for GfxPrefValue
 #include "mozilla/gfx/Point.h"      // for IntSize
 #include "mozilla/gfx/Rect.h"       // for IntSize
 #include "mozilla/gfx/gfxVars.h"    // for gfxVars
