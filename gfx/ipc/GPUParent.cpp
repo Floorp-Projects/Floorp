@@ -514,7 +514,7 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
     wr::RenderThread::ShutDown();
   }
 #ifdef XP_WIN
-  else if (widget::WinCompositorWindowThread::Get()) {
+  if (widget::WinCompositorWindowThread::Get()) {
     widget::WinCompositorWindowThread::ShutDown();
   }
 #endif
