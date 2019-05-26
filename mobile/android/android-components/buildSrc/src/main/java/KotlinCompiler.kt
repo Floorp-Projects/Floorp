@@ -30,7 +30,6 @@ object KotlinCompiler {
         "feature-tabs",
         "feature-toolbar",
         "lib-fetch-okhttp",
-        "lib-jexl",
         "samples-toolbar",
         "service-experiments",
         "service-fretboard",

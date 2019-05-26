@@ -371,12 +371,38 @@ class LexerTest {
 
     @Test
     fun `should tokenize a full expression`() {
-        val expression = "6+x -  -17.55*y<= !foo.bar[\"baz\\\\\"foz\"]"
+        val expression = """6+x -  -17.55*y<= !foo.bar["baz\\"foz"]"""
+
+        assertExpressionYieldsTokens(expression, listOf(
+            Token(Token.Type.LITERAL, "6", 6),
+            Token(Token.Type.BINARY_OP, "+", "+"),
+            Token(Token.Type.IDENTIFIER, "x", "x"),
+            Token(Token.Type.BINARY_OP, "-", "-"),
+            Token(Token.Type.LITERAL, "-17.55", -17.55),
+            Token(Token.Type.BINARY_OP, "*", "*"),
+            Token(Token.Type.IDENTIFIER, "y", "y"),
+            Token(Token.Type.BINARY_OP, "<=", "<="),
+            Token(Token.Type.UNARY_OP, "!", "!"),
+            Token(Token.Type.IDENTIFIER, "foo", "foo"),
+            Token(Token.Type.DOT, ".", "."),
+            Token(Token.Type.IDENTIFIER, "bar", "bar"),
+            Token(Token.Type.OPEN_BRACKET, "[", "["),
+            Token(Token.Type.LITERAL, """"baz\\"foz"""", """baz\"foz"""),
+            Token(Token.Type.CLOSE_BRACKET, "]", "]")
+        ))
     }
 
     @Test
     fun `should consider minus to be negative appropriately`() {
         val expression = "-1?-2:-3"
+
+        assertExpressionYieldsTokens(expression, listOf(
+            Token(Token.Type.LITERAL, "-1", -1),
+            Token(Token.Type.QUESTION, "?", "?"),
+            Token(Token.Type.LITERAL, "-2", -2),
+            Token(Token.Type.COLON, ":", ":"),
+            Token(Token.Type.LITERAL, "-3", -3)
+        ))
     }
 
     private fun assertExpressionYieldsTokens(expression: String, tokens: List<Token>) {
