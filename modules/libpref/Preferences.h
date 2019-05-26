@@ -34,6 +34,8 @@ class nsPrefBranch;
 
 namespace mozilla {
 
+struct RegisterCallbacksInternal;
+
 void UnloadPrefsModule();
 
 // A typesafe version of PrefChangeFunc, with its data argument type deduced
@@ -174,6 +176,8 @@ class Preferences final : public nsIPrefService,
 
   // Initialize user prefs from prefs.js/user.js
   static void InitializeUserPrefs();
+
+  static void RefreshStaticPrefsValues();
 
   // Returns the singleton instance which is addreffed.
   static already_AddRefed<Preferences> GetInstanceForService();
@@ -640,6 +644,7 @@ class Preferences final : public nsIPrefService,
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects(
       bool aIsStartup);
 
+  friend struct RegisterCallbacksInternal;
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const nsACString& aPref, void* aClosure,
                                    MatchKind aMatchKind,
