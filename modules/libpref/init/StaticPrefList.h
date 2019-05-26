@@ -5276,17 +5276,6 @@ VARCACHE_PREF(
 #endif // MOZ_WEBRTC
 
 //---------------------------------------------------------------------------
-// medium_high_event_queue prefs
-//---------------------------------------------------------------------------
-
-VARCACHE_PREF(
-  Live,
-  "medium_high_event_queue.enabled",
-  medium_high_event_queue_enabled,
-  RelaxedAtomicBool, true
-)
-
-//---------------------------------------------------------------------------
 // Prefs starting with "mousewheel."
 //---------------------------------------------------------------------------
 
@@ -5916,6 +5905,17 @@ VARCACHE_PREF(
   "toolkit.scrollbox.verticalScrollDistance",
   ToolkitVerticalScrollDistance,
   RelaxedAtomicInt32, 3
+)
+
+//---------------------------------------------------------------------------
+// Prefs starting with "thread."
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  Live,
+  "threads.medium_high_event_queue.enabled",
+  threads_medium_high_event_queue_enabled,
+  RelaxedAtomicBool, true
 )
 
 //---------------------------------------------------------------------------
