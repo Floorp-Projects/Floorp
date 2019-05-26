@@ -8,7 +8,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -18,6 +17,7 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -32,17 +32,15 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class ClipboardSuggestionProviderTest {
-    private val context: Context
-        get() { return ApplicationProvider.getApplicationContext() }
 
     private val clipboardManager: ClipboardManager
-        get() { return context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
+        get() = testContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     @Test
     fun `provider returns empty list by default`() = runBlocking {
         clipboardManager.primaryClip = null
 
-        val provider = ClipboardSuggestionProvider(context, mock())
+        val provider = ClipboardSuggestionProvider(testContext, mock())
 
         provider.onInputStarted()
         val suggestions = provider.onInputChanged("Hello")
@@ -94,7 +92,7 @@ class ClipboardSuggestionProviderTest {
     fun `provider return suggestion on input start`() {
         clipboardManager.primaryClip = ClipData.newPlainText("Test label", "https://www.mozilla.org")
 
-        val provider = ClipboardSuggestionProvider(context, mock())
+        val provider = ClipboardSuggestionProvider(testContext, mock())
         val suggestions = runBlocking { provider.onInputStarted() }
 
         assertEquals(1, suggestions.size)
@@ -118,7 +116,7 @@ class ClipboardSuggestionProviderTest {
     fun `provider should allow customization of title and icon on suggestion`() {
         clipboardManager.primaryClip = ClipData.newPlainText("Test label", "http://mozilla.org")
         val bitmap = Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
-        val provider = ClipboardSuggestionProvider(context, mock(), title = "My test title", icon = bitmap)
+        val provider = ClipboardSuggestionProvider(testContext, mock(), title = "My test title", icon = bitmap)
 
         val suggestion = runBlocking {
             provider.onInputStarted()
@@ -147,7 +145,7 @@ class ClipboardSuggestionProviderTest {
 
         val useCase = spy(SessionUseCases(sessionManager).loadUrl)
 
-        val provider = ClipboardSuggestionProvider(context, useCase)
+        val provider = ClipboardSuggestionProvider(testContext, useCase)
 
         provider.onInputStarted()
         val suggestions = provider.onInputChanged("Hello")
@@ -165,7 +163,7 @@ class ClipboardSuggestionProviderTest {
 
     @Test
     fun `Provider suggestion should not get cleared when text changes`() {
-        val provider = ClipboardSuggestionProvider(context, mock())
+        val provider = ClipboardSuggestionProvider(testContext, mock())
         assertFalse(provider.shouldClearSuggestions)
     }
 
@@ -188,7 +186,7 @@ class ClipboardSuggestionProviderTest {
     }
 
     private fun getSuggestion(): AwesomeBar.Suggestion? = runBlocking {
-        val provider = ClipboardSuggestionProvider(context, mock())
+        val provider = ClipboardSuggestionProvider(testContext, mock())
 
         provider.onInputStarted()
         val suggestions = provider.onInputChanged("Hello")

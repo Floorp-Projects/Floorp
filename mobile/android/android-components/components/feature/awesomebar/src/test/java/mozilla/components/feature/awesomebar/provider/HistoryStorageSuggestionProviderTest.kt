@@ -18,6 +18,7 @@ import org.junit.Test
 import org.mockito.Mockito.`when`
 
 class HistoryStorageSuggestionProviderTest {
+
     @Test
     fun `Provider returns empty list when text is empty`() = runBlocking {
         val provider = HistoryStorageSuggestionProvider(mock(), mock())

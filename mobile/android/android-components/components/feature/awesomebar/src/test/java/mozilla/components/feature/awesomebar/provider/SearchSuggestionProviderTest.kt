@@ -4,9 +4,6 @@
 
 package mozilla.components.feature.awesomebar.provider
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
-import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
@@ -19,8 +16,10 @@ import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -32,14 +31,11 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 private const val GOOGLE_MOCK_RESPONSE = "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
 
 @RunWith(RobolectricTestRunner::class)
 class SearchSuggestionProviderTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `Provider returns suggestion with chips based on search engine suggestion`() {
@@ -58,7 +54,7 @@ class SearchSuggestionProviderTest {
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
 
             val useCase = spy(SearchUseCases(
-                RuntimeEnvironment.application,
+                testContext,
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
@@ -114,7 +110,7 @@ class SearchSuggestionProviderTest {
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
 
             val useCase = spy(SearchUseCases(
-                RuntimeEnvironment.application,
+                testContext,
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
@@ -174,7 +170,7 @@ class SearchSuggestionProviderTest {
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
 
             val useCase = spy(SearchUseCases(
-                RuntimeEnvironment.application,
+                testContext,
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
@@ -223,7 +219,7 @@ class SearchSuggestionProviderTest {
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
 
             val useCase = spy(SearchUseCases(
-                RuntimeEnvironment.application,
+                testContext,
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
@@ -258,7 +254,7 @@ class SearchSuggestionProviderTest {
             server.start()
 
             val searchEngine: SearchEngine = mock()
-            val engineIcon = context.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
+            val engineIcon = testContext.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
 
             doReturn(engineIcon).`when`(searchEngine).icon
             doReturn("/").`when`(searchEngine).buildSuggestionsURL("fire")
@@ -284,14 +280,14 @@ class SearchSuggestionProviderTest {
             server.start()
 
             val searchEngine: SearchEngine = mock()
-            val engineIcon = context.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
+            val engineIcon = testContext.getDrawable(R.drawable.mozac_ic_device_desktop)!!.toBitmap()
 
             doReturn(engineIcon).`when`(searchEngine).icon
             doReturn("/").`when`(searchEngine).buildSuggestionsURL("fire")
             doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
             doReturn("google").`when`(searchEngine).name
 
-            val paramIcon = context.getDrawable(R.drawable.mozac_ic_search)!!.toBitmap()
+            val paramIcon = testContext.getDrawable(R.drawable.mozac_ic_search)!!.toBitmap()
 
             val provider = SearchSuggestionProvider(searchEngine, mock(), HttpURLConnectionClient(),
                     icon = paramIcon)
@@ -354,7 +350,7 @@ class SearchSuggestionProviderTest {
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
 
             val useCase = spy(SearchUseCases(
-                RuntimeEnvironment.application,
+                testContext,
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
@@ -388,7 +384,7 @@ class SearchSuggestionProviderTest {
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
 
             val useCase = spy(SearchUseCases(
-                RuntimeEnvironment.application,
+                testContext,
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)

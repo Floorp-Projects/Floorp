@@ -9,6 +9,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -19,15 +20,15 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class AwesomeBarFeatureTest {
+
     @Test
     fun `Feature connects toolbar with awesome bar`() {
         val toolbar: Toolbar = mock()
         val awesomeBar: AwesomeBar = mock()
-        doReturn(View(RuntimeEnvironment.application)).`when`(awesomeBar).asView()
+        doReturn(View(testContext)).`when`(awesomeBar).asView()
 
         var listener: Toolbar.OnEditListener? = null
 
@@ -121,7 +122,7 @@ class AwesomeBarFeatureTest {
 
         verify(awesomeBar, never()).addProviders(any())
 
-        feature.addClipboardProvider(RuntimeEnvironment.application, mock())
+        feature.addClipboardProvider(testContext, mock())
 
         verify(awesomeBar).addProviders(any())
     }
