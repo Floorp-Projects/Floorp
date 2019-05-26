@@ -86,9 +86,6 @@ class SVGAnimatedLength {
   typedef mozilla::dom::SVGElement SVGElement;
   typedef mozilla::dom::SVGViewportElement SVGViewportElement;
   typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
-  typedef mozilla::SMILAttr SMILAttr;
-  typedef mozilla::SMILValue SMILValue;
-  typedef mozilla::SVGContentUtils SVGContentUtils;
 
  public:
   void Init(uint8_t aCtxType = mozilla::SVGContentUtils::XY,
