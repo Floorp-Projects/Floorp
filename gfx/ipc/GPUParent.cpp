@@ -175,13 +175,8 @@ bool GPUParent::DeallocPAPZInputBridgeParent(PAPZInputBridgeParent* aActor) {
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvInit(
-    nsTArray<GfxPrefSetting>&& prefs, nsTArray<GfxVarUpdate>&& vars,
-    const DevicePrefs& devicePrefs, nsTArray<LayerTreeIdMapping>&& aMappings) {
-  const nsTArray<gfxPrefs::Pref*>& globalPrefs = gfxPrefs::all();
-  for (auto& setting : prefs) {
-    gfxPrefs::Pref* pref = globalPrefs[setting.index()];
-    pref->SetCachedValue(setting.value());
-  }
+    nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
+    nsTArray<LayerTreeIdMapping>&& aMappings) {
   for (const auto& var : vars) {
     gfxVars::ApplyUpdate(var);
   }
@@ -328,13 +323,6 @@ mozilla::ipc::IPCResult GPUParent::RecvInitProfiler(
 #ifdef MOZ_GECKO_PROFILER
   mProfilerController = ChildProfilerController::Create(std::move(aEndpoint));
 #endif
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult GPUParent::RecvUpdatePref(
-    const GfxPrefSetting& setting) {
-  gfxPrefs::Pref* pref = gfxPrefs::all()[setting.index()];
-  pref->SetCachedValue(setting.value());
   return IPC_OK();
 }
 
