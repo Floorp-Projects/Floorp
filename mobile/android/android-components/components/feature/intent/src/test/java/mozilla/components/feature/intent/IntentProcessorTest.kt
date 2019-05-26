@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -32,16 +33,16 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class IntentProcessorTest {
+
     private val sessionManager = mock(SessionManager::class.java)
     private val session = mock(Session::class.java)
     private val engineSession = mock(EngineSession::class.java)
     private val sessionUseCases = SessionUseCases(sessionManager)
     private val searchEngineManager = mock(SearchEngineManager::class.java)
-    private val searchUseCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionManager)
+    private val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
 
     @Before
     fun setup() {
@@ -55,7 +56,7 @@ class IntentProcessorTest {
         val sessionManager = spy(SessionManager(engine))
         val useCases = SessionUseCases(sessionManager)
         val handler =
-            IntentProcessor(useCases, sessionManager, searchUseCases, RuntimeEnvironment.application)
+            IntentProcessor(useCases, sessionManager, searchUseCases, testContext)
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
 
@@ -82,7 +83,7 @@ class IntentProcessorTest {
             sessionUseCases,
             sessionManager,
             searchUseCases,
-            RuntimeEnvironment.application,
+            testContext,
             true,
             false
         )
@@ -103,7 +104,7 @@ class IntentProcessorTest {
             sessionUseCases,
             sessionManager,
             searchUseCases,
-            RuntimeEnvironment.application,
+            testContext,
             true,
             false
         )
@@ -121,7 +122,7 @@ class IntentProcessorTest {
             sessionUseCases,
             sessionManager,
             searchUseCases,
-            RuntimeEnvironment.application,
+            testContext,
             useDefaultHandlers = false
         )
         val intent = mock(Intent::class.java)
@@ -138,7 +139,7 @@ class IntentProcessorTest {
             sessionUseCases,
             sessionManager,
             searchUseCases,
-            RuntimeEnvironment.application,
+            testContext,
             useDefaultHandlers = false
         )
         val intent = mock(Intent::class.java)
@@ -167,7 +168,7 @@ class IntentProcessorTest {
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
         val useCases = SessionUseCases(sessionManager)
 
-        val handler = IntentProcessor(useCases, sessionManager, searchUseCases, RuntimeEnvironment.application)
+        val handler = IntentProcessor(useCases, sessionManager, searchUseCases, testContext)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_VIEW)
@@ -189,7 +190,7 @@ class IntentProcessorTest {
     fun `load URL on ACTION_SEND if text contains URL`() {
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
-        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, RuntimeEnvironment.application)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, testContext)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
@@ -221,13 +222,13 @@ class IntentProcessorTest {
         val sessionManager = spy(SessionManager(engine))
         doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
 
-        val searchUseCases = SearchUseCases(RuntimeEnvironment.application, searchEngineManager, sessionManager)
+        val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
         val sessionUseCases = SessionUseCases(sessionManager)
 
         val searchTerms = "mozilla android"
         val searchUrl = "http://search-url.com?$searchTerms"
 
-        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, RuntimeEnvironment.application)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, testContext)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)
@@ -235,7 +236,7 @@ class IntentProcessorTest {
 
         val searchEngine = mock(SearchEngine::class.java)
         `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
-        `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
+        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
 
         handler.process(intent)
         verify(engineSession).loadUrl(searchUrl)
@@ -245,7 +246,7 @@ class IntentProcessorTest {
 
     @Test
     fun `processor handles ACTION_SEND with empty text`() {
-        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, RuntimeEnvironment.application)
+        val handler = IntentProcessor(sessionUseCases, sessionManager, searchUseCases, testContext)
 
         val intent = mock(Intent::class.java)
         `when`(intent.action).thenReturn(Intent.ACTION_SEND)

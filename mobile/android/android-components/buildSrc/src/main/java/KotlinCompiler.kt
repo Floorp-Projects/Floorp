@@ -22,7 +22,6 @@ object KotlinCompiler {
         "feature-contextmenu",
         "feature-customtabs",
         "feature-downloads",
-        "feature-intent",
         "feature-prompts",
         "feature-search",
         "feature-session",
