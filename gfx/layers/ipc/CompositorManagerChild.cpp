@@ -6,7 +6,7 @@
 
 #include "mozilla/layers/CompositorManagerChild.h"
 
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -269,7 +269,7 @@ void CompositorManagerChild::SetReplyTimeout() {
 #ifndef DEBUG
   // Add a timeout for release builds to kill GPU process when it hangs.
   if (XRE_IsParentProcess() && GPUProcessManager::Get()->GetGPUChild()) {
-    int32_t timeout = gfxPrefs::GPUProcessIPCReplyTimeoutMs();
+    int32_t timeout = StaticPrefs::GPUProcessIPCReplyTimeoutMs();
     SetReplyTimeoutMs(timeout);
   }
 #endif

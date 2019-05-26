@@ -10,9 +10,9 @@
 #include <stdint.h>  // for int32_t
 #include "Layers.h"
 #include "gfxContext.h"  // for gfxContext
-#include "gfxPrefs.h"
 #include "mozilla/Attributes.h"   // for override
-#include "mozilla/LinkedList.h"   // For LinkedList
+#include "mozilla/LinkedList.h"   // for LinkedList
+#include "mozilla/StaticPrefs.h"  // for StaticPrefs
 #include "mozilla/WidgetUtils.h"  // for ScreenRotation
 #include "mozilla/gfx/Rect.h"     // for Rect
 #include "mozilla/layers/CompositorTypes.h"
@@ -215,7 +215,7 @@ class ClientLayerManager final : public LayerManager,
 
   // TODO(botond): When we start using this and write a wrapper similar to
   // nsLayoutUtils::LogTestDataForPaint(), make sure that wrapper checks
-  // gfxPrefs::APZTestLoggingEnabled().
+  // StaticPrefs::APZTestLoggingEnabled().
   void LogTestDataForRepaintRequest(SequenceNumber aSequenceNumber,
                                     ScrollableLayerGuid::ViewID aScrollId,
                                     const std::string& aKey,

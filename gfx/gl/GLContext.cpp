@@ -34,7 +34,7 @@
 #include "SharedSurfaceGL.h"
 #include "GfxTexturesReporter.h"
 #include "gfx2DGlue.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/gfx/Logging.h"
 
@@ -276,7 +276,7 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
       mDebugFlags(ChooseDebugFlags(flags)),
       mSharedContext(sharedContext),
       mCaps(caps),
-      mWorkAroundDriverBugs(gfxPrefs::WorkAroundDriverBugs()) {
+      mWorkAroundDriverBugs(StaticPrefs::WorkAroundDriverBugs()) {
   mOwningThreadId = PlatformThread::CurrentId();
   MOZ_ALWAYS_TRUE(sCurrentContext.init());
   sCurrentContext.set(0);

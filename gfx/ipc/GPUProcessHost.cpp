@@ -6,10 +6,10 @@
 
 #include "GPUProcessHost.h"
 #include "chrome/common/process_watcher.h"
-#include "gfxPrefs.h"
 #include "mozilla/gfx/Logging.h"
 #include "nsITimer.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "VRGPUChild.h"
 #include "ProcessUtils.h"
 
@@ -62,7 +62,7 @@ bool GPUProcessHost::WaitForLaunch() {
     return !!mGPUChild;
   }
 
-  int32_t timeoutMs = gfxPrefs::GPUProcessTimeoutMs();
+  int32_t timeoutMs = StaticPrefs::GPUProcessTimeoutMs();
 
   // If one of the following environment variables are set we can effectively
   // ignore the timeout - as we can guarantee the compositor process will be

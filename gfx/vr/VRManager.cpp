@@ -13,9 +13,9 @@
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 
-#include "gfxPrefs.h"
 #include "gfxVR.h"
 #include "gfxVRExternal.h"
 
@@ -79,7 +79,7 @@ VRManager::VRManager()
 #if !defined(MOZ_WIDGET_ANDROID)
   // The VR Service accesses all hardware from a separate process
   // and replaces the other VRSystemManager when enabled.
-  if (!gfxPrefs::VRProcessEnabled() || !XRE_IsGPUProcess()) {
+  if (!StaticPrefs::VRProcessEnabled() || !XRE_IsGPUProcess()) {
     VRServiceManager::Get().CreateService();
   }
   if (VRServiceManager::Get().IsServiceValid()) {
@@ -100,7 +100,7 @@ VRManager::VRManager()
 
   // Enable gamepad extensions while VR is enabled.
   // Preference only can be set at the Parent process.
-  if (XRE_IsParentProcess() && gfxPrefs::VREnabled()) {
+  if (XRE_IsParentProcess() && StaticPrefs::VREnabled()) {
     Preferences::SetBool("dom.gamepad.extensions.enabled", true);
   }
 }
@@ -144,7 +144,8 @@ void VRManager::Shutdown() {
   }
   // XRE_IsGPUProcess() is helping us to check some platforms like
   // Win 7 try which are not using GPU process but VR process is enabled.
-  if (XRE_IsGPUProcess() && gfxPrefs::VRProcessEnabled() && mVRServiceStarted) {
+  if (XRE_IsGPUProcess() && StaticPrefs::VRProcessEnabled() &&
+      mVRServiceStarted) {
     RefPtr<Runnable> task = NS_NewRunnableFunction(
         "VRServiceManager::ShutdownVRProcess",
         []() -> void { VRServiceManager::Get().ShutdownVRProcess(); });
@@ -455,7 +456,7 @@ void VRManager::EnumerateVRDisplays() {
    */
 #if !defined(MOZ_WIDGET_ANDROID)
   if (!mVRServiceStarted) {
-    if (XRE_IsGPUProcess() && gfxPrefs::VRProcessEnabled()) {
+    if (XRE_IsGPUProcess() && StaticPrefs::VRProcessEnabled()) {
       VRServiceManager::Get().CreateVRProcess();
       mVRServiceStarted = true;
     } else {

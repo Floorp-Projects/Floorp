@@ -46,6 +46,7 @@
 #include "mozilla/Preferences.h"             // for Preferences
 #include "mozilla/RecursiveMutex.h"          // for RecursiveMutexAutoLock, etc
 #include "mozilla/RefPtr.h"                  // for RefPtr
+#include "mozilla/StaticPrefs.h"             // for StaticPrefs
 #include "mozilla/StaticPtr.h"               // for StaticAutoPtr
 #include "mozilla/Telemetry.h"               // for Telemetry
 #include "mozilla/TimeStamp.h"               // for TimeDuration, TimeStamp
@@ -815,8 +816,8 @@ void AsyncPanZoomController::InitializeGlobalState() {
       new ComputedTimingFunction(nsTimingFunction(StyleTimingKeyword::Ease));
   ClearOnShutdown(&gZoomAnimationFunction);
   gVelocityCurveFunction = new ComputedTimingFunction(nsTimingFunction(
-      gfxPrefs::APZCurveFunctionX1(), gfxPrefs::APZCurveFunctionY1(),
-      gfxPrefs::APZCurveFunctionX2(), gfxPrefs::APZCurveFunctionY2()));
+      StaticPrefs::APZCurveFunctionX1(), StaticPrefs::APZCurveFunctionY1(),
+      StaticPrefs::APZCurveFunctionX2(), StaticPrefs::APZCurveFunctionY2()));
   ClearOnShutdown(&gVelocityCurveFunction);
 
   uint64_t sysmem = PR_GetPhysicalMemorySize();
@@ -843,8 +844,8 @@ AsyncPanZoomController::AsyncPanZoomController(
       mY(this),
       mPanDirRestricted(false),
       mPinchLocked(false),
-      mPinchEventBuffer(
-          TimeDuration::FromMilliseconds(gfxPrefs::APZPinchLockBufferMaxAge())),
+      mPinchEventBuffer(TimeDuration::FromMilliseconds(
+          StaticPrefs::APZPinchLockBufferMaxAge())),
       mZoomConstraints(false, false,
                        mScrollMetadata.GetMetrics().GetDevPixelsPerCSSPixel() *
                            kViewportMinScale / ParentLayerToScreenScale(1),
@@ -1051,7 +1052,7 @@ nsEventStatus AsyncPanZoomController::HandleDragEvent(
   ScrollDirection direction = *scrollbarData.mDirection;
 
   bool isMouseAwayFromThumb = false;
-  if (int snapMultiplier = gfxPrefs::SliderSnapMultiplier()) {
+  if (int snapMultiplier = StaticPrefs::SliderSnapMultiplier()) {
     // It's fine to ignore the async component of the thumb's transform,
     // because any async transform of the thumb will be in the direction of
     // scrolling, but here we're interested in the other direction.
@@ -5066,7 +5067,7 @@ void AsyncPanZoomController::DispatchStateChangeNotification(
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
       // Let the compositor know about scroll state changes so it can manage
       // windowed plugins.
-      if (gfxPrefs::HidePluginsForScroll() && mCompositorController) {
+      if (StaticPrefs::HidePluginsForScroll() && mCompositorController) {
         mCompositorController->ScheduleHideAllPluginWindows();
       }
 #endif
@@ -5088,7 +5089,7 @@ void AsyncPanZoomController::DispatchStateChangeNotification(
       controller->NotifyAPZStateChange(GetGuid(),
                                        APZStateChange::eTransformEnd);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      if (gfxPrefs::HidePluginsForScroll() && mCompositorController) {
+      if (StaticPrefs::HidePluginsForScroll() && mCompositorController) {
         mCompositorController->ScheduleShowAllPluginWindows();
       }
 #endif
