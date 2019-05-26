@@ -88,7 +88,6 @@ interface nsILoginManager : nsISupports {
    * The browser sanitization feature allows the user to clear any stored
    * passwords. This interface allows that to be done without getting each
    * login first (which might require knowing the master password).
-   *
    */
   void removeAllLogins();
 
@@ -98,44 +97,34 @@ interface nsILoginManager : nsISupports {
    * if there are no logins the array is empty.
    *
    * @return An array of nsILoginInfo objects.
-   *
-   * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.getAllLogins();
-   *       (|logins| is an array).
    */
   Array<nsILoginInfo> getAllLogins();
 
 
   /**
-   * Obtain a list of all hosts for which password saving is disabled.
+   * Obtain a list of all origins for which password saving is disabled.
    *
-   * @return An array of hostname strings, in origin URL format without a
-   *         pathname. For example: "https://www.site.com".
-   *
-   * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.getAllDisabledHosts();
+   * @return An array of origin strings. For example: ["https://www.site.com"].
    */
   Array<AString> getAllDisabledHosts();
 
 
   /**
-   * Check to see if saving logins has been disabled for a host.
+   * Check to see if saving logins has been disabled for an origin.
    *
    * @param aHost
-   *        The hostname to check. This argument should be in the origin
-   *        URL format, without a pathname. For example: "http://foo.com".
+   *        The origin to check. For example: "http://foo.com".
    */
   boolean getLoginSavingEnabled(in AString aHost);
 
 
   /**
-   * Disable (or enable) storing logins for the specified host. When
+   * Disable (or enable) storing logins for the specified origin. When
    * disabled, the login manager will not prompt to store logins for
-   * that host. Existing logins are not affected.
+   * that origin. Existing logins are not affected.
    *
    * @param aHost
-   *        The hostname to set. This argument should be in the origin
-   *        URL format, without a pathname. For example: "http://foo.com".
+   *        The origin to set. For example: "http://foo.com".
    * @param isEnabled
    *        Specify if saving logins should be enabled (true) or
    *        disabled (false)
@@ -148,25 +137,21 @@ interface nsILoginManager : nsISupports {
    * for logins that might be applicable to a form or authentication request.
    *
    * @param aHostname
-   *        The hostname to restrict searches to, in URL format. For
-   *        example: "http://www.site.com".
+   *        The origin to restrict searches to. For example: "http://www.site.com".
    *        To find logins for a given nsIURI, you would typically pass in
-   *        its prePath.
+   *        its prePath (excluding userPass).
    * @param aActionURL
-   *        For form logins, this argument should be the URL to which the
-   *        form will be submitted. For protocol logins, specify null.
+   *        For form logins, this argument should be the origin to which the
+   *        form will be submitted, not the whole URL (despite the name).
+   *        For HTTP auth. logins, specify null.
    *        An empty string ("") will match any value (except null).
    * @param aHttpRealm
-   *        For protocol logins, this argument should be the HTTP Realm
+   *        For HTTP auth. logins, this argument should be the HTTP Realm
    *        for which the login applies. This is obtained from the
    *        WWW-Authenticate header. See RFC2617. For form logins,
    *        specify null.
    *        An empty string ("") will match any value (except null).
    * @return An array of nsILoginInfo objects.
-   *
-   * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.findLogins(hostname, ...);
-   *
    */
   Array<nsILoginInfo> findLogins(in AString aHostname, in AString aActionURL,
 				 in AString aHttpRealm);
@@ -180,11 +165,11 @@ interface nsILoginManager : nsISupports {
    * password to decrypt the logins.
    *
    * @param aHostname
-   *        The hostname to restrict searches to. Specify an empty string
-   *        to match all hosts. A null value will not match any logins, and
+   *        The origin to restrict searches to. Specify an empty string
+   *        to match all origins. A null value will not match any logins, and
    *        will thus always return a count of 0.
    * @param aActionURL
-   *        The URL to which a form login will be submitted. To match any
+   *        The origin to which a form login will be submitted. To match any
    *        form login, specify an empty string. To not match any form
    *        login, specify null.
    * @param aHttpRealm
@@ -204,10 +189,6 @@ interface nsILoginManager : nsISupports {
    *        requirements as findLogins for those fields. Wildcard matches are
    *        simply not specified.
    * @return An array of nsILoginInfo objects.
-   *
-   * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.searchLogins(matchData);
-   *       (|logins| is an array).
    */
   Array<nsILoginInfo> searchLogins(in nsIPropertyBag matchData);
 

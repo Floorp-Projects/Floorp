@@ -89,4 +89,4 @@ nsLoginInfo.prototype = {
 
 }; // end of nsLoginInfo implementation
 
-var EXPORTED_SYMBOLS = ["nsLoginInfo"];
+const EXPORTED_SYMBOLS = ["nsLoginInfo"];
