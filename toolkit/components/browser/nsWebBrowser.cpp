@@ -124,7 +124,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   browser->SetDocShell(docShell);
 
   // get the system default window background colour
-  LookAndFeel::GetColor(LookAndFeel::eColorID_WindowBackground,
+  LookAndFeel::GetColor(LookAndFeel::ColorID::WindowBackground,
                         &browser->mBackgroundColor);
 
   // HACK ALERT - this registration registers the nsDocShellTreeOwner as a
