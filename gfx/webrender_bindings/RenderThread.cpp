@@ -101,7 +101,9 @@ void RenderThread::ShutDown() {
 
   sRenderThread = nullptr;
 #ifdef XP_WIN
-  widget::WinCompositorWindowThread::ShutDown();
+  if (widget::WinCompositorWindowThread::Get()) {
+    widget::WinCompositorWindowThread::ShutDown();
+  }
 #endif
 }
 
