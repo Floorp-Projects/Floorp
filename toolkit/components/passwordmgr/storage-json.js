@@ -539,4 +539,4 @@ XPCOMUtils.defineLazyGetter(this.LoginManagerStorage_json.prototype, "log", () =
   return logger.log.bind(logger);
 });
 
-var EXPORTED_SYMBOLS = ["LoginManagerStorage_json"];
+const EXPORTED_SYMBOLS = ["LoginManagerStorage_json"];

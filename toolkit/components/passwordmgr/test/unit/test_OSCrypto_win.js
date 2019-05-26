@@ -9,7 +9,7 @@
 ChromeUtils.defineModuleGetter(this, "OSCrypto",
                                "resource://gre/modules/OSCrypto.jsm");
 
-var crypto = new OSCrypto();
+let crypto = new OSCrypto();
 
 // Tests
 
