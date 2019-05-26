@@ -523,7 +523,7 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
     wr::RenderThread::ShutDown();
   }
 #ifdef XP_WIN
-  else if (gfxPrefs::Direct3D11UseDoubleBuffering() && IsWin10OrLater()) {
+  else if (widget::WinCompositorWindowThread::Get()) {
     widget::WinCompositorWindowThread::ShutDown();
   }
 #endif
