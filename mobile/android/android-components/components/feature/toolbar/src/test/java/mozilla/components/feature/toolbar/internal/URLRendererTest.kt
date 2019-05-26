@@ -4,12 +4,11 @@
 
 package mozilla.components.feature.toolbar.internal
 
-import android.content.Context
 import android.graphics.Color
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
-import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -18,6 +17,7 @@ import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,16 +32,16 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class URLRendererTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Before
+    @ExperimentalCoroutinesApi
     fun setUp() {
         // Execute main thread coroutines on same thread as caller.
         Dispatchers.setMain(Dispatchers.Unconfined)
     }
 
     @After
+    @ExperimentalCoroutinesApi
     fun tearDown() {
         Dispatchers.resetMain()
     }
@@ -67,7 +67,7 @@ class URLRendererTest {
     fun `Render with configuration`() {
         runBlocking {
             val configuration = ToolbarFeature.UrlRenderConfiguration(
-                publicSuffixList = PublicSuffixList(context, Dispatchers.Unconfined),
+                publicSuffixList = PublicSuffixList(testContext, Dispatchers.Unconfined),
                 registrableDomainColor = Color.RED,
                 urlColor = Color.GREEN
             )

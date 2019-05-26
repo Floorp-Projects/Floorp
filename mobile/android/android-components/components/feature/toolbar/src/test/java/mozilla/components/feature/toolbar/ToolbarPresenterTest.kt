@@ -7,6 +7,7 @@
 package mozilla.components.feature.toolbar
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.Session
@@ -25,13 +26,16 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 class ToolbarPresenterTest {
+
     @Before
+    @ExperimentalCoroutinesApi
     fun setUp() {
         // Execute main thread coroutines on same thread as caller.
         Dispatchers.setMain(Dispatchers.Unconfined)
     }
 
     @After
+    @ExperimentalCoroutinesApi
     fun tearDown() {
         Dispatchers.resetMain()
     }

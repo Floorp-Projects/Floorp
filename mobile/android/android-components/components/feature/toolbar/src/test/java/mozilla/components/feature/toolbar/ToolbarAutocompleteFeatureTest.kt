@@ -5,30 +5,31 @@
 package mozilla.components.feature.toolbar
 
 import android.content.Context
-import mozilla.components.concept.storage.HistoryStorage
-import mozilla.components.concept.toolbar.AutocompleteDelegate
-import mozilla.components.concept.toolbar.Toolbar
-import org.junit.Test
-import org.junit.Assert.assertNotNull
-import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.domains.Domain
+import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.domains.autocomplete.DomainList
 import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
+import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.fail
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import kotlinx.coroutines.runBlocking
-import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class ToolbarAutocompleteFeatureTest {
+
     class TestToolbar : Toolbar {
         override var title: String = ""
         override var url: CharSequence = ""
@@ -207,6 +208,7 @@ class ToolbarAutocompleteFeatureTest {
         )
     }
 
+    @Suppress("SameParameterValue")
     private fun verifyNoAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String) {
         runBlocking {
             toolbar.autocompleteFilter!!(query, autocompleteDelegate)

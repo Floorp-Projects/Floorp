@@ -28,7 +28,6 @@ object KotlinCompiler {
         "feature-session",
         "feature-sitepermissions",
         "feature-tabs",
-        "feature-toolbar",
         "lib-fetch-okhttp",
         "samples-toolbar",
         "service-experiments",
