@@ -3863,9 +3863,9 @@ void nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
 
   if (!customColors) {
     nscolor backColor =
-        LookAndFeel::GetColor(LookAndFeel::eColorID_TextHighlightBackground);
+        LookAndFeel::GetColor(LookAndFeel::ColorID::TextHighlightBackground);
     nscolor foreColor =
-        LookAndFeel::GetColor(LookAndFeel::eColorID_TextHighlightForeground);
+        LookAndFeel::GetColor(LookAndFeel::ColorID::TextHighlightForeground);
     EnsureSufficientContrast(&foreColor, &backColor);
     *aForeColor = foreColor;
     *aBackColor = backColor;
@@ -3997,9 +3997,9 @@ void nsTextPaintStyle::InitCommonColors() {
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
 
   mSystemFieldForegroundColor =
-      LookAndFeel::GetColor(LookAndFeel::eColorID__moz_fieldtext);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::MozFieldtext);
   mSystemFieldBackgroundColor =
-      LookAndFeel::GetColor(LookAndFeel::eColorID__moz_field);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::MozField);
 
   if (bgFrame->IsThemed()) {
     // Assume a native widget has sufficient contrast always
@@ -4012,11 +4012,11 @@ void nsTextPaintStyle::InitCommonColors() {
                "default background color is not opaque");
 
   nscolor defaultWindowBackgroundColor =
-      LookAndFeel::GetColor(LookAndFeel::eColorID_WindowBackground);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::WindowBackground);
   nscolor selectionTextColor =
-      LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectForeground);
   nscolor selectionBGColor =
-      LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectBackground);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectBackground);
 
   mSufficientContrast = std::min(
       std::min(NS_SUFFICIENT_LUMINOSITY_DIFFERENCE,
@@ -4064,16 +4064,16 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   }
 
   nscolor selectionBGColor =
-      LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectBackground);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectBackground);
 
   if (selectionStatus == nsISelectionController::SELECTION_ATTENTION) {
     mSelectionBGColor = LookAndFeel::GetColor(
-        LookAndFeel::eColorID_TextSelectBackgroundAttention);
+        LookAndFeel::ColorID::TextSelectBackgroundAttention);
     mSelectionBGColor =
         EnsureDifferentColors(mSelectionBGColor, selectionBGColor);
   } else if (selectionStatus != nsISelectionController::SELECTION_ON) {
     mSelectionBGColor = LookAndFeel::GetColor(
-        LookAndFeel::eColorID_TextSelectBackgroundDisabled);
+        LookAndFeel::ColorID::TextSelectBackgroundDisabled);
     mSelectionBGColor =
         EnsureDifferentColors(mSelectionBGColor, selectionBGColor);
   } else {
@@ -4081,7 +4081,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   }
 
   mSelectionTextColor =
-      LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectForeground);
 
   if (mResolveColors) {
     // On MacOS X, only the background color gets set,
@@ -4102,7 +4102,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
                     &nsStyleText::mWebkitTextFillColor);
       if (frameColor == mSelectionBGColor) {
         mSelectionTextColor = LookAndFeel::GetColor(
-            LookAndFeel::eColorID_TextSelectForegroundCustom);
+            LookAndFeel::ColorID::TextSelectForegroundCustom);
       }
     } else {
       EnsureSufficientContrast(&mSelectionTextColor, &mSelectionBGColor);
@@ -4127,28 +4127,28 @@ struct StyleIDs {
   LookAndFeel::FloatID mLineRelativeSize;
 };
 static StyleIDs SelectionStyleIDs[] = {
-    {LookAndFeel::eColorID_IMERawInputForeground,
-     LookAndFeel::eColorID_IMERawInputBackground,
-     LookAndFeel::eColorID_IMERawInputUnderline,
+    {LookAndFeel::ColorID::IMERawInputForeground,
+     LookAndFeel::ColorID::IMERawInputBackground,
+     LookAndFeel::ColorID::IMERawInputUnderline,
      LookAndFeel::eIntID_IMERawInputUnderlineStyle,
      LookAndFeel::eFloatID_IMEUnderlineRelativeSize},
-    {LookAndFeel::eColorID_IMESelectedRawTextForeground,
-     LookAndFeel::eColorID_IMESelectedRawTextBackground,
-     LookAndFeel::eColorID_IMESelectedRawTextUnderline,
+    {LookAndFeel::ColorID::IMESelectedRawTextForeground,
+     LookAndFeel::ColorID::IMESelectedRawTextBackground,
+     LookAndFeel::ColorID::IMESelectedRawTextUnderline,
      LookAndFeel::eIntID_IMESelectedRawTextUnderlineStyle,
      LookAndFeel::eFloatID_IMEUnderlineRelativeSize},
-    {LookAndFeel::eColorID_IMEConvertedTextForeground,
-     LookAndFeel::eColorID_IMEConvertedTextBackground,
-     LookAndFeel::eColorID_IMEConvertedTextUnderline,
+    {LookAndFeel::ColorID::IMEConvertedTextForeground,
+     LookAndFeel::ColorID::IMEConvertedTextBackground,
+     LookAndFeel::ColorID::IMEConvertedTextUnderline,
      LookAndFeel::eIntID_IMEConvertedTextUnderlineStyle,
      LookAndFeel::eFloatID_IMEUnderlineRelativeSize},
-    {LookAndFeel::eColorID_IMESelectedConvertedTextForeground,
-     LookAndFeel::eColorID_IMESelectedConvertedTextBackground,
-     LookAndFeel::eColorID_IMESelectedConvertedTextUnderline,
+    {LookAndFeel::ColorID::IMESelectedConvertedTextForeground,
+     LookAndFeel::ColorID::IMESelectedConvertedTextBackground,
+     LookAndFeel::ColorID::IMESelectedConvertedTextUnderline,
      LookAndFeel::eIntID_IMESelectedConvertedTextUnderline,
      LookAndFeel::eFloatID_IMEUnderlineRelativeSize},
-    {LookAndFeel::eColorID_LAST_COLOR, LookAndFeel::eColorID_LAST_COLOR,
-     LookAndFeel::eColorID_SpellCheckerUnderline,
+    {LookAndFeel::ColorID::End, LookAndFeel::ColorID::End,
+     LookAndFeel::ColorID::SpellCheckerUnderline,
      LookAndFeel::eIntID_SpellCheckerUnderlineStyle,
      LookAndFeel::eFloatID_SpellCheckerUnderlineRelativeSize}};
 
@@ -4160,12 +4160,12 @@ void nsTextPaintStyle::InitSelectionStyle(int32_t aIndex) {
   StyleIDs* styleIDs = &SelectionStyleIDs[aIndex];
 
   nscolor foreColor, backColor;
-  if (styleIDs->mForeground == LookAndFeel::eColorID_LAST_COLOR) {
+  if (styleIDs->mForeground == LookAndFeel::ColorID::End) {
     foreColor = NS_SAME_AS_FOREGROUND_COLOR;
   } else {
     foreColor = LookAndFeel::GetColor(styleIDs->mForeground);
   }
-  if (styleIDs->mBackground == LookAndFeel::eColorID_LAST_COLOR) {
+  if (styleIDs->mBackground == LookAndFeel::ColorID::End) {
     backColor = NS_TRANSPARENT;
   } else {
     backColor = LookAndFeel::GetColor(styleIDs->mBackground);

@@ -1252,7 +1252,7 @@ bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
       aBuilder.PushRect(
           bounds, bounds, true,
           wr::ToColorF(Color::FromABGR(LookAndFeel::GetColor(
-              LookAndFeel::eColorID_WindowBackground, NS_RGBA(0, 0, 0, 0)))));
+              LookAndFeel::ColorID::WindowBackground, NS_RGBA(0, 0, 0, 0)))));
       return true;
 
     default:
