@@ -9,13 +9,13 @@ import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
@@ -23,7 +23,6 @@ import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.isAccessible
 
@@ -46,7 +45,7 @@ class ExperimentEvaluatorTest {
 
         `when`(context.packageName).thenReturn(appId)
 
-        packageInfo.versionName = "test.version"
+        packageInfo.versionName = versionName
         `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
@@ -70,6 +69,7 @@ class ExperimentEvaluatorTest {
         `when`(sharedPrefsOverrideBranch.edit()).thenReturn(branchEditor)
     }
 
+    @Suppress("SameParameterValue")
     private fun setOverride(experimentName: String, isActive: Boolean, branchName: String) {
         `when`(sharedPrefsOverrideEnabled.getBoolean(eq(experimentName), anyBoolean())).thenReturn(isActive)
         `when`(sharedPrefsOverrideBranch.getString(eq(experimentName), eq(null))).thenReturn(branchName)
@@ -453,13 +453,13 @@ class ExperimentEvaluatorTest {
             override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
         })
 
-        assertEquals(79, evaluator1.getUserBucket(RuntimeEnvironment.application))
+        assertEquals(79, evaluator1.getUserBucket(testContext))
 
         val evaluator2 = ExperimentEvaluator(object : ValuesProvider() {
             override fun getClientId(context: Context): String = "01a15650-9a5d-4383-a7ba-2f047b25c620"
         })
 
-        assertEquals(55, evaluator2.getUserBucket(RuntimeEnvironment.application))
+        assertEquals(55, evaluator2.getUserBucket(testContext))
     }
 
     @Test
@@ -469,9 +469,9 @@ class ExperimentEvaluatorTest {
         val sharedPrefs: SharedPreferences = mock()
         val prefsEditor: SharedPreferences.Editor = mock()
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
-        `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
-        `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
-        `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
+        `when`(prefsEditor.putBoolean(anyString(), anyBoolean())).thenReturn(prefsEditor)
+        `when`(prefsEditor.putString(anyString(), anyString())).thenReturn(prefsEditor)
+        `when`(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs)
 
         val distribution = (1..1000).map {
             val experimentEvaluator = ExperimentEvaluator()
@@ -656,7 +656,7 @@ class ExperimentEvaluatorTest {
     fun `evaluate debug tags`() {
         testReset()
 
-        var experiments = listOf(
+        val experiments = listOf(
             createDefaultExperiment(
                 id = "id-1",
                 match = createDefaultMatcher(

@@ -30,7 +30,6 @@ object KotlinCompiler {
         "feature-tabs",
         "lib-fetch-okhttp",
         "samples-toolbar",
-        "service-experiments",
         "service-glean",
         "support-test",
         "tooling-lint",
