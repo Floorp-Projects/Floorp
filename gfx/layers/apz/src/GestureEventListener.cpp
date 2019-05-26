@@ -10,7 +10,6 @@
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "InputBlockState.h"         // for TouchBlockState
 #include "base/task.h"               // for CancelableTask, etc
-#include "gfxPrefs.h"                // for gfxPrefs
 #include "InputBlockState.h"         // for TouchBlockState
 #include "mozilla/StaticPrefs.h"     // for StaticPrefs
 #include "nsDebug.h"                 // for NS_WARNING

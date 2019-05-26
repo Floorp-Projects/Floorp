@@ -7,7 +7,7 @@
 #include "InputQueue.h"
 
 #include "AsyncPanZoomController.h"
-#include "gfxPrefs.h"
+
 #include "InputBlockState.h"
 #include "LayersLogging.h"
 #include "mozilla/layers/APZThreadUtils.h"

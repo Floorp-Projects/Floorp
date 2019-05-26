@@ -128,7 +128,6 @@ void VRParent::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
-  gfxPrefs::DestroySingleton();
   CrashReporterClient::DestroySingleton();
   // Only calling XRE_ShutdownChildProcess() at the child process
   // instead of the main process. Otherwise, it will close all child processes
@@ -164,8 +163,6 @@ bool VRParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);
 
-  // Ensure gfxPrefs are initialized.
-  gfxPrefs::GetSingleton();
   gfxConfig::Init();
   gfxVars::Initialize();
 #if defined(XP_WIN)

@@ -15,7 +15,6 @@
 #include "LayersLogging.h"
 #include "Units.h"
 #include "OverscrollHandoffState.h"
-#include "gfxPrefs.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"

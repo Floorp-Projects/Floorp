@@ -25,7 +25,7 @@
 #include "UnitTransforms.h"                  // for ViewAs
 #include "apz/src/AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "gfxEnv.h"                          // for gfxEnv
-#include "gfxPrefs.h"                        // for gfxPrefs
+
 #ifdef XP_MACOSX
 #  include "gfxPlatformMac.h"
 #endif

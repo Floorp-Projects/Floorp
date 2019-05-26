@@ -10,7 +10,6 @@
 #include "gfxConfig.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
 #include "GLContextProvider.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
@@ -110,8 +109,6 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   // Init crash reporter support.
   CrashReporterClient::InitSingleton(this);
 
-  // Ensure gfxPrefs are initialized.
-  gfxPrefs::GetSingleton();
   gfxConfig::Init();
   gfxVars::Initialize();
   gfxPlatform::InitNullMetadata();
@@ -552,7 +549,6 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   LayerTreeOwnerTracker::Shutdown();
   gfxVars::Shutdown();
   gfxConfig::Shutdown();
-  gfxPrefs::DestroySingleton();
   CrashReporterClient::DestroySingleton();
   XRE_ShutdownChildProcess();
 }
