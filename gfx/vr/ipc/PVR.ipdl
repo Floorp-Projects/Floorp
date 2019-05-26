@@ -22,10 +22,9 @@ async protocol PVR
 {
 parent:
   async NewGPUVRManager(Endpoint<PVRGPUParent> endpoint);
-  async Init(GfxPrefSetting[] prefs, GfxVarUpdate[] vars, DevicePrefs devicePrefs);
+  async Init(GfxVarUpdate[] vars, DevicePrefs devicePrefs);
   async NotifyVsync(TimeStamp vsyncTimestamp);
 
-  async UpdatePref(GfxPrefSetting pref);
   async UpdateVar(GfxVarUpdate var);
   async PreferenceUpdate(Pref pref);
   async OpenVRControllerActionPathToVR(nsCString aPath);
