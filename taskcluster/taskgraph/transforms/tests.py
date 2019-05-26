@@ -169,7 +169,7 @@ TEST_VARIANTS = {
         'suffix': 'fis',
         'replace': {
             'e10s': True,
-            'run-on-projects': ['try', 'ash'],
+            'run-on-projects': ['ash'],
         },
         'merge': {
             'tier': 2,
