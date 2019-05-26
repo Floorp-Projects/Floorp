@@ -491,8 +491,6 @@ class nsWindow final : public nsBaseWidget {
   // This field omits duplicate scroll events caused by GNOME bug 726878.
   guint32 mLastScrollEventTime;
 
-  bool mPanInProgress = false;
-
   // for touch event handling
   nsRefPtrHashtable<nsPtrHashKey<GdkEventSequence>, mozilla::dom::Touch>
       mTouches;
