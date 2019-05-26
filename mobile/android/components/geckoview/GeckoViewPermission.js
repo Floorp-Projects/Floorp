@@ -49,18 +49,14 @@ GeckoViewPermission.prototype = {
   receiveMessage(aMsg) {
     switch (aMsg.name) {
       case "GeckoView:AddCameraPermission": {
-        let uri;
-        try {
-          // This fails for principals that serialize to "null", e.g. file URIs.
-          uri = Services.io.newURI(aMsg.data.origin);
-        } catch (e) {
-          uri = Services.io.newURI(aMsg.data.documentURI);
-        }
+        let principal = Services.scriptSecurityManager
+                                .createCodebasePrincipalFromOrigin(aMsg.data.origin);
+
         // Although the lifetime is "session" it will be removed upon
         // use so it's more of a one-shot.
-        Services.perms.add(uri, "MediaManagerVideo",
-                           Services.perms.ALLOW_ACTION,
-                           Services.perms.EXPIRE_SESSION);
+        Services.perms.addFromPrincipal(principal, "MediaManagerVideo",
+                                        Services.perms.ALLOW_ACTION,
+                                        Services.perms.EXPIRE_SESSION);
         break;
       }
     }
@@ -143,7 +139,7 @@ GeckoViewPermission.prototype = {
             throw new Error("invalid video id");
           }
           Services.cpmm.sendAsyncMessage("GeckoView:AddCameraPermission", {
-            origin: win.origin,
+            origin: win.document.nodePrincipal.origin,
             documentURI: win.document.documentURI,
           });
           allowedDevices.appendElement(video);
