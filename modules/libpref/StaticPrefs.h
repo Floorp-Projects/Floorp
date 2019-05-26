@@ -100,25 +100,25 @@ class StaticPrefs {
   };
 
 #define PREF(str, cpp_type, default_value)
-#define VARCACHE_PREF(policy, str, id, cpp_type, default_value)    \
- private:                                                          \
-  static cpp_type sVarCache_##id;                                  \
-                                                                   \
- public:                                                           \
-  static StripAtomic<cpp_type> id() {                              \
-    MOZ_ASSERT(UpdatePolicy::policy != UpdatePolicy::Live ||       \
-                   IsAtomic<cpp_type>::value || NS_IsMainThread(), \
-               "Non-atomic static pref '" str                      \
-               "' being accessed on background thread by getter"); \
-    return sVarCache_##id;                                         \
-  }                                                                \
-  static void Set##id(StripAtomic<cpp_type> aValue) {              \
-    MOZ_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),     \
-               "Non-atomic static pref '" str                      \
-               "' being accessed on background thread by setter"); \
-    sVarCache_##id = aValue;                                       \
-  }                                                                \
-  static const char* Get##id##PrefName() { return str; }           \
+#define VARCACHE_PREF(policy, str, id, cpp_type, default_value)               \
+ private:                                                                     \
+  static cpp_type sVarCache_##id;                                             \
+                                                                              \
+ public:                                                                      \
+  static StripAtomic<cpp_type> id() {                                         \
+    MOZ_DIAGNOSTIC_ASSERT(UpdatePolicy::policy != UpdatePolicy::Live ||       \
+                              IsAtomic<cpp_type>::value || NS_IsMainThread(), \
+                          "Non-atomic static pref '" str                      \
+                          "' being accessed on background thread by getter"); \
+    return sVarCache_##id;                                                    \
+  }                                                                           \
+  static void Set##id(StripAtomic<cpp_type> aValue) {                         \
+    MOZ_DIAGNOSTIC_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),     \
+                          "Non-atomic static pref '" str                      \
+                          "' being accessed on background thread by setter"); \
+    sVarCache_##id = aValue;                                                  \
+  }                                                                           \
+  static const char* Get##id##PrefName() { return str; }                      \
   static StripAtomic<cpp_type> Get##id##PrefDefault() { return default_value; }
 
 #include "mozilla/StaticPrefList.h"
