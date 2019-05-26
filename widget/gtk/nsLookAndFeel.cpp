@@ -271,189 +271,189 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       // These colors don't seem to be used for anything anymore in Mozilla
       // (except here at least TextSelectBackground and TextSelectForeground)
       // The CSS2 colors below are used.
-    case eColorID_WindowBackground:
-    case eColorID_WidgetBackground:
-    case eColorID_TextBackground:
-    case eColorID_activecaption:  // active window caption background
-    case eColorID_appworkspace:   // MDI background color
-    case eColorID_background:     // desktop background
-    case eColorID_window:
-    case eColorID_windowframe:
-    case eColorID__moz_dialog:
-    case eColorID__moz_combobox:
+    case ColorID::WindowBackground:
+    case ColorID::WidgetBackground:
+    case ColorID::TextBackground:
+    case ColorID::Activecaption:  // active window caption background
+    case ColorID::Appworkspace:   // MDI background color
+    case ColorID::Background:     // desktop background
+    case ColorID::Window:
+    case ColorID::Windowframe:
+    case ColorID::MozDialog:
+    case ColorID::MozCombobox:
       aColor = mMozWindowBackground;
       break;
-    case eColorID_WindowForeground:
-    case eColorID_WidgetForeground:
-    case eColorID_TextForeground:
-    case eColorID_captiontext:  // text in active window caption, size box, and
+    case ColorID::WindowForeground:
+    case ColorID::WidgetForeground:
+    case ColorID::TextForeground:
+    case ColorID::Captiontext:  // text in active window caption, size box, and
                                 // scrollbar arrow box (!)
-    case eColorID_windowtext:
-    case eColorID__moz_dialogtext:
+    case ColorID::Windowtext:
+    case ColorID::MozDialogtext:
       aColor = mMozWindowText;
       break;
-    case eColorID_WidgetSelectBackground:
-    case eColorID_TextSelectBackground:
-    case eColorID_IMESelectedRawTextBackground:
-    case eColorID_IMESelectedConvertedTextBackground:
-    case eColorID__moz_dragtargetzone:
-    case eColorID__moz_html_cellhighlight:
-    case eColorID_highlight:  // preference selected item,
+    case ColorID::WidgetSelectBackground:
+    case ColorID::TextSelectBackground:
+    case ColorID::IMESelectedRawTextBackground:
+    case ColorID::IMESelectedConvertedTextBackground:
+    case ColorID::MozDragtargetzone:
+    case ColorID::MozHtmlCellhighlight:
+    case ColorID::Highlight:  // preference selected item,
       aColor = mTextSelectedBackground;
       break;
-    case eColorID_WidgetSelectForeground:
-    case eColorID_TextSelectForeground:
-    case eColorID_IMESelectedRawTextForeground:
-    case eColorID_IMESelectedConvertedTextForeground:
-    case eColorID_highlighttext:
-    case eColorID__moz_html_cellhighlighttext:
+    case ColorID::WidgetSelectForeground:
+    case ColorID::TextSelectForeground:
+    case ColorID::IMESelectedRawTextForeground:
+    case ColorID::IMESelectedConvertedTextForeground:
+    case ColorID::Highlighttext:
+    case ColorID::MozHtmlCellhighlighttext:
       aColor = mTextSelectedText;
       break;
-    case eColorID__moz_cellhighlight:
+    case ColorID::MozCellhighlight:
       aColor = mMozCellHighlightBackground;
       break;
-    case eColorID__moz_cellhighlighttext:
+    case ColorID::MozCellhighlighttext:
       aColor = mMozCellHighlightText;
       break;
-    case eColorID_Widget3DHighlight:
+    case ColorID::Widget3DHighlight:
       aColor = NS_RGB(0xa0, 0xa0, 0xa0);
       break;
-    case eColorID_Widget3DShadow:
+    case ColorID::Widget3DShadow:
       aColor = NS_RGB(0x40, 0x40, 0x40);
       break;
-    case eColorID_IMERawInputBackground:
-    case eColorID_IMEConvertedTextBackground:
+    case ColorID::IMERawInputBackground:
+    case ColorID::IMEConvertedTextBackground:
       aColor = NS_TRANSPARENT;
       break;
-    case eColorID_IMERawInputForeground:
-    case eColorID_IMEConvertedTextForeground:
+    case ColorID::IMERawInputForeground:
+    case ColorID::IMEConvertedTextForeground:
       aColor = NS_SAME_AS_FOREGROUND_COLOR;
       break;
-    case eColorID_IMERawInputUnderline:
-    case eColorID_IMEConvertedTextUnderline:
+    case ColorID::IMERawInputUnderline:
+    case ColorID::IMEConvertedTextUnderline:
       aColor = NS_SAME_AS_FOREGROUND_COLOR;
       break;
-    case eColorID_IMESelectedRawTextUnderline:
-    case eColorID_IMESelectedConvertedTextUnderline:
+    case ColorID::IMESelectedRawTextUnderline:
+    case ColorID::IMESelectedConvertedTextUnderline:
       aColor = NS_TRANSPARENT;
       break;
-    case eColorID_SpellCheckerUnderline:
+    case ColorID::SpellCheckerUnderline:
       aColor = NS_RGB(0xff, 0, 0);
       break;
 
       // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
-    case eColorID_activeborder:
+    case ColorID::Activeborder:
       // active window border
       aColor = mMozWindowActiveBorder;
       break;
-    case eColorID_inactiveborder:
+    case ColorID::Inactiveborder:
       // inactive window border
       aColor = mMozWindowInactiveBorder;
       break;
-    case eColorID_graytext:             // disabled text in windows, menus, etc.
-    case eColorID_inactivecaptiontext:  // text in inactive window caption
+    case ColorID::Graytext:             // disabled text in windows, menus, etc.
+    case ColorID::Inactivecaptiontext:  // text in inactive window caption
       aColor = mMenuTextInactive;
       break;
-    case eColorID_inactivecaption:
+    case ColorID::Inactivecaption:
       // inactive window caption
       aColor = mMozWindowInactiveCaption;
       break;
-    case eColorID_infobackground:
+    case ColorID::Infobackground:
       // tooltip background color
       aColor = mInfoBackground;
       break;
-    case eColorID_infotext:
+    case ColorID::Infotext:
       // tooltip text color
       aColor = mInfoText;
       break;
-    case eColorID_menu:
+    case ColorID::Menu:
       // menu background
       aColor = mMenuBackground;
       break;
-    case eColorID_menutext:
+    case ColorID::Menutext:
       // menu text
       aColor = mMenuText;
       break;
-    case eColorID_scrollbar:
+    case ColorID::Scrollbar:
       // scrollbar gray area
       aColor = mMozScrollbar;
       break;
 
-    case eColorID_threedlightshadow:
+    case ColorID::Threedlightshadow:
       // 3-D highlighted inner edge color
       // always same as background in GTK code
-    case eColorID_threedface:
-    case eColorID_buttonface:
+    case ColorID::Threedface:
+    case ColorID::Buttonface:
       // 3-D face color
       aColor = mMozWindowBackground;
       break;
 
-    case eColorID_buttontext:
+    case ColorID::Buttontext:
       // text on push buttons
       aColor = mButtonText;
       break;
 
-    case eColorID_buttonhighlight:
+    case ColorID::Buttonhighlight:
       // 3-D highlighted edge color
-    case eColorID_threedhighlight:
+    case ColorID::Threedhighlight:
       // 3-D highlighted outer edge color
       aColor = mFrameOuterLightBorder;
       break;
 
-    case eColorID_buttonshadow:
+    case ColorID::Buttonshadow:
       // 3-D shadow edge color
-    case eColorID_threedshadow:
+    case ColorID::Threedshadow:
       // 3-D shadow inner edge color
       aColor = mFrameInnerDarkBorder;
       break;
 
-    case eColorID_threeddarkshadow:
+    case ColorID::Threeddarkshadow:
       // Hardcode to black
       aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
 
-    case eColorID__moz_eventreerow:
-    case eColorID__moz_field:
+    case ColorID::MozEventreerow:
+    case ColorID::MozField:
       aColor = mMozFieldBackground;
       break;
-    case eColorID__moz_fieldtext:
+    case ColorID::MozFieldtext:
       aColor = mMozFieldText;
       break;
-    case eColorID__moz_buttondefault:
+    case ColorID::MozButtondefault:
       // default button border color
       aColor = mButtonDefault;
       break;
-    case eColorID__moz_buttonhoverface:
+    case ColorID::MozButtonhoverface:
       aColor = mButtonHoverFace;
       break;
-    case eColorID__moz_buttonhovertext:
+    case ColorID::MozButtonhovertext:
       aColor = mButtonHoverText;
       break;
-    case eColorID__moz_gtk_buttonactivetext:
+    case ColorID::MozGtkButtonactivetext:
       aColor = mButtonActiveText;
       break;
-    case eColorID__moz_menuhover:
+    case ColorID::MozMenuhover:
       aColor = mMenuHover;
       break;
-    case eColorID__moz_menuhovertext:
+    case ColorID::MozMenuhovertext:
       aColor = mMenuHoverText;
       break;
-    case eColorID__moz_oddtreerow:
+    case ColorID::MozOddtreerow:
       aColor = mOddCellBackground;
       break;
-    case eColorID__moz_nativehyperlinktext:
+    case ColorID::MozNativehyperlinktext:
       aColor = mNativeHyperLinkText;
       break;
-    case eColorID__moz_comboboxtext:
+    case ColorID::MozComboboxtext:
       aColor = mComboBoxText;
       break;
-    case eColorID__moz_menubartext:
+    case ColorID::MozMenubartext:
       aColor = mMenuBarText;
       break;
-    case eColorID__moz_menubarhovertext:
+    case ColorID::MozMenubarhovertext:
       aColor = mMenuBarHoverText;
       break;
-    case eColorID__moz_gtk_info_bar_text:
+    case ColorID::MozGtkInfoBarText:
       aColor = mInfoBarText;
       break;
     default:
@@ -704,8 +704,8 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       // "light" or "dark", so we synthesize it from the CSS2 Window/WindowText
       // colors instead, by comparing their luminosity.
       nscolor fg, bg;
-      if (NS_SUCCEEDED(NativeGetColor(eColorID_windowtext, fg)) &&
-          NS_SUCCEEDED(NativeGetColor(eColorID_window, bg))) {
+      if (NS_SUCCEEDED(NativeGetColor(ColorID::Windowtext, fg)) &&
+          NS_SUCCEEDED(NativeGetColor(ColorID::Window, bg))) {
         aResult = (RelativeLuminanceUtils::Compute(bg) <
                    RelativeLuminanceUtils::Compute(fg))
                       ? 1

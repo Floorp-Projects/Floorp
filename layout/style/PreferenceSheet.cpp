@@ -62,17 +62,17 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
 
   if (nsContentUtils::UseStandinsForNativeColors()) {
     mDefaultColor = LookAndFeel::GetColorUsingStandins(
-        LookAndFeel::eColorID_windowtext, mDefaultColor);
+        LookAndFeel::ColorID::Windowtext, mDefaultColor);
     mDefaultBackgroundColor = LookAndFeel::GetColorUsingStandins(
-        LookAndFeel::eColorID_window, mDefaultBackgroundColor);
+        LookAndFeel::ColorID::Window, mDefaultBackgroundColor);
   } else if (usePrefColors) {
     GetColor("browser.display.background_color", mDefaultBackgroundColor);
     GetColor("browser.display.foreground_color", mDefaultColor);
   } else {
     mDefaultColor = LookAndFeel::GetColor(
-        LookAndFeel::eColorID_WindowForeground, mDefaultColor);
+        LookAndFeel::ColorID::WindowForeground, mDefaultColor);
     mDefaultBackgroundColor = LookAndFeel::GetColor(
-        LookAndFeel::eColorID_WindowBackground, mDefaultBackgroundColor);
+        LookAndFeel::ColorID::WindowBackground, mDefaultBackgroundColor);
   }
 
   GetColor("browser.anchor_color", mLinkColor);

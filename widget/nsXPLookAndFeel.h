@@ -7,6 +7,7 @@
 #define __nsXPLookAndFeel
 
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "nsTArray.h"
 
 class nsLookAndFeel;
@@ -25,17 +26,17 @@ struct nsLookAndFeelFloatPref {
   float floatVar;
 };
 
-#define CACHE_BLOCK(x) ((x) >> 5)
-#define CACHE_BIT(x) (1 << ((x)&31))
+#define CACHE_BLOCK(x) (uint32_t(x) >> 5)
+#define CACHE_BIT(x) (1 << (uint32_t(x) & 31))
 
-#define COLOR_CACHE_SIZE (CACHE_BLOCK(LookAndFeel::eColorID_LAST_COLOR) + 1)
+#define COLOR_CACHE_SIZE (CACHE_BLOCK(uint32_t(LookAndFeel::ColorID::End)) + 1)
 #define IS_COLOR_CACHED(x) \
   (CACHE_BIT(x) & nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)])
-#define CLEAR_COLOR_CACHE(x)               \
-  nsXPLookAndFeel::sCachedColors[(x)] = 0; \
+#define CLEAR_COLOR_CACHE(x)                       \
+  nsXPLookAndFeel::sCachedColors[uint32_t(x)] = 0; \
   nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)] &= ~(CACHE_BIT(x));
-#define CACHE_COLOR(x, y)                  \
-  nsXPLookAndFeel::sCachedColors[(x)] = y; \
+#define CACHE_COLOR(x, y)                          \
+  nsXPLookAndFeel::sCachedColors[uint32_t(x)] = y; \
   nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)] |= CACHE_BIT(x);
 
 class nsXPLookAndFeel : public mozilla::LookAndFeel {
@@ -112,7 +113,7 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
    * the array see nsXPLookAndFeel.cpp
    */
   static const char sColorPrefs[][41];
-  static int32_t sCachedColors[LookAndFeel::eColorID_LAST_COLOR];
+  static int32_t sCachedColors[size_t(LookAndFeel::ColorID::End)];
   static int32_t sCachedColorBits[COLOR_CACHE_SIZE];
   static bool sUseNativeColors;
   static bool sFindbarModalHighlight;

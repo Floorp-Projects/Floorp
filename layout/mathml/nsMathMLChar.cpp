@@ -1709,7 +1709,7 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
                                   *drawTarget);
   // get color to use for selection from the look&feel object
   nscolor bgColor = LookAndFeel::GetColor(
-      LookAndFeel::eColorID_TextSelectBackground, NS_RGB(0, 0, 0));
+      LookAndFeel::ColorID::TextSelectBackground, NS_RGB(0, 0, 0));
   drawTarget->FillRect(rect, ColorPattern(ToDeviceColor(bgColor)));
 }
 
@@ -1896,7 +1896,7 @@ void nsMathMLChar::PaintForeground(nsIFrame* aForFrame,
       &nsStyleText::mWebkitTextFillColor);
   if (aIsSelected) {
     // get color to use for selection from the look&feel object
-    fgColor = LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,
+    fgColor = LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectForeground,
                                     fgColor);
   }
   aRenderingContext.SetColor(Color::FromABGR(fgColor));
