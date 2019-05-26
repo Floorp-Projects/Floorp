@@ -6,7 +6,7 @@
 
 #include "WebRenderAPI.h"
 
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/webrender/RendererOGL.h"
@@ -77,8 +77,8 @@ class NewRenderer : public RendererEvent {
     if (!wr_window_new(
             aWindowId, mSize.width, mSize.height,
             supportLowPriorityTransactions,
-            gfxPrefs::WebRenderPictureCaching() && supportPictureCaching,
-            gfxPrefs::WebRenderStartDebugServer(), compositor->gl(),
+            StaticPrefs::WebRenderPictureCaching() && supportPictureCaching,
+            StaticPrefs::WebRenderStartDebugServer(), compositor->gl(),
             aRenderThread.GetProgramCache()
                 ? aRenderThread.GetProgramCache()->Raw()
                 : nullptr,

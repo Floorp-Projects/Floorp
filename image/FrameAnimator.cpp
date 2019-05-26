@@ -7,10 +7,10 @@
 
 #include "mozilla/Move.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/StaticPrefs.h"
 #include "imgIContainer.h"
 #include "LookupResult.h"
 #include "RasterImage.h"
-#include "gfxPrefs.h"
 
 namespace mozilla {
 
@@ -86,7 +86,7 @@ const gfx::IntRect AnimationState::UpdateStateInternal(
     } else if (aResult.Type() == MatchType::NOT_FOUND ||
                aResult.Type() == MatchType::PENDING) {
       if (mHasRequestedDecode) {
-        MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+        MOZ_ASSERT(StaticPrefs::ImageMemAnimatedDiscardable());
         mCompositedFrameInvalid = true;
       }
     }
@@ -138,7 +138,7 @@ void AnimationState::SetAnimationFrameTime(const TimeStamp& aTime) {
 }
 
 bool AnimationState::MaybeAdvanceAnimationFrameTime(const TimeStamp& aTime) {
-  if (!gfxPrefs::ImageAnimatedResumeFromLastDisplayed() ||
+  if (!StaticPrefs::ImageAnimatedResumeFromLastDisplayed() ||
       mCurrentAnimationFrameTime >= aTime) {
     return false;
   }
@@ -379,7 +379,7 @@ RefreshResult FrameAnimator::RequestRefresh(AnimationState& aState,
   // only advance the frame if the current time is greater than or
   // equal to the current frame's end time.
   if (!currentFrame) {
-    MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+    MOZ_ASSERT(StaticPrefs::ImageMemAnimatedDiscardable());
     MOZ_ASSERT(aState.GetHasRequestedDecode() &&
                !aState.GetIsCurrentlyDecoded());
     MOZ_ASSERT(aState.mCompositedFrameInvalid);
@@ -451,7 +451,7 @@ LookupResult FrameAnimator::GetCompositedFrame(AnimationState& aState,
       aMarkUsed);
 
   if (aState.mCompositedFrameInvalid) {
-    MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
+    MOZ_ASSERT(StaticPrefs::ImageMemAnimatedDiscardable());
     MOZ_ASSERT(aState.GetHasRequestedDecode());
     MOZ_ASSERT(!aState.GetIsCurrentlyDecoded());
     if (result.Type() == MatchType::NOT_FOUND) {

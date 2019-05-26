@@ -42,7 +42,6 @@
 
 #include "nsBoxFrame.h"
 
-#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsBoxLayoutState.h"

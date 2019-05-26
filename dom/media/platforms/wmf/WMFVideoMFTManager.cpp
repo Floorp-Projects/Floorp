@@ -22,11 +22,11 @@
 #include "WMFDecoderModule.h"
 #include "WMFUtils.h"
 #include "gfx2DGlue.h"
-#include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
@@ -443,11 +443,11 @@ class CreateDXVAManagerEvent : public Runnable {
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
     const bool deblacklistingForTelemetry =
         XRE_IsGPUProcess() &&
-        gfxPrefs::PDMWMFDeblacklistingForTelemetryInGPUProcess();
+        StaticPrefs::PDMWMFDeblacklistingForTelemetryInGPUProcess();
     nsACString* failureReason = &mFailureReason;
     nsCString secondFailureReason;
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
-        gfxPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
+        StaticPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
       const nsCString& blacklistedDLL = FindD3D11BlacklistedDLL();
       if (!deblacklistingForTelemetry && !blacklistedDLL.IsEmpty()) {
         failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
@@ -515,7 +515,7 @@ bool WMFVideoMFTManager::InitializeDXVA() {
 }
 
 MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
-  if (mStreamType != H264 || gfxPrefs::PDMWMFAllowUnsupportedResolutions()) {
+  if (mStreamType != H264 || StaticPrefs::PDMWMFAllowUnsupportedResolutions()) {
     return NS_OK;
   }
 
@@ -586,8 +586,8 @@ MediaResult WMFVideoMFTManager::InitInternal() {
     attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
                     WMFDecoderModule::GetNumDecoderThreads());
     bool lowLatency =
-        (gfxPrefs::PDMWMFLowLatencyEnabled() || IsWin10OrLater()) &&
-        !gfxPrefs::PDMWMFLowLatencyForceDisabled();
+        (StaticPrefs::PDMWMFLowLatencyEnabled() || IsWin10OrLater()) &&
+        !StaticPrefs::PDMWMFLowLatencyForceDisabled();
     if (mLowLatency || lowLatency) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {
@@ -1150,7 +1150,7 @@ nsCString WMFVideoMFTManager::GetDescriptionName() const {
   bool hw = IsHardwareAccelerated(failureReason);
   return nsPrintfCString("wmf %s video decoder - %s",
                          hw ? "hardware" : "software",
-                         hw ? gfxPrefs::PDMWMFUseNV12Format() &&
+                         hw ? StaticPrefs::PDMWMFUseNV12Format() &&
                                       gfx::DeviceManagerDx::Get()->CanUseNV12()
                                   ? "nv12"
                                   : "rgba32"

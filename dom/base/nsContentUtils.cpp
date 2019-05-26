@@ -30,7 +30,7 @@
 // is included in mozAutoDocUpdate.h.
 #include "nsNPAPIPluginInstance.h"
 #include "gfxDrawable.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "ImageOps.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AntiTrackingCommon.h"
@@ -7908,7 +7908,7 @@ nsresult nsContentUtils::SendMouseEvent(
     }
     return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
   }
-  if (gfxPrefs::TestEventsAsyncEnabled()) {
+  if (StaticPrefs::TestEventsAsyncEnabled()) {
     status = widget->DispatchInputEvent(&event);
   } else {
     nsresult rv = widget->DispatchEvent(&event, status);

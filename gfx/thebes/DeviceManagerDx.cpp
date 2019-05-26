@@ -7,9 +7,9 @@
 #include "D3D11Checks.h"
 #include "gfxConfig.h"
 #include "GfxDriverInfo.h"
-#include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mozilla/D3DMessageUtils.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/GPUParent.h"
@@ -183,7 +183,7 @@ bool DeviceManagerDx::CreateCompositorDevices() {
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   MOZ_ASSERT(d3d11.IsEnabled());
 
-  if (int32_t sleepSec = gfxPrefs::Direct3D11SleepOnCreateDevice()) {
+  if (int32_t sleepSec = StaticPrefs::Direct3D11SleepOnCreateDevice()) {
     printf_stderr("Attach to PID: %d\n", GetCurrentProcessId());
     Sleep(sleepSec * 1000);
   }
@@ -404,7 +404,7 @@ bool DeviceManagerDx::CreateCompositorDeviceHelper(
     FeatureState& aD3d11, IDXGIAdapter1* aAdapter, bool aAttemptVideoSupport,
     RefPtr<ID3D11Device>& aOutDevice) {
   // Check if a failure was injected for testing.
-  if (gfxPrefs::DeviceFailForTesting()) {
+  if (StaticPrefs::DeviceFailForTesting()) {
     aD3d11.SetFailed(FeatureStatus::Failed,
                      "Direct3D11 device failure simulated by preference",
                      NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_SIM"));
@@ -463,7 +463,7 @@ static inline int32_t GetNextDeviceCounter() {
 }
 
 void DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11) {
-  if (gfxPrefs::LayersD3D11ForceWARP()) {
+  if (StaticPrefs::LayersD3D11ForceWARP()) {
     CreateWARPCompositorDevice();
     return;
   }
@@ -533,8 +533,8 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
                                    D3D_DRIVER_TYPE aDriverType, UINT aFlags,
                                    HRESULT& aResOut,
                                    RefPtr<ID3D11Device>& aOutDevice) {
-  if (gfxPrefs::Direct3D11EnableDebugLayer() ||
-      gfxPrefs::Direct3D11BreakOnError()) {
+  if (StaticPrefs::Direct3D11EnableDebugLayer() ||
+      StaticPrefs::Direct3D11BreakOnError()) {
     aFlags |= D3D11_CREATE_DEVICE_DEBUG;
   }
 
@@ -546,7 +546,7 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
   }
   MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { return false; }
 
-  if (gfxPrefs::Direct3D11BreakOnError()) {
+  if (StaticPrefs::Direct3D11BreakOnError()) {
     do {
       if (!aOutDevice) break;
 
@@ -582,7 +582,7 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
 
 void DeviceManagerDx::CreateWARPCompositorDevice() {
   ScopedGfxFeatureReporter reporterWARP("D3D11-WARP",
-                                        gfxPrefs::LayersD3D11ForceWARP());
+                                        StaticPrefs::LayersD3D11ForceWARP());
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
 
   HRESULT hr;
@@ -707,13 +707,13 @@ RefPtr<ID3D11Device> DeviceManagerDx::CreateDecoderDevice() {
   }
 
   bool reuseDevice = false;
-  if (gfxPrefs::Direct3D11ReuseDecoderDevice() < 0) {
+  if (StaticPrefs::Direct3D11ReuseDecoderDevice() < 0) {
     // Use the default logic, which is to allow reuse of devices on AMD, but
     // create separate devices everywhere else.
     if (isAMD) {
       reuseDevice = true;
     }
-  } else if (gfxPrefs::Direct3D11ReuseDecoderDevice() > 0) {
+  } else if (StaticPrefs::Direct3D11ReuseDecoderDevice() > 0) {
     reuseDevice = true;
   }
 
@@ -991,8 +991,8 @@ bool DeviceManagerDx::GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason) {
   }
 
   if (XRE_IsParentProcess() && NS_IsMainThread() &&
-      gfxPrefs::DeviceResetForTesting()) {
-    gfxPrefs::SetDeviceResetForTesting(0);
+      StaticPrefs::DeviceResetForTesting()) {
+    StaticPrefs::SetDeviceResetForTesting(0);
     *aOutReason = DeviceResetReason::FORCED_RESET;
     return true;
   }
@@ -1091,7 +1091,7 @@ bool DeviceManagerDx::TextureSharingWorks() {
 
 bool DeviceManagerDx::CanInitializeKeyedMutexTextures() {
   MutexAutoLock lock(mDeviceLock);
-  return mDeviceStatus && gfxPrefs::Direct3D11AllowKeyedMutex() &&
+  return mDeviceStatus && StaticPrefs::Direct3D11AllowKeyedMutex() &&
          gfxVars::AllowD3D11KeyedMutex();
 }
 

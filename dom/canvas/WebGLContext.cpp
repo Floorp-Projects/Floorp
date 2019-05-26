@@ -13,7 +13,6 @@
 #include "gfxContext.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxPattern.h"
-#include "gfxPrefs.h"
 #include "gfxUtils.h"
 #include "MozFramebuffer.h"
 #include "GLBlitHelper.h"
@@ -35,6 +34,7 @@
 #include "mozilla/ProcessPriorityManager.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
@@ -97,7 +97,7 @@ using namespace mozilla::layers;
 
 WebGLContextOptions::WebGLContextOptions() {
   // Set default alpha state based on preference.
-  if (gfxPrefs::WebGLDefaultNoAlpha()) alpha = false;
+  if (StaticPrefs::WebGLDefaultNoAlpha()) alpha = false;
 }
 
 bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
@@ -116,18 +116,18 @@ bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
 WebGLContext::WebGLContext()
     : gl(mGL_OnlyClearInDestroyResourcesAndContext)  // const reference
       ,
-      mMaxPerfWarnings(gfxPrefs::WebGLMaxPerfWarnings()),
+      mMaxPerfWarnings(StaticPrefs::WebGLMaxPerfWarnings()),
       mNumPerfWarnings(0),
       mMaxAcceptableFBStatusInvals(
-          gfxPrefs::WebGLMaxAcceptableFBStatusInvals()),
+          StaticPrefs::WebGLMaxAcceptableFBStatusInvals()),
       mDataAllocGLCallCount(0),
       mEmptyTFO(0),
       mContextLossHandler(this),
       mNeedsFakeNoAlpha(false),
       mNeedsFakeNoDepth(false),
       mNeedsFakeNoStencil(false),
-      mAllowFBInvalidation(gfxPrefs::WebGLFBInvalidation()),
-      mMsaaSamples((uint8_t)gfxPrefs::WebGLMsaaSamples()) {
+      mAllowFBInvalidation(StaticPrefs::WebGLFBInvalidation()),
+      mMsaaSamples((uint8_t)StaticPrefs::WebGLMsaaSamples()) {
   mGeneration = 0;
   mInvalidated = false;
   mCapturedFrameInvalidated = false;
@@ -163,7 +163,7 @@ WebGLContext::WebGLContext()
   mAlreadyWarnedAboutFakeVertexAttrib0 = false;
   mAlreadyWarnedAboutViewportLargerThanDest = false;
 
-  mMaxWarnings = gfxPrefs::WebGLMaxWarningsPerContext();
+  mMaxWarnings = StaticPrefs::WebGLMaxWarningsPerContext();
   if (mMaxWarnings < -1) {
     GenerateWarning(
         "webgl.max-warnings-per-context size is too large (seems like a "
@@ -359,11 +359,11 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
   }
 
   // Don't do antialiasing if we've disabled MSAA.
-  if (!gfxPrefs::MSAALevel()) {
+  if (!StaticPrefs::MSAALevel()) {
     newOpts.antialias = false;
   }
 
-  if (!gfxPrefs::WebGLForceMSAA()) {
+  if (!StaticPrefs::WebGLForceMSAA()) {
     const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
 
     nsCString blocklistId;
@@ -475,7 +475,7 @@ bool WebGLContext::CreateAndInitGL(
 
   if (IsWebGL2()) {
     flags |= gl::CreateContextFlags::PREFER_ES3;
-  } else if (!gfxPrefs::WebGL1AllowCoreProfile()) {
+  } else if (!StaticPrefs::WebGL1AllowCoreProfile()) {
     flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
   }
 
@@ -496,7 +496,7 @@ bool WebGLContext::CreateAndInitGL(
       // - Same origin with root page (try to stem bleeding from WebGL
       // ads/trackers)
     default:
-      if (!gfxPrefs::WebGLDefaultLowPower()) {
+      if (!StaticPrefs::WebGLDefaultLowPower()) {
         flags |= gl::CreateContextFlags::HIGH_POWER;
       }
       break;
@@ -541,11 +541,11 @@ bool WebGLContext::CreateAndInitGL(
   tryNativeGL = false;
   tryANGLE = true;
 
-  if (gfxPrefs::WebGLDisableWGL()) {
+  if (StaticPrefs::WebGLDisableWGL()) {
     tryNativeGL = false;
   }
 
-  if (gfxPrefs::WebGLDisableANGLE() || PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL") ||
+  if (StaticPrefs::WebGLDisableANGLE() || PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL") ||
       useEGL) {
     tryNativeGL = true;
     tryANGLE = false;
@@ -801,7 +801,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
   // pick up the old generation.
   ++mGeneration;
 
-  bool disabled = gfxPrefs::WebGLDisabled();
+  bool disabled = StaticPrefs::WebGLDisabled();
 
   // TODO: When we have software webgl support we should use that instead.
   disabled |= gfxPlatform::InSafeMode();
@@ -817,7 +817,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
     return NS_ERROR_FAILURE;
   }
 
-  if (gfxPrefs::WebGLDisableFailIfMajorPerformanceCaveat()) {
+  if (StaticPrefs::WebGLDisableFailIfMajorPerformanceCaveat()) {
     mOptions.failIfMajorPerformanceCaveat = false;
   }
 
@@ -834,7 +834,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
   }
 
   // Alright, now let's start trying.
-  bool forceEnabled = gfxPrefs::WebGLForceEnabled();
+  bool forceEnabled = StaticPrefs::WebGLForceEnabled();
   ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
 
   MOZ_ASSERT(!gl);
@@ -966,8 +966,9 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
 }
 
 void WebGLContext::LoseOldestWebGLContextIfLimitExceeded() {
-  const auto maxWebGLContexts = gfxPrefs::WebGLMaxContexts();
-  auto maxWebGLContextsPerPrincipal = gfxPrefs::WebGLMaxContextsPerPrincipal();
+  const auto maxWebGLContexts = StaticPrefs::WebGLMaxContexts();
+  auto maxWebGLContextsPerPrincipal =
+      StaticPrefs::WebGLMaxContextsPerPrincipal();
 
   // maxWebGLContextsPerPrincipal must be less than maxWebGLContexts
   MOZ_ASSERT(maxWebGLContextsPerPrincipal <= maxWebGLContexts);
@@ -1329,7 +1330,7 @@ ScopedPrepForResourceClear::~ScopedPrepForResourceClear() {
 // -
 
 void WebGLContext::OnEndOfFrame() const {
-  if (gfxPrefs::WebGLSpewFrameAllocs()) {
+  if (StaticPrefs::WebGLSpewFrameAllocs()) {
     GeneratePerfWarning("[webgl.perf.spew-frame-allocs] %" PRIu64
                         " data allocations this frame.",
                         mDataAllocGLCallCount);

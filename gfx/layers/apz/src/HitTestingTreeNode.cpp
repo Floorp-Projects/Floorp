@@ -5,7 +5,6 @@
 #include "HitTestingTreeNode.h"
 
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
-#include "gfxPrefs.h"
 #include "LayersLogging.h"            // for Stringify
 #include "mozilla/gfx/Point.h"        // for Point4D
 #include "mozilla/layers/APZUtils.h"  // for CompleteAsyncTransform
@@ -273,7 +272,7 @@ CompositorHitTestInfo HitTestingTreeNode::HitTest(
     if (mEventRegions.mDTCRequiresTargetConfirmation) {
       result += CompositorHitTestFlags::eRequiresTargetConfirmation;
     }
-  } else if (gfxPrefs::TouchActionEnabled()) {
+  } else if (StaticPrefs::TouchActionEnabled()) {
     if (mEventRegions.mNoActionRegion.Contains(point.x, point.y)) {
       // set all the touch-action flags as disabled
       result += CompositorHitTestTouchActionMask;

@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUChild.h"
 #include "gfxConfig.h"
-#include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
 #include "VRProcessManager.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/dom/CheckerboardReportService.h"
@@ -40,22 +40,6 @@ GPUChild::GPUChild(GPUProcessHost* aHost) : mHost(aHost), mGPUReady(false) {
 GPUChild::~GPUChild() { MOZ_COUNT_DTOR(GPUChild); }
 
 void GPUChild::Init() {
-  // Build a list of prefs the GPU process will need. Note that because we
-  // limit the GPU process to prefs contained in gfxPrefs, we can simplify
-  // the message in two ways: one, we only need to send its index in gfxPrefs
-  // rather than its name, and two, we only need to send prefs that don't
-  // have their default value.
-  nsTArray<GfxPrefSetting> prefs;
-  for (auto pref : gfxPrefs::all()) {
-    if (pref->HasDefaultValue()) {
-      continue;
-    }
-
-    GfxPrefValue value;
-    pref->GetCachedValue(&value);
-    prefs.AppendElement(GfxPrefSetting(pref->Index(), value));
-  }
-
   nsTArray<GfxVarUpdate> updates = gfxVars::FetchNonDefaultVars();
 
   DevicePrefs devicePrefs;
@@ -73,7 +57,7 @@ void GPUChild::Init() {
         mappings.AppendElement(LayerTreeIdMapping(aLayersId, aProcessId));
       });
 
-  SendInit(prefs, updates, devicePrefs, mappings);
+  SendInit(updates, devicePrefs, mappings);
 
   gfxVars::AddReceiver(this);
 
@@ -158,7 +142,7 @@ mozilla::ipc::IPCResult GPUChild::RecvInitCrashReporter(
 mozilla::ipc::IPCResult GPUChild::RecvCreateVRProcess() {
   // Make sure create VR process at the main process
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (gfxPrefs::VRProcessEnabled()) {
+  if (StaticPrefs::VRProcessEnabled()) {
     VRProcessManager::Initialize();
     VRProcessManager* vr = VRProcessManager::Get();
     MOZ_ASSERT(vr, "VRProcessManager must be initialized first.");
@@ -174,7 +158,7 @@ mozilla::ipc::IPCResult GPUChild::RecvCreateVRProcess() {
 mozilla::ipc::IPCResult GPUChild::RecvShutdownVRProcess() {
   // Make sure stopping VR process at the main process
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (gfxPrefs::VRProcessEnabled()) {
+  if (StaticPrefs::VRProcessEnabled()) {
     VRProcessManager::Shutdown();
   }
 

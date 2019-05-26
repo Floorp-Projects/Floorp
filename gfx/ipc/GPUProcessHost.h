@@ -13,6 +13,11 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/TaskFactory.h"
 
+namespace mozilla {
+namespace ipc {
+class SharedPreferenceSerializer;
+}
+}  // namespace mozilla
 class nsITimer;
 
 namespace mozilla {
@@ -121,6 +126,8 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   UniquePtr<GPUChild> mGPUChild;
   uint64_t mProcessToken;
+
+  UniquePtr<mozilla::ipc::SharedPreferenceSerializer> mPrefSerializer;
 
   bool mShutdownRequested;
   bool mChannelClosed;

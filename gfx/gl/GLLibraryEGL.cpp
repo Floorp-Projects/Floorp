@@ -12,6 +12,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "nsDirectoryServiceDefs.h"
@@ -29,7 +30,6 @@
 #include "prsystem.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
-#include "gfxPrefs.h"
 #include "ScopedGLHelpers.h"
 #ifdef MOZ_WIDGET_GTK
 #  include <gdk/gdk.h>
@@ -85,8 +85,7 @@ PRLibrary* LoadApitraceLibrary() {
   if (!path) return nullptr;
 
   // Initialization of gfx prefs here is only needed during the unit tests...
-  gfxPrefs::GetSingleton();
-  if (!gfxPrefs::UseApitrace()) {
+  if (!StaticPrefs::UseApitrace()) {
     return nullptr;
   }
 
@@ -290,11 +289,11 @@ static EGLDisplay GetAndInitDisplayForAccelANGLE(
 
   FeatureState& d3d11ANGLE = gfxConfig::GetFeature(Feature::D3D11_HW_ANGLE);
 
-  if (!gfxPrefs::WebGLANGLETryD3D11())
+  if (!StaticPrefs::WebGLANGLETryD3D11())
     d3d11ANGLE.UserDisable("User disabled D3D11 ANGLE by pref",
                            NS_LITERAL_CSTRING("FAILURE_ID_ANGLE_PREF"));
 
-  if (gfxPrefs::WebGLANGLEForceD3D11())
+  if (StaticPrefs::WebGLANGLEForceD3D11())
     d3d11ANGLE.UserForceEnable(
         "User force-enabled D3D11 ANGLE on disabled hardware");
 
@@ -742,7 +741,7 @@ EGLDisplay GLLibraryEGL::CreateDisplay(bool forceAccel,
     bool shouldTryWARP = !forceAccel;  // Only if ANGLE not supported or fails
 
     // If WARP preferred, will override ANGLE support
-    if (gfxPrefs::WebGLANGLEForceWARP()) {
+    if (StaticPrefs::WebGLANGLEForceWARP()) {
       shouldTryWARP = true;
       shouldTryAccel = false;
       if (accelAngleFailureId.IsEmpty()) {

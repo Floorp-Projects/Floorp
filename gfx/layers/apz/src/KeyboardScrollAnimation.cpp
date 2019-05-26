@@ -7,8 +7,6 @@
 #include "KeyboardScrollAnimation.h"
 #include "ScrollAnimationBezierPhysics.h"
 
-#include "gfxPrefs.h"
-
 namespace mozilla {
 namespace layers {
 
@@ -20,25 +18,25 @@ static ScrollAnimationBezierPhysicsSettings SettingsForType(
   switch (aType) {
     case KeyboardScrollAction::eScrollCharacter:
     case KeyboardScrollAction::eScrollLine: {
-      maxMS = clamped(gfxPrefs::LineSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(gfxPrefs::LineSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS = clamped(StaticPrefs::LineSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(StaticPrefs::LineSmoothScrollMinDurationMs(), 0, maxMS);
       break;
     }
     case KeyboardScrollAction::eScrollPage: {
-      maxMS = clamped(gfxPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(gfxPrefs::PageSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS = clamped(StaticPrefs::PageSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(StaticPrefs::PageSmoothScrollMinDurationMs(), 0, maxMS);
       break;
     }
     case KeyboardScrollAction::eScrollComplete: {
-      maxMS = clamped(gfxPrefs::OtherSmoothScrollMaxDurationMs(), 0, 10000);
-      minMS = clamped(gfxPrefs::OtherSmoothScrollMinDurationMs(), 0, maxMS);
+      maxMS = clamped(StaticPrefs::OtherSmoothScrollMaxDurationMs(), 0, 10000);
+      minMS = clamped(StaticPrefs::OtherSmoothScrollMinDurationMs(), 0, maxMS);
       break;
     }
   }
 
   // The pref is 100-based int percentage, while mIntervalRatio is 1-based ratio
   double intervalRatio =
-      ((double)gfxPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
+      ((double)StaticPrefs::SmoothScrollDurationToIntervalRatio()) / 100.0;
   intervalRatio = std::max(1.0, intervalRatio);
   return ScrollAnimationBezierPhysicsSettings{minMS, maxMS, intervalRatio};
 }

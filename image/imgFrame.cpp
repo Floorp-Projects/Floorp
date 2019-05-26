@@ -13,7 +13,7 @@
 
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
+
 #include "gfxUtils.h"
 
 #include "GeckoProfiler.h"
@@ -81,14 +81,14 @@ static bool ShouldUseHeap(const IntSize& aSize, int32_t aStride,
 
   // For as long as an animated image is retained, its frames will never be
   // released to let the OS purge volatile buffers.
-  if (aIsAnimated && gfxPrefs::ImageMemAnimatedUseHeap()) {
+  if (aIsAnimated && StaticPrefs::ImageMemAnimatedUseHeap()) {
     return true;
   }
 
   // Lets us avoid too many small images consuming all of the handles. The
   // actual allocation checks for overflow.
   int32_t bufferSize = (aStride * aSize.width) / 1024;
-  if (bufferSize < gfxPrefs::ImageMemVolatileMinThresholdKB()) {
+  if (bufferSize < StaticPrefs::ImageMemVolatileMinThresholdKB()) {
     return true;
   }
 
@@ -99,7 +99,7 @@ static already_AddRefed<DataSourceSurface> AllocateBufferForImage(
     const IntSize& size, SurfaceFormat format, bool aIsAnimated = false) {
   int32_t stride = VolatileSurfaceStride(size, format);
 
-  if (gfxVars::GetUseWebRenderOrDefault() && gfxPrefs::ImageMemShared()) {
+  if (gfxVars::GetUseWebRenderOrDefault() && StaticPrefs::ImageMemShared()) {
     RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
     if (newSurf->Init(size, stride, format)) {
       return newSurf.forget();

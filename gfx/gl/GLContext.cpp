@@ -34,7 +34,7 @@
 #include "SharedSurfaceGL.h"
 #include "GfxTexturesReporter.h"
 #include "gfx2DGlue.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/gfx/Logging.h"
 
@@ -209,9 +209,9 @@ static const char* const sExtensionNames[] = {
     "GL_OVR_multiview2"};
 
 static bool ShouldUseTLSIsCurrent(bool useTLSIsCurrent) {
-  if (gfxPrefs::UseTLSIsCurrent() == 0) return useTLSIsCurrent;
+  if (StaticPrefs::UseTLSIsCurrent() == 0) return useTLSIsCurrent;
 
-  return gfxPrefs::UseTLSIsCurrent() > 0;
+  return StaticPrefs::UseTLSIsCurrent() > 0;
 }
 
 static bool ParseVersion(const std::string& versionStr,
@@ -276,7 +276,7 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
       mDebugFlags(ChooseDebugFlags(flags)),
       mSharedContext(sharedContext),
       mCaps(caps),
-      mWorkAroundDriverBugs(gfxPrefs::WorkAroundDriverBugs()) {
+      mWorkAroundDriverBugs(StaticPrefs::WorkAroundDriverBugs()) {
   mOwningThreadId = PlatformThread::CurrentId();
   MOZ_ALWAYS_TRUE(sCurrentContext.init());
   sCurrentContext.set(0);
@@ -1759,7 +1759,7 @@ GLFormats GLContext::ChooseGLFormats(const SurfaceCaps& caps) const {
     }
   }
 
-  uint32_t msaaLevel = gfxPrefs::MSAALevel();
+  uint32_t msaaLevel = StaticPrefs::MSAALevel();
   GLsizei samples = msaaLevel * msaaLevel;
   samples = std::min(samples, mMaxSamples);
 

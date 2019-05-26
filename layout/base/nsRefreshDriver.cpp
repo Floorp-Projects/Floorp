@@ -64,7 +64,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/Telemetry.h"
-#include "gfxPrefs.h"
+
 #include "BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/layout/VsyncChild.h"
@@ -990,9 +990,6 @@ static void CreateVsyncRefreshTimer() {
   MOZ_ASSERT(NS_IsMainThread());
 
   PodArrayZero(sJankLevels);
-  // Sometimes, gfxPrefs is not initialized here. Make sure the gfxPrefs is
-  // ready.
-  gfxPrefs::GetSingleton();
 
   if (gfxPlatform::IsInLayoutAsapMode()) {
     return;
@@ -1862,7 +1859,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   // We want to process any pending APZ metrics ahead of their positions
   // in the queue. This will prevent us from spending precious time
   // painting a stale displayport.
-  if (gfxPrefs::APZPeekMessages()) {
+  if (StaticPrefs::APZPeekMessages()) {
     nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages();
   }
 
@@ -2137,7 +2134,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   NS_ASSERTION(mInRefresh, "Still in refresh");
 
   if (mPresContext->IsRoot() && XRE_IsContentProcess() &&
-      gfxPrefs::AlwaysPaint()) {
+      StaticPrefs::AlwaysPaint()) {
     ScheduleViewManagerFlush();
   }
 
