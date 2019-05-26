@@ -7,6 +7,7 @@
 #include "mozilla/AvailableMemoryTracker.h"
 
 #if defined(XP_WIN)
+#  include "mozilla/WindowsVersion.h"
 #  include "nsExceptionHandler.h"
 #  include "nsICrashReporter.h"
 #  include "nsIMemoryReporter.h"
@@ -34,6 +35,21 @@ using namespace mozilla;
 namespace {
 
 #if defined(XP_WIN)
+
+#  if (NTDDI_VERSION < NTDDI_WINBLUE) || \
+      (NTDDI_VERSION == NTDDI_WINBLUE && !defined(WINBLUE_KBSPRING14))
+// Definitions for heap optimization that require the Windows SDK to target the
+// Windows 8.1 Update
+static const HEAP_INFORMATION_CLASS HeapOptimizeResources =
+    static_cast<HEAP_INFORMATION_CLASS>(3);
+
+static const DWORD HEAP_OPTIMIZE_RESOURCES_CURRENT_VERSION = 1;
+
+typedef struct _HEAP_OPTIMIZE_RESOURCES_INFORMATION {
+  DWORD Version;
+  DWORD Flags;
+} HEAP_OPTIMIZE_RESOURCES_INFORMATION, *PHEAP_OPTIMIZE_RESOURCES_INFORMATION;
+#  endif
 
 Atomic<uint32_t, MemoryOrdering::Relaxed> sNumLowVirtualMemEvents;
 Atomic<uint32_t, MemoryOrdering::Relaxed> sNumLowCommitSpaceEvents;
@@ -313,6 +329,10 @@ NS_IMPL_ISUPPORTS(LowEventsReporter, nsIMemoryReporter)
 class nsJemallocFreeDirtyPagesRunnable final : public nsIRunnable {
   ~nsJemallocFreeDirtyPagesRunnable() {}
 
+#if defined(XP_WIN)
+  void OptimizeSystemHeap();
+#endif
+
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
@@ -328,8 +348,26 @@ nsJemallocFreeDirtyPagesRunnable::Run() {
   jemalloc_free_dirty_pages();
 #endif
 
+#if defined(XP_WIN)
+  OptimizeSystemHeap();
+#endif
+
   return NS_OK;
 }
+
+#if defined(XP_WIN)
+void nsJemallocFreeDirtyPagesRunnable::OptimizeSystemHeap() {
+  // HeapSetInformation exists prior to Windows 8.1, but the
+  // HeapOptimizeResources information class does not.
+  if (IsWin8Point1OrLater()) {
+    HEAP_OPTIMIZE_RESOURCES_INFORMATION heapOptInfo = {
+        HEAP_OPTIMIZE_RESOURCES_CURRENT_VERSION};
+
+    ::HeapSetInformation(nullptr, HeapOptimizeResources, &heapOptInfo,
+                         sizeof(heapOptInfo));
+  }
+}
+#endif  // defined(XP_WIN)
 
 /**
  * The memory pressure watcher is used for listening to memory-pressure events
