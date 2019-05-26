@@ -46,203 +46,203 @@ nsresult nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor& aResult) {
   nsresult res = NS_OK;
 
   switch (aID) {
-    case eColorID_WindowBackground:
+    case ColorID::WindowBackground:
       aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case eColorID_WindowForeground:
+    case ColorID::WindowForeground:
       aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
-    case eColorID_WidgetBackground:
+    case ColorID::WidgetBackground:
       aResult = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
-    case eColorID_WidgetForeground:
+    case ColorID::WidgetForeground:
       aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
-    case eColorID_WidgetSelectBackground:
+    case ColorID::WidgetSelectBackground:
       aResult = NS_RGB(0x80, 0x80, 0x80);
       break;
-    case eColorID_WidgetSelectForeground:
+    case ColorID::WidgetSelectForeground:
       aResult = NS_RGB(0x00, 0x00, 0x80);
       break;
-    case eColorID_Widget3DHighlight:
+    case ColorID::Widget3DHighlight:
       aResult = NS_RGB(0xa0, 0xa0, 0xa0);
       break;
-    case eColorID_Widget3DShadow:
+    case ColorID::Widget3DShadow:
       aResult = NS_RGB(0x40, 0x40, 0x40);
       break;
-    case eColorID_TextBackground:
+    case ColorID::TextBackground:
       aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case eColorID_TextForeground:
+    case ColorID::TextForeground:
       aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
-    case eColorID_TextSelectBackground:
-    case eColorID_highlight:  // CSS2 color
+    case ColorID::TextSelectBackground:
+    case ColorID::Highlight:  // CSS2 color
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case eColorID__moz_menuhover:
+    case ColorID::MozMenuhover:
       aResult = NS_RGB(0xee, 0xee, 0xee);
       break;
-    case eColorID_TextSelectForeground:
-    case eColorID_highlighttext:  // CSS2 color
-    case eColorID__moz_menuhovertext:
+    case ColorID::TextSelectForeground:
+    case ColorID::Highlighttext:  // CSS2 color
+    case ColorID::MozMenuhovertext:
       aResult = mColorTextSelectForeground;
       break;
-    case eColorID_IMESelectedRawTextBackground:
-    case eColorID_IMESelectedConvertedTextBackground:
-    case eColorID_IMERawInputBackground:
-    case eColorID_IMEConvertedTextBackground:
+    case ColorID::IMESelectedRawTextBackground:
+    case ColorID::IMESelectedConvertedTextBackground:
+    case ColorID::IMERawInputBackground:
+    case ColorID::IMEConvertedTextBackground:
       aResult = NS_TRANSPARENT;
       break;
-    case eColorID_IMESelectedRawTextForeground:
-    case eColorID_IMESelectedConvertedTextForeground:
-    case eColorID_IMERawInputForeground:
-    case eColorID_IMEConvertedTextForeground:
+    case ColorID::IMESelectedRawTextForeground:
+    case ColorID::IMESelectedConvertedTextForeground:
+    case ColorID::IMERawInputForeground:
+    case ColorID::IMEConvertedTextForeground:
       aResult = NS_SAME_AS_FOREGROUND_COLOR;
       break;
-    case eColorID_IMERawInputUnderline:
-    case eColorID_IMEConvertedTextUnderline:
+    case ColorID::IMERawInputUnderline:
+    case ColorID::IMEConvertedTextUnderline:
       aResult = NS_40PERCENT_FOREGROUND_COLOR;
       break;
-    case eColorID_IMESelectedRawTextUnderline:
-    case eColorID_IMESelectedConvertedTextUnderline:
+    case ColorID::IMESelectedRawTextUnderline:
+    case ColorID::IMESelectedConvertedTextUnderline:
       aResult = NS_SAME_AS_FOREGROUND_COLOR;
       break;
-    case eColorID_SpellCheckerUnderline:
+    case ColorID::SpellCheckerUnderline:
       aResult = NS_RGB(0xff, 0, 0);
       break;
 
     //
     // css2 system colors http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
     //
-    case eColorID_buttontext:
-    case eColorID__moz_buttonhovertext:
-    case eColorID_captiontext:
-    case eColorID_menutext:
-    case eColorID_infotext:
-    case eColorID__moz_menubartext:
-    case eColorID_windowtext:
+    case ColorID::Buttontext:
+    case ColorID::MozButtonhovertext:
+    case ColorID::Captiontext:
+    case ColorID::Menutext:
+    case ColorID::Infotext:
+    case ColorID::MozMenubartext:
+    case ColorID::Windowtext:
       aResult = mColorDarkText;
       break;
-    case eColorID_activecaption:
+    case ColorID::Activecaption:
       aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case eColorID_activeborder:
+    case ColorID::Activeborder:
       aResult = NS_RGB(0x00, 0x00, 0x00);
       break;
-    case eColorID_appworkspace:
+    case ColorID::Appworkspace:
       aResult = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
-    case eColorID_background:
+    case ColorID::Background:
       aResult = NS_RGB(0x63, 0x63, 0xCE);
       break;
-    case eColorID_buttonface:
-    case eColorID__moz_buttonhoverface:
+    case ColorID::Buttonface:
+    case ColorID::MozButtonhoverface:
       aResult = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
-    case eColorID_buttonhighlight:
+    case ColorID::Buttonhighlight:
       aResult = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
-    case eColorID_buttonshadow:
+    case ColorID::Buttonshadow:
       aResult = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
-    case eColorID_graytext:
+    case ColorID::Graytext:
       aResult = NS_RGB(0x44, 0x44, 0x44);
       break;
-    case eColorID_inactiveborder:
+    case ColorID::Inactiveborder:
       aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case eColorID_inactivecaption:
+    case ColorID::Inactivecaption:
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case eColorID_inactivecaptiontext:
+    case ColorID::Inactivecaptiontext:
       aResult = NS_RGB(0x45, 0x45, 0x45);
       break;
-    case eColorID_scrollbar:
+    case ColorID::Scrollbar:
       aResult = NS_RGB(0, 0, 0);  // XXX
       break;
-    case eColorID_threeddarkshadow:
+    case ColorID::Threeddarkshadow:
       aResult = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
-    case eColorID_threedshadow:
+    case ColorID::Threedshadow:
       aResult = NS_RGB(0xE0, 0xE0, 0xE0);
       break;
-    case eColorID_threedface:
+    case ColorID::Threedface:
       aResult = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
-    case eColorID_threedhighlight:
+    case ColorID::Threedhighlight:
       aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case eColorID_threedlightshadow:
+    case ColorID::Threedlightshadow:
       aResult = NS_RGB(0xDA, 0xDA, 0xDA);
       break;
-    case eColorID_menu:
+    case ColorID::Menu:
       aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case eColorID_infobackground:
+    case ColorID::Infobackground:
       aResult = NS_RGB(0xFF, 0xFF, 0xC7);
       break;
-    case eColorID_windowframe:
+    case ColorID::Windowframe:
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case eColorID_window:
-    case eColorID__moz_field:
-    case eColorID__moz_combobox:
+    case ColorID::Window:
+    case ColorID::MozField:
+    case ColorID::MozCombobox:
       aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case eColorID__moz_fieldtext:
-    case eColorID__moz_comboboxtext:
+    case ColorID::MozFieldtext:
+    case ColorID::MozComboboxtext:
       aResult = mColorDarkText;
       break;
-    case eColorID__moz_dialog:
+    case ColorID::MozDialog:
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case eColorID__moz_dialogtext:
-    case eColorID__moz_cellhighlighttext:
-    case eColorID__moz_html_cellhighlighttext:
+    case ColorID::MozDialogtext:
+    case ColorID::MozCellhighlighttext:
+    case ColorID::MozHtmlCellhighlighttext:
       aResult = mColorDarkText;
       break;
-    case eColorID__moz_dragtargetzone:
-    case eColorID__moz_mac_chrome_active:
-    case eColorID__moz_mac_chrome_inactive:
+    case ColorID::MozDragtargetzone:
+    case ColorID::MozMacChromeActive:
+    case ColorID::MozMacChromeInactive:
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case eColorID__moz_mac_focusring:
+    case ColorID::MozMacFocusring:
       aResult = NS_RGB(0x3F, 0x98, 0xDD);
       break;
-    case eColorID__moz_mac_menushadow:
+    case ColorID::MozMacMenushadow:
       aResult = NS_RGB(0xA3, 0xA3, 0xA3);
       break;
-    case eColorID__moz_mac_menutextdisable:
+    case ColorID::MozMacMenutextdisable:
       aResult = NS_RGB(0x88, 0x88, 0x88);
       break;
-    case eColorID__moz_mac_menutextselect:
+    case ColorID::MozMacMenutextselect:
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case eColorID__moz_mac_disabledtoolbartext:
+    case ColorID::MozMacDisabledtoolbartext:
       aResult = NS_RGB(0x3F, 0x3F, 0x3F);
       break;
-    case eColorID__moz_mac_menuselect:
+    case ColorID::MozMacMenuselect:
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case eColorID__moz_buttondefault:
+    case ColorID::MozButtondefault:
       aResult = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
-    case eColorID__moz_cellhighlight:
-    case eColorID__moz_html_cellhighlight:
-    case eColorID__moz_mac_secondaryhighlight:
+    case ColorID::MozCellhighlight:
+    case ColorID::MozHtmlCellhighlight:
+    case ColorID::MozMacSecondaryhighlight:
       // For inactive list selection
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case eColorID__moz_eventreerow:
+    case ColorID::MozEventreerow:
       // Background color of even list rows.
       aResult = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case eColorID__moz_oddtreerow:
+    case ColorID::MozOddtreerow:
       // Background color of odd list rows.
       aResult = NS_TRANSPARENT;
       break;
-    case eColorID__moz_nativehyperlinktext:
+    case ColorID::MozNativehyperlinktext:
       // There appears to be no available system defined color. HARDCODING to the appropriate color.
       aResult = NS_RGB(0x14, 0x4F, 0xAE);
       break;
@@ -396,7 +396,7 @@ void nsLookAndFeel::EnsureInit() {
   mInitialized = true;
 
   nscolor color;
-  GetColor(eColorID_TextSelectBackground, color);
+  GetColor(ColorID::TextSelectBackground, color);
   if (color == 0x000000) {
     mColorTextSelectForeground = NS_RGB(0xff, 0xff, 0xff);
   } else {

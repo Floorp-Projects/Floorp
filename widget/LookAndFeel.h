@@ -26,186 +26,11 @@ struct LookAndFeelInt {
 
 namespace mozilla {
 
+enum class StyleSystemColor : uint8_t;
+
 class LookAndFeel {
  public:
-  // When modifying this list, also modify nsXPLookAndFeel::sColorPrefs
-  // in widget/xpwidgts/nsXPLookAndFeel.cpp.
-  enum ColorID : uint8_t {
-
-    // WARNING : NO NEGATIVE VALUE IN THIS ENUMERATION
-    // see patch in bug 57757 for more information
-
-    eColorID_WindowBackground,
-    eColorID_WindowForeground,
-    eColorID_WidgetBackground,
-    eColorID_WidgetForeground,
-    eColorID_WidgetSelectBackground,
-    eColorID_WidgetSelectForeground,
-    eColorID_Widget3DHighlight,
-    eColorID_Widget3DShadow,
-    eColorID_TextBackground,
-    eColorID_TextForeground,
-    eColorID_TextSelectBackground,
-    eColorID_TextSelectForeground,
-    eColorID_TextSelectForegroundCustom,
-    eColorID_TextSelectBackgroundDisabled,
-    eColorID_TextSelectBackgroundAttention,
-    eColorID_TextHighlightBackground,
-    eColorID_TextHighlightForeground,
-
-    eColorID_IMERawInputBackground,
-    eColorID_IMERawInputForeground,
-    eColorID_IMERawInputUnderline,
-    eColorID_IMESelectedRawTextBackground,
-    eColorID_IMESelectedRawTextForeground,
-    eColorID_IMESelectedRawTextUnderline,
-    eColorID_IMEConvertedTextBackground,
-    eColorID_IMEConvertedTextForeground,
-    eColorID_IMEConvertedTextUnderline,
-    eColorID_IMESelectedConvertedTextBackground,
-    eColorID_IMESelectedConvertedTextForeground,
-    eColorID_IMESelectedConvertedTextUnderline,
-
-    eColorID_SpellCheckerUnderline,
-
-    // New CSS 2 color definitions
-    eColorID_activeborder,
-    eColorID_activecaption,
-    eColorID_appworkspace,
-    eColorID_background,
-    eColorID_buttonface,
-    eColorID_buttonhighlight,
-    eColorID_buttonshadow,
-    eColorID_buttontext,
-    eColorID_captiontext,
-    eColorID_graytext,
-    eColorID_highlight,
-    eColorID_highlighttext,
-    eColorID_inactiveborder,
-    eColorID_inactivecaption,
-    eColorID_inactivecaptiontext,
-    eColorID_infobackground,
-    eColorID_infotext,
-    eColorID_menu,
-    eColorID_menutext,
-    eColorID_scrollbar,
-    eColorID_threeddarkshadow,
-    eColorID_threedface,
-    eColorID_threedhighlight,
-    eColorID_threedlightshadow,
-    eColorID_threedshadow,
-    eColorID_window,
-    eColorID_windowframe,
-    eColorID_windowtext,
-
-    eColorID__moz_buttondefault,
-    // Colors which will hopefully become CSS3
-    eColorID__moz_field,
-    eColorID__moz_fieldtext,
-    eColorID__moz_dialog,
-    eColorID__moz_dialogtext,
-    // used to highlight valid regions to drop something onto
-    eColorID__moz_dragtargetzone,
-
-    // used to cell text background, selected but not focus.
-    // It is not necessarily a system color, but it is
-    // distinct from -moz-appearance: listbox; and Highlight
-    eColorID__moz_cellhighlight,
-    // used to cell text, selected but not focus
-    eColorID__moz_cellhighlighttext,
-    // used to html select cell text background, selected but not focus
-    eColorID__moz_html_cellhighlight,
-    // used to html select cell text, selected but not focus
-    eColorID__moz_html_cellhighlighttext,
-    // used to button text background, when mouse is over
-    eColorID__moz_buttonhoverface,
-    // used to button text, when mouse is over
-    eColorID__moz_buttonhovertext,
-    // used to menu item background, when mouse is over
-    eColorID__moz_menuhover,
-    // used to menu item text, when mouse is over
-    eColorID__moz_menuhovertext,
-    // used to menu bar item text
-    eColorID__moz_menubartext,
-    // used to menu bar item text, when mouse is over
-    eColorID__moz_menubarhovertext,
-    // On platforms where these colors are the same as
-    // -moz-field, use -moz-fieldtext as foreground color
-    eColorID__moz_eventreerow,
-    eColorID__moz_oddtreerow,
-
-    // colors needed by the Linux Gtk theme
-
-    // used to button text, when button is pressed
-    eColorID__moz_gtk_buttonactivetext,
-
-    // colors needed by the Mac OS X theme
-
-    // foreground color of :hover:active buttons
-    eColorID__moz_mac_buttonactivetext,
-    // background color of chrome toolbars in active windows
-    eColorID__moz_mac_chrome_active,
-    // background color of chrome toolbars in inactive windows
-    eColorID__moz_mac_chrome_inactive,
-    // foreground color of default buttons
-    eColorID__moz_mac_defaultbuttontext,
-    // ring around text fields and lists
-    eColorID__moz_mac_focusring,
-    // colour used when mouse is over a menu item
-    eColorID__moz_mac_menuselect,
-    // colour used to do shadows on menu items
-    eColorID__moz_mac_menushadow,
-    // color used to display text for disabled menu items
-    eColorID__moz_mac_menutextdisable,
-    // colour used to display text while mouse is over a menu item
-    eColorID__moz_mac_menutextselect,
-    // text color of disabled text on toolbars
-    eColorID__moz_mac_disabledtoolbartext,
-    // inactive light hightlight
-    eColorID__moz_mac_secondaryhighlight,
-
-    // Font smoothing background colors needed by the Mac OS X theme, based
-    // on -moz-appearance names
-    eColorID__moz_mac_vibrancy_light,
-    eColorID__moz_mac_vibrancy_dark,
-    eColorID__moz_mac_vibrant_titlebar_light,
-    eColorID__moz_mac_vibrant_titlebar_dark,
-    eColorID__moz_mac_menupopup,
-    eColorID__moz_mac_menuitem,
-    eColorID__moz_mac_active_menuitem,
-    eColorID__moz_mac_source_list,
-    eColorID__moz_mac_source_list_selection,
-    eColorID__moz_mac_active_source_list_selection,
-    eColorID__moz_mac_tooltip,
-
-    // vista rebars
-
-    // accent color for title bar
-    eColorID__moz_win_accentcolor,
-    // color from drawing text over the accent color
-    eColorID__moz_win_accentcolortext,
-    // media rebar text
-    eColorID__moz_win_mediatext,
-    // communications rebar text
-    eColorID__moz_win_communicationstext,
-
-    // Hyperlink color extracted from the system, not affected by the
-    // browser.anchor_color user pref.
-    // There is no OS-specified safe background color for this text,
-    // but it is used regularly within Windows and the Gnome DE on Dialog and
-    // Window colors.
-    eColorID__moz_nativehyperlinktext,
-
-    // Combo box widgets
-    eColorID__moz_comboboxtext,
-    eColorID__moz_combobox,
-
-    // GtkInfoBar
-    eColorID__moz_gtk_info_bar_text,
-
-    // keep this one last, please
-    eColorID_LAST_COLOR
-  };
+  using ColorID = StyleSystemColor;
 
   // When modifying this list, also modify nsXPLookAndFeel::sIntPrefs
   // in widget/xpwidgts/nsXPLookAndFeel.cpp.
@@ -587,8 +412,8 @@ class LookAndFeel {
    * which returns nscolor directly.
    *
    * NOTE:
-   *   eColorID_TextSelectForeground might return NS_DONT_CHANGE_COLOR.
-   *   eColorID_IME* might return NS_TRANSPARENT, NS_SAME_AS_FOREGROUND_COLOR or
+   *   ColorID::TextSelectForeground might return NS_DONT_CHANGE_COLOR.
+   *   ColorID::IME* might return NS_TRANSPARENT, NS_SAME_AS_FOREGROUND_COLOR or
    *   NS_40PERCENT_FOREGROUND_COLOR.
    *   These values have particular meaning.  Then, they are not an actual
    *   color value.
@@ -713,7 +538,7 @@ class LookAndFeel {
 
 }  // namespace mozilla
 
-// On the Mac, GetColor(eColorID_TextSelectForeground, color) returns this
+// On the Mac, GetColor(ColorID::TextSelectForeground, color) returns this
 // constant to specify that the foreground color should not be changed
 // (ie. a colored text keeps its colors  when selected).
 // Of course if other plaforms work like the Mac, they can use it too.
@@ -722,11 +547,11 @@ class LookAndFeel {
 // Similar with NS_DONT_CHANGE_COLOR, except NS_DONT_CHANGE_COLOR would returns
 // complementary color if fg color is same as bg color.
 // NS_CHANGE_COLOR_IF_SAME_AS_BG would returns
-// eColorID_TextSelectForegroundCustom if fg and bg color are the same.
+// ColorID::TextSelectForegroundCustom if fg and bg color are the same.
 #define NS_CHANGE_COLOR_IF_SAME_AS_BG NS_RGB(0x02, 0x02, 0x02)
 
 // ---------------------------------------------------------------------
-//  Special colors for eColorID_IME* and eColorID_SpellCheckerUnderline
+//  Special colors for ColorID::IME* and ColorID::SpellCheckerUnderline
 // ---------------------------------------------------------------------
 
 // For background color only.
