@@ -267,7 +267,7 @@ class SelectionStyleProvider final {
     // FYI: LookAndFeel always returns selection colors of GtkTextView.
     nscolor selectionForegroundColor;
     if (NS_SUCCEEDED(
-            LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,
+            LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectForeground,
                                   &selectionForegroundColor))) {
       double alpha =
           static_cast<double>(NS_GET_A(selectionForegroundColor)) / 0xFF;
@@ -282,7 +282,7 @@ class SelectionStyleProvider final {
     }
     nscolor selectionBackgroundColor;
     if (NS_SUCCEEDED(
-            LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectBackground,
+            LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectBackground,
                                   &selectionBackgroundColor))) {
       double alpha =
           static_cast<double>(NS_GET_A(selectionBackgroundColor)) / 0xFF;

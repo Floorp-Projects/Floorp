@@ -48,10 +48,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
-#include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MouseEvents.h"
 #include "GLConsts.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/VsyncDispatcher.h"
@@ -823,7 +823,7 @@ bool nsBaseWidget::UseAPZ() {
           (WindowType() == eWindowType_toplevel ||
            WindowType() == eWindowType_child ||
            (WindowType() == eWindowType_popup && HasRemoteContent() &&
-            gfxPrefs::APZPopupsEnabled())));
+            StaticPrefs::APZPopupsEnabled())));
 }
 
 bool nsBaseWidget::AllowWebRenderForThisWindow() {
@@ -857,7 +857,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
       NewRunnableMethod<float>("layers::IAPZCTreeManager::SetDPI", mAPZC,
                                &IAPZCTreeManager::SetDPI, dpi));
 
-  if (gfxPrefs::APZKeyboardEnabled()) {
+  if (StaticPrefs::APZKeyboardEnabled()) {
     KeyboardMap map = nsXBLWindowKeyHandler::CollectKeyboardShortcuts();
     // On Android the main thread is not the controller thread
     APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
@@ -976,7 +976,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     UniquePtr<DisplayportSetListener> postLayerization;
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
       if (touchEvent->mMessage == eTouchStart) {
-        if (gfxPrefs::TouchActionEnabled()) {
+        if (StaticPrefs::TouchActionEnabled()) {
           APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
               this, GetDocument(), *(original->AsTouchEvent()), aInputBlockId,
               mSetAllowedTouchBehaviorCallback);

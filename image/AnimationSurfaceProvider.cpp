@@ -5,7 +5,7 @@
 
 #include "AnimationSurfaceProvider.h"
 
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsProxyRelease.h"
 
@@ -35,9 +35,9 @@ AnimationSurfaceProvider::AnimationSurfaceProvider(
   // enter decode-on-demand mode.
   IntSize frameSize = aSurfaceKey.Size();
   size_t threshold =
-      (size_t(gfxPrefs::ImageAnimatedDecodeOnDemandThresholdKB()) * 1024) /
+      (size_t(StaticPrefs::ImageAnimatedDecodeOnDemandThresholdKB()) * 1024) /
       (sizeof(uint32_t) * frameSize.width * frameSize.height);
-  size_t batch = gfxPrefs::ImageAnimatedDecodeOnDemandBatchSize();
+  size_t batch = StaticPrefs::ImageAnimatedDecodeOnDemandBatchSize();
 
   mFrames.reset(
       new AnimationFrameRetainedBuffer(threshold, batch, aCurrentFrame));
@@ -407,7 +407,7 @@ void AnimationSurfaceProvider::RequestFrameDiscarding() {
       static_cast<AnimationFrameRetainedBuffer*>(mFrames.get());
 
   MOZ_ASSERT(!mDecoder->GetFrameRecycler());
-  if (gfxPrefs::ImageAnimatedDecodeOnDemandRecycle()) {
+  if (StaticPrefs::ImageAnimatedDecodeOnDemandRecycle()) {
     mFrames.reset(new AnimationFrameRecyclingQueue(std::move(*oldFrameQueue)));
     mDecoder->SetFrameRecycler(this);
   } else {
@@ -464,7 +464,7 @@ bool AnimationSurfaceProvider::ShouldPreferSyncRun() const {
   MutexAutoLock lock(mDecodingMutex);
   MOZ_ASSERT(mDecoder);
 
-  return mDecoder->ShouldSyncDecode(gfxPrefs::ImageMemDecodeBytesAtATime());
+  return mDecoder->ShouldSyncDecode(StaticPrefs::ImageMemDecodeBytesAtATime());
 }
 
 RawAccessFrameRef AnimationSurfaceProvider::RecycleFrame(

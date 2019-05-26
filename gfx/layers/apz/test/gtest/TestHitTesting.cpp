@@ -6,7 +6,7 @@
 
 #include "APZCTreeManagerTester.h"
 #include "APZTestCommon.h"
-#include "gfxPrefs.h"
+
 #include "InputUtils.h"
 
 class APZHitTestingTester : public APZCTreeManagerTester {
@@ -637,7 +637,7 @@ TEST_F(APZHitTestingTester, Bug1148350) {
 
   uint64_t blockId;
   TouchDown(manager, ScreenIntPoint(100, 100), mcc->Time(), &blockId);
-  if (gfxPrefs::TouchActionEnabled()) {
+  if (StaticPrefs::TouchActionEnabled()) {
     SetDefaultAllowedTouchBehavior(manager, blockId);
   }
   mcc->AdvanceByMillis(100);

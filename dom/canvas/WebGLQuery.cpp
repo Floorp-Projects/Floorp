@@ -5,7 +5,6 @@
 
 #include "WebGLQuery.h"
 
-#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "nsContentUtils.h"
@@ -117,7 +116,7 @@ void WebGLQuery::GetQueryParameter(GLenum pname,
 
   // We must usually wait for an event loop before the query can be available.
   const bool canBeAvailable =
-      (mCanBeAvailable || gfxPrefs::WebGLImmediateQueries());
+      (mCanBeAvailable || StaticPrefs::WebGLImmediateQueries());
   if (!canBeAvailable) {
     if (pname == LOCAL_GL_QUERY_RESULT_AVAILABLE) {
       retval.set(JS::BooleanValue(false));

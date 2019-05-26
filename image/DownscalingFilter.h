@@ -23,7 +23,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
-#include "gfxPrefs.h"
 
 #ifdef MOZ_ENABLE_SKIA
 #  include "mozilla/gfx/ConvolutionFilter.h"

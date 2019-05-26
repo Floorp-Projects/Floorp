@@ -90,7 +90,6 @@
 #include "RetainedDisplayListBuilder.h"
 
 #include "gfxContext.h"
-#include "gfxPrefs.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "StickyScrollContainer.h"
 #include "nsFontInflationData.h"
@@ -1085,7 +1084,7 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
 
   RetainedDisplayListData* data = GetOrSetRetainedDisplayListData(rootFrame);
 
-  if (data->ModifiedFramesCount() > gfxPrefs::LayoutRebuildFrameLimit()) {
+  if (data->ModifiedFramesCount() > StaticPrefs::LayoutRebuildFrameLimit()) {
     // If the modified frames count is above the rebuild limit, mark the root
     // frame modified, and stop marking additional frames modified.
     data->AddModifiedFrame(rootFrame);
@@ -1138,7 +1137,7 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   // all bad, should get around to bug 1465474 eventually :(
   const bool isNonText = !IsTextFrame();
   if (isNonText) {
-    mComputedStyle->StartImageLoads(*doc);
+    mComputedStyle->StartImageLoads(*doc, aOldComputedStyle);
   }
 
   const nsStyleImageLayers* oldLayers =
@@ -2229,11 +2228,11 @@ Color nsDisplaySelectionOverlay::ComputeColor() const {
     return ComputeColorFromSelectionStyle(*style);
   }
   if (mSelectionValue == nsISelectionController::SELECTION_ON) {
-    colorID = LookAndFeel::eColorID_TextSelectBackground;
+    colorID = LookAndFeel::ColorID::TextSelectBackground;
   } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
-    colorID = LookAndFeel::eColorID_TextSelectBackgroundAttention;
+    colorID = LookAndFeel::ColorID::TextSelectBackgroundAttention;
   } else {
-    colorID = LookAndFeel::eColorID_TextSelectBackgroundDisabled;
+    colorID = LookAndFeel::ColorID::TextSelectBackgroundDisabled;
   }
 
   return ApplyTransparencyIfNecessary(
@@ -3255,7 +3254,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     set.Outlines()->DeleteAll(aBuilder);
   }
 
-  if (hasOverrideDirtyRect && gfxPrefs::LayoutDisplayListShowArea()) {
+  if (hasOverrideDirtyRect && StaticPrefs::LayoutDisplayListShowArea()) {
     nsDisplaySolidColor* color = MakeDisplayItem<nsDisplaySolidColor>(
         aBuilder, this,
         dirtyRect + aBuilder->GetCurrentFrameOffsetToReferenceFrame(),

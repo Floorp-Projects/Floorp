@@ -67,6 +67,7 @@ bool RDDProcessHost::Launch(StringVector aExtraOpts) {
 
   if (!GeckoChildProcessHost::AsyncLaunch(aExtraOpts)) {
     mLaunchPhase = LaunchPhase::Complete;
+    mPrefSerializer = nullptr;
     return false;
   }
   return true;

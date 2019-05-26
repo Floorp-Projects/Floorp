@@ -94,6 +94,11 @@ void AddVarCacheFunc(float* aVar, const nsCString& aPrefName) {
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 }
 
+void AddVarCacheFunc(std::atomic<float>* aVar, const nsCString& aPrefName) {
+  nsresult rv = Preferences::AddAtomicFloatVarCache(aVar, aPrefName);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+}
+
 template <typename T, typename U = T>
 void RunTest(const nsCString& aPrefName1, const nsCString& aPrefName2,
              T aValue1, T aValue2) {
@@ -194,6 +199,13 @@ TEST(CallbackAndVarCacheOrder, Float)
 {
   RunTest<float>(NS_LITERAL_CSTRING("test_pref.float.1"),
                  NS_LITERAL_CSTRING("test_pref.float.2"), -10.0f, 11.0f);
+}
+
+TEST(CallbackAndVarCacheOrder, AtomicFloat)
+{
+  RunTest<float, std::atomic<float>>(
+      NS_LITERAL_CSTRING("test_pref.atomic_float.1"),
+      NS_LITERAL_CSTRING("test_pref.atomic_float.2"), -12.0f, 13.0f);
 }
 
 }  // namespace mozilla

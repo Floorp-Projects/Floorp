@@ -83,7 +83,6 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "gfxUtils.h"
-#include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BorrowedContext.h"
 #include "mozilla/gfx/MacIOSurface.h"
@@ -93,6 +92,7 @@
 #endif
 
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 
 #include <dlfcn.h>
 
@@ -3274,7 +3274,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Make the context opaque for fullscreen (since it performs better), and transparent
   // for windowed (since we need it for rounded corners), but allow overriding
   // it to opaque for testing purposes, even if that breaks the rounded corners.
-  GLint opaque = aOpaque || gfxPrefs::CompositorGLContextOpaque();
+  GLint opaque = aOpaque || StaticPrefs::CompositorGLContextOpaque();
   [mGLContext setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
   CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
 }
@@ -3560,7 +3560,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // FIXME: bug 1525793 -- this may need to handle zooming or not on a per-document basis.
-  if (gfxPrefs::APZAllowZooming()) {
+  if (StaticPrefs::APZAllowZooming()) {
     NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
     ScreenPoint position =
         ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],
@@ -4377,7 +4377,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent, false);
   } else {
     ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
-    if (gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled()) {
+    if (StaticPrefs::SmoothScrollEnabled() && StaticPrefs::WheelSmoothScrollEnabled()) {
       scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
     }
     ScrollWheelInput wheelEvent(eventIntervalTime, eventTimeStamp, modifiers, scrollMode,
