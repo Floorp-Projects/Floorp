@@ -8,7 +8,6 @@
 
 #include "BrowserChild.h"
 
-#include "gfxPrefs.h"
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/DocAccessibleChild.h"
 #endif
@@ -1811,7 +1810,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
 
   if (localEvent.mMessage == eTouchStart && AsyncPanZoomEnabled()) {
     nsCOMPtr<Document> document = GetTopLevelDocument();
-    if (gfxPrefs::TouchActionEnabled()) {
+    if (StaticPrefs::TouchActionEnabled()) {
       APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
           mPuppetWidget, document, localEvent, aInputBlockId,
           mSetAllowedTouchBehaviorCallback);

@@ -6,7 +6,6 @@
 
 #include "mozilla/layers/APZInputBridge.h"
 
-#include "gfxPrefs.h"                       // for gfxPrefs
 #include "InputData.h"                      // for MouseInput, etc
 #include "mozilla/dom/WheelEventBinding.h"  // for WheelEvent constants
 #include "mozilla/EventStateManager.h"      // for EventStateManager
@@ -23,7 +22,7 @@ namespace layers {
 static bool WillHandleMouseEvent(const WidgetMouseEventBase& aEvent) {
   return aEvent.mMessage == eMouseMove || aEvent.mMessage == eMouseDown ||
          aEvent.mMessage == eMouseUp || aEvent.mMessage == eDragEnd ||
-         (gfxPrefs::TestEventsAsyncEnabled() &&
+         (StaticPrefs::TestEventsAsyncEnabled() &&
           aEvent.mMessage == eMouseHitTest);
 }
 
@@ -66,7 +65,7 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
       // hit testing in a zoomed-in or zoomed-out state.
       // FIXME: bug 1525793 -- this may need to handle zooming or not on a
       // per-document basis.
-      if (gfxPrefs::APZAllowZooming()) {
+      if (StaticPrefs::APZAllowZooming()) {
         mouseEvent.mIgnoreRootScrollFrame = true;
       }
 
@@ -116,13 +115,13 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
       if (Maybe<APZWheelAction> action = ActionForWheelEvent(&wheelEvent)) {
         ScrollWheelInput::ScrollMode scrollMode =
             ScrollWheelInput::SCROLLMODE_INSTANT;
-        if (gfxPrefs::SmoothScrollEnabled() &&
+        if (StaticPrefs::SmoothScrollEnabled() &&
             ((wheelEvent.mDeltaMode ==
                   dom::WheelEvent_Binding::DOM_DELTA_LINE &&
-              gfxPrefs::WheelSmoothScrollEnabled()) ||
+              StaticPrefs::WheelSmoothScrollEnabled()) ||
              (wheelEvent.mDeltaMode ==
                   dom::WheelEvent_Binding::DOM_DELTA_PAGE &&
-              gfxPrefs::PageSmoothScrollEnabled()))) {
+              StaticPrefs::PageSmoothScrollEnabled()))) {
           scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
         }
 

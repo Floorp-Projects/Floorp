@@ -35,7 +35,6 @@
 #include "ImageContainer.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
-#include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
@@ -314,14 +313,14 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value,
 }
 
 static inline bool AllowDirectBitmapSurfaceDrawing() {
-  if (!gfxPrefs::PluginAsyncDrawingEnabled()) {
+  if (!StaticPrefs::PluginAsyncDrawingEnabled()) {
     return false;
   }
   return gfxPlatform::GetPlatform()->SupportsPluginDirectBitmapDrawing();
 }
 
 static inline bool AllowDirectDXGISurfaceDrawing() {
-  if (!gfxPrefs::PluginAsyncDrawingEnabled()) {
+  if (!StaticPrefs::PluginAsyncDrawingEnabled()) {
     return false;
   }
 #if defined(XP_WIN)

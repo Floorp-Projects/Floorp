@@ -12,7 +12,6 @@
 #include "ClientLayerManager.h"       // for ClientLayerManager
 #include "gfxContext.h"               // for gfxContext, etc
 #include "gfxPlatform.h"              // for gfxPlatform
-#include "gfxPrefs.h"                 // for gfxPrefs
 #include "gfxRect.h"                  // for gfxRect
 #include "mozilla/MathAlgorithms.h"   // for Abs
 #include "mozilla/gfx/Point.h"        // for IntSize
@@ -29,6 +28,7 @@
 #include "nsMathUtils.h"          // for NS_lroundf
 #include "LayersLogging.h"
 #include "UnitTransforms.h"  // for TransformTo
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/UniquePtr.h"
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
@@ -230,7 +230,7 @@ bool SharedFrameMetricsHelper::AboutToCheckerboard(
       CSSRect(aCompositorMetrics.GetScrollOffset(),
               aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
   showing.Inflate(
-      LayerSize(gfxPrefs::APZDangerZoneX(), gfxPrefs::APZDangerZoneY()) /
+      LayerSize(StaticPrefs::APZDangerZoneX(), StaticPrefs::APZDangerZoneY()) /
       aCompositorMetrics.LayersPixelsPerCSSPixel());
 
   // Clamp both rects to the scrollable rect, because having either of those
@@ -600,7 +600,7 @@ Maybe<AcquiredBackBuffer> TileClient::AcquireBackBuffer(
     // later (copying pixels and texture upload). But this could increase
     // our memory usage and lead to OOM more frequently from spikes in usage,
     // so we have this behavior behind a pref.
-    if (!gfxPrefs::LayersTileRetainBackBuffer()) {
+    if (!StaticPrefs::LayersTileRetainBackBuffer()) {
       DiscardBackBuffer();
     }
     Flip();
@@ -678,7 +678,7 @@ Maybe<AcquiredBackBuffer> TileClient::AcquireBackBuffer(
   RefPtr<DrawTargetCapture> capture;
   if (aFlags & TilePaintFlags::Async) {
     capture = Factory::CreateCaptureDrawTargetForTarget(
-        target, gfxPrefs::LayersOMTPCaptureLimit());
+        target, StaticPrefs::LayersOMTPCaptureLimit());
     target = capture;
   }
 

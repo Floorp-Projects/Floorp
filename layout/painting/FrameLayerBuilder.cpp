@@ -54,7 +54,7 @@
 #include "mozilla/Unused.h"
 #include "GeckoProfiler.h"
 #include "LayersLogging.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 
 #include <algorithm>
 #include <functional>
@@ -577,7 +577,7 @@ class PaintedLayerData {
   nsCString mLog;
 
 #  define FLB_LOG_PAINTED_LAYER_DECISION(pld, ...) \
-    if (gfxPrefs::LayersDumpDecision()) {          \
+    if (StaticPrefs::LayersDumpDecision()) {       \
       pld->mLog.AppendPrintf("\t\t\t\t");          \
       pld->mLog.AppendPrintf(__VA_ARGS__);         \
     }
@@ -3037,7 +3037,7 @@ PaintedLayerData* PaintedLayerDataNode::FindPaintedLayerFor(
         break;
       }
 
-      if (gfxPrefs::LayoutSmallerPaintedLayers()) {
+      if (StaticPrefs::LayoutSmallerPaintedLayers()) {
         lowestUsableLayer = nullptr;
       }
     }
@@ -4384,7 +4384,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
 
   nsPoint topLeft(0, 0);
 
-  int32_t maxLayers = gfxPrefs::MaxActiveLayers();
+  int32_t maxLayers = StaticPrefs::MaxActiveLayers();
   int layerCount = 0;
 
   if (!mManager->IsWidgetLayerManager()) {
@@ -4969,7 +4969,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       } else if ((itemType == DisplayItemType::TYPE_SUBDOCUMENT ||
                   itemType == DisplayItemType::TYPE_ZOOM ||
                   itemType == DisplayItemType::TYPE_RESOLUTION) &&
-                 gfxPrefs::LayoutUseContainersForRootFrames()) {
+                 StaticPrefs::LayoutUseContainersForRootFrames()) {
         newLayerEntry->mBaseScrollMetadata =
             static_cast<nsDisplaySubDocument*>(item)->ComputeScrollMetadata(
                 ownLayer->Manager(), mParameters);
@@ -5889,9 +5889,9 @@ void ContainerState::Finish(uint32_t* aTextContentFlags,
                             nsDisplayList* aChildItems) {
   mPaintedLayerDataTree.Finish();
 
-  if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
+  if (!StaticPrefs::LayoutUseContainersForRootFrames()) {
     // Bug 1336544 tracks re-enabling this assertion in the
-    // gfxPrefs::LayoutUseContainersForRootFrames() case.
+    // StaticPrefs::LayoutUseContainersForRootFrames() case.
     NS_ASSERTION(mContainerBounds.IsEqualInterior(mAccumulatedChildBounds),
                  "Bounds computation mismatch");
   }
@@ -6129,7 +6129,7 @@ static bool ChooseScaleAndSetTransform(
   // tiling, that's not a problem, since we'll automatically choose a tiled
   // layer for layers of that size. If not, we need to apply clamping to
   // prevent this.
-  if (aTransform && !gfxPrefs::LayersTilesEnabled()) {
+  if (aTransform && !StaticPrefs::LayersTilesEnabled()) {
     RestrictScaleToMaxLayerSize(scale, aVisibleRect, aContainerFrame, aLayer);
   }
 
@@ -6228,7 +6228,7 @@ already_AddRefed<ContainerLayer> FrameLayerBuilder::BuildContainerLayerFor(
       aParameters.mScrollMetadataASR;
   const ActiveScrolledRoot* containerCompositorASR = aParameters.mCompositorASR;
 
-  if (!aContainerItem && gfxPrefs::LayoutUseContainersForRootFrames()) {
+  if (!aContainerItem && StaticPrefs::LayoutUseContainersForRootFrames()) {
     containerASR = aBuilder->ActiveScrolledRootForRootScrollframe();
     containerScrollMetadataASR = containerASR;
     containerCompositorASR = containerASR;
@@ -7077,7 +7077,7 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
  */
 static bool ShouldDrawRectsSeparately(DrawTarget* aDrawTarget,
                                       DrawRegionClip aClip) {
-  if (!gfxPrefs::LayoutPaintRectsSeparately() ||
+  if (!StaticPrefs::LayoutPaintRectsSeparately() ||
       aClip == DrawRegionClip::NONE) {
     return false;
   }
@@ -7205,7 +7205,7 @@ void FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       layerBuilder->PaintItems(userData->mItems, iterRect, aContext, builder,
                                presContext, offset, userData->mXScale,
                                userData->mYScale);
-      if (gfxPrefs::GfxLoggingPaintedPixelCountEnabled()) {
+      if (StaticPrefs::GfxLoggingPaintedPixelCountEnabled()) {
         aLayer->Manager()->AddPaintedPixelCount(iterRect.Area());
       }
     }
@@ -7222,7 +7222,7 @@ void FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     layerBuilder->PaintItems(userData->mItems, aRegionToDraw.GetBounds(),
                              aContext, builder, presContext, offset,
                              userData->mXScale, userData->mYScale);
-    if (gfxPrefs::GfxLoggingPaintedPixelCountEnabled()) {
+    if (StaticPrefs::GfxLoggingPaintedPixelCountEnabled()) {
       aLayer->Manager()->AddPaintedPixelCount(aRegionToDraw.GetBounds().Area());
     }
   }

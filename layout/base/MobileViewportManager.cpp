@@ -6,7 +6,6 @@
 
 #include "MobileViewportManager.h"
 
-#include "gfxPrefs.h"
 #include "LayersLogging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"

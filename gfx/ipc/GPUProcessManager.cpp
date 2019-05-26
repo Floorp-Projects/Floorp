@@ -6,10 +6,10 @@
 
 #include "GPUProcessManager.h"
 
-#include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessListener.h"
 #include "mozilla/MemoryReportingProcess.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StaticPrefs.h"
@@ -84,6 +84,7 @@ GPUProcessManager::GPUProcessManager()
   mIdNamespace = AllocateNamespace();
   mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
+  Preferences::AddStrongObserver(mObserver, "");
 
   mDeviceResetLastTime = TimeStamp::Now();
 
@@ -112,6 +113,8 @@ GPUProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
                                      const char16_t* aData) {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     mManager->OnXPCOMShutdown();
+  } else if (!strcmp(aTopic, "nsPref:changed")) {
+    mManager->OnPreferenceChange(aData);
   }
   return NS_OK;
 }
@@ -119,10 +122,30 @@ GPUProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
 void GPUProcessManager::OnXPCOMShutdown() {
   if (mObserver) {
     nsContentUtils::UnregisterShutdownObserver(mObserver);
+    Preferences::RemoveObserver(mObserver, "");
     mObserver = nullptr;
   }
 
   CleanShutdown();
+}
+
+void GPUProcessManager::OnPreferenceChange(const char16_t* aData) {
+  // A pref changed. If it's not on the blacklist, inform child processes.
+  if (!dom::ContentParent::ShouldSyncPreference(aData)) {
+    return;
+  }
+
+  // We know prefs are ASCII here.
+  NS_LossyConvertUTF16toASCII strData(aData);
+
+  mozilla::dom::Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
+  Preferences::GetPreference(&pref);
+  if (!!mGPUChild) {
+    MOZ_ASSERT(mQueuedPrefs.IsEmpty());
+    mGPUChild->SendPreferenceUpdate(pref);
+  } else {
+    mQueuedPrefs.AppendElement(pref);
+  }
 }
 
 void GPUProcessManager::LaunchGPUProcess() {
@@ -342,6 +365,13 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
                                           std::move(vsyncChild));
   mGPUChild->SendInitVsyncBridge(std::move(vsyncParent));
 
+  // Flush any pref updates that happened during launch and weren't
+  // included in the blobs set up in LaunchGPUProcess.
+  for (const mozilla::dom::Pref& pref : mQueuedPrefs) {
+    Unused << NS_WARN_IF(!mGPUChild->SendPreferenceUpdate(pref));
+  }
+  mQueuedPrefs.Clear();
+
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::GPUProcessStatus,
       NS_LITERAL_CSTRING("Running"));
@@ -354,8 +384,8 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
 static bool ShouldLimitDeviceResets(uint32_t count, int32_t deltaMilliseconds) {
   // We decide to limit by comparing the amount of resets that have happened
   // and time since the last reset to two prefs.
-  int32_t timeLimit = gfxPrefs::DeviceResetThresholdMilliseconds();
-  int32_t countLimit = gfxPrefs::DeviceResetLimitCount();
+  int32_t timeLimit = StaticPrefs::DeviceResetThresholdMilliseconds();
+  int32_t countLimit = StaticPrefs::DeviceResetLimitCount();
 
   bool hasTimeLimit = timeLimit >= 0;
   bool hasCountLimit = countLimit >= 0;
@@ -481,13 +511,13 @@ void GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {
   CompositorManagerChild::OnGPUProcessLost(aHost->GetProcessToken());
   DestroyProcess();
 
-  if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessMaxRestarts())) {
+  if (mNumProcessAttempts > uint32_t(StaticPrefs::GPUProcessMaxRestarts())) {
     char disableMessage[64];
     SprintfLiteral(disableMessage, "GPU process disabled after %d attempts",
                    mNumProcessAttempts);
     DisableGPUProcess(disableMessage);
   } else if (mNumProcessAttempts >
-                 uint32_t(gfxPrefs::GPUProcessMaxRestartsWithDecoder()) &&
+                 uint32_t(StaticPrefs::GPUProcessMaxRestartsWithDecoder()) &&
              mDecodeVideoOnGpuProcess) {
     mDecodeVideoOnGpuProcess = false;
     Telemetry::Accumulate(Telemetry::GPU_PROCESS_CRASH_FALLBACKS,

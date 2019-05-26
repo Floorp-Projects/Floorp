@@ -7,6 +7,7 @@
 #include "VRServiceManager.h"
 #include "VRGPUChild.h"
 #include "mozilla/gfx/GPUParent.h"
+#include "mozilla/StaticPrefs.h"
 
 namespace mozilla {
 namespace gfx {
@@ -45,7 +46,7 @@ void VRServiceManager::ShutdownVRProcess() {
     }
     VRGPUChild::Shutdown();
   }
-  if (gfxPrefs::VRProcessEnabled()) {
+  if (StaticPrefs::VRProcessEnabled()) {
     // Using PGPU channel to tell the main process
     // to shutdown VR process.
     gfx::GPUParent* gpu = GPUParent::GetSingleton();
@@ -55,7 +56,7 @@ void VRServiceManager::ShutdownVRProcess() {
 }
 
 void VRServiceManager::CreateService() {
-  if (!gfxPrefs::VRProcessEnabled()) {
+  if (!StaticPrefs::VRProcessEnabled()) {
     mVRService = VRService::Create();
   }
 }
