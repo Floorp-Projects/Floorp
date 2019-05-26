@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.support.test.any
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -25,13 +26,13 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.io.File
 import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.isAccessible
 
 @RunWith(RobolectricTestRunner::class)
 class FretboardTest {
+
     @Test
     fun loadExperiments() {
         val experimentSource = mock(ExperimentSource::class.java)
@@ -516,13 +517,13 @@ class FretboardTest {
             override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
         })
 
-        assertEquals(79, fretboard1.getUserBucket(RuntimeEnvironment.application))
+        assertEquals(79, fretboard1.getUserBucket(testContext))
 
         val fretboard2 = Fretboard(experimentSource, experimentStorage, object : ValuesProvider() {
             override fun getClientId(context: Context): String = "01a15650-9a5d-4383-a7ba-2f047b25c620"
         })
 
-        assertEquals(55, fretboard2.getUserBucket(RuntimeEnvironment.application))
+        assertEquals(55, fretboard2.getUserBucket(testContext))
     }
 
     @Test
@@ -568,7 +569,7 @@ class FretboardTest {
     fun loadingCorruptJSON() {
         val experimentSource = mock(ExperimentSource::class.java)
 
-        val file = File(RuntimeEnvironment.application.filesDir, "corrupt-experiments.json")
+        val file = File(testContext.filesDir, "corrupt-experiments.json")
         file.writer().use {
             it.write("""{"experiment":[""")
         }

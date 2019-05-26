@@ -31,7 +31,6 @@ object KotlinCompiler {
         "lib-fetch-okhttp",
         "samples-toolbar",
         "service-experiments",
-        "service-fretboard",
         "service-glean",
         "support-test",
         "tooling-lint",

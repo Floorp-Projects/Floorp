@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -21,10 +22,10 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ExperimentEvaluatorTest {
+
     @Test
     fun evaluateEmtpyMatchers() {
         val experiment = Experiment(
@@ -591,12 +592,12 @@ class ExperimentEvaluatorTest {
             override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
         })
 
-        assertEquals(79, evaluator1.getUserBucket(RuntimeEnvironment.application))
+        assertEquals(79, evaluator1.getUserBucket(testContext))
 
         val evaluator2 = ExperimentEvaluator(object : ValuesProvider() {
             override fun getClientId(context: Context): String = "01a15650-9a5d-4383-a7ba-2f047b25c620"
         })
 
-        assertEquals(55, evaluator2.getUserBucket(RuntimeEnvironment.application))
+        assertEquals(55, evaluator2.getUserBucket(testContext))
     }
 }
