@@ -19,7 +19,7 @@
 #include "mozilla/widget/WidgetMessageUtils.h"
 
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
+
 #include "qcms.h"
 
 #ifdef DEBUG
@@ -885,10 +885,6 @@ nsresult nsXPLookAndFeel::GetColorImpl(ColorID aID,
   if (sUseNativeColors && NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
     if (!mozilla::ServoStyleSet::IsInServoTraversal()) {
       MOZ_ASSERT(NS_IsMainThread());
-      // Make sure the preferences are initialized. In the normal run,
-      // they would already be, because gfxPlatform would have been created,
-      // but with some addon, that is not the case. See Bug 1357307.
-      gfxPrefs::GetSingleton();
       if ((gfxPlatform::GetCMSMode() == eCMSMode_All) &&
           !IsSpecialColor(aID, aResult)) {
         qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();

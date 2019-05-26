@@ -755,7 +755,7 @@ void gfxMacFontFamily::LocalizedName(nsACString& aLocalizedName) {
   // It's unsafe to call HasOtherFamilyNames off the main thread because
   // it entrains FindStyleVariations, which calls GetWeightOverride, which
   // retrieves prefs.  And the pref names can change (via user overrides),
-  // so we can't use gfxPrefs to access them.
+  // so we can't use StaticPrefs to access them.
   if (NS_IsMainThread() && !HasOtherFamilyNames()) {
     aLocalizedName = mName;
     return;

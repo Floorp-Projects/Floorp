@@ -9,7 +9,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxDrawable.h"
-#include "gfxPrefs.h"
+
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSClipPathInstance.h"
 #include "nsDisplayList.h"

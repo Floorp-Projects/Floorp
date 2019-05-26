@@ -8,7 +8,7 @@
 
 #include "prlink.h"
 #include "prenv.h"
-#include "gfxPrefs.h"
+
 #include "nsIGlobalObject.h"
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"

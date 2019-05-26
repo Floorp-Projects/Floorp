@@ -32,7 +32,7 @@
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
-#include "gfxPrefs.h"
+
 #include "gfxEnv.h"
 #include "gfxTextRun.h"
 #include "gfxUserFontSet.h"
@@ -845,8 +845,6 @@ void gfxPlatform::Init() {
   }
   gEverInitialized = true;
 
-  // Initialize the preferences by creating the singleton.
-  gfxPrefs::GetSingleton();
   gfxVars::Initialize();
 
   gfxConfig::Init();
@@ -1243,7 +1241,6 @@ void gfxPlatform::Shutdown() {
   delete gGfxPlatformPrefsLock;
 
   gfxVars::Shutdown();
-  gfxPrefs::DestroySingleton();
   gfxFont::DestroySingletons();
 
   gfxConfig::Shutdown();
@@ -2358,8 +2355,6 @@ void gfxPlatform::InitAcceleration() {
   // explicit.
   MOZ_ASSERT(NS_IsMainThread(), "can only initialize prefs on the main thread");
 
-  gfxPrefs::GetSingleton();
-
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   nsCString discardFailureId;
   int32_t status;
@@ -3249,11 +3244,6 @@ bool gfxPlatform::AsyncPanZoomEnabled() {
 #ifdef MOZ_WIDGET_ANDROID
   return true;
 #else
-  if (!gfxPrefs::SingletonExists()) {
-    // Make sure the gfxPrefs has been initialized before reading from it.
-    MOZ_ASSERT(NS_IsMainThread());
-    gfxPrefs::GetSingleton();
-  }
   return StaticPrefs::AsyncPanZoomEnabledDoNotUseDirectly();
 #endif
 }
