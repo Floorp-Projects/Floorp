@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["LoginManagerContextMenu"];
+const EXPORTED_SYMBOLS = ["LoginManagerContextMenu"];
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -14,10 +14,10 @@ ChromeUtils.defineModuleGetter(this, "LoginHelper",
 ChromeUtils.defineModuleGetter(this, "LoginManagerParent",
                                "resource://gre/modules/LoginManagerParent.jsm");
 
-/*
+/**
  * Password manager object for the browser contextual menu.
  */
-var LoginManagerContextMenu = {
+this.LoginManagerContextMenu = {
   /**
    * Look for login items and add them to the contextual menu.
    *

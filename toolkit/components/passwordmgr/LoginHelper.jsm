@@ -12,7 +12,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "LoginHelper",
 ];
 
@@ -24,7 +24,7 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 /**
  * Contains functions shared by different Login Manager components.
  */
-var LoginHelper = {
+this.LoginHelper = {
   debug: null,
   enabled: null,
   formlessCaptureEnabled: null,

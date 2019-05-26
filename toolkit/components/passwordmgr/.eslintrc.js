@@ -2,6 +2,7 @@
 
 module.exports = {
   "rules": {
+    "block-scoped-var": "error",
     "brace-style": ["error", "1tbs", {"allowSingleLine": false}],
 
     // XXX Bug 1358949 - This should be reduced down - probably to 20 or to
@@ -28,6 +29,7 @@ module.exports = {
 
     "curly": ["error", "all"],
     "no-unused-vars": ["error", {"args": "none", "vars": "local", "varsIgnorePattern": "^(ids|ignored|unused)$"}],
+    "no-var": "error",
     "space-in-parens": ["error"],
   }
 };

@@ -9,7 +9,7 @@ interface nsIFile;
 interface nsILoginInfo;
 interface nsIPropertyBag;
 
-/*
+/**
  * NOTE: This interface is intended to be implemented by modules
  *       providing storage mechanisms for the login manager.
  *       Other code should use the login manager's interfaces
@@ -100,7 +100,6 @@ interface nsILoginManagerStorage : nsISupports {
    * The browser sanitization feature allows the user to clear any stored
    * passwords. This interface allows that to be done without getting each
    * login first (which might require knowing the master password).
-   *
    */
   void removeAllLogins();
 
@@ -110,10 +109,6 @@ interface nsILoginManagerStorage : nsISupports {
    * if there are no logins the array is empty.
    *
    * @return An array of nsILoginInfo objects.
-   *
-   * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.getAllLogins();
-   *       (|logins| is an array).
    */
   Array<nsILoginInfo> getAllLogins();
 
@@ -127,10 +122,6 @@ interface nsILoginManagerStorage : nsISupports {
    *        requirements as findLogins for those fields. Wildcard matches are
    *        simply not specified.
    * @return An array of nsILoginInfo objects.
-   *
-   * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.searchLogins(matchData);
-   *       (|logins| is an array).
    */
   Array<nsILoginInfo> searchLogins(in nsIPropertyBag matchData);
 
@@ -140,10 +131,9 @@ interface nsILoginManagerStorage : nsISupports {
    * for logins that might be applicable to a form or authentication request.
    *
    * @param aHostname
-   *        The hostname to restrict searches to, in URL format. For
-   *        example: "http://www.site.com".
+   *        The origin to restrict searches to. For example: "http://www.site.com".
    * @param aActionURL
-   *        For form logins, this argument should be the URL to which the
+   *        For form logins, this argument should be the origin to which the
    *        form will be submitted. For protocol logins, specify null.
    * @param aHttpRealm
    *        For protocol logins, this argument should be the HTTP Realm
@@ -151,10 +141,6 @@ interface nsILoginManagerStorage : nsISupports {
    *        WWW-Authenticate header. See RFC2617. For form logins,
    *        specify null.
    * @return An array of nsILoginInfo objects.
-   *
-   * NOTE: This can be called from JS as:
-   *       var logins = pwmgr.findLogins(hostname, ...);
-   *
    */
   Array<nsILoginInfo> findLogins(in AString aHostname, in AString aActionURL,
 				 in AString aHttpRealm);
@@ -168,11 +154,11 @@ interface nsILoginManagerStorage : nsISupports {
    * password to decrypt the logins.
    *
    * @param aHostname
-   *        The hostname to restrict searches to. Specify an empty string
-   *        to match all hosts. A null value will not match any logins, and
+   *        The origin to restrict searches to. Specify an empty string
+   *        to match all origins. A null value will not match any logins, and
    *        will thus always return a count of 0.
    * @param aActionURL
-   *        The URL to which a form login will be submitted. To match any
+   *        The origin to which a form login will be submitted. To match any
    *        form login, specify an empty string. To not match any form
    *        login, specify null.
    * @param aHttpRealm

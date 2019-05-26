@@ -1,11 +1,11 @@
-/*
+/**
  * Tests notifications dispatched when modifying stored logins.
  */
 
-var expectedNotification;
-var expectedData;
+let expectedNotification;
+let expectedData;
 
-var TestObserver = {
+let TestObserver = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
@@ -21,8 +21,8 @@ var TestObserver = {
       case "modifyLogin":
         Assert.ok(subject instanceof Ci.nsIArray);
         Assert.equal(subject.length, 2);
-        var oldLogin = subject.queryElementAt(0, Ci.nsILoginInfo);
-        var newLogin = subject.queryElementAt(1, Ci.nsILoginInfo);
+        let oldLogin = subject.queryElementAt(0, Ci.nsILoginInfo);
+        let newLogin = subject.queryElementAt(1, Ci.nsILoginInfo);
         Assert.ok(expectedData[0].equals(oldLogin)); // nsILoginInfo.equals()
         Assert.ok(expectedData[1].equals(newLogin));
         break;
@@ -49,14 +49,14 @@ var TestObserver = {
 };
 
 add_task(function test_notifications() {
-  try {
-    var testnum = 0;
-    var testdesc = "Setup of nsLoginInfo test-users";
+  let testnum = 0;
+  let testdesc = "Setup of nsLoginInfo test-users";
 
-    var testuser1 = new LoginInfo("http://testhost1", "", null,
+  try {
+    let testuser1 = new LoginInfo("http://testhost1", "", null,
                                   "dummydude", "itsasecret", "put_user_here", "put_pw_here");
 
-    var testuser2 = new LoginInfo("http://testhost2", "", null,
+    let testuser2 = new LoginInfo("http://testhost2", "", null,
                                   "dummydude2", "itsasecret2", "put_user2_here", "put_pw2_here");
 
     Services.obs.addObserver(TestObserver, "passwordmgr-storage-changed");
