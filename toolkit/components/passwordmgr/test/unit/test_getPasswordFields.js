@@ -1,6 +1,7 @@
-/*
+/**
  * Test for LoginManagerContent._getPasswordFields using LoginFormFactory.
  */
+
 /* globals todo_check_eq */
 "use strict";
 

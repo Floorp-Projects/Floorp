@@ -1,4 +1,4 @@
-/*
+/**
  * Test Services.logins.searchLogins with the `schemeUpgrades` property.
  */
 

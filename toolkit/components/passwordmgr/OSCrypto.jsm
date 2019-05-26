@@ -11,9 +11,9 @@
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["OSCrypto"];
+const EXPORTED_SYMBOLS = ["OSCrypto"];
 
-var OSCrypto = {};
+this.OSCrypto = {};
 
 if (AppConstants.platform == "win") {
   Services.scriptloader.loadSubScript("resource://gre/modules/OSCrypto_win.js", this);
