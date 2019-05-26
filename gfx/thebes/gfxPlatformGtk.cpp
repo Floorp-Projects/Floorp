@@ -121,6 +121,17 @@ void gfxPlatformGtk::FlushContentDrawing() {
   }
 }
 
+void gfxPlatformGtk::InitPlatformGPUProcessPrefs() {
+#ifdef MOZ_WAYLAND
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
+    gpuProc.ForceDisable(FeatureStatus::Blocked,
+                         "Wayland does not work in the GPU process",
+                         NS_LITERAL_CSTRING("FEATURE_FAILURE_WAYLAND"));
+  }
+#endif
+}
+
 already_AddRefed<gfxASurface> gfxPlatformGtk::CreateOffscreenSurface(
     const IntSize& aSize, gfxImageFormat aFormat) {
   if (!Factory::AllowedSurfaceSize(aSize)) {
