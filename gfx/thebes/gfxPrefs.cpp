@@ -67,13 +67,6 @@ void gfxPrefs::AssertMainThread() {
 }
 
 void gfxPrefs::Pref::OnChange() {
-  if (auto gpm = gfx::GPUProcessManager::Get()) {
-    if (gfx::GPUChild* gpu = gpm->GetGPUChild()) {
-      GfxPrefValue value;
-      GetLiveValue(&value);
-      Unused << gpu->SendUpdatePref(gfx::GfxPrefSetting(mIndex, value));
-    }
-  }
   FireChangeCallback();
 }
 
