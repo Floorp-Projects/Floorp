@@ -1138,7 +1138,7 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   // all bad, should get around to bug 1465474 eventually :(
   const bool isNonText = !IsTextFrame();
   if (isNonText) {
-    mComputedStyle->StartImageLoads(*doc);
+    mComputedStyle->StartImageLoads(*doc, aOldComputedStyle);
   }
 
   const nsStyleImageLayers* oldLayers =
