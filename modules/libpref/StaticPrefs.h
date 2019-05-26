@@ -76,17 +76,13 @@ class StaticPrefs {
   // definition. A StaticPref can be set by using the corresponding Set method.
   // For example, if the accessor is Foo() then calling SetFoo(...) will update
   // the preference and also change the return value of subsequent Foo() calls.
-  // Changing StaticPrefs values in one process will not affect the result in
-  // other processes.
-  // Important Note: The use of the Setter is strongly discouraged.
+  // Changing StaticPrefs is only allowed on the parent process' main thread.
   //
   //   private:
   //     static int32_t sVarCache_my_varcache;
   //   public:
   //     static int32_t my_varcache() { return sVarCache_my_varcache; }
-  //     static void Setmy_varcache(int32_t aValue) {
-  //	     sVarCache_my_varcache = aValue;
-  //     }
+  //     static void Setmy_varcache(int32_t aValue);
   //     static const char* Getmy_varcachePrefName() { return "my.varcache"; }
   //     static int32_t Getmy_varcachePrefDefault() { return 99; }
   //
@@ -112,12 +108,7 @@ class StaticPrefs {
                           "' being accessed on background thread by getter"); \
     return sVarCache_##id;                                                    \
   }                                                                           \
-  static void Set##id(StripAtomic<cpp_type> aValue) {                         \
-    MOZ_DIAGNOSTIC_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),     \
-                          "Non-atomic static pref '" str                      \
-                          "' being accessed on background thread by setter"); \
-    sVarCache_##id = aValue;                                                  \
-  }                                                                           \
+  static void Set##id(StripAtomic<cpp_type> aValue);                          \
   static const char* Get##id##PrefName() { return str; }                      \
   static StripAtomic<cpp_type> Get##id##PrefDefault() { return default_value; }
 
