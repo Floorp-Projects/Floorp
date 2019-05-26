@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -21,7 +19,7 @@ const gReferenceTimeMs = new Date("2000-01-01T00:00:00").getTime();
 // Returns a milliseconds value to use with nsILoginMetaInfo properties, falling
 // approximately in the middle of the specified number of days before the
 // reference time, where zero days indicates a time within the past 24 hours.
-var daysBeforeMs = days => gReferenceTimeMs - (days + 0.5) * MS_PER_DAY;
+const daysBeforeMs = days => gReferenceTimeMs - (days + 0.5) * MS_PER_DAY;
 
 /**
  * Contains metadata that will be attached to test logins in order to verify

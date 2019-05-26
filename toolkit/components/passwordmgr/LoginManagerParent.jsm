@@ -28,9 +28,9 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 XPCOMUtils.defineLazyPreferenceGetter(this, "INCLUDE_OTHER_SUBDOMAINS_IN_LOOKUP",
                                       "signon.includeOtherSubdomainsInLookup", false);
 
-var EXPORTED_SYMBOLS = [ "LoginManagerParent" ];
+const EXPORTED_SYMBOLS = [ "LoginManagerParent" ];
 
-var LoginManagerParent = {
+this.LoginManagerParent = {
   /**
    * A map of a principal's origin (including suffixes) to a generated password string so that we
    * can offer the same password later (e.g. in a confirmation field).
@@ -263,7 +263,7 @@ var LoginManagerParent = {
     log("sendLoginDataToChild:", logins.length, "deduped logins");
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
-    var jsLogins = LoginHelper.loginsToVanillaObjects(logins);
+    let jsLogins = LoginHelper.loginsToVanillaObjects(logins);
     target.sendAsyncMessage("PasswordManager:loginsFound", {
       requestId,
       logins: jsLogins,
@@ -341,7 +341,7 @@ var LoginManagerParent = {
 
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
-    var jsLogins = LoginHelper.loginsToVanillaObjects(matchingLogins);
+    let jsLogins = LoginHelper.loginsToVanillaObjects(matchingLogins);
     target.messageManager.sendAsyncMessage("PasswordManager:loginsAutoCompleted", {
       requestId,
       generatedPassword,
@@ -382,7 +382,7 @@ var LoginManagerParent = {
                 oldPasswordField, openerTopWindowID,
                 dismissedPrompt, target}) {
     function getPrompter() {
-      var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
+      let prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
                         createInstance(Ci.nsILoginManagerPrompter);
       prompterSvc.init(target.ownerGlobal);
       prompterSvc.browser = target;
@@ -419,7 +419,7 @@ var LoginManagerParent = {
       return;
     }
 
-    var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+    let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
                     createInstance(Ci.nsILoginInfo);
     formLogin.init(hostname, formSubmitURL, null,
                    (usernameField ? usernameField.value : ""),
@@ -449,10 +449,10 @@ var LoginManagerParent = {
     // password, allow the user to select from a list of applicable
     // logins to update the password for.
     if (!usernameField && oldPasswordField && logins.length > 0) {
-      var prompter = getPrompter();
+      let prompter = getPrompter();
 
       if (logins.length == 1) {
-        var oldLogin = logins[0];
+        let oldLogin = logins[0];
 
         if (oldLogin.password == formLogin.password) {
           recordLoginUse(oldLogin);
@@ -477,7 +477,7 @@ var LoginManagerParent = {
     }
 
 
-    var existingLogin = null;
+    let existingLogin = null;
     // Look for an existing login that matches the form login.
     for (let login of logins) {
       let same;
@@ -487,7 +487,7 @@ var LoginManagerParent = {
       // same password. Otherwise, compare the logins and match even
       // if the passwords differ.
       if (!login.username && formLogin.username) {
-        var restoreMe = formLogin.username;
+        let restoreMe = formLogin.username;
         formLogin.username = "";
         same = LoginHelper.doLoginsMatch(formLogin, login, {
           ignorePassword: false,
@@ -520,11 +520,11 @@ var LoginManagerParent = {
       // Change password if needed.
       if (existingLogin.password != formLogin.password) {
         log("...passwords differ, prompting to change.");
-        prompter = getPrompter();
+        let prompter = getPrompter();
         prompter.promptToChangePassword(existingLogin, formLogin, dismissedPrompt);
       } else if (!existingLogin.username && formLogin.username) {
         log("...empty username update, prompting to change.");
-        prompter = getPrompter();
+        let prompter = getPrompter();
         prompter.promptToChangePassword(existingLogin, formLogin, dismissedPrompt);
       } else {
         recordLoginUse(existingLogin);
@@ -534,7 +534,7 @@ var LoginManagerParent = {
     }
 
     // Prompt user to save login (via dialog or notification bar)
-    prompter = getPrompter();
+    let prompter = getPrompter();
     prompter.promptToSavePassword(formLogin, dismissedPrompt);
   },
 

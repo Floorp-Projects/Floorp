@@ -11,7 +11,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["LoginManagerContent"];
+const EXPORTED_SYMBOLS = ["LoginManagerContent"];
 
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
@@ -48,9 +48,9 @@ Services.cpmm.addMessageListener("clearRecipeCache", () => {
   LoginRecipesContent._clearRecipeCache();
 });
 
-var gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
+let gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
 
-var observer = {
+const observer = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsIWebProgressListener,
                                           Ci.nsISupportsWeakReference]),
@@ -146,7 +146,7 @@ var observer = {
 
 
 // This object maps to the "child" process (even in the single-process case).
-var LoginManagerContent = {
+this.LoginManagerContent = {
   __formFillService: null, // FormFillController, for username autocompleting
   get _formFillService() {
     if (!this.__formFillService) {
@@ -784,7 +784,7 @@ var LoginManagerContent = {
 
     // Make sure the username field fillForm will use is the
     // same field as the autocomplete was activated on.
-    var [usernameField, passwordField, ignored] =
+    let [usernameField, passwordField, ignored] =
         this._getFormFields(acForm, false, recipes);
     if (usernameField == acInputField && passwordField) {
       this._getLoginDataFromParent(acForm, { showMasterPassword: false })
@@ -883,11 +883,11 @@ var LoginManagerContent = {
    * LoginForm has a password field.
    */
   _getFormFields(form, isSubmission, recipes) {
-    var usernameField = null;
-    var pwFields = null;
-    var fieldOverrideRecipe = LoginRecipesContent.getFieldOverrides(recipes, form);
+    let usernameField = null;
+    let pwFields = null;
+    let fieldOverrideRecipe = LoginRecipesContent.getFieldOverrides(recipes, form);
     if (fieldOverrideRecipe) {
-      var pwOverrideField = LoginRecipesContent.queryLoginField(
+      let pwOverrideField = LoginRecipesContent.queryLoginField(
         form,
         fieldOverrideRecipe.passwordSelector
       );
@@ -900,7 +900,7 @@ var LoginManagerContent = {
         }];
       }
 
-      var usernameOverrideField = LoginRecipesContent.queryLoginField(
+      let usernameOverrideField = LoginRecipesContent.queryLoginField(
         form,
         fieldOverrideRecipe.usernameSelector
       );
@@ -929,8 +929,8 @@ var LoginManagerContent = {
       // username. We might not find a username field if the user is
       // already logged in to the site.
 
-      for (var i = pwFields[0].index - 1; i >= 0; i--) {
-        var element = form.elements[i];
+      for (let i = pwFields[0].index - 1; i >= 0; i--) {
+        let element = form.elements[i];
         if (!LoginHelper.isUsernameFieldType(element)) {
           continue;
         }
@@ -956,17 +956,17 @@ var LoginManagerContent = {
     // password field values for us to use for identifying fields. So,
     // just assume the first password field is the one to be filled in.
     if (!isSubmission || pwFields.length == 1) {
-      var passwordField = pwFields[0].element;
+      let passwordField = pwFields[0].element;
       log("Password field", passwordField, "has name: ", passwordField.name);
       return [usernameField, passwordField, null];
     }
 
 
     // Try to figure out WTF is in the form based on the password values.
-    var oldPasswordField, newPasswordField;
-    var pw1 = pwFields[0].element.value;
-    var pw2 = pwFields[1].element.value;
-    var pw3 = (pwFields[2] ? pwFields[2].element.value : null);
+    let oldPasswordField, newPasswordField;
+    let pw1 = pwFields[0].element.value;
+    let pw2 = pwFields[1].element.value;
+    let pw3 = (pwFields[2] ? pwFields[2].element.value : null);
 
     if (pwFields.length == 3) {
       // Look for two identical passwords, that's the new password
@@ -1079,8 +1079,8 @@ var LoginManagerContent = {
    */
   _onFormSubmit(form) {
     log("_onFormSubmit", form);
-    var doc = form.ownerDocument;
-    var win = doc.defaultView;
+    let doc = form.ownerDocument;
+    let win = doc.defaultView;
 
     if (PrivateBrowsingUtils.isContentWindowPrivate(win) &&
         !LoginHelper.privateBrowsingCaptureEnabled) {
@@ -1095,7 +1095,7 @@ var LoginManagerContent = {
       return;
     }
 
-    var hostname = LoginHelper.getLoginOrigin(doc.documentURI);
+    let hostname = LoginHelper.getLoginOrigin(doc.documentURI);
     if (!hostname) {
       log("(form submission ignored -- invalid hostname)");
       return;
@@ -1107,7 +1107,7 @@ var LoginManagerContent = {
     let recipes = LoginRecipesContent.getRecipes(hostname, win);
 
     // Get the appropriate fields from the form.
-    var [usernameField, newPasswordField, oldPasswordField] =
+    let [usernameField, newPasswordField, oldPasswordField] =
           this._getFormFields(form, true, recipes);
 
     // Need at least 1 valid password field to do anything.
@@ -1255,6 +1255,7 @@ var LoginManagerContent = {
     }
 
     log("_fillForm", form.elements);
+    let usernameField;
     // Will be set to one of AUTOFILL_RESULT in the `try` block.
     let autofillResult = -1;
     const AUTOFILL_RESULT = {
@@ -1288,8 +1289,8 @@ var LoginManagerContent = {
       // We do this before checking to see if logins are stored,
       // so that the user isn't prompted for a master password
       // without need.
-      var [usernameField, passwordField, ignored] =
-            this._getFormFields(form, false, recipes);
+      let passwordField;
+      [usernameField, passwordField] = this._getFormFields(form, false, recipes);
 
       // If we have a password inputElement parameter and it's not
       // the same as the one heuristically found, use the parameter
@@ -1387,8 +1388,8 @@ var LoginManagerContent = {
       // fit into the fields (as specified by the maxlength attribute).
       // The user couldn't enter these values anyway, and it helps
       // with sites that have an extra PIN to be entered (bug 391514)
-      var maxUsernameLen = Number.MAX_VALUE;
-      var maxPasswordLen = Number.MAX_VALUE;
+      let maxUsernameLen = Number.MAX_VALUE;
+      let maxPasswordLen = Number.MAX_VALUE;
 
       // If attribute wasn't set, default is -1.
       if (usernameField && usernameField.maxLength >= 0) {
@@ -1398,8 +1399,8 @@ var LoginManagerContent = {
         maxPasswordLen = passwordField.maxLength;
       }
 
-      var logins = foundLogins.filter(function(l) {
-        var fit = (l.username.length <= maxUsernameLen &&
+      let logins = foundLogins.filter(function(l) {
+        let fit = (l.username.length <= maxUsernameLen &&
                    l.password.length <= maxPasswordLen);
         if (!fit) {
           log("Ignored", l.username, "login: won't fit");
@@ -1432,13 +1433,13 @@ var LoginManagerContent = {
       }
 
       // Select a login to use for filling in the form.
-      var selectedLogin;
+      let selectedLogin;
       if (!clobberUsername && usernameField && (usernameField.value ||
                                                 usernameField.disabled ||
                                                 usernameField.readOnly)) {
         // If username was specified in the field, it's disabled or it's readOnly, only fill in the
         // password if we find a matching login.
-        var username = usernameField.value.toLowerCase();
+        let username = usernameField.value.toLowerCase();
 
         let matchingLogins = logins.filter(l =>
           l.username.toLowerCase() == username);
