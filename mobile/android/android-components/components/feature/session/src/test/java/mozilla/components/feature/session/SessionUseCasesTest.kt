@@ -21,6 +21,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class SessionUseCasesTest {
+
     private val sessionManager = mock(SessionManager::class.java)
     private val selectedEngineSession = mock(EngineSession::class.java)
     private val selectedSession = mock(Session::class.java)
@@ -127,11 +128,11 @@ class SessionUseCasesTest {
         `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         useCases.requestDesktopSite.invoke(true, session)
-        verify(engineSession).toggleDesktopMode(true, true)
+        verify(engineSession).toggleDesktopMode(true, reload = true)
 
         `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.requestDesktopSite.invoke(true)
-        verify(selectedEngineSession).toggleDesktopMode(true, true)
+        verify(selectedEngineSession).toggleDesktopMode(true, reload = true)
     }
 
     @Test

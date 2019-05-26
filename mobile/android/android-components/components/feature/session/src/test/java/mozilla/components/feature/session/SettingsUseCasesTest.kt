@@ -13,6 +13,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 
 class SettingsUseCasesTest {
+
     private val settings = mock(Settings::class.java)
     private val sessionManager = mock(SessionManager::class.java)
     private val sessionA = mock(Session::class.java)

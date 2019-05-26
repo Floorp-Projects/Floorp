@@ -13,8 +13,8 @@ import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,6 +24,7 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class HistoryDelegateTest {
+
     @Test
     fun `history delegate passes through onVisited calls`() = runBlocking {
         val storage: HistoryStorage = mock()

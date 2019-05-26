@@ -15,6 +15,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 class EngineViewPresenterTest {
+
     private val sessionManager = mock(SessionManager::class.java)
     private val engineView = mock(EngineView::class.java)
     private val session = mock(Session::class.java)

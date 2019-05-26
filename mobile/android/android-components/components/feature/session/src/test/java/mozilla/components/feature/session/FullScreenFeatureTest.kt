@@ -20,6 +20,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 class FullScreenFeatureTest {
+
     private val sessionManager: SessionManager = mock()
     private val selectedSession: Session = mock()
     private val useCases = spy(SessionUseCases(sessionManager))

@@ -23,9 +23,11 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
+import org.mockito.verification.VerificationMode
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -33,6 +35,7 @@ private interface PipChangedCallback : (Boolean) -> Unit
 
 @RunWith(RobolectricTestRunner::class)
 class PictureInPictureFeatureTest {
+
     private val sessionManager: SessionManager = mock()
     private val selectedSession: Session = mock()
     private val activity: Activity = Mockito.mock(Activity::class.java, Mockito.RETURNS_DEEP_STUBS)
@@ -140,7 +143,7 @@ class PictureInPictureFeatureTest {
 
         assertFalse(pictureInPictureFeature.enterPipModeCompat())
         verify(activity, never()).enterPictureInPictureMode(any())
-        verify(activity, never()).enterPictureInPictureMode()
+        verifyDeprecatedPictureInPictureMode(activity, never())
     }
 
     @Test
@@ -160,7 +163,7 @@ class PictureInPictureFeatureTest {
         val pictureInPictureFeature = PictureInPictureFeature(sessionManager, activity)
 
         assertTrue(pictureInPictureFeature.enterPipModeCompat())
-        verify(activity).enterPictureInPictureMode()
+        verifyDeprecatedPictureInPictureMode(activity)
     }
 
     @Test
@@ -176,6 +179,11 @@ class PictureInPictureFeatureTest {
 
         verifyNoMoreInteractions(sessionManager)
         verify(activity, never()).enterPictureInPictureMode(any())
-        verify(activity, never()).enterPictureInPictureMode()
+        verifyDeprecatedPictureInPictureMode(activity, never())
     }
+}
+
+@Suppress("DEPRECATION")
+private fun verifyDeprecatedPictureInPictureMode(activity: Activity, mode: VerificationMode = times(1)) {
+    verify(activity, mode).enterPictureInPictureMode()
 }

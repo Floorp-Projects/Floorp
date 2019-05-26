@@ -23,7 +23,6 @@ object KotlinCompiler {
         "feature-downloads",
         "feature-prompts",
         "feature-search",
-        "feature-session",
         "feature-sitepermissions",
         "feature-tabs",
         "service-glean",

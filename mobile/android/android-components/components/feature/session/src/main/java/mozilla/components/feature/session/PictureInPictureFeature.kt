@@ -6,11 +6,11 @@
 
 package mozilla.components.feature.session
 
-import android.annotation.TargetApi
 import android.app.Activity
 import android.app.PictureInPictureParams
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresApi
 import mozilla.components.browser.session.SessionManager
 
 /**
@@ -38,16 +38,24 @@ class PictureInPictureFeature(
         return fullScreenMode && enterPipModeCompat()
     }
 
-    @TargetApi(Build.VERSION_CODES.O)
     fun enterPipModeCompat() = when {
         !hasSystemFeature -> false
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ->
-            activity.enterPictureInPictureMode(PictureInPictureParams.Builder().build())
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
-            activity.enterPictureInPictureMode()
-            true
-        }
+            enterPipModeForO()
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ->
+            enterPipModeForN()
         else -> false
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun enterPipModeForO() =
+        activity.enterPictureInPictureMode(PictureInPictureParams.Builder().build())
+
+    @Suppress("DEPRECATION")
+    @RequiresApi(Build.VERSION_CODES.N)
+    private fun enterPipModeForN() = run {
+        activity.enterPictureInPictureMode()
+        true
     }
 
     fun onPictureInPictureModeChanged(enabled: Boolean) = pipChanged?.invoke(enabled)

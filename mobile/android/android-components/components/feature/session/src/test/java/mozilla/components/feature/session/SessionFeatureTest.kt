@@ -17,6 +17,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class SessionFeatureTest {
+
     private val sessionManager = mock(SessionManager::class.java)
     private val engineView = mock(EngineView::class.java)
     private val sessionUseCases = SessionUseCases(sessionManager)
