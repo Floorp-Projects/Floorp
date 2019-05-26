@@ -289,8 +289,6 @@ class gfxPrefs final {
   // will keep these in an alphabetical order to make it easier to see if a
   // method accessing a pref already exists. Just add yours in the list.
 
-  // Note that        "gfx.logging.level" is defined in Logging.h.
-  DECL_GFX_PREF(Live, "gfx.logging.level",                     GfxLoggingLevel, int32_t, mozilla::gfx::LOG_DEFAULT);
   DECL_GFX_PREF(Once, "layers.windowrecording.path",           LayersWindowRecordingPath, std::string, std::string());
 
   DECL_GFX_PREF(Live, "layout.frame_rate",                     LayoutFrameRate, int32_t, -1);
