@@ -274,9 +274,11 @@ void GfxInfo::GetData() {
     }
   } else if (glVendor.EqualsLiteral("NVIDIA Corporation")) {
     CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), mVendorId);
+    mDriverVendor.AssignLiteral("nvidia/unknown");
     // TODO: Use NV-CONTROL X11 extension to query Device ID and VRAM.
   } else if (glVendor.EqualsLiteral("ATI Technologies Inc.")) {
     CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(VendorATI), mVendorId);
+    mDriverVendor.AssignLiteral("ati/unknown");
     // TODO: Look into ways to find the device ID on FGLRX.
   } else {
     NS_WARNING("Failed to detect GL vendor!");
