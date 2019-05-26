@@ -138,7 +138,7 @@ void AnimationState::SetAnimationFrameTime(const TimeStamp& aTime) {
 }
 
 bool AnimationState::MaybeAdvanceAnimationFrameTime(const TimeStamp& aTime) {
-  if (!gfxPrefs::ImageAnimatedResumeFromLastDisplayed() ||
+  if (!StaticPrefs::ImageAnimatedResumeFromLastDisplayed() ||
       mCurrentAnimationFrameTime >= aTime) {
     return false;
   }

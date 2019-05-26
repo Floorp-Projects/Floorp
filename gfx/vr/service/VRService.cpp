@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRService.h"
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "../gfxVRMutex.h"
 #include "base/thread.h"  // for Thread
 #include <cstring>        // for memcmp
@@ -292,7 +292,7 @@ void VRService::ServiceInitialize() {
     memset(&mSystemState, 0, sizeof(mSystemState));
     mSystemState.enumerationCompleted = true;
     mSystemState.displayState.minRestartInterval =
-        gfxPrefs::VRExternalNotDetectedTimeout();
+        StaticPrefs::VRExternalNotDetectedTimeout();
     mSystemState.displayState.shutdown = true;
     PushState(mSystemState);
   }
@@ -309,7 +309,7 @@ void VRService::ServiceShutdown() {
   mSystemState.displayState.shutdown = true;
   if (mSession && mSession->ShouldQuit()) {
     mSystemState.displayState.minRestartInterval =
-        gfxPrefs::VRExternalQuitTimeout();
+        StaticPrefs::VRExternalQuitTimeout();
   }
   PushState(mSystemState);
   mSession = nullptr;

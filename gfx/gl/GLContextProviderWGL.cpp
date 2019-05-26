@@ -215,7 +215,8 @@ bool WGLLibrary::EnsureInitialized() {
   // --
 
   bool hasDXInterop2 = HasExtension(extString, "WGL_NV_DX_interop2");
-  if (gfxVars::DXInterop2Blocked() && !gfxPrefs::IgnoreDXInterop2Blacklist()) {
+  if (gfxVars::DXInterop2Blocked() &&
+      !StaticPrefs::IgnoreDXInterop2Blacklist()) {
     hasDXInterop2 = false;
   }
 

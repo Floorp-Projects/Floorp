@@ -23,6 +23,7 @@
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/MatrixMessage.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
 #include "apz/src/APZCTreeManager.h"
@@ -32,7 +33,6 @@
 #include "Layers.h"
 #include "TestLayers.h"
 #include "UnitTransforms.h"
-#include "gfxPrefs.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -91,7 +91,7 @@ class ScopedGfxSetting {
 
 #define SCOPED_GFX_PREF(prefBase, prefType, prefValue)  \
   ScopedGfxSetting<prefType, prefType> pref_##prefBase( \
-      &(gfxPrefs::prefBase), &(gfxPrefs::Set##prefBase), prefValue)
+      &(StaticPrefs::prefBase), &(StaticPrefs::Set##prefBase), prefValue)
 
 #define SCOPED_GFX_VAR(varBase, varType, varValue)         \
   ScopedGfxSetting<const varType&, varType> var_##varBase( \
@@ -520,7 +520,7 @@ void APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
-  if (gfxPrefs::TouchActionEnabled() &&
+  if (StaticPrefs::TouchActionEnabled() &&
       status != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
   }
@@ -552,8 +552,8 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
   // We can't use a scoped pref because this value might be read at some later
   // time when the events are actually processed, rather than when we deliver
   // them.
-  gfxPrefs::SetAPZTouchStartTolerance(1.0f / 1000.0f);
-  gfxPrefs::SetAPZTouchMoveTolerance(0.0f);
+  StaticPrefs::SetAPZTouchStartTolerance(1.0f / 1000.0f);
+  StaticPrefs::SetAPZTouchMoveTolerance(0.0f);
   int overcomeTouchToleranceX = 0;
   int overcomeTouchToleranceY = 0;
   if (!(aOptions & PanOptions::ExactCoordinates)) {
@@ -596,7 +596,7 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
       EXPECT_EQ(1UL, aAllowedTouchBehaviors->Length());
       aTarget->SetAllowedTouchBehavior(*aOutInputBlockId,
                                        *aAllowedTouchBehaviors);
-    } else if (gfxPrefs::TouchActionEnabled()) {
+    } else if (StaticPrefs::TouchActionEnabled()) {
       SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
     }
   }
@@ -681,7 +681,7 @@ void APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
-  if (gfxPrefs::TouchActionEnabled() &&
+  if (StaticPrefs::TouchActionEnabled() &&
       status != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, blockId);
   }
@@ -700,7 +700,7 @@ void APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
   }
   mcc->AdvanceByMillis(10);
 
-  if (gfxPrefs::TouchActionEnabled() &&
+  if (StaticPrefs::TouchActionEnabled() &&
       status != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, blockId);
   }
@@ -773,7 +773,7 @@ void APZCTesterBase::PinchWithTouchInput(
     EXPECT_EQ(2UL, aAllowedTouchBehaviors->Length());
     aTarget->SetAllowedTouchBehavior(*aOutInputBlockId,
                                      *aAllowedTouchBehaviors);
-  } else if (gfxPrefs::TouchActionEnabled()) {
+  } else if (StaticPrefs::TouchActionEnabled()) {
     SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId, 2);
   }
 

@@ -18,6 +18,7 @@
 #include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mfapi.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
@@ -416,7 +417,7 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   }
 
   if ((adapter.VendorId == 0x1022 || adapter.VendorId == 0x1002) &&
-      !gfxPrefs::PDMWMFSkipBlacklist()) {
+      !StaticPrefs::PDMWMFSkipBlacklist()) {
     for (const auto& model : sAMDPreUVD4) {
       if (adapter.DeviceId == model) {
         mIsAMDPreUVD4 = true;
@@ -506,7 +507,7 @@ DXVA2Manager* DXVA2Manager::CreateD3D9DXVA(
 
   // DXVA processing takes up a lot of GPU resources, so limit the number of
   // videos we use DXVA with at any one time.
-  uint32_t dxvaLimit = gfxPrefs::PDMWMFMaxDXVAVideos();
+  uint32_t dxvaLimit = StaticPrefs::PDMWMFMaxDXVAVideos();
 
   if (sDXVAVideosCount == dxvaLimit) {
     aFailureReason.AssignLiteral("Too many DXVA videos playing");
@@ -848,7 +849,7 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
   }
 
   if ((adapterDesc.VendorId == 0x1022 || adapterDesc.VendorId == 0x1002) &&
-      !gfxPrefs::PDMWMFSkipBlacklist()) {
+      !StaticPrefs::PDMWMFSkipBlacklist()) {
     for (const auto& model : sAMDPreUVD4) {
       if (adapterDesc.DeviceId == model) {
         mIsAMDPreUVD4 = true;
@@ -1218,7 +1219,7 @@ DXVA2Manager* DXVA2Manager::CreateD3D11DXVA(
     ID3D11Device* aDevice) {
   // DXVA processing takes up a lot of GPU resources, so limit the number of
   // videos we use DXVA with at any one time.
-  uint32_t dxvaLimit = gfxPrefs::PDMWMFMaxDXVAVideos();
+  uint32_t dxvaLimit = StaticPrefs::PDMWMFMaxDXVAVideos();
 
   if (sDXVAVideosCount == dxvaLimit) {
     aFailureReason.AssignLiteral("Too many DXVA videos playing");
@@ -1250,7 +1251,7 @@ bool DXVA2Manager::IsUnsupportedResolution(const uint32_t& aWidth,
   // AMD cards with UVD3 or earlier perform poorly trying to decode 1080p60 in
   // hardware, so use software instead. Pick 45 as an arbitrary upper bound for
   // the framerate we can handle.
-  return !gfxPrefs::PDMWMFAMDHighResEnabled() && mIsAMDPreUVD4 &&
+  return !StaticPrefs::PDMWMFAMDHighResEnabled() && mIsAMDPreUVD4 &&
          (aWidth >= 1920 || aHeight >= 1088) && aFramerate > 45;
 }
 
