@@ -5267,21 +5267,6 @@ nsresult Preferences::AddAtomicFloatVarCache(std::atomic<float>* aCache,
   return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
 }
 
-// For a VarCache pref like this:
-//
-//   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
-//
-// we generate a static variable definition:
-//
-//   int32_t StaticPrefs::sVarCache_my_varcache(99);
-//
-#define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, id, cpp_type, value) \
-  cpp_type StaticPrefs::sVarCache_##id(value);
-#include "mozilla/StaticPrefList.h"
-#undef PREF
-#undef VARCACHE_PREF
-
 // The SetPref_*() functions below end in a `_<type>` suffix because they are
 // used by the PREF macro definition in InitAll() below.
 
@@ -5358,6 +5343,40 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
     AddVarCache(aCache, aName, aDefaultValue, true);
   }
 }
+
+// For a VarCache pref like this:
+//
+//   VARCACHE_PREF(Once, "my.varcache", my_varcache, int32_t, 99)
+//
+// we generate a static variable definition and a setter like:
+//
+//   int32_t StaticPrefs::sVarCache_my_varcache(99);
+//   void StaticPrefs::Setmy_varcache(int32_t aValue) {
+//     SetPref(Getmy_varcachePrefName(), aValue);
+//     if (UpdatePolicy::policy == UpdatePolicy::Once) {
+//       sVarCache_my_varcache =
+//           GetPref(Getmy_varcachePrefName(), sVarCache_my_varcache);
+//     }
+//     return;
+//   }
+
+#define PREF(name, cpp_type, value)
+#define VARCACHE_PREF(policy, name, id, cpp_type, value)                       \
+  cpp_type StaticPrefs::sVarCache_##id(value);                                 \
+  void StaticPrefs::Set##id(StripAtomic<cpp_type> aValue) {                    \
+    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread() && XRE_IsParentProcess(),          \
+                          "pref '" name "' being set outside parent process"); \
+    SetPref(Get##id##PrefName(), aValue);                                      \
+    if (UpdatePolicy::policy == UpdatePolicy::Once) {                          \
+      sVarCache_##id =                                                         \
+          GetPref(Get##id##PrefName(), StripAtomic<cpp_type>(sVarCache_##id)); \
+    }                                                                          \
+    /* The StaticPrefs storage will be updated by the registered callback */   \
+    return;                                                                    \
+  }
+#include "mozilla/StaticPrefList.h"
+#undef PREF
+#undef VARCACHE_PREF
 
 /* static */
 void StaticPrefs::InitAll(bool aIsStartup) {
