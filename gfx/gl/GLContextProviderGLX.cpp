@@ -38,7 +38,6 @@
 #include "gfxUtils.h"
 #include "gfx2DGlue.h"
 #include "GLScreenBuffer.h"
-#include "gfxPrefs.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -598,7 +597,7 @@ bool GLContextGLX::MakeCurrentImpl() const {
     // Many GLX implementations default to blocking until the next
     // VBlank when calling glXSwapBuffers. We want to run unthrottled
     // in ASAP mode. See bug 1280744.
-    const bool isASAP = (gfxPrefs::LayoutFrameRate() == 0);
+    const bool isASAP = (StaticPrefs::LayoutFrameRate() == 0);
     mGLX->fSwapInterval(mDisplay, mDrawable, isASAP ? 0 : 1);
   }
   return succeeded;
