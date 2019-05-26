@@ -1,4 +1,4 @@
-/*
+/**
  * Tests methods that find specific logins in the store (findLogins,
  * searchLogins, and countLogins).
  *

@@ -8,7 +8,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "LoginAutoComplete",
   "LoginAutoCompleteResult",
 ];
