@@ -21,7 +21,6 @@
 #include "mozilla/layers/Effects.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "nsWindowsHelpers.h"
-#include "gfxPrefs.h"
 #include "gfxConfig.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxUtils.h"
@@ -29,6 +28,7 @@
 #include "mozilla/widget/WinCompositorWidget.h"
 
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "BlendShaderConstants.h"
 
@@ -109,7 +109,7 @@ CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent,
       mIsDoubleBuffered(false),
       mVerifyBuffersFailed(false),
       mUseMutexOnPresent(false) {
-  mUseMutexOnPresent = gfxPrefs::UseMutexOnPresent();
+  mUseMutexOnPresent = StaticPrefs::UseMutexOnPresent();
 }
 
 CompositorD3D11::~CompositorD3D11() {}
@@ -1049,7 +1049,7 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
       mContext->PSSetShaderResources(TexSlot::Y, 3, srViews);
     } break;
     case EffectTypes::COMPONENT_ALPHA: {
-      MOZ_ASSERT(gfxPrefs::ComponentAlphaEnabled());
+      MOZ_ASSERT(StaticPrefs::ComponentAlphaEnabled());
       MOZ_ASSERT(mAttachments->mComponentBlendState);
       EffectComponentAlpha* effectComponentAlpha =
           static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
