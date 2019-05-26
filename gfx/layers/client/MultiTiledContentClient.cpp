@@ -22,8 +22,8 @@ MultiTiledContentClient::MultiTiledContentClient(
       mLowPrecisionTiledBuffer(aPaintedLayer, *this, aManager,
                                &mSharedFrameMetricsHelper) {
   MOZ_COUNT_CTOR(MultiTiledContentClient);
-  mLowPrecisionTiledBuffer.SetResolution(gfxPrefs::LowPrecisionResolution());
-  mHasLowPrecision = gfxPrefs::UseLowPrecisionBuffer();
+  mLowPrecisionTiledBuffer.SetResolution(StaticPrefs::LowPrecisionResolution());
+  mHasLowPrecision = StaticPrefs::UseLowPrecisionBuffer();
 }
 
 void MultiTiledContentClient::ClearCachedResources() {

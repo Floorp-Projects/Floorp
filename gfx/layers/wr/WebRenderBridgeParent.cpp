@@ -2099,7 +2099,7 @@ void WebRenderBridgeParent::NotifyDidSceneBuild(
   if (lastVsyncId == VsyncId() || !mMostRecentComposite ||
       mMostRecentComposite >= lastVsync ||
       ((TimeStamp::Now() - lastVsync).ToMilliseconds() >
-       gfxPrefs::WebRenderLateSceneBuildThreshold())) {
+       StaticPrefs::WebRenderLateSceneBuildThreshold())) {
     mCompositorScheduler->ScheduleComposition();
     return;
   }

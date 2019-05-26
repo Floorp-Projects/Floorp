@@ -230,7 +230,7 @@ bool SharedFrameMetricsHelper::AboutToCheckerboard(
       CSSRect(aCompositorMetrics.GetScrollOffset(),
               aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
   showing.Inflate(
-      LayerSize(gfxPrefs::APZDangerZoneX(), gfxPrefs::APZDangerZoneY()) /
+      LayerSize(StaticPrefs::APZDangerZoneX(), StaticPrefs::APZDangerZoneY()) /
       aCompositorMetrics.LayersPixelsPerCSSPixel());
 
   // Clamp both rects to the scrollable rect, because having either of those
@@ -600,7 +600,7 @@ Maybe<AcquiredBackBuffer> TileClient::AcquireBackBuffer(
     // later (copying pixels and texture upload). But this could increase
     // our memory usage and lead to OOM more frequently from spikes in usage,
     // so we have this behavior behind a pref.
-    if (!gfxPrefs::LayersTileRetainBackBuffer()) {
+    if (!StaticPrefs::LayersTileRetainBackBuffer()) {
       DiscardBackBuffer();
     }
     Flip();

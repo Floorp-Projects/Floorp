@@ -18,7 +18,7 @@
 
 #include "yuv_convert.h"
 
-#include "gfxPrefs.h"
+#include "mozilla/StaticPrefs.h"
 #include "libyuv.h"
 #include "scale_yuv_argb.h"
 // Header for low level row functions.
@@ -77,7 +77,7 @@ void ConvertYCbCrToRGB32(const uint8* y_buf, const uint8* u_buf,
   //
   // The function is still fast on some old intel chips.
   // See Bug 1256475.
-  bool use_deprecated = gfxPrefs::YCbCrAccurateConversion() ||
+  bool use_deprecated = StaticPrefs::YCbCrAccurateConversion() ||
                         (supports_mmx() && supports_sse() && !supports_sse3() &&
                          yuv_color_space == YUVColorSpace::BT601);
   // The deprecated function only support BT601.
@@ -292,7 +292,8 @@ void ScaleYCbCrToRGB32(const uint8* y_buf,
                        YUVColorSpace yuv_color_space,
                        ScaleFilter filter) {
 
-  bool use_deprecated = gfxPrefs::YCbCrAccurateConversion() ||
+  bool use_deprecated =
+      StaticPrefs::YCbCrAccurateConversion() ||
 #if defined(XP_WIN) && defined(_M_X64)
                         // libyuv does not support SIMD scaling on win 64bit. See Bug 1295927.
                         supports_sse3() ||

@@ -72,7 +72,7 @@ TEST_F(ImageSurfaceCache, Factor2) {
 
   // We need the default threshold to be enabled (otherwise we should disable
   // this test).
-  int32_t threshold = gfxPrefs::ImageCacheFactor2ThresholdSurfaces();
+  int32_t threshold = StaticPrefs::ImageCacheFactor2ThresholdSurfaces();
   ASSERT_TRUE(threshold >= 0);
 
   // We need to know what the native sizes are, otherwise factor of 2 mode will

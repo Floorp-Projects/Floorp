@@ -86,7 +86,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
 
     layers::CompositorManagerChild* manager =
         CompositorManagerChild::GetInstance();
-    if (!manager || !gfxPrefs::ImageMemDebugReporting()) {
+    if (!manager || !StaticPrefs::ImageMemDebugReporting()) {
       layers::SharedSurfacesMemoryReport sharedSurfaces;
       FinishCollectReports(aHandleReport, aData, aAnonymize, sharedSurfaces);
       return NS_OK;
@@ -263,7 +263,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
 
       summaryTotal += counter;
 
-      if (counter.IsNotable() || gfxPrefs::ImageMemDebugReporting()) {
+      if (counter.IsNotable() || StaticPrefs::ImageMemDebugReporting()) {
         ReportImage(aHandleReport, aData, aPathPrefix, counter,
                     aSharedSurfaces);
       } else {
@@ -344,7 +344,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
       if (counter.Type() == SurfaceMemoryCounterType::NORMAL) {
         PlaybackType playback = counter.Key().Playback();
         if (playback == PlaybackType::eAnimated) {
-          if (gfxPrefs::ImageMemDebugReporting()) {
+          if (StaticPrefs::ImageMemDebugReporting()) {
             surfacePathPrefix.AppendPrintf(
                 " (animation %4u)", uint32_t(counter.Values().FrameIndex()));
           } else {
