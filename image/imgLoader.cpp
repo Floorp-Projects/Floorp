@@ -15,6 +15,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/StaticPrefs.h"
@@ -55,7 +56,6 @@
 #include "nsIMemoryReporter.h"
 #include "DecoderFactory.h"
 #include "Image.h"
-#include "gfxPrefs.h"
 #include "prtime.h"
 #include "ReferrerInfo.h"
 
@@ -1251,8 +1251,8 @@ imgCacheQueue& imgLoader::GetCacheQueue(const ImageCacheKey& aKey) {
 }
 
 void imgLoader::GlobalInit() {
-  sCacheTimeWeight = gfxPrefs::ImageCacheTimeWeight() / 1000.0;
-  int32_t cachesize = gfxPrefs::ImageCacheSize();
+  sCacheTimeWeight = StaticPrefs::ImageCacheTimeWeight() / 1000.0;
+  int32_t cachesize = StaticPrefs::ImageCacheSize();
   sCacheMaxSize = cachesize > 0 ? cachesize : 0;
 
   sMemReporter = new imgMemoryReporter();

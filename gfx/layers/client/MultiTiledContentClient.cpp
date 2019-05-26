@@ -7,6 +7,7 @@
 #include "mozilla/layers/MultiTiledContentClient.h"
 
 #include "ClientTiledPaintedLayer.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 
 namespace mozilla {
@@ -264,7 +265,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       ctx = nullptr;
 
       // Edge padding allows us to avoid resampling artifacts
-      if (gfxPrefs::TileEdgePaddingEnabled() && mResolution == 1) {
+      if (StaticPrefs::TileEdgePaddingEnabled() && mResolution == 1) {
         drawTarget->PadEdges(newValidRegion.MovedBy(-mTilingOrigin));
       }
 

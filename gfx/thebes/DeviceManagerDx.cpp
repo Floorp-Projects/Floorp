@@ -7,7 +7,6 @@
 #include "D3D11Checks.h"
 #include "gfxConfig.h"
 #include "GfxDriverInfo.h"
-#include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mozilla/D3DMessageUtils.h"
 #include "mozilla/StaticPrefs.h"
@@ -184,7 +183,7 @@ bool DeviceManagerDx::CreateCompositorDevices() {
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
   MOZ_ASSERT(d3d11.IsEnabled());
 
-  if (int32_t sleepSec = gfxPrefs::Direct3D11SleepOnCreateDevice()) {
+  if (int32_t sleepSec = StaticPrefs::Direct3D11SleepOnCreateDevice()) {
     printf_stderr("Attach to PID: %d\n", GetCurrentProcessId());
     Sleep(sleepSec * 1000);
   }
@@ -464,7 +463,7 @@ static inline int32_t GetNextDeviceCounter() {
 }
 
 void DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11) {
-  if (gfxPrefs::LayersD3D11ForceWARP()) {
+  if (StaticPrefs::LayersD3D11ForceWARP()) {
     CreateWARPCompositorDevice();
     return;
   }
@@ -534,8 +533,8 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
                                    D3D_DRIVER_TYPE aDriverType, UINT aFlags,
                                    HRESULT& aResOut,
                                    RefPtr<ID3D11Device>& aOutDevice) {
-  if (gfxPrefs::Direct3D11EnableDebugLayer() ||
-      gfxPrefs::Direct3D11BreakOnError()) {
+  if (StaticPrefs::Direct3D11EnableDebugLayer() ||
+      StaticPrefs::Direct3D11BreakOnError()) {
     aFlags |= D3D11_CREATE_DEVICE_DEBUG;
   }
 
@@ -547,7 +546,7 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
   }
   MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { return false; }
 
-  if (gfxPrefs::Direct3D11BreakOnError()) {
+  if (StaticPrefs::Direct3D11BreakOnError()) {
     do {
       if (!aOutDevice) break;
 
@@ -583,7 +582,7 @@ bool DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
 
 void DeviceManagerDx::CreateWARPCompositorDevice() {
   ScopedGfxFeatureReporter reporterWARP("D3D11-WARP",
-                                        gfxPrefs::LayersD3D11ForceWARP());
+                                        StaticPrefs::LayersD3D11ForceWARP());
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
 
   HRESULT hr;

@@ -7,7 +7,6 @@
 #include "DXVA2Manager.h"
 #include "gfxConfig.h"
 #include "GfxDriverInfo.h"
-#include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs.h"
@@ -140,7 +139,7 @@ bool D3D11Checks::DoesDeviceWork() {
   if (checked) return result;
   checked = true;
 
-  if (gfxPrefs::Direct2DForceEnabled() ||
+  if (StaticPrefs::Direct2DForceEnabled() ||
       gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING)) {
     result = true;
     return true;
@@ -201,7 +200,7 @@ static bool DoesTextureSharingWorkInternal(ID3D11Device* device,
     return false;
   }
 
-  if (gfxPrefs::Direct2DForceEnabled() ||
+  if (StaticPrefs::Direct2DForceEnabled() ||
       gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING)) {
     return true;
   }
@@ -213,7 +212,7 @@ static bool DoesTextureSharingWorkInternal(ID3D11Device* device,
       gfxInfo->GetAdapterVendorID(vendorID);
       gfxInfo->GetAdapterVendorID2(vendorID2);
       if (vendorID.EqualsLiteral("0x8086") && vendorID2.IsEmpty()) {
-        if (!gfxPrefs::LayersAMDSwitchableGfxEnabled()) {
+        if (!StaticPrefs::LayersAMDSwitchableGfxEnabled()) {
           return false;
         }
         gfxCriticalError(CriticalLog::DefaultOptions(false))

@@ -25,6 +25,7 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/mozalloc.h"  // for operator delete, etc
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsCoord.h"          // for NSAppUnitsToFloatPixels

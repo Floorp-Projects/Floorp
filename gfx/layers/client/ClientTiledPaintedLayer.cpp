@@ -10,9 +10,9 @@
 #include "UnitTransforms.h"        // for TransformTo
 #include "ClientLayerManager.h"    // for ClientLayerManager, etc
 #include "gfxPlatform.h"           // for gfxPlatform
-#include "gfxPrefs.h"              // for gfxPrefs
 #include "gfxRect.h"               // for gfxRect
 #include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc
+#include "mozilla/StaticPrefs.h"   // for StaticPrefs
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Rect.h"  // for Rect, RectTyped

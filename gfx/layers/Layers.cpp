@@ -17,11 +17,11 @@
 #include "UnitTransforms.h"  // for ViewAs
 #include "gfxEnv.h"
 #include "gfxPlatform.h"  // for gfxPlatform
-#include "gfxPrefs.h"
 #include "gfxUtils.h"  // for gfxUtils, etc
 #include "gfx2DGlue.h"
 #include "mozilla/DebugOnly.h"  // for DebugOnly
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"  // for Accumulate
 #include "mozilla/ToString.h"
 #include "mozilla/gfx/2D.h"        // for DrawTarget
@@ -139,7 +139,7 @@ already_AddRefed<ImageContainer> LayerManager::CreateImageContainer(
 }
 
 bool LayerManager::AreComponentAlphaLayersEnabled() {
-  return gfxPrefs::ComponentAlphaEnabled();
+  return StaticPrefs::ComponentAlphaEnabled();
 }
 
 /*static*/
