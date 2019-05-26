@@ -123,6 +123,7 @@ include = [
   "ScrollbarColor",
   "Color",
   "ColorOrAuto",
+  "SystemColor",
   "GradientItem",
   "VerticalAlign",
   "BasicShape",
