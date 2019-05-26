@@ -3448,6 +3448,8 @@ VARCACHE_PREF(Live,"gfx.font_rendering.coretext.enabled",    CoreTextEnabled, Re
 #endif
 VARCACHE_PREF(Live, "gfx.layerscope.enabled",                LayerScopeEnabled, RelaxedAtomicBool, false);
 VARCACHE_PREF(Live, "gfx.layerscope.port",                   LayerScopePort, RelaxedAtomicInt32, 23456);
+// Note that        "gfx.logging.level" is defined in Logging.h.
+VARCACHE_PREF(Live, "gfx.logging.level",                     GfxLoggingLevel, RelaxedAtomicInt32, mozilla::gfx::LOG_DEFAULT);
 VARCACHE_PREF(Once, "gfx.logging.crash.length",              GfxLoggingCrashLength, RelaxedAtomicUint32, 16);
 VARCACHE_PREF(Live, "gfx.logging.painted-pixel-count.enabled",GfxLoggingPaintedPixelCountEnabled, RelaxedAtomicBool, false);
 // The maximums here are quite conservative, we can tighten them if problems show up.
