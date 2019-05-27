@@ -1496,7 +1496,12 @@ void HostLayer::RecomputeShadowVisibleRegionFromChildren() {
   mShadowVisibleRegion.SetEmpty();
   ContainerLayer* container = GetLayer()->AsContainerLayer();
   MOZ_ASSERT(container);
-  if (container) {
+  // Layers that extend a 3d context have a local visible region
+  // that can only be represented correctly in 3d space. Since
+  // we can't do that, leave it empty instead to stop anyone
+  // from trying to use it.
+  NS_ASSERTION(!GetLayer()->Extend3DContext(), "Can't compute visible region for layers that extend a 3d context");
+  if (container && !GetLayer()->Extend3DContext()) {
     ComputeVisibleRegionForChildren(container, mShadowVisibleRegion);
   }
 }
