@@ -549,8 +549,7 @@ void BaselineScript::unlinkDependentWasmImports(FreeOp* fop) {
     for (DependentWasmImport& dep : *dependentWasmImports_) {
       dep.instance->deoptimizeImportExit(dep.importIndex);
     }
-    fop->delete_(dependentWasmImports_);
-    dependentWasmImports_ = nullptr;
+    dependentWasmImports_.reset();
   }
 }
 
@@ -558,7 +557,7 @@ bool BaselineScript::addDependentWasmImport(JSContext* cx,
                                             wasm::Instance& instance,
                                             uint32_t idx) {
   if (!dependentWasmImports_) {
-    dependentWasmImports_ = cx->new_<Vector<DependentWasmImport>>(cx);
+    dependentWasmImports_ = cx->make_unique<Vector<DependentWasmImport>>(cx);
     if (!dependentWasmImports_) {
       return false;
     }
