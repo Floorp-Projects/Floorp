@@ -10,6 +10,7 @@ import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -74,6 +75,7 @@ class Session(
         fun onIconChanged(session: Session, icon: Bitmap?) = Unit
         fun onReaderableStateUpdated(session: Session, readerable: Boolean) = Unit
         fun onReaderModeChanged(session: Session, enabled: Boolean) = Unit
+        fun onRecordingDevicesChanged(session: Session, devices: List<RecordingDevice>) = Unit
     }
 
     /**
@@ -385,6 +387,13 @@ class Session(
      */
     var readerMode: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onReaderModeChanged(this@Session, new) }
+    }
+
+    /**
+     * List of recording devices (e.g. camera or microphone) currently in use by web content.
+     */
+    var recordingDevices: List<RecordingDevice> by Delegates.observable(emptyList()) { _, old, new ->
+        notifyObservers(old, new) { onRecordingDevicesChanged(this@Session, new) }
     }
 
     /**

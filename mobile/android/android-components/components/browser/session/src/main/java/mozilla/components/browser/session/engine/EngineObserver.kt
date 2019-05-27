@@ -11,6 +11,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
@@ -154,5 +155,9 @@ internal class EngineObserver(
 
     override fun onCrashStateChange(crashed: Boolean) {
         session.crashed = crashed
+    }
+
+    override fun onRecordingStateChanged(devices: List<RecordingDevice>) {
+        session.recordingDevices = devices
     }
 }
