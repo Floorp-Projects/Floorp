@@ -4042,6 +4042,36 @@ class MOZ_STACK_CLASS ESMEventCB : public EventDispatchingCallback {
 };
 
 /*static*/
+bool EventStateManager::IsUserInteractionEvent(const WidgetEvent* aEvent) {
+  if (!aEvent->IsTrusted()) {
+    return false;
+  }
+
+  switch (aEvent->mMessage) {
+    // eKeyboardEventClass
+    case eKeyPress:
+    case eKeyDown:
+    case eKeyUp:
+      // Not all keyboard events are treated as user input, so that popups
+      // can't be opened, fullscreen mode can't be started, etc at
+      // unexpected time.
+      return aEvent->AsKeyboardEvent()->CanTreatAsUserInput();
+    // eMouseEventClass
+    case eMouseDown:
+    case eMouseUp:
+    // ePointerEventClass
+    case ePointerDown:
+    case ePointerUp:
+    // eTouchEventClass
+    case eTouchStart:
+    case eTouchEnd:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/*static*/
 bool EventStateManager::IsHandlingUserInput() {
   return sUserInputEventDepth > 0;
 }
