@@ -364,7 +364,6 @@ class nsCookieService final : public nsICookieService,
   void NotifyAccepted(nsIChannel* aChannel);
   void NotifyRejected(nsIURI* aHostURI, nsIChannel* aChannel,
                       uint32_t aRejectedReason, CookieOperation aOperation);
-  void NotifyThirdParty(nsIURI* aHostURI, bool aAccepted, nsIChannel* aChannel);
   void NotifyChanged(nsISupports* aSubject, const char16_t* aData,
                      bool aOldCookieIsSession = false, bool aFromHttp = false);
   void NotifyPurged(nsICookie2* aCookie);
