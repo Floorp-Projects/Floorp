@@ -100,7 +100,7 @@ where
                 Some(frame) => {
                     trace!("sending msg {:?}, fds {:?}", frame.msgs, frame.fds);
                     let mut msgs = frame.msgs.clone().into_buf();
-                    let mut fds = match frame.fds {
+                    let fds = match frame.fds {
                         Some(ref fds) => fds.clone(),
                         None => Bytes::new(),
                     }.into_buf();
