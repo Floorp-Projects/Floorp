@@ -6,6 +6,8 @@
 
 #include "jit/arm64/Lowering-arm64.h"
 
+#include "mozilla/MathAlgorithms.h"
+
 #include "jit/arm64/Assembler-arm64.h"
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
@@ -203,8 +205,28 @@ void LIRGeneratorARM64::lowerDivI(MDiv* div) {
     return;
   }
 
-  // TODO (Bug 1523568): Implement the division-avoidance paths when rhs is
-  // constant.
+  if (div->rhs()->isConstant()) {
+    LAllocation lhs = useRegister(div->lhs());
+    int32_t rhs = div->rhs()->toConstant()->toInt32();
+    int32_t shift = mozilla::FloorLog2(mozilla::Abs(rhs));
+
+    if (rhs != 0 && uint32_t(1) << shift == mozilla::Abs(rhs)) {
+      LDivPowTwoI* lir = new (alloc()) LDivPowTwoI(lhs, shift, rhs < 0);
+      if (div->fallible()) {
+        assignSnapshot(lir, Bailout_DoubleOutput);
+      }
+      define(lir, div);
+      return;
+    }
+    if (rhs != 0) {
+      LDivConstantI* lir = new (alloc()) LDivConstantI(lhs, rhs, temp());
+      if (div->fallible()) {
+        assignSnapshot(lir, Bailout_DoubleOutput);
+      }
+      define(lir, div);
+      return;
+    }
+  }
 
   LDivI* lir = new (alloc())
       LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp());
@@ -310,8 +332,26 @@ void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
 
 void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
   LAllocation lhs = useRegister(div->lhs());
-  // TODO (Bug 1523568): Implement the division-avoidance paths when rhs is
-  // constant.
+  if (div->rhs()->isConstant()) {
+    int32_t rhs = div->rhs()->toConstant()->toInt32();
+    int32_t shift = mozilla::FloorLog2(mozilla::Abs(rhs));
+
+    if (rhs != 0 && uint32_t(1) << shift == mozilla::Abs(rhs)) {
+      LDivPowTwoI* lir = new (alloc()) LDivPowTwoI(lhs, shift, false);
+      if (div->fallible()) {
+        assignSnapshot(lir, Bailout_DoubleOutput);
+      }
+      define(lir, div);
+      return;
+    }
+
+    LUDivConstantI* lir = new (alloc()) LUDivConstantI(lhs, rhs, temp());
+    if (div->fallible()) {
+      assignSnapshot(lir, Bailout_DoubleOutput);
+    }
+    define(lir, div);
+    return;
+  }
 
   // Generate UDiv
   LAllocation rhs = useRegister(div->rhs());
