@@ -1551,20 +1551,6 @@ void Gecko_SetToSVGPath(StyleShapeSource* aShape,
   aShape->SetPath(MakeUnique<StyleSVGPath>(aCommands, aFill));
 }
 
-void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len) {
-  effects->mFilters.Clear();
-  effects->mFilters.SetLength(new_len);
-}
-
-void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest) {
-  aDest->mFilters = aSrc->mFilters;
-}
-
-void Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* aEffects,
-                                     const StyleComputedUrl* aURL) {
-  aEffects->SetURL(*aURL);
-}
-
 void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* aDest,
                                     const nsStyleSVGPaint* aSrc) {
   *aDest = *aSrc;
