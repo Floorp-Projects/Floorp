@@ -44,6 +44,10 @@ let whitelist = [
   {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
    errorMessage: /Unknown property.*overflow-clip-box/i,
    isFromDevTools: false},
+  // System colors reserved to UA / chrome sheets
+  {sourceName: /(?:res|gre-resources)\/forms\.css$/i,
+   errorMessage: /Expected color but found \u2018-moz.*/i,
+   platforms: ["linux"], isFromDevTools: false},
   // The '-moz-menulist-button' value is only supported in chrome and UA sheets
   // but forms.css is loaded as a document sheet by this test.
   // Maybe bug 1261237 will fix this?
