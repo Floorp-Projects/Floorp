@@ -217,7 +217,7 @@ struct BaselineScript final {
 
   // If non-null, the list of wasm::Modules that contain an optimized call
   // directly to this script.
-  Vector<DependentWasmImport>* dependentWasmImports_ = nullptr;
+  js::UniquePtr<Vector<DependentWasmImport>> dependentWasmImports_;
 
   // Early Ion bailouts will enter at this address. This is after frame
   // construction and before environment chain is initialized.
