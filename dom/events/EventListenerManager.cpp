@@ -1141,8 +1141,11 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     aEvent->PreventDefault();
   }
 
+  Maybe<AutoHandlingUserInputStatePusher> userInputStatePusher;
   Maybe<AutoPopupStatePusher> popupStatePusher;
   if (mIsMainThreadELM) {
+    userInputStatePusher.emplace(
+        EventStateManager::IsUserInteractionEvent(aEvent), aEvent);
     popupStatePusher.emplace(
         PopupBlocker::GetEventPopupControlState(aEvent, *aDOMEvent));
   }
