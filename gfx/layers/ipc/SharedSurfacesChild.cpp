@@ -13,6 +13,7 @@
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/RenderRootStateManager.h"
+#include "mozilla/StaticPrefs.h"  // for StaticPrefs
 #include "mozilla/SystemGroup.h"  // for SystemGroup
 
 namespace mozilla {
@@ -480,18 +481,15 @@ nsresult SharedSurfacesChild::UpdateAnimation(ImageContainer* aContainer,
 
 AnimationImageKeyData::AnimationImageKeyData(RenderRootStateManager* aManager,
                                              const wr::ImageKey& aImageKey)
-    : SharedSurfacesChild::ImageKeyData(aManager, aImageKey),
-      mRecycling(false) {}
+    : SharedSurfacesChild::ImageKeyData(aManager, aImageKey) {}
 
 AnimationImageKeyData::AnimationImageKeyData(AnimationImageKeyData&& aOther)
     : SharedSurfacesChild::ImageKeyData(std::move(aOther)),
-      mPendingRelease(std::move(aOther.mPendingRelease)),
-      mRecycling(aOther.mRecycling) {}
+      mPendingRelease(std::move(aOther.mPendingRelease)) {}
 
 AnimationImageKeyData& AnimationImageKeyData::operator=(
     AnimationImageKeyData&& aOther) {
   mPendingRelease = std::move(aOther.mPendingRelease);
-  mRecycling = aOther.mRecycling;
   SharedSurfacesChild::ImageKeyData::operator=(std::move(aOther));
   return *this;
 }
@@ -517,7 +515,7 @@ void SharedSurfacesAnimation::Destroy() {
 
   for (const auto& entry : mKeys) {
     MOZ_ASSERT(!entry.mManager->IsDestroyed());
-    if (entry.mRecycling) {
+    if (StaticPrefs::ImageAnimatedDecodeOnDemandRecycle()) {
       entry.mManager->DeregisterAsyncAnimation(entry.mImageKey);
     }
     entry.mManager->AddImageKeyForDiscard(entry.mImageKey);
@@ -533,11 +531,7 @@ void SharedSurfacesAnimation::HoldSurfaceForRecycling(
     return;
   }
 
-  if (!aEntry.mRecycling) {
-    aEntry.mManager->RegisterAsyncAnimation(aEntry.mImageKey, this);
-    aEntry.mRecycling = true;
-  }
-
+  MOZ_ASSERT(StaticPrefs::ImageAnimatedDecodeOnDemandRecycle());
   aEntry.mPendingRelease.AppendElement(aParentSurface);
 }
 
@@ -626,6 +620,10 @@ nsresult SharedSurfacesAnimation::UpdateKey(
 
   if (!found) {
     aKey = aManager->WrBridge()->GetNextImageKey();
+    if (StaticPrefs::ImageAnimatedDecodeOnDemandRecycle()) {
+      aManager->RegisterAsyncAnimation(aKey, this);
+    }
+
     AnimationImageKeyData data(aManager, aKey);
     HoldSurfaceForRecycling(data, aParentSurface, aSurface);
     mKeys.AppendElement(std::move(data));
