@@ -40,6 +40,7 @@ class LayerManager;
 class BasicLayerManager;
 class PaintedLayer;
 class ImageLayer;
+struct LayerProperties;
 }  // namespace layers
 
 class FrameLayerBuilder;
@@ -89,6 +90,9 @@ class DisplayItemData final {
   void SetItem(nsPaintedDisplayItem* aItem) { mItem = aItem; }
   nsPaintedDisplayItem* GetItem() const { return mItem; }
   nsIFrame* FirstFrame() const { return mFrameList[0]; }
+  layers::BasicLayerManager* InactiveManager() const {
+    return mInactiveManager;
+  }
 
   bool HasMergedFrames() const { return mFrameList.Length() > 1; }
 
@@ -223,13 +227,22 @@ class RefCountedRegion {
   bool mIsInfinite;
 };
 
+struct InactiveLayerData {
+  RefPtr<layers::BasicLayerManager> mLayerManager;
+  FrameLayerBuilder* mLayerBuilder;
+  RefPtr<layers::Layer> mLayer;
+  UniquePtr<layers::LayerProperties> mProps;
+
+  ~InactiveLayerData();
+};
+
 struct AssignedDisplayItem {
   AssignedDisplayItem(nsPaintedDisplayItem* aItem, LayerState aLayerState,
                       DisplayItemData* aData, const nsRect& aContentRect,
                       DisplayItemEntryType aType, const bool aHasOpacity,
                       const RefPtr<TransformClipNode>& aTransform,
                       const bool aIsMerged);
-  ~AssignedDisplayItem();
+  AssignedDisplayItem(AssignedDisplayItem&& aRhs) = default;
 
   bool HasOpacity() const { return mHasOpacity; }
 
@@ -243,7 +256,7 @@ struct AssignedDisplayItem {
    * layer, then this stores the layer manager being
    * used for the inactive transaction.
    */
-  RefPtr<layers::LayerManager> mInactiveLayerManager;
+  UniquePtr<InactiveLayerData> mInactiveLayerData;
   RefPtr<TransformClipNode> mTransform;
 
   nsRect mContentRect;
@@ -543,7 +556,7 @@ class FrameLayerBuilder : public layers::LayerUserData {
    */
   void AddPaintedDisplayItem(PaintedLayerData* aLayerData,
                              AssignedDisplayItem& aAssignedDisplayItem,
-                             ContainerState& aContainerState, Layer* aLayer);
+                             Layer* aLayer);
 
   /**
    * Calls GetOldLayerForFrame on the underlying frame of the display item,
