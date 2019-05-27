@@ -81,7 +81,7 @@ function convertFlags(aJavaFlags) {
   }).reduce((acc, cf) => {
     return acc | cf[1];
   }, 0);
-  return flags /* TODO: fix bug 1553454 */ & ~Ci.nsIClearDataService.CLEAR_HISTORY;
+  return flags;
 }
 
 const GeckoViewStorageController = {
