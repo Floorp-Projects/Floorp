@@ -303,47 +303,51 @@ add_task(clear_state);
 
 
 add_task(async function test_age_of_data_is_reported_in_uptake_status() {
-  const serverTime = 1552323900000;
-  server.registerPathHandler(CHANGES_PATH, serveChangesEntries(serverTime, [{
-    id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
-    last_modified: serverTime - 3600 * 1000,
-    host: "localhost",
-    bucket: "main",
-    collection: "some-entry",
-  }]));
+  await withFakeChannel("nightly", async () => {
+    const serverTime = 1552323900000;
+    server.registerPathHandler(CHANGES_PATH, serveChangesEntries(serverTime, [{
+      id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
+      last_modified: serverTime - 3600 * 1000,
+      host: "localhost",
+      bucket: "main",
+      collection: "some-entry",
+    }]));
 
-  await RemoteSettings.pollChanges();
+    await RemoteSettings.pollChanges();
 
-  TelemetryTestUtils.assertEvents([
-    ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
-      { source: TELEMETRY_HISTOGRAM_POLL_KEY, age: "3600", trigger: "manual" }],
-    ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
-      { source: TELEMETRY_HISTOGRAM_SYNC_KEY, duration: () => true, trigger: "manual" }],
-  ]);
+    TelemetryTestUtils.assertEvents([
+      ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
+        { source: TELEMETRY_HISTOGRAM_POLL_KEY, age: "3600", trigger: "manual" }],
+      ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
+        { source: TELEMETRY_HISTOGRAM_SYNC_KEY, duration: () => true, trigger: "manual" }],
+    ]);
+  });
 });
 add_task(clear_state);
 
 add_task(async function test_synchronization_duration_is_reported_in_uptake_status() {
-  server.registerPathHandler(CHANGES_PATH, serveChangesEntries(10000, [{
-    id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
-    last_modified: 42,
-    host: "localhost",
-    bucket: "main",
-    collection: "some-entry",
-  }]));
-  const c = RemoteSettings("some-entry");
-  // Simulate a synchronization that lasts 1 sec.
-  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-  c.maybeSync = () => new Promise(resolve => setTimeout(resolve, 1000));
+  await withFakeChannel("nightly", async () => {
+    server.registerPathHandler(CHANGES_PATH, serveChangesEntries(10000, [{
+      id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
+      last_modified: 42,
+      host: "localhost",
+      bucket: "main",
+      collection: "some-entry",
+    }]));
+    const c = RemoteSettings("some-entry");
+    // Simulate a synchronization that lasts 1 sec.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    c.maybeSync = () => new Promise(resolve => setTimeout(resolve, 1000));
 
-  await RemoteSettings.pollChanges();
+    await RemoteSettings.pollChanges();
 
-  TelemetryTestUtils.assertEvents([
-    ["uptake.remotecontent.result", "uptake", "remotesettings", "success",
-      { source: TELEMETRY_HISTOGRAM_POLL_KEY, age: () => true, trigger: "manual" }],
-    ["uptake.remotecontent.result", "uptake", "remotesettings", "success",
-      { source: TELEMETRY_HISTOGRAM_SYNC_KEY, duration: (v) => v >= 1000, trigger: "manual" }],
-  ]);
+    TelemetryTestUtils.assertEvents([
+      ["uptake.remotecontent.result", "uptake", "remotesettings", "success",
+        { source: TELEMETRY_HISTOGRAM_POLL_KEY, age: () => true, trigger: "manual" }],
+      ["uptake.remotecontent.result", "uptake", "remotesettings", "success",
+        { source: TELEMETRY_HISTOGRAM_SYNC_KEY, duration: (v) => v >= 1000, trigger: "manual" }],
+    ]);
+  });
 });
 add_task(clear_state);
 
