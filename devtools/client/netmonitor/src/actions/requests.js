@@ -108,15 +108,13 @@ function sendCustomRequest(connector, requestId = null) {
 /**
  * Tell the backend to block future requests that match the URL of the selected one.
  */
-function blockSelectedRequestURL(connector) {
-  return (dispatch, getState) => {
-    const selected = getSelectedRequest(getState());
-
-    if (!selected) {
+function blockSelectedRequestURL(connector, clickedRequest) {
+  return () => {
+    if (!clickedRequest) {
       return;
     }
 
-    const { url } = selected;
+    const { url } = clickedRequest;
     connector.blockRequest({ url });
   };
 }
@@ -124,15 +122,13 @@ function blockSelectedRequestURL(connector) {
 /**
  * Tell the backend to unblock future requests that match the URL of the selected one.
  */
-function unblockSelectedRequestURL(connector) {
-  return (dispatch, getState) => {
-    const selected = getSelectedRequest(getState());
-
-    if (!selected) {
+function unblockSelectedRequestURL(connector, clickedRequest) {
+  return () => {
+    if (!clickedRequest) {
       return;
     }
 
-    const { url } = selected;
+    const { url } = clickedRequest;
     connector.unblockRequest({ url });
   };
 }
