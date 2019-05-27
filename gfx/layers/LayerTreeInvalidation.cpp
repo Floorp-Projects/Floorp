@@ -111,6 +111,33 @@ static void AddRegion(nsIntRegion& aDest, const nsIntRegion& aSource) {
   aDest.SimplifyOutward(20);
 }
 
+Maybe<IntRect> TransformedBounds(Layer* aLayer) {
+  if (aLayer->Extend3DContext()) {
+    ContainerLayer* container = aLayer->AsContainerLayer();
+    MOZ_ASSERT(container);
+    IntRect result;
+    for (Layer* child = container->GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      Maybe<IntRect> childBounds = TransformedBounds(child);
+      if (!childBounds) {
+        return Nothing();
+      }
+      Maybe<IntRect> combined = result.SafeUnion(childBounds.value());
+      if (!combined) {
+        LTI_LOG("overflowed bounds of container %p accumulating child %p\n",
+                container, child);
+        return Nothing();
+      }
+      result = combined.value();
+    }
+    return Some(result);
+  }
+
+  return Some(TransformRect(
+    aLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect(),
+    GetTransformForInvalidation(aLayer)));
+}
+
 /**
  * Walks over this layer, and all descendant layers.
  * If any of these are a ContainerLayer that reports invalidations to a
@@ -132,7 +159,7 @@ static void NotifySubdocumentInvalidation(
       },
       [aCallback](Layer* layer) {
         ContainerLayer* container = layer->AsContainerLayer();
-        if (container) {
+        if (container && !container->Extend3DContext()) {
           nsIntRegion region =
               container->GetLocalVisibleRegion().ToUnknownRegion();
           aCallback(container, &region);
@@ -154,7 +181,7 @@ struct LayerPropertiesBase : public LayerProperties {
   explicit LayerPropertiesBase(Layer* aLayer)
       : mLayer(aLayer),
         mMaskLayer(nullptr),
-        mVisibleRegion(mLayer->GetLocalVisibleRegion().ToUnknownRegion()),
+        mVisibleRegion(mLayer->Extend3DContext() ? nsIntRegion() : mLayer->GetLocalVisibleRegion().ToUnknownRegion()),
         mPostXScale(aLayer->GetPostXScale()),
         mPostYScale(aLayer->GetPostYScale()),
         mOpacity(aLayer->GetLocalOpacity()),
@@ -308,10 +335,8 @@ struct LayerPropertiesBase : public LayerProperties {
                          mTransform);
   }
 
-  virtual Maybe<IntRect> NewTransformedBounds() {
-    return Some(TransformRect(
-        mLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect(),
-        GetTransformForInvalidation(mLayer)));
+  Maybe<IntRect> NewTransformedBounds() {
+    return TransformedBounds(mLayer);
   }
 
   virtual Maybe<IntRect> OldTransformedBounds() {
@@ -469,9 +494,11 @@ struct ContainerLayerProperties : public LayerPropertiesBase {
       if (invalidateChildsCurrentArea) {
         LTI_DUMP(child->GetLocalVisibleRegion().ToUnknownRegion(),
                  "invalidateChildsCurrentArea");
-        AddTransformedRegion(result,
-                             child->GetLocalVisibleRegion().ToUnknownRegion(),
-                             GetTransformForInvalidation(child));
+        if (Maybe<IntRect> bounds = TransformedBounds(child)) {
+          AddRegion(result, bounds.value());
+        } else {
+          areaOverflowed = true;
+        }
         if (aCallback) {
           NotifySubdocumentInvalidation(child, aCallback);
         } else {
@@ -533,28 +560,6 @@ struct ContainerLayerProperties : public LayerPropertiesBase {
 
     aOutRegion = std::move(result);
     return true;
-  }
-
-  Maybe<IntRect> NewTransformedBounds() override {
-    if (mLayer->Extend3DContext()) {
-      IntRect result;
-      for (UniquePtr<LayerPropertiesBase>& child : mChildren) {
-        Maybe<IntRect> childBounds = child->NewTransformedBounds();
-        if (!childBounds) {
-          return Nothing();
-        }
-        Maybe<IntRect> combined = result.SafeUnion(childBounds.value());
-        if (!combined) {
-          LTI_LOG("overflowed bounds of container %p accumulating child %p\n",
-                  this, child->mLayer.get());
-          return Nothing();
-        }
-        result = combined.value();
-      }
-      return Some(result);
-    }
-
-    return LayerPropertiesBase::NewTransformedBounds();
   }
 
   Maybe<IntRect> OldTransformedBounds() override {
