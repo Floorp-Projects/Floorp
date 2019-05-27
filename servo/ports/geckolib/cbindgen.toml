@@ -140,6 +140,9 @@ include = [
   "Scale",
   "Translate",
   "BorderImageWidth",
+  "ComputedUrl",
+  "ComputedImageUrl",
+  "UrlOrNone",
 ]
 item_types = ["enums", "structs", "typedefs", "functions"]
 renaming_overrides_prefixing = true
@@ -148,6 +151,7 @@ renaming_overrides_prefixing = true
 [export.rename]
 "nscolor" = "nscolor"
 "nsAtom" = "nsAtom"
+"nsIURI" = "nsIURI"
 "nsCompatibility" = "nsCompatibility"
 "SharedFontList" = "SharedFontList"
 "nsSimpleContentList" = "nsSimpleContentList"
@@ -390,6 +394,13 @@ renaming_overrides_prefixing = true
   }
 """
 
+"ArcInner" = """
+  // Increase the reference count.
+  inline void IncrementRef();
+  // Release the reference count, and return whether the result must be freed or not.
+  MOZ_MUST_USE inline bool DecrementRef();
+"""
+
 "ArcSlice" = """
   inline StyleArcSlice();
   inline StyleArcSlice(const StyleArcSlice& aOther);
@@ -405,6 +416,33 @@ renaming_overrides_prefixing = true
   inline bool IsEmpty() const;
   inline bool operator==(const StyleArcSlice& other) const;
   inline bool operator!=(const StyleArcSlice& other) const;
+"""
+
+"Arc" = """
+  StyleArc() = delete;
+  inline StyleArc(const StyleArc& Other);
+ private:
+  inline void Release();
+ public:
+  inline ~StyleArc();
+
+  inline StyleArc& operator=(const StyleArc&);
+  inline StyleArc& operator=(StyleArc&&);
+
+  const T* operator->() const {
+    MOZ_DIAGNOSTIC_ASSERT(p, "Arc shouldn't be null");
+    return &p->data;
+  }
+  const T& operator*() const {
+    MOZ_DIAGNOSTIC_ASSERT(p, "Arc shouldn't be null");
+    return p->data;
+  }
+  bool operator==(const StyleArc& other) const {
+    return p == other.p || *(*this) == *other;
+  }
+  bool operator!=(const StyleArc& other) const {
+    return !(*this == other);
+  }
 """
 
 "CustomIdent" = """
@@ -441,6 +479,14 @@ renaming_overrides_prefixing = true
  public:
 """
 
+"GenericUrlOrNone" = """
+ private:
+  // Private default constructor without initialization so that the helper
+  // constructor functions still work as expected. They take care of
+  // initializing the fields properly.
+  StyleGenericUrlOrNone() {}
+ public:
+"""
 "Angle" = """
   inline static StyleAngle Zero();
   inline float ToDegrees() const;
@@ -470,4 +516,51 @@ renaming_overrides_prefixing = true
     : first(StyleTextOverflowSide::Clip()),
       second(StyleTextOverflowSide::Clip()),
       sides_are_logical(true) {}
+"""
+
+"UrlExtraData" = """
+  StyleUrlExtraData() = delete;
+
+  // Could be implemented if wanted.
+  StyleUrlExtraData(const StyleUrlExtraData&) = delete;
+  StyleUrlExtraData& operator=(const StyleUrlExtraData&) = delete;
+
+  inline bool IsShared() const;
+
+  inline ~StyleUrlExtraData();
+  inline const URLExtraData& get() const;
+"""
+
+"CssUrlData" = """
+  // Implemented in nsStyleStruct.cpp
+  bool operator==(const StyleCssUrlData& other) const;
+  bool operator!=(const StyleCssUrlData& other) const {
+    return !(*this == other);
+  }
+"""
+
+"LoadData" = """
+  ~StyleLoadData();
+"""
+
+"CssUrl" = """
+  inline nsDependentCSubstring SpecifiedSerialization() const;
+  inline const URLExtraData& ExtraData() const;
+  inline StyleLoadData& LoadData() const;
+  inline nsIURI* GetURI() const;
+"""
+
+"ComputedUrl" = """
+  // Forwarded from CssUrl.
+  inline nsDependentCSubstring SpecifiedSerialization() const;
+  inline const URLExtraData& ExtraData() const;
+  inline nsIURI* GetURI() const;
+  inline StyleLoadData& LoadData() const;
+
+  inline bool IsLocalRef() const;
+  inline bool HasRef() const;
+  inline CORSMode CorsMode() const;
+  already_AddRefed<nsIURI> ResolveLocalRef(nsIURI* aBase) const;
+  already_AddRefed<nsIURI> ResolveLocalRef(const nsIContent* aContent) const;
+  imgRequestProxy* LoadImage(mozilla::dom::Document&);
 """

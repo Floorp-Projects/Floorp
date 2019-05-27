@@ -500,6 +500,13 @@ cbindgen-types = [
     { gecko = "StyleGenericTranslate", servo = "values::generics::transform::Translate" },
     { gecko = "StyleAngle", servo = "values::computed::Angle" },
     { gecko = "StyleGenericBorderImageSideWidth", servo = "values::generics::border::BorderImageSideWidth" },
+    { gecko = "StyleGenericUrlOrNone", servo = "values::generics::url::UrlOrNone" },
+    { gecko = "StyleCssUrl", servo = "gecko::url::CssUrl" },
+    { gecko = "StyleSpecifiedUrl", servo = "gecko::url::SpecifiedUrl" },
+    { gecko = "StyleSpecifiedImageUrl", servo = "gecko::url::SpecifiedImageUrl" },
+    { gecko = "StyleComputedUrl", servo = "gecko::url::ComputedUrl" },
+    { gecko = "StyleComputedImageUrl", servo = "gecko::url::ComputedImageUrl" },
+    { gecko = "StyleLoadData", servo = "gecko::url::LoadData" },
 ]
 
 mapped-generic-types = [
