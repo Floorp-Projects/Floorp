@@ -284,9 +284,9 @@ impl ClipSpaceConversion {
         if prim_spatial_node_index == clip_spatial_node_index {
             ClipSpaceConversion::Local
         } else if prim_spatial_node.coordinate_system_id == clip_spatial_node.coordinate_system_id {
-            let scale_offset = prim_spatial_node.coordinate_system_relative_scale_offset
+            let scale_offset = prim_spatial_node.content_transform
                 .inverse()
-                .accumulate(&clip_spatial_node.coordinate_system_relative_scale_offset);
+                .accumulate(&clip_spatial_node.content_transform);
             ClipSpaceConversion::ScaleOffset(scale_offset)
         } else {
             ClipSpaceConversion::Transform(
