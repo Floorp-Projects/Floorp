@@ -68,7 +68,7 @@ var Translation = {
 
     trUI.showURLBarIcon();
 
-    if (trUI.shouldShowInfoBar(aBrowser.currentURI))
+    if (trUI.shouldShowInfoBar(aBrowser.contentPrincipal))
       trUI.showTranslationInfoBar();
   },
 
@@ -234,7 +234,7 @@ TranslationUI.prototype = {
     return notif;
   },
 
-  shouldShowInfoBar(aURI) {
+  shouldShowInfoBar(aPrincipal) {
     // Never show the infobar automatically while the translation
     // service is temporarily unavailable.
     if (Translation.serviceUnavailable)
@@ -250,7 +250,7 @@ TranslationUI.prototype = {
 
     // or if we should never show the infobar for this domain.
     let perms = Services.perms;
-    if (perms.testExactPermission(aURI, "translate") == perms.DENY_ACTION) {
+    if (perms.testExactPermissionFromPrincipal(aPrincipal, "translate") == perms.DENY_ACTION) {
       TranslationTelemetry.recordAutoRejectedTranslationOffer();
       return false;
     }
