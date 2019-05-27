@@ -172,7 +172,6 @@ pub enum SystemColor {
     MozOddtreerow,
 
     /// Used for button text when pressed.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
     MozGtkButtonactivetext,
 
     /// Used for button text when pressed.
@@ -360,12 +359,14 @@ impl Parse for Color {
             Err(e) => {
                 #[cfg(feature = "gecko")]
                 {
-                    if let Ok(system) = input.try(|i| SystemColor::parse(context, i)) {
-                        return Ok(Color::System(system));
-                    }
+                    if let Ok(ident) = input.expect_ident() {
+                        if let Ok(system) = SystemColor::from_ident(ident) {
+                            return Ok(Color::System(system));
+                        }
 
-                    if let Ok(c) = input.try(gecko::SpecialColorKeyword::parse) {
-                        return Ok(Color::Special(c));
+                        if let Ok(c) = gecko::SpecialColorKeyword::from_ident(ident) {
+                            return Ok(Color::Special(c));
+                        }
                     }
                 }
 
