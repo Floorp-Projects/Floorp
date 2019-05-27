@@ -3171,7 +3171,7 @@ GeckoDriver.prototype.dismissDialog = async function() {
 
   await dialogClosed;
 
-  this.dialog = null;
+  this.dialog = modal.findModalDialogs(this.curBrowser);
 };
 
 /**
@@ -3189,7 +3189,7 @@ GeckoDriver.prototype.acceptDialog = async function() {
 
   await dialogClosed;
 
-  this.dialog = null;
+  this.dialog = modal.findModalDialogs(this.curBrowser);
 };
 
 /**
