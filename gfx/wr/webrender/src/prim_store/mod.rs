@@ -179,9 +179,9 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         self.kind = if self.ref_spatial_node_index == target_node_index {
             CoordinateSpaceMapping::Local
         } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
-            let scale_offset = ref_spatial_node.coordinate_system_relative_scale_offset
+            let scale_offset = ref_spatial_node.content_transform
                 .inverse()
-                .accumulate(&target_spatial_node.coordinate_system_relative_scale_offset);
+                .accumulate(&target_spatial_node.content_transform);
             CoordinateSpaceMapping::ScaleOffset(scale_offset)
         } else {
             let transform = clip_scroll_tree

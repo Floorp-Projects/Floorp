@@ -654,16 +654,11 @@ fn register_transform(
     to_index: SpatialNodeIndex,
     transform: LayoutToPictureTransform,
 ) -> usize {
-    // TODO(gw): This shouldn't ever happen - should be eliminated before
-    //           we get an uninvertible transform here. But maybe do
-    //           some investigation on if this ever happens?
-    let inv_transform = match transform.inverse() {
-        Some(inv_transform) => inv_transform,
-        None => {
-            error!("Unable to get inverse transform");
-            PictureToLayoutTransform::identity()
-        }
-    };
+    // TODO: refactor the calling code to not even try
+    // registering a non-invertible transform.
+    let inv_transform = transform
+        .inverse()
+        .unwrap_or_else(PictureToLayoutTransform::identity);
 
     let metadata = TransformMetadata {
         transform_kind: transform.transform_kind()
