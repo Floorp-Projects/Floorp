@@ -3621,7 +3621,6 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry,
     :
 #ifndef JS_CODEGEN_NONE
       jitCodeRaw_(stubEntry),
-      jitCodeSkipArgCheck_(stubEntry),
 #endif
       realm_(realm),
       sourceStart_(sourceStart),
@@ -5409,25 +5408,30 @@ LazyScript* LazyScript::CreateForXDR(
 
 void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   MOZ_ASSERT(rt);
+  uint8_t* jitCodeSkipArgCheck;
   if (hasBaselineScript() && baseline->hasPendingIonBuilder()) {
     MOZ_ASSERT(!isIonCompilingOffThread());
     jitCodeRaw_ = rt->jitRuntime()->lazyLinkStub().value;
-    jitCodeSkipArgCheck_ = jitCodeRaw_;
+    jitCodeSkipArgCheck = jitCodeRaw_;
   } else if (hasIonScript()) {
     jitCodeRaw_ = ion->method()->raw();
-    jitCodeSkipArgCheck_ = jitCodeRaw_ + ion->getSkipArgCheckEntryOffset();
+    jitCodeSkipArgCheck = jitCodeRaw_ + ion->getSkipArgCheckEntryOffset();
   } else if (hasBaselineScript()) {
     jitCodeRaw_ = baseline->method()->raw();
-    jitCodeSkipArgCheck_ = jitCodeRaw_;
+    jitCodeSkipArgCheck = jitCodeRaw_;
   } else if (jitScript() && js::jit::JitOptions.baselineInterpreter) {
     jitCodeRaw_ = rt->jitRuntime()->baselineInterpreter().codeRaw();
-    jitCodeSkipArgCheck_ = jitCodeRaw_;
+    jitCodeSkipArgCheck = jitCodeRaw_;
   } else {
     jitCodeRaw_ = rt->jitRuntime()->interpreterStub().value;
-    jitCodeSkipArgCheck_ = jitCodeRaw_;
+    jitCodeSkipArgCheck = jitCodeRaw_;
   }
   MOZ_ASSERT(jitCodeRaw_);
-  MOZ_ASSERT(jitCodeSkipArgCheck_);
+  MOZ_ASSERT(jitCodeSkipArgCheck);
+
+  if (jitScript_) {
+    jitScript_->jitCodeSkipArgCheck_ = jitCodeSkipArgCheck;
+  }
 }
 
 bool JSScript::hasLoops() {

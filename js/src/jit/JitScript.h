@@ -87,6 +87,10 @@ class alignas(uintptr_t) JitScript final {
   // them as well.
   RecompileInfoVector inlinedCompilations_;
 
+  // Like JSScript::jitCodeRaw_ but when the script has an IonScript this can
+  // point to a separate entry point that skips the argument type checks.
+  uint8_t* jitCodeSkipArgCheck_ = nullptr;
+
   // Offset of the StackTypeSet array.
   uint32_t typeSetOffset_ = 0;
 
@@ -254,6 +258,10 @@ class alignas(uintptr_t) JitScript final {
   static void Destroy(Zone* zone, JitScript* script);
 
   static constexpr size_t offsetOfICEntries() { return sizeof(JitScript); }
+
+  static constexpr size_t offsetOfJitCodeSkipArgCheck() {
+    return offsetof(JitScript, jitCodeSkipArgCheck_);
+  }
 
 #ifdef DEBUG
   void printTypes(JSContext* cx, HandleScript script);

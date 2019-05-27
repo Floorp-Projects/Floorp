@@ -1728,7 +1728,6 @@ class JSScript : public js::gc::TenuredCell {
   // entry, the JIT's EnterInterpreter stub, or the lazy link stub. Must be
   // non-null.
   uint8_t* jitCodeRaw_ = nullptr;
-  uint8_t* jitCodeSkipArgCheck_ = nullptr;
 
   // Shareable script data
   RefPtr<js::SharedScriptData> scriptData_ = {};
@@ -2474,9 +2473,6 @@ class JSScript : public js::gc::TenuredCell {
   static size_t offsetOfIonScript() { return offsetof(JSScript, ion); }
   static constexpr size_t offsetOfJitCodeRaw() {
     return offsetof(JSScript, jitCodeRaw_);
-  }
-  static constexpr size_t offsetOfJitCodeSkipArgCheck() {
-    return offsetof(JSScript, jitCodeSkipArgCheck_);
   }
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
 
