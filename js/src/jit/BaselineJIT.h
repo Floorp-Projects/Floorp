@@ -458,7 +458,6 @@ struct BaselineScript final {
                                            uint32_t idx);
   void removeDependentWasmImport(wasm::Instance& instance, uint32_t idx);
   void unlinkDependentWasmImports(FreeOp* fop);
-  void clearDependentWasmImports();
 
   // Toggle debug traps (used for breakpoints and step mode) in the script.
   // If |pc| is nullptr, toggle traps for all ops in the script. Else, only
@@ -524,9 +523,6 @@ struct BaselineScript final {
     }
 
     pendingBuilder_ = builder;
-
-    // lazy linking cannot happen during asmjs to ion.
-    clearDependentWasmImports();
 
     script->updateJitCodeRaw(rt);
   }
