@@ -54,6 +54,7 @@ class NotificationManager(private val context: Context) {
                 .setContentTitle(tab.title)
                 .setContentText(tab.url)
                 .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
                 // Explicitly set a priority for <API25 devices.
                 // On newer devices this is inherited from the channel.
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
