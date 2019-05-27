@@ -536,9 +536,6 @@ void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);
 
-void Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* effects,
-                                     const mozilla::StyleComputedUrl* url);
-
 void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* dest,
                                     const nsStyleSVGPaint* src);
 

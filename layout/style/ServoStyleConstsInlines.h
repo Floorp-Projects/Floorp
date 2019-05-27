@@ -23,7 +23,21 @@
 namespace mozilla {
 
 template <typename T>
-inline StyleOwnedSlice<T>::StyleOwnedSlice(const StyleOwnedSlice& aOther) {
+inline void StyleOwnedSlice<T>::Clear() {
+  if (!len) {
+    return;
+  }
+  for (size_t i : IntegerRange(len)) {
+    ptr[i].~T();
+  }
+  free(ptr);
+  ptr = (T*)alignof(T);
+  len = 0;
+}
+
+template <typename T>
+inline void StyleOwnedSlice<T>::CopyFrom(const StyleOwnedSlice& aOther) {
+  Clear();
   len = aOther.len;
   if (!len) {
     ptr = (T*)alignof(T);
@@ -37,24 +51,36 @@ inline StyleOwnedSlice<T>::StyleOwnedSlice(const StyleOwnedSlice& aOther) {
 }
 
 template <typename T>
-inline StyleOwnedSlice<T>::StyleOwnedSlice(StyleOwnedSlice&& aOther) {
-  len = aOther.len;
-  ptr = aOther.ptr;
-  aOther.ptr = (T*)alignof(T);
-  aOther.len = 0;
+inline void StyleOwnedSlice<T>::SwapElements(StyleOwnedSlice& aOther) {
+  std::swap(ptr, aOther.ptr);
+  std::swap(len, aOther.len);
 }
 
 template <typename T>
-inline void StyleOwnedSlice<T>::Clear() {
-  if (!len) {
-    return;
-  }
-  for (size_t i : IntegerRange(len)) {
-    ptr[i].~T();
-  }
-  free(ptr);
-  ptr = (T*)alignof(T);
-  len = 0;
+inline StyleOwnedSlice<T>::StyleOwnedSlice(const StyleOwnedSlice& aOther)
+    : StyleOwnedSlice() {
+  CopyFrom(aOther);
+}
+
+template <typename T>
+inline StyleOwnedSlice<T>::StyleOwnedSlice(StyleOwnedSlice&& aOther)
+    : StyleOwnedSlice() {
+  SwapElements(aOther);
+}
+
+template <typename T>
+inline StyleOwnedSlice<T>& StyleOwnedSlice<T>::operator=(
+    const StyleOwnedSlice& aOther) {
+  CopyFrom(aOther);
+  return *this;
+}
+
+template <typename T>
+inline StyleOwnedSlice<T>& StyleOwnedSlice<T>::operator=(
+    StyleOwnedSlice&& aOther) {
+  Clear();
+  SwapElements(aOther);
+  return *this;
 }
 
 template <typename T>

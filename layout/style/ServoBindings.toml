@@ -507,6 +507,7 @@ cbindgen-types = [
     { gecko = "StyleComputedUrl", servo = "gecko::url::ComputedUrl" },
     { gecko = "StyleComputedImageUrl", servo = "gecko::url::ComputedImageUrl" },
     { gecko = "StyleLoadData", servo = "gecko::url::LoadData" },
+    { gecko = "StyleGenericFilter", servo = "values::generics::effects::Filter" },
 ]
 
 mapped-generic-types = [
