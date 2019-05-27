@@ -68,7 +68,6 @@ textbox[is="search-textbox"] {
 
 .textbox-search-clear {
   list-style-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
-  -moz-image-region: rect(0, 14px, 14px, 0);
   margin-bottom: 1px;
 }
 
