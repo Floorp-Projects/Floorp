@@ -8,10 +8,7 @@ var EXPORTED_SYMBOLS = ["Session"];
 
 const {ParentProcessDomains} = ChromeUtils.import("chrome://remote/content/domains/ParentProcessDomains.jsm");
 const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
-const {
-  RemoteAgentError,
-  UnknownMethodError,
-} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
 /**
  * A session represents exactly one client WebSocket connection.
@@ -72,9 +69,6 @@ class Session {
   }
 
   async execute(id, domain, command, params) {
-    if (!this.domains.domainSupportsMethod(domain, command)) {
-      throw new UnknownMethodError(domain, command);
-    }
     const inst = this.domains.get(domain);
     const result = await inst[command](params);
     this.onResult(id, result);
