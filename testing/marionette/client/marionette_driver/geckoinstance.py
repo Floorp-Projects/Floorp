@@ -59,9 +59,6 @@ class GeckoInstance(object):
         "dom.max_chrome_script_run_time": 0,
         "dom.max_script_run_time": 0,
 
-        # DOM Push
-        "dom.push.connection.enabled": False,
-
         # Only load extensions from the application and user profile
         # AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
         "extensions.autoDisableScopes": 0,
@@ -118,9 +115,6 @@ class GeckoInstance(object):
         "network.manage-offline-status": False,
         # Make sure SNTP requests don't hit the network
         "network.sntp.pools": "%(server)s",
-
-        # Privacy and Tracking Protection
-        "privacy.trackingprotection.enabled": False,
 
         # Don't do network connections for mitm priming
         "security.certerrors.mitm.priming.enabled": False,
