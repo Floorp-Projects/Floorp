@@ -671,7 +671,7 @@ shown from Android O while a tab is being queued.-->
 <!ENTITY filepicker_audio_title "Choose or record a sound">
 <!ENTITY filepicker_image_title "Choose or take a picture">
 <!ENTITY filepicker_video_title "Choose or record a video">
-<!ENTITY filepicker_permission_denied "Required permissions not granted, reverting to the system file picker. ">
+<!ENTITY filepicker_permission_denied "Required permissions not granted, reverting to the system file picker.">
 
 <!-- Site identity popup -->
 <!ENTITY identity_connected_to "You are connected to">
