@@ -449,10 +449,20 @@ class HeadersPanel extends Component {
     const summaryReferrerPolicy = referrerPolicy ?
       this.renderSummary(SUMMARY_REFERRER_POLICY, referrerPolicy) : null;
 
+    const summaryItems = [
+      summaryUrl,
+      trackingProtectionStatus,
+      summaryMethod,
+      summaryAddress,
+      summaryStatus,
+      summaryVersion,
+      summaryReferrerPolicy,
+    ].filter(summaryItem => summaryItem !== null);
+
     const summaryEditAndResendBtn = (
       div({
         className: "summary-edit-and-resend" },
-        summaryReferrerPolicy,
+        summaryItems.pop(),
         button({
           className: "edit-and-resend-button devtools-button",
           onClick: cloneSelectedRequest,
@@ -463,12 +473,7 @@ class HeadersPanel extends Component {
     return (
       div({ className: "panel-container" },
         div({ className: "headers-overview" },
-          summaryUrl,
-          trackingProtectionStatus,
-          summaryMethod,
-          summaryAddress,
-          summaryStatus,
-          summaryVersion,
+          summaryItems,
           summaryEditAndResendBtn,
         ),
         PropertiesView({
