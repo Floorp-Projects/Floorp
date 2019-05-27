@@ -394,15 +394,15 @@ module.exports = connect(
     requestFilterTypes: state.filters.requestFilterTypes,
   }),
   (dispatch, props) => ({
-    blockSelectedRequestURL: () => {
-      dispatch(Actions.blockSelectedRequestURL(props.connector));
+    blockSelectedRequestURL: (clickedRequest) => {
+      dispatch(Actions.blockSelectedRequestURL(props.connector, clickedRequest));
     },
     cloneRequest: (id) => dispatch(Actions.cloneRequest(id)),
     openDetailsPanelTab: () => dispatch(Actions.openNetworkDetails(true)),
     sendCustomRequest: () => dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: (open) => dispatch(Actions.openStatistics(props.connector, open)),
-    unblockSelectedRequestURL: () => {
-      dispatch(Actions.unblockSelectedRequestURL(props.connector));
+    unblockSelectedRequestURL: (clickedRequest) => {
+      dispatch(Actions.unblockSelectedRequestURL(props.connector, clickedRequest));
     },
     /**
      * A handler that opens the stack trace tab when a stack trace is available
