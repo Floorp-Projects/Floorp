@@ -45,7 +45,7 @@
 #include "nsTransitionManager.h"
 #include "nsWindowSizes.h"
 
-#include "mozilla/CORSMode.h"
+#include "mozilla/css/ImageLoader.h"
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
@@ -1141,18 +1141,17 @@ void Gecko_SetGradientImageValue(nsStyleImage* aImage,
 }
 
 static already_AddRefed<nsStyleImageRequest> CreateStyleImageRequest(
-    nsStyleImageRequest::Mode aModeFlags, URLValue* aImageValue) {
-  RefPtr<nsStyleImageRequest> req =
-      new nsStyleImageRequest(aModeFlags, aImageValue);
+    nsStyleImageRequest::Mode aModeFlags, const StyleComputedImageUrl* aUrl) {
+  RefPtr<nsStyleImageRequest> req = new nsStyleImageRequest(aModeFlags, *aUrl);
   return req.forget();
 }
 
 void Gecko_SetLayerImageImageValue(nsStyleImage* aImage,
-                                   URLValue* aImageValue) {
-  MOZ_ASSERT(aImage && aImageValue);
+                                   const StyleComputedImageUrl* aUrl) {
+  MOZ_ASSERT(aImage && aUrl);
 
   RefPtr<nsStyleImageRequest> req =
-      CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aImageValue);
+      CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aUrl);
   aImage->SetImageRequest(req.forget());
 }
 
@@ -1179,11 +1178,12 @@ void Gecko_SetCursorArrayLength(nsStyleUI* aStyleUI, size_t aLen) {
   aStyleUI->mCursorImages.SetLength(aLen);
 }
 
-void Gecko_SetCursorImageValue(nsCursorImage* aCursor, URLValue* aImageValue) {
-  MOZ_ASSERT(aCursor && aImageValue);
+void Gecko_SetCursorImageValue(nsCursorImage* aCursor,
+                               const StyleComputedImageUrl* aUrl) {
+  MOZ_ASSERT(aCursor && aUrl);
 
   aCursor->mImage =
-      CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard, aImageValue);
+      CreateStyleImageRequest(nsStyleImageRequest::Mode::Discard, aUrl);
 }
 
 void Gecko_CopyCursorArrayFrom(nsStyleUI* aDest, const nsStyleUI* aSrc) {
@@ -1191,11 +1191,11 @@ void Gecko_CopyCursorArrayFrom(nsStyleUI* aDest, const nsStyleUI* aSrc) {
 }
 
 void Gecko_SetContentDataImageValue(nsStyleContentData* aContent,
-                                    URLValue* aImageValue) {
-  MOZ_ASSERT(aContent && aImageValue);
+                                    const StyleComputedImageUrl* aUrl) {
+  MOZ_ASSERT(aContent && aUrl);
 
   RefPtr<nsStyleImageRequest> req =
-      CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aImageValue);
+      CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aUrl);
   aContent->SetImageRequest(req.forget());
 }
 
@@ -1255,11 +1255,11 @@ void Gecko_SetListStyleImageNone(nsStyleList* aList) {
 }
 
 void Gecko_SetListStyleImageImageValue(nsStyleList* aList,
-                                       URLValue* aImageValue) {
-  MOZ_ASSERT(aList && aImageValue);
+                                       const StyleComputedImageUrl* aUrl) {
+  MOZ_ASSERT(aList && aUrl);
 
   aList->mListStyleImage =
-      CreateStyleImageRequest(nsStyleImageRequest::Mode(0), aImageValue);
+      CreateStyleImageRequest(nsStyleImageRequest::Mode(0), aUrl);
 }
 
 void Gecko_CopyListStyleImageFrom(nsStyleList* aList,
@@ -1560,8 +1560,9 @@ void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest) {
   aDest->mFilters = aSrc->mFilters;
 }
 
-void Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* aEffects, URLValue* aURL) {
-  aEffects->SetURL(aURL);
+void Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* aEffects,
+                                     const StyleComputedUrl* aURL) {
+  aEffects->SetURL(*aURL);
 }
 
 void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* aDest,
@@ -1570,8 +1571,8 @@ void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* aDest,
 }
 
 void Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* aPaint,
-                                       URLValue* aURL) {
-  aPaint->SetPaintServer(aURL);
+                                       const StyleComputedUrl* aURL) {
+  aPaint->SetPaintServer(*aURL);
 }
 
 void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* aPaint) { aPaint->SetNone(); }
@@ -1585,30 +1586,18 @@ void Gecko_nsStyleSVG_CopyDashArray(nsStyleSVG* aDst, const nsStyleSVG* aSrc) {
   aDst->mStrokeDasharray = aSrc->mStrokeDasharray;
 }
 
-URLValue* Gecko_URLValue_Create(StyleStrong<RawServoCssUrlData> aCssUrl,
-                                CORSMode aCORSMode) {
-  RefPtr<URLValue> url = new URLValue(aCssUrl.Consume(), aCORSMode);
-  return url.forget().take();
-}
-
-MOZ_DEFINE_MALLOC_SIZE_OF(GeckoURLValueMallocSizeOf)
-
-size_t Gecko_URLValue_SizeOfIncludingThis(URLValue* aURL) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return aURL->SizeOfIncludingThis(GeckoURLValueMallocSizeOf);
-}
-
-void Gecko_GetComputedURLSpec(const URLValue* aURL, nsCString* aOut) {
+void Gecko_GetComputedURLSpec(const StyleComputedUrl* aURL, nsCString* aOut) {
   MOZ_ASSERT(aURL);
   MOZ_ASSERT(aOut);
   if (aURL->IsLocalRef()) {
-    aOut->Assign(aURL->GetString());
+    aOut->Assign(aURL->SpecifiedSerialization());
     return;
   }
   Gecko_GetComputedImageURLSpec(aURL, aOut);
 }
 
-void Gecko_GetComputedImageURLSpec(const URLValue* aURL, nsCString* aOut) {
+void Gecko_GetComputedImageURLSpec(const StyleComputedUrl* aURL,
+                                   nsCString* aOut) {
   // Image URIs don't serialize local refs as local.
   if (nsIURI* uri = aURL->GetURI()) {
     nsresult rv = uri->GetSpec(*aOut);
@@ -1626,6 +1615,11 @@ void Gecko_nsIURI_Debug(nsIURI* aURI, nsCString* aOut) {
     *aOut = aURI->GetSpecOrDefault();
   }
 }
+
+// XXX Implemented by hand because even though it's thread-safe, only the
+// subclasses have the HasThreadSafeRefCnt bits.
+void Gecko_AddRefnsIURIArbitraryThread(nsIURI* aPtr) { NS_ADDREF(aPtr); }
+void Gecko_ReleasensIURIArbitraryThread(nsIURI* aPtr) { NS_RELEASE(aPtr); }
 
 template <typename ElementLike>
 void DebugListAttributes(const ElementLike& aElement, nsCString& aOut) {
@@ -1664,8 +1658,6 @@ void Gecko_Snapshot_DebugListAttributes(const ServoElementSnapshot* aSnapshot,
                                         nsCString* aOut) {
   DebugListAttributes(*aSnapshot, *aOut);
 }
-
-NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLValue, CSSURLValue);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLExtraData, URLExtraData);
 
@@ -1841,15 +1833,14 @@ void Gecko_StyleSheet_FinishAsyncParse(
 
 static already_AddRefed<StyleSheet> LoadImportSheet(
     Loader* aLoader, StyleSheet* aParent, SheetLoadData* aParentLoadData,
-    LoaderReusableStyleSheets* aReusableSheets, URLValue* aURL,
+    LoaderReusableStyleSheets* aReusableSheets, const StyleCssUrl& aURL,
     already_AddRefed<RawServoMediaList> aMediaList) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoader, "Should've catched this before");
   MOZ_ASSERT(aParent, "Only used for @import, so parent should exist!");
-  MOZ_ASSERT(aURL, "Invalid URLs shouldn't be loaded!");
 
   RefPtr<MediaList> media = new MediaList(std::move(aMediaList));
-  nsCOMPtr<nsIURI> uri = aURL->GetURI();
+  nsCOMPtr<nsIURI> uri = aURL.GetURI();
   nsresult rv = uri ? NS_OK : NS_ERROR_FAILURE;
 
   StyleSheet* previousFirstChild = aParent->GetFirstChild();
@@ -1874,7 +1865,7 @@ static already_AddRefed<StyleSheet> LoadImportSheet(
       NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:invalid"));
     }
     emptySheet->SetURIs(uri, uri, uri);
-    emptySheet->SetPrincipal(aURL->ExtraData()->Principal());
+    emptySheet->SetPrincipal(aURL.ExtraData().Principal());
     emptySheet->SetComplete();
     aParent->PrependStyleSheet(emptySheet);
     return emptySheet.forget();
@@ -1887,31 +1878,27 @@ static already_AddRefed<StyleSheet> LoadImportSheet(
 StyleSheet* Gecko_LoadStyleSheet(Loader* aLoader, StyleSheet* aParent,
                                  SheetLoadData* aParentLoadData,
                                  LoaderReusableStyleSheets* aReusableSheets,
-                                 StyleStrong<RawServoCssUrlData> aCssUrl,
+                                 const StyleCssUrl* aUrl,
                                  StyleStrong<RawServoMediaList> aMediaList) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aUrl);
 
-  // The CORS mode in the URLValue is irrelevant here.
-  // (CORS_NONE is used for all imported sheets in Load::LoadChildSheet.)
-  RefPtr<URLValue> url = new URLValue(aCssUrl.Consume(), CORS_NONE);
   return LoadImportSheet(aLoader, aParent, aParentLoadData, aReusableSheets,
-                         url, aMediaList.Consume())
+                         *aUrl, aMediaList.Consume())
       .take();
 }
 
 void Gecko_LoadStyleSheetAsync(SheetLoadDataHolder* aParentData,
-                               StyleStrong<RawServoCssUrlData> aCssUrl,
+                               const StyleCssUrl* aUrl,
                                StyleStrong<RawServoMediaList> aMediaList,
                                StyleStrong<RawServoImportRule> aImportRule) {
+  MOZ_ASSERT(aUrl);
   RefPtr<SheetLoadDataHolder> loadData = aParentData;
-  // The CORS mode in the URLValue is irrelevant here.
-  // (CORS_NONE is used for all imported sheets in Load::LoadChildSheet.)
-  RefPtr<URLValue> urlVal = new URLValue(aCssUrl.Consume(), CORS_NONE);
   RefPtr<RawServoMediaList> mediaList = aMediaList.Consume();
   RefPtr<RawServoImportRule> importRule = aImportRule.Consume();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       __func__,
-      [data = std::move(loadData), url = std::move(urlVal),
+      [data = std::move(loadData), url = StyleCssUrl(*aUrl),
        media = std::move(mediaList), import = std::move(importRule)]() mutable {
         MOZ_ASSERT(NS_IsMainThread());
         SheetLoadData* d = data->get();
@@ -2099,4 +2086,9 @@ bool Gecko_AssertClassAttrValueIsSane(const nsAttrValue* aValue) {
           aValue->GetStringValue())
           .IsEmpty());
   return true;
+}
+
+void Gecko_LoadData_DeregisterLoad(const StyleLoadData* aData) {
+  MOZ_ASSERT(aData->load_id != 0);
+  ImageLoader::DeregisterCSSImageFromAllLoaders(*aData);
 }

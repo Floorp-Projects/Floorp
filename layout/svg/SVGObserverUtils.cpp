@@ -93,18 +93,14 @@ class URLAndReferrerInfoHashKey : public PLDHashEntryHdr {
 };
 
 static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
-    nsIFrame* aFrame, const css::URLValue* aURL) {
+    nsIFrame* aFrame, const StyleComputedImageUrl& aURL) {
   MOZ_ASSERT(aFrame);
 
-  if (!aURL) {
-    return nullptr;
-  }
+  nsCOMPtr<nsIURI> uri = aURL.GetURI();
 
-  nsCOMPtr<nsIURI> uri = aURL->GetURI();
-
-  if (aURL->IsLocalRef()) {
+  if (aURL.IsLocalRef()) {
     uri = SVGObserverUtils::GetBaseURLForLocalRef(aFrame->GetContent(), uri);
-    uri = aURL->ResolveLocalRef(uri);
+    uri = aURL.ResolveLocalRef(uri);
   }
 
   if (!uri) {
@@ -112,7 +108,7 @@ static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
   }
 
   RefPtr<URLAndReferrerInfo> info =
-      new URLAndReferrerInfo(uri, aURL->ExtraData());
+      new URLAndReferrerInfo(uri, aURL.ExtraData());
   return info.forget();
 }
 
@@ -703,10 +699,10 @@ SVGFilterObserverList::SVGFilterObserverList(
       filterURL = ResolveURLUsingLocalRef(aFilteredFrame, aFilters[i].GetURL());
     } else {
       nsCOMPtr<nsIURI> resolvedURI =
-          aFilters[i].GetURL()->ResolveLocalRef(aFilteredElement);
+          aFilters[i].GetURL().ResolveLocalRef(aFilteredElement);
       if (resolvedURI) {
         filterURL = new URLAndReferrerInfo(resolvedURI,
-                                           aFilters[i].GetURL()->ExtraData());
+                                           aFilters[i].GetURL().ExtraData());
       }
     }
 
@@ -820,8 +816,12 @@ SVGMaskObserverList::SVGMaskObserverList(nsIFrame* aFrame) : mFrame(aFrame) {
   const nsStyleSVGReset* svgReset = aFrame->StyleSVGReset();
 
   for (uint32_t i = 0; i < svgReset->mMask.mImageCount; i++) {
-    const css::URLValue* data = svgReset->mMask.mLayers[i].mImage.GetURLValue();
-    RefPtr<URLAndReferrerInfo> maskUri = ResolveURLUsingLocalRef(aFrame, data);
+    const StyleComputedImageUrl* data =
+        svgReset->mMask.mLayers[i].mImage.GetURLValue();
+    RefPtr<URLAndReferrerInfo> maskUri;
+    if (data) {
+      maskUri = ResolveURLUsingLocalRef(aFrame, *data);
+    }
 
     bool hasRef = false;
     if (maskUri) {
@@ -1110,8 +1110,12 @@ static nsSVGPaintingProperty* GetPaintingProperty(
 }
 
 static already_AddRefed<URLAndReferrerInfo> GetMarkerURI(
-    nsIFrame* aFrame, RefPtr<css::URLValue> nsStyleSVG::*aMarker) {
-  return ResolveURLUsingLocalRef(aFrame, aFrame->StyleSVG()->*aMarker);
+    nsIFrame* aFrame, const StyleUrlOrNone nsStyleSVG::*aMarker) {
+  const StyleUrlOrNone& url = aFrame->StyleSVG()->*aMarker;
+  if (url.IsNone()) {
+    return nullptr;
+  }
+  return ResolveURLUsingLocalRef(aFrame, url.AsUrl());
 }
 
 bool SVGObserverUtils::GetAndObserveMarkers(nsIFrame* aMarkedFrame,
@@ -1234,11 +1238,10 @@ static nsSVGPaintingProperty* GetOrCreateClipPathObserver(
   if (svgStyleReset->mClipPath.GetType() != StyleShapeSourceType::Image) {
     return nullptr;
   }
-  const css::URLValue* url =
-      svgStyleReset->mClipPath.ShapeImage().GetURLValue();
+  const auto* url = svgStyleReset->mClipPath.ShapeImage().GetURLValue();
   MOZ_ASSERT(url);
   RefPtr<URLAndReferrerInfo> pathURI =
-      ResolveURLUsingLocalRef(aClippedFrame, url);
+      ResolveURLUsingLocalRef(aClippedFrame, *url);
   return GetPaintingProperty(pathURI, aClippedFrame, ClipPathProperty());
 }
 
