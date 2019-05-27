@@ -1,13 +1,6 @@
 /* vim: set ts=8 sw=8 noexpandtab: */
-#ifndef QCMS_INT_H
-#define QCMS_INT_H
-
 #include "qcms.h"
 #include "qcmstypes.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* used as a lookup table for the output transformation.
  * we refcount them so we only need to have one around per output
@@ -74,7 +67,7 @@ struct _qcms_transform {
 	struct precache_output *output_table_g;
 	struct precache_output *output_table_b;
 
-	void (*transform_fn)(const struct _qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length);
+	void (*transform_fn)(struct _qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length);
 };
 
 struct matrix {
@@ -211,7 +204,7 @@ struct tag_value {
 #define LAB_SIGNATURE  0x4C616220
 
 struct _qcms_profile {
-	uint32_t class_type;
+	uint32_t class;
 	uint32_t color_space;
 	uint32_t pcs;
 	qcms_intent rendering_intent;
@@ -261,48 +254,36 @@ static inline float uInt16Number_to_float(uInt16Number a)
 
 
 void precache_release(struct precache_output *p);
-bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
-bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
+qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
+qcms_bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries);
 
-void qcms_transform_data_rgb_out_lut_sse2(const qcms_transform *transform,
-                                          const unsigned char *src,
+void qcms_transform_data_rgb_out_lut_sse2(qcms_transform *transform,
+                                          unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
-void qcms_transform_data_rgba_out_lut_sse2(const qcms_transform *transform,
-                                          const unsigned char *src,
+void qcms_transform_data_rgba_out_lut_sse2(qcms_transform *transform,
+                                          unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
-void qcms_transform_data_bgra_out_lut_sse2(const qcms_transform *transform,
-                                          const unsigned char *src,
+void qcms_transform_data_rgb_out_lut_sse1(qcms_transform *transform,
+                                          unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
-void qcms_transform_data_rgb_out_lut_sse1(const qcms_transform *transform,
-                                          const unsigned char *src,
-                                          unsigned char *dest,
-                                          size_t length);
-void qcms_transform_data_rgba_out_lut_sse1(const qcms_transform *transform,
-                                          const unsigned char *src,
-                                          unsigned char *dest,
-                                          size_t length);
-void qcms_transform_data_bgra_out_lut_sse1(const qcms_transform *transform,
-                                          const unsigned char *src,
+void qcms_transform_data_rgba_out_lut_sse1(qcms_transform *transform,
+                                          unsigned char *src,
                                           unsigned char *dest,
                                           size_t length);
 
-void qcms_transform_data_rgb_out_lut_altivec(const qcms_transform *transform,
-                                             const unsigned char *src,
+void qcms_transform_data_rgb_out_lut_altivec(qcms_transform *transform,
+                                             unsigned char *src,
                                              unsigned char *dest,
                                              size_t length);
-void qcms_transform_data_rgba_out_lut_altivec(const qcms_transform *transform,
-                                              const unsigned char *src,
-                                              unsigned char *dest,
-                                              size_t length);
-void qcms_transform_data_bgra_out_lut_altivec(const qcms_transform *transform,
-                                              const unsigned char *src,
+void qcms_transform_data_rgba_out_lut_altivec(qcms_transform *transform,
+                                              unsigned char *src,
                                               unsigned char *dest,
                                               size_t length);
 
-extern bool qcms_supports_iccv4;
+extern qcms_bool qcms_supports_iccv4;
 
 #ifdef _MSC_VER
 
@@ -322,25 +303,25 @@ long __cdecl _InterlockedDecrement(long volatile *);
 #endif
 
 
-#define RGB_COMPONENTS 3
-#define RGBA_COMPONENTS 4
-
-#define RGBA_R_INDEX 0
-#define RGBA_G_INDEX 1
-#define RGBA_B_INDEX 2
-#define RGBA_A_INDEX 3
-
-#define BGRA_B_INDEX 0
-#define BGRA_G_INDEX 1
-#define BGRA_R_INDEX 2
-#define BGRA_A_INDEX 3
-
-#define NO_A_INDEX   0xFF
-
-#define A_INDEX_COMPONENTS(kAIndex)    ((kAIndex) == NO_A_INDEX ? RGB_COMPONENTS : RGBA_COMPONENTS)
-
-#ifdef __cplusplus
-}
-#endif
-
+#ifdef NATIVE_OUTPUT
+# define RGB_OUTPUT_COMPONENTS 4
+# define RGBA_OUTPUT_COMPONENTS 4
+# ifdef IS_LITTLE_ENDIAN
+#  define OUTPUT_A_INDEX 3
+#  define OUTPUT_R_INDEX 2
+#  define OUTPUT_G_INDEX 1
+#  define OUTPUT_B_INDEX 0
+# else
+#  define OUTPUT_A_INDEX 0
+#  define OUTPUT_R_INDEX 1
+#  define OUTPUT_G_INDEX 2
+#  define OUTPUT_B_INDEX 3
+# endif
+#else
+# define RGB_OUTPUT_COMPONENTS 3
+# define RGBA_OUTPUT_COMPONENTS 4
+# define OUTPUT_R_INDEX 0
+# define OUTPUT_G_INDEX 1
+# define OUTPUT_B_INDEX 2
+# define OUTPUT_A_INDEX 3
 #endif
