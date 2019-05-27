@@ -2118,6 +2118,7 @@ STATIC_ATOMS = [
     Atom("crh", "crh"),
     # Atom("el", "el"),  # "el" is present above
     Atom("ga", "ga"),
+    # Atom("lt", "lt"),  # "lt" is present above (atom name "lt_")
     Atom("nl", "nl"),
 
     # mathematical language, used for MathML
