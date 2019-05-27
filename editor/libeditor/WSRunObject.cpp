@@ -68,6 +68,7 @@ WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
                          const EditorDOMPointBase<PT, CT>& aScanEndPoint)
     : mScanStartPoint(aScanStartPoint),
       mScanEndPoint(aScanEndPoint),
+      mEditingHost(aHTMLEditor->GetActiveEditingHost()),
       mPRE(false),
       mStartOffset(0),
       mEndOffset(0),
@@ -1027,15 +1028,24 @@ nsIContent* WSRunObject::GetPreviousWSNodeInner(nsINode* aStartNode,
   // containers.
   MOZ_ASSERT(aStartNode && aBlockParent);
 
+  if (NS_WARN_IF(aStartNode == mEditingHost)) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIContent> priorNode = aStartNode->GetPreviousSibling();
   OwningNonNull<nsINode> curNode = *aStartNode;
   while (!priorNode) {
     // We have exhausted nodes in parent of aStartNode.
     nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
-    NS_ENSURE_TRUE(curParent, nullptr);
+    if (NS_WARN_IF(!curParent)) {
+      return nullptr;
+    }
     if (curParent == aBlockParent) {
       // We have exhausted nodes in the block parent.  The convention here is
       // to return null.
+      return nullptr;
+    }
+    if (NS_WARN_IF(curParent == mEditingHost)) {
       return nullptr;
     }
     // We have a parent: look for previous sibling
@@ -1112,15 +1122,24 @@ nsIContent* WSRunObject::GetNextWSNodeInner(nsINode* aStartNode,
   // containers.
   MOZ_ASSERT(aStartNode && aBlockParent);
 
+  if (NS_WARN_IF(aStartNode == mEditingHost)) {
+    return nullptr;
+  }
+
   nsCOMPtr<nsIContent> nextNode = aStartNode->GetNextSibling();
   nsCOMPtr<nsINode> curNode = aStartNode;
   while (!nextNode) {
     // We have exhausted nodes in parent of aStartNode.
     nsCOMPtr<nsINode> curParent = curNode->GetParentNode();
-    NS_ENSURE_TRUE(curParent, nullptr);
+    if (NS_WARN_IF(!curParent)) {
+      return nullptr;
+    }
     if (curParent == aBlockParent) {
       // We have exhausted nodes in the block parent.  The convention here is
       // to return null.
+      return nullptr;
+    }
+    if (NS_WARN_IF(curParent == mEditingHost)) {
       return nullptr;
     }
     // We have a parent: look for next sibling
