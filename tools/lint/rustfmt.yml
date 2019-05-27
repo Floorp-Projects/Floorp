@@ -2,6 +2,7 @@
 rust:
     description: Reformat rust
     include:
+        - js/src/wasm/cranelift/
         - servo/
     extensions:
         - rs
