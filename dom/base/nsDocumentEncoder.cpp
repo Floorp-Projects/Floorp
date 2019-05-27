@@ -222,6 +222,16 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
    */
   nsresult SerializeDependingOnScope(nsAString& aOutput, uint32_t aMaxLength);
 
+  nsresult SerializeSelection(nsAString& aOutput);
+
+  nsresult SerializeNode(nsAString& aOutput);
+
+  /**
+   * @param aMaxLength As described at
+   * `nsIDocumentEncodder.encodeToStringWithMaxLength`.
+   */
+  nsresult SerializeWholeDocument(nsAString& aOutput, uint32_t aMaxLength);
+
   nsresult SerializeNodeStart(nsINode& aOriginalNode, int32_t aStartOffset,
                               int32_t aEndOffset, nsAString& aStr,
                               nsINode* aFixupNode = nullptr);
@@ -382,92 +392,121 @@ static bool ParentIsTR(nsIContent* aContent) {
 nsresult nsDocumentEncoder::SerializeDependingOnScope(nsAString& aOutput,
                                                       uint32_t aMaxLength) {
   nsresult rv = NS_OK;
-  if (Selection* selection = mEncodingScope.mSelection) {
-    uint32_t count = selection->RangeCount();
-
-    nsCOMPtr<nsINode> node, prevNode;
-    uint32_t firstRangeStartDepth = 0;
-    for (uint32_t i = 0; i < count; ++i) {
-      RefPtr<nsRange> range = selection->GetRangeAt(i);
-
-      // Bug 236546: newlines not added when copying table cells into clipboard
-      // Each selected cell shows up as a range containing a row with a single
-      // cell get the row, compare it to previous row and emit </tr><tr> as
-      // needed Bug 137450: Problem copying/pasting a table from a web page to
-      // Excel. Each separate block of <tr></tr> produced above will be wrapped
-      // by the immediate context. This assumes that you can't select cells that
-      // are multiple selections from two tables simultaneously.
-      node = range->GetStartContainer();
-      NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-      if (node != prevNode) {
-        if (prevNode) {
-          rv = SerializeNodeEnd(*prevNode, aOutput);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-        if (content && content->IsHTMLElement(nsGkAtoms::tr) &&
-            !ParentIsTR(content)) {
-          if (!prevNode) {
-            // Went from a non-<tr> to a <tr>
-            mCommonAncestors.Clear();
-            nsContentUtils::GetAncestors(node->GetParentNode(),
-                                         mCommonAncestors);
-            rv = SerializeRangeContextStart(mCommonAncestors, aOutput);
-            NS_ENSURE_SUCCESS(rv, rv);
-            // Don't let SerializeRangeToString serialize the context again
-            mDisableContextSerialize = true;
-          }
-
-          rv = SerializeNodeStart(*node, 0, -1, aOutput);
-          NS_ENSURE_SUCCESS(rv, rv);
-          prevNode = node;
-        } else if (prevNode) {
-          // Went from a <tr> to a non-<tr>
-          mDisableContextSerialize = false;
-          rv = SerializeRangeContextEnd(aOutput);
-          NS_ENSURE_SUCCESS(rv, rv);
-          prevNode = nullptr;
-        }
-      }
-
-      rv = SerializeRangeToString(range, aOutput);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (i == 0) {
-        firstRangeStartDepth = mContextInfoDepth.mStart;
-      }
-    }
-    mContextInfoDepth.mStart = firstRangeStartDepth;
-
-    if (prevNode) {
-      rv = SerializeNodeEnd(*prevNode, aOutput);
-      NS_ENSURE_SUCCESS(rv, rv);
-      mDisableContextSerialize = false;
-      rv = SerializeRangeContextEnd(aOutput);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Just to be safe
-    mDisableContextSerialize = false;
+  if (mEncodingScope.mSelection) {
+    rv = SerializeSelection(aOutput);
   } else if (nsRange* range = mEncodingScope.mRange) {
     rv = SerializeRangeToString(range, aOutput);
-  } else if (nsINode* node = mEncodingScope.mNode) {
-    const bool nodeIsContainer = mEncodingScope.mNodeIsContainer;
-    if (!mNodeFixup && !(mFlags & SkipInvisibleContent) && !mTextStreamer &&
-        nodeIsContainer) {
-      rv = SerializeToStringIterative(node, aOutput);
-    } else {
-      rv = SerializeToStringRecursive(node, aOutput, nodeIsContainer);
-    }
+  } else if (mEncodingScope.mNode) {
+    rv = SerializeNode(aOutput);
   } else {
-    rv = mSerializer->AppendDocumentStart(mDocument, aOutput);
-
-    if (NS_SUCCEEDED(rv)) {
-      rv = SerializeToStringRecursive(mDocument, aOutput, false, aMaxLength);
-    }
+    rv = SerializeWholeDocument(aOutput, aMaxLength);
   }
 
   mEncodingScope = {};
 
+  return rv;
+}
+
+nsresult nsDocumentEncoder::SerializeSelection(nsAString& aOutput) {
+  NS_ENSURE_TRUE(mEncodingScope.mSelection, NS_ERROR_FAILURE);
+
+  nsresult rv = NS_OK;
+  Selection* selection = mEncodingScope.mSelection;
+  uint32_t count = selection->RangeCount();
+
+  nsCOMPtr<nsINode> node;
+  nsCOMPtr<nsINode> prevNode;
+  uint32_t firstRangeStartDepth = 0;
+  for (uint32_t i = 0; i < count; ++i) {
+    RefPtr<nsRange> range = selection->GetRangeAt(i);
+
+    // Bug 236546: newlines not added when copying table cells into clipboard
+    // Each selected cell shows up as a range containing a row with a single
+    // cell get the row, compare it to previous row and emit </tr><tr> as
+    // needed Bug 137450: Problem copying/pasting a table from a web page to
+    // Excel. Each separate block of <tr></tr> produced above will be wrapped
+    // by the immediate context. This assumes that you can't select cells that
+    // are multiple selections from two tables simultaneously.
+    node = range->GetStartContainer();
+    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+    if (node != prevNode) {
+      if (prevNode) {
+        rv = SerializeNodeEnd(*prevNode, aOutput);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+      if (content && content->IsHTMLElement(nsGkAtoms::tr) &&
+          !ParentIsTR(content)) {
+        if (!prevNode) {
+          // Went from a non-<tr> to a <tr>
+          mCommonAncestors.Clear();
+          nsContentUtils::GetAncestors(node->GetParentNode(), mCommonAncestors);
+          rv = SerializeRangeContextStart(mCommonAncestors, aOutput);
+          NS_ENSURE_SUCCESS(rv, rv);
+          // Don't let SerializeRangeToString serialize the context again
+          mDisableContextSerialize = true;
+        }
+
+        rv = SerializeNodeStart(*node, 0, -1, aOutput);
+        NS_ENSURE_SUCCESS(rv, rv);
+        prevNode = node;
+      } else if (prevNode) {
+        // Went from a <tr> to a non-<tr>
+        mDisableContextSerialize = false;
+        rv = SerializeRangeContextEnd(aOutput);
+        NS_ENSURE_SUCCESS(rv, rv);
+        prevNode = nullptr;
+      }
+    }
+
+    rv = SerializeRangeToString(range, aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (i == 0) {
+      firstRangeStartDepth = mContextInfoDepth.mStart;
+    }
+  }
+  mContextInfoDepth.mStart = firstRangeStartDepth;
+
+  if (prevNode) {
+    rv = SerializeNodeEnd(*prevNode, aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mDisableContextSerialize = false;
+    rv = SerializeRangeContextEnd(aOutput);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Just to be safe
+  mDisableContextSerialize = false;
+
+  return rv;
+}
+
+nsresult nsDocumentEncoder::SerializeNode(nsAString& aOutput) {
+  NS_ENSURE_TRUE(mEncodingScope.mNode, NS_ERROR_FAILURE);
+
+  nsresult rv = NS_OK;
+  nsINode* node = mEncodingScope.mNode;
+  const bool nodeIsContainer = mEncodingScope.mNodeIsContainer;
+  if (!mNodeFixup && !(mFlags & SkipInvisibleContent) && !mTextStreamer &&
+      nodeIsContainer) {
+    rv = SerializeToStringIterative(node, aOutput);
+  } else {
+    rv = SerializeToStringRecursive(node, aOutput, nodeIsContainer);
+  }
+
+  return rv;
+}
+
+nsresult nsDocumentEncoder::SerializeWholeDocument(nsAString& aOutput,
+                                                   uint32_t aMaxLength) {
+  NS_ENSURE_FALSE(mEncodingScope.mSelection, NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(mEncodingScope.mRange, NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(mEncodingScope.mNode, NS_ERROR_FAILURE);
+
+  nsresult rv = mSerializer->AppendDocumentStart(mDocument, aOutput);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SerializeToStringRecursive(mDocument, aOutput, false, aMaxLength);
   return rv;
 }
 
