@@ -119,7 +119,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
         return if (this != null) {
             val newList = list.plus(listOf(BookmarkNodeWithDepth(depth, this, this.parentGuid)))
             newList.plus(
-                children?.filter { it?.type == BookmarkNodeType.FOLDER }
+                children?.filter { it.type == BookmarkNodeType.FOLDER }
                     ?.flatMap { it.convertToFolderDepthTree(depth + 1) }
                     ?: listOf())
         } else listOf()

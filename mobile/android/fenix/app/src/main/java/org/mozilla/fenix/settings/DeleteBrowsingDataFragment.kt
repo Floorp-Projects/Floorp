@@ -82,11 +82,10 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
             })
         }
 
-        view?.open_tabs_item?.onCheckListener = { _ -> updateDeleteButton() }
-        view?.browsing_data_item?.onCheckListener = { _ -> updateDeleteButton() }
-        view?.collections_item?.onCheckListener = { _ -> updateDeleteButton() }
-
-        view?.delete_data?.setOnClickListener {
+        view.open_tabs_item?.onCheckListener = { _ -> updateDeleteButton() }
+        view.browsing_data_item?.onCheckListener = { _ -> updateDeleteButton() }
+        view.collections_item?.onCheckListener = { _ -> updateDeleteButton() }
+        view.delete_data?.setOnClickListener {
             askToDelete()
         }
     }

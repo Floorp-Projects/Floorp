@@ -148,7 +148,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             bookmark_separator.visibility = View.GONE
             bookmark_layout.isClickable = true
 
-            val bookmarkItemMenu = BookmarkItemMenu(containerView!!.context, item) {
+            val bookmarkItemMenu = BookmarkItemMenu(containerView.context, item) {
                 when (it) {
                     is BookmarkItemMenu.Item.Edit -> {
                         actionEmitter.onNext(BookmarkAction.Edit(item))

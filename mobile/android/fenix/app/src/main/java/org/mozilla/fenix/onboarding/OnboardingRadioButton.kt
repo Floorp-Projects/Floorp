@@ -46,7 +46,6 @@ class OnboardingRadioButton : RadioButton {
             updateRadioValue(true)
             toggleRadioGroups()
             clickListener?.invoke()
-            true
         }
     }
 

@@ -78,7 +78,7 @@ class CollectionCreationUIView(
             }
         }
 
-        view.name_collection_edittext.setOnEditorActionListener { v, actionId, event ->
+        view.name_collection_edittext.setOnEditorActionListener { v, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE && !v.text.toString().isEmpty()) {
                 when (step) {
                     is SaveCollectionStep.NameCollection -> {
