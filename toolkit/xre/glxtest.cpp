@@ -255,7 +255,7 @@ void glxtest() {
     vendorId &= 0xFFFF;
     deviceId &= 0xFFFF;
 
-    length += snprintf(buf + length, bufsize,
+    length += snprintf(buf + length, bufsize - length,
                        "MESA_VENDOR_ID\n0x%04x\n"
                        "MESA_DEVICE_ID\n0x%04x\n"
                        "MESA_ACCELERATED\n%s\n"
@@ -274,7 +274,7 @@ void glxtest() {
   if (glXGetScreenDriverProc) {
     const char* driDriver = glXGetScreenDriverProc(dpy, DefaultScreen(dpy));
     if (driDriver) {
-      length += snprintf(buf + length, bufsize, "DRI_DRIVER\n%s\n", driDriver);
+      length += snprintf(buf + length, bufsize - length, "DRI_DRIVER\n%s\n", driDriver);
       if (length >= bufsize)
         fatal_error("GL strings length too large for buffer size");
     }
