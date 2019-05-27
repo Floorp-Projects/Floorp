@@ -95,3 +95,30 @@ function getTargets(CDP) {
     });
   });
 }
+
+/**
+ * Create a new tab for the provided uri and start a CDP server debugging the
+ * created tab.
+ */
+async function setupTestForUri(uri) {
+  // Open a test page, to prevent debugging the random default page
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
+
+  // Start the CDP server
+  RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
+
+  // Retrieve the chrome-remote-interface library object
+  const CDP = await getCDP();
+
+  // Connect to the server
+  const client = await CDP({
+    target(list) {
+      // Ensure debugging the right target, i.e. the one for our test tab.
+      return list.find(target => {
+        return target.url == uri;
+      });
+    },
+  });
+  ok(true, "CDP client has been instantiated");
+  return { client, tab };
+}
