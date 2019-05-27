@@ -358,8 +358,7 @@ const CustomizableWidgets = [
     },
     updateCurrentCharset(aDocument) {
       let currentCharset = aDocument.defaultView.gBrowser.selectedBrowser.characterSet;
-      let {charsetAutodetected} = aDocument.defaultView.gBrowser.selectedBrowser;
-      currentCharset = CharsetMenu.foldCharset(currentCharset, charsetAutodetected);
+      currentCharset = CharsetMenu.foldCharset(currentCharset);
 
       let pinnedContainer = aDocument.getElementById("PanelUI-characterEncodingView-pinned");
       let charsetContainer = aDocument.getElementById("PanelUI-characterEncodingView-charsets");

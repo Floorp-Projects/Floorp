@@ -197,7 +197,6 @@ class RemoteWebProgressManager {
       if (json.charset) {
         this._browser._characterSet = json.charset;
         this._browser._mayEnableCharacterEncodingMenu = json.mayEnableCharacterEncodingMenu;
-        this._browser._charsetAutodetected = json.charsetAutodetected;
       }
     }
 
