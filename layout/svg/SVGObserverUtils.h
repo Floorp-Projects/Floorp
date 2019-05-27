@@ -296,13 +296,13 @@ class SVGObserverUtils {
    * set is destroyed or has its filter style reset).
    *
    * XXXjwatt: It's a bit unfortunate that both we and
-   * CanvasRenderingContext2D::UpdateFilter process the list of nsStyleFilter
+   * CanvasRenderingContext2D::UpdateFilter process the list of StyleFilter
    * objects separately.  It would be better to refactor things so that we only
    * do that work once.
    */
   static already_AddRefed<nsISupports> ObserveFiltersForCanvasContext(
       CanvasRenderingContext2D* aContext, Element* aCanvasElement,
-      nsTArray<nsStyleFilter>& aFilters);
+      Span<const StyleFilter> aFilters);
 
   /**
    * Called when cycle collecting CanvasRenderingContext2D, and requires the
@@ -403,7 +403,7 @@ class SVGObserverUtils {
    * A helper function to resolve filter URL.
    */
   static already_AddRefed<URLAndReferrerInfo> GetFilterURI(
-      nsIFrame* aFrame, const nsStyleFilter& aFilter);
+      nsIFrame* aFrame, const StyleFilter& aFilter);
 
   /**
    * Return a baseURL for resolving a local-ref URL.

@@ -30,7 +30,7 @@ static float ClampFactor(float aFactor) {
 }
 
 nsCSSFilterInstance::nsCSSFilterInstance(
-    const nsStyleFilter& aFilter, nscolor aShadowFallbackColor,
+    const StyleFilter& aFilter, nscolor aShadowFallbackColor,
     const nsIntRect& aTargetBoundsInFilterSpace,
     const gfxMatrix& aFrameSpaceInCSSPxToFilterSpaceTransform)
     : mFilter(aFilter),
@@ -45,35 +45,35 @@ nsresult nsCSSFilterInstance::BuildPrimitives(
   FilterPrimitiveDescription descr =
       CreatePrimitiveDescription(aPrimitiveDescrs, aInputIsTainted);
   nsresult result;
-  switch (mFilter.GetType()) {
-    case NS_STYLE_FILTER_BLUR:
+  switch (mFilter.tag) {
+    case StyleFilter::Tag::Blur:
       result = SetAttributesForBlur(descr);
       break;
-    case NS_STYLE_FILTER_BRIGHTNESS:
+    case StyleFilter::Tag::Brightness:
       result = SetAttributesForBrightness(descr);
       break;
-    case NS_STYLE_FILTER_CONTRAST:
+    case StyleFilter::Tag::Contrast:
       result = SetAttributesForContrast(descr);
       break;
-    case NS_STYLE_FILTER_DROP_SHADOW:
+    case StyleFilter::Tag::DropShadow:
       result = SetAttributesForDropShadow(descr);
       break;
-    case NS_STYLE_FILTER_GRAYSCALE:
+    case StyleFilter::Tag::Grayscale:
       result = SetAttributesForGrayscale(descr);
       break;
-    case NS_STYLE_FILTER_HUE_ROTATE:
+    case StyleFilter::Tag::HueRotate:
       result = SetAttributesForHueRotate(descr);
       break;
-    case NS_STYLE_FILTER_INVERT:
+    case StyleFilter::Tag::Invert:
       result = SetAttributesForInvert(descr);
       break;
-    case NS_STYLE_FILTER_OPACITY:
+    case StyleFilter::Tag::Opacity:
       result = SetAttributesForOpacity(descr);
       break;
-    case NS_STYLE_FILTER_SATURATE:
+    case StyleFilter::Tag::Saturate:
       result = SetAttributesForSaturate(descr);
       break;
-    case NS_STYLE_FILTER_SEPIA:
+    case StyleFilter::Tag::Sepia:
       result = SetAttributesForSepia(descr);
       break;
     default:
@@ -109,14 +109,9 @@ FilterPrimitiveDescription nsCSSFilterInstance::CreatePrimitiveDescription(
 
 nsresult nsCSSFilterInstance::SetAttributesForBlur(
     FilterPrimitiveDescription& aDescr) {
-  const nsStyleCoord& radiusInFrameSpace = mFilter.GetFilterParameter();
-  if (radiusInFrameSpace.GetUnit() != eStyleUnit_Coord) {
-    MOZ_ASSERT_UNREACHABLE("unexpected unit");
-    return NS_ERROR_FAILURE;
-  }
-
+  const Length& radiusInFrameSpace = mFilter.AsBlur();
   Size radiusInFilterSpace =
-      BlurRadiusToFilterSpace(radiusInFrameSpace.GetCoordValue());
+      BlurRadiusToFilterSpace(radiusInFrameSpace.ToAppUnits());
   GaussianBlurAttributes atts;
   atts.mStdDeviation = radiusInFilterSpace;
   aDescr.Attributes() = AsVariant(atts);
@@ -125,8 +120,7 @@ nsresult nsCSSFilterInstance::SetAttributesForBlur(
 
 nsresult nsCSSFilterInstance::SetAttributesForBrightness(
     FilterPrimitiveDescription& aDescr) {
-  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
-  float value = styleValue.GetFactorOrPercentValue();
+  float value = mFilter.AsBrightness();
   float intercept = 0.0f;
   ComponentTransferAttributes atts;
 
@@ -147,8 +141,7 @@ nsresult nsCSSFilterInstance::SetAttributesForBrightness(
 
 nsresult nsCSSFilterInstance::SetAttributesForContrast(
     FilterPrimitiveDescription& aDescr) {
-  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
-  float value = styleValue.GetFactorOrPercentValue();
+  float value = mFilter.AsContrast();
   float intercept = -(0.5 * value) + 0.5;
   ComponentTransferAttributes atts;
 
@@ -169,7 +162,7 @@ nsresult nsCSSFilterInstance::SetAttributesForContrast(
 
 nsresult nsCSSFilterInstance::SetAttributesForDropShadow(
     FilterPrimitiveDescription& aDescr) {
-  const auto& shadow = mFilter.GetDropShadow();
+  const auto& shadow = mFilter.AsDropShadow();
 
   DropShadowAttributes atts;
 
@@ -197,8 +190,7 @@ nsresult nsCSSFilterInstance::SetAttributesForGrayscale(
   atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_SATURATE;
 
   // Set color matrix values.
-  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
-  float value = 1 - ClampFactor(styleValue.GetFactorOrPercentValue());
+  float value = 1 - ClampFactor(mFilter.AsGrayscale());
   atts.mValues.AppendElements(&value, 1);
 
   aDescr.Attributes() = AsVariant(std::move(atts));
@@ -212,8 +204,7 @@ nsresult nsCSSFilterInstance::SetAttributesForHueRotate(
   atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_HUE_ROTATE;
 
   // Set color matrix values.
-  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
-  float value = styleValue.GetAngleValueInDegrees();
+  float value = mFilter.AsHueRotate().ToDegrees();
   atts.mValues.AppendElements(&value, 1);
 
   aDescr.Attributes() = AsVariant(std::move(atts));
@@ -223,8 +214,7 @@ nsresult nsCSSFilterInstance::SetAttributesForHueRotate(
 nsresult nsCSSFilterInstance::SetAttributesForInvert(
     FilterPrimitiveDescription& aDescr) {
   ComponentTransferAttributes atts;
-  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
-  float value = ClampFactor(styleValue.GetFactorOrPercentValue());
+  float value = ClampFactor(mFilter.AsInvert());
 
   // Set transfer functions for RGB.
   float invertTableValues[2];
@@ -246,8 +236,7 @@ nsresult nsCSSFilterInstance::SetAttributesForInvert(
 nsresult nsCSSFilterInstance::SetAttributesForOpacity(
     FilterPrimitiveDescription& aDescr) {
   OpacityAttributes atts;
-  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
-  float value = ClampFactor(styleValue.GetFactorOrPercentValue());
+  float value = ClampFactor(mFilter.AsOpacity());
 
   atts.mOpacity = value;
   aDescr.Attributes() = AsVariant(std::move(atts));
@@ -261,8 +250,7 @@ nsresult nsCSSFilterInstance::SetAttributesForSaturate(
   atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_SATURATE;
 
   // Set color matrix values.
-  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
-  float value = styleValue.GetFactorOrPercentValue();
+  float value = mFilter.AsSaturate();
   atts.mValues.AppendElements(&value, 1);
 
   aDescr.Attributes() = AsVariant(std::move(atts));
@@ -276,8 +264,7 @@ nsresult nsCSSFilterInstance::SetAttributesForSepia(
   atts.mType = (uint32_t)SVG_FECOLORMATRIX_TYPE_SEPIA;
 
   // Set color matrix values.
-  const nsStyleCoord& styleValue = mFilter.GetFilterParameter();
-  float value = ClampFactor(styleValue.GetFactorOrPercentValue());
+  float value = ClampFactor(mFilter.AsSepia());
   atts.mValues.AppendElements(&value, 1);
 
   aDescr.Attributes() = AsVariant(std::move(atts));

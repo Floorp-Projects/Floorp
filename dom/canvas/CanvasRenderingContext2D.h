@@ -566,7 +566,8 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
 
   // Returns whether a filter was successfully parsed.
   bool ParseFilter(const nsAString& aString,
-                   nsTArray<nsStyleFilter>& aFilterChain, ErrorResult& aError);
+                   StyleOwnedSlice<StyleFilter>& aFilterChain,
+                   ErrorResult& aError);
 
   // Returns whether the font was successfully updated.
   bool SetFontInternal(const nsAString& aFont, mozilla::ErrorResult& aError);
@@ -966,7 +967,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
     mozilla::gfx::JoinStyle lineJoin = mozilla::gfx::JoinStyle::MITER_OR_BEVEL;
 
     nsString filterString = nsString(u"none");
-    nsTArray<nsStyleFilter> filterChain;
+    StyleOwnedSlice<StyleFilter> filterChain;
     // RAII object that we obtain when we start to observer SVG filter elements
     // for rendering changes.  When released we stop observing the SVG elements.
     nsCOMPtr<nsISupports> autoSVGFiltersObserver;
