@@ -46,6 +46,7 @@ remote.jar:
   content/domains/content/runtime/ExecutionContext.jsm (domains/content/runtime/ExecutionContext.jsm)
   content/domains/content/Security.jsm (domains/content/Security.jsm)
   content/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
+  content/domains/parent/Page.jsm (domains/parent/Page.jsm)
   content/domains/parent/Target.jsm (domains/parent/Target.jsm)
 
   # transport layer

@@ -61,7 +61,7 @@ class TabSession extends Session {
       }
 
       const {domain, command} = Domains.splitMethod(method);
-      if (this.domains.has(domain)) {
+      if (this.domains.domainSupportsMethod(domain, command)) {
         await this.execute(id, domain, command, params);
       } else {
         this.executeInChild(id, domain, command, params);
