@@ -40,7 +40,7 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(STYLE_NO_TITLE, R.style.CreateCollectionDialogStyle)
+        setStyle(STYLE_NO_TITLE, R.style.ShareDialogStyle)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
