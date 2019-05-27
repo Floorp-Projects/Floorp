@@ -63,7 +63,9 @@ class RemoteAgentClass {
       this.server.registerPathHandler(target.path, target);
     });
     this.targets.on("disconnect", (eventName, target) => {
-      // TODO(ato): removing a handler is currently not possible
+      // TODO: This removes the entry added by registerPathHandler, should rather expose
+      // an unregisterPathHandler method on nsHttpServer.
+      delete this.server._handler._overridePaths[target.path];
     });
   }
 
