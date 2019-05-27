@@ -393,10 +393,13 @@ if (project.hasProperty("raptor")) {
 // -------------------------------------------------------------------------------------------------
 task printBuildVariants {
     doLast {
-        def buildVariants = android.applicationVariants.collect { variant ->
-            variant.name
-        }
-        println "variants: " + groovy.json.JsonOutput.toJson(buildVariants)
+        def variantData = android.applicationVariants.collect { variant -> [
+            name: variant.name,
+            buildType: variant.buildType.name,
+            abi: variant.productFlavors.find { it.dimension == 'abi' }.name,
+            isSigned: variant.signingReady,
+        ]}
+        println "variants: " + groovy.json.JsonOutput.toJson(variantData)
     }
 }
 

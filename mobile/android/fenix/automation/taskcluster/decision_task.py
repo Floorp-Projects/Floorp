@@ -15,10 +15,9 @@ import re
 
 import taskcluster
 
-from lib.gradle import get_build_variants, get_geckoview_versions
+from lib.gradle import get_debug_variants, get_geckoview_versions
 from lib.tasks import (
     fetch_mozharness_task_id,
-    get_architecture_and_build_type_from_variant,
     schedule_task_graph,
     TaskBuilder,
 )
@@ -26,6 +25,7 @@ from lib.chain_of_trust import (
     populate_chain_of_trust_task_graph,
     populate_chain_of_trust_required_but_unused_files
 )
+from lib.variant import Variant
 
 REPO_URL = os.environ.get('MOBILE_HEAD_REPOSITORY')
 COMMIT = os.environ.get('MOBILE_HEAD_REV')
@@ -57,7 +57,6 @@ def pr_or_push(is_push):
         print("Exit")
         return {}
 
-    debug_variants = [variant for variant in get_build_variants() if variant.endswith('Debug')]
     geckoview_nightly_version = get_geckoview_versions()['nightly']
     mozharness_task_id = fetch_mozharness_task_id(geckoview_nightly_version)
     gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
@@ -66,7 +65,7 @@ def pr_or_push(is_push):
     signing_tasks = {}
     other_tasks = {}
 
-    for variant in debug_variants:
+    for variant in get_debug_variants():
         assemble_task_id = taskcluster.slugId()
         build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
         build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
@@ -74,7 +73,7 @@ def pr_or_push(is_push):
     if is_push and SHORT_HEAD_BRANCH == 'master':
         other_tasks[taskcluster.slugId()] = BUILDER.craft_dependencies_task()
 
-        for variant in ('armRaptor', 'aarch64Raptor'):
+        for variant in [Variant.from_values(abi, False, 'raptor') for abi in ('aarch64', 'arm')]:
             assemble_task_id = taskcluster.slugId()
             build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
             signing_task_id = taskcluster.slugId()

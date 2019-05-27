@@ -113,15 +113,15 @@ class TaskBuilder(object):
 
     def craft_assemble_task(self, variant):
         return self._craft_clean_gradle_task(
-            name='assemble: {}'.format(variant),
-            description='Building and testing variant {}'.format(variant),
-            gradle_task='assemble{}'.format(variant.capitalize()),
+            name='assemble: {}'.format(variant.raw),
+            description='Building and testing variant {}'.format(variant.raw),
+            gradle_task='assemble{}'.format(variant.for_gradle_command),
             artifacts=_craft_artifacts_from_variant(variant),
             treeherder={
-                'groupSymbol': _craft_treeherder_group_symbol_from_variant(variant),
+                'groupSymbol': variant.build_type,
                 'jobKind': 'build',
                 'machine': {
-                  'platform': _craft_treeherder_platform_from_variant(variant),
+                  'platform': variant.platform,
                 },
                 'symbol': 'A',
                 'tier': 1,
@@ -130,14 +130,14 @@ class TaskBuilder(object):
 
     def craft_test_task(self, variant):
         return self._craft_clean_gradle_task(
-            name='test: {}'.format(variant),
-            description='Building and testing variant {}'.format(variant),
-            gradle_task='test{}UnitTest'.format(variant.capitalize()),
+            name='test: {}'.format(variant.raw),
+            description='Building and testing variant {}'.format(variant.raw),
+            gradle_task='test{}UnitTest'.format(variant.for_gradle_command),
             treeherder={
-                'groupSymbol': _craft_treeherder_group_symbol_from_variant(variant),
+                'groupSymbol': variant.build_type,
                 'jobKind': 'test',
                 'machine': {
-                  'platform': _craft_treeherder_platform_from_variant(variant),
+                  'platform': variant.platform,
                 },
                 'symbol': 'T',
                 'tier': 1,
@@ -377,36 +377,35 @@ class TaskBuilder(object):
     def craft_raptor_signing_task(
         self, assemble_task_id, variant
     ):
-        architecture, _ = get_architecture_and_build_type_from_variant(variant)
         routes = []
         if self.repo_url == _OFFICIAL_REPO_URL:
             routes = [
                 'index.project.mobile.fenix.v2.branch.master.revision.{}.raptor.{}'.format(
-                    self.commit, architecture
+                    self.commit, variant.abi
                 ),
                 'index.project.mobile.fenix.v2.branch.master.latest.raptor.{}'.format(
-                    architecture
+                    variant.abi
                 ),
                 'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.revision.{}.raptor.{}'.format(
-                    self.date.year, self.date.month, self.date.day, self.commit, architecture
+                    self.date.year, self.date.month, self.date.day, self.commit, variant.abi
                 ),
                 'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.latest.raptor.{}'.format(
-                    self.date.year, self.date.month, self.date.day, architecture
+                    self.date.year, self.date.month, self.date.day, variant.abi
                 ),
             ]
 
         return self._craft_signing_task(
-            name='sign: {}'.format(variant),
-            description='Dep-signing variant {}'.format(variant),
+            name='sign: {}'.format(variant.raw),
+            description='Dep-signing variant {}'.format(variant.raw),
             signing_type="dep",
             assemble_task_id=assemble_task_id,
             apk_paths=["public/target.apk"],
             routes=routes,
             treeherder={
-                'groupSymbol': _craft_treeherder_group_symbol_from_variant(variant),
+                'groupSymbol': variant.build_type,
                 'jobKind': 'other',
                 'machine': {
-                    'platform': _craft_treeherder_platform_from_variant(variant),
+                    'platform': variant.platform,
                 },
                 'symbol': 'As',
                 'tier': 1,
@@ -514,20 +513,19 @@ class TaskBuilder(object):
         group_symbol=None,
         force_run_on_64_bit_device=False,
     ):
-        architecture, _ = get_architecture_and_build_type_from_variant(variant)
-        worker_type = 'gecko-t-bitbar-gw-perf-p2' if force_run_on_64_bit_device or architecture == 'aarch64' else 'gecko-t-bitbar-gw-perf-g5'
+        worker_type = 'gecko-t-bitbar-gw-perf-p2' if force_run_on_64_bit_device or variant.abi == 'aarch64' else 'gecko-t-bitbar-gw-perf-g5'
 
         if force_run_on_64_bit_device:
             treeherder_platform = 'android-hw-p2-8-0-arm7-api-16'
-        elif architecture == 'arm':
+        elif variant.abi == 'arm':
             treeherder_platform = 'android-hw-g5-7-0-arm7-api-16'
-        elif architecture == 'aarch64':
+        elif variant.abi == 'aarch64':
             treeherder_platform = 'android-hw-p2-8-0-aarch64'
         else:
-            raise ValueError('Unsupported architecture "{}"'.format(architecture))
+            raise ValueError('Unsupported architecture "{}"'.format(variant.abi))
 
         task_name = '{}: {} {}'.format(
-            name_prefix, variant, '(on 64-bit-device)' if force_run_on_64_bit_device else ''
+            name_prefix, variant.raw, '(on 64-bit-device)' if force_run_on_64_bit_device else ''
         )
 
         apk_url = '{}/{}/artifacts/{}'.format(_DEFAULT_TASK_URL, signing_task_id,
@@ -603,56 +601,14 @@ class TaskBuilder(object):
         )
 
 
-
-def _craft_treeherder_platform_from_variant(variant):
-    architecture, build_type = get_architecture_and_build_type_from_variant(variant)
-    return 'android-{}-{}'.format(architecture, build_type)
-
-
-def _craft_treeherder_group_symbol_from_variant(variant):
-    _, build_type = get_architecture_and_build_type_from_variant(variant)
-    return build_type
-
-
 def _craft_artifacts_from_variant(variant):
     return {
         DEFAULT_APK_ARTIFACT_LOCATION: {
             'type': 'file',
-            'path': _craft_apk_full_path_from_variant(variant),
+            'path': variant.apk_absolute_path(),
             'expires': taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN)),
         }
     }
-
-
-def _craft_apk_full_path_from_variant(variant):
-    architecture, build_type = get_architecture_and_build_type_from_variant(variant)
-    postfix = '' if build_type == 'debug' else '-unsigned'
-    return '/opt/fenix/app/build/outputs/apk/{architecture}/{build_type}/app-{architecture}-{build_type}{postfix}.apk'.format(     # noqa: E501
-        architecture=architecture,
-        build_type=build_type,
-        postfix=postfix
-    )
-
-
-_SUPPORTED_ARCHITECTURES = ('aarch64', 'arm', 'x86')
-
-
-def get_architecture_and_build_type_from_variant(variant):
-    for supported_architecture in _SUPPORTED_ARCHITECTURES:
-        if variant.startswith(supported_architecture):
-            architecture = supported_architecture
-            break
-    else:
-        raise ValueError(
-            'Cannot identify architecture in "{}". '
-            'Expected to find one of these supported ones: {}'.format(
-                variant, _SUPPORTED_ARCHITECTURES
-            )
-        )
-
-    build_type = variant[len(architecture):]
-    build_type = lower_case_first_letter(build_type)
-    return architecture, build_type
 
 
 def schedule_task(queue, taskId, task):

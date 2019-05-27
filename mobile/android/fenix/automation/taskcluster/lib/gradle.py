@@ -6,8 +6,10 @@ from __future__ import print_function
 import json
 import subprocess
 
+from lib.variant import Variant
 
-def get_build_variants():
+
+def get_debug_variants():
     print("Fetching build variants from gradle")
     output = _run_gradle_process('printBuildVariants')
     content = _extract_content_from_command_output(output, prefix='variants: ')
@@ -16,9 +18,10 @@ def get_build_variants():
     if len(variants) == 0:
         raise ValueError("Could not get build variants from gradle")
 
-    print("Got variants: {}".format(' '.join(variants)))
-
-    return variants
+    print("Got variants: {}".format(variants))
+    return [Variant(variant_dict['name'], variant_dict['abi'], variant_dict['isSigned'], variant_dict['buildType'])
+            for variant_dict in variants
+            if variant_dict['buildType'] == 'debug']
 
 
 def get_geckoview_versions():
