@@ -55,7 +55,7 @@ win32/opt:
         tier: 1
     worker-type: b-win2012
     worker:
-        max-run-time: 7200
+        max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
@@ -198,7 +198,7 @@ win64/opt:
         tier: 1
     worker-type: b-win2012
     worker:
-        max-run-time: 7200
+        max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
