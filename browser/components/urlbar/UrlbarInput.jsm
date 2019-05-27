@@ -1322,7 +1322,9 @@ class UrlbarInput {
   }
 
   _on_mousedown(event) {
-    if (event.originalTarget == this.inputField &&
+    if ((event.target == this.inputField ||
+         // Can be removed after bug 1513337:
+         event.originalTarget.classList.contains("anonymous-div")) &&
         event.button == 0 &&
         event.detail == 2 &&
         UrlbarPrefs.get("doubleClickSelectsAll")) {
