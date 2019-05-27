@@ -82,7 +82,8 @@ typedef enum {
 #endif
 
 #include <stdio.h>
-#include <stdbool.h>
+
+typedef int qcms_bool;
 
 struct _qcms_transform;
 typedef struct _qcms_transform qcms_transform;
@@ -109,7 +110,6 @@ typedef enum {
 typedef enum {
 	QCMS_DATA_RGB_8,
 	QCMS_DATA_RGBA_8,
-	QCMS_DATA_BGRA_8,
 	QCMS_DATA_GRAY_8,
 	QCMS_DATA_GRAYA_8
 } qcms_data_type;
@@ -155,7 +155,7 @@ void qcms_data_from_unicode_path(const wchar_t *path, void **mem, size_t *size);
 qcms_profile* qcms_profile_sRGB(void);
 void qcms_profile_release(qcms_profile *profile);
 
-bool qcms_profile_is_bogus(qcms_profile *profile);
+qcms_bool qcms_profile_is_bogus(qcms_profile *profile);
 qcms_intent qcms_profile_get_rendering_intent(qcms_profile *profile);
 icColorSpaceSignature qcms_profile_get_color_space(qcms_profile *profile);
 
@@ -168,7 +168,7 @@ qcms_transform* qcms_transform_create(
 
 void qcms_transform_release(qcms_transform *);
 
-void qcms_transform_data(qcms_transform *transform, const void *src, void *dest, size_t length);
+void qcms_transform_data(qcms_transform *transform, void *src, void *dest, size_t length);
 
 void qcms_enable_iccv4();
 

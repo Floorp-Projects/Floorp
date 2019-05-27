@@ -1,10 +1,6 @@
 #ifndef QCMS_TYPES_H
 #define QCMS_TYPES_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #if BYTE_ORDER == LITTLE_ENDIAN
 #define IS_LITTLE_ENDIAN
 #elif BYTE_ORDER == BIG_ENDIAN
@@ -48,10 +44,8 @@ typedef unsigned long uintptr_t;
 #  include <stdint.h>
 #endif
 
-#include <stdbool.h>
-
-#ifdef __cplusplus
-}
-#endif
+typedef qcms_bool bool;
+#define true 1
+#define false 0
 
 #endif
