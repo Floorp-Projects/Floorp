@@ -42,6 +42,8 @@ class PathBuilderSkia : public PathBuilder {
   void SetFillRule(FillRule aFillRule);
 
   SkPath mPath;
+  Point mCurrentPoint;
+  Point mFirstPoint;
   FillRule mFillRule;
 };
 
