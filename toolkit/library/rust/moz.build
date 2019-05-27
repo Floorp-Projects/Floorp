@@ -15,7 +15,12 @@ RUST_TESTS = [
     'servo_arc',
     'stylo_tests',
 ]
-RUST_TEST_FEATURES = gkrust_features
+
+for feature in gkrust_features:
+    # We don't want to enable refcount logging during rusttests, since the
+    # relevant FFI symbols wouldn't be found.
+    if feature != 'gecko_refcount_logging':
+        RUST_TEST_FEATURES.append(feature)
 
 if CONFIG['CPU_ARCH'] != 'x86':
     # malloc_size_of_derive is a build dependency, so if we are doing
