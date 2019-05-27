@@ -21,7 +21,6 @@
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
-#include "wasm/WasmInstance.h"
 
 #include "gc/PrivateIterators-inl.h"
 #include "jit/JitFrames-inl.h"
@@ -531,8 +530,6 @@ void BaselineScript::Trace(JSTracer* trc, BaselineScript* script) {
 void BaselineScript::Destroy(FreeOp* fop, BaselineScript* script) {
   MOZ_ASSERT(!script->hasPendingIonBuilder());
 
-  script->unlinkDependentWasmImports(fop);
-
   fop->delete_(script);
 }
 
@@ -540,43 +537,6 @@ void JS::DeletePolicy<js::jit::BaselineScript>::operator()(
     const js::jit::BaselineScript* script) {
   BaselineScript::Destroy(rt_->defaultFreeOp(),
                           const_cast<BaselineScript*>(script));
-}
-
-void BaselineScript::unlinkDependentWasmImports(FreeOp* fop) {
-  // Remove any links from wasm::Instances that contain optimized FFI calls into
-  // this BaselineScript.
-  if (dependentWasmImports_) {
-    for (DependentWasmImport& dep : *dependentWasmImports_) {
-      dep.instance->deoptimizeImportExit(dep.importIndex);
-    }
-    dependentWasmImports_.reset();
-  }
-}
-
-bool BaselineScript::addDependentWasmImport(JSContext* cx,
-                                            wasm::Instance& instance,
-                                            uint32_t idx) {
-  if (!dependentWasmImports_) {
-    dependentWasmImports_ = cx->make_unique<Vector<DependentWasmImport>>(cx);
-    if (!dependentWasmImports_) {
-      return false;
-    }
-  }
-  return dependentWasmImports_->emplaceBack(instance, idx);
-}
-
-void BaselineScript::removeDependentWasmImport(wasm::Instance& instance,
-                                               uint32_t idx) {
-  if (!dependentWasmImports_) {
-    return;
-  }
-
-  for (DependentWasmImport& dep : *dependentWasmImports_) {
-    if (dep.instance == &instance && dep.importIndex == idx) {
-      dependentWasmImports_->erase(&dep);
-      break;
-    }
-  }
 }
 
 RetAddrEntry& BaselineScript::retAddrEntry(size_t index) {
