@@ -546,7 +546,7 @@ function verifyResults() {
   postToControlServer("results", results);
 }
 
-function postToControlServer(msgType, msgData) {
+function postToControlServer(msgType, msgData = "") {
   // if posting a status message, log it to console also
   if (msgType == "status") {
     console.log(`\n${msgData}`);
@@ -599,7 +599,7 @@ function cleanUp() {
   }
 
   // tell the control server we are done and the browser can be shutdown
-  postToControlServer("status", "__raptor_shutdownBrowser");
+  postToControlServer("shutdownBrowser");
 }
 
 function raptorRunner() {
