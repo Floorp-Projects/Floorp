@@ -4056,7 +4056,10 @@ bool EventStateManager::IsUserInteractionEvent(const WidgetEvent* aEvent) {
       // can't be opened, fullscreen mode can't be started, etc at
       // unexpected time.
       return aEvent->AsKeyboardEvent()->CanTreatAsUserInput();
+    // eBasicEventClass
+    case eFormChange:
     // eMouseEventClass
+    case eMouseClick:
     case eMouseDown:
     case eMouseUp:
     // ePointerEventClass
