@@ -619,7 +619,8 @@ static void AddImageURL(nsIURI& aURI, nsTArray<nsString>& aURLs) {
   aURLs.AppendElement(NS_ConvertUTF8toUTF16(spec));
 }
 
-static void AddImageURL(const css::URLValue& aURL, nsTArray<nsString>& aURLs) {
+static void AddImageURL(const StyleComputedUrl& aURL,
+                        nsTArray<nsString>& aURLs) {
   if (aURL.IsLocalRef()) {
     return;
   }
@@ -631,9 +632,7 @@ static void AddImageURL(const css::URLValue& aURL, nsTArray<nsString>& aURLs) {
 
 static void AddImageURL(const nsStyleImageRequest& aRequest,
                         nsTArray<nsString>& aURLs) {
-  if (auto* value = aRequest.GetImageValue()) {
-    AddImageURL(*value, aURLs);
-  }
+  AddImageURL(aRequest.GetImageValue(), aURLs);
 }
 
 static void AddImageURL(const nsStyleImage& aImage, nsTArray<nsString>& aURLs) {
@@ -660,9 +659,8 @@ static void AddImageURLs(const nsStyleImageLayers& aLayers,
   }
 }
 
-// FIXME(stylo-everywhere): This should be `const ComputedStyle&`.
 static void CollectImageURLsForProperty(nsCSSPropertyID aProp,
-                                        ComputedStyle& aStyle,
+                                        const ComputedStyle& aStyle,
                                         nsTArray<nsString>& aURLs) {
   if (nsCSSProps::IsShorthand(aProp)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProp,
@@ -1221,7 +1219,7 @@ void nsComputedDOMStyle::SetValueToPosition(const Position& aPosition,
   aValueList->AppendCSSValue(valY.forget());
 }
 
-void nsComputedDOMStyle::SetValueToURLValue(const css::URLValue* aURL,
+void nsComputedDOMStyle::SetValueToURLValue(const StyleComputedUrl* aURL,
                                             nsROCSSPrimitiveValue* aValue) {
   if (!aURL) {
     aValue->SetIdent(eCSSKeyword_none);
@@ -1238,9 +1236,7 @@ void nsComputedDOMStyle::SetValueToURLValue(const css::URLValue* aURL,
   }
 
   // Otherwise, serialize the specified URL value.
-  nsAutoString source;
-  aURL->GetSourceString(source);
-
+  NS_ConvertUTF8toUTF16 source(aURL->SpecifiedSerialization());
   nsAutoString url;
   url.AppendLiteral(u"url(");
   nsStyleUtil::AppendEscapedCSSString(source, url, '"');

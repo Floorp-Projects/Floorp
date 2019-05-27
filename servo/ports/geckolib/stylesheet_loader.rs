@@ -63,7 +63,7 @@ impl StyleStylesheetLoader for StylesheetLoader {
                 self.1,
                 self.2,
                 self.3,
-                url.0.clone().into_strong(),
+                &url,
                 media.into_strong(),
             )
         };
@@ -171,7 +171,7 @@ impl StyleStylesheetLoader for AsyncStylesheetParser {
         unsafe {
             bindings::Gecko_LoadStyleSheetAsync(
                 self.load_data.get(),
-                url.0.into_strong(),
+                &url,
                 media.into_strong(),
                 rule.clone().into_strong(),
             );
