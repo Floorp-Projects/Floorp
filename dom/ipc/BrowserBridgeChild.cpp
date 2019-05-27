@@ -33,9 +33,7 @@ void BrowserBridgeChild::NavigateByKey(bool aForward,
 
 void BrowserBridgeChild::Activate() { Unused << SendActivate(); }
 
-void BrowserBridgeChild::Deactivate(bool aWindowLowering) {
-  Unused << SendDeactivate(aWindowLowering);
-}
+void BrowserBridgeChild::Deactivate() { Unused << SendDeactivate(); }
 
 void BrowserBridgeChild::SetIsUnderHiddenEmbedderElement(
     bool aIsUnderHiddenEmbedderElement) {
