@@ -34,10 +34,8 @@ pub struct GenericBoxShadow<Color, SizeLength, BlurShapeLength, ShapeLength> {
 pub use self::GenericBoxShadow as BoxShadow;
 
 /// A generic value for a single `filter`.
-///
-/// cbindgen:derive-tagged-enum-copy-constructor=true
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
-#[animation(no_bound(U))]
+#[animation(no_bound(Url))]
 #[derive(
     Clone,
     ComputeSquaredDistance,
@@ -51,8 +49,7 @@ pub use self::GenericBoxShadow as BoxShadow;
     ToResolvedValue,
     ToShmem,
 )]
-#[repr(C, u8)]
-pub enum GenericFilter<Angle, Factor, Length, Shadow, U> {
+pub enum Filter<Angle, Factor, Length, DropShadow, Url> {
     /// `blur(<length>)`
     #[css(function)]
     Blur(Length),
@@ -82,13 +79,11 @@ pub enum GenericFilter<Angle, Factor, Length, Shadow, U> {
     Sepia(Factor),
     /// `drop-shadow(...)`
     #[css(function)]
-    DropShadow(Shadow),
+    DropShadow(DropShadow),
     /// `<url>`
     #[animation(error)]
-    Url(U),
+    Url(Url),
 }
-
-pub use self::GenericFilter as Filter;
 
 /// A generic value for the `drop-shadow()` filter and the `text-shadow` property.
 ///

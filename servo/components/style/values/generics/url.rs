@@ -5,8 +5,6 @@
 //! Generic types for url properties.
 
 /// An image url or none, used for example in list-style-image
-///
-/// cbindgen:derive-tagged-enum-copy-constructor=true
 #[derive(
     Animate,
     Clone,
@@ -23,27 +21,16 @@
     ToResolvedValue,
     ToShmem,
 )]
-#[repr(C, u8)]
-pub enum GenericUrlOrNone<U> {
+pub enum UrlOrNone<Url> {
     /// `none`
     None,
-    /// A URL.
-    Url(U),
+    /// `A URL`
+    Url(Url),
 }
-
-pub use self::GenericUrlOrNone as UrlOrNone;
 
 impl<Url> UrlOrNone<Url> {
     /// Initial "none" value for properties such as `list-style-image`
     pub fn none() -> Self {
         UrlOrNone::None
-    }
-
-    /// Returns whether the value is `none`.
-    pub fn is_none(&self) -> bool {
-        match *self {
-            UrlOrNone::None => true,
-            UrlOrNone::Url(..) => false,
-        }
     }
 }

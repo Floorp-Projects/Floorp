@@ -29,7 +29,7 @@ using namespace mozilla::dom::SVGUnitTypes_Binding;
 using namespace mozilla::gfx;
 
 nsSVGFilterInstance::nsSVGFilterInstance(
-    const StyleFilter& aFilter, nsIFrame* aTargetFrame,
+    const nsStyleFilter& aFilter, nsIFrame* aTargetFrame,
     nsIContent* aTargetContent, const UserSpaceMetrics& aMetrics,
     const gfxRect& aTargetBBox, const gfxSize& aUserSpaceToFilterSpaceScale)
     : mFilter(aFilter),
@@ -109,7 +109,7 @@ bool nsSVGFilterInstance::ComputeBounds() {
 }
 
 nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
-  if (!mFilter.IsUrl()) {
+  if (mFilter.GetType() != NS_STYLE_FILTER_URL) {
     // The filter is not an SVG reference filter.
     return nullptr;
   }
@@ -134,12 +134,12 @@ nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
 
     url = urlExtraReferrer->GetURI();
   } else {
-    url = mFilter.AsUrl().ResolveLocalRef(mTargetContent);
+    url = mFilter.GetURL()->ResolveLocalRef(mTargetContent);
   }
 
   if (!url) {
     MOZ_ASSERT_UNREACHABLE(
-        "an StyleFilter of type URL should have a non-null URL");
+        "an nsStyleFilter of type URL should have a non-null URL");
     return nullptr;
   }
 
@@ -147,8 +147,8 @@ nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
   IDTracker idTracker;
   bool watch = false;
   idTracker.ResetToURIFragmentID(
-      mTargetContent, url, mFilter.AsUrl().ExtraData().GetReferrer(),
-      mFilter.AsUrl().ExtraData().GetReferrerPolicy(), watch);
+      mTargetContent, url, mFilter.GetURL()->ExtraData()->GetReferrer(),
+      mFilter.GetURL()->ExtraData()->GetReferrerPolicy(), watch);
   Element* element = idTracker.get();
   if (!element) {
     // The URL points to no element.

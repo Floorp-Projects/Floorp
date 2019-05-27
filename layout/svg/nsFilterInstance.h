@@ -48,10 +48,6 @@ class UserSpaceMetrics;
  * http://www.w3.org/TR/SVG11/filters.html#FilterEffectsRegion
  */
 class nsFilterInstance {
-  template <typename T>
-  using Span = mozilla::Span<T>;
-  using StyleFilter = mozilla::StyleFilter;
-
   typedef mozilla::gfx::IntRect IntRect;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -75,7 +71,7 @@ class nsFilterInstance {
    * @return A FilterDescription describing the filter.
    */
   static FilterDescription GetFilterDescription(
-      nsIContent* aFilteredElement, Span<const StyleFilter> aFilterChain,
+      nsIContent* aFilteredElement, const nsTArray<nsStyleFilter>& aFilterChain,
       bool aFilterInputIsTainted, const UserSpaceMetrics& aMetrics,
       const gfxRect& aBBox,
       nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages);
@@ -157,7 +153,7 @@ class nsFilterInstance {
    */
   nsFilterInstance(nsIFrame* aTargetFrame, nsIContent* aTargetContent,
                    const UserSpaceMetrics& aMetrics,
-                   Span<const StyleFilter> aFilterChain,
+                   const nsTArray<nsStyleFilter>& aFilterChain,
                    bool aFilterInputIsTainted,
                    nsSVGFilterPaintCallback* aPaintCallback,
                    const gfxMatrix& aPaintTransform,
@@ -255,7 +251,7 @@ class nsFilterInstance {
    * mPrimitiveDescriptions and mInputImages. aFilterInputIsTainted describes
    * whether the SourceGraphic is tainted.
    */
-  nsresult BuildPrimitives(Span<const StyleFilter> aFilterChain,
+  nsresult BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain,
                            nsIFrame* aTargetFrame, bool aFilterInputIsTainted);
 
   /**
@@ -265,7 +261,8 @@ class nsFilterInstance {
    * tainted.
    */
   nsresult BuildPrimitivesForFilter(
-      const StyleFilter& aFilter, nsIFrame* aTargetFrame, bool aInputIsTainted,
+      const nsStyleFilter& aFilter, nsIFrame* aTargetFrame,
+      bool aInputIsTainted,
       nsTArray<FilterPrimitiveDescription>& aPrimitiveDescriptions);
 
   /**
