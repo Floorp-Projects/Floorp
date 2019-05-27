@@ -1630,7 +1630,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
 
   GenerateJitExitPrologue(masm, jitFramePushed + frameAlignExtra, offsets);
 
-  // 1. Descriptor
+  // 1. Descriptor.
   size_t argOffset = frameAlignExtra;
   uint32_t descriptor =
       MakeFrameDescriptor(sizeOfThisAndArgsAndPadding, FrameType::WasmToJSJit,
@@ -1639,30 +1639,30 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
                 Address(masm.getStackPointer(), argOffset));
   argOffset += sizeof(size_t);
 
-  // 2. Callee
+  // 2. Callee.
   Register callee = ABINonArgReturnReg0;   // live until call
   Register scratch = ABINonArgReturnReg1;  // repeatedly clobbered
 
-  // 2.1. Get JSFunction callee
+  // 2.1. Get JSFunction callee.
   masm.loadWasmGlobalPtr(fi.tlsDataOffset() + offsetof(FuncImportTls, fun),
                          callee);
 
-  // 2.2. Save callee
+  // 2.2. Save callee.
   masm.storePtr(callee, Address(masm.getStackPointer(), argOffset));
   argOffset += sizeof(size_t);
 
-  // 3. Argc
+  // 3. Argc.
   unsigned argc = fi.funcType().args().length();
   masm.storePtr(ImmWord(uintptr_t(argc)),
                 Address(masm.getStackPointer(), argOffset));
   argOffset += sizeof(size_t);
   MOZ_ASSERT(argOffset == sizeOfPreFrame + frameAlignExtra);
 
-  // 4. |this| value
+  // 4. |this| value.
   masm.storeValue(UndefinedValue(), Address(masm.getStackPointer(), argOffset));
   argOffset += sizeof(Value);
 
-  // 5. Fill the arguments
+  // 5. Fill the arguments.
   unsigned offsetToCallerStackArgs =
       jitFramePushed + sizeof(Frame) + frameAlignExtra;
   FillArgumentArray(masm, funcImportIndex, fi.funcType().args(), argOffset,
@@ -1670,15 +1670,20 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   argOffset += fi.funcType().args().length() * sizeof(Value);
   MOZ_ASSERT(argOffset == sizeOfThisAndArgs + sizeOfPreFrame + frameAlignExtra);
 
-  // 6. Check if we need to rectify arguments
+  // 6. Check if we need to rectify arguments.
   masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch);
 
   Label rectify;
   masm.branch32(Assembler::Above, scratch, Imm32(fi.funcType().args().length()),
                 &rectify);
 
-  // 7. If we haven't rectified arguments, load callee executable entry point
-  masm.loadJitCodeNoArgCheck(callee, callee);
+  // 7. If we haven't rectified arguments, load callee executable entry point.
+  // This is equivalent to masm.loadJitCodeNoArgCheck(callee, callee) but uses
+  // two loads instead of three.
+  masm.loadWasmGlobalPtr(
+      fi.tlsDataOffset() + offsetof(FuncImportTls, jitScript), callee);
+  masm.loadPtr(Address(callee, JitScript::offsetOfJitCodeSkipArgCheck()),
+               callee);
 
   Label rejoinBeforeCall;
   masm.bind(&rejoinBeforeCall);
@@ -1802,7 +1807,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
     MOZ_ASSERT(nativeFramePushed >= offsetToCoerceArgv + sizeof(Value));
     AssertStackAlignment(masm, ABIStackAlignment);
 
-    // Store return value into argv[0]
+    // Store return value into argv[0].
     masm.storeValue(JSReturnOperand,
                     Address(masm.getStackPointer(), offsetToCoerceArgv));
 
