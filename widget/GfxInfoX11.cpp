@@ -19,6 +19,8 @@
 
 #include "GfxInfoX11.h"
 
+#include <gdk/gdkx.h>
+
 #ifdef DEBUG
 bool fire_glxtest_process();
 #endif
@@ -40,6 +42,7 @@ nsresult GfxInfo::Init() {
   mHasTextureFromPixmap = false;
   mIsMesa = false;
   mIsAccelerated = true;
+  mIsWayland = false;
   return GfxInfoBase::Init();
 }
 
@@ -52,6 +55,8 @@ void GfxInfo::AddCrashReportAnnotations() {
       CrashReporter::Annotation::AdapterDriverVendor, mDriverVendor);
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::AdapterDriverVersion, mDriverVersion);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::IsWayland, mIsWayland);
 }
 
 void GfxInfo::GetData() {
@@ -286,6 +291,7 @@ void GfxInfo::GetData() {
   }
 
   mAdapterDescription.Assign(glRenderer);
+  mIsWayland = !GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
   AddCrashReportAnnotations();
 }
@@ -424,6 +430,17 @@ GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) {
 NS_IMETHODIMP
 GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
+  if (mIsWayland) {
+    aWindowProtocol.AssignLiteral("wayland");
+    return NS_OK;
+  }
+
+  aWindowProtocol.AssignLiteral("x11");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
