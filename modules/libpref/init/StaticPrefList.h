@@ -2859,10 +2859,10 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
-  Live,
+  Once,
   "image.animated.decode-on-demand.recycle",
   ImageAnimatedDecodeOnDemandRecycle,
-  RelaxedAtomicBool, false
+  bool, false
 )
 
 VARCACHE_PREF(
