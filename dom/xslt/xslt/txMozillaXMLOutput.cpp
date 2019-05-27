@@ -812,9 +812,8 @@ nsresult txMozillaXMLOutput::createResultDocument(const nsAString& aName,
 
   // Do this after calling OnDocumentCreated to ensure that the
   // PresShell/PresContext has been hooked up and get notified.
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-  if (htmlDoc) {
-    htmlDoc->SetCompatibilityMode(eCompatibility_FullStandards);
+  if (mDocument) {
+    mDocument->SetCompatibilityMode(eCompatibility_FullStandards);
   }
 
   // Add a doc-type if requested

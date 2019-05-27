@@ -92,9 +92,7 @@ void nsHtml5DocumentBuilder::SetDocumentMode(nsHtml5DocumentMode m) {
       mode = eCompatibility_NavQuirks;
       break;
   }
-  nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
-  NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
-  htmlDocument->SetCompatibilityMode(mode);
+  mDocument->SetCompatibilityMode(mode);
 }
 
 // nsContentSink overrides

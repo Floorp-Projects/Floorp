@@ -42,7 +42,7 @@ class MozFindbar extends XULElement {
         <image anonid="find-status-icon" class="findbar-find-fast find-status-icon" />
         <description anonid="find-status" control="findbar-textbox" class="findbar-find-fast findbar-find-status" />
       </hbox>
-      <toolbarbutton anonid="find-closebutton" class="findbar-closebutton close-icon" data-l10n-id="findbar-find-button-close" oncommand="close();" />
+      <toolbarbutton anonid="find-closebutton" class="findbar-closebutton close-icon" data-l10n-id="findbar-find-button-close" oncommand="window.close();" />
     `);
   }
 
