@@ -404,6 +404,10 @@ To regenerate the generated code:
 
 ## Release Notes
 
+### 0.8.17
+
+* Update `bincode` (dev dependency) version requirement to 1.0.
+
 ### 0.8.16
 
 * Switch from the `simd` crate to `packed_simd`.
