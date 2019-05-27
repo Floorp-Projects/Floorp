@@ -75,7 +75,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   entry.OrInsert([&] { return this; });
 
   // Determine which content process the window global is coming from.
-  ContentParentId processId(0);
+  dom::ContentParentId processId(0);
   if (!mInProcess) {
     processId = static_cast<ContentParent*>(Manager()->Manager())->ChildID();
   }
@@ -149,6 +149,11 @@ already_AddRefed<BrowserParent> WindowGlobalParent::GetBrowserParent() {
     return nullptr;
   }
   return do_AddRef(static_cast<BrowserParent*>(Manager()));
+}
+
+uint64_t WindowGlobalParent::ContentParentId() {
+  RefPtr<BrowserParent> browserParent = GetBrowserParent();
+  return browserParent ? browserParent->Manager()->ChildID() : 0;
 }
 
 IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
