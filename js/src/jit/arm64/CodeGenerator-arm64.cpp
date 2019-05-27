@@ -457,7 +457,230 @@ void CodeGenerator::visitDivI(LDivI* ins) {
 }
 
 void CodeGenerator::visitDivPowTwoI(LDivPowTwoI* ins) {
-  MOZ_CRASH("CodeGenerator::visitDivPowTwoI");
+  const Register numerator = ToRegister(ins->numerator());
+  const ARMRegister numerator32 = toWRegister(ins->numerator());
+  const ARMRegister output32 = toWRegister(ins->output());
+
+  int32_t shift = ins->shift();
+  bool negativeDivisor = ins->negativeDivisor();
+  MDiv* mir = ins->mir();
+
+  if (!mir->isTruncated() && negativeDivisor) {
+    // 0 divided by a negative number returns a -0 double.
+    bailoutTest32(Assembler::Zero, numerator, numerator, ins->snapshot());
+  }
+
+  if (shift) {
+    if (!mir->isTruncated()) {
+      // If the remainder is != 0, bailout since this must be a double.
+      bailoutTest32(Assembler::NonZero, numerator,
+                    Imm32(UINT32_MAX >> (32 - shift)), ins->snapshot());
+    }
+
+    if (mir->isUnsigned()) {
+      // shift right
+      masm.Lsr(output32, numerator32, shift);
+    } else {
+      ARMRegister temp32 = numerator32;
+      // Adjust the value so that shifting produces a correctly
+      // rounded result when the numerator is negative. See 10-1
+      // "Signed Division by a Known Power of 2" in Henry
+      // S. Warren, Jr.'s Hacker's Delight.
+      if (mir->canBeNegativeDividend() && mir->isTruncated()) {
+        if (shift > 1) {
+          // Copy the sign bit of the numerator. (= (2^32 - 1) or 0)
+          masm.Asr(output32, numerator32, 31);
+          temp32 = output32;
+        }
+        // Divide by 2^(32 - shift)
+        // i.e. (= (2^32 - 1) / 2^(32 - shift) or 0)
+        // i.e. (= (2^shift - 1) or 0)
+        masm.Lsr(output32, temp32, 32 - shift);
+        // If signed, make any 1 bit below the shifted bits to bubble up, such
+        // that once shifted the value would be rounded towards 0.
+        masm.Add(output32, output32, numerator32);
+        temp32 = output32;
+      }
+      masm.Asr(output32, temp32, shift);
+
+      if (negativeDivisor) {
+        masm.Neg(output32, output32);
+      }
+    }
+    return;
+  }
+
+  if (negativeDivisor) {
+    // INT32_MIN / -1 overflows.
+    if (!mir->isTruncated()) {
+      masm.Negs(output32, numerator32);
+      bailoutIf(Assembler::Overflow, ins->snapshot());
+    } else if (mir->trapOnError()) {
+      Label ok;
+      masm.Negs(output32, numerator32);
+      masm.branch(Assembler::NoOverflow, &ok);
+      masm.wasmTrap(wasm::Trap::IntegerOverflow, mir->bytecodeOffset());
+      masm.bind(&ok);
+    } else {
+      // Do not set condition flags.
+      masm.Neg(output32, numerator32);
+    }
+  } else {
+    if (mir->isUnsigned() && !mir->isTruncated()) {
+      // Copy and set flags.
+      masm.Adds(output32, numerator32, 0);
+      // Unsigned division by 1 can overflow if output is not truncated, as we
+      // do not have an Unsigned type for MIR instructions.
+      bailoutIf(Assembler::Signed, ins->snapshot());
+    } else {
+      // Copy the result.
+      masm.Mov(output32, numerator32);
+    }
+  }
+}
+
+void CodeGenerator::visitDivConstantI(LDivConstantI* ins) {
+  const ARMRegister lhs32 = toWRegister(ins->numerator());
+  const ARMRegister lhs64 = toXRegister(ins->numerator());
+  const ARMRegister const32 = toWRegister(ins->temp());
+  const ARMRegister output32 = toWRegister(ins->output());
+  const ARMRegister output64 = toXRegister(ins->output());
+  int32_t d = ins->denominator();
+
+  // The absolute value of the denominator isn't a power of 2.
+  using mozilla::Abs;
+  MOZ_ASSERT((Abs(d) & (Abs(d) - 1)) != 0);
+
+  // We will first divide by Abs(d), and negate the answer if d is negative.
+  // If desired, this can be avoided by generalizing computeDivisionConstants.
+  ReciprocalMulConstants rmc =
+      computeDivisionConstants(Abs(d), /* maxLog = */ 31);
+
+  // We first compute (M * n) >> 32, where M = rmc.multiplier.
+  masm.Mov(const32, int32_t(rmc.multiplier));
+  if (rmc.multiplier > INT32_MAX) {
+    MOZ_ASSERT(rmc.multiplier < (int64_t(1) << 32));
+
+    // We actually compute (int32_t(M) * n) instead, without the upper bit.
+    // Thus, (M * n) = (int32_t(M) * n) + n << 32.
+    //
+    // ((int32_t(M) * n) + n << 32) can't overflow, as both operands have
+    // opposite signs because int32_t(M) is negative.
+    masm.Lsl(output64, lhs64, 32);
+
+    // Store (M * n) in output64.
+    masm.Smaddl(output64, const32, lhs32, output64);
+  } else {
+    // Store (M * n) in output64.
+    masm.Smull(output64, const32, lhs32);
+  }
+
+  // (M * n) >> (32 + shift) is the truncated division answer if n is
+  // non-negative, as proved in the comments of computeDivisionConstants. We
+  // must add 1 later if n is negative to get the right answer in all cases.
+  masm.Asr(output64, output64, 32 + rmc.shiftAmount);
+
+  // We'll subtract -1 instead of adding 1, because (n < 0 ? -1 : 0) can be
+  // computed with just a sign-extending shift of 31 bits.
+  if (ins->canBeNegativeDividend()) {
+    masm.Asr(const32, lhs32, 31);
+    masm.Sub(output32, output32, const32);
+  }
+
+  // After this, output32 contains the correct truncated division result.
+  if (d < 0) {
+    masm.Neg(output32, output32);
+  }
+
+  if (!ins->mir()->isTruncated()) {
+    // This is a division op. Multiply the obtained value by d to check if
+    // the correct answer is an integer. This cannot overflow, since |d| > 1.
+    masm.Mov(const32, d);
+    masm.Msub(const32, output32, const32, lhs32);
+    // bailout if (lhs - output * d != 0)
+    masm.Cmp(const32, const32);
+    auto bailoutCond = Assembler::NonZero;
+
+    // If lhs is zero and the divisor is negative, the answer should have
+    // been -0.
+    if (d < 0) {
+      // or bailout if (lhs == 0).
+      // ^                  ^
+      // |                  '-- masm.Ccmp(lhs32, lhs32, .., ..)
+      // '-- masm.Ccmp(.., .., vixl::ZFlag, ! bailoutCond)
+      masm.Ccmp(lhs32, lhs32, vixl::ZFlag, Assembler::Zero);
+      bailoutCond = Assembler::Zero;
+    }
+
+    // bailout if (lhs - output * d != 0) or (d < 0 && lhs == 0)
+    bailoutIf(bailoutCond, ins->snapshot());
+  }
+}
+
+void CodeGenerator::visitUDivConstantI(LUDivConstantI* ins) {
+  const ARMRegister lhs32 = toWRegister(ins->numerator());
+  const ARMRegister lhs64 = toXRegister(ins->numerator());
+  const ARMRegister const32 = toWRegister(ins->temp());
+  const ARMRegister output32 = toWRegister(ins->output());
+  const ARMRegister output64 = toXRegister(ins->output());
+  uint32_t d = ins->denominator();
+
+  if (d == 0) {
+    if (ins->mir()->isTruncated()) {
+      if (ins->mir()->trapOnError()) {
+        masm.wasmTrap(wasm::Trap::IntegerDivideByZero,
+                      ins->mir()->bytecodeOffset());
+      } else {
+        masm.Mov(output32, wzr);
+      }
+    } else {
+      bailout(ins->snapshot());
+    }
+    return;
+  }
+
+  // The denominator isn't a power of 2 (see LDivPowTwoI).
+  MOZ_ASSERT((d & (d - 1)) != 0);
+
+  ReciprocalMulConstants rmc = computeDivisionConstants(d, /* maxLog = */ 32);
+
+  // We first compute (M * n) >> 32, where M = rmc.multiplier.
+  masm.Mov(const32, int32_t(rmc.multiplier));
+  masm.Umull(output64, const32, lhs32);
+  if (rmc.multiplier > UINT32_MAX) {
+    // M >= 2^32 and shift == 0 is impossible, as d >= 2 implies that
+    // ((M * n) >> (32 + shift)) >= n > floor(n/d) whenever n >= d,
+    // contradicting the proof of correctness in computeDivisionConstants.
+    MOZ_ASSERT(rmc.shiftAmount > 0);
+    MOZ_ASSERT(rmc.multiplier < (int64_t(1) << 33));
+
+    // We actually compute (uint32_t(M) * n) instead, without the upper bit.
+    // Thus, (M * n) = (uint32_t(M) * n) + n << 32.
+    //
+    // ((uint32_t(M) * n) + n << 32) can overflow. Hacker's Delight explains a
+    // trick to avoid this overflow case, but we can avoid it by computing the
+    // addition on 64 bits registers.
+    //
+    // Compute ((uint32_t(M) * n) >> 32 + n)
+    masm.Add(output64, lhs64, Operand(output64, vixl::LSR, 32));
+
+    // (M * n) >> (32 + shift) is the truncated division answer.
+    masm.Asr(output64, output64, rmc.shiftAmount);
+  } else {
+    // (M * n) >> (32 + shift) is the truncated division answer.
+    masm.Asr(output64, output64, 32 + rmc.shiftAmount);
+  }
+
+  // We now have the truncated division value. We are checking whether the
+  // division resulted in an integer, we multiply the obtained value by d and
+  // check the remainder of the division.
+  if (!ins->mir()->isTruncated()) {
+    masm.Mov(const32, d);
+    masm.Msub(const32, output32, const32, lhs32);
+    // bailout if (lhs - output * d != 0)
+    masm.Cmp(const32, const32);
+    bailoutIf(Assembler::NonZero, ins->snapshot());
+  }
 }
 
 void CodeGeneratorARM64::modICommon(MMod* mir, Register lhs, Register rhs,

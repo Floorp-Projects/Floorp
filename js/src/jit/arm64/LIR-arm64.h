@@ -82,19 +82,62 @@ class LDivI : public LBinaryMath<1> {
 
 class LDivPowTwoI : public LInstructionHelper<1, 1, 0> {
   const int32_t shift_;
+  const bool negativeDivisor_;
 
  public:
   LIR_HEADER(DivPowTwoI)
 
-  LDivPowTwoI(const LAllocation& lhs, int32_t shift)
-      : LInstructionHelper(classOpcode), shift_(shift) {
+  LDivPowTwoI(const LAllocation& lhs, int32_t shift, bool negativeDivisor)
+      : LInstructionHelper(classOpcode),
+        shift_(shift),
+        negativeDivisor_(negativeDivisor) {
     setOperand(0, lhs);
   }
 
   const LAllocation* numerator() { return getOperand(0); }
 
   int32_t shift() { return shift_; }
+  bool negativeDivisor() { return negativeDivisor_; }
 
+  MDiv* mir() const { return mir_->toDiv(); }
+};
+
+class LDivConstantI : public LInstructionHelper<1, 1, 1> {
+  const int32_t denominator_;
+
+ public:
+  LIR_HEADER(DivConstantI)
+
+  LDivConstantI(const LAllocation& lhs, int32_t denominator,
+                const LDefinition& temp)
+      : LInstructionHelper(classOpcode), denominator_(denominator) {
+    setOperand(0, lhs);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* numerator() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+  int32_t denominator() const { return denominator_; }
+  MDiv* mir() const { return mir_->toDiv(); }
+  bool canBeNegativeDividend() const { return mir()->canBeNegativeDividend(); }
+};
+
+class LUDivConstantI : public LInstructionHelper<1, 1, 1> {
+  const int32_t denominator_;
+
+ public:
+  LIR_HEADER(UDivConstantI)
+
+  LUDivConstantI(const LAllocation& lhs, int32_t denominator,
+                 const LDefinition& temp)
+      : LInstructionHelper(classOpcode), denominator_(denominator) {
+    setOperand(0, lhs);
+    setTemp(0, temp);
+  }
+
+  const LAllocation* numerator() { return getOperand(0); }
+  const LDefinition* temp() { return getTemp(0); }
+  int32_t denominator() const { return denominator_; }
   MDiv* mir() const { return mir_->toDiv(); }
 };
 
