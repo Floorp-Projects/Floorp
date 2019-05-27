@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
@@ -442,12 +441,10 @@ class GeckoEngineSession(
                 return GeckoResult.fromValue(false)
             }
 
-            val result = GeckoResult<Boolean>()
-            launch {
+            return launchGeckoResult {
                 delegate.onVisited(url, visitType)
-                result.complete(true)
+                true
             }
-            return result
         }
 
         override fun getVisited(
@@ -460,12 +457,10 @@ class GeckoEngineSession(
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(null)
 
-            val result = GeckoResult<BooleanArray>()
-            launch {
-                val visits: List<Boolean>? = delegate.getVisited(urls.toList())
-                result.complete(visits?.toBooleanArray())
+            return launchGeckoResult {
+                val visits = delegate.getVisited(urls.toList())
+                visits.toBooleanArray()
             }
-            return result
         }
     }
 
