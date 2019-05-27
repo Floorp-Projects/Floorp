@@ -33,11 +33,6 @@
       color: hsl(240,9%,98%);
     }
 
-    /* Keep showing the correct color inside the tabs. */
-    .tabbrowser-tab {
-      color: var(--lwt-text-color) !important;
-    }
-
     /* Because we're forcing the tabs toolbar to be [brighttext] to
      * get white toolbar button icons, we need to manually set the
      * correct color for the tab hover state for the light theme. */
@@ -93,6 +88,7 @@
    * show the tabs toolbar background color inside tabs. */
   .tabbrowser-tab {
     background-color: var(--lwt-accent-color) !important;
+    color: var(--lwt-text-color) !important;
     border-top: 1px solid var(--tabs-border-color);
     background-clip: padding-box;
   }
