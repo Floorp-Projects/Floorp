@@ -184,7 +184,7 @@ struct EncodedDocumentWithContext {
   // as mime type to the encoder. It uses this as a switch to decide whether to
   // encode the document as `text/html` or `text/plain`. It  is `true` iff
   // `text/html` was used.
-  bool mUnicodeEncodingIsTextHTML;
+  bool mUnicodeEncodingIsTextHTML = false;
 
   // The serialized document when encoding the document with `text/unicode`. See
   // comment of `mUnicodeEncodingIsTextHTML`.
