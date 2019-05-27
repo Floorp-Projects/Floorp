@@ -3813,11 +3813,14 @@ const addonTypes = new Set([
 ]);
 const htmlViewOpts = {
   loadViewFn(type, param) {
-    let viewId = `addons://${type}`;
+    let viewId = `addons://${type}/`;
     if (param) {
-      viewId += "/" + encodeURIComponent(param);
+      viewId += encodeURIComponent(param);
     }
     gViewController.loadView(viewId);
+  },
+  replaceWithDefaultViewFn() {
+    gViewController.replaceView(gViewDefault);
   },
   setCategoryFn(name) {
     if (addonTypes.has(name)) {
