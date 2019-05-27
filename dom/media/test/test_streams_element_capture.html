@@ -9,13 +9,13 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let manager = new MediaTestManager();
+const manager = new MediaTestManager();
 
 function checkDrawImage(vout, msg) {
-  var canvas = document.createElement("canvas");
-  var ctx = canvas.getContext("2d");
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
   ctx.drawImage(vout, 0, 0);
-  var imgData = ctx.getImageData(0, 0, 1, 1);
+  const imgData = ctx.getImageData(0, 0, 1, 1);
   is(imgData.data[3], 255, msg);
 }
 
@@ -23,82 +23,73 @@ function isGreaterThanOrEqualEps(a, b, msg) {
   ok(a >= b, `Got ${a}, expected at least ${b}; ${msg}`);
 }
 
-function startTest(test, token) {
+async function startTest(test, token) {
   manager.started(token);
-  var v = document.createElement('video');
-  var vout = document.createElement('video');
+  const v = document.createElement('video');
+  const vout = document.createElement('video');
 
+  v.token = token;
   v.id = "MediaDecoder";
   vout.id = "MediaStream";
 
-  v.src = test.name;
-  var stream;
-
-  var checkEnded = function() {
-    let duration = test.duration;
-    if (typeof(test.contentDuration) == "number") {
-      duration = test.contentDuration;
-    }
-    if (duration) {
-      isGreaterThanOrEqualEps(vout.currentTime, duration,
-        `${token} current time at end`);
-    }
-    is(vout.readyState, vout.HAVE_CURRENT_DATA,
-      `${token} checking readyState`);
-    ok(vout.ended, `${token} checking playback has ended`);
-    isnot(stream.getTracks().length, 0, `${token} results in some tracks`);
-    if (stream.getVideoTracks().length > 0) {
-      ok(test.type.match(/^video/), `${token} is a video resource`);
-      checkDrawImage(vout, `${token} checking video frame pixel has been drawn`);
-    }
-    vout.remove();
-    removeNodeAndSource(v);
-    manager.finished(token);
-  };
-  Promise.race([
-    Promise.all([
-      new Promise(r => vout.addEventListener("ended", r, {once:true})),
-      new Promise(r => v.addEventListener("ended", r, {once:true})),
-    ]),
-    new Promise((res, rej) => vout.addEventListener("error", rej, {once:true})),
-    new Promise((res, rej) => v.addEventListener("error", rej, {once:true})),
-  ]).then(() => checkEnded(), e => {
-    ok(false, `Error: ${e.target.id} ${token}, ${e.target.error.message}`);
-    manager.finished(token);
-  });
-
   document.body.appendChild(vout);
 
-  var onloadedmetadata = async function (ev) {
-    stream = v.mozCaptureStreamUntilEnded();
-    vout.srcObject = stream;
-    is(vout.srcObject, stream,
-      `${token} set output element .srcObject correctly`);
-    // Wait for the resource fetch algorithm to have run, so that the media
-    // element is hooked up to the MediaStream and ready to go. If we don't do
-    // this, we're not guaranteed to render the very first video frame, which
-    // can make this test fail the drawImage test when a video resource only
-    // contains one frame.
-    await new Promise(r => vout.addEventListener('loadstart', r));
-    v.play();
-    vout.play();
-  }
-
-  v.preload = 'metadata';
-  v.addEventListener('loadedmetadata', onloadedmetadata);
-
   // Log events for debugging.
-  var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+  const events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
                 "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
                 "waiting", "pause"];
   function logEvent(e) {
     Log(token, `${e.target.id} got ${e.type}`);
   }
-  events.forEach(function(e) {
+  for (const e of events) {
     v.addEventListener(e, logEvent);
     vout.addEventListener(e, logEvent);
-  });
+  };
 
+  v.src = test.name;
+  v.preload = 'metadata';
+  await new Promise(r => v.onloadedmetadata = r);
+
+  const stream = v.mozCaptureStreamUntilEnded();
+  vout.srcObject = stream;
+  is(vout.srcObject, stream,
+    `${token} set output element .srcObject correctly`);
+  // Wait for the resource fetch algorithm to have run, so that the media
+  // element is hooked up to the MediaStream and ready to go. If we don't do
+  // this, we're not guaranteed to render the very first video frame, which
+  // can make this test fail the drawImage test when a video resource only
+  // contains one frame.
+  await new Promise(r => vout.onloadstart = r);
+  v.play();
+  vout.play();
+
+  await Promise.race([
+    Promise.all([
+      new Promise(r => vout.onended = r),
+      new Promise(r => v.onended = r),
+    ]),
+    new Promise((_, r) => vout.onerror = _ => r(new Error(vout.error.message))),
+    new Promise((_, r) => v.onerror = _ => r(new Error(v.error.message))),
+  ]);
+
+  let duration = test.duration;
+  if (typeof(test.contentDuration) == "number") {
+    duration = test.contentDuration;
+  }
+  if (duration) {
+    isGreaterThanOrEqualEps(vout.currentTime, duration,
+      `${token} current time at end`);
+  }
+  is(vout.readyState, vout.HAVE_CURRENT_DATA,
+    `${token} checking readyState`);
+  ok(vout.ended, `${token} checking playback has ended`);
+  isnot(stream.getTracks().length, 0, `${token} results in some tracks`);
+  if (stream.getVideoTracks().length > 0) {
+    ok(test.type.match(/^video/), `${token} is a video resource`);
+    checkDrawImage(vout, `${token} checking video frame pixel has been drawn`);
+  }
+  vout.remove();
+  removeNodeAndSource(v);
 }
 
 (async () => {
@@ -113,7 +104,15 @@ function startTest(test, token) {
   let tests = gPlayTests;
   // Filter out bug1377278.webm due to bug 1541401.
   tests = tests.filter(t => !t.name.includes("1377278"));
-  manager.runTests(tests, startTest);
+
+  manager.runTests(tests, async (test, token) => {
+    try {
+      await startTest(test, token);
+    } catch(e) {
+      ok(false, `Caught exception for ${token}: ${e}`);
+    }
+    manager.finished(token);
+  });
 })();
 </script>
 </pre>
