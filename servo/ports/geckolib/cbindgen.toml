@@ -35,6 +35,11 @@ include = ["style", "cssparser", "style_traits", "servo_arc"]
 derive_eq = true
 derive_neq = true
 
+[defines]
+# This will actually never be defined, but is handy to avoid cbindgen
+# generating Servo-only types.
+"feature = servo" = "CBINDGEN_IS_SERVO"
+
 [macro_expansion]
 bitflags = true
 
@@ -143,6 +148,7 @@ include = [
   "ComputedUrl",
   "ComputedImageUrl",
   "UrlOrNone",
+  "Filter",
 ]
 item_types = ["enums", "structs", "typedefs", "functions"]
 renaming_overrides_prefixing = true
@@ -364,14 +370,15 @@ renaming_overrides_prefixing = true
     ptr((T*)alignof(T)),
     len(0) {}
 
-  // Should be easily implementable if wanted, but the default implementation would leak.
-  StyleOwnedSlice& operator=(const StyleOwnedSlice&) = delete;
-  StyleOwnedSlice& operator=(StyleOwnedSlice&&) = delete;
+  inline void Clear();
+  inline void CopyFrom(const StyleOwnedSlice&);
+  inline void SwapElements(StyleOwnedSlice&);
+
+  StyleOwnedSlice& operator=(const StyleOwnedSlice&);
+  StyleOwnedSlice& operator=(StyleOwnedSlice&&);
 
   inline StyleOwnedSlice(const StyleOwnedSlice&);
   inline StyleOwnedSlice(StyleOwnedSlice&&);
-
-  inline void Clear();
 
   inline ~StyleOwnedSlice();
 
@@ -456,6 +463,9 @@ renaming_overrides_prefixing = true
   // NOTE(emilio): For now we don't need to expose anything else, but it'd be trivial if we wanted to.
   inline bool IsStatic() const;
   inline nsAtom* AsAtom() const;
+
+  // Could be implemented if wanted.
+  StyleAtom& operator=(const StyleAtom&) = delete;
 
   inline StyleAtom(const StyleAtom& aOther);
   inline ~StyleAtom();
