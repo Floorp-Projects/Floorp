@@ -6,7 +6,7 @@ package org.mozilla.geckoview
 
 import mozilla.components.test.ReflectionUtils
 
-class MockRecordingDevice(
+internal class MockRecordingDevice(
     type: Long,
     status: Long
 ) : GeckoSession.MediaDelegate.RecordingDevice() {
