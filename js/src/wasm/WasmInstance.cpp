@@ -180,13 +180,6 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return true;
   }
 
-  // Don't enable jit entry when we have a pending ion builder.
-  // Take the interpreter path which will link it and enable
-  // the fast path on the next call.
-  if (script->baselineScript()->hasPendingIonBuilder()) {
-    return true;
-  }
-
   // Ensure the argument types are included in the argument TypeSets stored in
   // the JitScript. This is necessary for Ion, because the import will use
   // the skip-arg-checks entry point.

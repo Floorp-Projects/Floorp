@@ -542,22 +542,13 @@ void JS::DeletePolicy<js::jit::BaselineScript>::operator()(
                           const_cast<BaselineScript*>(script));
 }
 
-void BaselineScript::clearDependentWasmImports() {
-  // Remove any links from wasm::Instances that contain optimized import calls
-  // into this BaselineScript.
+void BaselineScript::unlinkDependentWasmImports(FreeOp* fop) {
+  // Remove any links from wasm::Instances that contain optimized FFI calls into
+  // this BaselineScript.
   if (dependentWasmImports_) {
     for (DependentWasmImport& dep : *dependentWasmImports_) {
       dep.instance->deoptimizeImportExit(dep.importIndex);
     }
-    dependentWasmImports_->clear();
-  }
-}
-
-void BaselineScript::unlinkDependentWasmImports(FreeOp* fop) {
-  // Remove any links from wasm::Instances that contain optimized FFI calls into
-  // this BaselineScript.
-  clearDependentWasmImports();
-  if (dependentWasmImports_) {
     fop->delete_(dependentWasmImports_);
     dependentWasmImports_ = nullptr;
   }
