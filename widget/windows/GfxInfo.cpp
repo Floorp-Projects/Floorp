@@ -126,6 +126,11 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
+  return NS_ERROR_FAILURE;
+}
+
 static nsresult GetKeyValue(const WCHAR* keyLocation, const WCHAR* keyName,
                             nsAString& destString, int type) {
   HKEY key;

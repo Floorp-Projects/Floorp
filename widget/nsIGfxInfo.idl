@@ -20,6 +20,11 @@ interface nsIGfxInfo : nsISupports
   readonly attribute AString cleartypeParameters;
 
   /*
+   * These are non-Android linux-specific
+   */
+  readonly attribute AString windowProtocol;
+
+  /*
    * These are valid across all platforms.
    */
   readonly attribute AString ContentBackend;
