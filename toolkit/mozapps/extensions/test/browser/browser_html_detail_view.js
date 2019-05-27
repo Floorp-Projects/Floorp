@@ -640,6 +640,33 @@ add_task(async function testPrivateBrowsingExtension() {
   await closeView(win);
 });
 
+add_task(async function testInvalidExtension() {
+  let win = await open_manager("addons://detail/foo");
+  let categoryUtils = new CategoryUtilities(win);
+  is(categoryUtils.selectedCategory, "discover",
+     "Should fall back to the discovery pane");
+
+  ok(!gBrowser.canGoBack, "The view has been replaced");
+
+  await close_manager(win);
+});
+
+add_task(async function testInvalidExtensionNoDiscover() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.getAddons.showPane", false]],
+  });
+
+  let win = await open_manager("addons://detail/foo");
+  let categoryUtils = new CategoryUtilities(win);
+  is(categoryUtils.selectedCategory, "extension",
+     "Should fall back to the extension list if discover is disabled");
+
+  ok(!gBrowser.canGoBack, "The view has been replaced");
+
+  await close_manager(win);
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function testExternalUninstall() {
   let id = "remove@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({

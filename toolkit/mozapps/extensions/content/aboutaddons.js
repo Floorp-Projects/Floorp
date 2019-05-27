@@ -156,6 +156,7 @@ function getOptionsType(addon, type) {
  * @param {string} param The (optional) param for the view.
  */
 let loadViewFn;
+let replaceWithDefaultViewFn;
 let setCategoryFn;
 
 let _templates = {};
@@ -2078,6 +2079,12 @@ class DetailView {
 
   async render() {
     let addon = await AddonManager.getAddonByID(this.id);
+
+    if (!addon) {
+      replaceWithDefaultViewFn();
+      return;
+    }
+
     let card = document.createElement("addon-card");
 
     // Ensure the category for this add-on type is selected.
@@ -2152,6 +2159,7 @@ let root = null;
 function initialize(opts) {
   root = document.getElementById("main");
   loadViewFn = opts.loadViewFn;
+  replaceWithDefaultViewFn = opts.replaceWithDefaultViewFn;
   setCategoryFn = opts.setCategoryFn;
   AddonCardListenerHandler.startup();
   window.addEventListener("unload", () => {
