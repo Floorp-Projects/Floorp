@@ -62,9 +62,9 @@ class ContentDelegateTest : BaseSessionTest() {
     }
 
     @Test fun download() {
-        sessionRule.session.loadTestPath(DOWNLOAD_HTML_PATH)
         // disable test on pgo for frequently failing Bug 1543355
         assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
+        sessionRule.session.loadTestPath(DOWNLOAD_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
 
