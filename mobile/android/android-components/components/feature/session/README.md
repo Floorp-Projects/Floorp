@@ -14,6 +14,34 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:feature-session:{latest-version}"
 ```
 
+### SwipeRefreshFeature
+Sample code can be found in [Sample Browser app](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
+
+Class to add pull to refresh functionality to browsers. You should pass it a reference to a [`SwipeRefreshLayout`](https://developer.android.com/reference/kotlin/androidx/swiperefreshlayout/widget/SwipeRefreshLayout.html) and the SessionManager.
+
+Your layout should have a `SwipeRefreshLayout` with an `EngineView` as its only child view.
+
+```xml
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    android:id="@+id/swipeRefreshLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <mozilla.components.concept.engine.EngineView
+        android:id="@+id/engineView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+```
+
+In your fragment code, use `SwipeRefreshFeature` to connect the `SwipeRefreshLayout` with your `SessionManager` and `ReloadUrlUseCase`.
+
+```kotlin
+    val feature = BrowserSwipeRefresh(sessionManager, sessionUseCases.reload, swipeRefreshLayout)
+    lifecycle.addObserver(feature)
+```
+
+`SwipeRefreshFeature` provides its own [`SwipeRefreshLayout.OnChildScrollUpCallback`](https://developer.android.com/reference/kotlin/androidx/swiperefreshlayout/widget/SwipeRefreshLayout.OnChildScrollUpCallback.html) and [`SwipeRefreshLayout.OnRefreshListener`](https://developer.android.com/reference/kotlin/androidx/swiperefreshlayout/widget/SwipeRefreshLayout.OnRefreshListener.html) implementations that you should not override.
+
 ### ThumbnailsFeature
 
 Feature implementation for automatically taking thumbnails of sites. The feature will take a screenshot when the page finishes loading, and will add it to the `Session.thumbnail` property.

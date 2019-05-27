@@ -22,6 +22,7 @@ import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.session.WindowFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
@@ -46,6 +47,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
+    private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
 
     @Suppress("LongMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -71,6 +73,14 @@ class BrowserFragment : Fragment(), BackHandler {
                 components.sessionUseCases.loadUrl,
                 components.defaultSearchUseCase,
                 sessionId),
+            owner = this,
+            view = layout)
+
+        swipeRefreshFeature.set(
+            feature = SwipeRefreshFeature(
+                components.sessionManager,
+                components.sessionUseCases.reload,
+                layout.swipeToRefresh),
             owner = this,
             view = layout)
 

@@ -35,6 +35,9 @@ permalink: /changelog/
   * `OAuthAccount` and `DeviceConstellation` methods that returned `Deferred<T>` (for some T) now return `Deferred<T?>`, where `null` means failure.
   * `FirefoxAccount`, `FirefoxDeviceConstellation` and `FirefoxDeviceManager` now handle all expected `FxAException`.
 
+* **engine-gecko-nightly**, **engine-system**, **concept-engine**:
+  * Added `EngineView.canScrollVerticallyUp()` for pull to refresh.
+
 * **engine-gecko-nightly**, **engine-gecko-beta**, **concept-engine**
   * Added engine API to clear browsing data.
 
@@ -51,6 +54,9 @@ permalink: /changelog/
 
 * **service-glean**
   * Disabling telemetry through `setUploadEnabled` now clears all metrics (except first_run_date) immediately.
+
+* **feature-session**
+  * Added `SwipeRefreshFeature` which adds pull to refresh to browsers.
 
 * **feature-tab-collections**
   * Added option to remove all collections and their tabs: `TabCollectionStorage.removeAllCollections()`.

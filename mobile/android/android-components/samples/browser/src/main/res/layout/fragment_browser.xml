@@ -38,10 +38,15 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <mozilla.components.concept.engine.EngineView
-            android:id="@+id/engineView"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeToRefresh"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
+            <mozilla.components.concept.engine.EngineView
+                android:id="@+id/engineView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <mozilla.components.browser.awesomebar.BrowserAwesomeBar
             android:id="@+id/awesomeBar"

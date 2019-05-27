@@ -57,6 +57,7 @@ class GeckoEngineSession(
 
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
+    internal var scrollY: Int = 0
     internal var job: Job = Job()
     private var lastSessionState: GeckoSession.SessionState? = null
     private var stateBeforeCrash: GeckoSession.SessionState? = null
@@ -569,6 +570,12 @@ class GeckoEngineSession(
         }
     }
 
+    private fun createScrollDelegate() = object : GeckoSession.ScrollDelegate {
+        override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            this@GeckoEngineSession.scrollY = scrollY
+        }
+    }
+
     @Suppress("ComplexMethod")
     fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null): HitResult? {
         return when (elementType) {
@@ -625,6 +632,7 @@ class GeckoEngineSession(
         geckoSession.promptDelegate = GeckoPromptDelegate(this)
         geckoSession.historyDelegate = createHistoryDelegate()
         geckoSession.mediaDelegate = GeckoMediaDelegate(this)
+        geckoSession.scrollDelegate = createScrollDelegate()
     }
 
     companion object {

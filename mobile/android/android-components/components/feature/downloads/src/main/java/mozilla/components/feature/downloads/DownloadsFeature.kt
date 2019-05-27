@@ -15,7 +15,6 @@ import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSessionIdOrSelected
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.observer.Consumable
@@ -46,7 +45,7 @@ class DownloadsFeature(
     var onNeedToRequestPermissions: OnNeedToRequestPermissions = { },
     var onDownloadCompleted: OnDownloadCompleted = { _, _ -> },
     private val downloadManager: DownloadManager = DownloadManager(applicationContext, onDownloadCompleted),
-    private val sessionManager: SessionManager,
+    sessionManager: SessionManager,
     private val sessionId: String? = null,
     private val fragmentManager: FragmentManager? = null,
     @VisibleForTesting(otherwise = PRIVATE)
@@ -129,7 +128,7 @@ class DownloadsFeature(
     private fun reAttachOnStartDownloadListener(previousDialog: DownloadDialogFragment?) {
         previousDialog?.apply {
             this@DownloadsFeature.dialog = this
-            sessionManager.runWithSessionIdOrSelected(sessionId) { session ->
+            activeSession?.let { session ->
                 session.download.consume {
                     onDownload(session, it)
                     false
