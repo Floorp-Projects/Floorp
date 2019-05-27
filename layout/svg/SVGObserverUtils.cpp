@@ -628,7 +628,7 @@ nsSVGFilterFrame* SVGFilterObserver::GetAndObserveFilterFrame() {
  */
 class SVGFilterObserverList : public nsISupports {
  public:
-  SVGFilterObserverList(const nsTArray<nsStyleFilter>& aFilters,
+  SVGFilterObserverList(Span<const StyleFilter> aFilters,
                         nsIContent* aFilteredElement,
                         nsIFrame* aFilteredFrame = nullptr);
 
@@ -684,25 +684,25 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGFilterObserverList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-SVGFilterObserverList::SVGFilterObserverList(
-    const nsTArray<nsStyleFilter>& aFilters, nsIContent* aFilteredElement,
-    nsIFrame* aFilteredFrame) {
-  for (uint32_t i = 0; i < aFilters.Length(); i++) {
-    if (aFilters[i].GetType() != NS_STYLE_FILTER_URL) {
+SVGFilterObserverList::SVGFilterObserverList(Span<const StyleFilter> aFilters,
+                                             nsIContent* aFilteredElement,
+                                             nsIFrame* aFilteredFrame) {
+  for (const auto& filter : aFilters) {
+    if (!filter.IsUrl()) {
       continue;
     }
+
+    const auto& url = filter.AsUrl();
 
     // aFilteredFrame can be null if this filter belongs to a
     // CanvasRenderingContext2D.
     RefPtr<URLAndReferrerInfo> filterURL;
     if (aFilteredFrame) {
-      filterURL = ResolveURLUsingLocalRef(aFilteredFrame, aFilters[i].GetURL());
+      filterURL = ResolveURLUsingLocalRef(aFilteredFrame, url);
     } else {
-      nsCOMPtr<nsIURI> resolvedURI =
-          aFilters[i].GetURL().ResolveLocalRef(aFilteredElement);
+      nsCOMPtr<nsIURI> resolvedURI = url.ResolveLocalRef(aFilteredElement);
       if (resolvedURI) {
-        filterURL = new URLAndReferrerInfo(resolvedURI,
-                                           aFilters[i].GetURL().ExtraData());
+        filterURL = new URLAndReferrerInfo(resolvedURI, url.ExtraData());
       }
     }
 
@@ -725,7 +725,7 @@ bool SVGFilterObserverList::ReferencesValidResources() {
 
 class SVGFilterObserverListForCSSProp final : public SVGFilterObserverList {
  public:
-  SVGFilterObserverListForCSSProp(const nsTArray<nsStyleFilter>& aFilters,
+  SVGFilterObserverListForCSSProp(Span<const StyleFilter> aFilters,
                                   nsIFrame* aFilteredFrame)
       : SVGFilterObserverList(aFilters, aFilteredFrame->GetContent(),
                               aFilteredFrame),
@@ -769,7 +769,7 @@ class SVGFilterObserverListForCanvasContext final
  public:
   SVGFilterObserverListForCanvasContext(CanvasRenderingContext2D* aContext,
                                         Element* aCanvasElement,
-                                        nsTArray<nsStyleFilter>& aFilters)
+                                        Span<const StyleFilter> aFilters)
       : SVGFilterObserverList(aFilters, aCanvasElement), mContext(aContext) {}
 
   void OnRenderingChange() override;
@@ -1168,7 +1168,8 @@ static SVGFilterObserverListForCSSProp* GetOrCreateFilterObserverListForCSS(
     MOZ_ASSERT(observers, "this property should only store non-null values");
     return observers;
   }
-  observers = new SVGFilterObserverListForCSSProp(effects->mFilters, aFrame);
+  observers =
+      new SVGFilterObserverListForCSSProp(effects->mFilters.AsSpan(), aFrame);
   NS_ADDREF(observers);
   aFrame->AddProperty(FilterProperty(), observers);
   return observers;
@@ -1219,7 +1220,7 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetFiltersIfObserving(
 
 already_AddRefed<nsISupports> SVGObserverUtils::ObserveFiltersForCanvasContext(
     CanvasRenderingContext2D* aContext, Element* aCanvasElement,
-    nsTArray<nsStyleFilter>& aFilters) {
+    const Span<const StyleFilter> aFilters) {
   return do_AddRef(new SVGFilterObserverListForCanvasContext(
       aContext, aCanvasElement, aFilters));
 }
@@ -1680,11 +1681,10 @@ already_AddRefed<nsIURI> SVGObserverUtils::GetBaseURLForLocalRef(
 }
 
 already_AddRefed<URLAndReferrerInfo> SVGObserverUtils::GetFilterURI(
-    nsIFrame* aFrame, const nsStyleFilter& aFilter) {
-  MOZ_ASSERT(aFrame->StyleEffects()->mFilters.Length());
-  MOZ_ASSERT(aFilter.GetType() == NS_STYLE_FILTER_URL);
-
-  return ResolveURLUsingLocalRef(aFrame, aFilter.GetURL());
+    nsIFrame* aFrame, const StyleFilter& aFilter) {
+  MOZ_ASSERT(!aFrame->StyleEffects()->mFilters.IsEmpty());
+  MOZ_ASSERT(aFilter.IsUrl());
+  return ResolveURLUsingLocalRef(aFrame, aFilter.AsUrl());
 }
 
 }  // namespace mozilla

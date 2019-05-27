@@ -35,7 +35,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 
 FilterDescription nsFilterInstance::GetFilterDescription(
-    nsIContent* aFilteredElement, const nsTArray<nsStyleFilter>& aFilterChain,
+    nsIContent* aFilteredElement, Span<const StyleFilter> aFilterChain,
     bool aFilterInputIsTainted, const UserSpaceMetrics& aMetrics,
     const gfxRect& aBBox,
     nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages) {
@@ -61,7 +61,7 @@ void nsFilterInstance::PaintFilteredFrame(
     nsIFrame* aFilteredFrame, gfxContext* aCtx,
     nsSVGFilterPaintCallback* aPaintCallback, const nsRegion* aDirtyArea,
     imgDrawingParams& aImgParams, float aOpacity) {
-  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
+  auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
 
@@ -121,7 +121,7 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
   aWrFilters.filter_datas.Clear();
   aWrFilters.values.Clear();
 
-  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
+  auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
 
@@ -375,7 +375,7 @@ nsRegion nsFilterInstance::GetPostFilterDirtyArea(
   }
 
   gfxMatrix tm = nsSVGUtils::GetCanvasTM(aFilteredFrame);
-  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
+  auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
   // Hardcode InputIsTainted to true because we don't want JS to be able to
@@ -396,7 +396,7 @@ nsRegion nsFilterInstance::GetPostFilterDirtyArea(
 nsRegion nsFilterInstance::GetPreFilterNeededArea(
     nsIFrame* aFilteredFrame, const nsRegion& aPostFilterDirtyRegion) {
   gfxMatrix tm = nsSVGUtils::GetCanvasTM(aFilteredFrame);
-  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
+  auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
   // Hardcode InputIsTainted to true because we don't want JS to be able to
@@ -428,7 +428,7 @@ nsRect nsFilterInstance::GetPostFilterBounds(nsIFrame* aFilteredFrame,
   }
 
   gfxMatrix tm = nsSVGUtils::GetCanvasTM(aFilteredFrame);
-  auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
+  auto filterChain = aFilteredFrame->StyleEffects()->mFilters.AsSpan();
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
   // Hardcode InputIsTainted to true because we don't want JS to be able to
@@ -446,10 +446,9 @@ nsRect nsFilterInstance::GetPostFilterBounds(nsIFrame* aFilteredFrame,
 
 nsFilterInstance::nsFilterInstance(
     nsIFrame* aTargetFrame, nsIContent* aTargetContent,
-    const UserSpaceMetrics& aMetrics,
-    const nsTArray<nsStyleFilter>& aFilterChain, bool aFilterInputIsTainted,
-    nsSVGFilterPaintCallback* aPaintCallback, const gfxMatrix& aPaintTransform,
-    const nsRegion* aPostFilterDirtyRegion,
+    const UserSpaceMetrics& aMetrics, Span<const StyleFilter> aFilterChain,
+    bool aFilterInputIsTainted, nsSVGFilterPaintCallback* aPaintCallback,
+    const gfxMatrix& aPaintTransform, const nsRegion* aPostFilterDirtyRegion,
     const nsRegion* aPreFilterDirtyRegion,
     const nsRect* aPreFilterVisualOverflowRectOverride,
     const gfxRect* aOverrideBBox)
@@ -555,9 +554,9 @@ gfxRect nsFilterInstance::FilterSpaceToUserSpace(
   return userSpaceRect;
 }
 
-nsresult nsFilterInstance::BuildPrimitives(
-    const nsTArray<nsStyleFilter>& aFilterChain, nsIFrame* aTargetFrame,
-    bool aFilterInputIsTainted) {
+nsresult nsFilterInstance::BuildPrimitives(Span<const StyleFilter> aFilterChain,
+                                           nsIFrame* aTargetFrame,
+                                           bool aFilterInputIsTainted) {
   nsTArray<FilterPrimitiveDescription> primitiveDescriptions;
 
   for (uint32_t i = 0; i < aFilterChain.Length(); i++) {
@@ -577,13 +576,13 @@ nsresult nsFilterInstance::BuildPrimitives(
 }
 
 nsresult nsFilterInstance::BuildPrimitivesForFilter(
-    const nsStyleFilter& aFilter, nsIFrame* aTargetFrame, bool aInputIsTainted,
+    const StyleFilter& aFilter, nsIFrame* aTargetFrame, bool aInputIsTainted,
     nsTArray<FilterPrimitiveDescription>& aPrimitiveDescriptions) {
   NS_ASSERTION(mUserSpaceToFilterSpaceScale.width > 0.0f &&
                    mFilterSpaceToUserSpaceScale.height > 0.0f,
                "scale factors between spaces should be positive values");
 
-  if (aFilter.GetType() == NS_STYLE_FILTER_URL) {
+  if (aFilter.IsUrl()) {
     // Build primitives for an SVG filter.
     nsSVGFilterInstance svgFilterInstance(aFilter, aTargetFrame, mTargetContent,
                                           mMetrics, mTargetBBox,

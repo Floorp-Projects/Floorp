@@ -41,7 +41,6 @@ class nsDOMCSSValueList;
 struct nsMargin;
 class nsROCSSPrimitiveValue;
 class nsStyleCoord;
-struct nsStyleFilter;
 class nsStyleGradient;
 struct nsStyleImage;
 class nsStyleSides;
