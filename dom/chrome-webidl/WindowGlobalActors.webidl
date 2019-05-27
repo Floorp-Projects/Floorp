@@ -18,6 +18,7 @@ interface WindowGlobalParent {
 
   readonly attribute unsigned long long innerWindowId;
   readonly attribute unsigned long long outerWindowId;
+  readonly attribute unsigned long long contentParentId;
 
   readonly attribute FrameLoader? rootFrameLoader; // Embedded (browser) only
 
@@ -48,6 +49,7 @@ interface WindowGlobalChild {
 
   readonly attribute unsigned long long innerWindowId;
   readonly attribute unsigned long long outerWindowId;
+  readonly attribute unsigned long long contentParentId;
 
   readonly attribute WindowGlobalParent? parentActor; // in-process only
 
