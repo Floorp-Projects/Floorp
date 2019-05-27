@@ -89,6 +89,23 @@ permalink: /changelog/
 * **browser-engine-gecko-nightly**, **concept-engine**:
   * Added `EngineSession.Observer.onRecordingStateChanged()` to get list of recording devices currently used by web content.
 
+* **support-base**
+  * Added helper for providing unique stable `Int` notification ids based on a `String` tag to avoid id conflicts between components and app code.
+
+  ```kotlin
+  // Get a unique id for the provided tag
+  val id = NotificationIds.getIdForTag(context, "mozac.my.feature")
+
+  // Extension methods for showing and cancelling notifications
+  NotificationManagerCompat
+      .from(context)
+      .notify(context, "mozac.my.feature", notification)
+
+  NotificationManagerCompat
+      .from(context)
+      .cancel(context, "mozac.my.feature")
+  ```
+
 # 0.53.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.52.0...v0.53.0)

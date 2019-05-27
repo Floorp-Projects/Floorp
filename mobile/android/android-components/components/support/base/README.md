@@ -69,6 +69,24 @@ class MyClass {
 }
 ```
 
+## Notifications
+
+Android's APIs require a unique `Int` id for showing and cancelling notifications. Agreeing on unique ids over multiple components and app code without any conflicts is hard. For this reason this component contains a `NotificationIds` object that allocates unique, stable ids based on a provided `String` tag.
+
+```kotlin
+// Get a unique id for the provided tag
+val id = NotificationIds.getIdForTag(context, "mozac.my.feature")
+
+// Extension methods for showing and cancelling notifications
+NotificationManagerCompat
+    .from(context)
+    .notify(context, "mozac.my.feature", notification)
+
+NotificationManagerCompat
+    .from(context)
+    .cancel(context, "mozac.my.feature")
+```
+
 ## Facts
 
 A `Fact` is a generic "event" that a component emitted.
