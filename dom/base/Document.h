@@ -1281,22 +1281,6 @@ class Document : public nsINode,
   void DisableCookieAccess() { mDisableCookieAccess = true; }
 
   /**
-   * Set compatibility mode for this document
-   */
-  void SetCompatibilityMode(nsCompatibility aMode);
-
-  /**
-   * Called to disable client access to document.write() API from user
-   * JavaScript code.
-   */
-  void SetDocWriteDisabled(bool aDisabled) { mDisableDocWrite = aDisabled; }
-
-  /**
-   * Whether a document.write() call is in progress.
-   */
-  bool IsWriting() const { return mWriteLevel != uint32_t(0); }
-
-  /**
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
    */
@@ -3305,16 +3289,6 @@ class Document : public nsINode,
     return GetFuncStringContentList<nsCachableElementsByNameNodeList>(
         this, MatchNameAttribute, nullptr, UseExistingNameString, aName);
   }
-  Document* Open(const mozilla::dom::Optional<nsAString>& /* unused */,
-                 const nsAString& /* unused */, mozilla::ErrorResult& aError);
-  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Open(
-      const nsAString& aURL, const nsAString& aName, const nsAString& aFeatures,
-      bool aReplace, mozilla::ErrorResult& rv);
-  void Close(mozilla::ErrorResult& rv);
-  void Write(const mozilla::dom::Sequence<nsString>& aText,
-             mozilla::ErrorResult& rv);
-  void Writeln(const mozilla::dom::Sequence<nsString>& aText,
-               mozilla::ErrorResult& rv);
   Nullable<WindowProxyHolder> GetDefaultView() const;
   Element* GetActiveElement();
   bool HasFocus(ErrorResult& rv) const;
@@ -3942,14 +3916,6 @@ class Document : public nsINode,
   already_AddRefed<nsIURI> RegistrableDomainSuffixOfInternal(
       const nsAString& aHostSuffixString, nsIURI* aOrigHost);
 
-  void WriteCommon(const nsAString& aText, bool aNewlineTerminate,
-                   mozilla::ErrorResult& aRv);
-  // A version of WriteCommon used by WebIDL bindings
-  void WriteCommon(const mozilla::dom::Sequence<nsString>& aText,
-                   bool aNewlineTerminate, mozilla::ErrorResult& rv);
-
-  void* GenerateParserKey(void);
-
  private:
   void RecordContentBlockingLog(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
@@ -4422,13 +4388,6 @@ class Document : public nsINode,
   // When false, the .cookies property is completely disabled
   bool mDisableCookieAccess : 1;
 
-  // When false, the document.write() API is disabled.
-  bool mDisableDocWrite : 1;
-
-  // Has document.write() been called with a recursion depth higher than
-  // allowed?
-  bool mTooDeepWriteRecursion : 1;
-
   uint8_t mPendingFullscreenRequests;
 
   uint8_t mXMLDeclarationBits;
@@ -4438,12 +4397,6 @@ class Document : public nsINode,
 
   // Onload blockers which haven't been activated yet.
   uint32_t mAsyncOnloadBlockCount;
-
-  // Tracks if we are currently processing any document.write calls (either
-  // implicit or explicit). Note that if a write call writes out something which
-  // would block the parser, then mWriteLevel will be incorrect until the parser
-  // finishes processing that script.
-  uint32_t mWriteLevel;
 
   // Compatibility mode
   nsCompatibility mCompatMode;
