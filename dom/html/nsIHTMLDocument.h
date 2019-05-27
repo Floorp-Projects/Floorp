@@ -28,11 +28,6 @@ class nsIHTMLDocument : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLDOCUMENT_IID)
 
   /**
-   * Set compatibility mode for this document
-   */
-  virtual void SetCompatibilityMode(nsCompatibility aMode) = 0;
-
-  /**
    * Called when form->BindToTree() is called so that document knows
    * immediately when a form is added
    */
@@ -49,8 +44,6 @@ class nsIHTMLDocument : public nsISupports {
   // XXXbz is this still needed now that we can flush just content,
   // not the rest?
   virtual int32_t GetNumFormsSynchronous() = 0;
-
-  virtual bool IsWriting() = 0;
 
   /**
    * Should be called when an element's editable changes as a result of
@@ -99,8 +92,6 @@ class nsIHTMLDocument : public nsISupports {
   virtual void TearingDownEditor() = 0;
 
   virtual void SetIsXHTML(bool aXHTML) = 0;
-
-  virtual void SetDocWriteDisabled(bool aDisabled) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)
