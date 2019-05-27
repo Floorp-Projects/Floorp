@@ -322,9 +322,11 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
                                        ? aInit.mCredentials.Value()
                                        : fallbackCredentials;
 
-  if (mode == RequestMode::Navigate ||
-      (aInit.IsAnyMemberPresent() &&
-       request->Mode() == RequestMode::Navigate)) {
+  if (mode == RequestMode::Navigate) {
+    aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>(NS_LITERAL_STRING("navigate"));
+    return nullptr;
+  }
+  if (aInit.IsAnyMemberPresent() && request->Mode() == RequestMode::Navigate) {
     mode = RequestMode::Same_origin;
   }
 
