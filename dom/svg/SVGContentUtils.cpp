@@ -258,15 +258,12 @@ void SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                        ComputedStyle* aComputedStyle,
                                        SVGContextPaint* aContextPaint,
                                        StrokeOptionFlags aFlags) {
-  RefPtr<ComputedStyle> computedStyle;
+  ComputedStyle* computedStyle;
   if (aComputedStyle) {
     computedStyle = aComputedStyle;
+  } else if (auto* f = aElement->GetPrimaryFrame()) {
+    computedStyle = f->Style();
   } else {
-    computedStyle =
-        nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  }
-
-  if (!computedStyle) {
     return;
   }
 
@@ -329,15 +326,12 @@ void SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
 Float SVGContentUtils::GetStrokeWidth(SVGElement* aElement,
                                       ComputedStyle* aComputedStyle,
                                       SVGContextPaint* aContextPaint) {
-  RefPtr<ComputedStyle> computedStyle;
+  ComputedStyle* computedStyle;
   if (aComputedStyle) {
     computedStyle = aComputedStyle;
+  } else if (auto* f = aElement->GetPrimaryFrame()) {
+    computedStyle = f->Style();
   } else {
-    computedStyle =
-        nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  }
-
-  if (!computedStyle) {
     return 0.0f;
   }
 
@@ -360,15 +354,18 @@ float SVGContentUtils::GetFontSize(Element* aElement) {
     return 1.0f;
   }
 
-  RefPtr<ComputedStyle> computedStyle =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  if (!computedStyle) {
-    // ReportToConsole
-    NS_WARNING("Couldn't get ComputedStyle for content in GetFontStyle");
-    return 1.0f;
+  if (auto* f = aElement->GetPrimaryFrame()) {
+    return GetFontSize(f->Style(), pc);
   }
 
-  return GetFontSize(computedStyle, pc);
+  if (RefPtr<ComputedStyle> style =
+          nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr)) {
+    return GetFontSize(style, pc);
+  }
+
+  // ReportToConsole
+  NS_WARNING("Couldn't get ComputedStyle for content in GetFontStyle");
+  return 1.0f;
 }
 
 float SVGContentUtils::GetFontSize(nsIFrame* aFrame) {
@@ -396,15 +393,18 @@ float SVGContentUtils::GetFontXHeight(Element* aElement) {
     return 1.0f;
   }
 
-  RefPtr<ComputedStyle> style =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  if (!style) {
-    // ReportToConsole
-    NS_WARNING("Couldn't get ComputedStyle for content in GetFontStyle");
-    return 1.0f;
+  if (auto* f = aElement->GetPrimaryFrame()) {
+    return GetFontXHeight(f->Style(), pc);
   }
 
-  return GetFontXHeight(style, pc);
+  if (RefPtr<ComputedStyle> style =
+          nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr)) {
+    return GetFontXHeight(style, pc);
+  }
+
+  // ReportToConsole
+  NS_WARNING("Couldn't get ComputedStyle for content in GetFontStyle");
+  return 1.0f;
 }
 
 float SVGContentUtils::GetFontXHeight(nsIFrame* aFrame) {
