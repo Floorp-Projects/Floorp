@@ -721,12 +721,12 @@ class JSString : public js::gc::Cell {
 
   static void addCellAddressToStoreBuffer(js::gc::StoreBuffer* buffer,
                                           js::gc::Cell** cellp) {
-    buffer->putCell(cellp);
+    buffer->putCell(reinterpret_cast<JSString**>(cellp));
   }
 
   static void removeCellAddressFromStoreBuffer(js::gc::StoreBuffer* buffer,
                                                js::gc::Cell** cellp) {
-    buffer->unputCell(cellp);
+    buffer->unputCell(reinterpret_cast<JSString**>(cellp));
   }
 
   static void writeBarrierPost(void* cellp, JSString* prev, JSString* next) {
@@ -738,12 +738,12 @@ class JSString : public js::gc::Cell {
       if (prev && prev->storeBuffer()) {
         return;
       }
-      buffer->putCell(static_cast<js::gc::Cell**>(cellp));
+      buffer->putCell(static_cast<JSString**>(cellp));
       return;
     }
 
     if (prev && (buffer = prev->storeBuffer())) {
-      buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
+      buffer->unputCell(static_cast<JSString**>(cellp));
     }
   }
 
