@@ -126,7 +126,7 @@ public class TopPanelRow extends StreamViewHolder {
             if (isPinned || !urls.contains(baseUrl)) {
                 final Object[] originalColumns = new Object[] {
                         cursor.getLong(cursor.getColumnIndex(BrowserContract.Combined._ID)),
-                        cursor.getLong(cursor.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID)),
+                        getBookmarkId(cursor),
                         cursor.getLong(cursor.getColumnIndex(BrowserContract.Combined.HISTORY_ID)),
                         cursor.getString(cursor.getColumnIndex(BrowserContract.Combined.URL)),
                         cursor.getString(cursor.getColumnIndex(BrowserContract.Combined.TITLE)),
@@ -141,6 +141,12 @@ public class TopPanelRow extends StreamViewHolder {
         } while (filteredCursor.getCount() < limit && cursor.moveToNext());
 
         return filteredCursor;
+    }
+
+    private Long getBookmarkId(Cursor cursor) {
+        // If the value of BOOKMARK_ID column it's null that means the url is not bookmarked
+        final int columnIndex = cursor.getColumnIndex(BrowserContract.Combined.BOOKMARK_ID);
+        return cursor.isNull(columnIndex) ? null : cursor.getLong(columnIndex);
     }
 
     private boolean isTopSitePinned(final int topSiteType) {
