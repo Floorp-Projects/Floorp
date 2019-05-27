@@ -129,6 +129,11 @@ void AltSvcMapping::ProcessHeader(
       continue;
     }
 
+    if (NS_FAILED(NS_CheckPortSafety(portno, originScheme.get()))) {
+      LOG(("Alt Svc doesn't allow port %d, ignoring", portno));
+      continue;
+    }
+
     // unescape modifies a c string in place, so afterwards
     // update nsCString length
     nsUnescape(npnToken.BeginWriting());
