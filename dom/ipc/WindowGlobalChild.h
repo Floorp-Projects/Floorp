@@ -65,6 +65,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   bool IsCurrentGlobal();
 
+  bool IsProcessRoot();
+
   // Get the other side of this actor if it is an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is not in-process.
   already_AddRefed<WindowGlobalParent> GetParentActor();

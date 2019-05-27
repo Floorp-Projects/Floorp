@@ -156,6 +156,18 @@ uint64_t WindowGlobalParent::ContentParentId() {
   return browserParent ? browserParent->Manager()->ChildID() : 0;
 }
 
+// A WindowGlobalPaernt is the root in its process if it has no parent, or its
+// embedder is in a different process.
+bool WindowGlobalParent::IsProcessRoot() {
+  if (!BrowsingContext()->GetParent()) {
+    return true;
+  }
+
+  auto* embedder = BrowsingContext()->GetEmbedderWindowGlobal();
+  MOZ_ASSERT(embedder, "This should be set before we were created");
+  return ContentParentId() != embedder->ContentParentId();
+}
+
 IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   // XXX(nika): Assert that the URI change was one which makes sense (either
   // about:blank -> a real URI, or a legal push/popstate URI change?)
