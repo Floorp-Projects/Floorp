@@ -375,24 +375,18 @@ class TaskBuilder(object):
         }
 
     def craft_raptor_signing_task(
-        self, assemble_task_id, variant
+        self, assemble_task_id, variant, is_staging,
     ):
-        routes = []
-        if self.repo_url == _OFFICIAL_REPO_URL:
-            routes = [
-                'index.project.mobile.fenix.v2.branch.master.revision.{}.raptor.{}'.format(
-                    self.commit, variant.abi
-                ),
-                'index.project.mobile.fenix.v2.branch.master.latest.raptor.{}'.format(
-                    variant.abi
-                ),
-                'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.revision.{}.raptor.{}'.format(
-                    self.date.year, self.date.month, self.date.day, self.commit, variant.abi
-                ),
-                'index.project.mobile.fenix.v2.branch.master.pushdate.{}.{}.{}.latest.raptor.{}'.format(
-                    self.date.year, self.date.month, self.date.day, variant.abi
-                ),
-            ]
+        staging_prefix = '.staging' if is_staging else ''
+        routes = [
+            "index.project.mobile.fenix.v2{}.raptor.{}.{}.{}.latest.{}".format(
+                staging_prefix, self.date.year, self.date.month, self.date.day, variant.abi
+            ),
+            "index.project.mobile.fenix.v2{}.raptor.{}.{}.{}.revision.{}.{}".format(
+                staging_prefix, self.date.year, self.date.month, self.date.day, self.commit, variant.abi
+            ),
+            "index.project.mobile.fenix.v2{}.raptor.latest.{}".format(staging_prefix, variant.abi),
+        ]
 
         return self._craft_signing_task(
             name='sign: {}'.format(variant.raw),
@@ -413,19 +407,19 @@ class TaskBuilder(object):
         )
 
     def craft_release_signing_task(
-        self, build_task_id, apk_paths, track, is_staging=False,
+        self, build_task_id, apk_paths, track, is_staging,
     ):
         capitalized_track = upper_case_first_letter(track)
-        index_release = 'staging.{}'.format(track) if is_staging else track
+        staging_prefix = '.staging' if is_staging else ''
 
         routes = [
-            "index.project.mobile.fenix.v2.{}.{}.{}.{}.latest".format(
-                index_release, self.date.year, self.date.month, self.date.day
+            "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.latest".format(
+                staging_prefix, track, self.date.year, self.date.month, self.date.day
             ),
-            "index.project.mobile.fenix.v2.{}.{}.{}.{}.revision.{}".format(
-                index_release, self.date.year, self.date.month, self.date.day, self.commit
+            "index.project.mobile.fenix.v2{}.{}.{}.{}.{}.revision.{}".format(
+                staging_prefix, track, self.date.year, self.date.month, self.date.day, self.commit
             ),
-            "index.project.mobile.fenix.v2.{}.latest".format(index_release),
+            "index.project.mobile.fenix.v2{}.{}.latest".format(staging_prefix, track),
         ]
 
         return self._craft_signing_task(

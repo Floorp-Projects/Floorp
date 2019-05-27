@@ -57,10 +57,6 @@ def pr_or_push(is_push):
         print("Exit")
         return {}
 
-    geckoview_nightly_version = get_geckoview_versions()['nightly']
-    mozharness_task_id = fetch_mozharness_task_id(geckoview_nightly_version)
-    gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
-
     build_tasks = {}
     signing_tasks = {}
     other_tasks = {}
@@ -70,23 +66,6 @@ def pr_or_push(is_push):
         build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
         build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
 
-    if is_push and SHORT_HEAD_BRANCH == 'master':
-        other_tasks[taskcluster.slugId()] = BUILDER.craft_dependencies_task()
-
-        for variant in [Variant.from_values(abi, False, 'raptor') for abi in ('aarch64', 'arm')]:
-            assemble_task_id = taskcluster.slugId()
-            build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
-            signing_task_id = taskcluster.slugId()
-            signing_tasks[signing_task_id] = BUILDER.craft_raptor_signing_task(assemble_task_id, variant)
-
-            ALL_RAPTOR_CRAFT_FUNCTIONS = [
-                BUILDER.craft_raptor_tp6m_cold_task(for_suite=i)
-                for i in range(1, 15)
-            ]
-            for craft_function in ALL_RAPTOR_CRAFT_FUNCTIONS:
-                args = (signing_task_id, mozharness_task_id, variant, gecko_revision)
-                other_tasks[taskcluster.slugId()] = craft_function(*args)
-
     for craft_function in (
         BUILDER.craft_detekt_task,
         BUILDER.craft_ktlint_task,
@@ -94,6 +73,35 @@ def pr_or_push(is_push):
         BUILDER.craft_compare_locales_task,
     ):
         other_tasks[taskcluster.slugId()] = craft_function()
+
+    if is_push and SHORT_HEAD_BRANCH == 'master':
+        other_tasks[taskcluster.slugId()] = BUILDER.craft_dependencies_task()
+
+    return (build_tasks, signing_tasks, other_tasks)
+
+
+def raptor(is_staging):
+    build_tasks = {}
+    signing_tasks = {}
+    other_tasks = {}
+
+    geckoview_nightly_version = get_geckoview_versions()['nightly']
+    mozharness_task_id = fetch_mozharness_task_id(geckoview_nightly_version)
+    gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
+
+    for variant in [Variant.from_values(abi, False, 'raptor') for abi in ('aarch64', 'arm')]:
+        assemble_task_id = taskcluster.slugId()
+        build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
+        signing_task_id = taskcluster.slugId()
+        signing_tasks[signing_task_id] = BUILDER.craft_raptor_signing_task(assemble_task_id, variant, is_staging)
+
+        all_raptor_craft_functions = [
+            BUILDER.craft_raptor_tp6m_cold_task(for_suite=i)
+            for i in range(1, 15)
+        ]
+        for craft_function in all_raptor_craft_functions:
+            args = (signing_task_id, mozharness_task_id, variant, gecko_revision)
+            other_tasks[taskcluster.slugId()] = craft_function(*args)
 
     return (build_tasks, signing_tasks, other_tasks)
 
@@ -138,6 +146,9 @@ if __name__ == "__main__":
     subparsers.add_parser('pull-request')
     subparsers.add_parser('push')
 
+    raptor_parser = subparsers.add_parser('raptor')
+    raptor_parser.add_argument('--staging', action='store_true')
+
     nightly_parser = subparsers.add_parser('nightly')
     nightly_parser.add_argument('--staging', action='store_true')
 
@@ -152,6 +163,8 @@ if __name__ == "__main__":
         ordered_groups_of_tasks = pr_or_push(False)
     elif command == 'push':
         ordered_groups_of_tasks = pr_or_push(True)
+    elif command == 'raptor':
+        ordered_groups_of_tasks = raptor(result.staging)
     elif command == 'nightly':
         formatted_date = datetime.datetime.now().strftime('%y%V')
         ordered_groups_of_tasks = release('nightly', result.staging, '1.0.{}'.format(formatted_date))

@@ -123,99 +123,128 @@ tasks:
             owner: ${user}@users.noreply.github.com
             source: ${repository}/raw/${head_rev}/.taskcluster.yml
       in:
-        - $if: 'tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "synchronize"]'
-          then:
-            $let:
-              pull_request_title: ${event.pull_request.title}
-              pull_request_number: ${event.pull_request.number}
-              pull_request_url: ${event.pull_request.html_url}
-            in:
+        $flatten:
+          - $if: 'tasks_for == "github-pull-request" && event["action"] in ["opened", "reopened", "synchronize"]'
+            then:
+              $let:
+                pull_request_title: ${event.pull_request.title}
+                pull_request_number: ${event.pull_request.number}
+                pull_request_url: ${event.pull_request.html_url}
+              in:
+                $mergeDeep:
+                  - {$eval: 'default_task_definition'}
+                  - scopes:
+                      - ${assume_scope_prefix}:pull-request
+                    payload:
+                      command:
+                        - >-
+                          git fetch ${repository} ${head_branch}
+                          && git config advice.detachedHead false
+                          && git checkout FETCH_HEAD
+                          && python automation/taskcluster/decision_task.py pull-request
+                      env:
+                        GITHUB_PULL_TITLE: ${pull_request_title}
+                    extra:
+                      treeherder:
+                        symbol: D-PR
+                    metadata:
+                      name: 'Fenix - Decision task (Pull Request #${pull_request_number})'
+                      description: 'Building and testing the Fenix - triggered by [#${pull_request_number}](${pull_request_url})'
+          - $if: 'tasks_for == "github-push" && head_branch[:10] != "refs/tags/"'
+            then:
               $mergeDeep:
                 - {$eval: 'default_task_definition'}
                 - scopes:
-                    - ${assume_scope_prefix}:pull-request
+                    - ${assume_scope_prefix}:branch:${short_head_branch}
                   payload:
                     command:
                       - >-
                         git fetch ${repository} ${head_branch}
                         && git config advice.detachedHead false
                         && git checkout FETCH_HEAD
-                        && python automation/taskcluster/decision_task.py pull-request
-                    env:
-                      GITHUB_PULL_TITLE: ${pull_request_title}
+                        && python automation/taskcluster/decision_task.py push
                   extra:
                     treeherder:
-                      symbol: D-PR
+                      symbol: D
                   metadata:
-                    name: 'Fenix - Decision task (Pull Request #${pull_request_number})'
-                    description: 'Building and testing the Fenix - triggered by [#${pull_request_number}](${pull_request_url})'
-        - $if: 'tasks_for == "github-push" && head_branch[:10] != "refs/tags/"'
-          then:
-            $mergeDeep:
-              - {$eval: 'default_task_definition'}
-              - scopes:
-                  - ${assume_scope_prefix}:branch:${short_head_branch}
-                payload:
-                  command:
-                    - >-
-                      git fetch ${repository} ${head_branch}
-                      && git config advice.detachedHead false
-                      && git checkout FETCH_HEAD
-                      && python automation/taskcluster/decision_task.py push
-                extra:
-                  treeherder:
-                    symbol: D
-                metadata:
-                  name: Fenix - Decision task
-                  description: Schedules the build and test tasks for Fenix.
-        - $if: 'tasks_for == "github-release" && event["action"] == "published"'
-          then:
-            $mergeDeep:
-              - {$eval: 'default_task_definition'}
-              - scopes:
-                - ${assume_scope_prefix}:release
-                payload:
-                  command:
-                    - >-
-                      git fetch ${repository} refs/tags/${head_rev}
-                      && git config advice.detachedHead false
-                      && git checkout FETCH_HEAD
-                      && python automation/taskcluster/decision_task.py beta ${event.release.tag_name}
-                extra:
-                  treeherder:
-                    symbol: beta-D
-                metadata:
-                  name: Fenix Beta Decision Task
-                  description: Building and releasing Fenix to the beta channel - triggered by release ${event.release.tag_name}
-        - $if: 'tasks_for == "cron"'
-          then:
-            $mergeDeep:
-              - {$eval: 'default_task_definition'}
-              - scopes:
-                  - $if: 'trust_level == 3'
-                    then: assume:hook-id:project-mobile/fenix-nightly
-                    else: assume:hook-id:project-mobile/fenix-nightly-staging
-                routes:
-                  $if: 'trust_level == 3'
-                  then:
-                    - notify.email.fenix-eng-notifications@mozilla.com.on-failed
-                payload:
-                  $let:
-                    staging_flag:
-                      $if: 'trust_level == 3'
-                      then: ''
-                      else: '--staging'
-                  in:
+                    name: Fenix VCS-Push Decision task
+                    description: Schedules the build and test tasks for Fenix.
+          - $if: 'tasks_for == "github-release" && event["action"] == "published"'
+            then:
+              $mergeDeep:
+                - {$eval: 'default_task_definition'}
+                - scopes:
+                  - ${assume_scope_prefix}:release
+                  payload:
                     command:
                       - >-
-                        git fetch ${repository} ${head_branch}
+                        git fetch ${repository} refs/tags/${head_rev}
                         && git config advice.detachedHead false
                         && git checkout FETCH_HEAD
-                        && python automation/taskcluster/decision_task.py nightly ${staging_flag}
-                extra:
-                  cron: {$json: {$eval: 'cron'}}
-                  treeherder:
-                    symbol: nightly-D
-                metadata:
-                  name: Fenix Nightly Decision Task
-                  description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
+                        && python automation/taskcluster/decision_task.py beta ${event.release.tag_name}
+                  extra:
+                    treeherder:
+                      symbol: beta-D
+                  metadata:
+                    name: Fenix Beta Decision Task
+                    description: Building and releasing Fenix to the beta channel - triggered by release ${event.release.tag_name}
+          - $if: 'tasks_for == "cron"'
+            then:
+              $let:
+                staging_flag:
+                  $if: 'trust_level == 3'
+                  then: ''
+                  else: '--staging'
+              in:
+              - $if: 'cron.name == "nightly"'
+                then:
+                  $mergeDeep:
+                    - {$eval: 'default_task_definition'}
+                    - scopes:
+                        - $if: 'trust_level == 3'
+                          then: assume:hook-id:project-mobile/fenix-nightly
+                          else: assume:hook-id:project-mobile/fenix-nightly-staging
+                      routes:
+                        $if: 'trust_level == 3'
+                        then:
+                          - notify.email.fenix-eng-notifications@mozilla.com.on-failed
+                      payload:
+                        command:
+                          - >-
+                            git fetch ${repository} ${head_branch}
+                            && git config advice.detachedHead false
+                            && git checkout FETCH_HEAD
+                            && python automation/taskcluster/decision_task.py nightly ${staging_flag}
+                      extra:
+                        cron: {$json: {$eval: 'cron'}}
+                        treeherder:
+                          symbol: nightly-D
+                      metadata:
+                        name: Fenix Nightly Decision Task
+                        description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
+              - $if: 'cron.name == "raptor"'
+                then:
+                  $mergeDeep:
+                    - {$eval: 'default_task_definition'}
+                    - scopes:
+                        - $if: 'trust_level == 3'
+                          then: assume:hook-id:project-mobile/fenix-raptor
+                          else: assume:hook-id:project-mobile/fenix-raptor-staging
+                      routes:
+                        $if: 'trust_level == 3'
+                        then:
+                          - notify.email.fenix-eng-notifications@mozilla.com.on-failed
+                      payload:
+                        command:
+                          - >-
+                            git fetch ${repository} ${head_branch}
+                            && git config advice.detachedHead false
+                            && git checkout FETCH_HEAD
+                            && python automation/taskcluster/decision_task.py raptor ${staging_flag}
+                      extra:
+                        cron: {$json: {$eval: 'cron'}}
+                        treeherder:
+                          symbol: raptor-D
+                      metadata:
+                        name: Fenix Raptor Decision Task
+                        description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
