@@ -24,7 +24,7 @@
             android:usesCleartextTraffic="true"
             tools:ignore="UnusedAttribute">
         <activity android:name=".HomeActivity"
-                  android:launchMode="singleInstance"
+                  android:launchMode="singleTask"
                   android:windowSoftInputMode="adjustResize"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout">
             <intent-filter>
