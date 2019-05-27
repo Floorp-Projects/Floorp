@@ -16,16 +16,18 @@ ChromeUtils.defineModuleGetter(this, "Deprecated",
 
 const kAutoDetectors = [
   ["off", ""],
+  ["ja", "ja_parallel_state_machine"],
   ["ru", "ruprob"],
   ["uk", "ukprob"],
 ];
 
 /**
  * This set contains encodings that are in the Encoding Standard, except:
- *  - Japanese encodings are represented by one autodetection item
+ *  - XSS-dangerous encodings (except ISO-2022-JP which is assumed to be
+ *    too common not to be included).
  *  - x-user-defined, which practically never makes sense as an end-user-chosen
  *    override.
- *  - Encodings that IE11 doesn't have in its corresponding menu.
+ *  - Encodings that IE11 doesn't have in its correspoding menu.
  */
 const kEncodings = new Set([
   // Globally relevant
@@ -58,8 +60,10 @@ const kEncodings = new Set([
   // Hebrew
   "windows-1255",
   "ISO-8859-8",
-  // Japanese (NOT AN ENCODING NAME)
-  "Japanese",
+  // Japanese
+  "Shift_JIS",
+  "EUC-JP",
+  "ISO-2022-JP",
   // Korean
   "EUC-KR",
   // Thai
@@ -91,7 +95,8 @@ function CharsetComparator(a, b) {
   // happens to make the less frequently-used items first.
   let titleA = a.label.replace(/\(.*/, "") + b.value;
   let titleB = b.label.replace(/\(.*/, "") + a.value;
-  // Secondarily reverse sort by encoding name to sort "windows"
+  // Secondarily reverse sort by encoding name to sort "windows" or
+  // "shift_jis" first.
   return titleA.localeCompare(titleB) || b.value.localeCompare(a.value);
 }
 
@@ -234,17 +239,7 @@ var CharsetMenu = {
    * For substantially similar encodings, treat two encodings as the same
    * for the purpose of the check mark.
    */
-  foldCharset(charset, isAutodetected) {
-    if (isAutodetected) {
-      switch (charset) {
-        case "Shift_JIS":
-        case "EUC-JP":
-        case "ISO-2022-JP":
-          return "Japanese";
-        default:
-          // fall through
-      }
-    }
+  foldCharset(charset) {
     switch (charset) {
       case "ISO-8859-8-I":
         return "windows-1255";
@@ -257,11 +252,8 @@ var CharsetMenu = {
     }
   },
 
-  /**
-   * This method is for comm-central callers only.
-   */
   update(parent, charset) {
-    let menuitem = parent.getElementsByAttribute("charset", this.foldCharset(charset, false)).item(0);
+    let menuitem = parent.getElementsByAttribute("charset", this.foldCharset(charset)).item(0);
     if (menuitem) {
       menuitem.setAttribute("checked", "true");
     }

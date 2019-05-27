@@ -95,6 +95,8 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/extensions/universalchardet/src/base',
+    '/extensions/universalchardet/src/xpcom',
     '/intl/chardet',
 ]
 

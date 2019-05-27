@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_rs"
-version = "0.8.17"
+version = "0.8.16"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A Gecko-oriented implementation of the Encoding Standard"
 homepage = "https://docs.rs/encoding_rs/"
@@ -35,7 +35,7 @@ optional = true
 version = "1.0"
 optional = true
 [dev-dependencies.bincode]
-version = "1.0"
+version = "0.8"
 
 [dev-dependencies.serde_derive]
 version = "1.0"

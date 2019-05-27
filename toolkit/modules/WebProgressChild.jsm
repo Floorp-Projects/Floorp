@@ -116,7 +116,6 @@ class WebProgressChild {
       json.title = this.mm.content.document.title;
       json.charset = this.mm.content.document.characterSet;
       json.mayEnableCharacterEncodingMenu = this.mm.docShell.mayEnableCharacterEncodingMenu;
-      json.charsetAutodetected = this.mm.docShell.charsetAutodetected;
       json.principal = this.mm.content.document.nodePrincipal;
       let csp = this.mm.content.document.csp;
       json.csp = E10SUtils.serializeCSP(csp);
