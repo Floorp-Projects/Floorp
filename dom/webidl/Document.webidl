@@ -144,11 +144,16 @@ partial interface Document {
   //(Not implemented)readonly attribute DOMElementMap cssElementMap;
 
   // dynamic markup insertion
-  //(HTML only)Document open(optional DOMString type, optional DOMString replace);
-  //(HTML only)WindowProxy open(DOMString url, DOMString name, DOMString features, optional boolean replace);
-  //(HTML only)void close();
-  //(HTML only)void write(DOMString... text);
-  //(HTML only)void writeln(DOMString... text);
+  [CEReactions, Throws]
+  Document open(optional DOMString type, optional DOMString replace = ""); // type is ignored
+  [CEReactions, Throws]
+  WindowProxy? open(DOMString url, DOMString name, DOMString features, optional boolean replace = false);
+  [CEReactions, Throws]
+  void close();
+  [CEReactions, Throws]
+  void write(DOMString... text);
+  [CEReactions, Throws]
+  void writeln(DOMString... text);
 
   // user interaction
   [Pure]

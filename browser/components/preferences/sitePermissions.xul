@@ -74,7 +74,7 @@
             data-l10n-id="disable-extension"/>
   </hbox>
   <hbox class="actionButtons" align="right" flex="1">
-    <button oncommand="close();" icon="close" id="cancel"
+    <button oncommand="window.close();" icon="close" id="cancel"
             data-l10n-id="permissions-button-cancel" />
     <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();" icon="save"
             data-l10n-id="permissions-button-ok" />
