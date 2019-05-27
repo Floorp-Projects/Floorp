@@ -123,7 +123,7 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
   if (isHTML) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(d);
     NS_ASSERTION(htmlDoc, "HTML Document doesn't implement nsIHTMLDocument?");
-    d->SetCompatibilityMode(eCompatibility_FullStandards);
+    htmlDoc->SetCompatibilityMode(eCompatibility_FullStandards);
     htmlDoc->SetIsXHTML(isXHTML);
   }
   d->SetLoadedAsData(aLoadedAsData);

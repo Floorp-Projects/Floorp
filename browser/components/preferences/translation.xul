@@ -83,7 +83,7 @@
             icon="clear"
             oncommand="gTranslationExceptions.onAllSitesDeleted();"/>
     <spacer flex="1"/>
-    <button oncommand="window.close();" icon="close"
+    <button oncommand="close();" icon="close"
             data-l10n-id="translation-button-close"/>
   </hbox>
 </window>

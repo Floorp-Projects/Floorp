@@ -632,7 +632,7 @@ nsEditingSession::OnStateChange(nsIWebProgress* aWebProgress,
         RefPtr<Document> doc = piWindow->GetDoc();
         nsHTMLDocument* htmlDoc =
             doc && doc->IsHTMLOrXHTML() ? doc->AsHTMLDocument() : nullptr;
-        if (htmlDoc && doc->IsWriting()) {
+        if (htmlDoc && htmlDoc->IsWriting()) {
           nsAutoString designMode;
           htmlDoc->GetDesignMode(designMode);
 
