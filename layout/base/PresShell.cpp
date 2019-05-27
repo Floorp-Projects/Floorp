@@ -7817,10 +7817,8 @@ nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
     }
   }
 
-  bool isHandlingUserInput = false;
   bool touchIsNew = false;
-  if (!PrepareToDispatchEvent(aEvent, aEventStatus, &isHandlingUserInput,
-                              &touchIsNew)) {
+  if (!PrepareToDispatchEvent(aEvent, aEventStatus, &touchIsNew)) {
     return NS_OK;
   }
 
@@ -7828,8 +7826,8 @@ nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
   // performance.
   RecordEventPreparationPerformance(aEvent);
 
-  AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
-                                                      aEvent);
+  AutoHandlingUserInputStatePusher userInpStatePusher(
+      EventStateManager::IsUserInteractionEvent(aEvent), aEvent);
   AutoEventHandler eventHandler(aEvent, GetDocument());
   AutoPopupStatePusher popupStatePusher(
       PopupBlocker::GetEventPopupControlState(aEvent));
@@ -7938,11 +7936,9 @@ nsresult PresShell::EventHandler::DispatchEvent(
 }
 
 bool PresShell::EventHandler::PrepareToDispatchEvent(
-    WidgetEvent* aEvent, nsEventStatus* aEventStatus, bool* aIsUserInteraction,
-    bool* aTouchIsNew) {
+    WidgetEvent* aEvent, nsEventStatus* aEventStatus, bool* aTouchIsNew) {
   MOZ_ASSERT(aEvent->IsTrusted());
   MOZ_ASSERT(aEventStatus);
-  MOZ_ASSERT(aIsUserInteraction);
   MOZ_ASSERT(aTouchIsNew);
 
   *aTouchIsNew = false;
@@ -7956,26 +7952,14 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(
     case eKeyUp: {
       WidgetKeyboardEvent* keyboardEvent = aEvent->AsKeyboardEvent();
       MaybeHandleKeyboardEventBeforeDispatch(keyboardEvent);
-      // Not all keyboard events are treated as user input, so that popups
-      // can't be opened, fullscreen mode can't be started, etc at unexpected
-      // time.
-      *aIsUserInteraction = keyboardEvent->CanTreatAsUserInput();
       return true;
     }
-    case eMouseDown:
-    case eMouseUp:
-    case ePointerDown:
-    case ePointerUp:
-      *aIsUserInteraction = true;
-      return true;
-
     case eMouseMove: {
       bool allowCapture = EventStateManager::GetActiveEventStateManager() &&
                           GetPresContext() &&
                           GetPresContext()->EventStateManager() ==
                               EventStateManager::GetActiveEventStateManager();
       PresShell::AllowMouseCapture(allowCapture);
-      *aIsUserInteraction = false;
       return true;
     }
     case eDrop: {
@@ -7987,12 +7971,9 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(
           aEvent->mFlags.mOnlyChromeDispatch = true;
         }
       }
-      *aIsUserInteraction = false;
       return true;
     }
     case eContextMenu: {
-      *aIsUserInteraction = false;
-
       // If we cannot open context menu even though eContextMenu is fired, we
       // should stop dispatching it into the DOM.
       WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
@@ -8017,10 +7998,8 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(
     case eTouchCancel:
     case eTouchPointerCancel:
       return mPresShell->mTouchManager.PreHandleEvent(
-          aEvent, aEventStatus, *aTouchIsNew, *aIsUserInteraction,
-          mPresShell->mCurrentEventContent);
+          aEvent, aEventStatus, *aTouchIsNew, mPresShell->mCurrentEventContent);
     default:
-      *aIsUserInteraction = false;
       return true;
   }
 }
