@@ -49,6 +49,9 @@ permalink: /changelog/
   * Added ability for `SuggestionProvider` to return an initial list of suggestions from `onInputStarted()`.
   * Modified `ClipboardSuggestionProvider` to already return a suggestions from `onInputStarted()` if the clipboard contains a URL.
 
+* **browser-engine-gecko-nightly**, **concept-engine**:
+  * Added `EngineSession.Observer.onRecordingStateChanged()` to get list of recording devices currently used by web content.
+
 # 0.53.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.52.0...v0.53.0)
