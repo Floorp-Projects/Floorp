@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import java.lang.UnsupportedOperationException
+import org.json.JSONObject
 
 /**
  * Class representing a single engine session.
@@ -50,6 +51,7 @@ abstract class EngineSession(
         fun onCloseWindowRequest(windowRequest: WindowRequest) = Unit
         fun onMediaAdded(media: Media) = Unit
         fun onMediaRemoved(media: Media) = Unit
+        fun onWebAppManifestLoaded(manifest: JSONObject) = Unit
         fun onCrashStateChange(crashed: Boolean) = Unit
         fun onRecordingStateChanged(devices: List<RecordingDevice>) = Unit
 

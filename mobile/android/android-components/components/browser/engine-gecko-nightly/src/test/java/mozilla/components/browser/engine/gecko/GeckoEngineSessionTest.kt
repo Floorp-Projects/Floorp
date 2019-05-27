@@ -25,6 +25,7 @@ import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.test.ReflectionUtils
+import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -230,6 +231,22 @@ class GeckoEngineSessionTest {
             contentType = "image/png",
             userAgent = null,
             cookie = null)
+    }
+
+    @Test
+    fun contentDelegateNotifiesObserverAboutWebAppManifest() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        val manifest = JSONObject()
+
+        captureDelegates()
+        contentDelegate.value.onWebAppManifest(mock(), manifest)
+
+        verify(observer).onWebAppManifestLoaded(manifest)
     }
 
     @Test

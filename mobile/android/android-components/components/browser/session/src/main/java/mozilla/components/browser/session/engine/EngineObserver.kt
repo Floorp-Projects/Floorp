@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.os.Environment
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.media.Media
@@ -16,6 +17,7 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
+import org.json.JSONObject
 
 /**
  * [EngineSession.Observer] implementation responsible to update the state of a [Session] from the events coming out of
@@ -151,6 +153,15 @@ internal class EngineObserver(
             it.remove(media)
         }
         media.unregisterObservers()
+    }
+
+    override fun onWebAppManifestLoaded(manifest: JSONObject) {
+        val manifestResult = WebAppManifestParser().parse(manifest)
+        session.webAppManifest = if (manifestResult is WebAppManifestParser.Result.Success) {
+            manifestResult.manifest
+        } else {
+            null
+        }
     }
 
     override fun onCrashStateChange(crashed: Boolean) {

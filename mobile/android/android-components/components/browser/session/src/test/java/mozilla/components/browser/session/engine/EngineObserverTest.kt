@@ -6,19 +6,18 @@ package mozilla.components.browser.session.engine
 
 import android.graphics.Bitmap
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
-
 import mozilla.components.concept.engine.prompt.PromptRequest
-
 import mozilla.components.concept.engine.window.WindowRequest
-
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.mock
+import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,10 +25,13 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class EngineObserverTest {
 
     @Test
@@ -275,6 +277,30 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverNotifiesWebAppManifest() {
+        val session = Session("https://www.mozilla.org")
+        val observer = EngineObserver(session)
+
+        observer.onWebAppManifestLoaded(loadManifest("minimal.json"))
+        val manifest = session.webAppManifest!!
+        assertEquals("Minimal", manifest.name)
+        assertNull(manifest.shortName)
+        assertEquals("/", manifest.startUrl)
+        assertEquals(WebAppManifest.DisplayMode.BROWSER, manifest.display)
+        assertNull(manifest.backgroundColor)
+        assertNull(manifest.description)
+        assertEquals(WebAppManifest.TextDirection.AUTO, manifest.dir)
+        assertNull(manifest.lang)
+        assertEquals(WebAppManifest.Orientation.ANY, manifest.orientation)
+        assertNull(manifest.scope)
+        assertNull(manifest.themeColor)
+        assertEquals(0, manifest.icons.size)
+
+        observer.onWebAppManifestLoaded(loadManifest("invalid_json.json"))
+        assertEquals(null, session.webAppManifest)
+    }
+
+    @Test
     fun engineSessionObserverWithContentPermissionRequests() {
         val permissionRequest = mock(PermissionRequest::class.java)
         val session = Session("")
@@ -449,4 +475,13 @@ class EngineObserverTest {
 
         assertEquals("Mozilla Foundation", session.searchTerms)
     }
+
+    private fun loadManifest(fileName: String): JSONObject =
+        JSONObject(javaClass.getResourceAsStream("/manifests/$fileName")!!
+            .bufferedReader().use {
+                it.readText()
+            }.also {
+                assertNotNull(it)
+            }
+        )
 }

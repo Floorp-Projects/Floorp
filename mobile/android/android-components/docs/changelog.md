@@ -15,6 +15,12 @@ permalink: /changelog/
 * **browser-menu**
   * Fixed a bug where overscroll effects would appear on the overflow menu.
 
+* **browser-session**
+  * Added handler for `onWebAppManifestLoaded` to update `session.webAppManifest`.
+
+* **concept-engine**
+  * Added `onWebAppManifestLoaded` to `EngineSession`, called when the engine find a web app manifest.
+
 * **concept-sync**, **service-accounts**
   * ⚠️ **This is a breaking behavior change**: API changes to facilitate error handling; new method on AccountObserver interface.
   * Added `onAuthenticationProblems` observer method, used for indicating that account needs to re-authenticate (e.g. after a password change).
