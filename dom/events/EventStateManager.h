@@ -244,6 +244,12 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                      bool aLockCursor);
 
   /**
+   * Returns true if the event is considered as user interaction event. I.e.,
+   * enough obvious input to allow to open popup, etc. Otherwise, returns false.
+   */
+  static bool IsUserInteractionEvent(const WidgetEvent* aEvent);
+
+  /**
    * StartHandlingUserInput() is called when we start to handle a user input.
    * StopHandlingUserInput() is called when we finish handling a user input.
    * If the caller knows which input event caused that, it should set
