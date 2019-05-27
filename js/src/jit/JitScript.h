@@ -16,6 +16,16 @@ class JSScript;
 namespace js {
 namespace jit {
 
+// Describes a single wasm::ImportExit which jumps (via an import with
+// the given index) directly to a BaselineScript or IonScript.
+struct DependentWasmImport {
+  wasm::Instance* instance;
+  size_t importIndex;
+
+  DependentWasmImport(wasm::Instance& instance, size_t importIndex)
+      : instance(&instance), importIndex(importIndex) {}
+};
+
 // [SMDOC] JitScript
 //
 // JitScript stores type inference data, Baseline ICs and other JIT-related data
@@ -90,6 +100,10 @@ class alignas(uintptr_t) JitScript final {
   // Like JSScript::jitCodeRaw_ but when the script has an IonScript this can
   // point to a separate entry point that skips the argument type checks.
   uint8_t* jitCodeSkipArgCheck_ = nullptr;
+
+  // If non-null, the list of wasm::Modules that contain an optimized call
+  // directly to this script.
+  js::UniquePtr<Vector<DependentWasmImport>> dependentWasmImports_;
 
   // Offset of the StackTypeSet array.
   uint32_t typeSetOffset_ = 0;
@@ -307,6 +321,12 @@ class alignas(uintptr_t) JitScript final {
 
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset);
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset, ICEntry* prevLookedUpEntry);
+
+  MOZ_MUST_USE bool addDependentWasmImport(JSContext* cx,
+                                           wasm::Instance& instance,
+                                           uint32_t idx);
+  void removeDependentWasmImport(wasm::Instance& instance, uint32_t idx);
+  void unlinkDependentWasmImports();
 };
 
 // Ensures no JitScripts are purged in the current zone.
