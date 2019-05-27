@@ -647,7 +647,7 @@ void XMLHttpRequestMainThread::SetResponseType(
   }
 
   // Set the responseType attribute's value to the given value.
-  mResponseType = aResponseType;
+  SetResponseTypeRaw(aResponseType);
 }
 
 void XMLHttpRequestMainThread::GetResponse(
