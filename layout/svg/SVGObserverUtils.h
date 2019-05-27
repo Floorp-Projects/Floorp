@@ -51,10 +51,10 @@ class URLAndReferrerInfo {
     MOZ_ASSERT(aURI);
   }
 
-  URLAndReferrerInfo(nsIURI* aURI, URLExtraData* aExtraData)
+  URLAndReferrerInfo(nsIURI* aURI, const URLExtraData& aExtraData)
       : mURI(aURI),
-        mReferrer(aExtraData->GetReferrer()),
-        mReferrerPolicy(aExtraData->GetReferrerPolicy()) {
+        mReferrer(aExtraData.GetReferrer()),
+        mReferrerPolicy(aExtraData.GetReferrerPolicy()) {
     MOZ_ASSERT(aURI);
   }
 

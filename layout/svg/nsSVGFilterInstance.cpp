@@ -134,7 +134,7 @@ nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
 
     url = urlExtraReferrer->GetURI();
   } else {
-    url = mFilter.GetURL()->ResolveLocalRef(mTargetContent);
+    url = mFilter.GetURL().ResolveLocalRef(mTargetContent);
   }
 
   if (!url) {
@@ -147,8 +147,8 @@ nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
   IDTracker idTracker;
   bool watch = false;
   idTracker.ResetToURIFragmentID(
-      mTargetContent, url, mFilter.GetURL()->ExtraData()->GetReferrer(),
-      mFilter.GetURL()->ExtraData()->GetReferrerPolicy(), watch);
+      mTargetContent, url, mFilter.GetURL().ExtraData().GetReferrer(),
+      mFilter.GetURL().ExtraData().GetReferrerPolicy(), watch);
   Element* element = idTracker.get();
   if (!element) {
     // The URL points to no element.

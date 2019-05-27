@@ -61,6 +61,8 @@ const bool GECKO_IS_NIGHTLY = false;
 
 extern "C" {
 
+NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsIURI, nsIURI);
+
 // Debugging stuff.
 void Gecko_Element_DebugListAttributes(const mozilla::dom::Element*,
                                        nsCString*);
@@ -115,11 +117,11 @@ mozilla::StyleSheet* Gecko_LoadStyleSheet(
     mozilla::css::Loader* loader, mozilla::StyleSheet* parent,
     mozilla::css::SheetLoadData* parent_load_data,
     mozilla::css::LoaderReusableStyleSheets* reusable_sheets,
-    mozilla::StyleStrong<RawServoCssUrlData> url,
+    const mozilla::StyleCssUrl* url,
     mozilla::StyleStrong<RawServoMediaList> media_list);
 
 void Gecko_LoadStyleSheetAsync(mozilla::css::SheetLoadDataHolder* parent_data,
-                               mozilla::StyleStrong<RawServoCssUrlData>,
+                               const mozilla::StyleCssUrl* url,
                                mozilla::StyleStrong<RawServoMediaList>,
                                mozilla::StyleStrong<RawServoImportRule>);
 
@@ -340,7 +342,7 @@ void Gecko_SetGradientImageValue(nsStyleImage* image,
                                  nsStyleGradient* gradient);
 
 void Gecko_SetLayerImageImageValue(nsStyleImage* image,
-                                   mozilla::css::URLValue* image_value);
+                                   const mozilla::StyleComputedImageUrl* url);
 
 void Gecko_SetImageElement(nsStyleImage* image, nsAtom* atom);
 void Gecko_CopyImageValueFrom(nsStyleImage* image, const nsStyleImage* other);
@@ -357,8 +359,8 @@ const nsStyleGradient* Gecko_GetGradientImageValue(const nsStyleImage* image);
 // list-style-image style.
 void Gecko_SetListStyleImageNone(nsStyleList* style_struct);
 
-void Gecko_SetListStyleImageImageValue(nsStyleList* style_struct,
-                                       mozilla::css::URLValue* aImageValue);
+void Gecko_SetListStyleImageImageValue(
+    nsStyleList* style_struct, const mozilla::StyleComputedImageUrl* url);
 
 void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 
@@ -366,12 +368,12 @@ void Gecko_CopyListStyleImageFrom(nsStyleList* dest, const nsStyleList* src);
 void Gecko_SetCursorArrayLength(nsStyleUI* ui, size_t len);
 
 void Gecko_SetCursorImageValue(nsCursorImage* aCursor,
-                               mozilla::css::URLValue* aImageValue);
+                               const mozilla::StyleComputedImageUrl* url);
 
 void Gecko_CopyCursorArrayFrom(nsStyleUI* dest, const nsStyleUI* src);
 
 void Gecko_SetContentDataImageValue(nsStyleContentData* aList,
-                                    mozilla::css::URLValue* aImageValue);
+                                    const mozilla::StyleComputedImageUrl* url);
 
 nsStyleContentData::CounterFunction* Gecko_SetCounterFunction(
     nsStyleContentData* content_data, mozilla::StyleContentType);
@@ -535,13 +537,13 @@ void Gecko_ResetFilters(nsStyleEffects* effects, size_t new_len);
 void Gecko_CopyFiltersFrom(nsStyleEffects* aSrc, nsStyleEffects* aDest);
 
 void Gecko_nsStyleFilter_SetURLValue(nsStyleFilter* effects,
-                                     mozilla::css::URLValue* uri);
+                                     const mozilla::StyleComputedUrl* url);
 
 void Gecko_nsStyleSVGPaint_CopyFrom(nsStyleSVGPaint* dest,
                                     const nsStyleSVGPaint* src);
 
 void Gecko_nsStyleSVGPaint_SetURLValue(nsStyleSVGPaint* paint,
-                                       mozilla::css::URLValue* uri);
+                                       const mozilla::StyleComputedUrl* url);
 
 void Gecko_nsStyleSVGPaint_Reset(nsStyleSVGPaint* paint);
 
@@ -554,20 +556,14 @@ void Gecko_nsStyleSVG_SetContextPropertiesLength(nsStyleSVG* svg, uint32_t len);
 void Gecko_nsStyleSVG_CopyContextProperties(nsStyleSVG* dst,
                                             const nsStyleSVG* src);
 
-mozilla::css::URLValue* Gecko_URLValue_Create(
-    mozilla::StyleStrong<RawServoCssUrlData> url, mozilla::CORSMode aCORSMode);
-
-size_t Gecko_URLValue_SizeOfIncludingThis(mozilla::css::URLValue* url);
-
-void Gecko_GetComputedURLSpec(const mozilla::css::URLValue* url,
+void Gecko_GetComputedURLSpec(const mozilla::StyleComputedUrl* url,
                               nsCString* spec);
 
-void Gecko_GetComputedImageURLSpec(const mozilla::css::URLValue* url,
+void Gecko_GetComputedImageURLSpec(const mozilla::StyleComputedUrl* url,
                                    nsCString* spec);
 
 void Gecko_nsIURI_Debug(nsIURI*, nsCString* spec);
 
-NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::URLValue, CSSURLValue);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::URLExtraData, URLExtraData);
 
 void Gecko_FillAllImageLayers(nsStyleImageLayers* layers, uint32_t max_len);
@@ -578,6 +574,8 @@ float Gecko_FontStretch_ToFloat(mozilla::FontStretch aStretch);
 
 void Gecko_FontStretch_SetFloat(mozilla::FontStretch* aStretch,
                                 float aFloatValue);
+
+void Gecko_LoadData_DeregisterLoad(const mozilla::StyleLoadData*);
 
 float Gecko_FontSlantStyle_ToFloat(mozilla::FontSlantStyle aStyle);
 void Gecko_FontSlantStyle_SetNormal(mozilla::FontSlantStyle*);
