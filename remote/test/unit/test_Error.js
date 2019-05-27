@@ -100,5 +100,7 @@ add_test(function test_UnsupportedError() {
 
 add_test(function test_UnknownMethodError() {
   ok(new UnknownMethodError() instanceof RemoteAgentError);
+  ok(new UnknownMethodError("domain").message.endsWith("domain"));
+  ok(new UnknownMethodError("domain", "command").message.endsWith("domain.command"));
   run_next_test();
 });
