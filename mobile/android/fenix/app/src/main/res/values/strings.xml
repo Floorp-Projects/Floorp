@@ -171,6 +171,12 @@
     <string name="fxa_received_tab_channel_name">Received tabs</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_description">Notifications for tabs received from other Firefox devices.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Tab Received</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Tabs Received</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Tab from %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
