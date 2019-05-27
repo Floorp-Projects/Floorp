@@ -36,8 +36,6 @@ void PathBuilderSkia::SetFillRule(FillRule aFillRule) {
 
 void PathBuilderSkia::MoveTo(const Point& aPoint) {
   mPath.moveTo(SkFloatToScalar(aPoint.x), SkFloatToScalar(aPoint.y));
-  mCurrentPoint = aPoint;
-  mFirstPoint = aPoint;
 }
 
 void PathBuilderSkia::LineTo(const Point& aPoint) {
@@ -46,7 +44,6 @@ void PathBuilderSkia::LineTo(const Point& aPoint) {
   } else {
     mPath.lineTo(SkFloatToScalar(aPoint.x), SkFloatToScalar(aPoint.y));
   }
-  mCurrentPoint = aPoint;
 }
 
 void PathBuilderSkia::BezierTo(const Point& aCP1, const Point& aCP2,
@@ -57,7 +54,6 @@ void PathBuilderSkia::BezierTo(const Point& aCP1, const Point& aCP2,
   mPath.cubicTo(SkFloatToScalar(aCP1.x), SkFloatToScalar(aCP1.y),
                 SkFloatToScalar(aCP2.x), SkFloatToScalar(aCP2.y),
                 SkFloatToScalar(aCP3.x), SkFloatToScalar(aCP3.y));
-  mCurrentPoint = aCP3;
 }
 
 void PathBuilderSkia::QuadraticBezierTo(const Point& aCP1, const Point& aCP2) {
@@ -66,13 +62,9 @@ void PathBuilderSkia::QuadraticBezierTo(const Point& aCP1, const Point& aCP2) {
   }
   mPath.quadTo(SkFloatToScalar(aCP1.x), SkFloatToScalar(aCP1.y),
                SkFloatToScalar(aCP2.x), SkFloatToScalar(aCP2.y));
-  mCurrentPoint = aCP2;
 }
 
-void PathBuilderSkia::Close() {
-  mPath.close();
-  mCurrentPoint = mFirstPoint;
-}
+void PathBuilderSkia::Close() { mPath.close(); }
 
 void PathBuilderSkia::Arc(const Point& aOrigin, float aRadius,
                           float aStartAngle, float aEndAngle,
@@ -81,11 +73,16 @@ void PathBuilderSkia::Arc(const Point& aOrigin, float aRadius,
               aAntiClockwise);
 }
 
-Point PathBuilderSkia::CurrentPoint() const { return mCurrentPoint; }
+Point PathBuilderSkia::CurrentPoint() const {
+  int pointCount = mPath.countPoints();
+  if (!pointCount) {
+    return Point(0, 0);
+  }
+  SkPoint point = mPath.getPoint(pointCount - 1);
+  return Point(SkScalarToFloat(point.fX), SkScalarToFloat(point.fY));
+}
 
 already_AddRefed<Path> PathBuilderSkia::Finish() {
-  mCurrentPoint = Point(0.0, 0.0);
-  mFirstPoint = Point(0.0, 0.0);
   return MakeAndAddRef<PathSkia>(mPath, mFillRule);
 }
 
