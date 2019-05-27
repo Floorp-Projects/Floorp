@@ -30,6 +30,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/Telemetry.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
@@ -583,10 +584,8 @@ class SetResponseTypeRunnable final : public WorkerThreadProxySyncRunnable {
   ~SetResponseTypeRunnable() {}
 
   virtual void RunOnMainThread(ErrorResult& aRv) override {
-    mProxy->mXHR->SetResponseType(mResponseType, aRv);
-    if (!aRv.Failed()) {
-      mResponseType = mProxy->mXHR->ResponseType();
-    }
+    mProxy->mXHR->SetResponseTypeRaw(mResponseType);
+    mResponseType = mProxy->mXHR->ResponseType();
   }
 };
 
@@ -2177,11 +2176,6 @@ void XMLHttpRequestWorker::SetResponseType(
     XMLHttpRequestResponseType aResponseType, ErrorResult& aRv) {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (mCanceled) {
-    aRv.ThrowUncatchableException();
-    return;
-  }
-
   // "document" is fine for the main thread but not for a worker. Short-circuit
   // that here.
   if (aResponseType == XMLHttpRequestResponseType::Document) {
@@ -2195,9 +2189,9 @@ void XMLHttpRequestWorker::SetResponseType(
     return;
   }
 
-  if (SendInProgress() &&
-      (mProxy->mSeenLoadStart || mStateData.mReadyState > 1)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (mStateData.mReadyState == XMLHttpRequest_Binding::LOADING ||
+      mStateData.mReadyState == XMLHttpRequest_Binding::DONE) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE);
     return;
   }
 
