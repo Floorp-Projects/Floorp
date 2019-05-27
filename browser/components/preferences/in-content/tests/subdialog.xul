@@ -22,6 +22,6 @@
 
   <separator class="thin"/>
 
-  <button oncommand="close();" icon="close" label="Close" />
+  <button oncommand="window.close();" icon="close" label="Close" />
 
 </dialog>
