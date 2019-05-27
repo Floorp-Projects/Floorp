@@ -485,7 +485,8 @@ class MediaCache {
 
   // Used by MediaCacheStream::GetDebugInfo() only for debugging.
   // Don't add new callers to this function.
-  friend nsCString MediaCacheStream::GetDebugInfo();
+  friend void MediaCacheStream::GetDebugInfo(
+      dom::MediaCacheStreamDebugInfo& aInfo);
   mozilla::Monitor& GetMonitorOnTheMainThread() {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
     return mMonitor;
@@ -2775,12 +2776,13 @@ double MediaCacheStream::GetDownloadRate(bool* aIsReliable) {
   return mDownloadStatistics.GetRate(aIsReliable);
 }
 
-nsCString MediaCacheStream::GetDebugInfo() {
+void MediaCacheStream::GetDebugInfo(dom::MediaCacheStreamDebugInfo& aInfo) {
   AutoLock lock(mMediaCache->GetMonitorOnTheMainThread());
-  return nsPrintfCString("mStreamLength=%" PRId64 " mChannelOffset=%" PRId64
-                         " mCacheSuspended=%d mChannelEnded=%d mLoadID=%u",
-                         mStreamLength, mChannelOffset, mCacheSuspended,
-                         mChannelEnded, mLoadID);
+  aInfo.mStreamLength = mStreamLength;
+  aInfo.mChannelOffset = mChannelOffset;
+  aInfo.mCacheSuspended = mCacheSuspended;
+  aInfo.mChannelEnded = mChannelEnded;
+  aInfo.mLoadID = mLoadID;
 }
 
 }  // namespace mozilla

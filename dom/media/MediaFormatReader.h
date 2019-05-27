@@ -13,6 +13,7 @@
 #  include "mozilla/StateMirroring.h"
 #  include "mozilla/StaticPrefs.h"
 #  include "mozilla/TaskQueue.h"
+#  include "mozilla/dom/MediaDebugInfoBinding.h"
 
 #  include "FrameStatistics.h"
 #  include "MediaEventSource.h"
@@ -178,9 +179,9 @@ class MediaFormatReader final
 
   RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
-  // Returns a string describing the state of the decoder data.
+  // Returns a MediaDebugInfo structure
   // Used for debugging purposes.
-  void GetMozDebugReaderData(nsACString& aString);
+  void GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo);
 
   // Switch the video decoder to NullDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
