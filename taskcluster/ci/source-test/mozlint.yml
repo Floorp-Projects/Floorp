@@ -47,6 +47,7 @@ codespell:
             - '**/*.py'
             - '**/*.properties'
             - '**/*.rst'
+            - '**/*.ftl'
 
 cpp-virtual-final:
     description: lint C++ virtual function declarations
