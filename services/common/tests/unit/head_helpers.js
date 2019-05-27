@@ -198,3 +198,17 @@ function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
     equal(expected, actual, `check events for ${status}`);
   }
 }
+
+async function withFakeChannel(channel, f) {
+  const module = ChromeUtils.import("resource://services-common/uptake-telemetry.js", null);
+  const oldPolicy = module.Policy;
+  module.Policy = {
+    ...oldPolicy,
+    getChannel: () => channel,
+  };
+  try {
+    return await f();
+  } finally {
+    module.Policy = oldPolicy;
+  }
+}

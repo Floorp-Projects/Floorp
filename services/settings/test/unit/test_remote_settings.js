@@ -351,12 +351,14 @@ add_task(async function test_telemetry_if_sync_succeeds() {
 add_task(clear_state);
 
 add_task(async function test_synchronization_duration_is_reported_in_uptake_status() {
-  await client.maybeSync(2000);
+  await withFakeChannel("nightly", async () => {
+    await client.maybeSync(2000);
 
-  TelemetryTestUtils.assertEvents([
-    ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
-      { source: client.identifier, duration: (v) => v > 0, trigger: "manual" }],
-  ]);
+    TelemetryTestUtils.assertEvents([
+      ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
+        { source: client.identifier, duration: (v) => v > 0, trigger: "manual" }],
+    ]);
+  });
 });
 add_task(clear_state);
 
