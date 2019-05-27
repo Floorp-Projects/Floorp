@@ -897,27 +897,6 @@ def build_scriptworker_signing_payload(config, task, task_def):
     task['release-artifacts'] = list(artifacts)
 
 
-@payload_builder('binary-transparency', schema={})
-def build_binary_transparency_payload(config, task, task_def):
-    release_config = get_release_config(config)
-
-    task_def['payload'] = {
-        'version': release_config['version'],
-        'chain': 'TRANSPARENCY.pem',
-        'contact': task_def['metadata']['owner'],
-        'maxRunTime': 600,
-        'stage-product': task['shipping-product'],
-        'summary': (
-            'https://archive.mozilla.org/pub/{}/candidates/'
-            '{}-candidates/build{}/SHA256SUMMARY'
-        ).format(
-            task['shipping-product'],
-            release_config['version'],
-            release_config['build_number'],
-        ),
-    }
-
-
 @payload_builder('beetmover', schema={
     # the maximum time to run, in seconds
     Required('max-run-time', default=600): int,
