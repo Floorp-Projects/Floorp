@@ -6620,6 +6620,9 @@ function handleDroppedLink(event, urlOrLinks, nameOrTriggeringPrincipal, trigger
 
 function BrowserSetForcedCharacterSet(aCharset) {
   if (aCharset) {
+    if (aCharset == "Japanese") {
+      aCharset = "Shift_JIS";
+    }
     gBrowser.selectedBrowser.characterSet = aCharset;
     // Save the forced character-set
     PlacesUIUtils.setCharsetForPage(getWebNavigation().currentURI,
@@ -6634,7 +6637,8 @@ function BrowserCharsetReload() {
 }
 
 function UpdateCurrentCharset(target) {
-  let selectedCharset = CharsetMenu.foldCharset(gBrowser.selectedBrowser.characterSet);
+  let selectedCharset = CharsetMenu.foldCharset(gBrowser.selectedBrowser.characterSet,
+                                                gBrowser.selectedBrowser.charsetAutodetected);
   for (let menuItem of target.getElementsByTagName("menuitem")) {
     let isSelected = menuItem.getAttribute("charset") === selectedCharset;
     menuItem.setAttribute("checked", isSelected);

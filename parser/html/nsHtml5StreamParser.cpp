@@ -180,7 +180,8 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
       mEventTarget(nsHtml5Module::GetStreamParserThread()->SerialEventTarget()),
       mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor)),
       mLoadFlusher(new nsHtml5LoadFlusher(aExecutor)),
-      mJapaneseDetector(mozilla::JapaneseDetector::Create(true)),
+      mJapaneseDetector(mozilla::JapaneseDetector::Create(
+          StaticPrefs::intl_charset_detector_iso2022jp_allowed())),
       mInitialEncodingWasFromParentFrame(false),
       mHasHadErrors(false),
       mDecodingLocalFileAsUTF8(false),
@@ -296,32 +297,35 @@ void nsHtml5StreamParser::FeedJapaneseDetector(Span<const uint8_t> aBuffer,
     return;
   }
   mFeedChardet = false;
+  int32_t source = kCharsetFromAutoDetection;
+  if (mCharsetSource == kCharsetFromParentForced ||
+      mCharsetSource == kCharsetFromUserForced) {
+    source = kCharsetFromUserForcedAutoDetection;
+  }
   if (detected == mEncoding) {
-    MOZ_ASSERT(mCharsetSource < kCharsetFromAutoDetection,
-               "Why are we running chardet at all?");
-    mCharsetSource = kCharsetFromAutoDetection;
+    MOZ_ASSERT(mCharsetSource < source, "Why are we running chardet at all?");
+    mCharsetSource = source;
     mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
   } else if (HasDecoder()) {
     // We've already committed to a decoder. Request a reload from the
     // docshell.
-    mTreeBuilder->NeedsCharsetSwitchTo(WrapNotNull(detected),
-                                       kCharsetFromAutoDetection, 0);
+    mTreeBuilder->NeedsCharsetSwitchTo(WrapNotNull(detected), source, 0);
     FlushTreeOpsAndDisarmTimer();
     Interrupt();
   } else {
     // Got a confident answer from the sniffing buffer. That code will
     // take care of setting up the decoder.
     mEncoding = WrapNotNull(detected);
-    mCharsetSource = kCharsetFromAutoDetection;
+    mCharsetSource = source;
     mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
   }
 }
 
 void nsHtml5StreamParser::FeedDetector(Span<const uint8_t> aBuffer,
                                        bool aLast) {
-  if (mEncoding == SHIFT_JIS_ENCODING) {
+  if (mEncoding->IsJapaneseLegacy()) {
     FeedJapaneseDetector(aBuffer, aLast);
-  } else if (mEncoding == WINDOWS_1251_ENCODING) {
+  } else if (mEncoding == WINDOWS_1251_ENCODING && mChardet) {
     if (!aBuffer.IsEmpty()) {
       bool dontFeed = false;
       mozilla::Unused << mChardet->DoIt((const char*)aBuffer.Elements(),
@@ -379,6 +383,11 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
     MOZ_ASSERT(mEncoding != UTF_8_ENCODING);
     mUnicodeDecoder = UTF_8_ENCODING->NewDecoderWithBOMRemoval();
   } else {
+    if (mCharsetSource >= kCharsetFromAutoDetection &&
+        !(mCharsetSource == kCharsetFromUserForced ||
+          mCharsetSource == kCharsetFromParentForced)) {
+      mFeedChardet = false;
+    }
     mDecodingLocalFileAsUTF8 = false;
     mUnicodeDecoder = mEncoding->NewDecoderWithBOMRemoval();
   }
@@ -523,12 +532,38 @@ static void HandleProcessingInstruction(void* aUserData,
   XML_StopParser(ud->mExpat, false);
 }
 
+void nsHtml5StreamParser::FinalizeSniffingWithDetector(
+    Span<const uint8_t> aFromSegment, uint32_t aCountToSniffingLimit,
+    bool aEof) {
+  if (mSniffingBuffer) {
+    FeedDetector(MakeSpan(mSniffingBuffer.get(), mSniffingLength), false);
+  }
+  if (mFeedChardet && !aFromSegment.IsEmpty()) {
+    // Avoid buffer boundary-dependent behavior when
+    // reparsing is forbidden. If reparse is forbidden,
+    // act as if we only saw the first 1024 bytes.
+    // When reparsing isn't forbidden, buffer boundaries
+    // can have an effect on whether the page is loaded
+    // once or twice. :-(
+    FeedDetector(mReparseForbidden ? aFromSegment.To(aCountToSniffingLimit)
+                                   : aFromSegment,
+                 false);
+  }
+  if (mFeedChardet && aEof &&
+      (!mReparseForbidden || aCountToSniffingLimit == aFromSegment.Length())) {
+    // Don't signal EOF if reparse is forbidden and we didn't pass all input
+    // to the detector above.
+    mFeedChardet = false;
+    FeedDetector(Span<const uint8_t>(), true);
+  }
+}
+
 nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
                                                uint32_t aCountToSniffingLimit,
                                                bool aEof) {
-  NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  NS_ASSERTION(mCharsetSource < kCharsetFromParentForced,
-               "Should not finalize sniffing when using forced charset.");
+  MOZ_ASSERT(IsParserThread(), "Wrong thread!");
+  MOZ_ASSERT(mCharsetSource < kCharsetFromUserForcedAutoDetection,
+             "Should not finalize sniffing with strong decision already made.");
   if (mMode == VIEW_SOURCE_XML) {
     static const XML_Memory_Handling_Suite memsuite = {
         (void* (*)(size_t))moz_xmalloc, (void* (*)(void*, size_t))moz_xrealloc,
@@ -591,38 +626,15 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
   }
 
   // meta scan failed.
-  if (mCharsetSource >= kCharsetFromHintPrevDoc) {
-    mFeedChardet = false;
-    return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
+  if (mCharsetSource < kCharsetFromMetaPrescan) {
+    // Check for BOMless UTF-16 with Basic
+    // Latin content for compat with IE. See bug 631751.
+    SniffBOMlessUTF16BasicLatin(aFromSegment.To(aCountToSniffingLimit));
   }
-  // Check for BOMless UTF-16 with Basic
-  // Latin content for compat with IE. See bug 631751.
-  SniffBOMlessUTF16BasicLatin(aFromSegment.To(aCountToSniffingLimit));
   // the charset may have been set now
   // maybe try chardet now;
   if (mFeedChardet && !mDecodingLocalFileAsUTF8) {
-    if (mSniffingBuffer) {
-      FeedDetector(MakeSpan(mSniffingBuffer.get(), mSniffingLength), false);
-    }
-    if (mFeedChardet && !aFromSegment.IsEmpty()) {
-        // Avoid buffer boundary-dependent behavior when
-        // reparsing is forbidden. If reparse is forbidden,
-        // act as if we only saw the first 1024 bytes.
-        // When reparsing isn't forbidden, buffer boundaries
-        // can have an effect on whether the page is loaded
-        // once or twice. :-(
-        FeedDetector(mReparseForbidden ? aFromSegment.To(aCountToSniffingLimit)
-                                       : aFromSegment,
-                     false);
-    }
-    if (mFeedChardet && aEof &&
-        (!mReparseForbidden ||
-         aCountToSniffingLimit == aFromSegment.Length())) {
-      // Don't signal EOF if reparse is forbidden and we didn't pass all input
-      // to the detector above.
-      mFeedChardet = false;
-      FeedDetector(Span<const uint8_t>(), true);
-    }
+    FinalizeSniffingWithDetector(aFromSegment, aCountToSniffingLimit, aEof);
     // fall thru; callback may have changed charset
   }
   if (mCharsetSource == kCharsetUninitialized) {
@@ -719,7 +731,6 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
     // earlier call to SetDocumentCharset(), since we didn't find a BOM and
     // overwrite mEncoding. (Note that if the user has overridden the charset,
     // we don't come here but check <meta> for XSS-dangerous charsets first.)
-    mFeedChardet = false;
     mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
     return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
   }
@@ -751,12 +762,16 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
             (encoding->IsAsciiCompatible() ||
              encoding == ISO_2022_JP_ENCODING)) {
           // Honor override
+          if (mEncoding->IsJapaneseLegacy()) {
+            mFeedChardet = true;
+            FinalizeSniffingWithDetector(aFromSegment, countToSniffingLimit,
+                                         false);
+          }
           return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
               aFromSegment);
         }
         mEncoding = WrapNotNull(encoding);
         mCharsetSource = kCharsetFromMetaPrescan;
-        mFeedChardet = false;
         mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
         return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(
             aFromSegment);
@@ -765,6 +780,10 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
     if (mCharsetSource == kCharsetFromParentForced ||
         mCharsetSource == kCharsetFromUserForced) {
       // meta not found, honor override
+      if (mEncoding->IsJapaneseLegacy()) {
+        mFeedChardet = true;
+        FinalizeSniffingWithDetector(aFromSegment, countToSniffingLimit, false);
+      }
       return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
     }
     return FinalizeSniffing(aFromSegment, countToSniffingLimit, false);
@@ -793,7 +812,6 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(
       }
       mEncoding = WrapNotNull(encoding);
       mCharsetSource = kCharsetFromMetaPrescan;
-      mFeedChardet = false;
       mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
       return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
     }
@@ -1063,7 +1081,9 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
     mInitialEncodingWasFromParentFrame = true;
   }
 
-  if (mCharsetSource >= kCharsetFromAutoDetection) {
+  if (mCharsetSource >= kCharsetFromAutoDetection &&
+      !(mCharsetSource == kCharsetFromParentForced ||
+        mCharsetSource == kCharsetFromUserForced)) {
     mFeedChardet = false;
   }
 
@@ -1073,9 +1093,9 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
     return NS_OK;
   }
 
-  // We are reloading a document.open()ed doc or loading JSON/WebVTT/etc. into
-  // a browsing context. In the latter case, there's no need to remove the
-  // BOM manually here, because the UTF-8 decoder removes it.
+  // We are loading JSON/WebVTT/etc. into a browsing context.
+  // There's no need to remove the BOM manually here, because
+  // the UTF-8 decoder removes it.
   mReparseForbidden = true;
   mFeedChardet = false;
 

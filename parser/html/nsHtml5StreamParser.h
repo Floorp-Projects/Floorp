@@ -294,6 +294,12 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
   void SniffBOMlessUTF16BasicLatin(mozilla::Span<const uint8_t> aFromSegment);
 
   /**
+   * Write the start of the stream to detector.
+   */
+  void FinalizeSniffingWithDetector(mozilla::Span<const uint8_t> aFromSegment,
+                                    uint32_t aCountToSniffingLimit, bool aEof);
+
+  /**
    * <meta charset> scan failed. Try chardet if applicable. After this, the
    * the parser will have some encoding even if a last resolt fallback.
    *
