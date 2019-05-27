@@ -62,6 +62,7 @@ class PathBuilderCapture : public PathBuilder {
   FillRule mFillRule;
   std::vector<PathOp> mPathOps;
   Point mCurrentPoint;
+  Point mFirstPoint;
   RefPtr<DrawTarget> mDT;
 };
 
