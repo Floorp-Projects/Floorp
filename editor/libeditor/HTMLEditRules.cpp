@@ -2502,6 +2502,12 @@ nsresult HTMLEditRules::WillDeleteSelection(
 
     if (wsType == WSType::special || wsType == WSType::br ||
         visNode->IsHTMLElement(nsGkAtoms::hr)) {
+      // If the void element is editing host, we should do nothing.
+      if (visNode == wsObj.GetEditingHost()) {
+        *aHandled = true;
+        return NS_OK;
+      }
+
       // Short circuit for invisible breaks.  delete them and recurse.
       if (visNode->IsHTMLElement(nsGkAtoms::br) &&
           !HTMLEditorRef().IsVisibleBRElement(visNode)) {

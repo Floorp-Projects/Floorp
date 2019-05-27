@@ -316,6 +316,8 @@ class MOZ_STACK_CLASS WSRunObject final {
   // be safely converted to regular ascii space and converts them.
   MOZ_CAN_RUN_SCRIPT nsresult AdjustWhitespace();
 
+  Element* GetEditingHost() const { return mEditingHost; }
+
  protected:
   // WSFragment represents a single run of ws (all leadingws, or all normalws,
   // or all trailingws, or all leading+trailingws).  Note that this single run
@@ -508,6 +510,9 @@ class MOZ_STACK_CLASS WSRunObject final {
   // The node passed to our constructor.
   EditorDOMPoint mScanStartPoint;
   EditorDOMPoint mScanEndPoint;
+
+  // The editing host when the instance is created.
+  RefPtr<Element> mEditingHost;
 
   // Together, the above represent the point at which we are building up ws
   // info.
