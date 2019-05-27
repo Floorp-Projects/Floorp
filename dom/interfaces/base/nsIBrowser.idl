@@ -94,6 +94,12 @@ interface nsIBrowser : nsISupports
   attribute boolean mayEnableCharacterEncodingMenu;
 
   /**
+   * Whether or not the character encoding was detected by analyzing
+   * content (as opposed to reading a protocol label).
+   */
+  attribute boolean charsetAutodetected;
+
+  /**
    * Called by Gecko to update the browser when its state changes.
    *
    * @param aCharset the new character set of the document

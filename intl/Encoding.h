@@ -253,6 +253,14 @@ class Encoding final {
   }
 
   /**
+   * Checks whether this is a Japanese legacy encoding.
+   */
+  inline bool IsJapaneseLegacy() const {
+    return this == SHIFT_JIS_ENCODING || this == EUC_JP_ENCODING ||
+           this == ISO_2022_JP_ENCODING;
+  }
+
+  /**
    * Returns the _output encoding_ of this encoding. This is UTF-8 for
    * UTF-16BE, UTF-16LE and replacement and the encoding itself otherwise.
    */
