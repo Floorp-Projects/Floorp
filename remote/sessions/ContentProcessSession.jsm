@@ -8,6 +8,7 @@ var EXPORTED_SYMBOLS = ["ContentProcessSession"];
 
 const {ContentProcessDomains} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomains.jsm");
 const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
+const {UnknownMethodError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
 class ContentProcessSession {
   constructor(messageManager, browsingContext, content, docShell) {
@@ -61,14 +62,11 @@ class ContentProcessSession {
     case "remote:request":
       try {
         const {id, domain, command, params} = data.request;
-
-        const inst = this.domains.get(domain);
-        const func = inst[command];
-        if (!func || typeof func != "function") {
-          throw new Error(`Implementation missing: ${domain}.${command}`);
+        if (!this.domains.domainSupportsMethod(domain, command)) {
+          throw new UnknownMethodError(domain, command);
         }
-
-        const result = await func.call(inst, params);
+        const inst = this.domains.get(domain);
+        const result = await inst[command](params);
 
         this.messageManager.sendAsyncMessage("remote:result", {
           browsingContextId,
