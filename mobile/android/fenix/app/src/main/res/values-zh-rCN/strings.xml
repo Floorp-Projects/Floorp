@@ -23,7 +23,7 @@
     <string name="private_browsing_title">您已进入隐私浏览状态</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s 在您关闭所有隐私浏览状态时，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或网络服务提供商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。\n\n隐私浏览功能的常见误解</string>
+    <string name="private_browsing_explanation">%1$s 在您关闭所有隐私浏览状态时，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。\n\n隐私浏览功能的常见误解</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">删除浏览状态</string>
 
@@ -104,6 +104,8 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">关于 %1$s</string>
+    <!-- Preference linking to the privacy policy -->
+    <string name="preferences_privacy_policy">隐私政策</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">密码</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
@@ -160,6 +162,12 @@
     <string name="sync_last_synced_summary">最后同步：%s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">最后同步：从未</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">收到标签页</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">收到来自其他 Firefox 设备的标签页通知。</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -245,6 +253,14 @@
     <string name="library_downloads">下载项</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">书签</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">桌面设备上的书签</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">书签菜单</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">书签工具栏</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">其他书签</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">历史</string>
     <!-- Option in Library to open Reading List -->
@@ -308,6 +324,8 @@
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">删除历史记录</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">您确定要清除历史记录吗？</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">删除</string>
     <!-- History multi select title in app bar
@@ -324,6 +342,9 @@
     <string name="history_this_month">本月</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">更早</string>
+
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">无历史记录</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -497,19 +518,55 @@
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">收藏集 %d</string>
 
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">发送并分享</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">分享链接</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">发送到设备</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">登录同步服务</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">发送到所有设备</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">重新连接同步</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_offline">离线</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">连接其他设备</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">请在至少另一台设备上的 Firefox 登录才能发送标签页。</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">明白了</string>
+
     <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">已删除收藏集</string>
 
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">已更名收藏集</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">标签页已删除</string>
 
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">已删除标签页</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">撤销</string>
 
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">允许 %1$s 打开 %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">允许</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">拒绝</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">您确定要删除 %1$s 吗？</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">删除</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">取消</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">进入全屏模式</string>
 
@@ -517,4 +574,8 @@
     <string name="url_copied">网址已复制</string>
 
 
-    </resources>
+    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. 
+中文字体测试：天地玄黄，宇宙洪荒。日月盈仄，辰宿列张。</string>
+    <string name="preference_accessibility_text_size_summary">放大或缩小网站上的文字</string>
+    <string name="preference_accessibility_font_size_title">字体大小</string>
+</resources>

@@ -102,6 +102,8 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s 정보</string>
+    <!-- Preference linking to the privacy policy -->
+    <string name="preferences_privacy_policy">개인 정보 보호 정책</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">암호</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
@@ -158,6 +160,12 @@
     <string name="sync_last_synced_summary">마지막 동기화: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">마지막 동기화: 없음</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">받은 탭</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">다른 Firefox 기기에서받은 탭에 대한 알림입니다.</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -241,6 +249,14 @@
     <string name="library_downloads">다운로드</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">북마크</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">데스크톱 북마크</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">북마크 메뉴</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">북마크 도구모음</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">다른 북마크</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">방문 기록</string>
     <!-- Option in Library to open Reading List -->
@@ -304,6 +320,8 @@
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">방문 기록 삭제</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">방문 기록을 삭제하시겠습니까?</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">삭제</string>
     <!-- History multi select title in app bar
@@ -320,6 +338,9 @@
     <string name="history_this_month">이번 달</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">이전</string>
+
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">방문기록 없음</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -494,19 +515,56 @@
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">모음집 %d개</string>
 
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">보내고 공유하기</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">링크 공유</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">기기로 보내기</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Sync에 로그인</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">모든 기기에 다 보내기</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">동기화에 다시 연결</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_offline">오프라인</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">다른 기기에 연결</string>
+
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">탭을 보내려면 하나 이상의 다른 기기에서 Firefox에 로그인하세요.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">알겠습니다</string>
+
     <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">모음집 삭제됨</string>
 
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">모음집 이름 변경됨</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">탭 삭제됨</string>
 
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">탭 삭제됨</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">실행 취소</string>
 
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">%1$s가 %2$s를 열도록 허용</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">허용</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">거부</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">%1$s 파일을 삭제하시겠습니까?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">삭제</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">취소</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">전체 화면 모드 진입</string>
 
@@ -514,4 +572,7 @@
     <string name="url_copied">URL 복사됨</string>
 
 
-    </resources>
+    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
+    <string name="preference_accessibility_text_size_summary">웹 사이트의 텍스트를 더 크게 또는 더 작게 함</string>
+    <string name="preference_accessibility_font_size_title">글자 크기</string>
+</resources>

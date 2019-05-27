@@ -175,6 +175,9 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Desactivar para todos los sitios</string>
 
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Desactivado de forma geneal, ve a Ajustes para activarlo.</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for crash reporter -->
@@ -187,10 +190,20 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activar Sync</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Escanear código de emparejamiento en la versión de escritorio de Firefox</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Iniciar sesión</string>
     <!-- Preference for account creation -->
     <string name="preferences_sync_create_account">Crear una cuenta</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Visita <b>firefox.com/pair </b> en Firefox en tu equipo para obtener tu código QR.]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Abrir cámara </string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Cancelar</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->

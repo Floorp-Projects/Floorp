@@ -99,6 +99,8 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Über %1$s</string>
+    <!-- Preference linking to the privacy policy -->
+    <string name="preferences_privacy_policy">Datenschutzerklärung</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Passwörter</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
@@ -156,6 +158,12 @@
     <string name="sync_last_synced_summary">Letzte Synchronisation: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Letzte Synchronisierung: nie</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Empfangene Tabs</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Benachrichtigungen für Tabs, die von anderen Firefox-Geräten empfangen wurden.</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -238,6 +246,14 @@
     <string name="library_downloads">Downloads</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Lesezeichen</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Desktop-Lesezeichen</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Lesezeichen-Menü</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Lesezeichen-Symbolleiste</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Weitere Lesezeichen</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Chronik</string>
     <!-- Option in Library to open Reading List -->
@@ -300,6 +316,8 @@
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Chronik löschen</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Soll Ihre Chronik wirklich gelöscht werden?</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Löschen</string>
     <!-- History multi select title in app bar
@@ -316,6 +334,9 @@
     <string name="history_this_month">Dieser Monat</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Älter</string>
+
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Keine Chronik vorhanden</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -488,19 +509,55 @@
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Sammlung %d</string>
 
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Senden und Teilen</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Einen Link teilen</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">An Gerät senden</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Bei Sync anmelden</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">An alle Geräte senden</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Wieder mit Sync verbinden</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_offline">Offline</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Weiteres Gerät verbinden</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Um einen Tab zu senden, melden Sie sich auf mindestens einem anderen Gerät bei Firefox an.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Verstanden</string>
+
     <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Sammlung gelöscht</string>
 
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Sammlung umbenannt</string>
     <!-- Text shown in snackbar when user deletes a tab -->
     <string name="snackbar_tab_deleted">Tab gelöscht</string>
 
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Tabs gelöscht</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">RÜCKGÄNGIG</string>
 
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">%1$s erlauben, %2$s zu öffnen</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">ERLAUBEN</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">VERWEIGERN</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Soll %1$s wirklich gelöscht werden?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Löschen</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Abbrechen</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Vollbildmodus wird gestartet</string>
 
@@ -508,4 +565,7 @@
     <string name="url_copied">Adresse kopiert</string>
 
 
-    </resources>
+    <string name="accessibility_text_size_sample_text">Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.</string>
+    <string name="preference_accessibility_text_size_summary">Text auf Websites vergrößern oder verkleinern</string>
+    <string name="preference_accessibility_font_size_title">Schriftgröße</string>
+</resources>

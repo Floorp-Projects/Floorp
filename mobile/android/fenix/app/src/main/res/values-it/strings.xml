@@ -101,6 +101,8 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Informazioni su %1$s</string>
+    <!-- Preference linking to the privacy policy -->
+    <string name="preferences_privacy_policy">Informativa sulla privacy</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Password</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
@@ -159,6 +161,12 @@
     <string name="sync_last_synced_summary">Ultima sincronizzazione: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Ultima sincronizzazione: mai</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Schede ricevute</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Notifiche per schede ricevute da altri dispositivi Firefox.</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -244,6 +252,14 @@
     <string name="library_downloads">Download</string>
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Segnalibri</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Segnalibri pc desktop</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Menu segnalibri</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Barra dei segnalibri</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Altri segnalibri</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">Cronologia</string>
     <!-- Option in Library to open Reading List -->
@@ -307,6 +323,8 @@
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Elimina cronologia</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Cancellare la cronologia?</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Elimina</string>
     <!-- History multi select title in app bar
@@ -323,6 +341,9 @@
     <string name="history_this_month">Questo mese</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Più vecchi</string>
+
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Nessuna cronologia disponibile.</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -493,19 +514,55 @@
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Raccolta %d</string>
 
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Invia e condividi</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Condividi un link</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Invia a dispositivo</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Accedi a Sync</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Invia a tutti i dispositivi</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Riconnetti a Sync</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_offline">Non in linea</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Connetti un altro dispositivo</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Per inviare una scheda, accedi all’account Firefox su almeno un altro dispositivo.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Tutto chiaro</string>
+
     <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Raccolta eliminata</string>
 
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Raccolta rinominata</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Schede eliminata</string>
+    <string name="snackbar_tab_deleted">Scheda eliminata</string>
 
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Schede eliminate</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
     <string name="snackbar_deleted_undo">ANNULLA</string>
 
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Consenti a %1$s di aprire %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">CONSENTI</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">NEGA</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Eliminare %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Elimina</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Annulla</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Passa a schermo intero</string>
 
@@ -513,4 +570,7 @@
     <string name="url_copied">Indirizzo copiato</string>
 
 
-    </resources>
+    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
+    <string name="preference_accessibility_text_size_summary">Aumenta o riduci la dimensione del testo dei siti web</string>
+    <string name="preference_accessibility_font_size_title">Dimensione carattere</string>
+</resources>
