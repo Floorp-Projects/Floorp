@@ -11,7 +11,7 @@
 #include "mozilla/dom/ClientBinding.h"
 #include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/dom/DocumentBinding.h"
-#include "nsContentUtils.h"
+#include "mozilla/StorageAccess.h"
 
 namespace IPC {
 template <>
@@ -33,11 +33,11 @@ struct ParamTraits<mozilla::dom::VisibilityState>
           mozilla::dom::VisibilityState::EndGuard_> {};
 
 template <>
-struct ParamTraits<nsContentUtils::StorageAccess>
+struct ParamTraits<mozilla::StorageAccess>
     : public ContiguousEnumSerializer<
-          nsContentUtils::StorageAccess,
-          nsContentUtils::StorageAccess::ePartitionForeignOrDeny,
-          nsContentUtils::StorageAccess::eNumValues> {};
+          mozilla::StorageAccess,
+          mozilla::StorageAccess::ePartitionForeignOrDeny,
+          mozilla::StorageAccess::eNumValues> {};
 }  // namespace IPC
 
 #endif  // _mozilla_dom_ClientIPCUtils_h

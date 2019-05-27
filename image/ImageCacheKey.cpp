@@ -14,6 +14,7 @@
 #include "nsString.h"
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
@@ -179,7 +180,7 @@ nsCString ImageCacheKey::GetTopLevelBaseDomain(Document* aDocument,
   // access is granted for this image.
   if (nsContentUtils::IsThirdPartyTrackingResourceWindow(
           aDocument->GetInnerWindow())) {
-    return nsContentUtils::StorageDisabledByAntiTracking(aDocument, aURI)
+    return StorageDisabledByAntiTracking(aDocument, aURI)
                ? aDocument->GetBaseDomain()
                : EmptyCString();
   }
