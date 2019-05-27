@@ -1070,18 +1070,8 @@ const CodeRange* CodeTier::lookupRange(const void* pc) const {
 
 bool JumpTables::init(CompileMode mode, const ModuleSegment& ms,
                       const CodeRangeVector& codeRanges) {
-  // Note a fast jit entry has two addresses, to be compatible with
-  // ion/baseline functions which have the raw vs checked args entries,
-  // both used all over the place in jit calls. This allows the fast entries
-  // to be compatible with jit code pointer loading routines.
-  // We can use the same entry for both kinds of jit entries since a wasm
-  // entry knows how to convert any kind of arguments and doesn't assume
-  // any input types.
-
   static_assert(JSScript::offsetOfJitCodeRaw() == 0,
-                "wasm fast jit entry is at (void*) jit[2*funcIndex]");
-  static_assert(JSScript::offsetOfJitCodeSkipArgCheck() == sizeof(void*),
-                "wasm fast jit entry is also at (void*) jit[2*funcIndex+1]");
+                "wasm fast jit entry is at (void*) jit[funcIndex]");
 
   mode_ = mode;
 
@@ -1105,7 +1095,7 @@ bool JumpTables::init(CompileMode mode, const ModuleSegment& ms,
   // filling/looking up the jit entries and safe (worst case we'll crash
   // because of a null deref when trying to call the jit entry of an
   // unexported function).
-  jit_ = TablePointer(js_pod_calloc<void*>(2 * numFuncs));
+  jit_ = TablePointer(js_pod_calloc<void*>(numFuncs));
   if (!jit_) {
     return false;
   }

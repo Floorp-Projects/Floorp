@@ -1679,7 +1679,8 @@ void MacroAssembler::loadJitCodeRaw(Register func, Register dest) {
 
 void MacroAssembler::loadJitCodeNoArgCheck(Register func, Register dest) {
   loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
-  loadPtr(Address(dest, JSScript::offsetOfJitCodeSkipArgCheck()), dest);
+  loadPtr(Address(dest, JSScript::offsetOfJitScript()), dest);
+  loadPtr(Address(dest, JitScript::offsetOfJitCodeSkipArgCheck()), dest);
 }
 
 void MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest) {
