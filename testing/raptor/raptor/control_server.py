@@ -187,9 +187,8 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
                 self.results_handler.add_page_timeout(str(data['data'][0]),
                                                       str(data['data'][1]),
                                                       dict(data['data'][2]))
-            elif data['type'] == 'webext_status' and data['data'] == "__raptor_shutdownBrowser":
-                LOG.info("received " + data['type'] + ": " + str(data['data']))
-                # webext is telling us it's done, and time to shutdown the browser
+            elif data['type'] == "webext_shutdownBrowser":
+                LOG.info("received request to shutdown the browser")
                 self.shutdown_browser()
             elif data['type'] == 'webext_screenshot':
                 LOG.info("received " + data['type'])
