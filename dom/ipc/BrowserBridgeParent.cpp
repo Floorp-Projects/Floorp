@@ -192,8 +192,8 @@ IPCResult BrowserBridgeParent::RecvActivate() {
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvDeactivate(const bool& aWindowLowering) {
-  mBrowserParent->Deactivate(aWindowLowering);
+IPCResult BrowserBridgeParent::RecvDeactivate() {
+  mBrowserParent->Deactivate();
   return IPC_OK();
 }
 
