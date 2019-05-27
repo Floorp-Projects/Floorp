@@ -198,7 +198,8 @@ struct InlineBackgroundData {
       }
     } else {
       // ... and restore it when possible.
-      mPIStartBorderData.mCoord = saved.mCoord;
+      mPIStartBorderData.SetCoord(saved.mCoord);
+
     }
     if (mVertical) {
       if (joinedBorderArea.y > mPIStartBorderData.mCoord) {
