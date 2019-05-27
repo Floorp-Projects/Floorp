@@ -51,4 +51,28 @@ add_task(async function() {
   is(newTab._tPos, currentTab._tPos + 1,
     "The new tab was opened in the position to the right of the current tab");
   is(gBrowser.selectedTab, currentTab, "The tab was opened in the background");
+
+  info("Test that Ctrl/Cmd + Click on a link in an array doesn't open the sidebar");
+  const onMessage = waitForMessage(hud, "Visit");
+  ContentTask.spawn(gBrowser.selectedBrowser, firstURL, url => {
+    content.wrappedJSObject.console.log([`Visit ${url}`]);
+  });
+  const message = await onMessage;
+  const urlEl3 = message.node.querySelector("a.url");
+
+  onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, firstURL, true);
+
+  EventUtils.sendMouseEvent({
+    type: "click",
+    [isMacOS ? "metaKey" : "ctrlKey"]: true,
+  }, urlEl3, hud.ui.window);
+  await onTabLoaded;
+
+  info("Log a message and wait for it to appear so we know the UI was updated");
+  const onSmokeMessage = waitForMessage(hud, "smoke");
+  ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
+    content.wrappedJSObject.console.log("smoke");
+  });
+  await onSmokeMessage;
+  ok(!hud.ui.document.querySelector(".sidebar"), "Sidebar wasn't closed");
 });
