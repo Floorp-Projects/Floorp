@@ -1793,7 +1793,8 @@ extern JS_PUBLIC_API JSFunction* GetSelfHostedFunction(
 /**
  * Create a new function based on the given JSFunctionSpec, *fs.
  * id is the result of a successful call to
- * `PropertySpecNameToPermanentId(cx, fs->name, &id)`.
+ * `PropertySpecNameToId(cx, fs->name, &id)` or
+   `PropertySpecNameToPermanentId(cx, fs->name, &id)`.
  *
  * Unlike JS_DefineFunctions, this does not treat fs as an array.
  * *fs must not be JS_FS_END.
@@ -1801,6 +1802,13 @@ extern JS_PUBLIC_API JSFunction* GetSelfHostedFunction(
 extern JS_PUBLIC_API JSFunction* NewFunctionFromSpec(JSContext* cx,
                                                      const JSFunctionSpec* fs,
                                                      HandleId id);
+
+/**
+ * Same as above, but without an id arg, for callers who don't have
+ * the id already.
+ */
+extern JS_PUBLIC_API JSFunction* NewFunctionFromSpec(JSContext* cx,
+                                                     const JSFunctionSpec* fs);
 
 } /* namespace JS */
 

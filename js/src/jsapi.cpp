@@ -3190,6 +3190,16 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
                                                   HandleId id) {
   cx->check(id);
 
+#ifdef DEBUG
+  if (fs->name.isSymbol()) {
+    MOZ_ASSERT(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(fs->name.symbol())) ==
+               id);
+  } else {
+    MOZ_ASSERT(JSID_IS_STRING(id) &&
+               StringEqualsAscii(JSID_TO_FLAT_STRING(id), fs->name.string()));
+  }
+#endif
+
   // Delay cloning self-hosted functions until they are called. This is
   // achieved by passing DefineFunction a nullptr JSNative which produces an
   // interpreted JSFunction where !hasScript. Interpreted call paths then
@@ -3238,6 +3248,16 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
     fun->setJitInfo(fs->call.info);
   }
   return fun;
+}
+
+JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
+                                                  const JSFunctionSpec* fs) {
+  RootedId id(cx);
+  if (!PropertySpecNameToId(cx, fs->name, &id)) {
+    return nullptr;
+  }
+
+  return NewFunctionFromSpec(cx, fs, id);
 }
 
 static bool IsFunctionCloneable(HandleFunction fun) {
