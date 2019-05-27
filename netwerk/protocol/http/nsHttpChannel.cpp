@@ -4051,6 +4051,9 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   if (mIsTRRServiceChannel) {
     extension.Append("TRR");
   }
+  if (mRequestHead.IsHead()) {
+    extension.Append("HEAD");
+  }
 
   if (IsIsolated()) {
     auto& topWindowOrigin = GetTopWindowOrigin();
@@ -4220,6 +4223,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry,
     // The cached response does not contain an entity.  We can only reuse
     // the response if the current request is also HEAD.
     if (!mRequestHead.IsHead()) {
+      *aResult = ENTRY_NOT_WANTED;
       return NS_OK;
     }
   }
