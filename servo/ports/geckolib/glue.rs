@@ -35,7 +35,7 @@ use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyle
 use style::gecko::restyle_damage::GeckoRestyleDamage;
 use style::gecko::selector_parser::{NonTSPseudoClass, PseudoElement};
 use style::gecko::traversal::RecalcStyleOnly;
-use style::gecko::url::{self, CssUrlData};
+use style::gecko::url;
 use style::gecko::wrapper::{GeckoElement, GeckoNode};
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::nsACString;
@@ -50,13 +50,12 @@ use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
 use style::gecko_bindings::structs::{Element as RawGeckoElement, nsINode as RawGeckoNode};
 use style::gecko_bindings::structs::{
-    RawServoStyleSet, RawServoAuthorStyles,
-    RawServoCssUrlData, RawServoDeclarationBlock, RawServoMediaList,
-    RawServoCounterStyleRule, RawServoAnimationValue, RawServoSupportsRule,
-    RawServoKeyframesRule, ServoCssRules, RawServoStyleSheetContents,
-    RawServoPageRule, RawServoNamespaceRule, RawServoMozDocumentRule,
-    RawServoKeyframe, RawServoMediaRule, RawServoImportRule,
-    RawServoFontFaceRule, RawServoFontFeatureValuesRule,
+    RawServoStyleSet, RawServoAuthorStyles, RawServoDeclarationBlock,
+    RawServoMediaList, RawServoCounterStyleRule, RawServoAnimationValue,
+    RawServoSupportsRule, RawServoKeyframesRule, ServoCssRules,
+    RawServoStyleSheetContents, RawServoPageRule, RawServoNamespaceRule,
+    RawServoMozDocumentRule, RawServoKeyframe, RawServoMediaRule,
+    RawServoImportRule, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
     RawServoSharedMemoryBuilder
 };
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
@@ -2786,7 +2785,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
             for source in sources.iter() {
                 match *source {
                     Source::Url(ref url) => {
-                        set_next(FontFaceSourceListComponent::Url(url.url.url_value_ptr()));
+                        set_next(FontFaceSourceListComponent::Url(&url.url));
                         for hint in url.format_hints.iter() {
                             set_next(FontFaceSourceListComponent::FormatHint {
                                 length: hint.len(),
@@ -6021,27 +6020,8 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_CssUrlData_GetSerialization(
-    url: &RawServoCssUrlData,
-    utf8_chars: *mut *const u8,
-    utf8_len: *mut u32,
-) {
-    let url_data = CssUrlData::as_arc(&url);
-    let string = url_data.as_str();
-    *utf8_len = string.len() as u32;
-    *utf8_chars = string.as_ptr();
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_CssUrlData_GetExtraData(
-    url: &RawServoCssUrlData,
-) -> &mut URLExtraData {
-    unsafe { &mut *CssUrlData::as_arc(&url).extra_data.ptr() }
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_CssUrlData_IsLocalRef(url: &RawServoCssUrlData) -> bool {
-    CssUrlData::as_arc(&url).is_fragment()
+pub extern "C" fn Servo_CssUrl_IsLocalRef(url: &url::CssUrl) -> bool {
+    url.is_fragment()
 }
 
 #[no_mangle]
@@ -6595,4 +6575,9 @@ pub unsafe extern "C" fn Servo_CloneBasicShape(v: &computed::basic_shape::BasicS
 #[no_mangle]
 pub unsafe extern "C" fn Servo_StyleArcSlice_EmptyPtr() -> *mut c_void {
     style_traits::arc_slice::ArcSlice::<u64>::leaked_empty_ptr()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_LoadData_GetLazy(source: &url::LoadDataSource) -> *const url::LoadData {
+    source.get()
 }

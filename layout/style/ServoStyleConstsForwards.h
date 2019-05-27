@@ -22,11 +22,13 @@
 #  include "mozilla/Span.h"
 #  include "Units.h"
 #  include "mozilla/gfx/Types.h"
+#  include "mozilla/CORSMode.h"
 #  include "mozilla/MemoryReporting.h"
 #  include "mozilla/ServoTypes.h"
 #  include "mozilla/ServoBindingTypes.h"
 #  include "nsCSSPropertyID.h"
 #  include "nsCompatibility.h"
+#  include "nsIURI.h"
 #  include <atomic>
 
 struct RawServoAnimationValueTable;
@@ -35,9 +37,11 @@ struct RawServoAnimationValueMap;
 class nsAtom;
 class nsIFrame;
 class nsINode;
+class nsIContent;
 class nsCSSPropertyIDSet;
 class nsPresContext;
 class nsSimpleContentList;
+class imgRequestProxy;
 struct nsCSSValueSharedList;
 struct nsTimingFunction;
 
@@ -97,7 +101,6 @@ class Loader;
 class LoaderReusableStyleSheets;
 class SheetLoadData;
 using SheetLoadDataHolder = nsMainThreadPtrHolder<SheetLoadData>;
-struct URLValue;
 enum SheetParsingMode : uint8_t;
 }  // namespace css
 
@@ -115,7 +118,6 @@ class Document;
 using StyleLoader = css::Loader;
 using StyleLoaderReusableStyleSheets = css::LoaderReusableStyleSheets;
 using StyleCallerType = dom::CallerType;
-using StyleURLValue = css::URLValue;
 using StyleSheetParsingMode = css::SheetParsingMode;
 using StyleSheetLoadData = css::SheetLoadData;
 using StyleSheetLoadDataHolder = css::SheetLoadDataHolder;
