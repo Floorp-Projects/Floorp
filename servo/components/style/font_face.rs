@@ -55,7 +55,7 @@ impl OneOrMoreSeparated for Source {
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum FontFaceSourceListComponent {
-    Url(*const crate::gecko::url::CssUrl),
+    Url(*const crate::gecko_bindings::structs::mozilla::css::URLValue),
     Local(*mut crate::gecko_bindings::structs::nsAtom),
     FormatHint {
         length: usize,

@@ -205,23 +205,23 @@ void ImageLoader::AssociateRequestToFrame(imgIRequest* aRequest,
              "We should only add to one map iff we also add to the other map.");
 }
 
-imgRequestProxy* ImageLoader::RegisterCSSImage(const StyleLoadData& aData) {
+imgRequestProxy* ImageLoader::RegisterCSSImage(URLValue* aImage) {
   MOZ_ASSERT(NS_IsMainThread());
-  uint64_t loadId = aData.load_id;
+  MOZ_ASSERT(aImage);
 
-  if (loadId == 0) {
+  if (aImage->LoadID() == 0) {
     MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
     return nullptr;
   }
 
-  if (imgRequestProxy* request = mRegisteredImages.GetWeak(loadId)) {
+  if (imgRequestProxy* request = mRegisteredImages.GetWeak(aImage->LoadID())) {
     // This document already has a request.
     return request;
   }
 
   imgRequestProxy* canonicalRequest = nullptr;
   {
-    auto entry = sImages->Lookup(loadId);
+    auto entry = sImages->Lookup(aImage->LoadID());
     if (entry) {
       canonicalRequest = entry.Data()->mCanonicalRequest;
     }
@@ -242,16 +242,19 @@ imgRequestProxy* ImageLoader::RegisterCSSImage(const StyleLoadData& aData) {
   canonicalRequest->SyncClone(this, mDocument, getter_AddRefs(request));
   mInClone = false;
 
-  MOZ_ASSERT(!mRegisteredImages.Contains(loadId));
+  MOZ_ASSERT(!mRegisteredImages.Contains(aImage->LoadID()));
 
   imgRequestProxy* requestWeak = request;
-  mRegisteredImages.Put(loadId, request.forget());
+  mRegisteredImages.Put(aImage->LoadID(), request.forget());
   return requestWeak;
 }
 
 /* static */
-void ImageLoader::DeregisterCSSImageFromAllLoaders(const StyleLoadData& aData) {
-  uint64_t loadID = aData.load_id;
+void ImageLoader::DeregisterCSSImageFromAllLoaders(URLValue* aImage) {
+  MOZ_ASSERT(aImage);
+
+  uint64_t loadID = aImage->LoadID();
+
   if (loadID == 0) {
     MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
     return;
@@ -423,11 +426,13 @@ void ImageLoader::ClearFrames(nsPresContext* aPresContext) {
 }
 
 /* static */
-void ImageLoader::LoadImage(const StyleComputedImageUrl& aImage,
-                            Document& aLoadingDoc) {
+void ImageLoader::LoadImage(URLValue* aImage, Document* aLoadingDoc) {
   MOZ_ASSERT(NS_IsMainThread());
-  uint64_t loadId = aImage.LoadData().load_id;
-  if (loadId == 0) {
+  MOZ_ASSERT(aLoadingDoc);
+  MOZ_ASSERT(aImage);
+  MOZ_ASSERT(aImage->LoadID() != 0);
+
+  if (aImage->LoadID() == 0) {
     MOZ_ASSERT_UNREACHABLE("Image should have a valid LoadID");
     return;
   }
@@ -435,29 +440,29 @@ void ImageLoader::LoadImage(const StyleComputedImageUrl& aImage,
   ImageTableEntry* entry;
 
   {
-    auto lookup = sImages->LookupForAdd(loadId);
+    auto lookup = sImages->LookupForAdd(aImage->LoadID());
     if (lookup) {
-      // This url has already been loaded.
+      // This css::URLValue has already been loaded.
       return;
     }
     entry = lookup.OrInsert([]() { return new ImageTableEntry(); });
   }
 
-  nsIURI* uri = aImage.GetURI();
+  nsIURI* uri = aImage->GetURI();
   if (!uri) {
     return;
   }
 
   int32_t loadFlags =
       nsIRequest::LOAD_NORMAL |
-      nsContentUtils::CORSModeToLoadImageFlags(aImage.CorsMode());
+      nsContentUtils::CORSModeToLoadImageFlags(aImage->CorsMode());
 
-  const URLExtraData& data = aImage.ExtraData();
+  URLExtraData* data = aImage->ExtraData();
 
   RefPtr<imgRequestProxy> request;
   nsresult rv = nsContentUtils::LoadImage(
-      uri, &aLoadingDoc, &aLoadingDoc, data.Principal(), 0, data.GetReferrer(),
-      data.GetReferrerPolicy(), nullptr, loadFlags, NS_LITERAL_STRING("css"),
+      uri, aLoadingDoc, aLoadingDoc, data->Principal(), 0, data->GetReferrer(),
+      data->GetReferrerPolicy(), nullptr, loadFlags, NS_LITERAL_STRING("css"),
       getter_AddRefs(request));
 
   if (NS_FAILED(rv) || !request) {

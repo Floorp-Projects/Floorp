@@ -2246,7 +2246,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   // Ensure that our XBL bindings are installed.
   //
   // FIXME(emilio): Can we remove support for bindings on the root?
-  if (display->mBinding.IsUrl()) {
+  if (display->mBinding) {
     // Get the XBL loader.
     nsresult rv;
 
@@ -2255,11 +2255,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
       return nullptr;
     }
 
-    const auto& url = display->mBinding.AsUrl();
-
     RefPtr<nsXBLBinding> binding;
-    rv = xblService->LoadBindings(aDocElement, url.GetURI(),
-                                  url.ExtraData().Principal(),
+    rv = xblService->LoadBindings(aDocElement, display->mBinding->GetURI(),
+                                  display->mBinding->ExtraData()->Principal(),
                                   getter_AddRefs(binding));
     if (NS_FAILED(rv) && rv != NS_ERROR_XBL_BLOCKED) {
       // Binding will load asynchronously.
@@ -5318,9 +5316,8 @@ nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
   if (!(aFlags & ITEM_ALLOW_XBL_BASE)) {
     return XBLBindingLoadInfo(nullptr);
   }
-
-  const auto& binding = aStyle.StyleDisplay()->mBinding;
-  if (binding.IsNone()) {
+  css::URLValue* binding = aStyle.StyleDisplay()->mBinding;
+  if (!binding) {
     return XBLBindingLoadInfo(nullptr);
   }
 
@@ -5330,10 +5327,11 @@ nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
   }
 
   auto newPendingBinding = MakeUnique<PendingBinding>();
-  const auto& url = binding.AsUrl();
-  nsresult rv = xblService->LoadBindings(
-      aContent.AsElement(), url.GetURI(), url.ExtraData().Principal(),
-      getter_AddRefs(newPendingBinding->mBinding));
+
+  nsresult rv =
+      xblService->LoadBindings(aContent.AsElement(), binding->GetURI(),
+                               binding->ExtraData()->Principal(),
+                               getter_AddRefs(newPendingBinding->mBinding));
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_XBL_BLOCKED) {
       return XBLBindingLoadInfo(nullptr);

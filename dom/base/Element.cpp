@@ -545,19 +545,19 @@ static bool MayNeedToLoadXBLBinding(const Document& aDocument,
   return aElement.IsAnyOfHTMLElements(nsGkAtoms::object, nsGkAtoms::embed);
 }
 
-StyleUrlOrNone Element::GetBindingURL(Document* aDocument) {
+bool Element::GetBindingURL(Document* aDocument, css::URLValue** aResult) {
   if (!MayNeedToLoadXBLBinding(*aDocument, *this)) {
-    return StyleUrlOrNone::None();
+    *aResult = nullptr;
+    return true;
   }
 
   // Get the computed -moz-binding directly from the ComputedStyle
-  RefPtr<ComputedStyle> style =
+  RefPtr<ComputedStyle> sc =
       nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
-  if (!style) {
-    return StyleUrlOrNone::None();
-  }
+  NS_ENSURE_TRUE(sc, false);
 
-  return style->StyleDisplay()->mBinding;
+  NS_IF_ADDREF(*aResult = sc->StyleDisplay()->mBinding);
+  return true;
 }
 
 JSObject* Element::WrapObject(JSContext* aCx,
@@ -597,11 +597,17 @@ JSObject* Element::WrapObject(JSContext* aCx,
   // since that can destroy the relevant presshell.
 
   {
-    StyleUrlOrNone result = GetBindingURL(doc);
-    if (result.IsUrl()) {
-      auto& url = result.AsUrl();
-      nsCOMPtr<nsIURI> uri = url.GetURI();
-      nsCOMPtr<nsIPrincipal> principal = url.ExtraData().Principal();
+    // Make a scope so that ~nsRefPtr can GC before returning obj.
+    RefPtr<css::URLValue> bindingURL;
+    bool ok = GetBindingURL(doc, getter_AddRefs(bindingURL));
+    if (!ok) {
+      dom::Throw(aCx, NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    if (bindingURL) {
+      nsCOMPtr<nsIURI> uri = bindingURL->GetURI();
+      nsCOMPtr<nsIPrincipal> principal = bindingURL->ExtraData()->Principal();
 
       // We have a binding that must be installed.
       nsXBLService* xblService = nsXBLService::GetInstance();
