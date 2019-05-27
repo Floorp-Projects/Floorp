@@ -43,8 +43,7 @@
 
   <wizardpage id="dummy" pageid="dummy" firstpage="true"/>
 
-  <wizardpage id="checking" pageid="checking" next="noupdatesfound"
-              object="gCheckingPage">
+  <wizardpage id="checking" pageid="checking" next="noupdatesfound">
     <updateheader label="&checking.title;"/>
     <vbox class="update-content" flex="1">
       <label>&updateCheck.label;</label>
@@ -53,8 +52,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="noupdatesfound" pageid="noupdatesfound"
-              object="gNoUpdatesPage">
+  <wizardpage id="noupdatesfound" pageid="noupdatesfound">
     <updateheader label="&noupdatesfound.title;"/>
     <vbox class="update-content" flex="1">
       <label id="noUpdatesAutoEnabled" hidden="true">&noupdatesautoenabled.intro;</label>
@@ -62,7 +60,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="manualUpdate" pageid="manualUpdate" object="gManualUpdatePage">
+  <wizardpage id="manualUpdate" pageid="manualUpdate">
     <updateheader label="&manualUpdate.title;"/>
     <vbox class="update-content" flex="1">
       <label id="manualUpdateDesc">&manualUpdate.desc;</label>
@@ -77,8 +75,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="unsupported" pageid="unsupported"
-              object="gUnsupportedPage">
+  <wizardpage id="unsupported" pageid="unsupported">
     <updateheader label="&unsupported.title;"/>
     <vbox class="update-content" flex="1">
       <description flex="1">&unsupported.label;
@@ -89,8 +86,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="updatesfoundbasic" pageid="updatesfoundbasic"
-              object="gUpdatesFoundBasicPage" next="downloading">
+  <wizardpage id="updatesfoundbasic" pageid="updatesfoundbasic" next="downloading">
     <updateheader id="updatesFoundBasicHeader" label=""/>
     <vbox class="update-content" flex="1">
       <label id="updatesFoundInto"/>
@@ -108,8 +104,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="downloading" pageid="downloading"
-              object="gDownloadingPage">
+  <wizardpage id="downloading" pageid="downloading">
     <updateheader label="&downloadPage.title;"/>
     <vbox class="update-content" flex="1">
       <hbox id="downloadStatusProgress">
@@ -127,7 +122,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="errors" pageid="errors" object="gErrorsPage">
+  <wizardpage id="errors" pageid="errors">
     <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label id="errorIntro">&error.label;</label>
@@ -142,8 +137,7 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="errorextra" pageid="errorextra"
-              object="gErrorExtraPage">
+  <wizardpage id="errorextra" pageid="errorextra">
     <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label id="bgErrorLabel">&genericBackgroundError.label;</label>
@@ -154,23 +148,21 @@
     </vbox>
   </wizardpage>
 
-  <wizardpage id="errorpatching" pageid="errorpatching" next="downloading"
-              object="gErrorPatchingPage">
+  <wizardpage id="errorpatching" pageid="errorpatching" next="downloading">
     <updateheader label="&error.title;"/>
     <vbox class="update-content" flex="1">
       <label>&errorpatching.intro;</label>
     </vbox>
   </wizardpage>
 
-  <wizardpage id="finished" pageid="finished" object="gFinishedPage">
+  <wizardpage id="finished" pageid="finished">
     <updateheader label="&finishedPage.title;"/>
     <vbox class="update-content" flex="1">
       <label>&finishedPage.text;</label>
     </vbox>
   </wizardpage>
 
-  <wizardpage id="finishedBackground" pageid="finishedBackground"
-              object="gFinishedPage">
+  <wizardpage id="finishedBackground" pageid="finishedBackground">
     <updateheader label="&finishedPage.title;"/>
     <vbox class="update-content" flex="1">
       <label>&finishedBackgroundPage.text;</label>
