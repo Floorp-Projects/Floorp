@@ -1730,8 +1730,8 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   info.mCookieSettings = mozilla::net::CookieSettings::Create();
   MOZ_ASSERT(info.mCookieSettings);
 
-  info.mStorageAccess = nsContentUtils::StorageAllowedForServiceWorker(
-      info.mPrincipal, info.mCookieSettings);
+  info.mStorageAccess =
+      StorageAllowedForServiceWorker(info.mPrincipal, info.mCookieSettings);
 
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 

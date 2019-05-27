@@ -12,6 +12,7 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/RelativeTimeline.h"
+#include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIEventTarget.h"
@@ -742,10 +743,10 @@ class WorkerPrivate : public RelativeTimeline {
     mLoadInfo.mXHRParamsAllowed = aAllowed;
   }
 
-  nsContentUtils::StorageAccess StorageAccess() const {
+  mozilla::StorageAccess StorageAccess() const {
     AssertIsOnWorkerThread();
     if (mLoadInfo.mFirstPartyStorageAccessGranted) {
-      return nsContentUtils::StorageAccess::eAllow;
+      return mozilla::StorageAccess::eAllow;
     }
 
     return mLoadInfo.mStorageAccess;

@@ -23,6 +23,7 @@
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/LoadInfo.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/MessageEvent.h"
@@ -629,8 +630,8 @@ nsIGlobalObject* ServiceWorkerContainer::GetGlobalIfValid(
   // from a window with storage disabled.  If these windows can access
   // the registration it increases the chance they can bypass the storage
   // block via postMessage(), etc.
-  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (NS_WARN_IF(storageAllowed != nsContentUtils::StorageAccess::eAllow)) {
+  auto storageAllowed = StorageAllowedForWindow(window);
+  if (NS_WARN_IF(storageAllowed != StorageAccess::eAllow)) {
     if (aStorageFailureCB) {
       aStorageFailureCB(doc);
     }

@@ -23,6 +23,7 @@
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
+#include "mozilla/StorageAccess.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
@@ -74,9 +75,8 @@ nsresult ClientSource::SnapshotWindowState(ClientState* aStateOut) {
   nsPIDOMWindowInner* window = GetInnerWindow();
   if (!window || !window->IsCurrentInnerWindow() ||
       !window->HasActiveDocument()) {
-    *aStateOut = ClientState(
-        ClientWindowState(VisibilityState::Hidden, TimeStamp(),
-                          nsContentUtils::StorageAccess::eDeny, false));
+    *aStateOut = ClientState(ClientWindowState(
+        VisibilityState::Hidden, TimeStamp(), StorageAccess::eDeny, false));
     return NS_OK;
   }
 
@@ -92,8 +92,7 @@ nsresult ClientSource::SnapshotWindowState(ClientState* aStateOut) {
     return rv.StealNSResult();
   }
 
-  nsContentUtils::StorageAccess storage =
-      nsContentUtils::StorageAllowedForDocument(doc);
+  StorageAccess storage = StorageAllowedForDocument(doc);
 
   *aStateOut = ClientState(ClientWindowState(
       doc->VisibilityState(), doc->LastFocusTime(), storage, focused));
@@ -212,7 +211,7 @@ void ClientSource::WorkerExecutionReady(WorkerPrivate* aWorkerPrivate) {
   // is before execution ready, unfortunately.
   if (mController.isSome()) {
     MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate->StorageAccess() >
-                              nsContentUtils::StorageAccess::ePrivateBrowsing ||
+                              StorageAccess::ePrivateBrowsing ||
                           StringBeginsWith(aWorkerPrivate->ScriptURL(),
                                            NS_LITERAL_STRING("blob:")));
   }
@@ -261,11 +260,10 @@ nsresult ClientSource::WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow) {
   // continue to inherit the SW as well.  We need to avoid triggering the
   // assertion in this corner case.
   if (mController.isSome()) {
-    MOZ_DIAGNOSTIC_ASSERT(
-        spec.LowerCaseEqualsLiteral("about:blank") ||
-        StringBeginsWith(spec, NS_LITERAL_CSTRING("blob:")) ||
-        nsContentUtils::StorageAllowedForWindow(aInnerWindow) ==
-            nsContentUtils::StorageAccess::eAllow);
+    MOZ_DIAGNOSTIC_ASSERT(spec.LowerCaseEqualsLiteral("about:blank") ||
+                          StringBeginsWith(spec, NS_LITERAL_CSTRING("blob:")) ||
+                          StorageAllowedForWindow(aInnerWindow) ==
+                              StorageAccess::eAllow);
   }
 
   nsPIDOMWindowOuter* outer = aInnerWindow->GetOuterWindow();
@@ -383,11 +381,10 @@ void ClientSource::SetController(
     MOZ_DIAGNOSTIC_ASSERT(
         Info().URL().LowerCaseEqualsLiteral("about:blank") ||
         StringBeginsWith(Info().URL(), NS_LITERAL_CSTRING("blob:")) ||
-        nsContentUtils::StorageAllowedForWindow(GetInnerWindow()) ==
-            nsContentUtils::StorageAccess::eAllow);
+        StorageAllowedForWindow(GetInnerWindow()) == StorageAccess::eAllow);
   } else if (GetWorkerPrivate()) {
     MOZ_DIAGNOSTIC_ASSERT(GetWorkerPrivate()->StorageAccess() >
-                              nsContentUtils::StorageAccess::ePrivateBrowsing ||
+                              StorageAccess::ePrivateBrowsing ||
                           StringBeginsWith(GetWorkerPrivate()->ScriptURL(),
                                            NS_LITERAL_STRING("blob:")));
   }
@@ -438,14 +435,13 @@ RefPtr<ClientOpPromise> ClientSource::Control(
     controlAllowed =
         Info().URL().LowerCaseEqualsLiteral("about:blank") ||
         StringBeginsWith(Info().URL(), NS_LITERAL_CSTRING("blob:")) ||
-        nsContentUtils::StorageAllowedForWindow(GetInnerWindow()) ==
-            nsContentUtils::StorageAccess::eAllow;
+        StorageAllowedForWindow(GetInnerWindow()) == StorageAccess::eAllow;
   } else if (GetWorkerPrivate()) {
     // Local URL workers and workers with access to storage cna be controlled.
-    controlAllowed = GetWorkerPrivate()->StorageAccess() >
-                         nsContentUtils::StorageAccess::ePrivateBrowsing ||
-                     StringBeginsWith(GetWorkerPrivate()->ScriptURL(),
-                                      NS_LITERAL_STRING("blob:"));
+    controlAllowed =
+        GetWorkerPrivate()->StorageAccess() > StorageAccess::ePrivateBrowsing ||
+        StringBeginsWith(GetWorkerPrivate()->ScriptURL(),
+                         NS_LITERAL_STRING("blob:"));
   }
 
   if (NS_WARN_IF(!controlAllowed)) {
