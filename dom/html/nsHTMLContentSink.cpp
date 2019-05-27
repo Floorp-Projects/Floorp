@@ -660,20 +660,18 @@ NS_IMETHODIMP
 HTMLContentSink::WillBuildModel(nsDTDMode aDTDMode) {
   WillBuildModelImpl();
 
-  if (mHTMLDocument) {
-    nsCompatibility mode = eCompatibility_NavQuirks;
-    switch (aDTDMode) {
-      case eDTDMode_full_standards:
-        mode = eCompatibility_FullStandards;
-        break;
-      case eDTDMode_almost_standards:
-        mode = eCompatibility_AlmostStandards;
-        break;
-      default:
-        break;
-    }
-    mHTMLDocument->SetCompatibilityMode(mode);
+  nsCompatibility mode = eCompatibility_NavQuirks;
+  switch (aDTDMode) {
+    case eDTDMode_full_standards:
+      mode = eCompatibility_FullStandards;
+      break;
+    case eDTDMode_almost_standards:
+      mode = eCompatibility_AlmostStandards;
+      break;
+    default:
+      break;
   }
+  mDocument->SetCompatibilityMode(mode);
 
   // Notify document that the load is beginning
   mDocument->BeginLoad();
