@@ -702,7 +702,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     private fun showQuickSettingsDialog() {
-        val session = requireNotNull(getSessionById())
+        val session = getSessionById() ?: return
         launch {
             val host = session.url.toUri()?.host
             val sitePermissions: SitePermissions? = host?.let {
