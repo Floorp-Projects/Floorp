@@ -171,9 +171,9 @@ void SVGViewportElement::ChildrenOnlyTransformChanged(uint32_t aFlags) {
 gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
   float viewportWidth, viewportHeight;
   if (IsInner()) {
-    SVGViewportElement* ctx = GetCtx();
-    viewportWidth = mLengthAttributes[ATTR_WIDTH].GetAnimValue(ctx);
-    viewportHeight = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(ctx);
+    SVGElement* self = const_cast<SVGViewportElement*>(this);
+    viewportWidth = mLengthAttributes[ATTR_WIDTH].GetAnimValue(self);
+    viewportHeight = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(self);
   } else {
     viewportWidth = mViewportWidth;
     viewportHeight = mViewportHeight;
@@ -211,12 +211,15 @@ float SVGViewportElement::GetLength(uint8_t aCtxType) {
     w = viewbox->width;
     h = viewbox->height;
   } else if (IsInner()) {
-    SVGViewportElement* ctx = GetCtx();
+    // Resolving length for inner <svg> is exactly the same as other
+    // ordinary element. We shouldn't use the SVGViewportElement overload
+    // of GetAnimValue().
+    SVGElement* self = this;
     if (shouldComputeWidth) {
-      w = mLengthAttributes[ATTR_WIDTH].GetAnimValue(ctx);
+      w = mLengthAttributes[ATTR_WIDTH].GetAnimValue(self);
     }
     if (shouldComputeHeight) {
-      h = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(ctx);
+      h = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(self);
     }
   } else if (ShouldSynthesizeViewBox()) {
     if (shouldComputeWidth) {
