@@ -95,7 +95,7 @@
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
     <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel"
-         oncommand="window.close();"/>
+         oncommand="close();"/>
 
     <!-- Command Keys -->
     <key id="placesKey_find:all"
@@ -247,7 +247,7 @@
                       key="placesKey_close"
                       label="&file.close.label;"
                       accesskey="&file.close.accesskey;"
-                      oncommand="window.close();"/>
+                      oncommand="close();"/>
 #endif
           </menupopup>
 #ifdef XP_MACOSX
