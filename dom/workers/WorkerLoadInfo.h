@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_workers_WorkerLoadInfo_h
 #define mozilla_dom_workers_WorkerLoadInfo_h
 
+#include "mozilla/StorageAccess.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
 #include "mozilla/dom/WorkerCommon.h"
@@ -124,7 +125,7 @@ struct WorkerLoadInfoData {
   bool mXHRParamsAllowed;
   bool mPrincipalIsSystem;
   bool mWatchedByDevtools;
-  nsContentUtils::StorageAccess mStorageAccess;
+  StorageAccess mStorageAccess;
   bool mFirstPartyStorageAccessGranted;
   bool mServiceWorkersTestingInWindow;
   OriginAttributes mOriginAttributes;

@@ -23,6 +23,7 @@
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/StorageAccess.h"
 
 #ifdef XP_WIN
 #  undef PostMessage
@@ -180,8 +181,8 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow) {
+  auto storageAllowed = StorageAllowedForWindow(window);
+  if (storageAllowed != StorageAccess::eAllow) {
     ServiceWorkerManager::LocalizeAndReportToAllClients(
         mDescriptor.Scope(), "ServiceWorkerPostMessageStorageError",
         nsTArray<nsString>{NS_ConvertUTF8toUTF16(mDescriptor.Scope())});

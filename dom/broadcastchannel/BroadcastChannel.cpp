@@ -232,7 +232,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   nsAutoCString origin;
   PrincipalInfo storagePrincipalInfo;
 
-  nsContentUtils::StorageAccess storageAccess;
+  StorageAccess storageAccess;
 
   nsCOMPtr<nsICookieSettings> cs;
   if (NS_IsMainThread()) {
@@ -271,7 +271,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       return nullptr;
     }
 
-    storageAccess = nsContentUtils::StorageAllowedForWindow(window);
+    storageAccess = StorageAllowedForWindow(window);
 
     Document* doc = window->GetExtantDoc();
     if (doc) {
@@ -309,7 +309,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
 
   // We want to allow opaque origins.
   if (storagePrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
-      (storageAccess == nsContentUtils::StorageAccess::eDeny ||
+      (storageAccess == StorageAccess::eDeny ||
        (ShouldPartitionStorage(storageAccess) &&
         !StoragePartitioningEnabled(storageAccess, cs)))) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);

@@ -13,6 +13,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsINetworkInterceptController.h"
@@ -89,7 +90,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mXHRParamsAllowed(false),
       mPrincipalIsSystem(false),
       mWatchedByDevtools(false),
-      mStorageAccess(nsContentUtils::StorageAccess::eDeny),
+      mStorageAccess(StorageAccess::eDeny),
       mFirstPartyStorageAccessGranted(false),
       mServiceWorkersTestingInWindow(false),
       mSecureContext(eNotSet) {}

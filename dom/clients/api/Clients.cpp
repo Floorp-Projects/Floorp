@@ -15,6 +15,7 @@
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/SystemGroup.h"
 #include "nsIGlobalObject.h"
 #include "nsString.h"
@@ -89,8 +90,7 @@ already_AddRefed<Promise> Clients::Get(const nsAString& aClientID,
             NS_ENSURE_TRUE_VOID(holder->GetParentObject());
             RefPtr<Client> client = new Client(
                 holder->GetParentObject(), aResult.get_ClientInfoAndState());
-            if (client->GetStorageAccess() ==
-                nsContentUtils::StorageAccess::eAllow) {
+            if (client->GetStorageAccess() == StorageAccess::eAllow) {
               outerPromise->MaybeResolve(std::move(client));
               return;
             }
@@ -170,8 +170,7 @@ already_AddRefed<Promise> Clients::MatchAll(const ClientQueryOptions& aOptions,
         for (const ClientInfoAndState& value :
              aResult.get_ClientList().values()) {
           RefPtr<Client> client = new Client(global, value);
-          if (client->GetStorageAccess() !=
-              nsContentUtils::StorageAccess::eAllow) {
+          if (client->GetStorageAccess() != StorageAccess::eAllow) {
             storageDenied = true;
             continue;
           }

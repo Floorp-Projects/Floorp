@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StorageAccess.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContentUtils.h"
@@ -29,8 +30,7 @@ class ClientWindowState final {
  public:
   ClientWindowState(mozilla::dom::VisibilityState aVisibilityState,
                     const TimeStamp& aLastFocusTime,
-                    nsContentUtils::StorageAccess aStorageAccess,
-                    bool aFocused);
+                    StorageAccess aStorageAccess, bool aFocused);
 
   explicit ClientWindowState(const IPCClientWindowState& aData);
 
@@ -49,7 +49,7 @@ class ClientWindowState final {
 
   bool Focused() const;
 
-  nsContentUtils::StorageAccess GetStorageAccess() const;
+  StorageAccess GetStorageAccess() const;
 
   const IPCClientWindowState& ToIPC() const;
 };
@@ -64,7 +64,7 @@ class ClientWorkerState final {
   UniquePtr<IPCClientWorkerState> mData;
 
  public:
-  explicit ClientWorkerState(nsContentUtils::StorageAccess aStorageAccess);
+  explicit ClientWorkerState(StorageAccess aStorageAccess);
 
   explicit ClientWorkerState(const IPCClientWorkerState& aData);
 
@@ -77,7 +77,7 @@ class ClientWorkerState final {
 
   ~ClientWorkerState();
 
-  nsContentUtils::StorageAccess GetStorageAccess() const;
+  StorageAccess GetStorageAccess() const;
 
   const IPCClientWorkerState& ToIPC() const;
 };
@@ -115,7 +115,7 @@ class ClientState final {
 
   const ClientWorkerState& AsWorkerState() const;
 
-  nsContentUtils::StorageAccess GetStorageAccess() const;
+  StorageAccess GetStorageAccess() const;
 
   const IPCClientState ToIPC() const;
 };

@@ -296,13 +296,12 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForWindow(aWindow);
+  StorageAccess access = StorageAllowedForWindow(aWindow);
 
   // the factory callsite records whether the browser is in private browsing.
   // and thus we don't have to respect that setting here. IndexedDB has no
   // concept of session-local storage, and thus ignores it.
-  if (access == nsContentUtils::StorageAccess::eDeny) {
+  if (access == StorageAccess::eDeny) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
