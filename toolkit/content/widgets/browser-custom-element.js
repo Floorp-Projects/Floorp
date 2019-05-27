@@ -240,8 +240,6 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
     this._mayEnableCharacterEncodingMenu = null;
 
-    this._charsetAutodetected = false;
-
     this._contentPrincipal = null;
 
     this._csp = null;
@@ -615,16 +613,6 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   set mayEnableCharacterEncodingMenu(aMayEnable) {
     if (this.isRemoteBrowser) {
       this._mayEnableCharacterEncodingMenu = aMayEnable;
-    }
-  }
-
-  get charsetAutodetected() {
-    return this.isRemoteBrowser ? this._charsetAutodetected : this.docShell.charsetAutodetected;
-  }
-
-  set charsetAutodetected(aAutodetected) {
-    if (this.isRemoteBrowser) {
-      this._charsetAutodetected = aAutodetected;
     }
   }
 
@@ -1706,7 +1694,6 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
         "_contentTitle",
         "_characterSet",
         "_mayEnableCharacterEncodingMenu",
-        "_charsetAutodetected",
         "_contentPrincipal",
         "_imageDocument",
         "_fullZoom",

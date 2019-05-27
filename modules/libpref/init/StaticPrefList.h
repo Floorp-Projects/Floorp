@@ -3116,15 +3116,6 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-// Whether ISO-2022-JP is a permitted content-based encoding detection
-// outcome.
-VARCACHE_PREF(
-  Live,
-  "intl.charset.detector.iso2022jp.allowed",
-   intl_charset_detector_iso2022jp_allowed,
-  bool, true
-)
-
 //---------------------------------------------------------------------------
 // Graphic Layers prefs
 //---------------------------------------------------------------------------
