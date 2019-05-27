@@ -1324,67 +1324,36 @@ MediaDecoderOwner::NextFrameStatus MediaDecoder::NextFrameBufferedStatus() {
              : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 }
 
-nsCString MediaDecoder::GetDebugInfo() {
-  return nsPrintfCString(
-      "MediaDecoder=%p: channels=%u rate=%u hasAudio=%d hasVideo=%d "
-      "mPlayState=%s",
-      this, mInfo ? mInfo->mAudio.mChannels : 0,
-      mInfo ? mInfo->mAudio.mRate : 0, mInfo ? mInfo->HasAudio() : 0,
-      mInfo ? mInfo->HasVideo() : 0, PlayStateStr());
+void MediaDecoder::GetDebugInfo(dom::MediaDecoderDebugInfo& aInfo) {
+  aInfo.mInstance = NS_ConvertUTF8toUTF16(nsPrintfCString("%p", this));
+  aInfo.mChannels = mInfo ? mInfo->mAudio.mChannels : 0;
+  aInfo.mRate = mInfo ? mInfo->mAudio.mRate : 0;
+  aInfo.mHasAudio = mInfo ? mInfo->HasAudio() : false;
+  aInfo.mHasVideo = mInfo ? mInfo->HasVideo() : false;
+  aInfo.mPlayState = NS_ConvertUTF8toUTF16(PlayStateStr());
+  aInfo.mContainerType =
+      NS_ConvertUTF8toUTF16(ContainerType().Type().AsString());
+  mReader->GetDebugInfo(aInfo.mReader);
 }
 
-RefPtr<GenericPromise> MediaDecoder::DumpDebugInfo() {
+RefPtr<GenericPromise> MediaDecoder::RequestDebugInfo(
+    MediaDecoderDebugInfo& aInfo) {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  nsCString str = GetDebugInfo();
-
-  nsAutoCString readerStr;
-  GetMozDebugReaderData(readerStr);
-  if (!readerStr.IsEmpty()) {
-    str += "\nreader data:\n";
-    str += readerStr;
-  }
+  GetDebugInfo(aInfo);
 
   if (!GetStateMachine()) {
-    DUMP("%s", str.get());
     return GenericPromise::CreateAndResolve(true, __func__);
   }
 
-  return GetStateMachine()->RequestDebugInfo()->Then(
-      SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
-      [str](const nsACString& aString) {
-        DUMP("%s", str.get());
-        DUMP("%s", aString.Data());
-        return GenericPromise::CreateAndResolve(true, __func__);
-      },
-      [str]() {
-        DUMP("%s", str.get());
-        return GenericPromise::CreateAndResolve(true, __func__);
-      });
-}
-
-RefPtr<MediaDecoder::DebugInfoPromise> MediaDecoder::RequestDebugInfo() {
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-
-  auto str = GetDebugInfo();
-  if (!GetStateMachine()) {
-    return DebugInfoPromise::CreateAndResolve(str, __func__);
-  }
-
-  return GetStateMachine()->RequestDebugInfo()->Then(
-      SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
-      [str](const nsACString& aString) {
-        nsCString result = str + nsCString("\n") + aString;
-        return DebugInfoPromise::CreateAndResolve(result, __func__);
-      },
-      [str]() { return DebugInfoPromise::CreateAndResolve(str, __func__); });
-}
-
-void MediaDecoder::GetMozDebugReaderData(nsACString& aString) {
-  aString += nsPrintfCString("Container Type: %s\n",
-                             ContainerType().Type().AsString().get());
-  if (mReader) {
-    mReader->GetMozDebugReaderData(aString);
-  }
+  return GetStateMachine()
+      ->RequestDebugInfo(aInfo.mStateMachine)
+      ->Then(
+          SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
+          []() { return GenericPromise::CreateAndResolve(true, __func__); },
+          []() {
+            UNREACHABLE();
+            return GenericPromise::CreateAndResolve(false, __func__);
+          });
 }
 
 void MediaDecoder::NotifyAudibleStateChanged() {

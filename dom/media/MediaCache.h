@@ -11,6 +11,7 @@
 #include "Intervals.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/MediaDebugInfoBinding.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
@@ -359,7 +360,7 @@ class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream> {
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  nsCString GetDebugInfo();
+  void GetDebugInfo(dom::MediaCacheStreamDebugInfo& aInfo);
 
  private:
   friend class MediaCache;
