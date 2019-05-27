@@ -2766,6 +2766,51 @@ void TrackBuffersManager::TrackData::AddSizeOfResources(
   }
 }
 
+void TrackBuffersManager::GetDebugInfo(
+    dom::TrackBuffersManagerDebugInfo& aInfo) {
+  aInfo.mType = NS_ConvertUTF8toUTF16(mType.Type().AsString());
+
+  if (HasAudio()) {
+    aInfo.mNextSampleTime = mAudioTracks.mNextSampleTime.ToSeconds();
+    aInfo.mNumSamples = mAudioTracks.mBuffers[0].Length();
+    aInfo.mBufferSize = mAudioTracks.mSizeBuffer;
+    aInfo.mEvictable = Evictable(TrackInfo::kAudioTrack);
+    aInfo.mNextGetSampleIndex = mAudioTracks.mNextGetSampleIndex.valueOr(-1);
+    aInfo.mNextInsertionIndex = mAudioTracks.mNextInsertionIndex.valueOr(-1);
+    media::TimeIntervals ranges = SafeBuffered(TrackInfo::kAudioTrack);
+    dom::Sequence<dom::BufferRange> items;
+    for (uint32_t i = 0; i < ranges.Length(); ++i) {
+      // dom::Sequence is a FallibleTArray
+      dom::BufferRange* range = items.AppendElement(fallible);
+      if (!range) {
+        break;
+      }
+      range->mStart = ranges.Start(i).ToSeconds();
+      range->mEnd = ranges.End(i).ToSeconds();
+    }
+    aInfo.mRanges = items;
+  } else if (HasVideo()) {
+    aInfo.mNextSampleTime = mVideoTracks.mNextSampleTime.ToSeconds();
+    aInfo.mNumSamples = mVideoTracks.mBuffers[0].Length();
+    aInfo.mBufferSize = mVideoTracks.mSizeBuffer;
+    aInfo.mEvictable = Evictable(TrackInfo::kVideoTrack);
+    aInfo.mNextGetSampleIndex = mVideoTracks.mNextGetSampleIndex.valueOr(-1);
+    aInfo.mNextInsertionIndex = mVideoTracks.mNextInsertionIndex.valueOr(-1);
+    media::TimeIntervals ranges = SafeBuffered(TrackInfo::kVideoTrack);
+    dom::Sequence<dom::BufferRange> items;
+    for (uint32_t i = 0; i < ranges.Length(); ++i) {
+      // dom::Sequence is a FallibleTArray
+      dom::BufferRange* range = items.AppendElement(fallible);
+      if (!range) {
+        break;
+      }
+      range->mStart = ranges.Start(i).ToSeconds();
+      range->mEnd = ranges.End(i).ToSeconds();
+    }
+    aInfo.mRanges = items;
+  }
+}
+
 void TrackBuffersManager::AddSizeOfResources(
     MediaSourceDecoder::ResourceSizes* aSizes) const {
   MOZ_ASSERT(OnTaskQueue());

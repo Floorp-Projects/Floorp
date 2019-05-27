@@ -11,6 +11,7 @@
 #include "MediaInfo.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/MediaDebugInfoBinding.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
@@ -129,9 +130,7 @@ class MediaSink {
   virtual void SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) {}
   virtual void ClearSecondaryVideoContainer() {}
 
-  // Return a string containing debugging information.
-  // Can be called in any phase.
-  virtual nsCString GetDebugInfo() { return nsCString(); }
+  virtual void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {}
 
  protected:
   virtual ~MediaSink() = default;
