@@ -11,6 +11,6 @@
 
     <!-- About content. The first and second parameters are the name of the application. (For example: Fenix) -->
     <string name="about_content" translatable="false">
-        1$s is produced by Mozilla.
+        %1$s is produced by Mozilla.
     </string>
 </resources>
