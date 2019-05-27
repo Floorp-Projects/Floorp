@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -154,7 +155,17 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 )
             }
             resources.getString(pref_key_rate) -> {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.RATE_APP_URL)))
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SupportUtils.RATE_APP_URL)))
+                } catch (e: ActivityNotFoundException) {
+                    // Device without the play store installed.
+                    // Opening the play store website.
+                    (activity as HomeActivity).openToBrowserAndLoad(
+                        searchTermOrURL = SupportUtils.FENIX_PLAY_STORE_URL,
+                        newTab = true,
+                        from = BrowserDirection.FromSettings
+                    )
+                }
             }
             resources.getString(pref_key_about) -> {
                 navigateToAbout()
