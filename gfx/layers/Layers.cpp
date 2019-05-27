@@ -988,7 +988,7 @@ bool ContainerLayer::HasMultipleChildren() {
   for (Layer* child = GetFirstChild(); child; child = child->GetNextSibling()) {
     const Maybe<ParentLayerIntRect>& clipRect = child->GetLocalClipRect();
     if (clipRect && clipRect->IsEmpty()) continue;
-    if (child->GetLocalVisibleRegion().IsEmpty()) continue;
+    if (!child->Extend3DContext() && child->GetLocalVisibleRegion().IsEmpty()) continue;
     ++count;
     if (count > 1) return true;
   }
@@ -1200,7 +1200,7 @@ void ContainerLayer::DefaultComputeEffectiveTransforms(
            * above. Nor for a child with a mask layer.
            */
           if (checkClipRect && (clipRect && !clipRect->IsEmpty() &&
-                                !child->GetLocalVisibleRegion().IsEmpty())) {
+                                (child->Extend3DContext() || !child->GetLocalVisibleRegion().IsEmpty()))) {
             useIntermediateSurface = true;
             break;
           }
@@ -2288,7 +2288,7 @@ void PrintInfo(std::stringstream& aStream, HostLayer* aLayerComposite) {
     AppendToString(aStream, aLayerComposite->GetShadowBaseTransform(),
                    " [shadow-transform=", "]");
   }
-  if (!aLayerComposite->GetShadowVisibleRegion().IsEmpty()) {
+  if (!aLayerComposite->GetLayer()->Extend3DContext() && !aLayerComposite->GetShadowVisibleRegion().IsEmpty()) {
     AppendToString(aStream,
                    aLayerComposite->GetShadowVisibleRegion().ToUnknownRegion(),
                    " [shadow-visible=", "]");
