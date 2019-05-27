@@ -2605,7 +2605,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   RefPtr<ContentParent> openerContentParent;
   RefPtr<BrowserParent> sameTabGroupAs;
   if (auto* host = BrowserHost::GetFrom(parentDocShell->GetOpener())) {
-    openerContentParent = host->GetActor()->Manager();
+    openerContentParent = host->GetContentParent();
   }
 
   // <iframe mozbrowser> gets to skip these checks.
