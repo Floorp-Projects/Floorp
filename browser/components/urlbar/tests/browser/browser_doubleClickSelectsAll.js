@@ -17,7 +17,7 @@ add_task(async function() {
 
   let url = "about:mozilla";
   let win = await BrowserTestUtils.openNewBrowserWindow();
-  let tab = await BrowserTestUtils.openNewForegroundTab({ gBrowser: win.gBrowser, url });
+  await BrowserTestUtils.openNewForegroundTab({ gBrowser: win.gBrowser, url });
 
   await doubleClick(win.gURLBar.inputField);
   is(win.gURLBar.selectionStart, 0, "Selection should start at the beginning of the urlbar value");
