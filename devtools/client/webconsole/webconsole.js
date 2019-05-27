@@ -154,6 +154,9 @@ class WebConsole {
       relatedToCurrent: true,
       inBackground: isMacOS ? e.metaKey : e.ctrlKey,
     });
+    if (e && typeof e.stopPropagation === "function") {
+      e.stopPropagation();
+    }
   }
 
   /**
