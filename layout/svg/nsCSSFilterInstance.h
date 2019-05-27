@@ -13,7 +13,9 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
 #include "nsColor.h"
-#include "mozilla/ServoStyleConsts.h"
+#include "nsTArrayForwardDeclare.h"
+
+struct nsStyleFilter;
 
 /**
  * This class helps nsFilterInstance build its filter graph. It turns a CSS
@@ -21,7 +23,6 @@
  * FilterPrimitiveDescription connected to the filter graph.
  */
 class nsCSSFilterInstance {
-  using StyleFilter = mozilla::StyleFilter;
   typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
   typedef mozilla::gfx::IntPoint IntPoint;
@@ -40,7 +41,7 @@ class nsCSSFilterInstance {
    *   the filtered element's frame space in CSS pixels to filter space.
    */
   nsCSSFilterInstance(
-      const StyleFilter& aFilter, nscolor aShadowFallbackColor,
+      const nsStyleFilter& aFilter, nscolor aShadowFallbackColor,
       const nsIntRect& aTargetBoundsInFilterSpace,
       const gfxMatrix& aFrameSpaceInCSSPxToFilterSpaceTransform);
 
@@ -120,7 +121,7 @@ class nsCSSFilterInstance {
   /**
    * The CSS filter originally from the style system.
    */
-  const StyleFilter& mFilter;
+  const nsStyleFilter& mFilter;
 
   /**
    * The color that should be used for drop-shadow() filters that don't

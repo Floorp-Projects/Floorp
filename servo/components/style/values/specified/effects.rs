@@ -18,7 +18,7 @@ use crate::values::specified::length::{Length, NonNegativeLength};
 #[cfg(feature = "gecko")]
 use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{Angle, Number, NumberOrPercentage};
-#[cfg(feature = "servo")]
+#[cfg(not(feature = "gecko"))]
 use crate::values::Impossible;
 use crate::Zero;
 use cssparser::{self, BasicParseErrorKind, Parser, Token};
@@ -30,13 +30,11 @@ pub type BoxShadow =
 
 /// A specified value for a single `filter`.
 #[cfg(feature = "gecko")]
-pub type SpecifiedFilter = GenericFilter<Angle, Factor, NonNegativeLength, SimpleShadow, SpecifiedUrl>;
+pub type Filter = GenericFilter<Angle, Factor, NonNegativeLength, SimpleShadow, SpecifiedUrl>;
 
 /// A specified value for a single `filter`.
-#[cfg(feature = "servo")]
-pub type SpecifiedFilter = GenericFilter<Angle, Factor, NonNegativeLength, Impossible, Impossible>;
-
-pub use self::SpecifiedFilter as Filter;
+#[cfg(not(feature = "gecko"))]
+pub type Filter = GenericFilter<Angle, Factor, NonNegativeLength, Impossible, Impossible>;
 
 /// A value for the `<factor>` parts in `Filter`.
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem)]

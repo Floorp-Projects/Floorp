@@ -34,6 +34,8 @@ class Document;
 
 namespace css {
 
+struct URLValue;
+
 /**
  * NOTE: All methods must be called from the main thread unless otherwise
  * specified.
@@ -61,7 +63,7 @@ class ImageLoader final : public imgINotificationObserver {
 
   void DropDocumentReference();
 
-  imgRequestProxy* RegisterCSSImage(const StyleLoadData& aImage);
+  imgRequestProxy* RegisterCSSImage(URLValue* aImage);
 
   void AssociateRequestToFrame(imgIRequest* aRequest, nsIFrame* aFrame,
                                FrameFlags aFlags);
@@ -77,13 +79,13 @@ class ImageLoader final : public imgINotificationObserver {
   // presshell pointer on the document has been cleared.
   void ClearFrames(nsPresContext* aPresContext);
 
-  static void LoadImage(const StyleComputedImageUrl& aImage, dom::Document&);
+  static void LoadImage(URLValue* aImage, dom::Document* aLoadingDoc);
 
-  // Cancels the image load for the given LoadData and deregisters it from any
-  // ImageLoaders it was registered with.
+  // Cancels the image load for the given css::URLValue and deregisters
+  // it from any ImageLoaders it was registered with.
   //
   // May be called from any thread.
-  static void DeregisterCSSImageFromAllLoaders(const StyleLoadData&);
+  static void DeregisterCSSImageFromAllLoaders(URLValue* aImage);
 
   void FlushUseCounters();
 
@@ -169,37 +171,38 @@ class ImageLoader final : public imgINotificationObserver {
   // A weak pointer to our document. Nulled out by DropDocumentReference.
   dom::Document* mDocument;
 
-  // A map of css ComputedUrls, keyed by their LoadID(), to the imgRequestProxy
+  // A map of css::URLValues, keyed by their LoadID(), to the imgRequestProxy
   // representing the load of the image for this ImageLoader's document.
   //
   // We use the LoadID() as the key since we can only access mRegisteredImages
-  // on the main thread, but Urls might be destroyed from other threads, and we
-  // don't want to leave dangling pointers around.
+  // on the main thread, but css::URLValues might be destroyed from other
+  // threads, and we don't want to leave dangling pointers around.
   nsRefPtrHashtable<nsUint64HashKey, imgRequestProxy> mRegisteredImages;
 
   // Are we cloning?  If so, ignore any notifications we get.
   bool mInClone;
 
-  // Data associated with every started load.
+  // Data associated with every css::URLValue object that has had a load
+  // started.
   struct ImageTableEntry {
-    // Set of all ImageLoaders that have registered this URL.
+    // Set of all ImageLoaders that have registered this css::URLValue.
     nsTHashtable<nsPtrHashKey<ImageLoader>> mImageLoaders;
 
-    // The "canonical" image request for this URL.
+    // The "canonical" image request for this css::URLValue.
     //
-    // This request is held on to as long as the specified URL is, so that any
-    // image that has already started loading (or has completed loading) will
-    // stay alive even if all computed values referencing the image requesst
-    // have gone away.
+    // This request is held on to as long as the specified css::URLValue
+    // object is, so that any image that has already started loading (or
+    // has completed loading) will stay alive even if all computed values
+    // referencing the image requesst have gone away.
     RefPtr<imgRequestProxy> mCanonicalRequest;
   };
 
-  // A table of all loads, keyed by their id mapping them to the set of
-  // ImageLoaders they have been registered in, and recording their "canonical"
-  // image request.
+  // A table of all css::URLValues that have been loaded, keyed by their
+  // LoadID(), mapping them to the set of ImageLoaders they have been registered
+  // in, and recording their "canonical" image request.
   //
-  // We use the load id as the key since we can only access sImages on the
-  // main thread, but LoadData objects might be destroyed from other threads,
+  // We use the LoadID() as the key since we can only access sImages on the
+  // main thread, but css::URLValues might be destroyed from other threads,
   // and we don't want to leave dangling pointers around.
   static nsClassHashtable<nsUint64HashKey, ImageTableEntry>* sImages;
 };

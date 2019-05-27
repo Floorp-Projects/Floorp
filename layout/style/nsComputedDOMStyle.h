@@ -41,6 +41,7 @@ class nsDOMCSSValueList;
 struct nsMargin;
 class nsROCSSPrimitiveValue;
 class nsStyleCoord;
+struct nsStyleFilter;
 class nsStyleGradient;
 struct nsStyleImage;
 class nsStyleSides;
@@ -290,7 +291,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
                                 const mozilla::StyleColor& aColor);
   void SetValueToPosition(const mozilla::Position& aPosition,
                           nsDOMCSSValueList* aValueList);
-  void SetValueToURLValue(const mozilla::StyleComputedUrl* aURL,
+  void SetValueToURLValue(const mozilla::css::URLValue* aURL,
                           nsROCSSPrimitiveValue* aValue);
 
   void SetValueToSize(nsROCSSPrimitiveValue* aValue, const mozilla::StyleSize&);

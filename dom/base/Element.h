@@ -460,7 +460,7 @@ class Element : public FragmentOrElement {
     }
   }
 
-  mozilla::StyleUrlOrNone GetBindingURL(Document* aDocument);
+  bool GetBindingURL(Document* aDocument, css::URLValue** aResult);
 
   Directionality GetComputedDirectionality() const;
 

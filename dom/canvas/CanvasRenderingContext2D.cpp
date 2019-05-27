@@ -2267,7 +2267,7 @@ static already_AddRefed<ComputedStyle> ResolveFilterStyleForServo(
 }
 
 bool CanvasRenderingContext2D::ParseFilter(
-    const nsAString& aString, StyleOwnedSlice<StyleFilter>& aFilterChain,
+    const nsAString& aString, nsTArray<nsStyleFilter>& aFilterChain,
     ErrorResult& aError) {
   if (!mCanvasElement && !mDocShell) {
     NS_WARNING(
@@ -2302,14 +2302,14 @@ bool CanvasRenderingContext2D::ParseFilter(
 
 void CanvasRenderingContext2D::SetFilter(const nsAString& aFilter,
                                          ErrorResult& aError) {
-  StyleOwnedSlice<StyleFilter> filterChain;
+  nsTArray<nsStyleFilter> filterChain;
   if (ParseFilter(aFilter, filterChain, aError)) {
     CurrentState().filterString = aFilter;
-    CurrentState().filterChain = std::move(filterChain);
+    filterChain.SwapElements(CurrentState().filterChain);
     if (mCanvasElement) {
       CurrentState().autoSVGFiltersObserver =
           SVGObserverUtils::ObserveFiltersForCanvasContext(
-              this, mCanvasElement, CurrentState().filterChain.AsSpan());
+              this, mCanvasElement, CurrentState().filterChain);
       UpdateFilter();
     }
   }
@@ -2376,8 +2376,7 @@ void CanvasRenderingContext2D::UpdateFilter() {
       (mCanvasElement && mCanvasElement->IsWriteOnly());
 
   CurrentState().filter = nsFilterInstance::GetFilterDescription(
-      mCanvasElement, CurrentState().filterChain.AsSpan(),
-      sourceGraphicIsTainted,
+      mCanvasElement, CurrentState().filterChain, sourceGraphicIsTainted,
       CanvasUserSpaceMetrics(
           GetSize(), CurrentState().fontFont, CurrentState().fontLanguage,
           CurrentState().fontExplicitLanguage, presShell->GetPresContext()),
