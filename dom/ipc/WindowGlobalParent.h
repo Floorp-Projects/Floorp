@@ -96,6 +96,8 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   bool IsCurrentGlobal();
 
+  bool IsProcessRoot();
+
   already_AddRefed<Promise> ChangeFrameRemoteness(dom::BrowsingContext* aBc,
                                                   const nsAString& aRemoteType,
                                                   uint64_t aPendingSwitchId,
