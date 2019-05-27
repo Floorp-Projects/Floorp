@@ -199,7 +199,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         val stringSet = mutableSetOf<String>()
 
         preferencesSyncCategory.forEach {
-            (it as CheckBoxPreference).let { checkboxPreference ->
+            (it as? CheckBoxPreference)?.let { checkboxPreference ->
                 if (checkboxPreference.isChecked) {
                     stringSet.add(checkboxPreference.key)
                 }
