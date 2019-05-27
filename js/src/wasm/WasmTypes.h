@@ -43,7 +43,7 @@
 namespace js {
 
 namespace jit {
-struct BaselineScript;
+class JitScript;
 enum class RoundingMode;
 }  // namespace jit
 
@@ -2092,9 +2092,9 @@ struct FuncImportTls {
   // The callee function's realm.
   JS::Realm* realm;
 
-  // If 'code' points into a JIT code thunk, the BaselineScript of the callee,
-  // for bidirectional registration purposes.
-  jit::BaselineScript* baselineScript;
+  // If 'code' points into a JIT code thunk, the JitScript of the callee, for
+  // bidirectional registration purposes.
+  jit::JitScript* jitScript;
 
   // A GC pointer which keeps the callee alive and is used to recover import
   // values for lazy table initialization.

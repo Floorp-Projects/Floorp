@@ -19,10 +19,10 @@
 #include "wasm/WasmInstance.h"
 
 #include "jit/AtomicOperations.h"
-#include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitCommon.h"
 #include "jit/JitRealm.h"
+#include "jit/JitScript.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "wasm/WasmBuiltins.h"
@@ -175,19 +175,14 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   }
 
   JSScript* script = importFun->nonLazyScript();
-  if (!script->hasBaselineScript()) {
-    MOZ_ASSERT(!script->hasIonScript());
+  if (!script->hasJitScript()) {
     return true;
   }
 
   // Ensure the argument types are included in the argument TypeSets stored in
   // the JitScript. This is necessary for Ion, because the import will use
-  // the skip-arg-checks entry point.
-  //
-  // Note that the JitScript is never discarded while the script has a
-  // BaselineScript, so if those checks hold now they must hold at least until
-  // the BaselineScript is discarded and when that happens the import is
-  // patched back.
+  // the skip-arg-checks entry point. When the JitScript is discarded the import
+  // is patched back.
   AutoSweepJitScript sweep(script);
   JitScript* jitScript = script->jitScript();
 
@@ -243,13 +238,12 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   }
 
   // Let's optimize it!
-  if (!script->baselineScript()->addDependentWasmImport(cx, *this,
-                                                        funcImportIndex)) {
+  if (!jitScript->addDependentWasmImport(cx, *this, funcImportIndex)) {
     return false;
   }
 
   import.code = jitExitCode;
-  import.baselineScript = script->baselineScript();
+  import.jitScript = jitScript;
   return true;
 }
 
@@ -1207,17 +1201,17 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       import.realm = f->realm();
       import.code =
           calleeInstance.codeBase(calleeTier) + codeRange.funcNormalEntry();
-      import.baselineScript = nullptr;
+      import.jitScript = nullptr;
     } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.funcType())) {
       import.tls = tlsData();
       import.realm = f->realm();
       import.code = thunk;
-      import.baselineScript = nullptr;
+      import.jitScript = nullptr;
     } else {
       import.tls = tlsData();
       import.realm = f->realm();
       import.code = codeBase(callerTier) + fi.interpExitCodeOffset();
-      import.baselineScript = nullptr;
+      import.jitScript = nullptr;
     }
   }
 
@@ -1341,8 +1335,8 @@ Instance::~Instance() {
 
   for (unsigned i = 0; i < funcImports.length(); i++) {
     FuncImportTls& import = funcImportTls(funcImports[i]);
-    if (import.baselineScript) {
-      import.baselineScript->removeDependentWasmImport(*this, i);
+    if (import.jitScript) {
+      import.jitScript->removeDependentWasmImport(*this, i);
     }
   }
 
@@ -1885,7 +1879,7 @@ void Instance::deoptimizeImportExit(uint32_t funcImportIndex) {
   const FuncImport& fi = metadata(t).funcImports[funcImportIndex];
   FuncImportTls& import = funcImportTls(fi);
   import.code = codeBase(t) + fi.interpExitCodeOffset();
-  import.baselineScript = nullptr;
+  import.jitScript = nullptr;
 }
 
 JSString* Instance::createDisplayURL(JSContext* cx) {

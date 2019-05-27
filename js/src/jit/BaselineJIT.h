@@ -89,16 +89,6 @@ struct PCMappingIndexEntry {
   uint32_t bufferOffset;
 };
 
-// Describes a single wasm::ImportExit which jumps (via an import with
-// the given index) directly to a BaselineScript or IonScript.
-struct DependentWasmImport {
-  wasm::Instance* instance;
-  size_t importIndex;
-
-  DependentWasmImport(wasm::Instance& instance, size_t importIndex)
-      : instance(&instance), importIndex(importIndex) {}
-};
-
 // Largest script that the baseline compiler will attempt to compile.
 #if defined(JS_CODEGEN_ARM)
 // ARM branches can only reach 32MB, and the macroassembler doesn't mitigate
@@ -214,10 +204,6 @@ struct BaselineScript final {
   // object and decl env object (linked via the call object's enclosing
   // scope).
   HeapPtr<EnvironmentObject*> templateEnv_ = nullptr;
-
-  // If non-null, the list of wasm::Modules that contain an optimized call
-  // directly to this script.
-  js::UniquePtr<Vector<DependentWasmImport>> dependentWasmImports_;
 
   // Early Ion bailouts will enter at this address. This is after frame
   // construction and before environment chain is initialized.
@@ -452,12 +438,6 @@ struct BaselineScript final {
   // the result may not be accurate.
   jsbytecode* approximatePcForNativeAddress(JSScript* script,
                                             uint8_t* nativeAddress);
-
-  MOZ_MUST_USE bool addDependentWasmImport(JSContext* cx,
-                                           wasm::Instance& instance,
-                                           uint32_t idx);
-  void removeDependentWasmImport(wasm::Instance& instance, uint32_t idx);
-  void unlinkDependentWasmImports(FreeOp* fop);
 
   // Toggle debug traps (used for breakpoints and step mode) in the script.
   // If |pc| is nullptr, toggle traps for all ops in the script. Else, only
