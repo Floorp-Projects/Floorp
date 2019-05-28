@@ -7,7 +7,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import six
 import sys
-import types
 from collections import OrderedDict
 
 
@@ -189,7 +188,7 @@ class Option(object):
             raise InvalidOptionError(
                 "nargs must be a positive integer, '?', '*' or '+'")
         if (not isinstance(default, six.string_types) and
-                not isinstance(default, (bool, types.NoneType)) and
+                not isinstance(default, (bool, type(None))) and
                 not istupleofstrings(default)):
             raise InvalidOptionError(
                 'default must be a bool, a string or a tuple of strings')
