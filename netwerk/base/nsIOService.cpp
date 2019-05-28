@@ -720,7 +720,7 @@ nsIOService::GetProtocolHandler(const char* scheme,
       spec.Append(':');
 
       nsCOMPtr<nsIURI> uri;
-      rv = (*result)->NewURI(spec, nullptr, nullptr, getter_AddRefs(uri));
+      rv = NS_NewURI(getter_AddRefs(uri), spec);
       if (NS_SUCCEEDED(rv)) {
         return rv;
       }

@@ -511,15 +511,6 @@ NS_IMETHODIMP nsExternalProtocolHandler::GetProtocolFlags(uint32_t* aUritype) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalProtocolHandler::NewURI(
-    const nsACString& aSpec,
-    const char* aCharset,  // ignore charset info
-    nsIURI* aBaseURI, nsIURI** _retval) {
-  return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
-      .SetSpec(aSpec)
-      .Finalize(_retval);
-}
-
 NS_IMETHODIMP
 nsExternalProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                       nsIChannel** aRetval) {

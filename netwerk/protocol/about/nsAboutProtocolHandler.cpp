@@ -121,14 +121,6 @@ nsAboutProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsAboutProtocolHandler::NewURI(const nsACString& aSpec,
-                               const char* aCharset,  // ignore charset info
-                               nsIURI* aBaseURI, nsIURI** aResult) {
-  return nsAboutProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI,
-                                              aResult);
-}
-
 // static
 nsresult nsAboutProtocolHandler::CreateNewURI(const nsACString& aSpec,
                                               const char* aCharset,
@@ -306,19 +298,6 @@ NS_IMETHODIMP
 nsSafeAboutProtocolHandler::GetProtocolFlags(uint32_t* result) {
   *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
             URI_IS_POTENTIALLY_TRUSTWORTHY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSafeAboutProtocolHandler::NewURI(const nsACString& aSpec,
-                                   const char* aCharset,  // ignore charset info
-                                   nsIURI* aBaseURI, nsIURI** result) {
-  nsresult rv =
-      NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(result);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   return NS_OK;
 }
 

@@ -64,12 +64,6 @@ nsViewSourceHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* result) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsViewSourceHandler::NewURI(const nsACString& aSpec, const char* aCharset,
-                            nsIURI* aBaseURI, nsIURI** aResult) {
-  return nsViewSourceHandler::CreateNewURI(aSpec, aCharset, aBaseURI, aResult);
-}
-
 // static
 nsresult nsViewSourceHandler::CreateNewURI(const nsACString& aSpec,
                                            const char* aCharset,
