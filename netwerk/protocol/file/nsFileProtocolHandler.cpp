@@ -144,26 +144,6 @@ nsFileProtocolHandler::GetProtocolFlags(uint32_t* result) {
 }
 
 NS_IMETHODIMP
-nsFileProtocolHandler::NewURI(const nsACString& spec, const char* charset,
-                              nsIURI* aBaseURI, nsIURI** result) {
-  nsAutoCString buf(spec);
-#if defined(XP_WIN)
-  buf.Truncate();
-  if (!net_NormalizeFileURL(spec, buf)) {
-    buf = spec;
-  }
-#endif
-
-  nsCOMPtr<nsIURI> base(aBaseURI);
-  return NS_MutateURI(new nsStandardURL::Mutator())
-      .Apply(NS_MutatorMethod(&nsIFileURLMutator::MarkFileURL))
-      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                              nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, buf,
-                              charset, base, nullptr))
-      .Finalize(result);
-}
-
-NS_IMETHODIMP
 nsFileProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                                   nsIChannel** result) {
   nsresult rv;

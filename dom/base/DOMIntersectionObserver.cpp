@@ -190,25 +190,6 @@ void DOMIntersectionObserver::TakeRecords(
   mQueuedEntries.Clear();
 }
 
-static bool CheckSimilarOrigin(nsINode* aNode1, nsINode* aNode2) {
-  nsIPrincipal* principal1 = aNode1->NodePrincipal();
-  nsIPrincipal* principal2 = aNode2->NodePrincipal();
-  nsAutoCString baseDomain1;
-  nsAutoCString baseDomain2;
-
-  nsresult rv = principal1->GetBaseDomain(baseDomain1);
-  if (NS_FAILED(rv)) {
-    return principal1 == principal2;
-  }
-
-  rv = principal2->GetBaseDomain(baseDomain2);
-  if (NS_FAILED(rv)) {
-    return principal1 == principal2;
-  }
-
-  return baseDomain1 == baseDomain2;
-}
-
 static Maybe<nsRect> EdgeInclusiveIntersection(const nsRect& aRect,
                                                const nsRect& aOtherRect) {
   nscoord left = std::max(aRect.x, aOtherRect.x);
@@ -221,22 +202,41 @@ static Maybe<nsRect> EdgeInclusiveIntersection(const nsRect& aRect,
   return Some(nsRect(left, top, right - left, bottom - top));
 }
 
-enum class BrowsingContextInfo {
-  SimilarOriginBrowsingContext,
-  DifferentOriginBrowsingContext,
-  UnknownBrowsingContext
-};
+enum class BrowsingContextOrigin { Similar, Different, Unknown };
+
+// FIXME(emilio): The whole concept of "units of related similar-origin browsing
+// contexts" is gone, but this is still in the spec, see
+// https://github.com/w3c/IntersectionObserver/issues/161
+static BrowsingContextOrigin SimilarOrigin(const Element& aTarget,
+                                           const Element* aRoot) {
+  if (!aRoot) {
+    return BrowsingContextOrigin::Unknown;
+  }
+  nsIPrincipal* principal1 = aTarget.NodePrincipal();
+  nsIPrincipal* principal2 = aRoot->NodePrincipal();
+
+  if (principal1 == principal2) {
+    return BrowsingContextOrigin::Similar;
+  }
+
+  nsAutoCString baseDomain1;
+  nsAutoCString baseDomain2;
+  if (NS_FAILED(principal1->GetBaseDomain(baseDomain1)) ||
+      NS_FAILED(principal2->GetBaseDomain(baseDomain2))) {
+    return BrowsingContextOrigin::Different;
+  }
+
+  return baseDomain1 == baseDomain2 ? BrowsingContextOrigin::Similar
+                                    : BrowsingContextOrigin::Different;
+}
 
 void DOMIntersectionObserver::Update(Document* aDocument,
                                      DOMHighResTimeStamp time) {
-  Element* root = nullptr;
-  nsIFrame* rootFrame = nullptr;
   nsRect rootRect;
-
+  nsIFrame* rootFrame = nullptr;
+  Element* root = mRoot;
   if (mRoot) {
-    root = mRoot;
-    rootFrame = root->GetPrimaryFrame();
-    if (rootFrame) {
+    if ((rootFrame = mRoot->GetPrimaryFrame())) {
       nsRect rootRectRelativeToRootFrame;
       if (rootFrame->IsScrollFrame()) {
         // rootRectRelativeToRootFrame should be the content rect of rootFrame,
@@ -252,33 +252,28 @@ void DOMIntersectionObserver::Update(Document* aDocument,
       rootRect = nsLayoutUtils::TransformFrameRectToAncestor(
           rootFrame, rootRectRelativeToRootFrame, containingBlock);
     }
-  } else {
-    RefPtr<PresShell> presShell = aDocument->GetPresShell();
-    if (presShell) {
-      rootFrame = presShell->GetRootScrollFrame();
-      if (rootFrame) {
-        nsPresContext* presContext = rootFrame->PresContext();
-        while (!presContext->IsRootContentDocument()) {
-          presContext = presContext->GetParentPresContext();
-          if (!presContext) {
-            break;
-          }
-          nsIFrame* rootScrollFrame =
-              presContext->PresShell()->GetRootScrollFrame();
-          if (rootScrollFrame) {
-            rootFrame = rootScrollFrame;
-          } else {
-            break;
-          }
+  } else if (PresShell* presShell = aDocument->GetPresShell()) {
+    // FIXME(emilio): This shouldn't probably go through the presShell and just
+    // through the document tree.
+    rootFrame = presShell->GetRootScrollFrame();
+    if (rootFrame) {
+      nsPresContext* presContext = rootFrame->PresContext();
+      while (!presContext->IsRootContentDocument()) {
+        presContext = presContext->GetParentPresContext();
+        if (!presContext) {
+          break;
         }
-        root = rootFrame->GetContent()->AsElement();
-        nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
-        // If we end up with a null root frame for some reason, we'll proceed
-        // with an empty root intersection rect.
-        if (scrollFrame) {
-          rootRect = scrollFrame->GetScrollPortRect();
+        nsIFrame* rootScrollFrame =
+            presContext->PresShell()->GetRootScrollFrame();
+        if (rootScrollFrame) {
+          rootFrame = rootScrollFrame;
+        } else {
+          break;
         }
       }
+      root = rootFrame->GetContent()->AsElement();
+      nsIScrollableFrame* scrollFrame = do_QueryFrame(rootFrame);
+      rootRect = scrollFrame->GetScrollPortRect();
     }
   }
 
@@ -290,8 +285,7 @@ void DOMIntersectionObserver::Update(Document* aDocument,
         nsLayoutUtils::ComputeCBDependentValue(basis, mRootMargin.Get(side));
   }
 
-  for (size_t i = 0; i < mObservationTargets.Length(); ++i) {
-    Element* target = mObservationTargets.ElementAt(i);
+  for (Element* target : mObservationTargets) {
     nsIFrame* targetFrame = target->GetPrimaryFrame();
     nsIFrame* originalTargetFrame = targetFrame;
     nsRect targetRect;
@@ -347,22 +341,13 @@ void DOMIntersectionObserver::Update(Document* aDocument,
     }
 
     nsRect rootIntersectionRect;
-    BrowsingContextInfo isInSimilarOriginBrowsingContext =
-        BrowsingContextInfo::UnknownBrowsingContext;
-
     if (rootFrame && targetFrame) {
+      // FIXME(emilio): Why only if there are frames?
       rootIntersectionRect = rootRect;
     }
 
-    if (root && target) {
-      isInSimilarOriginBrowsingContext =
-          CheckSimilarOrigin(root, target)
-              ? BrowsingContextInfo::SimilarOriginBrowsingContext
-              : BrowsingContextInfo::DifferentOriginBrowsingContext;
-    }
-
-    if (isInSimilarOriginBrowsingContext ==
-        BrowsingContextInfo::SimilarOriginBrowsingContext) {
+    BrowsingContextOrigin origin = SimilarOrigin(*target, root);
+    if (origin == BrowsingContextOrigin::Similar) {
       rootIntersectionRect.Inflate(rootMargin);
     }
 
@@ -416,13 +401,12 @@ void DOMIntersectionObserver::Update(Document* aDocument,
     }
 
     if (target->UpdateIntersectionObservation(this, threshold)) {
-      QueueIntersectionObserverEntry(
-          target, time,
-          isInSimilarOriginBrowsingContext ==
-                  BrowsingContextInfo::DifferentOriginBrowsingContext
-              ? Nothing()
-              : Some(rootIntersectionRect),
-          targetRect, intersectionRect, intersectionRatio);
+      QueueIntersectionObserverEntry(target, time,
+                                     origin == BrowsingContextOrigin::Different
+                                         ? Nothing()
+                                         : Some(rootIntersectionRect),
+                                     targetRect, intersectionRect,
+                                     intersectionRatio);
     }
   }
 }

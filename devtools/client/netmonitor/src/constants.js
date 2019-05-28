@@ -400,6 +400,41 @@ const SUPPORTED_HTTP_CODES = [
   "511",
 ];
 
+// Keys are the codes provided by server, values are localization messages
+// prefixed by "netmonitor.blocked."
+const BLOCKED_REASON_MESSAGES = {
+  devtools: "Blocked by DevTools",
+  1001: "CORS disabled",
+  1002: "CORS Failed",
+  1003: "CORS Not HTTP",
+  1004: "CORS Multiple Origin Not Allowed",
+  1005: "CORS Missing Allow Origin",
+  1006: "CORS No Allow Credentials",
+  1007: "CORS Allow Origin Not Matching Origin",
+  1008: "CORS Missing Allow Credentials",
+  1009: "CORS Origin Header Missing",
+  1010: "CORS External Redirect Not Allowed",
+  1011: "CORS Preflight Did Not Succeed",
+  1012: "CORS Invalid Allow Method",
+  1013: "CORS Method Not Found",
+  1014: "CORS Invalid Allow Header",
+  1015: "CORS Missing Allow Header",
+  2001: "Malware",
+  2002: "Phishing",
+  2003: "Unwanted",
+  2004: "Tracking",
+  2005: "Blocked",
+  2006: "Harmful",
+  3001: "Mixed Block",
+  4000: "CSP",
+  4001: "CSP No Data Protocol",
+  4002: "CSP Web Extension",
+  4003: "CSP ContentBlocked",
+  4004: "CSP Data Document",
+  4005: "CSP Web Browser",
+  4006: "CSP Preload",
+};
+
 const general = {
   ACTIVITY_TYPE,
   EVENTS,
@@ -415,6 +450,7 @@ const general = {
   MIN_COLUMN_WIDTH,
   DEFAULT_COLUMN_WIDTH,
   SUPPORTED_HTTP_CODES,
+  BLOCKED_REASON_MESSAGES,
 };
 
 // flatten constants

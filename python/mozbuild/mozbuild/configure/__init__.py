@@ -4,11 +4,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import __builtin__
 import inspect
 import logging
 import os
 import re
+import six
+from six.moves import builtins as __builtin__
 import sys
 import types
 from collections import OrderedDict
@@ -49,6 +50,7 @@ class ConfigureError(Exception):
 
 class SandboxDependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
+
     def __init__(self, unsandboxed):
         self._or = unsandboxed.__or__
         self._and = unsandboxed.__and__
@@ -75,6 +77,9 @@ class SandboxDependsFunction(object):
 
     def __eq__(self, other):
         raise ConfigureError('Cannot compare @depends functions.')
+
+    def __hash__(self):
+        return object.__hash__(self)
 
     def __ne__(self, other):
         raise ConfigureError('Cannot compare @depends functions.')
@@ -230,8 +235,12 @@ class CombinedDependsFunction(DependsFunction):
                 self._func is other._func and
                 set(self.dependencies) == set(other.dependencies))
 
+    def __hash__(self):
+        return object.__hash__(self)
+
     def __ne__(self, other):
         return not self == other
+
 
 class SandboxedGlobal(dict):
     '''Identifiable dict type for use as function global'''
@@ -280,11 +289,13 @@ class ConfigureSandbox(dict):
     # The default set of builtins. We expose unicode as str to make sandboxed
     # files more python3-ready.
     BUILTINS = ReadOnlyDict({
-        b: getattr(__builtin__, b)
+        b: getattr(__builtin__, b, None)
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
                   'list', 'tuple', 'set', 'dict', 'isinstance', 'getattr',
-                  'hasattr', 'enumerate', 'range', 'zip', 'AssertionError')
-    }, __import__=forbidden_import, str=unicode)
+                  'hasattr', 'enumerate', 'range', 'zip', 'AssertionError',
+                  '__build_class__',  # will be None on py2
+                  )
+    }, __import__=forbidden_import, str=six.text_type)
 
     # Expose a limited set of functions from os.path
     OS = ReadOnlyNamespace(path=ReadOnlyNamespace(**{
@@ -357,13 +368,15 @@ class ConfigureSandbox(dict):
         # that can't be converted to ascii. Make our log methods robust to this
         # by detecting the encoding that a producer is likely to have used.
         encoding = getpreferredencoding()
+
         def wrapped_log_method(logger, key):
             method = getattr(logger, key)
             if not encoding:
                 return method
+
             def wrapped(*args, **kwargs):
                 out_args = [
-                    arg.decode(encoding) if isinstance(arg, str) else arg
+                    arg.decode(encoding) if isinstance(arg, six.binary_type) else arg
                     for arg in args
                 ]
                 return method(*out_args, **kwargs)
@@ -430,7 +443,7 @@ class ConfigureSandbox(dict):
         if path:
             self.include_file(path)
 
-        for option in self._options.itervalues():
+        for option in six.itervalues(self._options):
             # All options must be referenced by some @depends function
             if option not in self._seen:
                 raise ConfigureError(
@@ -596,7 +609,7 @@ class ConfigureSandbox(dict):
         return value
 
     def _dependency(self, arg, callee_name, arg_name=None):
-        if isinstance(arg, types.StringTypes):
+        if isinstance(arg, six.string_types):
             prefix, name, values = Option.split_option(arg)
             if values != ():
                 raise ConfigureError("Option must not contain an '='")
@@ -660,8 +673,8 @@ class ConfigureSandbox(dict):
         '''
         when = self._normalize_when(kwargs.get('when'), 'option')
         args = [self._resolve(arg) for arg in args]
-        kwargs = {k: self._resolve(v) for k, v in kwargs.iteritems()
-                                      if k != 'when'}
+        kwargs = {k: self._resolve(v) for k, v in six.iteritems(kwargs)
+                  if k != 'when'}
         option = Option(*args, **kwargs)
         if when:
             self._conditions[option] = when
@@ -740,7 +753,7 @@ class ConfigureSandbox(dict):
         with self.only_when_impl(when):
             what = self._resolve(what)
             if what:
-                if not isinstance(what, types.StringTypes):
+                if not isinstance(what, six.string_types):
                     raise TypeError("Unexpected type: '%s'" % type(what).__name__)
                 self.include_file(what)
 
@@ -758,7 +771,7 @@ class ConfigureSandbox(dict):
                 (k[:-len('_impl')], getattr(self, k))
                 for k in dir(self) if k.endswith('_impl') and k != 'template_impl'
             )
-            glob.update((k, v) for k, v in self.iteritems() if k not in glob)
+            glob.update((k, v) for k, v in six.iteritems(self) if k not in glob)
 
         template = self._prepare_function(func, update_globals)
 
@@ -783,7 +796,7 @@ class ConfigureSandbox(dict):
             def wrapper(*args, **kwargs):
                 args = [maybe_prepare_function(arg) for arg in args]
                 kwargs = {k: maybe_prepare_function(v)
-                          for k, v in kwargs.iteritems()}
+                          for k, v in kwargs.items()}
                 ret = template(*args, **kwargs)
                 if isfunction(ret):
                     # We can't expect the sandboxed code to think about all the
@@ -818,7 +831,7 @@ class ConfigureSandbox(dict):
         for value, required in (
                 (_import, True), (_from, False), (_as, False)):
 
-            if not isinstance(value, types.StringTypes) and (
+            if not isinstance(value, six.string_types) and (
                     required or value is not None):
                 raise TypeError("Unexpected type: '%s'" % type(value).__name__)
             if value is not None and not self.RE_MODULE.match(value):
@@ -902,6 +915,8 @@ class ConfigureSandbox(dict):
         import_line = ''
         if '.' in what:
             _from, what = what.rsplit('.', 1)
+            if _from == '__builtin__' or _from.startswith('__builtin__.'):
+                _from = _from.replace('__builtin__', 'six.moves.builtins')
             import_line += 'from %s ' % _from
         import_line += 'import %s as imported' % what
         glob = {}
@@ -917,7 +932,7 @@ class ConfigureSandbox(dict):
         name = self._resolve(name)
         if name is None:
             return
-        if not isinstance(name, types.StringTypes):
+        if not isinstance(name, six.string_types):
             raise TypeError("Unexpected type: '%s'" % type(name).__name__)
         if name in data:
             raise ConfigureError(
@@ -1015,7 +1030,7 @@ class ConfigureSandbox(dict):
                 if isinstance(possible_reasons[0], Option):
                     reason = possible_reasons[0]
         if not reason and (isinstance(value, (bool, tuple)) or
-                           isinstance(value, types.StringTypes)):
+                           isinstance(value, six.string_types)):
             # A reason can be provided automatically when imply_option
             # is called with an immediate value.
             _, filename, line, _, _, _ = inspect.stack()[1]
@@ -1051,7 +1066,8 @@ class ConfigureSandbox(dict):
             return func
 
         glob = SandboxedGlobal(
-            (k, v) for k, v in func.func_globals.iteritems()
+            (k, v)
+            for k, v in six.iteritems(func.__globals__)
             if (inspect.isfunction(v) and v not in self._templates) or (
                 inspect.isclass(v) and issubclass(v, Exception))
         )
@@ -1074,20 +1090,20 @@ class ConfigureSandbox(dict):
         # Note this is not entirely bullet proof (if the value is e.g. a list,
         # the list contents could have changed), but covers the bases.
         closure = None
-        if func.func_closure:
+        if func.__closure__:
             def makecell(content):
                 def f():
                     content
-                return f.func_closure[0]
+                return f.__closure__[0]
 
             closure = tuple(makecell(cell.cell_contents)
-                            for cell in func.func_closure)
+                            for cell in func.__closure__)
 
         new_func = self.wraps(func)(types.FunctionType(
-            func.func_code,
+            func.__code__,
             glob,
             func.__name__,
-            func.func_defaults,
+            func.__defaults__,
             closure
         ))
         @self.wraps(new_func)

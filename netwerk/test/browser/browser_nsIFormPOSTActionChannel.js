@@ -3,7 +3,7 @@
  * should be able to accept form POST.
  */
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+"use strict";
 
 const SCHEME = "x-bug1241377";
 
@@ -30,12 +30,6 @@ CustomProtocolHandler.prototype = {
   get protocolFlags() {
     return Ci.nsIProtocolHandler.URI_NORELATIVE |
            Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE;
-  },
-  newURI: function(aSpec, aOriginCharset, aBaseURI) {
-    return Cc["@mozilla.org/network/standard-url-mutator;1"]
-             .createInstance(Ci.nsIURIMutator)
-             .setSpec(aSpec)
-             .finalize()
   },
   newChannel: function(aURI, aLoadInfo) {
     return new CustomChannel(aURI, aLoadInfo);

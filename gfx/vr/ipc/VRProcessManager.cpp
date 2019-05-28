@@ -45,8 +45,8 @@ VRProcessManager::~VRProcessManager() {
   MOZ_COUNT_DTOR(VRProcessManager);
 
   if (mObserver) {
-    mObserver->Unregister();
     nsContentUtils::UnregisterShutdownObserver(mObserver);
+    Preferences::RemoveObserver(mObserver, "");
     mObserver = nullptr;
   }
 
@@ -192,8 +192,6 @@ VRProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
   }
   return NS_OK;
 }
-
-void VRProcessManager::Observer::Unregister() { mManager = nullptr; }
 
 void VRProcessManager::CleanShutdown() { DestroyProcess(); }
 

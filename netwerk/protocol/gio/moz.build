@@ -12,6 +12,10 @@ XPCOM_MANIFESTS += [
     'components.conf',
 ]
 
+EXPORTS += [
+  'nsGIOProtocolHandler.h',
+]
+
 FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['TK_CFLAGS']

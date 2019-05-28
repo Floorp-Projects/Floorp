@@ -55,15 +55,6 @@ nsIconProtocolHandler::GetProtocolFlags(uint32_t* result) {
 }
 
 NS_IMETHODIMP
-nsIconProtocolHandler::NewURI(const nsACString& aSpec,
-                              const char* aOriginCharset,  // ignored
-                              nsIURI* aBaseURI, nsIURI** result) {
-  return NS_MutateURI(new nsMozIconURI::Mutator())
-      .SetSpec(aSpec)
-      .Finalize(result);
-}
-
-NS_IMETHODIMP
 nsIconProtocolHandler::NewChannel(nsIURI* url, nsILoadInfo* aLoadInfo,
                                   nsIChannel** result) {
   NS_ENSURE_ARG_POINTER(url);

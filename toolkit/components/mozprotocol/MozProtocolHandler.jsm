@@ -17,17 +17,6 @@ MozProtocolHandler.prototype = {
   defaultPort: -1,
   protocolFlags: Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
 
-  newURI(spec, charset, base) {
-    let mutator = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-                    .createInstance(Ci.nsIURIMutator);
-    if (base) {
-      mutator.setSpec(base.resolve(spec));
-    } else {
-      mutator.setSpec(spec);
-    }
-    return mutator.finalize();
-  },
-
   newChannel(uri, loadInfo) {
     const kCanada = "https://www.mozilla.org/contact/communities/canada/";
     let realURL = NetUtil.newURI((uri && uri.spec == "moz://eh") ? kCanada : this.urlToLoad);

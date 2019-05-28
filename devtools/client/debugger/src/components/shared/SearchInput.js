@@ -35,13 +35,16 @@ type Props = {
   handleNext?: (e: SyntheticMouseEvent<HTMLButtonElement>) => void,
   handlePrev?: (e: SyntheticMouseEvent<HTMLButtonElement>) => void,
   hasPrefix?: boolean,
+  onBlur?: (e: SyntheticFocusEvent<HTMLInputElement>) => void,
   onChange: (e: SyntheticInputEvent<HTMLInputElement>) => void,
+  onFocus?: (e: SyntheticFocusEvent<HTMLInputElement>) => void,
   onKeyDown: (e: SyntheticKeyboardEvent<HTMLInputElement>) => void,
   onKeyUp?: (e: SyntheticKeyboardEvent<HTMLInputElement>) => void,
   onHistoryScroll?: (historyValue: string) => void,
   placeholder: string,
   query: string,
   selectedItemId?: string,
+  shouldFocus?: boolean,
   showErrorEmoji: boolean,
   size: string,
   summaryMsg: string,
@@ -75,6 +78,12 @@ class SearchInput extends Component<Props, State> {
 
   componentDidMount() {
     this.setFocus();
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.props.shouldFocus && !prevProps.shouldFocus) {
+      this.setFocus();
+    }
   }
 
   setFocus() {
@@ -114,6 +123,22 @@ class SearchInput extends Component<Props, State> {
       ),
     ];
   }
+
+  onFocus = (e: SyntheticFocusEvent<HTMLInputElement>) => {
+    const { onFocus } = this.props;
+
+    if (onFocus) {
+      onFocus(e);
+    }
+  };
+
+  onBlur = (e: SyntheticFocusEvent<HTMLInputElement>) => {
+    const { onBlur } = this.props;
+
+    if (onBlur) {
+      onBlur(e);
+    }
+  };
 
   onKeyDown = (e: any) => {
     const { onHistoryScroll, onKeyDown } = this.props;
@@ -209,6 +234,8 @@ class SearchInput extends Component<Props, State> {
       onChange,
       onKeyDown: e => this.onKeyDown(e),
       onKeyUp,
+      onFocus: e => this.onFocus(e),
+      onBlur: e => this.onBlur(e),
       "aria-autocomplete": "list",
       "aria-controls": "result-list",
       "aria-activedescendant":

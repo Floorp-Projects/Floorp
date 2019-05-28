@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import shutil
@@ -21,7 +21,6 @@ from mozbuild.gn_processor import (
     GnMozbuildWriterBackend,
     find_common_attrs,
 )
-from mozbuild.backend.recursivemake import RecursiveMakeBackend
 
 from mozbuild.frontend.data import (
     ComputedFlags,
@@ -29,6 +28,7 @@ from mozbuild.frontend.data import (
     Sources,
     UnifiedSources,
 )
+
 
 class TestGnMozbuildWriter(BackendTester):
 

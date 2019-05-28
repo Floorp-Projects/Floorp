@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 import mozpack.path as mozpath
 from mozpack.files import (
@@ -24,7 +24,7 @@ from mozpack.copier import (
 )
 from mozpack.packager import SimplePackager
 from mozpack.packager.formats import FlatFormatter
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 
 
 class UnpackFinder(BaseFinder):
@@ -158,8 +158,8 @@ class UnpackFinder(BaseFinder):
         Return whether the given BaseFile looks like a ZIP/Jar.
         '''
         header = file.open().read(8)
-        return len(header) == 8 and (header[0:2] == 'PK' or
-                                     header[4:6] == 'PK')
+        return len(header) == 8 and (header[0:2] == b'PK' or
+                                     header[4:6] == b'PK')
 
     def _unjarize(self, entry, relpath):
         '''

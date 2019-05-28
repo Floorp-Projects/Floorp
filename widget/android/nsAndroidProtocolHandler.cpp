@@ -130,17 +130,6 @@ nsAndroidProtocolHandler::GetProtocolFlags(uint32_t* result) {
 }
 
 NS_IMETHODIMP
-nsAndroidProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
-                                 nsIURI* aBaseURI, nsIURI** result) {
-  nsCOMPtr<nsIURI> base(aBaseURI);
-  return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                              nsIStandardURL::URLTYPE_STANDARD, -1,
-                              nsCString(aSpec), aCharset, base, nullptr))
-      .Finalize(result);
-}
-
-NS_IMETHODIMP
 nsAndroidProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                      nsIChannel** aResult) {
   nsCOMPtr<nsIChannel> channel = AndroidChannel::CreateChannel(aURI);

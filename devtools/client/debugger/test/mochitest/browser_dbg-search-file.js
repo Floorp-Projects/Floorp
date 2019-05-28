@@ -64,4 +64,10 @@ add_task(async function() {
   // selecting another source keeps search open
   await selectSource(dbg, "simple2");
   ok(findElement(dbg, "searchField"), "Search field is still visible");
+
+  // search is always focused regardless of when or how it was opened
+  pressKey(dbg, "fileSearch");
+  await clickElement(dbg, "codeMirror");
+  pressKey(dbg, "fileSearch");
+  is(dbg.win.document.activeElement.tagName, "INPUT", "Search field focused");
 });

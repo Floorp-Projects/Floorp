@@ -17,6 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+from __future__ import absolute_import, print_function
+
 # A manifest file specifies files in that directory that are stored
 # elsewhere. This file should only list files in the same directory
 # in which the manifest file resides and it should be called
@@ -24,6 +26,7 @@
 
 from __future__ import print_function
 
+import StringIO
 import base64
 import calendar
 import hashlib
@@ -207,7 +210,7 @@ def normalize_string(mac_type,
                        name or '',
                        host,
                        port,
-                       content_hash or ''
+                       content_hash or '',
                        '',  # for ext which is empty in this case
                        '',  # Add trailing new line.
                        ]
@@ -236,8 +239,6 @@ def calculate_mac(mac_type,
     log.debug(u'normalized resource for mac calc: {norm}'.format(norm=normalized))
     digestmod = getattr(hashlib, algorithm)
 
-    # Make sure we are about to hash binary strings.
-
     if not isinstance(normalized, six_binary_type):
         normalized = normalized.encode('utf8')
 
@@ -263,7 +264,8 @@ def make_taskcluster_header(credentials, req):
         content_hash = calculate_payload_hash(  # pragma: no cover
             algorithm,
             req.get_data(),
-            req.get_method(),
+            # maybe we should detect this from req.headers but we anyway expect json
+            content_type='application/json',
         )
 
     mac = calculate_mac('header',
@@ -298,7 +300,7 @@ def make_taskcluster_header(credentials, req):
 class FileRecord(object):
 
     def __init__(self, filename, size, digest, algorithm, unpack=False,
-                 version=None, visibility=None, setup=None):
+                 version=None, visibility=None):
         object.__init__(self)
         if '/' in filename or '\\' in filename:
             log.error(
@@ -311,7 +313,6 @@ class FileRecord(object):
         self.unpack = unpack
         self.version = version
         self.visibility = visibility
-        self.setup = setup
 
     def __eq__(self, other):
         if self is other:
@@ -403,8 +404,6 @@ class FileRecordJSONEncoder(json.JSONEncoder):
                 rv['version'] = obj.version
             if obj.visibility is not None:
                 rv['visibility'] = obj.visibility
-            if obj.setup:
-                rv['setup'] = obj.setup
             return rv
 
     def default(self, f):
@@ -450,10 +449,9 @@ class FileRecordJSONDecoder(json.JSONDecoder):
                 unpack = obj.get('unpack', False)
                 version = obj.get('version', None)
                 visibility = obj.get('visibility', None)
-                setup = obj.get('setup')
                 rv = FileRecord(
                     obj['filename'], obj['size'], obj['digest'], obj['algorithm'],
-                    unpack, version, visibility, setup)
+                    unpack, version, visibility)
                 log.debug("materialized %s" % rv)
                 return rv
         return obj
@@ -556,7 +554,7 @@ def digest_file(f, a):
 
 def execute(cmd):
     """Execute CMD, logging its stdout at the info level"""
-    process = Popen(cmd, shell=True, stdout=PIPE, bufsize=0)
+    process = Popen(cmd, shell=True, stdout=PIPE)
     while True:
         line = process.stdout.readline()
         if not line:
@@ -740,58 +738,36 @@ def clean_path(dirname):
 CHECKSUM_SUFFIX = ".checksum"
 
 
-def _cache_checksum_matches(base_file, checksum):
-    try:
-        with open(base_file + CHECKSUM_SUFFIX, "rb") as f:
-            prev_checksum = f.read().strip()
-            if prev_checksum == checksum:
-                log.info("Cache matches, avoiding extracting in '%s'" % base_file)
-                return True
-            return False
-    except IOError as e:
-        return False
-
-
-def _compute_cache_checksum(filename):
-    with open(filename, "rb") as f:
-        return digest_file(f, "sha256")
-
-
-def unpack_file(filename, setup=None):
+def unpack_file(filename):
     """Untar `filename`, assuming it is uncompressed or compressed with bzip2,
     xz, gzip, or unzip a zip file. The file is assumed to contain a single
     directory with a name matching the base of the given filename.
     Xz support is handled by shelling out to 'tar'."""
-
-    checksum = _compute_cache_checksum(filename)
-
-    if tarfile.is_tarfile(filename):
+    if os.path.isfile(filename) and tarfile.is_tarfile(filename):
         tar_file, zip_ext = os.path.splitext(filename)
         base_file, tar_ext = os.path.splitext(tar_file)
-        if _cache_checksum_matches(base_file, checksum):
-            return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         tar = tarfile.open(filename)
         tar.extractall()
         tar.close()
-    elif filename.endswith('.tar.xz'):
+    elif os.path.isfile(filename) and filename.endswith('.tar.xz'):
         base_file = filename.replace('.tar.xz', '')
-        if _cache_checksum_matches(base_file, checksum):
-            return True
         clean_path(base_file)
         log.info('untarring "%s"' % filename)
         # Not using tar -Jxf because it fails on Windows for some reason.
         process = Popen(['xz', '-d', '-c', filename], stdout=PIPE)
-        tar = tarfile.open(fileobj=process.stdout, mode='r|')
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            return False
+        fileobj = StringIO.StringIO()
+        fileobj.write(stdout)
+        fileobj.seek(0)
+        tar = tarfile.open(fileobj=fileobj, mode='r|')
         tar.extractall()
         tar.close()
-        if not process.wait():
-            return False
-    elif zipfile.is_zipfile(filename):
+    elif os.path.isfile(filename) and zipfile.is_zipfile(filename):
         base_file = filename.replace('.zip', '')
-        if _cache_checksum_matches(base_file, checksum):
-            return True
         clean_path(base_file)
         log.info('unzipping "%s"' % filename)
         z = zipfile.ZipFile(filename)
@@ -800,13 +776,6 @@ def unpack_file(filename, setup=None):
     else:
         log.error("Unknown archive extension for filename '%s'" % filename)
         return False
-
-    if setup and not execute(os.path.join(base_file, setup)):
-        return False
-
-    with open(base_file + CHECKSUM_SUFFIX, "wb") as f:
-        f.write(checksum)
-
     return True
 
 
@@ -833,9 +802,6 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
 
     # Files that we want to unpack.
     unpack_files = []
-
-    # Setup for unpacked files.
-    setup_files = {}
 
     # Lets go through the manifest and fetch the files that we want
     for f in manifest.file_records:
@@ -896,13 +862,6 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
         else:
             log.debug("skipping %s" % f.filename)
 
-        if f.setup:
-            if f.unpack:
-                setup_files[f.filename] = f.setup
-            else:
-                log.error("'setup' requires 'unpack' being set for %s" % f.filename)
-                failed_files.append(f.filename)
-
     # lets ensure that fetched files match what the manifest specified
     for localfile, temp_file_name in fetched_files:
         # since I downloaded to a temp file, I need to perform all validations on the temp file
@@ -945,7 +904,7 @@ def fetch_files(manifest_file, base_urls, filenames=[], cache_folder=None,
 
     # Unpack files that need to be unpacked.
     for filename in unpack_files:
-        if not unpack_file(filename, setup_files.get(filename)):
+        if not unpack_file(filename):
             failed_files.append(filename)
 
     # If we failed to fetch or validate a file, we need to fail
@@ -1022,7 +981,7 @@ def _authorize(req, auth_file):
         try:
             auth_file_content = json.loads(auth_file_content)
             is_taskcluster_auth = True
-        except:
+        except Exception:
             pass
 
     if is_taskcluster_auth:
@@ -1299,6 +1258,7 @@ def main(argv, _skip_logging=False):
         parser.error('You must specify a command')
 
     return 0 if process_command(options, args) else 1
+
 
 if __name__ == "__main__":  # pragma: no cover
     sys.exit(main(sys.argv))

@@ -233,7 +233,6 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(config, {'FOO': self.KNOWN_A})
         self.assertEqual(out, 'checking for foo... %s\n' % self.KNOWN_A)
 
-
     def test_check_prog_with_args(self):
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "known-b", "known c"))',
@@ -431,7 +430,8 @@ class TestChecksConfigure(unittest.TestCase):
                          'single element, or a string')
 
     def test_check_prog_with_path(self):
-        config, out, status = self.get_result('check_prog("A", ("known-a",), paths=["/some/path"])')
+        config, out, status = self.get_result(
+            'check_prog("A", ("known-a",), paths=["/some/path"])')
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
         self.assertEqual(out, textwrap.dedent('''\
@@ -474,7 +474,8 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
         self.assertEqual(out, textwrap.dedent('''\
-            checking for a... 
+            checking for a... '''  # noqa  # trailing whitespace...
+                '''
             DEBUG: a: Trying known-a
             ERROR: Paths provided to find_program must be a list of strings, not %r
         ''' % mozpath.dirname(self.OTHER_A)))
@@ -620,8 +621,11 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(out, textwrap.dedent('''\
              checking for java... %s
              checking for jarsigner... not found
-             ERROR: The program jarsigner was not found.  Set $JAVA_HOME to your Java SDK directory or use '--with-java-bin-path={java-bin-dir}'
-        ''' % (java)))
+             ERROR: The program jarsigner was not found.  Set $JAVA_HOME to your \
+Java SDK directory or use '--with-java-bin-path={java-bin-dir}'
+        ''' % (java)
+            ),
+        )
 
     def test_pkg_check_modules(self):
         mock_pkg_config_version = '0.10.0'
@@ -664,7 +668,6 @@ class TestChecksConfigure(unittest.TestCase):
         extra_paths = {
             mock_pkg_config_path: mock_pkg_config,
         }
-        includes = ('util.configure', 'checks.configure', 'pkg.configure')
 
         config, output, status = get_result("pkg_check_modules('MOZ_VALID', 'valid')")
         self.assertEqual(status, 1)
@@ -674,7 +677,6 @@ class TestChecksConfigure(unittest.TestCase):
             *** in your path, or set the PKG_CONFIG environment variable
             *** to the full path to pkg-config.
         '''))
-
 
         config, output, status = get_result("pkg_check_modules('MOZ_VALID', 'valid')",
                                             extra_paths=extra_paths)

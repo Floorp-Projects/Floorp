@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from StringIO import StringIO
 import contextlib
 import os
 import sys

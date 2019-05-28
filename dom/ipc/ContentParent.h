@@ -629,7 +629,7 @@ class ContentParent final : public PContentParent,
       BrowsingContext* aContext);
 
   mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
-      BrowsingContext* aContext, nsTArray<BrowsingContextId>&& aChildren);
+      BrowsingContext* aContext, BrowsingContext::Children&& aChildren);
 
   mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
                                           bool aTrustedCaller);

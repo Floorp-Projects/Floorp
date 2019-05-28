@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 from argparse import ArgumentParser
 import json
 import os
@@ -15,7 +17,8 @@ from six import viewitems
 
 from mozpack.chrome.manifest import parse_manifest
 import mozpack.path as mozpath
-from manifest_handler import ChromeManifestHandler
+from .manifest_handler import ChromeManifestHandler
+
 
 class LcovRecord(object):
     __slots__ = ("test_name",
@@ -30,6 +33,7 @@ class LcovRecord(object):
                  "lines",
                  "line_count",
                  "covered_line_count")
+
     def __init__(self):
         self.functions = {}
         self.function_exec_counts = {}
@@ -64,13 +68,15 @@ class LcovRecord(object):
         # Re-calculate summaries after generating or splitting a record.
         self.function_count = len(self.functions.keys())
         # Function records may have moved between files, so filter here.
-        self.function_exec_counts = {fn_name: count for fn_name, count in viewitems(self.function_exec_counts)
-                                     if fn_name in self.functions.values()}
+        self.function_exec_counts = {
+            fn_name: count for fn_name, count in viewitems(self.function_exec_counts)
+            if fn_name in self.functions.values()}
         self.covered_function_count = len([c for c in self.function_exec_counts.values() if c])
         self.line_count = len(self.lines)
         self.covered_line_count = len([c for c, _ in self.lines.values() if c])
         self.branch_count = len(self.branches)
         self.covered_branch_count = len([c for c in self.branches.values() if c])
+
 
 class RecordRewriter(object):
     # Helper class for rewriting/spliting individual lcov records according
@@ -164,7 +170,8 @@ class RecordRewriter(object):
     def rewrite_record(self, record, pp_info):
         # Rewrite the lines in the given record according to preprocessor info
         # and split to additional records when pp_info has included file info.
-        self._current_pp_info = dict([(tuple([int(l) for l in k.split(',')]), v) for k, v in pp_info.items()])
+        self._current_pp_info = dict(
+            [(tuple([int(l) for l in k.split(',')]), v) for k, v in pp_info.items()])
         self._ranges = sorted(self._current_pp_info.keys())
         self._additions = {}
         self._rewrite_lines(record)
@@ -177,6 +184,7 @@ class RecordRewriter(object):
         for r in generated_records:
             r.resummarize()
         return generated_records
+
 
 class LcovFile(object):
     # Simple parser/pretty-printer for lcov format.
@@ -404,6 +412,7 @@ class LcovFile(object):
 class UrlFinderError(Exception):
     pass
 
+
 class UrlFinder(object):
     # Given a "chrome://" or "resource://" url, uses data from the UrlMapBackend
     # and install manifests to find a path to the source file and the corresponding
@@ -569,10 +578,10 @@ class UrlFinder(object):
 
             if app_name in url:
                 if omnijar_name in url:
-                    # e.g. file:///home/worker/workspace/build/application/firefox/omni.ja!/components/MainProcessSingleton.js
+                    # e.g. file:///home/worker/workspace/build/application/firefox/omni.ja!/components/MainProcessSingleton.js  # noqa
                     parts = url_obj.path.split(omnijar_name + '!', 1)
                 elif '.xpi!' in url:
-                    # e.g. file:///home/worker/workspace/build/application/firefox/browser/features/e10srollout@mozilla.org.xpi!/bootstrap.js
+                    # e.g. file:///home/worker/workspace/build/application/firefox/browser/features/e10srollout@mozilla.org.xpi!/bootstrap.js  # noqa
                     parts = url_obj.path.split('.xpi!', 1)
                 else:
                     # We don't know how to handle this jar: path, so return it to the
@@ -580,7 +589,10 @@ class UrlFinder(object):
                     return url_obj.path, None
 
                 dir_parts = parts[0].rsplit(app_name + '/', 1)
-                url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist', 'bin', dir_parts[1].lstrip('/'), parts[1].lstrip('/')))
+                url = mozpath.normpath(
+                    mozpath.join(self.topobjdir, 'dist',
+                                 'bin', dir_parts[1].lstrip('/'), parts[1].lstrip('/'))
+                    )
             elif '.xpi!' in url:
                 # This matching mechanism is quite brittle and based on examples seen in the wild.
                 # There's no rule to match the XPI name to the path in dist/xpi-stage.
@@ -590,7 +602,8 @@ class UrlFinder(object):
                     addon_name = addon_name[:-len('-test@mozilla.org')]
                 elif addon_name.endswith('@mozilla.org'):
                     addon_name = addon_name[:-len('@mozilla.org')]
-                url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist', 'xpi-stage', addon_name, parts[1].lstrip('/')))
+                url = mozpath.normpath(mozpath.join(self.topobjdir, 'dist',
+                                                    'xpi-stage', addon_name, parts[1].lstrip('/')))
         elif url_obj.scheme == 'file' and os.path.isabs(url_obj.path):
             path = url_obj.path
             if not os.path.isfile(path):
@@ -607,10 +620,12 @@ class UrlFinder(object):
         self._final_mapping[url] = result
         return result
 
+
 class LcovFileRewriter(object):
     # Class for partial parses of LCOV format and rewriting to resolve urls
     # and preprocessed file lines.
-    def __init__(self, chrome_map_path, appdir='dist/bin/browser/', gredir='dist/bin/', extra_chrome_manifests=[]):
+    def __init__(self, chrome_map_path, appdir='dist/bin/browser/',
+                 gredir='dist/bin/', extra_chrome_manifests=[]):
         self.url_finder = UrlFinder(chrome_map_path, appdir, gredir, extra_chrome_manifests)
         self.pp_rewriter = RecordRewriter()
 
@@ -631,9 +646,11 @@ class LcovFileRewriter(object):
                 return None
 
             source_file, pp_info = res
-            # We can't assert that the file exists here, because we don't have the source checkout available
-            # on test machines. We can bring back this assertion when bug 1432287 is fixed.
-            # assert os.path.isfile(source_file), "Couldn't find mapped source file %s at %s!" % (url, source_file)
+            # We can't assert that the file exists here, because we don't have the source
+            # checkout available on test machines. We can bring back this assertion when
+            # bug 1432287 is fixed.
+            # assert os.path.isfile(source_file), "Couldn't find mapped source file %s at %s!" % (
+            #     url, source_file)
 
             found_valid[0] = True
 
@@ -657,28 +674,44 @@ class LcovFileRewriter(object):
 
 
 def main():
-    parser = ArgumentParser(description="Given a set of gcov .info files produced "
-                            "by spidermonkey's code coverage, re-maps file urls "
-                            "back to source files and lines in preprocessed files "
-                            "back to their original locations.")
-    parser.add_argument("--chrome-map-path", default="chrome-map.json",
-                        help="Path to the chrome-map.json file.")
-    parser.add_argument("--app-dir", default="dist/bin/browser/",
-                        help="Prefix of the appdir in use. This is used to map "
-                             "urls starting with resource:///. It may differ by "
-                             "app, but defaults to the valid value for firefox.")
-    parser.add_argument("--gre-dir", default="dist/bin/",
-                        help="Prefix of the gre dir in use. This is used to map "
-                             "urls starting with resource://gre. It may differ by "
-                             "app, but defaults to the valid value for firefox.")
-    parser.add_argument("--output-suffix", default=".out",
-                        help="The suffix to append to output files.")
-    parser.add_argument("--extra-chrome-manifests", nargs='+',
-                        help="Paths to files containing extra chrome registration.")
-    parser.add_argument("--output-file", default="",
-                        help="The output file where the results are merged. Leave empty to make the rewriter not merge files.")
-    parser.add_argument("files", nargs='+',
-                        help="The set of files to process.")
+    parser = ArgumentParser(
+        description="Given a set of gcov .info files produced "
+        "by spidermonkey's code coverage, re-maps file urls "
+        "back to source files and lines in preprocessed files "
+        "back to their original locations."
+    )
+    parser.add_argument(
+        "--chrome-map-path", default="chrome-map.json", help="Path to the chrome-map.json file."
+    )
+    parser.add_argument(
+        "--app-dir",
+        default="dist/bin/browser/",
+        help="Prefix of the appdir in use. This is used to map "
+        "urls starting with resource:///. It may differ by "
+        "app, but defaults to the valid value for firefox.",
+    )
+    parser.add_argument(
+        "--gre-dir",
+        default="dist/bin/",
+        help="Prefix of the gre dir in use. This is used to map "
+        "urls starting with resource://gre. It may differ by "
+        "app, but defaults to the valid value for firefox.",
+    )
+    parser.add_argument(
+        "--output-suffix", default=".out", help="The suffix to append to output files."
+    )
+    parser.add_argument(
+        "--extra-chrome-manifests",
+        nargs='+',
+        help="Paths to files containing extra chrome registration.",
+    )
+    parser.add_argument(
+        "--output-file",
+        default="",
+        help="The output file where the results are merged. Leave empty to make the rewriter not "
+        "merge files.",
+    )
+    parser.add_argument("files", nargs='+', help="The set of files to process.")
 
     args = parser.parse_args()
 
@@ -693,6 +726,7 @@ def main():
             files.append(f)
 
     rewriter.rewrite_files(files, args.output_file, args.output_suffix)
+
 
 if __name__ == '__main__':
     main()
