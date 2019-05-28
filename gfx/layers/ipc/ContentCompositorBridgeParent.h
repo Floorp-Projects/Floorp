@@ -175,9 +175,8 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
 
   void UpdatePaintTime(LayerTransactionParent* aLayerTree,
                        const TimeDuration& aPaintTime) override;
-  void RegisterPayload(
-      LayerTransactionParent* aLayerTree,
-      const InfallibleTArray<CompositionPayload>& aPayload) override;
+  void RegisterPayloads(LayerTransactionParent* aLayerTree,
+                        const nsTArray<CompositionPayload>& aPayload) override;
 
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(
       const wr::PipelineId& aPipelineId,

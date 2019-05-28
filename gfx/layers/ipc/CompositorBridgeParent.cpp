@@ -817,15 +817,15 @@ void CompositorBridgeParent::UpdatePaintTime(LayerTransactionParent* aLayerTree,
   mLayerManager->SetPaintTime(aPaintTime);
 }
 
-void CompositorBridgeParent::RegisterPayload(
+void CompositorBridgeParent::RegisterPayloads(
     LayerTransactionParent* aLayerTree,
-    const InfallibleTArray<CompositionPayload>& aPayload) {
+    const nsTArray<CompositionPayload>& aPayload) {
   // We get a lot of paint timings for things with empty transactions.
   if (!mLayerManager) {
     return;
   }
 
-  mLayerManager->RegisterPayload(aPayload);
+  mLayerManager->RegisterPayloads(aPayload);
 }
 
 void CompositorBridgeParent::NotifyShadowTreeTransaction(
@@ -1263,7 +1263,7 @@ void CompositorBridgeParent::ShadowLayersUpdated(
   mRefreshStartTime = aInfo.refreshStart();
   mTxnStartTime = aInfo.transactionStart();
   mFwdTime = aInfo.fwdTime();
-  RegisterPayload(aLayerTree, aInfo.payload());
+  RegisterPayloads(aLayerTree, aInfo.payload());
 
   if (root) {
     SetShadowProperties(root);
