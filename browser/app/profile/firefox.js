@@ -510,8 +510,13 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", true);
 #endif
 
-// Turn on HTTP response process selection.
+#ifdef NIGHTLY_BUILD
 pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
+#else
+// Disabled outside of nightly due to bug 1554217
+pref("browser.tabs.remote.useHTTPResponseProcessSelection", false);
+#endif
+
 
 // Unload tabs when available memory is running low
 pref("browser.tabs.unloadOnLowMemory", true);
