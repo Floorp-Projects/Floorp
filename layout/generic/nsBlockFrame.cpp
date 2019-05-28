@@ -776,6 +776,9 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
         for (int32_t i = 0, i_end = line->GetChildCount(); i != i_end;
              ++i, kid = kid->GetNextSibling()) {
           kid->AddInlineMinISize(aRenderingContext, &data);
+          if (data.mTrailingWhitespace) {
+            data.OptionallyBreak();
+          }
         }
       }
 #ifdef DEBUG
