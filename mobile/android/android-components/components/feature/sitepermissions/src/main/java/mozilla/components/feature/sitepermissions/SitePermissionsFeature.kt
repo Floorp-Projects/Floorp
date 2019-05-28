@@ -467,7 +467,12 @@ class SitePermissionsFeature(
 
         override fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean {
             runBlocking {
-                feature.onContentPermissionRequested(session, permissionRequest)
+                if (permissionRequest.permissions.all { it.isSupported() }) {
+                    feature.onContentPermissionRequested(session, permissionRequest)
+                } else {
+                    session.contentPermissionRequest.consume { true }
+                    permissionRequest.reject()
+                }
             }
             return false
         }
@@ -549,5 +554,15 @@ private fun isPermissionGranted(
         }
         else ->
             throw InvalidParameterException("$permission is not a valid permission.")
+    }
+}
+
+private fun Permission.isSupported(): Boolean {
+    return when (this) {
+        is ContentGeoLocation,
+        is ContentNotification,
+        is ContentAudioCapture, is ContentAudioMicrophone,
+        is ContentVideoCamera, is ContentVideoCapture -> true
+        else -> false
     }
 }

@@ -98,8 +98,8 @@ class SitePermissionsFeatureTest {
         assertTrue(wasCalled)
     }
 
-    @Test(expected = InvalidParameterException::class)
-    fun `requesting an invalid content permission request will throw an exception`() {
+    @Test
+    fun `requesting an invalid content permission request will reject the permission request`() {
         val session = getSelectedSession()
 
         sitePermissionFeature = SitePermissionsFeature(
@@ -117,6 +117,8 @@ class SitePermissionsFeatureTest {
         doReturn(listOf(Generic("", ""))).`when`(mockPermissionRequest).permissions
 
         session.contentPermissionRequest = Consumable.from(mockPermissionRequest)
+
+        verify(mockPermissionRequest).reject()
     }
 
     @Test
