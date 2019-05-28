@@ -40,6 +40,9 @@ class SubstitutingProtocolHandler {
     return mSubstitutions.Get(aRoot, nullptr);
   }
 
+  static nsresult CreateNewURI(const nsACString& aSpec, const char* aCharset,
+                               nsIURI* aBaseURI, nsIURI** aResult);
+
   MOZ_MUST_USE nsresult
   CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aResources);
 
