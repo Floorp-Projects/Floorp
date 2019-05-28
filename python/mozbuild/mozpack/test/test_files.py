@@ -163,9 +163,8 @@ class TestDest(TestWithTmpDir):
         self.assertEqual(dest.read(), 'qux')
 
 
-rand = b''.join(random.choice(
-    b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-                for i in six.moves.xrange(131597))
+rand = bytes(random.choice(b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+             for i in six.moves.xrange(131597))
 samples = [
     b'',
     b'test',
