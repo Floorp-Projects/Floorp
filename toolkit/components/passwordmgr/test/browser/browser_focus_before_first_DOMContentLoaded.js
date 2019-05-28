@@ -12,10 +12,10 @@ add_task(function setup() {
 
   info("Adding two logins to get autocomplete instead of autofill");
   let login1 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "tempuser1", "temppass1", "", "");
+                               "tempuser1", "temppass1");
 
   let login2 = new nsLoginInfo("https://example.com", "https://autocomplete:8888", null,
-                               "testuser2", "testpass2", "", "");
+                               "testuser2", "testpass2");
 
   Services.logins.addLogin(login1);
   Services.logins.addLogin(login2);

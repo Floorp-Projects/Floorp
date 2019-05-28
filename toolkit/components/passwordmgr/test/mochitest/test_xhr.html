@@ -69,9 +69,9 @@ add_task(function setup() {
     let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
     let login1 = new nsLoginInfo("http://mochi.test:8888", null, "xhr",
-                                 "xhruser1", "xhrpass1", "", "");
+                                 "xhruser1", "xhrpass1");
     let login2 = new nsLoginInfo("http://mochi.test:8888", null, "xhr2",
-                                 "xhruser2", "xhrpass2", "", "");
+                                 "xhruser2", "xhrpass2");
 
     try {
       Services.logins.addLogin(login1);
