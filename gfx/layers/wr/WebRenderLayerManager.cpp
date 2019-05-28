@@ -152,6 +152,17 @@ void WebRenderLayerManager::StopFrameTimeRecording(
   }
 }
 
+void WebRenderLayerManager::PayloadPresented() {
+  MOZ_CRASH("WebRenderLayerManager::PayloadPresented should not be called");
+}
+
+void WebRenderLayerManager::TakeCompositionPayloads(
+    nsTArray<CompositionPayload>& aPayloads) {
+  aPayloads.Clear();
+
+  std::swap(mPayload, aPayloads);
+}
+
 bool WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget,
                                                        const nsCString& aURL) {
   mTarget = aTarget;
@@ -568,9 +579,6 @@ void WebRenderLayerManager::DidComposite(
   // this layer manager. So let's make sure this object stays alive until
   // the end of the method invocation.
   RefPtr<WebRenderLayerManager> selfRef = this;
-
-  // XXX - Currently we don't track this. Make sure it doesn't just grow though.
-  mPayload.Clear();
 
   // |aTransactionId| will be > 0 if the compositor is acknowledging a shadow
   // layers transaction.
