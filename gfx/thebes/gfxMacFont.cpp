@@ -196,6 +196,8 @@ bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
     return false;
   }
 
+  bool ok = false;
+
   // Currently, we don't support vertical shaping via CoreText,
   // so we ignore RequiresAATLayout if vertical is requested.
   auto macFontEntry = static_cast<MacOSFontEntry*>(GetFontEntry());
@@ -203,33 +205,34 @@ bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
     if (!mCoreTextShaper) {
       mCoreTextShaper = MakeUnique<gfxCoreTextShaper>(this);
     }
-    if (mCoreTextShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
-                                   aScript, aVertical, aRounding,
-                                   aShapedText)) {
+    ok = mCoreTextShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
+                                    aScript, aVertical, aRounding, aShapedText);
+    if (ok) {
       PostShapingFixup(aDrawTarget, aText, aOffset, aLength, aVertical,
                        aShapedText);
-
-      if (macFontEntry->HasTrackingTable()) {
-        // Convert font size from device pixels back to CSS px
-        // to use in selecting tracking value
-        float trackSize = GetAdjustedSize() *
-                          aShapedText->GetAppUnitsPerDevUnit() /
-                          AppUnitsPerCSSPixel();
-        float tracking =
-            macFontEntry->TrackingForCSSPx(trackSize) * mFUnitsConvFactor;
-        // Applying tracking is a lot like the adjustment we do for
-        // synthetic bold: we want to apply between clusters, not to
-        // non-spacing glyphs within a cluster. So we can reuse that
-        // helper here.
-        aShapedText->AdjustAdvancesForSyntheticBold(tracking, aOffset, aLength);
-      }
-
-      return true;
     }
   }
 
-  return gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
+  if (!ok) {
+    ok = gfxFont::ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
                             aVertical, aRounding, aShapedText);
+  }
+
+  if (ok && macFontEntry->HasTrackingTable()) {
+    // Convert font size from device pixels back to CSS px
+    // to use in selecting tracking value
+    float trackSize = GetAdjustedSize() * aShapedText->GetAppUnitsPerDevUnit() /
+                      AppUnitsPerCSSPixel();
+    float tracking =
+        macFontEntry->TrackingForCSSPx(trackSize) * mFUnitsConvFactor;
+    // Applying tracking is a lot like the adjustment we do for
+    // synthetic bold: we want to apply between clusters, not to
+    // non-spacing glyphs within a cluster. So we can reuse that
+    // helper here.
+    aShapedText->AdjustAdvancesForSyntheticBold(tracking, aOffset, aLength);
+  }
+
+  return ok;
 }
 
 bool gfxMacFont::SetupCairoFont(DrawTarget* aDrawTarget) {
