@@ -4742,7 +4742,7 @@ void JSScript::setNewStepMode(FreeOp* fop, uint32_t newValue) {
       baseline->toggleDebugTraps(this, nullptr);
     }
 
-    if (!stepModeEnabled() && !debug->numSites) {
+    if (!debug->needed()) {
       fop->free_(releaseDebugScript());
     }
   }
@@ -4801,7 +4801,8 @@ void JSScript::destroyBreakpointSite(FreeOp* fop, jsbytecode* pc) {
   fop->delete_(site);
   site = nullptr;
 
-  if (--debug->numSites == 0 && !stepModeEnabled()) {
+  debug->numSites--;
+  if (!debug->needed()) {
     fop->free_(releaseDebugScript());
   }
 }
