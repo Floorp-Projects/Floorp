@@ -35,6 +35,7 @@ loader.lazyRequireGetter(this, "setVariableTooltip",
   "devtools/client/shared/widgets/tooltip/VariableTooltipHelper", true);
 loader.lazyRequireGetter(this, "InactiveCssTooltipHelper",
   "devtools/client/shared/widgets/tooltip/inactive-css-tooltip-helper", false);
+loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry", false);
 
 const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 
@@ -43,6 +44,9 @@ const TOOLTIP_IMAGE_TYPE = "image";
 const TOOLTIP_FONTFAMILY_TYPE = "font-family";
 const TOOLTIP_INACTIVE_CSS = "inactive-css";
 const TOOLTIP_VARIABLE_TYPE = "variable";
+
+// Telemetry
+const TOOLTIP_SHOWN_SCALAR = "devtools.tooltip.shown";
 
 /**
  * Manages all tooltips in the style-inspector.
@@ -53,6 +57,7 @@ const TOOLTIP_VARIABLE_TYPE = "variable";
 function TooltipsOverlay(view) {
   this.view = view;
   this._instances = new Map();
+  this.telemetry = new Telemetry();
 
   this._onNewSelection = this._onNewSelection.bind(this);
   this.view.inspector.selection.on("new-node-front", this._onNewSelection);
@@ -253,6 +258,9 @@ TooltipsOverlay.prototype = {
         await setBrokenImageTooltip(this.getTooltip("previewTooltip"),
           this.view.inspector.panelDoc);
       }
+
+      this.sendOpenScalarToTelemetry(type);
+
       return true;
     }
 
@@ -260,6 +268,8 @@ TooltipsOverlay.prototype = {
       const font = nodeInfo.value.value;
       const nodeFront = inspector.selection.nodeFront;
       await this._setFontPreviewTooltip(font, nodeFront);
+
+      this.sendOpenScalarToTelemetry(type);
 
       if (nodeInfo.type === VIEW_NODE_FONT_TYPE) {
         // If the hovered element is on the font family span, anchor
@@ -272,6 +282,9 @@ TooltipsOverlay.prototype = {
     if (type === TOOLTIP_VARIABLE_TYPE && nodeInfo.value.value.startsWith("--")) {
       const variable = nodeInfo.value.variable;
       await this._setVariablePreviewTooltip(variable);
+
+      this.sendOpenScalarToTelemetry(type);
+
       return true;
     }
 
@@ -320,10 +333,23 @@ TooltipsOverlay.prototype = {
 
       await this.inactiveCssTooltipHelper.setContent(
         nodeInfo.value, this.getTooltip("interactiveTooltip"));
+
+      this.sendOpenScalarToTelemetry(type);
+
       return true;
     }
 
     return false;
+  },
+
+  /**
+   * Send a telemetry Scalar showing that a tooltip of `type` has been opened.
+   *
+   * @param {String} type
+   *        The node type from `devtools/client/inspector/shared/node-types`.
+   */
+  sendOpenScalarToTelemetry(type) {
+    this.telemetry.keyedScalarAdd(TOOLTIP_SHOWN_SCALAR, type, 1);
   },
 
   /**
@@ -414,6 +440,7 @@ TooltipsOverlay.prototype = {
 
     this.view.inspector.selection.off("new-node-front", this._onNewSelection);
     this.view = null;
+    this.telemetry = null;
 
     this._isDestroyed = true;
   },

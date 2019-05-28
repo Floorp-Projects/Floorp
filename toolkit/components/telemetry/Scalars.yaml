@@ -1507,6 +1507,21 @@ devtools:
     record_in_processes:
       - 'main'
 
+devtools.tooltip:
+  shown:
+    bug_numbers:
+      - 1553471
+    description: >
+      Number of times a tooltip was shown, keyed by tooltip type. Currently supported types are "image", "font-family", "inactive-css" and "variable."
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.aboutdevtools:
   opened:
     bug_numbers:
