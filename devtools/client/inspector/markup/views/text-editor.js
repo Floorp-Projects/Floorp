@@ -4,14 +4,13 @@
 
 "use strict";
 
-const { editableField } = require("devtools/client/shared/inplace-editor");
-const { LocalizationHelper } = require("devtools/shared/l10n");
+const { createFactory } = require("devtools/client/shared/vendor/react");
+
+const TextNode = createFactory(require("devtools/client/inspector/markup/components/TextNode"));
 
 loader.lazyRequireGetter(this, "getAutocompleteMaxWidth", "devtools/client/inspector/markup/utils", true);
 loader.lazyRequireGetter(this, "getLongString", "devtools/client/inspector/shared/utils", true);
-
-const INSPECTOR_L10N =
-  new LocalizationHelper("devtools/client/locales/inspector.properties");
+loader.lazyRequireGetter(this, "InplaceEditor", "devtools/client/shared/inplace-editor", true);
 
 /**
  * Creates a simple text editor node, used for TEXT and COMMENT
@@ -30,30 +29,9 @@ function TextEditor(container, node, type) {
   this.node = node;
   this._selected = false;
 
+  this.showTextEditor = this.showTextEditor.bind(this);
+
   this.buildMarkup(type);
-
-  editableField({
-    element: this.value,
-    stopOnReturn: true,
-    trigger: "dblclick",
-    multiline: true,
-    maxWidth: () => getAutocompleteMaxWidth(this.value, this.container.elt),
-    trimOutput: false,
-    done: (val, commit) => {
-      if (!commit) {
-        return;
-      }
-      getLongString(this.node.getNodeValue()).then(oldValue => {
-        this.container.undo.do(() => {
-          this.node.setNodeValue(val);
-        }, () => {
-          this.node.setNodeValue(oldValue);
-        });
-      });
-    },
-    cssProperties: this.markup.inspector.cssProperties,
-  });
-
   this.update();
 }
 
@@ -64,22 +42,17 @@ TextEditor.prototype = {
     this.elt = doc.createElement("span");
     this.elt.classList.add("editor", type);
 
-    if (type === "comment") {
-      const openComment = doc.createElement("span");
-      openComment.textContent = "<!--";
-      this.elt.appendChild(openComment);
-    }
+    this.textNode = this.ReactDOM.render(TextNode({
+      showTextEditor: this.showTextEditor,
+      type,
+      value: "",
+    }), this.elt);
+  },
 
-    this.value = doc.createElement("pre");
-    this.value.setAttribute("style", "display:inline-block;white-space: normal;");
-    this.value.setAttribute("tabindex", "-1");
-    this.elt.appendChild(this.value);
-
-    if (type === "comment") {
-      const closeComment = doc.createElement("span");
-      closeComment.textContent = "-->";
-      this.elt.appendChild(closeComment);
-    }
+  get ReactDOM() {
+    // Reuse the toolbox's ReactDOM to avoid loading react-dom.js again in the
+    // Inspector's BrowserLoader.
+    return this.container.markup.inspector.ReactDOM;
   },
 
   get selected() {
@@ -94,23 +67,41 @@ TextEditor.prototype = {
     this.update();
   },
 
-  update: function() {
-    getLongString(this.node.getNodeValue()).then(str => {
-      this.value.textContent = str;
-
-      const isWhitespace = !/[^\s]/.exec(str);
-      this.value.classList.toggle("whitespace", isWhitespace);
-
-      const chars = str.replace(/\n/g, "⏎")
-                     .replace(/\t/g, "⇥")
-                     .replace(/ /g, "◦");
-      this.value.setAttribute("title", isWhitespace
-        ? INSPECTOR_L10N.getFormatStr("markupView.whitespaceOnly", chars)
-        : "");
-    }).catch(console.error);
+  showTextEditor: function(element) {
+    new InplaceEditor({
+      cssProperties: this.markup.inspector.cssProperties,
+      done: (val, commit) => {
+        if (!commit) {
+          return;
+        }
+        getLongString(this.node.getNodeValue()).then(oldValue => {
+          this.container.undo.do(() => {
+            this.node.setNodeValue(val);
+          }, () => {
+            this.node.setNodeValue(oldValue);
+          });
+        });
+      },
+      element,
+      maxWidth: () => getAutocompleteMaxWidth(element, this.container.elt),
+      multiline: true,
+      stopOnReturn: true,
+      trimOutput: false,
+    });
   },
 
-  destroy: function() {},
+  update: async function() {
+    try {
+      const value = await getLongString(this.node.getNodeValue());
+      this.textNode.setState({ value });
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  destroy: function() {
+    this.ReactDOM.unmountComponentAtNode(this.elt);
+  },
 
   /**
    * Stub method for consistency with ElementEditor.
