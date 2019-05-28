@@ -128,7 +128,7 @@ class TransactionBuilder final {
 
   void AddExternalImage(ImageKey key, const ImageDescriptor& aDescriptor,
                         ExternalImageId aExtID,
-                        wr::WrExternalImageBufferType aBufferType,
+                        wr::ExternalImageType aImageType,
                         uint8_t aChannelIndex = 0);
 
   void UpdateImageBuffer(wr::ImageKey aKey, const ImageDescriptor& aDescriptor,
@@ -141,13 +141,15 @@ class TransactionBuilder final {
 
   void UpdateExternalImage(ImageKey aKey, const ImageDescriptor& aDescriptor,
                            ExternalImageId aExtID,
-                           wr::WrExternalImageBufferType aBufferType,
+                           wr::ExternalImageType aImageType,
                            uint8_t aChannelIndex = 0);
 
-  void UpdateExternalImageWithDirtyRect(
-      ImageKey aKey, const ImageDescriptor& aDescriptor, ExternalImageId aExtID,
-      wr::WrExternalImageBufferType aBufferType,
-      const wr::DeviceIntRect& aDirtyRect, uint8_t aChannelIndex = 0);
+  void UpdateExternalImageWithDirtyRect(ImageKey aKey,
+                                        const ImageDescriptor& aDescriptor,
+                                        ExternalImageId aExtID,
+                                        wr::ExternalImageType aImageType,
+                                        const wr::DeviceIntRect& aDirtyRect,
+                                        uint8_t aChannelIndex = 0);
 
   void SetImageVisibleArea(BlobImageKey aKey, const wr::DeviceIntRect& aArea);
 

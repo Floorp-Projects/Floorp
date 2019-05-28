@@ -597,19 +597,21 @@ void TransactionBuilder::AddBlobImage(BlobImageKey key,
   wr_resource_updates_add_blob_image(mTxn, key, &aDescriptor, &aBytes.inner);
 }
 
-void TransactionBuilder::AddExternalImage(
-    ImageKey key, const ImageDescriptor& aDescriptor, ExternalImageId aExtID,
-    wr::WrExternalImageBufferType aBufferType, uint8_t aChannelIndex) {
+void TransactionBuilder::AddExternalImage(ImageKey key,
+                                          const ImageDescriptor& aDescriptor,
+                                          ExternalImageId aExtID,
+                                          wr::ExternalImageType aImageType,
+                                          uint8_t aChannelIndex) {
   wr_resource_updates_add_external_image(mTxn, key, &aDescriptor, aExtID,
-                                         aBufferType, aChannelIndex);
+                                         &aImageType, aChannelIndex);
 }
 
 void TransactionBuilder::AddExternalImageBuffer(
     ImageKey aKey, const ImageDescriptor& aDescriptor,
     ExternalImageId aHandle) {
   auto channelIndex = 0;
-  AddExternalImage(aKey, aDescriptor, aHandle,
-                   wr::WrExternalImageBufferType::ExternalBuffer, channelIndex);
+  AddExternalImage(aKey, aDescriptor, aHandle, wr::ExternalImageType::Buffer(),
+                   channelIndex);
 }
 
 void TransactionBuilder::UpdateImageBuffer(ImageKey aKey,
@@ -626,19 +628,21 @@ void TransactionBuilder::UpdateBlobImage(BlobImageKey aKey,
                                         aDirtyRect);
 }
 
-void TransactionBuilder::UpdateExternalImage(
-    ImageKey aKey, const ImageDescriptor& aDescriptor, ExternalImageId aExtID,
-    wr::WrExternalImageBufferType aBufferType, uint8_t aChannelIndex) {
+void TransactionBuilder::UpdateExternalImage(ImageKey aKey,
+                                             const ImageDescriptor& aDescriptor,
+                                             ExternalImageId aExtID,
+                                             wr::ExternalImageType aImageType,
+                                             uint8_t aChannelIndex) {
   wr_resource_updates_update_external_image(mTxn, aKey, &aDescriptor, aExtID,
-                                            aBufferType, aChannelIndex);
+                                            &aImageType, aChannelIndex);
 }
 
 void TransactionBuilder::UpdateExternalImageWithDirtyRect(
     ImageKey aKey, const ImageDescriptor& aDescriptor, ExternalImageId aExtID,
-    wr::WrExternalImageBufferType aBufferType,
-    const wr::DeviceIntRect& aDirtyRect, uint8_t aChannelIndex) {
+    wr::ExternalImageType aImageType, const wr::DeviceIntRect& aDirtyRect,
+    uint8_t aChannelIndex) {
   wr_resource_updates_update_external_image_with_dirty_rect(
-      mTxn, aKey, &aDescriptor, aExtID, aBufferType, aChannelIndex, aDirtyRect);
+      mTxn, aKey, &aDescriptor, aExtID, &aImageType, aChannelIndex, aDirtyRect);
 }
 
 void TransactionBuilder::SetImageVisibleArea(BlobImageKey aKey,
