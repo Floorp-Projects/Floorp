@@ -23,11 +23,6 @@ if CONFIG['MOZ_DEVTOOLS'] == 'all':
       'locales',
     ]
 
-if CONFIG['NIGHTLY_BUILD']:
-    EXTRA_JS_MODULES += [
-        'AboutDebuggingNewRegistration.jsm',
-    ]
-
 XPCOM_MANIFESTS += [
     'components.conf',
 ]
