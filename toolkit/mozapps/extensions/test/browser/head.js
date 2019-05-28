@@ -319,19 +319,27 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
 }
 
 function get_addon_element(aManager, aId) {
-  var doc = aManager.document;
-  var view = get_current_view(aManager);
-  var listid = "addon-list";
-  if (view.id == "updates-view")
-    listid = "updates-list";
-  var list = doc.getElementById(listid);
+  if (aManager.useHtmlViews) {
+    const doc = aManager.getHtmlBrowser().contentDocument;
+    return doc.querySelector(`addon-card[addon-id="${aId}"]`);
+  }
 
-  var node = list.firstChild;
+  const doc = aManager.document;
+  const view = get_current_view(aManager);
+  let listid = "addon-list";
+  if (view.id == "updates-view") {
+    listid = "updates-list";
+  }
+  const list = doc.getElementById(listid);
+
+  let node = list.firstChild;
   while (node) {
-    if (node.value == aId)
+    if (node.value == aId) {
       return node;
+    }
     node = node.nextSibling;
   }
+
   return null;
 }
 
