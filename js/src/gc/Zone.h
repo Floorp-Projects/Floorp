@@ -508,6 +508,9 @@ class Zone : public JS::shadow::Zone,
   void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
     gcMallocSize.removeMemory(cell, nbytes, use);
   }
+  void swapCellMemory(js::gc::Cell* a, js::gc::Cell* b, js::MemoryUse use) {
+    gcMallocSize.swapMemory(a, b, use);
+  }
 
   size_t totalBytes() const {
     return zoneSize.gcBytes() + gcMallocSize.bytes();
