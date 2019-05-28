@@ -360,11 +360,16 @@ update-enable-search-update =
     .label = Automatically update search engines
     .accesskey = e
 
-update-pref-write-failure-title = Write Failure
+update-setting-write-failure-title = Error saving Update preferences
 
 # Variables:
 #   $path (String) - Path to the configuration file
-update-pref-write-failure-message = Unable to save preference. Could not write to file: { $path }
+# The newlines between the main text and the line containing the path is
+# intentional so the path is easier to identify.
+update-setting-write-failure-message =
+    { -brand-short-name } encountered an error and didn’t save this change. Note that setting this update preference requires permission to write to the file below. You or a system administrator may be able resolve the error by granting the Users group full control to this file.
+
+    Could not write to file: { $path }
 
 update-in-progress-title = Update In Progress
 
