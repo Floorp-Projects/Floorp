@@ -38,7 +38,6 @@ nsPrintObject::nsPrintObject()
       mDontPrint(true),
       mPrintAsIs(false),
       mInvisible(false),
-      mPrintPreview(false),
       mDidCreateDocShell(false),
       mShrinkRatio(1.0),
       mZoomRatio(1.0) {
@@ -101,14 +100,11 @@ nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
   NS_ENSURE_STATE(viewer);
   viewer->SetDocument(mDocument);
 
-  mPrintPreview = aForPrintPreview;
-
   return NS_OK;
 }
 
 nsresult nsPrintObject::InitAsNestedObject(nsIDocShell* aDocShell,
                                            Document* aDoc,
-                                           bool aForPrintPreview,
                                            nsPrintObject* aParent) {
   NS_ENSURE_STATE(aDocShell);
   NS_ENSURE_STATE(aDoc);
@@ -116,7 +112,6 @@ nsresult nsPrintObject::InitAsNestedObject(nsIDocShell* aDocShell,
   mParent = aParent;
   mDocShell = aDocShell;
   mDocument = aDoc;
-  mPrintPreview = aForPrintPreview;
 
   nsCOMPtr<nsPIDOMWindowOuter> window = aDoc->GetWindow();
   mContent = window->GetFrameElementInternal();
