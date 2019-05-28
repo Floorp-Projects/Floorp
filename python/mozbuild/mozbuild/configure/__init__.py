@@ -1063,7 +1063,7 @@ class ConfigureSandbox(dict):
 
         glob = SandboxedGlobal(
             (k, v)
-            for k, v in six.iteritems(func.func_globals)
+            for k, v in six.iteritems(func.__globals__)
             if (inspect.isfunction(v) and v not in self._templates) or (
                 inspect.isclass(v) and issubclass(v, Exception))
         )
@@ -1086,20 +1086,20 @@ class ConfigureSandbox(dict):
         # Note this is not entirely bullet proof (if the value is e.g. a list,
         # the list contents could have changed), but covers the bases.
         closure = None
-        if func.func_closure:
+        if func.__closure__:
             def makecell(content):
                 def f():
                     content
-                return f.func_closure[0]
+                return f.__closure__[0]
 
             closure = tuple(makecell(cell.cell_contents)
-                            for cell in func.func_closure)
+                            for cell in func.__closure__)
 
         new_func = self.wraps(func)(types.FunctionType(
-            func.func_code,
+            func.__code__,
             glob,
             func.__name__,
-            func.func_defaults,
+            func.__defaults__,
             closure
         ))
         @self.wraps(new_func)
