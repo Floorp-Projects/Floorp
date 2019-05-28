@@ -1059,7 +1059,8 @@ a11y::PDocAccessibleParent* BrowserParent::AllocPDocAccessibleParent(
     PDocAccessibleParent* aParent, const uint64_t&, const uint32_t&,
     const IAccessibleHolder&) {
 #ifdef ACCESSIBILITY
-  return new a11y::DocAccessibleParent();
+  // Reference freed in DeallocPDocAccessibleParent.
+  return do_AddRef(new a11y::DocAccessibleParent()).take();
 #else
   return nullptr;
 #endif
@@ -1067,7 +1068,8 @@ a11y::PDocAccessibleParent* BrowserParent::AllocPDocAccessibleParent(
 
 bool BrowserParent::DeallocPDocAccessibleParent(PDocAccessibleParent* aParent) {
 #ifdef ACCESSIBILITY
-  delete static_cast<a11y::DocAccessibleParent*>(aParent);
+  // Free reference from AllocPDocAccessibleParent.
+  static_cast<a11y::DocAccessibleParent*>(aParent)->Release();
 #endif
   return true;
 }
