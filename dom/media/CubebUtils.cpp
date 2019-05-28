@@ -32,6 +32,9 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include "GeneratedJNIWrappers.h"
 #endif
+#ifdef XP_WIN
+#  include "mozilla/mscom/EnsureMTA.h"
+#endif
 
 #define AUDIOIPC_POOL_SIZE_DEFAULT 2
 #define AUDIOIPC_STACK_SIZE_DEFAULT (64 * 4096)
@@ -491,7 +494,13 @@ cubeb* GetCubebContextUnlocked() {
     rv = audioipc_client_init(&sCubebContext, sBrandName, &initParams);
   } else {
 #endif  // MOZ_CUBEB_REMOTING
-    rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
+#ifdef XP_WIN
+    mozilla::mscom::EnsureMTA([&]() -> void {
+#endif
+      rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
+#ifdef XP_WIN
+    });
+#endif
 #ifdef MOZ_CUBEB_REMOTING
   }
   sIPCConnection = nullptr;
