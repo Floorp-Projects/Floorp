@@ -62,6 +62,10 @@
 #include "nsContentUtils.h"
 #include "nsExceptionHandler.h"
 
+#ifdef MOZ_WIDGET_GTK
+#  include "nsGIOProtocolHandler.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -708,24 +712,14 @@ nsIOService::GetProtocolHandler(const char* scheme,
     }
 
 #ifdef MOZ_WIDGET_GTK
-    // check to see whether GVFS can handle this URI scheme.  if it can
-    // create a nsIURI for the "scheme:", then we assume it has support for
-    // the requested protocol.  otherwise, we failover to using the default
-    // protocol handler.
+    // check to see whether GVFS can handle this URI scheme. otherwise, we
+    // failover to using the default protocol handler.
 
-    rv =
-        CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-gio", result);
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoCString spec(scheme);
-      spec.Append(':');
-
-      nsCOMPtr<nsIURI> uri;
-      rv = NS_NewURI(getter_AddRefs(uri), spec);
-      if (NS_SUCCEEDED(rv)) {
-        return rv;
-      }
-
-      NS_RELEASE(*result);
+    RefPtr<nsGIOProtocolHandler> gioHandler =
+        nsGIOProtocolHandler::GetSingleton();
+    if (gioHandler->IsSupportedProtocol(nsCString(scheme))) {
+      gioHandler.forget(result);
+      return NS_OK;
     }
 #endif
   }
