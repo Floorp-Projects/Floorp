@@ -8,7 +8,7 @@
 # the locale directory, chrome registry entries and other information
 # necessary to produce the complete manifest file for a language pack.
 ###
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import argparse
 import sys
@@ -307,7 +307,7 @@ def get_version_maybe_buildid(min_version):
     version = str(min_version)
     buildid = os.environ.get('MOZ_BUILD_DATE')
     if buildid and len(buildid) != 14:
-        print >>sys.stderr, 'Ignoring invalid MOZ_BUILD_DATE: %s' % buildid
+        print('Ignoring invalid MOZ_BUILD_DATE: %s' % buildid, file=sys.stderr)
         buildid = None
     if buildid:
         version = version + "buildid" + buildid
