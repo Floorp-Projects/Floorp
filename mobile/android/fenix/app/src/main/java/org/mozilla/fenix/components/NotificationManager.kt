@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.annotation.TargetApi
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -16,6 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.TabData
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 
 /**
@@ -43,9 +45,12 @@ class NotificationManager(private val context: Context) {
         }
     }
 
+    private val logger = Logger("NotificationManager")
+
     fun showReceivedTabs(event: DeviceEvent.TabReceived) {
         // In the future, experiment with displaying multiple tabs from the same device as as Notification Groups.
         // For now, a single notification per tab received will suffice.
+        logger.debug("Showing ${event.entries.size} tab(s) received from deviceID=${event.from?.id}")
         event.entries.forEach { tab ->
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tab.url))
             val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
@@ -53,19 +58,27 @@ class NotificationManager(private val context: Context) {
             val builder = NotificationCompat.Builder(context, RECEIVE_TABS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_status_logo)
                 .setTitle(event, tab)
+                .setWhen(System.currentTimeMillis())
                 .setContentText(tab.url)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 // Explicitly set a priority for <API25 devices.
                 // On newer devices this is inherited from the channel.
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(Notification.DEFAULT_VIBRATE or Notification.DEFAULT_SOUND)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                builder.setCategory(Notification.CATEGORY_REMINDER)
+            }
+
+            val notification = builder.build()
 
             // Pick a random ID for this notification so that different tabs do not clash.
             @SuppressWarnings("MagicNumber")
             val notificationId = (Math.random() * 100).toInt()
 
             with(NotificationManagerCompat.from(context)) {
-                notify(RECEIVE_TABS_TAG, notificationId, builder.build())
+                notify(RECEIVE_TABS_TAG, notificationId, notification)
             }
         }
     }

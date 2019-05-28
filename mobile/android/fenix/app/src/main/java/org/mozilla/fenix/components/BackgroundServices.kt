@@ -20,6 +20,7 @@ import mozilla.components.feature.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.manager.DeviceTuple
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 import org.mozilla.fenix.test.Mockable
 
@@ -58,7 +59,9 @@ class BackgroundServices(
     }
 
     private val deviceEventObserver = object : DeviceEventsObserver {
+        private val logger = Logger("DeviceEventsObserver")
         override fun onEvents(events: List<DeviceEvent>) {
+            logger.info("Received ${events.size} device event(s)")
             events.filter { it is DeviceEvent.TabReceived }.forEach {
                 notificationManager.showReceivedTabs(it as DeviceEvent.TabReceived)
             }
