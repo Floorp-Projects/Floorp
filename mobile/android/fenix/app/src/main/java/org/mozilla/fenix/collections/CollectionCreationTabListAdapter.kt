@@ -131,7 +131,7 @@ class TabViewHolder(
 
         view.hostname.text = tab.hostname
         view.tab_title.text = tab.title
-        checkbox.visibility = if (shouldHideCheckBox) View.GONE else View.VISIBLE
+        checkbox.visibility = if (shouldHideCheckBox) View.INVISIBLE else View.VISIBLE
         view.isClickable = !shouldHideCheckBox
         checkbox.setOnCheckedChangeListener(null)
         if (checkbox.isChecked != isSelected) {
