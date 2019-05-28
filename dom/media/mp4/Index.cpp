@@ -138,11 +138,9 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cenc")) {
       cryptoScheme = CryptoScheme::Cenc;
       writer->mCrypto.mCryptoScheme = CryptoScheme::Cenc;
-      writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cenc");
     } else if (moofParser->mSinf.mDefaultEncryptionType == AtomType("cbcs")) {
       cryptoScheme = CryptoScheme::Cbcs;
       writer->mCrypto.mCryptoScheme = CryptoScheme::Cbcs;
-      writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cenc");
     } else {
       MOZ_ASSERT_UNREACHABLE(
           "Sample description entry reports sample is encrypted, but no "
@@ -151,17 +149,18 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext() {
     }
   }
 
+  // We need to check if this moof has init data the CDM expects us to surface.
+  // This should happen when handling the first sample, even if that sample
+  // isn't encrypted (samples later in the moof may be).
   if (mCurrentSample == 0) {
     const nsTArray<Moof>& moofs = moofParser->Moofs();
     const Moof* currentMoof = &moofs[mCurrentMoof];
     if (!currentMoof->mPsshes.IsEmpty()) {
-      MOZ_ASSERT(sampleDescriptionEntry->mIsEncryptedEntry,
-                 "Unencrypted fragments should not contain pssh boxes");
-      MOZ_ASSERT(cryptoScheme != CryptoScheme::None);
       // This Moof contained crypto init data. Report that. We only report
       // the init data on the Moof's first sample, to avoid reporting it more
       // than once per Moof.
       writer->mCrypto.mInitDatas.AppendElements(currentMoof->mPsshes);
+      writer->mCrypto.mInitDataType = NS_LITERAL_STRING("cenc");
     }
   }
 
