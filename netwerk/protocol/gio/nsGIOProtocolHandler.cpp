@@ -7,7 +7,9 @@
  * This code is based on original Mozilla gnome-vfs extension. It implements
  * input stream provided by GVFS/GIO.
  */
+#include "nsGIOProtocolHandler.h"
 #include "mozilla/Components.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -827,33 +829,18 @@ static void mount_operation_ask_password(
 
 //-----------------------------------------------------------------------------
 
-class nsGIOProtocolHandler final : public nsIProtocolHandler,
-                                   public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPROTOCOLHANDLER
-  NS_DECL_NSIOBSERVER
+mozilla::StaticRefPtr<nsGIOProtocolHandler> nsGIOProtocolHandler::sSingleton;
 
-  nsresult Init();
-
- private:
-  ~nsGIOProtocolHandler() {}
-
-  void InitSupportedProtocolsPref(nsIPrefBranch* prefs);
-  bool IsSupportedProtocol(const nsCString& spec);
-
-  nsCString mSupportedProtocols;
-};
+already_AddRefed<nsGIOProtocolHandler> nsGIOProtocolHandler::GetSingleton() {
+  if (!sSingleton) {
+    sSingleton = new nsGIOProtocolHandler();
+    sSingleton->Init();
+    ClearOnShutdown(&sSingleton);
+  }
+  return do_AddRef(sSingleton);
+}
 
 NS_IMPL_ISUPPORTS(nsGIOProtocolHandler, nsIProtocolHandler, nsIObserver)
-
-NS_IMPL_COMPONENT_FACTORY(nsGIOProtocolHandler) {
-  auto inst = MakeRefPtr<nsGIOProtocolHandler>();
-  if (NS_SUCCEEDED(inst->Init())) {
-    return inst.forget().downcast<nsIProtocolHandler>();
-  }
-  return nullptr;
-}
 
 nsresult nsGIOProtocolHandler::Init() {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
