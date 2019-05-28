@@ -153,3 +153,14 @@ add_task(async function test_addon_normalinstalled() {
   notEqual(addon.permissions & AddonManager.PERM_CAN_DISABLE, 0, "Addon should be able to be disabled.");
   await addon.uninstall();
 });
+
+add_task(async function test_extensionsettings_string() {
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "ExtensionSettings": '{"*": {"installation_mode": "blocked"}}',
+    },
+  });
+
+  let extensionSettings =  Services.policies.getExtensionSettings("*");
+  equal(extensionSettings.installation_mode, "blocked");
+});
