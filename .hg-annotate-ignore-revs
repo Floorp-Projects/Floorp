@@ -328,3 +328,6 @@ b4662b6db1b34414494d070e33481193625403d1 - Ehsan Akhgari - Bug 1508472 - Part 4:
 8bf181f9b1c3daa66390ab03b6bc9f27c049f770 - Daniel Holbert - Bug 1513387: Add braces & newlines to re-wrap some return statements that clang-format unwrapped, in layout/svg. r=heycam
 2f227a365a670735df7bdee68488ea54c5d9f0ae - Jan-Ivar Bruaroey - Bug 1512280 - Make LOG macros clang-format friendlier. r=padenot
 1cd2c6c217949d0b1d06f15046eba45ff4517044 - Emilio Cobos Álvarez - Bug 1515707 - Use NS_INTERFACE_MAP_END_INHERITING in some CSSStyleDeclaration implementations. r=Ehsan
+020c8c871c0d3b3920fe95935cfef06501976c0f - Sylvestre Ledru - Bug 1552795 - Remove all trailing whitespaces in idl files r=ehsan
+10d5143647cfda21649cf254adcb21d116524c5d - Sylvestre Ledru - Bug 1489454 - Remove all trailing whitespaces (again) r=Ehsan
+6a629adbb62a299d7208373d1c6f375149d2afdb - Sylvestre Ledru - Bug 1378712 - Remove all trailing whitespaces r=Ehsan
