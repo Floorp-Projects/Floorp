@@ -63,38 +63,12 @@ pub enum AntialiasBorder {
     Yes,
 }
 
-#[repr(C)]
-pub enum WrExternalImageBufferType {
-    TextureHandle = 0,
-    TextureRectHandle = 1,
-    TextureArrayHandle = 2,
-    TextureExternalHandle = 3,
-    ExternalBuffer = 4,
-}
-
 /// Used to indicate if an image is opaque, or has an alpha channel.
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum OpacityType {
     Opaque = 0,
     HasAlphaChannel = 1,
-}
-
-impl WrExternalImageBufferType {
-    fn to_wr(self) -> ExternalImageType {
-        match self {
-            WrExternalImageBufferType::TextureHandle =>
-                ExternalImageType::TextureHandle(TextureTarget::Default),
-            WrExternalImageBufferType::TextureRectHandle =>
-                ExternalImageType::TextureHandle(TextureTarget::Rect),
-            WrExternalImageBufferType::TextureArrayHandle =>
-                ExternalImageType::TextureHandle(TextureTarget::Array),
-            WrExternalImageBufferType::TextureExternalHandle =>
-                ExternalImageType::TextureHandle(TextureTarget::External),
-            WrExternalImageBufferType::ExternalBuffer =>
-                ExternalImageType::Buffer,
-        }
-    }
 }
 
 /// cbindgen:field-names=[mHandle]
@@ -1611,7 +1585,7 @@ pub extern "C" fn wr_resource_updates_add_external_image(
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
     external_image_id: WrExternalImageId,
-    buffer_type: WrExternalImageBufferType,
+    image_type: &ExternalImageType,
     channel_index: u8
 ) {
     txn.add_image(
@@ -1621,7 +1595,7 @@ pub extern "C" fn wr_resource_updates_add_external_image(
             ExternalImageData {
                 id: external_image_id.into(),
                 channel_index: channel_index,
-                image_type: buffer_type.to_wr(),
+                image_type: *image_type,
             }
         ),
         None
@@ -1658,7 +1632,7 @@ pub extern "C" fn wr_resource_updates_update_external_image(
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
     external_image_id: WrExternalImageId,
-    image_type: WrExternalImageBufferType,
+    image_type: &ExternalImageType,
     channel_index: u8
 ) {
     txn.update_image(
@@ -1668,7 +1642,7 @@ pub extern "C" fn wr_resource_updates_update_external_image(
             ExternalImageData {
                 id: external_image_id.into(),
                 channel_index,
-                image_type: image_type.to_wr(),
+                image_type: *image_type,
             }
         ),
         &DirtyRect::All,
@@ -1681,7 +1655,7 @@ pub extern "C" fn wr_resource_updates_update_external_image_with_dirty_rect(
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
     external_image_id: WrExternalImageId,
-    image_type: WrExternalImageBufferType,
+    image_type: &ExternalImageType,
     channel_index: u8,
     dirty_rect: DeviceIntRect,
 ) {
@@ -1692,7 +1666,7 @@ pub extern "C" fn wr_resource_updates_update_external_image_with_dirty_rect(
             ExternalImageData {
                 id: external_image_id.into(),
                 channel_index,
-                image_type: image_type.to_wr(),
+                image_type: *image_type,
             }
         ),
         &DirtyRect::Partial(dirty_rect)
