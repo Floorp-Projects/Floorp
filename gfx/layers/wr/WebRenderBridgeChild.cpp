@@ -122,10 +122,16 @@ void WebRenderBridgeChild::EndTransaction(
     renderRoot.mCommands = std::move(mParentCommands[renderRoot.mRenderRoot]);
   }
 
+  nsTArray<CompositionPayload> payloads;
+  if (mManager) {
+    mManager->TakeCompositionPayloads(payloads);
+  }
+
   this->SendSetDisplayList(std::move(aRenderRoots), mDestroyedActors,
                            GetFwdTransactionId(), aTransactionId, mIdNamespace,
                            aContainsSVGGroup, aVsyncId, aVsyncStartTime,
-                           aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
+                           aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime,
+                           payloads);
 
   // With multiple render roots, we may not have sent all of our
   // mParentCommands, so go ahead and go through our mParentCommands and ensure
@@ -154,11 +160,16 @@ void WebRenderBridgeChild::EndEmptyTransaction(
     update.mCommands = std::move(mParentCommands[update.mRenderRoot]);
   }
 
+  nsTArray<CompositionPayload> payloads;
+  if (mManager) {
+    mManager->TakeCompositionPayloads(payloads);
+  }
+
   this->SendEmptyTransaction(
       aFocusTarget, aPaintSequenceNumber, std::move(aRenderRootUpdates),
       mDestroyedActors, GetFwdTransactionId(), aTransactionId, mIdNamespace,
       aVsyncId, aVsyncStartTime, aRefreshStartTime, aTxnStartTime, aTxnURL,
-      fwdTime);
+      fwdTime, payloads);
 
   // With multiple render roots, we may not have sent all of our
   // mParentCommands, so go ahead and go through our mParentCommands and ensure

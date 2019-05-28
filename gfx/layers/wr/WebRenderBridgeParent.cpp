@@ -972,7 +972,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     const bool& aContainsSVGGroup, const VsyncId& aVsyncId,
     const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
     const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
-    const TimeStamp& aFwdTime) {
+    const TimeStamp& aFwdTime, nsTArray<CompositionPayload>&& aPayloads) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -1078,7 +1078,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 
   HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId,
                            aVsyncStartTime, aRefreshStartTime, aTxnStartTime,
-                           aTxnURL, aFwdTime, mIsFirstPaint);
+                           aTxnURL, aFwdTime, mIsFirstPaint,
+                           std::move(aPayloads));
   mIsFirstPaint = false;
 
   if (!validTransaction) {
@@ -1106,7 +1107,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     const TransactionId& aTransactionId, const wr::IdNamespace& aIdNamespace,
     const VsyncId& aVsyncId, const TimeStamp& aVsyncStartTime,
     const TimeStamp& aRefreshStartTime, const TimeStamp& aTxnStartTime,
-    const nsCString& aTxnURL, const TimeStamp& aFwdTime) {
+    const nsCString& aTxnURL, const TimeStamp& aFwdTime,
+    nsTArray<CompositionPayload>&& aPayloads) {
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
@@ -1231,7 +1233,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
   HoldPendingTransactionId(mWrEpoch, aTransactionId, false, aVsyncId,
                            aVsyncStartTime, aRefreshStartTime, aTxnStartTime,
                            aTxnURL, aFwdTime,
-                           /* aIsFirstPaint */ false,
+                           /* aIsFirstPaint */ false, std::move(aPayloads),
                            /* aUseForTelemetry */ scheduleAnyComposite);
 
   for (auto renderRoot : wr::kRenderRoots) {
@@ -2042,12 +2044,12 @@ void WebRenderBridgeParent::HoldPendingTransactionId(
     const TimeStamp& aVsyncStartTime, const TimeStamp& aRefreshStartTime,
     const TimeStamp& aTxnStartTime, const nsCString& aTxnURL,
     const TimeStamp& aFwdTime, const bool aIsFirstPaint,
-    const bool aUseForTelemetry) {
+    nsTArray<CompositionPayload>&& aPayloads, const bool aUseForTelemetry) {
   MOZ_ASSERT(aTransactionId > LastPendingTransactionId());
   mPendingTransactionIds.push_back(PendingTransactionId(
       aWrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId, aVsyncStartTime,
       aRefreshStartTime, aTxnStartTime, aTxnURL, aFwdTime, aIsFirstPaint,
-      aUseForTelemetry));
+      aUseForTelemetry, std::move(aPayloads)));
 }
 
 already_AddRefed<wr::WebRenderAPI>
@@ -2192,6 +2194,8 @@ TransactionId WebRenderBridgeParent::FlushTransactionIdsForEpoch(
     if (aUiController && transactionId.mIsFirstPaint) {
       aUiController->NotifyFirstPaint();
     }
+
+    RecordCompositionPayloadsPresented(transactionId.mPayloads);
 
     id = transactionId.mId;
     mPendingTransactionIds.pop_front();

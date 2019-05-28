@@ -154,26 +154,7 @@ UniquePtr<LayerUserData> LayerManager::RemoveUserData(void* aKey) {
 }
 
 void LayerManager::PayloadPresented() {
-  if (mPayload.Length()) {
-    TimeStamp presented = TimeStamp::Now();
-    for (CompositionPayload& payload : mPayload) {
-#if MOZ_GECKO_PROFILER
-      if (profiler_is_active()) {
-        nsPrintfCString marker(
-            "Payload Presented, type: %d latency: %dms\n",
-            int32_t(payload.mType),
-            int32_t((presented - payload.mTimeStamp).ToMilliseconds()));
-        profiler_add_marker(marker.get(), JS::ProfilingCategoryPair::GRAPHICS);
-      }
-#endif
-
-      if (payload.mType == CompositionPayloadType::eKeyPress) {
-        Telemetry::AccumulateTimeDelta(
-            mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY, payload.mTimeStamp,
-            presented);
-      }
-    }
-  }
+  RecordCompositionPayloadsPresented(mPayload);
 }
 
 //--------------------------------------------------
@@ -2319,6 +2300,30 @@ void SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget) {
 
 IntRect ToOutsideIntRect(const gfxRect& aRect) {
   return IntRect::RoundOut(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
+}
+
+void RecordCompositionPayloadsPresented(
+    const nsTArray<CompositionPayload>& aPayloads) {
+  if (aPayloads.Length()) {
+    TimeStamp presented = TimeStamp::Now();
+    for (const CompositionPayload& payload : aPayloads) {
+#if MOZ_GECKO_PROFILER
+      if (profiler_is_active()) {
+        nsPrintfCString marker(
+            "Payload Presented, type: %d latency: %dms\n",
+            int32_t(payload.mType),
+            int32_t((presented - payload.mTimeStamp).ToMilliseconds()));
+        profiler_add_marker(marker.get(), JS::ProfilingCategoryPair::GRAPHICS);
+      }
+#endif
+
+      if (payload.mType == CompositionPayloadType::eKeyPress) {
+        Telemetry::AccumulateTimeDelta(
+            mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY, payload.mTimeStamp,
+            presented);
+      }
+    }
+  }
 }
 
 }  // namespace layers
