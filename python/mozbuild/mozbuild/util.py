@@ -1164,7 +1164,7 @@ def expand_variables(s, variables):
         value = variables.get(name)
         if not value:
             continue
-        if not isinstance(value, types.StringTypes):
+        if not isinstance(value, six.string_types):
             value = ' '.join(value)
         result += value
     return result

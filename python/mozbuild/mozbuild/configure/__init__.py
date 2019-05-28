@@ -601,7 +601,7 @@ class ConfigureSandbox(dict):
         return value
 
     def _dependency(self, arg, callee_name, arg_name=None):
-        if isinstance(arg, types.StringTypes):
+        if isinstance(arg, six.string_types):
             prefix, name, values = Option.split_option(arg)
             if values != ():
                 raise ConfigureError("Option must not contain an '='")
@@ -745,7 +745,7 @@ class ConfigureSandbox(dict):
         with self.only_when_impl(when):
             what = self._resolve(what)
             if what:
-                if not isinstance(what, types.StringTypes):
+                if not isinstance(what, six.string_types):
                     raise TypeError("Unexpected type: '%s'" % type(what).__name__)
                 self.include_file(what)
 
@@ -823,7 +823,7 @@ class ConfigureSandbox(dict):
         for value, required in (
                 (_import, True), (_from, False), (_as, False)):
 
-            if not isinstance(value, types.StringTypes) and (
+            if not isinstance(value, six.string_types) and (
                     required or value is not None):
                 raise TypeError("Unexpected type: '%s'" % type(value).__name__)
             if value is not None and not self.RE_MODULE.match(value):
@@ -922,7 +922,7 @@ class ConfigureSandbox(dict):
         name = self._resolve(name)
         if name is None:
             return
-        if not isinstance(name, types.StringTypes):
+        if not isinstance(name, six.string_types):
             raise TypeError("Unexpected type: '%s'" % type(name).__name__)
         if name in data:
             raise ConfigureError(
@@ -1020,7 +1020,7 @@ class ConfigureSandbox(dict):
                 if isinstance(possible_reasons[0], Option):
                     reason = possible_reasons[0]
         if not reason and (isinstance(value, (bool, tuple)) or
-                           isinstance(value, types.StringTypes)):
+                           isinstance(value, six.string_types)):
             # A reason can be provided automatically when imply_option
             # is called with an immediate value.
             _, filename, line, _, _, _ = inspect.stack()[1]
