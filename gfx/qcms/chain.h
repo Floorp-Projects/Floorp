@@ -24,7 +24,15 @@
 #ifndef _QCMS_CHAIN_H
 #define _QCMS_CHAIN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Generates and returns a 3D LUT with lutSize^3 samples using the provided src/dest.
 float* qcms_chain_transform(qcms_profile *in, qcms_profile *out, float *src, float *dest, size_t lutSize);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
