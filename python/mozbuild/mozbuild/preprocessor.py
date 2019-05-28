@@ -22,12 +22,14 @@ value :
   | \w+  # string identifier or value;
 """
 
+from __future__ import absolute_import
+
 import sys
 import os
 import re
 from optparse import OptionParser
 import errno
-from makeutil import Makefile
+from mozbuild.makeutil import Makefile
 
 # hack around win32 mangling our line endings
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/65443
@@ -495,11 +497,6 @@ class Preprocessor:
             if not options.output:
                 raise Preprocessor.Error(self, "--depend doesn't work with stdout",
                                          None)
-            try:
-                from makeutil import Makefile
-            except Exception:
-                raise Preprocessor.Error(self, "--depend requires the "
-                                               "mozbuild.makeutil module", None)
             depfile = get_output_file(options.depend)
 
         if args:

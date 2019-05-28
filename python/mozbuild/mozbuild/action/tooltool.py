@@ -17,6 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+from __future__ import absolute_import
+
 # A manifest file specifies files in that directory that are stored
 # elsewhere. This file should only list files in the same directory
 # in which the manifest file resides and it should be called
