@@ -13,7 +13,7 @@ from mozpack.chrome.manifest import (
     ManifestMultiContent,
 )
 from mozpack.errors import errors
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 import mozpack.path as mozpath
 from mozpack.files import ManifestFile
 from mozpack.copier import (
