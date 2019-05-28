@@ -866,9 +866,8 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   static auto sCairoSurfaceSetDeviceScalePtr =
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
-  // Support HiDPI widget styles on Wayland only for now.
-  bool useHiDPIWidgets = !isX11Display && (aScaleFactor != 1) &&
-                         (sCairoSurfaceSetDeviceScalePtr != nullptr);
+  bool useHiDPIWidgets =
+      (aScaleFactor != 1) && (sCairoSurfaceSetDeviceScalePtr != nullptr);
 
   Point drawOffsetScaled;
   Point drawOffsetOriginal;
@@ -1596,8 +1595,9 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
     } break;
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio: {
-      const ToggleGTKMetrics* metrics =
-          GetToggleMetrics(aAppearance == StyleAppearance::Radio);
+      const ToggleGTKMetrics* metrics = GetToggleMetrics(
+          aAppearance == StyleAppearance::Radio ? MOZ_GTK_RADIOBUTTON
+                                                : MOZ_GTK_CHECKBUTTON);
       aResult->width = metrics->minSizeWithBorder.width;
       aResult->height = metrics->minSizeWithBorder.height;
     } break;

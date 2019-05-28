@@ -53,6 +53,7 @@ type State = {
   selectedResultIndex: number,
   count: number,
   index: number,
+  inputFocused: boolean,
 };
 
 type Props = {
@@ -82,6 +83,7 @@ class SearchBar extends Component<Props, State> {
       selectedResultIndex: 0,
       count: 0,
       index: -1,
+      inputFocused: false,
     };
   }
 
@@ -146,7 +148,7 @@ class SearchBar extends Component<Props, State> {
       e.stopPropagation();
       e.preventDefault();
     }
-    this.setState({ query: "" });
+    this.setState({ query: "", inputFocused: false });
   };
 
   toggleSearch = (e: SyntheticKeyboardEvent<HTMLElement>) => {
@@ -162,10 +164,10 @@ class SearchBar extends Component<Props, State> {
       const query = editor.codeMirror.getSelection() || this.state.query;
 
       if (query !== "") {
-        this.setState({ query });
+        this.setState({ query, inputFocused: true });
         this.doSearch(query);
       } else {
-        this.setState({ query: "" });
+        this.setState({ query: "", inputFocused: true });
       }
     }
   };
@@ -196,6 +198,14 @@ class SearchBar extends Component<Props, State> {
     this.setState({ query: e.target.value });
 
     return this.doSearch(e.target.value);
+  };
+
+  onFocus = (e: SyntheticFocusEvent<HTMLElement>) => {
+    this.setState({ inputFocused: true });
+  };
+
+  onBlur = (e: SyntheticFocusEvent<HTMLElement>) => {
+    this.setState({ inputFocused: false });
   };
 
   onKeyDown = (e: any) => {
@@ -320,11 +330,14 @@ class SearchBar extends Component<Props, State> {
           summaryMsg={this.buildSummaryMsg()}
           isLoading={false}
           onChange={this.onChange}
+          onFocus={this.onFocus}
+          onBlur={this.onBlur}
           showErrorEmoji={this.shouldShowErrorEmoji()}
           onKeyDown={this.onKeyDown}
           onHistoryScroll={this.onHistoryScroll}
           handleNext={e => this.traverseResults(e, false)}
           handlePrev={e => this.traverseResults(e, true)}
+          shouldFocus={this.state.inputFocused}
           showClose={false}
         />
         <div className="search-bottom-bar">

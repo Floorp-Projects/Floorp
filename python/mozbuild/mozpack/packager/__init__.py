@@ -2,11 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.preprocessor import Preprocessor
 import re
 import os
+import six
 from mozpack.errors import errors
 from mozpack.chrome.manifest import (
     Manifest,
@@ -366,7 +367,8 @@ class SimplePackager(object):
 
         bases = self.get_bases()
         broken_bases = sorted(
-            m for m, includer in self._included_manifests.iteritems()
+            m
+            for m, includer in six.iteritems(self._included_manifests)
             if mozpath.basedir(m, bases) != mozpath.basedir(includer, bases))
         for m in broken_bases:
             errors.fatal('"%s" is included from "%s", which is outside "%s"' %

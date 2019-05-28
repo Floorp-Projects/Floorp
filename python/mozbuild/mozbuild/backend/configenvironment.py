@@ -2,14 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
+import six
 import sys
 import json
 
 from collections import Iterable, OrderedDict
-from types import StringTypes, ModuleType
+from types import ModuleType
 
 import mozpack.path as mozpath
 
@@ -19,12 +20,6 @@ from mozbuild.util import (
     ReadOnlyDict,
 )
 from mozbuild.shellutil import quote as shell_quote
-
-
-if sys.version_info.major == 2:
-    text_type = unicode
-else:
-    text_type = str
 
 
 class BuildConfig(object):
@@ -49,7 +44,7 @@ class BuildConfig(object):
 
         # cache the compiled code as it can be reused
         # we cache it the first time, or if the file changed
-        if not path in code_cache or code_cache[path][0] != mtime:
+        if path not in code_cache or code_cache[path][0] != mtime:
             # Add config.status manually to sys.modules so it gets picked up by
             # iter_modules_in_path() for automatic dependencies.
             mod = ModuleType('config.status')
@@ -118,7 +113,7 @@ class ConfigEnvironment(object):
     """
 
     def __init__(self, topsrcdir, topobjdir, defines=None,
-        non_global_defines=None, substs=None, source=None, mozconfig=None):
+                 non_global_defines=None, substs=None, source=None, mozconfig=None):
 
         if not source:
             source = mozpath.join(topobjdir, 'config.status')
@@ -148,20 +143,35 @@ class ConfigEnvironment(object):
         self.bin_suffix = self.substs.get('BIN_SUFFIX', '')
 
         global_defines = [name for name in self.defines
-            if not name in self.non_global_defines]
-        self.substs['ACDEFINES'] = ' '.join(['-D%s=%s' % (name,
-            shell_quote(self.defines[name]).replace('$', '$$'))
-            for name in sorted(global_defines)])
+                          if name not in self.non_global_defines]
+        self.substs["ACDEFINES"] = ' '.join(
+            [
+                '-D%s=%s' % (name, shell_quote(self.defines[name]).replace('$', '$$'))
+                for name in sorted(global_defines)
+            ]
+        )
+
         def serialize(name, obj):
-            if isinstance(obj, StringTypes):
+            if isinstance(obj, six.string_types):
                 return obj
             if isinstance(obj, Iterable):
                 return ' '.join(obj)
             raise Exception('Unhandled type %s for %s', type(obj), str(name))
-        self.substs['ALLSUBSTS'] = '\n'.join(sorted(['%s = %s' % (name,
-            serialize(name, self.substs[name])) for name in self.substs if self.substs[name]]))
-        self.substs['ALLEMPTYSUBSTS'] = '\n'.join(sorted(['%s =' % name
-            for name in self.substs if not self.substs[name]]))
+        self.substs['ALLSUBSTS'] = '\n'.join(
+            sorted([
+                '%s = %s' % (
+                    name,
+                    serialize(name, self.substs[name])
+                    )
+                for name in self.substs if self.substs[name]
+                ])
+            )
+        self.substs['ALLEMPTYSUBSTS'] = '\n'.join(
+            sorted([
+                '%s =' % name
+                for name in self.substs if not self.substs[name]
+                ])
+            )
 
         self.substs = ReadOnlyDict(self.substs)
 
@@ -181,17 +191,17 @@ class ConfigEnvironment(object):
         self.substs_unicode = {}
 
         def decode(v):
-            if not isinstance(v, text_type):
+            if not isinstance(v, six.text_type):
                 try:
                     return v.decode('utf-8')
                 except UnicodeDecodeError:
                     return v.decode('utf-8', 'replace')
 
         for k, v in self.substs.items():
-            if not isinstance(v, StringTypes):
+            if not isinstance(v, six.string_types):
                 if isinstance(v, Iterable):
                     type(v)(decode(i) for i in v)
-            elif not isinstance(v, text_type):
+            elif not isinstance(v, six.text_type):
                 v = decode(v)
 
             self.substs_unicode[k] = v
@@ -214,7 +224,7 @@ class ConfigEnvironment(object):
         config = BuildConfig.from_config_status(path)
 
         return ConfigEnvironment(config.topsrcdir, config.topobjdir,
-            config.defines, config.non_global_defines, config.substs, path)
+                                 config.defines, config.non_global_defines, config.substs, path)
 
 
 class PartialConfigDict(object):
@@ -224,6 +234,7 @@ class PartialConfigDict(object):
     similar for substs), where the value of FOO is delay-loaded until it is
     needed.
     """
+
     def __init__(self, config_statusd, typ, environ_override=False):
         self._dict = {}
         self._datadir = mozpath.join(config_statusd, typ)
@@ -338,6 +349,7 @@ class PartialConfigEnvironment(object):
       intended to be used instead of the defines structure from config.status so
       that scripts can depend directly on its value.
     """
+
     def __init__(self, topobjdir):
         config_statusd = mozpath.join(topobjdir, 'config.statusd')
         self.substs = PartialConfigDict(config_statusd, 'substs', environ_override=True)
@@ -353,8 +365,8 @@ class PartialConfigEnvironment(object):
             if name not in config['non_global_defines']
         ]
         acdefines = ' '.join(['-D%s=%s' % (name,
-            shell_quote(config['defines'][name]).replace('$', '$$'))
-            for name in sorted(global_defines)])
+                                           shell_quote(config['defines'][name]).replace('$', '$$'))
+                              for name in sorted(global_defines)])
         substs['ACDEFINES'] = acdefines
 
         all_defines = OrderedDict()

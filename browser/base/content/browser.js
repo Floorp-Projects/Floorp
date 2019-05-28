@@ -1440,6 +1440,10 @@ var gBrowserInit = {
       }
     }
 
+    if (Services.prefs.getBoolPref("toolkit.legacyUserProfileCustomizations.windowIcon", false)) {
+      document.documentElement.setAttribute("icon", "main-window");
+    }
+
     // Call this after we set attributes that might change toolbars' computed
     // text color.
     ToolbarIconColor.init();
@@ -8061,7 +8065,7 @@ var RestoreLastSessionObserver = {
         !PrivateBrowsingUtils.isWindowPrivate(window)) {
       Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
       goSetCommandEnabled("Browser:RestoreLastSession", true);
-    } else if (SessionStartup.isAutomaticRestoreEnabled()) {
+    } else if (SessionStore.willAutoRestore) {
       document.getElementById("Browser:RestoreLastSession").setAttribute("hidden", true);
     }
   },

@@ -208,18 +208,6 @@ nsAnnoProtocolHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
   return NS_OK;
 }
 
-// nsAnnoProtocolHandler::NewURI
-
-NS_IMETHODIMP
-nsAnnoProtocolHandler::NewURI(const nsACString& aSpec,
-                              const char* aOriginCharset, nsIURI* aBaseURI,
-                              nsIURI** _retval) {
-  *_retval = nullptr;
-  return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
-      .SetSpec(aSpec)
-      .Finalize(_retval);
-}
-
 // nsAnnoProtocolHandler::NewChannel
 //
 

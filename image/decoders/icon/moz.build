@@ -17,6 +17,10 @@ FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+EXPORTS += [
+  'nsIconURI.h',
+]
+
 platform = None
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:

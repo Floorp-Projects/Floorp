@@ -29,8 +29,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_CAPTIVE_MINTIME);
   Services.prefs.clearUserPref(PREF_CAPTIVE_MAXTIME);
   Services.prefs.clearUserPref(PREF_DNS_NATIVE_IS_LOCALHOST);
-
-  httpserver.stop(() => {});
 });
 
 function observerPromise(topic) {
@@ -88,4 +86,11 @@ add_task(async function test_simple()
   cps.recheckCaptivePortal();
   await notification;
   equal(cps.state, Ci.nsICaptivePortalService.UNLOCKED_PORTAL);
+});
+
+add_task(async function shutdown()
+{
+  await new Promise(resolve => {
+    httpserver.stop(resolve);
+  });
 });

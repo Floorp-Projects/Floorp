@@ -22,6 +22,7 @@ import {
   isSymbolsLoading,
   getContext,
 } from "../selectors";
+import { memoizeLast } from "../utils/memoizeLast";
 import { scrollList } from "../utils/result-list";
 import {
   formatSymbols,
@@ -131,11 +132,15 @@ export class QuickOpenModal extends Component<Props, State> {
     return query.split(":")[0];
   };
 
+  formatSources = memoizeLast((displayedSources, tabs) => {
+    const tabUrls = new Set(tabs.map((tab: Tab) => tab.url));
+    return formatSources(displayedSources, tabUrls);
+  });
+
   searchSources = (query: string) => {
     const { displayedSources, tabs } = this.props;
-    const tabUrls = new Set(tabs.map((tab: Tab) => tab.url));
-    const sources = formatSources(displayedSources, tabUrls);
 
+    const sources = this.formatSources(displayedSources, tabs);
     const results =
       query == "" ? sources : filter(sources, this.dropGoto(query));
     return this.setResults(results);

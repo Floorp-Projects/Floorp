@@ -15,19 +15,18 @@ contains the code for converting executed mozbuild files into these data
 structures.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.frontend.context import (
     ObjDirPath,
     SourcePath,
 )
-from mozbuild.util import StrictOrderingOnAppendList
 from mozpack.chrome.manifest import ManifestEntry
 
 import mozpack.path as mozpath
 from .context import FinalTargetValue
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import itertools
 
 from ..util import (
@@ -192,6 +191,7 @@ class ComputedFlags(ContextDerived):
                     flags[dest_var].extend(value)
         return flags.items()
 
+
 class XPIDLModule(ContextDerived):
     """Describes an XPIDL module to be compiled."""
 
@@ -206,6 +206,7 @@ class XPIDLModule(ContextDerived):
         assert all(isinstance(idl, SourcePath) for idl in idl_files)
         self.name = name
         self.idl_files = idl_files
+
 
 class BaseDefines(ContextDerived):
     """Context derived container object for DEFINES/HOST_DEFINES,
@@ -232,11 +233,14 @@ class BaseDefines(ContextDerived):
         else:
             self.defines.update(more_defines)
 
+
 class Defines(BaseDefines):
     pass
 
+
 class HostDefines(BaseDefines):
     pass
+
 
 class WebIDLCollection(ContextDerived):
     """Collects WebIDL info referenced during the build."""
@@ -507,7 +511,8 @@ class BaseProgram(Linkable):
     @property
     def output_path(self):
         if self.installed:
-            return ObjDirPath(self._context, '!/' + mozpath.join(self.install_target, self.program))
+            return ObjDirPath(self._context, '!/' + mozpath.join(
+                self.install_target, self.program))
         else:
             return ObjDirPath(self._context, '!' + self.program)
 
@@ -670,7 +675,7 @@ class StaticLibrary(Library):
     )
 
     def __init__(self, context, basename, real_name=None,
-        link_into=None, no_expand_lib=False):
+                 link_into=None, no_expand_lib=False):
         Library.__init__(self, context, basename, real_name)
         self.link_into = link_into
         self.no_expand_lib = no_expand_lib
@@ -702,8 +707,8 @@ class RustLibrary(StaticLibrary):
         # many other things in the build system depend on that.
         assert self.crate_type == 'staticlib'
         self.lib_name = '%s%s%s' % (context.config.rust_lib_prefix,
-                                     basename.replace('-', '_'),
-                                     context.config.rust_lib_suffix)
+                                    basename.replace('-', '_'),
+                                    context.config.rust_lib_suffix)
         self.dependencies = dependencies
         self.features = features
         self.target_dir = target_dir
@@ -899,8 +904,8 @@ class TestManifest(ContextDerived):
     )
 
     def __init__(self, context, path, manifest, flavor=None,
-            install_prefix=None, relpath=None, sources=(),
-            dupe_manifest=False):
+                 install_prefix=None, relpath=None, sources=(),
+                 dupe_manifest=False):
         ContextDerived.__init__(self, context)
 
         assert flavor in all_test_flavors()
@@ -1043,11 +1048,13 @@ class UnifiedSources(BaseSources):
             unified_prefix = unified_prefix.replace('/', '_')
 
             suffix = self.canonical_suffix[1:]
-            unified_prefix='Unified_%s_%s' % (suffix, unified_prefix)
-            self.unified_source_mapping = list(group_unified_files(source_files,
-                                                                   unified_prefix=unified_prefix,
-                                                                   unified_suffix=suffix,
-                                                                   files_per_unified_file=files_per_unified_file))
+            unified_prefix = 'Unified_%s_%s' % (suffix, unified_prefix)
+            self.unified_source_mapping = list(
+                group_unified_files(source_files,
+                                    unified_prefix=unified_prefix,
+                                    unified_suffix=suffix,
+                                    files_per_unified_file=files_per_unified_file)
+                )
 
 
 class InstallationTarget(ContextDerived):
@@ -1106,6 +1113,7 @@ class FinalTargetPreprocessedFiles(ContextDerived):
     def __init__(self, sandbox, files):
         ContextDerived.__init__(self, sandbox)
         self.files = files
+
 
 class LocalizedFiles(FinalTargetFiles):
     """Sandbox container object for LOCALIZED_FILES, which is a
@@ -1194,12 +1202,16 @@ class GeneratedFile(ContextDerived):
             '.inc',
             '.py',
             '.rs',
-            'node.stub', # To avoid VPATH issues with installing node files: https://bugzilla.mozilla.org/show_bug.cgi?id=1461714#c55
-            'android_apks', # We need to compile Java to generate JNI wrappers for native code compilation to consume.
+            'node.stub',  # To avoid VPATH issues with installing node files:
+                          # https://bugzilla.mozilla.org/show_bug.cgi?id=1461714#c55
+            # We need to compile Java to generate JNI wrappers for native code
+            # compilation to consume.
+            'android_apks',
             '.profdata',
             '.webidl'
         )
-        self.required_for_compile = [f for f in self.outputs if f.endswith(suffixes) or 'stl_wrappers/' in f]
+        self.required_for_compile = [
+            f for f in self.outputs if f.endswith(suffixes) or 'stl_wrappers/' in f]
 
 
 class ChromeManifestEntry(ContextDerived):

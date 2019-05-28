@@ -11,7 +11,6 @@ from __future__ import absolute_import, print_function
 import argparse
 import buildconfig
 import os
-import subprocess
 import sys
 
 from mozpack.copier import Jarrer
@@ -70,7 +69,7 @@ def package_fennec_apk(inputs=[], omni_ja=None,
         if verbose:
             print('Packaging %s from %s' % (path, file.path))
         if not os.path.exists(abspath):
-            raise ValueError('File %s not found (looked for %s)' % \
+            raise ValueError('File %s not found (looked for %s)' %
                              (file.path, abspath))
         if jarrer.contains(path):
             jarrer.remove(path)

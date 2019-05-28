@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 from mozpack.chrome.manifest import (
     Manifest,
@@ -13,7 +13,7 @@ from mozpack.chrome.manifest import (
     ManifestMultiContent,
 )
 from mozpack.errors import errors
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 import mozpack.path as mozpath
 from mozpack.files import ManifestFile
 from mozpack.copier import (

@@ -11,6 +11,7 @@ import shutil
 import sys
 import os
 
+
 def dump_symbols(target, tracking_file, count_ctors=False):
     # Our tracking file, if present, will contain path(s) to the previously generated
     # symbols. Remove them in this case so we don't simply accumulate old symbols
@@ -58,8 +59,9 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     if objcopy:
         os.environ['OBJCOPY'] = objcopy
 
-    args = ([buildconfig.substs['PYTHON'], os.path.join(buildconfig.topsrcdir, 'toolkit',
-                                                       'crashreporter', 'tools', 'symbolstore.py')] +
+    args = ([buildconfig.substs['PYTHON'],
+             os.path.join(buildconfig.topsrcdir, 'toolkit',
+                          'crashreporter', 'tools', 'symbolstore.py')] +
             sym_store_args +
             ['-s', buildconfig.topsrcdir, dump_syms_bin, os.path.join(buildconfig.topobjdir,
                                                                       'dist',
@@ -72,6 +74,7 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     with open(tracking_file, 'w') as fh:
         fh.write(out_files)
         fh.flush()
+
 
 def main(argv):
     parser = argparse.ArgumentParser(

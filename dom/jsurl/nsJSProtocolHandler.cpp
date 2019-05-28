@@ -1106,11 +1106,6 @@ nsJSProtocolHandler::GetProtocolFlags(uint32_t* result) {
             URI_OPENING_EXECUTES_SCRIPT;
   return NS_OK;
 }
-NS_IMETHODIMP
-nsJSProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
-                            nsIURI* aBaseURI, nsIURI** result) {
-  return nsJSProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI, result);
-}
 
 /* static */ nsresult nsJSProtocolHandler::CreateNewURI(const nsACString& aSpec,
                                                         const char* aCharset,
