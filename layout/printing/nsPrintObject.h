@@ -33,9 +33,12 @@ class nsPrintObject {
   nsPrintObject();
   ~nsPrintObject();  // non-virtual
 
-  // Methods
-  nsresult Init(nsIDocShell* aDocShell, mozilla::dom::Document* aDoc,
-                bool aPrintPreview);
+  nsresult InitAsRootObject(nsIDocShell* aDocShell,
+                            mozilla::dom::Document* aDoc,
+                            bool aForPrintPreview);
+  nsresult InitAsNestedObject(nsIDocShell* aDocShell,
+                              mozilla::dom::Document* aDoc,
+                              bool aForPrintPreview, nsPrintObject* aParent);
 
   bool IsPrintable() { return !mDontPrint; }
   void DestroyPresentation();
