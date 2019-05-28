@@ -574,8 +574,7 @@ bool WebRenderBridgeParent::AddExternalImage(
     wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
                                    dSurf->GetFormat());
     aResources.AddExternalImage(aKey, descriptor, aExtId,
-                                wr::WrExternalImageBufferType::ExternalBuffer,
-                                0);
+                                wr::ExternalImageType::Buffer(), 0);
     return true;
   }
 
@@ -705,7 +704,7 @@ bool WebRenderBridgeParent::UpdateExternalImage(
     wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
                                    dSurf->GetFormat());
     aResources.UpdateExternalImageWithDirtyRect(
-        aKey, descriptor, aExtId, wr::WrExternalImageBufferType::ExternalBuffer,
+        aKey, descriptor, aExtId, wr::ExternalImageType::Buffer(),
         wr::ToDeviceIntRect(aDirtyRect), 0);
     return true;
   }
