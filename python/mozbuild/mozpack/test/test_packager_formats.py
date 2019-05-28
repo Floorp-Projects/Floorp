@@ -234,7 +234,7 @@ RESULT_OMNIJAR.update({
             'components/foo.js',
         ), (
             mozpath.relpath(p, 'app')
-            for p in RESULT_FLAT.iterkeys()
+            for p in six.iterkeys(RESULT_FLAT)
             if p.startswith('app/chrome/addons/addon2/')
         ))
     },
