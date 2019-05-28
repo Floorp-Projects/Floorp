@@ -98,6 +98,7 @@
 #include "nsStreamUtils.h"
 #include "nsSocketTransportService2.h"
 #include "nsViewSourceHandler.h"
+#include "nsJARURI.h"
 
 #include "nsResProtocolHandler.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
@@ -1816,6 +1817,14 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
       return NS_ERROR_NOT_AVAILABLE;
     }
     return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (scheme.EqualsLiteral("jar")) {
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(new nsJARURI::Mutator())
+        .Apply(NS_MutatorMethod(&nsIJARURIMutator::SetSpecBaseCharset,
+                                nsCString(aSpec), base, aCharset))
+        .Finalize(aURI);
   }
 
 #ifdef MOZ_WIDGET_GTK
