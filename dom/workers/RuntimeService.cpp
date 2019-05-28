@@ -823,21 +823,19 @@ static bool PreserveWrapper(JSContext* cx, JS::HandleObject obj) {
   return mozilla::dom::TryPreserveWrapper(obj);
 }
 
+static bool IsWorkerDebuggerGlobalOrSandbox(JSObject* aGlobal) {
+  return IsWorkerDebuggerGlobal(aGlobal) || IsWorkerDebuggerSandbox(aGlobal);
+}
+
 JSObject* Wrap(JSContext* cx, JS::HandleObject existing, JS::HandleObject obj) {
   JSObject* targetGlobal = JS::CurrentGlobalOrNull(cx);
-  if (!IsWorkerDebuggerGlobal(targetGlobal) &&
-      !IsWorkerDebuggerSandbox(targetGlobal)) {
-    JS_ReportErrorASCII(
-        cx, "There should be no edges from the debuggee to the debugger.");
-    return nullptr;
-  }
 
   // Note: the JS engine unwraps CCWs before calling this callback.
   JSObject* originGlobal = JS::GetNonCCWObjectGlobal(obj);
 
   const js::Wrapper* wrapper = nullptr;
-  if (IsWorkerDebuggerGlobal(originGlobal) ||
-      IsWorkerDebuggerSandbox(originGlobal)) {
+  if (IsWorkerDebuggerGlobalOrSandbox(targetGlobal) &&
+      IsWorkerDebuggerGlobalOrSandbox(originGlobal)) {
     wrapper = &js::CrossCompartmentWrapper::singleton;
   } else {
     wrapper = &js::OpaqueCrossCompartmentWrapper::singleton;
