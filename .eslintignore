@@ -63,8 +63,15 @@ browser/extensions/pdfjs/content/web**
 # generated or library files in pocket
 browser/components/pocket/content/panels/js/tmpl.js
 browser/components/pocket/content/panels/js/vendor/**
-# Activity Stream has incompatible eslintrc. `npm run lint` from its directory
-browser/components/newtab/**
+
+# Ignore newtab files
+# Kept in sync with browser/components/newtab/.eslintignore
+browser/components/newtab/bin/prerender.js
+browser/components/newtab/data/
+browser/components/newtab/logs/
+browser/components/newtab/prerendered/
+browser/components/newtab/vendor/
+
 # The only file in browser/locales/ is pre-processed.
 browser/locales/**
 # imported from chromium

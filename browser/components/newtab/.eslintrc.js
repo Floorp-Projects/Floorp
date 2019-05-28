@@ -13,11 +13,12 @@ module.exports = {
   },
   "plugins": [
     "import", // require("eslint-plugin-import")
-    "json", // require("eslint-plugin-json")
-    "promise", // require("eslint-plugin-promise")
     "react", // require("eslint-plugin-react")
-    "react-hooks", // require("react-hooks")
-    "fetch-options", // require("eslint-plugin-fetch-options")
+    "jsx-a11y" // require("eslint-plugin-jsx-a11y")
+
+    // Temporarily disabled since they aren't vendored into in mozilla central yet
+    // "react-hooks", // require("react-hooks")
+    // "fetch-options", // require("eslint-plugin-fetch-options")
   ],
   "settings": {
     "react": {
@@ -25,7 +26,9 @@ module.exports = {
     }
   },
   "extends": [
+
     "eslint:recommended",
+    "plugin:jsx-a11y/recommended", // require("eslint-plugin-jsx-a11y")
     "plugin:mozilla/recommended", // require("eslint-plugin-mozilla")
     "plugin:mozilla/browser-test",
     "plugin:mozilla/mochitest-test",
@@ -36,26 +39,36 @@ module.exports = {
     "RPMSendAsyncMessage": true,
     "NewTabPagePreloading": true,
   },
-  "overrides": [{
-    // Use a configuration that's more appropriate for JSMs
-    "files": "**/*.jsm",
-    "parserOptions": {
-      "sourceType": "script"
+  "overrides": [
+    {
+      // These files use fluent-dom to insert content
+      "files": [
+        "content-src/asrouter/templates/OnboardingMessage/**",
+        "content-src/asrouter/templates/Trailhead/**",
+      ],
+      "rules": {
+        "jsx-a11y/anchor-has-content": 0,
+        "jsx-a11y/heading-has-content": 0,
+      }
     },
-    "env": {
-      "node": false
-    },
-    "rules": {
-      "no-implicit-globals": 0
+    {
+      // Use a configuration that's more appropriate for JSMs
+      "files": "**/*.jsm",
+      "parserOptions": {
+        "sourceType": "script"
+      },
+      "env": {
+        "node": false
+      },
+      "rules": {
+        "no-implicit-globals": 0
+      }
     }
-  }],
+  ],
   "rules": {
-    "react-hooks/rules-of-hooks": 2,
+    // "react-hooks/rules-of-hooks": 2,
 
-    "fetch-options/no-fetch-credentials": 2,
-
-    "promise/catch-or-return": 2,
-    "promise/param-names": 2,
+    // "fetch-options/no-fetch-credentials": 2,
 
     "react/jsx-boolean-value": [2, "always"],
     "react/jsx-closing-bracket-location": [2, "after-props"],
