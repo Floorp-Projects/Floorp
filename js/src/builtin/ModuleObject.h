@@ -215,8 +215,10 @@ struct FunctionDeclaration {
   HeapPtr<JSFunction*> fun;
 };
 
+// A vector of function bindings to be instantiated. This can be created in a
+// helper thread zone and so can't use ZoneAllocPolicy.
 using FunctionDeclarationVector =
-    GCVector<FunctionDeclaration, 0, ZoneAllocPolicy>;
+    GCVector<FunctionDeclaration, 0, SystemAllocPolicy>;
 
 // Possible values for ModuleStatus are defined in SelfHostingDefines.h.
 using ModuleStatus = int32_t;
