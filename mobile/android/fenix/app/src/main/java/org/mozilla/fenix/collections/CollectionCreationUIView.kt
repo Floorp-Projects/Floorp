@@ -67,10 +67,6 @@ class CollectionCreationUIView(
             R.layout.component_collection_creation_name_collection
         )
 
-        view.select_all_button.setOnClickListener {
-            actionEmitter.onNext(CollectionCreationAction.SelectAllTapped)
-        }
-
         view.close_icon.apply {
             increaseTapArea(increaseButtonByDps)
             setOnClickListener {
@@ -127,6 +123,19 @@ class CollectionCreationUIView(
             is SaveCollectionStep.SelectTabs -> {
                 back_button.setOnClickListener {
                     actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.SelectTabs))
+                }
+                val allSelected = it.selectedTabs.size == it.tabs.size
+                select_all_button.text =
+                    if (allSelected)
+                        view.context.getString(R.string.create_collection_deselect_all) else
+                        view.context.getString(R.string.create_collection_select_all)
+
+                view.select_all_button.setOnClickListener {
+                    if (allSelected) {
+                        actionEmitter.onNext(CollectionCreationAction.DeselectAllTapped)
+                    } else {
+                        actionEmitter.onNext(CollectionCreationAction.SelectAllTapped)
+                    }
                 }
                 TransitionManager.beginDelayedTransition(
                     view.collection_constraint_layout,

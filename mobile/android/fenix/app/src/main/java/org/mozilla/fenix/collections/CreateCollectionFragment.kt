@@ -114,6 +114,10 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                     getManagedEmitter<CollectionCreationChange>()
                         .onNext(CollectionCreationChange.AddAllTabs)
                 }
+                is CollectionCreationAction.DeselectAllTapped -> {
+                    getManagedEmitter<CollectionCreationChange>()
+                        .onNext(CollectionCreationChange.RemoveAllTabs)
+                }
                 is CollectionCreationAction.AddNewCollection -> getManagedEmitter<CollectionCreationChange>().onNext(
                     CollectionCreationChange.StepChanged(SaveCollectionStep.NameCollection)
                 )

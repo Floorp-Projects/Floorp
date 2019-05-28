@@ -36,6 +36,7 @@ data class CollectionCreationState(
 sealed class CollectionCreationChange : Change {
     data class TabListChange(val tabs: List<Tab>) : CollectionCreationChange()
     object AddAllTabs : CollectionCreationChange()
+    object RemoveAllTabs : CollectionCreationChange()
     data class TabAdded(val tab: Tab) : CollectionCreationChange()
     data class TabRemoved(val tab: Tab) : CollectionCreationChange()
     data class StepChanged(val saveCollectionStep: SaveCollectionStep) : CollectionCreationChange()
@@ -45,6 +46,7 @@ sealed class CollectionCreationChange : Change {
 sealed class CollectionCreationAction : Action {
     object Close : CollectionCreationAction()
     object SelectAllTapped : CollectionCreationAction()
+    object DeselectAllTapped : CollectionCreationAction()
     object AddNewCollection : CollectionCreationAction()
     data class AddTabToSelection(val tab: Tab) : CollectionCreationAction()
     data class RemoveTabFromSelection(val tab: Tab) : CollectionCreationAction()
@@ -95,6 +97,7 @@ class CollectionCreationViewModel(
             { state, change ->
                 when (change) {
                     is CollectionCreationChange.AddAllTabs -> state.copy(selectedTabs = state.tabs.toSet())
+                    is CollectionCreationChange.RemoveAllTabs -> state.copy(selectedTabs = setOf())
                     is CollectionCreationChange.TabListChange -> state.copy(tabs = change.tabs)
                     is CollectionCreationChange.TabAdded -> {
                         val selectedTabs = state.selectedTabs + setOf(change.tab)
