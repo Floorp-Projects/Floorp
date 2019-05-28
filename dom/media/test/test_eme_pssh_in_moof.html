@@ -10,64 +10,62 @@
   </head>
 
   <body>
-    <video controls id="video"></video>
-    <div id="log"></div>
     <script class="testbody" type="text/javascript">
+    let manager = new MediaTestManager;
 
-      SimpleTest.waitForExplicitFinish();
+    let psshTests = [
+      { name: "bear-640x360-cenc-key-rotation",
+        tracks : [
+          {
+            name: "video",
+            type: "video/mp4; codecs=\"avc1.64000d\"",
+            fragments: ["bear-640x360-v_frag-cenc-key_rotation.mp4"],
+            initDatas: 6
+          },
+          {
+            name: "audio",
+            type: "audio/mp4; codecs=\"mp4a.40.2\"",
+            fragments: ["bear-640x360-a_frag-cenc-key_rotation.mp4"],
+            initDatas: 7
+          }
+        ],
+        keys : {
+          "30313233343536373839303132333435" :
+            "ebdd62f16814d27b68ef122afce4ae3c"
+        }
+      }
+    ];
 
-      function e(id) {
-        return document.getElementById(id);
+    // Specialized create media keys function, since the one in eme.js relies
+    // on listening for encrypted events, and we want to manage those
+    // ourselves within this test.
+    async function createAndSetMediaKeys(video, test, token) {
+      function streamType(type) {
+        var x = test.tracks.find(o => o.name == type);
+        return x ? x.type : undefined;
       }
 
-      function log(msg) {
-        var log_pane = e('log');
-        log_pane.appendChild(document.createTextNode(msg));
-        log_pane.appendChild(document.createElement("br"));
+      var configuration = { initDataTypes: ["cenc"] };
+      if (streamType("video")) {
+        configuration.videoCapabilities = [{contentType: streamType("video")}];
       }
-
-      function DownloadMedia(url, type, mediaSource) {
-        return new Promise((resolve, reject) => {
-          var sourceBuffer = mediaSource.addSourceBuffer(type);
-          fetch(url)
-          .then((response) => { return response.arrayBuffer(); })
-          .then((arrayBuffer) => {
-            once(sourceBuffer, "updateend", resolve);
-            sourceBuffer.appendBuffer(arrayBuffer);
-          });
-        });
+      if (streamType("audio")) {
+        configuration.audioCapabilities = [{contentType: streamType("audio")}];
       }
+      let keySystemAccess = await navigator.requestMediaKeySystemAccess(
+        "org.w3.clearkey", [configuration]);
+      let mediaKeys = await keySystemAccess.createMediaKeys();
+      return video.setMediaKeys(mediaKeys);
+    }
 
-      function LoadMSE(video, tracks) {
-        var ms = new MediaSource();
-        video.src = URL.createObjectURL(ms);
-        once(ms, "sourceopen", () => {
-          Promise.all(tracks.map(track => DownloadMedia(track.url, track.type, ms)))
-            .then(() => {
-              ms.endOfStream();
-            })
-        });
-      }
+    function startTest(test, token) {
+      manager.started(token);
+      let video = document.createElement("video");
+      document.body.appendChild(video);
 
-      function CreateMediaKeys(video, configurations) {
-        return navigator.requestMediaKeySystemAccess("org.w3.clearkey", configurations)
-          .then((keySystemAccess) => {
-            return keySystemAccess.createMediaKeys();
-          }, bail("Failed to request key system access."))
+      let encryptedEventCount = 0;
 
-          .then((mediaKeys) => {
-            video.mediaKeys = mediaKeys;
-            return video.setMediaKeys(mediaKeys);
-          }, bail("Failed to set media keys."));
-      }
-
-      var encryptedEventCount = 0;
-
-      var initDatas = new Map();
-
-      var keys = {
-        "30313233343536373839303132333435" : "ebdd62f16814d27b68ef122afce4ae3c"
-      };
+      let initDatas = new Map();
 
       function handleEncrypted(event) {
         // We get one 'encrypted' event for every run of contiguous PSSH boxes
@@ -77,65 +75,42 @@
         // data is also repeated.
         encryptedEventCount++;
 
-        var hexStr = StringToHex(new TextDecoder().decode(event.initData));
+        let hexStr = StringToHex(new TextDecoder().decode(event.initData));
         if (initDatas.has(hexStr)) {
           // Already have a session for this.
           return;
         }
-        initDatas.set(hexStr, session);
 
-        var initData = new Uint8Array(event.initData);
-        log("encrypted event => len=" + initData.length + " " + hexStr);
-        var session = event.target.mediaKeys.createSession();
-        session.addEventListener("message", function(event) {
-          event.target.update(GenerateClearKeyLicense(event.message, keys));
+        let initData = new Uint8Array(event.initData);
+        Log(token, "encrypted event => len=" + initData.length + " " + hexStr);
+        let session = event.target.mediaKeys.createSession();
+        initDatas.set(hexStr, session);
+        session.addEventListener("message", event => {
+          event.target.update(
+            GenerateClearKeyLicense(event.message, test.keys));
         });
 
         session.generateRequest(event.initDataType, event.initData);
       }
 
-      const videoContentType = "video/mp4; codecs=\"avc1.64000d\"";
-      const audioContentType = "audio/mp4; codecs=\"mp4a.40.2\"";
-
-      var tracks = [
-        {
-          type: videoContentType,
-          url: "bear-640x360-v_frag-cenc-key_rotation.mp4",
-          initDatas: 6,
-        },
-        {
-          type: audioContentType,
-          url: "bear-640x360-a_frag-cenc-key_rotation.mp4",
-          initDatas: 7,
-        }
-      ];
-
-      var configurations = [{
-        initDataTypes: ["cenc"],
-        audioCapabilities: [{
-          contentType: audioContentType
-        }],
-        videoCapabilities: [{
-          contentType: videoContentType
-        }]
-      }];
-
-      var video = document.getElementById("video");
-
       video.addEventListener("encrypted", handleEncrypted, false);
 
-      video.addEventListener("ended", ()=>{
-        var expectedEncryptedEvents = tracks.reduce((sum, track) => sum += track.initDatas, 0);
-        is(encryptedEventCount, expectedEncryptedEvents, "Should get one 'encrypted' event per run of contiguous PSSH boxes in media.");
-        SimpleTest.finish();
+      video.addEventListener("ended", () => {
+        let expectedEncryptedEvents =
+          test.tracks.reduce((sum, track) => sum += track.initDatas, 0);
+        is(encryptedEventCount, expectedEncryptedEvents,
+           "Should get one 'encrypted' event per run of contiguous PSSH " +
+           "boxes in media.");
+        manager.finished(token);
       });
 
       video.autoplay = true;
 
-      CreateMediaKeys(video, configurations)
-      .then(()=>{
-        LoadMSE(video, tracks);
-      });
+      createAndSetMediaKeys(video, test, token)
+        .then(() => LoadTest(test, video, token))
+    }
+
+    manager.runTests(psshTests, startTest);
 
     </script>
   </body>
