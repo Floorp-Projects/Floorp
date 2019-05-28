@@ -22,6 +22,7 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/layers/SyncObject.h"
+#include "mozilla/PerfStats.h"
 #include "ClientReadbackLayer.h"  // for ClientReadbackLayer
 #include "nsAString.h"
 #include "nsDisplayList.h"
@@ -278,6 +279,7 @@ bool ClientLayerManager::EndTransactionInternal(
 
   PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Rasterization);
   AUTO_PROFILER_TRACING("Paint", "Rasterize", GRAPHICS);
+  PerfStats::AutoMetricRecording<PerfStats::Metric::Rasterizing> autoRecording;
 
   Maybe<TimeStamp> startTime;
   if (StaticPrefs::LayersDrawFPS()) {
