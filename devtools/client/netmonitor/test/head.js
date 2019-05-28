@@ -78,6 +78,7 @@ const SEND_BEACON_URL = EXAMPLE_URL + "html_send-beacon.html";
 const CORS_URL = EXAMPLE_URL + "html_cors-test-page.html";
 const PAUSE_URL = EXAMPLE_URL + "html_pause-test-page.html";
 const OPEN_REQUEST_IN_TAB_URL = EXAMPLE_URL + "html_open-request-in-tab.html";
+const CSP_URL = EXAMPLE_URL + "html_csp-test-page.html";
 
 const SIMPLE_SJS = EXAMPLE_URL + "sjs_simple-test-server.sjs";
 const SIMPLE_UNSORTED_COOKIES_SJS = EXAMPLE_URL + "sjs_simple-unsorted-cookies-test-server.sjs";

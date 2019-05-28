@@ -298,24 +298,6 @@ BaseWebSocketChannel::GetProtocolFlags(uint32_t* aProtocolFlags) {
 }
 
 NS_IMETHODIMP
-BaseWebSocketChannel::NewURI(const nsACString& aSpec,
-                             const char* aOriginCharset, nsIURI* aBaseURI,
-                             nsIURI** _retval) {
-  LOG(("BaseWebSocketChannel::NewURI() %p\n", this));
-
-  int32_t port;
-  nsresult rv = GetDefaultPort(&port);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIURI> base(aBaseURI);
-  return NS_MutateURI(new nsStandardURL::Mutator())
-      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                              nsIStandardURL::URLTYPE_AUTHORITY, port,
-                              nsCString(aSpec), aOriginCharset, base, nullptr))
-      .Finalize(_retval);
-}
-
-NS_IMETHODIMP
 BaseWebSocketChannel::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                  nsIChannel** outChannel) {
   LOG(("BaseWebSocketChannel::NewChannel() %p\n", this));

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import importlib
 import os
@@ -187,9 +187,9 @@ def setup(app):
     # properly. We leverage the in-tree virtualenv for this.
     topsrcdir = manager.topsrcdir
     ve = VirtualenvManager(topsrcdir,
-        os.path.join(topsrcdir, 'dummy-objdir'),
-        os.path.join(app.outdir, '_venv'),
-        sys.stderr,
-        os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
+                           os.path.join(topsrcdir, 'dummy-objdir'),
+                           os.path.join(app.outdir, '_venv'),
+                           sys.stderr,
+                           os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'))
     ve.ensure()
     ve.activate()

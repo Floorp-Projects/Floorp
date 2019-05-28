@@ -80,7 +80,6 @@ from mozbuild.base import ExecutionSummary
 from concurrent.futures.process import ProcessPoolExecutor
 
 
-
 if sys.version_info.major == 2:
     text_type = unicode
     type_type = types.TypeType
@@ -106,6 +105,7 @@ class EmptyConfig(object):
         This variation is needed because CONFIG uses .get() to access members.
         Without it, None (instead of our EmptyValue types) would be returned.
         """
+
         def get(self, key, default=None):
             return self[key]
 
@@ -182,6 +182,7 @@ class MozbuildSandbox(Sandbox):
     metadata is a dict of metadata that can be used during the sandbox
     evaluation.
     """
+
     def __init__(self, context, metadata={}, finder=default_finder):
         assert isinstance(context, Context)
 
@@ -241,7 +242,7 @@ class MozbuildSandbox(Sandbox):
         # protection, so it is omitted.
         if not is_read_allowed(path, self._context.config):
             raise SandboxLoadError(self._context.source_stack,
-                sys.exc_info()[2], illegal_path=path)
+                                   sys.exc_info()[2], illegal_path=path)
 
         Sandbox.exec_file(self, path)
 
@@ -290,14 +291,14 @@ class MozbuildSandbox(Sandbox):
 
         if not inspect.isfunction(func):
             raise Exception('`template` is a function decorator. You must '
-                'use it as `@template` preceding a function declaration.')
+                            'use it as `@template` preceding a function declaration.')
 
         name = func.func_name
 
         if name in self.templates:
             raise KeyError(
                 'A template named "%s" was already declared in %s.' % (name,
-                self.templates[name].path))
+                                                                       self.templates[name].path))
 
         if name.islower() or name.isupper() or name[0].islower():
             raise NameError('Template function names must be CamelCase.')
@@ -320,6 +321,7 @@ class MozbuildSandbox(Sandbox):
         The wrapper function does type coercion on the function arguments
         """
         func, args_def, doc = function_def
+
         def function(*args):
             def coerce(arg, type):
                 if not isinstance(arg, type):
@@ -416,7 +418,7 @@ class TemplateFunction(object):
         # actually never calls __getitem__ and __setitem__, so we need to
         # modify the AST so that accesses to globals are properly directed
         # to a dict.
-        self._global_name = b'_data' # AST wants str for this, not unicode
+        self._global_name = b'_data'  # AST wants str for this, not unicode
         # In case '_data' is a name used for a variable in the function code,
         # prepend more underscores until we find an unused name.
         while (self._global_name in code.co_names or
@@ -463,6 +465,7 @@ class TemplateFunction(object):
         """AST Node Transformer to rewrite variable accesses to go through
         a dict.
         """
+
         def __init__(self, sandbox, global_name):
             self._sandbox = sandbox
             self._global_name = global_name
@@ -491,6 +494,7 @@ class TemplateFunction(object):
 
 class SandboxValidationError(Exception):
     """Represents an error encountered when validating sandbox results."""
+
     def __init__(self, message, context):
         Exception.__init__(self, message)
         self.context = context
@@ -532,9 +536,10 @@ class BuildReaderError(Exception):
     MozbuildSandbox has over Sandbox (e.g. the concept of included files -
     which affect error messages, of course).
     """
+
     def __init__(self, file_stack, trace, sandbox_exec_error=None,
-        sandbox_load_error=None, validation_error=None, other_error=None,
-        sandbox_called_error=None):
+                 sandbox_load_error=None, validation_error=None, other_error=None,
+                 sandbox_called_error=None):
 
         self.file_stack = file_stack
         self.trace = trace
@@ -559,7 +564,7 @@ class BuildReaderError(Exception):
                 return self.file_stack[-2]
 
         if self.sandbox_error is not None and \
-            len(self.sandbox_error.file_stack):
+                len(self.sandbox_error.file_stack):
             return self.sandbox_error.file_stack[-1]
 
         return self.file_stack[-1]
@@ -602,7 +607,7 @@ class BuildReaderError(Exception):
             s.write('\n')
 
             for l in traceback.format_exception(type(self.other), self.other,
-                self.trace):
+                                                self.trace):
                 s.write(unicode(l))
 
         return s.getvalue()
@@ -760,7 +765,7 @@ class BuildReaderError(Exception):
 
             if inner.args[2] in DEPRECATION_HINTS:
                 s.write('%s\n' %
-                    textwrap.dedent(DEPRECATION_HINTS[inner.args[2]]).strip())
+                        textwrap.dedent(DEPRECATION_HINTS[inner.args[2]]).strip())
                 return
 
             s.write('Please change the file to not use this variable.\n')
@@ -802,7 +807,7 @@ class BuildReaderError(Exception):
             s.write('    %s\n' % inner.args[4].__name__)
         else:
             for t in inner.args[4]:
-                s.write( '    %s\n' % t.__name__)
+                s.write('    %s\n' % t.__name__)
         s.write('\n')
         s.write('Change the file to write a value of the appropriate type ')
         s.write('and try again.\n')
@@ -1053,23 +1058,23 @@ class BuildReader(object):
 
         except SandboxCalledError as sce:
             raise BuildReaderError(list(self._execution_stack),
-                sys.exc_info()[2], sandbox_called_error=sce)
+                                   sys.exc_info()[2], sandbox_called_error=sce)
 
         except SandboxExecutionError as se:
             raise BuildReaderError(list(self._execution_stack),
-                sys.exc_info()[2], sandbox_exec_error=se)
+                                   sys.exc_info()[2], sandbox_exec_error=se)
 
         except SandboxLoadError as sle:
             raise BuildReaderError(list(self._execution_stack),
-                sys.exc_info()[2], sandbox_load_error=sle)
+                                   sys.exc_info()[2], sandbox_load_error=sle)
 
         except SandboxValidationError as ve:
             raise BuildReaderError(list(self._execution_stack),
-                sys.exc_info()[2], validation_error=ve)
+                                   sys.exc_info()[2], validation_error=ve)
 
         except Exception as e:
             raise BuildReaderError(list(self._execution_stack),
-                sys.exc_info()[2], other_error=e)
+                                   sys.exc_info()[2], other_error=e)
 
     def _read_mozbuild(self, path, config, descend, metadata):
         path = mozpath.normpath(path)
@@ -1127,7 +1132,7 @@ class BuildReader(object):
             for v in ('input', 'variables'):
                 if not getattr(gyp_dir, v):
                     raise SandboxValidationError('Missing value for '
-                        'GYP_DIRS["%s"].%s' % (target_dir, v), context)
+                                                 'GYP_DIRS["%s"].%s' % (target_dir, v), context)
 
             # The make backend assumes contexts for sub-directories are
             # emitted after their parent, so accumulate the gyp contexts.
@@ -1140,7 +1145,7 @@ class BuildReader(object):
                 source = SourcePath(context, s)
                 if not self.finder.get(source.full_path):
                     raise SandboxValidationError('Cannot find %s.' % source,
-                        context)
+                                                 context)
                 non_unified_sources.add(source)
             action_overrides = {}
             for action, script in gyp_dir.action_overrides.iteritems():
@@ -1189,7 +1194,7 @@ class BuildReader(object):
             if not is_read_allowed(child_path, context.config):
                 raise SandboxValidationError(
                     'Attempting to process file outside of allowed paths: %s' %
-                        child_path, context)
+                    child_path, context)
 
             if not descend:
                 continue
@@ -1283,6 +1288,7 @@ class BuildReader(object):
         # Exporting doesn't work reliably in tree traversal mode. Override
         # the function to no-op.
         functions = dict(FUNCTIONS)
+
         def export(sandbox):
             return lambda varname: None
         functions['export'] = tuple([export] + list(FUNCTIONS['export'][1:]))
@@ -1337,6 +1343,7 @@ class BuildReader(object):
         # times (once for every path in a directory that doesn't have any
         # test metadata). So, we cache the function call.
         defaults_cache = {}
+
         def test_defaults_for_path(ctxs):
             key = tuple(ctx.current_path or ctx.main_path for ctx in ctxs)
 
@@ -1394,7 +1401,8 @@ class BuildReader(object):
         test_manifest_contexts = set(
             ['%s_MANIFESTS' % key for key in TEST_MANIFESTS] +
             ['%s_MANIFESTS' % flavor.upper() for flavor in REFTEST_FLAVORS] +
-            ['%s_MANIFESTS' % flavor.upper().replace('-', '_') for flavor in WEB_PLATFORM_TESTS_FLAVORS]
+            ['%s_MANIFESTS' % flavor.upper().replace('-', '_')
+             for flavor in WEB_PLATFORM_TESTS_FLAVORS]
         )
 
         result_context = Files(Context())

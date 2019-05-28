@@ -290,3 +290,23 @@ async function step(dbg, stepType) {
   return waitForPaused(dbg);
 }
 exports.step = step;
+
+async function hoverOnToken(dbg, cx, textToWaitFor, textToHover) {
+  await waitForText(dbg, null, textToWaitFor);
+  const tokenElement = [
+    ...dbg.win.document.querySelectorAll(".CodeMirror span"),
+  ].find(el => el.textContent === "window");
+
+  const mouseOverEvent = new dbg.win.MouseEvent("mouseover", {
+    bubbles: true,
+    cancelable: true,
+    view: dbg.win,
+  });
+  tokenElement.dispatchEvent(mouseOverEvent);
+
+  const setPreviewDispatch = waitForDispatch(dbg, "SET_PREVIEW");
+  const tokenPosition = { line: 21, column: 3 };
+  dbg.actions.updatePreview(cx, tokenElement, tokenPosition, getCM(dbg));
+  await setPreviewDispatch;
+}
+exports.hoverOnToken = hoverOnToken;

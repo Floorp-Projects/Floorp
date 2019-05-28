@@ -62,6 +62,10 @@
 #include "nsContentUtils.h"
 #include "nsExceptionHandler.h"
 
+#ifdef MOZ_WIDGET_GTK
+#  include "nsGIOProtocolHandler.h"
+#endif
+
 namespace mozilla {
 namespace net {
 
@@ -708,24 +712,14 @@ nsIOService::GetProtocolHandler(const char* scheme,
     }
 
 #ifdef MOZ_WIDGET_GTK
-    // check to see whether GVFS can handle this URI scheme.  if it can
-    // create a nsIURI for the "scheme:", then we assume it has support for
-    // the requested protocol.  otherwise, we failover to using the default
-    // protocol handler.
+    // check to see whether GVFS can handle this URI scheme. otherwise, we
+    // failover to using the default protocol handler.
 
-    rv =
-        CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-gio", result);
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoCString spec(scheme);
-      spec.Append(':');
-
-      nsCOMPtr<nsIURI> uri;
-      rv = (*result)->NewURI(spec, nullptr, nullptr, getter_AddRefs(uri));
-      if (NS_SUCCEEDED(rv)) {
-        return rv;
-      }
-
-      NS_RELEASE(*result);
+    RefPtr<nsGIOProtocolHandler> gioHandler =
+        nsGIOProtocolHandler::GetSingleton();
+    if (gioHandler->IsSupportedProtocol(nsCString(scheme))) {
+      gioHandler.forget(result);
+      return NS_OK;
     }
 #endif
   }
@@ -802,34 +796,7 @@ class AutoIncrement {
 
 nsresult nsIOService::NewURI(const nsACString& aSpec, const char* aCharset,
                              nsIURI* aBaseURI, nsIURI** result) {
-  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
-
-  static uint32_t recursionCount = 0;
-  if (recursionCount >= MAX_RECURSION_COUNT) return NS_ERROR_MALFORMED_URI;
-  AutoIncrement inc(&recursionCount);
-
-  nsAutoCString scheme;
-  nsresult rv = ExtractScheme(aSpec, scheme);
-  if (NS_FAILED(rv)) {
-    // then aSpec is relative
-    if (!aBaseURI) return NS_ERROR_MALFORMED_URI;
-
-    if (!aSpec.IsEmpty() && aSpec[0] == '#') {
-      // Looks like a reference instead of a fully-specified URI.
-      // --> initialize |uri| as a clone of |aBaseURI|, with ref appended.
-      return NS_GetURIWithNewRef(aBaseURI, aSpec, result);
-    }
-
-    rv = aBaseURI->GetScheme(scheme);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  // now get the handler for this scheme
-  nsCOMPtr<nsIProtocolHandler> handler;
-  rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
-  if (NS_FAILED(rv)) return rv;
-
-  return handler->NewURI(aSpec, aCharset, aBaseURI, result);
+  return NS_NewURI(result, aSpec, aCharset, aBaseURI, nullptr);
 }
 
 NS_IMETHODIMP
