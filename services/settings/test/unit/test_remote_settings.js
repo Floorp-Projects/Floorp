@@ -20,6 +20,9 @@ let client;
 let clientWithDump;
 
 async function clear_state() {
+  client.verifySignature = false;
+  clientWithDump.verifySignature = false;
+
   // Clear local DB.
   const collection = await client.openCollection();
   await collection.clear();
@@ -45,11 +48,10 @@ function run_test() {
   Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${server.identity.primaryPort}/v1`);
 
-  client = RemoteSettings("password-fields");
-  client.verifySignature = false;
+  Services.prefs.setCharPref("services.settings.loglevel", "debug");
 
+  client = RemoteSettings("password-fields");
   clientWithDump = RemoteSettings("language-dictionaries");
-  clientWithDump.verifySignature = false;
 
   server.registerPathHandler("/v1/", handleResponse);
   server.registerPathHandler("/v1/buckets/monitor/collections/changes/records", handleResponse);
@@ -65,6 +67,7 @@ function run_test() {
     server.stop(() => { });
   });
 }
+add_task(clear_state);
 
 add_task(async function test_records_obtained_from_server_are_stored_in_db() {
   // Test an empty db populates
@@ -599,7 +602,7 @@ function getSampleResponse(req, port) {
     },
     "GET:/fake-x5u": {
       "sampleHeaders": [
-        "Content-Type: /octet-stream",
+        "Content-Type: application/octet-stream",
       ],
       "status": { status: 200, statusText: "OK" },
       "responseBody": `-----BEGIN CERTIFICATE-----
