@@ -66,5 +66,7 @@ PYTHON_UNITTEST_MANIFESTS += [
 if CONFIG['MOZ_BUILD_APP']:
     PYTHON_UNITTEST_MANIFESTS += [
         'mozbuild/mozbuild/test/python.ini',
+        'mozbuild/mozbuild/test/python2.ini',
         'mozbuild/mozpack/test/python.ini',
+        'mozbuild/mozpack/test/python2.ini',
     ]
