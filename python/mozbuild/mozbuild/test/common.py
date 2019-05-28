@@ -46,7 +46,7 @@ class MockConfig(object):
                  topsrcdir='/path/to/topsrcdir',
                  extra_substs={},
                  error_is_fatal=True,
-             ):
+                 ):
         self.topsrcdir = mozpath.abspath(topsrcdir)
         self.topobjdir = mozpath.abspath('/path/to/topobjdir')
 

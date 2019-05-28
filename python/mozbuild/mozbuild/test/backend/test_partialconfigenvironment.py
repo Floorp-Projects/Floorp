@@ -82,7 +82,8 @@ class TestPartial(unittest.TestCase):
         self.assertTrue(os.path.exists(path))
 
     def _assert_deps(self, env, deps):
-        deps = sorted(['$(wildcard %s)' % (mozpath.join(env.topobjdir, 'config.statusd', d)) for d in deps])
+        deps = sorted(['$(wildcard %s)' %
+                       (mozpath.join(env.topobjdir, 'config.statusd', d)) for d in deps])
         self.assertEqual(sorted(env.get_dependencies()), deps)
 
     def test_dependencies(self):
@@ -107,7 +108,8 @@ class TestPartial(unittest.TestCase):
 
         with self.assertRaises(KeyError):
             x = env.substs['NON_EXISTENT']
-        self._assert_deps(env, ['defines/MOZ_FOO', 'defines/MOZ_BAR', 'substs/MOZ_SUBST_1', 'substs/NON_EXISTENT'])
+        self._assert_deps(env, ['defines/MOZ_FOO', 'defines/MOZ_BAR',
+                                'substs/MOZ_SUBST_1', 'substs/NON_EXISTENT'])
         self.assertEqual(env.substs.get('NON_EXISTENT'), None)
 
     def test_set_subst(self):
@@ -158,6 +160,7 @@ class TestPartial(unittest.TestCase):
         mydefines.update(env.defines.iteritems())
         self.assertEqual(mydefines['DEBUG'], '1')
         self.assertEqual(mydefines['MOZ_FOO'], '1')
+
 
 if __name__ == "__main__":
     main()

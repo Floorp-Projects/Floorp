@@ -22,6 +22,7 @@ def _tokens2re(**tokens):
     # backslash, captured in the "escape" match group.
     return re.compile('(?:%s|%s)' % (nonescaped, r'(?P<escape>\\\\)'))
 
+
 UNQUOTED_TOKENS_RE = _tokens2re(
   whitespace=r'[\t\r\n ]+',
   quote=r'[\'"]',
@@ -54,6 +55,7 @@ class _ClineSplitter(object):
     Parses a given command line string and creates a list of command
     and arguments, with wildcard expansion.
     '''
+
     def __init__(self, cline):
         self.arg = None
         self.cline = cline

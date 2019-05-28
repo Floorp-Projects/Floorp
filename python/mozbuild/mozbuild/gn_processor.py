@@ -78,7 +78,8 @@ class MozbuildWriter(object):
             self.write('\n')
             self.write(self.indent + key)
             self.write(' += [\n    ' + self.indent)
-            self.write((',\n    ' + self.indent).join(alphabetical_sorted(self.mb_serialize(v) for v in value)))
+            self.write(
+                (',\n    ' + self.indent).join(alphabetical_sorted(self.mb_serialize(v) for v in value)))
             self.write('\n')
             self.write_ln(']')
 
@@ -111,7 +112,6 @@ class MozbuildWriter(object):
 
                 if not wrote_ln:
                     self.write_ln("%s[%s] = %s" % subst_vals)
-
 
     def write_condition(self, values):
         def mk_condition(k, v):

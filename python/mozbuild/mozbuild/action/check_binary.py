@@ -280,12 +280,13 @@ def check_networking(binary):
         s = 'TEST-UNEXPECTED-FAIL | check_networking | {} | Identified {} ' + \
             'networking function(s) being imported in the rust static library ({})'
         print(s.format(basename, len(bad_occurences_names),
-            ",".join(sorted(bad_occurences_names))),
-            file=sys.stderr)
+                       ",".join(sorted(bad_occurences_names))),
+              file=sys.stderr)
         retcode = 1
     elif buildconfig.substs.get('MOZ_AUTOMATION'):
         print('TEST-PASS | check_networking | {}'.format(basename))
     return retcode
+
 
 def checks(target, binary):
     # The clang-plugin is built as target but is really a host binary.
@@ -345,7 +346,7 @@ def main(args):
 
     if options.networking and options.host:
         print('--networking is only valid with --target',
-               file=sys.stderr)
+              file=sys.stderr)
         return 1
 
     if options.networking:

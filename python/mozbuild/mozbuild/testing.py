@@ -72,10 +72,12 @@ REFTEST_FLAVORS = ('crashtest', 'reftest')
 # Web platform tests have their own manifest format and are processed separately.
 WEB_PLATFORM_TESTS_FLAVORS = ('web-platform-tests',)
 
+
 def all_test_flavors():
     return ([v[0] for v in TEST_MANIFESTS.values()] +
             list(REFTEST_FLAVORS) +
             list(WEB_PLATFORM_TESTS_FLAVORS))
+
 
 class TestInstallInfo(object):
     def __init__(self):
@@ -92,6 +94,7 @@ class TestInstallInfo(object):
         self.deferred_installs |= other.deferred_installs
         return self
 
+
 class SupportFilesConverter(object):
     """Processes a "support-files" entry from a test object, either from
     a parsed object from a test manifests or its representation in
@@ -101,6 +104,7 @@ class SupportFilesConverter(object):
     effect, and the structure of the parsed objects from manifests will have a
     lot of repeated entries, so this class takes care of memoizing.
     """
+
     def __init__(self):
         self._fields = (('head', set()),
                         ('support-files', set()),
@@ -179,6 +183,7 @@ class SupportFilesConverter(object):
                     info.installs.append((full, mozpath.normpath(dest_path)))
         return info
 
+
 def _resolve_installs(paths, topobjdir, manifest):
     """Using the given paths as keys, find any unresolved installs noted
     by the build backend corresponding to those keys, and add them
@@ -192,9 +197,9 @@ def _resolve_installs(paths, topobjdir, manifest):
         path = path[2:]
         if path not in resolved_installs:
             raise Exception('A cross-directory support file path noted in a '
-                'test manifest does not appear in any other manifest.\n "%s" '
-                'must appear in another test manifest to specify an install '
-                'for "!/%s".' % (path, path))
+                            'test manifest does not appear in any other manifest.\n "%s" '
+                            'must appear in another test manifest to specify an install '
+                            'for "!/%s".' % (path, path))
         installs = resolved_installs[path]
         for install_info in installs:
             try:
@@ -294,12 +299,14 @@ def read_manifestparser_manifest(context, manifest_path):
                                        finder=context._finder,
                                        handle_defaults=False)
 
+
 def read_reftest_manifest(context, manifest_path):
     import reftest
     path = manifest_path.full_path
     manifest = reftest.ReftestManifest(finder=context._finder)
     manifest.load(path)
     return manifest
+
 
 def read_wpt_manifest(context, paths):
     manifest_path, tests_root = paths

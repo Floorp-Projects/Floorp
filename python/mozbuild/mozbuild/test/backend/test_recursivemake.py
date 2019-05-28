@@ -59,9 +59,10 @@ class TestRecursiveMakeTraversal(unittest.TestCase):
         traversal.add('X')
 
         parallels = set(('G', 'H', 'I', 'J', 'O', 'P', 'Q', 'R', 'U'))
+
         def filter(current, subdirs):
             return (current, [d for d in subdirs.dirs if d in parallels],
-                [d for d in subdirs.dirs if d not in parallels])
+                    [d for d in subdirs.dirs if d not in parallels])
 
         start, deps = traversal.compute_dependencies(filter)
         self.assertEqual(start, ('X',))
@@ -95,8 +96,8 @@ class TestRecursiveMakeTraversal(unittest.TestCase):
 
         self.assertEqual(list(traversal.traverse('', filter)),
                          ['', 'A', 'B', 'E', 'F', 'C', 'G', 'H', 'D', 'I',
-                         'M', 'N', 'T', 'J', 'O', 'P', 'U', 'K', 'Q', 'R',
-                         'V', 'L', 'S', 'W', 'X'])
+                          'M', 'N', 'T', 'J', 'O', 'P', 'U', 'K', 'Q', 'R',
+                          'V', 'L', 'S', 'W', 'X'])
 
         self.assertEqual(list(traversal.traverse('C', filter)),
                          ['C', 'G', 'H'])
@@ -191,14 +192,15 @@ class TestRecursiveMakeTraversal(unittest.TestCase):
             'J': ('',),
         })
 
+
 class TestRecursiveMakeBackend(BackendTester):
     def test_basic(self):
         """Ensure the RecursiveMakeBackend works without error."""
         env = self._consume('stub0', RecursiveMakeBackend)
         self.assertTrue(os.path.exists(mozpath.join(env.topobjdir,
-            'backend.RecursiveMakeBackend')))
+                                                    'backend.RecursiveMakeBackend')))
         self.assertTrue(os.path.exists(mozpath.join(env.topobjdir,
-            'backend.RecursiveMakeBackend.in')))
+                                                    'backend.RecursiveMakeBackend.in')))
 
     def test_output_files(self):
         """Ensure proper files are generated."""
@@ -385,7 +387,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         # EXPORTS files should appear in the dist_include install manifest.
         m = InstallManifest(path=mozpath.join(env.topobjdir,
-            '_build_manifests', 'install', 'dist_include'))
+                                              '_build_manifests', 'install', 'dist_include'))
         self.assertEqual(len(m), 7)
         self.assertIn('foo.h', m)
         self.assertIn('mozilla/mozilla1.h', m)
@@ -567,7 +569,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         # EXPORTS files should appear in the dist_include install manifest.
         m = InstallManifest(path=mozpath.join(env.topobjdir,
-            '_build_manifests', 'install', 'dist_include'))
+                                              '_build_manifests', 'install', 'dist_include'))
         self.assertEqual(len(m), 8)
         self.assertIn('foo.h', m)
         self.assertIn('mozilla/mozilla1.h', m)
@@ -605,7 +607,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         # RESOURCE_FILES should appear in the dist_bin install manifest.
         m = InstallManifest(path=os.path.join(env.topobjdir,
-            '_build_manifests', 'install', 'dist_bin'))
+                                              '_build_manifests', 'install', 'dist_bin'))
         self.assertEqual(len(m), 10)
         self.assertIn('res/foo.res', m)
         self.assertIn('res/fonts/font1.ttf', m)
@@ -637,7 +639,7 @@ class TestRecursiveMakeBackend(BackendTester):
         """Pattern matches in test manifests' support-files should be recorded."""
         env = self._consume('test-manifests-written', RecursiveMakeBackend)
         m = InstallManifest(path=mozpath.join(env.topobjdir,
-            '_build_manifests', 'install', '_test_files'))
+                                              '_build_manifests', 'install', '_test_files'))
 
         # This is not the most robust test in the world, but it gets the job
         # done.
@@ -690,7 +692,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         # Install manifests should contain entries.
         install_dir = mozpath.join(env.topobjdir, '_build_manifests',
-            'install')
+                                   'install')
         self.assertTrue(os.path.isfile(mozpath.join(install_dir, 'xpidl')))
 
         m = InstallManifest(path=mozpath.join(install_dir, 'xpidl'))
@@ -710,7 +712,7 @@ class TestRecursiveMakeBackend(BackendTester):
     def test_test_support_files_tracked(self):
         env = self._consume('test-support-binaries-tracked', RecursiveMakeBackend)
         m = InstallManifest(path=mozpath.join(env.topobjdir,
-            '_build_manifests', 'install', '_tests'))
+                                              '_build_manifests', 'install', '_tests'))
         self.assertEqual(len(m), 4)
         self.assertIn('xpcshell/tests/mozbuildtest/test-library.dll', m)
         self.assertIn('xpcshell/tests/mozbuildtest/test-one.exe', m)
@@ -772,7 +774,8 @@ class TestRecursiveMakeBackend(BackendTester):
         topsrcdir = env.topsrcdir.replace(os.sep, '/')
 
         expected = [
-            "ALL_IPDLSRCS := bar1.ipdl foo1.ipdl %s/bar/bar.ipdl %s/bar/bar2.ipdlh %s/foo/foo.ipdl %s/foo/foo2.ipdlh" % tuple([topsrcdir] * 4),
+            "ALL_IPDLSRCS := bar1.ipdl foo1.ipdl %s/bar/bar.ipdl %s/bar/bar2.ipdlh %s/foo/foo.ipdl %s/foo/foo2.ipdlh" % tuple([
+                                                                                                                              topsrcdir] * 4),
             "CPPSRCS := UnifiedProtocols0.cpp",
             "IPDLDIRS := %s %s/bar %s/foo" % (env.topobjdir, topsrcdir, topsrcdir),
         ]
@@ -949,8 +952,8 @@ class TestRecursiveMakeBackend(BackendTester):
             backend_path = mozpath.join(key, 'backend.mk')
             lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
             found = [str for str in lines if
-                str.startswith('FINAL_TARGET') or str.startswith('XPI_NAME') or
-                str.startswith('DIST_SUBDIR')]
+                     str.startswith('FINAL_TARGET') or str.startswith('XPI_NAME') or
+                     str.startswith('DIST_SUBDIR')]
             self.assertEqual(found, expected_rules)
 
     def test_final_target_pp_files(self):
@@ -1149,7 +1152,7 @@ class TestRecursiveMakeBackend(BackendTester):
     def test_test_manifests_duplicate_support_files(self):
         """Ensure duplicate support-files in test manifests work."""
         env = self._consume('test-manifests-duplicate-support-files',
-            RecursiveMakeBackend)
+                            RecursiveMakeBackend)
 
         p = os.path.join(env.topobjdir, '_build_manifests', 'install', '_test_files')
         m = InstallManifest(p)

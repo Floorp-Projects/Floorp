@@ -30,6 +30,7 @@ from mozbuild.frontend.data import (
     UnifiedSources,
 )
 
+
 class TestGnMozbuildWriter(BackendTester):
 
     def setUp(self):

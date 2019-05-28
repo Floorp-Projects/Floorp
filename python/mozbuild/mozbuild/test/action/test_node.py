@@ -21,6 +21,7 @@ test_data_path = mozpath.join(test_data_path, 'data', 'node')
 def data(name):
     return os.path.join(test_data_path, name)
 
+
 TEST_SCRIPT = data("node-test-script.js")
 NONEXISTENT_TEST_SCRIPT = data("non-existent-test-script.js")
 

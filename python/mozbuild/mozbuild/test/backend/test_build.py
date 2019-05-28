@@ -233,5 +233,6 @@ class TestBuild(unittest.TestCase):
             'bin/app/modules/foo.jsm': 'foo.jsm\n',
         })
 
+
 if __name__ == '__main__':
     main()

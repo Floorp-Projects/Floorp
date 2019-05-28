@@ -27,10 +27,11 @@ MSVC_TESTS = [
      "conversion from 'double' to 'uint32_t', possible loss of data",
      'C:/mozilla-central/test/foo.cpp', 793, 'C4244',
      "'return' : conversion from 'double' to 'uint32_t', possible loss of "
-         'data')
+     'data')
 ]
 
 CURRENT_LINE = 1
+
 
 def get_warning():
     global CURRENT_LINE
@@ -44,6 +45,7 @@ def get_warning():
     CURRENT_LINE += 1
 
     return w
+
 
 class TestCompilerWarning(unittest.TestCase):
     def test_equivalence(self):
@@ -122,6 +124,7 @@ class TestCompilerWarning(unittest.TestCase):
         self.assertGreaterEqual(w2, w1)
         self.assertGreaterEqual(w1, w2)
 
+
 class TestWarningsParsing(unittest.TestCase):
     def test_clang_parsing(self):
         for source, filename, line, column, message, flag in CLANG_TESTS:
@@ -147,6 +150,7 @@ class TestWarningsParsing(unittest.TestCase):
             self.assertEqual(warning['line'], line)
             self.assertEqual(warning['flag'], flag)
             self.assertEqual(warning['message'], message)
+
 
 class TestWarningsDatabase(unittest.TestCase):
     def test_basic(self):
