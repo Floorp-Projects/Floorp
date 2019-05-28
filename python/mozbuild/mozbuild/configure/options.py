@@ -519,5 +519,5 @@ class CommandLineHelper(object):
 
     def __iter__(self):
         for d in (self._args, self._extra_args):
-            for arg, pos in d.itervalues():
+            for arg, pos in six.itervalues(d):
                 yield arg
