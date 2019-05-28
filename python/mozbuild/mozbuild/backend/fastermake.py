@@ -210,7 +210,13 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
                 rule = mk.create_rule([merge]).add_dependencies(
                     [ref_file, l10n_file] + python_deps)
                 rule.add_commands(
-                    ['$(PYTHON) -m mozbuild.action.l10n_merge --output {} --ref-file {} --l10n-file {}'.format(merge, ref_file, l10n_file)])
+                    [
+                        '$(PYTHON) -m mozbuild.action.l10n_merge '
+                        '--output {} --ref-file {} --l10n-file {}'.format(
+                            merge, ref_file, l10n_file
+                        )
+                    ]
+                )
                 # Add a dummy rule for the l10n file since it might not exist.
                 mk.create_rule([l10n_file])
 
@@ -222,7 +228,8 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
                                  'install_%s' % base.replace('/', '_'))) as fh:
                 install_manifest.write(fileobj=fh)
 
-        # For artifact builds only, write a single unified manifest for consumption by |mach watch|.
+        # For artifact builds only, write a single unified manifest
+        # for consumption by |mach watch|.
         if self.environment.is_artifact_build:
             unified_manifest = InstallManifest()
             for base, install_manifest in self._install_manifests.iteritems():

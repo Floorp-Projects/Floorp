@@ -155,7 +155,7 @@ class ConfigureOutputHandler(logging.Handler):
             stream.flush()
         except (KeyboardInterrupt, SystemExit, IOError):
             raise
-        except:
+        except Exception:
             self.handleError(record)
 
     @contextmanager

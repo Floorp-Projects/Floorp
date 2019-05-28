@@ -155,7 +155,7 @@ class Sandbox(dict):
 
         try:
             source = self._finder.get(path).read()
-        except Exception as e:
+        except Exception:
             raise SandboxLoadError(self._context.source_stack,
                                    sys.exc_info()[2], read_error=path)
 

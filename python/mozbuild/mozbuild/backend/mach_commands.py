@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import os
-import sys
 import subprocess
 import which
 
@@ -58,10 +57,12 @@ class MachCommands(MachCommandBase):
 
         if ide == 'eclipse':
             eclipse_workspace_dir = self.get_eclipse_workspace_path()
-            process = subprocess.check_call(['eclipse', '-data', eclipse_workspace_dir])
+            subprocess.check_call(['eclipse', '-data', eclipse_workspace_dir])
         elif ide == 'visualstudio':
             visual_studio_workspace_dir = self.get_visualstudio_workspace_path()
-            process = subprocess.check_call(['explorer.exe', visual_studio_workspace_dir])
+            subprocess.check_call(
+                ['explorer.exe', visual_studio_workspace_dir]
+            )
 
     def get_eclipse_workspace_path(self):
         from mozbuild.backend.cpp_eclipse import CppEclipseBackend

@@ -57,7 +57,7 @@ def repackage_msi(topsrcdir, wsx, version, locale, arch, setupexe, candle, light
         raise Exception("%s does not exist." % light)
     embeddedVersion = '0.0.0.0'
     # Version string cannot contain 'a' or 'b' when embedding in msi manifest.
-    if not 'a' in version and not 'b' in version:
+    if 'a' not in version and 'b' not in version:
         if version.endswith('esr'):
             parts = version[:-3].split('.')
         else:

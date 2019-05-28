@@ -13,8 +13,6 @@ import argparse
 import os
 import sys
 
-from io import BytesIO
-
 from xpidl import jsonxpt
 from buildconfig import topsrcdir
 from xpidl.header import print_header

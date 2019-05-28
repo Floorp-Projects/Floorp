@@ -4,10 +4,7 @@
 
 from __future__ import unicode_literals
 
-import cPickle as pickle
-import json
 import os
-import unittest
 
 from mozpack.copier import FileRegistry
 from mozpack.manifests import InstallManifest

@@ -79,7 +79,9 @@ class MozbuildWriter(object):
             self.write(self.indent + key)
             self.write(' += [\n    ' + self.indent)
             self.write(
-                (',\n    ' + self.indent).join(alphabetical_sorted(self.mb_serialize(v) for v in value)))
+                (',\n    ' + self.indent).join(
+                    alphabetical_sorted(self.mb_serialize(v) for v in value))
+                )
             self.write('\n')
             self.write_ln(']')
 
@@ -277,7 +279,7 @@ def process_gn_config(gn_config, srcdir, config, output, non_unified_sources,
         context_attrs['ASFLAGS'] = spec.get('asflags_mozilla', [])
         if use_defines_in_asflags and defines:
             context_attrs['ASFLAGS'] += ['-D' + d for d in defines]
-        flags = [f for f in spec.get('cflags', []) if f in mozilla_flags]
+        flags = [_f for _f in spec.get('cflags', []) if _f in mozilla_flags]
         if flags:
             suffix_map = {
                 '.c': 'CFLAGS',
@@ -432,7 +434,6 @@ def write_mozbuild(config, srcdir, output, non_unified_sources, gn_config_files,
             mb.write('\n')
             mb.write(generated_header)
 
-            all_attr_sets = [attrs for _, attrs in configs]
             all_args = [args for args, _ in configs]
 
             # Start with attributes that will be a part of the mozconfig

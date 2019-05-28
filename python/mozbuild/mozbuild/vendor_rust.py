@@ -11,7 +11,6 @@ from mozbuild.base import (
     BuildEnvironmentNotFoundException,
     MozbuildObject,
 )
-import mozfile
 import mozpack.path as mozpath
 import os
 import re
@@ -124,8 +123,11 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             self.run_process(args=[cargo, 'install', 'cargo-vendor'],
                              append_env=env)
         elif not self.check_cargo_vendor_version(cargo):
-            self.log(logging.INFO, 'cargo_vendor', {
-                     }, 'cargo-vendor >= 0.1.23 required; force-reinstalling (this may take a few minutes)...')
+            self.log(
+                logging.INFO, 'cargo_vendor', {},
+                ('cargo-vendor >= 0.1.23 required; '
+                 'force-reinstalling (this may take a few minutes)...')
+                )
             env = self.check_openssl()
             self.run_process(args=[cargo, 'install', '--force', 'cargo-vendor'],
                              append_env=env)
@@ -198,8 +200,9 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
     RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST = {
         # MIT
         'deque': '6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb',
-        # we're whitelisting this fuchsia crate because it doesn't get built in the final product but has a license-file that needs ignoring
-        'fuchsia-cprng' : '03b114f53e6587a398931762ee11e2395bfdba252a329940e2c8c9e81813845b',
+        # we're whitelisting this fuchsia crate because it doesn't get built in the final
+        # product but has a license-file that needs ignoring
+        'fuchsia-cprng': '03b114f53e6587a398931762ee11e2395bfdba252a329940e2c8c9e81813845b',
     }
 
     @staticmethod
@@ -346,15 +349,17 @@ license file's hash.
         vendor_dir = mozpath.join(self.topsrcdir, relative_vendor_dir)
 
         # We use check_call instead of mozprocess to ensure errors are displayed.
-        # We do an |update -p| here to regenerate the Cargo.lock file with minimal changes. See bug 1324462
+        # We do an |update -p| here to regenerate the Cargo.lock file with minimal
+        # changes. See bug 1324462
         subprocess.check_call([cargo, 'update', '-p', 'gkrust'], cwd=self.topsrcdir)
 
         subprocess.check_call([cargo, 'vendor', '--quiet', '--sync',
                                'Cargo.lock'] + [vendor_dir], cwd=self.topsrcdir)
 
         if not self._check_licenses(vendor_dir):
-            self.log(logging.ERROR, 'license_check_failed', {},
-                     '''The changes from `mach vendor rust` will NOT be added to version control.''')
+            self.log(
+                logging.ERROR, 'license_check_failed', {},
+                '''The changes from `mach vendor rust` will NOT be added to version control.''')
             sys.exit(1)
 
         self.repository.add_remove_files(vendor_dir)
@@ -396,4 +401,6 @@ The changes from `mach vendor rust` will NOT be added to version control.
 Please consider finding ways to reduce the size of the vendored packages.
 For instance, check the vendored packages for unusually large test or
 benchmark files that don't need to be published to crates.io and submit
-a pull request upstream to ignore those files when publishing.'''.format(size=cumulative_added_size))
+a pull request upstream to ignore those files when publishing.'''.format(
+                size=cumulative_added_size)
+            )

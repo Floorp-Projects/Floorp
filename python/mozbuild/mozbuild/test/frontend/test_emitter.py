@@ -14,7 +14,6 @@ from mozbuild.frontend.context import (
     Path,
 )
 from mozbuild.frontend.data import (
-    ChromeManifestEntry,
     ComputedFlags,
     ConfigFileSubstitution,
     Defines,
@@ -23,7 +22,6 @@ from mozbuild.frontend.data import (
     FinalTargetPreprocessedFiles,
     GeneratedFile,
     GeneratedSources,
-    HostDefines,
     HostProgram,
     HostRustLibrary,
     HostRustProgram,
@@ -52,7 +50,6 @@ from mozbuild.frontend.reader import (
     BuildReaderError,
     SandboxValidationError,
 )
-from mozpack.chrome import manifest
 
 from mozbuild.test.common import MockConfig
 
@@ -533,18 +530,22 @@ class TestEmitterBasic(unittest.TestCase):
         LOCALIZED_FILES as an objdir path produces an error.
         """
         reader = self.reader('localized-files-not-localized-generated')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Objdir file listed in LOCALIZED_FILES not in LOCALIZED_GENERATED_FILES:'):
-            objs = self.read_topsrcdir(reader)
+        with self.assertRaisesRegexp(
+            SandboxValidationError,
+            'Objdir file listed in LOCALIZED_FILES not in LOCALIZED_GENERATED_FILES:'
+        ):
+            self.read_topsrcdir(reader)
 
     def test_localized_generated_files_final_target_files(self):
         """Test that using LOCALIZED_GENERATED_FILES and then putting the output in
         FINAL_TARGET_FILES as an objdir path produces an error.
         """
         reader = self.reader('localized-generated-files-final-target-files')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Outputs of LOCALIZED_GENERATED_FILES cannot be used in FINAL_TARGET_FILES:'):
-            objs = self.read_topsrcdir(reader)
+        with self.assertRaisesRegexp(
+            SandboxValidationError,
+            'Outputs of LOCALIZED_GENERATED_FILES cannot be used in FINAL_TARGET_FILES:'
+        ):
+            self.read_topsrcdir(reader)
 
     def test_generated_files_method_names(self):
         reader = self.reader('generated-files-method-names')
@@ -748,8 +749,11 @@ class TestEmitterBasic(unittest.TestCase):
         """
         reader = self.reader('test-manifest-dupes')
 
-        with self.assertRaisesRegexp(SandboxValidationError, 'bar.js appears multiple times '
-                                     'in a test manifest under a support-files field, please omit the duplicate entry.'):
+        with self.assertRaisesRegexp(
+            SandboxValidationError,
+            'bar.js appears multiple times '
+            'in a test manifest under a support-files field, please omit the duplicate entry.'
+        ):
             self.read_topsrcdir(reader)
 
     def test_test_manifest_absolute_support_files(self):
@@ -1056,7 +1060,7 @@ class TestEmitterBasic(unittest.TestCase):
                 SandboxValidationError,
                 'Path specified in LOCAL_INCLUDES.*resolves to the '
                 'topsrcdir or topobjdir'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
         reader = self.reader('local_includes-invalid/objdir')
 
@@ -1064,7 +1068,7 @@ class TestEmitterBasic(unittest.TestCase):
                 SandboxValidationError,
                 'Path specified in LOCAL_INCLUDES.*resolves to the '
                 'topsrcdir or topobjdir'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_local_includes_file(self):
         """Test that a filename can't be used in LOCAL_INCLUDES."""
@@ -1073,7 +1077,7 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegexp(
                 SandboxValidationError,
                 'Path specified in LOCAL_INCLUDES is a filename'):
-            objs = self.read_topsrcdir(reader)
+            self.read_topsrcdir(reader)
 
     def test_generated_includes(self):
         """Test that GENERATED_INCLUDES is emitted correctly."""
@@ -1420,8 +1424,10 @@ class TestEmitterBasic(unittest.TestCase):
     def test_final_target_pp_files_non_srcdir(self):
         '''Test that non-srcdir paths in FINAL_TARGET_PP_FILES throws errors.'''
         reader = self.reader('final-target-pp-files-non-srcdir')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Only source directory paths allowed in FINAL_TARGET_PP_FILES:'):
+        with self.assertRaisesRegexp(
+            SandboxValidationError,
+            'Only source directory paths allowed in FINAL_TARGET_PP_FILES:'
+        ):
             self.read_topsrcdir(reader)
 
     def test_localized_files(self):
@@ -1444,9 +1450,11 @@ class TestEmitterBasic(unittest.TestCase):
         """Test that LOCALIZED_FILES errors if a path does not start with
         `en-US/` or contain `locales/en-US/`."""
         reader = self.reader('localized-files-no-en-us')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'LOCALIZED_FILES paths must start with `en-US/` or contain `locales/en-US/`: foo.js'):
-            objs = self.read_topsrcdir(reader)
+        with self.assertRaisesRegexp(
+            SandboxValidationError,
+            'LOCALIZED_FILES paths must start with `en-US/` or contain `locales/en-US/`: foo.js'
+        ):
+            self.read_topsrcdir(reader)
 
     def test_localized_pp_files(self):
         """Test that LOCALIZED_PP_FILES works properly."""
@@ -1665,8 +1673,10 @@ class TestEmitterBasic(unittest.TestCase):
         from GENERATED_FILES is an error.
         """
         reader = self.reader('test-symbols-file-objdir-missing-generated')
-        with self.assertRaisesRegexp(SandboxValidationError,
-                                     'Objdir file specified in SYMBOLS_FILE not in GENERATED_FILES:'):
+        with self.assertRaisesRegexp(
+            SandboxValidationError,
+            'Objdir file specified in SYMBOLS_FILE not in GENERATED_FILES:'
+        ):
             self.read_topsrcdir(reader)
 
 

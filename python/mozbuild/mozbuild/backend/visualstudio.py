@@ -10,7 +10,6 @@ from __future__ import absolute_import, unicode_literals
 import errno
 import os
 import re
-import types
 import uuid
 
 from xml.dom import getDOMImplementation
@@ -148,16 +147,17 @@ class VisualStudioBackend(CommonBackend):
             if target != 'full':
                 command += ' %s' % target
 
-            project_id = self._write_vs_project(out_proj_dir, basename, target,
-                                                build_command=command,
-                                                clean_command='$(SolutionDir)\\mach.bat build clean')
+            project_id = self._write_vs_project(
+                out_proj_dir, basename, target, build_command=command,
+                clean_command='$(SolutionDir)\\mach.bat build clean')
 
             projects[basename] = (project_id, basename, target)
 
         # A project that can be used to regenerate the visual studio projects.
         basename = 'target_vs'
-        project_id = self._write_vs_project(out_proj_dir, basename, 'visual-studio',
-                                            build_command='$(SolutionDir)\\mach.bat build-backend -b VisualStudio')
+        project_id = self._write_vs_project(
+            out_proj_dir, basename, 'visual-studio',
+            build_command='$(SolutionDir)\\mach.bat build-backend -b VisualStudio')
         projects[basename] = (project_id, basename, 'visual-studio')
 
         # Write out a shared property file with common variables.
@@ -239,14 +239,14 @@ class VisualStudioBackend(CommonBackend):
 
             basename = '%s_%s' % (prefix, item)
 
-            project_id = self._write_vs_project(out_dir, basename, item,
-                                                includes=includes,
-                                                forced_includes=[
-                                                    '$(TopObjDir)\\dist\\include\\mozilla-config.h'],
-                                                defines=defines,
-                                                headers=headers,
-                                                sources=sources,
-                                                debugger=debugger)
+            project_id = self._write_vs_project(
+                out_dir, basename, item,
+                includes=includes,
+                forced_includes=['$(TopObjDir)\\dist\\include\\mozilla-config.h'],
+                defines=defines,
+                headers=headers,
+                sources=sources,
+                debugger=debugger)
 
             projects[basename] = (project_id, basename, item)
 
@@ -462,8 +462,8 @@ class VisualStudioBackend(CommonBackend):
         project_id = get_id(basename.encode('utf-8'))
 
         with self._write_file(os.path.join(out_dir, root), mode='rb') as fh:
-            project_id, name = VisualStudioBackend.write_vs_project(fh,
-                                                                    self._version, project_id, name, **kwargs)
+            project_id, name = VisualStudioBackend.write_vs_project(
+                fh, self._version, project_id, name, **kwargs)
 
         with self._write_file(os.path.join(out_dir, '%s.user' % root), mode='rb') as fh:
             fh.write('<?xml version="1.0" encoding="utf-8"?>\r\n')
