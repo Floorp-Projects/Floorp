@@ -58,6 +58,7 @@ CycleCollectedJSContext::CycleCollectedJSContext()
       mDoingStableStates(false),
       mTargetedMicroTaskRecursionDepth(0),
       mMicroTaskLevel(0),
+      mDebuggerRecursionDepth(0),
       mMicroTaskRecursionDepth(0) {
   MOZ_COUNT_CTOR(CycleCollectedJSContext);
 
@@ -304,11 +305,14 @@ class CycleCollectedJSContext::SavedMicroTaskQueue
     : public JS::JobQueue::SavedJobQueue {
  public:
   explicit SavedMicroTaskQueue(CycleCollectedJSContext* ccjs) : ccjs(ccjs) {
+    ccjs->mDebuggerRecursionDepth++;
     ccjs->mPendingMicroTaskRunnables.swap(mQueue);
   }
 
   ~SavedMicroTaskQueue() {
     MOZ_RELEASE_ASSERT(ccjs->mPendingMicroTaskRunnables.empty());
+    MOZ_RELEASE_ASSERT(ccjs->mDebuggerRecursionDepth);
+    ccjs->mDebuggerRecursionDepth--;
     ccjs->mPendingMicroTaskRunnables.swap(mQueue);
   }
 
@@ -530,7 +534,10 @@ void CycleCollectedJSContext::IsIdleGCTaskNeeded() const {
 }
 
 uint32_t CycleCollectedJSContext::RecursionDepth() const {
-  return mOwningThread->RecursionDepth();
+  // Debugger interruptions are included in the recursion depth so that debugger
+  // microtask checkpoints do not run IDB transactions which were initiated
+  // before the interruption.
+  return mOwningThread->RecursionDepth() + mDebuggerRecursionDepth;
 }
 
 void CycleCollectedJSContext::RunInStableState(

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function test() {
+  var DBOpenRequest = window.indexedDB.open("toDoList", 5);
+  DBOpenRequest.onupgradeneeded = function(event) {
+    var db = DBOpenRequest.result;
+    db.createObjectStore("toDoList");
+  };
+
+  DBOpenRequest.onsuccess = function(event) {
+    var db = DBOpenRequest.result;
+    var transaction = db.transaction(["toDoList"], "readwrite");
+
+    // This will trigger the debugger's onNewScript which will save the
+    // microtask queue and perform one or more microtask checkpoints.
+    eval("var newScript;");
+
+    // If IDB transactions were processed by the debugger's microtask
+    // checkpoints then this store will throw an exception.
+    transaction.objectStore("toDoList");
+
+    debugger;
+  };
+}
+    </script>
+  </head>
+  <body>loading...</body>
+</html>
