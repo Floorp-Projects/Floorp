@@ -117,7 +117,7 @@ this.LoginTestUtils.testData = {
   authLogin(modifications) {
     let loginInfo = new LoginInfo("http://www.example.org", null,
                                   "The HTTP Realm", "the username",
-                                  "the password", "", "");
+                                  "the password");
     loginInfo.QueryInterface(Ci.nsILoginMetaInfo);
     if (modifications) {
       for (let [name, value] of Object.entries(modifications)) {
@@ -187,17 +187,17 @@ this.LoginTestUtils.testData = {
 
       // Simple HTTP authentication login.
       new LoginInfo("http://www.example.org", null, "The HTTP Realm",
-                    "the username", "the password", "", ""),
+                    "the username", "the password"),
 
       // Simple FTP authentication login.
       new LoginInfo("ftp://ftp.example.org", null, "ftp://ftp.example.org",
-                    "the username", "the password", "", ""),
+                    "the username", "the password"),
 
       // Multiple HTTP authentication logins can be stored for different realms.
       new LoginInfo("http://www2.example.org", null, "The HTTP Realm",
-                    "the username", "the password", "", ""),
+                    "the username", "the password"),
       new LoginInfo("http://www2.example.org", null, "The HTTP Realm Other",
-                    "the username other", "the password other", "", ""),
+                    "the username other", "the password other"),
 
       // --- Both form and authentication logins (example.net) ---
 
@@ -211,18 +211,18 @@ this.LoginTestUtils.testData = {
                     "username two", "the password",
                     "form_field_username", "form_field_password"),
       new LoginInfo("http://example.net", null, "The HTTP Realm",
-                    "the username", "the password", "", ""),
+                    "the username", "the password"),
       new LoginInfo("http://example.net", null, "The HTTP Realm Other",
-                    "username two", "the password", "", ""),
+                    "username two", "the password"),
       new LoginInfo("ftp://example.net", null, "ftp://example.net",
-                    "the username", "the password", "", ""),
+                    "the username", "the password"),
 
       // --- Examples of logins added by extensions (chrome scheme) ---
 
       new LoginInfo("chrome://example_extension", null, "Example Login One",
                     "the username", "the password one", "", ""),
       new LoginInfo("chrome://example_extension", null, "Example Login Two",
-                    "the username", "the password two", "", ""),
+                    "the username", "the password two"),
     ];
   },
 };
