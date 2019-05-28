@@ -4687,9 +4687,9 @@ void JSScript::destroyDebugScript(FreeOp* fop) {
   }
 }
 
-bool JSScript::ensureHasDebugScript(JSContext* cx) {
+DebugScript* JSScript::getOrCreateDebugScript(JSContext* cx) {
   if (hasDebugScript()) {
-    return true;
+    return debugScript();
   }
 
   size_t nbytes =
@@ -4697,22 +4697,23 @@ bool JSScript::ensureHasDebugScript(JSContext* cx) {
   UniqueDebugScript debug(
       reinterpret_cast<DebugScript*>(cx->pod_calloc<uint8_t>(nbytes)));
   if (!debug) {
-    return false;
+    return nullptr;
   }
 
   /* Create realm's debugScriptMap if necessary. */
   if (!realm()->debugScriptMap) {
     auto map = cx->make_unique<DebugScriptMap>();
     if (!map) {
-      return false;
+      return nullptr;
     }
 
     realm()->debugScriptMap = std::move(map);
   }
 
+  DebugScript* borrowed = debug.get();
   if (!realm()->debugScriptMap->putNew(this, std::move(debug))) {
     ReportOutOfMemory(cx);
-    return false;
+    return nullptr;
   }
 
   setFlag(MutableFlags::HasDebugScript);  // safe to set this;  we can't fail
@@ -4729,7 +4730,7 @@ bool JSScript::ensureHasDebugScript(JSContext* cx) {
     }
   }
 
-  return true;
+  return borrowed;
 }
 
 void JSScript::setNewStepMode(FreeOp* fop, uint32_t newValue) {
@@ -4754,11 +4755,11 @@ bool JSScript::incrementStepModeCount(JSContext* cx) {
 
   AutoRealm ar(cx, this);
 
-  if (!ensureHasDebugScript(cx)) {
+  DebugScript* debug = getOrCreateDebugScript(cx);
+  if (!debug) {
     return false;
   }
 
-  DebugScript* debug = debugScript();
   uint32_t count = debug->stepMode;
   setNewStepMode(cx->runtime()->defaultFreeOp(), count + 1);
   return true;
@@ -4775,11 +4776,11 @@ BreakpointSite* JSScript::getOrCreateBreakpointSite(JSContext* cx,
                                                     jsbytecode* pc) {
   AutoRealm ar(cx, this);
 
-  if (!ensureHasDebugScript(cx)) {
+  DebugScript* debug = getOrCreateDebugScript(cx);
+  if (!debug) {
     return nullptr;
   }
 
-  DebugScript* debug = debugScript();
   BreakpointSite*& site = debug->breakpoints[pcToOffset(pc)];
 
   if (!site) {
