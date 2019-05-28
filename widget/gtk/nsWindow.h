@@ -612,8 +612,9 @@ class nsWindow final : public nsBaseWidget {
 
   bool IsWaylandPopup();
   GtkWidget* ConfigureWaylandPopupWindows();
-  void CloseWaylandTooltips();
-  void CloseWaylandWindow();
+  void HideWaylandWindow();
+  void HideWaylandTooltips();
+  void HideWaylandPopupAndAllChildren();
 
   /**
    * |mIMContext| takes all IME related stuff.
