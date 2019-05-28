@@ -112,7 +112,7 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         AlertDialog.Builder(
             ContextThemeWrapper(
                 activity,
-                R.style.DialogStyle
+                R.style.DeleteDialogStyle
             )
         ).apply {
             val appName = context.getString(R.string.app_name)

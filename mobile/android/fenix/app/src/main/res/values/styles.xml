@@ -55,6 +55,19 @@
         <item name="android:background">?above</item>
         <item name="colorAccent">?accent</item>
         <item name="android:textColorPrimary">?primaryText</item>
+        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
+    </style>
+
+    <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">?primaryText</item>
+    </style>
+
+    <style name="PositiveButtonDeleteStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">?destructive</item>
+    </style>
+
+    <style name="DeleteDialogStyle" parent="DialogStyle">
+        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonDeleteStyle</item>
     </style>
 
     <style name="PrivateThemeBase" parent="Theme.AppCompat.NoActionBar">

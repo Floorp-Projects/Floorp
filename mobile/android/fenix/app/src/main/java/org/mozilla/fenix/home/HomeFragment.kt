@@ -376,7 +376,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         AlertDialog.Builder(
             ContextThemeWrapper(
                 activity,
-                R.style.DialogStyle
+                R.style.DeleteDialogStyle
             )
         ).apply {
             val message = context.getString(R.string.tab_collection_dialog_message, tabCollection.title)

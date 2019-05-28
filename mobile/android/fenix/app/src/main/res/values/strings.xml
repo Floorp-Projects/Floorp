@@ -333,6 +333,8 @@
     <string name="history_delete_all">Delete history</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Are you sure you want to clear your history?</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Clear</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Delete</string>
     <!-- History multi select title in app bar

@@ -142,14 +142,14 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                             AlertDialog.Builder(
                                 ContextThemeWrapper(
                                     it,
-                                    R.style.DialogStyle
+                                    R.style.DeleteDialogStyle
                                 )
                             ).apply {
                                 setMessage(R.string.history_delete_all_dialog)
                                 setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
                                     dialog.cancel()
                                 }
-                                setPositiveButton(android.R.string.ok) { dialog: DialogInterface, _ ->
+                                setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
                                     launch(Dispatchers.IO) {
                                         requireComponents.core.historyStorage.deleteEverything()
                                         reloadData()
