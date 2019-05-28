@@ -97,6 +97,7 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsStreamUtils.h"
 #include "nsSocketTransportService2.h"
+#include "nsViewSourceHandler.h"
 
 #include <limits>
 
@@ -1789,6 +1790,10 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
                                                 aURI);
   }
 
+  if (scheme.EqualsLiteral("view-source")) {
+    return nsViewSourceHandler::CreateNewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
 #ifdef MOZ_WIDGET_GTK
   if (scheme.EqualsLiteral("smb") || scheme.EqualsLiteral("sftp")) {
     nsCOMPtr<nsIURI> base(aBaseURI);
@@ -1800,13 +1805,8 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
   }
 #endif
 
-  if (NS_IsMainThread()) {
-    // XXX (valentin): this fallback should be removed once we get rid of
-    // nsIProtocolHandler.newURI
-    return NS_NewURI(aURI, aSpec, aCharset, aBaseURI, aIOService);
-  }
-
-  return NS_ERROR_UNKNOWN_PROTOCOL;
+  // Falls back to external protocol handler.
+  return NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(aURI);
 }
 
 nsresult NS_GetSanitizedURIStringFromURI(nsIURI* aUri,
