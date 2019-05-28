@@ -326,7 +326,7 @@ static nsWindow* gFocusWindow = nullptr;
 static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gRaiseWindows = true;
-static GList* gCurrentPopupWindows = nullptr;
+static GList* gVisibleWaylandPopupWindows = nullptr;
 
 #if GTK_CHECK_VERSION(3, 4, 0)
 static uint32_t gLastTouchID = 0;
@@ -1134,17 +1134,31 @@ bool nsWindow::IsWaylandPopup() {
   return !mIsX11Display && mIsTopLevel && mWindowType == eWindowType_popup;
 }
 
-void nsWindow::CloseWaylandTooltips() {
-  GList* popup = gCurrentPopupWindows;
-  GList* next;
-  while (popup) {
-    // CloseWaylandWindow() manipulates the gCurrentPopupWindows list.
-    next = popup->next;
-    nsWindow* window = static_cast<nsWindow*>(popup->data);
-    if (window->mPopupType == ePopupTypeTooltip) {
-      window->CloseWaylandWindow();
-    }
-    popup = next;
+void nsWindow::HideWaylandTooltips() {
+  while (gVisibleWaylandPopupWindows) {
+    nsWindow* window =
+        static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
+    if (window->mPopupType != ePopupTypeTooltip) break;
+    window->HideWaylandWindow();
+    gVisibleWaylandPopupWindows = g_list_delete_link(
+        gVisibleWaylandPopupWindows, gVisibleWaylandPopupWindows);
+  }
+}
+
+void nsWindow::HideWaylandPopupAndAllChildren() {
+  if (g_list_find(gVisibleWaylandPopupWindows, this) == nullptr) {
+    NS_WARNING("Popup window isn't in wayland popup list!");
+    return;
+  }
+
+  while (gVisibleWaylandPopupWindows) {
+    nsWindow* window =
+        static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
+    bool quit = gVisibleWaylandPopupWindows->data == this;
+    window->HideWaylandWindow();
+    gVisibleWaylandPopupWindows = g_list_delete_link(
+        gVisibleWaylandPopupWindows, gVisibleWaylandPopupWindows);
+    if (quit) break;
   }
 }
 
@@ -1154,47 +1168,63 @@ void nsWindow::CloseWaylandTooltips() {
 // popup needs to have an unique parent.
 GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
   // Check if we're already configured.
-  if (gCurrentPopupWindows && g_list_find(gCurrentPopupWindows, this)) {
+  if (gVisibleWaylandPopupWindows &&
+      g_list_find(gVisibleWaylandPopupWindows, this)) {
     return GTK_WIDGET(gtk_window_get_transient_for(GTK_WINDOW(mShell)));
   }
 
   // If we're opening a new window we don't want to attach it to a tooltip
   // as it's short lived temporary window.
-  CloseWaylandTooltips();
+  HideWaylandTooltips();
 
   GtkWindow* parentWidget = nullptr;
-  if (gCurrentPopupWindows) {
+  if (gVisibleWaylandPopupWindows) {
     if (mPopupType == ePopupTypeTooltip) {
       // Attach tooltip window to the latest popup window
       // to have both visible.
-      nsWindow* window = static_cast<nsWindow*>(gCurrentPopupWindows->data);
+      nsWindow* window =
+          static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
       parentWidget = GTK_WINDOW(window->GetGtkWidget());
     } else {
+      nsMenuPopupFrame* menuPopupFrame = nullptr;
       nsIFrame* frame = GetFrame();
-      if (!frame) {
-        // We're not fully created yet - just return our default parent.
+      if (frame) {
+        menuPopupFrame = do_QueryFrame(frame);
+      }
+      // The popup is not fully created yet (we're called from
+      // nsWindow::Create()) or we're toplevel popup without parent.
+      // In both cases just use parent which was passed to nsWindow::Create().
+      if (!menuPopupFrame) {
         return GTK_WIDGET(gtk_window_get_transient_for(GTK_WINDOW(mShell)));
       }
-      nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(frame);
-      nsWindow* window =
-          static_cast<nsWindow*>(menuPopupFrame->GetParentMenuWidget());
 
-      if (!window) {
+      nsWindow* parentWindow =
+          static_cast<nsWindow*>(menuPopupFrame->GetParentMenuWidget());
+      if (!parentWindow) {
         // We're toplevel popup menu attached to another menu. Just use our
         // latest popup as a parent.
-        window = static_cast<nsWindow*>(gCurrentPopupWindows->data);
-        parentWidget = GTK_WINDOW(window->GetGtkWidget());
+        parentWindow =
+            static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
+        parentWidget = GTK_WINDOW(parentWindow->GetGtkWidget());
       } else {
         // We're a regular menu in the same frame hierarchy.
-        // Close child popups which are on a different level.
-        parentWidget = GTK_WINDOW(window->GetGtkWidget());
-        do {
-          nsWindow* window = static_cast<nsWindow*>(gCurrentPopupWindows->data);
+        // Close child popups on the same level as we can't have two popups
+        // with one parent on Wayland.
+        parentWidget = GTK_WINDOW(parentWindow->GetGtkWidget());
+        nsWindow* lastChildOnTheSameLevel = nullptr;
+        for (GList* popup = gVisibleWaylandPopupWindows; popup;
+             popup = popup->next) {
+          nsWindow* window =
+              static_cast<nsWindow*>(gVisibleWaylandPopupWindows->data);
           if (GTK_WINDOW(window->GetGtkWidget()) == parentWidget) {
             break;
+          } else {
+            lastChildOnTheSameLevel = window;
           }
-          window->CloseWaylandWindow();
-        } while (gCurrentPopupWindows != nullptr);
+        }
+        if (lastChildOnTheSameLevel) {
+          lastChildOnTheSameLevel->HideWaylandPopupAndAllChildren();
+        }
       }
     }
   }
@@ -1204,7 +1234,8 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
   } else {
     parentWidget = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   }
-  gCurrentPopupWindows = g_list_prepend(gCurrentPopupWindows, this);
+  gVisibleWaylandPopupWindows =
+      g_list_prepend(gVisibleWaylandPopupWindows, this);
   return GTK_WIDGET(parentWidget);
 }
 
@@ -1230,9 +1261,12 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   }
 
   GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mShell));
-  // gdk_window_move_to_rect() is not available, we don't have a valid GdkWindow
-  // (we're not realized yet) - try plain gtk_window_move() at least.
-  if (!sGdkWindowMoveToRect || !gdkWindow) {
+
+  // Use standard gtk_window_move() instead of gdk_window_move_to_rect() when:
+  // - gdk_window_move_to_rect() is not available
+  // - the widget doesn't have a valid GdkWindow
+  // - the widget hasn't beed positioned yet
+  if (!sGdkWindowMoveToRect || !gdkWindow || !AreBoundsSane()) {
     gtk_window_move(GTK_WINDOW(mShell), aPosition->x, aPosition->y);
     return;
   }
@@ -4119,7 +4153,7 @@ void nsWindow::NativeMoveResize() {
   }
 }
 
-void nsWindow::CloseWaylandWindow() {
+void nsWindow::HideWaylandWindow() {
 #ifdef MOZ_WAYLAND
   if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
     // Because wl_egl_window is destroyed on moz_container_unmap(),
@@ -4129,10 +4163,6 @@ void nsWindow::CloseWaylandWindow() {
     DestroyLayerManager();
   }
 #endif
-
-  if (mWindowType == eWindowType_popup) {
-    gCurrentPopupWindows = g_list_remove(gCurrentPopupWindows, this);
-  }
   gtk_widget_hide(mShell);
 }
 
@@ -4158,7 +4188,11 @@ void nsWindow::NativeShow(bool aAction) {
     }
   } else {
     if (!mIsX11Display) {
-      CloseWaylandWindow();
+      if (IsWaylandPopup()) {
+        HideWaylandPopupAndAllChildren();
+      } else {
+        HideWaylandWindow();
+      }
     } else if (mIsTopLevel) {
       // Workaround window freezes on GTK versions before 3.21.2 by
       // ensuring that configure events get dispatched to windows before
