@@ -585,22 +585,25 @@ class TryOptionSyntax(object):
             run_by_default = True
             if attr('build_type') not in self.build_types:
                 return False
-            if self.platforms is not None:
-                if attr('build_platform') not in self.platforms:
-                    return False
-            else:
-                if not check_run_on_projects():
-                    run_by_default = False
+
+            if self.platforms is not None and attr('build_platform') not in self.platforms:
+                return False
+            elif not check_run_on_projects():
+                run_by_default = False
+
             if try_spec is None:
                 return run_by_default
+
             # TODO: optimize this search a bit
             for test in try_spec:
                 if attr(attr_name) == test['test']:
                     break
             else:
                 return False
+
             if 'only_chunks' in test and attr('test_chunk') not in test['only_chunks']:
                 return False
+
             tier = task.task['extra']['treeherder']['tier']
             if 'platforms' in test:
                 if 'all' in test['platforms']:
