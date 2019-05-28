@@ -89,7 +89,7 @@ bool NeckoChild::DeallocPHttpChannelChild(PHttpChannelChild* channel) {
   MOZ_ASSERT(IsNeckoChild(), "DeallocPHttpChannelChild called by non-child!");
 
   HttpChannelChild* child = static_cast<HttpChannelChild*>(channel);
-  child->ReleaseIPDLReference();
+  child->Release();
   return true;
 }
 

@@ -112,12 +112,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   // nsIResumableChannel
   NS_IMETHOD ResumeAt(uint64_t startPos, const nsACString& entityID) override;
 
-  // IPDL holds a reference while the PHttpChannel protocol is live (starting at
-  // AsyncOpen, and ending at either OnStopRequest or any IPDL error, either of
-  // which call NeckoChild::DeallocPHttpChannelChild()).
-  void AddIPDLReference();
-  void ReleaseIPDLReference();
-
   nsresult SetReferrerHeader(const nsACString& aReferrer) override;
 
   MOZ_MUST_USE bool IsSuspended();
@@ -398,8 +392,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   // To ensure only one SendDeletingChannel is triggered.
   Atomic<bool> mDeletingChannelSent;
 
-  Atomic<bool> mIPCOpen;
-
   Atomic<bool, ReleaseAcquire> mUnknownDecoderInvolved;
 
   // Once set, OnData and possibly OnStop will be diverted to the parent.
@@ -463,7 +455,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   void CleanupRedirectingChannel(nsresult rv);
 
   // true after successful AsyncOpen until OnStopRequest completes.
-  bool RemoteChannelExists() { return mIPCOpen && !mKeptAlive; }
+  bool RemoteChannelExists() { return CanSend() && !mKeptAlive; }
 
   void AssociateApplicationCache(const nsCString& groupID,
                                  const nsCString& clientID);
@@ -541,7 +533,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   friend class HttpAsyncAborter<HttpChannelChild>;
   friend class InterceptStreamListener;
   friend class InterceptedChannelContent;
-  friend class SyntheticDiversionListener;
   friend class HttpBackgroundChannelChild;
   friend class NeckoTargetChannelEvent<HttpChannelChild>;
   friend class ContinueDoNotifyListenerEvent;
