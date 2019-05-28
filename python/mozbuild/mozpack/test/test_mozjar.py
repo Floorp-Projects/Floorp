@@ -18,7 +18,7 @@ from collections import OrderedDict
 from mozpack.test.test_files import MockDest
 import unittest
 import mozunit
-from cStringIO import StringIO
+import six
 import mozpack.path as mozpath
 import os
 
@@ -291,7 +291,7 @@ class TestPreload(unittest.TestCase):
 
 class TestJarLog(unittest.TestCase):
     def test_jarlog(self):
-        s = StringIO('\n'.join([
+        s = six.moves.cStringIO('\n'.join([
             'bar/baz.jar first',
             'bar/baz.jar second',
             'bar/baz.jar third',
