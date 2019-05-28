@@ -738,11 +738,13 @@ class LayerManager : public FrameRecorder {
     mPayload.AppendElement(aPayload);
     MOZ_ASSERT(mPayload.Length() < 10000);
   }
+
   void RegisterPayloads(const nsTArray<CompositionPayload>& aPayload) {
     mPayload.AppendElements(aPayload);
     MOZ_ASSERT(mPayload.Length() < 10000);
   }
-  void PayloadPresented();
+
+  virtual void PayloadPresented();
 
   void SetContainsSVG(bool aContainsSVG) { mContainsSVG = aContainsSVG; }
 
@@ -2715,6 +2717,9 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, gfx::DrawTarget* aTarget);
 
 // A utility function used by different LayerManager implementations.
 gfx::IntRect ToOutsideIntRect(const gfxRect& aRect);
+
+void RecordCompositionPayloadsPresented(
+    const nsTArray<CompositionPayload>& aPayloads);
 
 }  // namespace layers
 }  // namespace mozilla

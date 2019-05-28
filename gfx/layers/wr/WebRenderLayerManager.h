@@ -190,6 +190,10 @@ class WebRenderLayerManager final : public LayerManager {
     return &mStateManagers[aRenderRoot];
   }
 
+  virtual void PayloadPresented() override;
+
+  void TakeCompositionPayloads(nsTArray<CompositionPayload>& aPayloads);
+
  private:
   /**
    * Take a snapshot of the parent context, and copy
