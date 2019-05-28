@@ -5845,7 +5845,7 @@ nsresult nsContentUtils::GetThreadSafeASCIIOrigin(nsIURI* aURI,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURIOnAnyThread(getter_AddRefs(uri), path);
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), path);
     if (rv == NS_ERROR_UNKNOWN_PROTOCOL) {
       return NS_ERROR_UNKNOWN_PROTOCOL;
     }
