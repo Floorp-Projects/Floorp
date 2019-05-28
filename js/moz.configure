@@ -48,13 +48,13 @@ set_define('JS_NUNBOX32', depends(target)(lambda t: t.bitness == 32 or None))
 
 # SpiderMonkey as a shared library, and how its symbols are exported
 # ==================================================================
-js_option('--disable-shared-js', when=building_js,
+js_option('--disable-shared-js', default=building_js,
           help='{Create|Do not create} a shared library')
 
-js_option('--disable-export-js', when=building_js,
+js_option('--disable-export-js', default=building_js,
           help='{Mark|Do not mark} JS symbols as DLL exported/visible')
 
-@depends('--disable-shared-js', '--disable-export-js', when=building_js)
+@depends('--disable-shared-js', '--disable-export-js')
 def shared_js(shared_js, export_js):
     if shared_js:
         if not export_js:
@@ -64,21 +64,21 @@ def shared_js(shared_js, export_js):
 set_config('JS_SHARED_LIBRARY', shared_js)
 add_old_configure_assignment('JS_SHARED_LIBRARY', shared_js)
 
-@depends('--disable-shared-js', '--disable-export-js', when=building_js)
+@depends('--disable-shared-js', '--disable-export-js')
 def exportable_js_api(shared_js, export_js):
     if not shared_js and export_js:
         return True
 
 set_define('STATIC_EXPORTABLE_JS_API', exportable_js_api)
 
-@depends('--disable-shared-js', '--disable-export-js', when=building_js)
+@depends('--disable-shared-js', '--disable-export-js')
 def static_js_api(shared_js, export_js):
     if not shared_js and not export_js:
         return True
 
 set_define('STATIC_JS_API', static_js_api)
 
-@depends('--disable-shared-js', when=building_js)
+@depends('--disable-shared-js')
 def static_js(value):
     if not value:
         return True
