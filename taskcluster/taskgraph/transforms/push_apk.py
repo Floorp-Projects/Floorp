@@ -53,8 +53,13 @@ def make_task_description(config, jobs):
             'release-level': config.params.release_level(),
         }
 
-        resolve_keyed_by(job, 'worker.commit', item_name=job['name'], **params_kwargs)
-        resolve_keyed_by(job, 'worker-type', item_name=job['name'], **params_kwargs)
+        for key in (
+            'worker.commit',
+            'worker.google-play-track',
+            'worker.rollout-percentage',
+            'worker-type',
+        ):
+            resolve_keyed_by(job, key, item_name=job['name'], **params_kwargs)
 
         job['scopes'] = [get_push_apk_scope(config, job['attributes'].get('release-type'))]
 
