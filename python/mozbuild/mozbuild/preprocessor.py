@@ -246,7 +246,7 @@ class Expression:
         def __repr__(self):
             return self.value.__repr__()
 
-    class ParseError(StandardError):
+    class ParseError(Exception):
         """
         Error raised when parsing fails.
         It has two members, offset and content, which give the offset of the
