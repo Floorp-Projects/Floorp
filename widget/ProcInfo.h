@@ -18,7 +18,7 @@ enum class ProcType {
   Web,
   File,
   Extension,
-  PrivilegedAbout,
+  Privileged,
   WebLargeAllocation,
   // GPU process (only on Windows)
   Gpu,
