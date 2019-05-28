@@ -33,6 +33,7 @@ CompiledModules(
     'log.js',
     'makeRecord.js',
     'memoize.js',
+    'memoizeLast.js',
     'memoizableAction.js',
     'path.js',
     'prefs.js',
