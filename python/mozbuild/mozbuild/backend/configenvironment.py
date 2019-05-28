@@ -22,12 +22,6 @@ from mozbuild.util import (
 from mozbuild.shellutil import quote as shell_quote
 
 
-if sys.version_info.major == 2:
-    text_type = unicode
-else:
-    text_type = str
-
-
 class BuildConfig(object):
     """Represents the output of configure."""
 
@@ -197,7 +191,7 @@ class ConfigEnvironment(object):
         self.substs_unicode = {}
 
         def decode(v):
-            if not isinstance(v, text_type):
+            if not isinstance(v, six.text_type):
                 try:
                     return v.decode('utf-8')
                 except UnicodeDecodeError:
@@ -207,7 +201,7 @@ class ConfigEnvironment(object):
             if not isinstance(v, six.string_types):
                 if isinstance(v, Iterable):
                     type(v)(decode(i) for i in v)
-            elif not isinstance(v, text_type):
+            elif not isinstance(v, six.text_type):
                 v = decode(v)
 
             self.substs_unicode[k] = v
