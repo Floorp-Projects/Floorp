@@ -9,6 +9,7 @@ import android.content.Intent.ACTION_SEND
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
@@ -16,11 +17,13 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.navigation.fragment.NavHostFragment.findNavController
+import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.fragment_share.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.concept.sync.DeviceEventOutgoing
+import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
@@ -33,8 +36,7 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
         get() = Dispatchers.Main + job
     private lateinit var job: Job
     private lateinit var component: ShareComponent
-    private lateinit var url: String
-    private lateinit var title: String
+    private var tabs: Array<ShareTab> = emptyArray()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,9 +47,13 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
         val view = inflater.inflate(R.layout.fragment_share, container, false)
         val args = ShareFragmentArgs.fromBundle(arguments!!)
 
+        if (args.url == null && args.tabs.isNullOrEmpty()) {
+            throw IllegalStateException("URL and tabs cannot both be null.")
+        }
+
         job = Job()
-        url = args.url
-        title = args.title ?: ""
+        tabs = args.tabs ?: arrayOf(ShareTab(args.url!!, args.title ?: ""))
+
         component = ShareComponent(
             view.share_wrapper,
             ActionBusFactory.get(this),
@@ -99,10 +105,7 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
                 is ShareAction.ShareDeviceClicked -> {
                     val authAccount = requireComponents.backgroundServices.accountManager.authenticatedAccount()
                     authAccount?.run {
-                        deviceConstellation().sendEventToDeviceAsync(
-                            it.device.id,
-                            DeviceEventOutgoing.SendTab(title, url)
-                        )
+                        sendSendTab(this, it.device.id, tabs)
                     }
                     dismiss()
                 }
@@ -110,17 +113,17 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
                     val authAccount = requireComponents.backgroundServices.accountManager.authenticatedAccount()
                     authAccount?.run {
                         it.devices.forEach { device ->
-                            deviceConstellation().sendEventToDeviceAsync(
-                                device.id,
-                                DeviceEventOutgoing.SendTab(title, url)
-                            )
+                            sendSendTab(this, device.id, tabs)
                         }
                     }
                     dismiss()
                 }
                 is ShareAction.ShareAppClicked -> {
+
+                    val shareText = tabs.joinToString("\n") { tab -> tab.url }
+
                     val intent = Intent(ACTION_SEND).apply {
-                        putExtra(EXTRA_TEXT, url)
+                        putExtra(EXTRA_TEXT, shareText)
                         type = "text/plain"
                         flags = FLAG_ACTIVITY_NEW_TASK
                         `package` = it.packageName
@@ -131,4 +134,18 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
             }
         }
     }
+
+    private fun sendSendTab(account: OAuthAccount, deviceId: String, tabs: Array<ShareTab>) {
+        account.run {
+            tabs.forEach { tab ->
+                deviceConstellation().sendEventToDeviceAsync(
+                    deviceId,
+                    DeviceEventOutgoing.SendTab(tab.title, tab.url)
+                )
+            }
+        }
+    }
 }
+
+@Parcelize
+data class ShareTab(val url: String, val title: String, val sessionId: String? = null) : Parcelable

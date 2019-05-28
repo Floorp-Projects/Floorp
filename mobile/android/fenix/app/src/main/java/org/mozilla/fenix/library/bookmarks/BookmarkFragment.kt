@@ -223,10 +223,12 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                     }
                     is BookmarkAction.Share -> {
                         it.item.url?.apply {
-                            navigation
-                                .navigate(
-                                    BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(this)
+                            navigation.navigate(
+                                BookmarkFragmentDirections.actionBookmarkFragmentToShareFragment(
+                                    this,
+                                    it.item.title
                                 )
+                            )
                             requireComponents.analytics.metrics.track(Event.ShareBookmark)
                         }
                     }

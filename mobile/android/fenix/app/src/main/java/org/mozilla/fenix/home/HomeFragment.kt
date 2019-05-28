@@ -70,6 +70,7 @@ import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
@@ -323,10 +324,9 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
             is TabAction.Share -> {
                 invokePendingDeleteJobs()
-                requireComponents.core.sessionManager.findSessionById(action.sessionId)
-                    ?.let { session ->
-                        share(session.url)
-                    }
+                requireComponents.core.sessionManager.findSessionById(action.sessionId)?.let { session ->
+                    share(session.url)
+                }
             }
             is TabAction.CloseAll -> {
                 removeAllTabsWithUndo(action.private)
@@ -346,10 +346,10 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
             is TabAction.ShareTabs -> {
                 invokePendingDeleteJobs()
-                val shareText = requireComponents.core.sessionManager.sessions.joinToString("\n") {
-                    it.url
+                val shareTabs = requireComponents.core.sessionManager.sessions.map {
+                    ShareTab(it.url, it.title, it.id)
                 }
-                share(shareText)
+                share(tabs = shareTabs)
             }
         }
     }
@@ -433,10 +433,8 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 }
             }
             is CollectionAction.ShareTabs -> {
-                val shareText = action.collection.tabs.joinToString("\n") {
-                    it.url
-                }
-                share(shareText)
+                val shareTabs = action.collection.tabs.map { ShareTab(it.url, it.title) }
+                share(tabs = shareTabs)
             }
             is CollectionAction.RemoveTab -> {
                 launch(Dispatchers.IO) {
@@ -664,8 +662,9 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         }
     }
 
-    private fun share(text: String) {
-        val directions = HomeFragmentDirections.actionHomeFragmentToShareFragment(text)
+    private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
+        val directions =
+            HomeFragmentDirections.actionHomeFragmentToShareFragment(url = url, tabs = tabs?.toTypedArray())
         Navigation.findNavController(view!!).navigate(directions)
     }
 

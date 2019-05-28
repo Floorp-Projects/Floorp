@@ -402,12 +402,19 @@
         tools:layout="@layout/fragment_share" >
         <argument
             android:name="url"
-            app:argType="string" />
+            android:defaultValue="@null"
+            app:argType="string"
+            app:nullable="true" />
         <argument
             android:name="title"
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="tabs"
+            android:defaultValue="@null"
+            app:nullable="true"
+            app:argType="org.mozilla.fenix.share.ShareTab[]" />
         <action
             android:id="@+id/action_shareFragment_to_turnOnSyncFragment"
             app:destination="@+id/turnOnSyncFragment"

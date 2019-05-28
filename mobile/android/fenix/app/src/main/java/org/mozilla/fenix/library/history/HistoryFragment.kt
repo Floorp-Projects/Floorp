@@ -41,6 +41,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import org.mozilla.fenix.share.ShareTab
 import java.net.MalformedURLException
 import java.net.URL
 import kotlin.coroutines.CoroutineContext
@@ -183,10 +184,8 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
                 when {
                     selectedHistory.size == 1 -> share(selectedHistory.first().url)
                     selectedHistory.size > 1 -> {
-                        val shareText = selectedHistory.joinToString("\n") {
-                            it.url
-                        }
-                        share(shareText)
+                        val shareTabs = selectedHistory.map { ShareTab(it.url, it.title) }
+                        share(tabs = shareTabs)
                     }
                 }
                 true
@@ -283,8 +282,9 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
         }
     }
 
-    private fun share(text: String) {
-        val directions = HistoryFragmentDirections.actionHistoryFragmentToShareFragment(text)
+    private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
+        val directions =
+            HistoryFragmentDirections.actionHistoryFragmentToShareFragment(url = url, tabs = tabs?.toTypedArray())
         Navigation.findNavController(view!!).navigate(directions)
     }
 }
