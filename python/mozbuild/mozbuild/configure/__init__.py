@@ -913,6 +913,8 @@ class ConfigureSandbox(dict):
         import_line = ''
         if '.' in what:
             _from, what = what.rsplit('.', 1)
+            if _from == '__builtin__' or _from.startswith('__builtin__.'):
+                _from = _from.replace('__builtin__', 'six.moves.builtins')
             import_line += 'from %s ' % _from
         import_line += 'import %s as imported' % what
         glob = {}
