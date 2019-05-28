@@ -341,12 +341,7 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);
-
-    nsTArray<BrowsingContextId> contexts(aChildren.Length());
-    for (BrowsingContext* child : aChildren) {
-      contexts.AppendElement(child->Id());
-    }
-    cc->SendRestoreBrowsingContextChildren(this, contexts);
+    cc->SendRestoreBrowsingContextChildren(this, aChildren);
   }
 }
 
