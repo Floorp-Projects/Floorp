@@ -97,12 +97,6 @@ class nsWebPDecoder final : public Decoder {
 
   /// True if we have setup the color profile for the image.
   bool mGotColorProfile;
-
-  /// Color management profile from the ICCP chunk in the image.
-  qcms_profile* mInProfile;
-
-  /// Color management transform to apply to image data.
-  qcms_transform* mTransform;
 };
 
 }  // namespace image
