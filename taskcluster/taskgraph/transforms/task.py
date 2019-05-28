@@ -135,7 +135,7 @@ task_description_schema = Schema({
 
         # Type of gecko v2 index to use
         'type': Any('generic', 'nightly', 'l10n', 'nightly-with-multi-l10n',
-                    'release', 'nightly-l10n', 'shippable', 'shippable-l10n',
+                    'nightly-l10n', 'shippable', 'shippable-l10n',
                     'android-nightly', 'android-nightly-with-multi-l10n'),
 
         # The rank that the task will receive in the TaskCluster
@@ -1479,29 +1479,6 @@ def add_shippable_index_routes(config, task):
     # For nightly-compat index:
     if 'nightly' in config.params['target_tasks_method']:
         add_nightly_index_routes(config, task)
-
-    return task
-
-
-@index_builder('release')
-def add_release_index_routes(config, task):
-    index = task.get('index')
-    routes = []
-    release_config = get_release_config(config)
-
-    subs = config.params.copy()
-    subs['build_number'] = str(release_config['build_number'])
-    subs['revision'] = subs['head_rev']
-    subs['underscore_version'] = release_config['version'].replace('.', '_')
-    subs['product'] = index['product']
-    subs['trust-domain'] = config.graph_config['trust-domain']
-    subs['branch_rev'] = get_branch_rev(config)
-    subs['branch'] = subs['project']
-
-    for rt in task.get('routes', []):
-        routes.append(rt.format(**subs))
-
-    task['routes'] = routes
 
     return task
 
