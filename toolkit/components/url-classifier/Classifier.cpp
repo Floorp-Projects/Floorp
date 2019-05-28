@@ -19,7 +19,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Base64.h"
@@ -41,8 +40,6 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define UPDATING_DIR_SUFFIX NS_LITERAL_CSTRING("-updating")
 
 #define METADATA_SUFFIX NS_LITERAL_CSTRING(".metadata")
-
-#define DEFAULT_THREAD_TIMEOUT_MS 5000
 
 namespace mozilla {
 namespace safebrowsing {
@@ -131,9 +128,8 @@ Classifier::Classifier()
     : mIsTableRequestResultOutdated(true),
       mUpdateInterrupted(true),
       mIsClosed(false) {
-  // Make a lazy thread for any IO
-  mUpdateThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                                     NS_LITERAL_CSTRING("Classifier Update"));
+  NS_NewNamedThread(NS_LITERAL_CSTRING("Classifier Update"),
+                    getter_AddRefs(mUpdateThread));
 }
 
 Classifier::~Classifier() { Close(); }
