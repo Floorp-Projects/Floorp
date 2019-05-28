@@ -6,8 +6,11 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -153,10 +156,19 @@ class SessionUseCasesTest {
     fun clearData() {
         val engineSession = mock(EngineSession::class.java)
         val session = mock(Session::class.java)
+        val engine = mock(Engine::class.java)
+        `when`(sessionManager.engine).thenReturn(engine)
         `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         useCases.clearData.invoke(session)
+        verify(engine).clearData()
         verify(engineSession).clearData()
+
+        useCases.clearData.invoke(data = BrowsingData.select(BrowsingData.COOKIES))
+        verify(engine).clearData(eq(BrowsingData.select(BrowsingData.COOKIES)), eq(null), any(), any())
+
+        useCases.clearData.invoke(session, data = BrowsingData.select(BrowsingData.COOKIES))
+        verify(engineSession).clearData(eq(BrowsingData.select(BrowsingData.COOKIES)), eq(null), any(), any())
 
         `when`(sessionManager.getOrCreateEngineSession(selectedSession)).thenReturn(selectedEngineSession)
         useCases.clearData.invoke()

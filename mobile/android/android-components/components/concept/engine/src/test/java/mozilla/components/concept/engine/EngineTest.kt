@@ -50,14 +50,12 @@ class EngineTest {
         assertTrue(exception is UnsupportedOperationException)
     }
 
-    // TODO change this behaviour to invoke error callback once
-    // https://github.com/mozilla-mobile/android-components/issues/1798
-    // is fully implemented.
     @Test
-    fun `invokes success callback if clear data not supported`() {
-        var callbackInvoked = false
-        testEngine.clearData(Engine.BrowsingData.all(), onSuccess = { callbackInvoked = true })
-        assertTrue(callbackInvoked)
+    fun `invokes error callback if clear data not supported`() {
+        var exception: Throwable? = null
+        testEngine.clearData(Engine.BrowsingData.all(), onError = { exception = it })
+        assertNotNull(exception)
+        assertTrue(exception is UnsupportedOperationException)
     }
 
     @Test

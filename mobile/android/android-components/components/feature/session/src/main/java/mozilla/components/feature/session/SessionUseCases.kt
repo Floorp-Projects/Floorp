@@ -6,6 +6,7 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Engine.BrowsingData
 
 /**
  * Contains use cases related to the session feature.
@@ -167,9 +168,10 @@ class SessionUseCases(
         /**
          * Clears all user data sources available.
          */
-        fun invoke(session: Session? = sessionManager.selectedSession) {
+        fun invoke(session: Session? = sessionManager.selectedSession, data: BrowsingData = BrowsingData.all()) {
+            sessionManager.engine.clearData(data)
             if (session != null) {
-                sessionManager.getOrCreateEngineSession(session).clearData()
+                sessionManager.getOrCreateEngineSession(session).clearData(data)
             }
         }
     }

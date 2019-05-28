@@ -103,6 +103,29 @@ class GeckoEngine(
         }
     }
 
+    /**
+     * See [Engine.clearData].
+     */
+    override fun clearData(
+        data: Engine.BrowsingData,
+        host: String?,
+        onSuccess: () -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        val flags = data.types.toLong()
+        if (host != null) {
+            runtime.storageController.clearDataFromHost(host, flags)
+        } else {
+            runtime.storageController.clearData(flags)
+        }.then({
+            onSuccess()
+            GeckoResult<Void>()
+        }, {
+            throwable -> onError(throwable)
+            GeckoResult<Void>()
+        })
+    }
+
     override fun name(): String = "Gecko"
 
     /**

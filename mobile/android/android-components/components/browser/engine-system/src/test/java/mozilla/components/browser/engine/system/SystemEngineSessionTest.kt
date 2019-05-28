@@ -17,6 +17,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
+import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.request.RequestInterceptor
@@ -25,6 +26,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -35,9 +37,11 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.Modifier
@@ -722,6 +726,7 @@ class SystemEngineSessionTest {
         `when`(webView.context).thenReturn(context)
         engineSession.webView = webView
 
+        // clear all data by default
         engineSession.clearData()
         verify(webView).clearFormData()
         verify(webView).clearHistory()
@@ -730,6 +735,105 @@ class SystemEngineSessionTest {
         verify(webView).clearCache(true)
         verify(webStorage).deleteAllData()
         verify(webViewDatabase).clearHttpAuthUsernamePassword()
+
+        // clear storages
+        engineSession.clearData(BrowsingData.select(BrowsingData.DOM_STORAGES))
+        verify(webStorage, times(2)).deleteAllData()
+        verify(webView, times(1)).clearCache(true)
+        verify(webView, times(1)).clearFormData()
+        verify(webView, times(1)).clearMatches()
+        verify(webView, times(1)).clearHistory()
+        verify(webView, times(1)).clearSslPreferences()
+        verify(webViewDatabase, times(1)).clearHttpAuthUsernamePassword()
+
+        // clear auth info
+        engineSession.clearData(BrowsingData.select(BrowsingData.AUTH_SESSIONS))
+        verify(webViewDatabase, times(2)).clearHttpAuthUsernamePassword()
+        verify(webStorage, times(2)).deleteAllData()
+        verify(webView, times(1)).clearCache(true)
+        verify(webView, times(1)).clearFormData()
+        verify(webView, times(1)).clearMatches()
+        verify(webView, times(1)).clearHistory()
+        verify(webView, times(1)).clearSslPreferences()
+
+        // clear cookies
+        engineSession.clearData(BrowsingData.select(BrowsingData.COOKIES))
+        verify(webViewDatabase, times(2)).clearHttpAuthUsernamePassword()
+        verify(webStorage, times(2)).deleteAllData()
+        verify(webView, times(1)).clearCache(true)
+        verify(webView, times(1)).clearFormData()
+        verify(webView, times(1)).clearMatches()
+        verify(webView, times(1)).clearHistory()
+        verify(webView, times(1)).clearSslPreferences()
+
+        // clear image cache
+        engineSession.clearData(BrowsingData.select(BrowsingData.IMAGE_CACHE))
+        verify(webView, times(2)).clearCache(true)
+        verify(webViewDatabase, times(2)).clearHttpAuthUsernamePassword()
+        verify(webStorage, times(2)).deleteAllData()
+        verify(webView, times(1)).clearFormData()
+        verify(webView, times(1)).clearMatches()
+        verify(webView, times(1)).clearHistory()
+        verify(webView, times(1)).clearSslPreferences()
+
+        // clear network cache
+        engineSession.clearData(BrowsingData.select(BrowsingData.NETWORK_CACHE))
+        verify(webView, times(3)).clearCache(true)
+        verify(webViewDatabase, times(2)).clearHttpAuthUsernamePassword()
+        verify(webStorage, times(2)).deleteAllData()
+        verify(webView, times(1)).clearFormData()
+        verify(webView, times(1)).clearMatches()
+        verify(webView, times(1)).clearHistory()
+        verify(webView, times(1)).clearSslPreferences()
+
+        // clear all caches
+        engineSession.clearData(BrowsingData.allCaches())
+        verify(webView, times(4)).clearCache(true)
+        verify(webViewDatabase, times(2)).clearHttpAuthUsernamePassword()
+        verify(webStorage, times(2)).deleteAllData()
+        verify(webView, times(1)).clearFormData()
+        verify(webView, times(1)).clearMatches()
+        verify(webView, times(1)).clearHistory()
+        verify(webView, times(1)).clearSslPreferences()
+    }
+
+    @Test
+    fun clearDataInvokesSuccessCallback() {
+        val engineSession = spy(SystemEngineSession(getApplicationContext()))
+        val webView = mock(WebView::class.java)
+        val webStorage: WebStorage = mock()
+        val webViewDatabase: WebViewDatabase = mock()
+        val context: Context = getApplicationContext()
+        var onSuccessCalled = false
+
+        doReturn(webStorage).`when`(engineSession).webStorage()
+        doReturn(webViewDatabase).`when`(engineSession).webViewDatabase(context)
+        `when`(webView.context).thenReturn(context)
+        engineSession.webView = webView
+
+        engineSession.clearData(onSuccess = { onSuccessCalled = true })
+        assertTrue(onSuccessCalled)
+    }
+
+    @Test
+    fun clearDataInvokesErrorCallback() {
+        val engineSession = spy(SystemEngineSession(getApplicationContext()))
+        val webView = mock(WebView::class.java)
+        val webViewDatabase: WebViewDatabase = mock()
+        val context: Context = getApplicationContext()
+        var onErrorCalled = false
+
+        val exception = RuntimeException()
+        doThrow(exception).`when`(engineSession).webStorage()
+        doReturn(webViewDatabase).`when`(engineSession).webViewDatabase(context)
+        `when`(webView.context).thenReturn(context)
+        engineSession.webView = webView
+
+        engineSession.clearData(onError = {
+            onErrorCalled = true
+            assertSame(it, exception)
+        })
+        assertTrue(onErrorCalled)
     }
 
     @Test

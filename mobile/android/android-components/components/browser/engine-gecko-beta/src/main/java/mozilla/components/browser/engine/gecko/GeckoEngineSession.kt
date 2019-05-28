@@ -202,13 +202,6 @@ class GeckoEngineSession(
     }
 
     /**
-     * See [EngineSession.clearData]
-     */
-    override fun clearData() {
-        // API not available yet.
-    }
-
-    /**
      * See [EngineSession.findAll]
      */
     override fun findAll(text: String) {

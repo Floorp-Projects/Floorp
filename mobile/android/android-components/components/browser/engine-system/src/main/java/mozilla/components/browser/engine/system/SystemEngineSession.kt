@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
+import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.Settings
@@ -167,20 +168,32 @@ class SystemEngineSession(
     /**
      * See [EngineSession.clearData]
      */
-    override fun clearData() {
+    @Suppress("TooGenericExceptionCaught")
+    override fun clearData(data: BrowsingData, host: String?, onSuccess: () -> Unit, onError: (Throwable) -> Unit) {
         webView.apply {
-            clearFormData()
-            clearHistory()
-            clearMatches()
-            clearSslPreferences()
-            clearCache(true)
-
-            // We don't care about the callback - we just want to make sure cookies are gone
-            CookieManager.getInstance().removeAllCookies(null)
-
-            webStorage().deleteAllData()
-
-            webViewDatabase(context).clearHttpAuthUsernamePassword()
+            try {
+                if (data.contains(BrowsingData.DOM_STORAGES)) {
+                    webStorage().deleteAllData()
+                }
+                if (data.contains(BrowsingData.IMAGE_CACHE) || data.contains(BrowsingData.NETWORK_CACHE)) {
+                    clearCache(true)
+                }
+                if (data.contains(BrowsingData.COOKIES)) {
+                    CookieManager.getInstance().removeAllCookies(null)
+                }
+                if (data.contains(BrowsingData.AUTH_SESSIONS)) {
+                    webViewDatabase(context).clearHttpAuthUsernamePassword()
+                }
+                if (data.contains(BrowsingData.ALL)) {
+                    clearSslPreferences()
+                    clearFormData()
+                    clearMatches()
+                    clearHistory()
+                }
+                onSuccess()
+            } catch (e: Throwable) {
+                onError(e)
+            }
         }
     }
 

@@ -123,10 +123,6 @@ class ServoEngineSession(
         // not implemented yet
     }
 
-    override fun clearData() {
-        // not implemented yet
-    }
-
     override fun findAll(text: String) {
         // not implemented yet
     }

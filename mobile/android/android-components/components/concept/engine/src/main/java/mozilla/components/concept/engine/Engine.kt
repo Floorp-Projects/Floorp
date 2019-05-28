@@ -118,18 +118,19 @@ interface Engine {
     /**
      * Clears browsing data stored by the engine.
      *
-     * @param data the type of data that should be cleared.
+     * @param data the type of data that should be cleared, defaults to all.
      * @param host (optional) name of the host for which data should be cleared. If
      * omitted data will be cleared for all hosts.
      * @param onSuccess (optional) callback invoked if the data was cleared successfully.
      * @param onError (optional) callback invoked if clearing the data caused an exception.
      */
     fun clearData(
-        data: BrowsingData,
+        data: BrowsingData = BrowsingData.all(),
         host: String? = null,
         onSuccess: (() -> Unit) = { },
         onError: ((Throwable) -> Unit) = { }
-    ): Unit = onSuccess()
+    ): Unit = onError(UnsupportedOperationException("Clearing browsing data is not supported by this engine. " +
+            "Check both the engine and engine session implementation."))
 
     /**
      * Provides access to the settings of this engine.

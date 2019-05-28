@@ -648,8 +648,6 @@ open class DummyEngineSession : EngineSession() {
 
     override fun disableTrackingProtection() {}
 
-    override fun clearData() {}
-
     override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
 
     override fun findAll(text: String) {}

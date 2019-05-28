@@ -8,15 +8,18 @@ import android.app.Activity
 import android.content.Context
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.DefaultSettings
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -33,6 +36,7 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.StorageController
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
@@ -309,5 +313,91 @@ class GeckoEngineTest {
         assertNotNull(captor.value)
 
         captor.value.onShutdown()
+    }
+
+    @Test
+    fun `clear browsing data for all hosts`() {
+        val runtime: GeckoRuntime = mock()
+        val storageController: StorageController = mock()
+
+        var onSuccessCalled = false
+
+        var result = GeckoResult<Void>()
+        `when`(runtime.storageController).thenReturn(storageController)
+        `when`(storageController.clearData(eq(Engine.BrowsingData.all().types.toLong()))).thenReturn(result)
+        result.complete(null)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.clearData(data = Engine.BrowsingData.all(), onSuccess = { onSuccessCalled = true })
+        assertTrue(onSuccessCalled)
+    }
+
+    @Test
+    fun `error handler invoked when clearing browsing data for all hosts fails`() {
+        val runtime: GeckoRuntime = mock()
+        val storageController: StorageController = mock()
+
+        var throwable: Throwable? = null
+        var onErrorCalled = false
+
+        val exception = IOException()
+        var result = GeckoResult<Void>()
+        `when`(runtime.storageController).thenReturn(storageController)
+        `when`(storageController.clearData(eq(Engine.BrowsingData.all().types.toLong()))).thenReturn(result)
+        result.completeExceptionally(exception)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.clearData(data = Engine.BrowsingData.all(), onError = {
+            onErrorCalled = true
+            throwable = it
+        })
+        assertTrue(onErrorCalled)
+        assertSame(exception, throwable)
+    }
+
+    @Test
+    fun `clear browsing data for specified host`() {
+        val runtime: GeckoRuntime = mock()
+        val storageController: StorageController = mock()
+
+        var onSuccessCalled = false
+
+        var result = GeckoResult<Void>()
+        `when`(runtime.storageController).thenReturn(storageController)
+        `when`(storageController.clearDataFromHost(
+                eq("mozilla.org"),
+                eq(Engine.BrowsingData.all().types.toLong()))
+        ).thenReturn(result)
+        result.complete(null)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.clearData(data = Engine.BrowsingData.all(), host = "mozilla.org", onSuccess = { onSuccessCalled = true })
+        assertTrue(onSuccessCalled)
+    }
+
+    @Test
+    fun `error handler invoked when clearing browsing data for specified hosts fails`() {
+        val runtime: GeckoRuntime = mock()
+        val storageController: StorageController = mock()
+
+        var throwable: Throwable? = null
+        var onErrorCalled = false
+
+        val exception = IOException()
+        var result = GeckoResult<Void>()
+        `when`(runtime.storageController).thenReturn(storageController)
+        `when`(storageController.clearDataFromHost(
+                eq("mozilla.org"),
+                eq(Engine.BrowsingData.all().types.toLong()))
+        ).thenReturn(result)
+        result.completeExceptionally(exception)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.clearData(data = Engine.BrowsingData.all(), host = "mozilla.org", onError = {
+            onErrorCalled = true
+            throwable = it
+        })
+        assertTrue(onErrorCalled)
+        assertSame(exception, throwable)
     }
 }
