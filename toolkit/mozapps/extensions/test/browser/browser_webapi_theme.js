@@ -49,10 +49,10 @@ add_task(async function test_theme_install() {
     let parsed = JSON.parse(updates[0]);
     ok(parsed.theme.headerURL.endsWith("/testImage.png"),
        "Theme update has the expected headerURL");
-    is(parsed.id, "theme@tests.mozilla.org", "Theme update includes the theme ID");
-    is(parsed.version, "1.0", "Theme update includes the theme's version");
+    is(parsed.theme.id, "theme@tests.mozilla.org", "Theme update includes the theme ID");
+    is(parsed.theme.version, "1.0", "Theme update includes the theme's version");
 
-    let addon = await AddonManager.getAddonByID(parsed.id);
+    let addon = await AddonManager.getAddonByID(parsed.theme.id);
     await addon.uninstall();
   });
 });
