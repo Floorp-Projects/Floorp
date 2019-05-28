@@ -783,11 +783,6 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
   }
   int32_t behavior = parentDoc->CookieSettings()->GetCookieBehavior();
 
-  MOZ_ASSERT(
-      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      behavior ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-
   if (!parentDoc->CookieSettings()->GetRejectThirdPartyTrackers()) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
@@ -795,6 +790,11 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
          behavior));
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
+
+  MOZ_ASSERT(
+      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+      behavior ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
 
   if (CheckContentBlockingAllowList(aParentWindow)) {
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
