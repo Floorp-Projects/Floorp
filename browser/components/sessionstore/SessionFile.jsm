@@ -35,7 +35,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   RunState: "resource:///modules/sessionstore/RunState.jsm",
-  SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
   SessionWorker: "resource:///modules/sessionstore/SessionWorker.jsm",
 });
@@ -382,8 +381,7 @@ var SessionFileInternal = {
       RunState.setClosed();
     }
 
-    let performShutdownCleanup = isFinalWrite &&
-      !SessionStartup.isAutomaticRestoreEnabled();
+    let performShutdownCleanup = isFinalWrite && !SessionStore.willAutoRestore;
 
     this._attempts++;
     let options = {isFinalWrite, performShutdownCleanup};

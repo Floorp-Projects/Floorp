@@ -155,6 +155,9 @@ const RESTORE_TAB_CONTENT_REASON = {
   NAVIGATE_AND_RESTORE: 1,
 };
 
+// 'browser.startup.page' preference value to resume the previous session.
+const BROWSER_STARTUP_RESUME_SESSION = 3;
+
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryTimestamps.jsm", this);
@@ -231,6 +234,10 @@ var SessionStore = {
 
   get lastClosedObjectType() {
     return SessionStoreInternal.lastClosedObjectType;
+  },
+
+  get willAutoRestore() {
+    return SessionStoreInternal.willAutoRestore;
   },
 
   init: function ss_init() {
@@ -617,6 +624,16 @@ var SessionStoreInternal = {
       }
     }
     return "tab";
+  },
+
+  /**
+   * Returns a boolean that determines whether the session will be automatically
+   * restored upon the _next_ startup or a restart.
+   */
+  get willAutoRestore() {
+    return !PrivateBrowsingUtils.permanentPrivateBrowsing &&
+      (Services.prefs.getBoolPref("browser.sessionstore.resume_session_once") ||
+       Services.prefs.getIntPref("browser.startup.page") == BROWSER_STARTUP_RESUME_SESSION);
   },
 
   /**
