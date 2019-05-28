@@ -87,13 +87,13 @@ add_task(async function() {
   }
 
   ok(!normalRequestState.blockedReason, "Normal request is not blocked");
-  ok(!normalRequestSize.includes("blocked"), "Normal request has a size");
+  ok(!normalRequestSize.includes("Blocked"), "Normal request has a size");
 
   ok(blockedRequestState.blockedReason, "Blocked request is blocked");
-  ok(blockedRequestSize.includes("blocked"), "Blocked request shows reason as size");
+  ok(blockedRequestSize.includes("Blocked"), "Blocked request shows reason as size");
 
   ok(!unblockedRequestState.blockedReason, "Unblocked request is not blocked");
-  ok(!unblockedRequestSize.includes("blocked"), "Unblocked request has a size");
+  ok(!unblockedRequestSize.includes("Blocked"), "Unblocked request has a size");
 
   return teardown(monitor);
 });
