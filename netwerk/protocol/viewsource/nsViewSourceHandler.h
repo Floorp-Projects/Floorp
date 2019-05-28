@@ -33,6 +33,9 @@ class nsViewSourceHandler final : public nsIProtocolHandlerWithDynamicFlags,
 
   static nsViewSourceHandler* GetInstance();
 
+  static nsresult CreateNewURI(const nsACString& aSpec, const char* aCharset,
+                               nsIURI* aBaseURI, nsIURI** aResult);
+
  private:
   ~nsViewSourceHandler();
 

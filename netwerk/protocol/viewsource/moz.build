@@ -15,6 +15,10 @@ UNIFIED_SOURCES += [
     'nsViewSourceHandler.cpp',
 ]
 
+EXPORTS += [
+  'nsViewSourceHandler.h',
+]
+
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/netwerk/base',
