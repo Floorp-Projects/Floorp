@@ -33,7 +33,6 @@ from mozbuild.frontend.data import (
     GnProjectData,
     HostLibrary,
     HostGeneratedSources,
-    HostRustLibrary,
     IPDLCollection,
     LocalizedPreprocessedFiles,
     LocalizedFiles,
@@ -53,7 +52,6 @@ from mozbuild.preprocessor import Preprocessor
 from mozpack.chrome.manifest import parse_manifest_line
 
 from mozbuild.util import (
-    group_unified_files,
     mkdir,
 )
 
@@ -205,8 +203,9 @@ class CommonBackend(BuildBackend):
         if len(self._idl_manager.modules):
             self._write_rust_xpidl_summary(self._idl_manager)
             self._handle_idl_manager(self._idl_manager)
-            self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % stem)
-                                           for stem in self._idl_manager.idl_stems())
+            self._handle_generated_sources(
+                mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % stem)
+                for stem in self._idl_manager.idl_stems())
 
         for config in self._configs:
             self.backend_input_files.add(config.source)
@@ -392,7 +391,7 @@ class CommonBackend(BuildBackend):
                 includeTemplate += (
                     '\n'
                     '#if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)\n'
-                    '#pragma message("wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)\n'
+                    '#pragma message("wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)\n'  # noqa
                     '#error "%(cppfile)s included unwrapped windows.h"\n'
                     "#endif")
             includeTemplate += (

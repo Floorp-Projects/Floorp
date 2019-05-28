@@ -92,6 +92,8 @@ ignore =
 
 per-file-ignores =
     ipc/ipdl/*: F403, F405
+    # cpp_eclipse has a lot of multi-line embedded XML which exceeds line length
+    python/mozbuild/mozbuild/backend/cpp_eclipse.py: E501
     testing/firefox-ui/**/__init__.py: F401
     testing/marionette/**/__init__.py: F401
     testing/mozharness/configs/*: E124, E127, E128, E131, E231, E261, E265, E266, E501, W391

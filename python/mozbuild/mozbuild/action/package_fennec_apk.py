@@ -11,7 +11,6 @@ from __future__ import absolute_import, print_function
 import argparse
 import buildconfig
 import os
-import subprocess
 import sys
 
 from mozpack.copier import Jarrer

@@ -1200,67 +1200,103 @@ SUBCONTEXTS = {cls.__name__: cls for cls in SUBCONTEXTS}
 #   (storage_type, input_types, docs)
 
 VARIABLES = {
-    'SOURCES': (ContextDerivedTypedListWithItems(Path, StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': List})), list,
-                """Source code files.
+    'SOURCES': (
+        ContextDerivedTypedListWithItems(
+            Path,
+            StrictOrderingOnAppendListWithFlagsFactory(
+                {'no_pgo': bool, 'flags': List}
+                )
+            ),
+        list,
+        """Source code files.
 
         This variable contains a list of source code files to compile.
         Accepts assembler, C, C++, Objective C/C++.
-        """),
+        """
+        ),
 
-    'FILES_PER_UNIFIED_FILE': (int, int,
-                               """The number of source files to compile into each unified source file.
+    'FILES_PER_UNIFIED_FILE': (
+        int,
+        int,
+        """The number of source files to compile into each unified source file.
 
-        """),
+        """
+        ),
 
-    'IS_RUST_LIBRARY': (bool, bool,
-                        """Whether the current library defined by this moz.build is built by Rust.
+    'IS_RUST_LIBRARY': (
+        bool,
+        bool,
+        """Whether the current library defined by this moz.build is built by Rust.
 
         The library defined by this moz.build should have a build definition in
         a Cargo.toml file that exists in this moz.build's directory.
-        """),
+        """
+        ),
 
-    'RUST_LIBRARY_FEATURES': (List, list,
-                              """Cargo features to activate for this library.
+    'RUST_LIBRARY_FEATURES': (
+        List,
+        list,
+        """Cargo features to activate for this library.
 
         This variable should not be used directly; you should be using the
         RustLibrary template instead.
-        """),
+        """
+        ),
 
-    'RUST_LIBRARY_TARGET_DIR': (unicode, unicode,
-                                """Where CARGO_TARGET_DIR should point when compiling this library.  If
+    'RUST_LIBRARY_TARGET_DIR': (
+        unicode,
+        unicode,
+        """Where CARGO_TARGET_DIR should point when compiling this library.  If
         not set, it defaults to the current objdir.  It should be a relative path
         to the current objdir; absolute paths should not be used.
 
         This variable should not be used directly; you should be using the
         RustLibrary template instead.
-        """),
+        """
+        ),
 
-    'HOST_RUST_LIBRARY_FEATURES': (List, list,
-                                   """Cargo features to activate for this host library.
+    'HOST_RUST_LIBRARY_FEATURES': (
+        List,
+        list,
+        """Cargo features to activate for this host library.
 
         This variable should not be used directly; you should be using the
         HostRustLibrary template instead.
+        """
+        ),
+
+    'RUST_TESTS': (
+        TypedList(unicode),
+        list,
+        """Names of Rust tests to build and run via `cargo test`.
         """),
 
-    'RUST_TESTS': (TypedList(unicode), list,
-                   """Names of Rust tests to build and run via `cargo test`.
-        """),
+    'RUST_TEST_FEATURES': (
+        TypedList(unicode),
+        list,
+        """Cargo features to activate for RUST_TESTS.
+        """
+        ),
 
-    'RUST_TEST_FEATURES': (TypedList(unicode), list,
-                           """Cargo features to activate for RUST_TESTS.
-        """),
-
-    'UNIFIED_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
-                        """Source code files that can be compiled together.
+    'UNIFIED_SOURCES': (
+        ContextDerivedTypedList(
+            SourcePath,
+            StrictOrderingOnAppendList
+            ),
+        list,
+        """Source code files that can be compiled together.
 
         This variable contains a list of source code files to compile,
         that can be concatenated all together and built as a single source
         file. This can help make the build faster and reduce the debug info
         size.
-        """),
+        """
+        ),
 
-    'GENERATED_FILES': (GeneratedFilesList, list,
-                        """Generic generated files.
+    'GENERATED_FILES': (
+        GeneratedFilesList,
+        list,
+        """Generic generated files.
 
         This variable contains a list of files for the build system to
         generate at export time. The generation method may be declared
@@ -1308,10 +1344,13 @@ VARIABLES = {
         build, regardless of whether it is stale.  This is special to the
         RecursiveMake backend and intended for special situations only (e.g.,
         localization).  Please consult a build peer before using ``force``.
-        """),
+        """
+        ),
 
-    'DEFINES': (InitializedDefines, dict,
-                """Dictionary of compiler defines to declare.
+    'DEFINES': (
+        InitializedDefines,
+        dict,
+        """Dictionary of compiler defines to declare.
 
         These are passed in to the compiler as ``-Dkey='value'`` for string
         values, ``-Dkey=value`` for numeric values, or ``-Dkey`` if the
@@ -1336,17 +1375,23 @@ VARIABLES = {
                'MOZ_EXTENSIONS_DB_SCHEMA': 15,
                'DLL_SUFFIX': '".so"',
            })
-        """),
+        """
+        ),
 
-    'DELAYLOAD_DLLS': (List, list,
-                       """Delay-loaded DLLs.
+    'DELAYLOAD_DLLS': (
+        List,
+        list,
+        """Delay-loaded DLLs.
 
         This variable contains a list of DLL files which the module being linked
         should load lazily.  This only has an effect when building with MSVC.
-        """),
+        """
+        ),
 
-    'DIRS': (ContextDerivedTypedList(SourcePath), list,
-             """Child directories to descend into looking for build frontend files.
+    'DIRS': (
+        ContextDerivedTypedList(SourcePath),
+        list,
+        """Child directories to descend into looking for build frontend files.
 
         This works similarly to the ``DIRS`` variable in make files. Each str
         value in the list is the name of a child directory. When this file is
@@ -1357,10 +1402,13 @@ VARIABLES = {
         Values are relative paths. They can be multiple directory levels
         above or below. Use ``..`` for parent directories and ``/`` for path
         delimiters.
-        """),
+        """
+        ),
 
-    'HAS_MISC_RULE': (bool, bool,
-                      """Whether this directory should be traversed in the ``misc`` tier.
+    'HAS_MISC_RULE': (
+        bool,
+        bool,
+        """Whether this directory should be traversed in the ``misc`` tier.
 
         Many ``libs`` rules still exist in Makefile.in files. We highly prefer
         that these rules exist in the ``misc`` tier/target so that they can be
@@ -1373,7 +1421,8 @@ VARIABLES = {
         Please note that converting ``libs`` rules to the ``misc`` tier must
         be done with care, as there are many implicit dependencies that can
         break the build in subtle ways.
-        """),
+        """
+        ),
 
     'FINAL_TARGET_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
                            """List of files to be installed into the application directory.
@@ -1680,23 +1729,35 @@ VARIABLES = {
         the Cargo.toml in the same directory.
         """),
 
-    'CONFIGURE_SUBST_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
-                              """Output files that will be generated using configure-like substitution.
+    'CONFIGURE_SUBST_FILES': (
+        ContextDerivedTypedList(
+            SourcePath,
+            StrictOrderingOnAppendList
+            ),
+        list,
+        """Output files that will be generated using configure-like substitution.
 
         This is a substitute for ``AC_OUTPUT`` in autoconf. For each path in this
         list, we will search for a file in the srcdir having the name
         ``{path}.in``. The contents of this file will be read and variable
         patterns like ``@foo@`` will be substituted with the values of the
         ``AC_SUBST`` variables declared during configure.
-        """),
+        """
+        ),
 
-    'CONFIGURE_DEFINE_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
-                               """Output files generated from configure/config.status.
+    'CONFIGURE_DEFINE_FILES': (
+        ContextDerivedTypedList(
+            SourcePath,
+            StrictOrderingOnAppendList
+            ),
+        list,
+        """Output files generated from configure/config.status.
 
         This is a substitute for ``AC_CONFIG_HEADER`` in autoconf. This is very
         similar to ``CONFIGURE_SUBST_FILES`` except the generation logic takes
         into account the values of ``AC_DEFINE`` instead of ``AC_SUBST``.
-        """),
+        """
+        ),
 
     'EXPORTS': (ContextDerivedTypedHierarchicalStringList(Path), list,
                 """List of files to be exported, and in which subdirectories.
@@ -1920,7 +1981,7 @@ VARIABLES = {
         """),
 
     'TELEMETRY_TESTS_CLIENT_MANIFESTS': (ManifestparserManifestList, list,
-        """List of manifest files defining telemetry client tests.
+                                         """List of manifest files defining telemetry client tests.
         """),
 
     # The following variables are used to control the target of installed files.
@@ -2426,23 +2487,31 @@ SPECIAL_VARIABLES = {
        ``$(FINAL_TARGET)/components/``.
         """),
 
-    'EXTRA_PP_COMPONENTS': (lambda context: context['FINAL_TARGET_PP_FILES'].components._strings, list,
-                            """Javascript XPCOM files.
+    'EXTRA_PP_COMPONENTS': (
+        lambda context: context['FINAL_TARGET_PP_FILES'].components._strings,
+        list,
+        """Javascript XPCOM files.
 
        This variable contains a list of files to preprocess.  Generated
        files will be installed in the ``/components`` directory of the distribution.
-        """),
+        """
+        ),
 
-    'JS_PREFERENCE_FILES': (lambda context: context['FINAL_TARGET_FILES'].defaults.pref._strings, list,
-                            """Exported JavaScript files.
+    'JS_PREFERENCE_FILES': (
+        lambda context: context['FINAL_TARGET_FILES'].defaults.pref._strings,
+        list,
+        """Exported JavaScript files.
 
         A list of files copied into the dist directory for packaging and installation.
         Path will be defined for gre or application prefs dir based on what is building.
         """),
 
-    'JS_PREFERENCE_PP_FILES': (lambda context: context['FINAL_TARGET_PP_FILES'].defaults.pref._strings, list,
-                               """Like JS_PREFERENCE_FILES, preprocessed..
-        """),
+    'JS_PREFERENCE_PP_FILES': (
+        lambda context: context['FINAL_TARGET_PP_FILES'].defaults.pref._strings,
+        list,
+        """Like JS_PREFERENCE_FILES, preprocessed..
+        """
+        ),
 
     'RESOURCE_FILES': (lambda context: context['FINAL_TARGET_FILES'].res, list,
                        """List of resources to be exported, and in which subdirectories.
@@ -2459,13 +2528,16 @@ SPECIAL_VARIABLES = {
            RESOURCE_FILES.fonts += ['bar.res']
         """),
 
-    'CONTENT_ACCESSIBLE_FILES': (lambda context: context['FINAL_TARGET_FILES'].contentaccessible, list,
-                                 """List of files which can be accessed by web content through resource:// URIs.
+    'CONTENT_ACCESSIBLE_FILES': (
+        lambda context: context['FINAL_TARGET_FILES'].contentaccessible,
+        list,
+        """List of files which can be accessed by web content through resource:// URIs.
 
         ``CONTENT_ACCESSIBLE_FILES`` is used to list the files to be exported
         to ``dist/bin/contentaccessible``. Files can also be appended to a
         field to indicate which subdirectory they should be exported to.
-        """),
+        """
+        ),
 
     'EXTRA_JS_MODULES': (lambda context: context['FINAL_TARGET_FILES'].modules, list,
                          """Additional JavaScript files to distribute.

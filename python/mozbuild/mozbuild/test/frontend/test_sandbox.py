@@ -4,8 +4,6 @@
 
 from __future__ import unicode_literals
 
-import os
-import shutil
 import unittest
 
 from mozunit import main
@@ -30,7 +28,6 @@ from mozbuild.frontend.context import (
 )
 
 from mozbuild.test.common import MockConfig
-from types import StringTypes
 
 import mozpack.path as mozpath
 

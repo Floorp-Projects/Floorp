@@ -24,7 +24,6 @@ import pytoml
 
 from .data import (
     BaseRustProgram,
-    BaseSources,
     ChromeManifestEntry,
     ComputedFlags,
     ConfigFileSubstitution,
@@ -57,7 +56,6 @@ from .data import (
     ObjdirFiles,
     ObjdirPreprocessedFiles,
     PerSourceFlag,
-    PgoGenerateOnlySources,
     WebIDLCollection,
     Program,
     RustLibrary,
@@ -93,7 +91,6 @@ from .context import (
     ObjDirPath,
     Path,
     SubContext,
-    TemplateContext,
 )
 
 from mozbuild.base import ExecutionSummary
@@ -448,8 +445,8 @@ class TreeMetadataEmitter(LoggingMixin):
             raise SandboxValidationError(
                 '%s contains "static:%s", but there is only a shared "%s" '
                 'in %s. You may want to add FORCE_STATIC_LIB=True in '
-                '%s/moz.build, or remove "static:".' % (variable, path,
-                                                        name, candidates[0].relobjdir, candidates[0].relobjdir),
+                '%s/moz.build, or remove "static:".' % (
+                    variable, path, name, candidates[0].relobjdir, candidates[0].relobjdir),
                 context)
 
         elif isinstance(obj, StaticLibrary) and isinstance(candidates[0],
@@ -586,8 +583,8 @@ class TreeMetadataEmitter(LoggingMixin):
             if program in self._binaries:
                 raise SandboxValidationError(
                     'Cannot use "%s" as %s name, '
-                    'because it is already used in %s' % (program, kind,
-                                                          self._binaries[program].relsrcdir), context)
+                    'because it is already used in %s' % (
+                        program, kind, self._binaries[program].relsrcdir), context)
         for kind, cls in [('PROGRAM', Program), ('HOST_PROGRAM', HostProgram)]:
             program = context.get(kind)
             if program:
@@ -636,8 +633,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 if program in self._binaries:
                     raise SandboxValidationError(
                         'Cannot use "%s" in %s, '
-                        'because it is already used in %s' % (program, kind,
-                                                              self._binaries[program].relsrcdir), context)
+                        'because it is already used in %s' % (
+                            program, kind, self._binaries[program].relsrcdir), context)
                 self._binaries[program] = cls(context, program,
                                               is_unit_test=kind == 'CPP_UNIT_TESTS')
                 self._linkage.append((context, self._binaries[program],
@@ -650,8 +647,8 @@ class TreeMetadataEmitter(LoggingMixin):
 
         if host_libname:
             if host_libname == libname:
-                raise SandboxValidationError('LIBRARY_NAME and '
-                                             'HOST_LIBRARY_NAME must have a different value', context)
+                raise SandboxValidationError(
+                    'LIBRARY_NAME and HOST_LIBRARY_NAME must have a different value', context)
 
             is_rust_library = context.get('IS_RUST_LIBRARY')
             if is_rust_library:
@@ -860,9 +857,9 @@ class TreeMetadataEmitter(LoggingMixin):
                     assert isinstance(f, Path)
                     gen_srcs.append(full_path)
                 if symbol == 'SOURCES':
-                    flags = context_srcs[f]
-                    if flags:
-                        all_flags[full_path] = flags
+                    context_flags = context_srcs[f]
+                    if context_flags:
+                        all_flags[full_path] = context_flags
 
                 if isinstance(f, SourcePath) and not os.path.exists(full_path):
                     raise SandboxValidationError('File listed in %s does not '
@@ -1110,8 +1107,11 @@ class TreeMetadataEmitter(LoggingMixin):
             generated_files.add(str(sub.relpath))
             yield sub
 
-        for defines_var, cls, backend_flags in (('DEFINES', Defines, (computed_flags, computed_as_flags)),
-                                                ('HOST_DEFINES', HostDefines, (computed_host_flags,))):
+        for defines_var, cls, backend_flags in (('DEFINES', Defines,
+                                                 (computed_flags, computed_as_flags)),
+                                                ('HOST_DEFINES', HostDefines,
+                                                 (computed_host_flags,))
+                                                ):
             defines = context.get(defines_var)
             if defines:
                 defines_obj = cls(context, defines)
@@ -1152,18 +1152,20 @@ class TreeMetadataEmitter(LoggingMixin):
             full_path = local_include.full_path
             if not isinstance(local_include, ObjDirPath):
                 if not os.path.exists(full_path):
-                    raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
-                                                 'does not exist: %s (resolved to %s)' % (local_include,
-                                                                                          full_path), context)
+                    raise SandboxValidationError(
+                        'Path specified in LOCAL_INCLUDES does not exist: %s (resolved to %s)' %
+                        (local_include, full_path), context)
                 if not os.path.isdir(full_path):
                     raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
                                                  'is a filename, but a directory is required: %s '
-                                                 '(resolved to %s)' % (local_include, full_path), context)
+                                                 '(resolved to %s)' % (local_include, full_path),
+                                                 context)
             if (full_path == context.config.topsrcdir or
                     full_path == context.config.topobjdir):
-                raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
-                                             '(%s) resolves to the topsrcdir or topobjdir (%s), which is '
-                                             'not allowed' % (local_include, full_path), context)
+                raise SandboxValidationError(
+                    'Path specified in LOCAL_INCLUDES '
+                    '(%s) resolves to the topsrcdir or topobjdir (%s), which is '
+                    'not allowed' % (local_include, full_path), context)
             include_obj = LocalInclude(context, local_include)
             local_includes.append(include_obj.path.full_path)
             yield include_obj
@@ -1258,8 +1260,13 @@ class TreeMetadataEmitter(LoggingMixin):
                             # in anything *but* LOCALIZED_FILES.
                             if f.target_basename in localized_generated_files:
                                 raise SandboxValidationError(
-                                    ('Outputs of LOCALIZED_GENERATED_FILES cannot be used in %s: ' +
-                                     '%s') % (var, f), context)
+                                    (
+                                        'Outputs of LOCALIZED_GENERATED_FILES cannot '
+                                        'be used in %s: %s'
+                                    )
+                                    % (var, f),
+                                    context,
+                                )
 
             # Addons (when XPI_NAME is defined) and Applications (when
             # DIST_SUBDIR is defined) use a different preferences directory
@@ -1496,9 +1503,10 @@ class TreeMetadataEmitter(LoggingMixin):
                             not os.path.isfile(mozpath.join(context.config.topsrcdir,
                                                             install_path[2:])),
                             install_path not in install_info.external_installs]):
-                        raise SandboxValidationError('Error processing test '
-                                                     'manifest %s: entry in support-files not present '
-                                                     'in the srcdir: %s' % (path, install_path), context)
+                        raise SandboxValidationError(
+                            'Error processing test '
+                            'manifest %s: entry in support-files not present '
+                            'in the srcdir: %s' % (path, install_path), context)
 
                 obj.deferred_installs |= install_info.deferred_installs
 
@@ -1535,16 +1543,18 @@ class TreeMetadataEmitter(LoggingMixin):
                 try:
                     del obj.installs[mozpath.join(manifest_dir, f)]
                 except KeyError:
-                    raise SandboxValidationError('Error processing test '
-                                                 'manifest %s: entry in generated-files not present '
-                                                 'elsewhere in manifest: %s' % (path, f), context)
+                    raise SandboxValidationError(
+                        'Error processing test '
+                        'manifest %s: entry in generated-files not present '
+                        'elsewhere in manifest: %s' % (path, f), context)
 
             yield obj
         except (AssertionError, Exception):
-            raise SandboxValidationError('Error processing test '
-                                         'manifest file %s: %s' % (path,
-                                                                   '\n'.join(traceback.format_exception(*sys.exc_info()))),
-                                         context)
+            raise SandboxValidationError(
+                'Error processing test '
+                'manifest file %s: %s' % (path,
+                                          '\n'.join(traceback.format_exception(*sys.exc_info()))),
+                context)
 
     def _process_reftest_manifest(self, context, flavor, manifest_path, manifest):
         manifest_full_path = manifest_path.full_path

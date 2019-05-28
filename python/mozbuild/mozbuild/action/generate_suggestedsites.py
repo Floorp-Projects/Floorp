@@ -38,13 +38,9 @@ import os
 from mozbuild.dotproperties import (
     DotProperties,
 )
-from mozbuild.util import (
-    FileAvoidWrite,
-)
 from mozpack.files import (
     FileFinder,
 )
-import mozpack.path as mozpath
 
 
 def merge_properties(paths):
@@ -92,7 +88,8 @@ def main(output, *args, **kwargs):
     properties = merge_properties(sources)
 
     # Keep these two in sync.
-    image_url_template = 'android.resource://%s/drawable/suggestedsites_{name}' % opts.android_package_name
+    image_url_template = \
+        'android.resource://%s/drawable/suggestedsites_{name}' % opts.android_package_name
     drawables_template = 'drawable*/suggestedsites_{name}.*'
 
     # Load properties corresponding to each site name and define their
@@ -121,7 +118,9 @@ def main(output, *args, **kwargs):
             else:
                 if opts.verbose:
                     print("Found {len} drawables in '{resources}' for '{name}': {matches}"
-                          .format(len=len(matches), resources=resources, name=name, matches=matches))
+                          .format(len=len(matches), resources=resources,
+                                  name=name, matches=matches)
+                          )
 
     # We want the lists to be ordered for reproducibility.  Each list has a
     # "default" JSON list item which will be extended by the properties read.
