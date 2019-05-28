@@ -1868,6 +1868,23 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
         .Finalize(aURI);
   }
 
+  if (aBaseURI) {
+    nsAutoCString newSpec;
+    rv = aBaseURI->Resolve(aSpec, newSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoCString newScheme;
+    rv = net_ExtractURLScheme(newSpec, newScheme);
+    if (NS_SUCCEEDED(rv)) {
+      // The scheme shouldn't really change at this point.
+      MOZ_DIAGNOSTIC_ASSERT(newScheme == scheme);
+    }
+
+    return NS_MutateURI(new nsSimpleURI::Mutator())
+        .SetSpec(newSpec)
+        .Finalize(aURI);
+  }
+
   // Falls back to external protocol handler.
   return NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(aURI);
 }
