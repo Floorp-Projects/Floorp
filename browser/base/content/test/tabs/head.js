@@ -189,3 +189,80 @@ async function dragAndDrop(tab1, tab2, copy, destWindow = window) {
 function getUrl(tab) {
   return tab.linkedBrowser.currentURI.spec;
 }
+
+/**
+ * Takes a xul:browser and makes sure that the remoteTypes for the browser in
+ * both the parent and the child processes are the same.
+ *
+ * @param {xul:browser} browser
+ *        A xul:browser.
+ * @param {string} expectedRemoteType
+ *        The expected remoteType value for the browser in both the parent
+ *        and child processes.
+ * @param {optional string} message
+ *        If provided, shows this string as the message when remoteType values
+ *        do not match. If not present, it uses the default message defined
+ *        in the function parameters.
+ */
+function checkBrowserRemoteType(
+  browser,
+  expectedRemoteType,
+  message = `Ensures that tab runs in the ${expectedRemoteType} content process.`
+) {
+  // Check both parent and child to ensure that they have the correct remoteType.
+  is(browser.remoteType, expectedRemoteType, message);
+  is(browser.messageManager.remoteType, expectedRemoteType,
+    "Parent and child process should agree on the remote type.");
+}
+
+function test_url_for_process_types(url, chromeResult, webContentResult, privilegedAboutContentResult, privilegedMozillaContentResult, extensionProcessResult) {
+  const CHROME_PROCESS = E10SUtils.NOT_REMOTE;
+  const WEB_CONTENT_PROCESS = E10SUtils.WEB_REMOTE_TYPE;
+  const PRIVILEGEDABOUT_CONTENT_PROCESS = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
+  const PRIVILEGEDMOZILLA_CONTENT_PROCESS = E10SUtils.PRIVILEGEDMOZILLA_REMOTE_TYPE;
+  const EXTENSION_PROCESS = E10SUtils.EXTENSION_REMOTE_TYPE;
+
+  is(E10SUtils.canLoadURIInRemoteType(url, /* fission */ false, CHROME_PROCESS),
+     chromeResult, "Check URL in chrome process.");
+  is(E10SUtils.canLoadURIInRemoteType(url, /* fission */ false, WEB_CONTENT_PROCESS),
+     webContentResult, "Check URL in web content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url, /* fission */ false, PRIVILEGEDABOUT_CONTENT_PROCESS),
+     privilegedAboutContentResult, "Check URL in privileged about content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url, /* fission */ false, PRIVILEGEDMOZILLA_CONTENT_PROCESS),
+     privilegedMozillaContentResult, "Check URL in privileged mozilla content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url, /* fission */ false, EXTENSION_PROCESS),
+     extensionProcessResult, "Check URL in extension process.");
+
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", /* fission */ false, CHROME_PROCESS),
+     chromeResult, "Check URL with ref in chrome process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", /* fission */ false, WEB_CONTENT_PROCESS),
+     webContentResult, "Check URL with ref in web content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", /* fission */ false, PRIVILEGEDABOUT_CONTENT_PROCESS),
+     privilegedAboutContentResult, "Check URL with ref in privileged about content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", /* fission */ false, PRIVILEGEDMOZILLA_CONTENT_PROCESS),
+     privilegedMozillaContentResult, "Check URL with ref in privileged mozilla content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", /* fission */ false, EXTENSION_PROCESS),
+     extensionProcessResult, "Check URL with ref in extension process.");
+
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", /* fission */ false, CHROME_PROCESS),
+     chromeResult, "Check URL with query in chrome process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", /* fission */ false, WEB_CONTENT_PROCESS),
+     webContentResult, "Check URL with query in web content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", /* fission */ false, PRIVILEGEDABOUT_CONTENT_PROCESS),
+     privilegedAboutContentResult, "Check URL with query in privileged about content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", /* fission */ false, PRIVILEGEDMOZILLA_CONTENT_PROCESS),
+     privilegedMozillaContentResult, "Check URL with query in privileged mozilla content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", /* fission */ false, EXTENSION_PROCESS),
+     extensionProcessResult, "Check URL with query in extension process.");
+
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", /* fission */ false, CHROME_PROCESS),
+     chromeResult, "Check URL with query and ref in chrome process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", /* fission */ false, WEB_CONTENT_PROCESS),
+     webContentResult, "Check URL with query and ref in web content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", /* fission */ false, PRIVILEGEDABOUT_CONTENT_PROCESS),
+     privilegedAboutContentResult, "Check URL with query and ref in privileged about content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", /* fission */ false, PRIVILEGEDMOZILLA_CONTENT_PROCESS),
+     privilegedMozillaContentResult, "Check URL with query and ref in privileged mozilla content process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", /* fission */ false, EXTENSION_PROCESS),
+     extensionProcessResult, "Check URL with query and ref in extension process.");
+}
