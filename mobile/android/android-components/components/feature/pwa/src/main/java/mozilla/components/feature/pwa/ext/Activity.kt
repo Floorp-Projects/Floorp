@@ -6,7 +6,7 @@ package mozilla.components.feature.pwa.ext
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
-import mozilla.components.browser.session.manifest.WebAppManifest
+import mozilla.components.concept.engine.manifest.WebAppManifest
 
 /**
  * Sets the requested orientation of the [Activity] to the orientation provided by the given [WebAppManifest] (See

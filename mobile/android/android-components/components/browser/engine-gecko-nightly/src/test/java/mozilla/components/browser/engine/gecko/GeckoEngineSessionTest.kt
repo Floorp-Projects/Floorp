@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.storage.VisitType
@@ -241,10 +242,17 @@ class GeckoEngineSessionTest {
         val observer: EngineSession.Observer = mock()
         engineSession.register(observer)
 
-        val manifest = JSONObject()
+        val json = JSONObject().apply {
+            put("name", "Minimal")
+            put("start_url", "/")
+        }
+        val manifest = WebAppManifest(
+            name = "Minimal",
+            startUrl = "/"
+        )
 
         captureDelegates()
-        contentDelegate.value.onWebAppManifest(mock(), manifest)
+        contentDelegate.value.onWebAppManifest(mock(), json)
 
         verify(observer).onWebAppManifestLoaded(manifest)
     }

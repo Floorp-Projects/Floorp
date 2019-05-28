@@ -6,9 +6,9 @@ package mozilla.components.browser.session
 
 import android.graphics.Bitmap
 import mozilla.components.browser.session.engine.EngineSessionHolder
-import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest

@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
 import mozilla.components.concept.storage.VisitType
@@ -517,7 +518,10 @@ class GeckoEngineSession(
         override fun onFocusRequest(session: GeckoSession) = Unit
 
         override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {
-            notifyObservers { onWebAppManifestLoaded(manifest) }
+            val parsed = WebAppManifestParser().parse(manifest)
+            if (parsed is WebAppManifestParser.Result.Success) {
+                notifyObservers { onWebAppManifestLoaded(parsed.manifest) }
+            }
         }
     }
 

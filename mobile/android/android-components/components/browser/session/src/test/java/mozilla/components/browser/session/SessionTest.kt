@@ -10,9 +10,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session.Source
-import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -38,7 +38,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import java.lang.IllegalArgumentException
 
 class SessionTest {
     @Test

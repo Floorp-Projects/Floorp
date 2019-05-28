@@ -5,7 +5,7 @@
 package mozilla.components.feature.pwa
 
 import android.content.Intent
-import mozilla.components.browser.session.manifest.WebAppManifest
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import org.junit.Assert.assertEquals

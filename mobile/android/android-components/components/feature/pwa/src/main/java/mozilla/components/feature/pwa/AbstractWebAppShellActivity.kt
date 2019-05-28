@@ -9,9 +9,9 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.ext.applyOrientation
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 

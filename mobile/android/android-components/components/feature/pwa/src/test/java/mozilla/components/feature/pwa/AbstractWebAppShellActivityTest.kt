@@ -9,8 +9,8 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.junit.runner.RunWith
