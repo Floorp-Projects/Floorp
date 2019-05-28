@@ -5,7 +5,6 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - taskgraph.transforms.google_play_strings:transforms
     - taskgraph.transforms.task:transforms
 
 job-defaults:
