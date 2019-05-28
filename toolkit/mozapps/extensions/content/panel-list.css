@@ -17,6 +17,7 @@
   min-width: 12em;
   z-index: 1;
   white-space: nowrap;
+  cursor: default;
 }
 
 :host([valign="top"]) {
