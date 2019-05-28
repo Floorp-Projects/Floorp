@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.quicksettings
 
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -29,6 +30,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.exceptions.ExceptionDomains
@@ -189,6 +191,12 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment(), CoroutineSco
                             val reportUrl =
                                 String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, it.url)
                             requireComponents.useCases.tabsUseCases.addTab.invoke(reportUrl)
+                            val sessionManager = requireComponents.core.sessionManager
+                            if (sessionManager.findSessionById(sessionId)?.isCustomTabSession() == true) {
+                                val intent = Intent(context, IntentReceiverActivity::class.java)
+                                intent.action = Intent.ACTION_VIEW
+                                startActivity(intent)
+                            }
                         }
                         dismiss()
                     }
