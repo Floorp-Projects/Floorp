@@ -4,12 +4,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import __builtin__
 import inspect
 import logging
 import os
 import re
 import six
+from six.moves import builtins as __builtin__
 import sys
 import types
 from collections import OrderedDict
