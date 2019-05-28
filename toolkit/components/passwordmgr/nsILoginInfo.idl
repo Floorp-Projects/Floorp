@@ -82,7 +82,7 @@ interface nsILoginInfo : nsISupports {
   void init(in AString aHostname,
             in AString aFormSubmitURL, in AString aHttpRealm,
             in AString aUsername,      in AString aPassword,
-            in AString aUsernameField, in AString aPasswordField);
+            [optional] in AString aUsernameField, [optional] in AString aPasswordField);
 
   /**
    * Test for strict equality with another nsILoginInfo object.
