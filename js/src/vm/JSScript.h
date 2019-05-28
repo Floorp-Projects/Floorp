@@ -2886,7 +2886,7 @@ class JSScript : public js::gc::TenuredCell {
   /* Change this->stepMode to |newValue|. */
   void setNewStepMode(js::FreeOp* fop, uint32_t newValue);
 
-  bool ensureHasDebugScript(JSContext* cx);
+  js::DebugScript* getOrCreateDebugScript(JSContext* cx);
   js::DebugScript* debugScript();
   js::DebugScript* releaseDebugScript();
   void destroyDebugScript(js::FreeOp* fop);
