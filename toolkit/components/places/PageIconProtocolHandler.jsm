@@ -69,13 +69,6 @@ PageIconProtocolHandler.prototype = {
            Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE;
   },
 
-  newURI(spec, originCharset, baseURI) {
-    return Cc["@mozilla.org/network/simple-uri-mutator;1"]
-             .createInstance(Ci.nsIURIMutator)
-             .setSpec(spec)
-             .finalize();
-  },
-
   newChannel(uri, loadInfo) {
     try {
       // Create a pipe that will give us an output stream that we can use once

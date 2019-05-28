@@ -949,55 +949,6 @@ static bool IsValidGIOScheme(const nsACString& aScheme) {
 }
 
 NS_IMETHODIMP
-nsGIOProtocolHandler::NewURI(const nsACString& aSpec,
-                             const char* aOriginCharset, nsIURI* aBaseURI,
-                             nsIURI** aResult) {
-  const nsCString flatSpec(aSpec);
-  LOG(("gio: NewURI [spec=%s]\n", flatSpec.get()));
-
-  if (!aBaseURI) {
-    // XXX Is it good to support all GIO protocols?
-    if (!IsSupportedProtocol(flatSpec)) return NS_ERROR_UNKNOWN_PROTOCOL;
-
-    int32_t colon_location = flatSpec.FindChar(':');
-    if (colon_location <= 0) return NS_ERROR_UNKNOWN_PROTOCOL;
-
-    // Verify that GIO supports this URI scheme.
-    bool uri_scheme_supported = false;
-
-    GVfs* gvfs = g_vfs_get_default();
-
-    if (!gvfs) {
-      g_warning("Cannot get GVfs object.");
-      return NS_ERROR_UNKNOWN_PROTOCOL;
-    }
-
-    const gchar* const* uri_schemes = g_vfs_get_supported_uri_schemes(gvfs);
-
-    while (*uri_schemes != nullptr) {
-      // While flatSpec ends with ':' the uri_scheme does not. Therefore do not
-      // compare last character.
-      if (StringHead(flatSpec, colon_location).Equals(*uri_schemes)) {
-        uri_scheme_supported = true;
-        break;
-      }
-      uri_schemes++;
-    }
-
-    if (!uri_scheme_supported) {
-      return NS_ERROR_UNKNOWN_PROTOCOL;
-    }
-  }
-
-  nsCOMPtr<nsIURI> base(aBaseURI);
-  return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                              nsIStandardURL::URLTYPE_STANDARD, -1, flatSpec,
-                              aOriginCharset, base, nullptr))
-      .Finalize(aResult);
-}
-
-NS_IMETHODIMP
 nsGIOProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                                  nsIChannel** aResult) {
   NS_ENSURE_ARG_POINTER(aURI);

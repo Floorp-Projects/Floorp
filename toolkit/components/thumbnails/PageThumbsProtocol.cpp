@@ -49,16 +49,6 @@ PageThumbsProtocol::GetProtocolFlags(uint32_t* aProtocolFlags) {
   return NS_OK;
 }
 
-// PageThumbsProtocol::NewURI
-
-NS_IMETHODIMP
-PageThumbsProtocol::NewURI(const nsACString& aSpec, const char* aOriginCharset,
-                           nsIURI* aBaseURI, nsIURI** _retval) {
-  return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
-      .SetSpec(aSpec)
-      .Finalize(_retval);
-}
-
 // PageThumbsProtocol::NewChannel
 
 NS_IMETHODIMP
