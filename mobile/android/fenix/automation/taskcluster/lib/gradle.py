@@ -9,7 +9,7 @@ import subprocess
 from lib.variant import Variant
 
 
-def get_debug_variants():
+def get_variants_for_build_type(build_type):
     print("Fetching build variants from gradle")
     output = _run_gradle_process('printBuildVariants')
     content = _extract_content_from_command_output(output, prefix='variants: ')
@@ -21,7 +21,7 @@ def get_debug_variants():
     print("Got variants: {}".format(variants))
     return [Variant(variant_dict['name'], variant_dict['abi'], variant_dict['isSigned'], variant_dict['buildType'])
             for variant_dict in variants
-            if variant_dict['buildType'] == 'debug']
+            if variant_dict['buildType'] == build_type]
 
 
 def get_geckoview_versions():

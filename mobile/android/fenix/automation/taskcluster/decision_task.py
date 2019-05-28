@@ -15,7 +15,7 @@ import re
 
 import taskcluster
 
-from lib.gradle import get_debug_variants, get_geckoview_versions
+from lib.gradle import get_variants_for_build_type, get_geckoview_versions
 from lib.tasks import (
     fetch_mozharness_task_id,
     schedule_task_graph,
@@ -61,7 +61,7 @@ def pr_or_push(is_push):
     signing_tasks = {}
     other_tasks = {}
 
-    for variant in get_debug_variants():
+    for variant in get_variants_for_build_type('debug'):
         assemble_task_id = taskcluster.slugId()
         build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
         build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
@@ -107,7 +107,8 @@ def raptor(is_staging):
 
 
 def release(track, is_staging, version_name):
-    architectures = ['x86', 'arm', 'aarch64']
+    variants = get_variants_for_build_type(track)
+    architectures = [variant.abi for variant in variants]
     apk_paths = ["public/target.{}.apk".format(arch) for arch in architectures]
 
     build_tasks = {}
