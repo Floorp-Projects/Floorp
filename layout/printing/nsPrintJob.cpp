@@ -472,9 +472,9 @@ static void BuildDocTree(BrowsingContext* aBrowsingContext,
       continue;
     }
     auto childPO = MakeUnique<nsPrintObject>();
-    childPO->mParent = aPO.get();
-    nsresult rv = childPO->Init(childBC->GetDocShell(), window->GetExtantDoc(),
-                                aPO->mPrintPreview);
+    nsresult rv = childPO->InitAsNestedObject(childBC->GetDocShell(),
+                                              window->GetExtantDoc(),
+                                              aPO->mPrintPreview, aPO.get());
     if (NS_FAILED(rv)) {
       MOZ_ASSERT_UNREACHABLE("Init failed?");
     }
@@ -840,7 +840,8 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
-    rv = printData->mPrintObject->Init(docShell, aSourceDoc, aIsPrintPreview);
+    rv = printData->mPrintObject->InitAsRootObject(docShell, aSourceDoc,
+                                                   aIsPrintPreview);
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(
