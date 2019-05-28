@@ -67,7 +67,7 @@ class JarStruct(object):
     (deserialized), or with empty fields.
     '''
 
-    TYPE_MAPPING = {'uint32': ('I', 4), 'uint16': ('H', 2)}
+    TYPE_MAPPING = {'uint32': (b'I', 4), 'uint16': (b'H', 2)}
 
     def __init__(self, data=None):
         '''
@@ -627,7 +627,7 @@ class JarWriter(object):
             deflater = data
         else:
             deflater = Deflater(compress, compress_level=self._compress_level)
-            if isinstance(data, basestring):
+            if isinstance(data, (six.binary_type, six.string_types)):
                 deflater.write(data)
             elif hasattr(data, 'read'):
                 if hasattr(data, 'seek'):
