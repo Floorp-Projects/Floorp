@@ -20,16 +20,6 @@ ProtocolHandler.prototype =
 {
   defaultPort: -1,
   allowPort: () => false,
-  newURI(aSpec, aCharset, aBaseURI) {
-    let mutator = Cc["@mozilla.org/network/standard-url-mutator;1"]
-                    .createInstance(Ci.nsIURIMutator);
-    if (aBaseURI) {
-      mutator.setSpec(aBaseURI.resolve(aSpec));
-    } else {
-      mutator.setSpec(aSpec);
-    }
-    return mutator.finalize();
-  },
   newChannel() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },
   QueryInterface: ChromeUtils.generateQI([
     Ci.nsIProtocolHandler,
