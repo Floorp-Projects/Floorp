@@ -91,6 +91,7 @@ internal class EditToolbar(
     }
 
     private val clearView = ImageView(context).apply {
+        visibility = View.GONE
         id = R.id.mozac_browser_toolbar_clear_view
         val padding = resources.pxToDp(CANCEL_PADDING_DP)
         setPadding(padding, padding, padding, padding)

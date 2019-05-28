@@ -166,6 +166,14 @@ class EditToolbarTest {
     }
 
     @Test
+    fun `clearView gone on init`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val editToolbar = EditToolbar(context, toolbar)
+        val clearView = extractClearView(editToolbar)
+        assertTrue(clearView.visibility == View.GONE)
+    }
+
+    @Test
     fun `clearView clears text in urlView`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val editToolbar = EditToolbar(context, toolbar)
