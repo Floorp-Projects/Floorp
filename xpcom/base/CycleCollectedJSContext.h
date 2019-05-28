@@ -299,6 +299,10 @@ class CycleCollectedJSContext
   std::queue<RefPtr<MicroTaskRunnable>> mPendingMicroTaskRunnables;
   std::queue<RefPtr<MicroTaskRunnable>> mDebuggerMicroTaskQueue;
 
+  // How many times the debugger has interrupted execution, possibly creating
+  // microtask checkpoints in places that they would not normally occur.
+  uint32_t mDebuggerRecursionDepth;
+
   uint32_t mMicroTaskRecursionDepth;
 
   // This implements about-to-be-notified rejected promises list in the spec.
