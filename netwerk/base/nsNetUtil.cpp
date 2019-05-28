@@ -1806,6 +1806,15 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
     return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
   }
 
+  if (scheme.EqualsLiteral("indexeddb")) {
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(new nsStandardURL::Mutator())
+        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                nsIStandardURL::URLTYPE_AUTHORITY, 0,
+                                nsCString(aSpec), aCharset, base, nullptr))
+        .Finalize(aURI);
+  }
+
   if (scheme.EqualsLiteral("moz-extension")) {
     if (!NS_IsMainThread()) {
       return NS_ERROR_UNKNOWN_PROTOCOL;
@@ -1849,6 +1858,15 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
         .Finalize(aURI);
   }
 #endif
+
+  if (scheme.EqualsLiteral("android")) {
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                nsIStandardURL::URLTYPE_STANDARD, -1,
+                                nsCString(aSpec), aCharset, base, nullptr))
+        .Finalize(aURI);
+  }
 
   // Falls back to external protocol handler.
   return NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(aURI);
