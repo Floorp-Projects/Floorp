@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-menu**
+  * Fixed a bug where overscroll effects would appear on the overflow menu.
+
 # 0.54.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.53.0...v0.54.0)
@@ -19,7 +22,7 @@ permalink: /changelog/
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.54.0/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.54.0/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.54.0/buildSrc/src/main/java/Config.kt)
-  
+
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * **Merge day!**
     * `browser-engine-gecko-release`: GeckoView 67.0
@@ -3058,4 +3061,3 @@ _Due to a packaging bug this release is not usable. Please use 0.5.1 instead._
   * Kotlin Standard library 1.2.30
 
 * First release with synchronized version numbers.
-

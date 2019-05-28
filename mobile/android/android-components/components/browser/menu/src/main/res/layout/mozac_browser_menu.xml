@@ -14,6 +14,7 @@
             android:id="@+id/mozac_browser_menu_recyclerView"
             android:paddingTop="@dimen/mozac_browser_menu_padding_vertical"
             android:paddingBottom="@dimen/mozac_browser_menu_padding_vertical"
+            android:overScrollMode="never"
             android:layout_width="@dimen/mozac_browser_menu_width"
             android:layout_height="wrap_content" />
 
