@@ -17,7 +17,6 @@ class HistoryDeleteButtonViewHolder(
     private val actionEmitter: Observer<HistoryAction>
 ) : RecyclerView.ViewHolder(view) {
     private var mode: HistoryState.Mode? = null
-    private val textView = view.delete_history_button_text
     private val buttonView = view.delete_history_button
 
     init {

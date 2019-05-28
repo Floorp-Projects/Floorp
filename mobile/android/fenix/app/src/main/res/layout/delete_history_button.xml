@@ -2,32 +2,23 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.button.MaterialButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/delete_history_button"
-    android:foreground="?android:attr/selectableItemBackground"
-    android:background="@drawable/button_background"
-    android:layout_margin="16dp"
-    android:padding="6dp"
-    android:clickable="true"
-    android:focusable="true"
+    style="@style/Widget.MaterialComponents.Button.TextButton"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-
-    <TextView
-        android:id="@+id/delete_history_button_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/history_delete_all"
-        android:gravity="center"
-        android:textColor="?primaryText"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:clickable="false"
-        android:focusable="false"
-        android:drawableTint="?primaryText"
-        android:drawableStart="@drawable/ic_delete"
-        android:drawablePadding="12dp"/>
-
-</FrameLayout>
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    android:background="@drawable/button_background"
+    android:letterSpacing="0"
+    android:text="@string/history_delete_all"
+    android:textAllCaps="false"
+    android:textColor="?destructive"
+    android:textStyle="bold"
+    android:theme="@style/Theme.MaterialComponents.Light"
+    app:backgroundTint="?neutral"
+    app:icon="@drawable/ic_delete"
+    app:iconGravity="textStart"
+    app:iconPadding="8dp"
+    app:iconTint="?destructive"
+    app:rippleColor="?secondaryText" />
