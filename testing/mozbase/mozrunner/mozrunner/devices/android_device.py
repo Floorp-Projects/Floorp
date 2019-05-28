@@ -20,7 +20,6 @@ from distutils.spawn import find_executable
 import psutil
 import six.moves.urllib as urllib
 from mozdevice import ADBHost, ADBDevice
-from mozprocess import ProcessHandler
 from six.moves.urllib.parse import urlparse
 
 EMULATOR_HOME_DIR = os.path.join(os.path.expanduser('~'), '.mozbuild', 'android-device')
@@ -500,11 +499,6 @@ class AndroidEmulator(object):
         auth_file = open(EMULATOR_AUTH_FILE, 'w')
         auth_file.close()
 
-        def outputHandler(line):
-            self.emulator_log.write("<%s>\n" % line)
-            if "Invalid value for -gpu" in line or "Invalid GPU mode" in line:
-                self.gpu = False
-
         env = os.environ
         env['ANDROID_AVD_HOME'] = os.path.join(EMULATOR_HOME_DIR, "avd")
         command = [self.emulator_path, "-avd", self.avd_info.name]
@@ -517,17 +511,14 @@ class AndroidEmulator(object):
                 self.avd_info.extra_args.remove('-enable-kvm')
             command += self.avd_info.extra_args
         log_path = os.path.join(EMULATOR_HOME_DIR, 'emulator.log')
-        self.emulator_log = open(log_path, 'w')
+        self.emulator_log = open(log_path, 'w+')
         _log_debug("Starting the emulator with this command: %s" %
                    ' '.join(command))
         _log_debug("Emulator output will be written to '%s'" %
                    log_path)
-        self.proc = ProcessHandler(
-            command, storeOutput=False, processOutputLine=outputHandler,
-            stdin=subprocess.PIPE, env=env, ignore_children=True)
-        self.proc.run()
-        _log_debug("Emulator started with pid %d" %
-                   int(self.proc.proc.pid))
+        self.proc = subprocess.Popen(command, env=env, stdin=subprocess.PIPE,
+                                     stdout=self.emulator_log, stderr=self.emulator_log)
+        _log_debug("Emulator started with pid %d" % int(self.proc.pid))
 
     def wait_for_start(self):
         """
@@ -581,7 +572,16 @@ class AndroidEmulator(object):
         return True
 
     def check_completed(self):
-        if self.proc.proc.poll() is not None:
+        if self.proc.poll() is not None:
+            if self.gpu:
+                try:
+                    for line in self.emulator_log.readlines():
+                        if "Invalid value for -gpu" in line or "Invalid GPU mode" in line:
+                            self.gpu = False
+                            break
+                except Exception as e:
+                    _log_warning(str(e))
+
             if not self.gpu and not self.restarted:
                 _log_warning("Emulator failed to start. Your emulator may be out of date.")
                 _log_warning("Trying to restart the emulator without -gpu argument.")
@@ -671,7 +671,7 @@ class AndroidEmulator(object):
                     tn.close()
             if not telnet_ok:
                 time.sleep(10)
-                if self.proc.proc.poll() is not None:
+                if self.proc.poll() is not None:
                     _log_warning("Emulator has already completed!")
                     return False
         return telnet_ok
@@ -820,21 +820,14 @@ def _get_tooltool_manifest(substs, src_path, dst_path, filename):
 
 
 def _tooltool_fetch():
-    def outputHandler(line):
-        _log_debug(line)
-
     tooltool_full_path = os.path.abspath(TOOLTOOL_PATH)
     command = [sys.executable, tooltool_full_path,
                'fetch', '-o', '-m', 'releng.manifest']
-    proc = ProcessHandler(
-        command, processOutputLine=outputHandler, storeOutput=False,
-        cwd=EMULATOR_HOME_DIR)
-    proc.run()
     try:
-        proc.wait()
-    except Exception:
-        if proc.poll() is None:
-            proc.kill(signal.SIGTERM)
+        response = subprocess.check_output(command, cwd=EMULATOR_HOME_DIR)
+        _log_debug(response)
+    except Exception as e:
+        _log_warning(str(e))
 
 
 def _get_host_platform():
@@ -904,10 +897,7 @@ def _verify_kvm(substs):
         emulator_path = 'emulator'
     command = [emulator_path, '-accel-check']
     try:
-        p = ProcessHandler(command, storeOutput=True)
-        p.run()
-        p.wait()
-        out = p.output
+        out = subprocess.check_output(command)
         if 'is installed and usable' in ''.join(out):
             return
     except Exception as e:
