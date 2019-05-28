@@ -202,6 +202,8 @@ adb shell am start -n org.mozilla.samples.glean/mozilla.components.service.glean
 
 Further documentation for pings that Glean can send out of the box is available [here](docs/pings/pings.md).
 
+There is also documentation about [internal behavior of parts of Glean](docs/internal.md).
+
 ## Contact
 
 To contact us you can:
