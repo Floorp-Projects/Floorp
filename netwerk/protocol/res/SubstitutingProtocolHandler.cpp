@@ -298,15 +298,6 @@ nsresult SubstitutingProtocolHandler::NewURI(const nsACString& aSpec,
                                              const char* aCharset,
                                              nsIURI* aBaseURI,
                                              nsIURI** aResult) {
-  return SubstitutingProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI,
-                                                   aResult);
-}
-
-// static
-nsresult SubstitutingProtocolHandler::CreateNewURI(const nsACString& aSpec,
-                                                   const char* aCharset,
-                                                   nsIURI* aBaseURI,
-                                                   nsIURI** aResult) {
   // unescape any %2f and %2e to make sure nsStandardURL coalesces them.
   // Later net_GetFileFromURLSpec() will do a full unescape and we want to
   // treat them the same way the file system will. (bugs 380994, 394075)
