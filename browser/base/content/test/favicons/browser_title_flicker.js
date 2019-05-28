@@ -38,7 +38,7 @@ add_task(async () => {
 
     await waitForAttributeChange(tab, "label");
     ok(tab.hasAttribute("busy"), "Should have seen the busy attribute");
-    let label = document.getAnonymousElementByAttribute(tab, "anonid", "tab-label");
+    let label = tab.textLabel;
     let bounds = label.getBoundingClientRect();
 
     await waitForAttributeChange(tab, "busy");
@@ -60,7 +60,7 @@ add_task(async () => {
     is(icon.iconURL, "http://example.com/favicon.ico");
 
     let tab = gBrowser.getTabForBrowser(browser);
-    let label = document.getAnonymousElementByAttribute(tab, "anonid", "tab-label");
+    let label = tab.textLabel;
     let bounds = label.getBoundingClientRect();
 
     await ContentTask.spawn(browser, null, () => {
