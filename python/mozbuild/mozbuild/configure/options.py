@@ -13,7 +13,7 @@ from collections import OrderedDict
 
 def istupleofstrings(obj):
     return isinstance(obj, tuple) and len(obj) and all(
-        isinstance(o, types.StringTypes) for o in obj)
+        isinstance(o, six.string_types) for o in obj)
 
 
 class OptionValue(tuple):
@@ -93,7 +93,7 @@ class OptionValue(tuple):
             return PositiveOptionValue()
         elif value is False or value == ():
             return NegativeOptionValue()
-        elif isinstance(value, types.StringTypes):
+        elif isinstance(value, six.string_types):
             return PositiveOptionValue((value,))
         elif isinstance(value, tuple):
             return PositiveOptionValue(value)
@@ -169,7 +169,7 @@ class Option(object):
                 'At least an option name or an environment variable name must '
                 'be given')
         if name:
-            if not isinstance(name, types.StringTypes):
+            if not isinstance(name, six.string_types):
                 raise InvalidOptionError('Option must be a string')
             if not name.startswith('--'):
                 raise InvalidOptionError('Option must start with `--`')
@@ -178,7 +178,7 @@ class Option(object):
             if not name.islower():
                 raise InvalidOptionError('Option must be all lowercase')
         if env:
-            if not isinstance(env, types.StringTypes):
+            if not isinstance(env, six.string_types):
                 raise InvalidOptionError(
                     'Environment variable name must be a string')
             if not env.isupper():
@@ -188,7 +188,7 @@ class Option(object):
                 isinstance(nargs, int) and nargs >= 0):
             raise InvalidOptionError(
                 "nargs must be a positive integer, '?', '*' or '+'")
-        if (not isinstance(default, types.StringTypes) and
+        if (not isinstance(default, six.string_types) and
                 not isinstance(default, (bool, types.NoneType)) and
                 not istupleofstrings(default)):
             raise InvalidOptionError(
@@ -275,7 +275,7 @@ class Option(object):
         where prefix is one of 'with', 'without', 'enable' or 'disable'.
         The '=values' part is optional. Values are separated with commas.
         '''
-        if not isinstance(option, types.StringTypes):
+        if not isinstance(option, six.string_types):
             raise InvalidOptionError('Option must be a string')
 
         elements = option.split('=', 1)
