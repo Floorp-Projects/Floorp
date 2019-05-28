@@ -257,6 +257,15 @@ function getTelemetryEvents(eventName: string) {
   return window.dbg._telemetry.events[eventName] || [];
 }
 
+function waitATick(callback: Function): Promise<*> {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      callback();
+      resolve();
+    });
+  });
+}
+
 export {
   actions,
   selectors,
@@ -275,4 +284,5 @@ export {
   waitForState,
   watchForState,
   getHistory,
+  waitATick,
 };
