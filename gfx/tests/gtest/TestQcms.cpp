@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "qcms.h"
+#include "qcmsint.h"
 #include "transform_util.h"
 
 const size_t allGBSize = 1 * 256 * 256 * 4;
