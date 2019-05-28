@@ -444,6 +444,12 @@ void ServiceWorkerManager::MaybeStartShutdown() {
       queue->CancelAll();
     }
     it1.UserData()->mJobQueues.Clear();
+
+    for (auto it2 = it1.UserData()->mInfos.Iter(); !it2.Done(); it2.Next()) {
+      RefPtr<ServiceWorkerRegistrationInfo> regInfo = it2.UserData();
+      regInfo->Clear();
+    }
+    it1.UserData()->mInfos.Clear();
   }
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
