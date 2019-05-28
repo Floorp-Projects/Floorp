@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 from io import BytesIO
 import struct
@@ -15,7 +15,10 @@ from zipfile import (
 )
 from collections import OrderedDict
 import mozpack.path as mozpath
-from mozbuild.util import memoize
+from mozbuild.util import (
+    memoize,
+    ensure_bytes,
+)
 
 
 JAR_STORED = ZIP_STORED
@@ -129,14 +132,14 @@ class JarStruct(object):
         data = data[:size]
         if isinstance(data, memoryview):
             data = data.tobytes()
-        return struct.unpack('<' + format, data)[0], size
+        return struct.unpack(b'<' + format, data)[0], size
 
     def serialize(self):
         '''
         Serialize the data structure according to the data structure definition
         from self.STRUCT.
         '''
-        serialized = struct.pack('<I', self.signature)
+        serialized = struct.pack(b'<I', self.signature)
         sizes = dict((t, name) for name, t in self.STRUCT.iteritems()
                      if t not in JarStruct.TYPE_MAPPING)
         for name, t in self.STRUCT.iteritems():
@@ -146,9 +149,9 @@ class JarStruct(object):
                     value = len(self[sizes[name]])
                 else:
                     value = self[name]
-                serialized += struct.pack('<' + format, value)
+                serialized += struct.pack(b'<' + format, value)
             else:
-                serialized += self[name]
+                serialized += ensure_bytes(self[name])
         return serialized
 
     @property

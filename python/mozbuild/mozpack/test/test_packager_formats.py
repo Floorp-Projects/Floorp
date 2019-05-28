@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
 import unittest
@@ -58,22 +58,22 @@ CONTENTS = {
         ManifestContent('app/chrome/addons/addon2/chrome', 'addon2', 'foo/bar/'),
     ],
     'files': {
-        'chrome/f/oo/bar/baz': GeneratedFile('foobarbaz'),
-        'chrome/f/oo/baz': GeneratedFile('foobaz'),
-        'chrome/f/oo/qux': GeneratedFile('fooqux'),
-        'components/foo.so': GeneratedFile('foo.so'),
+        'chrome/f/oo/bar/baz': GeneratedFile(b'foobarbaz'),
+        'chrome/f/oo/baz': GeneratedFile(b'foobaz'),
+        'chrome/f/oo/qux': GeneratedFile(b'fooqux'),
+        'components/foo.so': GeneratedFile(b'foo.so'),
         'components/foo.xpt': foo_xpt,
         'components/bar.xpt': bar_xpt,
-        'foo': GeneratedFile('foo'),
-        'app/chrome/foo/foo': GeneratedFile('appfoo'),
-        'app/components/foo.js': GeneratedFile('foo.js'),
-        'addon0/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
+        'foo': GeneratedFile(b'foo'),
+        'app/chrome/foo/foo': GeneratedFile(b'appfoo'),
+        'app/components/foo.js': GeneratedFile(b'foo.js'),
+        'addon0/chrome/foo/bar/baz': GeneratedFile(b'foobarbaz'),
         'addon0/components/foo.xpt': foo2_xpt,
         'addon0/components/bar.xpt': bar_xpt,
-        'addon1/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
+        'addon1/chrome/foo/bar/baz': GeneratedFile(b'foobarbaz'),
         'addon1/components/foo.xpt': foo2_xpt,
         'addon1/components/bar.xpt': bar_xpt,
-        'app/chrome/addons/addon2/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
+        'app/chrome/addons/addon2/chrome/foo/bar/baz': GeneratedFile(b'foobarbaz'),
         'app/chrome/addons/addon2/components/foo.xpt': foo2_xpt,
         'app/chrome/addons/addon2/components/bar.xpt': bar_xpt,
     },
@@ -275,7 +275,7 @@ CONTENTS_WITH_BASE = {
 }
 
 EXTRA_CONTENTS = {
-    'extra/file': GeneratedFile('extra file'),
+    'extra/file': GeneratedFile(b'extra file'),
 }
 
 CONTENTS_WITH_BASE['files'].update(EXTRA_CONTENTS)
@@ -408,7 +408,7 @@ class TestFormatters(TestErrors, unittest.TestCase):
             ])
             f.add_base('')
             f.add_base('app')
-            f.add(mozpath.join(base, path), GeneratedFile(''))
+            f.add(mozpath.join(base, path), GeneratedFile(b''))
             if f.copier.contains(mozpath.join(base, path)):
                 return False
             self.assertTrue(f.copier.contains(mozpath.join(base, 'omni.foo')))
