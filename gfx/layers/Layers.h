@@ -738,7 +738,7 @@ class LayerManager : public FrameRecorder {
     mPayload.AppendElement(aPayload);
     MOZ_ASSERT(mPayload.Length() < 10000);
   }
-  void RegisterPayload(const InfallibleTArray<CompositionPayload>& aPayload) {
+  void RegisterPayloads(const nsTArray<CompositionPayload>& aPayload) {
     mPayload.AppendElements(aPayload);
     MOZ_ASSERT(mPayload.Length() < 10000);
   }
@@ -782,7 +782,7 @@ class LayerManager : public FrameRecorder {
   // next composite.
   // IMPORTANT: Clients should take care to clear this or risk it slowly
   // growing out of control.
-  InfallibleTArray<CompositionPayload> mPayload;
+  nsTArray<CompositionPayload> mPayload;
 
  public:
   /*

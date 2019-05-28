@@ -139,9 +139,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       const nsTArray<SLGuidAndRenderRoot>& aTargets) = 0;
   virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree,
                                const TimeDuration& aPaintTime) {}
-  virtual void RegisterPayload(
-      LayerTransactionParent* aLayerTree,
-      const InfallibleTArray<CompositionPayload>& aPayload) {}
+  virtual void RegisterPayloads(LayerTransactionParent* aLayerTree,
+                                const nsTArray<CompositionPayload>& aPayload) {}
 
   ShmemAllocator* AsShmemAllocator() override { return this; }
 
@@ -448,9 +447,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   void UpdatePaintTime(LayerTransactionParent* aLayerTree,
                        const TimeDuration& aPaintTime) override;
-  void RegisterPayload(
-      LayerTransactionParent* aLayerTree,
-      const InfallibleTArray<CompositionPayload>& aPayload) override;
+  void RegisterPayloads(LayerTransactionParent* aLayerTree,
+                        const nsTArray<CompositionPayload>& aPayload) override;
 
   /**
    * Check rotation info and schedule a rendering task if needed.
