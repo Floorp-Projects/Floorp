@@ -468,6 +468,11 @@ IsGarbageCollecting:
   type: boolean
   ping: true
 
+IsWayland:
+  description: >
+    If true then the Wayland windowing system was in use.
+  type: boolean
+
 JavaStackTrace:
   description: >
     Java stack trace, only present on Firefox for Android if we encounter an
