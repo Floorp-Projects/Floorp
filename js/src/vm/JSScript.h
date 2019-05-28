@@ -277,6 +277,12 @@ class DebugScript {
    * this array's true length is script->length().
    */
   BreakpointSite* breakpoints[1];
+
+  /*
+   * True if this DebugScript carries any useful information. If false, it
+   * should be removed from its JSScript.
+   */
+  bool needed() const { return stepMode > 0 || numSites > 0; }
 };
 
 using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
