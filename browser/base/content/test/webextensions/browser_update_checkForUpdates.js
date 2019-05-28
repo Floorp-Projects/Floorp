@@ -13,5 +13,29 @@ function checkAll(win) {
 }
 
 // Test "Check for Updates" with both auto-update settings
-add_task(() => interactiveUpdateTest(true, checkAll));
-add_task(() => interactiveUpdateTest(false, checkAll));
+async function test_check_for_updates() {
+  info("Test 'Check for Updates' with auto-update true");
+  await interactiveUpdateTest(true, checkAll);
+  info("Test 'Check for Updates' with auto-update false");
+  await interactiveUpdateTest(false, checkAll);
+}
+
+add_task(async function test_xul_aboutaddons() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", false]],
+  });
+
+  await test_check_for_updates();
+
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_html_aboutaddons() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.htmlaboutaddons.enabled", true]],
+  });
+
+  await test_check_for_updates();
+
+  await SpecialPowers.popPrefEnv();
+});
