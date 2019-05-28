@@ -306,6 +306,7 @@ early_options = early_options()
 # This gives access to the sandbox. Don't copy this blindly.
 @imports('__sandbox__')
 @imports('os')
+@imports('six')
 def mozconfig_options(mozconfig, automation, help):
     if mozconfig['path']:
         if 'MOZ_AUTOMATION_MOZCONFIG' in mozconfig['env']['added']:
@@ -331,15 +332,15 @@ def mozconfig_options(mozconfig, automation, help):
                 log.info('  %s' % arg)
                 helper.add(arg, origin='mozconfig', args=helper._args)
 
-        for key, value in mozconfig['env']['added'].iteritems():
+        for key, value in six.iteritems(mozconfig['env']['added']):
             add(key, value)
             os.environ[key] = value
-        for key, (_, value) in mozconfig['env']['modified'].iteritems():
+        for key, (_, value) in six.iteritems(mozconfig['env']['modified']):
             add(key, value)
             os.environ[key] = value
-        for key, value in mozconfig['vars']['added'].iteritems():
+        for key, value in six.iteritems(mozconfig['vars']['added']):
             add(key, value)
-        for key, (_, value) in mozconfig['vars']['modified'].iteritems():
+        for key, (_, value) in six.iteritems(mozconfig['vars']['modified']):
             add(key, value)
 
 

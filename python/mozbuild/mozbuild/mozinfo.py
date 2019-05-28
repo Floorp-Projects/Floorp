@@ -5,7 +5,7 @@
 # This module produces a JSON file that provides basic build info and
 # configuration metadata.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import re
@@ -58,7 +58,7 @@ def build_dict(config, env=os.environ):
     # processor
     p = substs["TARGET_CPU"]
     # do some slight massaging for some values
-    #TODO: retain specific values in case someone wants them?
+    # TODO: retain specific values in case someone wants them?
     if p.startswith("arm"):
         p = "arm"
     elif re.match("i[3-9]86", p):
@@ -130,7 +130,7 @@ def build_dict(config, env=os.environ):
         d['platform_guess'] = guess_platform()
         d['buildtype_guess'] = guess_buildtype()
 
-    if 'buildapp' in d and d['buildapp'] == 'mobile/android' and 'MOZ_ANDROID_MIN_SDK_VERSION' in substs:
+    if d.get('buildapp', '') == 'mobile/android' and 'MOZ_ANDROID_MIN_SDK_VERSION' in substs:
         d['android_min_sdk'] = substs['MOZ_ANDROID_MIN_SDK_VERSION']
 
     return d

@@ -6,7 +6,7 @@
 #ifndef nsResProtocolHandler_h___
 #define nsResProtocolHandler_h___
 
-#include "SubstitutingProtocolHandler.h"
+#include "mozilla/net/SubstitutingProtocolHandler.h"
 
 #include "nsIResProtocolHandler.h"
 #include "nsInterfaceHashtable.h"
@@ -23,6 +23,8 @@ class nsResProtocolHandler final
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRESPROTOCOLHANDLER
 
+  static already_AddRefed<nsResProtocolHandler> GetSingleton();
+
   NS_FORWARD_NSIPROTOCOLHANDLER(mozilla::net::SubstitutingProtocolHandler::)
 
   nsResProtocolHandler()
@@ -31,8 +33,6 @@ class nsResProtocolHandler final
             URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE |
                 URI_IS_POTENTIALLY_TRUSTWORTHY,
             /* aEnforceFileOrJar = */ false) {}
-
-  MOZ_MUST_USE nsresult Init();
 
   NS_IMETHOD SetSubstitution(const nsACString& aRoot,
                              nsIURI* aBaseURI) override;
@@ -71,6 +71,9 @@ class nsResProtocolHandler final
                                         nsACString& aResult) override;
 
  private:
+  MOZ_MUST_USE nsresult Init();
+  static mozilla::StaticRefPtr<nsResProtocolHandler> sSingleton;
+
   nsCString mAppURI;
   nsCString mGREURI;
 #ifdef ANDROID

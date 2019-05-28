@@ -19,6 +19,10 @@ EXPORTS.mozilla.net += [
     'SubstitutingURL.h',
 ]
 
+EXPORTS += [
+    'nsResProtocolHandler.h',
+]
+
 UNIFIED_SOURCES += [
     'ExtensionProtocolHandler.cpp',
     'nsResProtocolHandler.cpp',

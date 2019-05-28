@@ -103,7 +103,7 @@ TEST(TestURIMutator, Mutator)
 
 extern MOZ_THREAD_LOCAL(uint32_t) gTlsURLRecursionCount;
 
-TEST(TestURIMutator, NS_NewURIOnAnyThread)
+TEST(TestURIMutator, OnAnyThread)
 {
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
   pool->SetThreadLimit(60);
@@ -111,10 +111,10 @@ TEST(TestURIMutator, NS_NewURIOnAnyThread)
   pool = new nsThreadPool();
   for (int i = 0; i < 1000; ++i) {
     nsCOMPtr<nsIRunnable> task =
-        NS_NewRunnableFunction("gtest-NS_NewURIOnAnyThread", []() {
+        NS_NewRunnableFunction("gtest-OnAnyThread", []() {
           nsCOMPtr<nsIURI> uri;
-          nsresult rv = NS_NewURIOnAnyThread(
-              getter_AddRefs(uri), NS_LITERAL_CSTRING("http://example.com"));
+          nsresult rv = NS_NewURI(getter_AddRefs(uri),
+                                  NS_LITERAL_CSTRING("http://example.com"));
           ASSERT_EQ(rv, NS_OK);
           nsAutoCString out;
           ASSERT_EQ(uri->GetSpec(out), NS_OK);
@@ -126,8 +126,8 @@ TEST(TestURIMutator, NS_NewURIOnAnyThread)
   }
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURIOnAnyThread(getter_AddRefs(uri),
-                                     NS_LITERAL_CSTRING("http://example.com"));
+  nsresult rv =
+      NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://example.com"));
   ASSERT_EQ(rv, NS_OK);
   nsAutoCString out;
   ASSERT_EQ(uri->GetSpec(out), NS_OK);

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import os
 import shutil
@@ -12,6 +12,7 @@ import tempfile
 import mozpack.path as mozpath
 import buildconfig
 from mozbuild.base import BuildEnvironmentNotFoundException
+
 
 def archive_exe(pkg_dir, tagfile, sfx_package, package, use_upx):
     tmpdir = tempfile.mkdtemp(prefix='tmp')
@@ -30,7 +31,10 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package, use_upx):
         except BuildEnvironmentNotFoundException:
             # configure hasn't been run, just use the default
             sevenz = '7z'
-        subprocess.check_call([sevenz, 'a', '-r', '-t7z', mozpath.join(tmpdir, 'app.7z'), '-mx', '-m0=BCJ2', '-m1=LZMA:d25', '-m2=LZMA:d19', '-m3=LZMA:d19', '-mb0:1', '-mb0s1:2', '-mb0s2:3'])
+        subprocess.check_call([
+            sevenz, 'a', '-r', '-t7z', mozpath.join(tmpdir, 'app.7z'), '-mx',
+            '-m0=BCJ2', '-m1=LZMA:d25', '-m2=LZMA:d19', '-m3=LZMA:d19', '-mb0:1',
+            '-mb0s1:2', '-mb0s2:3'])
 
         with open(package, 'wb') as o:
             for i in [final_sfx, tagfile, mozpath.join(tmpdir, 'app.7z')]:
@@ -41,6 +45,7 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package, use_upx):
             shutil.move('core', pkg_dir)
         shutil.rmtree(tmpdir)
 
+
 def main(args):
     if len(args) != 4:
         print('Usage: exe_7z_archive.py <pkg_dir> <tagfile> <sfx_package> <package> <use_upx>',
@@ -49,6 +54,7 @@ def main(args):
     else:
         archive_exe(args[0], args[1], args[2], args[3], args[4])
         return 0
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

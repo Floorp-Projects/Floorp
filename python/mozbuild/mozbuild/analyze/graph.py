@@ -2,8 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import os
 import sqlite3 as lite
+
 
 class Node(object):
 
@@ -39,10 +42,11 @@ class Node(object):
         return os.path.join(parent.get_path(graph), self.name)
 
     def calculate_mtime(self):
-        if self.type == 0: # only files have meaningful costs
+        if self.type == 0:  # only files have meaningful costs
             return sum(x.mtime for x in self.cmds)
         else:
             return None
+
 
 class Graph(object):
 
@@ -67,7 +71,7 @@ class Graph(object):
         self.connect.close()
 
     def query_arg(self, q, arg):
-        assert isinstance(arg, tuple) #execute() requires tuple argument
+        assert isinstance(arg, tuple)  # execute() requires tuple argument
         cursor = self.connect.cursor()
         cursor.execute(q, arg)
         return cursor
@@ -90,7 +94,7 @@ class Graph(object):
             ret = self.query_arg('SELECT id FROM node \
                 WHERE dir=? AND name=?', (nodeid, part)).fetchone()
             # fetchone should be ok bc dir and and name combo is unique
-            if ret == None:
+            if ret is None:
                 print ("\nCould not find id number for '%s'" % filepath)
                 return None
             nodeid = ret[0]
@@ -112,7 +116,7 @@ class Graph(object):
                 m, s = sec / 60, sec % 60
                 print ("\n------ Summary for %s ------\
                     \nTotal Build Time (mm:ss) = %d:%d\nNum Downstream Commands = %d"
-                    % (f, m, s, node.num_cmds))
+                       % (f, m, s, node.num_cmds))
 
     def populate(self):
         # make nodes for files with downstream commands
@@ -127,5 +131,4 @@ class Graph(object):
     def get_cost_dict(self):
         if self.results is None:
             self.populate()
-        return {k:v for k,v in self.results if v > 0}
-
+        return {k: v for k, v in self.results if v > 0}

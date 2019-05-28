@@ -140,16 +140,6 @@ namespace net {
 
 LazyLogModule gHttpLog("nsHttp");
 
-static nsresult NewURI(const nsACString& aSpec, const char* aCharset,
-                       nsIURI* aBaseURI, int32_t aDefaultPort, nsIURI** aURI) {
-  nsCOMPtr<nsIURI> base(aBaseURI);
-  return NS_MutateURI(new nsStandardURL::Mutator())
-      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                              nsIStandardURL::URLTYPE_AUTHORITY, aDefaultPort,
-                              nsCString(aSpec), aCharset, base, nullptr))
-      .Finalize(aURI);
-}
-
 #ifdef ANDROID
 static nsCString GetDeviceModelId() {
   // Assumed to be running on the main thread
@@ -1991,13 +1981,6 @@ nsHttpHandler::GetProtocolFlags(uint32_t* result) {
 }
 
 NS_IMETHODIMP
-nsHttpHandler::NewURI(const nsACString& aSpec, const char* aCharset,
-                      nsIURI* aBaseURI, nsIURI** aURI) {
-  return mozilla::net::NewURI(aSpec, aCharset, aBaseURI, NS_HTTP_DEFAULT_PORT,
-                              aURI);
-}
-
-NS_IMETHODIMP
 nsHttpHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                           nsIChannel** result) {
   LOG(("nsHttpHandler::NewChannel\n"));
@@ -2535,13 +2518,6 @@ NS_IMETHODIMP
 nsHttpsHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
   *aProtocolFlags = NS_HTTP_PROTOCOL_FLAGS | URI_IS_POTENTIALLY_TRUSTWORTHY;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpsHandler::NewURI(const nsACString& aSpec, const char* aOriginCharset,
-                       nsIURI* aBaseURI, nsIURI** _retval) {
-  return mozilla::net::NewURI(aSpec, aOriginCharset, aBaseURI,
-                              NS_HTTPS_DEFAULT_PORT, _retval);
 }
 
 NS_IMETHODIMP

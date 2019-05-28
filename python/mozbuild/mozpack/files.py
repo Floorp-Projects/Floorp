@@ -2,20 +2,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
 import inspect
 import os
 import platform
 import shutil
+import six
 import stat
 import subprocess
 import uuid
 import mozbuild.makeutil as makeutil
 from itertools import chain
 from mozbuild.preprocessor import Preprocessor
-from mozbuild.util import FileAvoidWrite
+from mozbuild.util import (
+    FileAvoidWrite,
+    ensure_bytes,
+    ensure_unicode,
+)
 from mozpack.executables import (
     is_executable,
     may_strip,
@@ -63,7 +68,7 @@ else:
 
     def _copyfile(src, dest):
         # False indicates `dest` should be overwritten if it exists already.
-        if isinstance(src, unicode) and isinstance(dest, unicode):
+        if isinstance(src, six.text_type) and isinstance(dest, six.text_type):
             _CopyFileW(src, dest, False)
         elif isinstance(src, str) and isinstance(dest, str):
             _CopyFileA(src, dest, False)
@@ -83,7 +88,7 @@ class Dest(object):
     '''
 
     def __init__(self, path):
-        self.path = path
+        self.path = ensure_unicode(path)
         self.mode = None
 
     @property
@@ -172,7 +177,7 @@ class BaseFile(object):
         disabled when skip_if_older is False.
         Returns whether a copy was actually performed (True) or not (False).
         '''
-        if isinstance(dest, basestring):
+        if isinstance(dest, six.string_types):
             dest = Dest(dest)
         else:
             assert isinstance(dest, Dest)
@@ -193,12 +198,12 @@ class BaseFile(object):
             else:
                 # Ensure the file is always created
                 if not dest.exists():
-                    dest.write('')
+                    dest.write(b'')
                 shutil.copyfileobj(self.open(), dest)
             return True
 
         src = self.open()
-        copy_content = ''
+        copy_content = b''
         while True:
             dest_content = dest.read(32768)
             src_content = src.read(32768)
@@ -255,7 +260,7 @@ class File(BaseFile):
     '''
 
     def __init__(self, path):
-        self.path = path
+        self.path = ensure_unicode(path)
 
     @property
     def mode(self):
@@ -292,11 +297,11 @@ class ExecutableFile(File):
 
     def copy(self, dest, skip_if_older=True):
         real_dest = dest
-        if not isinstance(dest, basestring):
+        if not isinstance(dest, six.string_types):
             fd, dest = mkstemp()
             os.close(fd)
             os.remove(dest)
-        assert isinstance(dest, basestring)
+        assert isinstance(dest, six.string_types)
         # If File.copy didn't actually copy because dest is newer, check the
         # file sizes. If dest is smaller, it means it is already stripped and
         # elfhacked and xz_compressed, so we can skip.
@@ -335,7 +340,7 @@ class AbsoluteSymlinkFile(File):
         File.__init__(self, path)
 
     def copy(self, dest, skip_if_older=True):
-        assert isinstance(dest, basestring)
+        assert isinstance(dest, six.string_types)
 
         # The logic in this function is complicated by the fact that symlinks
         # aren't universally supported. So, where symlinks aren't supported, we
@@ -426,7 +431,7 @@ class HardlinkFile(File):
     '''
 
     def copy(self, dest, skip_if_older=True):
-        assert isinstance(dest, basestring)
+        assert isinstance(dest, six.string_types)
 
         if not hasattr(os, 'link'):
             return super(HardlinkFile, self).copy(
@@ -488,7 +493,7 @@ class ExistingFile(BaseFile):
         self.required = required
 
     def copy(self, dest, skip_if_older=True):
-        if isinstance(dest, basestring):
+        if isinstance(dest, six.string_types):
             dest = Dest(dest)
         else:
             assert isinstance(dest, Dest)
@@ -512,8 +517,8 @@ class PreprocessedFile(BaseFile):
 
     def __init__(self, path, depfile_path, marker, defines, extra_depends=None,
                  silence_missing_directive_warnings=False):
-        self.path = path
-        self.depfile = depfile_path
+        self.path = ensure_unicode(path)
+        self.depfile = ensure_unicode(depfile_path)
         self.marker = marker
         self.defines = defines
         self.extra_depends = list(extra_depends or [])
@@ -535,7 +540,7 @@ class PreprocessedFile(BaseFile):
         '''
         Invokes the preprocessor to create the destination file.
         '''
-        if isinstance(dest, basestring):
+        if isinstance(dest, six.string_types):
             dest = Dest(dest)
         else:
             assert isinstance(dest, Dest)
@@ -706,9 +711,12 @@ class ManifestFile(BaseFile):
         Return a file-like object allowing to read() the serialized content of
         the manifest.
         '''
-        return BytesIO(''.join('%s\n' % e.rebase(self._base)
-                               for e in chain(self._entries,
-                                              self._interfaces)))
+        return BytesIO(
+            ensure_bytes(
+                ''.join(
+                    '%s\n' % e.rebase(self._base)
+                    for e in chain(self._entries, self._interfaces)
+                )))
 
     def __iter__(self):
         '''
@@ -738,8 +746,8 @@ class MinifiedProperties(BaseFile):
         Return a file-like object allowing to read() the minified content of
         the properties file.
         '''
-        return BytesIO(''.join(l for l in self._file.open().readlines()
-                               if not l.startswith('#')))
+        return BytesIO(b''.join(l for l in self._file.open().readlines()
+                                if not l.startswith(b'#')))
 
 
 class MinifiedJavaScript(BaseFile):
@@ -1086,7 +1094,7 @@ class ComposedFinder(BaseFinder):
         from mozpack.copier import FileRegistry
         self.files = FileRegistry()
 
-        for base, finder in sorted(finders.iteritems()):
+        for base, finder in sorted(six.iteritems(finders)):
             if self.files.contains(base):
                 self.files.remove(base)
             for p, f in finder.find(''):

@@ -8,11 +8,14 @@ import codecs
 import itertools
 import locale
 import logging
+import io
 import os
+import six
 import sys
 from collections import deque
 from contextlib import contextmanager
 from distutils.version import LooseVersion
+
 
 def getpreferredencoding():
     # locale._parse_localename makes locale.getpreferredencoding
@@ -29,6 +32,7 @@ def getpreferredencoding():
             encoding = 'utf-8'
     return encoding
 
+
 class Version(LooseVersion):
     '''A simple subclass of distutils.version.LooseVersion.
     Adds attributes for `major`, `minor`, `patch` for the first three
@@ -40,18 +44,19 @@ class Version(LooseVersion):
     v.minor == 2
     v.patch == 0
     '''
+
     def __init__(self, version):
         # Can't use super, LooseVersion's base class is not a new-style class.
         LooseVersion.__init__(self, version)
         # Take the first three integer components, stopping at the first
         # non-integer and padding the rest with zeroes.
         (self.major, self.minor, self.patch) = list(itertools.chain(
-            itertools.takewhile(lambda x:isinstance(x, int), self.version),
+            itertools.takewhile(lambda x: isinstance(x, int), self.version),
             (0, 0, 0)))[:3]
 
     def __cmp__(self, other):
         # LooseVersion checks isinstance(StringType), so work around it.
-        if isinstance(other, unicode):
+        if isinstance(other, six.text_type):
             other = other.encode('ascii')
         return LooseVersion.__cmp__(self, other)
 
@@ -71,6 +76,7 @@ class ConfigureOutputHandler(logging.Handler):
     printed out. This feature is only enabled under the `queue_debug` context
     manager.
     '''
+
     def __init__(self, stdout=sys.stdout, stderr=sys.stderr, maxlen=20):
         super(ConfigureOutputHandler, self).__init__()
 
@@ -94,7 +100,7 @@ class ConfigureOutputHandler(logging.Handler):
             fd1 = self._stdout.fileno()
             fd2 = self._stderr.fileno()
             self._same_output = self._is_same_output(fd1, fd2)
-        except AttributeError:
+        except (AttributeError, io.UnsupportedOperation):
             self._same_output = self._stdout == self._stderr
         self._stdout_waiting = None
         self._debug = deque(maxlen=maxlen + 1)
@@ -151,7 +157,7 @@ class ConfigureOutputHandler(logging.Handler):
             stream.flush()
         except (KeyboardInterrupt, SystemExit, IOError):
             raise
-        except:
+        except Exception:
             self.handleError(record)
 
     @contextmanager
@@ -193,6 +199,7 @@ class LineIO(object):
     '''File-like class that sends each line of the written data to a callback
     (without carriage returns).
     '''
+
     def __init__(self, callback, errors='strict'):
         self._callback = callback
         self._buf = ''

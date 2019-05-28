@@ -412,8 +412,8 @@ void URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
   bool useProxy = false;
   nsCOMPtr<nsIURI> baseURI;
   if (aBase.WasPassed()) {
-    rv = NS_NewURIOnAnyThread(getter_AddRefs(baseURI),
-                              NS_ConvertUTF16toUTF8(aBase.Value()));
+    rv = NS_NewURI(getter_AddRefs(baseURI),
+                   NS_ConvertUTF16toUTF8(aBase.Value()));
     if (NS_FAILED(rv)) {
       if (rv != NS_ERROR_UNKNOWN_PROTOCOL) {
         aRv.ThrowTypeError<MSG_INVALID_URL>(aBase.Value());
@@ -426,8 +426,8 @@ void URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
   // Let's see if we can parse aURI on this thread.
   nsCOMPtr<nsIURI> uri;
   if (!useProxy) {
-    rv = NS_NewURIOnAnyThread(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(aURL),
-                              nullptr, baseURI);
+    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUTF16toUTF8(aURL), nullptr,
+                   baseURI);
     if (NS_FAILED(rv)) {
       if (rv != NS_ERROR_UNKNOWN_PROTOCOL) {
         aRv.ThrowTypeError<MSG_INVALID_URL>(aURL);

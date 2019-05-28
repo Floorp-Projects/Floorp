@@ -244,6 +244,10 @@ function testTabRemoved(tab) {
 
 async function testTabUpdated(tab) {
   postToControlServer("status", `test tab updated: ${testTabID}`);
+  // now that the tab was updated with the URL, we're ready to get measurements; set the
+  // page timeout alarm now, so the timer will only be for getting the actual measurements
+  // themselves; not for the time to open/update the tab + getting measurements
+  setTimeoutAlarm("raptor-page-timeout", pageTimeout);
   // wait for pageload test result from content
   await waitForResult();
   // move on to next cycle (or test complete)
@@ -370,9 +374,6 @@ async function nextCycle() {
       let text = "begin pagecycle " + pageCycle;
       postToControlServer("status", text);
 
-      // set page timeout alarm
-      setTimeoutAlarm("raptor-page-timeout", pageTimeout);
-
       switch (testType) {
         case TEST_BENCHMARK:
           isBenchmarkPending = true;
@@ -411,8 +412,10 @@ async function nextCycle() {
       }
       setTimeout(function() {
         postToControlServer("status", `update tab: ${testTabID}`);
+
         // update the test page - browse to our test URL
         ext.tabs.update(testTabID, {url: testURL}, testTabUpdated);
+
         if (testType == TEST_SCENARIO) {
           scenarioTimer();
         }
@@ -639,7 +642,6 @@ function raptorRunner() {
       let text = `* pausing ${postStartupDelay / 1000} seconds to let browser settle... *`;
       postToControlServer("status", text);
 
-      // setTimeout(function() { nextCycle(); }, postStartupDelay);
       // on geckoview you can't create a new tab; only using existing tab - set it blank first
       if (config.browser == "geckoview" || config.browser == "refbrow" ||
           config.browser == "fenix") {

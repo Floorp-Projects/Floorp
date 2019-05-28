@@ -97,7 +97,12 @@
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "nsStreamUtils.h"
 #include "nsSocketTransportService2.h"
-
+#include "nsViewSourceHandler.h"
+#include "nsJARURI.h"
+#include "nsIconURI.h"
+#include "nsAboutProtocolHandler.h"
+#include "nsResProtocolHandler.h"
+#include "mozilla/net/ExtensionProtocolHandler.h"
 #include <limits>
 
 using namespace mozilla;
@@ -1617,19 +1622,6 @@ nsresult NS_ReadInputStreamToString(nsIInputStream* aInputStream,
 }
 
 nsresult NS_NewURI(
-    nsIURI** result, const nsACString& spec,
-    const char* charset /* = nullptr */, nsIURI* baseURI /* = nullptr */,
-    nsIIOService*
-        ioService /* = nullptr */)  // pass in nsIIOService to optimize callers
-{
-  nsresult rv;
-  nsCOMPtr<nsIIOService> grip;
-  rv = net_EnsureIOService(&ioService, grip);
-  if (ioService) rv = ioService->NewURI(spec, charset, baseURI, result);
-  return rv;
-}
-
-nsresult NS_NewURI(
     nsIURI** result, const nsACString& spec, NotNull<const Encoding*> encoding,
     nsIURI* baseURI /* = nullptr */,
     nsIIOService*
@@ -1708,10 +1700,10 @@ class TlsAutoIncrement {
   T& mVar;
 };
 
-nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
-                              const char* aCharset /* = nullptr */,
-                              nsIURI* aBaseURI /* = nullptr */,
-                              nsIIOService* aIOService /* = nullptr */) {
+nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
+                   const char* aCharset /* = nullptr */,
+                   nsIURI* aBaseURI /* = nullptr */,
+                   nsIIOService* aIOService /* = nullptr */) {
   TlsAutoIncrement<decltype(gTlsURLRecursionCount)> inc(gTlsURLRecursionCount);
   if (inc.value() >= MAX_RECURSION_COUNT) {
     return NS_ERROR_MALFORMED_URI;
@@ -1745,6 +1737,9 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
   }
   if (scheme.EqualsLiteral("ftp")) {
     return NewStandardURI(aSpec, aCharset, aBaseURI, 21, aURI);
+  }
+  if (scheme.EqualsLiteral("ssh")) {
+    return NewStandardURI(aSpec, aCharset, aBaseURI, 22, aURI);
   }
 
   if (scheme.EqualsLiteral("file")) {
@@ -1793,13 +1788,99 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
                                                 aURI);
   }
 
-  if (NS_IsMainThread()) {
-    // XXX (valentin): this fallback should be removed once we get rid of
-    // nsIProtocolHandler.newURI
-    return NS_NewURI(aURI, aSpec, aCharset, aBaseURI, aIOService);
+  if (scheme.EqualsLiteral("view-source")) {
+    return nsViewSourceHandler::CreateNewURI(aSpec, aCharset, aBaseURI, aURI);
   }
 
-  return NS_ERROR_UNKNOWN_PROTOCOL;
+  if (scheme.EqualsLiteral("resource")) {
+    RefPtr<nsResProtocolHandler> handler = nsResProtocolHandler::GetSingleton();
+    if (!handler) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (scheme.EqualsLiteral("indexeddb")) {
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(new nsStandardURL::Mutator())
+        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                nsIStandardURL::URLTYPE_AUTHORITY, 0,
+                                nsCString(aSpec), aCharset, base, nullptr))
+        .Finalize(aURI);
+  }
+
+  if (scheme.EqualsLiteral("moz-extension")) {
+    if (!NS_IsMainThread()) {
+      return NS_ERROR_UNKNOWN_PROTOCOL;
+    }
+    // TODO: must be thread safe
+    MOZ_ASSERT(NS_IsMainThread());
+    RefPtr<mozilla::net::ExtensionProtocolHandler> handler =
+        mozilla::net::ExtensionProtocolHandler::GetSingleton();
+    if (!handler) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (scheme.EqualsLiteral("about")) {
+    return nsAboutProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI,
+                                                aURI);
+  }
+
+  if (scheme.EqualsLiteral("jar")) {
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(new nsJARURI::Mutator())
+        .Apply(NS_MutatorMethod(&nsIJARURIMutator::SetSpecBaseCharset,
+                                nsCString(aSpec), base, aCharset))
+        .Finalize(aURI);
+  }
+
+  if (scheme.EqualsLiteral("moz-icon")) {
+    return NS_MutateURI(new nsMozIconURI::Mutator())
+        .SetSpec(aSpec)
+        .Finalize(aURI);
+  }
+
+#ifdef MOZ_WIDGET_GTK
+  if (scheme.EqualsLiteral("smb") || scheme.EqualsLiteral("sftp")) {
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(new nsStandardURL::Mutator())
+        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                nsIStandardURL::URLTYPE_STANDARD, -1,
+                                nsCString(aSpec), aCharset, base, nullptr))
+        .Finalize(aURI);
+  }
+#endif
+
+  if (scheme.EqualsLiteral("android")) {
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                nsIStandardURL::URLTYPE_STANDARD, -1,
+                                nsCString(aSpec), aCharset, base, nullptr))
+        .Finalize(aURI);
+  }
+
+  if (aBaseURI) {
+    nsAutoCString newSpec;
+    rv = aBaseURI->Resolve(aSpec, newSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoCString newScheme;
+    rv = net_ExtractURLScheme(newSpec, newScheme);
+    if (NS_SUCCEEDED(rv)) {
+      // The scheme shouldn't really change at this point.
+      MOZ_DIAGNOSTIC_ASSERT(newScheme == scheme);
+    }
+
+    return NS_MutateURI(new nsSimpleURI::Mutator())
+        .SetSpec(newSpec)
+        .Finalize(aURI);
+  }
+
+  // Falls back to external protocol handler.
+  return NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(aURI);
 }
 
 nsresult NS_GetSanitizedURIStringFromURI(nsIURI* aUri,

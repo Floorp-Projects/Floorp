@@ -68,6 +68,9 @@ interface nsIAboutModule : nsISupports
     /**
      * A flag that indicates that this URI should be linkable from content.
      * Ignored unless URI_SAFE_FOR_UNTRUSTED_CONTENT is also specified.
+     *
+     * When adding a new about module with this flag make sure to also update
+     * IsSafeToLinkForUntrustedContent() in nsAboutProtocolHandler.cpp
      */
     const unsigned long MAKE_LINKABLE = (1 << 7);
 
