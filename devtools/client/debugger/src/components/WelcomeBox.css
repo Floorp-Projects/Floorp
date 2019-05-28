@@ -12,7 +12,7 @@
   text-align: center;
   background-color: var(--theme-toolbar-background);
   overflow: hidden;
-  font-weight: lighter;
+  font-weight: 300;
   z-index: 10;
   user-select: none;
 }
