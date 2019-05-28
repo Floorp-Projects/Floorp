@@ -4,19 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.54.0-SNAPSHOT  (In Development)
+# 0.55.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.52.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/57?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.54.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/58?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
-* **service-pocket**
-  * Added `PocketEndpointRaw` and `PocketJSONParser` for low-level access.
+# 0.54.0
 
-* **browser-menu**
-  * Added `BrowserMenuHighlightableItem`. Its `highlight` property allows you to set the background and an image that appears on the right.
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.53.0...v0.54.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/57?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.54.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.54.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.54.0/buildSrc/src/main/java/Config.kt)
   
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * **Merge day!**
@@ -25,6 +27,12 @@ permalink: /changelog/
     * `browser-engine-gecko-nightly`: GeckoView 69.0
 
 * ⚠️ **Deprecated components**: `feature-session-bundling`, `ui-doorhanger`, `ui-progress` (See blog posting).
+
+* **service-pocket**
+  * Added `PocketEndpointRaw` and `PocketJSONParser` for low-level access.
+
+* **browser-menu**
+  * Added `BrowserMenuHighlightableItem`. Its `highlight` property allows you to set the background and an image that appears on the right.
 
 * **feature-findinpage**
   * Find in Page Bar now displays 0/0 for no matches found with new attr findInPageNoMatchesTextColor
