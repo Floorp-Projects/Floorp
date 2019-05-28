@@ -22,11 +22,13 @@ export type Preview = {|
 
 export type PreviewState = {
   +preview: ?Preview,
+  previewCount: number,
 };
 
 export function initialPreviewState(): PreviewState {
   return {
     preview: null,
+    previewCount: 0,
   };
 }
 
@@ -37,6 +39,10 @@ function update(
   switch (action.type) {
     case "CLEAR_PREVIEW": {
       return { ...state, preview: null };
+    }
+
+    case "START_PREVIEW": {
+      return { ...state, previewCount: state.previewCount + 1 };
     }
 
     case "SET_PREVIEW": {
@@ -53,6 +59,10 @@ type OuterState = { preview: PreviewState };
 
 export function getPreview(state: OuterState) {
   return state.preview.preview;
+}
+
+export function getPreviewCount(state: OuterState) {
+  return state.preview.previewCount;
 }
 
 export default update;
