@@ -43,7 +43,7 @@ job-defaults:
     run-on-projects: ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
 
 jobs:
-    google-play-strings-nightly:
+    nightly:
         attributes:
             release-type: nightly
         worker:
@@ -51,7 +51,7 @@ jobs:
                 PACKAGE_NAME: org.mozilla.fennec_aurora
         treeherder:
             symbol: pub(gps-n)
-    google-play-strings-beta:
+    beta:
         attributes:
             release-type: beta
         worker:
