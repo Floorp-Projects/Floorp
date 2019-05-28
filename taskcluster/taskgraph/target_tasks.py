@@ -450,12 +450,7 @@ def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
     def filter(task):
         # XXX Starting 68, we ship Fennec outside of mozilla-central, but geckoview must remain
         # shipped from there
-        if task.label in (
-            'beetmover-geckoview-android-aarch64-nightly/opt',
-            'beetmover-geckoview-android-api-16-nightly/opt',
-            'beetmover-geckoview-android-x86-nightly/opt',
-            'beetmover-geckoview-android-x86_64-nightly/opt',
-        ):
+        if task.kind == 'beetmover-geckoview':
             return False
 
         if not filter_for_project(task, parameters):
