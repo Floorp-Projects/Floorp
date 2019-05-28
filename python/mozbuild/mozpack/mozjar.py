@@ -397,7 +397,7 @@ class JarReader(object):
             preload = JarStruct.get_data('uint32', self._data)[0]
         entries = OrderedDict()
         offset = self._cdir_end['cdir_offset']
-        for e in xrange(self._cdir_end['cdir_entries']):
+        for e in six.moves.xrange(self._cdir_end['cdir_entries']):
             entry = JarCdirEntry(self._data[offset:])
             offset += entry.size
             # Creator host system. 0 is MSDOS, 3 is Unix
