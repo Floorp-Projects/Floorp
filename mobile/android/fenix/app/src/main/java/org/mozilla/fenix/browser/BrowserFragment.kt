@@ -727,10 +727,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     private fun getSessionById(): Session? {
+        val components = context?.components ?: return null
         return if (customTabSessionId != null) {
-            requireContext().components.core.sessionManager.findSessionById(customTabSessionId!!)
+            components.core.sessionManager.findSessionById(customTabSessionId!!)
         } else {
-            requireComponents.core.sessionManager.selectedSession
+            components.core.sessionManager.selectedSession
         }
     }
 

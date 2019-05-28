@@ -220,7 +220,9 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         }
     }
 
-    private fun deleteTabsAsync() = async(Dispatchers.IO) { requireComponents.core.sessionManager.removeSessions() }
+    private fun deleteTabsAsync() = async(Dispatchers.Main) {
+        requireComponents.useCases.tabsUseCases.removeAllTabs.invoke()
+    }
 
     private fun deleteBrowsingDataAsync() = async(Dispatchers.IO) {
         requireComponents.core.engine.clearData(Engine.BrowsingData.all())
