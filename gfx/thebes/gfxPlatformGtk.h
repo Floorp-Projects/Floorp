@@ -106,6 +106,7 @@ class gfxPlatformGtk : public gfxPlatform {
 #endif
 
  protected:
+  void InitPlatformGPUProcessPrefs() override;
   bool CheckVariationFontSupport() override;
 
   int8_t mMaxGenericSubstitutions;

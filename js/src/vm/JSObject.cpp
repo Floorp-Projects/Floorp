@@ -1703,11 +1703,15 @@ template XDRResult js::XDRObjectLiteral(XDRState<XDR_DECODE>* xdr,
 
 /* static */
 bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
-                                   HandleValueVector values, void* priv) {
+                                   NativeObject* old, HandleValueVector values,
+                                   void* priv) {
   // This object has just been swapped with some other object, and its shape
   // no longer reflects its allocated size. Correct this information and
   // fill the slots in with the specified values.
   MOZ_ASSERT(obj->slotSpan() == values.length());
+  MOZ_ASSERT(!IsInsideNursery(obj));
+
+  size_t oldSlotCount = obj->numDynamicSlots();
 
   // Make sure the shape's numFixedSlots() is correct.
   size_t nfixed =
@@ -1725,7 +1729,10 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
     MOZ_ASSERT(!priv);
   }
 
+  Zone* zone = obj->zone();
   if (obj->slots_) {
+    size_t size = oldSlotCount * sizeof(HeapSlot);
+    zone->removeCellMemory(old, size, MemoryUse::ObjectSlots);
     js_free(obj->slots_);
     obj->slots_ = nullptr;
   }
@@ -1736,6 +1743,8 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
     if (!obj->slots_) {
       return false;
     }
+    size_t size = ndynamic * sizeof(HeapSlot);
+    zone->addCellMemory(obj, size, MemoryUse::ObjectSlots);
     Debug_SetSlotRangeToCrashOnTouch(obj->slots_, ndynamic);
   }
 
@@ -1866,9 +1875,17 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
   bool bIsProxyWithInlineValues =
       b->is<ProxyObject>() && b->as<ProxyObject>().usingInlineValueArray();
 
+  // Swap element associations.
+  Zone* zone = a->zone();
+  zone->swapCellMemory(a, b, MemoryUse::ObjectElements);
+
   if (a->tenuredSizeOfThis() == b->tenuredSizeOfThis()) {
     // When both objects are the same size, just do a plain swap of their
     // contents.
+
+    // Swap slot associations.
+    zone->swapCellMemory(a, b, MemoryUse::ObjectSlots);
+
     size_t size = a->tenuredSizeOfThis();
 
     char tmp[mozilla::tl::Max<sizeof(JSFunction),
@@ -1949,13 +1966,13 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
     b->fixDictionaryShapeAfterSwap();
 
     if (na) {
-      if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), avals,
+      if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), na, avals,
                                          apriv)) {
         oomUnsafe.crash("fillInAfterSwap");
       }
     }
     if (nb) {
-      if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), bvals,
+      if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), nb, bvals,
                                          bpriv)) {
         oomUnsafe.crash("fillInAfterSwap");
       }
@@ -1985,7 +2002,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b) {
    * Normally write barriers happen before the write. However, that's not
    * necessary here because nothing is being destroyed. We're just swapping.
    */
-  JS::Zone* zone = a->zone();
   if (zone->needsIncrementalBarrier()) {
     a->traceChildren(zone->barrierTracer());
     b->traceChildren(zone->barrierTracer());
