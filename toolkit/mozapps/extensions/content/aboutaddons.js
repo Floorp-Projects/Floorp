@@ -1062,7 +1062,11 @@ class AddonCard extends HTMLElement {
       switch (action) {
         case "toggle-disabled":
           if (addon.userDisabled) {
-            await addon.enable();
+            if (shouldShowPermissionsPrompt(addon)) {
+              await showPermissionsPrompt(addon);
+            } else {
+              await addon.enable();
+            }
           } else {
             await addon.disable();
           }
@@ -1601,8 +1605,11 @@ class AddonList extends HTMLElement {
 
     // Process any pending uninstall related to this list.
     for (const addon of this.pendingUninstallAddons) {
-      addon.uninstall();
+      if (isPending(addon, "uninstall")) {
+        addon.uninstall();
+      }
     }
+    this.pendingUninstallAddons.clear();
   }
 
   /**
@@ -1898,6 +1905,7 @@ class AddonList extends HTMLElement {
   }
 
   onUninstalled(addon) {
+    this.pendingUninstallAddons.delete(addon);
     this.removePendingUninstallBar(addon);
     this.removeAddon(addon);
   }

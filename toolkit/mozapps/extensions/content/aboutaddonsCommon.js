@@ -6,7 +6,8 @@
 "use strict";
 
 /* exported attachUpdateHandler, getBrowserElement, loadReleaseNotes,
- * openOptionsInTab */
+            openOptionsInTab, shouldShowPermissionsPrompt,
+            showPermissionsPrompt */
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -99,4 +100,52 @@ function openOptionsInTab(optionsURL) {
     return true;
   }
   return false;
+}
+
+function shouldShowPermissionsPrompt(addon) {
+  if (!WEBEXT_PERMISSION_PROMPTS || !addon.isWebExtension || addon.seen) {
+    return false;
+  }
+
+  const {origins, permissions} = addon.userPermissions;
+  return origins.length > 0 || permissions.length > 0;
+}
+
+function showPermissionsPrompt(addon) {
+  return new Promise((resolve) => {
+    const permissions = addon.userPermissions;
+    const target = getBrowserElement();
+
+    const onAddonEnabled = () => {
+      // The user has just enabled a sideloaded extension, if the permission
+      // can be changed for the extension, show the post-install panel to
+      // give the user that opportunity.
+      if (addon.permissions &
+        AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS) {
+        Services.obs.notifyObservers({addon, target},
+          "webextension-install-notify");
+      }
+      resolve();
+    };
+
+    const subject = {
+      wrappedJSObject: {
+        target,
+        info: {
+          type: "sideload",
+          addon,
+          icon: addon.iconURL,
+          permissions,
+          resolve() {
+            addon.markAsSeen();
+            addon.enable().then(onAddonEnabled);
+          },
+          reject() {
+            // Ignore a cancelled permission prompt.
+          },
+        },
+      },
+    };
+    Services.obs.notifyObservers(subject, "webextension-permission-prompt");
+  });
 }
