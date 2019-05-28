@@ -19,7 +19,6 @@ except ImportError:
     # shutil.which is not available in Python 2.7
     import which
 
-from StringIO import StringIO
 from mach.mixin.process import ProcessExecutionMixin
 from mozversioncontrol import (
     get_repository_from_build_config,
@@ -273,7 +272,7 @@ class MozbuildObject(ProcessExecutionMixin):
         # the environment variable, which has an impact on autodetection (when
         # path is MozconfigLoader.AUTODETECT), and memoization wouldn't account
         # for it without the explicit (unused) argument.
-        out = StringIO()
+        out = six.StringIO()
         env = os.environ
         if path and path != MozconfigLoader.AUTODETECT:
             env = dict(env)
