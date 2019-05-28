@@ -1,3 +1,9 @@
+:host([checked]) {
+  --icon: url("chrome://global/skin/icons/check.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
 button {
   background-color: transparent;
   color: inherit;
@@ -15,6 +21,10 @@ button {
   width: 100%;
 }
 
+button:dir(rtl) {
+  background-position: right 16px center;
+}
+
 :host([badged]) button::after {
   content: "";
   display: block;
@@ -27,15 +37,15 @@ button {
   left: 28px;
 }
 
-:host([checked]) {
-  --icon: url("chrome://global/skin/icons/check.svg");
-}
-
 button:focus,
-button:not([disabled]):hover {
+button:enabled:hover {
   background-color: var(--in-content-button-background);
 }
 
-button:not([disabled]):hover:active {
+button:enabled:hover:active {
   background-color: var(--in-content-button-background-hover);
+}
+
+button:disabled {
+  opacity: 0.4;
 }

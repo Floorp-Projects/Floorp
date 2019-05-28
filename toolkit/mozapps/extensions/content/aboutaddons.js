@@ -348,11 +348,7 @@ class PanelList extends HTMLElement {
   }
 
   set open(val) {
-    if (val) {
-      this.setAttribute("open", "true");
-    } else {
-      this.removeAttribute("open");
-    }
+    this.toggleAttribute("open", val);
   }
 
   show(triggeringEvent) {
@@ -458,6 +454,10 @@ class PanelList extends HTMLElement {
       case "click":
         if (e.target.tagName == "PANEL-ITEM") {
           this.hide();
+        } else {
+          // Avoid falling through to the default click handler of the
+          // add-on card, which would expand the add-on card.
+          e.stopPropagation();
         }
         break;
       case "mousedown":
@@ -509,11 +509,7 @@ class PanelItem extends HTMLElement {
   }
 
   set disabled(val) {
-    if (val) {
-      this.button.setAttribute("disabled", "");
-    } else {
-      this.button.removeAttribute("disabled");
-    }
+    this.button.toggleAttribute("disabled", val);
   }
 
   get checked() {
@@ -521,11 +517,7 @@ class PanelItem extends HTMLElement {
   }
 
   set checked(val) {
-    if (val) {
-      this.setAttribute("checked", "");
-    } else {
-      this.removeAttribute("checked");
-    }
+    this.toggleAttribute("checked", val);
   }
 }
 customElements.define("panel-item", PanelItem);
@@ -1159,8 +1151,7 @@ class AddonCard extends HTMLElement {
           break;
         default:
           // Handle a click on the card itself.
-          // Don't expand if expanded or a button was clicked.
-          if (!this.expanded && e.target.localName != "button") {
+          if (!this.expanded) {
             loadViewFn("detail", this.addon.id);
           }
           break;
