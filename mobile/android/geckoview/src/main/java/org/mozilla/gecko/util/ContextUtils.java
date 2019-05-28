@@ -7,8 +7,12 @@
 package org.mozilla.gecko.util;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 public class ContextUtils {
@@ -45,5 +49,24 @@ public class ContextUtils {
         }
 
         return INSTALLER_GOOGLE_PLAY.equals(installerPackageName);
+    }
+
+    public static boolean isApplicationDebuggable(final @NonNull Context context) {
+        final ApplicationInfo applicationInfo = context.getApplicationInfo();
+        return (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+    }
+
+    public static boolean isApplicationCurrentDebugApp(final @NonNull Context context) {
+        final ApplicationInfo applicationInfo = context.getApplicationInfo();
+
+        final String currentDebugApp;
+        if (Build.VERSION.SDK_INT >= 17) {
+            currentDebugApp = Settings.Global.getString(context.getContentResolver(),
+                    Settings.Global.DEBUG_APP);
+        } else {
+            currentDebugApp = Settings.System.getString(context.getContentResolver(),
+                    Settings.System.DEBUG_APP);
+        }
+        return applicationInfo.packageName.equals(currentDebugApp);
     }
 }
