@@ -1793,6 +1793,17 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
                                                 aURI);
   }
 
+#ifdef MOZ_WIDGET_GTK
+  if (scheme.EqualsLiteral("smb") || scheme.EqualsLiteral("sftp")) {
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(new nsStandardURL::Mutator())
+        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                nsIStandardURL::URLTYPE_STANDARD, -1,
+                                nsCString(aSpec), aCharset, base, nullptr))
+        .Finalize(aURI);
+  }
+#endif
+
   if (NS_IsMainThread()) {
     // XXX (valentin): this fallback should be removed once we get rid of
     // nsIProtocolHandler.newURI
