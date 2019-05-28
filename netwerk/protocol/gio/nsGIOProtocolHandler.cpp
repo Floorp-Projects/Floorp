@@ -925,6 +925,29 @@ nsGIOProtocolHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
   return NS_OK;
 }
 
+static bool IsValidGIOScheme(const nsACString& aScheme) {
+  // Verify that GIO supports this URI scheme.
+  GVfs* gvfs = g_vfs_get_default();
+
+  if (!gvfs) {
+    g_warning("Cannot get GVfs object.");
+    return false;
+  }
+
+  const gchar* const* uri_schemes = g_vfs_get_supported_uri_schemes(gvfs);
+
+  while (*uri_schemes != nullptr) {
+    // While flatSpec ends with ':' the uri_scheme does not. Therefore do not
+    // compare last character.
+    if (aScheme.Equals(*uri_schemes)) {
+      return true;
+    }
+    uri_schemes++;
+  }
+
+  return false;
+}
+
 NS_IMETHODIMP
 nsGIOProtocolHandler::NewURI(const nsACString& aSpec,
                              const char* aOriginCharset, nsIURI* aBaseURI,
@@ -983,6 +1006,20 @@ nsGIOProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   nsAutoCString spec;
   rv = aURI->GetSpec(spec);
   if (NS_FAILED(rv)) return rv;
+
+  if (!IsSupportedProtocol(spec)) {
+    return NS_ERROR_UNKNOWN_PROTOCOL;
+  }
+
+  nsAutoCString scheme;
+  rv = aURI->GetScheme(scheme);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!IsValidGIOScheme(scheme)) {
+    return NS_ERROR_UNKNOWN_PROTOCOL;
+  }
 
   RefPtr<nsGIOInputStream> stream = new nsGIOInputStream(spec);
   if (!stream) {
