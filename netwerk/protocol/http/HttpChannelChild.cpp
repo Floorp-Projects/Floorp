@@ -169,7 +169,6 @@ HttpChannelChild::HttpChannelChild()
       mCacheFetchCount(0),
       mCacheExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME),
       mDeletingChannelSent(false),
-      mIPCOpen(false),
       mUnknownDecoderInvolved(false),
       mDivertingToParent(false),
       mFlushedForDiversion(false),
@@ -255,9 +254,9 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
 
   // Normally we Send_delete in OnStopRequest, but when we need to retain the
   // remote channel for security info IPDL itself holds 1 reference, so we
-  // Send_delete when refCnt==1.  But if !mIPCOpen, then there's nobody to send
+  // Send_delete when refCnt==1.  But if !CanSend(), then there's nobody to send
   // to, so we fall through.
-  if (mKeptAlive && count == 1 && mIPCOpen) {
+  if (mKeptAlive && count == 1 && CanSend()) {
     mKeptAlive = false;
     // We send a message to the parent, which calls SendDelete, and then the
     // child calling Send__delete__() to finally drop the refcount to 0.
@@ -297,18 +296,6 @@ NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 //-----------------------------------------------------------------------------
 // HttpChannelChild::PHttpChannelChild
 //-----------------------------------------------------------------------------
-
-void HttpChannelChild::AddIPDLReference() {
-  MOZ_ASSERT(!mIPCOpen, "Attempt to retain more than one IPDL reference");
-  mIPCOpen = true;
-  AddRef();
-}
-
-void HttpChannelChild::ReleaseIPDLReference() {
-  MOZ_ASSERT(mIPCOpen, "Attempt to release nonexistent IPDL reference");
-  mIPCOpen = false;
-  Release();
-}
 
 void HttpChannelChild::OnBackgroundChildReady(
     HttpBackgroundChannelChild* aBgChild) {
@@ -634,7 +621,7 @@ class SyntheticDiversionListener final : public nsIStreamListener {
 
   NS_IMETHOD
   OnStopRequest(nsIRequest* aRequest, nsresult aStatus) override {
-    if (mChannel->mIPCOpen) {
+    if (mChannel->CanSend()) {
       mChannel->SendDivertOnStopRequest(aStatus);
       mChannel->SendDivertComplete();
     }
@@ -644,7 +631,7 @@ class SyntheticDiversionListener final : public nsIStreamListener {
   NS_IMETHOD
   OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
                   uint64_t aOffset, uint32_t aCount) override {
-    if (!mChannel->mIPCOpen) {
+    if (!mChannel->CanSend()) {
       aRequest->Cancel(NS_ERROR_ABORT);
       return NS_ERROR_ABORT;
     }
@@ -1173,7 +1160,7 @@ void HttpChannelChild::OnStopRequest(
   if (mLoadFlags & LOAD_DOCUMENT_URI) {
     // Keep IPDL channel open, but only for updating security info.
     // If IPDL is already closed, then do nothing.
-    if (mIPCOpen) {
+    if (CanSend()) {
       mKeptAlive = true;
       SendDocumentChannelCleanup(true);
     }
@@ -1414,7 +1401,7 @@ void HttpChannelChild::FailedAsyncOpen(const nsresult& status) {
   // We're already being called from IPDL, therefore already "async"
   HandleAsyncAbort();
 
-  if (mIPCOpen) {
+  if (CanSend()) {
     TrySendDeletingChannel();
   }
 }
@@ -2174,7 +2161,7 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
 
   // The socket transport in the chrome process now holds a logical ref to us
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
-  AddIPDLReference();
+  AddRef();
 
   // This must happen before the constructor message is sent. Otherwise messages
   // from the parent could arrive quickly and be delivered to the wrong event
@@ -2399,7 +2386,7 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
   ChildLoadInfoForwarderArgs loadInfoForwarder;
   LoadInfoToChildLoadInfoForwarder(newChannelLoadInfo, &loadInfoForwarder);
 
-  if (mIPCOpen)
+  if (CanSend())
     SendRedirect2Verify(result, *headerTuples, loadInfoForwarder, loadFlags,
                         referrerInfo, redirectURI, corsPreflightArgs,
                         chooseAppcache);
@@ -2921,7 +2908,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
   // The socket transport in the chrome process now holds a logical ref to us
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
-  AddIPDLReference();
+  AddRef();
 
   PBrowserOrId browser = cc->GetBrowserOrId(browserChild);
   if (!gNeckoChild->SendPHttpChannelConstructor(
@@ -3228,7 +3215,7 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString& aType,
         aType, aPredictedSize, _retval);
   }
 
-  if (!mIPCOpen) {
+  if (!CanSend()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
   if (static_cast<ContentChild*>(gNeckoChild->Manager())->IsShuttingDown()) {
@@ -3258,7 +3245,7 @@ HttpChannelChild::GetOriginalInputStream(nsIInputStreamReceiver* aReceiver) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!mIPCOpen) {
+  if (!CanSend()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -3275,7 +3262,7 @@ HttpChannelChild::GetAltDataInputStream(const nsACString& aType,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!mIPCOpen) {
+  if (!CanSend()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -3501,7 +3488,7 @@ HttpChannelChild::RemoveCorsPreflightCacheEntry(nsIURI* aURI,
   bool result = false;
   // Be careful to not attempt to send a message to the parent after the
   // actor has been destroyed.
-  if (mIPCOpen) {
+  if (CanSend()) {
     result = SendRemoveCorsPreflightCacheEntry(uri, principalInfo);
   }
   return result ? NS_OK : NS_ERROR_FAILURE;
@@ -3688,7 +3675,7 @@ void HttpChannelChild::TrySendDeletingChannel() {
   }
 
   if (NS_IsMainThread()) {
-    if (NS_WARN_IF(!mIPCOpen)) {
+    if (NS_WARN_IF(!CanSend())) {
       // IPC actor is detroyed already, do not send more messages.
       return;
     }
@@ -4056,7 +4043,7 @@ void HttpChannelChild::MaybeCallSynthesizedCallback() {
 }
 
 nsresult HttpChannelChild::CrossProcessRedirectFinished(nsresult aStatus) {
-  if (!mIPCOpen) {
+  if (!CanSend()) {
     return NS_BINDING_FAILED;
   }
   Unused << SendCrossProcessRedirectDone(aStatus);
