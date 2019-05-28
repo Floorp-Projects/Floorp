@@ -13,8 +13,8 @@ import android.net.http.SslError
 import android.os.Build
 import android.os.StrictMode
 import android.preference.PreferenceManager
-import android.support.annotation.CheckResult
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.CheckResult
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText

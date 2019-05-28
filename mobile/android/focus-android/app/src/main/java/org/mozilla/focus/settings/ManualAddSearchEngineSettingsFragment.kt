@@ -8,9 +8,9 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.WorkerThread
-import android.support.design.widget.Snackbar
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
+import com.google.android.material.snackbar.Snackbar
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater

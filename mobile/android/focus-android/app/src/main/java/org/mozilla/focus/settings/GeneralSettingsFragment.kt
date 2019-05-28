@@ -6,8 +6,8 @@ package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.support.v7.preference.ListPreference
-import android.support.v7.preference.Preference
+import androidx.preference.ListPreference
+import androidx.preference.Preference
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.ViewGroup

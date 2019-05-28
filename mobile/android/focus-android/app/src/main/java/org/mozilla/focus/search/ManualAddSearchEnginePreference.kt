@@ -7,9 +7,9 @@ package org.mozilla.focus.search
 import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.design.widget.TextInputLayout
-import android.support.v7.preference.Preference
-import android.support.v7.preference.PreferenceViewHolder
+import com.google.android.material.textfield.TextInputLayout
+import androidx.preference.Preference
+import androidx.preference.PreferenceViewHolder
 import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher

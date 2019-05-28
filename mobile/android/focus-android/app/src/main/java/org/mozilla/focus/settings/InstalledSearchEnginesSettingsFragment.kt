@@ -5,7 +5,7 @@
 package org.mozilla.focus.settings
 
 import android.os.Bundle
-import android.support.v7.preference.Preference
+import androidx.preference.Preference
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem

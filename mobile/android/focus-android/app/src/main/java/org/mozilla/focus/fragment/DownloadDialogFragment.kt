@@ -6,8 +6,8 @@ package org.mozilla.focus.fragment
 
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
-import android.support.v7.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import androidx.appcompat.app.AlertDialog
 import android.text.Html
 import android.text.Spanned
 import android.widget.Button

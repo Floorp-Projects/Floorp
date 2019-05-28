@@ -19,7 +19,7 @@
             android:layout_marginBottom="20dp"
             android:textColor="@color/colorCursor"/>
 
-    <android.support.design.widget.TextInputLayout
+    <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:hintTextAppearance="@style/HintTextAppearance"
@@ -35,9 +35,9 @@
                 android:textSize="16sp"
                 android:textCursorDrawable="@null"
                 android:theme="@style/ColorHandleTheme"/>
-    </android.support.design.widget.TextInputLayout>
+    </com.google.android.material.textfield.TextInputLayout>
 
-    <android.support.design.widget.TextInputLayout
+    <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:hintTextAppearance="@style/HintTextAppearance">
@@ -52,6 +52,6 @@
                 android:textSize="16sp"
                 android:textCursorDrawable="@null"
                 android:theme="@style/ColorHandleTheme"/>
-    </android.support.design.widget.TextInputLayout>
+    </com.google.android.material.textfield.TextInputLayout>
 
 </LinearLayout>

@@ -2,12 +2,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <!--- <Preference
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_privacy_and_security_description"/> -->
 
-    <android.support.v7.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_tracking_protection">
 
@@ -39,9 +39,9 @@
             android:summary="@string/preference_privacy_block_content_summary2"
             android:title="@string/preference_privacy_block_content" />
 
-    </android.support.v7.preference.PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-    <android.support.v7.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_web_content">
 
@@ -66,9 +66,9 @@
             android:defaultValue="@string/preference_performance_block_images" />
         -->
 
-    </android.support.v7.preference.PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-    <android.support.v7.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_cookies">
         <org.mozilla.focus.widget.CookiesPreference
@@ -77,17 +77,17 @@
             android:key="@string/pref_key_performance_enable_cookies"
             android:layout="@layout/focus_preference_no_icon"
             android:title="@string/preference_privacy_category_cookies" />
-    </android.support.v7.preference.PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-    <android.support.v7.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:layout="@layout/focus_preference_category_no_title">
         <android.support.v7.preference.Preference
             android:key="@string/pref_key_screen_exceptions"
             android:layout="@layout/focus_preference_no_icon"
             android:title="@string/preference_exceptions" />
-    </android.support.v7.preference.PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-    <android.support.v7.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_switching_apps">
         <android.support.v7.preference.SwitchPreferenceCompat
@@ -102,9 +102,9 @@
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_privacy_stealth_summary"
             android:title="@string/preference_privacy_secure_mode" />
-    </android.support.v7.preference.PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-    <android.support.v7.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:key="@string/pref_key_category_safe_browsing"
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_safe_browsing">
@@ -114,9 +114,9 @@
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_safe_browsing_summary"
             android:title="@string/preference_safe_browsing_title" />
-    </android.support.v7.preference.PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-    <android.support.v7.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_data_choices">
 
@@ -125,6 +125,6 @@
             android:key="@string/pref_key_telemetry"
             android:summary="@string/preference_mozilla_telemetry_summary2"
             android:title="@string/preference_mozilla_telemetry2" />
-    </android.support.v7.preference.PreferenceCategory>
+    </androidx.preference.PreferenceCategory>
 
-</android.support.v7.preference.PreferenceScreen>
+</androidx.preference.PreferenceScreen>

@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <android.support.v7.preference.Preference
+    <androidx.preference.Preference
         android:icon="@drawable/ic_settings"
         android:key="@string/pref_key_general_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_general_summary"
         android:title="@string/preference_category_general" />
 
-    <android.support.v7.preference.Preference
+    <androidx.preference.Preference
         android:icon="@drawable/ic_lock"
         android:key="@string/pref_key_privacy_security_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_privacy_and_security_summary"
         android:title="@string/preference_privacy_and_security_header" />
 
-    <android.support.v7.preference.Preference
+    <androidx.preference.Preference
         android:icon="@drawable/ic_search"
         android:key="@string/pref_key_search_screen"
         android:layout="@layout/focus_preference"
         android:summary="@string/preference_search_summary"
         android:title="@string/preference_category_search" />
 
-    <android.support.v7.preference.Preference
+    <androidx.preference.Preference
         android:icon="@drawable/ic_developer"
         android:key="@string/pref_key_advanced_screen"
         android:layout="@layout/focus_preference"
@@ -38,4 +38,4 @@
         android:summary="@string/preference_mozilla_summary"
         android:title="@string/preference_category_mozilla" />
 
-</android.support.v7.preference.PreferenceScreen>
+</androidx.preference.PreferenceScreen>

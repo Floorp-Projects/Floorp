@@ -28,7 +28,7 @@
             android:orientation="vertical"
             android:clipChildren="false">
 
-            <android.support.v4.widget.SwipeRefreshLayout
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
                 android:id="@+id/swipe_refresh"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -43,7 +43,7 @@
                     android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
                     app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-            </android.support.v4.widget.SwipeRefreshLayout>
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
             <FrameLayout
                 android:id="@+id/crash_container"

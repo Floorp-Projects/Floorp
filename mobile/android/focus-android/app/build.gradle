@@ -19,8 +19,8 @@ android {
         targetSdkVersion 28
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "8.0.11"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionName "8.0.12"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
     }
@@ -173,16 +173,16 @@ repositories {
 }
 
 dependencies {
-    implementation "com.android.support:appcompat-v7:$support_libraries_version"
-    implementation "com.android.support:customtabs:$support_libraries_version"
-    implementation "com.android.support:design:$support_libraries_version"
-    implementation "com.android.support:cardview-v7:$support_libraries_version"
-    implementation "com.android.support:recyclerview-v7:$support_libraries_version"
-    implementation "com.android.support:support-v4:$support_libraries_version"
-    implementation "com.android.support:preference-v7:$support_libraries_version"
+    implementation "androidx.appcompat:appcompat:$support_libraries_version"
+    implementation "androidx.browser:browser:$support_libraries_version"
+    implementation "com.google.android.material:material:$support_libraries_version"
+    implementation "androidx.cardview:cardview:$support_libraries_version"
+    implementation "androidx.recyclerview:recyclerview:$support_libraries_version"
+    implementation "androidx.legacy:legacy-support-v4:$support_libraries_version"
+    implementation "androidx.preference:preference:$support_libraries_version"
     implementation 'io.sentry:sentry-android:1.7.9'
 
-    implementation "android.arch.lifecycle:extensions:$architecture_components_version"
+    implementation "androidx.lifecycle:lifecycle-extensions:$architecture_components_version"
 
     compileOnly 'net.jcip:jcip-annotations:1.0'
     compileOnly "com.github.spotbugs:spotbugs-annotations:$spotbugs_version"
@@ -216,7 +216,7 @@ dependencies {
     armImplementation "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:${geckoview_version}"
     x86Implementation "org.mozilla.geckoview:geckoview-nightly-x86:${geckoview_version}"
     aarch64Implementation "org.mozilla.geckoview:geckoview-nightly-arm64-v8a:${geckoview_version}"
-    implementation "com.android.support:palette-v7:$support_libraries_version"
+    implementation "androidx.palette:palette:$support_libraries_version"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.3.1"
@@ -225,15 +225,15 @@ dependencies {
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
     testImplementation "org.robolectric:robolectric:4.0-alpha-3" // required to support api level 28
     testImplementation 'org.mockito:mockito-core:2.21.0'
-    testImplementation "android.arch.core:core-testing:${architecture_components_version}"
+    testImplementation "androidx.arch.core:core-testing:${architecture_components_version}"
 
-    androidTestImplementation 'com.android.support.test.uiautomator:uiautomator-v18:2.1.3'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0-alpha4'
 
-    androidTestImplementation "com.android.support.test.espresso:espresso-core:$espresso_version", {
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestImplementation "com.android.support.test.espresso:espresso-idling-resource:$espresso_version"
-    androidTestImplementation "com.android.support.test.espresso:espresso-web:$espresso_version", {
+    androidTestImplementation "androidx.test.espresso:espresso-idling-resource:$espresso_version"
+    androidTestImplementation "androidx.test.espresso:espresso-web:$espresso_version", {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 
@@ -243,16 +243,16 @@ dependencies {
     androidTestImplementation "tools.fastlane:screengrab:1.2.0", {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestImplementation 'com.android.support.test.espresso:espresso-contrib:2.2.2', {
+    androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.1.0-alpha4', {
         exclude group: 'com.android.support', module: 'support-annotations'
         exclude group: 'com.android.support', module: 'support-v4'
         exclude group: 'com.android.support', module: 'design'
         exclude group: 'com.android.support', module: 'recyclerview-v7'
     }
-    implementation 'com.android.support.test:runner:1.0.2'
-    testImplementation 'com.android.support.test:rules:1.0.2'
+    implementation 'androidx.test:runner:1.1.0-alpha4'
+    testImplementation 'androidx.test:rules:1.1.0-alpha4'
 
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'com.jakewharton:process-phoenix:2.0.0'
     debugImplementation 'com.facebook.stetho:stetho:1.5.0'
 }

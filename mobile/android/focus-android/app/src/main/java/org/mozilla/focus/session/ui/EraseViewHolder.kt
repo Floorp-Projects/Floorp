@@ -6,8 +6,8 @@ package org.mozilla.focus.session.ui
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.support.v7.content.res.AppCompatResources
-import android.support.v7.widget.RecyclerView
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
 import org.mozilla.focus.R
@@ -18,7 +18,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 class EraseViewHolder(
     private val fragment: SessionsSheetFragment,
     itemView: View
-) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
+) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView), View.OnClickListener {
 
     init {
         val textView = itemView as TextView

@@ -6,7 +6,7 @@ package org.mozilla.focus.session.ui
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
 import mozilla.components.browser.session.Session
@@ -19,7 +19,7 @@ import java.lang.ref.WeakReference
 class SessionViewHolder internal constructor(
     private val fragment: SessionsSheetFragment,
     private val textView: TextView
-) : RecyclerView.ViewHolder(textView), View.OnClickListener {
+) : androidx.recyclerview.widget.RecyclerView.ViewHolder(textView), View.OnClickListener {
     companion object {
         @JvmField
         internal val LAYOUT_ID = R.layout.item_session

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.webview.matcher.util;
 
-import android.support.annotation.CheckResult;
+import androidx.annotation.CheckResult;
 
 /**
  * A String wrapper utility that allows for efficient string reversal.

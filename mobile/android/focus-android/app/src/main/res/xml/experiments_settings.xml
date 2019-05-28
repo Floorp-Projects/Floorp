@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <android.support.v7.preference.SwitchPreferenceCompat
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.preference.SwitchPreferenceCompat
         android:key="use_gecko_engine"
         android:summary="Use the newest GeckoView renderer to take advantage of the latest features"
         android:title="Use new renderer?" />
-</android.support.v7.preference.PreferenceScreen>
+</androidx.preference.PreferenceScreen>

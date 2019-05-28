@@ -7,7 +7,7 @@ package org.mozilla.focus.menu.browser
 
 import android.app.PendingIntent
 import android.content.Context
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import mozilla.components.browser.session.tab.CustomTabConfig
@@ -25,7 +25,7 @@ class BrowserMenuAdapter(
     private val menu: BrowserMenu,
     private val fragment: BrowserFragment,
     customTabConfig: CustomTabConfig?
-) : RecyclerView.Adapter<BrowserMenuViewHolder>() {
+) : androidx.recyclerview.widget.RecyclerView.Adapter<BrowserMenuViewHolder>() {
     sealed class MenuItem {
         open val viewType = 0
 

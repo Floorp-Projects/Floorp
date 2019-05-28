@@ -1,6 +1,6 @@
 package org.mozilla.focus.findinpage
 
-import android.arch.lifecycle.MutableLiveData
+import androidx.lifecycle.MutableLiveData
 import org.mozilla.focus.web.IFindListener
 
 class FindInPageCoordinator : IFindListener {

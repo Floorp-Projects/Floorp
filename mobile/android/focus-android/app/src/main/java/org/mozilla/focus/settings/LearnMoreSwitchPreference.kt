@@ -3,9 +3,9 @@ package org.mozilla.focus.settings
 import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
-import android.support.v4.content.ContextCompat
-import android.support.v7.preference.PreferenceViewHolder
-import android.support.v7.preference.SwitchPreferenceCompat
+import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceViewHolder
+import androidx.preference.SwitchPreferenceCompat
 import android.util.AttributeSet
 import android.view.ContextThemeWrapper
 import android.view.View

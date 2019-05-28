@@ -5,7 +5,7 @@
 package org.mozilla.focus.biometrics
 
 import android.content.Context
-import android.support.v4.hardware.fingerprint.FingerprintManagerCompat
+import androidx.core.hardware.fingerprint.FingerprintManagerCompat
 import android.app.KeyguardManager
 import android.os.Build
 import org.mozilla.focus.utils.Settings

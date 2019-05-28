@@ -5,7 +5,7 @@
 
 package org.mozilla.focus.menu.browser;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 
 import org.mozilla.focus.fragment.BrowserFragment;

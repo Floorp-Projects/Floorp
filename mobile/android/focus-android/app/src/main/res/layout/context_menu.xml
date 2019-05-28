@@ -19,7 +19,7 @@
             android:background="@color/contextMenuSeparatorBackground" />
     </LinearLayout>
 
-    <android.support.design.widget.NavigationView
+    <com.google.android.material.navigation.NavigationView
         android:theme="@style/AppTheme.ContextMenuItem"
         android:id="@+id/context_menu"
         android:layout_width="match_parent"

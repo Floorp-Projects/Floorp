@@ -4,15 +4,15 @@
 
 package org.mozilla.focus.biometrics
 
-import android.arch.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleObserver
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.support.annotation.RequiresApi
-import android.support.v4.app.DialogFragment
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatDialogFragment
+import androidx.annotation.RequiresApi
+import androidx.fragment.app.DialogFragment
+import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatDialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

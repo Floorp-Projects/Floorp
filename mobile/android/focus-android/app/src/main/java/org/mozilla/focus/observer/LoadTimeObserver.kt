@@ -5,7 +5,7 @@
 package org.mozilla.focus.observer
 
 import android.os.SystemClock
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.util.Log
 import mozilla.components.browser.session.Session
 import org.mozilla.focus.telemetry.TelemetryWrapper

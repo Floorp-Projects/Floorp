@@ -34,7 +34,7 @@ class AutocompleteSettingsFragment : BaseSettingsFragment(), SharedPreferences.O
         preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
     }
 
-    override fun onPreferenceTreeClick(preference: android.support.v7.preference.Preference?): Boolean {
+    override fun onPreferenceTreeClick(preference: androidx.preference.Preference?): Boolean {
         preference?.let {
             if (it.key == getString(R.string.pref_key_screen_custom_domains)) {
                 navigateToFragment(AutocompleteListFragment())

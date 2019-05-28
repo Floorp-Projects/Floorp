@@ -10,32 +10,32 @@
     android:padding="@dimen/preference_root_layout_padding"
     android:importantForAutofill="noExcludeDescendants">
 
-    <android.support.design.widget.TextInputLayout
+    <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/edit_engine_name_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="@dimen/textinputlayout_spacing">
-        <android.support.design.widget.TextInputEditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_engine_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/search_add_manually_name_hint"
             android:inputType="text">
             <requestFocus/>
-        </android.support.design.widget.TextInputEditText>
-    </android.support.design.widget.TextInputLayout>
+        </com.google.android.material.textfield.TextInputEditText>
+    </com.google.android.material.textfield.TextInputLayout>
 
-    <android.support.design.widget.TextInputLayout
+    <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/edit_search_string_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <android.support.design.widget.TextInputEditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_search_string"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/search_add_manually_string"
             android:inputType="text" />
-    </android.support.design.widget.TextInputLayout>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:layout_width="match_parent"

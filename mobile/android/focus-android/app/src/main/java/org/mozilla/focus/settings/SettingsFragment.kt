@@ -36,7 +36,7 @@ class SettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSharedPrefe
         super.onPause()
     }
 
-    override fun onPreferenceTreeClick(preference: android.support.v7.preference.Preference): Boolean {
+    override fun onPreferenceTreeClick(preference: androidx.preference.Preference): Boolean {
         val resources = resources
 
         when {

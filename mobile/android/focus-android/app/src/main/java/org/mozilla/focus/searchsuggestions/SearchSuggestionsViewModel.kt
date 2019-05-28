@@ -5,10 +5,10 @@
 package org.mozilla.focus.searchsuggestions
 
 import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.Transformations.map
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations.map
 import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder

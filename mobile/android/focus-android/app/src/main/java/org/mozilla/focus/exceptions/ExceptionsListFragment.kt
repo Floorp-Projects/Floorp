@@ -4,14 +4,14 @@
 
 package org.mozilla.focus.exceptions
 
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
-import android.support.v7.widget.helper.ItemTouchHelper.SimpleCallback
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -53,9 +53,9 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
     val itemTouchHelper: ItemTouchHelper = ItemTouchHelper(
         object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
             override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
+                recyclerView: androidx.recyclerview.widget.RecyclerView,
+                viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
+                target: androidx.recyclerview.widget.RecyclerView.ViewHolder
             ): Boolean {
                 val from = viewHolder.adapterPosition
                 val to = target.adapterPosition
@@ -65,9 +65,9 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
                 return true
             }
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+            override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {}
 
-            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+            override fun onSelectedChanged(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder?, actionState: Int) {
                 super.onSelectedChanged(viewHolder, actionState)
 
                 if (viewHolder is DomainViewHolder) {
@@ -76,8 +76,8 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
             }
 
             override fun clearView(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder
+                recyclerView: androidx.recyclerview.widget.RecyclerView,
+                viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder
             ) {
                 super.clearView(recyclerView, viewHolder)
 
@@ -106,7 +106,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         exceptionList.layoutManager =
-                LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
+                androidx.recyclerview.widget.LinearLayoutManager(activity, androidx.recyclerview.widget.RecyclerView.VERTICAL, false)
         exceptionList.adapter = DomainListAdapter()
         exceptionList.setHasFixedSize(true)
 
@@ -175,7 +175,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
     /**
      * Adapter implementation for the list of exception domains.
      */
-    inner class DomainListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class DomainListAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
         private val domains: MutableList<String> = mutableListOf()
         private val selectedDomains: MutableList<String> = mutableListOf()
 
@@ -194,7 +194,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
         override fun getItemViewType(position: Int) = DomainViewHolder.LAYOUT_ID
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder =
             when (viewType) {
                 DomainViewHolder.LAYOUT_ID ->
                     DomainViewHolder(
@@ -205,7 +205,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
 
         override fun getItemCount(): Int = domains.size
 
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
             if (holder is DomainViewHolder) {
                 holder.bind(
                     domains[position],
@@ -217,7 +217,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
             }
         }
 
-        override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        override fun onViewRecycled(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder) {
             if (holder is DomainViewHolder) {
                 holder.checkBoxView.setOnCheckedChangeListener(null)
             }
@@ -241,7 +241,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
     private class DomainViewHolder(
         itemView: View,
         val domainFormatter: DomainFormatter? = null
-    ) : RecyclerView.ViewHolder(itemView) {
+    ) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         val domainView: TextView = itemView.findViewById(R.id.domainView)
         val checkBoxView: CheckBox = itemView.findViewById(R.id.checkbox)
         val handleView: View = itemView.findViewById(R.id.handleView)

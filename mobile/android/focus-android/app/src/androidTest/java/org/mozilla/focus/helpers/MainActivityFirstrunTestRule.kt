@@ -5,9 +5,9 @@
 package org.mozilla.focus.helpers
 
 import android.preference.PreferenceManager
-import android.support.annotation.CallSuper
-import android.support.test.InstrumentationRegistry
-import android.support.test.rule.ActivityTestRule
+import androidx.annotation.CallSuper
+import androidx.test.InstrumentationRegistry
+import androidx.test.rule.ActivityTestRule
 
 import org.mozilla.focus.activity.MainActivity
 

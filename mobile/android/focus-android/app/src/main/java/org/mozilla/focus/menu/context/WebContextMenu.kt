@@ -18,9 +18,9 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Environment
 import android.preference.PreferenceManager
-import android.support.design.internal.NavigationMenuView
-import android.support.design.widget.NavigationView
-import android.support.v7.app.AlertDialog
+import com.google.android.material.internal.NavigationMenuView
+import com.google.android.material.navigation.NavigationView
+import androidx.appcompat.app.AlertDialog
 import android.text.Html
 import android.view.LayoutInflater
 import android.view.View

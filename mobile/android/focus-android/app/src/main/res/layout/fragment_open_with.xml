@@ -17,7 +17,7 @@
         android:textColor="#ff868686"
         android:textSize="16sp" />
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/apps"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

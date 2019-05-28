@@ -6,9 +6,9 @@
 package org.mozilla.focus.webview;
 
 import android.content.Context;
-import android.support.v4.view.NestedScrollingChild;
-import android.support.v4.view.NestedScrollingChildHelper;
-import android.support.v4.view.ViewCompat;
+import androidx.core.view.NestedScrollingChild;
+import androidx.core.view.NestedScrollingChildHelper;
+import androidx.core.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.webkit.WebView;
@@ -18,7 +18,7 @@ import android.webkit.WebView;
  *
  * This code is a simplified version of the NestedScrollView implementation
  * which can be found in the support library:
- *   {@link android.support.v4.widget.NestedScrollView}
+ *   {@link androidx.core.widget.NestedScrollView}
  *
  * Based on:
  *   https://github.com/takahirom/webview-in-coordinatorlayout

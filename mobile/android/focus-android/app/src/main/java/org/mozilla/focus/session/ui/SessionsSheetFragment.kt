@@ -7,8 +7,8 @@ package org.mozilla.focus.session.ui
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewAnimationUtils
@@ -45,8 +45,8 @@ class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
         val sessionsAdapter = SessionsAdapter(this, sessionManager.sessions)
         sessionManager.register(sessionsAdapter, owner = this)
 
-        view.findViewById<RecyclerView>(R.id.sessions).let {
-            it.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        view.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.sessions).let {
+            it.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context, androidx.recyclerview.widget.RecyclerView.VERTICAL, false)
             it.adapter = sessionsAdapter
         }
 

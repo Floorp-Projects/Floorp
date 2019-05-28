@@ -9,9 +9,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +37,7 @@ public class BrowserMenu extends PopupWindow {
         adapter = new BrowserMenuAdapter(context, this, fragment, customTabConfig);
 
         final RecyclerView menuList = view.findViewById(R.id.list);
-        menuList.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+        menuList.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
         menuList.setAdapter(adapter);
 
         if (customTabConfig != null) {

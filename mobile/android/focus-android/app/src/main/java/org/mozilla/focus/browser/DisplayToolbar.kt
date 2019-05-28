@@ -5,7 +5,7 @@
 package org.mozilla.focus.browser
 
 import android.content.Context
-import android.support.design.widget.AppBarLayout
+import com.google.android.material.appbar.AppBarLayout
 import android.util.AttributeSet
 import android.util.TypedValue
 import kotlinx.android.synthetic.main.browser_display_toolbar.view.*

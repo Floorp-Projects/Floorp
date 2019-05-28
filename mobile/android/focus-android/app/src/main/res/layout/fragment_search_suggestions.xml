@@ -10,7 +10,7 @@
     android:orientation="vertical"
     tools:context="org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment">
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/enable_search_suggestions_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -72,9 +72,9 @@
             android:textColor="@color/searchSuggestionPromptButtonTextColor"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/no_suggestions_container"
         android:background="@drawable/background_search_suggestion_section"
         android:layout_width="match_parent"
@@ -105,9 +105,9 @@
             android:layout_marginTop="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/no_suggestions_message" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <android.support.v4.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -132,13 +132,13 @@
                 android:textColor="@color/searchHintTextColor"
                 android:textSize="14sp" />
 
-            <android.support.v7.widget.RecyclerView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/suggestionList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:nestedScrollingEnabled="false" />
         </LinearLayout>
-    </android.support.v4.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </org.mozilla.focus.widget.ResizableKeyboardLinearLayout>

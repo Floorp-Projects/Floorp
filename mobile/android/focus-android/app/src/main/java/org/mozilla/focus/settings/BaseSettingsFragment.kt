@@ -6,8 +6,8 @@ package org.mozilla.focus.settings
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.preference.PreferenceFragmentCompat
+import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceFragmentCompat
 import android.view.View
 import android.widget.ListView
 import org.mozilla.focus.R

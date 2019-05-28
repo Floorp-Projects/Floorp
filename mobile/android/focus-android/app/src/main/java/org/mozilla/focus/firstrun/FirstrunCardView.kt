@@ -5,7 +5,7 @@
 package org.mozilla.focus.firstrun
 
 import android.content.Context
-import android.support.v7.widget.CardView
+import androidx.cardview.widget.CardView
 import android.util.AttributeSet
 import android.view.View
 
@@ -15,7 +15,7 @@ class FirstrunCardView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = R.attr.cardViewStyle
-) : CardView(context, attrs, defStyleAttr) {
+) : androidx.cardview.widget.CardView(context, attrs, defStyleAttr) {
 
     private val maxWidth = resources.getDimensionPixelSize(R.dimen.firstrun_card_width)
     private val maxHeight = resources.getDimensionPixelSize(R.dimen.firstrun_card_height)

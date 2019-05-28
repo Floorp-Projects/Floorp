@@ -6,7 +6,7 @@ package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.support.v7.preference.Preference
+import androidx.preference.Preference
 import org.mozilla.focus.R
 import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper

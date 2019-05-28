@@ -5,7 +5,7 @@
 package org.mozilla.focus.whatsnew
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 
 /**
  * Helper class tracking whether the application was recently updated in order to show "What's new"

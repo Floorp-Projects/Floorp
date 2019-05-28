@@ -7,7 +7,7 @@ package org.mozilla.focus.search
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.support.v7.preference.Preference
+import androidx.preference.Preference
 import android.util.AttributeSet
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components

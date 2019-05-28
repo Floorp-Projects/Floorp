@@ -5,8 +5,8 @@
 package org.mozilla.focus.webview;
 
 import android.content.res.Resources;
-import android.support.v4.util.ArrayMap;
-import android.support.v4.util.Pair;
+import androidx.collection.ArrayMap;
+import androidx.core.util.Pair;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
