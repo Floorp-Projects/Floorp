@@ -87,7 +87,7 @@ class LintSandbox(ConfigureSandbox):
         # to line numbers relative to co_firstlineno.
         # If the offset we need to encode is larger than 255, we need to split it.
         co_lnotab = (chr(0) + chr(255)) * (offset / 255) + chr(0) + chr(offset % 255)
-        code = thrower.func_code
+        code = thrower.__code__
         code = types.CodeType(
             code.co_argcount,
             code.co_nlocals,
@@ -104,10 +104,10 @@ class LintSandbox(ConfigureSandbox):
         )
         thrower = types.FunctionType(
             code,
-            thrower.func_globals,
+            thrower.__globals__,
             funcname,
-            thrower.func_defaults,
-            thrower.func_closure
+            thrower.__defaults__,
+            thrower.__closure__
         )
         thrower(exception)
 
@@ -154,7 +154,7 @@ class LintSandbox(ConfigureSandbox):
             # - don't use @imports
             # - don't have a closure
             # - don't use global variables
-            if func in self._has_imports or func.func_closure:
+            if func in self._has_imports or func.__closure__:
                 return True
             for op, arg, _ in disassemble_as_iter(func):
                 if op in ('LOAD_GLOBAL', 'STORE_GLOBAL'):
@@ -237,7 +237,6 @@ class LintSandbox(ConfigureSandbox):
                                        name, default))
                 self._raise_from(e, frame.f_back if frame else None)
 
-
     def _check_help_for_option_with_func_default(self, option, *args, **kwargs):
         default = kwargs['default']
 
@@ -270,10 +269,10 @@ class LintSandbox(ConfigureSandbox):
         self._raise_from(e, frame.f_back if frame else None)
 
     def unwrap(self, func):
-        glob = func.func_globals
+        glob = func.__globals__
         while func in self._wrapped:
-            if isinstance(func.func_globals, SandboxedGlobal):
-                glob = func.func_globals
+            if isinstance(func.__globals__, SandboxedGlobal):
+                glob = func.__globals__
             func = self._wrapped[func]
         return func, glob
 
@@ -285,6 +284,7 @@ class LintSandbox(ConfigureSandbox):
 
     def imports_impl(self, _import, _from=None, _as=None):
         wrapper = super(LintSandbox, self).imports_impl(_import, _from=_from, _as=_as)
+
         def decorator(func):
             self._has_imports.add(func)
             return wrapper(func)
@@ -301,7 +301,7 @@ class LintSandbox(ConfigureSandbox):
                 what = _import.split('.')[0]
                 imports.add(what)
         for op, arg, line in disassemble_as_iter(func):
-            code = func.func_code
+            code = func.__code__
             if op == 'LOAD_GLOBAL' and \
                     arg not in glob and \
                     arg not in imports and \

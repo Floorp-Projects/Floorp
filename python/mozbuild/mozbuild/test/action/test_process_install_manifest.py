@@ -3,19 +3,14 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
+from __future__ import absolute_import, print_function
+
 import os
 
 import mozunit
 
-from unittest import expectedFailure
-
-from mozpack.copier import (
-    FileCopier,
-    FileRegistry,
-)
 from mozpack.manifests import (
     InstallManifest,
-    UnreadableInstallManifest,
 )
 from mozpack.test.test_files import TestWithTmpDir
 
@@ -69,6 +64,7 @@ class TestGenerateManifest(TestWithTmpDir):
             self.assertFalse(os.path.exists(self.tmppath('dest/foo/file1')))
             self.assertFalse(os.path.exists(self.tmppath('dest/foo/file2')))
             self.assertFalse(os.path.exists(self.tmppath('dest/foo/file3')))
+
 
 if __name__ == '__main__':
     mozunit.main()

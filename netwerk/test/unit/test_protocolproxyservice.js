@@ -42,12 +42,6 @@ TestProtocolHandler.prototype = {
                  Ci.nsIProtocolHandler.URI_NORELATIVE |
                  Ci.nsIProtocolHandler.ALLOWS_PROXY |
                  Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
-  newURI: function(spec, originCharset, baseURI) {
-    return Cc["@mozilla.org/network/simple-uri-mutator;1"]
-             .createInstance(Ci.nsIURIMutator)
-             .setSpec(spec)
-             .finalize();
-  },
   newChannel: function(uri, aLoadInfo) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },

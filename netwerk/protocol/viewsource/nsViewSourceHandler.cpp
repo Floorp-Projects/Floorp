@@ -64,9 +64,10 @@ nsViewSourceHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* result) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsViewSourceHandler::NewURI(const nsACString& aSpec, const char* aCharset,
-                            nsIURI* aBaseURI, nsIURI** aResult) {
+// static
+nsresult nsViewSourceHandler::CreateNewURI(const nsACString& aSpec,
+                                           const char* aCharset,
+                                           nsIURI* aBaseURI, nsIURI** aResult) {
   *aResult = nullptr;
 
   // Extract inner URL and normalize to ASCII.  This is done to properly

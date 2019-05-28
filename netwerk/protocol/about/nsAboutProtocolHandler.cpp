@@ -36,15 +36,32 @@ static bool IsSafeForUntrustedContent(nsIAboutModule* aModule, nsIURI* aURI) {
   return (flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) != 0;
 }
 
-static bool IsSafeToLinkForUntrustedContent(nsIAboutModule* aModule,
-                                            nsIURI* aURI) {
-  uint32_t flags;
-  nsresult rv = aModule->GetURIFlags(aURI, &flags);
-  NS_ENSURE_SUCCESS(rv, false);
+static bool IsSafeToLinkForUntrustedContent(nsIURI* aURI) {
+  nsAutoCString path;
+  aURI->GetPathQueryRef(path);
 
-  return (flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) &&
-         (flags & nsIAboutModule::MAKE_LINKABLE);
+  int32_t f = path.FindChar('#');
+  if (f >= 0) {
+    path.SetLength(f);
+  }
+
+  f = path.FindChar('?');
+  if (f >= 0) {
+    path.SetLength(f);
+  }
+
+  ToLowerCase(path);
+
+  // The about modules for these URL types have the
+  // URI_SAFE_FOR_UNTRUSTED_CONTENT and MAKE_LINKABLE flags set.
+  if (path.EqualsLiteral("blank") || path.EqualsLiteral("license") ||
+      path.EqualsLiteral("logo") || path.EqualsLiteral("srcdoc")) {
+    return true;
+  }
+
+  return false;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS(nsAboutProtocolHandler, nsIProtocolHandler,
@@ -104,11 +121,12 @@ nsAboutProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsAboutProtocolHandler::NewURI(const nsACString& aSpec,
-                               const char* aCharset,  // ignore charset info
-                               nsIURI* aBaseURI, nsIURI** result) {
-  *result = nullptr;
+// static
+nsresult nsAboutProtocolHandler::CreateNewURI(const nsACString& aSpec,
+                                              const char* aCharset,
+                                              nsIURI* aBaseURI,
+                                              nsIURI** aResult) {
+  *aResult = nullptr;
   nsresult rv;
 
   // Use a simple URI to parse out some stuff first
@@ -119,18 +137,7 @@ nsAboutProtocolHandler::NewURI(const nsACString& aSpec,
     return rv;
   }
 
-  // Unfortunately, people create random about: URIs that don't correspond to
-  // about: modules...  Since those URIs will never open a channel, might as
-  // well consider them unsafe for better perf, and just in case.
-  bool isSafe = false;
-
-  nsCOMPtr<nsIAboutModule> aboutMod;
-  rv = NS_GetAboutModule(url, getter_AddRefs(aboutMod));
-  if (NS_SUCCEEDED(rv)) {
-    isSafe = IsSafeToLinkForUntrustedContent(aboutMod, url);
-  }
-
-  if (isSafe) {
+  if (IsSafeToLinkForUntrustedContent(url)) {
     // We need to indicate that this baby is safe.  Use an inner URI that
     // no one but the security manager will see.  Make sure to preserve our
     // path, in case someone decides to hardcode checks for particular
@@ -154,7 +161,7 @@ nsAboutProtocolHandler::NewURI(const nsACString& aSpec,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  url.swap(*result);
+  url.swap(*aResult);
   return NS_OK;
 }
 
@@ -291,19 +298,6 @@ NS_IMETHODIMP
 nsSafeAboutProtocolHandler::GetProtocolFlags(uint32_t* result) {
   *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
             URI_IS_POTENTIALLY_TRUSTWORTHY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSafeAboutProtocolHandler::NewURI(const nsACString& aSpec,
-                                   const char* aCharset,  // ignore charset info
-                                   nsIURI* aBaseURI, nsIURI** result) {
-  nsresult rv =
-      NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(result);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   return NS_OK;
 }
 

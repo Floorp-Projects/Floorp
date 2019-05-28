@@ -250,7 +250,7 @@ class TestOption(unittest.TestCase):
         self.assertEquals(PositiveOptionValue(('c',)), value)
 
         value = option.get_value('--with-option=-b,+d')
-        self.assertEquals(PositiveOptionValue(('c','d')), value)
+        self.assertEquals(PositiveOptionValue(('c', 'd')), value)
 
         # Adding something that is in the default is fine
         value = option.get_value('--with-option=+b')
@@ -875,14 +875,18 @@ class TestCommandLineHelper(unittest.TestCase):
 
         bar = Option('--bar',
                      possible_origins=('mozconfig',))
-        with self.assertRaisesRegexp(InvalidOptionError,
-            "--bar can not be set by command-line. Values are accepted from: mozconfig"):
+        with self.assertRaisesRegexp(
+            InvalidOptionError,
+            "--bar can not be set by command-line. Values are accepted from: mozconfig"
+        ):
             helper.handle(bar)
 
         baz = Option(env='BAZ',
                      possible_origins=('implied',))
-        with self.assertRaisesRegexp(InvalidOptionError,
-            "BAZ=1 can not be set by environment. Values are accepted from: implied"):
+        with self.assertRaisesRegexp(
+            InvalidOptionError,
+            "BAZ=1 can not be set by environment. Values are accepted from: implied"
+        ):
             helper.handle(baz)
 
 

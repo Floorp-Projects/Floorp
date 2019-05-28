@@ -43,7 +43,6 @@ class IdType {
 
 typedef IdType<BrowserParent> TabId;
 typedef IdType<ContentParent> ContentParentId;
-typedef IdType<BrowsingContext> BrowsingContextId;
 }  // namespace dom
 }  // namespace mozilla
 

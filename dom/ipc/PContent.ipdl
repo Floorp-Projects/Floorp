@@ -97,7 +97,6 @@ using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
-using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextFieldEpochs from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
@@ -1450,7 +1449,7 @@ both:
      * Re-attach all BrowsingContexts in a 'aContext'.
      */
     async RestoreBrowsingContextChildren(BrowsingContext aContext,
-                                         BrowsingContextId[] aChildren);
+                                         BrowsingContext[] aChildren);
 
     async WindowClose(BrowsingContext aContext, bool aTrustedCaller);
     async WindowFocus(BrowsingContext aContext);

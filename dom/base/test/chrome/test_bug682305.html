@@ -18,6 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=682305
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript">
+
+"use strict";
+
 SimpleTest.waitForExplicitFinish();
 
 /*
@@ -106,12 +109,6 @@ CustomProtocol.prototype = {
   },
   allowPort: function allowPort() {
     return false;
-  },
-  newURI: function newURI(spec, charset, baseURI) {
-    return Cc["@mozilla.org/network/simple-uri-mutator;1"]
-             .createInstance(Ci.nsIURIMutator)
-             .setSpec(spec)
-             .finalize();
   },
   newChannel: function newChannel(URI, loadInfo) {
     return new CustomChannel(URI, loadInfo);

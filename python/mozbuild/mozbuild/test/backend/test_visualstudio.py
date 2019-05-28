@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 from xml.dom.minidom import parse
 import os
@@ -41,7 +41,7 @@ class TestVisualStudioBackend(BackendTester):
         els = d.getElementsByTagName('NMakeForcedIncludes')
         self.assertEqual(len(els), 1)
         self.assertEqual(els[0].firstChild.nodeValue,
-            '$(TopObjDir)\\dist\\include\\mozilla-config.h')
+                         '$(TopObjDir)\\dist\\include\\mozilla-config.h')
 
         # LOCAL_INCLUDES get added to the include search path.
         els = d.getElementsByTagName('NMakeIncludeSearchPath')

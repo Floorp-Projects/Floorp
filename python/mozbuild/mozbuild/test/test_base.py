@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
@@ -23,7 +23,6 @@ from mozbuild.base import (
     BadEnvironmentException,
     MachCommandBase,
     MozbuildObject,
-    ObjdirMismatchException,
     PathArgument,
 )
 
@@ -76,7 +75,7 @@ class TestMozbuildObject(unittest.TestCase):
             os.environ[b'MOZCONFIG'] = mozconfig.name
 
             self.assertEqual(base.topobjdir, mozpath.join(base.topsrcdir,
-                'foo'))
+                                                          'foo'))
             self.assertTrue(base.topobjdir.endswith('foo'))
 
     def test_objdir_config_status(self):
@@ -214,7 +213,7 @@ class TestMozbuildObject(unittest.TestCase):
             context.topdir = topsrcdir
             context.settings = None
             context.log_manager = None
-            context.detect_virtualenv_mozinfo=False
+            context.detect_virtualenv_mozinfo = False
 
             o = MachCommandBase(context)
 
@@ -280,7 +279,7 @@ class TestMozbuildObject(unittest.TestCase):
             context.topdir = topsrcdir
             context.settings = None
             context.log_manager = None
-            context.detect_virtualenv_mozinfo=False
+            context.detect_virtualenv_mozinfo = False
 
             stdout = sys.stdout
             sys.stdout = StringIO()
@@ -332,7 +331,7 @@ class TestMozbuildObject(unittest.TestCase):
             substs.append(('BIN_SUFFIX', ''))
 
         base._config_environment = ConfigEnvironment(base.topsrcdir,
-            base.topobjdir, substs=substs)
+                                                     base.topobjdir, substs=substs)
 
         p = base.get_binary_path('xpcshell', False)
         if platform.startswith('darwin'):
@@ -365,6 +364,7 @@ class TestMozbuildObject(unittest.TestCase):
             self.assertTrue(p.endswith('foobar.exe'))
         else:
             self.assertTrue(p.endswith('foobar'))
+
 
 class TestPathArgument(unittest.TestCase):
     def test_path_argument(self):
@@ -403,6 +403,7 @@ class TestPathArgument(unittest.TestCase):
         self.assertEqual(p.relpath(), "foo/bar")
         self.assertEqual(p.srcdir_path(), "/src/foo/bar")
         self.assertEqual(p.objdir_path(), "/src/obj/foo/bar")
+
 
 if __name__ == '__main__':
     main()

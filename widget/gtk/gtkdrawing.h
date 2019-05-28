@@ -427,7 +427,7 @@ gint moz_gtk_checkbox_get_metrics(gint* indicator_size,
  * isRadio:            [IN] true when requesting metrics for the radio button
  * returns:    pointer to ToggleGTKMetrics struct
  */
-const ToggleGTKMetrics* GetToggleMetrics(bool isRadio);
+const ToggleGTKMetrics* GetToggleMetrics(WidgetNodeType aWidgetType);
 
 /**
  * Get the desired size of a GtkRadioButton

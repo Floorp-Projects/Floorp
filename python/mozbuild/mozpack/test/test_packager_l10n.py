@@ -2,7 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 import unittest
+import six
 import mozunit
 from test_packager import MockFinder
 from mozpack.packager import l10n
@@ -21,16 +24,16 @@ from mozpack.packager.formats import FlatFormatter
 
 class TestL10NRepack(unittest.TestCase):
     def test_l10n_repack(self):
-        foo = GeneratedFile('foo')
-        foobar = GeneratedFile('foobar')
-        qux = GeneratedFile('qux')
-        bar = GeneratedFile('bar')
-        baz = GeneratedFile('baz')
-        dict_aa = GeneratedFile('dict_aa')
-        dict_bb = GeneratedFile('dict_bb')
-        dict_cc = GeneratedFile('dict_cc')
-        barbaz = GeneratedFile('barbaz')
-        lst = GeneratedFile('foo\nbar')
+        foo = GeneratedFile(b'foo')
+        foobar = GeneratedFile(b'foobar')
+        qux = GeneratedFile(b'qux')
+        bar = GeneratedFile(b'bar')
+        baz = GeneratedFile(b'baz')
+        dict_aa = GeneratedFile(b'dict_aa')
+        dict_bb = GeneratedFile(b'dict_bb')
+        dict_cc = GeneratedFile(b'dict_cc')
+        barbaz = GeneratedFile(b'barbaz')
+        lst = GeneratedFile(b'foo\nbar')
         app_finder = MockFinder({
             'bar/foo': foo,
             'chrome/foo/foobar': foobar,
@@ -57,11 +60,11 @@ class TestL10NRepack(unittest.TestCase):
         })
         app_finder.jarlogs = {}
         app_finder.base = 'app'
-        foo_l10n = GeneratedFile('foo_l10n')
-        qux_l10n = GeneratedFile('qux_l10n')
-        baz_l10n = GeneratedFile('baz_l10n')
-        barbaz_l10n = GeneratedFile('barbaz_l10n')
-        lst_l10n = GeneratedFile('foo\nqux')
+        foo_l10n = GeneratedFile(b'foo_l10n')
+        qux_l10n = GeneratedFile(b'qux_l10n')
+        baz_l10n = GeneratedFile(b'baz_l10n')
+        barbaz_l10n = GeneratedFile(b'barbaz_l10n')
+        lst_l10n = GeneratedFile(b'foo\nqux')
         l10n_finder = MockFinder({
             'chrome/qux-l10n/qux.properties': qux_l10n,
             'chrome/qux-l10n/baz/baz.properties': baz_l10n,
@@ -118,7 +121,7 @@ class TestL10NRepack(unittest.TestCase):
 
         self.assertEqual(
             dict((p, f.open().read()) for p, f in copier),
-            dict((p, f.open().read()) for p, f in repacked.iteritems())
+            dict((p, f.open().read()) for p, f in six.iteritems(repacked)),
         )
 
 

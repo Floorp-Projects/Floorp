@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import bisect
 import gzip
 import json
@@ -17,31 +19,36 @@ PUSHLOG_CHUNK_SIZE = 500
 
 URL = 'https://hg.mozilla.org/mozilla-central/json-pushes?'
 
+
 def unix_epoch(date):
-    return (date - datetime(1970,1,1)).total_seconds()
+    return (date - datetime(1970, 1, 1)).total_seconds()
+
 
 def unix_from_date(n, today):
     return unix_epoch(today - timedelta(days=n))
 
+
 def get_lastpid(session):
     return session.get(URL+'&version=2').json()['lastpushid']
+
 
 def get_pushlog_chunk(session, start, end):
     # returns pushes sorted by date
     res = session.get(URL+'version=1&startID={0}&\
         endID={1}&full=1'.format(start, end)).json()
-    return sorted(res.items(), key = lambda x: x[1]['date'])
+    return sorted(res.items(), key=lambda x: x[1]['date'])
+
 
 def collect_data(session, date):
-    if date < 1206031764: #first push
-        raise Exception ("No pushes exist before March 20, 2008.")
+    if date < 1206031764:  # first push
+        raise Exception("No pushes exist before March 20, 2008.")
     lastpushid = get_lastpid(session)
     data = []
     start_id = lastpushid - PUSHLOG_CHUNK_SIZE
     end_id = lastpushid + 1
     while True:
         res = get_pushlog_chunk(session, start_id, end_id)
-        starting_date = res[0][1]['date'] # date of oldest push in chunk
+        starting_date = res[0][1]['date']  # date of oldest push in chunk
         dates = [x[1]['date'] for x in res]
         if starting_date < date:
             i = bisect.bisect_left(dates, date)
@@ -52,10 +59,12 @@ def collect_data(session, date):
             end_id = start_id + 1
             start_id = start_id - PUSHLOG_CHUNK_SIZE
 
+
 def get_data(epoch):
     session = requests.Session()
     data = collect_data(session, epoch)
-    return {k:v for sublist in data for (k,v) in sublist}
+    return {k: v for sublist in data for (k, v) in sublist}
+
 
 class Pushlog(object):
 
@@ -78,12 +87,14 @@ class Pushlog(object):
         keys.sort()
         return keys
 
+
 class Push(object):
 
     def __init__(self, pid, p_dict):
         self.id = pid
         self.date = p_dict['date']
         self.files = [f for x in p_dict['changesets'] for f in x['files']]
+
 
 class Report(object):
 
@@ -112,7 +123,7 @@ class Report(object):
             cost = costs.get(f)
             count = counts.get(f)
             if cost is not None:
-                res.append((f, cost, count, round(cost*count,3)))
+                res.append((f, cost, count, round(cost*count, 3)))
         return res
 
     def get_sorted_report(self, format):
@@ -143,7 +154,8 @@ class Report(object):
         res = self.get_sorted_report(format)
         if limit is not None:
             res = self.cut(limit, res)
-        for x in res: data.append(x)
+        for x in res:
+            data.append(x)
         if format == 'pretty':
             print (data)
         else:
@@ -160,4 +172,3 @@ class Report(object):
             with open(file_path, 'wb') as f:
                 f.write(content)
             print ("Created report: %s" % file_path)
-

@@ -6,11 +6,12 @@
 # to a given compilation unit. This is used as a helper to find a bug in some
 # versions of GNU ld.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import subprocess
 import sys
 import re
+
 
 def get_range_for(compilation_unit, debug_info):
     '''Returns the range offset for a given compilation unit
@@ -32,6 +33,7 @@ def get_range_for(compilation_unit, debug_info):
                 ranges = nfo.rsplit(None, 1)[1]
     return None
 
+
 def get_range_length(range, debug_ranges):
     '''Returns the number of items in the range starting at the
        given offset.'''
@@ -42,8 +44,9 @@ def get_range_length(range, debug_ranges):
             length += 1
     return length
 
+
 def main(bin, compilation_unit):
-    p = subprocess.Popen(['objdump', '-W', bin], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    p = subprocess.Popen(['objdump', '-W', bin], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out, err) = p.communicate()
     sections = re.split('\n(Contents of the|The section) ', out)
     debug_info = [s for s in sections if s.startswith('.debug_info')]

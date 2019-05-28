@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import filecmp
 import os
@@ -11,7 +11,6 @@ import sys
 import subprocess
 import traceback
 
-from collections import defaultdict
 from mozpack import path as mozpath
 
 
@@ -66,7 +65,7 @@ class MozconfigLoader(object):
         \s* [?:]?= \s*          # Assignment operator surrounded by optional
                                 # spaces
         (?P<value>.*$)''',      # Everything else (likely the value)
-        re.VERBOSE)
+                                  re.VERBOSE)
 
     # Default mozconfig files in the topsrcdir.
     DEFAULT_TOPSRCDIR_PATHS = ('.mozconfig', 'mozconfig')
@@ -145,7 +144,7 @@ class MozconfigLoader(object):
                         'does not exist in any of ' + ', '.join(potential_roots))
 
                 env_path = os.path.join(existing[0], env_path)
-            elif not os.path.exists(env_path): # non-relative path
+            elif not os.path.exists(env_path):  # non-relative path
                 raise MozconfigFindException(
                     'MOZCONFIG environment variable refers to a path that '
                     'does not exist: ' + env_path)
@@ -156,12 +155,12 @@ class MozconfigLoader(object):
                     'non-file: ' + env_path)
 
         srcdir_paths = [os.path.join(self.topsrcdir, p) for p in
-            self.DEFAULT_TOPSRCDIR_PATHS]
+                        self.DEFAULT_TOPSRCDIR_PATHS]
         existing = [p for p in srcdir_paths if os.path.isfile(p)]
 
         if env_path is None and len(existing) > 1:
             raise MozconfigFindException('Multiple default mozconfig files '
-                'present. Remove all but one. ' + ', '.join(existing))
+                                         'present. Remove all but one. ' + ', '.join(existing))
 
         path = None
 
@@ -175,12 +174,12 @@ class MozconfigLoader(object):
             return os.path.abspath(path)
 
         deprecated_paths = [os.path.join(self.topsrcdir, s) for s in
-            self.DEPRECATED_TOPSRCDIR_PATHS]
+                            self.DEPRECATED_TOPSRCDIR_PATHS]
 
         home = env.get('HOME', None)
         if home is not None:
             deprecated_paths.extend([os.path.join(home, s) for s in
-            self.DEPRECATED_HOME_PATHS])
+                                     self.DEPRECATED_HOME_PATHS])
 
         for path in deprecated_paths:
             if os.path.exists(path):
@@ -243,7 +242,7 @@ class MozconfigLoader(object):
             # We need to capture stderr because that's where the shell sends
             # errors if execution fails.
             output = subprocess.check_output(command, stderr=subprocess.STDOUT,
-                cwd=self.topsrcdir, env=env)
+                                             cwd=self.topsrcdir, env=env)
         except subprocess.CalledProcessError as e:
             lines = e.output.splitlines()
 
@@ -306,7 +305,7 @@ class MozconfigLoader(object):
 
         # Environment variables also appear as shell variables, but that's
         # uninteresting duplication of information. Filter them out.
-        filt = lambda x, y: {k: v for k, v in x.items() if k not in y}
+        def filt(x, y): return {k: v for k, v in x.items() if k not in y}
         result['vars'] = diff_vars(
             filt(parsed['vars_before'], parsed['env_before']),
             filt(parsed['vars_after'], parsed['env_after'])
