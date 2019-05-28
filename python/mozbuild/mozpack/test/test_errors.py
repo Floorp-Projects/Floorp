@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 from mozpack.errors import (
     errors,
     ErrorMessage,
@@ -9,13 +11,13 @@ from mozpack.errors import (
 )
 import unittest
 import mozunit
+import six
 import sys
-from cStringIO import StringIO
 
 
 class TestErrors(object):
     def setUp(self):
-        errors.out = StringIO()
+        errors.out = six.moves.cStringIO()
         errors.ignore_errors(False)
 
     def tearDown(self):

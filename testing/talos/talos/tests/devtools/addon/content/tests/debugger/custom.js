@@ -8,7 +8,7 @@ const Services = require("Services");
 const { closeToolboxAndLog, garbageCollect, runTest, testSetup,
         testTeardown, PAGES_BASE_URL } = require("../head");
 const { createContext, openDebuggerAndLog, pauseDebugger, reloadDebuggerAndLog,
-        removeBreakpoints, resume, step } = require("./debugger-helpers");
+        removeBreakpoints, resume, step, hoverOnToken } = require("./debugger-helpers");
 
 const EXPECTED = {
   sources: 107,
@@ -22,6 +22,7 @@ const EXPECTED_FUNCTION = "window.hitBreakpoint()";
 module.exports = async function() {
   const tab = await testSetup(PAGES_BASE_URL + "custom/debugger/index.html");
   Services.prefs.setBoolPref("devtools.debugger.features.map-scopes", false);
+  Services.prefs.setBoolPref("devtools.testing", true);
 
   const toolbox = await openDebuggerAndLog("custom", EXPECTED);
   await reloadDebuggerAndLog("custom", toolbox, EXPECTED);
@@ -31,6 +32,7 @@ module.exports = async function() {
   await stepDebuggerAndLog(tab, toolbox, EXPECTED_FUNCTION);
 
   await testProjectSearch(tab, toolbox);
+  await testPreview(tab, toolbox, EXPECTED_FUNCTION);
 
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
@@ -107,5 +109,22 @@ async function testProjectSearch(tab, toolbox) {
   await dbg.actions.searchSources(cx, "return");
   await dbg.actions.closeActiveSearch();
   test.done();
+  await garbageCollect();
+}
+
+async function testPreview(tab, toolbox, testFunction) {
+  const panel = await toolbox.getPanelWhenReady("jsdebugger");
+  const dbg = await createContext(panel);
+  const cx = dbg.selectors.getContext(dbg.getState());
+  const pauseLocation = { line: 22, file: "App.js" };
+
+  let test = runTest("custom.jsdebugger.preview.DAMP");
+  await pauseDebugger(dbg, tab, testFunction, pauseLocation);
+  await hoverOnToken(dbg, cx, "window.hitBreakpoint", "window");
+  dbg.actions.clearPreview(cx);
+  test.done();
+
+  await removeBreakpoints(dbg);
+  await resume(dbg);
   await garbageCollect();
 }

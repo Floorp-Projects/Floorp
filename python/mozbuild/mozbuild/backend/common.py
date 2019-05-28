@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import itertools
 import json
@@ -33,7 +33,6 @@ from mozbuild.frontend.data import (
     GnProjectData,
     HostLibrary,
     HostGeneratedSources,
-    HostRustLibrary,
     IPDLCollection,
     LocalizedPreprocessedFiles,
     LocalizedFiles,
@@ -53,9 +52,9 @@ from mozbuild.preprocessor import Preprocessor
 from mozpack.chrome.manifest import parse_manifest_line
 
 from mozbuild.util import (
-    group_unified_files,
     mkdir,
 )
+
 
 class XPIDLManager(object):
     """Helps manage XPCOM IDLs in the context of the build system."""
@@ -102,12 +101,14 @@ class XPIDLManager(object):
         """
         return itertools.chain(*[m.stems() for m in self.modules.itervalues()])
 
+
 class BinariesCollection(object):
     """Tracks state of binaries produced by the build."""
 
     def __init__(self):
         self.shared_libraries = []
         self.programs = []
+
 
 class CommonBackend(BuildBackend):
     """Holds logic common to all build backends."""
@@ -182,7 +183,8 @@ class CommonBackend(BuildBackend):
             return False
 
         elif isinstance(obj, Exports):
-            objdir_files = [f.full_path for path, files in obj.files.walk() for f in files if isinstance(f, ObjDirPath)]
+            objdir_files = [f.full_path for path, files in obj.files.walk()
+                            for f in files if isinstance(f, ObjDirPath)]
             if objdir_files:
                 self._handle_generated_sources(objdir_files)
             return False
@@ -201,9 +203,9 @@ class CommonBackend(BuildBackend):
         if len(self._idl_manager.modules):
             self._write_rust_xpidl_summary(self._idl_manager)
             self._handle_idl_manager(self._idl_manager)
-            self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % stem)
-                                           for stem in self._idl_manager.idl_stems())
-
+            self._handle_generated_sources(
+                mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % stem)
+                for stem in self._idl_manager.idl_stems())
 
         for config in self._configs:
             self.backend_input_files.add(config.source)
@@ -324,7 +326,8 @@ class CommonBackend(BuildBackend):
         return ref
 
     def _handle_generated_sources(self, files):
-        self._generated_sources.update(mozpath.relpath(f, self.environment.topobjdir) for f in files)
+        self._generated_sources.update(mozpath.relpath(
+            f, self.environment.topobjdir) for f in files)
 
     def _handle_webidl_collection(self, webidls):
 
@@ -388,7 +391,7 @@ class CommonBackend(BuildBackend):
                 includeTemplate += (
                     '\n'
                     '#if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)\n'
-                    '#pragma message("wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)\n'
+                    '#pragma message("wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)\n'  # noqa
                     '#error "%(cppfile)s included unwrapped windows.h"\n'
                     "#endif")
             includeTemplate += (
@@ -403,7 +406,7 @@ class CommonBackend(BuildBackend):
                 'so it cannot be built in unified mode."\n'
                 '#undef INITGUID\n'
                 '#endif')
-            f.write('\n'.join(includeTemplate % { "cppfile": s } for
+            f.write('\n'.join(includeTemplate % {"cppfile": s} for
                               s in source_filenames))
 
     def _write_unified_files(self, unified_source_mapping, output_directory,

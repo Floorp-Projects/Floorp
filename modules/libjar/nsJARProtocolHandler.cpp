@@ -89,16 +89,6 @@ nsJARProtocolHandler::GetProtocolFlags(uint32_t* result) {
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
-                             nsIURI* aBaseURI, nsIURI** result) {
-  nsCOMPtr<nsIURI> base(aBaseURI);
-  return NS_MutateURI(new nsJARURI::Mutator())
-      .Apply(NS_MutatorMethod(&nsIJARURIMutator::SetSpecBaseCharset,
-                              nsCString(aSpec), base, aCharset))
-      .Finalize(result);
-}
-
-NS_IMETHODIMP
 nsJARProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                                  nsIChannel** result) {
   nsJARChannel* chan = new nsJARChannel();

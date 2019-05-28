@@ -7,7 +7,9 @@
  * This code is based on original Mozilla gnome-vfs extension. It implements
  * input stream provided by GVFS/GIO.
  */
+#include "nsGIOProtocolHandler.h"
 #include "mozilla/Components.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -827,33 +829,18 @@ static void mount_operation_ask_password(
 
 //-----------------------------------------------------------------------------
 
-class nsGIOProtocolHandler final : public nsIProtocolHandler,
-                                   public nsIObserver {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPROTOCOLHANDLER
-  NS_DECL_NSIOBSERVER
+mozilla::StaticRefPtr<nsGIOProtocolHandler> nsGIOProtocolHandler::sSingleton;
 
-  nsresult Init();
-
- private:
-  ~nsGIOProtocolHandler() {}
-
-  void InitSupportedProtocolsPref(nsIPrefBranch* prefs);
-  bool IsSupportedProtocol(const nsCString& spec);
-
-  nsCString mSupportedProtocols;
-};
+already_AddRefed<nsGIOProtocolHandler> nsGIOProtocolHandler::GetSingleton() {
+  if (!sSingleton) {
+    sSingleton = new nsGIOProtocolHandler();
+    sSingleton->Init();
+    ClearOnShutdown(&sSingleton);
+  }
+  return do_AddRef(sSingleton);
+}
 
 NS_IMPL_ISUPPORTS(nsGIOProtocolHandler, nsIProtocolHandler, nsIObserver)
-
-NS_IMPL_COMPONENT_FACTORY(nsGIOProtocolHandler) {
-  auto inst = MakeRefPtr<nsGIOProtocolHandler>();
-  if (NS_SUCCEEDED(inst->Init())) {
-    return inst.forget().downcast<nsIProtocolHandler>();
-  }
-  return nullptr;
-}
 
 nsresult nsGIOProtocolHandler::Init() {
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -925,53 +912,27 @@ nsGIOProtocolHandler::GetProtocolFlags(uint32_t* aProtocolFlags) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGIOProtocolHandler::NewURI(const nsACString& aSpec,
-                             const char* aOriginCharset, nsIURI* aBaseURI,
-                             nsIURI** aResult) {
-  const nsCString flatSpec(aSpec);
-  LOG(("gio: NewURI [spec=%s]\n", flatSpec.get()));
+static bool IsValidGIOScheme(const nsACString& aScheme) {
+  // Verify that GIO supports this URI scheme.
+  GVfs* gvfs = g_vfs_get_default();
 
-  if (!aBaseURI) {
-    // XXX Is it good to support all GIO protocols?
-    if (!IsSupportedProtocol(flatSpec)) return NS_ERROR_UNKNOWN_PROTOCOL;
-
-    int32_t colon_location = flatSpec.FindChar(':');
-    if (colon_location <= 0) return NS_ERROR_UNKNOWN_PROTOCOL;
-
-    // Verify that GIO supports this URI scheme.
-    bool uri_scheme_supported = false;
-
-    GVfs* gvfs = g_vfs_get_default();
-
-    if (!gvfs) {
-      g_warning("Cannot get GVfs object.");
-      return NS_ERROR_UNKNOWN_PROTOCOL;
-    }
-
-    const gchar* const* uri_schemes = g_vfs_get_supported_uri_schemes(gvfs);
-
-    while (*uri_schemes != nullptr) {
-      // While flatSpec ends with ':' the uri_scheme does not. Therefore do not
-      // compare last character.
-      if (StringHead(flatSpec, colon_location).Equals(*uri_schemes)) {
-        uri_scheme_supported = true;
-        break;
-      }
-      uri_schemes++;
-    }
-
-    if (!uri_scheme_supported) {
-      return NS_ERROR_UNKNOWN_PROTOCOL;
-    }
+  if (!gvfs) {
+    g_warning("Cannot get GVfs object.");
+    return false;
   }
 
-  nsCOMPtr<nsIURI> base(aBaseURI);
-  return NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                              nsIStandardURL::URLTYPE_STANDARD, -1, flatSpec,
-                              aOriginCharset, base, nullptr))
-      .Finalize(aResult);
+  const gchar* const* uri_schemes = g_vfs_get_supported_uri_schemes(gvfs);
+
+  while (*uri_schemes != nullptr) {
+    // While flatSpec ends with ':' the uri_scheme does not. Therefore do not
+    // compare last character.
+    if (aScheme.Equals(*uri_schemes)) {
+      return true;
+    }
+    uri_schemes++;
+  }
+
+  return false;
 }
 
 NS_IMETHODIMP
@@ -983,6 +944,20 @@ nsGIOProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   nsAutoCString spec;
   rv = aURI->GetSpec(spec);
   if (NS_FAILED(rv)) return rv;
+
+  if (!IsSupportedProtocol(spec)) {
+    return NS_ERROR_UNKNOWN_PROTOCOL;
+  }
+
+  nsAutoCString scheme;
+  rv = aURI->GetScheme(scheme);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!IsValidGIOScheme(scheme)) {
+    return NS_ERROR_UNKNOWN_PROTOCOL;
+  }
 
   RefPtr<nsGIOInputStream> stream = new nsGIOInputStream(spec);
   if (!stream) {

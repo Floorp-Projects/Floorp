@@ -30,6 +30,9 @@ class nsAboutProtocolHandler : public nsIProtocolHandlerWithDynamicFlags,
   // nsAboutProtocolHandler methods:
   nsAboutProtocolHandler() = default;
 
+  static nsresult CreateNewURI(const nsACString& aSpec, const char* aCharset,
+                               nsIURI* aBaseURI, nsIURI** result);
+
  private:
   virtual ~nsAboutProtocolHandler() = default;
 };

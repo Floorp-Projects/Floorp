@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import gzip
@@ -12,12 +12,9 @@ import sys
 import shutil
 
 import mozpack.path as mozpath
-from mozbuild import shellutil
 from mozbuild.analyze.graph import Graph
 from mozbuild.analyze.hg import Report
 from mozbuild.base import MozbuildObject
-from mozbuild.backend.base import PartialBackend, HybridBackend
-from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.mozconfig import MozconfigLoader
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import OrderedDefaultDict
@@ -59,7 +56,6 @@ from ..frontend.data import (
 )
 from ..util import (
     FileAvoidWrite,
-    expand_variables,
 )
 from ..frontend.context import (
     AbsolutePath,
@@ -147,7 +143,8 @@ class BackendTupfile(object):
         else:
             caret_text = flags
 
-        self.write(': %(inputs)s%(extra_inputs)s |> %(display)s%(cmd)s |> %(outputs)s%(output_group)s\n' % {
+        self.write((': %(inputs)s%(extra_inputs)s |> %(display)s%(cmd)s |> '
+                    '%(outputs)s%(output_group)s\n') % {
             'inputs': ' '.join(inputs),
             'extra_inputs': ' | ' + ' '.join(extra_inputs) if extra_inputs else '',
             'display': '^%s^ ' % caret_text if caret_text else '',
@@ -272,7 +269,8 @@ class TupBackend(CommonBackend):
         self._rust_cmds = set()
 
         self._built_in_addons = set()
-        self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
+        self._built_in_addons_file = \
+            'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
 
     def _output_group(self, label):
         if label:
@@ -332,9 +330,9 @@ class TupBackend(CommonBackend):
         tiers.set_tiers(('tup',))
         tiers.begin_tier('tup')
         status = config.run_process(args=args,
-                                  line_handler=output.on_line,
-                                  ensure_exit_code=False,
-                                  append_env=self._get_mozconfig_env(config))
+                                    line_handler=output.on_line,
+                                    ensure_exit_code=False,
+                                    append_env=self._get_mozconfig_env(config))
         tiers.finish_tier('tup')
         if not status and self.environment.substs.get('MOZ_AUTOMATION'):
             config.log_manager.enable_unstructured()
@@ -474,7 +472,6 @@ class TupBackend(CommonBackend):
         # accurate once we start building libraries in their final locations.
         inputs = objs + static_libs + shared_libs + [self._shlibs]
 
-
         rust_linked = [l for l in prog.linked_libraries
                        if isinstance(l, RustLibrary)]
 
@@ -512,11 +509,9 @@ class TupBackend(CommonBackend):
             display='LINK %o'
         )
 
-
     def _gen_host_programs(self, backend_file):
         for p in backend_file.host_programs:
             self._gen_host_program(backend_file, p)
-
 
     def _gen_host_program(self, backend_file, prog):
         _, _, _, extra_libs, _ = self._expand_libs(prog)
@@ -558,7 +553,6 @@ class TupBackend(CommonBackend):
             display='LINK %o'
         )
 
-
     def _gen_static_library(self, backend_file):
         ar = [
             backend_file.environment.substs['AR'],
@@ -582,7 +576,6 @@ class TupBackend(CommonBackend):
             outputs=[backend_file.static_lib.name],
             display='AR %o'
         )
-
 
     def consume_object(self, obj):
         """Write out build files necessary to build with tup."""
@@ -676,11 +669,13 @@ class TupBackend(CommonBackend):
 
         for objdir, backend_file in sorted(self._backend_files.items()):
             backend_file.gen_sources_rules([self._installed_files])
-            for var, gen_method in ((backend_file.shared_lib, self._gen_shared_library),
-                                    (backend_file.static_lib and backend_file.static_lib.no_expand_lib,
-                                     self._gen_static_library),
-                                    (backend_file.programs, self._gen_programs),
-                                    (backend_file.host_programs, self._gen_host_programs)):
+            for var, gen_method in (
+                (backend_file.shared_lib, self._gen_shared_library),
+                (backend_file.static_lib and backend_file.static_lib.no_expand_lib,
+                 self._gen_static_library),
+                (backend_file.programs, self._gen_programs),
+                (backend_file.host_programs, self._gen_host_programs)
+            ):
                 if var:
                     backend_file.export_shell()
                     backend_file.export_icecc()
@@ -693,8 +688,9 @@ class TupBackend(CommonBackend):
                 pass
 
         with self._write_file(mozpath.join(self.environment.topobjdir, 'Tuprules.tup')) as fh:
-            acdefines_flags = ' '.join(['-D%s=%s' % (name, shell_quote(value))
-                for (name, value) in sorted(self.environment.acdefines.iteritems())])
+            acdefines_flags = ' '.join(
+                ['-D%s=%s' % (name, shell_quote(value))
+                 for (name, value) in sorted(self.environment.acdefines.iteritems())])
             # TODO: AB_CD only exists in Makefiles at the moment.
             acdefines_flags += ' -DAB_CD=en-US'
 
@@ -728,12 +724,13 @@ class TupBackend(CommonBackend):
                 # Ask the user to figure out where to run 'tup init' before
                 # continuing.
                 raise Exception("Please run `tup init --no-sync` in a common "
-                    "ancestor directory of your objdir and srcdir, possibly "
-                    "%s. To reduce file scanning overhead, this directory "
-                    "should contain the fewest files possible that are not "
-                    "necessary for this build." % tup_base_dir)
+                                "ancestor directory of your objdir and srcdir, possibly "
+                                "%s. To reduce file scanning overhead, this directory "
+                                "should contain the fewest files possible that are not "
+                                "necessary for this build." % tup_base_dir)
             tup = self.environment.substs.get('TUP', 'tup')
-            self._cmd.run_process(cwd=tup_base_dir, log_name='tup', args=[tup, 'init', '--no-sync'])
+            self._cmd.run_process(cwd=tup_base_dir, log_name='tup',
+                                  args=[tup, 'init', '--no-sync'])
 
     def _get_cargo_flags(self, obj):
 
@@ -812,12 +809,10 @@ class TupBackend(CommonBackend):
 
         # Enable link-time optimization for release builds.
         cargo_library_flags = []
-        if (not obj.config.substs.get('DEVELOPER_OPTIONS') and
-            not obj.config.substs.get('MOZ_DEBUG_RUST')):
+        if not obj.config.substs.get('DEVELOPER_OPTIONS') and not obj.config.substs.get(
+            'MOZ_DEBUG_RUST'
+        ):
             cargo_library_flags += ['-C', 'lto']
-
-        rust_build_home = mozpath.join(self.environment.topobjdir,
-                                       'toolkit/library/rust')
 
         def display_name(invocation):
             output_str = ''
@@ -872,7 +867,9 @@ class TupBackend(CommonBackend):
 
             invocation['full-deps'] = set()
 
-            if os.path.basename(invocation['program']) in ['build-script-build', 'build-script-main']:
+            if os.path.basename(invocation['program']) in [
+                'build-script-build', 'build-script-main'
+            ]:
                 out_dir = invocation['env']['OUT_DIR']
                 for output in cargo_extra_outputs.get(shortname, []):
                     outputs.append(os.path.join(out_dir, output))
@@ -983,16 +980,15 @@ class TupBackend(CommonBackend):
                                                                     obj.name),
                                                        output_group)
 
-
         for val in enumerate(invocations):
             _process(*val)
-
 
     def _gen_rust_rules(self, obj, backend_file):
         cargo_flags = self._get_cargo_flags(obj)
         cargo_env = self._get_cargo_env(obj, backend_file)
 
         output_lines = []
+
         def accumulate_output(line):
             output_lines.append(line)
 
@@ -1013,7 +1009,6 @@ class TupBackend(CommonBackend):
         self._gen_cargo_rules(obj, cargo_plan, cargo_env, output_group)
         self.backend_input_files |= set(cargo_plan['inputs'])
 
-
     def _process_generated_file(self, backend_file, obj):
         if obj.script and obj.method:
             backend_file.export_shell()
@@ -1024,8 +1019,8 @@ class TupBackend(CommonBackend):
                 obj.script,
                 obj.method,
                 obj.outputs[0],
-                '%s.pp' % obj.outputs[0], # deps file required
-                'unused', # deps target is required
+                '%s.pp' % obj.outputs[0],  # deps file required
+                'unused',  # deps target is required
             ])
             full_inputs = [f.full_path for f in obj.inputs]
             cmd.extend(full_inputs)
@@ -1124,8 +1119,9 @@ class TupBackend(CommonBackend):
                         if f.startswith('/') or isinstance(f, AbsolutePath):
                             basepath, wild = os.path.split(f.full_path)
                             if '*' in basepath:
-                                raise Exception("Wildcards are only supported in the filename part of "
-                                                "srcdir-relative or absolute paths.")
+                                raise Exception(
+                                    "Wildcards are only supported in the filename part of "
+                                    "srcdir-relative or absolute paths.")
 
                             # TODO: This is only needed for Windows, so we can
                             # skip this for now.
@@ -1154,7 +1150,6 @@ class TupBackend(CommonBackend):
 
                             finder = FileFinder(prefix)
                             for p, _ in finder.find(f.full_path[len(prefix):]):
-                                install_dir = prefix[len(obj.srcdir) + 1:]
                                 output = p
                                 if f.target_basename and '*' not in f.target_basename:
                                     output = mozpath.join(f.target_basename, output)
@@ -1162,10 +1157,12 @@ class TupBackend(CommonBackend):
                                                           output=mozpath.join(output_dir, output),
                                                           output_group=output_group)
                     else:
-                        backend_file.symlink_rule(f.full_path, output=f.target_basename, output_group=output_group)
+                        backend_file.symlink_rule(
+                            f.full_path, output=f.target_basename, output_group=output_group)
                 else:
                     if (self.environment.is_artifact_build and
-                        any(mozpath.match(f.target_basename, p) for p in self._compile_env_gen_files)):
+                        any(mozpath.match(f.target_basename, p)
+                            for p in self._compile_env_gen_files)):
                         # If we have an artifact build we never would have generated this file,
                         # so do not attempt to install it.
                         continue
@@ -1174,18 +1171,19 @@ class TupBackend(CommonBackend):
                                           f.target_basename)
                     gen_backend_file = self._get_backend_file(f.context.relobjdir)
                     if gen_backend_file.requires_delay([f]):
-                        gen_backend_file.delayed_installed_files.append((f.full_path, output, output_group))
+                        gen_backend_file.delayed_installed_files.append(
+                            (f.full_path, output, output_group))
                     else:
                         gen_backend_file.symlink_rule(f.full_path, output=output,
                                                       output_group=output_group)
-
 
     def _process_final_target_pp_files(self, obj, backend_file):
         for i, (path, files) in enumerate(obj.files.walk()):
             self._add_features(obj.install_target, path)
             for f in files:
                 self._preprocess(backend_file, f.full_path,
-                                 destdir=mozpath.join(self.environment.topobjdir, obj.install_target, path),
+                                 destdir=mozpath.join(self.environment.topobjdir,
+                                                      obj.install_target, path),
                                  target=f.target_basename)
 
     def _process_computed_flags(self, obj, backend_file):
@@ -1314,7 +1312,8 @@ class TupBackend(CommonBackend):
         cmd.extend(['-I%s' % d for d in ipdldirs])
         cmd.extend(sorted_ipdl_sources)
 
-        outputs = ['IPCMessageTypeName.cpp', mozpath.join(outheaderdir, 'IPCMessageStart.h'), 'ipdl_lextab.py', 'ipdl_yacctab.py']
+        outputs = ['IPCMessageTypeName.cpp', mozpath.join(
+            outheaderdir, 'IPCMessageStart.h'), 'ipdl_lextab.py', 'ipdl_yacctab.py']
 
         for filename in sorted_ipdl_sources:
             filepath, ext = os.path.splitext(filename)
@@ -1378,4 +1377,5 @@ class TupBackend(CommonBackend):
         backend_file.sources['.cpp'].extend(sorted(global_define_files))
 
         test_backend_file = self._get_backend_file('dom/bindings/test')
-        test_backend_file.sources['.cpp'].extend(sorted('../%sBinding.cpp' % s for s in webidls.all_test_stems()))
+        test_backend_file.sources['.cpp'].extend(
+            sorted('../%sBinding.cpp' % s for s in webidls.all_test_stems()))

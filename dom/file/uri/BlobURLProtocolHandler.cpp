@@ -777,13 +777,6 @@ BlobURLProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aResult) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BlobURLProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
-                               nsIURI* aBaseURI, nsIURI** aResult) {
-  return BlobURLProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI,
-                                              aResult);
-}
-
 /* static */ nsresult BlobURLProtocolHandler::CreateNewURI(
     const nsACString& aSpec, const char* aCharset, nsIURI* aBaseURI,
     nsIURI** aResult) {

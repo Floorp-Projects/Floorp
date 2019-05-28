@@ -3,6 +3,7 @@
  * should not fail for channels of unknown size
  */
 
+"use strict";
 
 var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
                           .getService(Ci.nsIContentSecurityManager);
@@ -29,9 +30,6 @@ ProtocolHandler.prototype = {
            Ci.nsIProtocolHandler.URI_IS_LOCAL_RESOURCE |
            Ci.nsIProtocolHandler.URI_NON_PERSISTABLE |
            Ci.nsIProtocolHandler.URI_SYNC_LOAD_IS_OK;
-  },
-  newURI: function(aSpec, aOriginCharset, aBaseURI) {
-    return this.uri;
   },
   newChannel: function(aURI, aLoadInfo) {
     this.loadInfo = aLoadInfo;

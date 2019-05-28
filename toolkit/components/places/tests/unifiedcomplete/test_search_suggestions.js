@@ -971,11 +971,16 @@ add_task(async function avoid_http_url_suggestions() {
     ],
   });
 
+  // This is still a valid ftp URL even if FTP support is disabled.
   await check_autocomplete({
     search: "ftp://test",
     searchParam: "enable-actions",
     matches: [
-      makeSearchMatch("ftp://test", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI("visiturl", { url: "ftp://test/", input: "ftp://test" }),
+        style: [ "action", "visiturl", "heuristic" ],
+        title: "ftp://test/",
+      },
     ],
   });
 

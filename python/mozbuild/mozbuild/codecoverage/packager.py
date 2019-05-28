@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function
 
 import argparse
+import errno
 import sys
 import json
 import buildconfig
@@ -16,6 +17,7 @@ from mozpack.manifests import (
     UnreadableInstallManifest,
 )
 import mozpack.path as mozpath
+
 
 def describe_install_manifest(manifest, dest_dir):
     try:
@@ -74,6 +76,7 @@ def cli(args=sys.argv[1:]):
         args.root = topobjdir
 
     return package_coverage_data(args.root, args.output_file)
+
 
 if __name__ == '__main__':
     sys.exit(cli())

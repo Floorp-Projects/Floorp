@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 import unittest
 import mozunit
 import os
@@ -145,26 +147,26 @@ class TestSimplePackager(unittest.TestCase):
         curdir = os.path.abspath(os.curdir)
         file = GeneratedFileWithPath(os.path.join(curdir, 'foo',
                                                   'bar.manifest'),
-                                     'resource bar bar/\ncontent bar bar/')
+                                     b'resource bar bar/\ncontent bar bar/')
         with errors.context('manifest', 1):
             packager.add('foo/bar.manifest', file)
 
         file = GeneratedFileWithPath(os.path.join(curdir, 'foo',
                                                   'baz.manifest'),
-                                     'resource baz baz/')
+                                     b'resource baz baz/')
         with errors.context('manifest', 2):
             packager.add('bar/baz.manifest', file)
 
         with errors.context('manifest', 3):
             packager.add('qux/qux.manifest',
-                         GeneratedFile(''.join([
-                            'resource qux qux/\n',
-                            'binary-component qux.so\n',
+                         GeneratedFile(b''.join([
+                            b'resource qux qux/\n',
+                            b'binary-component qux.so\n',
                          ])))
-        bar_xpt = GeneratedFile('bar.xpt')
-        qux_xpt = GeneratedFile('qux.xpt')
-        foo_html = GeneratedFile('foo_html')
-        bar_html = GeneratedFile('bar_html')
+        bar_xpt = GeneratedFile(b'bar.xpt')
+        qux_xpt = GeneratedFile(b'qux.xpt')
+        foo_html = GeneratedFile(b'foo_html')
+        bar_html = GeneratedFile(b'bar_html')
         with errors.context('manifest', 4):
             packager.add('foo/bar.xpt', bar_xpt)
         with errors.context('manifest', 5):
@@ -172,9 +174,9 @@ class TestSimplePackager(unittest.TestCase):
             packager.add('foo/bar/bar.html', bar_html)
 
         file = GeneratedFileWithPath(os.path.join(curdir, 'foo.manifest'),
-                                     ''.join([
-                                         'manifest foo/bar.manifest\n',
-                                         'manifest bar/baz.manifest\n',
+                                     b''.join([
+                                         b'manifest foo/bar.manifest\n',
+                                         b'manifest bar/baz.manifest\n',
                                      ]))
         with errors.context('manifest', 6):
             packager.add('foo.manifest', file)
@@ -183,68 +185,68 @@ class TestSimplePackager(unittest.TestCase):
 
         file = GeneratedFileWithPath(os.path.join(curdir, 'addon',
                                                   'chrome.manifest'),
-                                     'resource hoge hoge/')
+                                     b'resource hoge hoge/')
         with errors.context('manifest', 8):
             packager.add('addon/chrome.manifest', file)
 
-        install_rdf = GeneratedFile('<RDF></RDF>')
+        install_rdf = GeneratedFile(b'<RDF></RDF>')
         with errors.context('manifest', 9):
             packager.add('addon/install.rdf', install_rdf)
 
         with errors.context('manifest', 10):
             packager.add('addon2/install.rdf', install_rdf)
             packager.add('addon2/chrome.manifest',
-                         GeneratedFile('binary-component addon2.so'))
+                         GeneratedFile(b'binary-component addon2.so'))
 
         with errors.context('manifest', 11):
             packager.add('addon3/install.rdf', install_rdf)
             packager.add('addon3/chrome.manifest', GeneratedFile(
-                'manifest components/components.manifest'))
+                b'manifest components/components.manifest'))
             packager.add('addon3/components/components.manifest',
-                         GeneratedFile('binary-component addon3.so'))
+                         GeneratedFile(b'binary-component addon3.so'))
 
         with errors.context('manifest', 12):
             install_rdf_addon4 = GeneratedFile(
-                '<RDF>\n<...>\n<em:unpack>true</em:unpack>\n<...>\n</RDF>')
+                b'<RDF>\n<...>\n<em:unpack>true</em:unpack>\n<...>\n</RDF>')
             packager.add('addon4/install.rdf', install_rdf_addon4)
 
         with errors.context('manifest', 13):
             install_rdf_addon5 = GeneratedFile(
-                '<RDF>\n<...>\n<em:unpack>false</em:unpack>\n<...>\n</RDF>')
+                b'<RDF>\n<...>\n<em:unpack>false</em:unpack>\n<...>\n</RDF>')
             packager.add('addon5/install.rdf', install_rdf_addon5)
 
         with errors.context('manifest', 14):
             install_rdf_addon6 = GeneratedFile(
-                '<RDF>\n<... em:unpack=true>\n<...>\n</RDF>')
+                b'<RDF>\n<... em:unpack=true>\n<...>\n</RDF>')
             packager.add('addon6/install.rdf', install_rdf_addon6)
 
         with errors.context('manifest', 15):
             install_rdf_addon7 = GeneratedFile(
-                '<RDF>\n<... em:unpack=false>\n<...>\n</RDF>')
+                b'<RDF>\n<... em:unpack=false>\n<...>\n</RDF>')
             packager.add('addon7/install.rdf', install_rdf_addon7)
 
         with errors.context('manifest', 16):
             install_rdf_addon8 = GeneratedFile(
-                '<RDF>\n<... em:unpack="true">\n<...>\n</RDF>')
+                b'<RDF>\n<... em:unpack="true">\n<...>\n</RDF>')
             packager.add('addon8/install.rdf', install_rdf_addon8)
 
         with errors.context('manifest', 17):
             install_rdf_addon9 = GeneratedFile(
-                '<RDF>\n<... em:unpack="false">\n<...>\n</RDF>')
+                b'<RDF>\n<... em:unpack="false">\n<...>\n</RDF>')
             packager.add('addon9/install.rdf', install_rdf_addon9)
 
         with errors.context('manifest', 18):
             install_rdf_addon10 = GeneratedFile(
-                '<RDF>\n<... em:unpack=\'true\'>\n<...>\n</RDF>')
+                b'<RDF>\n<... em:unpack=\'true\'>\n<...>\n</RDF>')
             packager.add('addon10/install.rdf', install_rdf_addon10)
 
         with errors.context('manifest', 19):
             install_rdf_addon11 = GeneratedFile(
-                '<RDF>\n<... em:unpack=\'false\'>\n<...>\n</RDF>')
+                b'<RDF>\n<... em:unpack=\'false\'>\n<...>\n</RDF>')
             packager.add('addon11/install.rdf', install_rdf_addon11)
 
         we_manifest = GeneratedFile(
-            '{"manifest_version": 2, "name": "Test WebExtension", "version": "1.0"}')
+            b'{"manifest_version": 2, "name": "Test WebExtension", "version": "1.0"}')
         # hybrid and hybrid2 are both bootstrapped extensions with
         # embedded webextensions, they differ in the order in which
         # the manifests are added to the packager.
@@ -263,7 +265,7 @@ class TestSimplePackager(unittest.TestCase):
         with errors.context('manifest', 24):
             packager.add('webextension/manifest.json', we_manifest)
 
-        non_we_manifest = GeneratedFile('{"not a webextension": true}')
+        non_we_manifest = GeneratedFile(b'{"not a webextension": true}')
         with errors.context('manifest', 25):
             packager.add('nonwebextension/manifest.json', non_we_manifest)
 
@@ -355,12 +357,12 @@ class TestSimplePackager(unittest.TestCase):
         # includes a manifest inside bar/.
         packager = SimplePackager(formatter)
         packager.add('base.manifest', GeneratedFile(
-            'manifest foo/bar.manifest\n'
-            'manifest bar/baz.manifest\n'
+            b'manifest foo/bar.manifest\n'
+            b'manifest bar/baz.manifest\n'
         ))
-        packager.add('foo/bar.manifest', GeneratedFile('resource bar bar'))
-        packager.add('bar/baz.manifest', GeneratedFile('resource baz baz'))
-        packager.add('bar/install.rdf', GeneratedFile(''))
+        packager.add('foo/bar.manifest', GeneratedFile(b'resource bar bar'))
+        packager.add('bar/baz.manifest', GeneratedFile(b'resource baz baz'))
+        packager.add('bar/install.rdf', GeneratedFile(b''))
 
         with self.assertRaises(ErrorMessage) as e:
             packager.close()
@@ -374,12 +376,12 @@ class TestSimplePackager(unittest.TestCase):
         # bar/.
         packager = SimplePackager(formatter)
         packager.add('base.manifest', GeneratedFile(
-            'manifest foo/bar.manifest\n'
-            'manifest bar/baz.manifest\n'
+            b'manifest foo/bar.manifest\n'
+            b'manifest bar/baz.manifest\n'
         ))
-        packager.add('foo/bar.manifest', GeneratedFile('resource bar bar'))
-        packager.add('bar/baz.manifest', GeneratedFile('resource baz baz'))
-        packager.add('bar/chrome.manifest', GeneratedFile('resource baz baz'))
+        packager.add('foo/bar.manifest', GeneratedFile(b'resource bar bar'))
+        packager.add('bar/baz.manifest', GeneratedFile(b'resource baz baz'))
+        packager.add('bar/chrome.manifest', GeneratedFile(b'resource baz baz'))
 
         with self.assertRaises(ErrorMessage) as e:
             packager.close()
@@ -393,30 +395,30 @@ class TestSimplePackager(unittest.TestCase):
         # the same directory. This shouldn't error out.
         packager = SimplePackager(formatter)
         packager.add('base.manifest', GeneratedFile(
-            'manifest foo/bar.manifest\n'
+            b'manifest foo/bar.manifest\n'
         ))
-        packager.add('foo/bar.manifest', GeneratedFile('resource bar bar'))
-        packager.add('bar/baz.manifest', GeneratedFile('resource baz baz'))
+        packager.add('foo/bar.manifest', GeneratedFile(b'resource bar bar'))
+        packager.add('bar/baz.manifest', GeneratedFile(b'resource baz baz'))
         packager.add('bar/chrome.manifest',
-                     GeneratedFile('manifest baz.manifest'))
+                     GeneratedFile(b'manifest baz.manifest'))
         packager.close()
 
 
 class TestSimpleManifestSink(unittest.TestCase):
     def test_simple_manifest_parser(self):
         formatter = MockFormatter()
-        foobar = GeneratedFile('foobar')
-        foobaz = GeneratedFile('foobaz')
-        fooqux = GeneratedFile('fooqux')
-        foozot = GeneratedFile('foozot')
+        foobar = GeneratedFile(b'foobar')
+        foobaz = GeneratedFile(b'foobaz')
+        fooqux = GeneratedFile(b'fooqux')
+        foozot = GeneratedFile(b'foozot')
         finder = MockFinder({
             'bin/foo/bar': foobar,
             'bin/foo/baz': foobaz,
             'bin/foo/qux': fooqux,
             'bin/foo/zot': foozot,
-            'bin/foo/chrome.manifest': GeneratedFile('resource foo foo/'),
+            'bin/foo/chrome.manifest': GeneratedFile(b'resource foo foo/'),
             'bin/chrome.manifest':
-            GeneratedFile('manifest foo/chrome.manifest'),
+            GeneratedFile(b'manifest foo/chrome.manifest'),
         })
         parser = SimpleManifestSink(finder, formatter)
         component0 = Component('component0')

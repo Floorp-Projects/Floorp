@@ -15,6 +15,7 @@
 #include "nsJARURI.h"
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RWLock.h"
 
 class nsIIOService;
 
@@ -32,13 +33,17 @@ class SubstitutingProtocolHandler {
                               bool aEnforceFileOrJar = true);
   explicit SubstitutingProtocolHandler(const char* aScheme);
 
-  NS_INLINE_DECL_REFCOUNTING(SubstitutingProtocolHandler);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SubstitutingProtocolHandler);
   NS_DECL_NON_VIRTUAL_NSIPROTOCOLHANDLER;
   NS_DECL_NON_VIRTUAL_NSISUBSTITUTINGPROTOCOLHANDLER;
 
   bool HasSubstitution(const nsACString& aRoot) const {
+    AutoReadLock lock(const_cast<RWLock&>(mSubstitutionsLock));
     return mSubstitutions.Get(aRoot, nullptr);
   }
+
+  nsresult NewURI(const nsACString& aSpec, const char* aCharset,
+                  nsIURI* aBaseURI, nsIURI** aResult);
 
   MOZ_MUST_USE nsresult
   CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aResources);
@@ -97,6 +102,8 @@ class SubstitutingProtocolHandler {
 
   nsCString mScheme;
   Maybe<uint32_t> mFlags;
+
+  RWLock mSubstitutionsLock;
   nsDataHashtable<nsCStringHashKey, SubstitutionEntry> mSubstitutions;
   nsCOMPtr<nsIIOService> mIOService;
 
