@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
 import inspect
@@ -15,7 +15,11 @@ import uuid
 import mozbuild.makeutil as makeutil
 from itertools import chain
 from mozbuild.preprocessor import Preprocessor
-from mozbuild.util import FileAvoidWrite
+from mozbuild.util import (
+    FileAvoidWrite,
+    ensure_bytes,
+    ensure_unicode,
+)
 from mozpack.executables import (
     is_executable,
     may_strip,
@@ -83,7 +87,7 @@ class Dest(object):
     '''
 
     def __init__(self, path):
-        self.path = path
+        self.path = ensure_unicode(path)
         self.mode = None
 
     @property
@@ -193,12 +197,12 @@ class BaseFile(object):
             else:
                 # Ensure the file is always created
                 if not dest.exists():
-                    dest.write('')
+                    dest.write(b'')
                 shutil.copyfileobj(self.open(), dest)
             return True
 
         src = self.open()
-        copy_content = ''
+        copy_content = b''
         while True:
             dest_content = dest.read(32768)
             src_content = src.read(32768)
@@ -255,7 +259,7 @@ class File(BaseFile):
     '''
 
     def __init__(self, path):
-        self.path = path
+        self.path = ensure_unicode(path)
 
     @property
     def mode(self):
@@ -512,8 +516,8 @@ class PreprocessedFile(BaseFile):
 
     def __init__(self, path, depfile_path, marker, defines, extra_depends=None,
                  silence_missing_directive_warnings=False):
-        self.path = path
-        self.depfile = depfile_path
+        self.path = ensure_unicode(path)
+        self.depfile = ensure_unicode(depfile_path)
         self.marker = marker
         self.defines = defines
         self.extra_depends = list(extra_depends or [])
@@ -706,9 +710,12 @@ class ManifestFile(BaseFile):
         Return a file-like object allowing to read() the serialized content of
         the manifest.
         '''
-        return BytesIO(''.join('%s\n' % e.rebase(self._base)
-                               for e in chain(self._entries,
-                                              self._interfaces)))
+        return BytesIO(
+            ensure_bytes(
+                ''.join(
+                    '%s\n' % e.rebase(self._base)
+                    for e in chain(self._entries, self._interfaces)
+                )))
 
     def __iter__(self):
         '''
@@ -738,8 +745,8 @@ class MinifiedProperties(BaseFile):
         Return a file-like object allowing to read() the minified content of
         the properties file.
         '''
-        return BytesIO(''.join(l for l in self._file.open().readlines()
-                               if not l.startswith('#')))
+        return BytesIO(b''.join(l for l in self._file.open().readlines()
+                                if not l.startswith(b'#')))
 
 
 class MinifiedJavaScript(BaseFile):

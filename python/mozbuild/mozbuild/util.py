@@ -1393,3 +1393,15 @@ def patch_main():
             return cmdline
         orig_command_line = forking.get_command_line
         forking.get_command_line = my_get_command_line
+
+
+def ensure_bytes(value):
+    if isinstance(value, basestring):
+        return value.encode('utf8')
+    return value
+
+
+def ensure_unicode(value):
+    if isinstance(value, type(b'')):
+        return value.decode('utf8')
+    return value
