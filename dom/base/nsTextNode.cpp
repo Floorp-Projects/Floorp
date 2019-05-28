@@ -44,8 +44,7 @@ class nsAttributeTextNode final : public nsTextNode,
 
   virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) override;
+  virtual void UnbindFromTree(bool aNullParent = true) override;
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
@@ -124,10 +123,10 @@ nsresult nsTextNode::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void nsTextNode::UnbindFromTree(bool aDeep, bool aNullParent) {
+void nsTextNode::UnbindFromTree(bool aNullParent) {
   ResetDirectionSetByTextNode(this);
 
-  CharacterData::UnbindFromTree(aDeep, aNullParent);
+  CharacterData::UnbindFromTree(aNullParent);
 }
 
 #ifdef DEBUG
@@ -216,7 +215,7 @@ nsresult nsAttributeTextNode::BindToTree(Document* aDocument,
   return NS_OK;
 }
 
-void nsAttributeTextNode::UnbindFromTree(bool aDeep, bool aNullParent) {
+void nsAttributeTextNode::UnbindFromTree(bool aNullParent) {
   // UnbindFromTree can be called anytime so we have to be safe.
   if (mGrandparent) {
     // aNullParent might not be true here, but we want to remove the
@@ -225,7 +224,7 @@ void nsAttributeTextNode::UnbindFromTree(bool aDeep, bool aNullParent) {
     mGrandparent->RemoveMutationObserver(this);
     mGrandparent = nullptr;
   }
-  nsTextNode::UnbindFromTree(aDeep, aNullParent);
+  nsTextNode::UnbindFromTree(aNullParent);
 }
 
 void nsAttributeTextNode::AttributeChanged(Element* aElement,

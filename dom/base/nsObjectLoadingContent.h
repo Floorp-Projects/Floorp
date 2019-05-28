@@ -318,7 +318,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   nsresult BindToTree(mozilla::dom::Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent);
-  void UnbindFromTree(bool aDeep = true, bool aNullParent = true);
+  void UnbindFromTree(bool aNullParent = true);
 
   /**
    * Return the content policy type used for loading the element.

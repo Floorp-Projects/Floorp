@@ -125,7 +125,7 @@ class nsIContent : public nsINode {
    *        recursively calling UnbindFromTree when a subtree is detached.
    * @note This method is safe to call on nodes that are not bound to a tree.
    */
-  virtual void UnbindFromTree(bool aDeep = true, bool aNullParent = true) = 0;
+  virtual void UnbindFromTree(bool aNullParent = true) = 0;
 
   enum {
     /**
