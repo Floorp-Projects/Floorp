@@ -543,6 +543,11 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   static qcms_transform* GetCMSRGBATransform();
 
+  /**
+   * Return sRGBA -> output device transform.
+   */
+  static qcms_transform* GetCMSBGRATransform();
+
   virtual void FontsPrefsChanged(const char* aPref);
 
   int32_t GetBidiNumeralOption();

@@ -24,6 +24,10 @@
 #ifndef _QCMS_MATRIX_H
 #define _QCMS_MATRIX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct vector {
         float v[3];
 };
@@ -35,5 +39,9 @@ struct matrix matrix_multiply(struct matrix a, struct matrix b);
 struct matrix matrix_invert(struct matrix mat);
 
 struct matrix matrix_invalid(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
