@@ -99,6 +99,8 @@
 #include "nsSocketTransportService2.h"
 #include "nsViewSourceHandler.h"
 
+#include "nsResProtocolHandler.h"
+#include "mozilla/net/ExtensionProtocolHandler.h"
 #include <limits>
 
 using namespace mozilla;
@@ -1795,13 +1797,7 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
   }
 
   if (scheme.EqualsLiteral("resource")) {
-    if (!NS_IsMainThread()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    // TODO: must be thread safe
-    MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIProtocolHandler> handler =
-        do_GetService("@mozilla.org/network/protocol;1?name=resource");
+    RefPtr<nsResProtocolHandler> handler = nsResProtocolHandler::GetSingleton();
     if (!handler) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -1814,8 +1810,8 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
     }
     // TODO: must be thread safe
     MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIProtocolHandler> handler =
-        do_GetService("@mozilla.org/network/protocol;1?name=moz-extension");
+    RefPtr<mozilla::net::ExtensionProtocolHandler> handler =
+        mozilla::net::ExtensionProtocolHandler::GetSingleton();
     if (!handler) {
       return NS_ERROR_NOT_AVAILABLE;
     }
