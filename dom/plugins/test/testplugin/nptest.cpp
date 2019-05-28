@@ -1058,7 +1058,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode,
   }
 
   if ((instanceData->bugMode == 813906) && instanceData->frame.length()) {
-    bug813906(instance, "f", "browser.xul", instanceData->frame.c_str());
+    bug813906(instance, "f", "browser.xhtml", instanceData->frame.c_str());
   }
 
   return NPERR_NO_ERROR;

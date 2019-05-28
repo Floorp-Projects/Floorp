@@ -78,7 +78,7 @@
  *   its own sub-tree, even if multiple tabs are showing the same URI.
  *
  * - <top-uri> is the URI of the top window.  Excepting special windows (such
- *   as browser.xul or hiddenWindow.html) it's what the address bar shows for
+ *   as browser.xhtml or hiddenWindow.html) it's what the address bar shows for
  *   the tab.
  *
  */

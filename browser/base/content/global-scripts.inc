@@ -3,8 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# JS files which are needed by browser.xul but no other top level windows to
-# support MacOS specific features should be loaded directly from browser.xul
+# JS files which are needed by browser.xhtml but no other top level windows to
+# support MacOS specific features should be loaded directly from browser.xhtml
 # rather than this file.
 
 # If you update this list, you may need to add a mapping within the following
