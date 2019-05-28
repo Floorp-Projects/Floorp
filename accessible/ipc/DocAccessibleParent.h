@@ -26,6 +26,8 @@ class xpcAccessibleGeneric;
 class DocAccessibleParent : public ProxyAccessible,
                             public PDocAccessibleParent {
  public:
+  NS_INLINE_DECL_REFCOUNTING(DocAccessibleParent);
+
   DocAccessibleParent()
       : ProxyAccessible(this),
         mParentDoc(kNoParentDoc),
@@ -34,18 +36,10 @@ class DocAccessibleParent : public ProxyAccessible,
 #endif  // defined(XP_WIN)
         mTopLevel(false),
         mShutdown(false) {
-    MOZ_COUNT_CTOR_INHERITED(DocAccessibleParent, ProxyAccessible);
     sMaxDocID++;
     mActorID = sMaxDocID;
     MOZ_ASSERT(!LiveDocs().Get(mActorID));
     LiveDocs().Put(mActorID, this);
-  }
-
-  ~DocAccessibleParent() {
-    LiveDocs().Remove(mActorID);
-    MOZ_COUNT_DTOR_INHERITED(DocAccessibleParent, ProxyAccessible);
-    MOZ_ASSERT(mChildDocs.Length() == 0);
-    MOZ_ASSERT(!ParentDoc());
   }
 
   void SetTopLevel() { mTopLevel = true; }
@@ -221,6 +215,12 @@ class DocAccessibleParent : public ProxyAccessible,
 #endif
 
  private:
+  ~DocAccessibleParent() {
+    LiveDocs().Remove(mActorID);
+    MOZ_ASSERT(mChildDocs.Length() == 0);
+    MOZ_ASSERT(!ParentDoc());
+  }
+
   class ProxyEntry : public PLDHashEntryHdr {
    public:
     explicit ProxyEntry(const void*) : mProxy(nullptr) {}
