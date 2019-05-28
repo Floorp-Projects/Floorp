@@ -946,6 +946,9 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 #  if defined(MOZ_WIDGET_ANDROID)
   LaunchAndroidService(childProcessType, childArgv,
                        mLaunchOptions->fds_to_remap, &process);
+  if (process == 0) {
+    return false;
+  }
 #  else   // goes with defined(MOZ_WIDGET_ANDROID)
   if (!base::LaunchApp(childArgv, *mLaunchOptions, &process)) {
     return false;
@@ -1254,7 +1257,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 #  error Sorry
 #endif  // defined(OS_POSIX)
 
-  MOZ_ASSERT(process);
+  MOZ_DIAGNOSTIC_ASSERT(process);
   // NB: on OS X, we block much longer than we need to in order to
   // reach this call, waiting for the child process's task_t.  The
   // best way to fix that is to refactor this file, hard.
