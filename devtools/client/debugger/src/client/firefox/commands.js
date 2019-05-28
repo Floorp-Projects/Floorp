@@ -422,7 +422,12 @@ async function fetchWorkers(): Promise<Worker[]> {
     for (const actor of workerNames) {
       if (!workerClients[actor]) {
         const client = newWorkerClients[actor].thread;
-        getSources(client);
+
+        // This runs in the background and populates some data, but we also
+        // want to allow it to fail quietly. For instance, it is pretty easy
+        // for source clients to throw during the fetch if their thread
+        // shuts down, and this would otherwise cause test failures.
+        getSources(client).catch(e => console.error(e));
       }
     }
 
