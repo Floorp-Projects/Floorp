@@ -463,6 +463,9 @@ const SNAPSHOT_SCHEMA = {
         targetFrameRate: {
           type: "number",
         },
+        windowProtocol: {
+          type: "string",
+        },
       },
     },
     media: {
