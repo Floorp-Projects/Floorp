@@ -10562,6 +10562,11 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
   }
 }
 
+bool PresShell::UsesMobileViewportSizing() const {
+  return GetIsViewportOverridden() &&
+         nsLayoutUtils::ShouldHandleMetaViewport(mDocument);
+}
+
 /*
  * Determines the current image locking state. Called when one of the
  * dependent factors changes.
