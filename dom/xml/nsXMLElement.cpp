@@ -25,7 +25,7 @@ JSObject* nsXMLElement::WrapNode(JSContext* aCx,
   return Element_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void nsXMLElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void nsXMLElement::UnbindFromTree(bool aNullParent) {
   nsAtom* property;
   switch (GetPseudoElementType()) {
     case PseudoStyleType::marker:
@@ -45,7 +45,7 @@ void nsXMLElement::UnbindFromTree(bool aDeep, bool aNullParent) {
     MOZ_ASSERT(GetParent()->IsElement());
     GetParent()->DeleteProperty(property);
   }
-  Element::UnbindFromTree(aDeep, aNullParent);
+  Element::UnbindFromTree(aNullParent);
 }
 
 NS_IMPL_ELEMENT_CLONE(nsXMLElement)

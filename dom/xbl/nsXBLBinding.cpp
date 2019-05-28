@@ -201,7 +201,7 @@ void nsXBLBinding::UnbindAnonymousContent(Document* aDocument,
   nsCOMPtr<nsIContent> anonParent = aAnonParent;
   for (nsIContent* child = aAnonParent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    child->UnbindFromTree(true, aNullParent);
+    child->UnbindFromTree(aNullParent);
   }
 }
 

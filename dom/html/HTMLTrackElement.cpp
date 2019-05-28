@@ -410,7 +410,7 @@ nsresult HTMLTrackElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void HTMLTrackElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLTrackElement::UnbindFromTree(bool aNullParent) {
   if (mMediaParent && aNullParent) {
     // mTrack can be null if HTMLTrackElement::LoadResource has never been
     // called.
@@ -421,7 +421,7 @@ void HTMLTrackElement::UnbindFromTree(bool aDeep, bool aNullParent) {
     mMediaParent = nullptr;
   }
 
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
 uint16_t HTMLTrackElement::ReadyState() const {
