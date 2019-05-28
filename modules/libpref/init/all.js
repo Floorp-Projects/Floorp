@@ -627,7 +627,7 @@ pref("media.cubeb.sandbox", false);
 pref("media.audiograph.single_thread.enabled", false);
 
 #ifdef MOZ_AV1
-#if defined(XP_WIN) && !defined(_ARM64_)
+#if defined(XP_WIN) && !defined(_ARM64_) && !defined(__MINGW32__)
 pref("media.av1.enabled", true);
 pref("media.av1.use-dav1d", true);
 #elif defined(XP_MACOSX)
