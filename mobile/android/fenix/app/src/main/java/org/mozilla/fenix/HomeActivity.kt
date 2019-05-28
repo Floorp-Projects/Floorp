@@ -14,6 +14,9 @@ import androidx.appcompat.widget.Toolbar
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -100,6 +103,19 @@ open class HomeActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         handleCrashIfNecessary(intent)
         handleOpenedFromExternalSourceIfNecessary(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        CoroutineScope(Dispatchers.Main).launch {
+            // Make sure accountManager is initialized.
+            components.backgroundServices.accountManager.initAsync().await()
+            // If we're authenticated, kick-off a sync and a device state refresh.
+            components.backgroundServices.accountManager.authenticatedAccount()?.let {
+                components.backgroundServices.syncManager.syncNow(startup = true)
+                it.deviceConstellation().refreshDeviceStateAsync().await()
+            }
+        }
     }
 
     override fun onCreateView(
