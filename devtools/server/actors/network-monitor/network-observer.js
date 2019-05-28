@@ -262,12 +262,12 @@ NetworkObserver.prototype = {
     }
 
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-
     if (!matchRequest(channel, this.filters)) {
       return;
     }
 
-    "add your handling code here";
+    const blockedCode = channel.loadInfo.requestBlockingReason;
+    this._httpResponseExaminer(subject, topic, blockedCode);
   },
 
   /**
@@ -279,7 +279,7 @@ NetworkObserver.prototype = {
    * @param string topic
    * @returns void
    */
-  _httpResponseExaminer: function(subject, topic) {
+  _httpResponseExaminer: function(subject, topic, blockedReason) {
     // The httpResponseExaminer is used to retrieve the uncached response
     // headers. The data retrieved is stored in openResponses. The
     // NetworkResponseListener is responsible with updating the httpActivity
@@ -287,7 +287,8 @@ NetworkObserver.prototype = {
 
     if (!this.owner ||
         (topic != "http-on-examine-response" &&
-         topic != "http-on-examine-cached-response") ||
+         topic != "http-on-examine-cached-response" &&
+         topic != "http-on-failed-opening-request") ||
         !(subject instanceof Ci.nsIHttpChannel)) {
       return;
     }
@@ -307,26 +308,28 @@ NetworkObserver.prototype = {
 
     const setCookieHeaders = [];
 
-    channel.visitOriginalResponseHeaders({
-      visitHeader: function(name, value) {
-        const lowerName = name.toLowerCase();
-        if (lowerName == "set-cookie") {
-          setCookieHeaders.push(value);
-        }
-        response.headers.push({ name: name, value: value });
-      },
-    });
+    if (!blockedReason) {
+      channel.visitOriginalResponseHeaders({
+        visitHeader: function(name, value) {
+          const lowerName = name.toLowerCase();
+          if (lowerName == "set-cookie") {
+            setCookieHeaders.push(value);
+          }
+          response.headers.push({ name: name, value: value });
+        },
+      });
 
-    if (!response.headers.length) {
-      // No need to continue.
-      return;
-    }
+      if (!response.headers.length) {
+        // No need to continue.
+        return;
+      }
 
-    if (setCookieHeaders.length) {
-      response.cookies = setCookieHeaders.reduce((result, header) => {
-        const cookies = NetworkHelper.parseSetCookieHeader(header);
-        return result.concat(cookies);
-      }, []);
+      if (setCookieHeaders.length) {
+        response.cookies = setCookieHeaders.reduce((result, header) => {
+          const cookies = NetworkHelper.parseSetCookieHeader(header);
+          return result.concat(cookies);
+        }, []);
+      }
     }
 
     // Determine the HTTP version.
@@ -334,14 +337,16 @@ NetworkObserver.prototype = {
     const httpVersionMin = {};
 
     channel.QueryInterface(Ci.nsIHttpChannelInternal);
-    channel.getResponseVersion(httpVersionMaj, httpVersionMin);
+    if (!blockedReason) {
+      channel.getResponseVersion(httpVersionMaj, httpVersionMin);
 
-    response.status = channel.responseStatus;
-    response.statusText = channel.responseStatusText;
-    response.httpVersion = "HTTP/" + httpVersionMaj.value + "." +
+      response.status = channel.responseStatus;
+      response.statusText = channel.responseStatusText;
+      response.httpVersion = "HTTP/" + httpVersionMaj.value + "." +
                                      httpVersionMin.value;
 
-    this.openResponses.set(channel, response);
+      this.openResponses.set(channel, response);
+    }
 
     if (topic === "http-on-examine-cached-response") {
       // Service worker requests emits cached-response notification on non-e10s,
@@ -370,6 +375,8 @@ NetworkObserver.prototype = {
       const timings = this._setupHarTimings(httpActivity, true);
       httpActivity.owner.addEventTimings(timings.total, timings.timings,
                                          timings.offsets);
+    } else if (topic === "http-on-failed-opening-request") {
+      this._createNetworkEvent(channel, {blockedReason});
     }
   },
 
@@ -506,7 +513,8 @@ NetworkObserver.prototype = {
    *
    */
   _createNetworkEvent: function(channel, { timestamp, extraStringData,
-                                           fromCache, fromServiceWorker }) {
+                                           fromCache, fromServiceWorker,
+                                           blockedReason }) {
     const httpActivity = this.createOrGetActivityObject(channel);
 
     channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
@@ -596,9 +604,13 @@ NetworkObserver.prototype = {
 
     // Check the request URL with ones manually blocked by the user in DevTools.
     // If it's meant to be blocked, we cancel the request and annotate the event.
-    if (this.blockedURLs.has(httpActivity.url)) {
-      channel.cancel(Cr.NS_BINDING_ABORTED);
-      event.blockedReason = "DevTools";
+    if (!blockedReason) {
+      if (this.blockedURLs.has(httpActivity.url)) {
+        channel.cancel(Cr.NS_BINDING_ABORTED);
+        event.blockedReason = "devtools";
+      }
+    } else {
+      event.blockedReason = blockedReason;
     }
 
     httpActivity.owner = this.owner.onNetworkEvent(event);
