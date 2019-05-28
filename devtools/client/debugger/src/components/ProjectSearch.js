@@ -56,6 +56,7 @@ type Item = Result | Match;
 
 type State = {
   inputValue: string,
+  inputFocused: boolean,
   focusedItem: ?Item,
 };
 
@@ -89,6 +90,7 @@ export class ProjectSearch extends Component<Props, State> {
     super(props);
     this.state = {
       inputValue: this.props.query || "",
+      inputFocused: false,
       focusedItem: null,
     };
   }
@@ -177,7 +179,11 @@ export class ProjectSearch extends Component<Props, State> {
   };
 
   onEnterPress = () => {
-    if (!this.isProjectSearchEnabled() || !this.state.focusedItem) {
+    if (
+      !this.isProjectSearchEnabled() ||
+      !this.state.focusedItem ||
+      this.state.inputFocused
+    ) {
       return;
     }
     if (this.state.focusedItem.type === "MATCH") {
@@ -295,6 +301,8 @@ export class ProjectSearch extends Component<Props, State> {
         summaryMsg={this.renderSummary()}
         isLoading={status === statusType.fetching}
         onChange={this.inputOnChange}
+        onFocus={() => this.setState({ inputFocused: true })}
+        onBlur={() => this.setState({ inputFocused: false })}
         onKeyDown={this.onKeyDown}
         onHistoryScroll={this.onHistoryScroll}
         handleClose={
