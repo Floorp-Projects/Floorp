@@ -1598,8 +1598,12 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
-#if defined(XP_WIN) && !defined(_ARM64_)
-# define PREF_VALUE true
+#if defined(XP_WIN)
+# if defined(_ARM64_) || defined(__MINGW32__)
+#  define PREF_VALUE false
+# else
+#  define PREF_VALUE true
+# endif
 #elif defined(XP_MACOSX)
 # define PREF_VALUE true
 #elif defined(XP_LINUX) && !defined(ANDROID)
