@@ -200,6 +200,7 @@ SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme,
                                                          uint32_t aFlags,
                                                          bool aEnforceFileOrJar)
     : mScheme(aScheme),
+      mSubstitutionsLock("SubstitutingProtocolHandler::mSubstitutions"),
       mSubstitutions(16),
       mEnforceFileOrJar(aEnforceFileOrJar) {
   mFlags.emplace(aFlags);
@@ -207,7 +208,10 @@ SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme,
 }
 
 SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme)
-    : mScheme(aScheme), mSubstitutions(16), mEnforceFileOrJar(true) {
+    : mScheme(aScheme),
+      mSubstitutionsLock("SubstitutingProtocolHandler::mSubstitutions"),
+      mSubstitutions(16),
+      mEnforceFileOrJar(true) {
   ConstructInternal();
 }
 
@@ -223,6 +227,7 @@ void SubstitutingProtocolHandler::ConstructInternal() {
 
 nsresult SubstitutingProtocolHandler::CollectSubstitutions(
     InfallibleTArray<SubstitutionMapping>& aMappings) {
+  AutoReadLock lock(mSubstitutionsLock);
   for (auto iter = mSubstitutions.ConstIter(); !iter.Done(); iter.Next()) {
     SubstitutionEntry& entry = iter.Data();
     nsCOMPtr<nsIURI> uri = entry.baseURI;
@@ -448,7 +453,10 @@ nsresult SubstitutingProtocolHandler::SetSubstitutionWithFlags(
   ToLowerCase(origRoot, root);
 
   if (!baseURI) {
-    mSubstitutions.Remove(root);
+    {
+      AutoWriteLock lock(mSubstitutionsLock);
+      mSubstitutions.Remove(root);
+    }
     NotifyObservers(root, baseURI);
     return SendSubstitution(root, baseURI, flags);
   }
@@ -466,9 +474,12 @@ nsresult SubstitutingProtocolHandler::SetSubstitutionWithFlags(
       return NS_ERROR_INVALID_ARG;
     }
 
-    SubstitutionEntry& entry = mSubstitutions.GetOrInsert(root);
-    entry.baseURI = baseURI;
-    entry.flags = flags;
+    {
+      AutoWriteLock lock(mSubstitutionsLock);
+      SubstitutionEntry& entry = mSubstitutions.GetOrInsert(root);
+      entry.baseURI = baseURI;
+      entry.flags = flags;
+    }
     NotifyObservers(root, baseURI);
     return SendSubstitution(root, baseURI, flags);
   }
@@ -483,9 +494,12 @@ nsresult SubstitutingProtocolHandler::SetSubstitutionWithFlags(
       mIOService->NewURI(newBase, nullptr, nullptr, getter_AddRefs(newBaseURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  SubstitutionEntry& entry = mSubstitutions.GetOrInsert(root);
-  entry.baseURI = newBaseURI;
-  entry.flags = flags;
+  {
+    AutoWriteLock lock(mSubstitutionsLock);
+    SubstitutionEntry& entry = mSubstitutions.GetOrInsert(root);
+    entry.baseURI = newBaseURI;
+    entry.flags = flags;
+  }
   NotifyObservers(root, baseURI);
   return SendSubstitution(root, newBaseURI, flags);
 }
@@ -497,11 +511,14 @@ nsresult SubstitutingProtocolHandler::GetSubstitution(
   nsAutoCString root;
   ToLowerCase(origRoot, root);
 
-  SubstitutionEntry entry;
-  if (mSubstitutions.Get(root, &entry)) {
-    nsCOMPtr<nsIURI> baseURI = entry.baseURI;
-    baseURI.forget(result);
-    return NS_OK;
+  {
+    AutoReadLock lock(mSubstitutionsLock);
+    SubstitutionEntry entry;
+    if (mSubstitutions.Get(root, &entry)) {
+      nsCOMPtr<nsIURI> baseURI = entry.baseURI;
+      baseURI.forget(result);
+      return NS_OK;
+    }
   }
 
   uint32_t flags;
@@ -518,10 +535,15 @@ nsresult SubstitutingProtocolHandler::GetSubstitutionFlags(
 #endif
 
   *flags = 0;
-  SubstitutionEntry entry;
-  if (mSubstitutions.Get(root, &entry)) {
-    *flags = entry.flags;
-    return NS_OK;
+
+  {
+    AutoReadLock lock(mSubstitutionsLock);
+
+    SubstitutionEntry entry;
+    if (mSubstitutions.Get(root, &entry)) {
+      *flags = entry.flags;
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsIURI> baseURI;
