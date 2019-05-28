@@ -73,11 +73,6 @@ bool GetParentPrincipalAndTrackingOrigin(
     nsGlobalWindowInner* a3rdPartyTrackingWindow,
     nsIPrincipal** aTopLevelStoragePrincipal, nsACString& aTrackingOrigin,
     nsIURI** aTrackingURI, nsIPrincipal** aTrackingPrincipal) {
-  if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(
-          a3rdPartyTrackingWindow)) {
-    return false;
-  }
-
   Document* doc = a3rdPartyTrackingWindow->GetDocument();
   // Make sure storage access isn't disabled
   if (doc && (doc->StorageAccessSandboxed() ||
@@ -786,11 +781,18 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     LOG(("Parent window has no doc"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
+  int32_t behavior = parentDoc->CookieSettings()->GetCookieBehavior();
+
+  MOZ_ASSERT(
+      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+      behavior ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+
   if (!parentDoc->CookieSettings()->GetRejectThirdPartyTrackers()) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
          "early",
-         parentDoc->CookieSettings()->GetCookieBehavior()));
+         behavior));
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
@@ -830,15 +832,38 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     }
 
-    // We are a 3rd party source.
-  } else if (!GetParentPrincipalAndTrackingOrigin(
-                 parentWindow, getter_AddRefs(topLevelStoragePrincipal),
-                 trackingOrigin, getter_AddRefs(trackingURI),
-                 getter_AddRefs(trackingPrincipal))) {
-    LOG(
-        ("Error while computing the parent principal and tracking origin, "
-         "bailing out early"));
-    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  } else {
+    // We should be a 3rd party source.
+    bool isThirdParty = false;
+    if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+      isThirdParty =
+          nsContentUtils::IsThirdPartyTrackingResourceWindow(parentWindow);
+    } else if (behavior == nsICookieService::
+                               BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+      isThirdParty = nsContentUtils::IsThirdPartyWindowOrChannel(
+          parentWindow, nullptr, nullptr);
+    }
+
+    if (!isThirdParty) {
+      if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
+        LOG(("Our window isn't a third-party tracking window"));
+      } else if (behavior ==
+                 nsICookieService::
+                     BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+        LOG(("Our window isn't a third-party window"));
+      }
+      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+    }
+
+    if (!GetParentPrincipalAndTrackingOrigin(
+            parentWindow, getter_AddRefs(topLevelStoragePrincipal),
+            trackingOrigin, getter_AddRefs(trackingURI),
+            getter_AddRefs(trackingPrincipal))) {
+      LOG(
+          ("Error while computing the parent principal and tracking origin, "
+           "bailing out early"));
+      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+    }
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerParentWindow->GetTop();
