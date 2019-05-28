@@ -33,6 +33,28 @@
           "30313233343536373839303132333435" :
             "ebdd62f16814d27b68ef122afce4ae3c"
         }
+      },
+      { name: "bipbop-clearkey-keyrotation-clear-lead",
+        tracks : [
+          {
+            name: "video",
+            type: "video/mp4; codecs=\"avc1.4d4015\"",
+            fragments: ["bipbop-clearkey-keyrotation-clear-lead-video.mp4"],
+            initDatas: 3
+          },
+          {
+            name: "audio",
+            type: "audio/mp4; codecs=\"mp4a.40.2\"",
+            fragments: ["bipbop-clearkey-keyrotation-clear-lead-audio.mp4"],
+            initDatas: 3
+          }
+        ],
+        keys : {
+          "00112233445566778899aabbccddeeff" :
+            "00112233445566778899aabbccddeeff",
+          "112233445566778899aabbccddeeff00" :
+            "112233445566778899aabbccddeeff00"
+        }
       }
     ];
 
@@ -82,6 +104,8 @@
         }
 
         let initData = new Uint8Array(event.initData);
+        is(event.initDataType, "cenc", "'encrypted' event should have 'cenc' " +
+           "initDataType");
         Log(token, "encrypted event => len=" + initData.length + " " + hexStr);
         let session = event.target.mediaKeys.createSession();
         initDatas.set(hexStr, session);
