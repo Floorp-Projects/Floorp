@@ -140,6 +140,8 @@ JSObject* GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind,
   if (obj) {
     if (nDynamicSlots) {
       static_cast<NativeObject*>(obj)->initSlots(slots);
+      AddCellMemory(obj, nDynamicSlots * sizeof(HeapSlot),
+                    MemoryUse::ObjectSlots);
     }
   } else {
     js_free(slots);

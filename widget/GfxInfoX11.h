@@ -22,6 +22,7 @@ class GfxInfo final : public GfxInfoBase {
   NS_IMETHOD GetDWriteEnabled(bool* aDWriteEnabled) override;
   NS_IMETHOD GetDWriteVersion(nsAString& aDwriteVersion) override;
   NS_IMETHOD GetCleartypeParameters(nsAString& aCleartypeParams) override;
+  NS_IMETHOD GetWindowProtocol(nsAString& aWindowProtocol) override;
   NS_IMETHOD GetAdapterDescription(nsAString& aAdapterDescription) override;
   NS_IMETHOD GetAdapterDriver(nsAString& aAdapterDriver) override;
   NS_IMETHOD GetAdapterVendorID(nsAString& aAdapterVendorID) override;
@@ -79,6 +80,7 @@ class GfxInfo final : public GfxInfoBase {
   unsigned int mGLMajorVersion, mGLMinorVersion;
   bool mIsMesa;
   bool mIsAccelerated;
+  bool mIsWayland;
 
   void AddCrashReportAnnotations();
 };

@@ -595,6 +595,37 @@ void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   map.remove(ptr);
 }
 
+void MemoryTracker::swapTrackedMemory(Cell* a, Cell* b, MemoryUse use) {
+  MOZ_ASSERT(a->isTenured());
+  MOZ_ASSERT(b->isTenured());
+
+  Key ka{a, use};
+  Key kb{b, use};
+
+  LockGuard<Mutex> lock(mutex);
+
+  size_t sa = getAndRemoveEntry(ka, lock);
+  size_t sb = getAndRemoveEntry(kb, lock);
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+
+  if ((sa && !map.put(kb, sa)) ||
+      (sb && !map.put(ka, sb))) {
+    oomUnsafe.crash("MemoryTracker::swapTrackedMemory");
+  }
+}
+
+size_t MemoryTracker::getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock) {
+  auto ptr = map.lookup(key);
+  if (!ptr) {
+    return 0;
+  }
+
+  size_t size = ptr->value();
+  map.remove(ptr);
+  return size;
+}
+
 void MemoryTracker::fixupAfterMovingGC() {
   // Update the table after we move GC things. We don't use MovableCellHasher
   // because that would create a difference between debug and release builds.

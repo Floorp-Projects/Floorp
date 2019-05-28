@@ -20,6 +20,35 @@
 #include "vm/ObjectOperations-inl.h"  // js::MaybeHasInterestingSymbolProperty
 #include "vm/Realm-inl.h"
 
+MOZ_ALWAYS_INLINE uint32_t js::NativeObject::numDynamicSlots() const {
+  return dynamicSlotsCount(numFixedSlots(), slotSpan(), getClass());
+}
+
+/* static */ MOZ_ALWAYS_INLINE uint32_t js::NativeObject::dynamicSlotsCount(
+    uint32_t nfixed, uint32_t span, const Class* clasp) {
+  if (span <= nfixed) {
+    return 0;
+  }
+  span -= nfixed;
+
+  // Increase the slots to SLOT_CAPACITY_MIN to decrease the likelihood
+  // the dynamic slots need to get increased again. ArrayObjects ignore
+  // this because slots are uncommon in that case.
+  if (clasp != &ArrayObject::class_ && span <= SLOT_CAPACITY_MIN) {
+    return SLOT_CAPACITY_MIN;
+  }
+
+  uint32_t slots = mozilla::RoundUpPow2(span);
+  MOZ_ASSERT(slots >= span);
+  return slots;
+}
+
+/* static */ MOZ_ALWAYS_INLINE uint32_t
+js::NativeObject::dynamicSlotsCount(Shape* shape) {
+  return dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(),
+                           shape->getObjectClass());
+}
+
 inline void JSObject::finalize(js::FreeOp* fop) {
   js::probes::FinalizeObject(this);
 
@@ -45,21 +74,24 @@ inline void JSObject::finalize(js::FreeOp* fop) {
   }
 
   if (nobj->hasDynamicSlots()) {
-    fop->free_(nobj->slots_);
+    size_t size = nobj->numDynamicSlots() * sizeof(js::HeapSlot);
+    fop->free_(this, nobj->slots_, size, js::MemoryUse::ObjectSlots);
   }
 
   if (nobj->hasDynamicElements()) {
     js::ObjectElements* elements = nobj->getElementsHeader();
+    size_t size = elements->numAllocatedElements() * sizeof(js::HeapSlot);
     if (elements->isCopyOnWrite()) {
       if (elements->ownerObject() == this) {
         // Don't free the elements until object finalization finishes,
         // so that other objects can access these elements while they
         // are themselves finalized.
         MOZ_ASSERT(elements->numShiftedElements() == 0);
-        fop->freeLater(elements);
+        fop->freeLater(this, elements, size, js::MemoryUse::ObjectElements);
       }
     } else {
-      fop->free_(nobj->getUnshiftedElementsHeader());
+      fop->free_(this, nobj->getUnshiftedElementsHeader(), size,
+                 js::MemoryUse::ObjectElements);
     }
   }
 
