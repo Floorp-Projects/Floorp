@@ -448,6 +448,12 @@ addon-detail-private-browsing-help = When allowed, the extension will have acces
 addon-detail-private-browsing-allow = Allow
 addon-detail-private-browsing-disallow = Don’t Allow
 
+# This is the tooltip text for the recommended badge for an extension in about:addons. The
+# badge is a small icon displayed next to an extension when it is recommended on AMO.
+addon-badge-recommended =
+  .title = Recommended
+  .alt = Recommended
+
 available-updates-heading = Available Updates
 recent-updates-heading = Recent Updates
 
