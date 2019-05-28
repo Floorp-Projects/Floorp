@@ -44,9 +44,16 @@ void ServiceWorkerRegistrationInfo::Clear() {
     mEvaluatingWorker = nullptr;
   }
 
+  RefPtr<ServiceWorkerInfo> evaluating = mEvaluatingWorker.forget();
   RefPtr<ServiceWorkerInfo> installing = mInstallingWorker.forget();
   RefPtr<ServiceWorkerInfo> waiting = mWaitingWorker.forget();
   RefPtr<ServiceWorkerInfo> active = mActiveWorker.forget();
+
+  if (evaluating) {
+    evaluating->UpdateState(ServiceWorkerState::Redundant);
+    evaluating->UpdateRedundantTime();
+    evaluating->WorkerPrivate()->NoteDeadServiceWorkerInfo();
+  }
 
   if (installing) {
     installing->UpdateState(ServiceWorkerState::Redundant);
