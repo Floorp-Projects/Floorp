@@ -197,6 +197,12 @@ class KeymapWrapper {
 #endif
 
   /**
+   * ResetKeyboard is called on keymap changes from OnKeysChanged and
+   * keyboard_handle_keymap to prepare for keymap changes.
+   */
+  static void ResetKeyboard();
+
+  /**
    * Destroys the singleton KeymapWrapper instance, if it exists.
    */
   static void Shutdown();
