@@ -4,7 +4,7 @@
 
 # This modules provides functionality for dealing with code completion.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import types
