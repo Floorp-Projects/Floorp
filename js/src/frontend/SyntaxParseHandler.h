@@ -361,6 +361,7 @@ class SyntaxParseHandler {
                                              Node member) {
     return true;
   }
+  void deleteConstructorScope(JSContext* cx, ListNodeType memberList) {}
   UnaryNodeType newYieldExpression(uint32_t begin, Node value) {
     return NodeGeneric;
   }

@@ -6992,6 +6992,10 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
         ctorbox->function()->lazyScript()->setHasThisBinding();
       }
     }
+
+    if (numFields == 0) {
+      handler_.deleteConstructorScope(cx_, classMembers);
+    }
   }
 
   return true;
