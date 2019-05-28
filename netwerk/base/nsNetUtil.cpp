@@ -99,6 +99,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsViewSourceHandler.h"
 #include "nsJARURI.h"
+#include "nsIconURI.h"
 #include "nsAboutProtocolHandler.h"
 #include "nsResProtocolHandler.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
@@ -1829,6 +1830,12 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
     return NS_MutateURI(new nsJARURI::Mutator())
         .Apply(NS_MutatorMethod(&nsIJARURIMutator::SetSpecBaseCharset,
                                 nsCString(aSpec), base, aCharset))
+        .Finalize(aURI);
+  }
+
+  if (scheme.EqualsLiteral("moz-icon")) {
+    return NS_MutateURI(new nsMozIconURI::Mutator())
+        .SetSpec(aSpec)
         .Finalize(aURI);
   }
 
