@@ -141,7 +141,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // Bug 1510806 has been filed to fix this properly, by making RDM resilient
       // to process flips.
       if (mustChangeProcess &&
-          tab.linkedBrowser.remoteType == "privilegedabout") {
+          tab.linkedBrowser.remoteType == "privileged") {
         debug(`Tab must flip away from the privileged content process ` +
               `on navigation`);
         gBrowser.updateBrowserRemoteness(tab.linkedBrowser, {

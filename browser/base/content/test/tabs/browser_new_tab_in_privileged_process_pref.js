@@ -5,9 +5,8 @@
  */
 
 /**
- * Tests to ensure that Activity Stream loads in the privileged about:
- * content process. Normal http web pages should load in the web content
- * process.
+ * Tests to ensure that Activity Stream loads in the privileged content process.
+ * Normal http web pages should load in the web content process.
  * Ref: Bug 1469072.
  */
 
@@ -17,29 +16,54 @@ const ABOUT_NEWTAB = "about:newtab";
 const ABOUT_WELCOME = "about:welcome";
 const TEST_HTTP = "http://example.org/";
 
+/**
+ * Takes a xul:browser and makes sure that the remoteTypes for the browser in
+ * both the parent and the child processes are the same.
+ *
+ * @param {xul:browser} browser
+ *        A xul:browser.
+ * @param {string} expectedRemoteType
+ *        The expected remoteType value for the browser in both the parent
+ *        and child processes.
+ * @param {optional string} message
+ *        If provided, shows this string as the message when remoteType values
+ *        do not match. If not present, it uses the default message defined
+ *        in the function parameters.
+ */
+function checkBrowserRemoteType(
+  browser,
+  expectedRemoteType,
+  message = `Ensures that tab runs in the ${expectedRemoteType} content process.`
+) {
+  // Check both parent and child to ensure that they have the correct remoteType.
+  is(browser.remoteType, expectedRemoteType, message);
+  is(browser.messageManager.remoteType, expectedRemoteType,
+    "Parent and child process should agree on the remote type.");
+}
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.newtab.preload", false],
       ["browser.tabs.remote.separatePrivilegedContentProcess", true],
-      ["dom.ipc.processCount.privilegedabout", 1],
-      ["dom.ipc.keepProcessesAlive.privilegedabout", 1],
+      ["dom.ipc.processCount.privileged", 1],
+      ["dom.ipc.keepProcessesAlive.privileged", 1],
     ],
   });
 });
 
 /*
- * Test to ensure that the Activity Stream tabs open in privileged about: content
+ * Test to ensure that the Activity Stream tabs open in privileged content
  * process. We will first open an about:newtab page that acts as a reference to
- * the privileged about:  content process. With the reference, we can then open
- * Activity Stream links in a new tab and ensure that the new tab opens in the same
- * privileged about: content process as our reference.
+ * the privileged content process. With the reference, we can then open Activity
+ * Stream links in a new tab and ensure that the new tab opens in the same
+ * privileged content process as our reference.
  */
 add_task(async function activity_stream_in_privileged_content_process() {
   Services.ppmm.releaseCachedProcesses();
 
   await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function(browser1) {
-    checkBrowserRemoteType(browser1, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE);
+    checkBrowserRemoteType(browser1, E10SUtils.PRIVILEGED_REMOTE_TYPE);
 
     // Note the processID for about:newtab for comparison later.
     let privilegedPid = browser1.frameLoader.remoteTab.osPid;
@@ -57,7 +81,7 @@ add_task(async function activity_stream_in_privileged_content_process() {
     ]) {
       await BrowserTestUtils.withNewTab(url, async function(browser2) {
         is(browser2.frameLoader.remoteTab.osPid, privilegedPid,
-          "Check that about:newtab tabs are in the same privileged about: content process.");
+          "Check that about:newtab tabs are in the same privileged content process.");
       });
     }
   });
@@ -76,25 +100,25 @@ add_task(async function process_switching_through_loading_in_the_same_tab() {
     checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
     for (let [url, remoteType] of [
-      [ABOUT_NEWTAB, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
-      [ABOUT_BLANK, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [ABOUT_NEWTAB, E10SUtils.PRIVILEGED_REMOTE_TYPE],
+      [ABOUT_BLANK, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
-      [ABOUT_HOME, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [ABOUT_HOME, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
-      [ABOUT_WELCOME, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [ABOUT_WELCOME, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
       [ABOUT_BLANK, E10SUtils.WEB_REMOTE_TYPE],
-      [`${ABOUT_NEWTAB}#foo`, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [`${ABOUT_NEWTAB}#foo`, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
-      [`${ABOUT_WELCOME}#bar`, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [`${ABOUT_WELCOME}#bar`, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
-      [`${ABOUT_HOME}#baz`, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [`${ABOUT_HOME}#baz`, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
-      [`${ABOUT_NEWTAB}?q=foo`, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [`${ABOUT_NEWTAB}?q=foo`, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
-      [`${ABOUT_WELCOME}?q=bar`, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [`${ABOUT_WELCOME}?q=bar`, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
-      [`${ABOUT_HOME}?q=baz`, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE],
+      [`${ABOUT_HOME}?q=baz`, E10SUtils.PRIVILEGED_REMOTE_TYPE],
       [TEST_HTTP, E10SUtils.WEB_REMOTE_TYPE],
     ]) {
       BrowserTestUtils.loadURI(browser, url);
@@ -115,7 +139,7 @@ add_task(async function process_switching_through_navigation_features() {
   Services.ppmm.releaseCachedProcesses();
 
   await BrowserTestUtils.withNewTab(ABOUT_NEWTAB, async function(browser) {
-    checkBrowserRemoteType(browser, E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE);
+    checkBrowserRemoteType(browser, E10SUtils.PRIVILEGED_REMOTE_TYPE);
 
     // Note the processID for about:newtab for comparison later.
     let privilegedPid = browser.frameLoader.remoteTab.osPid;
@@ -131,20 +155,20 @@ add_task(async function process_switching_through_navigation_features() {
     });
     browser = newTab.linkedBrowser;
     is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that new tab opened from about:newtab is loaded in privileged about: content process.");
+      "Check that new tab opened from about:newtab is loaded in privileged content process.");
 
-    // Check that reload does not break the privileged about: content process affinity.
+    // Check that reload does not break the privileged content process affinity.
     BrowserReload();
     await BrowserTestUtils.browserLoaded(browser, false, ABOUT_NEWTAB);
     is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that about:newtab is still in privileged about: content process after reload.");
+      "Check that about:newtab is still in privileged content process after reload.");
 
     // Load http webpage
     BrowserTestUtils.loadURI(browser, TEST_HTTP);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_HTTP);
     checkBrowserRemoteType(browser, E10SUtils.WEB_REMOTE_TYPE);
 
-    // Check that using the history back feature switches back to privileged about: content process.
+    // Check that using the history back feature switches back to privileged content process.
     let promiseLocation = BrowserTestUtils.waitForLocationChange(gBrowser, ABOUT_NEWTAB);
     browser.goBack();
     await promiseLocation;
@@ -152,7 +176,7 @@ add_task(async function process_switching_through_navigation_features() {
     // the navigation history data will be available when we do browser.goForward();
     await BrowserTestUtils.waitForEvent(newTab, "SSTabRestored");
     is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that about:newtab is still in privileged about: content process after history goBack.");
+      "Check that about:newtab is still in privileged content process after history goBack.");
 
     // Check that using the history forward feature switches back to the web content process.
     promiseLocation = BrowserTestUtils.waitForLocationChange(gBrowser, TEST_HTTP);
@@ -169,7 +193,7 @@ add_task(async function process_switching_through_navigation_features() {
     browser.gotoIndex(0);
     await promiseLocation;
     is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that about:newtab is in privileged about: content process after history gotoIndex.");
+      "Check that about:newtab is in privileged content process after history gotoIndex.");
 
     BrowserTestUtils.loadURI(browser, TEST_HTTP);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_HTTP);
@@ -181,7 +205,7 @@ add_task(async function process_switching_through_navigation_features() {
     });
     await BrowserTestUtils.browserLoaded(browser, false, ABOUT_NEWTAB);
     is(browser.frameLoader.remoteTab.osPid, privilegedPid,
-      "Check that about:newtab is in privileged about: content process after location change.");
+      "Check that about:newtab is in privileged content process after location change.");
   });
 
   Services.ppmm.releaseCachedProcesses();

@@ -32,6 +32,8 @@ function makeTest(name, startURL, startProcessIsRemote, endURL, endProcessIsRemo
   };
 }
 
+const CHROME_PROCESS = E10SUtils.NOT_REMOTE;
+const WEB_CONTENT_PROCESS = E10SUtils.WEB_REMOTE_TYPE;
 const PATH = (getRootDirectory(gTestPath) + "test_process_flags_chrome.html").replace("chrome://mochitests", "");
 
 const CHROME = "chrome://mochitests" + PATH;
@@ -46,16 +48,38 @@ registerCleanupFunction(() => {
   gBrowser.removeCurrentTab();
 });
 
+function test_url(url, chromeResult, contentResult) {
+  is(E10SUtils.canLoadURIInRemoteType(url, /* fission */ false, CHROME_PROCESS),
+     chromeResult, "Check URL in chrome process.");
+  is(E10SUtils.canLoadURIInRemoteType(url, /* fission */ false, WEB_CONTENT_PROCESS),
+     contentResult, "Check URL in web content process.");
+
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", /* fission */ false, CHROME_PROCESS),
+     chromeResult, "Check URL with ref in chrome process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "#foo", /* fission */ false, WEB_CONTENT_PROCESS),
+     contentResult, "Check URL with ref in web content process.");
+
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", /* fission */ false, CHROME_PROCESS),
+     chromeResult, "Check URL with query in chrome process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo", /* fission */ false, WEB_CONTENT_PROCESS),
+     contentResult, "Check URL with query in web content process.");
+
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", /* fission */ false, CHROME_PROCESS),
+     chromeResult, "Check URL with query and ref in chrome process.");
+  is(E10SUtils.canLoadURIInRemoteType(url + "?foo#bar", /* fission */ false, WEB_CONTENT_PROCESS),
+     contentResult, "Check URL with query and ref in web content process.");
+}
+
 add_task(async function test_chrome() {
-  test_url_for_process_types(CHROME, true, false, false, false, false);
+  test_url(CHROME, true, false);
 });
 
 add_task(async function test_any() {
-  test_url_for_process_types(CANREMOTE, true, true, false, false, false);
+  test_url(CANREMOTE, true, true);
 });
 
 add_task(async function test_remote() {
-  test_url_for_process_types(MUSTREMOTE, false, true, false, false, false);
+  test_url(MUSTREMOTE, false, true);
 });
 
 // The set of page transitions
