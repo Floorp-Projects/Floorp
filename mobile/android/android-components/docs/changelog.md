@@ -15,6 +15,15 @@ permalink: /changelog/
 * **browser-menu**
   * Fixed a bug where overscroll effects would appear on the overflow menu.
 
+* **concept-sync**, **service-accounts**
+  * ⚠️ **This is a breaking behavior change**: API changes to facilitate error handling; new method on AccountObserver interface.
+  * Added `onAuthenticationProblems` observer method, used for indicating that account needs to re-authenticate (e.g. after a password change).
+  * `FxaAccountManager` gained a new method, `accountNeedsReauth`, that could be used for the same purpose.
+  * `DeviceConstellation` methods that returned `Deferred<Unit>` now return `Deferred<Boolean>`, with a success flag.
+  * `OAuthAccount` methods that returned `Deferred` values now have an `Async` suffix in their names.
+  * `OAuthAccount` and `DeviceConstellation` methods that returned `Deferred<T>` (for some T) now return `Deferred<T?>`, where `null` means failure.
+  * `FirefoxAccount`, `FirefoxDeviceConstellation` and `FirefoxDeviceManager` now handle all expected `FxAException`.
+
 # 0.54.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.53.0...v0.54.0)
@@ -62,15 +71,6 @@ permalink: /changelog/
 
 * **browser-engine-gecko-nightly**, **concept-engine**:
   * Added `EngineSession.Observer.onRecordingStateChanged()` to get list of recording devices currently used by web content.
-
-* **concept-sync**, **service-accounts**
-  * ⚠️ **This is a breaking behavior change**: new method on AccountObserver interface.
-  * Added `onAuthenticationProblems` observer method, used for indicating that account needs to re-authenticate (e.g. after a password change).
-  * `FxaAccountManager` gained a new method, `accountNeedsReauth`, that could be used for the same purpose.
-  * `DeviceConstellation` methods that returned `Deferred<Unit>` now return `Deferred<Boolean>`, with a success flag.
-  * `OAuthAccount` methods that returned `Deferred` values now have an `Async` suffix in their names.
-  * `OAuthAccount` methods that returned `Deferred<T>` (for some T) now return `Deferred<T?>`, where `null` means failure.
-  * `FirefoxAccount`, `FirefoxDeviceConstellation` and `FirefoxDeviceManager` now handle all expected `FxAException`.
 
 # 0.53.0
 
