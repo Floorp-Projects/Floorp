@@ -468,9 +468,8 @@ static void BuildNestedPrintObjects(BrowsingContext* aBrowsingContext,
       continue;
     }
     auto childPO = MakeUnique<nsPrintObject>();
-    nsresult rv = childPO->InitAsNestedObject(childBC->GetDocShell(),
-                                              window->GetExtantDoc(),
-                                              aPO->mPrintPreview, aPO.get());
+    nsresult rv = childPO->InitAsNestedObject(
+        childBC->GetDocShell(), window->GetExtantDoc(), aPO.get());
     if (NS_FAILED(rv)) {
       MOZ_ASSERT_UNREACHABLE("Init failed?");
     }
