@@ -24,6 +24,19 @@ permalink: /changelog/
   * `OAuthAccount` and `DeviceConstellation` methods that returned `Deferred<T>` (for some T) now return `Deferred<T?>`, where `null` means failure.
   * `FirefoxAccount`, `FirefoxDeviceConstellation` and `FirefoxDeviceManager` now handle all expected `FxAException`.
 
+* **engine-gecko-nightly**, **engine-gecko-beta**, **concept-engine**
+  * Added engine API to clear browsing data.
+  ```kotlin
+  // Clear all browsing data
+  engine.clearData(BrowsingData.all())
+
+  // Clear all caches
+  engine.clearData(BrowsingData.allCaches())
+
+  // Clear cookies only for the provided host
+  engine.clearData(BrowsingData.select(BrowsingData.COOKIES), host = "mozilla.org")
+  ```
+
 # 0.54.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.53.0...v0.54.0)
