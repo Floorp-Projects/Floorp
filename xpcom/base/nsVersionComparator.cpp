@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <errno.h>
 #if defined(XP_WIN) && !defined(UPDATER_NO_STRING_GLUE_STL)
 #  include <wchar.h>
 #  include "nsString.h"
@@ -65,7 +66,19 @@ static char* ParseVP(char* aPart, VersionPart& aResult) {
     aResult.numA = INT32_MAX;
     aResult.strB = "";
   } else {
+    errno = 0;
     aResult.numA = strtol(aPart, const_cast<char**>(&aResult.strB), 10);
+
+    // Different platforms seem to disagree on what to return when the value
+    // is out of range so we ensure that it is always what we want it to be.
+    // We choose 0 firstly because that is the default when the number doesn't
+    // exist at all and also because it would be easier to recover from should
+    // you somehow end up in a situation where an old version is invalid. It is
+    // much easier to create a version either larger or smaller than 0, much
+    // harder to do the same with INT_MAX.
+    if (errno != 0) {
+      aResult.numA = 0;
+    }
   }
 
   if (!*aResult.strB) {
@@ -85,7 +98,14 @@ static char* ParseVP(char* aPart, VersionPart& aResult) {
       } else {
         aResult.strBlen = numstart - aResult.strB;
 
+        errno = 0;
         aResult.numC = strtol(numstart, &aResult.extraD, 10);
+
+        // See above for the rationale for using 0 here.
+        if (errno != 0) {
+          aResult.numC = 0;
+        }
+
         if (!*aResult.extraD) {
           aResult.extraD = nullptr;
         }
@@ -134,7 +154,13 @@ static wchar_t* ParseVP(wchar_t* aPart, VersionPartW& aResult) {
     aResult.numA = INT32_MAX;
     aResult.strB = kEmpty;
   } else {
+    errno = 0;
     aResult.numA = wcstol(aPart, const_cast<wchar_t**>(&aResult.strB), 10);
+
+    // See above for the rationale for using 0 here.
+    if (errno != 0) {
+      aResult.numA = 0;
+    }
   }
 
   if (!*aResult.strB) {
@@ -154,7 +180,14 @@ static wchar_t* ParseVP(wchar_t* aPart, VersionPartW& aResult) {
       } else {
         aResult.strBlen = numstart - aResult.strB;
 
+        errno = 0;
         aResult.numC = wcstol(numstart, &aResult.extraD, 10);
+
+        // See above for the rationale for using 0 here.
+        if (errno != 0) {
+          aResult.numC = 0;
+        }
+
         if (!*aResult.extraD) {
           aResult.extraD = nullptr;
         }
