@@ -95,10 +95,6 @@ class CollectionCreationUIView(
             false
         }
 
-        view.save_button.setOnClickListener {
-            actionEmitter.onNext(CollectionCreationAction.SaveTabsToCollection(selectedTabs.toList()))
-        }
-
         view.add_collection_button.setOnClickListener {
             actionEmitter.onNext(CollectionCreationAction.AddNewCollection)
         }
@@ -118,6 +114,7 @@ class CollectionCreationUIView(
     override fun updateView() = Consumer<CollectionCreationState> {
         step = it.saveCollectionStep
         selectedTabs = it.selectedTabs
+        selectedCollection = it.selectedTabCollection
 
         when (it.saveCollectionStep) {
             is SaveCollectionStep.SelectTabs -> {
@@ -158,7 +155,21 @@ class CollectionCreationUIView(
                         it.selectedTabs.size
                     )
                 }
+
                 view.select_tabs_layout_text.text = selectTabsText
+
+                save_button.setOnClickListener { _ ->
+                    if (selectedCollection != null) {
+                        actionEmitter.onNext(
+                            CollectionCreationAction.SelectCollection(
+                                selectedCollection!!,
+                                it.selectedTabs.toList()
+                            )
+                        )
+                    } else {
+                        actionEmitter.onNext(CollectionCreationAction.SaveTabsToCollection(selectedTabs.toList()))
+                    }
+                }
 
                 save_button.visibility = if (it.selectedTabs.isEmpty()) {
                     View.GONE
@@ -221,7 +232,6 @@ class CollectionCreationUIView(
             }
             is SaveCollectionStep.RenameCollection -> {
                 it.selectedTabCollection?.let { tabCollection ->
-                    selectedCollection = tabCollection
                     tabCollection.tabs.map { tab ->
                         Tab(
                             tab.id.toString(),

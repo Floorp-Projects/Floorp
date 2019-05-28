@@ -71,7 +71,6 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
@@ -410,7 +409,9 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 createDeleteCollectionPrompt(action.collection)
             }
             is CollectionAction.AddTab -> {
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1575")
+                showCollectionCreationFragment(
+                    selectedTabCollection = action.collection
+                )
             }
             is CollectionAction.Rename -> {
                 showCollectionCreationFragment(
