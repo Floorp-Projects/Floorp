@@ -416,6 +416,7 @@ XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutCertViewerHandler: "resource://gre/modules/AboutCertViewerHandler.jsm",
   AboutNetErrorHandler: "resource:///modules/aboutpages/AboutNetErrorHandler.jsm",
   AboutPrivateBrowsingHandler: "resource:///modules/aboutpages/AboutPrivateBrowsingHandler.jsm",
   AboutProtectionsHandler: "resource:///modules/aboutpages/AboutProtectionsHandler.jsm",
@@ -1386,6 +1387,8 @@ BrowserGlue.prototype = {
 
     NewTabUtils.init();
 
+    AboutCertViewerHandler.init();
+
     AboutNetErrorHandler.init();
 
     AboutPrivateBrowsingHandler.init();
@@ -1538,6 +1541,7 @@ BrowserGlue.prototype = {
 
     PageThumbs.uninit();
     NewTabUtils.uninit();
+    AboutCertViewerHandler.uninit();
     AboutNetErrorHandler.uninit();
     AboutPrivateBrowsingHandler.uninit();
     AboutProtectionsHandler.uninit();
