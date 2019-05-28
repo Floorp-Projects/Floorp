@@ -5,7 +5,6 @@
 from __future__ import unicode_literals
 
 import cPickle as pickle
-import json
 import os
 import unittest
 
@@ -408,7 +407,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += bar.c.pp',
             '$(MDDEPDIR)/bar.c.stub: %s/generate-bar.py' % env.topsrcdir,
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,
+            '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'export:: $(MDDEPDIR)/foo.c.stub',
@@ -418,7 +417,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += foo.c.pp',
             '$(MDDEPDIR)/foo.c.stub: %s/generate-foo.py $(srcdir)/foo-data' % (env.topsrcdir),
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(MDDEPDIR)/foo.c.stub $(srcdir)/foo-data)' % (env.topsrcdir),
+            '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(MDDEPDIR)/foo.c.stub $(srcdir)/foo-data)' % (env.topsrcdir),  # noqa
             '@$(TOUCH) $@',
             '',
         ]
@@ -441,7 +440,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += bar.c.pp',
             '$(MDDEPDIR)/bar.c.stub: %s/generate-bar.py FORCE' % env.topsrcdir,
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,
+            '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'export:: $(MDDEPDIR)/foo.c.stub',
@@ -451,7 +450,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += foo.c.pp',
             '$(MDDEPDIR)/foo.c.stub: %s/generate-foo.py $(srcdir)/foo-data' % (env.topsrcdir),
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(MDDEPDIR)/foo.c.stub $(srcdir)/foo-data)' % (env.topsrcdir),
+            '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(MDDEPDIR)/foo.c.stub $(srcdir)/foo-data)' % (env.topsrcdir),  # noqa
             '@$(TOUCH) $@',
             '',
         ]
@@ -472,9 +471,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'GARBAGE += foo.xyz',
             'GARBAGE += $(MDDEPDIR)/foo.xyz.stub',
             'EXTRA_MDDEPEND_FILES += foo.xyz.pp',
-            '$(MDDEPDIR)/foo.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(MDDEPDIR)/foo.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'LOCALIZED_FILES_0_FILES += foo.xyz',
@@ -499,9 +498,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'GARBAGE += foo.xyz',
             'GARBAGE += $(MDDEPDIR)/foo.xyz.stub',
             'EXTRA_MDDEPEND_FILES += foo.xyz.pp',
-            '$(MDDEPDIR)/foo.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(MDDEPDIR)/foo.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'libs:: $(MDDEPDIR)/abc.xyz.stub',
@@ -509,9 +508,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'GARBAGE += abc.xyz',
             'GARBAGE += $(MDDEPDIR)/abc.xyz.stub',
             'EXTRA_MDDEPEND_FILES += abc.xyz.pp',
-            '$(MDDEPDIR)/abc.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input FORCE' % env.topsrcdir,
+            '$(MDDEPDIR)/abc.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input FORCE' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main abc.xyz $(MDDEPDIR)/abc.xyz.pp $(MDDEPDIR)/abc.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main abc.xyz $(MDDEPDIR)/abc.xyz.pp $(MDDEPDIR)/abc.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
         ]
@@ -533,9 +532,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'GARBAGE += foo$(AB_CD).xyz',
             'GARBAGE += $(MDDEPDIR)/foo$(AB_CD).xyz.stub',
             'EXTRA_MDDEPEND_FILES += foo$(AB_CD).xyz.pp',
-            '$(MDDEPDIR)/foo$(AB_CD).xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(MDDEPDIR)/foo$(AB_CD).xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo$(AB_CD).xyz $(MDDEPDIR)/foo$(AB_CD).xyz.pp $(MDDEPDIR)/foo$(AB_CD).xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo$(AB_CD).xyz $(MDDEPDIR)/foo$(AB_CD).xyz.pp $(MDDEPDIR)/foo$(AB_CD).xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'include $(topsrcdir)/config/AB_rCD.mk',
@@ -543,18 +542,18 @@ class TestRecursiveMakeBackend(BackendTester):
             'GARBAGE += bar$(AB_rCD).xyz',
             'GARBAGE += $(MDDEPDIR)/bar$(AB_rCD).xyz.stub',
             'EXTRA_MDDEPEND_FILES += bar$(AB_rCD).xyz.pp',
-            '$(MDDEPDIR)/bar$(AB_rCD).xyz.stub: %s/generate-foo.py $(call MERGE_RELATIVE_FILE,localized-input,inner/locales) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(MDDEPDIR)/bar$(AB_rCD).xyz.stub: %s/generate-foo.py $(call MERGE_RELATIVE_FILE,localized-input,inner/locales) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main bar$(AB_rCD).xyz $(MDDEPDIR)/bar$(AB_rCD).xyz.pp $(MDDEPDIR)/bar$(AB_rCD).xyz.stub $(call MERGE_RELATIVE_FILE,localized-input,inner/locales) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main bar$(AB_rCD).xyz $(MDDEPDIR)/bar$(AB_rCD).xyz.pp $(MDDEPDIR)/bar$(AB_rCD).xyz.stub $(call MERGE_RELATIVE_FILE,localized-input,inner/locales) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'zot$(AB_rCD).xyz: $(MDDEPDIR)/zot$(AB_rCD).xyz.stub ;',
             'GARBAGE += zot$(AB_rCD).xyz',
             'GARBAGE += $(MDDEPDIR)/zot$(AB_rCD).xyz.stub',
             'EXTRA_MDDEPEND_FILES += zot$(AB_rCD).xyz.pp',
-            '$(MDDEPDIR)/zot$(AB_rCD).xyz.stub: %s/generate-foo.py $(call MERGE_RELATIVE_FILE,localized-input,locales) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(MDDEPDIR)/zot$(AB_rCD).xyz.stub: %s/generate-foo.py $(call MERGE_RELATIVE_FILE,localized-input,locales) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main zot$(AB_rCD).xyz $(MDDEPDIR)/zot$(AB_rCD).xyz.pp $(MDDEPDIR)/zot$(AB_rCD).xyz.stub $(call MERGE_RELATIVE_FILE,localized-input,locales) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main zot$(AB_rCD).xyz $(MDDEPDIR)/zot$(AB_rCD).xyz.pp $(MDDEPDIR)/zot$(AB_rCD).xyz.stub $(call MERGE_RELATIVE_FILE,localized-input,locales) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
         ]
@@ -757,7 +756,8 @@ class TestRecursiveMakeBackend(BackendTester):
             self.assertEqual(m, m2)
 
     def test_ipdl_sources(self):
-        """Test that PREPROCESSED_IPDL_SOURCES and IPDL_SOURCES are written to ipdlsrcs.mk correctly."""
+        """Test that PREPROCESSED_IPDL_SOURCES and IPDL_SOURCES are written to
+        ipdlsrcs.mk correctly."""
         env = self._get_environment('ipdl_sources')
 
         # Make substs writable so we can set the value of IPDL_ROOT to reflect
@@ -774,8 +774,7 @@ class TestRecursiveMakeBackend(BackendTester):
         topsrcdir = env.topsrcdir.replace(os.sep, '/')
 
         expected = [
-            "ALL_IPDLSRCS := bar1.ipdl foo1.ipdl %s/bar/bar.ipdl %s/bar/bar2.ipdlh %s/foo/foo.ipdl %s/foo/foo2.ipdlh" % tuple([
-                                                                                                                              topsrcdir] * 4),
+            "ALL_IPDLSRCS := bar1.ipdl foo1.ipdl %s/bar/bar.ipdl %s/bar/bar2.ipdlh %s/foo/foo.ipdl %s/foo/foo2.ipdlh" % tuple([topsrcdir] * 4),  # noqa
             "CPPSRCS := UnifiedProtocols0.cpp",
             "IPDLDIRS := %s %s/bar %s/foo" % (env.topobjdir, topsrcdir, topsrcdir),
         ]
@@ -820,8 +819,6 @@ class TestRecursiveMakeBackend(BackendTester):
         backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
-        topobjdir = env.topobjdir.replace('\\', '/')
-
         expected = [
             'LOCAL_INCLUDES += -I$(CURDIR)/bar/baz',
             'LOCAL_INCLUDES += -I$(CURDIR)/foo',
@@ -840,7 +837,7 @@ class TestRecursiveMakeBackend(BackendTester):
                  if not l.startswith('COMPUTED_')]
 
         expected = [
-            'RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libtest_library.a' % env.topobjdir,
+            'RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libtest_library.a' % env.topobjdir,  # noqa
             'CARGO_FILE := $(srcdir)/Cargo.toml',
             'CARGO_TARGET_DIR := %s' % env.topobjdir,
         ]
@@ -857,7 +854,7 @@ class TestRecursiveMakeBackend(BackendTester):
                  if not l.startswith('COMPUTED_')]
 
         expected = [
-            'HOST_RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libhostrusttool.a' % env.topobjdir,
+            'HOST_RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libhostrusttool.a' % env.topobjdir,  # noqa
             'CARGO_FILE := $(srcdir)/Cargo.toml',
             'CARGO_TARGET_DIR := %s' % env.topobjdir,
         ]
@@ -874,7 +871,7 @@ class TestRecursiveMakeBackend(BackendTester):
                  if not l.startswith('COMPUTED_')]
 
         expected = [
-            'HOST_RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libhostrusttool.a' % env.topobjdir,
+            'HOST_RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libhostrusttool.a' % env.topobjdir,  # noqa
             'CARGO_FILE := $(srcdir)/Cargo.toml',
             'CARGO_TARGET_DIR := %s' % env.topobjdir,
             'HOST_RUST_LIBRARY_FEATURES := musthave cantlivewithout',
@@ -892,7 +889,7 @@ class TestRecursiveMakeBackend(BackendTester):
                  if not l.startswith('COMPUTED_')]
 
         expected = [
-            'RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libfeature_library.a' % env.topobjdir,
+            'RUST_LIBRARY_FILE := %s/x86_64-unknown-linux-gnu/release/libfeature_library.a' % env.topobjdir,  # noqa
             'CARGO_FILE := $(srcdir)/Cargo.toml',
             'CARGO_TARGET_DIR := %s' % env.topobjdir,
             'RUST_LIBRARY_FEATURES := musthave cantlivewithout',
@@ -929,7 +926,7 @@ class TestRecursiveMakeBackend(BackendTester):
         """Test that FINAL_TARGET is written to backend.mk correctly."""
         env = self._consume('final_target', RecursiveMakeBackend)
 
-        final_target_rule = "FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)"
+        final_target_rule = "FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)"  # noqa
         expected = dict()
         expected[env.topobjdir] = []
         expected[mozpath.join(env.topobjdir, 'both')] = [

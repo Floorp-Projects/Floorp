@@ -61,7 +61,7 @@ class TestPartial(unittest.TestCase):
         myconfig = config.copy()
         env.write_vars(myconfig)
         with self.assertRaises(KeyError):
-            x = env.substs['MYSUBST']
+            _ = env.substs['MYSUBST']
         self.assertFalse(os.path.exists(path))
 
         myconfig['substs']['MYSUBST'] = 'new'
@@ -73,7 +73,7 @@ class TestPartial(unittest.TestCase):
         del myconfig['substs']['MYSUBST']
         env.write_vars(myconfig)
         with self.assertRaises(KeyError):
-            x = env.substs['MYSUBST']
+            _ = env.substs['MYSUBST']
         # Now that the subst is gone, the file still needs to be present so that
         # make can update dependencies correctly. Overwriting the file with
         # 'None' is the same as deleting it as far as the
@@ -107,7 +107,7 @@ class TestPartial(unittest.TestCase):
         self._assert_deps(env, ['defines/MOZ_FOO', 'defines/MOZ_BAR', 'substs/MOZ_SUBST_1'])
 
         with self.assertRaises(KeyError):
-            x = env.substs['NON_EXISTENT']
+            _ = env.substs['NON_EXISTENT']
         self._assert_deps(env, ['defines/MOZ_FOO', 'defines/MOZ_BAR',
                                 'substs/MOZ_SUBST_1', 'substs/NON_EXISTENT'])
         self.assertEqual(env.substs.get('NON_EXISTENT'), None)

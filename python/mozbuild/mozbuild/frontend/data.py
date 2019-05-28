@@ -21,13 +21,12 @@ from mozbuild.frontend.context import (
     ObjDirPath,
     SourcePath,
 )
-from mozbuild.util import StrictOrderingOnAppendList
 from mozpack.chrome.manifest import ManifestEntry
 
 import mozpack.path as mozpath
 from .context import FinalTargetValue
 
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import itertools
 
 from ..util import (
@@ -512,7 +511,8 @@ class BaseProgram(Linkable):
     @property
     def output_path(self):
         if self.installed:
-            return ObjDirPath(self._context, '!/' + mozpath.join(self.install_target, self.program))
+            return ObjDirPath(self._context, '!/' + mozpath.join(
+                self.install_target, self.program))
         else:
             return ObjDirPath(self._context, '!' + self.program)
 
@@ -1049,10 +1049,12 @@ class UnifiedSources(BaseSources):
 
             suffix = self.canonical_suffix[1:]
             unified_prefix = 'Unified_%s_%s' % (suffix, unified_prefix)
-            self.unified_source_mapping = list(group_unified_files(source_files,
-                                                                   unified_prefix=unified_prefix,
-                                                                   unified_suffix=suffix,
-                                                                   files_per_unified_file=files_per_unified_file))
+            self.unified_source_mapping = list(
+                group_unified_files(source_files,
+                                    unified_prefix=unified_prefix,
+                                    unified_suffix=suffix,
+                                    files_per_unified_file=files_per_unified_file)
+                )
 
 
 class InstallationTarget(ContextDerived):
@@ -1200,8 +1202,10 @@ class GeneratedFile(ContextDerived):
             '.inc',
             '.py',
             '.rs',
-            'node.stub',  # To avoid VPATH issues with installing node files: https://bugzilla.mozilla.org/show_bug.cgi?id=1461714#c55
-            # We need to compile Java to generate JNI wrappers for native code compilation to consume.
+            'node.stub',  # To avoid VPATH issues with installing node files:
+                          # https://bugzilla.mozilla.org/show_bug.cgi?id=1461714#c55
+            # We need to compile Java to generate JNI wrappers for native code
+            # compilation to consume.
             'android_apks',
             '.profdata',
             '.webidl'

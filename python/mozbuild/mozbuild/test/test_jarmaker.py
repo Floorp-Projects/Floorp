@@ -8,8 +8,6 @@ import unittest
 import os
 import sys
 import os.path
-import time
-import inspect
 from filecmp import dircmp
 from tempfile import mkdtemp
 from shutil import rmtree, copy2

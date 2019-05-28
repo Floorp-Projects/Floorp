@@ -12,12 +12,9 @@ import sys
 import shutil
 
 import mozpack.path as mozpath
-from mozbuild import shellutil
 from mozbuild.analyze.graph import Graph
 from mozbuild.analyze.hg import Report
 from mozbuild.base import MozbuildObject
-from mozbuild.backend.base import PartialBackend, HybridBackend
-from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.mozconfig import MozconfigLoader
 from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import OrderedDefaultDict
@@ -59,7 +56,6 @@ from ..frontend.data import (
 )
 from ..util import (
     FileAvoidWrite,
-    expand_variables,
 )
 from ..frontend.context import (
     AbsolutePath,
@@ -147,7 +143,8 @@ class BackendTupfile(object):
         else:
             caret_text = flags
 
-        self.write(': %(inputs)s%(extra_inputs)s |> %(display)s%(cmd)s |> %(outputs)s%(output_group)s\n' % {
+        self.write((': %(inputs)s%(extra_inputs)s |> %(display)s%(cmd)s |> '
+                    '%(outputs)s%(output_group)s\n') % {
             'inputs': ' '.join(inputs),
             'extra_inputs': ' | ' + ' '.join(extra_inputs) if extra_inputs else '',
             'display': '^%s^ ' % caret_text if caret_text else '',
@@ -272,7 +269,8 @@ class TupBackend(CommonBackend):
         self._rust_cmds = set()
 
         self._built_in_addons = set()
-        self._built_in_addons_file = 'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
+        self._built_in_addons_file = \
+            'dist/bin/browser/chrome/browser/content/browser/built_in_addons.json'
 
     def _output_group(self, label):
         if label:
@@ -671,11 +669,13 @@ class TupBackend(CommonBackend):
 
         for objdir, backend_file in sorted(self._backend_files.items()):
             backend_file.gen_sources_rules([self._installed_files])
-            for var, gen_method in ((backend_file.shared_lib, self._gen_shared_library),
-                                    (backend_file.static_lib and backend_file.static_lib.no_expand_lib,
-                                     self._gen_static_library),
-                                    (backend_file.programs, self._gen_programs),
-                                    (backend_file.host_programs, self._gen_host_programs)):
+            for var, gen_method in (
+                (backend_file.shared_lib, self._gen_shared_library),
+                (backend_file.static_lib and backend_file.static_lib.no_expand_lib,
+                 self._gen_static_library),
+                (backend_file.programs, self._gen_programs),
+                (backend_file.host_programs, self._gen_host_programs)
+            ):
                 if var:
                     backend_file.export_shell()
                     backend_file.export_icecc()
@@ -688,8 +688,9 @@ class TupBackend(CommonBackend):
                 pass
 
         with self._write_file(mozpath.join(self.environment.topobjdir, 'Tuprules.tup')) as fh:
-            acdefines_flags = ' '.join(['-D%s=%s' % (name, shell_quote(value))
-                                        for (name, value) in sorted(self.environment.acdefines.iteritems())])
+            acdefines_flags = ' '.join(
+                ['-D%s=%s' % (name, shell_quote(value))
+                 for (name, value) in sorted(self.environment.acdefines.iteritems())])
             # TODO: AB_CD only exists in Makefiles at the moment.
             acdefines_flags += ' -DAB_CD=en-US'
 
@@ -808,12 +809,10 @@ class TupBackend(CommonBackend):
 
         # Enable link-time optimization for release builds.
         cargo_library_flags = []
-        if (not obj.config.substs.get('DEVELOPER_OPTIONS') and
-            not obj.config.substs.get('MOZ_DEBUG_RUST')):
+        if not obj.config.substs.get('DEVELOPER_OPTIONS') and not obj.config.substs.get(
+            'MOZ_DEBUG_RUST'
+        ):
             cargo_library_flags += ['-C', 'lto']
-
-        rust_build_home = mozpath.join(self.environment.topobjdir,
-                                       'toolkit/library/rust')
 
         def display_name(invocation):
             output_str = ''
@@ -868,7 +867,9 @@ class TupBackend(CommonBackend):
 
             invocation['full-deps'] = set()
 
-            if os.path.basename(invocation['program']) in ['build-script-build', 'build-script-main']:
+            if os.path.basename(invocation['program']) in [
+                'build-script-build', 'build-script-main'
+            ]:
                 out_dir = invocation['env']['OUT_DIR']
                 for output in cargo_extra_outputs.get(shortname, []):
                     outputs.append(os.path.join(out_dir, output))
@@ -1118,8 +1119,9 @@ class TupBackend(CommonBackend):
                         if f.startswith('/') or isinstance(f, AbsolutePath):
                             basepath, wild = os.path.split(f.full_path)
                             if '*' in basepath:
-                                raise Exception("Wildcards are only supported in the filename part of "
-                                                "srcdir-relative or absolute paths.")
+                                raise Exception(
+                                    "Wildcards are only supported in the filename part of "
+                                    "srcdir-relative or absolute paths.")
 
                             # TODO: This is only needed for Windows, so we can
                             # skip this for now.
@@ -1148,7 +1150,6 @@ class TupBackend(CommonBackend):
 
                             finder = FileFinder(prefix)
                             for p, _ in finder.find(f.full_path[len(prefix):]):
-                                install_dir = prefix[len(obj.srcdir) + 1:]
                                 output = p
                                 if f.target_basename and '*' not in f.target_basename:
                                     output = mozpath.join(f.target_basename, output)
@@ -1160,7 +1161,8 @@ class TupBackend(CommonBackend):
                             f.full_path, output=f.target_basename, output_group=output_group)
                 else:
                     if (self.environment.is_artifact_build and
-                        any(mozpath.match(f.target_basename, p) for p in self._compile_env_gen_files)):
+                        any(mozpath.match(f.target_basename, p)
+                            for p in self._compile_env_gen_files)):
                         # If we have an artifact build we never would have generated this file,
                         # so do not attempt to install it.
                         continue

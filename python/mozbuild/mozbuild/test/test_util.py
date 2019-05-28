@@ -277,24 +277,24 @@ class TestHierarchicalStringList(unittest.TestCase):
                          "<type 'bool'>")
 
     def test_del_exports(self):
-        with self.assertRaises(MozbuildDeletionError) as mde:
+        with self.assertRaises(MozbuildDeletionError):
             self.EXPORTS.foo += ['bar.h']
             del self.EXPORTS.foo
 
     def test_unsorted(self):
-        with self.assertRaises(UnsortedError) as ee:
+        with self.assertRaises(UnsortedError):
             self.EXPORTS += ['foo.h', 'bar.h']
 
-        with self.assertRaises(UnsortedError) as ee:
+        with self.assertRaises(UnsortedError):
             self.EXPORTS.foo = ['foo.h', 'bar.h']
 
-        with self.assertRaises(UnsortedError) as ee:
+        with self.assertRaises(UnsortedError):
             self.EXPORTS.foo += ['foo.h', 'bar.h']
 
     def test_reassign(self):
         self.EXPORTS.foo = ['foo.h']
 
-        with self.assertRaises(KeyError) as ee:
+        with self.assertRaises(KeyError):
             self.EXPORTS.foo = ['bar.h']
 
     def test_walk(self):
@@ -503,7 +503,7 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
             l['a'] = 'foo'
 
         with self.assertRaises(Exception):
-            c = l['c']
+            l['c']
 
         self.assertEqual(l['a'].foo, False)
         l['a'].foo = True

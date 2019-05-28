@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import subprocess
 import unittest
 import shutil
 from StringIO import StringIO
@@ -287,7 +286,8 @@ class TestUrlFinder(unittest.TestCase):
                 ],
             },
             {
-                'chrome://global/content/netError.xhtml': 'chrome://browser/content/aboutNetError.xhtml',
+                'chrome://global/content/netError.xhtml':
+                    'chrome://browser/content/aboutNetError.xhtml',
             },
             {
                 'dist/bin/components/MainProcessSingleton.js': [
@@ -345,9 +345,6 @@ class TestUrlFinder(unittest.TestCase):
             self.assertEqual(url_finder.rewrite_url(path)[0], expected)
 
     def test_wrong_scheme_paths(self):
-        app_name = buildconfig.substs.get('MOZ_APP_NAME')
-        omnijar_name = buildconfig.substs.get('OMNIJAR_NAME')
-
         paths = [
             'http://www.mozilla.org/aFile.js',
             'https://www.mozilla.org/aFile.js',
@@ -376,7 +373,7 @@ class TestUrlFinder(unittest.TestCase):
             # Path which ends with > Function
             ('resource://gre/modules/osfile/osfile_async_worker.js line 3 > Function', None),
             # Path which contains "->"
-            ('resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/osfile/osfile_async_worker.js',
+            ('resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/osfile/osfile_async_worker.js',  # noqa
              ('toolkit/components/osfile/modules/osfile_async_worker.js', None)),
             # Path with pp_info
             ('resource://gre/modules/AppConstants.jsm', ('toolkit/modules/AppConstants.jsm', {

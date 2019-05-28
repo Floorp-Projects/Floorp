@@ -51,7 +51,6 @@ from ..frontend.data import (
     HostSources,
     InstallationTarget,
     JARManifest,
-    Library,
     Linkable,
     LocalInclude,
     LocalizedFiles,
@@ -59,7 +58,6 @@ from ..frontend.data import (
     ObjdirFiles,
     ObjdirPreprocessedFiles,
     PerSourceFlag,
-    PgoGenerateOnlySources,
     Program,
     RustLibrary,
     HostSharedLibrary,
@@ -313,7 +311,7 @@ class RecursiveMakeTraversal(object):
                 if start_node != '':
                     deps[start_node] = prev_nodes
                 prev_nodes = (start_node,)
-            if not start_node in self._traversal:
+            if start_node not in self._traversal:
                 return prev_nodes
             parallel_nodes = []
             for node in parallel:
@@ -339,7 +337,7 @@ class RecursiveMakeTraversal(object):
         current, parallel, sequential = self.call_filter(start, filter)
         if current is not None:
             yield start
-        if not start in self._traversal:
+        if start not in self._traversal:
             return
         for node in parallel:
             for n in self.traverse(node, filter):
@@ -599,12 +597,15 @@ class RecursiveMakeBackend(CommonBackend):
                 backend_file.write('GARBAGE += %s\n' % stub_file)
                 backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
 
-                backend_file.write("""{stub}: {script}{inputs}{backend}{force}
+                backend_file.write((
+                    """{stub}: {script}{inputs}{backend}{force}
 \t$(REPORT_BUILD)
-\t$(call py_action,file_generate,{locale}{script} {method} {output} $(MDDEPDIR)/{dep_file} {stub}{inputs}{flags})
+\t$(call py_action,file_generate,{locale}{script} """  # wrap for E501
+                    """{method} {output} $(MDDEPDIR)/{dep_file} {stub}{inputs}{flags})
 \t@$(TOUCH) $@
 
-""".format(stub=stub_file,
+""").format(
+                    stub=stub_file,
                     output=first_output,
                     dep_file=dep_file,
                     inputs=' ' + ' '.join(inputs) if inputs else '',
@@ -617,7 +618,9 @@ class RecursiveMakeBackend(CommonBackend):
                     force=force,
                     locale='--locale=$(AB_CD) ' if obj.localized else '',
                     script=obj.script,
-                    method=obj.method))
+                    method=obj.method
+                    )
+                )
 
         elif isinstance(obj, JARManifest):
             self._no_skip['libs'].add(backend_file.relobjdir)
@@ -813,8 +816,10 @@ class RecursiveMakeBackend(CommonBackend):
             # Directories containing rust compilations don't generally depend
             # on other directories in the tree, so putting them first here will
             # start them earlier in the build.
-            rule.add_dependencies(chain((r for r in roots if mozpath.dirname(r) in self._rust_dirs),
-                                        (r for r in roots if mozpath.dirname(r) not in self._rust_dirs)))
+            rule.add_dependencies(
+                chain((r for r in roots if mozpath.dirname(r) in self._rust_dirs),
+                      (r for r in roots if mozpath.dirname(r) not in self._rust_dirs))
+                )
             for target, deps in sorted(graph.items()):
                 if deps:
                     rule = root_deps_mk.create_rule([target])
@@ -897,9 +902,10 @@ class RecursiveMakeBackend(CommonBackend):
                                              all_sources))
 
         if include_curdir_build_rules:
-            makefile.add_statement('\n'
-                                   '# Make sometimes gets confused between "foo" and "$(CURDIR)/foo".\n'
-                                   '# Help it out by explicitly specifiying dependencies.')
+            makefile.add_statement(
+                '\n'
+                '# Make sometimes gets confused between "foo" and "$(CURDIR)/foo".\n'
+                '# Help it out by explicitly specifiying dependencies.')
             makefile.add_statement('all_absolute_unified_files := \\\n'
                                    '  $(addprefix $(CURDIR)/,$(%s))'
                                    % unified_files_makefile_variable)
@@ -1063,10 +1069,10 @@ class RecursiveMakeBackend(CommonBackend):
             return (mozpath.relpath(d.translated, base) for d in dirs)
 
         if obj.dirs:
-            fh.write('DIRS := %s\n' % ' '.join(
-                relativize(backend_file.objdir, obj.dirs)))
-            self._traversal.add(backend_file.relobjdir,
-                                dirs=relativize(self.environment.topobjdir, obj.dirs))
+            fh.write('DIRS := %s\n' % ' '.join(relativize(backend_file.objdir, obj.dirs)))
+            self._traversal.add(
+                backend_file.relobjdir, dirs=relativize(self.environment.topobjdir, obj.dirs)
+            )
 
         # The directory needs to be registered whether subdirectories have been
         # registered or not.
@@ -1091,7 +1097,9 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('FINAL_TARGET = $(DEPTH)/%s\n' % (obj.target))
         else:
             backend_file.write(
-                'FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)\n')
+                'FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),'
+                '$(DIST)/bin)$(DIST_SUBDIR:%=/%)\n'
+                )
 
         if not obj.enabled:
             backend_file.write('NO_DIST_INSTALL := 1\n')
@@ -1106,8 +1114,7 @@ class RecursiveMakeBackend(CommonBackend):
             self._install_manifests['dist_include'].add_optional_exists('%s.h' % stem)
 
         for module in manager.modules:
-            build_files.add_optional_exists(mozpath.join('.deps',
-                                                         '%s.pp' % module))
+            build_files.add_optional_exists(mozpath.join('.deps', '%s.pp' % module))
 
         modules = manager.modules
         xpt_modules = sorted(modules.keys())
@@ -1297,8 +1304,9 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_computed_flags(self, computed_flags, backend_file):
         for var, flags in computed_flags.get_flags():
-            backend_file.write('COMPUTED_%s += %s\n' % (var,
-                                                        ' '.join(make_quote(shell_quote(f)) for f in flags)))
+            backend_file.write(
+                'COMPUTED_%s += %s\n' % (var,
+                                         ' '.join(make_quote(shell_quote(f)) for f in flags)))
 
     def _process_non_default_target(self, libdef, target_name, backend_file):
         backend_file.write("%s:: %s\n" % (libdef.output_category, target_name))
@@ -1364,7 +1372,6 @@ class RecursiveMakeBackend(CommonBackend):
             return os.path.normpath(mozpath.join(mozpath.relpath(lib.objdir, obj.objdir),
                                                  name))
 
-        topobjdir = mozpath.normsep(obj.topobjdir)
         # This will create the node even if there aren't any linked libraries.
         build_target = self._build_target_for_obj(obj)
         self._compile_graph[build_target]
@@ -1517,8 +1524,8 @@ class RecursiveMakeBackend(CommonBackend):
                         if f.startswith('/') or isinstance(f, AbsolutePath):
                             basepath, wild = os.path.split(f.full_path)
                             if '*' in basepath:
-                                raise Exception("Wildcards are only supported in the filename part of "
-                                                "srcdir-relative or absolute paths.")
+                                raise Exception("Wildcards are only supported in the filename part"
+                                                " of srcdir-relative or absolute paths.")
 
                             install_manifest.add_pattern_link(basepath, wild, path)
                         else:
@@ -1740,8 +1747,9 @@ class RecursiveMakeBackend(CommonBackend):
                                       unified_files_makefile_variable='CPPSRCS')
 
         # Preprocessed ipdl files are generated in ipdl_dir.
-        mk.add_statement('IPDLDIRS := %s %s' % (ipdl_dir, ' '.join(sorted(set(mozpath.dirname(p)
-                                                                              for p in sorted_static_ipdl_sources)))))
+        mk.add_statement(
+            'IPDLDIRS := %s %s' % (ipdl_dir, ' '.join(sorted(set(mozpath.dirname(p)
+                                                      for p in sorted_static_ipdl_sources)))))
 
         with self._write_file(mozpath.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
             mk.dump(ipdls, removal_guard=False)

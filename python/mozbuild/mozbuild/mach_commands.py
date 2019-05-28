@@ -108,12 +108,12 @@ class Watch(MachCommandBase):
 
         if not conditions.is_artifact_build(self):
             print('mach watch requires an artifact build. See '
-                  'https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build')
+                  'https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_build')  # noqa
             return 1
 
         if not self.substs.get('WATCHMAN', None):
             print('mach watch requires watchman to be installed. See '
-                  'https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching')
+                  'https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching')  # noqa
             return 1
 
         self._activate_virtualenv()
@@ -121,7 +121,7 @@ class Watch(MachCommandBase):
             self.virtualenv_manager.install_pip_package('pywatchman==1.3.0')
         except Exception:
             print('Could not install pywatchman from pip. See '
-                  'https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching')
+                  'https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Incremental_builds_with_filesystem_watching')  # noqa
             return 1
 
         from mozbuild.faster_daemon import Daemon
@@ -310,7 +310,7 @@ class CargoProvider(MachCommandBase):
 
         if all_crates:
             crates = crates_and_roots.keys()
-        elif crates == None or crates == []:
+        elif crates is None or crates == []:
             crates = ['gkrust']
 
         for crate in crates:
@@ -354,6 +354,7 @@ class Doctor(MachCommandBase):
 class Clobber(MachCommandBase):
     NO_AUTO_LOG = True
     CLOBBER_CHOICES = ['objdir', 'python']
+
     @Command('clobber', category='build',
              description='Clobber the tree (delete the object directory).')
     @CommandArgument('what', default=['objdir'], nargs='*',
@@ -571,8 +572,9 @@ class Warnings(MachCommandBase):
                 continue
 
             if warning['column'] is not None:
-                print('%s:%d:%d [%s] %s' % (filename, warning['line'],
-                                            warning['column'], warning['flag'], warning['message']))
+                print('%s:%d:%d [%s] %s' % (
+                    filename, warning['line'], warning['column'],
+                    warning['flag'], warning['message']))
             else:
                 print('%s:%d [%s] %s' % (filename, warning['line'],
                                          warning['flag'], warning['message']))
@@ -592,8 +594,9 @@ class GTestCommands(MachCommandBase):
     @Command('gtest', category='testing',
              description='Run GTest unit tests (C++ tests).')
     @CommandArgument('gtest_filter', default=b"*", nargs='?', metavar='gtest_filter',
-                     help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
-                     "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
+                     help="test_filter is a ':'-separated list of wildcard patterns "
+                     "(called the positive patterns), optionally followed by a '-' "
+                     "and another ':'-separated pattern list (called the negative patterns).")
     @CommandArgument('--jobs', '-j', default='1', nargs='?', metavar='jobs', type=int,
                      help='Run the tests in parallel using multiple processes.')
     @CommandArgument('--tbpl-parser', '-t', action='store_true',
@@ -620,12 +623,14 @@ class GTestCommands(MachCommandBase):
                      help='(Android only) Path to gtest libxul.so.')
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
-                     help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
+                     help='Enable the debugger. Not specifying a --debugger option will result in '
+                     'the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
                      help='Name of debugger to use.')
     @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
                      group='debugging',
-                     help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
+                     help='Command-line arguments to pass to the debugger itself; '
+                     'split as the Bourne shell would.')
     def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser,
               package, adb_path, device_serial, remote_test_root, libxul_path,
               debug, debugger, debugger_args):
@@ -664,7 +669,8 @@ class GTestCommands(MachCommandBase):
             if debug or debugger or debugger_args:
                 print("--debug options are not supported on Android and will be ignored")
             return self.android_gtest(cwd, shuffle, gtest_filter,
-                                      package, adb_path, device_serial, remote_test_root, libxul_path)
+                                      package, adb_path, device_serial,
+                                      remote_test_root, libxul_path)
 
         if package or adb_path or device_serial or remote_test_root or libxul_path:
             print("One or more Android-only options will be ignored")
@@ -748,7 +754,7 @@ class GTestCommands(MachCommandBase):
         from mozlog.commandline import setup_logging
         format_args = {'level': self._mach_context.settings['test']['level']}
         default_format = self._mach_context.settings['test']['format']
-        log = setup_logging('mach-gtest', {}, {default_format: sys.stdout}, format_args)
+        setup_logging('mach-gtest', {}, {default_format: sys.stdout}, format_args)
 
         # ensure that a device is available and test app is installed
         from mozrunner.devices.android_device import (verify_android_device, get_adb_path)
@@ -916,11 +922,13 @@ class RunProgram(MachCommandBase):
     prog_group = 'the compiled program'
 
     @Command('run-desktop', category='post-build',
-        conditional_name='run',
-        conditions=[conditions.is_not_android],
+             conditional_name='run',
+             conditions=[conditions.is_not_android],
              description='Run the compiled program, possibly under a debugger or DMD.')
     @CommandArgument('params', nargs='...', group=prog_group,
-                     help='Command-line arguments to be passed through to the program. Not specifying a --profile or -P option will result in a temporary profile being used.')
+                     help='Command-line arguments to be passed through to the program. Not '
+                     'specifying a --profile or -P option will result in a temporary profile '
+                     'being used.')
     @CommandArgumentGroup(prog_group)
     @CommandArgument('--remote', '-r', action='store_true', group=prog_group,
                      help='Do not pass the --no-remote argument by default.')
@@ -933,19 +941,26 @@ class RunProgram(MachCommandBase):
     @CommandArgument('--enable-crash-reporter', action='store_true', group=prog_group,
                      help='Run the program with the crash reporter enabled.')
     @CommandArgument('--setpref', action='append', default=[], group=prog_group,
-                     help='Set the specified pref before starting the program. Can be set multiple times. Prefs can also be set in ~/.mozbuild/machrc in the [runprefs] section - see `./mach settings` for more information.')
+                     help='Set the specified pref before starting the program. Can be set '
+                     'multiple times. Prefs can also be set in ~/.mozbuild/machrc in the '
+                     '[runprefs] section - see `./mach settings` for more information.')
     @CommandArgument('--temp-profile', action='store_true', group=prog_group,
-                     help='Run the program using a new temporary profile created inside the objdir.')
+                     help='Run the program using a new temporary profile created inside '
+                     'the objdir.')
     @CommandArgument('--macos-open', action='store_true', group=prog_group,
-                     help="On macOS, run the program using the open(1) command. Per open(1), the browser is launched \"just as if you had double-clicked the file's icon\". The browser can not be launched under a debugger with this option.")
+                     help="On macOS, run the program using the open(1) command. Per open(1), "
+                     "the browser is launched \"just as if you had double-clicked the file's "
+                     "icon\". The browser can not be launched under a debugger with this option.")
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
-                     help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
+                     help='Enable the debugger. Not specifying a --debugger option will result '
+                     'in the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
                      help='Name of debugger to use.')
     @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
                      group='debugging',
-                     help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
+                     help='Command-line arguments to pass to the debugger itself; '
+                     'split as the Bourne shell would.')
     @CommandArgument('--debugparams', action=StoreDebugParamsAndWarnAction,
                      default=None, type=str, dest='debugger_args', group='debugging',
                      help=argparse.SUPPRESS)
@@ -1724,7 +1739,7 @@ class StaticAnalysisMonitor(object):
 
         try:
             warning = self._warnings_collector.process_line(line)
-        except:
+        except Exception:
             pass
 
         if line.find('clang-tidy') != -1:
@@ -1805,8 +1820,8 @@ class StaticAnalysis(MachCommandBase):
                      help='Output format to write in a file')
     @CommandArgument('--outgoing', default=False, action='store_true',
                      help='Run static analysis checks on outgoing files from mercurial repository')
-    def check(self, source=None, jobs=2, strip=1, verbose=False,
-              checks='-*', fix=False, header_filter='', output=None, format='text', outgoing=False):
+    def check(self, source=None, jobs=2, strip=1, verbose=False, checks='-*',
+              fix=False, header_filter='', output=None, format='text', outgoing=False):
         from mozbuild.controller.building import (
             StaticAnalysisFooter,
             StaticAnalysisOutputManager,
@@ -1820,7 +1835,8 @@ class StaticAnalysis(MachCommandBase):
             return rc
 
         if self._is_version_eligible() is False:
-            self.log(logging.ERROR, 'static-analysis', {}, "You're using an old version of clang-format binary."
+            self.log(logging.ERROR, 'static-analysis', {},
+                     "You're using an old version of clang-format binary."
                      " Please update to a more recent one by running: './mach bootstrap'")
             return 1
 
@@ -1895,11 +1911,12 @@ class StaticAnalysis(MachCommandBase):
                      help='Write coverity output translated to json output in a file')
     @CommandArgument('--coverity_output_path', '-co', default=None,
                      help='Path where to write coverity results as cov-results.json. '
-                     'If no path is specified the default path from the coverity working directory, '
-                     '~./mozbuild/coverity is used.')
+                     'If no path is specified the default path from the coverity working '
+                     'directory, ~./mozbuild/coverity is used.')
     @CommandArgument('--outgoing', default=False, action='store_true',
                      help='Run coverity on outgoing files from mercurial or git repository')
-    def check_coverity(self, source=[], output=None, coverity_output_path=None, outgoing=False, verbose=False):
+    def check_coverity(self, source=[], output=None, coverity_output_path=None,
+                       outgoing=False, verbose=False):
         self._set_log_level(verbose)
         self.log_manager.enable_all_structured_loggers()
 
@@ -1994,14 +2011,16 @@ class StaticAnalysis(MachCommandBase):
     def get_reliability_index_for_cov_checker(self, checker_name):
         if self._cov_config is None:
             self.log(logging.INFO, 'static-analysis', {}, 'Coverity config file not found, '
-                     'using default-value \'reliablity\' = medium. for checker {}'.format(checker_name))
+                     'using default-value \'reliablity\' = medium. for checker {}'.format(
+                        checker_name))
             return 'medium'
 
         checkers = self._cov_config['coverity_checkers']
         if checker_name not in checkers:
             self.log(logging.INFO, 'static-analysis', {},
                      'Coverity checker {} not found to determine reliability index. '
-                     'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
+                     'For the moment we shall use the default \'reliablity\' = medium.'.format(
+                        checker_name))
             return 'medium'
 
         if 'reliability' not in checkers[checker_name]:
@@ -2009,7 +2028,8 @@ class StaticAnalysis(MachCommandBase):
             self.log(logging.INFO, 'static-analysis', {},
                      'Coverity checker {} doesn\'t have a reliability index set, '
                      'field \'reliability is missing\', please cosinder adding it. '
-                     'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
+                     'For the moment we shall use the default \'reliablity\' = medium.'.format(
+                        checker_name))
             return 'medium'
 
         return checkers[checker_name]['reliability']
@@ -2033,7 +2053,9 @@ class StaticAnalysis(MachCommandBase):
                     'line': issue['mainEventLineNumber'],
                     'flag': issue['checkerName'],
                     'message': event_path['eventDescription'],
-                    'reliability': self.get_reliability_index_for_cov_checker(issue['checkerName']),
+                    'reliability': self.get_reliability_index_for_cov_checker(
+                        issue['checkerName']
+                        ),
                     'extra': {
                         'category': issue['checkerProperties']['category'],
                         'stateOnServer': issue['stateOnServer'],
@@ -2043,10 +2065,11 @@ class StaticAnalysis(MachCommandBase):
 
                 # Embed all events into extra message
                 for event in issue['events']:
-                    dict_issue['extra']['stack'].append({'file_path': event['strippedFilePathname'],
-                                                         'line_number': event['lineNumber'],
-                                                         'path_type': event['eventTag'],
-                                                         'description': event['eventDescription']})
+                    dict_issue['extra']['stack'].append(
+                        {'file_path': event['strippedFilePathname'],
+                         'line_number': event['lineNumber'],
+                         'path_type': event['eventTag'],
+                         'description': event['eventDescription']})
 
                 return dict_issue
 
@@ -2054,8 +2077,12 @@ class StaticAnalysis(MachCommandBase):
                 path = self.cov_is_file_in_source(issue['strippedMainEventFilePathname'], source)
                 if path is None:
                     # Since we skip a result we should log it
-                    self.log(logging.INFO, 'static-analysis', {}, 'Skipping CID: {0} from file: {1} since it\'s not related with the current patch.'.format(
-                        issue['stateOnServer']['cid'], issue['strippedMainEventFilePathname']))
+                    self.log(logging.INFO, 'static-analysis', {},
+                             'Skipping CID: {0} from file: {1} since it\'s not related '
+                             'with the current patch.'.format(
+                                issue['stateOnServer']['cid'],
+                                issue['strippedMainEventFilePathname'])
+                             )
                     continue
                 if path in files_list:
                     files_list[path]['warnings'].append(build_element(issue))
@@ -2340,7 +2367,7 @@ class StaticAnalysis(MachCommandBase):
                     if item['publish']:
                         checkers.append(item['name'])
                 tp_path = mozpath.join(self.topsrcdir, config['third_party'])
-            except Exception as e:
+            except Exception:
                 print('Looks like config.yaml is not valid, so we are unable '
                       'to determine default checkers, and which folder to '
                       'exclude, using defaults provided by infer')
@@ -2406,7 +2433,8 @@ class StaticAnalysis(MachCommandBase):
                 return True
         except subprocess.CalledProcessError as e:
             self.log(logging.ERROR, 'static-analysis', {},
-                     "Error determining the version clang-tidy/format binary, please see the attached exception: \n{}".format(e.output))
+                     "Error determining the version clang-tidy/format binary, please see the "
+                     "attached exception: \n{}".format(e.output))
 
         return False
 
@@ -2550,8 +2578,11 @@ class StaticAnalysis(MachCommandBase):
         platform, _ = self.platform
 
         if platform not in self._clang_tidy_config['platforms']:
-            self.log(logging.ERROR, 'static-analysis', {},
-                     "RUNNING: clang-tidy autotest for platform {} not supported.".format(platform))
+            self.log(
+                logging.ERROR, 'static-analysis', {},
+                "RUNNING: clang-tidy autotest for platform {} not supported.".format(
+                    platform)
+                )
             return self.TOOLS_UNSUPORTED_PLATFORM
 
         import concurrent.futures
@@ -2581,7 +2612,8 @@ class StaticAnalysis(MachCommandBase):
                 # 1. Checker attribute 'publish' is False.
                 not_published = not bool(item.get('publish', True))
                 # 2. Checker has restricted-platforms and current platform is not of them.
-                ignored_platform = 'restricted-platforms' in item and platform not in item['restricted-platforms']
+                ignored_platform = ('restricted-platforms' in item and
+                                    platform not in item['restricted-platforms'])
                 # 3. Checker name is mozilla-* or -*.
                 ignored_checker = item['name'] in ['mozilla-*', '-*']
                 # 4. List checker_names is passed and the current checker is not part of the
@@ -2619,20 +2651,29 @@ class StaticAnalysis(MachCommandBase):
 
                     message_to_log = ''
                     if checker_error == self.TOOLS_CHECKER_NOT_FOUND:
-                        message_to_log = "\tChecker {} not present in this clang-tidy version.".format(
-                            checker_name)
+                        message_to_log = \
+                            "\tChecker {} not present in this clang-tidy version.".format(
+                                checker_name)
                     elif checker_error == self.TOOLS_CHECKER_NO_TEST_FILE:
-                        message_to_log = "\tChecker {0} does not have a test file - {0}.cpp".format(
-                            checker_name)
+                        message_to_log = \
+                            "\tChecker {0} does not have a test file - {0}.cpp".format(
+                                checker_name)
                     elif checker_error == self.TOOLS_CHECKER_RETURNED_NO_ISSUES:
-                        message_to_log = "\tChecker {0} did not find any issues in its test file, clang-tidy output for the run is:\n{1}".format(
-                            checker_name, info1)
+                        message_to_log = (
+                            "\tChecker {0} did not find any issues in its test file, "
+                            "clang-tidy output for the run is:\n{1}"
+                            ).format(checker_name, info1)
                     elif checker_error == self.TOOLS_CHECKER_RESULT_FILE_NOT_FOUND:
-                        message_to_log = "\tChecker {0} does not have a result file - {0}.json".format(
-                            checker_name)
+                        message_to_log = \
+                            "\tChecker {0} does not have a result file - {0}.json".format(
+                                checker_name)
                     elif checker_error == self.TOOLS_CHECKER_DIFF_FAILED:
-                        message_to_log = "\tChecker {0}\nExpected: {1}\nGot: {2}\nclang-tidy output for the run is:\n{3}".format(
-                            checker_name, info1, info2, info3)
+                        message_to_log = (
+                            "\tChecker {0}\nExpected: {1}\n"
+                            "Got: {2}\n"
+                            "clang-tidy output for the run is:\n"
+                            "{3}"
+                            ).format(checker_name, info1, info2, info3)
 
                     print('\n'+message_to_log)
 
@@ -2674,8 +2715,11 @@ class StaticAnalysis(MachCommandBase):
             return self.TOOLS_CHECKER_LIST_EMPTY
 
         issues, clang_output = self._run_analysis(
-            checks='-*,' + ",".join(items), header_filter='',
-            sources=[mozpath.join(self._clang_tidy_base_path, "test", checker) + '.cpp' for checker in items], print_out=True)
+            checks='-*,' + ",".join(items),
+            header_filter='',
+            sources=[mozpath.join(self._clang_tidy_base_path, "test", checker) + '.cpp'
+                     for checker in items],
+            print_out=True)
 
         if issues is None:
             return self.TOOLS_CHECKER_FAILED_FILE
@@ -2705,7 +2749,8 @@ class StaticAnalysis(MachCommandBase):
                 print('\tChecker {0} expect following results: \n\t\t{1}'.format(
                     failed_check, baseline_issue))
 
-            print('This is the output generated by clang-tidy for the bulk build:\n{}'.format(clang_output))
+            print('This is the output generated by clang-tidy for the bulk build:\n{}'.format(
+                clang_output))
             return self.TOOLS_CHECKER_DIFF_FAILED
 
         return self.TOOLS_SUCCESS
@@ -2866,9 +2911,11 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('--force', action='store_true',
                      help='Force re-install even though the tool exists in mozbuild.',
                      default=False)
-    @CommandArgument('--minimal-install', action='store_true', help='Download only clang based tool.',
+    @CommandArgument('--minimal-install', action='store_true',
+                     help='Download only clang based tool.',
                      default=False)
-    def install(self, source=None, skip_cache=False, force=False, minimal_install=False, verbose=False):
+    def install(self, source=None, skip_cache=False, force=False, minimal_install=False,
+                verbose=False):
         self._set_log_level(verbose)
         rc = self._get_clang_tools(force=force, skip_cache=skip_cache,
                                    source=source, verbose=verbose)
@@ -2932,12 +2979,14 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('--output', '-o', default=None, dest='output_path',
                      help='Specify a file handle to write clang-format raw output instead of '
                           'applying changes. This can be stdout or a file path.')
-    @CommandArgument('--format', '-f', choices=('diff', 'json'), default='diff', dest='output_format',
+    @CommandArgument('--format', '-f', choices=('diff', 'json'), default='diff',
+                     dest='output_format',
                      help='Specify the output format used: diff is the raw patch provided by '
                      'clang-format, json is a list of atomic changes to process.')
     @CommandArgument('--outgoing', default=False, action='store_true',
                      help='Run clang-format on outgoing files from mercurial repository')
-    def clang_format(self, assume_filename, path, commit, output_path=None, output_format='diff', verbose=False, outgoing=False):
+    def clang_format(self, assume_filename, path, commit, output_path=None, output_format='diff',
+                     verbose=False, outgoing=False):
         # Run clang-format or clang-format-diff on the local changes
         # or files/directories
         if path is None and outgoing:
@@ -2978,7 +3027,8 @@ class StaticAnalysis(MachCommandBase):
                 return rc
 
         if self._is_version_eligible() is False:
-            self.log(logging.ERROR, 'static-analysis', {}, "You're using an old version of clang-format binary."
+            self.log(logging.ERROR, 'static-analysis', {},
+                     "You're using an old version of clang-format binary."
                      " Please update to a more recent one by running: './mach bootstrap'")
             return 1
 
@@ -2987,7 +3037,8 @@ class StaticAnalysis(MachCommandBase):
                                                self._clang_format_path, commit, output)
 
         if assume_filename:
-            return self._run_clang_format_in_console(self._clang_format_path, path, assume_filename)
+            return self._run_clang_format_in_console(self._clang_format_path,
+                                                     path, assume_filename)
 
         return self._run_clang_format_path(self._clang_format_path, path, output, output_format)
 
@@ -3010,7 +3061,7 @@ class StaticAnalysis(MachCommandBase):
         }
 
         # Verify if this checker actually exists
-        if not check in self._clang_tidy_checks:
+        if check not in self._clang_tidy_checks:
             checker_error['checker-error'] = self.TOOLS_CHECKER_NOT_FOUND
             checkers_results.append(checker_error)
             return self.TOOLS_CHECKER_NOT_FOUND
@@ -3154,7 +3205,7 @@ class StaticAnalysis(MachCommandBase):
             ran_configure = True
             try:
                 config = self.config_environment
-            except Exception as e:
+            except Exception:
                 pass
 
         return (0, config, ran_configure)
@@ -3216,10 +3267,10 @@ class StaticAnalysis(MachCommandBase):
         self._clang_apply_replacements = mozpath.join(
             self._clang_tools_path, "clang-tidy", "bin",
             "clang-apply-replacements" + config.substs.get('BIN_SUFFIX', ''))
-        self._run_clang_tidy_path = mozpath.join(self._clang_tools_path, "clang-tidy", "share", "clang",
-                                                 "run-clang-tidy.py")
-        self._clang_format_diff = mozpath.join(self._clang_tools_path, "clang-tidy", "share", "clang",
-                                               "clang-format-diff.py")
+        self._run_clang_tidy_path = mozpath.join(self._clang_tools_path, "clang-tidy",
+                                                 "share", "clang", "run-clang-tidy.py")
+        self._clang_format_diff = mozpath.join(self._clang_tools_path, "clang-tidy",
+                                               "share", "clang", "clang-format-diff.py")
         return 0
 
     def _do_clang_tools_exist(self):
@@ -3530,7 +3581,8 @@ class StaticAnalysis(MachCommandBase):
                         # here, we expect changes. if we are here, this means that
                         # there is a diff to show
                         if e.output:
-                            # Replace the temp path by the path relative to the repository to display a valid patch
+                            # Replace the temp path by the path relative to the repository to
+                            # display a valid patch
                             relative_path = os.path.relpath(original_path, self.topsrcdir)
                             patch = e.output.replace(target_file, relative_path)
                             patch = patch.replace(original_path, relative_path)
@@ -3643,11 +3695,13 @@ class Vendor(MachCommandBase):
         vendor_command.vendor(**kwargs)
 
     @SubCommand('vendor', 'aom',
-                description='Vendor av1 video codec reference implementation into the source repository.')
+                description='Vendor av1 video codec reference implementation into the '
+                'source repository.')
     @CommandArgument('-r', '--revision',
                      help='Repository tag or commit to update to.')
     @CommandArgument('--repo',
-                     help='Repository url to pull a snapshot from. Supports github and googlesource.')
+                     help='Repository url to pull a snapshot from. '
+                     'Supports github and googlesource.')
     @CommandArgument('--ignore-modified', action='store_true',
                      help='Ignore modified files in current checkout',
                      default=False)
@@ -3655,6 +3709,7 @@ class Vendor(MachCommandBase):
         from mozbuild.vendor_aom import VendorAOM
         vendor_command = self._spawn(VendorAOM)
         vendor_command.vendor(**kwargs)
+
     @SubCommand('vendor', 'dav1d',
                 description='Vendor dav1d implementation of AV1 into the source repository.')
     @CommandArgument('-r', '--revision',
@@ -3674,7 +3729,11 @@ class Vendor(MachCommandBase):
     @CommandArgument('--with-windows-wheel', action='store_true',
                      help='Vendor a wheel for Windows along with the source package',
                      default=False)
-    @CommandArgument('packages', default=None, nargs='*', help='Packages to vendor. If omitted, packages and their dependencies defined in Pipfile.lock will be vendored. If Pipfile has been modified, then Pipfile.lock will be regenerated. Note that transient dependencies may be updated when running this command.')
+    @CommandArgument('packages', default=None, nargs='*',
+                     help='Packages to vendor. If omitted, packages and their dependencies '
+                     'defined in Pipfile.lock will be vendored. If Pipfile has been modified, '
+                     'then Pipfile.lock will be regenerated. Note that transient dependencies '
+                     'may be updated when running this command.')
     def vendor_python(self, **kwargs):
         from mozbuild.vendor_python import VendorPython
         vendor_command = self._spawn(VendorPython)
@@ -3698,16 +3757,19 @@ class WebRTCGTestCommands(GTestCommands):
     @Command('webrtc-gtest', category='testing',
              description='Run WebRTC.org GTest unit tests.')
     @CommandArgument('gtest_filter', default=b"*", nargs='?', metavar='gtest_filter',
-                     help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
-                     "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
+                     help="test_filter is a ':'-separated list of wildcard patterns "
+                     "(called the positive patterns), optionally followed by a '-' and "
+                     "another ':'-separated pattern list (called the negative patterns).")
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
-                     help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
+                     help='Enable the debugger. Not specifying a --debugger option will '
+                     'result in the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
                      help='Name of debugger to use.')
     @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
                      group='debugging',
-                     help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
+                     help='Command-line arguments to pass to the debugger itself; '
+                     'split as the Bourne shell would.')
     def gtest(self, gtest_filter, debug, debugger,
               debugger_args):
         app_path = self.get_binary_path('webrtc-gtest')
@@ -3878,7 +3940,8 @@ class Analyze(MachCommandBase):
             return 1
 
     @SubCommand('analyze', 'all',
-                description='Get a report of files changed within the last n days and their corresponding build cost.')
+                description='Get a report of files changed within the last n days and '
+                'their corresponding build cost.')
     @CommandArgument('--days', '-d', type=int, default=14,
                      help='Number of days to include in the report.')
     @CommandArgument('--format', default='pretty',

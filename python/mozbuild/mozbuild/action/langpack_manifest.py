@@ -26,7 +26,6 @@ from mozpack.chrome.manifest import (
 )
 from mozbuild.configure.util import Version
 from mozbuild.preprocessor import Preprocessor
-import buildconfig
 
 
 def write_file(path, content):

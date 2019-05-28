@@ -6,18 +6,14 @@ from __future__ import absolute_import
 
 import errno
 import glob
-import random
 import os
 import shutil
 import subprocess
-import types
 from xml.sax.saxutils import quoteattr
-import xml.etree.ElementTree as ET
 from .common import CommonBackend
 
 from ..frontend.data import (
     ComputedFlags,
-    Defines,
 )
 from mozbuild.base import ExecutionSummary
 
@@ -195,7 +191,7 @@ class CppEclipseBackend(CommonBackend):
         self._write_noindex()
 
         try:
-            process = subprocess.check_call(
+            subprocess.check_call(
                              ["eclipse", "-application", "-nosplash",
                               "org.eclipse.cdt.managedbuilder.core.headlessbuild",
                               "-data", self._workspace_dir, "-importAll", self._project_dir])
@@ -382,8 +378,8 @@ PROJECT_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                 <buildCommand>
                         <name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
                         <triggers></triggers>
-			<arguments>
-			</arguments>
+            <arguments>
+            </arguments>
                 </buildCommand>
         </buildSpec>
         <natures>
@@ -481,7 +477,7 @@ CPROJECT_TEMPLATE_HEADER = """<?xml version="1.0" encoding="UTF-8" standalone="n
                                         <folderInfo id="0.1674256904." name="/" resourcePath="">
                                                 <toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.1276586933" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
                                                         <targetPlatform archList="all" binaryParser="" id="cdt.managedbuild.targetPlatform.gnu.cross.710759961" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder arguments="--log-no-times build" buildPath="@PROJECT_TOPSRCDIR@" command="@MACH_COMMAND@" enableCleanBuild="false" incrementalBuildTarget="binaries" id="org.eclipse.cdt.build.core.settings.default.builder.1437267827" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+                            <builder arguments="--log-no-times build" buildPath="@PROJECT_TOPSRCDIR@" command="@MACH_COMMAND@" enableCleanBuild="false" incrementalBuildTarget="binaries" id="org.eclipse.cdt.build.core.settings.default.builder.1437267827" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
                                                 </toolChain>
                                         </folderInfo>
 """
@@ -495,9 +491,9 @@ CPROJECT_TEMPLATE_FILEINFO = """                                        <fileInf
                                         </fileInfo>
 """
 CPROJECT_TEMPLATE_FOOTER = """
-					<sourceEntries>
-						<entry excluding="**/lib*|**/third_party/|tree/*.xcodeproj/|tree/.cargo/|tree/.vscode/|tree/build/|tree/extensions/|tree/gfx/angle/|tree/gfx/cairo/|tree/gfx/skia/skia/|tree/intl/icu/|tree/js/|tree/media/|tree/modules/freetype2|tree/modules/pdfium/|tree/netwerk/|tree/netwerk/sctp|tree/netwerk/srtp|tree/nsprpub/lib|tree/nsprpub/pr/src|tree/other-licenses/|tree/parser/|tree/python/|tree/security/nss/|tree/tools/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
-					</sourceEntries>
+                    <sourceEntries>
+                        <entry excluding="**/lib*|**/third_party/|tree/*.xcodeproj/|tree/.cargo/|tree/.vscode/|tree/build/|tree/extensions/|tree/gfx/angle/|tree/gfx/cairo/|tree/gfx/skia/skia/|tree/intl/icu/|tree/js/|tree/media/|tree/modules/freetype2|tree/modules/pdfium/|tree/netwerk/|tree/netwerk/sctp|tree/netwerk/srtp|tree/nsprpub/lib|tree/nsprpub/pr/src|tree/other-licenses/|tree/parser/|tree/python/|tree/security/nss/|tree/tools/" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+                    </sourceEntries>
                                 </configuration>
                         </storageModule>
                         <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -539,38 +535,38 @@ WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" s
 
 LANGUAGE_SETTINGS_TEMPLATE_HEADER = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project>
-	<configuration id="0.1674256904" name="Default">
-		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
-			<provider class="org.eclipse.cdt.core.language.settings.providers.LanguageSettingsGenericProvider" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider" name="CDT User Setting Entries" prefer-non-shared="true" store-entries-with-project="true">
-				<language id="org.eclipse.cdt.core.g++">
+    <configuration id="0.1674256904" name="Default">
+        <extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
+            <provider class="org.eclipse.cdt.core.language.settings.providers.LanguageSettingsGenericProvider" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider" name="CDT User Setting Entries" prefer-non-shared="true" store-entries-with-project="true">
+                <language id="org.eclipse.cdt.core.g++">
 """
 
-LANGUAGE_SETTINGS_TEMPLATE_DIR_HEADER = """					<resource project-relative-path="@RELATIVE_PATH@">
-						<entry kind="includeFile" name="@PREINCLUDE_FILE_PATH@">
-							<flag value="LOCAL"/>
-						</entry>
+LANGUAGE_SETTINGS_TEMPLATE_DIR_HEADER = """                 <resource project-relative-path="@RELATIVE_PATH@">
+                        <entry kind="includeFile" name="@PREINCLUDE_FILE_PATH@">
+                            <flag value="LOCAL"/>
+                        </entry>
 """
 
-LANGUAGE_SETTINGS_TEMPLATE_DIR_INCLUDE = """						<entry kind="includePath" name="@INCLUDE_PATH@">
-							<flag value="LOCAL"/>
-						</entry>
+LANGUAGE_SETTINGS_TEMPLATE_DIR_INCLUDE = """                        <entry kind="includePath" name="@INCLUDE_PATH@">
+                            <flag value="LOCAL"/>
+                        </entry>
 """
 
-LANGUAGE_SETTINGS_TEMPLATE_DIR_DEFINE = """						<entry kind="macro" name="@NAME@" value=@VALUE@/>
+LANGUAGE_SETTINGS_TEMPLATE_DIR_DEFINE = """                        <entry kind="macro" name="@NAME@" value=@VALUE@/>
 """
 
-LANGUAGE_SETTINGS_TEMPLATE_DIR_FOOTER = """					</resource>
+LANGUAGE_SETTINGS_TEMPLATE_DIR_FOOTER = """                    </resource>
 """
 
-LANGUAGE_SETTINGS_TEMPLATE_FOOTER = """				</language>
-			</provider>
-			<provider class="org.eclipse.cdt.internal.build.crossgcc.CrossGCCBuiltinSpecsDetector" console="false" env-hash="-859273372804152468" id="org.eclipse.cdt.build.crossgcc.CrossGCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT Cross GCC Built-in Compiler Settings" parameter="@COMPILER_FLAGS@ -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11" prefer-non-shared="true" store-entries-with-project="true">
-				<language-scope id="org.eclipse.cdt.core.gcc"/>
-				<language-scope id="org.eclipse.cdt.core.g++"/>
-			</provider>
-			<provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
-		</extension>
-	</configuration>
+LANGUAGE_SETTINGS_TEMPLATE_FOOTER = """                </language>
+                </provider>
+            <provider class="org.eclipse.cdt.internal.build.crossgcc.CrossGCCBuiltinSpecsDetector" console="false" env-hash="-859273372804152468" id="org.eclipse.cdt.build.crossgcc.CrossGCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT Cross GCC Built-in Compiler Settings" parameter="@COMPILER_FLAGS@ -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11" prefer-non-shared="true" store-entries-with-project="true">
+                <language-scope id="org.eclipse.cdt.core.gcc"/>
+                <language-scope id="org.eclipse.cdt.core.g++"/>
+            </provider>
+            <provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
+        </extension>
+    </configuration>
 </project>
 """
 

@@ -59,8 +59,9 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     if objcopy:
         os.environ['OBJCOPY'] = objcopy
 
-    args = ([buildconfig.substs['PYTHON'], os.path.join(buildconfig.topsrcdir, 'toolkit',
-                                                        'crashreporter', 'tools', 'symbolstore.py')] +
+    args = ([buildconfig.substs['PYTHON'],
+             os.path.join(buildconfig.topsrcdir, 'toolkit',
+                          'crashreporter', 'tools', 'symbolstore.py')] +
             sym_store_args +
             ['-s', buildconfig.topsrcdir, dump_syms_bin, os.path.join(buildconfig.topobjdir,
                                                                       'dist',

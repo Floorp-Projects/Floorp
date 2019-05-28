@@ -134,8 +134,9 @@ class SupportFilesConverter(object):
                 # directory for the benefit of tests specifying 'install-to-subdir'.
                 key = field, pattern, out_dir
                 if key in info.seen:
-                    raise ValueError("%s appears multiple times in a test manifest under a %s field,"
-                                     " please omit the duplicate entry." % (pattern, field))
+                    raise ValueError(
+                        "%s appears multiple times in a test manifest under a %s field,"
+                        " please omit the duplicate entry." % (pattern, field))
                 info.seen.add(key)
                 if key in seen:
                     continue
