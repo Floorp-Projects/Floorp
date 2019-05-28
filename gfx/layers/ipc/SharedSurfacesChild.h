@@ -15,6 +15,7 @@
 #include "mozilla/gfx/UserData.h"              // for UserDataKey
 #include "mozilla/webrender/WebRenderTypes.h"  // for wr::ImageKey
 #include "nsTArray.h"                          // for AutoTArray
+#include "nsThreadUtils.h"                     // for Runnable
 #include "ImageTypes.h"                        // for ContainerProducerID
 
 namespace mozilla {
@@ -138,20 +139,20 @@ class SharedSurfacesChild {
 
   friend class SharedSurfacesAnimation;
 
-  class SharedUserData final {
+  class SharedUserData final : public Runnable {
    public:
-    SharedUserData() : mShared(false) {}
-
-    explicit SharedUserData(const wr::ExternalImageId& aId)
-        : mId(aId), mShared(false) {}
-
-    ~SharedUserData();
+    explicit SharedUserData(const wr::ExternalImageId& aId);
+    virtual ~SharedUserData();
 
     SharedUserData(const SharedUserData& aOther) = delete;
     SharedUserData& operator=(const SharedUserData& aOther) = delete;
 
     SharedUserData(SharedUserData&& aOther) = delete;
     SharedUserData& operator=(SharedUserData&& aOther) = delete;
+
+    static void Destroy(void* aClosure);
+
+    NS_IMETHOD Run() override;
 
     const wr::ExternalImageId& Id() const { return mId; }
 
