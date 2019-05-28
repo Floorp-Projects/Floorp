@@ -322,7 +322,7 @@
     },
 
     "ExtensionSettings": {
-      "type": "object",
+      "type": ["JSON", "object"],
       "properties": {
         "*": {
           "type": "object",
