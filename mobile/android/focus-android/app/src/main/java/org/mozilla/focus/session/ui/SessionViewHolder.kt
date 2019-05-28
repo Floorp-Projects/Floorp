@@ -19,7 +19,7 @@ import java.lang.ref.WeakReference
 class SessionViewHolder internal constructor(
     private val fragment: SessionsSheetFragment,
     private val textView: TextView
-) : androidx.recyclerview.widget.RecyclerView.ViewHolder(textView), View.OnClickListener {
+) : RecyclerView.ViewHolder(textView), View.OnClickListener {
     companion object {
         @JvmField
         internal val LAYOUT_ID = R.layout.item_session

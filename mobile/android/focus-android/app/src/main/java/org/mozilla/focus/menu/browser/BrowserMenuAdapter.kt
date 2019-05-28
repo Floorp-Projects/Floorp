@@ -25,7 +25,7 @@ class BrowserMenuAdapter(
     private val menu: BrowserMenu,
     private val fragment: BrowserFragment,
     customTabConfig: CustomTabConfig?
-) : androidx.recyclerview.widget.RecyclerView.Adapter<BrowserMenuViewHolder>() {
+) : RecyclerView.Adapter<BrowserMenuViewHolder>() {
     sealed class MenuItem {
         open val viewType = 0
 

@@ -21,7 +21,7 @@ import org.mozilla.focus.whatsnew.WhatsNew
 class HomeMenuAdapter(
     context: Context,
     private val listener: View.OnClickListener
-) : androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items: List<MenuItem> = listOf(
             MenuItem(R.id.whats_new, WhatsNewViewHolder.LAYOUT_ID, context.getString(R.string.menu_whats_new)),
@@ -29,7 +29,7 @@ class HomeMenuAdapter(
             MenuItem(R.id.settings, MenuItemViewHolder.LAYOUT_ID, context.getString(R.string.menu_settings))
     )
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
@@ -39,7 +39,7 @@ class HomeMenuAdapter(
         }
     }
 
-    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is MenuItemViewHolder -> holder.bind(items[position])
             is WhatsNewViewHolder -> holder.bind()
@@ -58,7 +58,7 @@ class HomeMenuAdapter(
 private class MenuItemViewHolder(
     val labelView: TextView,
     val listener: View.OnClickListener
-) : androidx.recyclerview.widget.RecyclerView.ViewHolder(labelView) {
+) : RecyclerView.ViewHolder(labelView) {
 
     companion object {
         val LAYOUT_ID: Int = R.layout.menu_item
@@ -79,7 +79,7 @@ private class MenuItemViewHolder(
 private class WhatsNewViewHolder(
     itemView: View,
     val listener: View.OnClickListener
-) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+) : RecyclerView.ViewHolder(itemView) {
     val dotView: View = itemView.findViewById(R.id.dot)
 
     companion object {

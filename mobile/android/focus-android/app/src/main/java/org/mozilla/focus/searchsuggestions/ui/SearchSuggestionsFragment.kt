@@ -120,7 +120,8 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         enable_search_suggestions_subtitle.movementMethod = LinkMovementMethod.getInstance()
         enable_search_suggestions_subtitle.highlightColor = Color.TRANSPARENT
 
-        suggestionList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity, androidx.recyclerview.widget.RecyclerView.VERTICAL, false)
+        suggestionList.layoutManager = LinearLayoutManager(activity,
+                RecyclerView.VERTICAL, false)
         suggestionList.adapter = SuggestionsAdapter {
             searchSuggestionsViewModel.selectSearchSuggestion(it)
         }
@@ -181,7 +182,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
     inner class SuggestionsAdapter(
         private val clickListener: (String) -> Unit
-    ) : androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
+    ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         inner class DiffCallback(
             private val oldSuggestions: List<SpannableStringBuilder>,
             private val newSuggestions: List<SpannableStringBuilder>
@@ -211,7 +212,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
             }
         }
 
-        override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.isEmpty()) {
                 super.onBindViewHolder(holder, position, payloads)
             } else {
@@ -221,7 +222,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
             }
         }
 
-        override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             if (holder is SuggestionViewHolder) {
                 holder.bind(suggestions[position])
             }
@@ -233,7 +234,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
             return SuggestionViewHolder.LAYOUT_ID
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             return SuggestionViewHolder(
                     LayoutInflater.from(parent.context).inflate(viewType, parent, false),
                     clickListener)
@@ -247,7 +248,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 private class SuggestionViewHolder(
     itemView: View,
     private val clickListener: (String) -> Unit
-) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+) : RecyclerView.ViewHolder(itemView) {
     companion object {
         const val LAYOUT_ID = R.layout.item_suggestion
     }

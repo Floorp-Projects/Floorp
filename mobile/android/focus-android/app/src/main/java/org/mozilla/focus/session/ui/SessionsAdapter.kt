@@ -18,8 +18,8 @@ import org.mozilla.focus.ext.requireComponents
 class SessionsAdapter internal constructor(
     private val fragment: SessionsSheetFragment,
     private var sessions: List<Session> = emptyList()
-) : androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>(), SessionManager.Observer {
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), SessionManager.Observer {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
 
         return when (viewType) {
@@ -35,7 +35,7 @@ class SessionsAdapter internal constructor(
         }
     }
 
-    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder.itemViewType) {
             EraseViewHolder.LAYOUT_ID -> { /* Nothing to do */ }
             SessionViewHolder.LAYOUT_ID -> (holder as SessionViewHolder).bind(sessions[position])

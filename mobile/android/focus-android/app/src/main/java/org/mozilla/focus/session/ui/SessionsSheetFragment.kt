@@ -45,8 +45,8 @@ class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
         val sessionsAdapter = SessionsAdapter(this, sessionManager.sessions)
         sessionManager.register(sessionsAdapter, owner = this)
 
-        view.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.sessions).let {
-            it.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context, androidx.recyclerview.widget.RecyclerView.VERTICAL, false)
+        view.findViewById<RecyclerView>(R.id.sessions).let {
+            it.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
             it.adapter = sessionsAdapter
         }
 

@@ -53,9 +53,9 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
     val itemTouchHelper: ItemTouchHelper = ItemTouchHelper(
             object : SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
                 override fun onMove(
-                    recyclerView: androidx.recyclerview.widget.RecyclerView,
-                    viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
-                    target: androidx.recyclerview.widget.RecyclerView.ViewHolder
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
                 ): Boolean {
                     val from = viewHolder.adapterPosition
                     val to = target.adapterPosition
@@ -65,9 +65,9 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
                     return true
                 }
 
-                override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {}
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
 
-                override fun getMovementFlags(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder): Int {
+                override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                     if (viewHolder is AddActionViewHolder) {
                         return ItemTouchHelper.Callback.makeMovementFlags(0, 0)
                     }
@@ -75,7 +75,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
                     return super.getMovementFlags(recyclerView, viewHolder)
                 }
 
-                override fun onSelectedChanged(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder?, actionState: Int) {
+                override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
                     super.onSelectedChanged(viewHolder, actionState)
 
                     if (viewHolder is DomainViewHolder) {
@@ -83,7 +83,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
                     }
                 }
 
-                override fun clearView(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder) {
+                override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                     super.clearView(recyclerView, viewHolder)
 
                     if (viewHolder is DomainViewHolder) {
@@ -92,9 +92,9 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
                 }
 
                 override fun canDropOver(
-                    recyclerView: androidx.recyclerview.widget.RecyclerView,
-                    current: androidx.recyclerview.widget.RecyclerView.ViewHolder,
-                    target: androidx.recyclerview.widget.RecyclerView.ViewHolder
+                    recyclerView: RecyclerView,
+                    current: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
                 ): Boolean {
                     if (target is AddActionViewHolder) {
                         return false
@@ -119,7 +119,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
             inflater.inflate(R.layout.fragment_autocomplete_customdomains, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        domainList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity, androidx.recyclerview.widget.RecyclerView.VERTICAL, false)
+        domainList.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
         domainList.adapter = DomainListAdapter()
         domainList.setHasFixedSize(true)
 
@@ -179,7 +179,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
     /**
      * Adapter implementation for the list of custom autocomplete domains.
      */
-    inner class DomainListAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
+    inner class DomainListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private val domains: MutableList<String> = mutableListOf()
         private val selectedDomains: MutableList<String> = mutableListOf()
 
@@ -202,7 +202,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
                     else -> DomainViewHolder.LAYOUT_ID
                 }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder =
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
                 when (viewType) {
                     AddActionViewHolder.LAYOUT_ID ->
                             AddActionViewHolder(
@@ -217,7 +217,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
 
         override fun getItemCount(): Int = domains.size + if (isSelectionMode()) 0 else 1
 
-        override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             if (holder is DomainViewHolder) {
                 holder.bind(
                         domains[position],
@@ -228,7 +228,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
             }
         }
 
-        override fun onViewRecycled(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder) {
+        override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
             if (holder is DomainViewHolder) {
                 holder.checkBoxView.setOnCheckedChangeListener(null)
             }
@@ -254,7 +254,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
     private class DomainViewHolder(
         itemView: View,
         val domainFormatter: DomainFormatter? = null
-    ) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+    ) : RecyclerView.ViewHolder(itemView) {
         val domainView: TextView = itemView.findViewById(R.id.domainView)
         val checkBoxView: CheckBox = itemView.findViewById(R.id.checkbox)
         val handleView: View = itemView.findViewById(R.id.handleView)
@@ -314,7 +314,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
     private class AddActionViewHolder(
         val fragment: AutocompleteListFragment,
         itemView: View
-    ) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+    ) : RecyclerView.ViewHolder(itemView) {
         init {
             itemView.setOnClickListener {
                 fragment.fragmentManager!!

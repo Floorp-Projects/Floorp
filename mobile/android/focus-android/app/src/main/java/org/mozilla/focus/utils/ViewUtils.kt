@@ -97,7 +97,7 @@ object ViewUtils {
         val snackbarView = snackbar.view
         snackbarView.setBackgroundColor(ContextCompat.getColor(context, R.color.snackbarBackground))
 
-        val snackbarTextView = snackbarView.findViewById<View>(com.google.android.material.R.id.snackbar_text) as TextView
+        val snackbarTextView = snackbarView.findViewById<View>(R.id.snackbar_text) as TextView
         snackbarTextView.setTextColor(ContextCompat.getColor(context, R.color.snackbarTextColor))
         snackbarTextView.gravity = Gravity.CENTER
         snackbarTextView.textAlignment = View.TEXT_ALIGNMENT_CENTER
@@ -110,7 +110,7 @@ object ViewUtils {
         val snackbar = Snackbar.make(view, resId, Snackbar.LENGTH_LONG)
         val snackbarView = snackbar.view
         snackbarView.setBackgroundColor(ContextCompat.getColor(context, R.color.snackbarBackground))
-        val snackbarTextView = snackbarView.findViewById<TextView>(com.google.android.material.R.id.snackbar_text)
+        val snackbarTextView = snackbarView.findViewById<TextView>(R.id.snackbar_text)
         snackbarTextView.setTextColor(ContextCompat.getColor(context, R.color.snackbarTextColor))
         snackbar.setActionTextColor(ContextCompat.getColor(context, R.color.snackbarActionText))
         return snackbar

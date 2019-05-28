@@ -88,7 +88,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
         searchEngineGroup!!.removeAllViews()
 
         val layoutInflater = LayoutInflater.from(context)
-        val layoutParams = androidx.recyclerview.widget.RecyclerView.LayoutParams(
+        val layoutParams = RecyclerView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT)
 

@@ -18,7 +18,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 class EraseViewHolder(
     private val fragment: SessionsSheetFragment,
     itemView: View
-) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView), View.OnClickListener {
+) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
 
     init {
         val textView = itemView as TextView
