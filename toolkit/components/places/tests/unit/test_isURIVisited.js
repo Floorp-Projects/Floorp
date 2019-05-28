@@ -16,7 +16,7 @@ const SCHEMES = {
   "mailbox:": false,
   "moz-anno:favicon:http://": false,
   "view-source:http://": false,
-  "chrome://browser/content/browser.xul?": false,
+  "chrome://browser/content/browser.xhtml?": false,
   "resource://": false,
   "data:,": false,
   "javascript:": false,

@@ -125,10 +125,10 @@ Tart.prototype = {
     this._endDetection = this.tabDetector;
     this._win.BrowserOpenTab();
     // Modifying the style for each tab right after opening seems like it could regress performance,
-    // However, overlaying a global style over browser.xul actually ends up having greater ovrehead,
+    // However, overlaying a global style over browser.xhtml actually ends up having greater ovrehead,
     // especially while closing the last of many tabs (a noticeable ~250ms delay before expanding the rest).
     // To overlay the style globally, add at tart/chrome.manifest:
-    // style chrome://browser/content/browser.xul chrome://tart/content/tab-min-width-1px.css
+    // style chrome://browser/content/browser.xhtml chrome://tart/content/tab-min-width-1px.css
     // where the file tab-min-width-1px.css is:
     // .tabbrowser-tab[fadein]:not([pinned]) { min-width: 1px !important; }
     // Additionally, the global style overlay apparently messes with intervals recording when layout.frame_rate=10000:

@@ -249,7 +249,7 @@ function addTopLevelItems(doc) {
   const menu = doc.getElementById("menuWebDeveloperPopup");
   menu.appendChild(menuItems);
 
-  // There is still "Page Source" menuitem hardcoded into browser.xul. Instead
+  // There is still "Page Source" menuitem hardcoded into browser.xhtml. Instead
   // of manually inserting everything around it, move it to the expected
   // position.
   const pageSource = doc.getElementById("menu_pageSource");
