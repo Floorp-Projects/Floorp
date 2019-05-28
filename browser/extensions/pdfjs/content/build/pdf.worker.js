@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.177';
-const pdfjsBuild = '1421b2f2';
+const pdfjsVersion = '2.2.189';
+const pdfjsBuild = 'f652cf8e';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -378,7 +378,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.177';
+    let workerVersion = '2.2.189';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -631,7 +631,8 @@ var WorkerMessageHandler = {
       });
     });
     handler.on('GetPageIndex', function wphSetupGetPageIndex(data) {
-      var ref = new _primitives.Ref(data.ref.num, data.ref.gen);
+      var ref = _primitives.Ref.get(data.ref.num, data.ref.gen);
+
       var catalog = pdfManager.pdfDocument.catalog;
       return catalog.getPageIndex(ref);
     });
@@ -3289,7 +3290,9 @@ class PDFDocument {
       linearization
     } = this;
     (0, _util.assert)(linearization && linearization.pageFirst === pageIndex);
-    const ref = new _primitives.Ref(linearization.objectNumberFirst, 0);
+
+    const ref = _primitives.Ref.get(linearization.objectNumberFirst, 0);
+
     return this.xref.fetchAsync(ref).then(obj => {
       if ((0, _primitives.isDict)(obj, 'Page') || (0, _primitives.isDict)(obj) && !obj.has('Type') && obj.has('Contents')) {
         if (ref && !catalog.pageKidsCountCache.has(ref)) {
@@ -4081,6 +4084,7 @@ class Catalog {
   }
 
   cleanup() {
+    (0, _primitives.clearPrimitiveCaches)();
     this.pageKidsCountCache.clear();
     const promises = [];
     this.fontCache.forEach(function (promise) {
@@ -5097,7 +5101,7 @@ var XRef = function XRefClosure() {
 
     fetchCompressed(ref, xrefEntry, suppressEncryption = false) {
       var tableOffset = xrefEntry.offset;
-      var stream = this.fetch(new _primitives.Ref(tableOffset, 0));
+      var stream = this.fetch(_primitives.Ref.get(tableOffset, 0));
 
       if (!(0, _primitives.isStream)(stream)) {
         throw new _util.FormatError('bad ObjStm stream');
@@ -5586,6 +5590,7 @@ exports.ObjectLoader = ObjectLoader;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.clearPrimitiveCaches = clearPrimitiveCaches;
 exports.isEOF = isEOF;
 exports.isCmd = isCmd;
 exports.isDict = isDict;
@@ -5594,20 +5599,28 @@ exports.isRef = isRef;
 exports.isRefsEqual = isRefsEqual;
 exports.isStream = isStream;
 exports.RefSetCache = exports.RefSet = exports.Ref = exports.Name = exports.Dict = exports.Cmd = exports.EOF = void 0;
+
+var _util = __w_pdfjs_require__(2);
+
 var EOF = {};
 exports.EOF = EOF;
 
 var Name = function NameClosure() {
+  let nameCache = Object.create(null);
+
   function Name(name) {
     this.name = name;
   }
 
   Name.prototype = {};
-  var nameCache = Object.create(null);
 
   Name.get = function Name_get(name) {
     var nameValue = nameCache[name];
     return nameValue ? nameValue : nameCache[name] = new Name(name);
+  };
+
+  Name._clearCache = function () {
+    nameCache = Object.create(null);
   };
 
   return Name;
@@ -5616,16 +5629,21 @@ var Name = function NameClosure() {
 exports.Name = Name;
 
 var Cmd = function CmdClosure() {
+  let cmdCache = Object.create(null);
+
   function Cmd(cmd) {
     this.cmd = cmd;
   }
 
   Cmd.prototype = {};
-  var cmdCache = Object.create(null);
 
   Cmd.get = function Cmd_get(cmd) {
     var cmdValue = cmdCache[cmd];
     return cmdValue ? cmdValue : cmdCache[cmd] = new Cmd(cmd);
+  };
+
+  Cmd._clearCache = function () {
+    cmdCache = Object.create(null);
   };
 
   return Cmd;
@@ -5764,6 +5782,8 @@ var Dict = function DictClosure() {
 exports.Dict = Dict;
 
 var Ref = function RefClosure() {
+  let refCache = Object.create(null);
+
   function Ref(num, gen) {
     this.num = num;
     this.gen = gen;
@@ -5771,13 +5791,24 @@ var Ref = function RefClosure() {
 
   Ref.prototype = {
     toString: function Ref_toString() {
-      if (this.gen !== 0) {
-        return `${this.num}R${this.gen}`;
+      if (this.gen === 0) {
+        return `${this.num}R`;
       }
 
-      return `${this.num}R`;
+      return `${this.num}R${this.gen}`;
     }
   };
+
+  Ref.get = function (num, gen) {
+    const key = gen === 0 ? `${num}R` : `${num}R${gen}`;
+    const refValue = refCache[key];
+    return refValue ? refValue : refCache[key] = new Ref(num, gen);
+  };
+
+  Ref._clearCache = function () {
+    refCache = Object.create(null);
+  };
+
   return Ref;
 }();
 
@@ -5862,6 +5893,14 @@ function isRefsEqual(v1, v2) {
 
 function isStream(v) {
   return typeof v === 'object' && v !== null && v.getBytes !== undefined;
+}
+
+function clearPrimitiveCaches() {
+  Cmd._clearCache();
+
+  Name._clearCache();
+
+  Ref._clearCache();
 }
 
 /***/ }),
@@ -6017,7 +6056,8 @@ class Parser {
       const num = buf1;
 
       if (Number.isInteger(this.buf1) && (0, _primitives.isCmd)(this.buf2, 'R')) {
-        const ref = new _primitives.Ref(num, this.buf1);
+        const ref = _primitives.Ref.get(num, this.buf1);
+
         this.shift();
         this.shift();
         return ref;
@@ -18173,7 +18213,7 @@ const LabCS = function LabCSClosure() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.AnnotationFactory = exports.AnnotationBorderStyle = exports.Annotation = void 0;
+exports.MarkupAnnotation = exports.AnnotationFactory = exports.AnnotationBorderStyle = exports.Annotation = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
@@ -18319,8 +18359,8 @@ function getTransformMatrix(rect, bbox, matrix) {
 
 class Annotation {
   constructor(params) {
-    let dict = params.dict;
-    this.setCreationDate(dict.get('CreationDate'));
+    const dict = params.dict;
+    this.setContents(dict.get('Contents'));
     this.setModificationDate(dict.get('M'));
     this.setFlags(dict.get('F'));
     this.setRectangle(dict.getArray('Rect'));
@@ -18331,7 +18371,7 @@ class Annotation {
       annotationFlags: this.flags,
       borderStyle: this.borderStyle,
       color: this.color,
-      creationDate: this.creationDate,
+      contents: this.contents,
       hasAppearance: !!this.appearance,
       id: params.id,
       modificationDate: this.modificationDate,
@@ -18368,8 +18408,8 @@ class Annotation {
     return this._isPrintable(this.flags);
   }
 
-  setCreationDate(creationDate) {
-    this.creationDate = (0, _util.isString)(creationDate) ? creationDate : null;
+  setContents(contents) {
+    this.contents = (0, _util.stringToPDFString)(contents || '');
   }
 
   setModificationDate(modificationDate) {
@@ -18637,12 +18677,19 @@ class MarkupAnnotation extends Annotation {
       this.data.color = null;
     }
 
+    this.setCreationDate(dict.get('CreationDate'));
+    this.data.creationDate = this.creationDate;
     this.data.hasPopup = dict.has('Popup');
     this.data.title = (0, _util.stringToPDFString)(dict.get('T') || '');
-    this.data.contents = (0, _util.stringToPDFString)(dict.get('Contents') || '');
+  }
+
+  setCreationDate(creationDate) {
+    this.creationDate = (0, _util.isString)(creationDate) ? creationDate : null;
   }
 
 }
+
+exports.MarkupAnnotation = MarkupAnnotation;
 
 class WidgetAnnotation extends Annotation {
   constructor(params) {
@@ -18961,13 +19008,6 @@ class PopupAnnotation extends Annotation {
     this.data.parentId = dict.getRaw('Parent').toString();
     this.data.title = (0, _util.stringToPDFString)(parentItem.get('T') || '');
     this.data.contents = (0, _util.stringToPDFString)(parentItem.get('Contents') || '');
-
-    if (!parentItem.has('CreationDate')) {
-      this.data.creationDate = null;
-    } else {
-      this.setCreationDate(parentItem.get('CreationDate'));
-      this.data.creationDate = this.creationDate;
-    }
 
     if (!parentItem.has('M')) {
       this.data.modificationDate = null;
