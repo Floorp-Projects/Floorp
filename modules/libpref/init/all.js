@@ -3348,17 +3348,13 @@ pref("dom.ipc.processCount.file", 1);
 // WebExtensions only support a single extension process.
 pref("dom.ipc.processCount.extension", 1);
 
-// The privileged about process only supports a single content process.
-pref("dom.ipc.processCount.privilegedabout", 1);
+// Privileged content only supports a single content process.
+pref("dom.ipc.processCount.privileged", 1);
 
-// Limit the privileged mozilla process to a single instance only
-// to avoid multiple of these content processes
-pref("dom.ipc.processCount.privilegedmozilla", 1);
-
-// Keep a single privileged about process alive for performance reasons.
+// Keep a single privileged content process alive for performance reasons.
 // e.g. we do not want to throw content processes out every time we navigate
 // away from about:newtab.
-pref("dom.ipc.keepProcessesAlive.privilegedabout", 1);
+pref("dom.ipc.keepProcessesAlive.privileged", 1);
 
 // Whether a native event loop should be used in the content process.
 #if defined(XP_WIN) || defined(XP_MACOSX)
@@ -3390,18 +3386,8 @@ pref("browser.tabs.remote.separateFileUriProcess", true);
 // content process, causes compatibility issues.
 pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", true);
 
-// Pref to control whether we use a separate privileged content process
-// for about: pages. This pref name did not age well: we will have multiple
-// types of privileged content processes, each with different privileges.
+// Pref to control whether we use separate privileged content processes.
 pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
-
-// Pref to control whether we use a separate privileged content process
-// for certain mozilla webpages (which are listed in the following pref).
-pref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
-
-// The domains we will isolate into the Mozilla Content Process. Comma-separated
-// full domains: any subdomains of the domains listed will also be allowed.
-pref("browser.tabs.remote.separatedMozillaDomains", "addons.mozilla.org,accounts.firefox.com");
 
 // When this pref is enabled top level loads with a mismatched
 // Cross-Origin-Opener-Policy header will be loaded in a separate process.

@@ -9,17 +9,17 @@
 
 "use strict";
 
-const PRIVILEGEDABOUT_PROCESS_PREF =
+const PRIVILEGED_PROCESS_PREF =
   "browser.tabs.remote.separatePrivilegedContentProcess";
-const PRIVILEGEDABOUT_PROCESS_ENABLED =
-  Services.prefs.getBoolPref(PRIVILEGEDABOUT_PROCESS_PREF);
+const PRIVILEGED_PROCESS_ENABLED =
+  Services.prefs.getBoolPref(PRIVILEGED_PROCESS_PREF);
 
 const REMOTE_BROWSER_SHOWN = "remote-browser-shown";
 
 // When the privileged content process is enabled, we expect about:home
 // to load in it. Otherwise, it's in a normal web content process.
 const EXPECTED_ABOUTHOME_REMOTE_TYPE =
-  PRIVILEGEDABOUT_PROCESS_ENABLED ? E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE
+  PRIVILEGED_PROCESS_ENABLED ? E10SUtils.PRIVILEGED_REMOTE_TYPE
                              : E10SUtils.DEFAULT_REMOTE_TYPE;
 
 /**

@@ -26,18 +26,18 @@ const BASE_URL = "resource://activity-stream/";
 const ACTIVITY_STREAM_PAGES = new Set(["home", "newtab", "welcome"]);
 
 const IS_MAIN_PROCESS = Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
-const IS_PRIVILEGED_PROCESS = Services.appinfo.remoteType === E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
+const IS_PRIVILEGED_PROCESS = Services.appinfo.remoteType === E10SUtils.PRIVILEGED_REMOTE_TYPE;
 
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
-const PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS = "browser.tabs.remote.separatePrivilegedContentProcess";
+const PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS = "browser.tabs.remote.separatePrivilegedContentProcess";
 const PREF_ACTIVITY_STREAM_PRERENDER_ENABLED = "browser.newtabpage.activity-stream.prerender";
 const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
 
 function AboutNewTabService() {
   Services.obs.addObserver(this, TOPIC_APP_QUIT);
   Services.obs.addObserver(this, TOPIC_LOCALES_CHANGE);
-  Services.prefs.addObserver(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS, this);
+  Services.prefs.addObserver(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS, this);
   Services.prefs.addObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
   if (!IS_RELEASE_OR_BETA) {
     Services.prefs.addObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
@@ -93,7 +93,7 @@ AboutNewTabService.prototype = {
   _activityStreamPrerender: false,
   _activityStreamPath: "",
   _activityStreamDebug: false,
-  _privilegedAboutContentProcess: false,
+  _privilegedContentProcess: false,
   _overridden: false,
   willNotifyUser: false,
 
@@ -106,8 +106,8 @@ AboutNewTabService.prototype = {
   observe(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":
-        if (data === PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS) {
-          this._privilegedAboutContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS);
+        if (data === PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS) {
+          this._privilegedContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS);
           this.updatePrerenderedPath();
           this.notifyChange();
         } else if (data === PREF_ACTIVITY_STREAM_PRERENDER_ENABLED) {
@@ -216,7 +216,7 @@ AboutNewTabService.prototype = {
     } else {
       this._activityStreamEnabled = false;
     }
-    this._privilegedAboutContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS);
+    this._privilegedContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS);
     this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
     if (!IS_RELEASE_OR_BETA) {
       this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
@@ -233,7 +233,7 @@ AboutNewTabService.prototype = {
     // Debug files are specially packaged in a non-localized directory, but with
     // dynamic script loading, localized debug is supported.
     this._activityStreamPath = `${this._activityStreamDebug &&
-      !this._privilegedAboutContentProcess ? "static" : this.activityStreamLocale}/`;
+      !this._privilegedContentProcess ? "static" : this.activityStreamLocale}/`;
   },
 
   /*
@@ -253,8 +253,8 @@ AboutNewTabService.prototype = {
       "activity-stream",
       this._activityStreamPrerender ? "-prerendered" : "",
       // Debug version loads dev scripts but noscripts separately loads scripts
-      this._activityStreamDebug && !this._privilegedAboutContentProcess ? "-debug" : "",
-      this._privilegedAboutContentProcess ? "-noscripts" : "",
+      this._activityStreamDebug && !this._privilegedContentProcess ? "-debug" : "",
+      this._privilegedContentProcess ? "-noscripts" : "",
       ".html",
     ].join("");
   },
@@ -351,7 +351,7 @@ AboutNewTabService.prototype = {
     }
     Services.obs.removeObserver(this, TOPIC_APP_QUIT);
     Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
-    Services.prefs.removeObserver(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS, this);
+    Services.prefs.removeObserver(PREF_SEPARATE_PRIVILEGED_CONTENT_PROCESS, this);
     Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
     if (!IS_RELEASE_OR_BETA) {
       Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_DEBUG, this);

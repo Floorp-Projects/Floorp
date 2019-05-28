@@ -13,12 +13,6 @@
 ChromeUtils.defineModuleGetter(this, "AppConstants",
                                "resource://gre/modules/AppConstants.jsm");
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyPreferenceGetter(this, "separatePrivilegedMozillaWebContentProcess",
-  "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
-XPCOMUtils.defineLazyPreferenceGetter(this, "extensionsWebAPITesting",
-  "extensions.webapi.testing", false);
-
 // The old XPInstall error codes
 const EXECUTION_ERROR   = -203;
 const CANT_READ_ARCHIVE = -207;
@@ -222,12 +216,6 @@ amManager.prototype = {
       }
 
       case MSG_PROMISE_REQUEST: {
-        if (!extensionsWebAPITesting &&
-            separatePrivilegedMozillaWebContentProcess && aMessage.target &&
-            aMessage.target.remoteType != null && aMessage.target.remoteType !== "privilegedmozilla") {
-          return undefined;
-        }
-
         let mm = aMessage.target.messageManager;
         let resolve = (value) => {
           mm.sendAsyncMessage(MSG_PROMISE_RESULT, {
@@ -252,23 +240,11 @@ amManager.prototype = {
       }
 
       case MSG_INSTALL_CLEANUP: {
-        if (!extensionsWebAPITesting &&
-            separatePrivilegedMozillaWebContentProcess && aMessage.target &&
-            aMessage.target.remoteType != null && aMessage.target.remoteType !== "privilegedmozilla") {
-          return undefined;
-        }
-
         AddonManager.webAPI.clearInstalls(payload.ids);
         break;
       }
 
       case MSG_ADDON_EVENT_REQ: {
-        if (!extensionsWebAPITesting &&
-            separatePrivilegedMozillaWebContentProcess && aMessage.target &&
-            aMessage.target.remoteType != null && aMessage.target.remoteType !== "privilegedmozilla") {
-          return undefined;
-        }
-
         let target = aMessage.target.messageManager;
         if (payload.enabled) {
           this._addAddonListener(target);
