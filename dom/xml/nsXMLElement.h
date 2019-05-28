@@ -23,8 +23,7 @@ class nsXMLElement : public mozilla::dom::Element {
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const override;
 
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) override;
+  virtual void UnbindFromTree(bool aNullParent = true) override;
 
  protected:
   virtual ~nsXMLElement() {}

@@ -51,7 +51,7 @@ class SVGUseElement final : public SVGUseElementBase,
 
   nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
-  void UnbindFromTree(bool aDeep = true, bool aNullParent = true) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED

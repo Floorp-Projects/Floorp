@@ -62,11 +62,11 @@ nsresult SVGTitleElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void SVGTitleElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void SVGTitleElement::UnbindFromTree(bool aNullParent) {
   SendTitleChangeEvent(false);
 
   // Let this fall through.
-  SVGTitleElementBase::UnbindFromTree(aDeep, aNullParent);
+  SVGTitleElementBase::UnbindFromTree(aNullParent);
 }
 
 void SVGTitleElement::DoneAddingChildren(bool aHaveNotified) {

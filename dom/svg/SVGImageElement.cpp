@@ -221,9 +221,9 @@ nsresult SVGImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void SVGImageElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
-  SVGImageElementBase::UnbindFromTree(aDeep, aNullParent);
+void SVGImageElement::UnbindFromTree(bool aNullParent) {
+  nsImageLoadingContent::UnbindFromTree(aNullParent);
+  SVGImageElementBase::UnbindFromTree(aNullParent);
 }
 
 EventStates SVGImageElement::IntrinsicState() const {
