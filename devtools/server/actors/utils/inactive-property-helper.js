@@ -138,9 +138,14 @@ class InactivePropertyHelper {
           "vertical-align",
         ],
         when: () => {
-          return !this.checkStyle("display", ["inline", "table-cell"]) &&
-                 !this.cssRule.selectorText.includes("::first-letter") &&
-                 !this.cssRule.selectorText.includes("::first-line");
+          const { selectorText } = this.cssRule;
+
+          const isFirstLetter = selectorText && selectorText.includes("::first-letter");
+          const isFirstLine = selectorText && selectorText.includes("::first-line");
+
+          const isInlineLevel = this.checkStyle("display", ["inline", "table-cell"]);
+
+          return !isInlineLevel && !isFirstLetter && !isFirstLine;
         },
         fixId: "inactive-css-not-inline-or-tablecell-fix",
         msgId: "inactive-css-not-inline-or-tablecell",
