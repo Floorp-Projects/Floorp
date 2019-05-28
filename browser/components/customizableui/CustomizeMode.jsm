@@ -107,7 +107,7 @@ function CustomizeMode(aWindow) {
     container.replaceChild(this.window.MozXULElement.parseXULToFragment(container.firstChild.data), container.lastChild);
   }
   // There are two palettes - there's the palette that can be overlayed with
-  // toolbar items in browser.xul. This is invisible, and never seen by the
+  // toolbar items in browser.xhtml. This is invisible, and never seen by the
   // user. Then there's the visible palette, which gets populated and displayed
   // to the user when in customizing mode.
   this.visiblePalette = this.$(kPaletteId);

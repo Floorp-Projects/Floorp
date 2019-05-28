@@ -212,7 +212,7 @@ add_task(async function testPageActionPopup() {
 
 
 add_task(async function testPageActionSecurity() {
-  const URL = "chrome://browser/content/browser.xul";
+  const URL = "chrome://browser/content/browser.xhtml";
 
   let apis = ["browser_action", "page_action"];
 
