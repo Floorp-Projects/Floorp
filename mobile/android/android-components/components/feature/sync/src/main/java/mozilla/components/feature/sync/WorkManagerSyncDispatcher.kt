@@ -234,14 +234,17 @@ class WorkManagerSyncWorker(
                     resultBuilder.putBoolean(it.key, true)
                 }
                 is SyncStatus.Error -> {
-                    // Notify auth error observers that we saw an auth-related error while syncing.
-                    if (status.exception is AuthException) {
-                        authErrorRegistry.notifyObservers {
-                            onAuthErrorAsync(status.exception as AuthException)
+                    val exception = status.exception
+                    when (exception) {
+                        // Notify auth error observers that we saw an auth-related error while syncing.
+                        is AuthException -> {
+                            authErrorRegistry.notifyObservers {
+                                onAuthErrorAsync(exception)
+                            }
                         }
                     }
 
-                    logger.error("Failed to synchronize store ${it.key}", status.exception)
+                    logger.error("Failed to synchronize store ${it.key}", exception)
                     resultBuilder.putBoolean(it.key, false)
                 }
             }

@@ -44,7 +44,7 @@ class StorageSyncTest {
         val mockAccessTokenInfo = AccessTokenInfo(
             scope = "scope", key = OAuthScopedKey("kty", "scope", "kid", "k"), token = "token", expiresAt = 0
         )
-        `when`(mockAccount.getAccessToken(any())).thenReturn(CompletableDeferred((mockAccessTokenInfo)))
+        `when`(mockAccount.getAccessTokenAsync(any())).thenReturn(CompletableDeferred((mockAccessTokenInfo)))
 
         // Single store, different result types.
         val testStore: SyncableStore = mock()
@@ -88,7 +88,7 @@ class StorageSyncTest {
         val mockAccessTokenInfo = AccessTokenInfo(
                 scope = "scope", key = OAuthScopedKey("kty", "scope", "kid", "k"), token = "token", expiresAt = 0
         )
-        `when`(mockAccount.getAccessToken(any())).thenReturn(CompletableDeferred((mockAccessTokenInfo)))
+        `when`(mockAccount.getAccessTokenAsync(any())).thenReturn(CompletableDeferred((mockAccessTokenInfo)))
 
         val verifier = object {
             private val blocks = mutableListOf<() -> Unit>()

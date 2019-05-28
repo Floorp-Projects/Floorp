@@ -19,16 +19,11 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import mozilla.components.concept.sync.AuthException
-import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.DeviceConstellationObserver
 import mozilla.components.concept.sync.DeviceEventsObserver
-import mozilla.components.service.fxa.FxaException
-import mozilla.components.service.fxa.FxaPanicException
-import mozilla.components.service.fxa.FxaUnauthorizedException
 import mozilla.components.support.base.log.logger.Logger
 
 import mozilla.components.support.base.observer.Observable
@@ -63,24 +58,13 @@ internal open class PollingDeviceManager(
         getRefreshManager().stopRefresh()
     }
 
-    fun pollAsync(): Deferred<Unit> {
+    fun pollAsync(): Deferred<Boolean> {
         return scope.async {
             logger.debug("poll")
-            val events = try {
-                constellation.pollForEventsAsync().await()
-            } catch (e: FxaPanicException) {
-                // Re-throw panics.
-                throw e
-            } catch (e: FxaUnauthorizedException) {
-                // Propagate auth errors.
-                authErrorRegistry.notifyObservers { onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
-                return@async
-            } catch (e: FxaException) {
-                // Ignore intermittent errors.
-                logger.warn("Failed to poll for events", e)
-                return@async
-            }
-            processEvents(events)
+            constellation.pollForEventsAsync().await()?.let {
+                processEvents(it)
+                true
+            } ?: false
         }
     }
 
@@ -93,24 +77,12 @@ internal open class PollingDeviceManager(
         notifyObservers { onEvents(events) }
     }
 
-    fun refreshDevicesAsync(): Deferred<Unit> = synchronized(this) {
+    fun refreshDevicesAsync(): Deferred<Boolean> = synchronized(this) {
         return scope.async {
             logger.info("Refreshing device list...")
 
-            val allDevices = try {
-                constellation.fetchAllDevicesAsync().await()
-            } catch (e: FxaPanicException) {
-                // Re-throw panics.
-                throw e
-            } catch (e: FxaUnauthorizedException) {
-                // Propagate auth errors.
-                authErrorRegistry.notifyObservers { onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
-                return@async
-            } catch (e: FxaException) {
-                // Ignore intermittent errors.
-                logger.warn("Failed to fetch devices", e)
-                return@async
-            }
+            // Attempt to fetch devices, or bail out on failure.
+            val allDevices = constellation.fetchAllDevicesAsync().await() ?: return@async false
 
             // Find the current device.
             val currentDevice = allDevices.find { it.isCurrentDevice }
@@ -135,6 +107,7 @@ internal open class PollingDeviceManager(
             }
 
             logger.info("Refreshed device list; saw ${allDevices.size} device(s).")
+            true
         }
     }
 
@@ -190,12 +163,15 @@ internal class WorkManagerDeviceRefreshWorker(
 
     @Suppress("ReturnCount", "ComplexMethod")
     override suspend fun doWork(): Result {
-        logger.debug("Polling for new events via ${DeviceManagerProvider.deviceManager}")
+        logger.info("Polling for new events via ${DeviceManagerProvider.deviceManager}")
 
-        DeviceManagerProvider.deviceManager?.let { deviceManager ->
+        val result = DeviceManagerProvider.deviceManager?.let { deviceManager ->
+            // TODO we may have failed to ensure device capabilities earlier (due to intermittent issues on startup).
             deviceManager.refreshDevicesAsync().await()
             deviceManager.pollAsync().await()
-        }
+        } ?: false
+
+        logger.info("Polling result: $result")
 
         return Result.success()
     }

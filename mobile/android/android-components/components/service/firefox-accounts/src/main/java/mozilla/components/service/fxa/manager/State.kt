@@ -12,7 +12,7 @@ import mozilla.components.concept.sync.AuthException
 enum class AccountState {
     Start,
     NotAuthenticated,
-    AuthenticationProblems,
+    AuthenticationProblem,
     AuthenticatedNoProfile,
     AuthenticatedWithProfile
 }

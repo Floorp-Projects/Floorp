@@ -14,7 +14,6 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.FxaNetworkException
 import mozilla.components.service.fxa.SharedPrefAccountStorage
 import mozilla.components.service.fxa.manager.DeviceTuple
 import mozilla.components.support.test.any
@@ -116,15 +115,10 @@ class FirefoxAccountsAuthFeatureTest {
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
-        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
-        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
-        `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
-        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
-        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
-        // So we manually complete it here!
-        val unitDeferred = CompletableDeferred<Unit>()
-        unitDeferred.complete(Unit)
-        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
+        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
+        `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
 
@@ -149,18 +143,11 @@ class FirefoxAccountsAuthFeatureTest {
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
-        `when`(mockAccount.getProfile(anyBoolean())).thenReturn(CompletableDeferred(profile))
+        `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
 
-        val exceptionalDeferred = CompletableDeferred<String>()
-        exceptionalDeferred.completeExceptionally(FxaNetworkException("oops"))
-        `when`(mockAccount.beginOAuthFlow(any(), anyBoolean())).thenReturn(exceptionalDeferred)
-        `when`(mockAccount.beginPairingFlow(anyString(), any())).thenReturn(exceptionalDeferred)
-        // This ceremony is necessary because CompletableDeferred<Unit>() is created in an _active_ state,
-        // and threads will deadlock since it'll never be resolved while state machine is waiting for it.
-        // So we manually complete it here!
-        val unitDeferred = CompletableDeferred<Unit>()
-        unitDeferred.complete(Unit)
-        `when`(mockAccount.completeOAuthFlow(anyString(), anyString())).thenReturn(unitDeferred)
+        `when`(mockAccount.beginOAuthFlowAsync(any(), anyBoolean())).thenReturn(CompletableDeferred(value = null))
+        `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(value = null))
+        `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
         // There's no account at the start.
         `when`(accountStorage.read()).thenReturn(null)
 

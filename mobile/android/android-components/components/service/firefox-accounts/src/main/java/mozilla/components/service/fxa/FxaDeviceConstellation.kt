@@ -11,6 +11,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import mozilla.appservices.fxaclient.AccountEvent
 import mozilla.appservices.fxaclient.FirefoxAccount
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
@@ -54,9 +55,15 @@ class FxaDeviceConstellation(
         })
     }
 
-    override fun initDeviceAsync(name: String, type: DeviceType, capabilities: List<DeviceCapability>): Deferred<Unit> {
+    override fun initDeviceAsync(
+        name: String,
+        type: DeviceType,
+        capabilities: List<DeviceCapability>
+    ): Deferred<Boolean> {
         return scope.async {
-            account.initializeDevice(name, type.into(), capabilities.map { it.into() }.toSet())
+            handleFxaExceptions(logger, "initializing device") {
+                account.initializeDevice(name, type.into(), capabilities.map { it.into() }.toSet())
+            }
         }
     }
 
@@ -64,13 +71,9 @@ class FxaDeviceConstellation(
         val state = state()
         state?.currentDevice?.let {
             return scope.async {
-                maybeExceptional({
+                handleFxaExceptions(logger, "destroying current device") {
                     account.destroyDevice(it.id)
-                    true
-                }, { error ->
-                    logger.error("Failed to destroy device record", error)
-                    false
-                })
+                }
             }
         }
 
@@ -83,37 +86,45 @@ class FxaDeviceConstellation(
         return CompletableDeferred(false)
     }
 
-    override fun ensureCapabilitiesAsync(capabilities: List<DeviceCapability>): Deferred<Unit> {
+    override fun ensureCapabilitiesAsync(capabilities: List<DeviceCapability>): Deferred<Boolean> {
         return scope.async {
-            account.ensureCapabilities(capabilities.map { it.into() }.toSet())
-        }
-    }
-
-    override fun processRawEvent(payload: String) {
-        scope.launch {
-            val events = account.handlePushMessage(payload).filter {
-                it is mozilla.appservices.fxaclient.AccountEvent.TabReceived
-            }.map {
-                (it as mozilla.appservices.fxaclient.AccountEvent.TabReceived).into()
+            handleFxaExceptions(logger, "ensuring capabilities") {
+                account.ensureCapabilities(capabilities.map { it.into() }.toSet())
             }
-            deviceManager.processEvents(events)
         }
     }
 
-    override fun pollForEventsAsync(): Deferred<List<DeviceEvent>> {
+    override fun processRawEventAsync(payload: String): Deferred<Boolean> {
+        return scope.async {
+            handleFxaExceptions(logger, "processing raw events") {
+                val events = account.handlePushMessage(payload).filter {
+                    it is AccountEvent.TabReceived
+                }.map {
+                    (it as AccountEvent.TabReceived).into()
+                }
+                deviceManager.processEvents(events)
+            }
+        }
+    }
+
+    override fun pollForEventsAsync(): Deferred<List<DeviceEvent>?> {
         // Currently ignoring non-TabReceived events.
         return scope.async {
-            account.pollDeviceCommands().filter {
-                it is mozilla.appservices.fxaclient.AccountEvent.TabReceived
-            }.map {
-                (it as mozilla.appservices.fxaclient.AccountEvent.TabReceived).into()
+            handleFxaExceptions(logger, "polling for device events", { null }) {
+                account.pollDeviceCommands().filter {
+                    it is AccountEvent.TabReceived
+                }.map {
+                    (it as AccountEvent.TabReceived).into()
+                }
             }
         }
     }
 
-    override fun fetchAllDevicesAsync(): Deferred<List<Device>> {
+    override fun fetchAllDevicesAsync(): Deferred<List<Device>?> {
         return scope.async {
-            account.getDevices().map { it.into() }
+            handleFxaExceptions(logger, "fetching all devices", { null }) {
+                account.getDevices().map { it.into() }
+            }
         }
     }
 
@@ -125,27 +136,33 @@ class FxaDeviceConstellation(
         deviceObserverRegistry.register(observer, owner, autoPause)
     }
 
-    override fun setDeviceNameAsync(name: String): Deferred<Unit> {
+    override fun setDeviceNameAsync(name: String): Deferred<Boolean> {
         return scope.async {
-            account.setDeviceDisplayName(name)
+            handleFxaExceptions(logger, "changing device name") {
+                account.setDeviceDisplayName(name)
+            }
         }
     }
 
-    override fun setDevicePushSubscriptionAsync(subscription: DevicePushSubscription): Deferred<Unit> {
+    override fun setDevicePushSubscriptionAsync(subscription: DevicePushSubscription): Deferred<Boolean> {
         return scope.async {
-            account.setDevicePushSubscription(
-                    subscription.endpoint, subscription.publicKey, subscription.authKey
-            )
+            handleFxaExceptions(logger, "updating device push subscription") {
+                account.setDevicePushSubscription(
+                        subscription.endpoint, subscription.publicKey, subscription.authKey
+                )
+            }
         }
     }
 
-    override fun sendEventToDeviceAsync(targetDeviceId: String, outgoingEvent: DeviceEventOutgoing): Deferred<Unit> {
+    override fun sendEventToDeviceAsync(targetDeviceId: String, outgoingEvent: DeviceEventOutgoing): Deferred<Boolean> {
         return scope.async {
-            when (outgoingEvent) {
-                is DeviceEventOutgoing.SendTab -> {
-                    account.sendSingleTab(targetDeviceId, outgoingEvent.title, outgoingEvent.url)
+            handleFxaExceptions(logger, "sending device event") {
+                when (outgoingEvent) {
+                    is DeviceEventOutgoing.SendTab -> {
+                        account.sendSingleTab(targetDeviceId, outgoingEvent.title, outgoingEvent.url)
+                    }
+                    else -> logger.debug("Skipped sending unsupported event type: $outgoingEvent")
                 }
-                else -> logger.debug("Skipped sending unsupported event type: $outgoingEvent")
             }
         }
     }
@@ -162,10 +179,14 @@ class FxaDeviceConstellation(
         deviceManager.stopPolling()
     }
 
-    override fun refreshDeviceStateAsync(): Deferred<Unit> {
+    override fun refreshDeviceStateAsync(): Deferred<Boolean> {
         return scope.async {
-            deviceManager.refreshDevicesAsync().await()
-            deviceManager.processEvents(pollForEventsAsync().await())
+            val refreshedDevices = deviceManager.refreshDevicesAsync().await()
+            val events = pollForEventsAsync().await()?.let {
+                deviceManager.processEvents(it)
+                true
+            } ?: false
+            refreshedDevices && events
         }
     }
 }

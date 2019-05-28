@@ -69,12 +69,16 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                 val config = Config(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
                 val acct = FirefoxAccount(config)
                 launch {
-                    try {
-                        val url = acct.beginPairingFlow(pairingUrl, scopes).await()
-                        openWebView(url)
-                    } catch (e: FxaException) {
-                        Log.log(Log.Priority.ERROR, "mozac-samples-fxa", e, "Pairing flow failed for $pairingUrl")
+                    val url = acct.beginPairingFlowAsync(pairingUrl, scopes).await()
+                    if (url == null) {
+                        Log.log(
+                            Log.Priority.ERROR,
+                            tag = "mozac-samples-fxa",
+                            message = "Pairing flow failed for $pairingUrl"
+                        )
+                        return@launch
                     }
+                    openWebView(url)
                 }
             }
         )
@@ -83,15 +87,17 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
         findViewById<View>(R.id.buttonCustomTabs).setOnClickListener {
             launch {
-                val url = account.beginOAuthFlow(scopes, wantsKeys).await()
-                openTab(url)
+                account.beginOAuthFlowAsync(scopes, wantsKeys).await()?.let {
+                    openTab(it)
+                }
             }
         }
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                val url = account.beginOAuthFlow(scopes, wantsKeys).await()
-                openWebView(url)
+                account.beginOAuthFlowAsync(scopes, wantsKeys).await()?.let {
+                    openWebView(it)
+                }
             }
         }
 
@@ -114,8 +120,9 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
     private fun initAccount(): FirefoxAccount {
         getAuthenticatedAccount()?.let {
             launch {
-                val profile = it.getProfile(true).await()
-                displayProfile(profile)
+                it.getProfileAsync(true).await()?.let {
+                    displayProfile(it)
+                }
             }
             return it
         }
@@ -179,9 +186,10 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     private fun displayAndPersistProfile(code: String, state: String) {
         launch {
-            account.completeOAuthFlow(code, state).await()
-            val profile = account.getProfile().await()
-            displayProfile(profile)
+            account.completeOAuthFlowAsync(code, state).await()
+            account.getProfileAsync().await()?.let {
+                displayProfile(it)
+            }
             account.toJSONString().let {
                 getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE)
                         .edit().putString(FXA_STATE_KEY, it).apply()

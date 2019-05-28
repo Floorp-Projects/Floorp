@@ -24,7 +24,6 @@ import mozilla.components.concept.sync.SyncStatusObserver
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.Config
 import mozilla.components.service.fxa.FirefoxAccount
-import mozilla.components.service.fxa.FxaException
 import mozilla.components.feature.sync.BackgroundSyncManager
 import mozilla.components.feature.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.fxa.manager.DeviceTuple
@@ -93,10 +92,9 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
 
         findViewById<View>(R.id.buttonWebView).setOnClickListener {
             launch {
-                val authUrl = try {
-                    accountManager.beginAuthenticationAsync().await()
-                } catch (error: FxaException) {
-                    Toast.makeText(this@MainActivity, "Account auth error: $error", Toast.LENGTH_LONG).show()
+                val authUrl = accountManager.beginAuthenticationAsync().await()
+                if (authUrl == null) {
+                    Toast.makeText(this@MainActivity, "Account auth error", Toast.LENGTH_LONG).show()
                     return@launch
                 }
                 openWebView(authUrl)

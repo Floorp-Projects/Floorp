@@ -12,7 +12,6 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.FxaException
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -37,15 +36,12 @@ class FirefoxAccountsAuthFeature(
         }
     }
 
-    private fun beginAuthenticationAsync(beginAuthentication: suspend () -> String) {
+    private fun beginAuthenticationAsync(beginAuthentication: suspend () -> String?) {
         CoroutineScope(coroutineContext).launch {
-            val authUrl = try {
-                beginAuthentication()
-            } catch (e: FxaException) {
-                // FIXME return a fallback URL provided by Config...
-                // https://github.com/mozilla-mobile/android-components/issues/2496
-                "https://accounts.firefox.com/signin"
-            }
+            // FIXME return a fallback URL provided by Config...
+            // https://github.com/mozilla-mobile/android-components/issues/2496
+            val authUrl = beginAuthentication() ?: "https://accounts.firefox.com/signin"
+
             // TODO
             // We may fail to obtain an authentication URL, for example due to transient network errors.
             // If that happens, open up a fallback URL in order to present some kind of a "no network"

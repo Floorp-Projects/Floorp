@@ -18,20 +18,20 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
      * @param name An initial name for the current device. This may be changed via [setDeviceNameAsync].
      * @param type Type of the current device. This can't be changed.
      * @param capabilities A list of capabilities that the current device claims to have.
-     * @return A [Deferred] that will be resolved once initialization is complete.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
     fun initDeviceAsync(
         name: String,
         type: DeviceType = DeviceType.MOBILE,
         capabilities: List<DeviceCapability>
-    ): Deferred<Unit>
+    ): Deferred<Boolean>
 
     /**
      * Destroy current device record.
      * Use this when device record is no longer relevant, e.g. while logging out. On success, other
      * devices will no longer see the current device in their device lists.
      *
-     * @return A boolean flag indicating if the operation succeeded.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
     fun destroyCurrentDeviceAsync(): Deferred<Boolean>
 
@@ -41,9 +41,9 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
      * @param capabilities A list of capabilities to configure. This is expected to be the same or
      * longer list than what was passed into [initDeviceAsync]. Removing capabilities is currently
      * not supported.
-     * @return A [Deferred] that will be resolved once operation is complete.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun ensureCapabilitiesAsync(capabilities: List<DeviceCapability>): Deferred<Unit>
+    fun ensureCapabilitiesAsync(capabilities: List<DeviceCapability>): Deferred<Boolean>
 
     /**
      * Current state of the constellation. May be missing if state was never queried.
@@ -59,44 +59,45 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
 
     /**
      * Get all devices in the constellation.
-     * @return A list of all devices in the constellation.
+     * @return A list of all devices in the constellation, or `null` on failure.
      */
-    fun fetchAllDevicesAsync(): Deferred<List<Device>>
+    fun fetchAllDevicesAsync(): Deferred<List<Device>?>
 
     /**
      * Set name of the current device.
      * @param name New device name.
-     * @return A [Deferred] that will be resolved once operation is complete.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun setDeviceNameAsync(name: String): Deferred<Unit>
+    fun setDeviceNameAsync(name: String): Deferred<Boolean>
 
     /**
      * Set a [DevicePushSubscription] for the current device.
      * @param subscription A new [DevicePushSubscription].
-     * @return A [Deferred] that will be resolved once operation is complete.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun setDevicePushSubscriptionAsync(subscription: DevicePushSubscription): Deferred<Unit>
+    fun setDevicePushSubscriptionAsync(subscription: DevicePushSubscription): Deferred<Boolean>
 
     /**
      * Send an event to a specified device.
      * @param targetDeviceId A device ID of the recipient.
      * @param outgoingEvent An event to send.
-     * @return A [Deferred] that will be resolved once operation is complete.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun sendEventToDeviceAsync(targetDeviceId: String, outgoingEvent: DeviceEventOutgoing): Deferred<Unit>
+    fun sendEventToDeviceAsync(targetDeviceId: String, outgoingEvent: DeviceEventOutgoing): Deferred<Boolean>
 
     /**
      * Process a raw event, obtained via a push message or some other out-of-band mechanism.
      * @param payload A raw, plaintext payload to be processed.
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun processRawEvent(payload: String)
+    fun processRawEventAsync(payload: String): Deferred<Boolean>
 
     /**
      * Poll for events targeted at the current [Device]. It's expected that if a [DeviceEvent] was
      * returned after a poll, it will not be returned in consequent polls.
-     * @return A list of [DeviceEvent] instances that are currently pending for this [Device].
+     * @return A list of [DeviceEvent] instances that are currently pending for this [Device], or `null` on failure.
      */
-    fun pollForEventsAsync(): Deferred<List<DeviceEvent>>
+    fun pollForEventsAsync(): Deferred<List<DeviceEvent>?>
 
     /**
      * Begin periodically refreshing constellation state, including polling for events.
@@ -109,10 +110,12 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     fun stopPeriodicRefresh()
 
     /**
-     * Refreshes internal state of the device constellation.
-     * @return A [Deferred] that will be resolved once operation is complete.
+     * Refreshes [ConstellationState] and polls for device events.
+     *
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete. Failure may
+     * indicate a partial success.
      */
-    fun refreshDeviceStateAsync(): Deferred<Unit>
+    fun refreshDeviceStateAsync(): Deferred<Boolean>
 }
 
 /**

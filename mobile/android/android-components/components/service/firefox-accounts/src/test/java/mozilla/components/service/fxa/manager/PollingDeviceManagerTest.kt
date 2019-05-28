@@ -22,7 +22,9 @@ import mozilla.components.concept.sync.TabData
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
@@ -65,7 +67,7 @@ class PollingDeviceManagerTest {
 
         // No events, no observers.
         `when`(constellation.pollForEventsAsync()).thenReturn(CompletableDeferred(listOf()))
-        manager.pollAsync().await()
+        assertTrue(manager.pollAsync().await())
 
         val eventsObserver = object : DeviceEventsObserver {
             var latestEvents: List<DeviceEvent>? = null
@@ -77,14 +79,14 @@ class PollingDeviceManagerTest {
 
         // No events, with an observer.
         manager.register(eventsObserver)
-        manager.pollAsync().await()
+        assertTrue(manager.pollAsync().await())
         assertEquals(listOf<DeviceEvent>(), eventsObserver.latestEvents)
 
         // Some events.
         `when`(constellation.pollForEventsAsync()).thenReturn(CompletableDeferred(listOf(
             DeviceEvent.TabReceived(null, listOf())
         )))
-        manager.pollAsync().await()
+        assertTrue(manager.pollAsync().await())
 
         var events = eventsObserver.latestEvents!!
         assertEquals(null, (events[0] as DeviceEvent.TabReceived).from)
@@ -100,7 +102,7 @@ class PollingDeviceManagerTest {
         `when`(constellation.pollForEventsAsync()).thenReturn(CompletableDeferred(listOf(
             DeviceEvent.TabReceived(testDevice1, listOf())
         )))
-        manager.pollAsync().await()
+        assertTrue(manager.pollAsync().await())
         assertNotNull(eventsObserver.latestEvents)
         assertEquals(1, eventsObserver.latestEvents!!.size)
         events = eventsObserver.latestEvents!!
@@ -111,7 +113,7 @@ class PollingDeviceManagerTest {
         `when`(constellation.pollForEventsAsync()).thenReturn(CompletableDeferred(listOf(
             DeviceEvent.TabReceived(testDevice2, listOf(testTab1))
         )))
-        manager.pollAsync().await()
+        assertTrue(manager.pollAsync().await())
 
         events = eventsObserver.latestEvents!!
         assertEquals(testDevice2, (events[0] as DeviceEvent.TabReceived).from)
@@ -121,7 +123,7 @@ class PollingDeviceManagerTest {
         `when`(constellation.pollForEventsAsync()).thenReturn(CompletableDeferred(listOf(
                 DeviceEvent.TabReceived(testDevice2, listOf(testTab1, testTab3))
         )))
-        manager.pollAsync().await()
+        assertTrue(manager.pollAsync().await())
 
         events = eventsObserver.latestEvents!!
         assertEquals(testDevice2, (events[0] as DeviceEvent.TabReceived).from)
@@ -132,13 +134,17 @@ class PollingDeviceManagerTest {
             DeviceEvent.TabReceived(testDevice2, listOf(testTab1, testTab2)),
             DeviceEvent.TabReceived(testDevice1, listOf(testTab3))
         )))
-        manager.pollAsync().await()
+        assertTrue(manager.pollAsync().await())
 
         events = eventsObserver.latestEvents!!
         assertEquals(testDevice2, (events[0] as DeviceEvent.TabReceived).from)
         assertEquals(listOf(testTab1, testTab2), (events[0] as DeviceEvent.TabReceived).entries)
         assertEquals(testDevice1, (events[1] as DeviceEvent.TabReceived).from)
         assertEquals(listOf(testTab3), (events[1] as DeviceEvent.TabReceived).entries)
+
+        // Failure to poll for events
+        `when`(constellation.pollForEventsAsync()).thenReturn(CompletableDeferred(value = null))
+        assertFalse(manager.pollAsync().await())
     }
 
     @Test
