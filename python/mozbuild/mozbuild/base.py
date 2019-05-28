@@ -9,9 +9,9 @@ import logging
 import mozpack.path as mozpath
 import multiprocessing
 import os
+import six
 import subprocess
 import sys
-import types
 import errno
 try:
     from shutil import which
@@ -289,7 +289,7 @@ class MozbuildObject(ProcessExecutionMixin):
         class ReducedConfigureSandbox(ConfigureSandbox):
             def depends_impl(self, *args, **kwargs):
                 args = tuple(
-                    a if not isinstance(a, types.StringTypes) or a != '--help'
+                    a if not isinstance(a, six.string_types) or a != '--help'
                     else self._always.sandboxed
                     for a in args
                 )
