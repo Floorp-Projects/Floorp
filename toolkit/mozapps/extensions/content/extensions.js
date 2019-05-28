@@ -30,8 +30,6 @@ ChromeUtils.defineModuleGetter(this, "ClientID",
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
-                                      "extensions.webextPermissionPrompts", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "XPINSTALL_ENABLED",
                                       "xpinstall.enabled", true);
 
@@ -1230,42 +1228,15 @@ var gViewController = {
                 hasPermission(aAddon, "enable"));
       },
       doCommand(aAddon) {
-        if (aAddon.isWebExtension && !aAddon.seen && WEBEXT_PERMISSION_PROMPTS) {
-          let perms = aAddon.userPermissions;
-          if (perms.origins.length > 0 || perms.permissions.length > 0) {
-            const target = getBrowserElement();
-
-            let subject = {
-              wrappedJSObject: {
-                target,
-                info: {
-                  type: "sideload",
-                  addon: aAddon,
-                  icon: aAddon.iconURL,
-                  permissions: perms,
-                  resolve() {
-                    aAddon.markAsSeen();
-                    aAddon.enable().then(() => {
-                      // The user has just enabled a sideloaded extension, if the permission
-                      // can be changed for the extension, show the post-install panel to
-                      // give the user that opportunity.
-                      if (aAddon.permissions & AddonManager.PERM_CAN_CHANGE_PRIVATEBROWSING_ACCESS) {
-                        Services.obs.notifyObservers({
-                          addon: aAddon, target,
-                        }, "webextension-install-notify");
-                      }
-                    });
-                  },
-                  reject() {},
-                },
-              },
-            };
-            Services.obs.notifyObservers(subject, "webextension-permission-prompt");
-            return;
-          }
+        if (shouldShowPermissionsPrompt(aAddon)) {
+          showPermissionsPrompt(aAddon).then(() => {
+            // Record telemetry if the addon has been enabled.
+            recordActionTelemetry({action: "enable", addon: aAddon});
+          });
+        } else {
+          aAddon.enable();
+          recordActionTelemetry({action: "enable", addon: aAddon});
         }
-        aAddon.enable();
-        recordActionTelemetry({action: "enable", addon: aAddon});
       },
       getTooltip(aAddon) {
         if (!aAddon)
