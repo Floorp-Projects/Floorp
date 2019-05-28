@@ -99,7 +99,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsViewSourceHandler.h"
 #include "nsJARURI.h"
-
+#include "nsAboutProtocolHandler.h"
 #include "nsResProtocolHandler.h"
 #include "mozilla/net/ExtensionProtocolHandler.h"
 #include <limits>
@@ -1817,6 +1817,11 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
       return NS_ERROR_NOT_AVAILABLE;
     }
     return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (scheme.EqualsLiteral("about")) {
+    return nsAboutProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI,
+                                                aURI);
   }
 
   if (scheme.EqualsLiteral("jar")) {
