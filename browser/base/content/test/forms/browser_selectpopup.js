@@ -794,3 +794,47 @@ add_task(async function test_blur_hides_popup() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+function getIsHandlingUserInput(browser, elementId, eventName) {
+  return ContentTask.spawn(browser, [elementId, eventName],
+    async function([contentElementId, contentEventName]) {
+      let element = content.document.getElementById(contentElementId);
+      let isHandlingUserInput = false;
+      await ContentTaskUtils.waitForEvent(element, contentEventName, false, e => {
+        isHandlingUserInput = content.window.windowUtils.isHandlingUserInput;
+        return true;
+      });
+
+      return isHandlingUserInput;
+    });
+}
+
+// This test checks if the change/click event is considered as user input event.
+add_task(async function test_handling_user_input() {
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let menulist = document.getElementById("ContentSelectDropdown");
+  let selectPopup = menulist.menupopup;
+
+  // Test onchange event when changing value via keyboard.
+  await openSelectPopup(selectPopup, "click", "#one");
+  let getPromise = getIsHandlingUserInput(tab.linkedBrowser, "one", "change");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  await hideSelectPopup(selectPopup);
+  is(await getPromise, true, "isHandlingUserInput should be true");
+
+  // Test onchange event when changing value via mouse click
+  await openSelectPopup(selectPopup, "click", "#two");
+  getPromise = getIsHandlingUserInput(tab.linkedBrowser, "two", "change");
+  EventUtils.synthesizeMouseAtCenter(selectPopup.lastElementChild, {});
+  is(await getPromise, true, "isHandlingUserInput should be true");
+
+  // Test onclick event fired from clicking select popup.
+  await openSelectPopup(selectPopup, "click", "#three");
+  getPromise = getIsHandlingUserInput(tab.linkedBrowser, "three", "click");
+  EventUtils.synthesizeMouseAtCenter(selectPopup.firstElementChild, {});
+  is(await getPromise, true, "isHandlingUserInput should be true");
+
+  BrowserTestUtils.removeTab(tab);
+});
