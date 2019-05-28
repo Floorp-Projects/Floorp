@@ -1242,6 +1242,9 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       behavior ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
 
+  uint32_t blockedReason =
+      nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+
   if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     if (!nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow)) {
       LOG(("Our window isn't a third-party tracking window"));
@@ -1255,9 +1258,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     } else if (nsContentUtils::IsThirdPartyWindowOrChannel(aWindow, nullptr,
                                                            aURI)) {
       LOG(("We're in the third-party context, storage should be partitioned"));
-      *aRejectedReason =
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
-      return false;
+      // fall through, but remember that we're partitioning.
+      blockedReason = nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
     } else {
       LOG(("Our window isn't a third-party window, storage is allowed"));
       return true;
@@ -1286,7 +1288,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
           nsGlobalWindowInner::Cast(aWindow), getter_AddRefs(parentPrincipal),
           trackingOrigin, getter_AddRefs(trackingURI), nullptr)) {
     LOG(("Failed to obtain the parent principal and the tracking origin"));
-    *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+    *aRejectedReason = blockedReason;
     return false;
   }
   Unused << parentPrincipal->GetURI(getter_AddRefs(parentPrincipalURI));
@@ -1326,7 +1328,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       parentPrincipalURI);
 
   if (result != nsIPermissionManager::ALLOW_ACTION) {
-    *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+    *aRejectedReason = blockedReason;
     return false;
   }
 
@@ -1499,6 +1501,9 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       behavior ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
 
+  uint32_t blockedReason =
+      nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+
   // Not a tracker.
   if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
     if (!aChannel->IsThirdPartyTrackingResource()) {
@@ -1513,9 +1518,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     } else if (nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel,
                                                            aURI)) {
       LOG(("We're in the third-party context, storage should be partitioned"));
-      *aRejectedReason =
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
-      return false;
+      // fall through but remember that we're partitioning.
+      blockedReason = nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
     } else {
       LOG(("Our channel isn't a third-party channel, storage is allowed"));
       return true;
@@ -1530,7 +1534,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     // window.
     if (loadInfo->GetTopLevelPrincipal()) {
       LOG(("Parent window is the top-level window, bail out early"));
-      *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+      *aRejectedReason = blockedReason;
       return false;
     }
 
@@ -1594,7 +1598,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       parentPrincipalURI);
 
   if (result != nsIPermissionManager::ALLOW_ACTION) {
-    *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+    *aRejectedReason = blockedReason;
     return false;
   }
 
