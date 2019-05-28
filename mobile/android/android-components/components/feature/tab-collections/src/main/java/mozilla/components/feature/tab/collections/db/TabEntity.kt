@@ -53,9 +53,11 @@ internal data class TabEntity(
         return AtomicFile(File(getStateDirectory(context), stateFile))
     }
 
-    private fun getStateDirectory(context: Context): File {
-        return File(context.filesDir, "mozac.feature.tab.collections").apply {
-            mkdirs()
+    companion object {
+        internal fun getStateDirectory(context: Context): File {
+            return File(context.filesDir, "mozac.feature.tab.collections").apply {
+                mkdirs()
+            }
         }
     }
 }

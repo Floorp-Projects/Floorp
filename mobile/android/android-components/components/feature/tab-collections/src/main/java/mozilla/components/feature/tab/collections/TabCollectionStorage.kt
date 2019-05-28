@@ -16,6 +16,7 @@ import mozilla.components.feature.tab.collections.adapter.TabCollectionAdapter
 import mozilla.components.feature.tab.collections.db.TabCollectionDatabase
 import mozilla.components.feature.tab.collections.db.TabCollectionEntity
 import mozilla.components.feature.tab.collections.db.TabEntity
+import mozilla.components.support.ktx.java.io.truncateDirectory
 import java.util.UUID
 
 /**
@@ -143,6 +144,16 @@ class TabCollectionStorage(
         collectionWithTabs.tabs.forEach { tab ->
             tab.getStateFile(context).delete()
         }
+    }
+
+    /**
+     * Removes all collections and all tabs.
+     */
+    fun removeAllCollections() {
+        database.value.clearAllTables()
+
+        TabEntity.getStateDirectory(context)
+            .truncateDirectory()
     }
 
     /**

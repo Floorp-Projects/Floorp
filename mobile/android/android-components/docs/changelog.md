@@ -38,8 +38,12 @@ permalink: /changelog/
   ```
 
 * **service-glean**
-   * Disabling telemetry through `setUploadEnabled` now clears all metrics
-     (except first_run_date) immediately.
+  * Disabling telemetry through `setUploadEnabled` now clears all metrics (except first_run_date) immediately.
+
+* **feature-tab-collections**
+  * Added option to remove all collections and their tabs: `TabCollectionStorage.removeAllCollections()`.
+
+>>>>>>> Closes #3118: Add option to remove all tab collections and their tabs.
 
 # 0.54.0
 

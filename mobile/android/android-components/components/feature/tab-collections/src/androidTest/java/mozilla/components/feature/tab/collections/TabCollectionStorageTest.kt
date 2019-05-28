@@ -18,7 +18,9 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.feature.tab.collections.db.TabCollectionDatabase
+import mozilla.components.feature.tab.collections.db.TabEntity
 import mozilla.components.support.android.test.awaitValue
+import mozilla.components.support.ktx.java.io.truncateDirectory
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -30,6 +32,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class TabCollectionStorageTest {
+    private lateinit var context: Context
     private lateinit var sessionManager: SessionManager
     private lateinit var storage: TabCollectionStorage
     private lateinit var executor: ExecutorService
@@ -41,7 +44,7 @@ class TabCollectionStorageTest {
     fun setUp() {
         executor = Executors.newSingleThreadExecutor()
 
-        val context: Context = ApplicationProvider.getApplicationContext()
+        context = ApplicationProvider.getApplicationContext()
         val database = Room.inMemoryDatabaseBuilder(context, TabCollectionDatabase::class.java).build()
 
         val engine = FakeEngine()
@@ -53,6 +56,8 @@ class TabCollectionStorageTest {
 
     @After
     fun tearDown() {
+        TabEntity.getStateDirectory(context).truncateDirectory()
+
         executor.shutdown()
     }
 
@@ -259,6 +264,28 @@ class TabCollectionStorageTest {
         storage.removeCollection(collections[0])
 
         assertEquals(1, storage.getTabCollectionsCount())
+    }
+
+    @Test
+    fun testRemovingAllCollections() {
+        storage.createCollection(
+            "Articles", listOf(
+                Session("https://www.mozilla.org").apply { title = "Mozilla" }
+            )
+        )
+        storage.createCollection(
+            "Recipes", listOf(
+                Session("https://www.firefox.com").apply { title = "Firefox" }
+            )
+        )
+
+        assertEquals(2, storage.getTabCollectionsCount())
+        assertEquals(2, TabEntity.getStateDirectory(context).listFiles().size)
+
+        storage.removeAllCollections()
+
+        assertEquals(0, storage.getTabCollectionsCount())
+        assertEquals(0, TabEntity.getStateDirectory(context).listFiles().size)
     }
 
     private fun getAllCollections(): List<TabCollection> {
