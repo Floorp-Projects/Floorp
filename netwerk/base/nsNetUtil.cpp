@@ -1747,6 +1747,9 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
   if (scheme.EqualsLiteral("ftp")) {
     return NewStandardURI(aSpec, aCharset, aBaseURI, 21, aURI);
   }
+  if (scheme.EqualsLiteral("ssh")) {
+    return NewStandardURI(aSpec, aCharset, aBaseURI, 22, aURI);
+  }
 
   if (scheme.EqualsLiteral("file")) {
     nsAutoCString buf(aSpec);
