@@ -8061,7 +8061,7 @@ var RestoreLastSessionObserver = {
         !PrivateBrowsingUtils.isWindowPrivate(window)) {
       Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
       goSetCommandEnabled("Browser:RestoreLastSession", true);
-    } else if (SessionStartup.isAutomaticRestoreEnabled()) {
+    } else if (SessionStore.willAutoRestore) {
       document.getElementById("Browser:RestoreLastSession").setAttribute("hidden", true);
     }
   },
