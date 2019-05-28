@@ -199,6 +199,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             contentDescriptionForPrivateBrowsingButton(isPrivate)
 
         privateBrowsingButton.setOnClickListener {
+            invokePendingDeleteJobs()
             val browsingModeManager = (activity as HomeActivity).browsingModeManager
             val newMode = when (browsingModeManager.mode) {
                 BrowsingModeManager.Mode.Normal -> BrowsingModeManager.Mode.Private
@@ -547,9 +548,11 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun removeAllTabsWithUndo(isPrivate: Boolean) {
+        val useCases = requireComponents.useCases.tabsUseCases
+
         getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.TabsChange(listOf()))
         deleteAllSessionsJob = {
-            requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(isPrivate)
+            useCases.removeAllTabsOfType.invoke(isPrivate)
         }
 
         CoroutineScope(Dispatchers.Main).allowUndo(
@@ -559,7 +562,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 emitSessionChanges()
             }
         ) {
-            requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(isPrivate)
+            useCases.removeAllTabsOfType.invoke(isPrivate)
         }
     }
 
