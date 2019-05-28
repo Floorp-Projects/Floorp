@@ -392,7 +392,7 @@ void ContentCompositorBridgeParent::ShadowLayersUpdated(
       static_cast<uint32_t>(
           (endTime - aInfo.transactionStart()).ToMilliseconds()));
 
-  RegisterPayload(aLayerTree, aInfo.payload());
+  RegisterPayloads(aLayerTree, aInfo.payload());
 
   aLayerTree->SetPendingTransactionId(
       aInfo.id(), aInfo.vsyncId(), aInfo.vsyncStart(), aInfo.refreshStart(),
@@ -628,9 +628,9 @@ void ContentCompositorBridgeParent::UpdatePaintTime(
   state->mParent->UpdatePaintTime(aLayerTree, aPaintTime);
 }
 
-void ContentCompositorBridgeParent::RegisterPayload(
+void ContentCompositorBridgeParent::RegisterPayloads(
     LayerTransactionParent* aLayerTree,
-    const InfallibleTArray<CompositionPayload>& aPayload) {
+    const nsTArray<CompositionPayload>& aPayload) {
   LayersId id = aLayerTree->GetId();
   MOZ_ASSERT(id.IsValid());
 
@@ -640,7 +640,7 @@ void ContentCompositorBridgeParent::RegisterPayload(
     return;
   }
 
-  state->mParent->RegisterPayload(aLayerTree, aPayload);
+  state->mParent->RegisterPayloads(aLayerTree, aPayload);
 }
 
 void ContentCompositorBridgeParent::ObserveLayersUpdate(
