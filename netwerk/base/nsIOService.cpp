@@ -802,34 +802,7 @@ class AutoIncrement {
 
 nsresult nsIOService::NewURI(const nsACString& aSpec, const char* aCharset,
                              nsIURI* aBaseURI, nsIURI** result) {
-  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
-
-  static uint32_t recursionCount = 0;
-  if (recursionCount >= MAX_RECURSION_COUNT) return NS_ERROR_MALFORMED_URI;
-  AutoIncrement inc(&recursionCount);
-
-  nsAutoCString scheme;
-  nsresult rv = ExtractScheme(aSpec, scheme);
-  if (NS_FAILED(rv)) {
-    // then aSpec is relative
-    if (!aBaseURI) return NS_ERROR_MALFORMED_URI;
-
-    if (!aSpec.IsEmpty() && aSpec[0] == '#') {
-      // Looks like a reference instead of a fully-specified URI.
-      // --> initialize |uri| as a clone of |aBaseURI|, with ref appended.
-      return NS_GetURIWithNewRef(aBaseURI, aSpec, result);
-    }
-
-    rv = aBaseURI->GetScheme(scheme);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  // now get the handler for this scheme
-  nsCOMPtr<nsIProtocolHandler> handler;
-  rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
-  if (NS_FAILED(rv)) return rv;
-
-  return handler->NewURI(aSpec, aCharset, aBaseURI, result);
+  return NS_NewURI(result, aSpec, aCharset, aBaseURI, nullptr);
 }
 
 NS_IMETHODIMP
