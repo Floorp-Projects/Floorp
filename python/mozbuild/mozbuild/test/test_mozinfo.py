@@ -201,6 +201,7 @@ class TestWriteMozinfo(unittest.TestCase, Base):
     """
     Test the write_mozinfo function.
     """
+
     def setUp(self):
         fd, self.f = tempfile.mkstemp()
         os.close(fd)

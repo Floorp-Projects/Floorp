@@ -233,7 +233,6 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(config, {'FOO': self.KNOWN_A})
         self.assertEqual(out, 'checking for foo... %s\n' % self.KNOWN_A)
 
-
     def test_check_prog_with_args(self):
         config, out, status = self.get_result(
             'check_prog("FOO", ("unknown", "known-b", "known c"))',
@@ -431,7 +430,8 @@ class TestChecksConfigure(unittest.TestCase):
                          'single element, or a string')
 
     def test_check_prog_with_path(self):
-        config, out, status = self.get_result('check_prog("A", ("known-a",), paths=["/some/path"])')
+        config, out, status = self.get_result(
+            'check_prog("A", ("known-a",), paths=["/some/path"])')
         self.assertEqual(status, 1)
         self.assertEqual(config, {})
         self.assertEqual(out, textwrap.dedent('''\
@@ -674,7 +674,6 @@ class TestChecksConfigure(unittest.TestCase):
             *** in your path, or set the PKG_CONFIG environment variable
             *** to the full path to pkg-config.
         '''))
-
 
         config, output, status = get_result("pkg_check_modules('MOZ_VALID', 'valid')",
                                             extra_paths=extra_paths)

@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 
+
 class VendorRust(MozbuildObject):
     def get_cargo_path(self):
         try:
@@ -62,7 +63,8 @@ class VendorRust(MozbuildObject):
         on the user. Allow changes to Cargo.{toml,lock} since that's
         likely to be a common use case.
         '''
-        modified = [f for f in self.repository.get_changed_files('M') if os.path.basename(f) not in ('Cargo.toml', 'Cargo.lock')]
+        modified = [f for f in self.repository.get_changed_files(
+            'M') if os.path.basename(f) not in ('Cargo.toml', 'Cargo.lock')]
         if modified:
             self.log(logging.ERROR, 'modified_files', {},
                      '''You have uncommitted changes to the following files:
@@ -108,23 +110,28 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         '''
         cargo = self.get_cargo_path()
         if not self.check_cargo_version(cargo):
-            self.log(logging.ERROR, 'cargo_version', {}, 'Cargo >= 0.13 required (install Rust 1.12 or newer)')
+            self.log(logging.ERROR, 'cargo_version', {},
+                     'Cargo >= 0.13 required (install Rust 1.12 or newer)')
             return None
         else:
             self.log(logging.DEBUG, 'cargo_version', {}, 'cargo is new enough')
-        have_vendor = any(l.strip() == 'vendor' for l in subprocess.check_output([cargo, '--list']).splitlines())
+        have_vendor = any(l.strip() == 'vendor' for l in subprocess.check_output(
+            [cargo, '--list']).splitlines())
         if not have_vendor:
-            self.log(logging.INFO, 'installing', {}, 'Installing cargo-vendor (this may take a few minutes)...')
+            self.log(logging.INFO, 'installing', {},
+                     'Installing cargo-vendor (this may take a few minutes)...')
             env = self.check_openssl()
             self.run_process(args=[cargo, 'install', 'cargo-vendor'],
                              append_env=env)
         elif not self.check_cargo_vendor_version(cargo):
-            self.log(logging.INFO, 'cargo_vendor', {}, 'cargo-vendor >= 0.1.23 required; force-reinstalling (this may take a few minutes)...')
+            self.log(logging.INFO, 'cargo_vendor', {
+                     }, 'cargo-vendor >= 0.1.23 required; force-reinstalling (this may take a few minutes)...')
             env = self.check_openssl()
             self.run_process(args=[cargo, 'install', '--force', 'cargo-vendor'],
                              append_env=env)
         else:
-            self.log(logging.DEBUG, 'cargo_vendor', {}, 'sufficiently new cargo-vendor is already installed')
+            self.log(logging.DEBUG, 'cargo_vendor', {},
+                     'sufficiently new cargo-vendor is already installed')
 
         return cargo
 
@@ -236,7 +243,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             if not self.runtime_license(package, license):
                 if license not in self.BUILDTIME_LICENSE_WHITELIST:
                     self.log(logging.ERROR, 'package_license_error', {},
-                            '''Package {} has a non-approved license: {}.
+                             '''Package {} has a non-approved license: {}.
 
     Please request license review on the package's license.  If the package's license
     is approved, please add it to the whitelist of suitable licenses.
@@ -244,7 +251,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
                     return False
                 elif package not in self.BUILDTIME_LICENSE_WHITELIST[license]:
                     self.log(logging.ERROR, 'package_license_error', {},
-                            '''Package {} has a license that is approved for build-time dependencies: {}
+                             '''Package {} has a license that is approved for build-time dependencies: {}
     but the package itself is not whitelisted as being a build-time only package.
 
     If your package is build-time only, please add it to the whitelist of build-time
@@ -264,8 +271,10 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             # to scanning individual lines.
             with open(toml_file, 'r') as f:
                 license_lines = [l for l in f if l.strip().startswith(b'license')]
-                license_matches = list(filter(lambda x: x, [LICENSE_LINE_RE.match(l) for l in license_lines]))
-                license_file_matches = list(filter(lambda x: x, [LICENSE_FILE_LINE_RE.match(l) for l in license_lines]))
+                license_matches = list(
+                    filter(lambda x: x, [LICENSE_LINE_RE.match(l) for l in license_lines]))
+                license_file_matches = list(
+                    filter(lambda x: x, [LICENSE_FILE_LINE_RE.match(l) for l in license_lines]))
 
                 # License information is optional for crates to provide, but
                 # we require it.
@@ -301,7 +310,8 @@ to the whitelist of packages whose licenses are suitable.
                         return False
 
                     approved_hash = self.RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST[package]
-                    license_contents = open(os.path.join(vendor_dir, package, license_file), 'r').read()
+                    license_contents = open(os.path.join(
+                        vendor_dir, package, license_file), 'r').read()
                     current_hash = hashlib.sha256(license_contents).hexdigest()
                     if current_hash != approved_hash:
                         self.log(logging.ERROR, 'package_license_file_mismatch', {},
@@ -317,7 +327,8 @@ license file's hash.
         # Force all of the packages to be checked for license information
         # before reducing via `all`, so all license issues are found in a
         # single `mach vendor rust` invocation.
-        results = [check_package(p) for p in os.listdir(vendor_dir) if os.path.isdir(os.path.join(vendor_dir, p))]
+        results = [check_package(p) for p in os.listdir(vendor_dir)
+                   if os.path.isdir(os.path.join(vendor_dir, p))]
         return all(results)
 
     def vendor(self, ignore_modified=False,
@@ -338,7 +349,8 @@ license file's hash.
         # We do an |update -p| here to regenerate the Cargo.lock file with minimal changes. See bug 1324462
         subprocess.check_call([cargo, 'update', '-p', 'gkrust'], cwd=self.topsrcdir)
 
-        subprocess.check_call([cargo, 'vendor', '--quiet', '--sync', 'Cargo.lock'] + [vendor_dir], cwd=self.topsrcdir)
+        subprocess.check_call([cargo, 'vendor', '--quiet', '--sync',
+                               'Cargo.lock'] + [vendor_dir], cwd=self.topsrcdir)
 
         if not self._check_licenses(vendor_dir):
             self.log(logging.ERROR, 'license_check_failed', {},

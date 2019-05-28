@@ -23,6 +23,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     objdir_abspath = mozpath.abspath(buildconfig.topobjdir)
+
     def is_valid_entry(entry):
         if isinstance(entry[1], BaseFile):
             entry_abspath = mozpath.abspath(entry[1].path)

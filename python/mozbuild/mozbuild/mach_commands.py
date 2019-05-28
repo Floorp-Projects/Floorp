@@ -140,19 +140,19 @@ class Build(MachCommandBase):
 
     @Command('build', category='build', description='Build the tree.')
     @CommandArgument('--jobs', '-j', default='0', metavar='jobs', type=int,
-        help='Number of concurrent jobs to run. Default is the number of CPUs.')
+                     help='Number of concurrent jobs to run. Default is the number of CPUs.')
     @CommandArgument('-C', '--directory', default=None,
-        help='Change to a subdirectory of the build directory first.')
+                     help='Change to a subdirectory of the build directory first.')
     @CommandArgument('what', default=None, nargs='*', help=BUILD_WHAT_HELP)
     @CommandArgument('-X', '--disable-extra-make-dependencies',
                      default=False, action='store_true',
                      help='Do not add extra make dependencies.')
     @CommandArgument('-v', '--verbose', action='store_true',
-        help='Verbose output for what commands the build is running.')
+                     help='Verbose output for what commands the build is running.')
     @CommandArgument('--keep-going', action='store_true',
                      help='Keep building after an error has occurred')
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0,
-        directory=None, verbose=False, keep_going=False):
+              directory=None, verbose=False, keep_going=False):
         """Build the source tree.
 
         With no arguments, this will perform a full build.
@@ -190,7 +190,7 @@ class Build(MachCommandBase):
             mach_context=self._mach_context)
 
     @Command('configure', category='build',
-        description='Configure the tree (run configure and config.status).')
+             description='Configure the tree (run configure and config.status).')
     @CommandArgument('options', default=None, nargs=argparse.REMAINDER,
                      help='Configure options')
     def configure(self, options=None, buildstatus_messages=False, line_handler=None):
@@ -207,15 +207,15 @@ class Build(MachCommandBase):
             line_handler=line_handler)
 
     @Command('resource-usage', category='post-build',
-        description='Show information about system resource usage for a build.')
+             description='Show information about system resource usage for a build.')
     @CommandArgument('--address', default='localhost',
-        help='Address the HTTP server should listen on.')
+                     help='Address the HTTP server should listen on.')
     @CommandArgument('--port', type=int, default=0,
-        help='Port number the HTTP server should listen on.')
+                     help='Port number the HTTP server should listen on.')
     @CommandArgument('--browser', default='firefox',
-        help='Web browser to automatically open. See webbrowser Python module.')
+                     help='Web browser to automatically open. See webbrowser Python module.')
     @CommandArgument('--url',
-        help='URL of JSON document to display')
+                     help='URL of JSON document to display')
     def resource_usage(self, address=None, port=None, browser=None, url=None):
         import webbrowser
         from mozbuild.html_build_viewer import BuildViewerServer
@@ -228,8 +228,8 @@ class Build(MachCommandBase):
             last = self._get_state_filename('build_resources.json')
             if not os.path.exists(last):
                 print('Build resources not available. If you have performed a '
-                    'build and receive this message, the psutil Python package '
-                    'likely failed to initialize properly.')
+                      'build and receive this message, the psutil Python package '
+                      'likely failed to initialize properly.')
                 return 1
 
             server.add_resource_json_file('last', last)
@@ -246,17 +246,17 @@ class Build(MachCommandBase):
         server.run()
 
     @Command('build-backend', category='build',
-        description='Generate a backend used to build the tree.')
+             description='Generate a backend used to build the tree.')
     @CommandArgument('-d', '--diff', action='store_true',
-        help='Show a diff of changes.')
+                     help='Show a diff of changes.')
     # It would be nice to filter the choices below based on
     # conditions, but that is for another day.
     @CommandArgument('-b', '--backend', nargs='+', choices=sorted(backends),
-        help='Which backend to build.')
+                     help='Which backend to build.')
     @CommandArgument('-v', '--verbose', action='store_true',
-        help='Verbose output.')
+                     help='Verbose output.')
     @CommandArgument('-n', '--dry-run', action='store_true',
-        help='Do everything except writing files out.')
+                     help='Do everything except writing files out.')
     def build_backend(self, backend, diff=False, verbose=False, dry_run=False):
         python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, 'config.status')
@@ -279,7 +279,7 @@ class Build(MachCommandBase):
             args.append('--dry-run')
 
         return self._run_command_in_objdir(args=args, pass_thru=True,
-            ensure_exit_code=False)
+                                           ensure_exit_code=False)
 
 
 @CommandProvider
@@ -295,7 +295,7 @@ class CargoProvider(MachCommandBase):
     @SubCommand('cargo', 'check',
                 description='Run `cargo check` on a given crate.  Defaults to gkrust.')
     @CommandArgument('--all-crates', default=None, action='store_true',
-        help='Check all of the crates in the tree.')
+                     help='Check all of the crates in the tree.')
     @CommandArgument('crates', default=None, nargs='*', help='The crate name(s) to check.')
     def check(self, all_crates=None, crates=None):
         # XXX duplication with `mach vendor rust`
@@ -335,30 +335,32 @@ class CargoProvider(MachCommandBase):
 
         return 0
 
+
 @CommandProvider
 class Doctor(MachCommandBase):
     """Provide commands for diagnosing common build environment problems"""
     @Command('doctor', category='devenv',
-        description='')
+             description='')
     @CommandArgument('--fix', default=None, action='store_true',
-        help='Attempt to fix found problems.')
+                     help='Attempt to fix found problems.')
     def doctor(self, fix=None):
         self._activate_virtualenv()
         from mozbuild.doctor import Doctor
         doctor = Doctor(self.topsrcdir, self.topobjdir, fix)
         return doctor.check_all()
 
+
 @CommandProvider
 class Clobber(MachCommandBase):
     NO_AUTO_LOG = True
     CLOBBER_CHOICES = ['objdir', 'python']
     @Command('clobber', category='build',
-        description='Clobber the tree (delete the object directory).')
+             description='Clobber the tree (delete the object directory).')
     @CommandArgument('what', default=['objdir'], nargs='*',
-        help='Target to clobber, must be one of {{{}}} (default objdir).'.format(
+                     help='Target to clobber, must be one of {{{}}} (default objdir).'.format(
              ', '.join(CLOBBER_CHOICES)))
     @CommandArgument('--full', action='store_true',
-        help='Perform a full clobber')
+                     help='Perform a full clobber')
     def clobber(self, what, full=False):
         """Clean up the source and object directories.
 
@@ -392,10 +394,10 @@ class Clobber(MachCommandBase):
                 Clobberer(self.topsrcdir, self.topobjdir).remove_objdir(full)
             except OSError as e:
                 if sys.platform.startswith('win'):
-                    if isinstance(e, WindowsError) and e.winerror in (5,32):
+                    if isinstance(e, WindowsError) and e.winerror in (5, 32):
                         self.log(logging.ERROR, 'file_access_error', {'error': e},
-                            "Could not clobber because a file was in use. If the "
-                            "application is running, try closing it. {error}")
+                                 "Could not clobber because a file was in use. If the "
+                                 "application is running, try closing it. {error}")
                         return 1
                 raise
 
@@ -421,16 +423,17 @@ class Clobber(MachCommandBase):
         except BuildEnvironmentNotFoundException:
             return {}
 
+
 @CommandProvider
 class Logs(MachCommandBase):
     """Provide commands to read mach logs."""
     NO_AUTO_LOG = True
 
     @Command('show-log', category='post-build',
-        description='Display mach logs')
+             description='Display mach logs')
     @CommandArgument('log_file', nargs='?', type=argparse.FileType('rb'),
-        help='Filename to read log data from. Defaults to the log of the last '
-             'mach command.')
+                     help='Filename to read log data from. Defaults to the log of the last '
+                     'mach command.')
     def show_log(self, log_file=None):
         if not log_file:
             path = self._get_state_filename('last_log.json')
@@ -502,12 +505,12 @@ class Warnings(MachCommandBase):
         return database
 
     @Command('warnings-summary', category='post-build',
-        description='Show a summary of compiler warnings.')
+             description='Show a summary of compiler warnings.')
     @CommandArgument('-C', '--directory', default=None,
-        help='Change to a subdirectory of the build directory first.')
+                     help='Change to a subdirectory of the build directory first.')
     @CommandArgument('report', default=None, nargs='?',
-        help='Warnings report to display. If not defined, show the most '
-            'recent report.')
+                     help='Warnings report to display. If not defined, show the most '
+                     'recent report.')
     def summary(self, directory=None, report=None):
         database = self.database
 
@@ -520,7 +523,7 @@ class Warnings(MachCommandBase):
 
         type_counts = database.type_counts(dirpath)
         sorted_counts = sorted(type_counts.iteritems(),
-            key=operator.itemgetter(1))
+                               key=operator.itemgetter(1))
 
         total = 0
         for k, v in sorted_counts:
@@ -530,14 +533,14 @@ class Warnings(MachCommandBase):
         print('%d\tTotal' % total)
 
     @Command('warnings-list', category='post-build',
-        description='Show a list of compiler warnings.')
+             description='Show a list of compiler warnings.')
     @CommandArgument('-C', '--directory', default=None,
-        help='Change to a subdirectory of the build directory first.')
+                     help='Change to a subdirectory of the build directory first.')
     @CommandArgument('--flags', default=None, nargs='+',
-        help='Which warnings flags to match.')
+                     help='Which warnings flags to match.')
     @CommandArgument('report', default=None, nargs='?',
-        help='Warnings report to display. If not defined, show the most '
-            'recent report.')
+                     help='Warnings report to display. If not defined, show the most '
+                     'recent report.')
     def list(self, directory=None, flags=None, report=None):
         database = self.database
 
@@ -569,10 +572,10 @@ class Warnings(MachCommandBase):
 
             if warning['column'] is not None:
                 print('%s:%d:%d [%s] %s' % (filename, warning['line'],
-                    warning['column'], warning['flag'], warning['message']))
+                                            warning['column'], warning['flag'], warning['message']))
             else:
                 print('%s:%d [%s] %s' % (filename, warning['line'],
-                    warning['flag'], warning['message']))
+                                         warning['flag'], warning['message']))
 
     def join_ensure_dir(self, dir1, dir2):
         dir1 = mozpath.normpath(dir1)
@@ -583,48 +586,46 @@ class Warnings(MachCommandBase):
         print('Specified directory not found.')
         return None
 
+
 @CommandProvider
 class GTestCommands(MachCommandBase):
     @Command('gtest', category='testing',
-        description='Run GTest unit tests (C++ tests).')
+             description='Run GTest unit tests (C++ tests).')
     @CommandArgument('gtest_filter', default=b"*", nargs='?', metavar='gtest_filter',
-        help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
-             "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
+                     help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
+                     "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
     @CommandArgument('--jobs', '-j', default='1', nargs='?', metavar='jobs', type=int,
-        help='Run the tests in parallel using multiple processes.')
+                     help='Run the tests in parallel using multiple processes.')
     @CommandArgument('--tbpl-parser', '-t', action='store_true',
-        help='Output test results in a format that can be parsed by TBPL.')
+                     help='Output test results in a format that can be parsed by TBPL.')
     @CommandArgument('--shuffle', '-s', action='store_true',
-        help='Randomize the execution order of tests.')
-
+                     help='Randomize the execution order of tests.')
     @CommandArgument('--package',
-        default='org.mozilla.geckoview.test',
-        help='(Android only) Package name of test app.')
+                     default='org.mozilla.geckoview.test',
+                     help='(Android only) Package name of test app.')
     @CommandArgument('--adbpath',
-        dest='adb_path',
-        help='(Android only) Path to adb binary.')
+                     dest='adb_path',
+                     help='(Android only) Path to adb binary.')
     @CommandArgument('--deviceSerial',
-        dest='device_serial',
-        help="(Android only) adb serial number of remote device. "
-             "Required when more than one device is connected to the host. "
-             "Use 'adb devices' to see connected devices.")
+                     dest='device_serial',
+                     help="(Android only) adb serial number of remote device. "
+                     "Required when more than one device is connected to the host. "
+                     "Use 'adb devices' to see connected devices.")
     @CommandArgument('--remoteTestRoot',
-        dest='remote_test_root',
-        help='(Android only) Remote directory to use as test root '
-             '(eg. /mnt/sdcard/tests or /data/local/tests).')
+                     dest='remote_test_root',
+                     help='(Android only) Remote directory to use as test root '
+                     '(eg. /mnt/sdcard/tests or /data/local/tests).')
     @CommandArgument('--libxul',
-        dest='libxul_path',
-        help='(Android only) Path to gtest libxul.so.')
-
+                     dest='libxul_path',
+                     help='(Android only) Path to gtest libxul.so.')
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
-        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
+                     help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
-        help='Name of debugger to use.')
+                     help='Name of debugger to use.')
     @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
-        group='debugging',
-        help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
-
+                     group='debugging',
+                     help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
     def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser,
               package, adb_path, device_serial, remote_test_root, libxul_path,
               debug, debugger, debugger_args):
@@ -669,10 +670,10 @@ class GTestCommands(MachCommandBase):
             print("One or more Android-only options will be ignored")
 
         app_path = self.get_binary_path('app')
-        args = [app_path, '-unittest', '--gtest_death_test_style=threadsafe'];
+        args = [app_path, '-unittest', '--gtest_death_test_style=threadsafe']
 
         if sys.platform.startswith('win') and \
-            'MOZ_LAUNCHER_PROCESS' in self.defines:
+                'MOZ_LAUNCHER_PROCESS' in self.defines:
             args.append('--wait-for-browser')
 
         if debug or debugger or debugger_args:
@@ -710,6 +711,7 @@ class GTestCommands(MachCommandBase):
 
         from mozprocess import ProcessHandlerMixin
         import functools
+
         def handle_line(job_id, line):
             # Prepend the jobId
             line = '[%d] %s' % (job_id + 1, line.strip())
@@ -720,10 +722,11 @@ class GTestCommands(MachCommandBase):
         for i in range(0, jobs):
             gtest_env["GTEST_SHARD_INDEX"] = str(i)
             processes[i] = ProcessHandlerMixin([app_path, "-unittest"],
-                             cwd=cwd,
-                             env=gtest_env,
-                             processOutputLine=[functools.partial(handle_line, i)],
-                             universal_newlines=True)
+                                               cwd=cwd,
+                                               env=gtest_env,
+                                               processOutputLine=[
+                                                   functools.partial(handle_line, i)],
+                                               universal_newlines=True)
             processes[i].run()
 
         exit_code = 0
@@ -808,10 +811,11 @@ class GTestCommands(MachCommandBase):
         args = [debuggerInfo.path] + debuggerInfo.args + args
         return args
 
+
 @CommandProvider
 class ClangCommands(MachCommandBase):
     @Command('clang-complete', category='devenv',
-        description='Generate a .clang_complete file.')
+             description='Generate a .clang_complete file.')
     def clang_complete(self):
         import shlex
 
@@ -866,9 +870,9 @@ class Package(MachCommandBase):
     """Package the built product for distribution."""
 
     @Command('package', category='post-build',
-        description='Package the built product for distribution as an APK, DMG, etc.')
+             description='Package the built product for distribution as an APK, DMG, etc.')
     @CommandArgument('-v', '--verbose', action='store_true',
-        help='Verbose output for what commands the packaging process is running.')
+                     help='Verbose output for what commands the packaging process is running.')
     def package(self, verbose=False):
         ret = self._run_make(directory=".", target='package',
                              silent=not verbose, ensure_exit_code=False)
@@ -876,21 +880,23 @@ class Package(MachCommandBase):
             self.notify('Packaging complete')
         return ret
 
+
 @CommandProvider
 class Install(MachCommandBase):
     """Install a package."""
 
     @Command('install-desktop', category='post-build',
-        conditional_name='install',
-        conditions=[conditions.is_not_android],
-        description='Install the package on the machine.')
+             conditional_name='install',
+             conditions=[conditions.is_not_android],
+             description='Install the package on the machine.')
     @CommandArgument('--verbose', '-v', action='store_true',
-        help='Print verbose output when installing to an Android emulator.')
+                     help='Print verbose output when installing to an Android emulator.')
     def install(self, verbose=False):
         ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
         if ret == 0:
             self.notify('Install complete')
         return ret
+
 
 @SettingsProvider
 class RunSettings():
@@ -902,6 +908,7 @@ single quoted to force them to be strings.
 """.strip()),
     ]
 
+
 @CommandProvider
 class RunProgram(MachCommandBase):
     """Run the compiled program."""
@@ -911,51 +918,49 @@ class RunProgram(MachCommandBase):
     @Command('run-desktop', category='post-build',
         conditional_name='run',
         conditions=[conditions.is_not_android],
-        description='Run the compiled program, possibly under a debugger or DMD.')
+             description='Run the compiled program, possibly under a debugger or DMD.')
     @CommandArgument('params', nargs='...', group=prog_group,
-        help='Command-line arguments to be passed through to the program. Not specifying a --profile or -P option will result in a temporary profile being used.')
+                     help='Command-line arguments to be passed through to the program. Not specifying a --profile or -P option will result in a temporary profile being used.')
     @CommandArgumentGroup(prog_group)
     @CommandArgument('--remote', '-r', action='store_true', group=prog_group,
-        help='Do not pass the --no-remote argument by default.')
+                     help='Do not pass the --no-remote argument by default.')
     @CommandArgument('--background', '-b', action='store_true', group=prog_group,
-        help='Do not pass the --foreground argument by default on Mac.')
+                     help='Do not pass the --foreground argument by default on Mac.')
     @CommandArgument('--noprofile', '-n', action='store_true', group=prog_group,
-        help='Do not pass the --profile argument by default.')
+                     help='Do not pass the --profile argument by default.')
     @CommandArgument('--disable-e10s', action='store_true', group=prog_group,
-        help='Run the program with electrolysis disabled.')
+                     help='Run the program with electrolysis disabled.')
     @CommandArgument('--enable-crash-reporter', action='store_true', group=prog_group,
-        help='Run the program with the crash reporter enabled.')
+                     help='Run the program with the crash reporter enabled.')
     @CommandArgument('--setpref', action='append', default=[], group=prog_group,
-        help='Set the specified pref before starting the program. Can be set multiple times. Prefs can also be set in ~/.mozbuild/machrc in the [runprefs] section - see `./mach settings` for more information.')
+                     help='Set the specified pref before starting the program. Can be set multiple times. Prefs can also be set in ~/.mozbuild/machrc in the [runprefs] section - see `./mach settings` for more information.')
     @CommandArgument('--temp-profile', action='store_true', group=prog_group,
-        help='Run the program using a new temporary profile created inside the objdir.')
+                     help='Run the program using a new temporary profile created inside the objdir.')
     @CommandArgument('--macos-open', action='store_true', group=prog_group,
-        help="On macOS, run the program using the open(1) command. Per open(1), the browser is launched \"just as if you had double-clicked the file's icon\". The browser can not be launched under a debugger with this option.")
-
+                     help="On macOS, run the program using the open(1) command. Per open(1), the browser is launched \"just as if you had double-clicked the file's icon\". The browser can not be launched under a debugger with this option.")
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
-        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
+                     help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
-        help='Name of debugger to use.')
+                     help='Name of debugger to use.')
     @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
-        group='debugging',
-        help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
+                     group='debugging',
+                     help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
     @CommandArgument('--debugparams', action=StoreDebugParamsAndWarnAction,
-        default=None, type=str, dest='debugger_args', group='debugging',
-        help=argparse.SUPPRESS)
-
+                     default=None, type=str, dest='debugger_args', group='debugging',
+                     help=argparse.SUPPRESS)
     @CommandArgumentGroup('DMD')
     @CommandArgument('--dmd', action='store_true', group='DMD',
-        help='Enable DMD. The following arguments have no effect without this.')
+                     help='Enable DMD. The following arguments have no effect without this.')
     @CommandArgument('--mode', choices=['live', 'dark-matter', 'cumulative', 'scan'], group='DMD',
-         help='Profiling mode. The default is \'dark-matter\'.')
+                     help='Profiling mode. The default is \'dark-matter\'.')
     @CommandArgument('--stacks', choices=['partial', 'full'], group='DMD',
-        help='Allocation stack trace coverage. The default is \'partial\'.')
+                     help='Allocation stack trace coverage. The default is \'partial\'.')
     @CommandArgument('--show-dump-stats', action='store_true', group='DMD',
-        help='Show stats when doing dumps.')
+                     help='Show stats when doing dumps.')
     def run(self, params, remote, background, noprofile, disable_e10s,
-        enable_crash_reporter, setpref, temp_profile, macos_open, debug,
-        debugger, debugger_args, dmd, mode, stacks, show_dump_stats):
+            enable_crash_reporter, setpref, temp_profile, macos_open, debug,
+            debugger, debugger_args, dmd, mode, stacks, show_dump_stats):
 
         from mozprofile import Profile, Preferences
 
@@ -963,7 +968,7 @@ class RunProgram(MachCommandBase):
             binpath = self.get_binary_path('app')
         except Exception as e:
             print("It looks like your program isn't built.",
-                "You can run |mach build| to build it.")
+                  "You can run |mach build| to build it.")
             print(e)
             return 1
 
@@ -971,7 +976,7 @@ class RunProgram(MachCommandBase):
         if macos_open:
             if debug:
                 print("The browser can not be launched in the debugger "
-                    "when using the macOS open command.")
+                      "when using the macOS open command.")
                 return 1
             try:
                 m = re.search(r'^.+\.app', binpath)
@@ -979,7 +984,7 @@ class RunProgram(MachCommandBase):
                 args = ['open', apppath, '--args']
             except Exception as e:
                 print("Couldn't get the .app path from the binary path. "
-                    "The macOS open option can only be used on macOS")
+                      "The macOS open option can only be used on macOS")
                 print(e)
                 return 1
         else:
@@ -1098,21 +1103,23 @@ class RunProgram(MachCommandBase):
                 extra_env['DMD'] = '1'
 
         return self.run_process(args=args, ensure_exit_code=False,
-            pass_thru=True, append_env=extra_env)
+                                pass_thru=True, append_env=extra_env)
+
 
 @CommandProvider
 class Buildsymbols(MachCommandBase):
     """Produce a package of debug symbols suitable for use with Breakpad."""
 
     @Command('buildsymbols', category='post-build',
-        description='Produce a package of Breakpad-format symbols.')
+             description='Produce a package of Breakpad-format symbols.')
     def buildsymbols(self):
         return self._run_make(directory=".", target='buildsymbols', ensure_exit_code=False)
+
 
 @CommandProvider
 class Makefiles(MachCommandBase):
     @Command('empty-makefiles', category='build-dev',
-        description='Find empty Makefile.in in the tree.')
+             description='Find empty Makefile.in in the tree.')
     def empty(self):
         import pymake.parser
         import pymake.parserdata
@@ -1152,7 +1159,7 @@ class Makefiles(MachCommandBase):
             relpath = os.path.relpath(path, self.topsrcdir)
             try:
                 statements = [s for s in pymake.parser.parsefile(path)
-                    if is_statement_relevant(s)]
+                              if is_statement_relevant(s)]
 
                 if not statements:
                     print(relpath)
@@ -1165,17 +1172,18 @@ class Makefiles(MachCommandBase):
                 if f == 'Makefile.in':
                     yield os.path.join(root, f)
 
+
 @CommandProvider
 class MachDebug(MachCommandBase):
     @Command('environment', category='build-dev',
-        description='Show info about the mach and build environment.')
+             description='Show info about the mach and build environment.')
     @CommandArgument('--format', default='pretty',
-        choices=['pretty', 'configure', 'json'],
-        help='Print data in the given format.')
+                     choices=['pretty', 'configure', 'json'],
+                     help='Print data in the given format.')
     @CommandArgument('--output', '-o', type=str,
-        help='Output to the given file.')
+                     help='Output to the given file.')
     @CommandArgument('--verbose', '-v', action='store_true',
-        help='Print verbose output.')
+                     help='Print verbose output.')
     def environment(self, format, output=None, verbose=False):
         func = getattr(self, '_environment_%s' % format.replace('.', '_'))
 
@@ -1240,6 +1248,7 @@ class MachDebug(MachCommandBase):
 
     def _environment_json(self, out, verbose):
         import json
+
         class EnvironmentEncoder(json.JSONEncoder):
             def default(self, obj):
                 if isinstance(obj, MozbuildObject):
@@ -1263,11 +1272,11 @@ class ArtifactSubCommand(SubCommand):
         after = SubCommand.__call__(self, func)
         args = [
             CommandArgument('--tree', metavar='TREE', type=str,
-                help='Firefox tree.'),
+                            help='Firefox tree.'),
             CommandArgument('--job', metavar='JOB', choices=JOB_CHOICES,
-                help='Build job.'),
+                            help='Build job.'),
             CommandArgument('--verbose', '-v', action='store_true',
-                help='Print verbose output.'),
+                            help='Print verbose output.'),
         ]
         for arg in args:
             after = arg(after)
@@ -1287,7 +1296,7 @@ class PackageFrontend(MachCommandBase):
     """Fetch and install binary artifacts from Mozilla automation."""
 
     @Command('artifact', category='post-build',
-        description='Use pre-built artifacts to build Firefox.')
+             description='Use pre-built artifacts to build Firefox.')
     def artifact(self):
         '''Download, cache, and install pre-built binary artifacts to build Firefox.
 
@@ -1330,15 +1339,15 @@ class PackageFrontend(MachCommandBase):
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',
-        'Install a good pre-built artifact.')
+                        'Install a good pre-built artifact.')
     @CommandArgument('source', metavar='SRC', nargs='?', type=str,
-        help='Where to fetch and install artifacts from.  Can be omitted, in '
-            'which case the current hg repository is inspected; an hg revision; '
-            'a remote URL; or a local file.',
-        default=None)
+                     help='Where to fetch and install artifacts from.  Can be omitted, in '
+                     'which case the current hg repository is inspected; an hg revision; '
+                     'a remote URL; or a local file.',
+                     default=None)
     @CommandArgument('--skip-cache', action='store_true',
-        help='Skip all local caches to force re-fetching remote artifacts.',
-        default=False)
+                     help='Skip all local caches to force re-fetching remote artifacts.',
+                     default=False)
     @CommandArgument('--no-tests', action='store_true', help="Don't install tests.")
     @CommandArgument('--symbols', nargs='?', action=SymbolsAction, help='Download symbols.')
     @CommandArgument('--host-bins', action='store_true', help='Download host binaries.')
@@ -1354,7 +1363,7 @@ class PackageFrontend(MachCommandBase):
         return artifacts.install_from(source, distdir or self.distdir)
 
     @ArtifactSubCommand('artifact', 'clear-cache',
-        'Delete local artifacts and reset local artifact cache.')
+                        'Delete local artifacts and reset local artifact cache.')
     def artifact_clear_cache(self, tree=None, job=None, verbose=False):
         self._set_log_level(verbose)
         artifacts = self._make_artifacts(tree=tree, job=job)
@@ -1363,35 +1372,35 @@ class PackageFrontend(MachCommandBase):
 
     @SubCommand('artifact', 'toolchain')
     @CommandArgument('--verbose', '-v', action='store_true',
-        help='Print verbose output.')
+                     help='Print verbose output.')
     @CommandArgument('--cache-dir', metavar='DIR',
-        help='Directory where to store the artifacts cache')
+                     help='Directory where to store the artifacts cache')
     @CommandArgument('--skip-cache', action='store_true',
-        help='Skip all local caches to force re-fetching remote artifacts.',
-        default=False)
+                     help='Skip all local caches to force re-fetching remote artifacts.',
+                     default=False)
     @CommandArgument('--from-build', metavar='BUILD', nargs='+',
-        help='Download toolchains resulting from the given build(s); '
-             'BUILD is a name of a toolchain task, e.g. linux64-clang')
+                     help='Download toolchains resulting from the given build(s); '
+                     'BUILD is a name of a toolchain task, e.g. linux64-clang')
     @CommandArgument('--tooltool-manifest', metavar='MANIFEST',
-        help='Explicit tooltool manifest to process')
+                     help='Explicit tooltool manifest to process')
     @CommandArgument('--authentication-file', metavar='FILE',
-        help='Use the RelengAPI token found in the given file to authenticate')
+                     help='Use the RelengAPI token found in the given file to authenticate')
     @CommandArgument('--tooltool-url', metavar='URL',
-        help='Use the given url as tooltool server')
+                     help='Use the given url as tooltool server')
     @CommandArgument('--no-unpack', action='store_true',
-        help='Do not unpack any downloaded file')
+                     help='Do not unpack any downloaded file')
     @CommandArgument('--retry', type=int, default=4,
-        help='Number of times to retry failed downloads')
+                     help='Number of times to retry failed downloads')
     @CommandArgument('--artifact-manifest', metavar='FILE',
-        help='Store a manifest about the downloaded taskcluster artifacts')
+                     help='Store a manifest about the downloaded taskcluster artifacts')
     @CommandArgument('files', nargs='*',
-        help='A list of files to download, in the form path@task-id, in '
-             'addition to the files listed in the tooltool manifest.')
+                     help='A list of files to download, in the form path@task-id, in '
+                     'addition to the files listed in the tooltool manifest.')
     def artifact_toolchain(self, verbose=False, cache_dir=None,
-                          skip_cache=False, from_build=(),
-                          tooltool_manifest=None, authentication_file=None,
-                          tooltool_url=None, no_unpack=False, retry=None,
-                          artifact_manifest=None, files=()):
+                           skip_cache=False, from_build=(),
+                           tooltool_manifest=None, authentication_file=None,
+                           tooltool_url=None, no_unpack=False, retry=None,
+                           artifact_manifest=None, files=()):
         '''Download, cache and install pre-built toolchains.
         '''
         from mozbuild.artifacts import ArtifactCache
@@ -1479,7 +1488,7 @@ class PackageFrontend(MachCommandBase):
 
                 name = os.path.basename(artifact_name)
                 artifact_url = get_artifact_url(task_id, artifact_name,
-                    use_proxy=not artifact_name.startswith('public/'))
+                                                use_proxy=not artifact_name.startswith('public/'))
                 super(ArtifactRecord, self).__init__(
                     artifact_url, name,
                     None, digest, algorithm, unpack=True)
@@ -1655,6 +1664,7 @@ class PackageFrontend(MachCommandBase):
 
         return 0
 
+
 class StaticAnalysisSubCommand(SubCommand):
     def __call__(self, func):
         after = SubCommand.__call__(self, func)
@@ -1811,7 +1821,7 @@ class StaticAnalysis(MachCommandBase):
 
         if self._is_version_eligible() is False:
             self.log(logging.ERROR, 'static-analysis', {}, "You're using an old version of clang-format binary."
-                            " Please update to a more recent one by running: './mach bootstrap'")
+                     " Please update to a more recent one by running: './mach bootstrap'")
             return 1
 
         rc = self._build_compile_db(verbose=verbose)
@@ -1839,8 +1849,8 @@ class StaticAnalysis(MachCommandBase):
 
         if not total:
             self.log(logging.INFO, 'static-analysis', {},
-                "There are no files eligible for analysis. Please note that 'header' files "
-                "cannot be used for analysis since they do not consist compilation units.")
+                     "There are no files eligible for analysis. Please note that 'header' files "
+                     "cannot be used for analysis since they do not consist compilation units.")
             return 0
 
         cwd = self.topobjdir
@@ -1850,11 +1860,13 @@ class StaticAnalysis(MachCommandBase):
         args = self._get_clang_tidy_command(
             checks=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
 
-        monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, self._clang_tidy_config, total)
+        monitor = StaticAnalysisMonitor(
+            self.topsrcdir, self.topobjdir, self._clang_tidy_config, total)
 
         footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
         with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output_manager:
-            rc = self.run_process(args=args, ensure_exit_code=False, line_handler=output_manager.on_line, cwd=cwd)
+            rc = self.run_process(args=args, ensure_exit_code=False,
+                                  line_handler=output_manager.on_line, cwd=cwd)
 
             self.log(logging.WARNING, 'warning_summary',
                      {'count': len(monitor.warnings_db)},
@@ -1892,7 +1904,8 @@ class StaticAnalysis(MachCommandBase):
         self.log_manager.enable_all_structured_loggers()
 
         if 'MOZ_AUTOMATION' not in os.environ:
-            self.log(logging.INFO, 'static-analysis', {}, 'Coverity based static-analysis cannot be ran outside automation.')
+            self.log(logging.INFO, 'static-analysis', {},
+                     'Coverity based static-analysis cannot be ran outside automation.')
             return
 
         # Use outgoing files instead of source files
@@ -1902,7 +1915,8 @@ class StaticAnalysis(MachCommandBase):
             source = map(os.path.abspath, files)
 
         if len(source) == 0:
-            self.log(logging.ERROR, 'static-analysis', {}, 'There are no files that coverity can use to scan.')
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'There are no files that coverity can use to scan.')
             return 0
 
         rc = self._build_compile_db(verbose=verbose)
@@ -1913,7 +1927,8 @@ class StaticAnalysis(MachCommandBase):
 
         commands_list = self.get_files_with_commands(source)
         if len(commands_list) == 0:
-            self.log(logging.INFO, 'static-analysis', {}, 'There are no files that need to be analyzed.')
+            self.log(logging.INFO, 'static-analysis', {},
+                     'There are no files that need to be analyzed.')
             return 0
 
         # Load the configuration file for coverity static-analysis
@@ -1927,31 +1942,37 @@ class StaticAnalysis(MachCommandBase):
 
         # First run cov-run-desktop --setup in order to setup the analysis env
         cmd = [self.cov_run_desktop, '--setup']
-        self.log(logging.INFO, 'static-analysis', {}, 'Running {} --setup'.format(self.cov_run_desktop))
+        self.log(logging.INFO, 'static-analysis', {},
+                 'Running {} --setup'.format(self.cov_run_desktop))
 
         rc = self.run_process(args=cmd, cwd=self.cov_path, pass_thru=True)
 
         if rc != 0:
-            self.log(logging.ERROR, 'static-analysis', {}, 'Running {} --setup failed!'.format(self.cov_run_desktop))
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'Running {} --setup failed!'.format(self.cov_run_desktop))
             return rc
 
         # Run cov-configure for clang
         cmd = [self.cov_configure, '--clang']
-        self.log(logging.INFO, 'static-analysis', {}, 'Running {} --clang'.format(self.cov_configure))
+        self.log(logging.INFO, 'static-analysis', {},
+                 'Running {} --clang'.format(self.cov_configure))
 
         rc = self.run_process(args=cmd, cwd=self.cov_path, pass_thru=True)
 
         if rc != 0:
-            self.log(logging.ERROR, 'static-analysis', {}, 'Running {} --clang failed!'.format(self.cov_configure))
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'Running {} --clang failed!'.format(self.cov_configure))
             return rc
 
         # For each element in commands_list run `cov-translate`
         for element in commands_list:
             cmd = [self.cov_translate, '--dir', self.cov_idir_path] + element['command'].split(' ')
-            self.log(logging.INFO, 'static-analysis', {}, 'Running Coverity Tranlate for {}'.format(cmd))
+            self.log(logging.INFO, 'static-analysis', {},
+                     'Running Coverity Tranlate for {}'.format(cmd))
             rc = self.run_process(args=cmd, cwd=element['directory'], pass_thru=True)
             if rc != 0:
-                self.log(logging.ERROR, 'static-analysis', {}, 'Running Coverity Tranlate failed for {}'.format(cmd))
+                self.log(logging.ERROR, 'static-analysis', {},
+                         'Running Coverity Tranlate failed for {}'.format(cmd))
                 return cmd
 
         if coverity_output_path is None:
@@ -1961,7 +1982,8 @@ class StaticAnalysis(MachCommandBase):
 
         # Once the capture is performed we need to do the actual Coverity Desktop analysis
         cmd = [self.cov_run_desktop, '--json-output-v6', cov_result, '--analyze-captured-source']
-        self.log(logging.INFO, 'static-analysis', {}, 'Running Coverity Analysis for {}'.format(cmd))
+        self.log(logging.INFO, 'static-analysis', {},
+                 'Running Coverity Analysis for {}'.format(cmd))
         rc = self.run_process(cmd, cwd=self.cov_state_path, pass_thru=True)
         if rc != 0:
             self.log(logging.ERROR, 'static-analysis', {}, 'Coverity Analysis failed!')
@@ -1972,22 +1994,22 @@ class StaticAnalysis(MachCommandBase):
     def get_reliability_index_for_cov_checker(self, checker_name):
         if self._cov_config is None:
             self.log(logging.INFO, 'static-analysis', {}, 'Coverity config file not found, '
-                'using default-value \'reliablity\' = medium. for checker {}'.format(checker_name))
+                     'using default-value \'reliablity\' = medium. for checker {}'.format(checker_name))
             return 'medium'
 
         checkers = self._cov_config['coverity_checkers']
         if checker_name not in checkers:
             self.log(logging.INFO, 'static-analysis', {},
-                'Coverity checker {} not found to determine reliability index. '
-                'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
+                     'Coverity checker {} not found to determine reliability index. '
+                     'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
             return 'medium'
 
         if 'reliability' not in checkers[checker_name]:
             # This checker doesn't have a reliability index
             self.log(logging.INFO, 'static-analysis', {},
-                'Coverity checker {} doesn\'t have a reliability index set, '
-                'field \'reliability is missing\', please cosinder adding it. '
-                'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
+                     'Coverity checker {} doesn\'t have a reliability index set, '
+                     'field \'reliability is missing\', please cosinder adding it. '
+                     'For the moment we shall use the default \'reliablity\' = medium.'.format(checker_name))
             return 'medium'
 
         return checkers[checker_name]['reliability']
@@ -2004,7 +2026,8 @@ class StaticAnalysis(MachCommandBase):
 
             def build_element(issue):
                 # We look only for main event
-                event_path = next((event for event in issue['events'] if event['main'] is True), None)
+                event_path = next(
+                    (event for event in issue['events'] if event['main'] is True), None)
 
                 dict_issue = {
                     'line': issue['mainEventLineNumber'],
@@ -2048,7 +2071,8 @@ class StaticAnalysis(MachCommandBase):
         secret_name = 'project/relman/coverity'
         secrets_url = '{}/secrets/v1/secret/{}'.format(get_root_url(True), secret_name)
 
-        self.log(logging.INFO, 'static-analysis', {}, 'Using symbol upload token from the secrets service: "{}"'.format(secrets_url))
+        self.log(logging.INFO, 'static-analysis', {},
+                 'Using symbol upload token from the secrets service: "{}"'.format(secrets_url))
 
         import requests
         res = requests.get(secrets_url)
@@ -2057,7 +2081,8 @@ class StaticAnalysis(MachCommandBase):
         cov_config = secret['secret'] if 'secret' in secret else None
 
         if cov_config is None:
-            self.log(logging.ERROR, 'static-analysis', {}, 'Ill formatted secret for Coverity. Aborting analysis.')
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'Ill formatted secret for Coverity. Aborting analysis.')
             return 1
 
         self.cov_analysis_url = cov_config.get('package_url')
@@ -2144,7 +2169,8 @@ class StaticAnalysis(MachCommandBase):
         self.cov_idir_path = mozpath.join(self.cov_work_path, self.cov_package_ver, 'idir')
 
         if not os.path.exists(self.cov_path):
-            self.log(logging.ERROR, 'static-analysis', {}, 'Missing Coverity in {}'.format(self.cov_path))
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'Missing Coverity in {}'.format(self.cov_path))
             return 1
 
         return 0
@@ -2339,8 +2365,8 @@ class StaticAnalysis(MachCommandBase):
             config = yaml.safe_load(file_handler)
         except Exception:
             self.log(logging.ERROR, 'static-analysis', {},
-                    'Looks like config.yaml is not valid, we are going to use default'
-                    ' values for the rest of the analysis for clang-tidy.')
+                     'Looks like config.yaml is not valid, we are going to use default'
+                     ' values for the rest of the analysis for clang-tidy.')
             return None
         return config
 
@@ -2350,8 +2376,8 @@ class StaticAnalysis(MachCommandBase):
             config = yaml.safe_load(file_handler)
         except Exception:
             self.log(logging.ERROR, 'static-analysis', {},
-                    'Looks like config.yaml is not valid, we are going to use default'
-                    ' values for the rest of the analysis for coverity.')
+                     'Looks like config.yaml is not valid, we are going to use default'
+                     ' values for the rest of the analysis for coverity.')
             return None
         return config
 
@@ -2364,7 +2390,8 @@ class StaticAnalysis(MachCommandBase):
         if 'package_version' in self._clang_tidy_config:
             version = self._clang_tidy_config['package_version']
         else:
-            self.log(logging.ERROR, 'static-analysis', {}, "Unable to find 'package_version' in the config.yml")
+            self.log(logging.ERROR, 'static-analysis', {},
+                     "Unable to find 'package_version' in the config.yml")
             return False
 
         # Because the fact that we ship together clang-tidy and clang-format
@@ -2398,7 +2425,7 @@ class StaticAnalysis(MachCommandBase):
         # is considered to be the source in order to limit the diagnostic message to
         # the source files or folders.
         common_args += ['-header-filter=%s' % (header_filter
-                                              if len(header_filter) else '|'.join(sources))]
+                                               if len(header_filter) else '|'.join(sources))]
 
         # From our configuration file, config.yaml, we build the configuration list, for
         # the checkers that are used. These configuration options are used to better fit
@@ -2559,7 +2586,8 @@ class StaticAnalysis(MachCommandBase):
                 ignored_checker = item['name'] in ['mozilla-*', '-*']
                 # 4. List checker_names is passed and the current checker is not part of the
                 #    list or 'publish' is False
-                checker_not_in_list = checker_names and (item['name'] not in checker_names or not_published)
+                checker_not_in_list = checker_names and (
+                    item['name'] not in checker_names or not_published)
                 if not_published or \
                    ignored_platform or \
                    ignored_checker or \
@@ -2580,7 +2608,8 @@ class StaticAnalysis(MachCommandBase):
 
             if error_code != self.TOOLS_SUCCESS:
 
-                self.log(logging.INFO, 'static-analysis', {}, "FAIL: the following clang-tidy check(s) failed:")
+                self.log(logging.INFO, 'static-analysis', {},
+                         "FAIL: the following clang-tidy check(s) failed:")
                 for failure in checkers_results:
                     checker_error = failure['checker-error']
                     checker_name = failure['checker-name']
@@ -2593,12 +2622,14 @@ class StaticAnalysis(MachCommandBase):
                         message_to_log = "\tChecker {} not present in this clang-tidy version.".format(
                             checker_name)
                     elif checker_error == self.TOOLS_CHECKER_NO_TEST_FILE:
-                        message_to_log = "\tChecker {0} does not have a test file - {0}.cpp".format(checker_name)
+                        message_to_log = "\tChecker {0} does not have a test file - {0}.cpp".format(
+                            checker_name)
                     elif checker_error == self.TOOLS_CHECKER_RETURNED_NO_ISSUES:
                         message_to_log = "\tChecker {0} did not find any issues in its test file, clang-tidy output for the run is:\n{1}".format(
                             checker_name, info1)
                     elif checker_error == self.TOOLS_CHECKER_RESULT_FILE_NOT_FOUND:
-                        message_to_log = "\tChecker {0} does not have a result file - {0}.json".format(checker_name)
+                        message_to_log = "\tChecker {0} does not have a result file - {0}.json".format(
+                            checker_name)
                     elif checker_error == self.TOOLS_CHECKER_DIFF_FAILED:
                         message_to_log = "\tChecker {0}\nExpected: {1}\nGot: {2}\nclang-tidy output for the run is:\n{3}".format(
                             checker_name, info1, info2, info3)
@@ -2635,9 +2666,11 @@ class StaticAnalysis(MachCommandBase):
         return self._parse_issues(clang_output), clang_output
 
     def _run_analysis_batch(self, items):
-        self.log(logging.INFO, 'static-analysis', {},"RUNNING: clang-tidy checker batch analysis.")
+        self.log(logging.INFO, 'static-analysis', {},
+                 "RUNNING: clang-tidy checker batch analysis.")
         if not len(items):
-            self.log(logging.ERROR, 'static-analysis', {}, "ERROR: clang-tidy checker list is empty!")
+            self.log(logging.ERROR, 'static-analysis', {},
+                     "ERROR: clang-tidy checker list is empty!")
             return self.TOOLS_CHECKER_LIST_EMPTY
 
         issues, clang_output = self._run_analysis(
@@ -2650,7 +2683,8 @@ class StaticAnalysis(MachCommandBase):
         failed_checks = []
         failed_checks_baseline = []
         for checker in items:
-            test_file_path_json = mozpath.join(self._clang_tidy_base_path, "test", checker) + '.json'
+            test_file_path_json = mozpath.join(
+                self._clang_tidy_base_path, "test", checker) + '.json'
             # Read the pre-determined issues
             baseline_issues = self._get_autotest_stored_issues(test_file_path_json)
 
@@ -2664,10 +2698,12 @@ class StaticAnalysis(MachCommandBase):
                 failed_checks_baseline.append(baseline_issues)
 
         if len(failed_checks) > 0:
-            self.log(logging.ERROR, 'static-analysis', {}, 'The following check(s) failed for bulk analysis: ' + ' '.join(failed_checks))
+            self.log(logging.ERROR, 'static-analysis', {},
+                     'The following check(s) failed for bulk analysis: ' + ' '.join(failed_checks))
 
             for failed_check, baseline_issue in zip(failed_checks, failed_checks_baseline):
-                print('\tChecker {0} expect following results: \n\t\t{1}'.format(failed_check, baseline_issue))
+                print('\tChecker {0} expect following results: \n\t\t{1}'.format(
+                    failed_check, baseline_issue))
 
             print('This is the output generated by clang-tidy for the bulk build:\n{}'.format(clang_output))
             return self.TOOLS_CHECKER_DIFF_FAILED
@@ -2910,7 +2946,7 @@ class StaticAnalysis(MachCommandBase):
 
         if path:
             # Create the full path list
-            path_maker = lambda f_name: os.path.join(self.topsrcdir, f_name)
+            def path_maker(f_name): return os.path.join(self.topsrcdir, f_name)
             path = map(path_maker, path)
 
         os.chdir(self.topsrcdir)
@@ -2943,7 +2979,7 @@ class StaticAnalysis(MachCommandBase):
 
         if self._is_version_eligible() is False:
             self.log(logging.ERROR, 'static-analysis', {}, "You're using an old version of clang-format binary."
-                            " Please update to a more recent one by running: './mach bootstrap'")
+                     " Please update to a more recent one by running: './mach bootstrap'")
             return 1
 
         if path is None:
@@ -3074,7 +3110,7 @@ class StaticAnalysis(MachCommandBase):
                     checks += ',' + item['name']
         except Exception:
             print('Looks like config.yaml is not valid, so we are unable to '
-                    'determine default checkers, using \'-checks=-*,mozilla-*\'')
+                  'determine default checkers, using \'-checks=-*,mozilla-*\'')
             checks += ',mozilla-*'
         finally:
             return checks
@@ -3098,7 +3134,7 @@ class StaticAnalysis(MachCommandBase):
             checker_config['CheckOptions'] = config_list
         except Exception:
             print('Looks like config.yaml is not valid, so we are unable to '
-                    'determine configuration for checkers, so using default')
+                  'determine configuration for checkers, so using default')
             checker_config = None
         finally:
             return checker_config
@@ -3209,8 +3245,8 @@ class StaticAnalysis(MachCommandBase):
             # and start from scratch.
             shutil.rmtree(self._clang_tools_path)
             return self._get_clang_tools(force=force, skip_cache=skip_cache,
-                                            source=source, verbose=verbose,
-                                            download_if_needed=download_if_needed)
+                                         source=source, verbose=verbose,
+                                         download_if_needed=download_if_needed)
 
         # Create base directory where we store clang binary
         os.mkdir(self._clang_tools_path)
@@ -3236,10 +3272,10 @@ class StaticAnalysis(MachCommandBase):
         currentWorkingDir = os.getcwd()
         os.chdir(self._clang_tools_path)
         rc = self._artifact_manager.artifact_toolchain(verbose=verbose,
-                                                        skip_cache=skip_cache,
-                                                        from_build=[job],
-                                                        no_unpack=False,
-                                                        retry=0)
+                                                       skip_cache=skip_cache,
+                                                       from_build=[job],
+                                                       no_unpack=False,
+                                                       retry=0)
         # Change back the cwd
         os.chdir(currentWorkingDir)
 
@@ -3281,7 +3317,7 @@ class StaticAnalysis(MachCommandBase):
                 args += ['--include', 'glob:**{0}'.format(dot_extension)]
             args += ['--exclude', 'listfile:{0}'.format(self._format_ignore_file)]
         else:
-            commit_range = "HEAD" # All uncommitted changes.
+            commit_range = "HEAD"  # All uncommitted changes.
             if commit:
                 commit_range = commit if ".." in commit else "{}~..{}".format(commit, commit)
             args = ["git", "diff", "--no-color", "-U0", commit_range, "--"]
@@ -3596,11 +3632,11 @@ class Vendor(MachCommandBase):
     @SubCommand('vendor', 'rust',
                 description='Vendor rust crates from crates.io into third_party/rust')
     @CommandArgument('--ignore-modified', action='store_true',
-        help='Ignore modified files in current checkout',
-        default=False)
+                     help='Ignore modified files in current checkout',
+                     default=False)
     @CommandArgument('--build-peers-said-large-imports-were-ok', action='store_true',
-        help='Permit overly-large files to be added to the repository',
-        default=False)
+                     help='Permit overly-large files to be added to the repository',
+                     default=False)
     def vendor_rust(self, **kwargs):
         from mozbuild.vendor_rust import VendorRust
         vendor_command = self._spawn(VendorRust)
@@ -3609,12 +3645,12 @@ class Vendor(MachCommandBase):
     @SubCommand('vendor', 'aom',
                 description='Vendor av1 video codec reference implementation into the source repository.')
     @CommandArgument('-r', '--revision',
-        help='Repository tag or commit to update to.')
+                     help='Repository tag or commit to update to.')
     @CommandArgument('--repo',
-        help='Repository url to pull a snapshot from. Supports github and googlesource.')
+                     help='Repository url to pull a snapshot from. Supports github and googlesource.')
     @CommandArgument('--ignore-modified', action='store_true',
-        help='Ignore modified files in current checkout',
-        default=False)
+                     help='Ignore modified files in current checkout',
+                     default=False)
     def vendor_aom(self, **kwargs):
         from mozbuild.vendor_aom import VendorAOM
         vendor_command = self._spawn(VendorAOM)
@@ -3622,12 +3658,12 @@ class Vendor(MachCommandBase):
     @SubCommand('vendor', 'dav1d',
                 description='Vendor dav1d implementation of AV1 into the source repository.')
     @CommandArgument('-r', '--revision',
-        help='Repository tag or commit to update to.')
+                     help='Repository tag or commit to update to.')
     @CommandArgument('--repo',
-        help='Repository url to pull a snapshot from. Supports gitlab.')
+                     help='Repository url to pull a snapshot from. Supports gitlab.')
     @CommandArgument('--ignore-modified', action='store_true',
-        help='Ignore modified files in current checkout',
-        default=False)
+                     help='Ignore modified files in current checkout',
+                     default=False)
     def vendor_dav1d(self, **kwargs):
         from mozbuild.vendor_dav1d import VendorDav1d
         vendor_command = self._spawn(VendorDav1d)
@@ -3636,8 +3672,8 @@ class Vendor(MachCommandBase):
     @SubCommand('vendor', 'python',
                 description='Vendor Python packages from pypi.org into third_party/python')
     @CommandArgument('--with-windows-wheel', action='store_true',
-        help='Vendor a wheel for Windows along with the source package',
-        default=False)
+                     help='Vendor a wheel for Windows along with the source package',
+                     default=False)
     @CommandArgument('packages', default=None, nargs='*', help='Packages to vendor. If omitted, packages and their dependencies defined in Pipfile.lock will be vendored. If Pipfile has been modified, then Pipfile.lock will be regenerated. Note that transient dependencies may be updated when running this command.')
     def vendor_python(self, **kwargs):
         from mozbuild.vendor_python import VendorPython
@@ -3656,21 +3692,22 @@ class Vendor(MachCommandBase):
         from mozbuild.vendor_manifest import verify_manifests
         verify_manifests(files)
 
+
 @CommandProvider
 class WebRTCGTestCommands(GTestCommands):
     @Command('webrtc-gtest', category='testing',
-        description='Run WebRTC.org GTest unit tests.')
+             description='Run WebRTC.org GTest unit tests.')
     @CommandArgument('gtest_filter', default=b"*", nargs='?', metavar='gtest_filter',
-        help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
-             "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
+                     help="test_filter is a ':'-separated list of wildcard patterns (called the positive patterns),"
+                     "optionally followed by a '-' and another ':'-separated pattern list (called the negative patterns).")
     @CommandArgumentGroup('debugging')
     @CommandArgument('--debug', action='store_true', group='debugging',
-        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
+                     help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used.')
     @CommandArgument('--debugger', default=None, type=str, group='debugging',
-        help='Name of debugger to use.')
+                     help='Name of debugger to use.')
     @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
-        group='debugging',
-        help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
+                     group='debugging',
+                     help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
     def gtest(self, gtest_filter, debug, debugger,
               debugger_args):
         app_path = self.get_binary_path('webrtc-gtest')
@@ -3702,6 +3739,7 @@ class WebRTCGTestCommands(GTestCommands):
                                 ensure_exit_code=False,
                                 pass_thru=True)
 
+
 @CommandProvider
 class Repackage(MachCommandBase):
     '''Repackages artifacts into different formats.
@@ -3718,9 +3756,9 @@ class Repackage(MachCommandBase):
     @SubCommand('repackage', 'dmg',
                 description='Repackage a tar file into a .dmg for OSX')
     @CommandArgument('--input', '-i', type=str, required=True,
-        help='Input filename')
+                     help='Input filename')
     @CommandArgument('--output', '-o', type=str, required=True,
-        help='Output filename')
+                     help='Output filename')
     def repackage_dmg(self, input, output):
         if not os.path.exists(input):
             print('Input file does not exist: %s' % input)
@@ -3737,19 +3775,19 @@ class Repackage(MachCommandBase):
     @SubCommand('repackage', 'installer',
                 description='Repackage into a Windows installer exe')
     @CommandArgument('--tag', type=str, required=True,
-        help='The .tag file used to build the installer')
+                     help='The .tag file used to build the installer')
     @CommandArgument('--setupexe', type=str, required=True,
-        help='setup.exe file inside the installer')
+                     help='setup.exe file inside the installer')
     @CommandArgument('--package', type=str, required=False,
-        help='Optional package .zip for building a full installer')
+                     help='Optional package .zip for building a full installer')
     @CommandArgument('--output', '-o', type=str, required=True,
-        help='Output filename')
+                     help='Output filename')
     @CommandArgument('--package-name', type=str, required=False,
-        help='Name of the package being rebuilt')
+                     help='Name of the package being rebuilt')
     @CommandArgument('--sfx-stub', type=str, required=True,
-        help='Path to the self-extraction stub.')
+                     help='Path to the self-extraction stub.')
     @CommandArgument('--use-upx', required=False, action='store_true',
-        help='Run UPX on the self-extraction stub.')
+                     help='Run UPX on the self-extraction stub.')
     def repackage_installer(self, tag, setupexe, package, output, package_name, sfx_stub, use_upx):
         from mozbuild.repackaging.installer import repackage_installer
         repackage_installer(
@@ -3766,21 +3804,21 @@ class Repackage(MachCommandBase):
     @SubCommand('repackage', 'msi',
                 description='Repackage into a MSI')
     @CommandArgument('--wsx', type=str, required=True,
-        help='The wsx file used to build the installer')
+                     help='The wsx file used to build the installer')
     @CommandArgument('--version', type=str, required=True,
-        help='The Firefox version used to create the installer')
+                     help='The Firefox version used to create the installer')
     @CommandArgument('--locale', type=str, required=True,
-        help='The locale of the installer')
+                     help='The locale of the installer')
     @CommandArgument('--arch', type=str, required=True,
-        help='The archtecture you are building.')
+                     help='The archtecture you are building.')
     @CommandArgument('--setupexe', type=str, required=True,
-        help='setup.exe installer')
+                     help='setup.exe installer')
     @CommandArgument('--candle', type=str, required=False,
-        help='location of candle binary')
+                     help='location of candle binary')
     @CommandArgument('--light', type=str, required=False,
-        help='location of light binary')
+                     help='location of light binary')
     @CommandArgument('--output', '-o', type=str, required=True,
-        help='Output filename')
+                     help='Output filename')
     def repackage_msi(self, wsx, version, locale, arch, setupexe, candle, light, output):
         from mozbuild.repackaging.msi import repackage_msi
         repackage_msi(
@@ -3798,32 +3836,33 @@ class Repackage(MachCommandBase):
     @SubCommand('repackage', 'mar',
                 description='Repackage into complete MAR file')
     @CommandArgument('--input', '-i', type=str, required=True,
-        help='Input filename')
+                     help='Input filename')
     @CommandArgument('--mar', type=str, required=True,
-        help='Mar binary path')
+                     help='Mar binary path')
     @CommandArgument('--output', '-o', type=str, required=True,
-        help='Output filename')
+                     help='Output filename')
     @CommandArgument('--format', type=str, default='lzma',
-        choices=('lzma', 'bz2'),
-        help='Mar format')
+                     choices=('lzma', 'bz2'),
+                     help='Mar format')
     @CommandArgument('--arch', type=str, required=True,
-        help='The archtecture you are building.')
+                     help='The archtecture you are building.')
     def repackage_mar(self, input, mar, output, format, arch):
         from mozbuild.repackaging.mar import repackage_mar
         repackage_mar(self.topsrcdir, input, mar, output, format, arch=arch)
+
 
 @CommandProvider
 class Analyze(MachCommandBase):
     """ Get information about a file in the build graph """
     @Command('analyze', category='misc',
-        description='Analyze the build graph.')
+             description='Analyze the build graph.')
     def analyze(self):
         print("Usage: ./mach analyze [files|report] [args...]")
 
     @SubCommand('analyze', 'files',
-        description='Get incremental build cost for file(s) from the tup database.')
+                description='Get incremental build cost for file(s) from the tup database.')
     @CommandArgument('--path', help='Path to tup db',
-        default=None)
+                     default=None)
     @CommandArgument('files', nargs='*', help='Files to analyze')
     def analyze_files(self, path, files):
         from mozbuild.analyze.graph import Graph
@@ -3839,16 +3878,16 @@ class Analyze(MachCommandBase):
             return 1
 
     @SubCommand('analyze', 'all',
-        description='Get a report of files changed within the last n days and their corresponding build cost.')
+                description='Get a report of files changed within the last n days and their corresponding build cost.')
     @CommandArgument('--days', '-d', type=int, default=14,
-        help='Number of days to include in the report.')
+                     help='Number of days to include in the report.')
     @CommandArgument('--format', default='pretty',
-        choices=['pretty', 'csv', 'json', 'html'],
-        help='Print or export data in the given format.')
+                     choices=['pretty', 'csv', 'json', 'html'],
+                     help='Print or export data in the given format.')
     @CommandArgument('--limit', type=int, default=None,
-        help='Get the top n most expensive files from the report.')
+                     help='Get the top n most expensive files from the report.')
     @CommandArgument('--path', help='Path to cost_dict.gz',
-        default=None)
+                     default=None)
     def analyze_report(self, days, format, limit, path):
         from mozbuild.analyze.hg import Report
         self._activate_virtualenv()
@@ -3957,7 +3996,8 @@ class L10NCommands(MachCommandBase):
             self.log(logging.INFO, 'package-multi-locale', {},
                      'Invoking `mach android archive-geckoview`')
             self.run_process(
-                [mozpath.join(self.topsrcdir, 'mach'), 'android', 'archive-geckoview'.format(locale)],
+                [mozpath.join(self.topsrcdir, 'mach'), 'android',
+                 'archive-geckoview'.format(locale)],
                 append_env=append_env,
                 pass_thru=True,
                 ensure_exit_code=True,

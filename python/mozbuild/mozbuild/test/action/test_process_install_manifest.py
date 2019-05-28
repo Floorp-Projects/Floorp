@@ -70,5 +70,6 @@ class TestGenerateManifest(TestWithTmpDir):
             self.assertFalse(os.path.exists(self.tmppath('dest/foo/file2')))
             self.assertFalse(os.path.exists(self.tmppath('dest/foo/file3')))
 
+
 if __name__ == '__main__':
     mozunit.main()

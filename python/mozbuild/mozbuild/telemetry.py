@@ -238,6 +238,7 @@ def get_build_attrs(attrs):
         res['cpu_percent'] = int(round(usage['cpu_percent']))
     return res
 
+
 def filter_args(command, argv, paths):
     '''
     Given the full list of command-line arguments, remove anything up to and including `command`,

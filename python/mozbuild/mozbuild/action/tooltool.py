@@ -1257,5 +1257,6 @@ def main(argv, _skip_logging=False):
 
     return 0 if process_command(options, args) else 1
 
+
 if __name__ == "__main__":  # pragma: no cover
     sys.exit(main(sys.argv))

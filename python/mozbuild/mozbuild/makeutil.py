@@ -62,6 +62,7 @@ class _SimpleOrderedSet(object):
     It doesn't expose a complete API, and normalizes path separators
     at insertion.
     '''
+
     def __init__(self):
         self._list = []
         self._set = set()
@@ -95,6 +96,7 @@ class Rule(object):
                    command2
                    ...
     '''
+
     def __init__(self, targets=[]):
         self._targets = _SimpleOrderedSet()
         self._dependencies = _SimpleOrderedSet()
@@ -174,6 +176,7 @@ def read_dep_makefile(fh):
 
     if rule:
         raise Exception('Makefile finishes with a backslash. Expected more input.')
+
 
 def write_dep_makefile(fh, target, deps):
     '''

@@ -54,4 +54,3 @@ def chunkify(things, this_chunk, chunks):
         return things[start:end]
     except TypeError:
         return islice(things, start, end)
-

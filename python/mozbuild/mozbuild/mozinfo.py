@@ -58,7 +58,7 @@ def build_dict(config, env=os.environ):
     # processor
     p = substs["TARGET_CPU"]
     # do some slight massaging for some values
-    #TODO: retain specific values in case someone wants them?
+    # TODO: retain specific values in case someone wants them?
     if p.startswith("arm"):
         p = "arm"
     elif re.match("i[3-9]86", p):

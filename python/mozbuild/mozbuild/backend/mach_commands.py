@@ -20,10 +20,11 @@ from mach.decorators import (
     Command,
 )
 
+
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('ide', category='devenv',
-        description='Generate a project and launch an IDE.')
+             description='Generate a project and launch an IDE.')
     @CommandArgument('ide', choices=['eclipse', 'visualstudio'])
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def eclipse(self, ide, args):

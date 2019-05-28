@@ -49,6 +49,7 @@ class ConfigureError(Exception):
 
 class SandboxDependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
+
     def __init__(self, unsandboxed):
         self._or = unsandboxed.__or__
         self._and = unsandboxed.__and__
@@ -233,6 +234,7 @@ class CombinedDependsFunction(DependsFunction):
     def __ne__(self, other):
         return not self == other
 
+
 class SandboxedGlobal(dict):
     '''Identifiable dict type for use as function global'''
 
@@ -357,10 +359,12 @@ class ConfigureSandbox(dict):
         # that can't be converted to ascii. Make our log methods robust to this
         # by detecting the encoding that a producer is likely to have used.
         encoding = getpreferredencoding()
+
         def wrapped_log_method(logger, key):
             method = getattr(logger, key)
             if not encoding:
                 return method
+
             def wrapped(*args, **kwargs):
                 out_args = [
                     arg.decode(encoding) if isinstance(arg, str) else arg
@@ -661,7 +665,7 @@ class ConfigureSandbox(dict):
         when = self._normalize_when(kwargs.get('when'), 'option')
         args = [self._resolve(arg) for arg in args]
         kwargs = {k: self._resolve(v) for k, v in kwargs.iteritems()
-                                      if k != 'when'}
+                  if k != 'when'}
         option = Option(*args, **kwargs)
         if when:
             self._conditions[option] = when
