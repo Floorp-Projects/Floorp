@@ -419,13 +419,25 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
     if (manualUpdatePromise) {
       await manualUpdatePromise;
 
-      let list = win.document.getElementById("addon-list");
-
-      // Make sure we have XBL bindings
-      list.clientHeight;
-
-      let item = list.itemChildren.find(_item => _item.value == ID);
-      EventUtils.synthesizeMouseAtCenter(item._updateBtn, {}, win);
+      if (win.useHtmlViews) {
+        // about:addons is using the new HTML views.
+        const availableUpdates = win.document.getElementById("updates-manualUpdatesFound-btn");
+        availableUpdates.click();
+        let doc = win.getHtmlBrowser().contentDocument;
+        let card = await BrowserTestUtils.waitForCondition(() => {
+         return doc.querySelector(`addon-card[addon-id="${ID}"]`);
+        }, `Wait addon card for "${ID}"`);
+        let updateBtn = card.querySelector('panel-item[action="install-update"]');
+        ok(updateBtn, `Found update button for "${ID}"`);
+        updateBtn.click();
+      } else {
+        // about:addons is still using the legacy XUL views.
+        let list = win.document.getElementById("addon-list");
+        // Make sure we have XBL bindings
+        list.clientHeight;
+        let item = list.itemChildren.find(_item => _item.value == ID);
+        EventUtils.synthesizeMouseAtCenter(item._updateBtn, {}, win);
+      }
     }
 
     return {promise};
