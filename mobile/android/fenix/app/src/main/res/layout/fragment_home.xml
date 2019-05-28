@@ -50,38 +50,38 @@
 
         <org.mozilla.fenix.home.SearchView
             android:id="@+id/toolbar_wrapper"
-            android:transitionName="toolbar_wrapper_transition"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="64dp"
             android:layout_marginStart="16dp"
-            android:elevation="@dimen/toolbar_elevation"
+            android:layout_marginTop="64dp"
+            android:layout_marginEnd="16dp"
             android:background="@drawable/home_search_background_normal"
+            android:elevation="@dimen/toolbar_elevation"
+            android:transitionName="toolbar_wrapper_transition"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/wordmark">
 
             <ImageView
                 android:id="@+id/search_engine_icon"
-                android:transitionName="toolbar_icon_transition"
-                android:layout_margin="12dp"
                 android:layout_width="24dp"
-                android:layout_height="24dp" />
+                android:layout_height="24dp"
+                android:layout_margin="12dp"
+                android:transitionName="toolbar_icon_transition" />
 
             <TextView
-                android:transitionName="toolbar_transition"
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
                 android:layout_marginStart="47dp"
-                android:padding="12dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:layout_gravity="center_vertical"
+                android:padding="12dp"
                 android:text="@string/search_hint"
                 android:textColor="?primaryText"
-                android:textSize="15sp" />
+                android:textSize="15sp"
+                android:transitionName="toolbar_transition" />
         </org.mozilla.fenix.home.SearchView>
 
         <View

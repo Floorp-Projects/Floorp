@@ -83,6 +83,7 @@ class SearchFragment : Fragment(), BackHandler {
             ActionBusFactory.get(this),
             sessionId,
             isPrivate,
+            true,
             view.search_engine_icon,
             FenixViewModelProvider.create(
                 this,

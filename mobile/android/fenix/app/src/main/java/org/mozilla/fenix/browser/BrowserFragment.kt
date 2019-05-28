@@ -135,6 +135,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             view.browserLayout,
             ActionBusFactory.get(this), customTabSessionId,
             (activity as HomeActivity).browsingModeManager.isPrivate,
+            false,
             search_engine_icon,
             FenixViewModelProvider.create(
                 this,

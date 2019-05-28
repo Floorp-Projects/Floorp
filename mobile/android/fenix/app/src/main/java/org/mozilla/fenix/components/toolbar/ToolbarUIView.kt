@@ -24,6 +24,7 @@ import org.mozilla.fenix.mvi.UIView
 class ToolbarUIView(
     sessionId: String?,
     isPrivate: Boolean,
+    inSearchFragment: Boolean,
     container: ViewGroup,
     actionEmitter: Observer<SearchAction>,
     changesObservable: Observable<SearchChange>,
@@ -48,6 +49,10 @@ class ToolbarUIView(
             ?: sessionManager.selectedSession
 
         view.apply {
+            if (inSearchFragment) {
+                editMode()
+            }
+
             elevation = resources.pxToDp(TOOLBAR_ELEVATION).toFloat()
 
             setOnUrlCommitListener {
