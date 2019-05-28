@@ -555,8 +555,16 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             readerViewFeature.onBackPressed() -> true
             customTabsIntegration.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
-            else -> false
+            else -> {
+                removeSessionIfNeeded()
+                false
+            }
         }
+    }
+
+    private fun removeSessionIfNeeded() {
+        val session = getSessionById() ?: return
+        if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(session)
     }
 
     override fun onRequestPermissionsResult(
