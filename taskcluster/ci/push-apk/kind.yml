@@ -43,8 +43,11 @@ jobs:
         attributes:
             release-type: nightly
         worker:
-            # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
-            google-play-track: beta
+            google-play-track:
+                by-release-level:
+                    # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
+                    production: beta
+                    staging: alpha
         treeherder:
             symbol: pub(gp-n)
 
@@ -52,6 +55,14 @@ jobs:
         attributes:
             release-type: beta
         worker:
-            google-play-track: production
+            google-play-track:
+                by-release-level:
+                    production: production
+                    staging: alpha
+            rollout-percentage:
+                by-release-level:
+                    # XXX Change this value if google-play-track becomes rollout
+                    production: null
+                    staging: null
         treeherder:
             symbol: pub(gp-b)
