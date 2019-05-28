@@ -25,10 +25,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:textSize="15sp"
+        android:drawablePadding="8dp"
+        android:ellipsize="none"
+        android:fadingEdgeLength="8dp"
+        android:inputType="textAutoComplete"
+        android:requiresFadingEdge="horizontal"
         android:textColor="?secondaryText"
-        tools:text="Internet for people, not profit -- Mozilla"
-        android:inputType="textAutoComplete" />
+        android:textSize="15sp"
+        tools:text="Internet for people, not profit -- Mozilla" />
 
     <TextView
         android:id="@+id/bookmark_url_label"
@@ -46,10 +50,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:textSize="15sp"
+        android:drawablePadding="8dp"
+        android:ellipsize="none"
+        android:fadingEdgeLength="8dp"
+        android:inputType="textUri"
+        android:requiresFadingEdge="horizontal"
         android:textColor="?secondaryText"
-        tools:text="https://www.mozilla.org/en-US/"
-        android:inputType="textUri"/>
+        android:textSize="15sp"
+        tools:text="https://www.mozilla.org/en-US/" />
 
     <TextView
         android:id="@+id/bookmark_folder_label"
