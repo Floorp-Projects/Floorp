@@ -6,7 +6,7 @@
 #ifndef nsResProtocolHandler_h___
 #define nsResProtocolHandler_h___
 
-#include "SubstitutingProtocolHandler.h"
+#include "mozilla/net/SubstitutingProtocolHandler.h"
 
 #include "nsIResProtocolHandler.h"
 #include "nsInterfaceHashtable.h"

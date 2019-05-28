@@ -1794,6 +1794,34 @@ nsresult NS_NewURIOnAnyThread(nsIURI** aURI, const nsACString& aSpec,
     return nsViewSourceHandler::CreateNewURI(aSpec, aCharset, aBaseURI, aURI);
   }
 
+  if (scheme.EqualsLiteral("resource")) {
+    if (!NS_IsMainThread()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    // TODO: must be thread safe
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIProtocolHandler> handler =
+        do_GetService("@mozilla.org/network/protocol;1?name=resource");
+    if (!handler) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (scheme.EqualsLiteral("moz-extension")) {
+    if (!NS_IsMainThread()) {
+      return NS_ERROR_UNKNOWN_PROTOCOL;
+    }
+    // TODO: must be thread safe
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIProtocolHandler> handler =
+        do_GetService("@mozilla.org/network/protocol;1?name=moz-extension");
+    if (!handler) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
 #ifdef MOZ_WIDGET_GTK
   if (scheme.EqualsLiteral("smb") || scheme.EqualsLiteral("sftp")) {
     nsCOMPtr<nsIURI> base(aBaseURI);
