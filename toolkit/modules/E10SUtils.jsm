@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "useSeparateFileUriProcess",
                                       "browser.tabs.remote.separateFileUriProcess", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "allowLinkedWebInFileUriProcess",
                                       "browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
-XPCOMUtils.defineLazyPreferenceGetter(this, "useSeparatePrivilegedContentProcess",
+XPCOMUtils.defineLazyPreferenceGetter(this, "useSeparatePrivilegedAboutContentProcess",
                                       "browser.tabs.remote.separatePrivilegedContentProcess", false);
 XPCOMUtils.defineLazyPreferenceGetter(this, "useHttpResponseProcessSelection",
                                       "browser.tabs.remote.useHTTPResponseProcessSelection", false);
@@ -46,7 +46,7 @@ const NOT_REMOTE = null;
 const WEB_REMOTE_TYPE = "web";
 const FILE_REMOTE_TYPE = "file";
 const EXTENSION_REMOTE_TYPE = "extension";
-const PRIVILEGED_REMOTE_TYPE = "privileged";
+const PRIVILEGEDABOUT_REMOTE_TYPE = "privilegedabout";
 
 // This must start with the WEB_REMOTE_TYPE above.
 const LARGE_ALLOCATION_REMOTE_TYPE = "webLargeAllocation";
@@ -103,7 +103,7 @@ var E10SUtils = {
   WEB_REMOTE_TYPE,
   FILE_REMOTE_TYPE,
   EXTENSION_REMOTE_TYPE,
-  PRIVILEGED_REMOTE_TYPE,
+  PRIVILEGEDABOUT_REMOTE_TYPE,
   LARGE_ALLOCATION_REMOTE_TYPE,
 
   useHttpResponseProcessSelection() {
@@ -235,9 +235,9 @@ var E10SUtils = {
         }
 
         if (flags & Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD) {
-          if ((flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGED_CHILD) &&
-              useSeparatePrivilegedContentProcess) {
-            return PRIVILEGED_REMOTE_TYPE;
+          if ((flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS) &&
+              useSeparatePrivilegedAboutContentProcess) {
+            return PRIVILEGEDABOUT_REMOTE_TYPE;
           }
           return DEFAULT_REMOTE_TYPE;
         }
