@@ -1542,6 +1542,8 @@ class LexicalScopeNode : public ParseNode {
     return Handle<LexicalScope::Data*>::fromMarkedLocation(&bindings);
   }
 
+  void clearScopeBindings() { this->bindings = nullptr; }
+
   ParseNode* scopeBody() const { return body; }
 
   void setScopeBody(ParseNode* body) { this->body = body; }
