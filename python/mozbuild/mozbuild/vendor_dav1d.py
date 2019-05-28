@@ -19,6 +19,7 @@ import sys
 import tarfile
 from urlparse import urlparse
 
+
 class VendorDav1d(MozbuildObject):
     def upstream_snapshot(self, revision):
         '''Construct a url for a tarball snapshot of the given revision.'''
@@ -96,8 +97,8 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         prefix = '  release: commit'
         if prefix in yaml:
             new_yaml = re.sub(prefix + ' [v\.a-f0-9]+.*$',
-                                prefix + ' %s (%s).' % (revision, timestamp),
-                                yaml, flags=re.MULTILINE)
+                              prefix + ' %s (%s).' % (revision, timestamp),
+                              yaml, flags=re.MULTILINE)
         else:
             new_yaml = '%s\n\n%s %s.' % (yaml, prefix, revision)
 
@@ -114,13 +115,12 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         with open(dst_filename, 'w') as f:
             f.write(vcs_version)
 
-
     def clean_upstream(self, target):
         '''Remove files we don't want to import.'''
         mozfile.remove(mozpath.join(target, '.gitattributes'))
         mozfile.remove(mozpath.join(target, '.gitignore'))
         mozfile.remove(mozpath.join(target, 'build', '.gitattributes'))
-        mozfile.remove(mozpath.join(target, 'build' ,'.gitignore'))
+        mozfile.remove(mozpath.join(target, 'build', '.gitignore'))
 
     def check_modified_files(self):
         '''

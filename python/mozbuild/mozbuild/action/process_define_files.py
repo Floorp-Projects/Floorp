@@ -55,6 +55,7 @@ def process_define_file(output, input):
                         # via the command line, which raises a mass of macro
                         # redefinition warnings.  Just handle those macros
                         # specially here.
+
                         def define_for_name(name, val):
                             define = "#define {name} {val}".format(name=name, val=val)
                             if name in ('WINVER', '_WIN32_WINNT'):

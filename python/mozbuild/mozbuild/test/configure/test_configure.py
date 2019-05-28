@@ -247,16 +247,16 @@ class TestConfigure(unittest.TestCase):
                 def foo():
                     import sys
                 foo()'''),
-                sandbox
-            )
+                  sandbox
+                  )
 
         exec_(textwrap.dedent('''
             @template
             @imports('sys')
             def foo():
                 return sys'''),
-            sandbox
-        )
+              sandbox
+              )
 
         self.assertIs(sandbox['foo'](), sys)
 
@@ -265,8 +265,8 @@ class TestConfigure(unittest.TestCase):
             @imports(_from='os', _import='path')
             def foo():
                 return path'''),
-            sandbox
-        )
+              sandbox
+              )
 
         self.assertIs(sandbox['foo'](), os.path)
 
@@ -275,8 +275,8 @@ class TestConfigure(unittest.TestCase):
             @imports(_from='os', _import='path', _as='os_path')
             def foo():
                 return os_path'''),
-            sandbox
-        )
+              sandbox
+              )
 
         self.assertIs(sandbox['foo'](), os.path)
 
@@ -285,8 +285,8 @@ class TestConfigure(unittest.TestCase):
             @imports('__builtin__')
             def foo():
                 return __builtin__'''),
-            sandbox
-        )
+              sandbox
+              )
 
         import __builtin__
         self.assertIs(sandbox['foo'](), __builtin__)
@@ -296,8 +296,8 @@ class TestConfigure(unittest.TestCase):
             @imports(_from='__builtin__', _import='open')
             def foo():
                 return open('%s')''' % os.devnull),
-            sandbox
-        )
+              sandbox
+              )
 
         f = sandbox['foo']()
         self.assertEquals(f.name, os.devnull)
@@ -310,8 +310,8 @@ class TestConfigure(unittest.TestCase):
             def foo():
                 import sys
                 return sys'''),
-            sandbox
-        )
+              sandbox
+              )
 
         self.assertIs(sandbox['foo'](), sys)
 
@@ -320,8 +320,8 @@ class TestConfigure(unittest.TestCase):
             @imports('__sandbox__')
             def foo():
                 return __sandbox__'''),
-            sandbox
-        )
+              sandbox
+              )
 
         self.assertIs(sandbox['foo'](), sandbox)
 
@@ -330,8 +330,8 @@ class TestConfigure(unittest.TestCase):
             @imports(_import='__sandbox__', _as='s')
             def foo():
                 return s'''),
-            sandbox
-        )
+              sandbox
+              )
 
         self.assertIs(sandbox['foo'](), sandbox)
 
@@ -348,8 +348,8 @@ class TestConfigure(unittest.TestCase):
                     return sys
                 return bar
             bar = foo()'''),
-            sandbox
-        )
+              sandbox
+              )
 
         with self.assertRaises(NameError) as e:
             sandbox._depends[sandbox['bar']].result()
@@ -377,8 +377,8 @@ class TestConfigure(unittest.TestCase):
                 return sys
             foo()
             foo()'''),
-            sandbox
-        )
+              sandbox
+              )
 
         self.assertEquals(len(imports), 1)
 
@@ -587,7 +587,7 @@ class TestConfigure(unittest.TestCase):
 
         config = get_config(['--enable-foo=a,b'])
         self.assertIn('BAR', config)
-        self.assertEquals(config['BAR'], PositiveOptionValue(('a','b')))
+        self.assertEquals(config['BAR'], PositiveOptionValue(('a', 'b')))
 
         with self.assertRaises(InvalidOptionError) as e:
             get_config(['--enable-foo=a,b', '--disable-bar'])
@@ -639,18 +639,18 @@ class TestConfigure(unittest.TestCase):
             mozpath.join(test_data_path, 'imply_option', 'imm.configure'))
 
         with self.assertRaisesRegexp(InvalidOptionError,
-            "--enable-foo' implied by 'imply_option at %s:7' conflicts with "
-            "'--disable-foo' from the command-line" % config_path):
+                                     "--enable-foo' implied by 'imply_option at %s:7' conflicts with "
+                                     "'--disable-foo' from the command-line" % config_path):
             get_config(['--disable-foo'])
 
         with self.assertRaisesRegexp(InvalidOptionError,
-            "--enable-bar=foo,bar' implied by 'imply_option at %s:16' conflicts"
-            " with '--enable-bar=a,b,c' from the command-line" % config_path):
+                                     "--enable-bar=foo,bar' implied by 'imply_option at %s:16' conflicts"
+                                     " with '--enable-bar=a,b,c' from the command-line" % config_path):
             get_config(['--enable-bar=a,b,c'])
 
         with self.assertRaisesRegexp(InvalidOptionError,
-            "--enable-baz=BAZ' implied by 'imply_option at %s:25' conflicts"
-            " with '--enable-baz=QUUX' from the command-line" % config_path):
+                                     "--enable-baz=BAZ' implied by 'imply_option at %s:25' conflicts"
+                                     " with '--enable-baz=QUUX' from the command-line" % config_path):
             get_config(['--enable-baz=QUUX'])
 
     def test_imply_option_failures(self):

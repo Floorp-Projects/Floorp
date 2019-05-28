@@ -108,6 +108,7 @@ LH:2
 end_of_record
 """
 
+
 class TempFile():
     def __init__(self, content):
         self.file = NamedTemporaryFile(delete=False)
@@ -142,6 +143,7 @@ class TestLcovParser(unittest.TestCase):
         output = self.parser_roundtrip(fn_with_multiple_commas)
         self.assertEqual(fn_with_multiple_commas, output)
 
+
 multiple_included_files = """//@line 1 "/src/dir/foo.js"
 bazfoobar
 //@line 2 "/src/dir/path/bar.js"
@@ -157,6 +159,7 @@ baz
 //@line 6 "/src/dir/f.js"
 fin
 """
+
 
 class TestLineRemapping(unittest.TestCase):
     def setUp(self):
@@ -237,6 +240,7 @@ class TestLineRemapping(unittest.TestCase):
         # Rewrite preprocessed entries.
         lcov_file = lcov_rewriter.LcovFile([fpath])
         r_num = []
+
         def rewrite_source(s):
             r_num.append(1)
             return s, pp_remap
@@ -261,6 +265,7 @@ class TestLineRemapping(unittest.TestCase):
                          sum(r.function_count for r in records))
         self.assertEqual(original_covered_function_count,
                          sum(r.covered_function_count for r in records))
+
 
 class TestUrlFinder(unittest.TestCase):
     def setUp(self):
@@ -329,8 +334,10 @@ class TestUrlFinder(unittest.TestCase):
         omnijar_name = buildconfig.substs.get('OMNIJAR_NAME')
 
         paths = [
-            ('jar:file:///home/worker/workspace/build/application/' + app_name + '/' + omnijar_name + '!/components/MainProcessSingleton.js', 'path1'),
-            ('jar:file:///home/worker/workspace/build/application/' + app_name + '/browser/features/firefox@getpocket.com.xpi!/bootstrap.js', 'path4'),
+            ('jar:file:///home/worker/workspace/build/application/' + app_name +
+             '/' + omnijar_name + '!/components/MainProcessSingleton.js', 'path1'),
+            ('jar:file:///home/worker/workspace/build/application/' + app_name +
+             '/browser/features/firefox@getpocket.com.xpi!/bootstrap.js', 'path4'),
         ]
 
         url_finder = lcov_rewriter.UrlFinder(self._chrome_map_file, '', '', [])
@@ -356,31 +363,37 @@ class TestUrlFinder(unittest.TestCase):
     def test_chrome_resource_paths(self):
         paths = [
             # Path with default url prefix
-            ('resource://gre/modules/osfile/osfile_async_worker.js', ('toolkit/components/osfile/modules/osfile_async_worker.js', None)),
+            ('resource://gre/modules/osfile/osfile_async_worker.js',
+             ('toolkit/components/osfile/modules/osfile_async_worker.js', None)),
             # Path with url prefix that is in chrome map
-            ('resource://activity-stream/lib/PrefsFeed.jsm', ('browser/components/newtab/lib/PrefsFeed.jsm', None)),
+            ('resource://activity-stream/lib/PrefsFeed.jsm',
+             ('browser/components/newtab/lib/PrefsFeed.jsm', None)),
             # Path which is in url overrides
-            ('chrome://global/content/netError.xhtml', ('browser/base/content/aboutNetError.xhtml', None)),
+            ('chrome://global/content/netError.xhtml',
+             ('browser/base/content/aboutNetError.xhtml', None)),
             # Path which ends with > eval
             ('resource://gre/modules/osfile/osfile_async_worker.js line 3 > eval', None),
             # Path which ends with > Function
             ('resource://gre/modules/osfile/osfile_async_worker.js line 3 > Function', None),
             # Path which contains "->"
-            ('resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/osfile/osfile_async_worker.js', ('toolkit/components/osfile/modules/osfile_async_worker.js', None)),
+            ('resource://gre/modules/addons/XPIProvider.jsm -> resource://gre/modules/osfile/osfile_async_worker.js',
+             ('toolkit/components/osfile/modules/osfile_async_worker.js', None)),
             # Path with pp_info
             ('resource://gre/modules/AppConstants.jsm', ('toolkit/modules/AppConstants.jsm', {
                 '101,102': [
-                    'toolkit/modules/AppConstants.jsm', 
+                    'toolkit/modules/AppConstants.jsm',
                     135
                 ],
             })),
             # Path with query
-            ('resource://activity-stream/lib/PrefsFeed.jsm?q=0.9098419174803978', ('browser/components/newtab/lib/PrefsFeed.jsm', None)),
+            ('resource://activity-stream/lib/PrefsFeed.jsm?q=0.9098419174803978',
+             ('browser/components/newtab/lib/PrefsFeed.jsm', None)),
         ]
 
         url_finder = lcov_rewriter.UrlFinder(self._chrome_map_file, '', 'dist/bin/', [])
         for path, expected in paths:
             self.assertEqual(url_finder.rewrite_url(path), expected)
+
 
 if __name__ == '__main__':
     mozunit.main()

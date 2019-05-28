@@ -26,6 +26,7 @@ from mozbuild.base import ExecutionSummary
 # Open eclipse:
 # /Users/bgirard/mozilla/eclipse/eclipse/eclipse/eclipse -data $PWD/workspace
 
+
 class CppEclipseBackend(CommonBackend):
     """Backend that generates Cpp Eclipse project files.
     """
@@ -81,7 +82,8 @@ class CppEclipseBackend(CommonBackend):
         # Note that unlike VS, Eclipse' indexer seem to crawl the headers and
         # isn't picky about the local includes.
         if isinstance(obj, ComputedFlags):
-            args = self._args_for_dirs.setdefault('tree/' + reldir, {'includes': [], 'defines': []})
+            args = self._args_for_dirs.setdefault(
+                'tree/' + reldir, {'includes': [], 'defines': []})
             # use the same args for any objdirs we include:
             if reldir == 'dom/bindings':
                 self._args_for_dirs.setdefault('generated-webidl', args)
@@ -105,7 +107,8 @@ class CppEclipseBackend(CommonBackend):
     def consume_finished(self):
         settings_dir = os.path.join(self._project_dir, '.settings')
         launch_dir = os.path.join(self._project_dir, 'RunConfigurations')
-        workspace_settings_dir = os.path.join(self._workspace_dir, '.metadata/.plugins/org.eclipse.core.runtime/.settings')
+        workspace_settings_dir = os.path.join(
+            self._workspace_dir, '.metadata/.plugins/org.eclipse.core.runtime/.settings')
 
         for dir_name in [self._project_dir, settings_dir, launch_dir, workspace_settings_dir, self._workspace_lang_dir]:
             try:
@@ -129,22 +132,25 @@ class CppEclipseBackend(CommonBackend):
         workspace_language_path = os.path.join(self._workspace_lang_dir, 'language.settings.xml')
         with open(workspace_language_path, 'wb') as fh:
             workspace_lang_settings = WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE
-            workspace_lang_settings = workspace_lang_settings.replace("@COMPILER_FLAGS@", self._cxx + " " + self._cppflags);
+            workspace_lang_settings = workspace_lang_settings.replace(
+                "@COMPILER_FLAGS@", self._cxx + " " + self._cppflags)
             fh.write(workspace_lang_settings)
 
         self._write_launch_files(launch_dir)
 
-        core_resources_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.core.resources.prefs')
+        core_resources_prefs_path = os.path.join(
+            workspace_settings_dir, 'org.eclipse.core.resources.prefs')
         with open(core_resources_prefs_path, 'wb') as fh:
-            fh.write(STATIC_CORE_RESOURCES_PREFS);
+            fh.write(STATIC_CORE_RESOURCES_PREFS)
 
-        core_runtime_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.core.runtime.prefs')
+        core_runtime_prefs_path = os.path.join(
+            workspace_settings_dir, 'org.eclipse.core.runtime.prefs')
         with open(core_runtime_prefs_path, 'wb') as fh:
-            fh.write(STATIC_CORE_RUNTIME_PREFS);
+            fh.write(STATIC_CORE_RUNTIME_PREFS)
 
         ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.ui.prefs')
         with open(ui_prefs_path, 'wb') as fh:
-            fh.write(STATIC_UI_PREFS);
+            fh.write(STATIC_UI_PREFS)
 
         cdt_ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.ui.prefs')
         cdt_ui_prefs = STATIC_CDT_UI_PREFS
@@ -155,10 +161,11 @@ class CppEclipseBackend(CommonBackend):
         XML_PREF_TEMPLATE = """<setting id\="@PREF_NAME@" value\="@PREF_VAL@"/>\\n"""
         for line in FORMATTER_SETTINGS.splitlines():
             [pref, val] = line.split("=")
-            cdt_ui_prefs += XML_PREF_TEMPLATE.replace("@PREF_NAME@", pref).replace("@PREF_VAL@", val)
+            cdt_ui_prefs += XML_PREF_TEMPLATE.replace("@PREF_NAME@",
+                                                      pref).replace("@PREF_VAL@", val)
         cdt_ui_prefs += "</profile>\\n</profiles>\\n"
         with open(cdt_ui_prefs_path, 'wb') as fh:
-            fh.write(cdt_ui_prefs);
+            fh.write(cdt_ui_prefs)
 
         cdt_core_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.core.prefs')
         with open(cdt_core_prefs_path, 'wb') as fh:
@@ -168,11 +175,11 @@ class CppEclipseBackend(CommonBackend):
             # as the active formatter all its prefs are set in this prefs file,
             # so we need add those now:
             cdt_core_prefs += FORMATTER_SETTINGS
-            fh.write(cdt_core_prefs);
+            fh.write(cdt_core_prefs)
 
-        editor_prefs_path = os.path.join(workspace_settings_dir, "org.eclipse.ui.editors.prefs");
+        editor_prefs_path = os.path.join(workspace_settings_dir, "org.eclipse.ui.editors.prefs")
         with open(editor_prefs_path, 'wb') as fh:
-            fh.write(EDITOR_SETTINGS);
+            fh.write(EDITOR_SETTINGS)
 
         # Now import the project into the workspace
         self._import_project()
@@ -208,7 +215,7 @@ class CppEclipseBackend(CommonBackend):
     def _write_noindex(self):
         noindex_path = os.path.join(self._project_dir, '.settings/org.eclipse.cdt.core.prefs')
         with open(noindex_path, 'wb') as fh:
-            fh.write(NOINDEX_TEMPLATE);
+            fh.write(NOINDEX_TEMPLATE)
 
     def _remove_noindex(self):
         # Below we remove the config file that temporarily disabled the indexer
@@ -257,7 +264,8 @@ class CppEclipseBackend(CommonBackend):
         dirsettings_template = LANGUAGE_SETTINGS_TEMPLATE_DIR_HEADER
 
         # Add OS_COMPILE_CXXFLAGS args (same as OS_COMPILE_CFLAGS):
-        dirsettings_template = dirsettings_template.replace('@PREINCLUDE_FILE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include/mozilla-config.h'))
+        dirsettings_template = dirsettings_template.replace('@PREINCLUDE_FILE_PATH@', os.path.join(
+            self.environment.topobjdir, 'dist/include/mozilla-config.h'))
         dirsettings_template += add_define('MOZILLA_CLIENT', '1')
 
         # Add EXTRA_INCLUDES args:
@@ -304,7 +312,7 @@ class CppEclipseBackend(CommonBackend):
                     # netwerk/sctp/src uses -U__APPLE__ on Mac
                     # XXX We should make this code smart enough to remove existing defines.
                     continue
-                d = d[2:] # get rid of leading "-D"
+                d = d[2:]  # get rid of leading "-D"
                 name_value = d.split("=", 1)
                 name = name_value[0]
                 value = ""
@@ -314,7 +322,8 @@ class CppEclipseBackend(CommonBackend):
             dirsettings += LANGUAGE_SETTINGS_TEMPLATE_DIR_FOOTER
             fh.write(dirsettings)
 
-        fh.write(LANGUAGE_SETTINGS_TEMPLATE_FOOTER.replace("@COMPILER_FLAGS@", self._cxx + " " + self._cppflags))
+        fh.write(LANGUAGE_SETTINGS_TEMPLATE_FOOTER.replace(
+            "@COMPILER_FLAGS@", self._cxx + " " + self._cppflags))
 
     def _write_launch_files(self, launch_dir):
         bin_dir = os.path.join(self.environment.topobjdir, 'dist')
@@ -334,21 +343,25 @@ class CppEclipseBackend(CommonBackend):
             launch = launch.replace('@LAUNCH_ARGS@', '-P -no-remote')
             fh.write(launch)
 
-        #TODO Add more launch configs (and delegate calls to mach)
+        # TODO Add more launch configs (and delegate calls to mach)
 
     def _write_project(self, fh):
-        project = PROJECT_TEMPLATE;
+        project = PROJECT_TEMPLATE
 
         project = project.replace('@PROJECT_NAME@', self._project_name)
         project = project.replace('@PROJECT_TOPSRCDIR@', self.environment.topsrcdir)
-        project = project.replace('@GENERATED_IPDL_FILES@', os.path.join(self.environment.topobjdir, "ipc", "ipdl"))
-        project = project.replace('@GENERATED_WEBIDL_FILES@', os.path.join(self.environment.topobjdir, "dom", "bindings"))
+        project = project.replace('@GENERATED_IPDL_FILES@', os.path.join(
+            self.environment.topobjdir, "ipc", "ipdl"))
+        project = project.replace('@GENERATED_WEBIDL_FILES@', os.path.join(
+            self.environment.topobjdir, "dom", "bindings"))
         fh.write(project)
 
     def _write_cproject(self, fh):
         cproject_header = CPROJECT_TEMPLATE_HEADER
-        cproject_header = cproject_header.replace('@PROJECT_TOPSRCDIR@', self.environment.topobjdir)
-        cproject_header = cproject_header.replace('@MACH_COMMAND@', os.path.join(self.environment.topsrcdir, 'mach'))
+        cproject_header = cproject_header.replace(
+            '@PROJECT_TOPSRCDIR@', self.environment.topobjdir)
+        cproject_header = cproject_header.replace(
+            '@MACH_COMMAND@', os.path.join(self.environment.topsrcdir, 'mach'))
         fh.write(cproject_header)
         fh.write(CPROJECT_TEMPLATE_FOOTER)
 
@@ -615,21 +628,21 @@ undoHistorySize=200
 """
 
 
-STATIC_CORE_RESOURCES_PREFS="""eclipse.preferences.version=1
+STATIC_CORE_RESOURCES_PREFS = """eclipse.preferences.version=1
 refresh.enabled=true
 """
 
-STATIC_CORE_RUNTIME_PREFS="""eclipse.preferences.version=1
+STATIC_CORE_RUNTIME_PREFS = """eclipse.preferences.version=1
 content-types/org.eclipse.cdt.core.cxxSource/file-extensions=mm
 content-types/org.eclipse.core.runtime.xml/file-extensions=xul
 content-types/org.eclipse.wst.jsdt.core.jsSource/file-extensions=jsm
 """
 
-STATIC_UI_PREFS="""eclipse.preferences.version=1
+STATIC_UI_PREFS = """eclipse.preferences.version=1
 showIntro=false
 """
 
-STATIC_CDT_CORE_PREFS="""eclipse.preferences.version=1
+STATIC_CDT_CORE_PREFS = """eclipse.preferences.version=1
 indexer.updatePolicy=0
 """
 
@@ -797,7 +810,7 @@ org.eclipse.cdt.core.formatter.tabulation.size=2
 org.eclipse.cdt.core.formatter.use_tabs_only_for_leading_indentations=false
 """
 
-STATIC_CDT_UI_PREFS="""eclipse.preferences.version=1
+STATIC_CDT_UI_PREFS = """eclipse.preferences.version=1
 buildConsoleLines=10000
 Console.limitConsoleOutput=false
 ensureNewlineAtEOF=false

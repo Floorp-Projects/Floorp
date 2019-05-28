@@ -291,5 +291,6 @@ class TestCcacheStats(unittest.TestCase):
         stat9 = CCacheStats(self.STAT9)
         self.assertTrue(stat9)
 
+
 if __name__ == '__main__':
     main()
