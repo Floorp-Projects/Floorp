@@ -17,6 +17,7 @@ import hashlib
 import itertools
 import os
 import re
+import six
 import stat
 import sys
 import time
@@ -93,7 +94,7 @@ class ReadOnlyNamespace(object):
     """A class for objects with immutable attributes set at initialization."""
 
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in six.iteritems(kwargs):
             super(ReadOnlyNamespace, self).__setattr__(k, v)
 
     def __delattr__(self, key):
@@ -582,7 +583,7 @@ def FlagsFactory(flags):
         _flags = flags
 
         def update(self, **kwargs):
-            for k, v in kwargs.iteritems():
+            for k, v in six.iteritems(kwargs):
                 setattr(self, k, v)
 
         def __getattr__(self, name):
@@ -1298,7 +1299,7 @@ def encode(obj, encoding='utf-8'):
     if isinstance(obj, dict):
         return {
             encode(k, encoding): encode(v, encoding)
-            for k, v in obj.iteritems()
+            for k, v in six.iteritems(obj)
         }
     if isinstance(obj, bytes):
         return obj

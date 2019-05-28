@@ -33,6 +33,7 @@ from mozpack.test.test_files import (
     bar_xpt,
 )
 import mozpack.path as mozpath
+import six
 from itertools import chain
 from test_errors import TestErrors
 
@@ -123,7 +124,7 @@ RESULT_FLAT = {
 for addon in ('addon0', 'addon1', 'app/chrome/addons/addon2'):
     RESULT_FLAT.update({
         mozpath.join(addon, p): f
-        for p, f in {
+        for p, f in six.iteritems({
             'chrome.manifest': [
                 'manifest chrome/chrome.manifest',
                 'manifest components/components.manifest',
@@ -138,7 +139,7 @@ for addon in ('addon0', 'addon1', 'app/chrome/addons/addon2'):
             ],
             'components/bar.xpt': bar_xpt,
             'components/foo.xpt': foo2_xpt,
-        }.iteritems()
+        })
     })
 
 RESULT_JAR = {
@@ -186,12 +187,12 @@ RESULT_JAR.update({
     },
     'addon1.xpi': {
         mozpath.relpath(p, 'addon1'): f
-        for p, f in RESULT_FLAT.iteritems()
+        for p, f in six.iteritems(RESULT_FLAT)
         if p.startswith('addon1/')
     },
     'app/chrome/addons/addon2.xpi': {
         mozpath.relpath(p, 'app/chrome/addons/addon2'): f
-        for p, f in RESULT_FLAT.iteritems()
+        for p, f in six.iteritems(RESULT_FLAT)
         if p.startswith('app/chrome/addons/addon2/')
     },
 })
@@ -262,7 +263,7 @@ RESULT_OMNIJAR_WITH_SUBPATH = {
 CONTENTS_WITH_BASE = {
     'bases': {
         mozpath.join('base/root', b) if b else 'base/root': a
-        for b, a in CONTENTS['bases'].iteritems()
+        for b, a in six.iteritems(CONTENTS['bases'])
     },
     'manifests': [
         m.move(mozpath.join('base/root', m.base))
@@ -270,7 +271,7 @@ CONTENTS_WITH_BASE = {
     ],
     'files': {
         mozpath.join('base/root', p): f
-        for p, f in CONTENTS['files'].iteritems()
+        for p, f in six.iteritems(CONTENTS['files'])
     },
 }
 
@@ -284,7 +285,7 @@ CONTENTS_WITH_BASE['files'].update(EXTRA_CONTENTS)
 def result_with_base(results):
     result = {
         mozpath.join('base/root', p): v
-        for p, v in results.iteritems()
+        for p, v in six.iteritems(results)
     }
     result.update(EXTRA_CONTENTS)
     return result
@@ -302,7 +303,7 @@ def fill_formatter(formatter, contents):
     for manifest in contents['manifests']:
         formatter.add_manifest(manifest)
 
-    for k, v in sorted(contents['files'].iteritems()):
+    for k, v in sorted(six.iteritems(contents['files'])):
         if k.endswith('.xpt'):
             formatter.add_interfaces(k, v)
         else:

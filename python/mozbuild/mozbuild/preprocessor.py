@@ -296,10 +296,11 @@ class Preprocessor:
 
     def __init__(self, defines=None, marker='#'):
         self.context = Context()
-        for k, v in {'FILE': '',
-                     'LINE': 0,
-                     'DIRECTORY': os.path.abspath('.')}.iteritems():
-            self.context[k] = v
+        self.context.update({
+            'FILE': '',
+            'LINE': 0,
+            'DIRECTORY': os.path.abspath('.')
+            })
         try:
             # Can import globally because of bootstrapping issues.
             from buildconfig import topsrcdir, topobjdir
@@ -319,23 +320,25 @@ class Preprocessor:
         self.checkLineNumbers = False
         self.filters = []
         self.cmds = {}
-        for cmd, level in {'define': 0,
-                           'undef': 0,
-                           'if': sys.maxint,
-                           'ifdef': sys.maxint,
-                           'ifndef': sys.maxint,
-                           'else': 1,
-                           'elif': 1,
-                           'elifdef': 1,
-                           'elifndef': 1,
-                           'endif': sys.maxint,
-                           'expand': 0,
-                           'literal': 0,
-                           'filter': 0,
-                           'unfilter': 0,
-                           'include': 0,
-                           'includesubst': 0,
-                           'error': 0}.iteritems():
+        for cmd, level in (
+            ('define', 0),
+            ('undef', 0),
+            ('if', sys.maxint),
+            ('ifdef', sys.maxint),
+            ('ifndef', sys.maxint),
+            ('else', 1),
+            ('elif', 1),
+            ('elifdef', 1),
+            ('elifndef', 1),
+            ('endif', sys.maxint),
+            ('expand', 0),
+            ('literal', 0),
+            ('filter', 0),
+            ('unfilter', 0),
+            ('include', 0),
+            ('includesubst', 0),
+            ('error', 0),
+        ):
             self.cmds[cmd] = (level, getattr(self, 'do_' + cmd))
         self.out = sys.stdout
         self.setMarker(marker)

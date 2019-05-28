@@ -17,7 +17,7 @@ def _tokens2re(**tokens):
     # which matches the pattern and captures it in a named match group.
     # The group names and patterns are given as arguments.
     all_tokens = '|'.join('(?P<%s>%s)' % (name, value)
-                          for name, value in tokens.iteritems())
+                          for name, value in tokens.items())
     nonescaped = r'(?<!\\)(?:%s)' % all_tokens
 
     # The final pattern matches either the above pattern, or an escaped
