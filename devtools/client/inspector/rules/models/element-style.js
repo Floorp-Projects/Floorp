@@ -44,6 +44,7 @@ class ElementStyle {
     this.ruleView = ruleView;
     this.store = store || {};
     this.pageStyle = pageStyle;
+    this.pseudoElements = [];
     this.showUserAgentStyles = showUserAgentStyles;
     this.rules = [];
     this.cssProperties = this.ruleView.cssProperties;
@@ -82,6 +83,7 @@ class ElementStyle {
     }
 
     this.destroyed = true;
+    this.pseudoElements = [];
 
     for (const rule of this.rules) {
       if (rule.editor) {
@@ -134,6 +136,11 @@ class ElementStyle {
       for (const entry of entries) {
         this._maybeAddRule(entry, existingRules);
       }
+
+      // Store a list of all pseudo-element types found in the matching rules.
+      this.pseudoElements = this.rules
+        .filter(r => r.pseudoElement)
+        .map(r => r.pseudoElement);
 
       // Mark overridden computed styles.
       this.onRuleUpdated();
@@ -259,20 +266,27 @@ class ElementStyle {
     this.variables.clear();
     this.updateDeclarations();
 
-    for (const pseudo of this.cssProperties.pseudoElements) {
+    // Update declarations for matching rules for pseudo-elements.
+    for (const pseudo of this.pseudoElements) {
       this.updateDeclarations(pseudo);
     }
   }
 
   /**
-   * Mark the declarations for a given pseudo element with an overridden flag if
-   * an earlier property overrides it and update the editor to show it in the
-   * UI. If there is any inactive CSS we also update the editors state to show
-   * the inactive CSS icon.
+   * Go over all CSS rules matching the selected element and mark the CSS declarations
+   * (aka TextProperty instances) with an `overridden` Boolean flag if an earlier or
+   * higher priority declaration overrides it. Rules are already ordered by specificity.
+   *
+   * If a pseudo-element type is passed (ex: ::before, ::first-line, etc),
+   * restrict the operation only to declarations in rules matching that pseudo-element.
+   *
+   * At the end, update the declaration's view (TextPropertyEditor instance) so it relects
+   * the latest state. Use this opportunity to also trigger checks for the "inactive"
+   * state of the declaration (whether it has effect or not).
    *
    * @param  {String} pseudo
-   *         Which pseudo element to flag as overridden.
-   *         Empty string or undefined will default to no pseudo element.
+   *         Optional pseudo-element for which to restrict marking CSS declarations as
+   *         overridden.
    */
   /* eslint-disable complexity */
   updateDeclarations(pseudo = "") {
@@ -282,10 +296,37 @@ class ElementStyle {
     // as time, and animation overlay are required to be check in order to
     // determine if the property is overridden.
     const textProps = [];
+
     for (const rule of this.rules) {
-      if ((rule.matchedSelectors.length > 0 ||
-           rule.domRule.type === ELEMENT_STYLE) &&
-          rule.pseudoElement === pseudo && !rule.keyframes) {
+      // Skip @keyframes rules
+      if (rule.keyframes) {
+        continue;
+      }
+
+      // Style rules must be considered only when they have selectors that match the node.
+      // When renaming a selector, the unmatched rule lingers in the Rule view, but it no
+      // longer matches the node. This strict check avoids accidentally causing
+      // declarations to be overridden in the remaining matching rules.
+      const isStyleRule = rule.pseudoElement === "" && rule.matchedSelectors.length > 0;
+
+      // Style rules for pseudo-elements must always be considered, regardless if their
+      // selector matches the node. As a convenience, declarations in rules for
+      // pseudo-elements show up in a separate Pseudo-elements accordion when selecting
+      // the host node (instead of the pseudo-element node directly, which is sometimes
+      // impossible, for example with ::selection or ::first-line).
+      // Loosening the strict check on matched selectors ensures these declarations
+      // participate in the algorithm below to mark them as overridden.
+      const isPseudoElementRule = rule.pseudoElement !== "" &&
+                                  rule.pseudoElement === pseudo;
+
+      const isElementStyle = rule.domRule.type === ELEMENT_STYLE;
+
+      const filterCondition = pseudo === ""
+        ? (isStyleRule || isElementStyle)
+        : isPseudoElementRule;
+
+      // First, gather all relevant CSS declarations (aka TextProperty instances).
+      if (filterCondition) {
         for (const textProp of rule.textProps.slice(0).reverse()) {
           if (textProp.enabled) {
             textProps.push(textProp);
