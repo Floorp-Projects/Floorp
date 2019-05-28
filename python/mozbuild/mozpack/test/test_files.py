@@ -60,12 +60,12 @@ import mozfile
 import mozunit
 import os
 import random
+import six
 import sys
 import tarfile
 import mozpack.path as mozpath
 from tempfile import mkdtemp
 from io import BytesIO
-from StringIO import StringIO
 
 
 class TestWithTmpDir(unittest.TestCase):
@@ -921,7 +921,7 @@ class TestMinifiedJavaScript(TestWithTmpDir):
 
     def test_minified_verify_failure(self):
         orig_f = GeneratedFile(b'\n'.join(self.orig_lines))
-        errors.out = StringIO()
+        errors.out = six.StringIO()
         min_f = MinifiedJavaScript(orig_f,
                                    verify_command=self._verify_command('1'))
 
