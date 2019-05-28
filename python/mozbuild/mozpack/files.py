@@ -9,6 +9,7 @@ import inspect
 import os
 import platform
 import shutil
+import six
 import stat
 import subprocess
 import uuid
@@ -1093,7 +1094,7 @@ class ComposedFinder(BaseFinder):
         from mozpack.copier import FileRegistry
         self.files = FileRegistry()
 
-        for base, finder in sorted(finders.iteritems()):
+        for base, finder in sorted(six.iteritems(finders)):
             if self.files.contains(base):
                 self.files.remove(base)
             for p, f in finder.find(''):

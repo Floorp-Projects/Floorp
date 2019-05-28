@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
+import six
 import mozunit
 from test_packager import MockFinder
 from mozpack.packager import l10n
@@ -120,7 +121,7 @@ class TestL10NRepack(unittest.TestCase):
 
         self.assertEqual(
             dict((p, f.open().read()) for p, f in copier),
-            dict((p, f.open().read()) for p, f in repacked.iteritems())
+            dict((p, f.open().read()) for p, f in six.iteritems(repacked)),
         )
 
 

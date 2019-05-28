@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import six
 import stat
 import sys
 
@@ -145,7 +146,7 @@ class FileRegistry(object):
             for path, file in registry:
                 (...)
         '''
-        return self._files.iteritems()
+        return six.iteritems(self._files)
 
     def required_directories(self):
         '''
