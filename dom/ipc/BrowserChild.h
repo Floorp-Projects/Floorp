@@ -242,7 +242,7 @@ class BrowserChild final : public BrowserChildBase,
    */
   BrowserChild(ContentChild* aManager, const TabId& aTabId, TabGroup* aTabGroup,
                const TabContext& aContext, BrowsingContext* aBrowsingContext,
-               uint32_t aChromeFlags);
+               uint32_t aChromeFlags, bool aIsTopLevel);
 
   nsresult Init(mozIDOMWindowProxy* aParent);
 
@@ -250,7 +250,7 @@ class BrowserChild final : public BrowserChildBase,
   static already_AddRefed<BrowserChild> Create(
       ContentChild* aManager, const TabId& aTabId, const TabId& aSameTabGroupAs,
       const TabContext& aContext, BrowsingContext* aBrowsingContext,
-      uint32_t aChromeFlags);
+      uint32_t aChromeFlags, bool aIsTopLevel);
 
   // Let managees query if it is safe to send messages.
   bool IsDestroyed() const { return mDestroyed; }
@@ -862,6 +862,10 @@ class BrowserChild final : public BrowserChildBase,
   // Position of tab, relative to parent widget (typically the window)
   LayoutDeviceIntPoint mChromeOffset;
   TabId mUniqueId;
+
+  // Whether or not this browser is the child part of the top level PBrowser
+  // actor in a remote browser.
+  bool mIsTopLevel;
 
   // Whether or not this tab has siblings (other tabs in the same window).
   // This is one factor used when choosing to allow or deny a non-system

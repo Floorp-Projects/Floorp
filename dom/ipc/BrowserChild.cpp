@@ -358,18 +358,19 @@ already_AddRefed<BrowserChild> BrowserChild::FindBrowserChild(
 already_AddRefed<BrowserChild> BrowserChild::Create(
     ContentChild* aManager, const TabId& aTabId, const TabId& aSameTabGroupAs,
     const TabContext& aContext, BrowsingContext* aBrowsingContext,
-    uint32_t aChromeFlags) {
+    uint32_t aChromeFlags, bool aIsTopLevel) {
   RefPtr<BrowserChild> groupChild = FindBrowserChild(aSameTabGroupAs);
   dom::TabGroup* group = groupChild ? groupChild->TabGroup() : nullptr;
-  RefPtr<BrowserChild> iframe = new BrowserChild(
-      aManager, aTabId, group, aContext, aBrowsingContext, aChromeFlags);
+  RefPtr<BrowserChild> iframe =
+      new BrowserChild(aManager, aTabId, group, aContext, aBrowsingContext,
+                       aChromeFlags, aIsTopLevel);
   return iframe.forget();
 }
 
 BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
                            dom::TabGroup* aTabGroup, const TabContext& aContext,
                            BrowsingContext* aBrowsingContext,
-                           uint32_t aChromeFlags)
+                           uint32_t aChromeFlags, bool aIsTopLevel)
     : TabContext(aContext),
       mTabGroup(aTabGroup),
       mManager(aManager),
@@ -387,6 +388,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mHasValidInnerSize(false),
       mDestroyed(false),
       mUniqueId(aTabId),
+      mIsTopLevel(aIsTopLevel),
       mHasSiblings(false),
       mIsTransparent(false),
       mIPCOpen(false),
