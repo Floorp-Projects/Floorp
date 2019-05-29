@@ -12,6 +12,18 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:feature-media:{latest-version}"
 ```
 
+### Notification: Recording devices
+
+`RecordingDevicesNotificationFeature` can be used to show an ongoing notification when a recording device (camera,
+microphone) is used by web content. Notifications will be shown in the "Media" notification channel.
+
+This feature should only be initialized once globally:
+
+```kotlin
+RecordingDevicesNotificationFeature(applicationContext, sessionManager)
+    .enable()
+```
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
