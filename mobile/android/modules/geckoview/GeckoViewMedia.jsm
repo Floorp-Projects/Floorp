@@ -60,43 +60,41 @@ const GeckoViewRecordingMedia = {
   },
 
   handleRecordingDeviceEvents() {
-    debug `handleRecordingDeviceEvents`;
-    const windows = MediaManagerService.activeMediaCaptureWindows;
-    const devices = [];
-
-    const getStatusString = function(activityStatus) {
-      switch (activityStatus) {
-        case MediaManagerService.STATE_CAPTURE_ENABLED:
-        case MediaManagerService.STATE_CAPTURE_DISABLED:
-          return STATUS_RECORDING;
-        case MediaManagerService.STATE_NOCAPTURE:
-          return STATUS_INACTIVE;
-      }
-    };
-
-    for (let i = 0; i < windows.length; i++) {
-      const win = windows.queryElementAt(i, Ci.nsIDOMWindow);
-      const hasCamera = {};
-      const hasMicrophone = {};
-      MediaManagerService.mediaCaptureWindowState(win, hasCamera, hasMicrophone);
-      var cameraStatus = getStatusString(hasCamera.value);
-      var microphoneStatus = getStatusString(hasMicrophone.value);
-      if (hasCamera.value != MediaManagerService.STATE_NOCAPTURE) {
-        devices.push({
-          type: TYPE_CAMERA,
-          status: cameraStatus,
-        });
-      }
-      if (hasMicrophone.value != MediaManagerService.STATE_NOCAPTURE) {
-        devices.push({
-          type: TYPE_MICROPHONE,
-          status: microphoneStatus,
-        });
-      }
-    }
-
     const [dispatcher] = GeckoViewUtils.getActiveDispatcherAndWindow();
     if (dispatcher) {
+      const windows = MediaManagerService.activeMediaCaptureWindows;
+      const devices = [];
+
+      const getStatusString = function(activityStatus) {
+        switch (activityStatus) {
+          case MediaManagerService.STATE_CAPTURE_ENABLED:
+          case MediaManagerService.STATE_CAPTURE_DISABLED:
+            return STATUS_RECORDING;
+          case MediaManagerService.STATE_NOCAPTURE:
+            return STATUS_INACTIVE;
+        }
+      };
+
+      for (let i = 0; i < windows.length; i++) {
+        const win = windows.queryElementAt(i, Ci.nsIDOMWindow);
+        const hasCamera = {};
+        const hasMicrophone = {};
+        MediaManagerService.mediaCaptureWindowState(win, hasCamera, hasMicrophone);
+        var cameraStatus = getStatusString(hasCamera.value);
+        var microphoneStatus = getStatusString(hasMicrophone.value);
+        if (hasCamera.value != MediaManagerService.STATE_NOCAPTURE) {
+          devices.push({
+            type: TYPE_CAMERA,
+            status: cameraStatus,
+          });
+        }
+        if (hasMicrophone.value != MediaManagerService.STATE_NOCAPTURE) {
+          devices.push({
+            type: TYPE_MICROPHONE,
+            status: microphoneStatus,
+          });
+        }
+      }
       dispatcher.sendRequestForResult({
         type: "GeckoView:MediaRecordingStatusChanged",
         devices: devices,
