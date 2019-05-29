@@ -5545,8 +5545,7 @@ already_AddRefed<Element> Document::CreateElement(
 #if DEBUG
     xpc_DumpJSStack(true, true, false);
 #endif
-    MOZ_DIAGNOSTIC_ASSERT(false,
-                          "CreateElement() not allowed in XUL document.");
+    MOZ_ASSERT_UNREACHABLE("CreateElement() not allowed in XUL document.");
     rv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
