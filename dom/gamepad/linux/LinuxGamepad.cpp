@@ -138,8 +138,9 @@ void LinuxGamepadService::AddDevice(struct udev_device* dev) {
 
   gamepad.index = service->AddGamepad(
       gamepad.idstring, mozilla::dom::GamepadMappingType::_empty,
-      mozilla::dom::GamepadHand::_empty, gamepad.numButtons, gamepad.numAxes,
-      0);  // TODO: Bug 680289, implement gamepad haptics for Linux.
+      mozilla::dom::GamepadHand::_empty, gamepad.numButtons, gamepad.numAxes, 0,
+      0, 0);  // TODO: Bug 680289, implement gamepad haptics for Linux.
+  // TODO: Bug 1523355, implement gamepad lighindicator and touch for Linux.
 
   gamepad.source_id =
       g_io_add_watch(channel, GIOCondition(G_IO_IN | G_IO_ERR | G_IO_HUP),
