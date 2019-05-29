@@ -7,35 +7,14 @@
 
 #include <stddef.h>  // for size_t
 
-#if defined(MOZ_MEMORY)
-// mozalloc.cpp is part of the same library as mozmemory, thus MOZ_MEMORY_IMPL
-// is needed.
-#  define MOZ_MEMORY_IMPL
-#  include "mozmemory_wrap.h"
+#if defined(MALLOC_H)
+#  include MALLOC_H  // for memalign, malloc_size, malloc_us
+#endif               // if defined(MALLOC_H)
 
-#  if defined(XP_DARWIN)
-#    include <malloc/malloc.h>  // for malloc_size
-#  endif
-
-// See mozmemory_wrap.h for more details. This file is part of libmozglue, so
-// it needs to use _impl suffixes. However, with libmozglue growing, this is
-// becoming cumbersome, so we will likely use a malloc.h wrapper of some sort
-// and allow the use of the functions without a _impl suffix.
-#  define MALLOC_DECL(name, return_type, ...) \
-    MOZ_MEMORY_API return_type name##_impl(__VA_ARGS__);
-#  define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
-#  include "malloc_decls.h"
-
-MOZ_MEMORY_API char* strdup_impl(const char*);
-MOZ_MEMORY_API char* strndup_impl(const char*, size_t);
-
-#else
+#if !defined(MOZ_MEMORY)
 // When jemalloc is disabled, or when building the static runtime variant,
 // we need not to use the suffixes.
 
-#  if defined(MALLOC_H)
-#    include MALLOC_H  // for memalign, malloc_size, malloc_us
-#  endif               // if defined(MALLOC_H)
 #  include <stdlib.h>  // for malloc, free
 #  if defined(XP_UNIX)
 #    include <unistd.h>
@@ -63,6 +42,11 @@ MOZ_MEMORY_API char* strndup_impl(const char*, size_t);
 #include "mozilla/Likely.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/mozalloc_oom.h"  // for mozalloc_handle_oom
+
+#if defined(MOZ_MEMORY)
+MOZ_MEMORY_API char* strdup_impl(const char*);
+MOZ_MEMORY_API char* strndup_impl(const char*, size_t);
+#endif
 
 void* moz_xmalloc(size_t size) {
   void* ptr = malloc_impl(size);

@@ -12,7 +12,6 @@ EXPORTS += [
 
 if CONFIG['ZLIB_IN_MOZGLUE']:
     FINAL_LIBRARY = 'mozglue'
-    DEFINES['IMPL_MFBT'] = True
 else:
     # The final library is in config/external/zlib
     FINAL_LIBRARY = 'zlib'

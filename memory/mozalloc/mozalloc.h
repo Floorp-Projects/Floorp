@@ -8,6 +8,19 @@
 #ifndef mozilla_mozalloc_h
 #define mozilla_mozalloc_h
 
+#if defined(MOZ_MEMORY) && defined(IMPL_MFBT)
+#  define MOZ_MEMORY_IMPL
+#  include "mozmemory_wrap.h"
+#  define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
+// See mozmemory_wrap.h for more details. Files that are part of libmozglue,
+// need to use _impl suffixes, which is becoming cumbersome. We'll have to use
+// something like a malloc.h wrapper and allow the use of the functions without
+// a _impl suffix. In the meanwhile, this is enough to get by for C++ code.
+#  define MALLOC_DECL(name, return_type, ...) \
+    MOZ_MEMORY_API return_type name##_impl(__VA_ARGS__);
+#  include "malloc_decls.h"
+#endif
+
 /*
  * https://bugzilla.mozilla.org/show_bug.cgi?id=427099
  */

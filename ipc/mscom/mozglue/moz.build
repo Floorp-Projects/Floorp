@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('mscom-mozglue')
+FINAL_LIBRARY = 'mozglue'
 
 EXPORTS.mozilla.mscom += [
     'ProcessRuntimeShared.h',
@@ -13,8 +13,6 @@ EXPORTS.mozilla.mscom += [
 LOCAL_INCLUDES += [
     '/mozglue/build',
 ]
-
-DEFINES['IMPL_MFBT'] = True
 
 UNIFIED_SOURCES += [
     'ProcessRuntimeShared.cpp',
