@@ -23,7 +23,7 @@ use gleam::gl;
 use webrender::{
     api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
     BinaryRecorder, DebugFlags, Device, ExternalImage, ExternalImageHandler, ExternalImageSource,
-    PipelineInfo, ProfilerHooks, Renderer, RendererOptions, RendererStats,
+    PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
     WrShaders, set_profiler_hooks,
 };
@@ -649,6 +649,47 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
             false
         },
     }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_renderer_record_frame(
+    renderer: &mut Renderer,
+    image_format: ImageFormat,
+    out_handle: &mut RecordedFrameHandle,
+    out_width: &mut i32,
+    out_height: &mut i32,
+) -> bool {
+    if let Some((handle, size)) = renderer.record_frame(image_format) {
+        *out_handle = handle;
+        *out_width = size.width;
+        *out_height = size.height;
+
+        true
+    } else {
+        false
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_renderer_map_recorded_frame(
+    renderer: &mut Renderer,
+    handle: RecordedFrameHandle,
+    dst_buffer: *mut u8,
+    dst_buffer_len: usize,
+    dst_stride: usize,
+) -> bool {
+    renderer.map_recorded_frame(
+        handle,
+        unsafe { make_slice_mut(dst_buffer, dst_buffer_len) },
+        dst_stride,
+    )
+}
+
+#[no_mangle]
+pub extern "C" fn wr_renderer_release_composition_recorder_structures(
+    renderer: &mut Renderer,
+) {
+    renderer.release_composition_recorder_structures();
 }
 
 #[no_mangle]
