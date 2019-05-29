@@ -1286,24 +1286,13 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
  */
 class MOZ_RAII AutoHandlingUserInputStatePusher final {
  public:
-  AutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
-                                   WidgetEvent* aEvent,
-                                   dom::Document* aDocument);
+  explicit AutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
+                                            WidgetEvent* aEvent = nullptr);
   ~AutoHandlingUserInputStatePusher();
 
  protected:
-  RefPtr<dom::Document> mMouseButtonEventHandlingDocument;
   EventMessage mMessage;
   bool mIsHandlingUserInput;
-
-  bool NeedsToResetFocusManagerMouseButtonHandlingState() const {
-    return mMessage == eMouseDown || mMessage == eMouseUp;
-  }
-
-  bool NeedsToUpdateCurrentMouseBtnState() const {
-    return mMessage == eMouseDown || mMessage == eMouseUp ||
-           mMessage == ePointerDown || mMessage == ePointerUp;
-  }
 };
 
 }  // namespace mozilla

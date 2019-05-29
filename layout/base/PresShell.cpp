@@ -7730,6 +7730,67 @@ nsresult PresShell::EventHandler::HandleEventWithTarget(
   return rv;
 }
 
+namespace {
+
+class MOZ_RAII AutoEventHandler final {
+ public:
+  AutoEventHandler(WidgetEvent* aEvent, Document* aDocument) : mEvent(aEvent) {
+    MOZ_ASSERT(mEvent);
+    MOZ_ASSERT(mEvent->IsTrusted());
+
+    if (mEvent->mMessage == eMouseDown) {
+      PresShell::ReleaseCapturingContent();
+      PresShell::AllowMouseCapture(true);
+    }
+    if (aDocument && NeedsToResetFocusManagerMouseButtonHandlingState()) {
+      nsFocusManager* fm = nsFocusManager::GetFocusManager();
+      NS_ENSURE_TRUE_VOID(fm);
+      // If it's in modal state, mouse button event handling may be nested.
+      // E.g., a modal dialog is opened at mousedown or mouseup event handler
+      // and the dialog is clicked.  Therefore, we should store current
+      // mouse button event handling document if nsFocusManager already has it.
+      mMouseButtonEventHandlingDocument =
+          fm->SetMouseButtonHandlingDocument(aDocument);
+    }
+    if (NeedsToUpdateCurrentMouseBtnState()) {
+      WidgetMouseEvent* mouseEvent = mEvent->AsMouseEvent();
+      if (mouseEvent) {
+        EventStateManager::sCurrentMouseBtn = mouseEvent->mButton;
+      }
+    }
+  }
+
+  ~AutoEventHandler() {
+    if (mEvent->mMessage == eMouseDown) {
+      PresShell::AllowMouseCapture(false);
+    }
+    if (NeedsToResetFocusManagerMouseButtonHandlingState()) {
+      nsFocusManager* fm = nsFocusManager::GetFocusManager();
+      NS_ENSURE_TRUE_VOID(fm);
+      RefPtr<Document> document =
+          fm->SetMouseButtonHandlingDocument(mMouseButtonEventHandlingDocument);
+    }
+    if (NeedsToUpdateCurrentMouseBtnState()) {
+      EventStateManager::sCurrentMouseBtn = MouseButton::eNotPressed;
+    }
+  }
+
+ protected:
+  bool NeedsToResetFocusManagerMouseButtonHandlingState() const {
+    return mEvent->mMessage == eMouseDown || mEvent->mMessage == eMouseUp;
+  }
+
+  bool NeedsToUpdateCurrentMouseBtnState() const {
+    return mEvent->mMessage == eMouseDown || mEvent->mMessage == eMouseUp ||
+           mEvent->mMessage == ePointerDown || mEvent->mMessage == ePointerUp;
+  }
+
+  RefPtr<Document> mMouseButtonEventHandlingDocument;
+  WidgetEvent* mEvent;
+};
+
+}  // anonymous namespace
+
 nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
     WidgetEvent* aEvent, nsEventStatus* aEventStatus,
     bool aIsHandlingNativeEvent, nsIContent* aOverrideClickTarget) {
@@ -7768,8 +7829,8 @@ nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
   RecordEventPreparationPerformance(aEvent);
 
   AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
-                                                      aEvent, GetDocument());
-
+                                                      aEvent);
+  AutoEventHandler eventHandler(aEvent, GetDocument());
   AutoPopupStatePusher popupStatePusher(
       PopupBlocker::GetEventPopupControlState(aEvent));
 
