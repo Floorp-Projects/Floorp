@@ -71,7 +71,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     }
 
     override fun postMessage(sessionToken: CustomTabsSessionToken?, message: String?, extras: Bundle?): Int {
-        return CustomTabsService.RESULT_FAILURE_DISALLOWED
+        return RESULT_FAILURE_DISALLOWED
     }
 
     override fun validateRelationship(
