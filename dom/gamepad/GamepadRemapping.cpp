@@ -47,6 +47,10 @@ enum CanonicalAxisIndex {
   AXIS_INDEX_COUNT
 };
 
+float NormalizeTouch(long aValue, long aMin, long aMax) {
+  return (2.f * (aValue - aMin) / static_cast<float>(aMax - aMin)) - 1.f;
+}
+
 bool AxisNegativeAsButton(float input) {
   const float value = (input < -0.5f) ? 1.f : 0.f;
   return value > 0.1f;
@@ -363,6 +367,92 @@ class Dualshock4Remapper final : public GamepadRemapper {
     return DUALSHOCK_BUTTON_COUNT;
   }
 
+  virtual uint32_t GetLightIndicatorCount() const override {
+    return LIGHT_INDICATOR_COUNT;
+  }
+
+  virtual void GetLightIndicators(
+      nsTArray<GamepadLightIndicatorType>& aTypes) const override {
+    const uint32_t len = GetLightIndicatorCount();
+    aTypes.SetLength(len);
+    for (uint32_t i = 0; i < len; ++i) {
+      aTypes[i] = GamepadLightIndicatorType::Rgb;
+    }
+  }
+
+  virtual uint32_t GetTouchEventCount() const override {
+    return TOUCH_EVENT_COUNT;
+  }
+
+  virtual void GetLightColorReport(
+      uint8_t aRed, uint8_t aGreen, uint8_t aBlue,
+      std::vector<uint8_t>& aReport) const override {
+    const size_t report_length = 32;
+    aReport.resize(report_length);
+    aReport.assign(report_length, 0);
+
+    aReport[0] = 0x05;  // report ID USB only
+    aReport[1] = 0x02;  // LED only
+    aReport[6] = aRed;
+    aReport[7] = aGreen;
+    aReport[8] = aBlue;
+  }
+
+  virtual void GetTouchData(uint32_t aIndex, void* aInput) override {
+    nsTArray<GamepadTouchState> touches(TOUCH_EVENT_COUNT);
+    touches.SetLength(TOUCH_EVENT_COUNT);
+    uint8_t* rawData = (uint8_t*)aInput;
+
+    bool touch0Pressed = (((rawData[35] & 0xff) >> 7) == 0);
+    bool touch1Pressed = (((rawData[39] & 0xff) >> 7) == 0);
+
+    if (!touch0Pressed && !touch1Pressed) {
+      return;
+    }
+
+    if ((touch0Pressed && (rawData[35] & 0xff) < mLastTouch0Id) ||
+        (touch1Pressed && (rawData[39] & 0xff) < mLastTouch1Id)) {
+      mTouchIdBase += 128;
+    }
+
+    const uint32_t kTouchDimensionX = 1920;
+    const uint32_t kTouchDimensionY = 942;
+
+    touches[0].touchId = mTouchIdBase + (rawData[35] & 0x7f);
+    touches[0].surfaceId = 0;
+    touches[0].position[0] = NormalizeTouch(
+        ((rawData[37] & 0xf) << 8) | rawData[36], 0, (kTouchDimensionX - 1));
+    touches[0].position[1] =
+        NormalizeTouch(rawData[38] << 4 | ((rawData[37] & 0xf0) >> 4), 0,
+                       (kTouchDimensionY - 1));
+    touches[0].surfaceDimensions[0] = kTouchDimensionX;
+    touches[0].surfaceDimensions[1] = kTouchDimensionY;
+    touches[0].isSurfaceDimensionsValid = true;
+    mLastTouch0Id = rawData[35] & 0x7f;
+
+    touches[1].touchId = mTouchIdBase + (rawData[39] & 0x7f);
+    touches[1].surfaceId = 0;
+    touches[1].position[0] =
+        NormalizeTouch(((rawData[41] & 0xf) << 8) | rawData[40] + 1, 0,
+                       (kTouchDimensionX - 1));
+    touches[1].position[1] =
+        NormalizeTouch(rawData[42] << 4 | ((rawData[41] & 0xf0) >> 4), 0,
+                       (kTouchDimensionY - 1));
+    touches[1].surfaceDimensions[0] = kTouchDimensionX;
+    touches[1].surfaceDimensions[1] = kTouchDimensionY;
+    touches[1].isSurfaceDimensionsValid = true;
+    mLastTouch1Id = rawData[39] & 0x7f;
+
+    RefPtr<GamepadPlatformService> service =
+        GamepadPlatformService::GetParentService();
+    if (!service) {
+      return;
+    }
+
+    service->NewMultiTouchEvent(aIndex, 0, touches[0]);
+    service->NewMultiTouchEvent(aIndex, 1, touches[1]);
+  }
+
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                                   double aValue) const override {
     RefPtr<GamepadPlatformService> service =
@@ -443,6 +533,13 @@ class Dualshock4Remapper final : public GamepadRemapper {
     DUALSHOCK_BUTTON_TOUCHPAD = BUTTON_INDEX_COUNT,
     DUALSHOCK_BUTTON_COUNT
   };
+
+  static const uint32_t LIGHT_INDICATOR_COUNT = 1;
+  static const uint32_t TOUCH_EVENT_COUNT = 2;
+
+  unsigned long mLastTouch0Id = 0;
+  unsigned long mLastTouch1Id = 0;
+  unsigned long mTouchIdBase = 0;
 };
 
 class LogitechDInputRemapper final : public GamepadRemapper {
