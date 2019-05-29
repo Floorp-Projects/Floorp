@@ -198,6 +198,7 @@ void RenderThread::RemoveRenderer(wr::WindowId aWindowId) {
   }
 
   mRenderers.erase(aWindowId);
+  mCompositionRecorders.erase(aWindowId);
 
   if (mRenderers.size() == 0 && mHandlingDeviceReset) {
     mHandlingDeviceReset = false;
@@ -227,6 +228,15 @@ RendererOGL* RenderThread::GetRenderer(wr::WindowId aWindowId) {
 size_t RenderThread::RendererCount() {
   MOZ_ASSERT(IsInRenderThread());
   return mRenderers.size();
+}
+
+void RenderThread::SetCompositionRecorderForWindow(
+    wr::WindowId aWindowId,
+    RefPtr<layers::WebRenderCompositionRecorder>&& aCompositionRecorder) {
+  MOZ_ASSERT(IsInRenderThread());
+  MOZ_ASSERT(GetRenderer(aWindowId));
+
+  mCompositionRecorders[aWindowId] = std::move(aCompositionRecorder);
 }
 
 void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
@@ -382,12 +392,27 @@ void RenderThread::UpdateAndRender(
   renderer->CheckGraphicsResetStatus();
 
   TimeStamp end = TimeStamp::Now();
-  auto info = renderer->FlushPipelineInfo();
+  RefPtr<WebRenderPipelineInfo> info = renderer->FlushPipelineInfo();
 
   layers::CompositorThreadHolder::Loop()->PostTask(
       NewRunnableFunction("NotifyDidRenderRunnable", &NotifyDidRender,
                           renderer->GetCompositorBridge(), info, aStartId,
                           aStartTime, start, end, aRender, stats));
+
+  if (rendered) {
+    auto recorderIt = mCompositionRecorders.find(aWindowId);
+    if (recorderIt != mCompositionRecorders.end()) {
+      bool shouldRelease = recorderIt->second->MaybeRecordFrame(
+          renderer->GetRenderer(), info.get());
+
+      if (shouldRelease) {
+        mCompositionRecorders.erase(recorderIt);
+
+        wr_renderer_release_composition_recorder_structures(
+            renderer->GetRenderer());
+      }
+    }
+  }
 
   if (rendered) {
     // Wait for GPU after posting NotifyDidRender, since the wait is not
