@@ -524,8 +524,6 @@ package org.mozilla.geckoview {
 
   public static class GeckoSession.MediaDelegate.RecordingDevice {
     ctor protected RecordingDevice();
-    field public static final int TYPE_CAMERA = 0;
-    field public static final int TYPE_MICROPHONE = 1;
     field public final long status;
     field public final long type;
   }
