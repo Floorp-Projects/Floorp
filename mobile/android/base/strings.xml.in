@@ -43,8 +43,10 @@
   <string name="firstrun_sync_message">&firstrun_sync_message2;</string>
   <string name="firstrun_sync_subtext">&firstrun_sync_subtext2;</string>
   <string name="newfirstrun_sync_subtext">&newfirstrun_sync_subtext;</string>
+  <string name="updatednewfirstrun_sync_subtext">&updatednewfirstrun_sync_subtext;</string>
   <string name="firstrun_signin_button">&firstrun_signin_button;</string>
   <string name="newfirstrun_signin_button">&newfirstrun_signin_button;</string>
+  <string name="updatednewfirstrun_signin_button">&updatednewfirstrun_signin_button;</string>
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
   <string name="firstrun_button_next">&firstrun_button_next;</string>
 

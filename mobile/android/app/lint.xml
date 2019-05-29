@@ -242,6 +242,7 @@
              preprocessed_resources res/raw folder. Lint reports it as unused. We should get
              rid of the file eventually. See bug 1268948. -->
         <ignore path="**/raw/.mkdir.done" />
+        <ignore regexp="updatednewfirstrun_sync_subtext|updatednewfirstrun_signin_button" />
     </issue>
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />
