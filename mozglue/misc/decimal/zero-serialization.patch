@@ -1,6 +1,6 @@
-diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
---- a/mfbt/decimal/Decimal.cpp
-+++ b/mfbt/decimal/Decimal.cpp
+diff --git a/mozglue/misc/decimal/Decimal.cpp b/mozglue/misc/decimal/Decimal.cpp
+--- a/mozglue/misc/decimal/Decimal.cpp
++++ b/mozglue/misc/decimal/Decimal.cpp
 @@ -277,17 +277,17 @@ bool Decimal::EncodedData::operator==(co
  }
  
