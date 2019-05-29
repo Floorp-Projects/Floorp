@@ -225,7 +225,7 @@ class Zone : public JS::shadow::Zone,
   MOZ_MUST_USE void* onOutOfMemory(js::AllocFunction allocFunc,
                                    arena_id_t arena, size_t nbytes,
                                    void* reallocPtr = nullptr);
-  void reportAllocationOverflow();
+  void reportAllocationOverflow() const;
 
   void beginSweepTypes();
 
@@ -469,6 +469,17 @@ class Zone : public JS::shadow::Zone,
   void maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
                                       js::gc::TriggerKind trigger);
 
+ public:
+  // Check allocation threshold and trigger a zone GC if necessary.
+  void maybeAllocTriggerZoneGC() {
+    JSRuntime* rt = runtimeFromAnyThread();
+    if (totalBytes() >= threshold.gcTriggerBytes() &&
+        rt->heapState() == JS::HeapState::Idle) {
+      rt->gc.maybeAllocTriggerZoneGC(this);
+    }
+  }
+
+ private:
   js::MainThreadData<js::UniquePtr<js::RegExpZone>> regExps_;
 
  public:
@@ -488,7 +499,7 @@ class Zone : public JS::shadow::Zone,
   }
   void adoptMallocBytes(Zone* other) {
     gcMallocCounter.adopt(other->gcMallocCounter);
-    gcMallocSize.adopt(other->gcMallocSize);
+    gcMallocSize.adopt(other->gcMallocSize, this);
   }
   size_t GCMaxMallocBytes() const { return gcMallocCounter.maxBytes(); }
   size_t GCMallocBytes() const { return gcMallocCounter.bytes(); }
@@ -510,6 +521,21 @@ class Zone : public JS::shadow::Zone,
   }
   void swapCellMemory(js::gc::Cell* a, js::gc::Cell* b, js::MemoryUse use) {
     gcMallocSize.swapMemory(a, b, use);
+  }
+#ifdef DEBUG
+  void registerPolicy(js::ZoneAllocPolicy* policy) {
+    return gcMallocSize.registerPolicy(policy);
+  }
+  void unregisterPolicy(js::ZoneAllocPolicy* policy) {
+    return gcMallocSize.unregisterPolicy(policy);
+  }
+#endif
+  void incPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes) {
+    gcMallocSize.incPolicyMemory(policy, nbytes);
+    maybeAllocTriggerZoneGC();
+  }
+  void decPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes) {
+    gcMallocSize.decPolicyMemory(policy, nbytes);
   }
 
   size_t totalBytes() const {
@@ -699,9 +725,8 @@ class Zone : public JS::shadow::Zone,
 namespace js {
 
 /*
- * Allocation policy that uses Zone::pod_malloc and friends, so that memory
- * pressure is accounted for on the zone. This is suitable for memory associated
- * with GC things allocated in the zone.
+ * Allocation policy that performs precise memory tracking on the zone. This
+ * should be used for all containers associated with a GC thing or a zone.
  *
  * Since it doesn't hold a JSContext (those may not live long enough), it can't
  * report out-of-memory conditions itself; the caller must check for OOM and
@@ -709,46 +734,60 @@ namespace js {
  *
  * FIXME bug 647103 - replace these *AllocPolicy names.
  */
-class ZoneAllocPolicy {
-  JS::Zone* const zone;
+class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
+  JS::Zone* zone_;
+  friend class js::gc::MemoryTracker;  // Can clear |zone_| on merge.
 
  public:
-  MOZ_IMPLICIT ZoneAllocPolicy(JS::Zone* z) : zone(z) {}
-
-  template <typename T>
-  T* maybe_pod_malloc(size_t numElems) {
-    return zone->maybe_pod_malloc<T>(numElems);
+  MOZ_IMPLICIT ZoneAllocPolicy(JS::Zone* z) : zone_(z) {
+#ifdef DEBUG
+    zone()->registerPolicy(this);
+#endif
   }
-  template <typename T>
-  T* maybe_pod_calloc(size_t numElems) {
-    return zone->maybe_pod_calloc<T>(numElems);
-  }
-  template <typename T>
-  T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
-    return zone->maybe_pod_realloc<T>(p, oldSize, newSize);
-  }
-  template <typename T>
-  T* pod_malloc(size_t numElems) {
-    return zone->pod_malloc<T>(numElems);
-  }
-  template <typename T>
-  T* pod_calloc(size_t numElems) {
-    return zone->pod_calloc<T>(numElems);
-  }
-  template <typename T>
-  T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
-    return zone->pod_realloc<T>(p, oldSize, newSize);
+  ZoneAllocPolicy(ZoneAllocPolicy& other) : ZoneAllocPolicy(other.zone_) {}
+  ZoneAllocPolicy(ZoneAllocPolicy&& other) : ZoneAllocPolicy(other.zone_) {}
+  ~ZoneAllocPolicy() {
+#ifdef DEBUG
+    if (zone_) {
+      zone_->unregisterPolicy(this);
+    }
+#endif
   }
 
+  // Public methods required to fulfill the AllocPolicy interface.
+
   template <typename T>
-  void free_(T* p, size_t numElems = 0) {
-    js_free(p);
+  void free_(T* p, size_t numElems) {
+    if (p) {
+      decMemory(numElems * sizeof(T));
+      js_free(p);
+    }
   }
-  void reportAllocOverflow() const {}
 
   MOZ_MUST_USE bool checkSimulatedOOM() const {
     return !js::oom::ShouldFailWithOOM();
   }
+
+  void reportAllocOverflow() const { reportAllocationOverflow(); }
+
+  // Internal methods called by the MallocProvider implementation.
+
+  MOZ_MUST_USE void* onOutOfMemory(js::AllocFunction allocFunc,
+                                   arena_id_t arena, size_t nbytes,
+                                   void* reallocPtr = nullptr) {
+    return zone()->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
+  }
+  void reportAllocationOverflow() const { zone()->reportAllocationOverflow(); }
+  void updateMallocCounter(size_t nbytes) {
+    zone()->incPolicyMemory(this, nbytes);
+  }
+
+ private:
+  Zone* zone() const {
+    MOZ_ASSERT(zone_);
+    return zone_;
+  }
+  void decMemory(size_t nbytes) { zone_->decPolicyMemory(this, nbytes); }
 };
 
 // Convenience functions for memory accounting on the zone.
