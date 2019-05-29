@@ -54,7 +54,7 @@ class TimePickerDialogFragmentTest {
         dialog.show()
 
         val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
-        val datePicker = dialog.findViewById<DatePicker>(mozilla.components.feature.prompts.R.id.date_picker)
+        val datePicker = dialog.findViewById<DatePicker>(R.id.date_picker)
 
         assertEquals(titleTextView.text, "title")
         assertEquals(2019, datePicker.year)
@@ -147,7 +147,7 @@ class TimePickerDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val datePicker = dialog.findViewById<DatePicker>(mozilla.components.feature.prompts.R.id.date_picker)
+        val datePicker = dialog.findViewById<DatePicker>(R.id.date_picker)
 
         assertEquals(2018, datePicker.year)
         assertEquals(6, datePicker.month + 1)
@@ -156,14 +156,15 @@ class TimePickerDialogFragmentTest {
         assertEquals(minDate, Date(datePicker.minDate))
         assertEquals(maxDate, Date(datePicker.maxDate))
 
-        val timePicker = dialog.findViewById<TimePicker>(mozilla.components.feature.prompts.R.id.datetime_picker)
+        val timePicker = dialog.findViewById<TimePicker>(R.id.datetime_picker)
 
         assertEquals(19, timePicker.hour)
         assertEquals(30, timePicker.minute)
     }
 
-    @Config(sdk = [LOLLIPOP])
     @Test
+    @Config(sdk = [LOLLIPOP])
+    @Suppress("DEPRECATION")
     fun `building a time picker`() {
         val initialDate = "2018-06-12T19:30".toDate("yyyy-MM-dd'T'HH:mm")
         val minDate = "2018-06-07T00:00".toDate("yyyy-MM-dd'T'HH:mm")
@@ -184,7 +185,7 @@ class TimePickerDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val timePicker = dialog.findViewById<TimePicker>(mozilla.components.feature.prompts.R.id.time_picker)
+        val timePicker = dialog.findViewById<TimePicker>(R.id.time_picker)
 
         assertEquals(19, timePicker.currentHour)
         assertEquals(30, timePicker.currentMinute)

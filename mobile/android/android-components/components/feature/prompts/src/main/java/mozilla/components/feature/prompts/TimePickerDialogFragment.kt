@@ -27,7 +27,7 @@ private const val KEY_SELECTED_DATE = "KEY_SELECTED_DATE"
 private const val KEY_SELECTION_TYPE = "KEY_SELECTION_TYPE"
 
 /**
- * [android.support.v4.app.DialogFragment] implementation to display date picker with a native dialog.
+ * [DialogFragment][androidx.fragment.app.DialogFragment] implementation to display date picker with a native dialog.
  */
 @Suppress("TooManyFunctions")
 internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnDateChangedListener,
@@ -110,7 +110,7 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         return view
     }
 
-    @SuppressWarnings("deprecation")
+    @Suppress("DEPRECATION")
     private fun bind(picker: TimePicker, cal: Calendar) {
         if (Build.VERSION.SDK_INT >= M) {
             picker.hour = cal.get(Calendar.HOUR_OF_DAY)

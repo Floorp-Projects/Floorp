@@ -12,7 +12,6 @@ object KotlinCompiler {
     // Maybe this is easier in Gradle 5+.
     @JvmStatic
     val projectsWithWarningsAsErrorsDisabled = setOf(
-        "browser-domains",
-        "feature-prompts"
+        "browser-domains"
     )
 }

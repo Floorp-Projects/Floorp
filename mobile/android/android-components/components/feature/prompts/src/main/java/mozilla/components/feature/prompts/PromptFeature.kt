@@ -153,6 +153,7 @@ class PromptFeature(
      * @param grantResults The grant results for the corresponding permissions
      * @see [onNeedToRequestPermissions].
      */
+    @Suppress("UNUSED_PARAMETER")
     fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
         if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
             onPermissionsGranted()
