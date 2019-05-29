@@ -60,6 +60,9 @@ permalink: /changelog/
 
 * **feature-tab-collections**
   * Added option to remove all collections and their tabs: `TabCollectionStorage.removeAllCollections()`.
+  
+* **feature-media**
+  * Added `RecordingDevicesNotificationFeature` to show an ongoing notification while recording devices (camera, microphone) are used by web content.
 
 * **concept-push**
   * 🆕 Added a new component for supporting push notifications.
