@@ -4,6 +4,8 @@
 
 using mozilla::dom::GamepadServiceType from "mozilla/dom/GamepadMessageUtils.h";
 using mozilla::dom::GamepadPoseState from "mozilla/dom/GamepadMessageUtils.h";
+using mozilla::dom::GamepadTouchState from "mozilla/dom/GamepadMessageUtils.h";
+using mozilla::dom::GamepadLightIndicatorType from "mozilla/dom/GamepadMessageUtils.h";
 using mozilla::dom::GamepadMappingType from "mozilla/dom/GamepadMessageUtils.h";
 using mozilla::dom::GamepadHand from "mozilla/dom/GamepadMessageUtils.h";
 
@@ -19,6 +21,8 @@ struct GamepadAdded {
   uint32_t num_buttons;
   uint32_t num_axes;
   uint32_t num_haptics;
+  uint32_t num_lights;
+  uint32_t num_touches;
 };
 
 struct GamepadRemoved {};
@@ -39,8 +43,18 @@ struct GamepadPoseInformation {
   GamepadPoseState pose_state;
 };
 
+struct GamepadLightIndicatorTypeInformation {
+  uint32_t light;
+  GamepadLightIndicatorType type;
+};
+
 struct GamepadHandInformation {
   GamepadHand hand;
+};
+
+struct GamepadTouchInformation {
+  uint32_t index;
+  GamepadTouchState touch_state;
 };
 
 union GamepadChangeEventBody {
@@ -48,8 +62,10 @@ union GamepadChangeEventBody {
   GamepadRemoved;
   GamepadAxisInformation;
   GamepadButtonInformation;
-  GamepadPoseInformation;
   GamepadHandInformation;
+  GamepadLightIndicatorTypeInformation;
+  GamepadPoseInformation;
+  GamepadTouchInformation;
 };
 
 struct GamepadChangeEvent {
