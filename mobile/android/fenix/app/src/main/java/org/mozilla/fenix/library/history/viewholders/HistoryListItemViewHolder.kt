@@ -85,7 +85,7 @@ class HistoryListItemViewHolder(
 
         val selected = when (mode) {
             is HistoryState.Mode.Editing -> mode.selectedItems.contains(item)
-            HistoryState.Mode.Normal -> false
+            else -> false
         }
 
         setClickListeners(item, selected)

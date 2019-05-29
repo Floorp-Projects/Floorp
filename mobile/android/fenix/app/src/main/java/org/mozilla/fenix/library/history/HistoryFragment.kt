@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_history.view.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.MainScope
@@ -106,7 +107,8 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
                 R.menu.library_menu
             is HistoryState.Mode.Editing ->
                 R.menu.history_select_multi
-        }.let { inflater.inflate(it, menu) }
+            else -> null
+        }?.let { inflater.inflate(it, menu) }
 
         if (mode is HistoryState.Mode.Editing) {
             menu.findItem(R.id.share_history_multi_select)?.run {
@@ -237,10 +239,15 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
                     dialog.cancel()
                 }
                 setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
+                    emitChange { HistoryChange.EnterDeletionMode }
                     launch {
                         requireComponents.core.historyStorage.deleteEverything()
                         reloadData()
+                        launch(Dispatchers.Main) {
+                            emitChange { HistoryChange.ExitDeletionMode }
+                        }
                     }
+
                     dialog.dismiss()
                 }
                 create()
@@ -302,6 +309,8 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
     private inline fun emitChange(producer: () -> HistoryChange) {
         getManagedEmitter<HistoryChange>().onNext(producer())
     }
-}
 
-private const val HISTORY_TIME_DAYS = 3L
+    companion object {
+        private const val HISTORY_TIME_DAYS = 3L
+    }
+}

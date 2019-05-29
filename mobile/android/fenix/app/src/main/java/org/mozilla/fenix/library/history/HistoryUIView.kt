@@ -9,10 +9,10 @@ import android.graphics.PorterDuffColorFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.appcompat.widget.Toolbar
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.reactivex.Observable
@@ -45,7 +45,7 @@ class HistoryUIView(
 
     fun getSelected(): List<HistoryItem> = historyAdapter.selected
 
-    override val view: FrameLayout = LayoutInflater.from(container.context)
+    override val view: ConstraintLayout = LayoutInflater.from(container.context)
         .inflate(R.layout.component_history, container, true)
         .findViewById(R.id.history_wrapper)
 
@@ -58,10 +58,13 @@ class HistoryUIView(
     }
 
     override fun updateView() = Consumer<HistoryState> {
+        view.progress_bar.visibility = if (it.mode is HistoryState.Mode.Deleting) View.VISIBLE else View.GONE
+
         if (it.mode != mode) {
             mode = it.mode
             actionEmitter.onNext(HistoryAction.SwitchMode)
         }
+
         (view.history_list.adapter as HistoryAdapter).updateData(it.items, it.mode)
 
         items = it.items
@@ -128,8 +131,8 @@ class HistoryUIView(
     }
 
     override fun onBackPressed(): Boolean {
-        return when {
-            mode is HistoryState.Mode.Editing -> {
+        return when (mode) {
+            is HistoryState.Mode.Editing -> {
                 mode = HistoryState.Mode.Normal
                 historyAdapter.updateData(items, mode)
                 setUIForNormalMode(items.isEmpty())

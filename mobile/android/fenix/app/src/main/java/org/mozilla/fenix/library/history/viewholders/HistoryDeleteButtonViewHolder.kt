@@ -25,7 +25,8 @@ class HistoryDeleteButtonViewHolder(
                 val action = when (it) {
                     is HistoryState.Mode.Normal -> HistoryAction.Delete.All
                     is HistoryState.Mode.Editing -> HistoryAction.Delete.Some(it.selectedItems)
-                }
+                    is HistoryState.Mode.Deleting -> null
+                } ?: return@also
 
                 actionEmitter.onNext(action)
             }
@@ -35,7 +36,8 @@ class HistoryDeleteButtonViewHolder(
         this.mode = mode
 
         buttonView.run {
-            if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
+            val isDeleting = mode is HistoryState.Mode.Deleting
+            if (isDeleting || mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
                 isEnabled = false
                 alpha = DISABLED_ALPHA
             } else {

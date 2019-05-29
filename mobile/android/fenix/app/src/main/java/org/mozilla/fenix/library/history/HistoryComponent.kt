@@ -38,6 +38,7 @@ data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : ViewStat
     sealed class Mode {
         object Normal : Mode()
         data class Editing(val selectedItems: List<HistoryItem>) : Mode()
+        object Deleting : Mode()
     }
 }
 
@@ -62,6 +63,8 @@ sealed class HistoryChange : Change {
     object ExitEditMode : HistoryChange()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryChange()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryChange()
+    object EnterDeletionMode : HistoryChange()
+    object ExitDeletionMode : HistoryChange()
 }
 
 class HistoryViewModel(
@@ -95,6 +98,8 @@ class HistoryViewModel(
                     }
                 }
                 is HistoryChange.ExitEditMode -> state.copy(mode = HistoryState.Mode.Normal)
+                is HistoryChange.EnterDeletionMode -> state.copy(mode = HistoryState.Mode.Deleting)
+                is HistoryChange.ExitDeletionMode -> state.copy(mode = HistoryState.Mode.Normal)
             }
         }
     }
