@@ -191,7 +191,7 @@ class SearchBox extends PureComponent {
         placeholder,
         ref: this.inputRef,
         value,
-        type,
+        type: "search",
       }),
       showLearnMoreLink && MDNLink({
         title: learnMoreTitle,
