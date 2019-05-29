@@ -227,8 +227,6 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.21.0'
     testImplementation "androidx.arch.core:core-testing:${architecture_components_version}"
 
-    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0-alpha4'
-
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {
         exclude group: 'com.android.support', module: 'support-annotations'
     }

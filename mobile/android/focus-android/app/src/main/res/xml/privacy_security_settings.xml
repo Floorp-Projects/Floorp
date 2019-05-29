@@ -11,28 +11,28 @@
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_tracking_protection">
 
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="@string/pref_key_privacy_block_ads"
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_privacy_block_ads_summary"
             android:title="@string/preference_privacy_block_ads" />
 
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="@string/pref_key_privacy_block_analytics"
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_privacy_block_analytics_summary"
             android:title="@string/preference_privacy_block_analytics" />
 
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="@string/pref_key_privacy_block_social"
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_privacy_block_social_summary"
             android:title="@string/preference_privacy_block_social" />
 
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="@string/pref_key_privacy_block_other"
             android:layout="@layout/focus_preference_no_icon"
@@ -45,14 +45,14 @@
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_web_content">
 
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="@string/pref_key_performance_block_webfonts"
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_performance_block_webfonts_summary"
             android:title="@string/preference_performance_block_webfonts" />
 
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="@string/pref_key_performance_block_javascript"
             android:layout="@layout/focus_preference_no_icon"
@@ -81,7 +81,7 @@
 
     <androidx.preference.PreferenceCategory
         android:layout="@layout/focus_preference_category_no_title">
-        <android.support.v7.preference.Preference
+        <androidx.preference.Preference
             android:key="@string/pref_key_screen_exceptions"
             android:layout="@layout/focus_preference_no_icon"
             android:title="@string/preference_exceptions" />
@@ -90,13 +90,13 @@
     <androidx.preference.PreferenceCategory
         android:layout="@layout/focus_preference_category"
         android:title="@string/preference_category_switching_apps">
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="@string/pref_key_biometric"
             android:layout="@layout/focus_preference_no_icon"
             android:summary="@string/preference_security_biometric_summary"
             android:title="@string/preference_security_biometric" />
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <androidx.preference.SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="@string/pref_key_secure"
             android:layout="@layout/focus_preference_no_icon"
