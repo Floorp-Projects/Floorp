@@ -105,7 +105,7 @@ fun:*CodedInputStream*ReadTagWithCutoff*
 
 
 # SQLite3 is full of overflows :/
-src:*/db/sqlite3/src/sqlite3.c
+src:*/third_party/sqlite3/src/sqlite3.c
 
 # zlib has some overflows, we can't deal with them right now
 src:*/modules/zlib/src/*

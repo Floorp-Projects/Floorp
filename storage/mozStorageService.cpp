@@ -43,7 +43,7 @@
 #define PREF_TS_PAGESIZE "toolkit.storage.pageSize"
 
 // This value must be kept in sync with the value of SQLITE_DEFAULT_PAGE_SIZE in
-// db/sqlite3/src/Makefile.in.
+// third_party/sqlite3/src/Makefile.in.
 #define PREF_TS_PAGESIZE_DEFAULT 32768
 
 namespace mozilla {
