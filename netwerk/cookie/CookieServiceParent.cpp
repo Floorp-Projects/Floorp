@@ -70,6 +70,7 @@ void GetInfoFromCookie(nsCookie* aCookie, CookieStruct& aCookieStruct) {
   aCookieStruct.isSecure() = aCookie->IsSecure();
   aCookieStruct.isHttpOnly() = aCookie->IsHttpOnly();
   aCookieStruct.sameSite() = aCookie->SameSite();
+  aCookieStruct.rawSameSite() = aCookie->RawSameSite();
 }
 
 void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
@@ -178,6 +179,7 @@ void CookieServiceParent::SerialializeCookieList(
     cookieStruct->isSession() = cookie->IsSession();
     cookieStruct->isSecure() = cookie->IsSecure();
     cookieStruct->sameSite() = cookie->SameSite();
+    cookieStruct->rawSameSite() = cookie->RawSameSite();
   }
 }
 
