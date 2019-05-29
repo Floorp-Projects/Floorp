@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.annotation.SuppressLint
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
+import io.reactivex.plugins.RxJavaPlugins
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -38,6 +39,7 @@ open class FenixApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
         setupApplication()
     }
 
@@ -49,6 +51,7 @@ open class FenixApplication : Application() {
         setDayNightTheme()
         val megazordEnabled = setupMegazord()
         setupLogging(megazordEnabled)
+        registerRxExceptionHandling()
         setupCrashReporting()
 
         if (!isMainProcess()) {
@@ -62,6 +65,14 @@ open class FenixApplication : Application() {
         setupLeakCanary()
         if (Settings.getInstance(this).isTelemetryEnabled) {
             components.analytics.metrics.start()
+        }
+    }
+
+    private fun registerRxExceptionHandling() {
+        RxJavaPlugins.setErrorHandler {
+            it.cause?.run {
+                throw this
+            } ?: throw it
         }
     }
 
