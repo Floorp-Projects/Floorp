@@ -3348,13 +3348,13 @@ pref("dom.ipc.processCount.file", 1);
 // WebExtensions only support a single extension process.
 pref("dom.ipc.processCount.extension", 1);
 
-// Privileged content only supports a single content process.
-pref("dom.ipc.processCount.privileged", 1);
+// The privileged about process only supports a single content process.
+pref("dom.ipc.processCount.privilegedabout", 1);
 
-// Keep a single privileged content process alive for performance reasons.
+// Keep a single privileged about process alive for performance reasons.
 // e.g. we do not want to throw content processes out every time we navigate
 // away from about:newtab.
-pref("dom.ipc.keepProcessesAlive.privileged", 1);
+pref("dom.ipc.keepProcessesAlive.privilegedabout", 1);
 
 // Whether a native event loop should be used in the content process.
 #if defined(XP_WIN) || defined(XP_MACOSX)
@@ -3386,7 +3386,9 @@ pref("browser.tabs.remote.separateFileUriProcess", true);
 // content process, causes compatibility issues.
 pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", true);
 
-// Pref to control whether we use separate privileged content processes.
+// Pref to control whether we use a separate privileged content process
+// for about: pages. This pref name did not age well: we will have multiple
+// types of privileged content processes, each with different privileges.
 pref("browser.tabs.remote.separatePrivilegedContentProcess", false);
 
 // When this pref is enabled top level loads with a mismatched

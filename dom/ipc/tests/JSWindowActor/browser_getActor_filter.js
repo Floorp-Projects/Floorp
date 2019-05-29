@@ -92,7 +92,7 @@ declTest("getActor with remoteType match", {
 });
 
 declTest("getActor with remoteType mismatch", {
-  remoteTypes: ["privileged"],
+  remoteTypes: ["privilegedabout"],
   url: TEST_URL,
 
   async test(browser) {
