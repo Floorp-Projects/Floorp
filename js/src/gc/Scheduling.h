@@ -313,6 +313,9 @@
 #include "js/HashTable.h"
 
 namespace js {
+
+class ZoneAllocPolicy;
+
 namespace gc {
 
 struct Cell;
@@ -686,10 +689,27 @@ class MemoryTracker {
     swapTrackedMemory(a, b, use);
 #endif
   }
+#ifdef DEBUG
+  void registerPolicy(ZoneAllocPolicy* policy);
+  void unregisterPolicy(ZoneAllocPolicy* policy);
+#endif
+  void incPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
+#ifdef DEBUG
+    incTrackedPolicyMemory(policy, nbytes);
+#endif
+    bytes_ += nbytes;
+  }
+  void decPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
+#ifdef DEBUG
+    decTrackedPolicyMemory(policy, nbytes);
+#endif
+    MOZ_ASSERT(bytes_ >= nbytes);
+    bytes_ -= nbytes;
+  }
 
   size_t bytes() const { return bytes_; }
 
-  void adopt(MemoryTracker& other);
+  void adopt(MemoryTracker& other, Zone* newZone);
 
  private:
   mozilla::Atomic<size_t, mozilla::Relaxed,
@@ -720,15 +740,26 @@ class MemoryTracker {
     static void rekey(Key& k, const Key& newKey);
   };
 
+  // Map containing the allocated size associated with (cell, use) pairs.
   using Map = HashMap<Key, size_t, Hasher, SystemAllocPolicy>;
+
+  // Map containing the allocated size associated with each instance of a
+  // container that uses ZoneAllocPolicy.
+  using ZoneAllocPolicyMap = HashMap<ZoneAllocPolicy*, size_t,
+                                     DefaultHasher<ZoneAllocPolicy*>,
+                                     SystemAllocPolicy>;
 
   void trackMemory(Cell* cell, size_t nbytes, MemoryUse use);
   void untrackMemory(Cell* cell, size_t nbytes, MemoryUse use);
   void swapTrackedMemory(Cell* a, Cell* b, MemoryUse use);
   size_t getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock);
+  void incTrackedPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes);
+  void decTrackedPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes);
 
   Mutex mutex;
   Map map;
+  ZoneAllocPolicyMap policyMap;
+
 #endif
 };
 

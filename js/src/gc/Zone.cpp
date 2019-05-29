@@ -482,7 +482,9 @@ void* Zone::onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                                                 reallocPtr);
 }
 
-void Zone::reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
+void Zone::reportAllocationOverflow() const {
+  js::ReportAllocationOverflow(nullptr);
+}
 
 void JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
                                               TriggerKind trigger) {
@@ -505,19 +507,31 @@ void JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
   counter.recordTrigger(trigger);
 }
 
-void MemoryTracker::adopt(MemoryTracker& other) {
+void MemoryTracker::adopt(MemoryTracker& other, Zone* newZone) {
   bytes_ += other.bytes_;
   other.bytes_ = 0;
 
 #ifdef DEBUG
   LockGuard<Mutex> lock(mutex);
+
   AutoEnterOOMUnsafeRegion oomUnsafe;
+
   for (auto r = other.map.all(); !r.empty(); r.popFront()) {
     if (!map.put(r.front().key(), r.front().value())) {
       oomUnsafe.crash("MemoryTracker::adopt");
     }
   }
   other.map.clear();
+
+  // There may still be ZoneAllocPolicies associated with the old zone since
+  // some are not destroyed until the zone itself dies. Instead check there is
+  // no memory associated with them and clear their zone pointer in debug builds
+  // to catch further memory association.
+  for (auto r = other.policyMap.all(); !r.empty(); r.popFront()) {
+    MOZ_ASSERT(r.front().value() == 0);
+    r.front().key()->zone_ = nullptr;
+  }
+  other.policyMap.clear();
 #endif
 }
 
@@ -543,18 +557,27 @@ MemoryTracker::~MemoryTracker() {
     return;
   }
 
-  if (map.empty()) {
-    MOZ_ASSERT(bytes() == 0);
-    return;
+  bool ok = true;
+
+  if (!map.empty()) {
+    ok = false;
+    fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
+    for (auto r = map.all(); !r.empty(); r.popFront()) {
+      fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell(),
+              r.front().value(), MemoryUseName(r.front().key().use()));
+    }
   }
 
-  fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
-  for (auto r = map.all(); !r.empty(); r.popFront()) {
-    fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell(),
-            r.front().value(), MemoryUseName(r.front().key().use()));
+  if (!policyMap.empty()) {
+    ok = false;
+    fprintf(stderr, "Missing calls to Zone::decPolicyMemory:\n");
+    for (auto r = policyMap.all(); !r.empty(); r.popFront()) {
+      fprintf(stderr, "  %p 0x%zx\n", r.front().key(), r.front().value());
+    }
   }
 
-  MOZ_CRASH();
+  MOZ_ASSERT(ok);
+  MOZ_ASSERT(bytes() == 0);
 }
 
 void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
@@ -583,8 +606,8 @@ void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   Key key{cell, use};
   auto ptr = map.lookup(key);
   if (!ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("Association not found: %p 0x%x %s", cell,
-                            unsigned(nbytes), MemoryUseName(use));
+    MOZ_CRASH_UNSAFE_PRINTF("Association not found: %p 0x%zx %s", cell, nbytes,
+                            MemoryUseName(use));
   }
   if (ptr->value() != nbytes) {
     MOZ_CRASH_UNSAFE_PRINTF(
@@ -609,13 +632,13 @@ void MemoryTracker::swapTrackedMemory(Cell* a, Cell* b, MemoryUse use) {
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
-  if ((sa && !map.put(kb, sa)) ||
-      (sb && !map.put(ka, sb))) {
+  if ((sa && !map.put(kb, sa)) || (sb && !map.put(ka, sb))) {
     oomUnsafe.crash("MemoryTracker::swapTrackedMemory");
   }
 }
 
-size_t MemoryTracker::getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock) {
+size_t MemoryTracker::getAndRemoveEntry(const Key& key,
+                                        LockGuard<Mutex>& lock) {
   auto ptr = map.lookup(key);
   if (!ptr) {
     return 0;
@@ -624,6 +647,68 @@ size_t MemoryTracker::getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock) 
   size_t size = ptr->value();
   map.remove(ptr);
   return size;
+}
+
+void MemoryTracker::registerPolicy(ZoneAllocPolicy* policy) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto ptr = policyMap.lookupForAdd(policy);
+  if (ptr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p already registeredd", policy);
+  }
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  if (!policyMap.add(ptr, policy, 0)) {
+    oomUnsafe.crash("MemoryTracker::incTrackedPolicyMemory");
+  }
+}
+
+void MemoryTracker::unregisterPolicy(ZoneAllocPolicy* policy) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto ptr = policyMap.lookup(policy);
+  if (!ptr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+  }
+  if (ptr->value() != 0) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "ZoneAllocPolicy %p still has 0x%zx bytes associated", policy,
+        ptr->value());
+  }
+
+  policyMap.remove(ptr);
+}
+
+void MemoryTracker::incTrackedPolicyMemory(ZoneAllocPolicy* policy,
+                                           size_t nbytes) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto ptr = policyMap.lookup(policy);
+  if (!ptr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+  }
+
+  ptr->value() += nbytes;
+}
+
+void MemoryTracker::decTrackedPolicyMemory(ZoneAllocPolicy* policy,
+                                           size_t nbytes) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto ptr = policyMap.lookup(policy);
+  if (!ptr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+  }
+
+  size_t& value = ptr->value();
+  if (value < nbytes) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "ZoneAllocPolicy %p is too small: "
+        "expected at least 0x%zx but got 0x%zx bytes",
+        policy, nbytes, value);
+  }
+
+  value -= nbytes;
 }
 
 void MemoryTracker::fixupAfterMovingGC() {
