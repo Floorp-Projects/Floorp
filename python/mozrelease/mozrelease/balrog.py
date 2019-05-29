@@ -49,6 +49,11 @@ def _generate_conditions(context, entry):
             entry['update-channel'] + suffix
             for suffix in ('', '-localtest', '-cdntest')
         ]
+    if 'build-ids' in entry:
+        conditions['buildIDs'] = [
+            buildid.format(**context)
+            for buildid in entry['build-ids']
+        ]
     return conditions
 
 

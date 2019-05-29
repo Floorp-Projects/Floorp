@@ -37,6 +37,7 @@ def generate_update_line(config, jobs):
                 'product': product,
                 'version': GeckoVersion.parse(release_config['appVersion']),
                 'blob-type': blob_type,
+                'build-id': config.params['moz_build_date'],
             }
             job['worker']['update-line'][suffix] = generate_update_properties(
                 context, update_config)
