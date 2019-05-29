@@ -4998,16 +4998,6 @@ public class GeckoSession implements Parcelable {
             /* package */ @interface DeviceType {}
 
             /**
-             * The recording device is camera.
-             */
-            public static final int TYPE_CAMERA = 0;
-
-            /**
-             * The recording device is microphone.
-             */
-            public static final int TYPE_MICROPHONE = 1;
-
-            /**
              * A long giving the current recording status, must be either Status.RECORDING,
              * Status.PAUSED or Status.INACTIVE.
              */
