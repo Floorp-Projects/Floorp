@@ -26,8 +26,7 @@ mozilla::ipc::IPCResult GamepadTestChannelParent::RecvGamepadTestEvent(
     LossyCopyUTF16toASCII(a.id(), gamepadID);
     uint32_t index = service->AddGamepad(
         gamepadID.get(), static_cast<GamepadMappingType>(a.mapping()), a.hand(),
-        a.num_buttons(), a.num_axes(), a.num_haptics(), a.num_lights(),
-        a.num_touches());
+        a.num_buttons(), a.num_axes(), a.num_haptics());
     if (!mShuttingdown) {
       Unused << SendReplyGamepadIndex(aID, index);
     }
@@ -51,11 +50,6 @@ mozilla::ipc::IPCResult GamepadTestChannelParent::RecvGamepadTestEvent(
   if (body.type() == GamepadChangeEventBody::TGamepadPoseInformation) {
     const GamepadPoseInformation& a = body.get_GamepadPoseInformation();
     service->NewPoseEvent(index, a.pose_state());
-    return IPC_OK();
-  }
-  if (body.type() == GamepadChangeEventBody::TGamepadTouchInformation) {
-    const GamepadTouchInformation& a = body.get_GamepadTouchInformation();
-    service->NewMultiTouchEvent(index, a.index(), a.touch_state());
     return IPC_OK();
   }
 

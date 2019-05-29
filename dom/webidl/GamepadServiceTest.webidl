@@ -17,9 +17,7 @@ interface GamepadServiceTest
                                     GamepadHand hand,
                                     unsigned long numButtons,
                                     unsigned long numAxes,
-                                    unsigned long numHaptics,
-                                    unsigned long numLightIndicator,
-                                    unsigned long numTouchEvents);
+                                    unsigned long numHaptics);
 
   void removeGamepad(unsigned long index);
 
@@ -44,8 +42,4 @@ interface GamepadServiceTest
                    Float32Array? angAcceleration,
                    Float32Array? linVelocity,
                    Float32Array? linAcceleration);
-  
-  void newTouch(unsigned long index, unsigned long aTouchArrayIndex,
-                unsigned long touchId, octet surfaceId,
-                Float32Array position, Float32Array? surfaceDimension);
 };

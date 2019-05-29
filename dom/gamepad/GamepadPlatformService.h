@@ -38,8 +38,7 @@ class GamepadPlatformService final {
   // Add a gamepad to the list of known gamepads, and return its index.
   uint32_t AddGamepad(const char* aID, GamepadMappingType aMapping,
                       GamepadHand aHand, uint32_t aNumButtons,
-                      uint32_t aNumAxes, uint32_t aNumHaptics,
-                      uint32_t aNumLightIndicator, uint32_t aNumTouchEvents);
+                      uint32_t aNumAxes, uint32_t aNumHaptics);
   // Remove the gamepad at |aIndex| from the list of known gamepads.
   void RemoveGamepad(uint32_t aIndex);
 
@@ -63,14 +62,6 @@ class GamepadPlatformService final {
   // Update the state of |aState| for the gamepad at |aIndex| for all
   // windows that are listening and visible.
   void NewPoseEvent(uint32_t aIndex, const GamepadPoseState& aState);
-  // Update the type of |aType| for the gamepad at |aIndex| for all
-  // windows that are listening and visible.
-  void NewLightIndicatorTypeEvent(uint32_t aIndex, uint32_t aLight,
-                                  GamepadLightIndicatorType aType);
-  // Update the state of |aState| for the gamepad at |aIndex| with
-  // |aTouchArrayIndex| for all windows that are listening and visible.
-  void NewMultiTouchEvent(uint32_t aIndex, uint32_t aTouchArrayIndex,
-                          const GamepadTouchState& aState);
 
   // When shutting down the platform communications for gamepad, also reset the
   // indexes.

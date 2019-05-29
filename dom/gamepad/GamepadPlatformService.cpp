@@ -79,8 +79,7 @@ void GamepadPlatformService::NotifyGamepadChange(uint32_t aIndex,
 
 uint32_t GamepadPlatformService::AddGamepad(
     const char* aID, GamepadMappingType aMapping, GamepadHand aHand,
-    uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aHaptics,
-    uint32_t aNumLightIndicator, uint32_t aNumTouchEvents) {
+    uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aHaptics) {
   // This method is called by monitor thread populated in
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -90,8 +89,7 @@ uint32_t GamepadPlatformService::AddGamepad(
 
   // Only VR controllers has displayID, we give 0 to the general gamepads.
   GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), aMapping,
-                 aHand, 0, aNumButtons, aNumAxes, aHaptics, aNumLightIndicator,
-                 aNumTouchEvents);
+                 aHand, 0, aNumButtons, aNumAxes, aHaptics);
 
   NotifyGamepadChange<GamepadAdded>(index, a);
   return index;
@@ -147,36 +145,14 @@ void GamepadPlatformService::NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
   NotifyGamepadChange<GamepadAxisInformation>(aIndex, a);
 }
 
-void GamepadPlatformService::NewLightIndicatorTypeEvent(
-    uint32_t aIndex, uint32_t aLight, GamepadLightIndicatorType aType) {
-  // This method is called by monitor thread populated in
-  // platform-dependent backends
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(!NS_IsMainThread());
-  GamepadLightIndicatorTypeInformation a(aLight, aType);
-  NotifyGamepadChange<GamepadLightIndicatorTypeInformation>(aIndex, a);
-}
-
 void GamepadPlatformService::NewPoseEvent(uint32_t aIndex,
-                                          const GamepadPoseState& aState) {
+                                          const GamepadPoseState& aPose) {
   // This method is called by monitor thread populated in
   // platform-dependent backends
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!NS_IsMainThread());
-  GamepadPoseInformation a(aState);
+  GamepadPoseInformation a(aPose);
   NotifyGamepadChange<GamepadPoseInformation>(aIndex, a);
-}
-
-void GamepadPlatformService::NewMultiTouchEvent(
-    uint32_t aIndex, uint32_t aTouchArrayIndex,
-    const GamepadTouchState& aState) {
-  // This method is called by monitor thread populated in
-  // platform-dependent backends
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  GamepadTouchInformation a(aTouchArrayIndex, aState);
-  NotifyGamepadChange<GamepadTouchInformation>(aIndex, a);
 }
 
 void GamepadPlatformService::ResetGamepadIndexes() {
