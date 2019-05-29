@@ -39,7 +39,12 @@ class BrowserMenu internal constructor(
      *  the top of the menu is always visible.
      */
     @SuppressLint("InflateParams")
-    fun show(anchor: View, orientation: Orientation = DOWN, endOfMenuAlwaysVisible: Boolean = false): PopupWindow {
+    fun show(
+        anchor: View,
+        orientation: Orientation = DOWN,
+        endOfMenuAlwaysVisible: Boolean = false,
+        onDismiss: () -> Unit = {}
+    ): PopupWindow {
         val view = LayoutInflater.from(anchor.context).inflate(R.layout.mozac_browser_menu, null)
 
         adapter.menu = this
@@ -63,6 +68,7 @@ class BrowserMenu internal constructor(
             setOnDismissListener {
                 adapter.menu = null
                 currentPopup = null
+                onDismiss()
             }
 
             displayPopup(view, anchor, orientation)

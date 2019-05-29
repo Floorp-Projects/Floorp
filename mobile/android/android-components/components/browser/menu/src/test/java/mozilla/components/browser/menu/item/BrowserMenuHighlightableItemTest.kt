@@ -32,11 +32,11 @@ class BrowserMenuHighlightableItemTest {
     fun `browser menu highlightable item should be inflated`() {
         var onClickWasPress = false
         val item = BrowserMenuHighlightableItem(
-                "label",
-                android.R.drawable.ic_menu_report_image,
-                android.R.color.black,
-                android.R.color.black,
-                highlight = BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
+            "label",
+            android.R.drawable.ic_menu_report_image,
+            android.R.color.black,
+            android.R.color.black,
+            BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
         ) {
             onClickWasPress = true
         }
@@ -50,13 +50,12 @@ class BrowserMenuHighlightableItemTest {
     @Test
     fun `browser menu highlightable item  should have the right text, image, and iconTintColorResource`() {
         val item = BrowserMenuHighlightableItem(
-                "label",
-                android.R.drawable.ic_menu_report_image,
-                android.R.color.black,
-                android.R.color.black,
-                highlight = BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
-        ) {
-        }
+            "label",
+            android.R.drawable.ic_menu_report_image,
+            android.R.color.black,
+            android.R.color.black,
+            BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
+        )
 
         val view = inflate(item)
 
@@ -77,11 +76,10 @@ class BrowserMenuHighlightableItemTest {
     @Test
     fun `browser menu highlightable item with with no iconTintColorResource must not have an imageTintList`() {
         val item = BrowserMenuHighlightableItem(
-                "label",
-                android.R.drawable.ic_menu_report_image,
-                highlight = BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
-        ) {
-        }
+            "label",
+            android.R.drawable.ic_menu_report_image,
+            highlight = BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
+        )
 
         val view = inflate(item)
 
@@ -95,10 +93,10 @@ class BrowserMenuHighlightableItemTest {
     @Test
     fun `browser menu highlightable item with with no highlight must not have highlightImageView visible`() {
         val item = BrowserMenuHighlightableItem(
-                "label",
-                android.R.drawable.ic_menu_report_image
-        ) {
-        }
+            "label",
+            android.R.drawable.ic_menu_report_image,
+            highlight = null
+        )
 
         val view = inflate(item)
         val highlightImageView = view.findViewById<AppCompatImageView>(R.id.highlight_image)

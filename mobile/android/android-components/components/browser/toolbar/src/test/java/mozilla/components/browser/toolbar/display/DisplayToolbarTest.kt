@@ -11,6 +11,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.view.forEach
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -21,7 +22,8 @@ import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
-import mozilla.components.support.ktx.android.view.forEach
+import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -31,6 +33,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -175,7 +178,7 @@ class DisplayToolbarTest {
         menuView.performClick()
 
         verify(menuBuilder).build(testContext)
-        verify(menu).show(menuView)
+        verify(menu).show(eq(menuView), any(), anyBoolean(), any())
         verify(menu, never()).invalidate()
 
         displayToolbar.invalidateActions()
@@ -877,72 +880,38 @@ class DisplayToolbarTest {
     }
 
     companion object {
-        private fun extractUrlView(displayToolbar: DisplayToolbar): TextView {
-            var textView: TextView? = null
+        private fun extractUrlView(displayToolbar: DisplayToolbar): TextView =
+            extractView(displayToolbar) {
+                it?.id == R.id.mozac_browser_toolbar_url_view
+            } ?: throw AssertionError("Could not find URL view")
 
-            displayToolbar.forEach {
-                if (it is TextView) {
-                    textView = it
-                    return@forEach
-                }
-            }
+        private fun extractProgressView(displayToolbar: DisplayToolbar): ProgressBar =
+            extractView(displayToolbar) ?: throw AssertionError("Could not find progress bar")
 
-            return textView ?: throw AssertionError("Could not find URL view")
-        }
+        private fun extractIconView(displayToolbar: DisplayToolbar): ImageView =
+            extractView(displayToolbar) ?: throw AssertionError("Could not find icon view")
 
-        private fun extractProgressView(displayToolbar: DisplayToolbar): ProgressBar {
-            var progressView: ProgressBar? = null
-
-            displayToolbar.forEach {
-                if (it is ProgressBar) {
-                    progressView = it
-                    return@forEach
-                }
-            }
-
-            return progressView ?: throw AssertionError("Could not find URL view")
-        }
-
-        private fun extractIconView(displayToolbar: DisplayToolbar): ImageView {
-            var iconView: ImageView? = null
-
-            displayToolbar.forEach {
-                if (it is ImageView) {
-                    iconView = it
-                    return@forEach
-                }
-            }
-
-            return iconView ?: throw AssertionError("Could not find URL view")
-        }
-
-        private fun extractMenuView(displayToolbar: DisplayToolbar): ImageButton {
-            var menuButton: ImageButton? = null
-
-            displayToolbar.forEach {
-                if (it is ImageButton) {
-                    menuButton = it
-                    return@forEach
-                }
-            }
-
-            return menuButton ?: throw AssertionError("Could not find menu view")
-        }
+        private fun extractMenuView(displayToolbar: DisplayToolbar): MenuButton =
+            extractView(displayToolbar) ?: throw AssertionError("Could not find menu view")
 
         private fun extractActionView(
             displayToolbar: DisplayToolbar,
             contentDescription: String
-        ): ImageButton? {
-            var actionView: ImageButton? = null
+        ): ImageButton? = extractView(displayToolbar) {
+            it?.contentDescription == contentDescription
+        }
 
+        private inline fun <reified T> extractView(
+            displayToolbar: DisplayToolbar,
+            otherCondition: (T) -> Boolean = { _ -> true }
+        ): T? {
             displayToolbar.forEach {
-                if (it is ImageButton && it.contentDescription == contentDescription) {
-                    actionView = it
-                    return@forEach
+                if (it is T && otherCondition(it)) {
+                    return it
                 }
             }
 
-            return actionView
+            return null
         }
     }
 }

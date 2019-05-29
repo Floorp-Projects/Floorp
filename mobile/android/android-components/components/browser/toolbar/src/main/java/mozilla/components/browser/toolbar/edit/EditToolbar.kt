@@ -6,7 +6,6 @@ package mozilla.components.browser.toolbar.edit
 
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.core.content.ContextCompat
 import android.text.InputType
 import android.view.Gravity
 import android.view.KeyEvent
@@ -15,6 +14,8 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import androidx.core.content.ContextCompat
+import androidx.core.view.setPadding
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.facts.emitCommitFact
@@ -53,8 +54,7 @@ internal class EditToolbar(
         textSize = URL_TEXT_SIZE
         inputType = InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT
 
-        val padding = resources.pxToDp(URL_PADDING_DP)
-        setPadding(padding, padding, padding, padding)
+        setPadding(resources.pxToDp(URL_PADDING_DP))
         setSelectAllOnFocus(true)
 
         setOnCommitListener {
@@ -93,8 +93,7 @@ internal class EditToolbar(
     private val clearView = ImageView(context).apply {
         visibility = View.GONE
         id = R.id.mozac_browser_toolbar_clear_view
-        val padding = resources.pxToDp(CANCEL_PADDING_DP)
-        setPadding(padding, padding, padding, padding)
+        setPadding(resources.pxToDp(CANCEL_PADDING_DP))
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_clear)
         contentDescription = context.getString(R.string.mozac_clear_button_description)
         scaleType = ImageView.ScaleType.CENTER

@@ -38,7 +38,7 @@ internal fun TextView.setColorResource(@ColorRes textColorResource: Int) {
  * @param textColorResource Optional ID of color resource to tint the text.
  * @param listener Callback to be invoked when this menu item is clicked.
  */
-class BrowserMenuImageText(
+open class BrowserMenuImageText(
     private val label: String,
     @DrawableRes
     private val imageResource: Int,

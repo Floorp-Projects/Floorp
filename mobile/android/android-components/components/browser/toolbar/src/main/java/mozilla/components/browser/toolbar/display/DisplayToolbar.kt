@@ -7,21 +7,18 @@ package mozilla.components.browser.toolbar.display
 import android.annotation.SuppressLint
 import android.content.Context
 import android.text.TextUtils
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import android.widget.ProgressBar
-import androidx.appcompat.widget.AppCompatImageButton
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
-import mozilla.components.browser.menu.BrowserMenu
+import androidx.core.view.setPadding
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
-import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
 import mozilla.components.browser.toolbar.internal.ActionWrapper
 import mozilla.components.browser.toolbar.internal.invalidateActions
 import mozilla.components.browser.toolbar.internal.measureActions
@@ -69,22 +66,17 @@ import mozilla.components.ui.icons.R.drawable.mozac_ic_lock
  *
  */
 @SuppressLint("ViewConstructor") // This view is only instantiated in code
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("ViewConstructor", "LargeClass", "TooManyFunctions")
 internal class DisplayToolbar(
     context: Context,
     val toolbar: BrowserToolbar
 ) : ViewGroup(context) {
-    private var menu: BrowserMenu? = null
-    internal var menuBuilder: BrowserMenuBuilder? = null
-        set(value) {
-            field = value
-            menuView.visibility = if (value == null) View.GONE else View.VISIBLE
-            if (value == null) menu = null
-        }
+    internal var menuBuilder: BrowserMenuBuilder?
+        get() = menuView.menuBuilder
+        set(value) { menuView.menuBuilder = value }
 
     internal val siteSecurityIconView = AppCompatImageView(context).apply {
-        val padding = resources.pxToDp(ICON_PADDING_DP)
-        setPadding(padding, padding, padding, padding)
+        setPadding(resources.pxToDp(ICON_PADDING_DP))
 
         setImageResource(mozac_ic_globe)
 
@@ -120,33 +112,7 @@ internal class DisplayToolbar(
         }
     }
 
-    private val menuView = AppCompatImageButton(context).apply {
-        val padding = resources.pxToDp(MENU_PADDING_DP)
-        setPadding(padding, padding, padding, padding)
-
-        setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_menu)
-        contentDescription = context.getString(R.string.mozac_browser_toolbar_menu_button)
-
-        val outValue = TypedValue()
-        context.theme.resolveAttribute(
-                android.R.attr.selectableItemBackgroundBorderless,
-                outValue,
-                true)
-
-        setBackgroundResource(outValue.resourceId)
-        visibility = View.GONE
-
-        setOnClickListener {
-            menu = menuBuilder?.build(context)
-            val endAlwaysVisible = menuBuilder?.endOfMenuAlwaysVisible ?: false
-            menu?.show(
-                anchor = this,
-                orientation = BrowserMenu.determineMenuOrientation(toolbar),
-                endOfMenuAlwaysVisible = endAlwaysVisible
-            )
-            emitOpenMenuFact(menuBuilder?.extras)
-        }
-    }
+    private val menuView = MenuButton(context, toolbar)
 
     private val progressView = ProgressBar(
         context, null, android.R.attr.progressBarStyleHorizontal
@@ -316,7 +282,7 @@ internal class DisplayToolbar(
      * should be updated if needed.
      */
     fun invalidateActions() {
-        menu?.invalidate()
+        menuView.invalidateMenu()
         invalidateActions(navigationActions + pageActions + browserActions)
     }
 
@@ -516,7 +482,6 @@ internal class DisplayToolbar(
         const val BOTTOM_PROGRESS_BAR = 0
         private const val TOP_PROGRESS_BAR = 1
         private const val ICON_PADDING_DP = 16
-        private const val MENU_PADDING_DP = 16
         private const val URL_TEXT_SIZE = 15f
         private const val PROGRESS_BAR_HEIGHT_DP = 3
     }
