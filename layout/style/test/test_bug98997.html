@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=98997
 </div>
 
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -102,7 +102,7 @@ for (i = 0; i < cnodes.length; ++i) {
 }
 
 for (i in divs) {
-  var div = divs[i];
+  let div = divs[i];
   if (div.className.match(/makeemptytext/))
     div.insertBefore(document.createTextNode(""), div.firstChild);
 }
@@ -120,20 +120,20 @@ function bg(div) {
 }
 
 for (i in divs) {
-  var div = divs[i];
+  let div = divs[i];
   is(bg(div), ORANGE, "should be orange");
   is(color(div), MAROON, "should be maroon");
 }
 
 for (i in divs) {
-  var div = divs[i];
+  let div = divs[i];
   var e = document.createEvent("MouseEvents");
   e.initEvent("click", true, true);
   div.dispatchEvent(e);
 }
 
 for (i in divs) {
-  var div = divs[i];
+  let div = divs[i];
   is(bg(div), GREEN, "should be green");
   is(color(div), NAVY, "should be navy");
 }

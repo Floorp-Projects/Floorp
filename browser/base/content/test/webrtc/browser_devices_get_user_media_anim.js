@@ -33,8 +33,7 @@ var gTests = [
       let tab = gBrowser.selectedTab;
       is(tab.getAttribute("sharing"), aSharing,
          "the tab has the attribute to show the " + aSharing + " icon");
-      let icon =
-        document.getAnonymousElementByAttribute(tab, "anonid", "sharing-icon");
+      let icon = tab.sharingIcon;
       is(window.getComputedStyle(icon).display, "none",
          "the animated sharing icon of the tab is hidden");
 

@@ -233,7 +233,7 @@ class PromiseJobRunnable final : public MicroTaskRunnable {
         doc = win->GetExtantDoc();
       }
       AutoHandlingUserInputStatePusher userInpStatePusher(
-          mPropagateUserInputEventHandling, nullptr, doc);
+          mPropagateUserInputEventHandling);
 
       mCallback->Call("promise callback");
       aAso.CheckForInterrupt();

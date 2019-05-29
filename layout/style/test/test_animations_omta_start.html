@@ -162,7 +162,7 @@ function testTransitionTakingOver() {
       getComputedStyle(child).opacity;
       gUtils.advanceTimeAndRefresh(0);
       waitForAllPaints(function() {
-        var opacity = gUtils.getOMTAStyle(child, "opacity");
+        opacity = gUtils.getOMTAStyle(child, "opacity");
         is(opacity, "0.4",
            "transition that interrupted animation is correct");
         gUtils.advanceTimeAndRefresh(5000);

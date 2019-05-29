@@ -137,7 +137,7 @@ function run() {
     expression_should_not_be_parseable(max_name);
   }
 
-  function test_serialization(q, test_application, should_apply) {
+  function test_serialization(q, test_application, expected_to_apply) {
     style.setAttribute("media", q);
     var ser1 = style.sheet.media.mediaText;
     isnot(ser1, "", "serialization of '" + q + "' should not be empty");
@@ -145,9 +145,9 @@ function run() {
     var ser2 = style.sheet.media.mediaText;
     is(ser2, ser1, "parse+serialize of '" + q + "' should be idempotent");
     if (test_application) {
-      var applies = body_cs.getPropertyValue("text-decoration") == "underline";
-      is(applies, should_apply,
-         "Media query '" + q + "' should " + (should_apply ? "" : "NOT ") +
+      let applies = body_cs.getPropertyValue("text-decoration") == "underline";
+      is(applies, expected_to_apply,
+         "Media query '" + q + "' should " + (expected_to_apply ? "" : "NOT ") +
          "apply after serialize + reparse");
     }
 
@@ -170,10 +170,10 @@ function run() {
       is(ser3, ser1, "cloning query '" + q + "' should not change " +
                      "serialization");
       if (test_application) {
-        var applies = clonewin.getComputedStyle(clonedoc.body).
+        let applies = clonewin.getComputedStyle(clonedoc.body).
                         textDecoration == "underline";
-        is(applies, should_apply,
-           "Media query '" + q + "' should " + (should_apply ? "" : "NOT ") +
+        is(applies, expected_to_apply,
+           "Media query '" + q + "' should " + (expected_to_apply ? "" : "NOT ") +
            "apply after cloning");
       }
     });
@@ -927,5 +927,3 @@ function handle_iframe_onload(event)
 </pre>
 </body>
 </html>
-
-

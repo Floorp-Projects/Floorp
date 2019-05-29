@@ -800,7 +800,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
   }
 }
 
-#if defined(DEBUG) || defined(FUZZING)
+#ifdef EARLY_BETA_OR_EARLIER
 // Assert that we never use the SystemPrincipal to load remote documents
 // i.e., HTTP, HTTPS, FTP URLs
 static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
@@ -860,7 +860,7 @@ static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
     // but other mochitest are exempt from this
     return;
   }
-  MOZ_ASSERT(false, "SystemPrincipal must not load remote documents.");
+  MOZ_RELEASE_ASSERT(false, "SystemPrincipal must not load remote documents.");
 }
 #endif
 
@@ -890,7 +890,7 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
     DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
 
-#if defined(DEBUG) || defined(FUZZING)
+#ifdef EARLY_BETA_OR_EARLIER
   AssertSystemPrincipalMustNotLoadRemoteDocuments(aChannel);
 #endif
 

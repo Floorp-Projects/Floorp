@@ -1,7 +1,7 @@
 const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_plugIn.html";
 
 async function click_icon(tab) {
-  let icon = document.getAnonymousElementByAttribute(tab, "anonid", "soundplaying-icon");
+  let icon = tab.soundPlayingIcon;
 
   await hover_icon(icon, document.getElementById("tabbrowser-tab-tooltip"));
   EventUtils.synthesizeMouseAtCenter(icon, {button: 0});

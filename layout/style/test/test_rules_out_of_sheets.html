@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=634373
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=634373">Mozilla Bug 634373</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -90,9 +90,9 @@ try {
 } catch(ex) {}
 
 rule = make_rule_and_remove_sheet("@media screen { p { color: blue } }",
-                                  function(rule) {
+                                  function(ruleInner) {
                                     return keep_rule_alive_by_matching(
-                                             get_only_child(rule));
+                                             get_only_child(ruleInner));
                                   });
 try {
   rule.style.color = "";
