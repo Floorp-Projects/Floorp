@@ -294,8 +294,7 @@ void DocAccessible::TakeFocus() const {
   // Focus the document.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   RefPtr<dom::Element> newFocus;
-  AutoHandlingUserInputStatePusher inputStatePusher(true, nullptr,
-                                                    mDocumentNode);
+  AutoHandlingUserInputStatePusher inputStatePusher(true);
   fm->MoveFocus(mDocumentNode->GetWindow(), nullptr,
                 nsFocusManager::MOVEFOCUS_ROOT, 0, getter_AddRefs(newFocus));
 }
