@@ -54,6 +54,10 @@ XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
   });
 });
 
+XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsGate", () => {
+  return FeatureGate.fromId("normandy-remote-settings");
+});
+
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
  */
@@ -75,13 +79,31 @@ var RecipeRunner = {
     this.checkPrefs(); // sets this.enabled
     this.watchPrefs();
 
-    // Run if enabled immediately on first run, or if dev mode is enabled.
+    // Here "first run" means the first run this profile has ever done. This
+    // preference is set to true at the end of this function, and never reset to
+    // false.
     const firstRun = Services.prefs.getBoolPref(FIRST_RUN_PREF, true);
+
+    // Dev mode is a mode used for development and QA that bypasses the normal
+    // timer function of Normandy, to make testing more convenient.
     const devMode = Services.prefs.getBoolPref(DEV_MODE_PREF, false);
 
     if (this.enabled && (devMode || firstRun)) {
+      // In dev mode, if remote settings is enabled, force an immediate sync
+      // before running. This ensures that the latest data is used for testing.
+      // This is not needed for the first run case, because remote settings
+      // already handles empty collections well.
+      if (devMode) {
+        let remoteSettingsGate = await gRemoteSettingsGate;
+        if (await remoteSettingsGate.isEnabled()) {
+          await gRemoteSettingsClient.sync();
+        }
+      }
       await this.run();
     }
+
+    // Update the firstRun pref, to indicate that Normandy has run at least once
+    // on this profile.
     if (firstRun) {
       Services.prefs.setBoolPref(FIRST_RUN_PREF, false);
     }

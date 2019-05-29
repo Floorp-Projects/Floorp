@@ -305,10 +305,12 @@ decorate_task(
   }),
   withStub(RecipeRunner, "run"),
   withStub(RecipeRunner, "registerTimer"),
-  async function testInitDevMode(runStub, registerTimerStub, updateRunIntervalStub) {
+  withStub(RecipeRunner._remoteSettingsClientForTesting, "sync"),
+  async function testInitDevMode(runStub, registerTimerStub, syncStub) {
     await RecipeRunner.init();
-    ok(runStub.called, "RecipeRunner.run is called immediately when in dev mode");
-    ok(registerTimerStub.called, "RecipeRunner.init registers a timer");
+    ok(runStub.called, "RecipeRunner.run should be called immediately when in dev mode");
+    ok(registerTimerStub.called, "RecipeRunner.init should register a timer");
+    ok(syncStub.called, "RecipeRunner.init should sync remote settings in dev mode");
   }
 );
 
