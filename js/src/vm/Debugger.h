@@ -1560,8 +1560,8 @@ class DebuggerFrame : public NativeObject {
  public:
   FrameIter::Data* frameIterData() const;
   void freeFrameIterData(FreeOp* fop);
-  void maybeDecrementFrameScriptStepModeCount(FreeOp* fop,
-                                              AbstractFramePtr frame);
+  void maybeDecrementFrameScriptStepperCount(FreeOp* fop,
+                                             AbstractFramePtr frame);
 };
 
 class DebuggerObject : public NativeObject {

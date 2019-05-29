@@ -4733,7 +4733,7 @@ DebugScript* JSScript::getOrCreateDebugScript(JSContext* cx) {
   return borrowed;
 }
 
-bool JSScript::incrementStepModeCount(JSContext* cx) {
+bool JSScript::incrementStepperCount(JSContext* cx) {
   cx->check(this);
   MOZ_ASSERT(cx->realm()->isDebuggee());
 
@@ -4744,9 +4744,9 @@ bool JSScript::incrementStepModeCount(JSContext* cx) {
     return false;
   }
 
-  debug->stepMode++;
+  debug->stepperCount++;
 
-  if (debug->stepMode == 1) {
+  if (debug->stepperCount == 1) {
     if (hasBaselineScript()) {
       baseline->toggleDebugTraps(this, nullptr);
     }
@@ -4755,14 +4755,14 @@ bool JSScript::incrementStepModeCount(JSContext* cx) {
   return true;
 }
 
-void JSScript::decrementStepModeCount(FreeOp* fop) {
+void JSScript::decrementStepperCount(FreeOp* fop) {
   DebugScript* debug = debugScript();
   MOZ_ASSERT(debug);
-  MOZ_ASSERT(debug->stepMode > 0);
+  MOZ_ASSERT(debug->stepperCount > 0);
 
-  debug->stepMode--;
+  debug->stepperCount--;
 
-  if (debug->stepMode == 0) {
+  if (debug->stepperCount == 0) {
     if (hasBaselineScript()) {
       baseline->toggleDebugTraps(this, nullptr);
     }

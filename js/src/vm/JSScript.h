@@ -257,12 +257,12 @@ class DebugScript {
   friend class JS::Realm;
 
   /*
-   * When greater than zero, compile script in single-step mode, with VM calls
-   * to HandleDebugTrap before each bytecode instruction's code. This is a
-   * counter, adjusted by the incrementStepModeCount and decrementStepModeCount
-   * methods.
+   * The number of Debugger.Frame objects that refer to frames running this
+   * script and that have onStep handlers. When nonzero, the interpreter and JIT
+   * must arrange to call Debugger::onSingleStep before each bytecode, or at
+   * least at some useful granularity.
    */
-  uint32_t stepMode;
+  uint32_t stepperCount;
 
   /*
    * Number of breakpoint sites at opcodes in the script. This is the number
@@ -282,7 +282,7 @@ class DebugScript {
    * True if this DebugScript carries any useful information. If false, it
    * should be removed from its JSScript.
    */
-  bool needed() const { return stepMode > 0 || numSites > 0; }
+  bool needed() const { return stepperCount > 0 || numSites > 0; }
 };
 
 using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
@@ -2919,16 +2919,16 @@ class JSScript : public js::gc::TenuredCell {
    *
    * Only incrementing is fallible, as it could allocate a DebugScript.
    */
-  bool incrementStepModeCount(JSContext* cx);
-  void decrementStepModeCount(js::FreeOp* fop);
+  bool incrementStepperCount(JSContext* cx);
+  void decrementStepperCount(js::FreeOp* fop);
 
   bool stepModeEnabled() {
-    return hasDebugScript() && !!debugScript()->stepMode;
+    return hasDebugScript() && debugScript()->stepperCount > 0;
   }
 
 #ifdef DEBUG
-  uint32_t stepModeCount() {
-    return hasDebugScript() ? debugScript()->stepMode : 0;
+  uint32_t stepperCount() {
+    return hasDebugScript() ? debugScript()->stepperCount : 0;
   }
 #endif
 
