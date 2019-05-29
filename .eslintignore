@@ -15,10 +15,6 @@ obj*/**
 # If you are enabling a directory, please add directory specific exclusions
 # below.
 layout/**
-netwerk/cookie/test/browser/**
-netwerk/test/browser/**
-netwerk/test/mochitests/**
-netwerk/test/unit*/**
 
 # We currently have no js files in these directories, so we ignore them by
 # default to aid ESLint's performance.
