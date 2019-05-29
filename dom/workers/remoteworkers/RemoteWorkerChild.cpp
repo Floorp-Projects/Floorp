@@ -249,13 +249,12 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
     Maybe<mozilla::ipc::CSPInfo> cspInfo = clientInfo.ref().GetCspInfo();
     if (cspInfo.isSome()) {
       info.mCSP = CSPInfoToCSP(cspInfo.ref(), nullptr);
+      info.mCSPInfo = new CSPInfo();
+      rv = CSPToCSPInfo(info.mCSP, info.mCSPInfo);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
-  }
-
-  info.mCSPInfo = new CSPInfo();
-  rv = CSPToCSPInfo(info.mCSP, info.mCSPInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   rv = info.SetPrincipalsAndCSPOnMainThread(
