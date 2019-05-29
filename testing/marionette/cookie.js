@@ -169,7 +169,7 @@ cookie.add = function(newCookie, {restrictToHost = null} = {}) {
         newCookie.session,
         newCookie.expiry,
         {} /* origin attributes */,
-        Ci.nsICookie2.SAMESITE_UNSET);
+        Ci.nsICookie2.SAMESITE_NONE);
   } catch (e) {
     throw new UnableToSetCookieError(e);
   }
