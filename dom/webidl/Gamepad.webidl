@@ -96,10 +96,4 @@ interface Gamepad {
    */
   [Constant, Cached, Frozen, Pref="dom.gamepad.extensions.enabled"]
   readonly attribute sequence<GamepadHapticActuator> hapticActuators;
-
-  [Constant, Cached, Frozen, Pref="dom.gamepad.extensions.enabled", Pref="dom.gamepad.extensions.lightindicator"]
-  readonly attribute sequence<GamepadLightIndicator> lightIndicators;
-
-  [Constant, Cached, Frozen, Pref="dom.gamepad.extensions.enabled", Pref="dom.gamepad.extensions.multitouch"]
-  readonly attribute sequence<GamepadTouch> touchEvents;
 };
