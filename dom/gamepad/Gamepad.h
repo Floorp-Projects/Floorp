@@ -12,6 +12,8 @@
 #include "mozilla/dom/GamepadButton.h"
 #include "mozilla/dom/GamepadPose.h"
 #include "mozilla/dom/GamepadHapticActuator.h"
+#include "mozilla/dom/GamepadLightIndicator.h"
+#include "mozilla/dom/GamepadTouch.h"
 #include "mozilla/dom/Performance.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
@@ -40,7 +42,8 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   Gamepad(nsISupports* aParent, const nsAString& aID, uint32_t aIndex,
           uint32_t aHashKey, GamepadMappingType aMapping, GamepadHand aHand,
           uint32_t aDisplayID, uint32_t aNumButtons, uint32_t aNumAxes,
-          uint32_t aNumHaptics);
+          uint32_t aNumHaptics, uint32_t aNumLightIndicator,
+          uint32_t aNumTouchEvents);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
@@ -50,6 +53,9 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   void SetAxis(uint32_t aAxis, double aValue);
   void SetIndex(uint32_t aIndex);
   void SetPose(const GamepadPoseState& aPose);
+  void SetLightIndicatorType(uint32_t aLightIndex,
+                             GamepadLightIndicatorType aType);
+  void SetTouchEvent(uint32_t aTouchIndex, const GamepadTouchState& aTouch);
   void SetHand(GamepadHand aHand);
 
   // Make the state of this gamepad equivalent to other.
@@ -93,6 +99,15 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
     aHapticActuators = mHapticActuators;
   }
 
+  void GetLightIndicators(
+      nsTArray<RefPtr<GamepadLightIndicator>>& aLightIndicators) const {
+    aLightIndicators = mLightIndicators;
+  }
+
+  void GetTouchEvents(nsTArray<RefPtr<GamepadTouch>>& aTouchEvents) const {
+    aTouchEvents = mTouchEvents;
+  }
+
  private:
   virtual ~Gamepad() {}
   void UpdateTimestamp();
@@ -104,6 +119,7 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   // the gamepad hash key in GamepadManager
   uint32_t mHashKey;
   uint32_t mDisplayId;
+  uint32_t mTouchIdHashValue;
   // The mapping in use.
   GamepadMappingType mMapping;
   GamepadHand mHand;
@@ -117,6 +133,9 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   DOMHighResTimeStamp mTimestamp;
   RefPtr<GamepadPose> mPose;
   nsTArray<RefPtr<GamepadHapticActuator>> mHapticActuators;
+  nsTArray<RefPtr<GamepadLightIndicator>> mLightIndicators;
+  nsTArray<RefPtr<GamepadTouch>> mTouchEvents;
+  nsDataHashtable<nsUint32HashKey, uint32_t> mTouchIdHash;
 };
 
 }  // namespace dom
