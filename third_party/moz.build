@@ -18,3 +18,6 @@ with Files('prio/**'):
 
 with Files('msgpack/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
+
+with Files('sqlite3/**'):
+    BUG_COMPONENT = ('Toolkit', 'Storage')
