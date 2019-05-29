@@ -70,7 +70,7 @@ class Popover extends Component<Props, State> {
     const estimatedRight = estimatedLeft + popover.width;
     const isOverflowingRight = estimatedRight > editor.right;
     if (orientation === "right") {
-      return target.left + target.width;
+      return target.left + target.width + 5;
     }
     if (isOverflowingRight) {
       const adjustedLeft = editor.right - popover.width - 8;
@@ -211,14 +211,13 @@ class Popover extends Component<Props, State> {
   }
 
   getPopoverArrow(orientation: Orientation, left: number, top: number) {
-    let arrowProps = {};
-
+    const arrowProps = {};
     if (orientation === "up") {
-      arrowProps = { orientation: "down", bottom: 10, left };
+      Object.assign(arrowProps, { orientation: "down", bottom: 5, left });
     } else if (orientation === "down") {
-      arrowProps = { orientation: "up", top: -2, left };
+      Object.assign(arrowProps, { orientation: "up", top: -7, left });
     } else {
-      arrowProps = { orientation: "left", top, left: -4 };
+      Object.assign(arrowProps, { orientation: "left", top, left: -9 });
     }
 
     return <BracketArrow {...arrowProps} />;
