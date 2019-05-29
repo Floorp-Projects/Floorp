@@ -1052,6 +1052,23 @@ class MozAutocompleteTwoLineRichlistitem extends MozElements.MozRichlistitem {
   handleOverUnderflow() {}
 }
 
+class MozAutocompleteLoginRichlistitem extends MozAutocompleteTwoLineRichlistitem {
+  static get inheritedAttributes() {
+    return {
+      // getLabelAt:
+      ".line1-label": "text=ac-value",
+      // Don't inherit ac-label with getCommentAt since the label is JSON.
+    };
+  }
+
+  _adjustAcItem() {
+    super._adjustAcItem();
+
+    let details = JSON.parse(this.getAttribute("ac-label"));
+    this.querySelector(".line2-label").textContent = details.comment;
+  }
+}
+
 customElements.define("autocomplete-richlistitem", MozElements.MozAutocompleteRichlistitem, {
   extends: "richlistitem",
 });
@@ -1065,6 +1082,10 @@ customElements.define("autocomplete-richlistitem-logins-footer", MozAutocomplete
 });
 
 customElements.define("autocomplete-two-line-richlistitem", MozAutocompleteTwoLineRichlistitem, {
+  extends: "richlistitem",
+});
+
+customElements.define("autocomplete-login-richlistitem", MozAutocompleteLoginRichlistitem, {
   extends: "richlistitem",
 });
 }

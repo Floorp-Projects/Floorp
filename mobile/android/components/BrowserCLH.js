@@ -228,13 +228,6 @@ BrowserCLH.prototype = {
       this.LoginManagerContent.onDOMInputPasswordAdded(event, event.target.ownerGlobal.top);
     }, options);
 
-    aWindow.addEventListener("DOMAutoComplete", event => {
-      if (shouldIgnoreLoginManagerEvent(event)) {
-        return;
-      }
-      this.LoginManagerContent.onDOMAutoComplete(event);
-    }, options);
-
     aWindow.addEventListener("pageshow", event => {
       // XXXbz what about non-HTML documents??
       if (ChromeUtils.getClassName(event.target) == "HTMLDocument") {
