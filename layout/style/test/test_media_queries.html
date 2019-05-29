@@ -173,7 +173,7 @@ function run() {
         let applies = clonewin.getComputedStyle(clonedoc.body).
                         textDecoration == "underline";
         is(applies, expected_to_apply,
-           "Media query '" + q + "' should " + (should_apply1 ? "" : "NOT ") +
+           "Media query '" + q + "' should " + (expected_to_apply ? "" : "NOT ") +
            "apply after cloning");
       }
     });
