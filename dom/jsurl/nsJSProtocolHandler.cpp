@@ -229,12 +229,6 @@ nsresult nsJSThunk::EvaluateScript(
 
   nsCOMPtr<nsIScriptGlobalObject> innerGlobal = do_QueryInterface(innerWin);
 
-  mozilla::DebugOnly<nsCOMPtr<nsIDOMWindow>> domWindow(
-      do_QueryInterface(global, &rv));
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-
   // So far so good: get the script context from its owner.
   nsCOMPtr<nsIScriptContext> scriptContext = global->GetContext();
   if (!scriptContext) return NS_ERROR_FAILURE;
