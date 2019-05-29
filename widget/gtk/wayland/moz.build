@@ -9,6 +9,12 @@ with Files("**"):
 
 SOURCES += [
     'gtk-primary-selection-protocol.c',
+    'linux-dmabuf-unstable-v1-protocol.c'
+]
+
+EXPORTS.mozilla.widget += [
+    'gtk-primary-selection-client-protocol.h',
+    'linux-dmabuf-unstable-v1-client-protocol.h',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

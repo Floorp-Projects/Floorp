@@ -136,10 +136,10 @@ nsresult HTMLMetaElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void HTMLMetaElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLMetaElement::UnbindFromTree(bool aNullParent) {
   nsCOMPtr<Document> oldDoc = GetUncomposedDoc();
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMMetaRemoved"));
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
 void HTMLMetaElement::CreateAndDispatchEvent(Document* aDoc,

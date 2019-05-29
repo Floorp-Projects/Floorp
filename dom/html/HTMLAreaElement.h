@@ -45,8 +45,7 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
 
   virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) override;
+  virtual void UnbindFromTree(bool aNullParent = true) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

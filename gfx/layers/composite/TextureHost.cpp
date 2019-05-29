@@ -574,7 +574,7 @@ void BufferTextureHost::PushResourceUpdates(
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
                     : &wr::TransactionBuilder::UpdateExternalImage;
-  auto bufferType = wr::WrExternalImageBufferType::ExternalBuffer;
+  auto imageType = wr::ExternalImageType::Buffer();
 
   if (GetFormat() != gfx::SurfaceFormat::YUV) {
     MOZ_ASSERT(aImageKeys.length() == 1);
@@ -583,7 +583,7 @@ void BufferTextureHost::PushResourceUpdates(
         GetSize(),
         ImageDataSerializer::ComputeRGBStride(GetFormat(), GetSize().width),
         GetFormat());
-    (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
+    (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0);
   } else {
     MOZ_ASSERT(aImageKeys.length() == 3);
 
@@ -594,9 +594,9 @@ void BufferTextureHost::PushResourceUpdates(
     wr::ImageDescriptor cbcrDescriptor(
         desc.cbCrSize(), desc.cbCrStride(),
         SurfaceFormatForColorDepth(desc.colorDepth()));
-    (aResources.*method)(aImageKeys[0], yDescriptor, aExtID, bufferType, 0);
-    (aResources.*method)(aImageKeys[1], cbcrDescriptor, aExtID, bufferType, 1);
-    (aResources.*method)(aImageKeys[2], cbcrDescriptor, aExtID, bufferType, 2);
+    (aResources.*method)(aImageKeys[0], yDescriptor, aExtID, imageType, 0);
+    (aResources.*method)(aImageKeys[1], cbcrDescriptor, aExtID, imageType, 1);
+    (aResources.*method)(aImageKeys[2], cbcrDescriptor, aExtID, imageType, 2);
   }
 }
 

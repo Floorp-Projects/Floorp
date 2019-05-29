@@ -6,6 +6,7 @@
 
 #include "DocAccessibleParent.h"
 #include "mozilla/a11y/Platform.h"
+#include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "xpcAccessibleDocument.h"
 #include "xpcAccEvents.h"
@@ -676,12 +677,17 @@ void DocAccessibleParent::MaybeInitWindowEmulation() {
     isActive = browserParent->GetDocShellIsActive();
   }
 
-  nsWinUtils::NativeWindowCreateProc onCreate([this](HWND aHwnd) -> void {
+  // onCreate is guaranteed to be called synchronously by
+  // nsWinUtils::CreateNativeWindow, so this reference isn't really necessary.
+  // However, static analysis complains without it.
+  RefPtr<DocAccessibleParent> thisRef = this;
+  nsWinUtils::NativeWindowCreateProc onCreate([thisRef](HWND aHwnd) -> void {
     IDispatchHolder hWndAccHolder;
 
-    ::SetPropW(aHwnd, kPropNameDocAccParent, reinterpret_cast<HANDLE>(this));
+    ::SetPropW(aHwnd, kPropNameDocAccParent,
+               reinterpret_cast<HANDLE>(thisRef.get()));
 
-    SetEmulatedWindowHandle(aHwnd);
+    thisRef->SetEmulatedWindowHandle(aHwnd);
 
     RefPtr<IAccessible> hwndAcc;
     if (SUCCEEDED(::AccessibleObjectFromWindow(
@@ -692,8 +698,9 @@ void DocAccessibleParent::MaybeInitWindowEmulation() {
           mscom::ToProxyUniquePtr(std::move(wrapped))));
     }
 
-    Unused << SendEmulatedWindow(
-        reinterpret_cast<uintptr_t>(mEmulatedWindowHandle), hWndAccHolder);
+    Unused << thisRef->SendEmulatedWindow(
+        reinterpret_cast<uintptr_t>(thisRef->mEmulatedWindowHandle),
+        hWndAccHolder);
   });
 
   HWND parentWnd = reinterpret_cast<HWND>(rootDocument->GetNativeWindow());
@@ -829,6 +836,24 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
   return IPC_OK();
 }
 #endif  // !defined(XP_WIN)
+
+Tuple<DocAccessibleParent*, uint64_t> DocAccessibleParent::GetRemoteEmbedder() {
+  dom::BrowserParent* embeddedBrowser = dom::BrowserParent::GetFrom(Manager());
+  dom::BrowserBridgeParent* bridge = embeddedBrowser->GetBrowserBridgeParent();
+  if (!bridge) {
+    return Tuple<DocAccessibleParent*, uint64_t>(nullptr, 0);
+  }
+  DocAccessibleParent* doc;
+  uint64_t id;
+  Tie(doc, id) = bridge->GetEmbedderAccessible();
+  if (doc && doc->IsShutdown()) {
+    // Sometimes, the embedder document is destroyed before its
+    // BrowserBridgeParent. Don't return a destroyed document.
+    doc = nullptr;
+    id = 0;
+  }
+  return Tuple<DocAccessibleParent*, uint64_t>(doc, id);
+}
 
 }  // namespace a11y
 }  // namespace mozilla

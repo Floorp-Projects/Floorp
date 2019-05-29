@@ -5698,7 +5698,7 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
 
   mIsUsingMinimumScaleSize = false;
 
-  if (!mOuter->PresShell()->GetIsViewportOverridden()) {
+  if (!mOuter->PresShell()->UsesMobileViewportSizing()) {
     return;
   }
 
@@ -5770,7 +5770,7 @@ bool ScrollFrameHelper::ReflowFinished() {
   mPostedReflowCallback = false;
 
   if (mIsRoot && mMinimumScaleSizeChanged &&
-      mOuter->PresShell()->GetIsViewportOverridden() &&
+      mOuter->PresShell()->UsesMobileViewportSizing() &&
       !mOuter->PresShell()->IsResolutionUpdatedByApz()) {
     PresShell* presShell = mOuter->PresShell();
     RefPtr<MobileViewportManager> manager =

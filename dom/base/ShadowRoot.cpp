@@ -148,7 +148,7 @@ void ShadowRoot::Unbind() {
 
   for (nsIContent* child = GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    child->UnbindFromTree(true, false);
+    child->UnbindFromTree(false);
   }
 }
 

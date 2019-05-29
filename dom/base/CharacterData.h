@@ -110,7 +110,7 @@ class CharacterData : public nsIContent {
   nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                       nsIContent* aBindingParent) override;
 
-  void UnbindFromTree(bool aDeep = true, bool aNullParent = true) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
   already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) final {
     return nullptr;

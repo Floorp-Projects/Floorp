@@ -150,9 +150,9 @@ nsresult SVGFEImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void SVGFEImageElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
-  SVGFEImageElementBase::UnbindFromTree(aDeep, aNullParent);
+void SVGFEImageElement::UnbindFromTree(bool aNullParent) {
+  nsImageLoadingContent::UnbindFromTree(aNullParent);
+  SVGFEImageElementBase::UnbindFromTree(aNullParent);
 }
 
 EventStates SVGFEImageElement::IntrinsicState() const {

@@ -67,7 +67,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
                                 bool aNotify) override;
   virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
+  virtual void UnbindFromTree(bool aNullParent) override;
   virtual EventStates IntrinsicState() const override;
 
   NS_IMETHOD Notify(imgIRequest* aRequest, int32_t aType,

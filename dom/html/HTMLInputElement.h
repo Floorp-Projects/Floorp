@@ -202,8 +202,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
 
   virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
-  virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) override;
+  virtual void UnbindFromTree(bool aNullParent = true) override;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void DoneCreatingElement() override;

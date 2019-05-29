@@ -169,12 +169,12 @@ nsresult SVGAElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void SVGAElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void SVGAElement::UnbindFromTree(bool aNullParent) {
   // Without removing the link state we risk a dangling pointer
   // in the mStyledLinks hashtable
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  SVGAElementBase::UnbindFromTree(aDeep, aNullParent);
+  SVGAElementBase::UnbindFromTree(aNullParent);
 }
 
 already_AddRefed<nsIURI> SVGAElement::GetHrefURI() const {

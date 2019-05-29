@@ -152,14 +152,14 @@ nsresult XULFrameElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void XULFrameElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void XULFrameElement::UnbindFromTree(bool aNullParent) {
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (frameLoader) {
     frameLoader->Destroy();
   }
   mFrameLoader = nullptr;
 
-  nsXULElement::UnbindFromTree(aDeep, aNullParent);
+  nsXULElement::UnbindFromTree(aNullParent);
 }
 
 void XULFrameElement::DestroyContent() {

@@ -62,8 +62,8 @@ nsresult HTMLLegendElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
 }
 
-void HTMLLegendElement::UnbindFromTree(bool aDeep, bool aNullParent) {
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+void HTMLLegendElement::UnbindFromTree(bool aNullParent) {
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
 void HTMLLegendElement::Focus(const FocusOptions& aOptions,

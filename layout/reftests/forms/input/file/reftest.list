@@ -5,7 +5,7 @@ fuzzy-if(gtkWidget||webrender,0-1,0-10) fails-if(Android) == background.html bac
 fuzzy-if(gtkWidget,0-1,0-10) fails-if(Android) == style.html style-ref.xul
 != width-clip.html width-clip-ref.html
 fails-if(Android) == color-inherit.html color-inherit-ref.html
-fuzzy-if(Android,0-2,0-2) fails-if(webrender&&!cocoaWidget) == dynamic-max-width.html dynamic-max-width-ref.html # bug 1496542 for webrender.
+fuzzy-if(Android,0-2,0-2) fuzzy-if(OSX,0-34,0-134) fails-if(webrender&&!cocoaWidget) == dynamic-max-width.html dynamic-max-width-ref.html # bug 1496542 for webrender.
 == label-min-inline-size.html label-min-inline-size-ref.html
 == css-overflow.html css-overflow-ref.html
 == css-display.html css-display-ref.html

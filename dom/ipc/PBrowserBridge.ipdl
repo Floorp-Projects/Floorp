@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
+include protocol PDocAccessible;
 
 include DOMTypes;
 
@@ -76,6 +77,14 @@ parent:
   async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
   async SkipBrowsingContextDetach();
+
+  /**
+   * Tell the parent the accessible for this iframe's embedder
+   * OuterDocAccessible.
+   * aDoc is the actor for the containing document.
+   * aID is the unique id of the embedder accessible within that document.
+   */
+  async SetEmbedderAccessible(PDocAccessible aDoc, uint64_t aID);
 };
 
 }  // namespace dom

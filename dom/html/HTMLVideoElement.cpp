@@ -180,14 +180,14 @@ nsMapRuleToAttributesFunc HTMLVideoElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-void HTMLVideoElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLVideoElement::UnbindFromTree(bool aNullParent) {
   if (mVisualCloneSource) {
     mVisualCloneSource->EndCloningVisually();
   } else if (mVisualCloneTarget) {
     EndCloningVisually();
   }
 
-  HTMLMediaElement::UnbindFromTree(aDeep, aNullParent);
+  HTMLMediaElement::UnbindFromTree(aNullParent);
 }
 
 nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel) {
