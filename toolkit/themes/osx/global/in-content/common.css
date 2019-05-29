@@ -86,3 +86,12 @@ html|button {
   /* XUL button min-width */
   min-width: 79px;
 }
+
+html|input[type="email"],
+html|input[type="tel"],
+html|input[type="text"],
+html|input[type="password"],
+html|input[type="number"],
+html|textarea {
+  margin: 4px;
+}

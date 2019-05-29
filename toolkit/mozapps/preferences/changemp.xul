@@ -25,7 +25,7 @@
   <vbox>
     <hbox>
       <label flex="1" control="oldpw" data-l10n-id="set-password-old-password"></label>
-      <textbox id="oldpw" type="password"/>
+      <html:input id="oldpw" type="password"/>
       <!-- This textbox is inserted as a workaround to the fact that making the 'type'
             & 'disabled' property of the 'oldpw' textbox toggle between ['password' &
             'false'] and ['text' & 'true'] - as would be necessary if the menu has more
@@ -33,16 +33,16 @@
             either the textbox 'oldpw' or the textbox 'message' would be displayed,
             depending on the state of the token selected
       -->
-      <textbox id="message" disabled="true" />
+      <html:input type="text" data-l10n-attrs="value" data-l10n-id="password-not-set" id="message" disabled="true" />
     </hbox>
     <hbox>
       <label flex="1" control="pw1" data-l10n-id="set-password-new-password"></label>
-      <textbox id="pw1" type="password"
-               oninput="setPasswordStrength(); checkPasswords();"/>
+      <html:input id="pw1" type="password"
+                  oninput="setPasswordStrength(); checkPasswords();"/>
     </hbox>
     <hbox>
       <label flex="1" control="pw2" data-l10n-id="set-password-reenter-password"></label>
-      <textbox id="pw2" type="password" oninput="checkPasswords();"/>
+      <html:input id="pw2" type="password" oninput="checkPasswords();"/>
     </hbox>
   </vbox>
 
