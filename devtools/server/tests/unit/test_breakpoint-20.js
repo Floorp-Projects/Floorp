@@ -48,11 +48,11 @@ const testBreakpoint = async function(threadResponse, targetFront,
   // test source.
 
   const bpPause1 = await executeOnNextTickAndWaitForPause(gDebuggee.functions[0],
-                                                          gClient);
+                                                          threadClient);
   equal(bpPause1.why.type, "breakpoint",
         "Should pause because of hitting our breakpoint (not debugger statement).");
   const dbgStmtPause1 = await executeOnNextTickAndWaitForPause(() => resume(threadClient),
-                                                               gClient);
+                                                               threadClient);
   equal(dbgStmtPause1.why.type, "debuggerStatement",
         "And we should hit the debugger statement after the pause.");
   await resume(threadClient);
@@ -61,11 +61,11 @@ const testBreakpoint = async function(threadResponse, targetFront,
   // of the test source.
 
   const bpPause2 = await executeOnNextTickAndWaitForPause(gDebuggee.functions[1],
-                                                          gClient);
+                                                          threadClient);
   equal(bpPause2.why.type, "breakpoint",
         "Should pause because of hitting our breakpoint (not debugger statement).");
   const dbgStmtPause2 = await executeOnNextTickAndWaitForPause(() => resume(threadClient),
-                                                               gClient);
+                                                               threadClient);
   equal(dbgStmtPause2.why.type, "debuggerStatement",
         "And we should hit the debugger statement after the pause.");
 

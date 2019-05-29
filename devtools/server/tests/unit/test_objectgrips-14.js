@@ -42,13 +42,13 @@ function evalCode() {
 }
 
 const testObjectGroup = async function() {
-  let packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
+  let packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadClient);
 
   const ugh = packet.frame.environment.parent.parent.bindings.variables.ugh;
   const ughClient = await gThreadClient.pauseGrip(ugh.value);
 
   packet = await getPrototypeAndProperties(ughClient);
-  packet = await resumeAndWaitForPause(gClient, gThreadClient);
+  packet = await resumeAndWaitForPause(gThreadClient);
 
   const ugh2 = packet.frame.environment.bindings.variables.ugh;
   const ugh2Client = gThreadClient.pauseGrip(ugh2.value);

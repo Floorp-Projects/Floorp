@@ -2,7 +2,7 @@
 
 const SOURCE_URL = getFileUrl("setBreakpoint-on-column-minified.js");
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   const promise = waitForNewSource(threadClient, SOURCE_URL);
   loadSubScript(SOURCE_URL, debuggee);
   const { source } = await promise;
@@ -14,7 +14,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
 
   const packet = await executeOnNextTickAndWaitForPause(function() {
     Cu.evalInSandbox("f()", debuggee);
-  }, client);
+  }, threadClient);
 
   Assert.equal(packet.type, "paused");
   const why = packet.why;

@@ -13,7 +13,8 @@ add_task(async function() {
   openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
   await once(Services.ppmm, "RecordingFinished");
 
-  const { target, toolbox } = await attachDebugger(tab), client = toolbox.threadClient;
+  const { target, toolbox } = await attachDebugger(tab);
+  const client = toolbox.threadClient;
   await client.interrupt();
   const bp = await setBreakpoint(client, "doc_rr_basic.html", 21);
   await rewindToLine(client, 21);

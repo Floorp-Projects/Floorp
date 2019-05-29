@@ -9,12 +9,12 @@
  * caught exceptions, but not uncaught ones.
  */
 
-add_task(threadClientTest(async ({ threadClient, client, debuggee }) => {
-  await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), client);
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
+  await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), threadClient);
 
   threadClient.pauseOnExceptions(true, true);
   await resume(threadClient);
-  const paused = await waitForPause(client);
+  const paused = await waitForPause(threadClient);
   Assert.equal(paused.why.type, "exception");
   equal(paused.frame.where.line, 6, "paused at throw");
 
@@ -29,10 +29,10 @@ function evaluateTestCode(debuggee) {
   try {
   Cu.evalInSandbox(`                    // 1
    debugger;                            // 2
-   try {                                // 3           
+   try {                                // 3
      throw "foo";                       // 4
    } catch (e) {}                       // 5
-   throw "bar";                         // 6  
+   throw "bar";                         // 6
   `,                                    // 7
     debuggee,
     "1.8",

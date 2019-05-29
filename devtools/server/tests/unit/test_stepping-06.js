@@ -8,15 +8,15 @@
  * Check that stepping out of a function returns the right return value.
  */
 
-async function invokeAndPause({global, debuggerClient}, expression) {
+async function invokeAndPause({global, threadClient}, expression) {
   return executeOnNextTickAndWaitForPause(
     () => Cu.evalInSandbox(expression, global),
-    debuggerClient
+    threadClient
   );
 }
 
-async function step({threadClient, debuggerClient}, cmd) {
-  return cmd(debuggerClient, threadClient);
+async function step(threadClient, cmd) {
+  return cmd(threadClient);
 }
 
 function getPauseLocation(packet) {
@@ -28,10 +28,10 @@ function getFrameFinished(packet) {
   return packet.why.frameFinished;
 }
 
-async function steps(dbg, sequence) {
+async function steps(threadClient, sequence) {
   const locations = [];
   for (const cmd of sequence) {
-    const packet = await step(dbg, cmd);
+    const packet = await step(threadClient, cmd);
     locations.push(getPauseLocation(packet));
   }
   return locations;
@@ -46,11 +46,12 @@ async function testFinish({threadClient, debuggerClient}) {
 
 async function testRet(dbg) {
   let packet;
+  const { threadClient } = dbg;
 
   info(`1. Test returning from doRet via stepping over`);
   await invokeAndPause(dbg, `doRet()`);
-  await steps(dbg, [stepOver, stepIn]);
-  packet = await step(dbg, stepOver);
+  await steps(threadClient, [stepOver, stepIn]);
+  packet = await stepOver(threadClient);
 
   deepEqual(
     getPauseLocation(packet),
@@ -61,13 +62,13 @@ async function testRet(dbg) {
     getFrameFinished(packet),
     {"return": 2}, `completion value`);
 
-  await resume(dbg.threadClient);
+  await resume(threadClient);
 
   info(`2. Test leaving from doRet via stepping out`);
   await invokeAndPause(dbg, `doRet()`);
-  await steps(dbg, [stepOver, stepIn]);
+  await steps(threadClient, [stepOver, stepIn]);
 
-  packet = await step(dbg, stepOut);
+  packet = await stepOut(threadClient);
 
   deepEqual(
     getPauseLocation(packet),
@@ -81,16 +82,17 @@ async function testRet(dbg) {
     `completion completion value`
   );
 
-  await resume(dbg.threadClient);
+  await resume(threadClient);
 }
 
 async function testThrow(dbg) {
   let packet;
+  const { threadClient } = dbg;
 
   info(`3. Test leaving from doThrow via stepping over`);
   await invokeAndPause(dbg, `doThrow()`);
-  await steps(dbg, [stepOver, stepIn]);
-  packet = await step(dbg, stepOver);
+  await steps(threadClient, [stepOver, stepIn]);
+  packet = await step(threadClient, stepOver);
 
   deepEqual(
     getPauseLocation(packet),
@@ -109,13 +111,13 @@ async function testThrow(dbg) {
     `completion value preview`
   );
 
-  await resume(dbg.threadClient);
+  await resume(threadClient);
 
   info(`4. Test leaving from doThrow via stepping out`);
   await invokeAndPause(dbg, `doThrow()`);
-  await steps(dbg, [stepOver, stepIn]);
+  await steps(threadClient, [stepOver, stepIn]);
 
-  packet = await step(dbg, stepOut);
+  packet = await stepOut(threadClient);
   deepEqual(
     getPauseLocation(packet),
     {line: 24, column: 0},
@@ -127,7 +129,7 @@ async function testThrow(dbg) {
     {return: {type: "undefined"}},
     `completion type`
   );
-  await resume(dbg.threadClient);
+  await resume(threadClient);
 }
 
 function run_test() {
