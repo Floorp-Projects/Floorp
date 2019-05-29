@@ -11,7 +11,7 @@
 add_task(threadClientTest(({ threadClient, debuggee, client }) => {
   return new Promise(resolve => {
     // Debugger statement
-    client.addOneTimeListener("paused", async function(event, packet) {
+    threadClient.addOneTimeListener("paused", async function(event, packet) {
       const source = await getSourceById(
         threadClient,
         packet.frame.where.actor
