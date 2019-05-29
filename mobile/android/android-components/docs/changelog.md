@@ -34,8 +34,9 @@ permalink: /changelog/
   * `OAuthAccount` methods that returned `Deferred` values now have an `Async` suffix in their names.
   * `OAuthAccount` and `DeviceConstellation` methods that returned `Deferred<T>` (for some T) now return `Deferred<T?>`, where `null` means failure.
   * `FirefoxAccount`, `FirefoxDeviceConstellation` and `FirefoxDeviceManager` now handle all expected `FxAException`.
+  * Fixes device name not changing in FxaDeviceConstellation after setDeviceNameAsync is called.
 
-* **engine-gecko-nightly**, **engine-gecko-beta**, **concept-engine**
+* **engine-gecko-nightly**, **engine-gecko-beta**, **engine-system**, **concept-engine**
   * Added `EngineView.canScrollVerticallyUp()` for pull to refresh.
   * Added engine API to clear browsing data.
 
@@ -73,10 +74,13 @@ permalink: /changelog/
 
 * **lib-push-firebase**
   * 🆕 Added a new component for Firebase Cloud Messaging push support.
+
   ```kotlin
   class FirebasePush : AbstractFirebasePushService()
   ```
+
   * In your Manifest you need to make the service visible:
+
   ```xml
   <service android:name=".FirebasePush">
     <intent-filter>
@@ -87,6 +91,7 @@ permalink: /changelog/
 
 * **feature-push**
   * 🆕 Added a new component for Autopush messaging support.
+
   ```kotlin
   class Application {
     override fun onCreate() {
@@ -122,6 +127,7 @@ permalink: /changelog/
     }
   }
   ```
+
   * Checkout the component documentation for more details.
 
 # 0.54.0

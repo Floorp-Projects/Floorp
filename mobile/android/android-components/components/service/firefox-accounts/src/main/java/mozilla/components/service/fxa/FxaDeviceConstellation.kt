@@ -138,9 +138,13 @@ class FxaDeviceConstellation(
 
     override fun setDeviceNameAsync(name: String): Deferred<Boolean> {
         return scope.async {
-            handleFxaExceptions(logger, "changing device name") {
+            val rename = handleFxaExceptions(logger, "changing device name") {
                 account.setDeviceDisplayName(name)
             }
+            // See the latest device (name) changes after changing it.
+            val refreshDevices = deviceManager.refreshDevicesAsync().await()
+
+            rename && refreshDevices
         }
     }
 
