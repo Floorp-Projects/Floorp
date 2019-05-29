@@ -1838,14 +1838,12 @@ void nsCocoaWindow::SetMenuBar(nsMenuBarX* aMenuBar) {
     mMenuBar->Paint();
 }
 
-void nsCocoaWindow::SetFocus(Raise aRaise) {
-  if (!mWindow) return;
+nsresult nsCocoaWindow::SetFocus(bool aState) {
+  if (!mWindow) return NS_OK;
 
   if (mPopupContentView) {
-    return mPopupContentView->SetFocus(aRaise);
-  }
-
-  if (aRaise == Raise::Yes && ([mWindow isVisible] || [mWindow isMiniaturized])) {
+    mPopupContentView->SetFocus(aState);
+  } else if (aState && ([mWindow isVisible] || [mWindow isMiniaturized])) {
     if ([mWindow isMiniaturized]) {
       [mWindow deminiaturize:nil];
     }
@@ -1853,6 +1851,8 @@ void nsCocoaWindow::SetFocus(Raise aRaise) {
     [mWindow makeKeyAndOrderFront:nil];
     SendSetZLevelEvent();
   }
+
+  return NS_OK;
 }
 
 LayoutDeviceIntPoint nsCocoaWindow::WidgetToScreenOffset() {

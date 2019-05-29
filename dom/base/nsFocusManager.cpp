@@ -1093,7 +1093,7 @@ void nsFocusManager::EnsureCurrentWidgetFocused() {
   if (!widget) {
     return;
   }
-  widget->SetFocus(nsIWidget::Raise::No);
+  widget->SetFocus(false);
 }
 
 bool ActivateOrDeactivateChild(BrowserParent* aParent, void* aArg) {
@@ -1629,12 +1629,13 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
         } else {
           // note that the presshell's widget is being retrieved here, not the
           // one for the object frame.
-          if (nsViewManager* vm = presShell->GetViewManager()) {
+          nsViewManager* vm = presShell->GetViewManager();
+          if (vm) {
             nsCOMPtr<nsIWidget> widget;
             vm->GetRootWidget(getter_AddRefs(widget));
             if (widget) {
               // set focus to the top level window but don't raise it.
-              widget->SetFocus(nsIWidget::Raise::No);
+              widget->SetFocus(false);
             }
           }
         }
@@ -1820,10 +1821,11 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
     if (objectFrame) objectFrameWidget = objectFrame->GetWidget();
   }
   if (aAdjustWidgets && !objectFrameWidget && !sTestMode) {
-    if (nsViewManager* vm = presShell->GetViewManager()) {
+    nsViewManager* vm = presShell->GetViewManager();
+    if (vm) {
       nsCOMPtr<nsIWidget> widget;
       vm->GetRootWidget(getter_AddRefs(widget));
-      if (widget) widget->SetFocus(nsIWidget::Raise::No);
+      if (widget) widget->SetFocus(false);
     }
   }
 
@@ -1876,9 +1878,8 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
       // that we might no longer be in the same document, due to the events we
       // fired above when aIsNewDocument.
       if (presShell->GetDocument() == aElement->GetComposedDoc()) {
-        if (aAdjustWidgets && objectFrameWidget && !sTestMode) {
-          objectFrameWidget->SetFocus(nsIWidget::Raise::No);
-        }
+        if (aAdjustWidgets && objectFrameWidget && !sTestMode)
+          objectFrameWidget->SetFocus(false);
 
         // if the object being focused is a remote browser, activate remote
         // content
@@ -1910,12 +1911,11 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
     // the root widget.
     if (aAdjustWidgets && objectFrameWidget && mFocusedWindow == aWindow &&
         mFocusedElement == nullptr && !sTestMode) {
-      if (nsViewManager* vm = presShell->GetViewManager()) {
+      nsViewManager* vm = presShell->GetViewManager();
+      if (vm) {
         nsCOMPtr<nsIWidget> widget;
         vm->GetRootWidget(getter_AddRefs(widget));
-        if (widget) {
-          widget->SetFocus(nsIWidget::Raise::No);
-        }
+        if (widget) widget->SetFocus(false);
       }
     }
 
@@ -2189,10 +2189,11 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow) {
     return;
   }
 
-  if (nsViewManager* vm = presShell->GetViewManager()) {
+  nsViewManager* vm = presShell->GetViewManager();
+  if (vm) {
     nsCOMPtr<nsIWidget> widget;
     vm->GetRootWidget(getter_AddRefs(widget));
-    if (widget) widget->SetFocus(nsIWidget::Raise::Yes);
+    if (widget) widget->SetFocus(true);
   }
 #else
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin =
@@ -2200,7 +2201,7 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow) {
   if (treeOwnerAsWin) {
     nsCOMPtr<nsIWidget> widget;
     treeOwnerAsWin->GetMainWidget(getter_AddRefs(widget));
-    if (widget) widget->SetFocus(nsIWidget::Raise::Yes);
+    if (widget) widget->SetFocus(true);
   }
 #endif
 }

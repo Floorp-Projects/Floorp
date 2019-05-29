@@ -372,7 +372,7 @@ void nsChildView::ReleaseTitlebarCGContext() {
 
 nsresult nsChildView::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                              const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // Because the hidden window is created outside of an event loop,
   // we need to provide an autorelease pool to avoid leaking cocoa objects
@@ -723,12 +723,14 @@ void nsChildView::Enable(bool aState) {}
 
 bool nsChildView::IsEnabled() const { return true; }
 
-void nsChildView::SetFocus(Raise) {
+nsresult nsChildView::SetFocus(bool aRaise) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NSWindow* window = [mView window];
   if (window) [window makeFirstResponder:mView];
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 // Override to set the cursor on the mac

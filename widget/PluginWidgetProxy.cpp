@@ -161,10 +161,11 @@ void PluginWidgetProxy::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
   }
 }
 
-void PluginWidgetProxy::SetFocus(Raise aRaise) {
+nsresult PluginWidgetProxy::SetFocus(bool aRaise) {
   ENSURE_CHANNEL;
-  PWLOG("PluginWidgetProxy::SetFocus(%d)\n", aRaise == Raise::Yes);
-  mActor->SendSetFocus(aRaise == Raise::Yes);
+  PWLOG("PluginWidgetProxy::SetFocus(%d)\n", aRaise);
+  mActor->SendSetFocus(aRaise);
+  return NS_OK;
 }
 
 }  // namespace widget

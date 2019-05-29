@@ -2165,24 +2165,25 @@ bool nsWindow::IsEnabled() const {
  *
  **************************************************************/
 
-void nsWindow::SetFocus(Raise aRaise) {
+nsresult nsWindow::SetFocus(bool aRaise) {
   if (mWnd) {
 #ifdef WINSTATE_DEBUG_OUTPUT
     if (mWnd == WinUtils::GetTopLevelHWND(mWnd)) {
       MOZ_LOG(gWindowsLog, LogLevel::Info,
-              ("*** SetFocus: [  top] raise=%d\n", aRaise == Raise::Yes));
+              ("*** SetFocus: [  top] raise=%d\n", aRaise));
     } else {
       MOZ_LOG(gWindowsLog, LogLevel::Info,
-              ("*** SetFocus: [child] raise=%d\n", aRaise == Raise::Yes));
+              ("*** SetFocus: [child] raise=%d\n", aRaise));
     }
 #endif
     // Uniconify, if necessary
     HWND toplevelWnd = WinUtils::GetTopLevelHWND(mWnd);
-    if (aRaise == Raise::Yes && ::IsIconic(toplevelWnd)) {
+    if (aRaise && ::IsIconic(toplevelWnd)) {
       ::ShowWindow(toplevelWnd, SW_RESTORE);
     }
     ::SetFocus(mWnd);
   }
+  return NS_OK;
 }
 
 /**************************************************************

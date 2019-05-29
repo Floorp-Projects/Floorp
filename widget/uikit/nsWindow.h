@@ -35,7 +35,7 @@ class nsWindow final : public nsBaseWidget {
   virtual void Enable(bool aState) override {}
   virtual bool IsEnabled() const override { return true; }
   virtual bool IsVisible() const override { return mVisible; }
-  virtual void SetFocus(Raise) override;
+  virtual nsresult SetFocus(bool aState = false) override;
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
 
   virtual void SetBackgroundColor(const nscolor& aColor) override;

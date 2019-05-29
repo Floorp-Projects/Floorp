@@ -144,7 +144,7 @@ class nsWindow final : public nsWindowBase {
   virtual void SuppressAnimation(bool aSuppress) override;
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
-  virtual void SetFocus(Raise) override;
+  virtual nsresult SetFocus(bool aRaise) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   virtual MOZ_MUST_USE nsresult

@@ -1743,9 +1743,11 @@ nsWindow* nsWindow::FindTopLevel() {
   return this;
 }
 
-void nsWindow::SetFocus(Raise) {
-  // FIXME: Shouldn't this account for the argument?
-  FindTopLevel()->BringToFront();
+nsresult nsWindow::SetFocus(bool aRaise) {
+  nsWindow* top = FindTopLevel();
+  top->BringToFront();
+
+  return NS_OK;
 }
 
 void nsWindow::BringToFront() {
