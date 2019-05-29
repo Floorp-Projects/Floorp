@@ -139,6 +139,8 @@ class nsCookie final : public nsICookie2 {
   bool mIsHttpOnly;
   mozilla::OriginAttributes mOriginAttributes;
   int32_t mSameSite;
+
+  // This will be removed, together with all the rest, in bug 1554377.
   int32_t mRawSameSite;
 };
 
