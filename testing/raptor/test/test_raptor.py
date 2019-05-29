@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+import requests
 import sys
 import threading
 import time
@@ -83,8 +84,6 @@ def test_start_and_stop_server(raptor):
 
 def test_server_wait_states(raptor):
     import datetime
-
-    import requests
 
     def post_state():
         requests.post("http://127.0.0.1:%s/" % raptor.control_server.port,
