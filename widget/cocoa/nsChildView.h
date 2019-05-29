@@ -332,7 +332,7 @@ class nsChildView final : public nsBaseWidget {
 
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
-  virtual nsresult SetFocus(bool aRaise) override;
+  virtual void SetFocus(Raise) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;

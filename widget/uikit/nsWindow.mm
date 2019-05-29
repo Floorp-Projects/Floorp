@@ -591,10 +591,9 @@ void nsWindow::Invalidate(const LayoutDeviceIntRect& aRect) {
   [mNativeView setNeedsDisplayInRect:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
 }
 
-nsresult nsWindow::SetFocus(bool aRaise) {
+void nsWindow::SetFocus(Raise) {
   [[mNativeView window] makeKeyWindow];
   [mNativeView becomeFirstResponder];
-  return NS_OK;
 }
 
 void nsWindow::WillPaintWindow() {
