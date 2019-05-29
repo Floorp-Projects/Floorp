@@ -158,6 +158,10 @@ panelview[mainview] > .panel-header {
   visibility: hidden; /* temporary space to keep a tab's close button under the cursor */
 }
 
+.tabbrowser-tab {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+}
+
 .tabbrowser-tab:not([pinned]) {
   -moz-box-flex: 100;
   max-width: 225px;

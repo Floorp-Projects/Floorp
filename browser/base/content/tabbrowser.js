@@ -655,7 +655,8 @@ window._gBrowser = {
       const animations =
         Array.from(aTab.parentNode.getElementsByTagName("tab"))
         .map(tab => {
-          const throbber = tab.throbber;
+          const throbber =
+            document.getAnonymousElementByAttribute(tab, "anonid", "tab-throbber");
           return throbber ? throbber.getAnimations({ subtree: true }) : [];
         })
         .reduce((a, b) => a.concat(b))
@@ -2318,7 +2319,8 @@ window._gBrowser = {
     let openerTab = ((openerBrowser && this.getTabForBrowser(openerBrowser)) ||
       (relatedToCurrent && this.selectedTab));
 
-    var t = document.createXULElement("tab", { is: "tabbrowser-tab" });
+    var t = document.createXULElement("tab");
+
     t.openerTab = openerTab;
 
     aURI = aURI || "about:blank";
@@ -4226,8 +4228,8 @@ window._gBrowser = {
 
   createTooltip(event) {
     event.stopPropagation();
-    let tab = document.tooltipNode ? document.tooltipNode.closest("tab") : null;
-    if (!tab) {
+    var tab = document.tooltipNode;
+    if (!tab || tab.localName != "tab") {
       event.preventDefault();
       return;
     }
@@ -5408,9 +5410,8 @@ var TabContextMenu = {
     });
   },
   updateContextMenu(aPopupMenu) {
-    let tab = aPopupMenu.triggerNode && aPopupMenu.triggerNode.closest("tab");
-    this.contextTab = tab || gBrowser.selectedTab;
-
+    this.contextTab = aPopupMenu.triggerNode.localName == "tab" ?
+                      aPopupMenu.triggerNode : gBrowser.selectedTab;
     let disabled = gBrowser.tabs.length == 1;
     let multiselectionContext = this.contextTab.multiselected;
 

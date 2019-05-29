@@ -62,7 +62,7 @@ add_task(async function test_reader_button() {
   let readerUrl = gBrowser.selectedBrowser.currentURI.spec;
   ok(readerUrl.startsWith("about:reader"), "about:reader loaded after clicking reader mode button");
   is_element_visible(readerButton, "Reader mode button is present on about:reader");
-  let iconEl = tab.iconImage;
+  let iconEl = document.getAnonymousElementByAttribute(tab, "anonid", "tab-icon-image");
   await TestUtils.waitForCondition(() => iconEl.getBoundingClientRect().width != 0);
   is_element_visible(iconEl, "Favicon should be visible");
   is(iconEl.src, favicon, "Correct favicon should be loaded");

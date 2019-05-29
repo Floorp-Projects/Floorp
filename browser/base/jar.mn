@@ -95,7 +95,6 @@ browser.jar:
         content/browser/contentSearchUI.css           (content/contentSearchUI.css)
         content/browser/tabbrowser.css                (content/tabbrowser.css)
         content/browser/tabbrowser.js                 (content/tabbrowser.js)
-        content/browser/tabbrowser-tab.js             (content/tabbrowser-tab.js)
         content/browser/tabbrowser.xml                (content/tabbrowser.xml)
 *       content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)
         content/browser/utilityOverlay.js             (content/utilityOverlay.js)

@@ -53,7 +53,7 @@ async function overflowTabs() {
 
 function getLastCloseButton() {
   let lastTab = gBrowser.tabs[gBrowser.tabs.length - 1];
-  return lastTab.closeButton;
+  return document.getAnonymousElementByAttribute(lastTab, "anonid", "close-button");
 }
 
 function getLastCloseButtonLocation() {
