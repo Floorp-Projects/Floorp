@@ -38,8 +38,7 @@ function process() {
     let msgBox = document.getElementById("message");
     if ((token.needsLogin() && token.needsUserInit) || !token.needsLogin()) {
       oldpwbox.setAttribute("hidden", "true");
-      document.l10n.setAttributes(msgBox, "password-not-set");
-      msgBox.setAttribute("hidden", "false");
+      msgBox.removeAttribute("hidden");
 
       if (!token.needsLogin()) {
         oldpwbox.setAttribute("inited", "empty");
@@ -51,7 +50,7 @@ function process() {
       document.getElementById("pw1").focus();
     } else {
       // Select old password field
-      oldpwbox.setAttribute("hidden", "false");
+      oldpwbox.removeAttribute("hidden");
       msgBox.setAttribute("hidden", "true");
       oldpwbox.setAttribute("inited", "false");
       oldpwbox.focus();
