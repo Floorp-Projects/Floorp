@@ -122,7 +122,7 @@ void VRSystemManager::AddGamepad(const VRControllerInfo& controllerInfo) {
       NS_ConvertUTF8toUTF16(controllerInfo.GetControllerName()),
       controllerInfo.GetMappingType(), controllerInfo.GetHand(),
       controllerInfo.GetDisplayID(), controllerInfo.GetNumButtons(),
-      controllerInfo.GetNumAxes(), controllerInfo.GetNumHaptics(), 0, 0);
+      controllerInfo.GetNumAxes(), controllerInfo.GetNumHaptics());
 
   VRManager* vm = VRManager::Get();
   vm->NotifyGamepadChange<dom::GamepadAdded>(mControllerCount, a);

@@ -9,20 +9,10 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/GamepadBinding.h"
-#include "mozilla/dom/GamepadLightIndicatorBinding.h"
 #include "mozilla/dom/GamepadPoseState.h"
 #include "mozilla/dom/GamepadServiceType.h"
-#include "mozilla/dom/GamepadTouchState.h"
 
 namespace IPC {
-
-template <>
-struct ParamTraits<mozilla::dom::GamepadLightIndicatorType>
-    : public ContiguousEnumSerializer<
-          mozilla::dom::GamepadLightIndicatorType,
-          mozilla::dom::GamepadLightIndicatorType(0),
-          mozilla::dom::GamepadLightIndicatorType(
-              mozilla::dom::GamepadLightIndicatorType::EndGuard_)> {};
 
 template <>
 struct ParamTraits<mozilla::dom::GamepadMappingType>
@@ -103,35 +93,6 @@ struct ParamTraits<mozilla::dom::GamepadPoseState> {
         !ReadParam(aMsg, aIter, &(aResult->linearAcceleration[2])) ||
         !ReadParam(aMsg, aIter, &(aResult->isPositionValid)) ||
         !ReadParam(aMsg, aIter, &(aResult->isOrientationValid))) {
-      return false;
-    }
-    return true;
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::dom::GamepadTouchState> {
-  typedef mozilla::dom::GamepadTouchState paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.touchId);
-    WriteParam(aMsg, aParam.surfaceId);
-    WriteParam(aMsg, aParam.position[0]);
-    WriteParam(aMsg, aParam.position[1]);
-    WriteParam(aMsg, aParam.surfaceDimensions[0]);
-    WriteParam(aMsg, aParam.surfaceDimensions[1]);
-    WriteParam(aMsg, aParam.isSurfaceDimensionsValid);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &(aResult->touchId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->surfaceId)) ||
-        !ReadParam(aMsg, aIter, &(aResult->position[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->position[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->surfaceDimensions[0])) ||
-        !ReadParam(aMsg, aIter, &(aResult->surfaceDimensions[1])) ||
-        !ReadParam(aMsg, aIter, &(aResult->isSurfaceDimensionsValid))) {
       return false;
     }
     return true;

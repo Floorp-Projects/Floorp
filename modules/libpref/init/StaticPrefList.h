@@ -1169,38 +1169,6 @@ VARCACHE_PREF(
   bool, false
 )
 
-// Is Gamepad Extension API enabled?
-VARCACHE_PREF(
-  Live,
-  "dom.gamepad.extensions.enabled",
-   dom_gamepad_extensions_enabled,
-   bool, true
-)
-
-// Is LightIndcator API enabled in Gamepad Extension API?
-VARCACHE_PREF(
-  Live,
-  "dom.gamepad.extensions.lightindicator",
-   dom_gamepad_extensions_lightindicator,
-   bool, false
-)
-
-// Is MultiTouch API enabled in Gamepad Extension API?
-VARCACHE_PREF(
-  Live,
-  "dom.gamepad.extensions.multitouch",
-   dom_gamepad_extensions_multitouch,
-   bool, false
-)
-
-// Is Gamepad vibrate haptic feedback function enabled?
-VARCACHE_PREF(
-  Live,
-  "dom.gamepad.haptic_feedback.enabled",
-   dom_gamepad_haptic_feedback_enabled,
-   bool, true
-)
-
 // Enable passing the "storage" option to indexedDB.open.
 VARCACHE_PREF(
   Live,
