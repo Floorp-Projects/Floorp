@@ -1706,8 +1706,7 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
   if (IsInComposedDoc()) {
     // Connected callback must be enqueued whenever a custom element becomes
     // connected.
-    CustomElementData* data = GetCustomElementData();
-    if (data) {
+    if (CustomElementData* data = GetCustomElementData()) {
       if (data->mState == CustomElementData::State::eCustom) {
         nsContentUtils::EnqueueLifecycleCallback(Document::eConnected, this);
       } else {
@@ -2619,18 +2618,16 @@ nsresult Element::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValueOrString* aValue,
                                 bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aName == nsGkAtoms::_class) {
-      if (aValue) {
-        // Note: This flag is asymmetrical. It is never unset and isn't exact.
-        // If it is ever made to be exact, we probably need to handle this
-        // similarly to how ids are handled in PreIdMaybeChange and
-        // PostIdMaybeChange.
-        // Note that SetSingleClassFromParser inlines BeforeSetAttr and
-        // calls SetMayHaveClass directly. Making a subclass take action
-        // on the class attribute in a BeforeSetAttr override would
-        // require revising SetSingleClassFromParser.
-        SetMayHaveClass();
-      }
+    if (aName == nsGkAtoms::_class && aValue) {
+      // Note: This flag is asymmetrical. It is never unset and isn't exact.
+      // If it is ever made to be exact, we probably need to handle this
+      // similarly to how ids are handled in PreIdMaybeChange and
+      // PostIdMaybeChange.
+      // Note that SetSingleClassFromParser inlines BeforeSetAttr and
+      // calls SetMayHaveClass directly. Making a subclass take action
+      // on the class attribute in a BeforeSetAttr override would
+      // require revising SetSingleClassFromParser.
+      SetMayHaveClass();
     }
   }
 

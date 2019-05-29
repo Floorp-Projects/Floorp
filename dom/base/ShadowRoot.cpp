@@ -478,9 +478,8 @@ ShadowRoot::SlotAssignment ShadowRoot::SlotAssignmentFor(nsIContent* aContent) {
   nsAutoString slotName;
   // Note that if slot attribute is missing, assign it to the first default
   // slot, if exists.
-  if (aContent->IsElement()) {
-    aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::slot,
-                                   slotName);
+  if (Element* element = Element::FromNode(aContent)) {
+    element->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
   }
 
   SlotArray* slots = mSlotMap.Get(slotName);
