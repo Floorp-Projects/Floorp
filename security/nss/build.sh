@@ -50,6 +50,7 @@ fuzz=0
 fuzz_tls=0
 fuzz_oss=0
 no_local_nspr=0
+sslkeylogfile=1
 
 gyp_params=(--depth="$cwd" --generator-output=".")
 ninja_params=()
@@ -103,6 +104,7 @@ while [ $# -gt 0 ]; do
         --enable-fips) gyp_params+=(-Ddisable_fips=0) ;;
         --enable-libpkix) gyp_params+=(-Ddisable_libpkix=0) ;;
         --mozpkix-only) gyp_params+=(-Dmozpkix_only=1 -Ddisable_tests=1 -Dsign_libs=0) ;;
+        --disable-keylog) sslkeylogfile=0 ;;
 	-D*) gyp_params+=("$1") ;;
         *) show_help; exit 2 ;;
     esac
@@ -116,6 +118,8 @@ if [ "$opt_build" = 1 ]; then
 else
     target=Debug
 fi
+
+gyp_params+=(-Denable_sslkeylogfile="$sslkeylogfile")
 
 # Do special setup.
 if [ "$fuzz" = 1 ]; then
