@@ -109,15 +109,14 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
 
   if (mCSP) {
     mCSP->GetAllowsEval(&mReportCSPViolations, &mEvalAllowed);
+    mCSPInfo = new CSPInfo();
+    nsresult rv = CSPToCSPInfo(aCsp, mCSPInfo);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   } else {
     mEvalAllowed = true;
     mReportCSPViolations = false;
-  }
-
-  mCSPInfo = new CSPInfo();
-  nsresult rv = CSPToCSPInfo(aCsp, mCSPInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   mLoadGroup = aLoadGroup;
@@ -126,7 +125,7 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
   mStoragePrincipalInfo = new PrincipalInfo();
   mOriginAttributes = nsContentUtils::GetOriginAttributes(aLoadGroup);
 
-  rv = PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo);
+  nsresult rv = PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aPrincipal->Equals(aStoragePrincipal)) {
