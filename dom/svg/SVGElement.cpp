@@ -227,9 +227,8 @@ nsresult SVGElement::Init() {
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult SVGElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                nsIContent* aBindingParent) {
-  nsresult rv = SVGElementBase::BindToTree(aDocument, aParent, aBindingParent);
+nsresult SVGElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = SVGElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!MayHaveStyle()) {

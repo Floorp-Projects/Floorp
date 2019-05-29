@@ -36,8 +36,7 @@ class HTMLSharedElement final : public nsGenericHTMLElement {
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
 
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
   virtual void UnbindFromTree(bool aNullParent = true) override;
 

@@ -781,11 +781,10 @@ EventStates HTMLTextAreaElement::IntrinsicState() const {
   return state;
 }
 
-nsresult HTMLTextAreaElement::BindToTree(Document* aDocument,
-                                         nsIContent* aParent,
-                                         nsIContent* aBindingParent) {
-  nsresult rv = nsGenericHTMLFormElementWithState::BindToTree(
-      aDocument, aParent, aBindingParent);
+nsresult HTMLTextAreaElement::BindToTree(BindContext& aContext,
+                                         nsINode& aParent) {
+  nsresult rv =
+      nsGenericHTMLFormElementWithState::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If there is a disabled fieldset in the parent chain, the element is now

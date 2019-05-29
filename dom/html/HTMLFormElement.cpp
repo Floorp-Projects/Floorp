@@ -251,13 +251,11 @@ bool HTMLFormElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-nsresult HTMLFormElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                     nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLFormElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(aDocument));
+  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(GetUncomposedDoc()));
   if (htmlDoc) {
     htmlDoc->AddedForm();
   }

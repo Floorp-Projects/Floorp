@@ -283,10 +283,8 @@ bool HTMLBodyElement::IsEventAttributeNameInternal(nsAtom* aName) {
       aName, EventNameType_HTML | EventNameType_HTMLBodyOrFramesetOnly);
 }
 
-nsresult HTMLBodyElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                     nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLBodyElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
   return mAttrs.ForceMapped(this, OwnerDoc());
 }

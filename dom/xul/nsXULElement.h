@@ -328,8 +328,7 @@ class nsXULElement : public nsStyledElement {
   virtual nsresult PreHandleEvent(
       mozilla::EventChainVisitor& aVisitor) override;
   // nsIContent
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent) override;
   virtual void DestroyContent() override;
   virtual void DoneAddingChildren(bool aHaveNotified) override;

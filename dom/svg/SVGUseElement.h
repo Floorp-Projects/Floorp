@@ -49,8 +49,7 @@ class SVGUseElement final : public SVGUseElementBase,
  public:
   NS_IMPL_FROMNODE_WITH_TAG(SVGUseElement, kNameSpaceID_SVG, use)
 
-  nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                      nsIContent* aBindingParent) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
 
   // interfaces:

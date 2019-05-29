@@ -28,6 +28,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
@@ -1223,7 +1224,6 @@ nsresult nsINode::InsertChildBefore(nsIContent* aKid,
   nsMutationGuard::DidMutate();
 
   // Do this before checking the child-count since this could cause mutations
-  Document* doc = GetUncomposedDoc();
   mozAutoDocUpdate updateBatch(GetComposedDoc(), aNotify);
 
   if (OwnerDoc() != aKid->OwnerDoc()) {
@@ -1249,8 +1249,8 @@ nsresult nsINode::InsertChildBefore(nsIContent* aKid,
 
   // XXXbz Do we even need this code anymore?
   bool wasInNACScope = ShouldUseNACScope(aKid);
-  nsresult rv = aKid->BindToTree(doc, parent,
-                                 parent ? parent->GetBindingParent() : nullptr);
+  BindContext context(*this);
+  nsresult rv = aKid->BindToTree(context, *this);
   if (NS_SUCCEEDED(rv) && !wasInNACScope && ShouldUseNACScope(aKid)) {
     MOZ_ASSERT(ShouldUseNACScope(this),
                "Why does the kid need to use an the anonymous content scope?");

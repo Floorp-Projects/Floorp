@@ -63,11 +63,9 @@ void HTMLTitleElement::ContentRemoved(nsIContent* aChild,
   SendTitleChangeEvent(false);
 }
 
-nsresult HTMLTitleElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
+nsresult HTMLTitleElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   // Let this fall through.
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SendTitleChangeEvent(true);

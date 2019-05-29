@@ -653,8 +653,7 @@ class Element : public FragmentOrElement {
 
   void UpdateEditableState(bool aNotify) override;
 
-  nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                      nsIContent* aBindingParent) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
   void UnbindFromTree(bool aNullParent = true) override;
 

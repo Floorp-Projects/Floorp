@@ -491,17 +491,13 @@ bool HTMLImageElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   return false;
 }
 
-nsresult HTMLImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLImageElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
+  nsImageLoadingContent::BindToTree(aContext, aParent);
 
-  if (aParent) {
-    UpdateFormOwner();
-  }
+  UpdateFormOwner();
 
   if (HaveSrcsetOrInPicture()) {
     Document* doc = GetComposedDoc();

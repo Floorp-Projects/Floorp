@@ -73,16 +73,16 @@ nsMathMLElement::nsMathMLElement(
       ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
       mIncrementScriptLevel(false) {}
 
-nsresult nsMathMLElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                     nsIContent* aBindingParent) {
+nsresult nsMathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsresult rv =
-      nsMathMLElementBase::BindToTree(aDocument, aParent, aBindingParent);
+  nsresult rv = nsMathMLElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument) {
-    aDocument->RegisterPendingLinkUpdate(this);
+  // FIXME(emilio): Probably should be composed, this uses all the other link
+  // infrastructure.
+  if (Document* doc = GetUncomposedDoc()) {
+    doc->RegisterPendingLinkUpdate(this);
   }
 
   // Set the bit in the document for telemetry.

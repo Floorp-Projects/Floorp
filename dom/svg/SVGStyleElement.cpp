@@ -58,10 +58,8 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGStyleElement)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult SVGStyleElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                     nsIContent* aBindingParent) {
-  nsresult rv =
-      SVGStyleElementBase::BindToTree(aDocument, aParent, aBindingParent);
+nsresult SVGStyleElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = SVGStyleElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   void (SVGStyleElement::*update)() =

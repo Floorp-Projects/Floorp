@@ -93,12 +93,11 @@ bool HTMLAnchorElement::HasDeferredDNSPrefetchRequest() {
   return HasFlag(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
 }
 
-nsresult HTMLAnchorElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                       nsIContent* aBindingParent) {
+nsresult HTMLAnchorElement::BindToTree(BindContext& aContext,
+                                       nsINode& aParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Prefetch links

@@ -28,6 +28,7 @@ namespace mozilla {
 class EventChainPreVisitor;
 struct URLExtraData;
 namespace dom {
+struct BindContext;
 class ShadowRoot;
 class HTMLSlotElement;
 }  // namespace dom
@@ -57,7 +58,9 @@ enum nsLinkState {
  */
 class nsIContent : public nsINode {
  public:
-  typedef mozilla::widget::IMEState IMEState;
+  using IMEState = mozilla::widget::IMEState;
+  using BindContext = mozilla::dom::BindContext;
+
 
   void ConstructUbiNode(void* storage) override;
 
@@ -85,19 +88,9 @@ class nsIContent : public nsINode {
    * appended to a parent, this will be called after the node has been added to
    * the parent's child list and before nsIDocumentObserver notifications for
    * the addition are dispatched.
-   * @param aDocument The new document for the content node.  May not be null
-   *                  if aParent is null.  Must match the current document of
-   *                  aParent, if aParent is not null (note that
-   *                  aParent->GetUncomposedDoc() can be null, in which case
-   *                  this must also be null).
-   * @param aParent The new parent for the content node.  May be null if the
-   *                node is being bound as a direct child of the document.
-   * @param aBindingParent The new binding parent for the content node.
-   *                       This is must either be non-null if a particular
-   *                       binding parent is desired or match aParent's binding
-   *                       parent.
-   * @note either aDocument or aParent must be non-null.  If both are null,
-   *       this method _will_ crash.
+   * BindContext propagates various information down the subtree; see its
+   * documentation to know how to set it up.
+   * @param aParent The new parent node for the content node. May be a document.
    * @note This method must not be called by consumers of nsIContent on a node
    *       that is already bound to a tree.  Call UnbindFromTree first.
    * @note This method will handle rebinding descendants appropriately (eg
@@ -108,8 +101,7 @@ class nsIContent : public nsINode {
    * TODO(emilio): Should we move to nsIContent::BindToTree most of the
    * FragmentOrElement / CharacterData duplicated code?
    */
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) = 0;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) = 0;
 
   /**
    * Unbind this content node from a tree.  This will set its current document

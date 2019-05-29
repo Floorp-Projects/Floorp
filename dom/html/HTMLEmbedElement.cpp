@@ -73,20 +73,20 @@ void HTMLEmbedElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
   nsImageLoadingContent::AsyncEventRunning(aEvent);
 }
 
-nsresult HTMLEmbedElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLEmbedElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsObjectLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
+  rv = nsObjectLoadingContent::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Don't kick off load from being bound to a plugin document - the plugin
   // document will call nsObjectLoadingContent::InitializeFromChannel() for the
   // initial load.
-  nsCOMPtr<nsIPluginDocument> pluginDoc = do_QueryInterface(aDocument);
-
+  //
+  // FIXME(emilio): Seems a bit wasteful to add the runnable unconditionally
+  // otherwise?
+  nsCOMPtr<nsIPluginDocument> pluginDoc = do_QueryInterface(GetUncomposedDoc());
   if (!pluginDoc) {
     void (HTMLEmbedElement::*start)() = &HTMLEmbedElement::StartObjectLoad;
     nsContentUtils::AddScriptRunner(

@@ -137,12 +137,11 @@ void XULFrameElement::SwapFrameLoaders(nsFrameLoaderOwner* aOtherLoaderOwner,
   rv = loader->SwapWithOtherLoader(otherLoader, this, aOtherLoaderOwner);
 }
 
-nsresult XULFrameElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                     nsIContent* aBindingParent) {
-  nsresult rv = nsXULElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult XULFrameElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsXULElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument) {
+  if (IsInUncomposedDoc()) {
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                  "Missing a script blocker!");
     // We're in a document now.  Kick off the frame load.

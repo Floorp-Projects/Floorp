@@ -4265,13 +4265,12 @@ void HTMLInputElement::MaybeLoadImage() {
   }
 }
 
-nsresult HTMLInputElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
-  nsresult rv = nsGenericHTMLFormElementWithState::BindToTree(
-      aDocument, aParent, aBindingParent);
+nsresult HTMLInputElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv =
+      nsGenericHTMLFormElementWithState::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
+  nsImageLoadingContent::BindToTree(aContext, aParent);
 
   if (mType == NS_FORM_INPUT_IMAGE) {
     // Our base URI may have changed; claim that our URI changed, and the

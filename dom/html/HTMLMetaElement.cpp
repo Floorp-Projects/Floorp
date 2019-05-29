@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/HTMLMetaElement.h"
 #include "mozilla/dom/HTMLMetaElementBinding.h"
 #include "mozilla/dom/nsCSPService.h"
@@ -70,25 +71,26 @@ nsresult HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-nsresult HTMLMetaElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                     nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (aDocument && AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                               nsGkAtoms::viewport, eIgnoreCase)) {
+  Document* document = GetUncomposedDoc();
+  if (!document) {
+    return rv;
+  }
+  if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, nsGkAtoms::viewport,
+                  eIgnoreCase)) {
     nsAutoString content;
     GetContent(content);
-    nsContentUtils::ProcessViewportInfo(aDocument, content);
+    nsContentUtils::ProcessViewportInfo(document, content);
   }
 
-  if (StaticPrefs::security_csp_enable() && aDocument &&
-      !aDocument->IsLoadedAsData() &&
+  if (StaticPrefs::security_csp_enable() && !document->IsLoadedAsData() &&
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::httpEquiv, nsGkAtoms::headerCSP,
                   eIgnoreCase)) {
     // only accept <meta http-equiv="Content-Security-Policy" content=""> if it
     // appears in the <head> element.
-    Element* headElt = aDocument->GetHeadElement();
+    Element* headElt = document->GetHeadElement();
     if (headElt && nsContentUtils::ContentIsDescendantOf(this, headElt)) {
       nsAutoString content;
       GetContent(content);
@@ -96,11 +98,10 @@ nsresult HTMLMetaElement::BindToTree(Document* aDocument, nsIContent* aParent,
           nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
               content);
 
-      nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
-      if (csp) {
+      if (nsCOMPtr<nsIContentSecurityPolicy> csp = document->GetCsp()) {
         if (LOG_ENABLED()) {
           nsAutoCString documentURIspec;
-          nsIURI* documentURI = aDocument->GetDocumentURI();
+          nsIURI* documentURI = document->GetDocumentURI();
           if (documentURI) {
             documentURI->GetAsciiSpec(documentURIspec);
           }
@@ -108,7 +109,7 @@ nsresult HTMLMetaElement::BindToTree(Document* aDocument, nsIContent* aParent,
           LOG(
               ("HTMLMetaElement %p sets CSP '%s' on document=%p, "
                "document-uri=%s",
-               this, NS_ConvertUTF16toUTF8(content).get(), aDocument,
+               this, NS_ConvertUTF16toUTF8(content).get(), document,
                documentURIspec.get()));
         }
 
@@ -120,19 +121,18 @@ nsresult HTMLMetaElement::BindToTree(Document* aDocument, nsIContent* aParent,
                               false,  // csp via meta tag can not be report only
                               true);  // delivered through the meta tag
         NS_ENSURE_SUCCESS(rv, rv);
-        nsPIDOMWindowInner* inner = aDocument->GetInnerWindow();
-        if (inner) {
+        if (nsPIDOMWindowInner* inner = document->GetInnerWindow()) {
           inner->SetCsp(csp);
         }
-        aDocument->ApplySettingsFromCSP(false);
+        document->ApplySettingsFromCSP(false);
       }
     }
   }
 
   // Referrer Policy spec requires a <meta name="referrer" tag to be in the
   // <head> element.
-  SetMetaReferrer(aDocument);
-  CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMMetaAdded"));
+  SetMetaReferrer(document);
+  CreateAndDispatchEvent(document, NS_LITERAL_STRING("DOMMetaAdded"));
   return rv;
 }
 
