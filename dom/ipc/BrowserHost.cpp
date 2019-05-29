@@ -227,25 +227,6 @@ BrowserHost::GetHasPresented(bool* aHasPresented) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BrowserHost::GetWindowGlobalParents(
-    nsTArray<RefPtr<WindowGlobalParent>>& aWindowGlobalParents) {
-  if (!mRoot) {
-    aWindowGlobalParents = nsTArray<RefPtr<WindowGlobalParent>>();
-    return NS_OK;
-  }
-  VisitAll([&](BrowserParent* aBrowser) {
-    const auto& windowGlobalParents = aBrowser->ManagedPWindowGlobalParent();
-    for (auto iter = windowGlobalParents.ConstIter(); !iter.Done();
-         iter.Next()) {
-      WindowGlobalParent* windowGlobalParent =
-          static_cast<WindowGlobalParent*>(iter.Get()->GetKey());
-      aWindowGlobalParents.AppendElement(windowGlobalParent);
-    }
-  });
-  return NS_OK;
-}
-
 /* void transmitPermissionsForPrincipal (in nsIPrincipal aPrincipal); */
 NS_IMETHODIMP
 BrowserHost::TransmitPermissionsForPrincipal(nsIPrincipal* aPrincipal) {
