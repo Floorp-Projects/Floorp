@@ -8,14 +8,14 @@
  * at the specified line.
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   // Populate the `ScriptStore` so that we only test that the script
   // is added through `onNewScript`
   await getSources(threadClient);
 
   const packet = await executeOnNextTickAndWaitForPause(() => {
     evalCode(debuggee);
-  }, client);
+  }, threadClient);
   const source = await getSourceById(
     threadClient,
     packet.frame.where.actor

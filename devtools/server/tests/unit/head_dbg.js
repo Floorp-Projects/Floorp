@@ -650,11 +650,11 @@ function waitForEvent(client, type, predicate) {
  * and finally yield the promise.
  *
  * @param Function action
- * @param DebuggerClient client
+ * @param ThreadClient threadClient
  * @returns Promise
  */
-function executeOnNextTickAndWaitForPause(action, client) {
-  const paused = waitForPause(client);
+function executeOnNextTickAndWaitForPause(action, threadClient) {
+  const paused = waitForPause(threadClient);
   executeSoon(action);
   return paused;
 }
@@ -688,8 +688,8 @@ function interrupt(threadClient) {
  * @param ThreadClient threadClient
  * @returns Promise
  */
-function resumeAndWaitForPause(client, threadClient) {
-  const paused = waitForPause(client);
+function resumeAndWaitForPause(threadClient) {
+  const paused = waitForPause(threadClient);
   return resume(threadClient).then(() => paused);
 }
 
@@ -697,13 +697,12 @@ function resumeAndWaitForPause(client, threadClient) {
  * Resume JS execution for a single step and wait for the pause after the step
  * has been taken.
  *
- * @param DebuggerClient client
  * @param ThreadClient threadClient
  * @returns Promise
  */
-function stepIn(client, threadClient) {
+function stepIn(threadClient) {
   dumpn("Stepping in.");
-  const paused = waitForPause(client);
+  const paused = waitForPause(threadClient);
   return threadClient.stepIn()
     .then(() => paused);
 }
@@ -712,14 +711,13 @@ function stepIn(client, threadClient) {
  * Resume JS execution for a step over and wait for the pause after the step
  * has been taken.
  *
- * @param DebuggerClient client
  * @param ThreadClient threadClient
  * @returns Promise
  */
-function stepOver(client, threadClient) {
+function stepOver(threadClient) {
   dumpn("Stepping over.");
   return threadClient.stepOver()
-    .then(() => waitForPause(client));
+    .then(() => waitForPause(threadClient));
 }
 
 /**
@@ -730,10 +728,10 @@ function stepOver(client, threadClient) {
  * @param ThreadClient threadClient
  * @returns Promise
  */
-function stepOut(client, threadClient) {
+function stepOut(threadClient) {
   dumpn("Stepping out.");
   return threadClient.stepOut()
-    .then(() => waitForPause(client));
+    .then(() => waitForPause(threadClient));
 }
 
 /**

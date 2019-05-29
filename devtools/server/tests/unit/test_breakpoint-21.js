@@ -9,14 +9,14 @@
  * scripts, so you can set breakpoints on deeply nested scripts
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   // Populate the `ScriptStore` so that we only test that the script
   // is added through `onNewScript`
   await getSources(threadClient);
 
   let packet = await executeOnNextTickAndWaitForPause(() => {
     evalCode(debuggee);
-  }, client);
+  }, threadClient);
   const source = await getSourceById(
       threadClient,
       packet.frame.where.actor
@@ -29,7 +29,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   setBreakpoint(threadClient, location);
 
   await resume(threadClient);
-  packet = await waitForPause(client);
+  packet = await waitForPause(threadClient);
   Assert.equal(packet.type, "paused");
   Assert.equal(packet.why.type, "breakpoint");
   Assert.equal(packet.frame.where.actor, source.actor);

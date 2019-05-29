@@ -30,7 +30,7 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box() {
-  gClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.addOneTimeListener("paused", function(event, packet) {
     gThreadClient.setBreakpoint({ sourceUrl: BLACK_BOXED_URL, line: 2 }, {});
     test_black_box_paused();
   });
@@ -74,6 +74,7 @@ function test_black_box_paused() {
     const pausedInSource = await blackBox(sourceFront);
     Assert.ok(pausedInSource,
       "We should be notified that we are currently paused in this source");
+    await gThreadClient.resume();
     finishClient(gClient);
   });
 }

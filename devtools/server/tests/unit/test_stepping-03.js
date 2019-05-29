@@ -8,11 +8,11 @@
  * Check basic step-out functionality.
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   dumpn("Evaluating test code and waiting for first debugger statement");
-  await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), client);
+  await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), threadClient);
 
-  const step1 = await stepOut(client, threadClient);
+  const step1 = await stepOut(threadClient);
   equal(step1.type, "paused");
   equal(step1.frame.where.line, 8);
   equal(step1.why.type, "resumeLimit");

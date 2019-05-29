@@ -28,7 +28,7 @@ function run_test() {
 const SOURCE_URL = "http://example.com/source.js";
 
 const testSameBreakpoint = async function() {
-  const packet = await executeOnNextTickAndWaitForPause(evalCode, gClient);
+  const packet = await executeOnNextTickAndWaitForPause(evalCode, gThreadClient);
   const source = await getSourceById(
     gThreadClient,
     packet.frame.where.actor
