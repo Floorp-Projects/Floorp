@@ -98,6 +98,48 @@ inline Chunk* js::NurseryChunk::toChunk(JSRuntime* rt) {
   return chunk;
 }
 
+void js::NurseryDecommitChunksTask::queueChunk(
+    NurseryChunk* nchunk, const AutoLockHelperThreadState& lock) {
+  // Using the chunk pointers is infalliable.
+  Chunk* chunk = nchunk->toChunk(runtime());
+  chunk->info.prev = nullptr;
+  chunk->info.next = queue;
+  queue = chunk;
+}
+
+Chunk* js::NurseryDecommitChunksTask::popChunk() {
+  AutoLockHelperThreadState lock;
+
+  if (!queue) {
+    // We call setFinishing here while we have the lock that checks for work,
+    // rather than in run's loop.
+    setFinishing(lock);
+    return nullptr;
+  }
+
+  Chunk* chunk = queue;
+  queue = chunk->info.next;
+  chunk->info.next = nullptr;
+  MOZ_ASSERT(chunk->info.prev == nullptr);
+  return chunk;
+}
+
+void js::NurseryDecommitChunksTask::run() {
+  Chunk* chunk;
+
+  while ((chunk = popChunk())) {
+    decommitChunk(chunk);
+  }
+}
+
+void js::NurseryDecommitChunksTask::decommitChunk(Chunk* chunk) {
+  MarkPagesUnused(&chunk->arenas[0], ArenaSize * ArenasPerChunk);
+  {
+    AutoLockGC lock(runtime());
+    runtime()->gc.recycleChunk(chunk, lock);
+  }
+}
+
 js::Nursery::Nursery(JSRuntime* rt)
     : runtime_(rt),
       position_(0),
@@ -113,7 +155,8 @@ js::Nursery::Nursery(JSRuntime* rt)
       enableProfiling_(false),
       canAllocateStrings_(true),
       reportTenurings_(0),
-      minorGCTriggerReason_(JS::GCReason::NO_REASON)
+      minorGCTriggerReason_(JS::GCReason::NO_REASON),
+      decommitChunksTask(rt)
 #ifdef JS_GC_ZEAL
       ,
       lastCanary_(nullptr)
@@ -226,6 +269,8 @@ void js::Nursery::disable() {
   currentStringEnd_ = 0;
   position_ = 0;
   runtime()->gc.storeBuffer().disable();
+
+  decommitChunksTask.join();
 }
 
 void js::Nursery::enableStrings() {
@@ -1303,12 +1348,20 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
 
 void js::Nursery::freeChunksFrom(unsigned firstFreeChunk) {
   MOZ_ASSERT(firstFreeChunk < chunks_.length());
-  {
-    AutoLockGC lock(runtime());
-    for (unsigned i = firstFreeChunk; i < chunks_.length(); i++) {
-      runtime()->gc.recycleChunk(chunk(i).toChunk(runtime()), lock);
+
+  if (CanUseExtraThreads()) {
+    AutoLockHelperThreadState lock;
+    for (size_t i = firstFreeChunk; i < chunks_.length(); i++) {
+      decommitChunksTask.queueChunk(chunks_[i], lock);
+    }
+    decommitChunksTask.startOrRunIfIdle(lock);
+  } else {
+    // Sequential path
+    for (size_t i = firstFreeChunk; i < chunks_.length(); i++) {
+      decommitChunksTask.decommitChunk(chunks_[i]->toChunk(runtime()));
     }
   }
+
   chunks_.shrinkTo(firstFreeChunk);
 }
 
