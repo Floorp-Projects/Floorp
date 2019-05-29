@@ -94,7 +94,7 @@ struct ConstCookie {
               const nsCString& aHost, const nsCString& aPath, int64_t aExpiry,
               int64_t aLastAccessed, int64_t aCreationTime, bool aIsSecure,
               bool aIsHttpOnly, const OriginAttributes& aOriginAttributes,
-              int32_t aSameSite)
+              int32_t aSameSite, int32_t aRawSameSite)
       : name(aName),
         value(aValue),
         host(aHost),
@@ -105,7 +105,8 @@ struct ConstCookie {
         isSecure(aIsSecure),
         isHttpOnly(aIsHttpOnly),
         originAttributes(aOriginAttributes),
-        sameSite(aSameSite) {}
+        sameSite(aSameSite),
+        rawSameSite(aRawSameSite) {}
 
   const nsCString name;
   const nsCString value;
@@ -118,6 +119,7 @@ struct ConstCookie {
   const bool isHttpOnly;
   const OriginAttributes originAttributes;
   const int32_t sameSite;
+  const int32_t rawSameSite;
 };
 
 // encapsulates a (key, nsCookie) tuple for temporary storage purposes.
@@ -212,6 +214,15 @@ struct nsCookieAttributes {
   bool isSecure;
   bool isHttpOnly;
   int8_t sameSite;
+  int8_t rawSameSite;
+
+  nsCookieAttributes()
+      : expiryTime(0),
+        isSession(false),
+        isSecure(false),
+        isHttpOnly(false),
+        sameSite(nsICookie2::SAMESITE_NONE),
+        rawSameSite(nsICookie2::SAMESITE_NONE) {}
 };
 
 class nsCookieService final : public nsICookieService,
