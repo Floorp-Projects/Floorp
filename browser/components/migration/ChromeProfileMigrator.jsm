@@ -336,7 +336,7 @@ async function GetCookiesResource(aProfileFolder) {
                                false,
                                parseInt(expiresUtc),
                                {},
-                               Ci.nsICookie2.SAMESITE_NONE);
+                               Ci.nsICookie2.SAMESITE_UNSET);
         } catch (e) {
           Cu.reportError(e);
         }

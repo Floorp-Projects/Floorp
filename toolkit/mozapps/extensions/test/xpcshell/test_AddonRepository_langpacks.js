@@ -102,7 +102,7 @@ add_task(async function test_cookies() {
   let expiration = Date.now() / 1000 + 60 * 60;
   Services.cookies.add("example.com", "/", COOKIE, "testing",
                        false, false, false, expiration, {},
-                       Ci.nsICookie2.SAMESITE_NONE);
+                       Ci.nsICookie2.SAMESITE_UNSET);
 
   await AddonRepository.getAvailableLangpacks();
 

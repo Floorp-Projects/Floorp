@@ -98,15 +98,15 @@ async function testCookies(options) {
       // This will be evicted after we add a fourth cookie.
       Services.cookies.add(domain, "/", "evicted", "bar", options.secure, false,
                            false, options.expiry, {},
-                           Ci.nsICookie2.SAMESITE_NONE);
+                           Ci.nsICookie2.SAMESITE_UNSET);
       // This will be modified by the background script.
       Services.cookies.add(domain, "/", "foo", "bar", options.secure, false,
                            false, options.expiry, {},
-                           Ci.nsICookie2.SAMESITE_NONE);
+                           Ci.nsICookie2.SAMESITE_UNSET);
       // This will be deleted by the background script.
       Services.cookies.add(domain, "/", "deleted", "bar", options.secure, false,
                            false, options.expiry, {},
-                           Ci.nsICookie2.SAMESITE_NONE);
+                           Ci.nsICookie2.SAMESITE_UNSET);
       sendAsyncMessage("done");
     });
   });
@@ -124,9 +124,9 @@ async function testCookies(options) {
       let domain = options.domain.replace(/^\.?/, ".");
 
       Services.cookies.add(domain, "/", "x", "y", options.secure, false, false,
-                           options.expiry, {}, Ci.nsICookie2.SAMESITE_NONE);
+                           options.expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
       Services.cookies.add(domain, "/", "x", "z", options.secure, false, false,
-                           options.expiry, {}, Ci.nsICookie2.SAMESITE_NONE);
+                           options.expiry, {}, Ci.nsICookie2.SAMESITE_UNSET);
       Services.cookies.remove(domain, "x", "/", false, {});
       sendAsyncMessage("done");
     });
