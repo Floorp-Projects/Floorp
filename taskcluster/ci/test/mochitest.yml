@@ -192,7 +192,12 @@ mochitest-chrome:
             android-em-4.*\/debug: 8
             android-em.4.*\/(?:opt|pgo)?: 4
             android-em-7.*: 1
-            default: 3
+            .*-ccov/.*: 3
+            .*-qr/.*: 3
+            .*-asan/opt: 3
+            (linux64|windows.*-..|macosx10..)/debug: 3
+            windows10-aarch64/.*: 3
+            default: 2
     max-run-time:
         by-test-platform:
             android-em.*: 7200
