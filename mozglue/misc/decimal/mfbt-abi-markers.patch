@@ -1,6 +1,6 @@
-diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
---- a/mfbt/decimal/Decimal.h
-+++ b/mfbt/decimal/Decimal.h
+diff --git a/mozglue/misc/decimal/Decimal.h b/mozglue/misc/decimal/Decimal.h
+--- a/mozglue/misc/decimal/Decimal.h
++++ b/mozglue/misc/decimal/Decimal.h
 @@ -26,16 +26,18 @@
   * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE

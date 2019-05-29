@@ -1,6 +1,6 @@
-diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
---- a/mfbt/decimal/Decimal.cpp
-+++ b/mfbt/decimal/Decimal.cpp
+diff --git a/mozglue/misc/decimal/Decimal.cpp b/mozglue/misc/decimal/Decimal.cpp
+--- a/mozglue/misc/decimal/Decimal.cpp
++++ b/mozglue/misc/decimal/Decimal.cpp
 @@ -509,21 +509,25 @@ Decimal Decimal::operator/(const Decimal
      if (remainder > divisor / 2)
          ++result;
