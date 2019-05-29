@@ -405,6 +405,10 @@ def target_tasks_ship_fennec(full_task_graph, parameters, graph_config):
     )
 
     def filter(task):
+        # XXX Starting 68, Geckoview is shipped in a separate target_tasks
+        if task.kind == 'beetmover-geckoview':
+            return False
+
         # Include candidates build tasks; these will be optimized out
         if task.label in filtered_for_candidates:
             return True
@@ -462,6 +466,21 @@ def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
                 return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('ship_geckoview_beta')
+def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to ship geckoview beta. The
+    build process involves a pipeline of builds and an upload to
+    maven.mozilla.org."""
+
+    def filter(task):
+        # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be
+        # uploaded
+        return task.kind == 'beetmover-geckoview' and task.attributes.get('release-type') == 'beta'
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
 
 
 def make_desktop_nightly_filter(platforms):
