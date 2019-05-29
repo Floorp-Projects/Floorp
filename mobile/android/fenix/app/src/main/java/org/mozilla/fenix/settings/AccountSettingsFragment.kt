@@ -73,7 +73,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
             // Current sync state
             updateLastSyncedTimePref(context!!, preferenceSyncNow)
             if (requireComponents.backgroundServices.syncManager.isSyncRunning()) {
-                preferenceSyncNow.title = getString(R.string.sync_syncing)
+                preferenceSyncNow.title = getString(R.string.sync_syncing_in_progress)
                 preferenceSyncNow.isEnabled = false
             } else {
                 preferenceSyncNow.isEnabled = true
@@ -152,8 +152,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         override fun onStarted() {
             CoroutineScope(Dispatchers.Main).launch {
                 val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
-                view?.announceForAccessibility(getString(R.string.sync_syncing))
-                pref?.title = getString(R.string.sync_syncing)
+                view?.announceForAccessibility(getString(R.string.sync_syncing_in_progress))
+                pref?.title = getString(R.string.sync_syncing_in_progress)
                 pref?.isEnabled = false
 
                 updateSyncingItemsPreference()

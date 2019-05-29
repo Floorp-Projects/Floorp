@@ -156,7 +156,7 @@
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Device name</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing">Syncing…</string>
+    <string name="sync_syncing_in_progress">Syncing…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Sync failed. Last success: %s</string>
     <!-- Label summary showing never synced -->
@@ -581,7 +581,7 @@
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tabs</string>
     <!-- Title for the data and history items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_data_title">Browsing history and site data</string>
-    <!-- Subtitle for the data and history items item in Delete browsing data, parameter will be replaced with the
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d addresses</string>
     <!-- Title for the collections item in Delete browsing data -->
