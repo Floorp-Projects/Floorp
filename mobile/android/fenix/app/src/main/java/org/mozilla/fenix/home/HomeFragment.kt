@@ -180,7 +180,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
             runBlocking(Dispatchers.Main) {
-                search_engine_icon.setImageDrawable(searchIcon)
+                search_engine_icon?.setImageDrawable(searchIcon)
             }
         }
 
