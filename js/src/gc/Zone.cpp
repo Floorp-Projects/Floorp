@@ -6,6 +6,8 @@
 
 #include "gc/Zone-inl.h"
 
+#include "jsutil.h"
+
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
