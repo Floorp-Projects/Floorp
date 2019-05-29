@@ -63,12 +63,6 @@ addEventListener("DOMInputPasswordAdded", function(event) {
   let formLike = LoginFormFactory.createFromField(event.originalTarget);
   InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
-addEventListener("DOMAutoComplete", function(event) {
-  if (shouldIgnoreLoginManagerEvent(event)) {
-    return;
-  }
-  LoginManagerContent.onDOMAutoComplete(event);
-});
 
 ContentMetaHandler.init(this);
 

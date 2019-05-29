@@ -103,6 +103,33 @@ const observer = {
     LoginManagerContent._onNavigation(aWebProgress.DOMWindow.document);
   },
 
+  // nsIObserver
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "autocomplete-did-enter-text": {
+        let input = subject.QueryInterface(Ci.nsIAutoCompleteInput);
+        let {selectedIndex} = input.popup;
+        if (selectedIndex < 0) {
+          break;
+        }
+        let style = input.controller.getStyleAt(selectedIndex);
+        if (style != "login" && style != "loginWithOrigin") {
+          break;
+        }
+        let {focusedInput} = LoginManagerContent._formFillService;
+        if (focusedInput.nodePrincipal.isNullPrincipal) {
+          // If we have a null principal then prevent any more password manager code from running and
+          // incorrectly using the document `location`.
+          return;
+        }
+        let details = JSON.parse(input.controller.getCommentAt(selectedIndex));
+        LoginManagerContent.onFieldAutoComplete(focusedInput, details.guid);
+        break;
+      }
+    }
+  },
+
+  // nsIDOMEventListener
   handleEvent(aEvent) {
     if (!aEvent.isTrusted) {
       return;
@@ -116,7 +143,7 @@ const observer = {
       case "keydown": {
         if (aEvent.keyCode == aEvent.DOM_VK_TAB ||
             aEvent.keyCode == aEvent.DOM_VK_RETURN) {
-          LoginManagerContent.onUsernameInput(aEvent);
+          LoginManagerContent.onUsernameAutocompleted(aEvent.target);
         }
         break;
       }
@@ -144,6 +171,8 @@ const observer = {
   },
 };
 
+// Add this observer once for the process.
+Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
 // This object maps to the "child" process (even in the single-process case).
 this.LoginManagerContent = {
@@ -323,6 +352,7 @@ this.LoginManagerContent = {
    *
    * @param {HTMLFormElement} form - form to get login data for
    * @param {Object} options
+   * @param {boolean} options.guid - guid of a login to retrieve
    * @param {boolean} options.showMasterPassword - whether to show a master password prompt
    */
   _getLoginDataFromParent(form, options) {
@@ -733,18 +763,12 @@ this.LoginManagerContent = {
   },
 
   /**
-   * Listens for DOMAutoComplete event on login form.
+   * A username or password was autocompleted into a field.
    */
-  onDOMAutoComplete(event) {
-    if (!event.isTrusted) {
-      return;
-    }
-
+  onFieldAutoComplete(acInputField, loginGUID) {
     if (!LoginHelper.enabled) {
       return;
     }
-
-    let acInputField = event.target;
 
     // This is probably a bit over-conservatative.
     if (ChromeUtils.getClassName(acInputField.ownerDocument) != "HTMLDocument") {
@@ -756,26 +780,17 @@ this.LoginManagerContent = {
     }
 
     if (LoginHelper.isUsernameFieldType(acInputField)) {
-      this.onUsernameInput(event);
+      this.onUsernameAutocompleted(acInputField, loginGUID);
     } else if (acInputField.hasBeenTypePassword) {
-      this._highlightFilledField(event.target);
+      this._highlightFilledField(acInputField);
     }
   },
 
   /**
-   * Calls fill form on the username field.
+   * A username field was filled so try fill in the associated password in the password field.
    */
-  onUsernameInput(event) {
-    let acInputField = event.target;
-
-    // If the username is blank, bail out now -- we don't want
-    // fillForm() to try filling in a login without a username
-    // to filter on (bug 471906).
-    if (!acInputField.value) {
-      return;
-    }
-
-    log("onUsernameInput from", event.type);
+  onUsernameAutocompleted(acInputField, loginGUID = null) {
+    log("onUsernameAutocompleted:", acInputField);
 
     let acForm = LoginFormFactory.createFromField(acInputField);
     let doc = acForm.ownerDocument;
@@ -787,7 +802,10 @@ this.LoginManagerContent = {
     let [usernameField, passwordField, ignored] =
         this._getFormFields(acForm, false, recipes);
     if (usernameField == acInputField && passwordField) {
-      this._getLoginDataFromParent(acForm, { showMasterPassword: false })
+      this._getLoginDataFromParent(acForm, {
+        guid: loginGUID,
+        showMasterPassword: false,
+      })
           .then(({ form, loginsFound, recipes }) => {
             this._fillForm(form, loginsFound, recipes, {
               autofillForm: true,
