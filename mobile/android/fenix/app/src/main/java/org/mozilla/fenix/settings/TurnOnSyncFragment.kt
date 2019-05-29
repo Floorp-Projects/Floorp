@@ -14,11 +14,13 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.support.ktx.android.content.hasCamera
+import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.isInExperiment
 
 @SuppressWarnings("TooManyFunctions")
 class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
@@ -57,6 +59,11 @@ class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
         preferenceNewAccount?.onPreferenceClickListener = getClickListenerForCreateAccount()
         preferencePairSignIn?.onPreferenceClickListener = getClickListenerForPairing()
         preferencePairSignIn?.isVisible = context?.hasCamera() ?: true
+
+        // if FxA pairing has been turned off on the server
+        if (context?.isInExperiment(Experiments.asFeatureFxAPairingDisabled)!!) {
+            preferencePairSignIn?.isVisible = false
+        }
     }
 
     private fun getClickListenerForSignIn(): Preference.OnPreferenceClickListener {

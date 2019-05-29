@@ -115,7 +115,7 @@ open class HomeActivity : AppCompatActivity() {
             components.backgroundServices.accountManager.initAsync().await()
             // If we're authenticated, kick-off a sync and a device state refresh.
             components.backgroundServices.accountManager.authenticatedAccount()?.let {
-                components.backgroundServices.syncManager.syncNow(startup = true)
+                components.backgroundServices.syncManager?.syncNow(startup = true)
                 it.deviceConstellation().refreshDeviceStateAsync().await()
             }
         }
