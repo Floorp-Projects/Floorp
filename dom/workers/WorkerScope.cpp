@@ -507,7 +507,11 @@ WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(
 }
 
 void WorkerGlobalScope::FirstPartyStorageAccessGranted() {
+  // Reset the IndexedDB factory.
   mIndexedDB = nullptr;
+
+  // Reset DOM Cache
+  mCacheStorage = nullptr;
 }
 
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(
