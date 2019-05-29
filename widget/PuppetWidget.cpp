@@ -789,6 +789,10 @@ nsresult PuppetWidget::NotifyIMEOfFocusChange(
           mBrowserChild->TabGroup()->EventTargetFor(TaskCategory::UI), __func__,
           [self](IMENotificationRequests&& aRequests) {
             self->mIMENotificationRequestsOfParent = aRequests;
+            if (TextEventDispatcher* dispatcher =
+                    self->GetTextEventDispatcher()) {
+              dispatcher->OnWidgetChangeIMENotificationRequests(self);
+            }
           },
           [self](mozilla::ipc::ResponseRejectReason&& aReason) {
             NS_WARNING("SendNotifyIMEFocus got rejected.");
