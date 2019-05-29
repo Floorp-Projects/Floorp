@@ -130,6 +130,9 @@ async function continueFileHandler(leafName) {
     interval = 200;
     retries = 600;
     continueFile = getGREBinDir();
+    if (AppConstants.platform == "macosx") {
+      continueFile = continueFile.parent.parent;
+    }
     continueFile.append(leafName);
   } else {
     continueFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
