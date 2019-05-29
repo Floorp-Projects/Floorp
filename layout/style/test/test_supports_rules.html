@@ -44,18 +44,18 @@ function runTest() {
 
   var cs1 = getComputedStyle(document.getElementById("display1"), "");
   var cs2 = getComputedStyle(document.getElementById("display2"), "");
-  function check_balanced_condition(condition, expected_match) {
+  function check_balanced_condition(condition_inner, expected_match) {
     style.textContent = "#display1, #display2 { text-decoration: overline }\n" +
-                        "@supports " + condition + "{\n" +
+                        "@supports " + condition_inner + "{\n" +
                         "  #display1 { text-decoration: line-through }\n" +
                         "}\n" +
                         "#display2 { text-decoration: underline }\n";
     is(cs1.textDecoration,
        expected_match ? "line-through" : "overline",
-       "@supports condition \"" + condition + "\" should " +
+       "@supports condition \"" + condition_inner + "\" should " +
        (expected_match ? "" : "NOT ") + "match");
     is(cs2.textDecoration, "underline",
-       "@supports condition \"" + condition + "\" should be balanced");
+       "@supports condition \"" + condition_inner + "\" should be balanced");
   }
 
   check_balanced_condition("not (color: green)", false);

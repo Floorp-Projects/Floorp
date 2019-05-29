@@ -114,17 +114,17 @@ function checkClipRegionWithDoc(doc, offsetX, offsetY, id, rects, checkBounds) {
       "': expected " + dumpRegion(rects) + ", got " + dumpRegion(clipRects));
 }
 
-checkClipRegion = function checkClipRegion(id, rects) {
+checkClipRegion = function(id, rects) {
   checkClipRegionWithDoc(document, 0, 0, id, rects, true);
 }
 
-checkClipRegionForFrame = function checkClipRegionForFrame(fid, id, rects) {
+checkClipRegionForFrame = function(fid, id, rects) {
   var f = document.getElementById(fid);
   var bounds = f.getBoundingClientRect();
   checkClipRegionWithDoc(f.contentDocument, bounds.left, bounds.top, id, rects, true);
 }
 
-checkClipRegionNoBounds = function checkClipRegionNoBounds(id, rects) {
+checkClipRegionNoBounds = function(id, rects) {
   checkClipRegionWithDoc(document, 0, 0, id, rects, false);
 }
 

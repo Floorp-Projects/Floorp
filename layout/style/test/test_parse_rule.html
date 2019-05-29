@@ -238,11 +238,11 @@ var doTests = function() {
   }
   if (curSubTest == 0) {
     styleElement.textContent = "";
-    var base = document.defaultView.getComputedStyle(divElement, testset[curTest].pseudo)[testset[curTest].prop];
+    let computedBase = document.defaultView.getComputedStyle(divElement, testset[curTest].pseudo)[testset[curTest].prop];
     styleElement.textContent = testset[curTest].base;
     canonical = document.defaultView.getComputedStyle(divElement, testset[curTest].pseudo)[testset[curTest].prop];
     styleElement.textContent = "";
-    isnot(base, canonical, "Sanity check for rule: " + testset[curTest].base);
+    isnot(computedBase, canonical, "Sanity check for rule: " + testset[curTest].base);
   }
   frame.contentDocument.open();
   frame.contentDocument.write("<html lang=en><style>" + testset[curTest].tests[curSubTest] + "</style><div id=a class='a b c' title='zxcv weeqweqeweasd&#13;&#10;a'></div>");

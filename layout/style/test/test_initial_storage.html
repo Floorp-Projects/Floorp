@@ -101,11 +101,11 @@ function test_property(property)
         check_final(info.subproperties[idx]);
 
     // can all properties be removed from the style?
-    function test_remove_all_properties(property, value) {
+    function test_remove_all_properties(propName, value) {
       var i, p = [];
       for (i = 0; i < gDeclaration.length; i++) p.push(gDeclaration[i]);
       for (i = 0; i < p.length; i++) gDeclaration.removeProperty(p[i]);
-      var errstr = "when setting property " + property + " to " + value;
+      var errstr = "when setting property " + propName + " to " + value;
       is(gDeclaration.length, 0, "unremovable properties " + errstr);
       is(gDeclaration.cssText, "", "non-empty serialization after removing all properties " + errstr);
     }
