@@ -7825,7 +7825,7 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
   // If this load failed because of a security error, it may be because we
   // are in a captive portal - trigger an async check to make sure.
   int32_t nsprError = -1 * NS_ERROR_GET_CODE(status);
-  if (mozilla::psm::IsNSSErrorCode(nsprError)) {
+  if (mozilla::psm::IsNSSErrorCode(nsprError) && IsHTTPS()) {
     gIOService->RecheckCaptivePortal();
   }
 
