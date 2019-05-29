@@ -286,7 +286,9 @@ bool nsCSSBorderRenderer::AreBorderSideFinalStylesSame(uint8_t aSides) {
   int firstStyle = 0;
   NS_FOR_CSS_SIDES(i) {
     if (firstStyle == i) {
-      if (((1 << i) & aSides) == 0) firstStyle++;
+      if (((1 << i) & aSides) == 0) {
+        firstStyle++;
+      }
       continue;
     }
 
@@ -396,18 +398,20 @@ BorderColorStyle nsCSSBorderRenderer::BorderColorStyleForSolidCorner(
 
     case StyleBorderStyle::Inset:
     case StyleBorderStyle::Groove:
-      if (aCorner == eCornerTopLeft)
+      if (aCorner == eCornerTopLeft) {
         return BorderColorStyleDark;
-      else if (aCorner == eCornerBottomRight)
+      } else if (aCorner == eCornerBottomRight) {
         return BorderColorStyleLight;
+      }
       break;
 
     case StyleBorderStyle::Outset:
     case StyleBorderStyle::Ridge:
-      if (aCorner == eCornerTopLeft)
+      if (aCorner == eCornerTopLeft) {
         return BorderColorStyleLight;
-      else if (aCorner == eCornerBottomRight)
+      } else if (aCorner == eCornerBottomRight) {
         return BorderColorStyleDark;
+      }
       break;
     default:
       return BorderColorStyleNone;
@@ -1236,15 +1240,18 @@ void nsCSSBorderRenderer::DrawBorderSides(int aSides) {
   BorderColorStyle* borderColorStyle = nullptr;
 
   NS_FOR_CSS_SIDES(i) {
-    if ((aSides & (1 << i)) == 0) continue;
+    if ((aSides & (1 << i)) == 0) {
+      continue;
+    }
     borderRenderStyle = mBorderStyles[i];
     borderRenderColor = mBorderColors[i];
     break;
   }
 
   if (borderRenderStyle == StyleBorderStyle::None ||
-      borderRenderStyle == StyleBorderStyle::Hidden)
+      borderRenderStyle == StyleBorderStyle::Hidden) {
     return;
+  }
 
   if (borderRenderStyle == StyleBorderStyle::Dashed ||
       borderRenderStyle == StyleBorderStyle::Dotted) {
@@ -1282,8 +1289,9 @@ void nsCSSBorderRenderer::DrawBorderSides(int aSides) {
   // with a 1px border needs to look like solid, not like 'outset'.
   if (mOneUnitBorder && (borderRenderStyle == StyleBorderStyle::Ridge ||
                          borderRenderStyle == StyleBorderStyle::Groove ||
-                         borderRenderStyle == StyleBorderStyle::Double))
+                         borderRenderStyle == StyleBorderStyle::Double)) {
     borderRenderStyle = StyleBorderStyle::Solid;
+  }
 
   switch (borderRenderStyle) {
     case StyleBorderStyle::Solid:
@@ -1355,10 +1363,11 @@ void nsCSSBorderRenderer::DrawBorderSides(int aSides) {
   // The caller should never give us anything with a mix
   // of TL/BR if the border style would require a
   // TL/BR split.
-  if (aSides & (eSideBitsBottom | eSideBitsRight))
+  if (aSides & (eSideBitsBottom | eSideBitsRight)) {
     borderColorStyle = borderColorStyleBottomRight;
-  else
+  } else {
     borderColorStyle = borderColorStyleTopLeft;
+  }
 
   // Distribute the border across the available space.
   Float borderWidths[3][4];
@@ -1591,7 +1600,9 @@ void nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
       // +---+---+---+---+---+---+---+---+---+---+
 
       // If border is too short, draw solid line.
-      if (aBorderLength < 6.0f * minHalfDash) return;
+      if (aBorderLength < 6.0f * minHalfDash) {
+        return;
+      }
 
       if (count % 4 == 0) {
         count += 2;
@@ -1622,7 +1633,9 @@ void nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
       // +---+---+---+---+---+---+---+---+---+
 
       // If border is too short, draw solid line.
-      if (aBorderLength < 5.0f * minHalfDash) return;
+      if (aBorderLength < 5.0f * minHalfDash) {
+        return;
+      }
 
       if (count % 4 == 0) {
         count += 1;
@@ -1644,7 +1657,9 @@ void nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
       // +---+---+---+---+---+---+---+---+
 
       // If border is too short, draw solid line.
-      if (aBorderLength < 4.0f * minHalfDash) return;
+      if (aBorderLength < 4.0f * minHalfDash) {
+        return;
+      }
 
       if (count % 4 == 1) {
         count += 3;
@@ -3065,7 +3080,9 @@ void nsCSSBorderRenderer::DrawBorders() {
   {
     gfxRect outerRect = ThebesRect(mOuterRect);
     gfxUtils::ConditionRect(outerRect);
-    if (outerRect.IsEmpty()) return;
+    if (outerRect.IsEmpty()) {
+      return;
+    }
     mOuterRect = ToRect(outerRect);
 
     gfxRect innerRect = ThebesRect(mInnerRect);
@@ -3158,7 +3175,9 @@ void nsCSSBorderRenderer::DrawBorders() {
     NS_FOR_CSS_FULL_CORNERS(corner) {
       const mozilla::Side sides[2] = {mozilla::Side(corner), PREV_SIDE(corner)};
 
-      if (!IsZeroSize(mBorderRadii[corner])) continue;
+      if (!IsZeroSize(mBorderRadii[corner])) {
+        continue;
+      }
 
       if (mBorderWidths[sides[0]] == 1.0 && mBorderWidths[sides[1]] == 1.0) {
         if (mOuterRect.Width() > mOuterRect.Height()) {
@@ -3172,7 +3191,9 @@ void nsCSSBorderRenderer::DrawBorders() {
     // First, the corners
     NS_FOR_CSS_FULL_CORNERS(corner) {
       // if there's no corner, don't do all this work for it
-      if (IsZeroSize(mBorderCornerDimensions[corner])) continue;
+      if (IsZeroSize(mBorderCornerDimensions[corner])) {
+        continue;
+      }
 
       const int sides[2] = {corner, PREV_SIDE(corner)};
       int sideBits = (1 << sides[0]) | (1 << sides[1]);
@@ -3263,13 +3284,16 @@ void nsCSSBorderRenderer::DrawBorders() {
     // We're done with the corners, now draw the sides.
     NS_FOR_CSS_SIDES(side) {
       // if we drew it above, skip it
-      if (alreadyDrawnSides & (1 << side)) continue;
+      if (alreadyDrawnSides & (1 << side)) {
+        continue;
+      }
 
       // If there's no border on this side, skip it
       if (mBorderWidths[side] == 0.0 ||
           mBorderStyles[side] == StyleBorderStyle::Hidden ||
-          mBorderStyles[side] == StyleBorderStyle::None)
+          mBorderStyles[side] == StyleBorderStyle::None) {
         continue;
+      }
 
       if (dashedSides & (1 << side)) {
         // Dashed sides will always draw just the part ignoring the
@@ -3460,19 +3484,21 @@ ImgDrawResult nsCSSBorderImageRenderer::DrawBorderImage(
         //     that, the height is not scaled.
         gfxFloat hFactor, vFactor;
 
-        if (0 < mWidths.left && 0 < mSlice.left)
+        if (0 < mWidths.left && 0 < mSlice.left) {
           vFactor = gfxFloat(mWidths.left) / mSlice.left;
-        else if (0 < mWidths.right && 0 < mSlice.right)
+        } else if (0 < mWidths.right && 0 < mSlice.right) {
           vFactor = gfxFloat(mWidths.right) / mSlice.right;
-        else
+        } else {
           vFactor = 1;
+        }
 
-        if (0 < mWidths.top && 0 < mSlice.top)
+        if (0 < mWidths.top && 0 < mSlice.top) {
           hFactor = gfxFloat(mWidths.top) / mSlice.top;
-        else if (0 < mWidths.bottom && 0 < mSlice.bottom)
+        } else if (0 < mWidths.bottom && 0 < mSlice.bottom) {
           hFactor = gfxFloat(mWidths.bottom) / mSlice.bottom;
-        else
+        } else {
           hFactor = 1;
+        }
 
         unitSize.width = sliceWidth[i] * hFactor;
         unitSize.height = sliceHeight[j] * vFactor;
@@ -3483,10 +3509,11 @@ ImgDrawResult nsCSSBorderImageRenderer::DrawBorderImage(
         // Sides are always stretched to the thickness of their border,
         // and stretched proportionately on the other axis.
         gfxFloat factor;
-        if (0 < borderHeight[j] && 0 < sliceHeight[j])
+        if (0 < borderHeight[j] && 0 < sliceHeight[j]) {
           factor = gfxFloat(borderHeight[j]) / sliceHeight[j];
-        else
+        } else {
           factor = 1;
+        }
 
         unitSize.width = sliceWidth[i] * factor;
         unitSize.height = borderHeight[j];
@@ -3495,10 +3522,11 @@ ImgDrawResult nsCSSBorderImageRenderer::DrawBorderImage(
 
       } else if (j == MIDDLE) {  // left, right
         gfxFloat factor;
-        if (0 < borderWidth[i] && 0 < sliceWidth[i])
+        if (0 < borderWidth[i] && 0 < sliceWidth[i]) {
           factor = gfxFloat(borderWidth[i]) / sliceWidth[i];
-        else
+        } else {
           factor = 1;
+        }
 
         unitSize.width = borderWidth[i];
         unitSize.height = sliceHeight[j] * factor;
@@ -3746,8 +3774,12 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
       MOZ_ASSERT(slice.IsPercentage());
       value = slice.AsPercentage()._0 * imgDimension;
     }
-    if (value < 0) value = 0;
-    if (value > imgDimension) value = imgDimension;
+    if (value < 0) {
+      value = 0;
+    }
+    if (value > imgDimension) {
+      value = imgDimension;
+    }
     mSlice.Side(s) = value;
 
     const auto& width = aStyleBorder.mBorderImageWidth.Get(s);

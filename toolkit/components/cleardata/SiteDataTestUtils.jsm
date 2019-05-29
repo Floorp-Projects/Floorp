@@ -83,7 +83,7 @@ var SiteDataTestUtils = {
     let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
     Services.cookies.add(principal.URI.host, principal.URI.pathQueryRef, name, value,
       false, false, false, Date.now() + 24000 * 60 * 60, {},
-      Ci.nsICookie2.SAMESITE_UNSET);
+      Ci.nsICookie2.SAMESITE_NONE);
   },
 
   /**

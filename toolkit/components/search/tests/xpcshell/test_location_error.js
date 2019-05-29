@@ -17,11 +17,8 @@ add_task(async function test_location_error() {
   } catch (ex) {}
   // should have an error recorded.
   checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.ERROR);
-  // but false values for timeout and forced-sync-init.
-  for (let hid of ["SEARCH_SERVICE_COUNTRY_TIMEOUT",
-                   "SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT"]) {
-    let histogram = Services.telemetry.getHistogramById(hid);
-    let snapshot = histogram.snapshot();
-    deepEqual(snapshot.values, {0: 1, 1: 0}); // boolean probe so 3 buckets, expect 1 result for |0|.
-  }
+  // but false values for timeout
+  let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT");
+  let snapshot = histogram.snapshot();
+  deepEqual(snapshot.values, {0: 1, 1: 0}); // boolean probe so 3 buckets, expect 1 result for |0|.
 });

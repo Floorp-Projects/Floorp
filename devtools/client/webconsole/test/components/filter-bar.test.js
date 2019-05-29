@@ -58,7 +58,7 @@ describe("FilterBar component:", () => {
 
     // Text filter input
     const textFilter = textInput.children().eq(0);
-    expect(textFilter.attr("class")).toBe("devtools-searchinput");
+    expect(textFilter.attr("class")).toBe("devtools-filterinput");
     expect(textFilter.attr("placeholder")).toBe("Filter output");
     expect(textFilter.attr("type")).toBe("search");
     expect(textFilter.attr("value")).toBe("");
@@ -251,7 +251,7 @@ describe("FilterBar component:", () => {
     const store = setupStore();
 
     const wrapper = mount(Provider({store}, getFilterBar()));
-    const input = wrapper.find(".devtools-searchinput");
+    const input = wrapper.find(".devtools-filterinput");
     input.simulate("change", { target: { value: "a" } });
     expect(store.getState().filters.text).toBe("a");
   });
