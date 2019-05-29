@@ -47,7 +47,7 @@ struct ExprLoc {
 };
 
 typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>
-    StepModeCounters;
+    StepperCounters;
 typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>,
                 SystemAllocPolicy>
     WasmBreakpointSiteMap;
@@ -63,7 +63,7 @@ class DebugState {
   bool enterFrameTrapsEnabled_;
   uint32_t enterAndLeaveFrameTrapsCounter_;
   WasmBreakpointSiteMap breakpointSites_;
-  StepModeCounters stepModeCounters_;
+  StepperCounters stepperCounters_;
 
   void toggleDebugTrap(uint32_t offset, bool enabled);
 
@@ -100,8 +100,8 @@ class DebugState {
   // the granularity of individual functions.
 
   bool stepModeEnabled(uint32_t funcIndex) const;
-  bool incrementStepModeCount(JSContext* cx, uint32_t funcIndex);
-  bool decrementStepModeCount(FreeOp* fop, uint32_t funcIndex);
+  bool incrementStepperCount(JSContext* cx, uint32_t funcIndex);
+  bool decrementStepperCount(FreeOp* fop, uint32_t funcIndex);
 
   // Stack inspection helpers.
 
