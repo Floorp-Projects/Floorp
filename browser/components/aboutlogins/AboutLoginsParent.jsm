@@ -23,16 +23,16 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 
-const PRIVILEGED_PROCESS_PREF =
+const PRIVILEGEDABOUT_PROCESS_PREF =
   "browser.tabs.remote.separatePrivilegedContentProcess";
-const PRIVILEGED_PROCESS_ENABLED =
-  Services.prefs.getBoolPref(PRIVILEGED_PROCESS_PREF, false);
+const PRIVILEGEDABOUT_PROCESS_ENABLED =
+  Services.prefs.getBoolPref(PRIVILEGEDABOUT_PROCESS_PREF, false);
 
 // When the privileged content process is enabled, we expect about:logins
 // to load in it. Otherwise, it's in a normal web content process.
 const EXPECTED_ABOUTLOGINS_REMOTE_TYPE =
-  PRIVILEGED_PROCESS_ENABLED ? E10SUtils.PRIVILEGED_REMOTE_TYPE
-                             : E10SUtils.DEFAULT_REMOTE_TYPE;
+  PRIVILEGEDABOUT_PROCESS_ENABLED ? E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE
+                                  : E10SUtils.DEFAULT_REMOTE_TYPE;
 
 const isValidLogin = login => {
   return !(login.hostname || "").startsWith("chrome://");

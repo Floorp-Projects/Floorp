@@ -1,6 +1,6 @@
 const CHROME_PROCESS = E10SUtils.NOT_REMOTE;
 const WEB_CONTENT_PROCESS = E10SUtils.WEB_REMOTE_TYPE;
-const PRIVILEGED_CONTENT_PROCESS = E10SUtils.PRIVILEGED_REMOTE_TYPE;
+const PRIVILEGED_CONTENT_PROCESS = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
 const EXTENSION_PROCESS = E10SUtils.EXTENSION_REMOTE_TYPE;
 
 const CHROME = {
@@ -22,7 +22,7 @@ const CANPRIVILEGEDREMOTE = {
   id: "a04ffafe-6c63-4266-acae-0f4b093165aa",
   path: "test-canprivilegedremote",
   flags: Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD |
-         Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGED_CHILD,
+         Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS,
 };
 const MUSTEXTENSION = {
   id: "f7a1798f-965b-49e9-be83-ec6ee4d7d675",
@@ -152,8 +152,8 @@ add_task(async function test_privileged_remote_true() {
     ],
   });
 
-  // This shouldn't be taken literally. We will always use the privileged
-  // content type if the URI_CAN_LOAD_IN_PRIVILEGED_CHILD flag is enabled and
+  // This shouldn't be taken literally. We will always use the privleged about
+  // content type if the URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS flag is enabled and
   // the pref is turned on.
   test_url("about:" + CANPRIVILEGEDREMOTE.path, false, false, true, false);
 });
@@ -165,8 +165,8 @@ add_task(async function test_privileged_remote_false() {
     ],
   });
 
-  // This shouldn't be taken literally. We will always use the privileged
-  // content type if the URI_CAN_LOAD_IN_PRIVILEGED_CHILD flag is enabled and
+  // This shouldn't be taken literally. We will always use the privleged about
+  // content type if the URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS flag is enabled and
   // the pref is turned on.
   test_url("about:" + CANPRIVILEGEDREMOTE.path, false, true, false, false);
 });

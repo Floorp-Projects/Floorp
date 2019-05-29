@@ -498,7 +498,9 @@ pref("browser.tabs.showAudioPlayingIcon", true);
 // This should match Chromium's audio indicator delay.
 pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 
-// Pref to control whether we use separate privileged content processes.
+// Pref to control whether we use a separate privileged content process
+// for about: pages. This pref name did not age well: we will have multiple
+// types of privileged content processes, each with different privileges.
 #if defined(NIGHTLY_BUILD) && !defined(MOZ_ASAN)
 pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 #endif
