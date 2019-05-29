@@ -782,6 +782,11 @@ Search.prototype = {
           this.setBehavior("restrict");
         }
         this.setBehavior(behavior);
+        // We return tags only for bookmarks, thus when tags are enforced, we
+        // must also set the bookmark behavior.
+        if (behavior == "tag") {
+          this.setBehavior("bookmark");
+        }
       }
     }
     // Set the right JavaScript behavior based on our preference.  Note that the

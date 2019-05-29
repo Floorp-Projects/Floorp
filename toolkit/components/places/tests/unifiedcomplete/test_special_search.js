@@ -74,10 +74,10 @@ add_task(async function test_special_searches() {
   info("Tag restrict");
   await check_autocomplete({
     search: UrlbarTokenizer.RESTRICT.TAG,
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
+    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info("Special as first word");
@@ -151,10 +151,10 @@ add_task(async function test_special_searches() {
   info(`foo ${UrlbarTokenizer.RESTRICT.TAG} -> is tag`);
   await check_autocomplete({
     search: `foo ${UrlbarTokenizer.RESTRICT.TAG}`,
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
+    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   // Test various pairs of special searches
@@ -199,17 +199,17 @@ add_task(async function test_special_searches() {
   info(`foo ${UrlbarTokenizer.RESTRICT.TITLE} ${UrlbarTokenizer.RESTRICT.TAG} -> in title, is tag`);
   await check_autocomplete({
     search: `foo ${UrlbarTokenizer.RESTRICT.TITLE} ${UrlbarTokenizer.RESTRICT.TAG}`,
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
+    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   info(`foo ${UrlbarTokenizer.RESTRICT.URL} ${UrlbarTokenizer.RESTRICT.TAG} -> in url, is tag`);
   await check_autocomplete({
     search: `foo ${UrlbarTokenizer.RESTRICT.URL} ${UrlbarTokenizer.RESTRICT.TAG}`,
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ],
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ],
   });
 
   // Test conflicting restrictions.
@@ -241,7 +241,7 @@ add_task(async function test_special_searches() {
   await check_autocomplete({
     search: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK} ${UrlbarTokenizer.RESTRICT.TAG}`,
     matches: [
-      { uri: "http://tag.conflict.com/", title: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK}`, tags: [ "one" ], style: [ "tag" ] },
+      { uri: "http://tag.conflict.com/", title: `conflict ${UrlbarTokenizer.RESTRICT.BOOKMARK}`, tags: [ "one" ], style: [ "bookmark-tag" ] },
     ],
   });
 

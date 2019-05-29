@@ -78,6 +78,16 @@ add_task(async function() {
     expected: {
       typeImageVisible: false,
     },
+  }, {
+      description: "Test partial tag and casing",
+      tagName: "tagtest6",
+      prefs: {
+        "suggest.bookmark": true,
+      },
+      input: "TeSt6",
+      expected: {
+        typeImageVisible: true,
+      },
   }];
 
   for (let testcase of testcases) {
