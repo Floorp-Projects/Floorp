@@ -141,6 +141,7 @@ EXPORTS.mozilla.dom += [
     'AnonymousContent.h',
     'Attr.h',
     'BarProps.h',
+    'BindContext.h',
     'BodyUtil.h',
     'BorrowedAttrInfo.h',
     'CharacterData.h',

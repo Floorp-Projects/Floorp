@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "ChildIterator.h"
@@ -131,9 +132,10 @@ nsresult ShadowRoot::Bind() {
     OwnerDoc()->AddComposedDocShadowRoot(*this);
   }
 
+  BindContext context(*this);
   for (nsIContent* child = GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    nsresult rv = child->BindToTree(nullptr, this, Host());
+    nsresult rv = child->BindToTree(context, *this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

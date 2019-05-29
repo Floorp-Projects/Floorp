@@ -35,6 +35,7 @@ class imgRequestProxy;
 namespace mozilla {
 class AsyncEventDispatcher;
 namespace dom {
+struct BindContext;
 class Document;
 class Element;
 }  // namespace dom
@@ -216,8 +217,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   virtual mozilla::net::ReferrerPolicy GetImageReferrerPolicy();
 
   // Subclasses are *required* to call BindToTree/UnbindFromTree.
-  void BindToTree(mozilla::dom::Document* aDocument, nsIContent* aParent,
-                  nsIContent* aBindingParent);
+  void BindToTree(mozilla::dom::BindContext&, nsINode& aParent);
   void UnbindFromTree(bool aNullParent);
 
   nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);

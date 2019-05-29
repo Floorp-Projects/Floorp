@@ -378,14 +378,12 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
   doc->Dispatch(TaskCategory::Other, runnable.forget());
 }
 
-nsresult HTMLTrackElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLTrackElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   LOG("Track Element bound to tree.");
-  auto* parent = HTMLMediaElement::FromNodeOrNull(aParent);
+  auto* parent = HTMLMediaElement::FromNode(aParent);
   if (!parent) {
     return NS_OK;
   }

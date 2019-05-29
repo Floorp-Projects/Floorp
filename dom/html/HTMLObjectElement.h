@@ -52,8 +52,7 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,

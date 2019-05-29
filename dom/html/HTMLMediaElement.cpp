@@ -4066,10 +4066,8 @@ void HTMLMediaElement::AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 }
 
-nsresult HTMLMediaElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLMediaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
 
   if (IsInComposedDoc()) {
     // Construct Shadow Root so web content can be hidden in the DOM.
@@ -4077,9 +4075,11 @@ nsresult HTMLMediaElement::BindToTree(Document* aDocument, nsIContent* aParent,
     NotifyUAWidgetSetupOrChange();
   }
 
+  // FIXME(emilio, bug 1555946): mUnboundFromTree doesn't make any sense, should
+  // just use IsInComposedDoc() in the relevant places or something.
   mUnboundFromTree = false;
 
-  if (aDocument) {
+  if (IsInUncomposedDoc()) {
     // The preload action depends on the value of the autoplay attribute.
     // It's value may have changed, so update it.
     UpdatePreloadAction();
@@ -5679,8 +5679,7 @@ bool HTMLMediaElement::IsActive() const {
 }
 
 bool HTMLMediaElement::IsHidden() const {
-  Document* ownerDoc;
-  return mUnboundFromTree || !(ownerDoc = OwnerDoc()) || ownerDoc->Hidden();
+  return mUnboundFromTree || OwnerDoc()->Hidden();
 }
 
 VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer() {
