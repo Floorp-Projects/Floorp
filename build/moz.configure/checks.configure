@@ -125,11 +125,10 @@ def check_prog(var, progs, what=None, input=None, allow_missing=False,
     # Trick to make a @depends function out of an immediate value.
     progs = dependable(progs)
     paths = dependable(paths)
-    allow_missing = dependable(allow_missing)
 
-    @depends_if(input, progs, paths, allow_missing, when=when)
+    @depends_if(input, progs, paths, when=when)
     @checking('for %s' % what, lambda x: quote(x) if x else 'not found')
-    def check(value, progs, paths, allow_missing):
+    def check(value, progs, paths):
         if progs is None:
             progs = ()
 
