@@ -744,19 +744,6 @@ nsresult ProcessUpdates(nsIFile* greDir, nsIFile* appDir, nsIFile* updRootDir,
   nsCOMPtr<nsIFile> statusFile;
   UpdateStatus status = GetUpdateStatus(updatesDir, statusFile);
   switch (status) {
-    case ePendingElevate: {
-      if (NS_IsMainThread()) {
-        // Only do this if we're called from the main thread.
-        nsCOMPtr<nsIUpdatePrompt> up =
-            do_GetService("@mozilla.org/updates/update-prompt;1");
-        if (up) {
-          up->ShowUpdateElevationRequired();
-        }
-        break;
-      }
-      // Intentional fallthrough to ePendingUpdate and ePendingService.
-      MOZ_FALLTHROUGH;
-    }
     case ePendingUpdate:
     case ePendingService: {
       ApplyUpdate(greDir, updatesDir, appDir, argc, argv, restart, false, pid);
@@ -768,6 +755,9 @@ nsresult ProcessUpdates(nsIFile* greDir, nsIFile* appDir, nsIFile* updRootDir,
       // application is used.
       ApplyUpdate(greDir, updatesDir, appDir, argc, argv, restart, true, pid);
       break;
+    case ePendingElevate:
+      // No action should be performed since the user hasn't opted into
+      // elevating for the update so continue application startup.
     case eNoUpdateAction:
       // We don't need to do any special processing here, we'll just continue to
       // startup the application.
