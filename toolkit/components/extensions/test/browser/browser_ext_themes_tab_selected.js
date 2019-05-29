@@ -22,10 +22,10 @@ add_task(async function test_tab_background_color_property() {
   info("Checking selected tab color");
 
   let openTab = document.querySelector(".tabbrowser-tab[visuallyselected=true]");
-  let openTabBackground = openTab.querySelector(".tab-background");
+  let openTabBackground = document.getAnonymousElementByAttribute(openTab, "class", "tab-background");
 
   let selectedTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
-  let selectedTabBackground = selectedTab.querySelector(".tab-background");
+  let selectedTabBackground = document.getAnonymousElementByAttribute(selectedTab, "class", "tab-background");
 
   let openTabGradient = window.getComputedStyle(openTabBackground).getPropertyValue("background-image");
   let selectedTabGradient = window.getComputedStyle(selectedTabBackground).getPropertyValue("background-image");

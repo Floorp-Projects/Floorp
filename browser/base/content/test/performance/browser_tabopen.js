@@ -31,12 +31,11 @@ add_task(async function() {
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
-  let firstTabLabelRect = gBrowser.selectedTab.textLabel.getBoundingClientRect();
+  let firstTabLabelRect =
+    document.getAnonymousElementByAttribute(gBrowser.selectedTab, "anonid", "tab-label")
+            .getBoundingClientRect();
   let textBoxRect = document.getAnonymousElementByAttribute(gURLBar.textbox,
     "anonid", "moz-input-box").getBoundingClientRect();
-  let historyDropmarkerRect = document.getAnonymousElementByAttribute(
-    gURLBar.textbox, "anonid", "historydropmarker").getBoundingClientRect();
-
   let inRange = (val, min, max) => min <= val && val <= max;
 
   // Add a reflow observer and open a new tab.
@@ -93,12 +92,6 @@ add_task(async function() {
                            r.x2 <= firstTabLabelRect.right &&
                            r.y1 >= firstTabLabelRect.y &&
                            r.y2 <= firstTabLabelRect.bottom,
-          },
-          {name: "bug 1547341 - addressbar history dropmarker is shown",
-           condition: r => r.x1 >= historyDropmarkerRect.x &&
-                           r.x2 <= historyDropmarkerRect.right &&
-                           r.y1 >= historyDropmarkerRect.y &&
-                           r.y2 <= historyDropmarkerRect.bottom,
           },
         ],
       },
