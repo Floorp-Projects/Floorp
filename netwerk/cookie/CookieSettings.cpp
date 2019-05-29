@@ -125,27 +125,19 @@ CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
   nsresult rv;
 
   // Let's see if we know this permission.
-  if (!mCookiePermissions.IsEmpty()) {
-    nsCOMPtr<nsIPrincipal> principal =
-        nsPermission::ClonePrincipalForPermission(aPrincipal);
-    if (NS_WARN_IF(!principal)) {
-      return NS_ERROR_FAILURE;
+  for (const RefPtr<nsIPermission>& permission : mCookiePermissions) {
+    bool match = false;
+    rv = permission->Matches(aPrincipal, false, &match);
+    if (NS_WARN_IF(NS_FAILED(rv)) || !match) {
+      continue;
     }
 
-    for (const RefPtr<nsIPermission>& permission : mCookiePermissions) {
-      bool match = false;
-      rv = permission->MatchesPrincipalForPermission(aPrincipal, false, &match);
-      if (NS_WARN_IF(NS_FAILED(rv)) || !match) {
-        continue;
-      }
-
-      rv = permission->GetCapability(aCookiePermission);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      return NS_OK;
+    rv = permission->GetCapability(aCookiePermission);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
+
+    return NS_OK;
   }
 
   // Let's ask the permission manager.

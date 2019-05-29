@@ -105,6 +105,10 @@
 #include "mozilla/net/ExtensionProtocolHandler.h"
 #include <limits>
 
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+#  include "nsNewMailnewsURI.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::net;
 using mozilla::dom::BlobURLProtocolHandler;
@@ -1878,6 +1882,10 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
         .SetSpec(newSpec)
         .Finalize(aURI);
   }
+
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+  return NS_NewMailnewsURI(aURI, aSpec, aCharset, aBaseURI, aIOService);
+#endif
 
   // Falls back to external protocol handler.
   return NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(aURI);
