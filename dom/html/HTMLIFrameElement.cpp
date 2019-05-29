@@ -65,10 +65,9 @@ HTMLIFrameElement::~HTMLIFrameElement() {}
 
 NS_IMPL_ELEMENT_CLONE(HTMLIFrameElement)
 
-nsresult HTMLIFrameElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                       nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLFrameElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLIFrameElement::BindToTree(BindContext& aContext,
+                                       nsINode& aParent) {
+  nsresult rv = nsGenericHTMLFrameElement::BindToTree(aContext, aParent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
