@@ -142,7 +142,7 @@ def create_module_tasks(module):
     elif "lintTask" in override:
         gradle_tasks = " ".join([
             gradle_module_task_name(module, gradle_task)
-            for gradle_task in ['assemble', 'test', override["lintTask"]]
+            for gradle_task in ['assemble', 'assembleAndroidTest', 'test', override["lintTask"]]
         ])
         task_definitions.append(
             BUILDER.craft_build_task(
@@ -158,7 +158,7 @@ def create_module_tasks(module):
     else:
         gradle_tasks = " ".join([
             gradle_module_task_name(module, gradle_task)
-            for gradle_task in ['assemble', 'test', 'lintRelease']
+            for gradle_task in ['assemble', 'assembleAndroidTest', 'test', 'lintRelease']
         ])
         task_definitions.append(
             BUILDER.craft_build_task(
