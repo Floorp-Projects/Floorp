@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=507902
 -->
 <head>
   <title>Test for Bug 507902</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -60,7 +60,7 @@ var canvasNames = [ "brokenIconTest",  "brokenIconReference",
                     "loadingIconTest", "loadingIconReference",
                     "loadedTest",      "loadedReference" ];
 var windowElem = document.documentElement;
-for (var i in canvasNames) {
+for (let i in canvasNames) {
   var can = document.createElement("canvas");
   can.setAttribute("width", windowElem.getAttribute("width"));
   can.setAttribute("height", windowElem.getAttribute("height"));
@@ -81,7 +81,7 @@ for (var i in canvasNames) {
   // with the image, but not the bottom and right borders.
 
   if ((i > 1) && (i < 4)) {
-    var ctx = can.getContext("2d");
+    let ctx = can.getContext("2d");
     ctx.beginPath();
     ctx.rect(0,0, 30, 30);
     ctx.clip();
@@ -327,7 +327,7 @@ function resetImage() {
 // debugging.
 //
 function makeCanvasesVisible() {
-  for (var i = 0; i < canvasNames.length - 1; i += 2) {
+  for (let i = 0; i < canvasNames.length - 1; i += 2) {
     var title = document.createElement("h3");
     title.innerHTML = canvasNames[i] + ", " + canvasNames[i+1] + ":";
     document.body.appendChild(title);
@@ -359,7 +359,7 @@ function disableBorderAndPad() {
 
 function drawWindowToCanvas(canvasName) {
   var win = testFrameElem.contentWindow;
-  var ctx = canvases[canvasName].getContext("2d");
+  let ctx = canvases[canvasName].getContext("2d");
   // drawWindow always draws one canvas pixel for each CSS pixel in the source
   // window, so scale the drawing to show the zoom (making each canvas pixel be one
   // device pixel instead)

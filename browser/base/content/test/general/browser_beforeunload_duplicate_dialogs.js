@@ -34,7 +34,7 @@ add_task(async function closeLastTabInWindow() {
   let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
   // close tab:
-  document.getAnonymousElementByAttribute(firstTab, "anonid", "close-button").click();
+  firstTab.closeButton.click();
   await windowClosedPromise;
   ok(!expectingDialog, "There should have been a dialog.");
   ok(newWin.closed, "Window should be closed.");
@@ -63,13 +63,13 @@ add_task(async function closeWindoWithSingleTabTwice() {
   expectingDialog = true;
   wantToClose = false;
   let firstDialogShownPromise = new Promise((resolve, reject) => { resolveDialogPromise = resolve; });
-  document.getAnonymousElementByAttribute(firstTab, "anonid", "close-button").click();
+  firstTab.closeButton.click();
   await firstDialogShownPromise;
   info("Got initial dialog, now trying again");
   expectingDialog = true;
   wantToClose = true;
   resolveDialogPromise = null;
-  document.getAnonymousElementByAttribute(firstTab, "anonid", "close-button").click();
+  firstTab.closeButton.click();
   await windowClosedPromise;
   ok(!expectingDialog, "There should have been a dialog.");
   ok(newWin.closed, "Window should be closed.");

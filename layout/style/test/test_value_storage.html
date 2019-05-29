@@ -130,11 +130,11 @@ function test_property(property)
   var info = gCSSProperties[property];
 
   // can all properties be removed from the style?
-  function test_remove_all_properties(property, value) {
+  function test_remove_all_properties(propName, value) {
     var i, p = [];
     for (i = 0; i < gDeclaration.length; i++) p.push(gDeclaration[i]);
     for (i = 0; i < p.length; i++) gDeclaration.removeProperty(p[i]);
-    var errstr = "when setting property " + property + " to " + value;
+    var errstr = "when setting property " + propName + " to " + value;
     is(gDeclaration.length, 0, "unremovable properties " + errstr);
     is(gDeclaration.cssText, "", "non-empty serialization after removing all properties " + errstr);
   }
@@ -198,13 +198,13 @@ function test_property(property)
     var expected_serialization = "";
     if (step1val != "") {
       if ("alias_for" in info) {
-        let value = info.legacy_mapping && info.legacy_mapping[step1val]
+        let newValue = info.legacy_mapping && info.legacy_mapping[step1val]
           ? info.legacy_mapping[step1val] : step1val;
         // FIXME(emilio): This is a bit unfortunate:
         // https://github.com/w3c/csswg-drafts/issues/3332
         if (info.type == CSS_TYPE_LEGACY_SHORTHAND && value_has_variable_reference)
-          value = "";
-        expected_serialization = info.alias_for + colon + value + ";";
+          newValue = "";
+        expected_serialization = info.alias_for + colon + newValue + ";";
       } else {
         expected_serialization = property + colon + step1val + ";";
       }

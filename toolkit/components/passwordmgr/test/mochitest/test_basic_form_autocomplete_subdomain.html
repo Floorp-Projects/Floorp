@@ -117,13 +117,8 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
 
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  todo_is(pword.value, "dsdp1",
-          `Bug 1166113: The password should match the login that was selected.
-           From bug 499649 when there are two logins with the same case we just
-           blindly select the last one always. We should instead remember which
-           login was selected from the dropdown and use that login's password
-           when possible`);
-  checkLoginForm(uname, "dsdu1", pword, "dsdp1prime");
+  is(pword.value, "dsdp1", "password should match the login that was selected");
+  checkLoginForm(uname, "dsdu1", pword, "dsdp1");
 
   restoreForm();
 
@@ -137,12 +132,7 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
 
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  todo_is(pword.value, "dsdp1",
-          `Bug 1166113: The password should match the login that was selected.
-           From bug 499649 when there are two logins with the same case we just
-           blindly select the last one always. We should instead remember which
-           login was selected from the dropdown and use that login's password
-           when possible`);
+  is(pword.value, "dsdp1prime", "Password should match the login that was selected");
   checkLoginForm(uname, "dsdu1", pword, "dsdp1prime");
 });
 </script>

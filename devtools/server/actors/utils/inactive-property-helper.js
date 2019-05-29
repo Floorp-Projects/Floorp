@@ -143,9 +143,7 @@ class InactivePropertyHelper {
           const isFirstLetter = selectorText && selectorText.includes("::first-letter");
           const isFirstLine = selectorText && selectorText.includes("::first-line");
 
-          const isInlineLevel = this.checkStyle("display", ["inline", "table-cell"]);
-
-          return !isInlineLevel && !isFirstLetter && !isFirstLine;
+          return !this.isInlineLevel() && !isFirstLetter && !isFirstLine;
         },
         fixId: "inactive-css-not-inline-or-tablecell-fix",
         msgId: "inactive-css-not-inline-or-tablecell",
@@ -297,6 +295,24 @@ class InactivePropertyHelper {
    */
   checkStyleForNode(node, propName, values) {
     return values.some(value => this.style[propName] === value);
+  }
+
+  /**
+   *  Check if the current node is an inline-level box.
+   */
+  isInlineLevel() {
+    return this.checkStyle("display", [
+      "inline",
+      "inline-block",
+      "inline-table",
+      "inline-flex",
+      "inline-grid",
+      "table-cell",
+      "table-row",
+      "table-row-group",
+      "table-header-group",
+      "table-footer-group",
+    ]);
   }
 
   /**

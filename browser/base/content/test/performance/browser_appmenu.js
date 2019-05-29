@@ -46,6 +46,7 @@ add_task(async function() {
     "anonid", "moz-input-box").getBoundingClientRect();
   let menuButtonRect =
     document.getElementById("PanelUI-menu-button").getBoundingClientRect();
+  let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
   let frameExpectations = {
     filter: rects => rects.filter(r => !(
       // We expect the menu button to get into the active state.
@@ -59,6 +60,11 @@ add_task(async function() {
        condition: r =>
          r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
          r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom,
+      },
+      {name: "bug 1547341 - a first tab gets drawn early",
+       condition: r =>
+         r.x1 >= firstTabRect.left && r.x2 <= firstTabRect.right &&
+         r.y1 >= firstTabRect.top && r.y2 <= firstTabRect.bottom,
       },
     ],
   };

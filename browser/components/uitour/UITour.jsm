@@ -172,9 +172,7 @@ var UITour = {
     ["selectedTabIcon", {
       query: (aDocument) => {
         let selectedtab = aDocument.defaultView.gBrowser.selectedTab;
-        let element = aDocument.getAnonymousElementByAttribute(selectedtab,
-                                                               "anonid",
-                                                               "tab-icon-image");
+        let element = selectedtab.iconImage;
         if (!element || !UITour.isElementVisible(element)) {
           return null;
         }

@@ -128,7 +128,6 @@ function is_pending(aPromise, aDescription, aTestID) {
 }
 
 function fetchAsArrayBuffer(aURL) {
-  var xhr;
   return new Promise(function(aResolve, aReject) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", aURL);
@@ -1818,10 +1817,9 @@ function runTest() {
     expected.vdocument.push(all[0]);
 
     // Create a FontFace in each window and add it to each document's FontFaceSet.
-    var i = 0;
     var faces = [];
-    sourceWindows.forEach(function({ win, what: whatWin }) {
-      var f = new win.FontFace("test" + ++i, "url(x)");
+    sourceWindows.forEach(function({ win, what: whatWin }, index) {
+      var f = new win.FontFace("test" + index, "url(x)");
       sourceDocuments.forEach(function({ doc, what: whatDoc }) {
         doc.fonts.add(f);
         expected[whatDoc].push(f);
@@ -1830,10 +1828,10 @@ function runTest() {
     });
 
     sourceDocuments.forEach(function({ doc, what }) {
-      var all = Array.from(doc.fonts);
-      is(expected[what].length, all.length, "expected FontFaceSet size (TEST 48) (" + what + ")");
-      for (var i = 0; i < expected[what].length; i++) {
-        is(expected[what][i], all[i], "expected FontFace (" + expected[what][i]._description + ") at index " + i + " (TEST 48) (" + what + ")");
+      let allFonts = Array.from(doc.fonts);
+      is(expected[what].length, allFonts.length, "expected FontFaceSet size (TEST 48) (" + what + ")");
+      for (let i = 0; i < expected[what].length; i++) {
+        is(expected[what][i], allFonts[i], "expected FontFace (" + expected[what][i]._description + ") at index " + i + " (TEST 48) (" + what + ")");
       }
     });
 

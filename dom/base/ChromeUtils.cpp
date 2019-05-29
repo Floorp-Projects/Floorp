@@ -710,8 +710,9 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                 type = mozilla::ProcType::File;
               } else if (processType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
                 type = mozilla::ProcType::Extension;
-              } else if (processType.EqualsLiteral(PRIVILEGED_REMOTE_TYPE)) {
-                type = mozilla::ProcType::Privileged;
+              } else if (processType.EqualsLiteral(
+                             PRIVILEGEDABOUT_REMOTE_TYPE)) {
+                type = mozilla::ProcType::PrivilegedAbout;
               } else if (processType.EqualsLiteral(
                              LARGE_ALLOCATION_REMOTE_TYPE)) {
                 type = mozilla::ProcType::WebLargeAllocation;

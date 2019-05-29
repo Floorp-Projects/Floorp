@@ -134,7 +134,7 @@ add_task(async function open_10_tabs() {
       max: 20,
     },
     "browser.tabs.remote.logSwitchTiming": {
-      max: 25,
+      max: 35,
     },
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.

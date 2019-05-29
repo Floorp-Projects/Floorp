@@ -21,7 +21,7 @@ var iframe = document.getElementById("iframe");
 SimpleTest.waitForExplicitFinish();
 
 for (var prop in gCSSProperties) {
-  var info = gCSSProperties[prop];
+  let info = gCSSProperties[prop];
 
   test_queue.push({ prop: prop, value: "inherit",
                     inherited_value: info.initial_values[0] });
@@ -36,10 +36,10 @@ for (var prop in gCSSProperties) {
   } else {
     test_queue.push({ prop: prop, value: "unset" });
   }
-  for (var idx in info.initial_values) {
+  for (let idx in info.initial_values) {
     test_queue.push({ prop: prop, value: info.initial_values[idx] });
   }
-  for (var idx in info.other_values) {
+  for (let idx in info.other_values) {
     test_queue.push({ prop: prop, value: info.other_values[idx] });
   }
 }
@@ -52,10 +52,10 @@ function doTest()
 {
   var sheet_data = "";
 
-  for (var idx = 0; idx < test_queue.length; ++idx) {
+  for (let idx = 0; idx < test_queue.length; ++idx) {
     var current_item = test_queue[idx];
 
-    var info = gCSSProperties[current_item.prop];
+    let info = gCSSProperties[current_item.prop];
 
     sheet_data += "#parent"+idx+", #test"+idx+" { ";
     for (var prereq in info.prereqs) {
@@ -83,7 +83,7 @@ function doTest()
     "<body>\n";
 
 
-  for (var idx = 0; idx < test_queue.length; ++idx) {
+  for (let idx = 0; idx < test_queue.length; ++idx) {
     var current_item = test_queue[idx];
 
     if ("inherited_value" in current_item) {
@@ -112,7 +112,7 @@ function iframe_loaded(event)
   var ifdoc = wrappedFrame.contentDocument;
   var ifwin = wrappedFrame.contentWindow;
 
-  for (var idx = 0; idx < test_queue.length; ++idx) {
+  for (let idx = 0; idx < test_queue.length; ++idx) {
     var current_item = test_queue[idx];
     var info = gCSSProperties[current_item.prop];
 
@@ -148,7 +148,7 @@ function iframe_loaded(event)
   var ow = ifdoc.body.offsetWidth;
   ifdoc.body.style.display="";
 
-  for (var idx = 0; idx < test_queue.length; ++idx) {
+  for (let idx = 0; idx < test_queue.length; ++idx) {
     var current_item = test_queue[idx];
     var info = gCSSProperties[current_item.prop];
 

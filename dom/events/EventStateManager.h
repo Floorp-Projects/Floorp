@@ -244,6 +244,12 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                      bool aLockCursor);
 
   /**
+   * Returns true if the event is considered as user interaction event. I.e.,
+   * enough obvious input to allow to open popup, etc. Otherwise, returns false.
+   */
+  static bool IsUserInteractionEvent(const WidgetEvent* aEvent);
+
+  /**
    * StartHandlingUserInput() is called when we start to handle a user input.
    * StopHandlingUserInput() is called when we finish handling a user input.
    * If the caller knows which input event caused that, it should set
@@ -1286,24 +1292,13 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
  */
 class MOZ_RAII AutoHandlingUserInputStatePusher final {
  public:
-  AutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
-                                   WidgetEvent* aEvent,
-                                   dom::Document* aDocument);
+  explicit AutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
+                                            WidgetEvent* aEvent = nullptr);
   ~AutoHandlingUserInputStatePusher();
 
  protected:
-  RefPtr<dom::Document> mMouseButtonEventHandlingDocument;
   EventMessage mMessage;
   bool mIsHandlingUserInput;
-
-  bool NeedsToResetFocusManagerMouseButtonHandlingState() const {
-    return mMessage == eMouseDown || mMessage == eMouseUp;
-  }
-
-  bool NeedsToUpdateCurrentMouseBtnState() const {
-    return mMessage == eMouseDown || mMessage == eMouseUp ||
-           mMessage == ePointerDown || mMessage == ePointerUp;
-  }
 };
 
 }  // namespace mozilla

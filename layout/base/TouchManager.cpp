@@ -220,7 +220,7 @@ nsIFrame* TouchManager::SuppressInvalidPointsAndGetTargetedFrame(
 }
 
 bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
-                                  bool& aTouchIsNew, bool& aIsHandlingUserInput,
+                                  bool& aTouchIsNew,
                                   nsCOMPtr<nsIContent>& aCurrentEventContent) {
   MOZ_DIAGNOSTIC_ASSERT(aEvent->IsTrusted());
 
@@ -228,7 +228,6 @@ bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
   //       cases in PresShell::EventHandler::PrepareToDispatchEvent().
   switch (aEvent->mMessage) {
     case eTouchStart: {
-      aIsHandlingUserInput = true;
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       // if there is only one touch in this touchstart event, assume that it is
       // the start of a new touch session and evict any old touches in the
@@ -335,9 +334,6 @@ bool TouchManager::PreHandleEvent(WidgetEvent* aEvent, nsEventStatus* aStatus,
       break;
     }
     case eTouchEnd:
-      aIsHandlingUserInput = true;
-      // Fall through to touchcancel code
-      MOZ_FALLTHROUGH;
     case eTouchCancel: {
       // Remove the changed touches
       // need to make sure we only remove touches that are ending here

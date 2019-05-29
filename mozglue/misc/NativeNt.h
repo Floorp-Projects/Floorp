@@ -320,6 +320,16 @@ class MOZ_RAII PEHeaders final {
     return reinterpret_cast<T>(absAddress);
   }
 
+  Maybe<Span<const uint8_t>> GetBounds() const {
+    if (!mImageLimit) {
+      return Nothing();
+    }
+
+    auto base = reinterpret_cast<const uint8_t*>(mMzHeader);
+    DWORD imageSize = mPeHeader->OptionalHeader.SizeOfImage;
+    return Some(MakeSpan(base, imageSize));
+  }
+
   PIMAGE_IMPORT_DESCRIPTOR GetImportDirectory() {
     return GetImageDirectoryEntry<PIMAGE_IMPORT_DESCRIPTOR>(
         IMAGE_DIRECTORY_ENTRY_IMPORT);

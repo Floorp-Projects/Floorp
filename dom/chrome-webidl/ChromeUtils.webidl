@@ -415,7 +415,7 @@ enum ProcType {
  "web",
  "file",
  "extension",
- "privileged",
+ "privilegedabout",
  "webLargeAllocation",
  "gpu",
  "rdd",

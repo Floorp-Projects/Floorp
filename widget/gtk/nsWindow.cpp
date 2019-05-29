@@ -6866,9 +6866,6 @@ bool nsWindow::WaylandSurfaceNeedsClear() {
   if (mContainer) {
     return moz_container_surface_needs_clear(MOZ_CONTAINER(mContainer));
   }
-
-  NS_WARNING(
-      "nsWindow::WaylandSurfaceNeedsClear(): We don't have any mContainer!");
   return false;
 }
 #endif

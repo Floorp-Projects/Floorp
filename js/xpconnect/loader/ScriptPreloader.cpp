@@ -188,8 +188,8 @@ ProcessType ScriptPreloader::GetChildProcessType(const nsAString& remoteType) {
   if (remoteType.EqualsLiteral(EXTENSION_REMOTE_TYPE)) {
     return ProcessType::Extension;
   }
-  if (remoteType.EqualsLiteral(PRIVILEGED_REMOTE_TYPE)) {
-    return ProcessType::Privileged;
+  if (remoteType.EqualsLiteral(PRIVILEGEDABOUT_REMOTE_TYPE)) {
+    return ProcessType::PrivilegedAbout;
   }
   return ProcessType::Web;
 }
@@ -346,9 +346,9 @@ void ScriptPreloader::FinishContentStartup() {
 
 #ifdef DEBUG
   if (mContentStartupFinishedTopic.Equals(CONTENT_DOCUMENT_LOADED_TOPIC)) {
-    MOZ_ASSERT(sProcessType == ProcessType::Privileged);
+    MOZ_ASSERT(sProcessType == ProcessType::PrivilegedAbout);
   } else {
-    MOZ_ASSERT(sProcessType != ProcessType::Privileged);
+    MOZ_ASSERT(sProcessType != ProcessType::PrivilegedAbout);
   }
 #endif /* DEBUG */
 
@@ -457,7 +457,7 @@ Result<Ok, nsresult> ScriptPreloader::InitCache(
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   MOZ_RELEASE_ASSERT(obs);
 
-  if (sProcessType == ProcessType::Privileged) {
+  if (sProcessType == ProcessType::PrivilegedAbout) {
     // Since we control all of the documents loaded in the privileged
     // content process, we can increase the window of active time for the
     // ScriptPreloader to include the scripts that are loaded until the
