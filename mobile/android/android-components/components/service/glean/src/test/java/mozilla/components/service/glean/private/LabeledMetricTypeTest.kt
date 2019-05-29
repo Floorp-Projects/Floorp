@@ -258,7 +258,7 @@ class LabeledMetricTypeTest {
             4,
             ErrorRecording.testGetNumRecordedErrors(
                 labeledCounterMetric,
-                ErrorRecording.ErrorType.InvalidValue
+                ErrorRecording.ErrorType.InvalidLabel
             )
         )
         assertEquals(

@@ -90,7 +90,7 @@ data class LabeledMetricType<T>(
                 if (label.length > MAX_LABEL_LENGTH) {
                     recordError(
                         this,
-                        ErrorType.InvalidValue,
+                        ErrorType.InvalidLabel,
                         "label length ${label.length} exceeds maximum of $MAX_LABEL_LENGTH",
                         logger
                     )
@@ -101,7 +101,7 @@ data class LabeledMetricType<T>(
                 if (!labelRegex.matches(label)) {
                     recordError(
                         this,
-                        ErrorType.InvalidValue,
+                        ErrorType.InvalidLabel,
                         "label must be snake_case, got '$label'",
                         logger
                     )
