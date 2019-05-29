@@ -72,16 +72,11 @@
           - cs
           - cy
           - da
-          - de
           - dsb
-          - en-CA
-          - en-GB
-          - en-US
           - es-AR
           - es-CL
           - es-ES
           - es-MX
-          - fr
           - fy-NL
           - gn
           - hsb
@@ -125,16 +120,11 @@
           - cs
           - cy
           - da
-          - de
           - dsb
-          - en-CA
-          - en-GB
-          - en-US
           - es-AR
           - es-CL
           - es-ES
           - es-MX
-          - fr
           - fy-NL
           - gn
           - hsb
@@ -161,3 +151,37 @@
           - vi
           - zh-CN
           - zh-TW
+- type: show-url
+  # yamllint disable-line rule:line-length
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version.major_number}.0beta/whatsnew/?oldversion=%OLD_VERSION%"
+  conditions:
+      blob-types: [wnp]
+      release-types: [beta]
+      products: [firefox]
+      update-channel: beta
+      # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
+      # This is done by taskgraph.
+      build-ids: ["<{build-id}"]
+      locales:
+          - de
+          - en-CA
+          - en-GB
+          - en-US
+          - fr
+- type: show-url
+  # yamllint disable-line rule:line-length
+  url: "https://www.mozilla.org/%LOCALE%/{product}/{version.major_number}.0a2/whatsnew/?oldversion=%OLD_VERSION%"
+  conditions:
+      blob-types: [wnp]
+      release-types: [beta]
+      products: [firefox]
+      update-channel: aurora
+      # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
+      # This is done by taskgraph.
+      build-ids: ["<{build-id}"]
+      locales:
+          - de
+          - en-CA
+          - en-GB
+          - en-US
+          - fr
