@@ -191,8 +191,14 @@ function makeObserver(aObserveTopic, aObserveFunc) {
   return removeMe;
 }
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess");
+});
+
+
 function test() {
   waitForExplicitFinish();
+  Services.prefs.setBoolPref("browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
 
   (async function() {
     for (let testCase of gTests) {
