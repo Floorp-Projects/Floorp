@@ -1145,6 +1145,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
 #  endif
     }
 #  ifdef XP_WIN
+    a11y::WrapperFor(doc)->SetID(aMsaaID);
     if (a11y::nsWinUtils::IsWindowEmulationStarted()) {
       doc->SetEmulatedWindowHandle(embedderDoc->GetEmulatedWindowHandle());
     }
