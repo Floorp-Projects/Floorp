@@ -43,7 +43,7 @@ void GamepadEventChannelChild::AddPromise(const uint32_t& aID,
   mPromiseList.Put(aID, aPromise);
 }
 
-mozilla::ipc::IPCResult GamepadEventChannelChild::RecvReplyGamepadPromise(
+mozilla::ipc::IPCResult GamepadEventChannelChild::RecvReplyGamepadVibrateHaptic(
     const uint32_t& aPromiseID) {
   RefPtr<dom::Promise> p;
   if (!mPromiseList.Get(aPromiseID, getter_AddRefs(p))) {
