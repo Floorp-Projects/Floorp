@@ -43,9 +43,6 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.share.ShareTab
-import java.net.MalformedURLException
-import java.net.URL
-import kotlin.coroutines.CoroutineContext
 import java.util.concurrent.TimeUnit
 
 @SuppressWarnings("TooManyFunctions")
@@ -58,58 +55,23 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_history, container, false)
-        historyComponent = HistoryComponent(
-            view.history_layout,
-            ActionBusFactory.get(this),
-            FenixViewModelProvider.create(
-                this,
-                HistoryViewModel::class.java,
-                HistoryViewModel.Companion::create
+    ): View? = inflater
+        .inflate(R.layout.fragment_history, container, false).also { view ->
+            historyComponent = HistoryComponent(
+                view.history_layout,
+                ActionBusFactory.get(this),
+                FenixViewModelProvider.create(
+                    this,
+                    HistoryViewModel::class.java,
+                    HistoryViewModel.Companion::create
+                )
             )
-        )
-        return view
-    }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setHasOptionsMenu(true)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.library_history)
-        (activity as AppCompatActivity).supportActionBar?.show()
-    }
-
-    private fun openItem(item: HistoryItem) {
-        (activity as HomeActivity).openToBrowserAndLoad(
-            searchTermOrURL = item.url,
-            newTab = false,
-            from = BrowserDirection.FromHistory)
-    }
-
-    override fun onDestroy() {
-        coroutineContext.cancel()
-        super.onDestroy()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        when (val mode = (historyComponent.uiView as HistoryUIView).mode) {
-            HistoryState.Mode.Normal -> inflater.inflate(R.menu.library_menu, menu)
-            is HistoryState.Mode.Editing -> {
-                inflater.inflate(R.menu.history_select_multi, menu)
-                menu.findItem(R.id.share_history_multi_select)?.run {
-                    isVisible = mode.selectedItems.isNotEmpty()
-                    icon.colorFilter = PorterDuffColorFilter(
-                        ContextCompat.getColor(context!!, R.color.white_color),
-                        PorterDuff.Mode.SRC_IN
-                    )
-                }
-            }
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -118,117 +80,173 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
         launch { reloadData() }
     }
 
-    // This method triggers the complexity warning. However it's actually not that hard to understand.
-    @SuppressWarnings("ComplexMethod")
     override fun onStart() {
         super.onStart()
         getAutoDisposeObservable<HistoryAction>()
-            .subscribe {
-                when (it) {
-                    is HistoryAction.Open -> openItem(it.item)
-                    is HistoryAction.EnterEditMode -> getManagedEmitter<HistoryChange>()
-                        .onNext(HistoryChange.EnterEditMode(it.item))
-                    is HistoryAction.AddItemForRemoval -> getManagedEmitter<HistoryChange>()
-                        .onNext(HistoryChange.AddItemForRemoval(it.item))
-                    is HistoryAction.RemoveItemForRemoval -> getManagedEmitter<HistoryChange>()
-                        .onNext(HistoryChange.RemoveItemForRemoval(it.item))
-                    is HistoryAction.BackPressed -> getManagedEmitter<HistoryChange>()
-                        .onNext(HistoryChange.ExitEditMode)
-                    is HistoryAction.Delete.All -> {
-                        activity?.let { activity ->
-                            AlertDialog.Builder(
-                                ContextThemeWrapper(
-                                    activity,
-                                    R.style.DeleteDialogStyle
-                                )
-                            ).apply {
-                                setMessage(R.string.history_delete_all_dialog)
-                                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
-                                    dialog.cancel()
-                                }
-                                setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
-                                    launch {
-                                        requireComponents.core.historyStorage.deleteEverything()
-                                        reloadData()
-                                    }
-                                    dialog.dismiss()
-                                }
-                                create()
-                            }.show()
-                        }
-                    }
-                    is HistoryAction.Delete.One -> launch {
-                        requireComponents.core.historyStorage.deleteVisit(it.item.url, it.item.visitedAt)
-                        reloadData()
-                    }
-                    is HistoryAction.Delete.Some -> launch {
-                        val storage = requireComponents.core.historyStorage
-                        for (item in it.items) {
-                            storage.deleteVisit(item.url, item.visitedAt)
-                        }
-                        reloadData()
-                    }
-                    is HistoryAction.SwitchMode -> activity?.invalidateOptionsMenu()
-                }
-            }
+            .subscribe(this::handleNewHistoryAction)
     }
 
-    @Suppress("ComplexMethod")
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.share_history_multi_select -> {
-                val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
-                when {
-                    selectedHistory.size == 1 -> share(selectedHistory.first().url)
-                    selectedHistory.size > 1 -> {
-                        val shareTabs = selectedHistory.map { ShareTab(it.url, it.title) }
-                        share(tabs = shareTabs)
-                    }
-                }
-                true
-            }
-            R.id.libraryClose -> {
-                Navigation.findNavController(requireActivity(), R.id.container)
-                    .popBackStack(R.id.libraryFragment, true)
-                true
-            }
-            R.id.delete_history_multi_select -> {
-                val components = context?.applicationContext?.components!!
-                val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
-
-                GlobalScope.launch(Main) {
-                    deleteSelectedHistory(selectedHistory, components)
-                    reloadData()
-                }
-                true
-            }
-            R.id.open_history_in_new_tabs_multi_select -> {
-                val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
-                selectedHistory.forEach {
-                    requireComponents.useCases.tabsUseCases.addTab.invoke(it.url)
-                }
-
-                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
-                (activity as HomeActivity).supportActionBar?.hide()
-                navigation.navigate(HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
-                true
-            }
-            R.id.open_history_in_private_tabs_multi_select -> {
-                val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
-                selectedHistory.forEach {
-                    requireComponents.useCases.tabsUseCases.addPrivateTab.invoke(it.url)
-                }
-
-                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
-                (activity as HomeActivity).supportActionBar?.hide()
-                navigation.navigate(HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+    override fun onResume() {
+        super.onResume()
+        (activity as AppCompatActivity).apply {
+            title = getString(R.string.library_history)
+            supportActionBar?.show()
         }
     }
 
+    override fun onDestroy() {
+        coroutineContext.cancel()
+        super.onDestroy()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        val mode = (historyComponent.uiView as HistoryUIView).mode
+        when (mode) {
+            HistoryState.Mode.Normal ->
+                R.menu.library_menu
+            is HistoryState.Mode.Editing ->
+                R.menu.history_select_multi
+        }.let { inflater.inflate(it, menu) }
+
+        if (mode is HistoryState.Mode.Editing) {
+            menu.findItem(R.id.share_history_multi_select)?.run {
+                isVisible = mode.selectedItems.isNotEmpty()
+                icon.colorFilter = PorterDuffColorFilter(
+                    ContextCompat.getColor(context!!, R.color.white_color),
+                    PorterDuff.Mode.SRC_IN
+                )
+            }
+        }
+    }
+
+    @Suppress("ComplexMethod")
+    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+        R.id.share_history_multi_select -> {
+            val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
+            when {
+                selectedHistory.size == 1 ->
+                    share(selectedHistory.first().url)
+                selectedHistory.size > 1 -> {
+                    val shareTabs = selectedHistory.map { ShareTab(it.url, it.title) }
+                    share(tabs = shareTabs)
+                }
+            }
+            true
+        }
+        R.id.libraryClose -> {
+            Navigation.findNavController(requireActivity(), R.id.container)
+                .popBackStack(R.id.libraryFragment, true)
+            true
+        }
+        R.id.delete_history_multi_select -> {
+            val components = context?.applicationContext?.components!!
+            val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
+
+            GlobalScope.launch(Main) {
+                deleteSelectedHistory(selectedHistory, components)
+                reloadData()
+            }
+            true
+        }
+        R.id.open_history_in_new_tabs_multi_select -> {
+            val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
+            requireComponents.useCases.tabsUseCases.addTab.let { useCase ->
+                for (selectedItem in selectedHistory) {
+                    useCase.invoke(selectedItem.url)
+                }
+            }
+
+            (activity as HomeActivity).apply {
+                browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+                supportActionBar?.hide()
+            }
+            navigation.navigate(HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
+            true
+        }
+        R.id.open_history_in_private_tabs_multi_select -> {
+            val selectedHistory = (historyComponent.uiView as HistoryUIView).getSelected()
+            requireComponents.useCases.tabsUseCases.addPrivateTab.let { useCase ->
+                for (selectedItem in selectedHistory) {
+                    useCase.invoke(selectedItem.url)
+                }
+            }
+
+            (activity as HomeActivity).apply {
+                browsingModeManager.mode = BrowsingModeManager.Mode.Private
+                supportActionBar?.hide()
+            }
+            navigation.navigate(HistoryFragmentDirections.actionHistoryFragmentToHomeFragment())
+            true
+        }
+        else -> super.onOptionsItemSelected(item)
+    }
+
     override fun onBackPressed(): Boolean = (historyComponent.uiView as HistoryUIView).onBackPressed()
+
+    @SuppressWarnings("ComplexMethod")
+    private fun handleNewHistoryAction(action: HistoryAction) {
+        when (action) {
+            is HistoryAction.Open ->
+                openItem(action.item)
+            is HistoryAction.EnterEditMode ->
+                emitChange { HistoryChange.EnterEditMode(action.item) }
+            is HistoryAction.AddItemForRemoval ->
+                emitChange { HistoryChange.AddItemForRemoval(action.item) }
+            is HistoryAction.RemoveItemForRemoval ->
+                emitChange { HistoryChange.RemoveItemForRemoval(action.item) }
+            is HistoryAction.BackPressed ->
+                emitChange { HistoryChange.ExitEditMode }
+            is HistoryAction.Delete.All ->
+                displayDeleteAllDialog()
+            is HistoryAction.Delete.One -> launch {
+                requireComponents.core
+                    .historyStorage
+                    .deleteVisit(action.item.url, action.item.visitedAt)
+                reloadData()
+            }
+            is HistoryAction.Delete.Some -> launch {
+                val storage = requireComponents.core.historyStorage
+                for (item in action.items) {
+                    storage.deleteVisit(item.url, item.visitedAt)
+                }
+                reloadData()
+            }
+            is HistoryAction.SwitchMode ->
+                activity?.invalidateOptionsMenu()
+        }
+    }
+
+    private fun openItem(item: HistoryItem) {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = item.url,
+            newTab = false,
+            from = BrowserDirection.FromHistory
+        )
+    }
+
+    private fun displayDeleteAllDialog() {
+        activity?.let { activity ->
+            AlertDialog.Builder(
+                ContextThemeWrapper(
+                    activity,
+                    R.style.DeleteDialogStyle
+                )
+            ).apply {
+                setMessage(R.string.history_delete_all_dialog)
+                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
+                setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
+                    launch {
+                        requireComponents.core.historyStorage.deleteEverything()
+                        reloadData()
+                    }
+                    dialog.dismiss()
+                }
+                create()
+            }.show()
+        }
+    }
 
     private suspend fun reloadData() {
         val excludeTypes = listOf(
@@ -247,7 +265,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
         val items = requireComponents.core.historyStorage
             .getDetailedVisits(sinceTimeMs, excludeTypes = excludeTypes)
             // We potentially have a large amount of visits, and multiple processing steps.
-            // Wrapping iterator in a sequence should make this a little more efficient.
+            // Wrapping iterator in a sequence should make this a little memory-more efficient.
             .asSequence()
             .sortedByDescending { it.visitTime }
             .mapIndexed { id, item ->
@@ -261,8 +279,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
             .toList()
 
         withContext(Main) {
-            getManagedEmitter<HistoryChange>()
-                .onNext(HistoryChange.Change(items))
+            emitChange { HistoryChange.Change(items) }
         }
     }
 
@@ -270,8 +287,9 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
         selected: List<HistoryItem>,
         components: Components = requireComponents
     ) {
-        selected.forEach {
-            components.core.historyStorage.deleteVisit(it.url, it.visitedAt)
+        val storage = components.core.historyStorage
+        for (item in selected) {
+            storage.deleteVisit(item.url, item.visitedAt)
         }
     }
 
@@ -279,6 +297,10 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
         val directions =
             HistoryFragmentDirections.actionHistoryFragmentToShareFragment(url = url, tabs = tabs?.toTypedArray())
         Navigation.findNavController(view!!).navigate(directions)
+    }
+
+    private inline fun emitChange(producer: () -> HistoryChange) {
+        getManagedEmitter<HistoryChange>().onNext(producer())
     }
 }
 
