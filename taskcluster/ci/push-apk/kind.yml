@@ -52,7 +52,6 @@ jobs:
         attributes:
             release-type: beta
         worker:
-            google-play-track: rollout
-            rollout-percentage: 10
+            google-play-track: production
         treeherder:
             symbol: pub(gp-b)
