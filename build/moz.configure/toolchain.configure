@@ -1456,18 +1456,8 @@ include('windows.configure', when=is_windows)
 
 # PGO
 # ==============================================================
-@depends('MOZ_PGO', c_compiler)
-def allow_missing_llvm_profdata(pgo, compiler):
-    if not pgo:
-        return True
-
-    if compiler.type in ('clang', 'clang-cl'):
-        return False
-
-    return True
-
-llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'], what='llvm-profdata',
-                           allow_missing=allow_missing_llvm_profdata,
+llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
+                           allow_missing=True,
                            paths=toolchain_search_path)
 
 js_option('--enable-profile-generate',
