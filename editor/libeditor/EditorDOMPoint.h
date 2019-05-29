@@ -501,6 +501,10 @@ class EditorDOMPointBase final {
     return true;
   }
 
+  bool HasChildMovedFromContainer() const {
+    return mChild && mChild->GetParentNode() != mParent;
+  }
+
   bool IsStartOfContainer() const {
     // If we're referring the first point in the container:
     //   If mParent is not a container like a text node, mOffset is 0.
