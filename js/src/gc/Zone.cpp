@@ -63,7 +63,7 @@ JS::Zone::Zone(JSRuntime* rt)
       data(this, nullptr),
       isSystem(this, false),
 #ifdef DEBUG
-      gcLastSweepGroupIndex(0),
+      gcSweepGroupIndex(0),
 #endif
       jitZone_(this, nullptr),
       gcScheduled_(false),
@@ -609,13 +609,13 @@ void MemoryTracker::swapTrackedMemory(Cell* a, Cell* b, MemoryUse use) {
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
-  if ((sa && !map.put(kb, sa)) ||
-      (sb && !map.put(ka, sb))) {
+  if ((sa && !map.put(kb, sa)) || (sb && !map.put(ka, sb))) {
     oomUnsafe.crash("MemoryTracker::swapTrackedMemory");
   }
 }
 
-size_t MemoryTracker::getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock) {
+size_t MemoryTracker::getAndRemoveEntry(const Key& key,
+                                        LockGuard<Mutex>& lock) {
   auto ptr = map.lookup(key);
   if (!ptr) {
     return 0;
