@@ -25,7 +25,7 @@ sealed class ShareAction : Action {
     object AddNewDeviceClicked : ShareAction()
     data class ShareDeviceClicked(val device: Device) : ShareAction()
     data class SendAllClicked(val devices: List<Device>) : ShareAction()
-    data class ShareAppClicked(val packageName: String) : ShareAction()
+    data class ShareAppClicked(val item: ShareItem) : ShareAction()
 }
 
 class ShareComponent(

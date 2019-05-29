@@ -126,7 +126,7 @@ class ShareFragment : AppCompatDialogFragment(), CoroutineScope {
                         putExtra(EXTRA_TEXT, shareText)
                         type = "text/plain"
                         flags = FLAG_ACTIVITY_NEW_TASK
-                        `package` = it.packageName
+                        setClassName(it.item.packageName, it.item.activityName)
                     }
                     startActivity(intent)
                     dismiss()

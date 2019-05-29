@@ -62,7 +62,8 @@ class AppShareAdapter(
                 ShareItem(
                     resolveInfo.loadLabel(context.packageManager).toString(),
                     resolveInfo.loadIcon(context.packageManager),
-                    resolveInfo.activityInfo.packageName
+                    resolveInfo.activityInfo.packageName,
+                    resolveInfo.activityInfo.name
                 )
             }
 
@@ -110,7 +111,7 @@ class AppShareItemViewHolder(
         itemView.setOnClickListener {
             Log.d("Jonathan", "${shareItem?.name} clicked.")
             shareItem?.let {
-                actionEmitter.onNext(ShareAction.ShareAppClicked(it.packageName))
+                actionEmitter.onNext(ShareAction.ShareAppClicked(it))
             }
         }
     }
@@ -126,4 +127,4 @@ class AppShareItemViewHolder(
     }
 }
 
-data class ShareItem(val name: String, val icon: Drawable, val packageName: String)
+data class ShareItem(val name: String, val icon: Drawable, val packageName: String, val activityName: String)
