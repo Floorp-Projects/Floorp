@@ -10,7 +10,7 @@ var {
 } = ExtensionUtils;
 
 const SAME_SITE_STATUSES = [
-  "no_restriction", // Index 0 = Ci.nsICookie2.SAMESITE_UNSET
+  "no_restriction", // Index 0 = Ci.nsICookie2.SAMESITE_NONE
   "lax",            // Index 1 = Ci.nsICookie2.SAMESITE_LAX
   "strict",         // Index 2 = Ci.nsICookie2.SAMESITE_STRICT
 ];

@@ -24,7 +24,7 @@ const COOKIE_ORG = {
 let since, oldCookie;
 
 function addCookie(cookie) {
-  Services.cookies.add(cookie.host, cookie.path, cookie.name, "test", false, false, false, Date.now() / 1000 + 10000, {}, Ci.nsICookie2.SAMESITE_UNSET);
+  Services.cookies.add(cookie.host, cookie.path, cookie.name, "test", false, false, false, Date.now() / 1000 + 10000, {}, Ci.nsICookie2.SAMESITE_NONE);
   ok(Services.cookies.cookieExists(cookie.host, cookie.path, cookie.name, {}), `Cookie ${cookie.name} was created.`);
 }
 

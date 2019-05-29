@@ -2871,7 +2871,7 @@ nsCookieService::ImportCookies(nsIFile* aCookieFile) {
         nsCookie::GenerateUniqueCreationTime(currentTimeInUsec), false,
         Substring(buffer, secureIndex, expiresIndex - secureIndex - 1)
             .EqualsLiteral(kTrue),
-        isHttpOnly, key.mOriginAttributes, nsICookie2::SAMESITE_UNSET);
+        isHttpOnly, key.mOriginAttributes, nsICookie2::SAMESITE_NONE);
     if (!newCookie) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3318,7 +3318,7 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
 
   // If the new cookie is same-site but in a cross site context,
   // browser must ignore the cookie.
-  if ((aCookieAttributes.sameSite != nsICookie2::SAMESITE_UNSET) &&
+  if ((aCookieAttributes.sameSite != nsICookie2::SAMESITE_NONE) &&
       aThirdPartyUtil) {
     // Do not treat loads triggered by web extensions as foreign
     bool addonAllowsLoad = false;
@@ -3761,7 +3761,7 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
 
   aCookieAttributes.isSecure = false;
   aCookieAttributes.isHttpOnly = false;
-  aCookieAttributes.sameSite = nsICookie2::SAMESITE_UNSET;
+  aCookieAttributes.sameSite = nsICookie2::SAMESITE_NONE;
 
   nsDependentCSubstring tokenString(cookieStart, cookieStart);
   nsDependentCSubstring tokenValue(cookieStart, cookieStart);
