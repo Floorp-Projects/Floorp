@@ -26,6 +26,7 @@ permalink: /changelog/
 
 * **engine-gecko-nightly**, **engine-gecko-beta**, **concept-engine**
   * Added engine API to clear browsing data.
+
   ```kotlin
   // Clear all browsing data
   engine.clearData(BrowsingData.all())
@@ -42,8 +43,6 @@ permalink: /changelog/
 
 * **feature-tab-collections**
   * Added option to remove all collections and their tabs: `TabCollectionStorage.removeAllCollections()`.
-
->>>>>>> Closes #3118: Add option to remove all tab collections and their tabs.
 
 # 0.54.0
 
