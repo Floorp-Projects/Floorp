@@ -83,8 +83,6 @@ struct alignas(gc::CellAlignBytes) Cell {
   MOZ_ALWAYS_INLINE bool isMarkedAny() const;
   MOZ_ALWAYS_INLINE bool isMarkedBlack() const;
   MOZ_ALWAYS_INLINE bool isMarkedGray() const;
-  MOZ_ALWAYS_INLINE bool isMarked(gc::MarkColor color) const;
-  MOZ_ALWAYS_INLINE bool isMarkedAtLeast(gc::MarkColor color) const;
 
   inline JSRuntime* runtimeFromMainThread() const;
 
@@ -243,14 +241,6 @@ MOZ_ALWAYS_INLINE bool Cell::isMarkedBlack() const {
 
 MOZ_ALWAYS_INLINE bool Cell::isMarkedGray() const {
   return isTenured() && asTenured().isMarkedGray();
-}
-
-MOZ_ALWAYS_INLINE bool Cell::isMarked(gc::MarkColor color) const {
-  return color == MarkColor::Gray ? isMarkedGray() : isMarkedBlack();
-}
-
-MOZ_ALWAYS_INLINE bool Cell::isMarkedAtLeast(gc::MarkColor color) const {
-  return color == MarkColor::Gray ? isMarkedAny() : isMarkedBlack();
 }
 
 inline JSRuntime* Cell::runtimeFromMainThread() const {

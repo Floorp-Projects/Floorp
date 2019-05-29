@@ -233,8 +233,6 @@ class ZoneList {
 };
 
 class GCRuntime {
-  friend GCMarker::MarkQueueProgress GCMarker::processMarkQueue();
-
  public:
   explicit GCRuntime(JSRuntime* rt);
   MOZ_MUST_USE bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
@@ -405,9 +403,6 @@ class GCRuntime {
   void setFullCompartmentChecks(bool enable);
 
   JS::Zone* getCurrentSweepGroup() { return currentSweepGroup; }
-  unsigned getCurrentSweepGroupIndex() {
-    return state() == State::Sweep ? sweepGroupIndex : 0;
-  }
 
   uint64_t gcNumber() const { return number; }
 

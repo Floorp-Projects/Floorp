@@ -301,10 +301,9 @@ class Zone : public JS::shadow::Zone,
 
   // For testing purposes, return the index of the sweep group which this zone
   // was swept in in the last GC.
-  unsigned lastSweepGroupIndex() { return gcSweepGroupIndex; }
+  unsigned lastSweepGroupIndex() { return gcLastSweepGroupIndex; }
 #endif
 
-  void sweepAfterMinorGC();
   void sweepBreakpoints(js::FreeOp* fop);
   void sweepUniqueIds();
   void sweepWeakMaps();
@@ -409,15 +408,12 @@ class Zone : public JS::shadow::Zone,
  private:
   /*
    * Mapping from not yet marked keys to a vector of all values that the key
-   * maps to in any live weak map. Separate tables for nursery and tenured
-   * keys.
+   * maps to in any live weak map.
    */
   js::ZoneOrGCTaskData<js::gc::WeakKeyTable> gcWeakKeys_;
-  js::ZoneOrGCTaskData<js::gc::WeakKeyTable> gcNurseryWeakKeys_;
 
  public:
   js::gc::WeakKeyTable& gcWeakKeys() { return gcWeakKeys_.ref(); }
-  js::gc::WeakKeyTable& gcNurseryWeakKeys() { return gcNurseryWeakKeys_.ref(); }
 
   // A set of edges from this zone to other zones used during GC to calculate
   // sweep groups.
@@ -629,7 +625,7 @@ class Zone : public JS::shadow::Zone,
   js::ZoneData<bool> isSystem;
 
 #ifdef DEBUG
-  js::MainThreadData<unsigned> gcSweepGroupIndex;
+  js::MainThreadData<unsigned> gcLastSweepGroupIndex;
 #endif
 
   static js::HashNumber UniqueIdToHash(uint64_t uid);

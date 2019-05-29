@@ -7,8 +7,6 @@
 #ifndef gc_GCMarker_h
 #define gc_GCMarker_h
 
-#include "mozilla/Maybe.h"
-
 #include "ds/OrderedHashTable.h"
 #include "js/SliceBudget.h"
 #include "js/TracingAPI.h"
@@ -27,28 +25,27 @@ namespace gc {
 struct Cell;
 
 struct WeakKeyTableHashPolicy {
-  using Lookup = Cell*;
-  static HashNumber hash(const Lookup& v,
-                         const mozilla::HashCodeScrambler& hcs) {
-    return hcs.scramble(mozilla::HashGeneric(v));
+  typedef JS::GCCellPtr Lookup;
+  static HashNumber hash(const Lookup& v, const mozilla::HashCodeScrambler&) {
+    return mozilla::HashGeneric(v.asCell());
   }
-  static bool match(Cell* const& k, const Lookup& l) { return k == l; }
-  static bool isEmpty(Cell* const& v) { return !v; }
-  static void makeEmpty(Cell** vp) { *vp = nullptr; }
+  static bool match(const JS::GCCellPtr& k, const Lookup& l) { return k == l; }
+  static bool isEmpty(const JS::GCCellPtr& v) { return !v; }
+  static void makeEmpty(JS::GCCellPtr* vp) { *vp = nullptr; }
 };
 
 struct WeakMarkable {
   WeakMapBase* weakmap;
-  Cell* key;
+  JS::GCCellPtr key;
 
-  WeakMarkable(WeakMapBase* weakmapArg, Cell* keyArg)
+  WeakMarkable(WeakMapBase* weakmapArg, JS::GCCellPtr keyArg)
       : weakmap(weakmapArg), key(keyArg) {}
 };
 
 using WeakEntryVector = Vector<WeakMarkable, 2, js::SystemAllocPolicy>;
 
 using WeakKeyTable =
-    OrderedHashMap<Cell*, WeakEntryVector, WeakKeyTableHashPolicy,
+    OrderedHashMap<JS::GCCellPtr, WeakEntryVector, WeakKeyTableHashPolicy,
                    js::SystemAllocPolicy>;
 
 /*
@@ -230,11 +227,8 @@ class GCMarker : public JSTracer {
   explicit GCMarker(JSRuntime* rt);
   MOZ_MUST_USE bool init(JSGCMode gcMode);
 
-  void setMaxCapacity(size_t maxCap) {
-    blackStack.setMaxCapacity(maxCap);
-    grayStack.setMaxCapacity(maxCap);
-  }
-  size_t maxCapacity() const { return blackStack.maxCapacity(); }
+  void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
+  size_t maxCapacity() const { return stack.maxCapacity(); }
 
   void start();
   void stop();
@@ -299,26 +293,9 @@ class GCMarker : public JSTracer {
 
   bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
-  enum MarkQueueProgress {
-    QueueYielded,   // End this incremental GC slice, if possible
-    QueueComplete,  // Done with the queue
-    QueueSuspended  // Continue the GC without ending the slice
-  };
-  MarkQueueProgress processMarkQueue();
-
-  void startQueue() {
-#ifdef DEBUG
-    queuePos = 0;
-    queueMarkColor.reset();
-#endif
-  }
-
   MOZ_MUST_USE bool markUntilBudgetExhausted(SliceBudget& budget);
 
-  void setGCMode(JSGCMode mode) {
-    blackStack.setGCMode(mode);
-    grayStack.setGCMode(mode);
-  }
+  void setGCMode(JSGCMode mode) { stack.setGCMode(mode); }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -380,13 +357,11 @@ class GCMarker : public JSTracer {
 
   inline void pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end);
 
-  bool isMarkStackEmpty() {
-    return blackStack.isEmpty() && grayStack.isEmpty();
-  }
+  bool isMarkStackEmpty() { return stack.isEmpty(); }
 
-  bool hasBlackEntries() const { return !blackStack.isEmpty(); }
+  bool hasBlackEntries() const { return stack.position() > grayPosition; }
 
-  bool hasGrayEntries() const { return !grayStack.isEmpty(); }
+  bool hasGrayEntries() const { return grayPosition > 0 && !stack.isEmpty(); }
 
   MOZ_MUST_USE bool restoreValueArray(
       const gc::MarkStack::SavedValueArray& array, HeapSlot** vpp,
@@ -410,17 +385,14 @@ class GCMarker : public JSTracer {
   template <typename F>
   void forEachDelayedMarkingArena(F&& f);
 
-  /* The stack of items to mark black. */
-  gc::MarkStack blackStack;
-  /* The stack of items to mark (CC) gray. */
-  gc::MarkStack grayStack;
+  /* The mark stack. Pointers in this stack are "gray" in the GC sense. */
+  gc::MarkStack stack;
+
+  /* Stack entries at positions below this are considered gray. */
+  MainThreadData<size_t> grayPosition;
 
   /* The color is only applied to objects and functions. */
   MainThreadData<gc::MarkColor> color;
-
-  gc::MarkStack& currentStack() {
-    return color == gc::MarkColor::Black ? blackStack : grayStack;
-  }
 
   /* Pointer to the top of the stack of arenas we are delaying marking on. */
   MainThreadData<js::gc::Arena*> delayedMarkingList;
@@ -444,36 +416,11 @@ class GCMarker : public JSTracer {
   /* Assert that start and stop are called with correct ordering. */
   MainThreadData<bool> started;
 
-  /* The test marking queue might want to be marking a particular color. */
-  mozilla::Maybe<js::gc::MarkColor> queueMarkColor;
-
   /*
    * If this is true, all marked objects must belong to a compartment being
    * GCed. This is used to look for compartment bugs.
    */
   MainThreadData<bool> strictCompartmentChecking;
-
- public:
-  /*
-   * List of objects to mark at the beginning of a GC. May also contains string
-   * directives to change mark color or wait until different phases of the GC.
-   *
-   * This is a WeakCache because not everything in this list is guaranteed to
-   * end up marked (eg if you insert an object from an already-processed sweep
-   * group in the middle of an incremental GC). Also, the mark queue is not
-   * used during shutdown GCs. In either case, unmarked objects may need to be
-   * discarded.
-   */
-
-  JS::WeakCache<GCVector<JS::Heap<JS::Value>, 0, SystemAllocPolicy>> markQueue;
-
-  /* Position within the test mark queue. */
-  size_t queuePos;
-
-  /*
-   * Do not mark the debug mark queue during a shutdown GC.
-   */
-  MainThreadData<bool> isShutdownGC;
 #endif  // DEBUG
 };
 
