@@ -45,9 +45,13 @@ recommend you use our provided pre-push hook in `config/pre-push-recommended.sh`
 Using this hook will guarantee your hook gets updated as the repository changes.
 This hook tries to run as much as possible without taking too much time.
 
-To add it, run this command from the project root:
+To add it on Mac/Linux, run this command from the project root:
 ```sh
 ln -s ../../config/pre-push-recommended.sh .git/hooks/pre-push
+```
+or for Windows run this command with administrative priveleges:
+```sh
+mklink /d .git\hooks\pre-push ..\..\config\pre-push-recommended.sh
 ```
 
 To push without running the pre-push hook (e.g. doc updates):
