@@ -27,7 +27,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=696253
 <pre id="test">
 <script type="application/javascript">
 "use strict";
-
 /*
  * Utility function for getting computed style of "align-self":
  */
@@ -156,27 +155,27 @@ function main() {
   testGeneralNode(body);
   testNodeThatHasParent(body);
 
-  // 
+  //
   // align-items/self tests:
   //
   //// Block tests
-  var elem = document.body;
+  var element = document.body;
   var child = document.getElementById("display");
-  var abs = document.getElementById("absChild");
-  is(getComputedAlignItems(elem), 'normal', "default align-items value for block container");
+  var absChild = document.getElementById("absChild");
+  is(getComputedAlignItems(element), 'normal', "default align-items value for block container");
   is(getComputedAlignSelf(child), 'auto', "default align-self value for block child");
-  is(getComputedAlignSelf(abs), 'auto', "default align-self value for block container abs.pos. child");
-  elem.style.alignItems = "end";
+  is(getComputedAlignSelf(absChild), 'auto', "default align-self value for block container abs.pos. child");
+  element.style.alignItems = "end";
   is(getComputedAlignSelf(child), 'auto', "align-self:auto value persists for block child");
-  is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for block container abs.pos. child");
-  elem.style.alignItems = "left";
-  is(getComputedAlignItems(elem), 'end', "align-items:left is an invalid declaration");
+  is(getComputedAlignSelf(absChild), 'auto', "align-self:auto value persists for block container abs.pos. child");
+  element.style.alignItems = "left";
+  is(getComputedAlignItems(element), 'end', "align-items:left is an invalid declaration");
   is(getComputedAlignSelf(child), 'auto', "align-self:auto persists for block child");
-  is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for block container abs.pos. child");
-  elem.style.alignItems = "right";
-  is(getComputedAlignItems(elem), 'end', "align-items:right is an invalid declaration");
+  is(getComputedAlignSelf(absChild), 'auto', "align-self:auto value persists for block container abs.pos. child");
+  element.style.alignItems = "right";
+  is(getComputedAlignItems(element), 'end', "align-items:right is an invalid declaration");
   is(getComputedAlignSelf(child), 'auto', "align-self:auto value persists for block child");
-  is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for block container abs.pos. child");
+  is(getComputedAlignSelf(absChild), 'auto', "align-self:auto value persists for block container abs.pos. child");
 
   //// Flexbox tests
   function testFlexAlignItemsSelf(elem) {
@@ -227,32 +226,32 @@ function main() {
   // justify-items/self tests:
   //
   //// Block tests
-  var elem = document.body;
-  var child = document.getElementById("display");
-  var abs = document.getElementById("absChild");
-  is(getComputedJustifyItems(elem), 'normal', "default justify-items value for block container");
+  element = document.body;
+  child = document.getElementById("display");
+  absChild = document.getElementById("absChild");
+  is(getComputedJustifyItems(element), 'normal', "default justify-items value for block container");
   is(getComputedJustifySelf(child), 'auto', "default justify-self value for block container child");
-  is(getComputedJustifySelf(abs), 'auto', "default justify-self value for block container abs.pos. child");
-  elem.style.justifyItems = "end";
+  is(getComputedJustifySelf(absChild), 'auto', "default justify-self value for block container abs.pos. child");
+  element.style.justifyItems = "end";
   is(getComputedJustifySelf(child), 'auto', "justify-self:auto value persists for block child");
-  is(getComputedJustifySelf(abs), 'auto', "justify-self:auto value persists for block container abs.pos. child");
-  elem.style.justifyItems = "left";
-  is(getComputedJustifyItems(elem), 'left', "justify-items:left computes to itself on a block");
+  is(getComputedJustifySelf(absChild), 'auto', "justify-self:auto value persists for block container abs.pos. child");
+  element.style.justifyItems = "left";
+  is(getComputedJustifyItems(element), 'left', "justify-items:left computes to itself on a block");
   is(getComputedJustifySelf(child), 'auto', "justify-self:auto value persists for block child");
-  is(getComputedJustifySelf(abs), 'auto', "justify-self:auto value persists for block container abs.pos. child");
-  elem.style.justifyItems = "right";
+  is(getComputedJustifySelf(absChild), 'auto', "justify-self:auto value persists for block container abs.pos. child");
+  element.style.justifyItems = "right";
   is(getComputedJustifySelf(child), 'auto', "justify-self:auto value persists for block child");
-  is(getComputedJustifySelf(abs), 'auto', "justify-self:auto value persists for block container abs.pos. child");
-  elem.style.justifyItems = "safe right";
+  is(getComputedJustifySelf(absChild), 'auto', "justify-self:auto value persists for block container abs.pos. child");
+  element.style.justifyItems = "safe right";
   is(getComputedJustifySelf(child), 'auto', "justify-self:auto value persists for block child");
-  elem.style.justifyItems = "";
+  element.style.justifyItems = "";
   child.style.justifySelf = "left";
   is(getComputedJustifySelf(child), 'left', "justify-self:left computes to left on block child");
   child.style.justifySelf = "right";
   is(getComputedJustifySelf(child), 'right', "justify-self:right computes to right on block child");
   child.style.justifySelf = "";
-  abs.style.justifySelf = "right";
-  is(getComputedJustifySelf(abs), 'right', "justify-self:right computes to right on block container abs.pos. child");
+  absChild.style.justifySelf = "right";
+  is(getComputedJustifySelf(absChild), 'right', "justify-self:right computes to right on block container abs.pos. child");
 
   //// Flexbox tests
   function testFlexJustifyItemsSelf(elem) {
@@ -324,26 +323,26 @@ function main() {
   testGridJustifyItemsSelf(document.getElementById("gridContainer"));
   testGridJustifyItemsSelf(document.getElementById("gridContainerFlex"));
 
-  // 
+  //
   // align-content tests:
   //
   //// Block tests
-  var elem = document.body;
-  var child = document.getElementById("display");
-  var abs = document.getElementById("absChild");
-  is(getComputedAlignContent(elem), 'normal', "default align-content value for block container");
+  element = document.body;
+  child = document.getElementById("display");
+  absChild = document.getElementById("absChild");
+  is(getComputedAlignContent(element), 'normal', "default align-content value for block container");
   is(getComputedAlignContent(child), 'normal', "default align-content value for block child");
-  is(getComputedAlignContent(abs), 'normal', "default align-content value for block container abs.pos. child");
-  elem.style.alignContent = "end";
+  is(getComputedAlignContent(absChild), 'normal', "default align-content value for block container abs.pos. child");
+  element.style.alignContent = "end";
   is(getComputedAlignContent(child), 'normal', "default align-content isn't affected by parent align-content value for in-flow child");
-  is(getComputedAlignContent(abs), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
-  elem.style.alignContent = "left";
-  is(getComputedAlignContent(elem), 'end', "align-content:left isn't a valid declaration");
-  is(getComputedAlignContent(abs), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
-  elem.style.alignContent = "right";
-  is(getComputedAlignContent(elem), 'end', "align-content:right isn't a valid declaration");
-  is(getComputedAlignContent(abs), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
-  elem.style.alignContent = "";
+  is(getComputedAlignContent(absChild), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
+  element.style.alignContent = "left";
+  is(getComputedAlignContent(element), 'end', "align-content:left isn't a valid declaration");
+  is(getComputedAlignContent(absChild), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
+  element.style.alignContent = "right";
+  is(getComputedAlignContent(element), 'end', "align-content:right isn't a valid declaration");
+  is(getComputedAlignContent(absChild), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
+  element.style.alignContent = "";
 
   //// Flexbox tests
   function testFlexAlignContent(elem) {
@@ -387,28 +386,28 @@ function main() {
   testGridAlignContent(document.getElementById("gridContainerFlex"));
 
 
-  // 
+  //
   // justify-content tests:
   //
   //// Block tests
-  var elem = document.body;
-  var child = document.getElementById("display");
-  var abs = document.getElementById("absChild");
-  is(getComputedJustifyContent(elem), 'normal', "default justify-content value for block container");
+  element = document.body;
+  child = document.getElementById("display");
+  absChild = document.getElementById("absChild");
+  is(getComputedJustifyContent(element), 'normal', "default justify-content value for block container");
   is(getComputedJustifyContent(child), 'normal', "default justify-content value for block child");
-  is(getComputedJustifyContent(abs), 'normal', "default justify-content value for block container abs.pos. child");
-  elem.style.justifyContent = "end";
+  is(getComputedJustifyContent(absChild), 'normal', "default justify-content value for block container abs.pos. child");
+  element.style.justifyContent = "end";
   is(getComputedJustifyContent(child), 'normal', "default justify-content isn't affected by parent justify-content value for in-flow child");
-  is(getComputedJustifyContent(abs), 'normal', "default justify-content isn't affected by parent justify-content value for block container abs.pos. child");
-  elem.style.justifyContent = "left";
-  is(getComputedJustifyContent(elem), 'left', "justify-content:left computes to left on block child");
-  is(getComputedJustifyContent(abs), 'normal', "default justify-content isn't affected by parent justify-content value for block container abs.pos. child");
-  elem.style.justifyContent = "right";
-  is(getComputedJustifyContent(elem), 'right', "justify-content:right computes to right on block child");
-  is(getComputedJustifyContent(abs), 'normal', "default justify-content isn't affected by parent justify-content value for block container abs.pos. child");
-  elem.style.justifyContent = "safe right";
-  is(getComputedJustifyContent(elem), 'safe right', "justify-content:'safe right' computes to 'justify-content:safe right'");
-  elem.style.justifyContent = "";
+  is(getComputedJustifyContent(absChild), 'normal', "default justify-content isn't affected by parent justify-content value for block container abs.pos. child");
+  element.style.justifyContent = "left";
+  is(getComputedJustifyContent(element), 'left', "justify-content:left computes to left on block child");
+  is(getComputedJustifyContent(absChild), 'normal', "default justify-content isn't affected by parent justify-content value for block container abs.pos. child");
+  element.style.justifyContent = "right";
+  is(getComputedJustifyContent(element), 'right', "justify-content:right computes to right on block child");
+  is(getComputedJustifyContent(absChild), 'normal', "default justify-content isn't affected by parent justify-content value for block container abs.pos. child");
+  element.style.justifyContent = "safe right";
+  is(getComputedJustifyContent(element), 'safe right', "justify-content:'safe right' computes to 'justify-content:safe right'");
+  element.style.justifyContent = "";
   child.style.justifyContent = "left";
   is(getComputedJustifyContent(child), 'left', "justify-content:left computes to left on block child");
   child.style.justifyContent = "right";
@@ -416,9 +415,9 @@ function main() {
   child.style.justifyContent = "safe left";
   is(getComputedJustifyContent(child), 'safe left', "justify-content:safe left computes to 'safe left' on block child");
   child.style.justifyContent = "";
-  abs.style.justifyContent = "right";
-  is(getComputedJustifyContent(abs), 'right', "justify-content:right computes to right on block container abs.pos. child");
-  abs.style.justifyContent = "";
+  absChild.style.justifyContent = "right";
+  is(getComputedJustifyContent(absChild), 'right', "justify-content:right computes to right on block container abs.pos. child");
+  absChild.style.justifyContent = "";
 
   //// Flexbox tests
   function testFlexJustifyContent(elem) {

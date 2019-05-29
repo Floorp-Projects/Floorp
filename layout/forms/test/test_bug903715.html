@@ -59,7 +59,7 @@ function runTests()
   select.addEventListener("popupshowing", function (aEvent) {
     setTimeout(function () {
       synthesizeKey("KEY_ArrowDown");
-      select.addEventListener("popuphiding", function (aEvent) {
+      select.addEventListener("popuphiding", function (aEventInner) {
         setTimeout(function () {
           // Enter key should cause closing the dropdown of the select element
           // and keypress event shouldn't be fired on the input element because

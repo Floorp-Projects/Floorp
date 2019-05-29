@@ -11,11 +11,6 @@
 # Exclude expected objdirs.
 obj*/**
 
-# We ignore all these directories by default, until we get them enabled.
-# If you are enabling a directory, please add directory specific exclusions
-# below.
-layout/**
-
 # We currently have no js files in these directories, so we ignore them by
 # default to aid ESLint's performance.
 build/**

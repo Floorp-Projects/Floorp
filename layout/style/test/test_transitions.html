@@ -125,7 +125,7 @@ var div = document.getElementById("display");
 // This means they move through 62.5 pixels per second.
 const REF_PX_PER_SEC = 62.5;
 function make_reference_p() {
-    var p = document.createElement("p");
+    let p = document.createElement("p");
     p.appendChild(document.createTextNode("reference"));
     p.style.textIndent = "0px";
     p.style.transition = "16s text-indent linear";
@@ -138,9 +138,9 @@ var earlyrefcs = getComputedStyle(earlyref, "");
 // Test all timing functions using a set of 8-second transitions, which
 // we check at times 0, 2s, 4s, 6s, and 8s.
 var tftests = [];
-for (var tf in timingFunctions) {
-    var p = document.createElement("p");
-    var t = document.createTextNode("transition-timing-function: " + tf);
+for (let tf in timingFunctions) {
+    let p = document.createElement("p");
+    let t = document.createTextNode("transition-timing-function: " + tf);
     p.appendChild(t);
     p.style.textIndent = "0px";
     p.style.transition = "8s text-indent linear";
@@ -155,16 +155,16 @@ for (var tf in timingFunctions) {
 // middle.
 var interrupt_tests = [];
 for (var restyleParent of [true, false]) {
-    for (var itime = 2; itime < 8; itime += 2) {
-        var p = document.createElement("p");
-        var t = document.createTextNode("interrupt on " +
+    for (let itime = 2; itime < 8; itime += 2) {
+        let p = document.createElement("p");
+        let t = document.createTextNode("interrupt on " +
                                         (restyleParent ? "parent" : "node itself") +
                                         " at " + itime + "s");
         p.appendChild(t);
         p.style.textIndent = "0px";
         p.style.transition = "8s text-indent cubic-bezier(0, 1, 1, 0)";
         if (restyleParent) {
-          var d = document.createElement("div");
+          let d = document.createElement("div");
           d.appendChild(p);
           div.appendChild(d);
         } else {
@@ -183,10 +183,10 @@ for (var restyleParent of [true, false]) {
 // Test transition-delay values of -4s through 4s on a 4s transition
 // with 'ease-out' timing function.
 var delay_tests = {};
-for (var d = -4; d <= 4; ++d) {
-    var p = document.createElement("p");
-    var delay = d + "s";
-    var t = document.createTextNode("transition-delay: " + delay);
+for (let d = -4; d <= 4; ++d) {
+    let p = document.createElement("p");
+    let delay = d + "s";
+    let t = document.createTextNode("transition-delay: " + delay);
     p.appendChild(t);
     p.style.marginLeft = "0px";
     p.style.transition = "4s margin-left ease-out " + delay;
@@ -199,10 +199,10 @@ for (var d = -4; d <= 4; ++d) {
 // Test transition-delay values of -4s through 4s on a 4s transition
 // with duration of zero.
 var delay_zero_tests = {};
-for (var d = -4; d <= 4; ++d) {
-    var p = document.createElement("p");
-    var delay = d + "s";
-    var t = document.createTextNode("transition-delay: " + delay);
+for (let d = -4; d <= 4; ++d) {
+    let p = document.createElement("p");
+    let delay = d + "s";
+    let t = document.createTextNode("transition-delay: " + delay);
     p.appendChild(t);
     p.style.marginLeft = "0px";
     p.style.transition = "0s margin-left linear " + delay;
@@ -216,8 +216,8 @@ for (var d = -4; d <= 4; ++d) {
 // value it currently happens to have resets the transition.
 function make_reset_test(transition, description)
 {
-    var p = document.createElement("p");
-    var t = document.createTextNode(description);
+    let p = document.createElement("p");
+    let t = document.createTextNode(description);
     p.appendChild(t);
     p.style.marginLeft = "0px";
     p.style.transition = transition;
@@ -260,8 +260,8 @@ var descendant_tests = [
       child_transition: "8s text-indent" }
 ];
 
-for (var i in descendant_tests) {
-    var test = descendant_tests[i];
+for (let i in descendant_tests) {
+    let test = descendant_tests[i];
     test.parentNode = document.createElement("div");
     test.childNode = document.createElement("p");
     test.parentNode.appendChild(test.childNode);
@@ -296,13 +296,13 @@ var number_tests = [
   { style: "transition: 4s margin-left, 8s margin" },
   { style: "transition-property: margin-left; " +
              "transition-duration: 8s, 2s" },
-  { style: "transition-property: margin-left, margin-left; " + 
+  { style: "transition-property: margin-left, margin-left; " +
              "transition-duration: 2s, 8s" },
   { style: "transition-property: margin-left, margin-left, margin-left; " +
              "transition-duration: 8s, 2s" },
   { style: "transition-property: margin-left; " +
              "transition-duration: 8s, 16s" },
-  { style: "transition-property: margin-left, margin-left; " + 
+  { style: "transition-property: margin-left, margin-left; " +
              "transition-duration: 16s, 8s" },
   { style: "transition-property: margin-left, margin-left, margin-left; " +
              "transition-duration: 8s, 16s" },
@@ -314,11 +314,11 @@ var number_tests = [
              "transition-delay: 8s, 8s, 0, 8s, 8s, 8s" },
 ];
 
-for (var i in number_tests) {
-    var test = number_tests[i];
-    var p = document.createElement("p");
+for (let i in number_tests) {
+    let test = number_tests[i];
+    let p = document.createElement("p");
     p.setAttribute("style", test.style);
-    var t = document.createTextNode(test.style);
+    let t = document.createTextNode(test.style);
     p.appendChild(t);
     p.style.marginLeft = "100px";
     div.appendChild(p);
@@ -332,7 +332,7 @@ for (var i in number_tests) {
 var from_none_test, to_none_test, always_none_test;
 function make_display_test(initially_none, text)
 {
-    var p = document.createElement("p");
+    let p = document.createElement("p");
     p.appendChild(document.createTextNode(text));
     p.style.textIndent = "0px";
     p.style.transition = "8s text-indent ease-in-out";
@@ -350,7 +350,7 @@ var display_tests = [ from_none_test, to_none_test, always_none_test ];
 var before_test, after_test;
 function make_pseudo_elem_test(pseudo)
 {
-    var p = document.createElement("p");
+    let p = document.createElement("p");
     p.className = pseudo;
     div.appendChild(p);
     return {"pseudo": pseudo, element: p};
@@ -370,38 +370,38 @@ var x = getComputedStyle(div, "").width;
 // Start our timer as close as possible to when we start the first
 // transition.
 // Do not use setInterval because once it gets off in time, it stays off.
-for (var i = 1; i <= 8; ++i) {
+for (let i = 1; i <= 8; ++i) {
     setTimeout(process_future_calls, i * 1000, i);
 }
 gStartTime1 = Date.now(); // set before any transitions have started
 
 // Start all the transitions.
 earlyref.style.textIndent = "1000px";
-for (var test in tftests) {
-    var p = tftests[test][0];
+for (let test in tftests) {
+    let p = tftests[test][0];
     p.style.textIndent = "100px";
 }
-for (var test in interrupt_tests) {
-    var p = interrupt_tests[test][0];
+for (let test in interrupt_tests) {
+    let p = interrupt_tests[test][0];
     p.style.textIndent = "100px";
 }
-for (var d in delay_tests) {
-    var p = delay_tests[d];
+for (let d in delay_tests) {
+    let p = delay_tests[d];
     p.style.marginLeft = "100px";
 }
-for (var d in delay_zero_tests) {
-    var p = delay_zero_tests[d];
+for (let d in delay_zero_tests) {
+    let p = delay_zero_tests[d];
     p.style.marginLeft = "100px";
 }
 reset_test.style.marginLeft = "100px";
 reset_test_reference.style.marginLeft = "100px";
-for (var i in descendant_tests) {
-    var test = descendant_tests[i];
+for (let i in descendant_tests) {
+    let test = descendant_tests[i];
     test.parentNode.style.textIndent = "150px";
     test.parentNode.style.letterSpacing = "5px";
 }
-for (var i in number_tests) {
-    var test = number_tests[i];
+for (let i in number_tests) {
+    let test = number_tests[i];
     test.node.style.marginLeft = "50px";
 }
 from_none_test.style.textIndent = "100px";
@@ -409,8 +409,8 @@ from_none_test.style.display = "";
 to_none_test.style.textIndent = "100px";
 to_none_test.style.display = "none";
 always_none_test.style.textIndent = "100px";
-for (var i in pseudo_element_tests) {
-    var test = pseudo_element_tests[i];
+for (let i in pseudo_element_tests) {
+    let test = pseudo_element_tests[i];
     test.element.classList.add("started");
 }
 lateref.style.textIndent = "1000px";
@@ -526,7 +526,7 @@ function check_ref_range()
     check("late reference", px_to_num(laterefcs.textIndent));
 }
 
-for (var i = 1; i <= 8; ++i) {
+for (let i = 1; i <= 8; ++i) {
     add_future_call(i, check_ref_range);
 }
 
@@ -553,7 +553,7 @@ add_future_call(8, check_tf_test);
 
 function check_interrupt_tests()
 {
-    for (var test in interrupt_tests) {
+    for (let test in interrupt_tests) {
         var p = interrupt_tests[test][0];
         var itime = interrupt_tests[test][1];
 
@@ -571,9 +571,9 @@ function check_interrupt_tests()
 
 function check_delay_test(time)
 {
-    var tf = timingFunctions["ease-out"];
-    for (var d in delay_tests) {
-        var p = delay_tests[d];
+    let tf = timingFunctions["ease-out"];
+    for (let d in delay_tests) {
+        let p = delay_tests[d];
 
         check_transition_value(tf, Number(d), Number(d) + 4, 0, 100,
                                getComputedStyle(p, "").marginLeft,
@@ -582,14 +582,14 @@ function check_delay_test(time)
 }
 
 check_delay_test(0);
-for (var i = 1; i <= 8; ++i) {
+for (let i = 1; i <= 8; ++i) {
     add_future_call(i, check_delay_test);
 }
 
 function check_delay_zero_test(time)
 {
-    for (var d in delay_zero_tests) {
-        var p = delay_zero_tests[d];
+    for (let d in delay_zero_tests) {
+        let p = delay_zero_tests[d];
 
         time_range = [ px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC,
                        px_to_num(laterefcs.textIndent) / REF_PX_PER_SEC ];
@@ -605,7 +605,7 @@ function check_delay_zero_test(time)
 }
 
 check_delay_zero_test(0);
-for (var i = 1; i <= 8; ++i) {
+for (let i = 1; i <= 8; ++i) {
     add_future_call(i, check_delay_zero_test);
 }
 
@@ -626,7 +626,7 @@ is(getComputedStyle(reset_test_reference, "").marginLeft, "75px",
    "reset test reference value");
 reset_reset_test();
 check_reset_test(0);
-for (var i = 1; i <= 8; ++i) {
+for (let i = 1; i <= 8; ++i) {
     (function(j) {
         add_future_call(j, function() { check_reset_test(j); });
     })(i);
@@ -642,12 +642,12 @@ function check_descendant_tests() {
     var values = {};
     values["text-indent"] = [ 50, 150 ];
     values["letter-spacing"] = [ 10, 5 ];
-    var tf = timingFunctions["ease"];
+    let tf = timingFunctions["ease"];
 
     var time = px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC;
 
-    for (var i in descendant_tests) {
-        var test = descendant_tests[i];
+    for (let i in descendant_tests) {
+        let test = descendant_tests[i];
 
         /* ti=text-indent, ls=letter-spacing */
         var child_ti_duration = 0;
@@ -721,10 +721,10 @@ function check_descendant_tests() {
 
 function check_number_tests()
 {
-    var tf = timingFunctions["ease"];
-    for (var d in number_tests) {
-        var test = number_tests[d];
-        var p = test.node;
+    let tf = timingFunctions["ease"];
+    for (let d in number_tests) {
+        let test = number_tests[d];
+        let p = test.node;
 
         check_transition_value(tf, 0, 8, 100, 50,
                                getComputedStyle(p, "").marginLeft,
@@ -741,8 +741,8 @@ add_future_call(8, check_number_tests);
 
 function check_display_tests(time)
 {
-    for (var i in display_tests) {
-        var p = display_tests[i];
+    for (let i in display_tests) {
+        let p = display_tests[i];
 
         // There is no transition if the old or new style is display:none, so
         // the computed value is always the end value.
@@ -761,9 +761,9 @@ add_future_call(8, function() { check_display_tests(8); });
 
 function check_pseudo_element_tests(time)
 {
-    var tf = timingFunctions["ease-in-out"];
-    for (var i in pseudo_element_tests) {
-        var test = pseudo_element_tests[i];
+    let tf = timingFunctions["ease-in-out"];
+    for (let i in pseudo_element_tests) {
+        let test = pseudo_element_tests[i];
 
         check_transition_value(tf, 0, 8, 0, 100,
                                getComputedStyle(test.element, "").width,

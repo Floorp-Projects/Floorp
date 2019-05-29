@@ -44,7 +44,7 @@ function run() {
     var elements = [];
 
     var div = document.getElementById("content");
-    for (var i = 0; i < div.childNodes.length; ++i) {
+    for (let i = 0; i < div.childNodes.length; ++i) {
         var child = div.childNodes[i];
         if (child.nodeType == Node.ELEMENT_NODE)
             elements.push(child);
@@ -56,7 +56,7 @@ function run() {
     {
         var zi = ++counter;
         styleText.data = selector + " { z-index: " + zi + " }";
-        var i;
+        let i;
         for (i in match_indices) {
             var e = elements[match_indices[i]];
             is(getComputedStyle(e, "").zIndex, String(zi),
@@ -95,4 +95,3 @@ run();
 </pre>
 </body>
 </html>
-
