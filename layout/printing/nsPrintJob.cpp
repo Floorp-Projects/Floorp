@@ -640,7 +640,7 @@ bool nsPrintJob::CheckBeforeDestroy() {
 }
 
 //-------------------------------------------------------
-nsresult nsPrintJob::Cancelled() {
+nsresult nsPrintJob::Cancel() {
   if (mPrt && mPrt->mPrintSettings) {
     return mPrt->mPrintSettings->SetIsCancelled(true);
   }
