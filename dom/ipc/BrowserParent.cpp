@@ -1141,10 +1141,11 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
 #  endif
     }
 #  ifdef XP_WIN
-    a11y::WrapperFor(doc)->SetID(aMsaaID);
-    if (a11y::nsWinUtils::IsWindowEmulationStarted()) {
-      doc->SetEmulatedWindowHandle(embedderDoc->GetEmulatedWindowHandle());
-    }
+    // This *must* be called after AddChildDoc because AddChildDoc
+    // calls ProxyCreated and WrapperFor will fail before that.
+    a11y::AccessibleWrap* wrapper = a11y::WrapperFor(doc);
+    MOZ_ASSERT(wrapper);
+    wrapper->SetID(aMsaaID);
 #  endif
     return IPC_OK();
   } else {
