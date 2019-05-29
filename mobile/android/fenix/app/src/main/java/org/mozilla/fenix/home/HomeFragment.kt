@@ -26,6 +26,7 @@ import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
 import androidx.navigation.Navigator
 import androidx.navigation.fragment.FragmentNavigator
+import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
@@ -640,6 +641,8 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         selectedTabCollection: TabCollection? = null,
         step: SaveCollectionStep = SaveCollectionStep.SelectTabs
     ) {
+        if (findNavController(this).currentDestination?.id == R.id.createCollectionFragment) return
+
         val tabs = requireComponents.core.sessionManager.sessions.filter { !it.private }
             .map { Tab(it.id, it.url, it.url.urlToTrimmedHost(), it.title) }
 
