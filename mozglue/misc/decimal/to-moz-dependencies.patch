@@ -1,6 +1,6 @@
-diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
---- a/mfbt/decimal/Decimal.cpp
-+++ b/mfbt/decimal/Decimal.cpp
+diff --git a/mozglue/misc/decimal/Decimal.cpp b/mozglue/misc/decimal/Decimal.cpp
+--- a/mozglue/misc/decimal/Decimal.cpp
++++ b/mozglue/misc/decimal/Decimal.cpp
 @@ -23,22 +23,20 @@
   * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
   * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
@@ -112,9 +112,9 @@ diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
  }
  
  } // namespace blink
-diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
---- a/mfbt/decimal/Decimal.h
-+++ b/mfbt/decimal/Decimal.h
+diff --git a/mozglue/misc/decimal/Decimal.h b/mozglue/misc/decimal/Decimal.h
+--- a/mozglue/misc/decimal/Decimal.h
++++ b/mozglue/misc/decimal/Decimal.h
 @@ -23,26 +23,49 @@
   * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
   * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
