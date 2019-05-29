@@ -574,7 +574,7 @@ class Zone : public JS::shadow::Zone,
 
   // Amount of data to allocate before triggering a new incremental slice for
   // the current GC.
-  js::UnprotectedData<size_t> gcDelayBytes;
+  js::MainThreadData<size_t> gcDelayBytes;
 
   js::ZoneData<uint32_t> tenuredStrings;
   js::ZoneData<bool> allocNurseryStrings;
