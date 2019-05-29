@@ -60,8 +60,9 @@ bool WebRenderCompositionRecorder::MaybeRecordFrame(
   }
 
   if (!mMutex.TryLock()) {
-    // If we cannot lock the mutex, then the |CompositorBridgeParent|
-    // is holding the mutex in |WriteCollectedFrames|.
+    // If we cannot lock the mutex, then either (a) the |CompositorBridgeParent|
+    // is holding the mutex in |WriteCollectedFrames| or (b) the |RenderThread|
+    // is holding the mutex in |ForceFinishRecording|.
     //
     // In either case we do not want to wait to acquire the mutex to record a
     // frame since frames recorded now will not be written to disk.
@@ -104,6 +105,17 @@ void WebRenderCompositionRecorder::WriteCollectedFrames() {
   CompositionRecorder::WriteCollectedFrames();
 
   mFinishedRecording = true;
+}
+
+bool WebRenderCompositionRecorder::ForceFinishRecording() {
+  MutexAutoLock guard(mMutex);
+
+  bool wasRecording = !mFinishedRecording;
+  mFinishedRecording = true;
+
+  ClearCollectedFrames();
+
+  return wasRecording;
 }
 
 bool WebRenderCompositionRecorder::DidPaintContent(
