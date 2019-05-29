@@ -84,8 +84,8 @@ for (let v of VALUES)
 //
 // - through WebAssembly.Table.prototype.set()
 // - through the table.set, table.copy, and table.grow instructions
-// - unimplemented: through table.fill
-// - unimplemented: through WebAssembly.Table.prototype.grow()
+// - through table.fill
+// - through WebAssembly.Table.prototype.grow()
 //
 // Their values can be read in several ways:
 //

@@ -154,22 +154,25 @@ function dummy() { return 37 }
 //
 // table.get and table.set
 
+const wasmFun = wasmEvalText(`(module (func (export "x")))`).exports.x;
+
 // table.get in bounds - returns right value type & value
 // table.get out of bounds - fails
 
-{
+function testTableGet(type, x) {
     let ins = wasmEvalText(
         `(module
-           (table (export "t") 10 anyref)
-           (func (export "f") (param i32) (result anyref)
+           (table (export "t") 10 ${type})
+           (func (export "f") (param i32) (result ${type})
               (table.get (local.get 0))))`);
-    let x = {};
     ins.exports.t.set(0, x);
     assertEq(ins.exports.f(0), x);
     assertEq(ins.exports.f(1), null);
     assertErrorMessage(() => ins.exports.f(10), RangeError, /index out of bounds/);
     assertErrorMessage(() => ins.exports.f(-5), RangeError, /index out of bounds/);
 }
+testTableGet('anyref', {});
+testTableGet('funcref', wasmFun);
 
 // table.get with non-i32 index - fails validation
 
@@ -180,25 +183,6 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
          (table.get (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
-
-// table.get on table of funcref - fails validation because funcref is not expressible
-// Both with and without anyref support
-
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-       (table 10 funcref)
-       (func (export "f") (param i32)
-         (drop (table.get (local.get 0)))))`)),
-                   WebAssembly.CompileError,
-                   /table.get only on tables of anyref/);
-
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-       (table 10 funcref)
-       (func (export "f") (param i32)
-         (drop (table.get (local.get 0)))))`)),
-                   WebAssembly.CompileError,
-                   /table.get only on tables of anyref/);
 
 // table.get when there are no tables - fails validation
 
@@ -213,15 +197,14 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
 // table.set with null - works
 // table.set out of bounds - fails
 
-{
+function testTableSet(type, x) {
     let ins = wasmEvalText(
         `(module
-           (table (export "t") 10 anyref)
-           (func (export "set_anyref") (param i32) (param anyref)
+           (table (export "t") 10 ${type})
+           (func (export "set_anyref") (param i32) (param ${type})
              (table.set (local.get 0) (local.get 1)))
            (func (export "set_null") (param i32)
              (table.set (local.get 0) (ref.null))))`);
-    let x = {};
     ins.exports.set_anyref(3, x);
     assertEq(ins.exports.t.get(3), x);
     ins.exports.set_null(3);
@@ -230,6 +213,8 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     assertErrorMessage(() => ins.exports.set_anyref(10, x), RangeError, /index out of bounds/);
     assertErrorMessage(() => ins.exports.set_anyref(-1, x), RangeError, /index out of bounds/);
 }
+testTableSet('anyref', {});
+testTableSet('funcref', wasmFun);
 
 // table.set with non-i32 index - fails validation
 
@@ -241,7 +226,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
                    WebAssembly.CompileError,
                    /type mismatch/);
 
-// table.set with non-anyref value - fails validation
+// table.set with non-ref value - fails validation
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
@@ -250,16 +235,13 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
          (table.set (i32.const 0) (local.get 0))))`)),
                    WebAssembly.CompileError,
                    /type mismatch/);
-
-// table.set on table of funcref - fails validation
-
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
-      (table 10 funcref)
-      (func (export "f") (param anyref)
-       (table.set (i32.const 0) (local.get 0))))`)),
+       (table 10 funcref)
+       (func (export "f") (param f64)
+         (table.set (i32.const 0) (local.get 0))))`)),
                    WebAssembly.CompileError,
-                   /table.set only on tables of anyref/);
+                   /type mismatch/);
 
 // table.set when there are no tables - fails validation
 
@@ -270,36 +252,43 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
                    WebAssembly.CompileError,
                    /table index out of range for table.set/);
 
-// we can grow table of anyref
-// table.grow with zero delta - always works even at maximum
-// table.grow with delta - works and returns correct old value
-// table.grow with delta at upper limit - fails
-// table.grow with negative delta - fails
+function testTableGrow(type, x) {
+  let ins = wasmEvalText(
+      `(module
+        (table (export "t") 10 20 ${type})
+        (func (export "grow") (param i32) (result i32)
+         (table.grow (ref.null) (local.get 0)))
+        (func (export "grow2") (param i32) (param ${type}) (result i32)
+         (table.grow (local.get 1) (local.get 0))))`);
 
-let ins = wasmEvalText(
-    `(module
-      (table (export "t") 10 20 anyref)
-      (func (export "grow") (param i32) (result i32)
-       (table.grow (ref.null) (local.get 0))))`);
-assertEq(ins.exports.grow(0), 10);
-assertEq(ins.exports.t.length, 10);
-assertEq(ins.exports.grow(1), 10);
-assertEq(ins.exports.t.length, 11);
-assertEq(ins.exports.t.get(10), null);
-assertEq(ins.exports.grow(9), 11);
-assertEq(ins.exports.t.length, 20);
-assertEq(ins.exports.t.get(19), null);
-assertEq(ins.exports.grow(0), 20);
+  // we can grow table of references
+  // table.grow with zero delta - always works even at maximum
+  // table.grow with delta - works and returns correct old value
+  // table.grow with delta at upper limit - fails
+  // table.grow with negative delta - fails
+  assertEq(ins.exports.grow(0), 10);
+  assertEq(ins.exports.t.length, 10);
+  assertEq(ins.exports.grow(1), 10);
+  assertEq(ins.exports.t.length, 11);
+  assertEq(ins.exports.t.get(10), null);
+  assertEq(ins.exports.grow2(9, x), 11);
+  assertEq(ins.exports.t.length, 20);
+  for (var i = 11; i < 20; i++)
+    assertEq(ins.exports.t.get(i), x);
+  assertEq(ins.exports.grow(0), 20);
 
-// The JS API throws if it can't grow
-assertErrorMessage(() => ins.exports.t.grow(1), RangeError, /failed to grow table/);
-assertErrorMessage(() => ins.exports.t.grow(-1), TypeError, /bad [Tt]able grow delta/);
+  // The JS API throws if it can't grow
+  assertErrorMessage(() => ins.exports.t.grow(1), RangeError, /failed to grow table/);
+  assertErrorMessage(() => ins.exports.t.grow(-1), TypeError, /bad [Tt]able grow delta/);
 
-// The wasm API does not throw if it can't grow, but returns -1
-assertEq(ins.exports.grow(1), -1);
-assertEq(ins.exports.t.length, 20);
-assertEq(ins.exports.grow(-1), -1);
-assertEq(ins.exports.t.length, 20)
+  // The wasm API does not throw if it can't grow, but returns -1
+  assertEq(ins.exports.grow(1), -1);
+  assertEq(ins.exports.t.length, 20);
+  assertEq(ins.exports.grow(-1), -1);
+  assertEq(ins.exports.t.length, 20)
+}
+testTableGrow('anyref', 42);
+testTableGrow('funcref', wasmFun);
 
 // Special case for private tables without a maximum
 
@@ -314,16 +303,6 @@ assertEq(ins.exports.t.length, 20)
     assertEq(ins.exports.grow(9), 11);
     assertEq(ins.exports.grow(0), 20);
 }
-
-// Can't grow table of funcref yet
-
-assertErrorMessage(() => wasmEvalText(
-    `(module
-      (table $t 2 funcref)
-      (func $f
-       (drop (table.grow (ref.null) (i32.const 1)))))`),
-                   WebAssembly.CompileError,
-                   /table.grow only on tables of anyref/);
 
 // table.grow with non-i32 argument - fails validation
 
