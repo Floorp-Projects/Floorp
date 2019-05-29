@@ -15,11 +15,16 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.constraintlayout.motion.widget.MotionScene
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import androidx.navigation.Navigation
+import androidx.navigation.Navigator
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_home.*
@@ -190,11 +195,17 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
             val extras =
                 FragmentNavigator.Extras.Builder()
-                    .addSharedElement(it, "toolbar_transition")
                     .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
-                    .addSharedElement(search_engine_icon, "toolbar_icon_transition")
                     .build()
-            Navigation.findNavController(it).navigate(directions, extras)
+
+            if (homeLayout.progress == 1.0F) {
+                Navigation.findNavController(it).navigate(directions, extras)
+            } else {
+                homeLayout.setTransitionDuration(TRANSITION_DURATION_MOTION)
+                homeLayout.transitionToEnd()
+                val listener = getTransitionListener(Navigation.findNavController(it), directions, extras)
+                homeLayout.setTransitionListener(listener)
+            }
 
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
@@ -222,6 +233,26 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
         // We need the shadow to be above the components.
         homeDividerShadow.bringToFront()
+    }
+
+    private fun getTransitionListener(
+        navController: NavController,
+        directions: NavDirections,
+        extras: Navigator.Extras
+    ) = object : MotionLayout.TransitionListener {
+        override fun onTransitionTrigger(p0: MotionLayout?, p1: Int, p2: Boolean, p3: Float) {}
+
+        override fun allowsTransition(p0: MotionScene.Transition?): Boolean {
+            return true
+        }
+
+        override fun onTransitionStarted(p0: MotionLayout?, p1: Int, p2: Int) {
+            navController.navigate(directions, extras)
+        }
+
+        override fun onTransitionChange(p0: MotionLayout?, p1: Int, p2: Int, p3: Float) {}
+
+        override fun onTransitionCompleted(p0: MotionLayout?, p1: Int) {}
     }
 
     override fun onDestroyView() {
@@ -694,6 +725,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     override fun onProfileUpdated(profile: Profile) { emitAccountChanges() }
 
     companion object {
+        private const val TRANSITION_DURATION_MOTION = 400
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val toolbarPaddingDp = 12f
         private const val MOTION_LAYOUT_PROGRESS_ROUND_POINT = 0.25f

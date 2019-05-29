@@ -66,8 +66,7 @@
                 android:id="@+id/search_engine_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_margin="12dp"
-                android:transitionName="toolbar_icon_transition" />
+                android:layout_margin="12dp" />
 
             <TextView
                 android:id="@+id/toolbar"
@@ -80,8 +79,7 @@
                 android:padding="12dp"
                 android:text="@string/search_hint"
                 android:textColor="?primaryText"
-                android:textSize="15sp"
-                android:transitionName="toolbar_transition" />
+                android:textSize="15sp" />
         </org.mozilla.fenix.home.SearchView>
 
         <View
