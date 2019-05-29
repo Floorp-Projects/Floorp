@@ -11,7 +11,9 @@ import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
 import org.mozilla.fenix.DefaultThemeManager
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 
 class DefaultToolbarMenu(
@@ -92,7 +94,7 @@ class DefaultToolbarMenu(
     }
 
     private val menuItems by lazy {
-        listOf(
+        val items = mutableListOf(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_help),
                 R.drawable.ic_help,
@@ -160,19 +162,29 @@ class DefaultToolbarMenu(
                 DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(ToolbarMenu.Item.ReportIssue)
-            },
+            }
+        )
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_save_to_collection),
-                R.drawable.ic_tab_collection,
-                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
-            ) {
-                onItemTapped.invoke(ToolbarMenu.Item.SaveToCollection)
-            },
+        if ((context.asActivity() as? HomeActivity)?.browsingModeManager?.isPrivate == false) {
+            items.add(
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_save_to_collection),
+                    R.drawable.ic_tab_collection,
+                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
+                ) {
+                    onItemTapped.invoke(ToolbarMenu.Item.SaveToCollection)
+                }
+            )
+        }
 
-            BrowserMenuDivider(),
+        items.add(
+            BrowserMenuDivider()
+        )
 
+        items.add(
             menuToolbar
         )
+
+        items
     }
 }
