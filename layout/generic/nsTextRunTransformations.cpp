@@ -59,7 +59,9 @@ already_AddRefed<nsTransformedTextRun> nsTransformedTextRun::Create(
 void nsTransformedTextRun::SetCapitalization(uint32_t aStart, uint32_t aLength,
                                              bool* aCapitalization) {
   if (mCapitalize.IsEmpty()) {
-    if (!mCapitalize.AppendElements(GetLength())) return;
+    if (!mCapitalize.AppendElements(GetLength())) {
+      return;
+    }
     memset(mCapitalize.Elements(), 0, GetLength() * sizeof(bool));
   }
   memcpy(mCapitalize.Elements() + aStart, aCapitalization,
@@ -132,7 +134,9 @@ void MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
     const gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
     nsresult rv = aDest->AddGlyphRun(run->mFont, run->mMatchType, offset, false,
                                      run->mOrientation);
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) {
+      return;
+    }
 
     bool anyMissing = false;
     uint32_t mergeRunStart = iter.GetStringStart();
@@ -825,7 +829,9 @@ void nsCaseTransformTextRunFactory::RebuildTextRun(
         flags, nsTextFrameUtils::Flags(), aMFR);
     child = cachedChild.get();
   }
-  if (!child) return;
+  if (!child) {
+    return;
+  }
   // Copy potential linebreaks into child so they're preserved
   // (and also child will be shaped appropriately)
   NS_ASSERTION(convertedString.Length() == canBreakBeforeArray.Length(),
