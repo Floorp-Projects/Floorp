@@ -63,8 +63,7 @@ scripts:
 
 # lint: Run eslint and sass-lint
   lint:
-    eslint: esw --ext=.js,.jsm,.json,.jsx .
-    jsx-a11y: esw --config=.eslintrc.jsx-a11y.js --ext=.jsx content-src/
+    eslint: eslint --ext=.js,.jsm,.jsx .
     sasslint: sass-lint -v -q
 
 # strings-import: Replace local strings with those from l10n-central

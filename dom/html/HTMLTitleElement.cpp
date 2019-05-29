@@ -75,11 +75,11 @@ nsresult HTMLTitleElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void HTMLTitleElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLTitleElement::UnbindFromTree(bool aNullParent) {
   SendTitleChangeEvent(false);
 
   // Let this fall through.
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
 void HTMLTitleElement::DoneAddingChildren(bool aHaveNotified) {

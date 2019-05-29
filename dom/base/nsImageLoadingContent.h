@@ -218,7 +218,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   // Subclasses are *required* to call BindToTree/UnbindFromTree.
   void BindToTree(mozilla::dom::Document* aDocument, nsIContent* aParent,
                   nsIContent* aBindingParent);
-  void UnbindFromTree(bool aDeep, bool aNullParent);
+  void UnbindFromTree(bool aNullParent);
 
   nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   void OnUnlockedDraw();

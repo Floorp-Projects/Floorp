@@ -7075,7 +7075,7 @@ void Document::WriteCommon(const Sequence<nsString>& aText,
     // without having to do all this copying and then ask it to start
     // parsing....
     nsString text;
-    for (uint32_t i = 0; i < aText.Length(); ++i) {
+    for (size_t i = 0; i < aText.Length(); ++i) {
       text.Append(aText[i]);
     }
     WriteCommon(text, aNewlineTerminate, rv);

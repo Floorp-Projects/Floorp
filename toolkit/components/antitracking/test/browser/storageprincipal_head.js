@@ -20,7 +20,7 @@ this.StoragePrincipalHelper = {
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
         ["privacy.storagePrincipal.enabledForTrackers", true],
-        ["privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "tracking.example.com,tracking.example.org"],
+        ["privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "tracking.example.org"],
       ]});
 
       if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {

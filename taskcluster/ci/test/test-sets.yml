@@ -427,7 +427,6 @@ android-x86_64-opt-tests:
 android-x86_64-tests:
     - cppunit
     - gtest
-    - jsreftest
     - marionette
     - mochitest
     - mochitest-gpu

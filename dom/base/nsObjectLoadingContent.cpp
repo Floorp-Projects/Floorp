@@ -575,8 +575,8 @@ nsresult nsObjectLoadingContent::BindToTree(Document* aDocument,
   return NS_OK;
 }
 
-void nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent) {
-  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
+void nsObjectLoadingContent::UnbindFromTree(bool aNullParent) {
+  nsImageLoadingContent::UnbindFromTree(aNullParent);
 
   nsCOMPtr<Element> thisElement =
       do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));

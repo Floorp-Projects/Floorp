@@ -96,7 +96,7 @@ nsresult HTMLEmbedElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void HTMLEmbedElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLEmbedElement::UnbindFromTree(bool aNullParent) {
 #ifdef XP_MACOSX
   // When a page is reloaded (when an Document's content is removed), the
   // focused element isn't necessarily sent an eBlur event. See
@@ -105,8 +105,8 @@ void HTMLEmbedElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   // disable text input in the browser window. See bug 1137229.
   HTMLObjectElement::OnFocusBlurPlugin(this, false);
 #endif
-  nsObjectLoadingContent::UnbindFromTree(aDeep, aNullParent);
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsObjectLoadingContent::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
 nsresult HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,

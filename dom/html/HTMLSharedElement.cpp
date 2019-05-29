@@ -244,10 +244,10 @@ nsresult HTMLSharedElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void HTMLSharedElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLSharedElement::UnbindFromTree(bool aNullParent) {
   Document* doc = GetUncomposedDoc();
 
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 
   // If we're removing a <base> from a document, we may need to update the
   // document's base URI and base target

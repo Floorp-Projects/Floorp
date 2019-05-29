@@ -32,6 +32,9 @@
 #ifdef MOZ_WIDGET_ANDROID
 #  include "GeneratedJNIWrappers.h"
 #endif
+#ifdef XP_WIN
+#  include "mozilla/mscom/EnsureMTA.h"
+#endif
 
 #define AUDIOIPC_POOL_SIZE_DEFAULT 2
 #define AUDIOIPC_STACK_SIZE_DEFAULT (64 * 4096)
@@ -460,11 +463,11 @@ cubeb* GetCubebContextUnlocked() {
         "Did not initialize sbrandName, and not on the main thread?");
   }
 
+  int rv = CUBEB_ERROR;
 #ifdef MOZ_CUBEB_REMOTING
   MOZ_LOG(gCubebLog, LogLevel::Info,
           ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
 
-  int rv = CUBEB_OK;
   if (sCubebSandbox) {
     if (XRE_IsParentProcess()) {
       // TODO: Don't use audio IPC when within the same process.
@@ -490,11 +493,17 @@ cubeb* GetCubebContextUnlocked() {
 
     rv = audioipc_client_init(&sCubebContext, sBrandName, &initParams);
   } else {
-    rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
+#endif  // MOZ_CUBEB_REMOTING
+#ifdef XP_WIN
+    mozilla::mscom::EnsureMTA([&]() -> void {
+#endif
+      rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
+#ifdef XP_WIN
+    });
+#endif
+#ifdef MOZ_CUBEB_REMOTING
   }
   sIPCConnection = nullptr;
-#else   // !MOZ_CUBEB_REMOTING
-  int rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
 #endif  // MOZ_CUBEB_REMOTING
   NS_WARNING_ASSERTION(rv == CUBEB_OK, "Could not get a cubeb context.");
   sCubebState =

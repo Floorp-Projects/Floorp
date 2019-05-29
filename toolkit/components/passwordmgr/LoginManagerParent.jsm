@@ -54,11 +54,18 @@ this.LoginManagerParent = {
   // to avoid spamming master password prompts on autocomplete searches.
   _lastMPLoginCancelled: Math.NEGATIVE_INFINITY,
 
+  /**
+   * @param {origin} formOrigin
+   * @param {origin} actionOrigin
+   * @param {object} options
+   * @param {boolean} options.acceptDifferentSubdomains Include results for eTLD+1 matches
+   * @param {boolean} options.ignoreActionAndRealm Include all form and HTTP auth logins for the site
+   */
   _searchAndDedupeLogins(formOrigin,
                          actionOrigin,
                          {
-                           looseActionOriginMatch,
                            acceptDifferentSubdomains,
+                           ignoreActionAndRealm,
                          } = {}) {
     let logins;
     let matchData = {
@@ -66,7 +73,7 @@ this.LoginManagerParent = {
       schemeUpgrades: LoginHelper.schemeUpgrades,
       acceptDifferentSubdomains,
     };
-    if (!looseActionOriginMatch) {
+    if (!ignoreActionAndRealm) {
       matchData.formSubmitURL = actionOrigin;
     }
     try {
@@ -256,7 +263,7 @@ this.LoginManagerParent = {
     let logins = this._searchAndDedupeLogins(formOrigin,
                                              actionOrigin,
                                              {
-                                               looseActionOriginMatch: true,
+                                               ignoreActionAndRealm: true,
                                                acceptDifferentSubdomains: INCLUDE_OTHER_SUBDOMAINS_IN_LOOKUP,
                                              });
 
@@ -317,7 +324,7 @@ this.LoginManagerParent = {
       logins = this._searchAndDedupeLogins(formOrigin,
                                            actionOrigin,
                                            {
-                                             looseActionOriginMatch: true,
+                                             ignoreActionAndRealm: true,
                                              acceptDifferentSubdomains: INCLUDE_OTHER_SUBDOMAINS_IN_LOOKUP,
                                            });
     }

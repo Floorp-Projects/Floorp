@@ -20,7 +20,8 @@ function closeFindbarAndWait(findbar) {
       findbar.removeEventListener("transitionend", cont);
       resolve();
     });
-    findbar.close();
+    let close = findbar.getElement("find-closebutton");
+    close.doCommand();
   });
 }
 

@@ -1619,7 +1619,7 @@ void nsImageLoadingContent::BindToTree(Document* aDocument, nsIContent* aParent,
   }
 }
 
-void nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent) {
+void nsImageLoadingContent::UnbindFromTree(bool aNullParent) {
   // We may be leaving the document, so if our image is tracked, untrack it.
   nsCOMPtr<Document> doc = GetOurCurrentDoc();
   if (!doc) return;

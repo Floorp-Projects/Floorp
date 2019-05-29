@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef ACCESSIBILITY
+#  include "mozilla/a11y/DocAccessibleParent.h"
+#endif
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentParent.h"
@@ -19,7 +22,8 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace dom {
 
-BrowserBridgeParent::BrowserBridgeParent() : mIPCOpen(false) {}
+BrowserBridgeParent::BrowserBridgeParent()
+    : mEmbedderAccessibleID(0), mIPCOpen(false) {}
 
 BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 
@@ -201,6 +205,15 @@ IPCResult BrowserBridgeParent::RecvSetIsUnderHiddenEmbedderElement(
     const bool& aIsUnderHiddenEmbedderElement) {
   Unused << mBrowserParent->SendSetIsUnderHiddenEmbedderElement(
       aIsUnderHiddenEmbedderElement);
+  return IPC_OK();
+}
+
+IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
+    PDocAccessibleParent* aDoc, uint64_t aID) {
+#ifdef ACCESSIBILITY
+  mEmbedderAccessibleDoc = static_cast<a11y::DocAccessibleParent*>(aDoc);
+  mEmbedderAccessibleID = aID;
+#endif
   return IPC_OK();
 }
 

@@ -327,6 +327,46 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
       test_length_unclamped,
       test_percent_unclamped,
       test_calc_wrapped_calc_transition ];
+
+  function test_offset_rotate_transition(prop) {
+    [
+      // No transition between a keyword and a fixed angle.
+      { start: "auto", end: "0deg",
+        expected: "0deg" },
+      // "auto 45deg" to "auto 145 deg".
+      { start: "auto 45deg", end: "auto 145deg",
+        expected: "auto 70deg" },
+      // "auto 130deg" to "auto 90deg".
+      { start: "auto 130deg", end: "100grad auto",
+        expected: "auto 120deg" },
+      // "auto 0deg" to "auto 180deg".
+      { start: "auto", end: "reverse",
+        expected: "auto 45deg" },
+      // "auto 45deg" to "auto 225deg".
+      { start: "auto 45deg", end: "45deg reverse",
+        expected: "auto 90deg" },
+      // "auto -60deg" to "auto -360deg".
+      { start: "auto -60deg",
+        end: "auto calc(90deg - 0.5turn - 300grad + 0rad)",
+        expected: "auto -135deg" },
+    ].forEach(test => {
+      div.style.transitionProperty = 'none';
+      div.style[prop] = test.start;
+      is(cs[prop], test.start,
+         `offset-rotate: computed value before transition`);
+      div.style.transitionProperty = prop;
+      div.style[prop] = test.end;
+      is(cs[prop], test.expected,
+         `offset-rotate: interpolation of offset-rotate`);
+      // We check distance only if there is a transition.
+      if (test.end != test.expected) {
+        check_distance(prop, test.start, test.expected, test.end);
+      }
+    });
+  }
+  supported_properties["offset-rotate"] =
+    [ test_angle_transition,
+      test_offset_rotate_transition ];
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {

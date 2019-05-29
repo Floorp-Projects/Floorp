@@ -404,12 +404,12 @@ nsresult SVGSVGElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void SVGSVGElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void SVGSVGElement::UnbindFromTree(bool aNullParent) {
   if (mTimedDocumentRoot) {
     mTimedDocumentRoot->SetParent(nullptr);
   }
 
-  SVGGraphicsElement::UnbindFromTree(aDeep, aNullParent);
+  SVGGraphicsElement::UnbindFromTree(aNullParent);
 }
 
 SVGAnimatedTransformList* SVGSVGElement::GetAnimatedTransformList(

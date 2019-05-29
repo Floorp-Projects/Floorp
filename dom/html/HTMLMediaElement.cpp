@@ -4291,7 +4291,7 @@ void HTMLMediaElement::ReportTelemetry() {
   }
 }
 
-void HTMLMediaElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLMediaElement::UnbindFromTree(bool aNullParent) {
   mUnboundFromTree = true;
   mVisibilityState = Visibility::Untracked;
 
@@ -4299,7 +4299,7 @@ void HTMLMediaElement::UnbindFromTree(bool aDeep, bool aNullParent) {
     NotifyUAWidgetTeardown();
   }
 
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 
   MOZ_ASSERT(IsHidden());
   NotifyDecoderActivityChanges();

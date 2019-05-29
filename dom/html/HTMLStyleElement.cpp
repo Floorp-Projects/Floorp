@@ -95,11 +95,11 @@ nsresult HTMLStyleElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void HTMLStyleElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLStyleElement::UnbindFromTree(bool aNullParent) {
   nsCOMPtr<Document> oldDoc = GetUncomposedDoc();
   ShadowRoot* oldShadow = GetContainingShadow();
 
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 
   if (oldShadow && GetContainingShadow()) {
     // The style is in a shadow tree and is still in the

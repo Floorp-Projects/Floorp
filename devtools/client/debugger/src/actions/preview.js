@@ -18,6 +18,7 @@ import {
   getSelectedFrame,
   getSymbols,
   getCurrentThread,
+  getPreviewCount,
 } from "../selectors";
 
 import { getMappedExpression } from "./expressions";
@@ -83,6 +84,8 @@ export function setPreview(
   target: HTMLElement
 ) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+    dispatch({ type: "START_PREVIEW" });
+    const previewCount = getPreviewCount(getState());
     if (getPreview(getState())) {
       dispatch(clearPreview(cx));
     }
@@ -136,6 +139,11 @@ export function setPreview(
     // on the token. If it happens to be hovered on whitespace, it should
     // not render anything
     if (!target.matches(":hover") && !isTesting()) {
+      return;
+    }
+
+    // Don't finish dispatching if another setPreview was started
+    if (previewCount != getPreviewCount(getState())) {
       return;
     }
 

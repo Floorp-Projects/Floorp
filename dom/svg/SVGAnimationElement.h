@@ -37,7 +37,7 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
   // nsIContent specializations
   virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent) override;
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
+  virtual void UnbindFromTree(bool aNullParent) override;
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 

@@ -154,7 +154,7 @@ void HTMLLinkElement::LinkRemoved() {
   CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkRemoved"));
 }
 
-void HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLLinkElement::UnbindFromTree(bool aNullParent) {
   // Cancel any DNS prefetches
   // Note: Must come before ResetLinkState.  If called after, it will recreate
   // mCachedURI based on data that is invalid - due to a call to GetHostname.
@@ -182,7 +182,7 @@ void HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   }
 
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 
   Unused << UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
 }
