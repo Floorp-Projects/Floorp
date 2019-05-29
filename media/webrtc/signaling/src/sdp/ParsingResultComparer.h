@@ -15,16 +15,26 @@ class Sdp;
 class SdpMediaSection;
 class SdpAttributeList;
 
+enum class SdpComparisonResult {
+  Inequal = false,
+  Equal = true,
+};
+
 class ParsingResultComparer {
  public:
   ParsingResultComparer() = default;
 
   bool Compare(const Sdp& rsdparsaSdp, const Sdp& sipccSdp,
-               const std::string& originalSdp);
-  bool CompareMediaSections(const SdpMediaSection& rustMediaSection,
-                            const SdpMediaSection& sipccMediaSection) const;
-  bool CompareAttrLists(const SdpAttributeList& rustAttrlist,
-                        const SdpAttributeList& sipccAttrlist, int level) const;
+               const std::string& originalSdp,
+               const SdpComparisonResult expect = SdpComparisonResult::Equal);
+  bool CompareMediaSections(
+      const SdpMediaSection& rustMediaSection,
+      const SdpMediaSection& sipccMediaSection,
+      const SdpComparisonResult expect = SdpComparisonResult::Equal) const;
+  bool CompareAttrLists(
+      const SdpAttributeList& rustAttrlist,
+      const SdpAttributeList& sipccAttrlist, int level,
+      const SdpComparisonResult expect = SdpComparisonResult::Equal) const;
   void TrackRustParsingFailed(size_t sipccErrorCount) const;
 
  private:
