@@ -136,9 +136,24 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         kwargs["prompt"] = True
         kwargs["install_browser"] = False
 
+        # Install the deps
+        # We do this explicitly to avoid calling pip with options that aren't
+        # supported in the in-tree version
+        wptrunner_path = os.path.join(self._here, "tests", "tools", "wptrunner")
+        browser_cls = run.product_setup[kwargs["product"]].browser_cls
+        requirements = ["requirements.txt"]
+        if hasattr(browser_cls, "requirements"):
+            requirements.append(browser_cls.requirements)
+
+        for filename in requirements:
+            path = os.path.join(wptrunner_path, filename)
+            if os.path.exists(path):
+                self.virtualenv_manager.install_pip_requirements(path, require_hashes=False)
+
+        venv = run.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root,
+                                         skip_virtualenv_setup=True)
         try:
-            kwargs = run.setup_wptrunner(run.virtualenv.Virtualenv(self.virtualenv_manager.virtualenv_root, False),
-                                         **kwargs)
+            kwargs = run.setup_wptrunner(venv, **kwargs)
         except run.WptrunError as e:
             print(e.message, file=sys.stderr)
             sys.exit(1)
