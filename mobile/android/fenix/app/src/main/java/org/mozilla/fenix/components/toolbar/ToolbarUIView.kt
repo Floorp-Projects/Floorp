@@ -24,7 +24,7 @@ import org.mozilla.fenix.mvi.UIView
 class ToolbarUIView(
     sessionId: String?,
     isPrivate: Boolean,
-    inSearchFragment: Boolean,
+    startInEditMode: Boolean,
     container: ViewGroup,
     actionEmitter: Observer<SearchAction>,
     changesObservable: Observable<SearchChange>,
@@ -49,7 +49,7 @@ class ToolbarUIView(
             ?: sessionManager.selectedSession
 
         view.apply {
-            if (inSearchFragment) {
+            if (startInEditMode) {
                 editMode()
             }
 

@@ -26,7 +26,7 @@ class ToolbarComponent(
     bus: ActionBusFactory,
     private val sessionId: String?,
     private val isPrivate: Boolean,
-    private val inSearchFragment: Boolean,
+    private val startInEditMode: Boolean,
     private val engineIconView: ImageView? = null,
     viewModelProvider: UIComponentViewModelProvider<SearchState, SearchChange>
 ) :
@@ -41,7 +41,7 @@ class ToolbarComponent(
     override fun initView() = ToolbarUIView(
         sessionId,
         isPrivate,
-        inSearchFragment,
+        startInEditMode,
         container,
         actionEmitter,
         changesObservable,
