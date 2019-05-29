@@ -208,10 +208,11 @@ already_AddRefed<nsIContentSecurityPolicy> CSPInfoToCSP(
 
 nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aCSP);
   MOZ_ASSERT(aCSPInfo);
 
   if (!aCSP || !aCSPInfo) {
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   uint32_t count = 0;

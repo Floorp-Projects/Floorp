@@ -1324,7 +1324,7 @@ nsresult WorkerPrivate::SetCSPFromHeaderValues(
 
 void WorkerPrivate::StoreCSPOnClient() {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
-  if (data->mClientSource) {
+  if (data->mClientSource && mLoadInfo.mCSPInfo) {
     data->mClientSource->SetCspInfo(*mLoadInfo.mCSPInfo.get());
   }
 }
