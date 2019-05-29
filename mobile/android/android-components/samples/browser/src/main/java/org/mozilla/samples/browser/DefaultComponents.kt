@@ -84,7 +84,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     val searchEngineManager by lazy {
         SearchEngineManager().apply {
             CoroutineScope(Dispatchers.Default).launch {
-                load(applicationContext).await()
+                loadAsync(applicationContext).await()
             }
         }
     }

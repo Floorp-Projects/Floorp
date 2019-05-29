@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-search**
+  * `SearchEngineManager.load()` is deprecated. Use `SearchEngineManager.loadAsync()` instead.
+
 * **browser-menu**
   * Fixed a bug where overscroll effects would appear on the overflow menu.
 

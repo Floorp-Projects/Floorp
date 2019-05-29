@@ -15,7 +15,6 @@ object KotlinCompiler {
         "browser-domains",
         "browser-engine-gecko",
         "browser-engine-servo",
-        "browser-search",
         "browser-storage-sync",
         "feature-accounts",
         "feature-contextmenu",

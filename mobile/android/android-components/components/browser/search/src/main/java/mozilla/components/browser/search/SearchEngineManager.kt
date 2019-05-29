@@ -39,10 +39,10 @@ class SearchEngineManager(
     var defaultSearchEngine: SearchEngine? = null
 
     /**
-     * Asynchronously load search engines from providers. Inherits caller's [CoroutineScope.coroutineContext].
+     * Asynchronously load search engines from providers. Inherits caller's [CoroutineContext].
      */
     @Synchronized
-    suspend fun load(context: Context): Deferred<SearchEngineList> = coroutineScope {
+    suspend fun loadAsync(context: Context): Deferred<SearchEngineList> = coroutineScope {
         // We might have previous 'load' calls still running; cancel them.
         deferredSearchEngines?.cancel()
         scope.async {
@@ -51,14 +51,23 @@ class SearchEngineManager(
     }
 
     /**
+     * Asynchronously load search engines from providers. Inherits caller's [CoroutineContext].
+     */
+    @Synchronized
+    @Suppress("DeferredIsResult")
+    @Deprecated("Use `loadAsync` instead", ReplaceWith("loadAsync(context)"))
+    // TODO remove it from public API
+    suspend fun load(context: Context): Deferred<SearchEngineList> = loadAsync(context)
+
+    /**
      * Gets the localized list of search engines and a default search engine from providers.
      *
      * If no call to load() has been made then calling this method will perform a load.
      */
     @Synchronized
-    private fun getSearchEngineList(context: Context): SearchEngineList {
-        return deferredSearchEngines?.let { runBlocking { it.await() } }
-                ?: runBlocking { load(context).await() }
+    private fun getSearchEngineList(context: Context): SearchEngineList = runBlocking {
+        (deferredSearchEngines ?: loadAsync(context))
+            .await()
     }
 
     /**
@@ -129,7 +138,7 @@ class SearchEngineManager(
         object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent?) {
                 scope.launch {
-                    load(context.applicationContext).await()
+                    loadAsync(context.applicationContext).await()
                 }
             }
         }

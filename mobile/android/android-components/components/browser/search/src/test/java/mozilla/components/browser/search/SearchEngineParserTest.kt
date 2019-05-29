@@ -4,13 +4,13 @@
 
 package mozilla.components.browser.search
 
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.io.IOException
 
 @RunWith(RobolectricTestRunner::class)
@@ -18,7 +18,7 @@ class SearchEngineParserTest {
     @Test
     fun `SearchEngine can be parsed from assets`() {
         val searchEngine = SearchEngineParser().load(
-                RuntimeEnvironment.application.assets,
+            testContext.assets,
                 "google", "searchplugins/google-b-m.xml")
 
         assertEquals("google", searchEngine.identifier)
@@ -35,7 +35,7 @@ class SearchEngineParserTest {
     @Test
     fun `SearchEngine without SuggestUri wont build suggestionURL`() {
         val searchEngine = SearchEngineParser().load(
-                RuntimeEnvironment.application.assets,
+            testContext.assets,
                 "amazon", "searchplugins/amazon-au.xml")
 
         val suggestionURL = searchEngine.buildSuggestionsURL("Mozilla")
@@ -45,7 +45,7 @@ class SearchEngineParserTest {
     @Test(expected = IOException::class)
     fun `Parsing not existing file will throw exception`() {
         SearchEngineParser().load(
-                RuntimeEnvironment.application.assets,
+            testContext.assets,
                 "google", "does/not/exist.xml")
     }
 }

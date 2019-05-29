@@ -14,7 +14,6 @@ import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
 import java.io.File
 import java.io.FileInputStream
-import java.util.ArrayList
 import java.util.UUID
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
@@ -45,18 +44,13 @@ class ParseSearchPluginsTest(private val searchEngineIdentifier: String) {
     companion object {
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-        fun searchPlugins(): Collection<Array<Any>> {
-            val searchPlugins = ArrayList<Array<Any>>()
-            basePath.list().forEach {
-                searchPlugins.add(arrayOf(it))
-            }
-            return searchPlugins
-        }
+        fun searchPlugins(): Collection<Array<Any>> = basePath.list()
+            .mapNotNull { it as Any }
+            .map { arrayOf(it) }
 
         private val basePath: File
-            get() {
-                val classLoader = ParseSearchPluginsTest::class.java.classLoader
-                return File(classLoader.getResource("searchplugins").file)
-            }
+            get() = ParseSearchPluginsTest::class.java.classLoader!!
+                .getResource("searchplugins").file
+                .let { File(it) }
     }
 }

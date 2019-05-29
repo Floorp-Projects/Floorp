@@ -6,15 +6,16 @@ package mozilla.components.browser.search.suggestions
 
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngineParser
+import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.Assert.assertEquals
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.io.IOException
 
 @RunWith(RobolectricTestRunner::class)
 class SearchSuggestionClientTest {
+
     companion object {
         val GOOGLE_MOCK_RESPONSE: SearchSuggestionFetcher = { "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]" }
         val QWANT_MOCK_RESPONSE: SearchSuggestionFetcher = { "{\"status\":\"success\",\"data\":{\"items\":[{\"value\":\"firefox (video game)\",\"suggestType\":3},{\"value\":\"firefox addons\",\"suggestType\":12},{\"value\":\"firefox\",\"suggestType\":2},{\"value\":\"firefox quantum\",\"suggestType\":12},{\"value\":\"firefox focus\",\"suggestType\":12}],\"special\":[],\"availableQwick\":[]}}" }
@@ -24,7 +25,7 @@ class SearchSuggestionClientTest {
     @Test
     fun `Get a list of results based on the Google search engine`() {
         val searchEngine = SearchEngineParser().load(
-                RuntimeEnvironment.application.assets,
+            testContext.assets,
                 "google", "searchplugins/google-b-m.xml")
 
         val client = SearchSuggestionClient(searchEngine, GOOGLE_MOCK_RESPONSE)
@@ -40,7 +41,7 @@ class SearchSuggestionClientTest {
     @Test
     fun `Get a list of results based on a non google search engine`() {
         val searchEngine = SearchEngineParser().load(
-                RuntimeEnvironment.application.assets,
+            testContext.assets,
                 "google", "searchplugins/qwant.xml")
 
         val client = SearchSuggestionClient(searchEngine, QWANT_MOCK_RESPONSE)
@@ -56,7 +57,7 @@ class SearchSuggestionClientTest {
     @Test(expected = SearchSuggestionClient.ResponseParserException::class)
     fun `Check that a bad response will throw a parser exception`() {
         val searchEngine = SearchEngineParser().load(
-                RuntimeEnvironment.application.assets,
+            testContext.assets,
                 "google", "searchplugins/google-b-m.xml")
 
         val client = SearchSuggestionClient(searchEngine, SERVER_ERROR_RESPONSE)
@@ -69,10 +70,10 @@ class SearchSuggestionClientTest {
     @Test(expected = SearchSuggestionClient.FetchException::class)
     fun `Check that an exception in the suggestionFetcher will re-throw an IOException`() {
         val searchEngine = SearchEngineParser().load(
-                RuntimeEnvironment.application.assets,
+            testContext.assets,
                 "google", "searchplugins/google-b-m.xml")
 
-        val client = SearchSuggestionClient(searchEngine, { throw IOException() })
+        val client = SearchSuggestionClient(searchEngine) { throw IOException() }
 
         runBlocking {
             client.getSuggestions("firefox")
@@ -82,9 +83,9 @@ class SearchSuggestionClientTest {
     @Test(expected = IllegalArgumentException::class)
     fun `Check that a search engine without a suggestURI will throw an exception`() {
         val searchEngine = SearchEngineParser().load(
-                RuntimeEnvironment.application.assets,
+            testContext.assets,
                 "drae", "searchplugins/drae.xml")
 
-        val client = SearchSuggestionClient(searchEngine, { "no-op" })
+        SearchSuggestionClient(searchEngine) { "no-op" }
     }
 }
