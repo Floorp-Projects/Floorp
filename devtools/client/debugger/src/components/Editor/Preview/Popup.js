@@ -55,7 +55,7 @@ type State = {
 export class Popup extends Component<Props, State> {
   marker: any;
   pos: any;
-  popover: ?HTMLDivElement;
+  popup: ?HTMLDivElement;
   timerId: ?IntervalID;
 
   constructor(props: Props) {
@@ -89,8 +89,7 @@ export class Popup extends Component<Props, State> {
     if (
       isTesting() ||
       currentTarget.matches(":hover") ||
-      (this.popover.$popover && this.popover.$popover.matches(":hover")) ||
-      (this.popover.$tooltip && this.popover.$tooltip.matches(":hover"))
+      (this.popup && this.popup.matches(":hover"))
     ) {
       return;
     }
@@ -119,6 +118,7 @@ export class Popup extends Component<Props, State> {
     return (
       <div
         className="preview-popup"
+        ref={a => (this.popup = a)}
         onClick={() =>
           selectSourceURL(cx, result.location.url, {
             line: result.location.line,
@@ -143,6 +143,7 @@ export class Popup extends Component<Props, State> {
       <div
         className="preview-popup"
         style={{ maxHeight: this.calculateMaxHeight() }}
+        ref={a => (this.popup = a)}
       >
         <ObjectInspector
           roots={properties}
@@ -166,7 +167,7 @@ export class Popup extends Component<Props, State> {
       preview: { result },
     } = this.props;
     return (
-      <div className="preview-popup">
+      <div className="preview-popup" ref={a => (this.popup = a)}>
         {Rep({
           object: result,
           mode: MODE.LONG,
@@ -228,7 +229,6 @@ export class Popup extends Component<Props, State> {
         type={type}
         onPopoverCoords={this.onPopoverCoords}
         editorRef={editorRef}
-        ref={a => (this.popover = a)}
       >
         {this.renderPreview()}
       </Popover>
