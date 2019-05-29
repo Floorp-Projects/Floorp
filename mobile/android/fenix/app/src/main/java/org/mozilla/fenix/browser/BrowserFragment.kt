@@ -18,6 +18,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
@@ -386,6 +387,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     override fun onResume() {
+        if (getSessionById() == null) findNavController(this).popBackStack(R.id.homeFragment, false)
         super.onResume()
         context?.components?.core?.let {
             val preferredColorScheme = it.getPreferredColorScheme()
