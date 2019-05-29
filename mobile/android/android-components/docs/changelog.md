@@ -55,6 +55,62 @@ permalink: /changelog/
 * **feature-tab-collections**
   * Added option to remove all collections and their tabs: `TabCollectionStorage.removeAllCollections()`.
 
+* **concept-push**
+  * 🆕 Added a new component for supporting push notifications.
+
+* **lib-push-firebase**
+  * 🆕 Added a new component for Firebase Cloud Messaging push support.
+  ```kotlin
+  class FirebasePush : AbstractFirebasePushService()
+  ```
+  * In your Manifest you need to make the service visible:
+  ```xml
+  <service android:name=".FirebasePush">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+    </intent-filter>
+  </service>
+  ```
+
+* **feature-push**
+  * 🆕 Added a new component for Autopush messaging support.
+  ```kotlin
+  class Application {
+    override fun onCreate() {
+      PushProcessor.install(services.push)
+    }
+  }
+
+  class Services {
+    val push by lazy {
+      val config = PushConfig(
+        senderId = "my-app",
+        serverHost = "push.services.mozilla.com",
+        serviceType = ServiceType.FCM,
+        protocol = Protocol.HTTPS
+      )
+
+      // You need to use a supported push service (Firebase is one of them).
+      val pushService = FirebasePush()
+
+      AutoPushFeature(context, pushService, config).also { it.initialize() }
+    }
+  }
+
+  class MyActivity {
+    override fun onCreate() {
+      services.push.registerForSubscriptions(object : PushSubscriptionObserver {
+        override fun onSubscriptionAvailable(subscription: AutoPushSubscription) { }
+      })
+
+      services.push.registerForPushMessages(PushType.Services, object: Bus.Observer<PushType, String> {
+        override fun onEvent(type: PushType, message: String) { }
+      })
+    }
+  }
+  ```
+  * Checkout the component documentation for more details.
+
 # 0.54.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.53.0...v0.54.0)
@@ -290,7 +346,6 @@ permalink: /changelog/
 * **feature-prompts**
   * ⚠️ **This is a breaking API change**:
   * `PromptFeature` constructor adds an optional `sessionId`. This should use the custom tab session id if available.
-
 
 * **browser-session**
   * Added `SessionManager.runWithSessionIdOrSelected(sessionId: String?)` run function block on a session ID. If the session does not exist, then uses the selected session.
