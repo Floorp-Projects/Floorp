@@ -456,6 +456,10 @@ marionette-headless:
 
 android-hw-arm7-opt-unittests:
     - jittest
+    - mochitest-media
+
+android-hw-arm7-pgo-unittests:
+    - jittest
     - jsreftest
     - mochitest-media
 
