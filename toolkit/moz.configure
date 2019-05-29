@@ -1775,3 +1775,15 @@ def new_notification_store(milestone):
 
 set_config('MOZ_NEW_NOTIFICATION_STORE', True, when=new_notification_store)
 set_define('MOZ_NEW_NOTIFICATION_STORE', True, when=new_notification_store)
+
+
+# new Cert Storage implementation
+# ==============================================================
+
+@depends(milestone)
+def new_cert_storage(milestone):
+    if milestone.is_nightly:
+        return True
+
+set_config('MOZ_NEW_CERT_STORAGE', True, when=new_cert_storage)
+set_define('MOZ_NEW_CERT_STORAGE', True, when=new_cert_storage)
