@@ -19,6 +19,7 @@
 
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
+#include "gc/Nursery-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Realm-inl.h"
 
@@ -44,6 +45,8 @@ JS::Zone::Zone(JSRuntime* rt)
       gcGrayRoots_(this),
       weakCaches_(this),
       gcWeakKeys_(this, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
+      gcNurseryWeakKeys_(this, SystemAllocPolicy(),
+                         rt->randomHashCodeScrambler()),
       typeDescrObjects_(this, this),
       markedAtoms_(this),
       atomCache_(this),
@@ -106,7 +109,7 @@ Zone::~Zone() {
 bool Zone::init(bool isSystemArg) {
   isSystem = isSystemArg;
   regExps_.ref() = make_unique<RegExpZone>(this);
-  return regExps_.ref() && gcWeakKeys().init();
+  return regExps_.ref() && gcWeakKeys().init() && gcNurseryWeakKeys().init();
 }
 
 void Zone::setNeedsIncrementalBarrier(bool needs) {
@@ -186,6 +189,82 @@ void Zone::sweepBreakpoints(FreeOp* fop) {
       }
       instance->debug().clearAllBreakpoints(fop, instance->objectUnbarriered());
     }
+  }
+}
+
+static void SweepWeakEntryVectorWhileMinorSweeping(
+    js::gc::WeakEntryVector& entries) {
+  EraseIf(entries, [](js::gc::WeakMarkable& markable) -> bool {
+    return IsAboutToBeFinalizedDuringMinorSweep(&markable.key);
+  });
+}
+
+void Zone::sweepAfterMinorGC() {
+  for (WeakKeyTable::Range r = gcNurseryWeakKeys().all(); !r.empty();
+       r.popFront()) {
+    // Sweep gcNurseryWeakKeys to move live (forwarded) keys to gcWeakKeys,
+    // scanning through all the entries for such keys to update them.
+    //
+    // Forwarded and dead keys may also appear in their delegates' entries,
+    // so sweep those too (see below.)
+
+    // The tricky case is when the key has a delegate that was already
+    // tenured. Then it will be in its compartment's gcWeakKeys, but we
+    // still need to update the key (which will be in the entries
+    // associated with it.)
+    gc::Cell* key = r.front().key;
+    MOZ_ASSERT(!key->isTenured());
+    if (!Nursery::getForwardedPointer(&key)) {
+      // Dead nursery cell => discard.
+      continue;
+    }
+
+    // Key been moved. The value is an array of <map,key> pairs; update all
+    // keys in that array.
+    WeakEntryVector& entries = r.front().value;
+    SweepWeakEntryVectorWhileMinorSweeping(entries);
+
+    // Live (moved) nursery cell. Append entries to gcWeakKeys.
+    auto entry = gcWeakKeys().get(key);
+    if (!entry) {
+      if (!gcWeakKeys().put(key, gc::WeakEntryVector())) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        oomUnsafe.crash("Failed to tenure weak keys entry");
+      }
+      entry = gcWeakKeys().get(key);
+    }
+
+    for (auto& markable : entries) {
+      if (!entry->value.append(markable)) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        oomUnsafe.crash("Failed to tenure weak keys entry");
+      }
+    }
+
+    // If the key has a delegate, then it will map to a WeakKeyEntryVector
+    // containing the key that needs to be updated.
+
+    JSObject* delegate = WeakMapBase::getDelegate(key->as<JSObject>());
+    if (!delegate) {
+      continue;
+    }
+    MOZ_ASSERT(delegate->isTenured());
+
+    // If delegate was formerly nursery-allocated, we will sweep its
+    // entries when we visit its gcNurseryWeakKeys (if we haven't already).
+    // Note that we don't know the nursery address of the delegate, since
+    // the location it was stored in has already been updated.
+    //
+    // Otherwise, it will be in gcWeakKeys and we sweep it here.
+    auto p = delegate->zone()->gcWeakKeys().get(delegate);
+    if (p) {
+      SweepWeakEntryVectorWhileMinorSweeping(p->value);
+    }
+  }
+
+  if (!gcNurseryWeakKeys().clear()) {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    oomUnsafe.crash("OOM while clearing gcNurseryWeakKeys.");
   }
 }
 
