@@ -255,4 +255,13 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
 	<p>Die Website auf %1$s wurde als betrügerische Website gemeldet und aufgrund Ihrer Sicherheitseinstellungen blockiert.</p>
 	]]></string>
+
+    <!-- The tile for the list of external apps to open the link in -->
+    <string name="mozac_feature_applinks_open_in">Öffnen in…</string>
+    <!-- The description to warn users that their private browsing session changes  -->
+    <string name="mozac_feature_applinks_confirm_dialog_title">In App öffnen? Ihre Aktivitäten sind dann möglicherweise nicht mehr privat.</string>
+    <!-- Opens the selected time -->
+    <string name="mozac_feature_applinks_confirm_dialog_confirm">Öffnen</string>
+    <!-- Cancels the prompt -->
+    <string name="mozac_feature_applinks_confirm_dialog_deny">Abbrechen</string>
 </resources>

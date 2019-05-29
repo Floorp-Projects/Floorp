@@ -66,7 +66,7 @@
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
       <ul>
         <li>该网站可能暂时无法使用或太忙。请稍后再试一次。</li>
-        <li>如果您无法载入任何页面，请检查设备的数据或Wi-Fi连接。</li>
+        <li>如果您无法载入任何页面，请检查设备的数据或 Wi-Fi 连接。</li>
       </ul>
     ]]></string>
 
@@ -83,8 +83,8 @@
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
       <p>浏览器已停止尝试获取请求的项。网站正在将请求无限循环重定向。</p>
       <ul>
-        <li>您是否禁用或拦截了该网站必须的cookie？</li>
-        <li>如果接受该网站的cookie仍然不能解决问题，则很可能是该网站服务器配置的问题而不是您计算机的问题。</li>
+        <li>您是否禁用或拦截了该网站必须的 Cookie？</li>
+        <li>如果接受该网站的 Cookie 仍然不能解决问题，则很可能是该网站服务器配置的问题而不是您计算机的问题。</li>
       </ul>
     ]]></string>
 
@@ -103,7 +103,7 @@
     <string name="mozac_browser_errorpages_port_blocked_title">安全原因导致访问端口受限</string>
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
-      <p>请求的网址指定的端口（例如<q>mozilla.org:80</q>表示使用mozilla.org的80端口）通常<em>不是</em>用于网络浏览。为了保护您的安全，浏览器已取消请求。</p>
+      <p>请求的网址指定的端口（例如 <q>mozilla.org:80</q> 表示使用 mozilla.org 的 80 端口）通常<em>不是</em>用于网络浏览。为了保护您的安全，浏览器已取消请求。</p>
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
@@ -113,7 +113,7 @@
       <p>协商连接时网络链路中断。请重试。</p>
       <ul>
         <li>该网站可能暂时无法使用或太忙。请稍后再试一次。</li>
-        <li>如果您无法载入任何页面，请检查设备的数据或Wi-Fi连接。</li>
+        <li>如果您无法载入任何页面，请检查设备的数据或 Wi-Fi 连接。</li>
       </ul>
     ]]></string>
 
@@ -161,9 +161,9 @@
       <p>浏览器无法找到该网址对应的服务器。</p>
       <ul>
         <li>检查网址有没有输入错误，比如把
-			<strong>www</strong>.example.com输入成了
+			<strong>www</strong>.example.com 输入成了
 			<strong>ww</strong>.example.com。</li>
-        <li>如果您无法载入任何页面，请检查设备的数据或Wi-Fi连接。</li>
+        <li>如果您无法载入任何页面，请检查设备的数据或 Wi-Fi 连接。</li>
       </ul>
     ]]></string>
 
@@ -178,14 +178,14 @@
     <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
       <ul>
         <li>网址的格式通常是：<strong>http://www.example.com/</strong>。</li>
-        <li>请确保您使用的是正斜杠（即<strong>/</strong>）。</li>
+        <li>请确保您使用的是正斜杠（即 <strong>/</strong>）。</li>
       </ul>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">未知协议</string>
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
-      <p>浏览器无法识别该网址的协议（例如<q>wxyz://</q>），因此浏览器无法连接至该网站。</p>
+      <p>浏览器无法识别该网址的协议（例如 <q>wxyz://</q>），因此浏览器无法连接至该网站。</p>
       <ul>
         <li>您是否在尝试访问多媒体或其他非文字服务？请检查该站点是否有其他要求。</li>
         <li>某些协议可能需要安装第三方软件或插件后浏览器才能识别。</li>
@@ -217,7 +217,7 @@
       <ul>
         <li>浏览器的代理服务器设置是否正确？请检查并重试。</li>
         <li>该代理服务是否允许来自此网络的连接？</li>
-        <li>仍然不行？请联系您的网络管理员或者互联网服务提供商以寻求协助。</li>
+        <li>仍然不行？请联系您的网络管理员或者电信运营商以寻求协助。</li>
 	  </ul>
     ]]></string>
 
@@ -236,27 +236,36 @@
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">恶意软件网站问题</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
-      <p>根据举报，位于%1$s的此网站有攻击行为。现已根据您的安全选项予以拦截。</p>
+      <p>根据举报，位于 %1$s 的此网站有攻击行为。现已根据您的安全选项予以拦截。</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">流氓软件网站问题</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
-      <p>根据举报，位于%1$s的此网站提供流氓软件。现已根据您的安全选项予以拦截。</p>
+      <p>根据举报，位于 %1$s 的此网站提供流氓软件。现已根据您的安全选项予以拦截。</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">恶意网站问题</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
-      <p>根据举报，位于%1$s的此网站可能有攻击行为。现已根据您的安全选项予以拦截。</p>
+      <p>根据举报，位于 %1$s 的此网站可能有攻击行为。现已根据您的安全选项予以拦截。</p>
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">欺诈网站问题</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
-      <p>根据举报，位于%1$s的此网站为欺诈网站。现已根据您的安全选项予以拦截。</p>
+      <p>根据举报，位于 %1$s 的此网站为欺诈网站。现已根据您的安全选项予以拦截。</p>
     ]]></string>
+
+    <!-- The tile for the list of external apps to open the link in -->
+    <string name="mozac_feature_applinks_open_in">打开于…</string>
+    <!-- The description to warn users that their private browsing session changes  -->
+    <string name="mozac_feature_applinks_confirm_dialog_title">在 App 中打开？您的活动可能不再私密。</string>
+    <!-- Opens the selected time -->
+    <string name="mozac_feature_applinks_confirm_dialog_confirm">打开</string>
+    <!-- Cancels the prompt -->
+    <string name="mozac_feature_applinks_confirm_dialog_deny">取消</string>
 </resources>
