@@ -224,8 +224,10 @@ void UiCompositorControllerChild::ActorDealloc() {
 
 void UiCompositorControllerChild::ProcessingError(Result aCode,
                                                   const char* aReason) {
-  MOZ_RELEASE_ASSERT(aCode == MsgDropped,
-                     "Processing error in UiCompositorControllerChild");
+  if (aCode != MsgDropped) {
+    gfxDevCrash(gfx::LogReason::ProcessingError)
+        << "Processing error in UiCompositorControllerChild: " << int(aCode);
+  }
 }
 
 void UiCompositorControllerChild::HandleFatalError(const char* aMsg) const {
