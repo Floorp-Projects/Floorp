@@ -65,7 +65,7 @@ function startTest() {
 
 function onAttach(state, response) {
   onNetworkEventUpdate = onNetworkEventUpdate.bind(null, state);
-  state.dbgClient.addListener("networkEventUpdate", onNetworkEventUpdate);
+  state.dbgClient.on("networkEventUpdate", onNetworkEventUpdate);
 
   runNextCase(state);
 }
@@ -85,7 +85,7 @@ function runNextCase(state) {
   iframe.wrappedJSObject.makeXhrCallback("GET", url);
 }
 
-function onNetworkEventUpdate(state, type, packet) {
+function onNetworkEventUpdate(state, packet) {
   function onSecurityInfo(received) {
     let data = TEST_CASES[gCurrentTestCase];
     is(received.securityInfo.hpkp, data.usesPinning,

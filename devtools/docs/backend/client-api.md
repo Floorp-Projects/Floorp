@@ -82,7 +82,7 @@ function attachToTab() {
       // Now the targetFront is ready and can be used.
 
       // Attach listeners for client events.
-      targetFront.addListener("tabNavigated", onTab);
+      targetFront.on("tabNavigated", onTab);
     });
   });
 }

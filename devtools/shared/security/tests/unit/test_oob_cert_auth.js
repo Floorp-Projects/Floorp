@@ -71,7 +71,7 @@ add_task(async function() {
   const onUnexpectedClose = () => {
     do_throw("Closed unexpectedly");
   };
-  client.addListener("closed", onUnexpectedClose);
+  client.on("closed", onUnexpectedClose);
   await connectClient(client);
 
   // Send a message the server will echo back
@@ -79,7 +79,7 @@ add_task(async function() {
   const reply = await client.mainRoot.echo({ message });
   equal(reply.message, message, "Encrypted echo matches");
 
-  client.removeListener("closed", onUnexpectedClose);
+  client.off("closed", onUnexpectedClose);
   transport.close();
   listener.close();
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");

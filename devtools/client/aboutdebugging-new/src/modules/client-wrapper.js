@@ -39,31 +39,31 @@ class ClientWrapper {
     this.workersListener = new WorkersListener(client.mainRoot);
   }
 
-  addOneTimeListener(evt, listener) {
+  once(evt, listener) {
     if (MAIN_ROOT_EVENTS.includes(evt)) {
       this.client.mainRoot.once(evt, listener);
     } else {
-      this.client.addOneTimeListener(evt, listener);
+      this.client.once(evt, listener);
     }
   }
 
-  addListener(evt, listener) {
+  on(evt, listener) {
     if (evt === "workersUpdated") {
       this.workersListener.addListener(listener);
     } else if (MAIN_ROOT_EVENTS.includes(evt)) {
       this.client.mainRoot.on(evt, listener);
     } else {
-      this.client.addListener(evt, listener);
+      this.client.on(evt, listener);
     }
   }
 
-  removeListener(evt, listener) {
+  off(evt, listener) {
     if (evt === "workersUpdated") {
       this.workersListener.removeListener(listener);
     } else if (MAIN_ROOT_EVENTS.includes(evt)) {
       this.client.mainRoot.off(evt, listener);
     } else {
-      this.client.removeListener(evt, listener);
+      this.client.off(evt, listener);
     }
   }
 

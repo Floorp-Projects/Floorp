@@ -30,7 +30,7 @@ function onAttach(aState, aResponse)
   onNetworkEvent = onNetworkEvent.bind(null, aState);
   aState.client.on("serverNetworkEvent", onNetworkEvent);
   onNetworkEventUpdate = onNetworkEventUpdate.bind(null, aState);
-  aState.dbgClient.addListener("networkEventUpdate", onNetworkEventUpdate);
+  aState.dbgClient.on("networkEventUpdate", onNetworkEventUpdate);
 
   let iframe = document.querySelector("iframe").contentWindow;
   iframe.wrappedJSObject.testXhrPost();
@@ -56,7 +56,7 @@ function onNetworkEvent(aState, aPacket)
 
 let updates = [];
 
-function onNetworkEventUpdate(aState, aType, aPacket)
+function onNetworkEventUpdate(aState, aPacket)
 {
   info("received networkEventUpdate " + aPacket.updateType);
   is(aPacket.from, aState.netActor, "networkEventUpdate actor");
@@ -126,7 +126,7 @@ function onNetworkEventUpdate(aState, aType, aPacket)
 
   if (updates.indexOf("responseContent") > -1 &&
       updates.indexOf("eventTimings") > -1) {
-    aState.dbgClient.removeListener("networkEventUpdate",
+    aState.dbgClient.off("networkEventUpdate",
                                     onNetworkEvent);
 
     onRequestHeaders = onRequestHeaders.bind(null, aState);

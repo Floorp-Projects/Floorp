@@ -615,7 +615,7 @@ const assert = Assert.ok.bind(Assert);
 /**
  * Create a promise that is resolved on the next occurence of the given event.
  *
- * @param DebuggerClient client
+ * @param ThreadClient client
  * @param String event
  * @param Function predicate
  * @returns Promise
@@ -626,11 +626,11 @@ function waitForEvent(client, type, predicate) {
   }
 
   return new Promise(function(resolve) {
-    function listener(type, packet) {
+    function listener(packet) {
       if (!predicate(packet)) {
         return;
       }
-      client.removeListener(listener);
+      client.removeListener(type, listener);
       resolve(packet);
     }
     client.addListener(type, listener);

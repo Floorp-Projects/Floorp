@@ -9,8 +9,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }
   Assert.equal(xpcInspector.eventLoopNestLevel, 0);
 
   await new Promise(resolve => {
-    client.addListener("paused", function(name, packet) {
-      Assert.equal(name, "paused");
+    client.on("paused", function(packet) {
       Assert.equal(false, "error" in packet);
       Assert.equal(packet.from, threadClient.actor);
       Assert.equal(packet.type, "paused");
