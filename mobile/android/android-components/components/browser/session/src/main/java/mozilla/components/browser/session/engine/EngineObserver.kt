@@ -37,6 +37,11 @@ internal class EngineObserver(
 
         session.url = url
 
+        // Meh, GeckoView doesn't notify us about recording devices no longer used when navigating away. As a
+        // workaround we clear them here. But that's not perfect...
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1554778
+        session.recordingDevices = listOf()
+
         session.contentPermissionRequest.consume {
             it.reject()
             true
