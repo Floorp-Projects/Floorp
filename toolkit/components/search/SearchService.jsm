@@ -152,10 +152,6 @@ var ensureKnownRegion = async function(ss) {
         });
       }
     }
-
-    // If gInitialized is true then the search service was forced to perform
-    // a sync initialization during our XHRs - capture this via telemetry.
-    Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT").add(gInitialized);
   } catch (ex) {
     Cu.reportError(ex);
   } finally {
