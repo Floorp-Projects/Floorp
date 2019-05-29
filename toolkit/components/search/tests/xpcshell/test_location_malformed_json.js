@@ -31,11 +31,8 @@ add_task(async function test_location_malformed_json() {
   ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
   // should have recorded SUCCESS_WITHOUT_DATA
   checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA);
-  // and false values for timeout and forced-sync-init.
-  for (let hid of ["SEARCH_SERVICE_COUNTRY_TIMEOUT",
-                   "SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT"]) {
-    let histogram = Services.telemetry.getHistogramById(hid);
-    let snapshot = histogram.snapshot();
-    deepEqual(snapshot.values, {0: 1, 1: 0}); // boolean probe so 3 buckets, expect 1 result for |0|.
-  }
+  // and false values for timeout.
+  let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT");
+  let snapshot = histogram.snapshot();
+  deepEqual(snapshot.values, {0: 1, 1: 0}); // boolean probe so 3 buckets, expect 1 result for |0|.
 });
