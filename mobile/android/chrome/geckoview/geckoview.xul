@@ -4,8 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <window id="main-window"
-        onload="startup();"
         windowtype="navigator:geckoview"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://geckoview/content/geckoview.js"/>
+  <script>
+    window.addEventListener("DOMContentLoaded", startup, { once: true });
+  </script>
 </window>
