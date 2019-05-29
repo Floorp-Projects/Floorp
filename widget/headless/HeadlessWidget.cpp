@@ -200,17 +200,18 @@ void HeadlessWidget::Show(bool aState) {
 
 bool HeadlessWidget::IsVisible() const { return mVisible; }
 
-void HeadlessWidget::SetFocus(Raise aRaise) {
-  LOGFOCUS(("  SetFocus %d [%p]\n", aRaise == Raise::Yes, (void*)this));
+nsresult HeadlessWidget::SetFocus(bool aRaise) {
+  LOGFOCUS(("  SetFocus %d [%p]\n", aRaise, (void*)this));
 
-  // This means we request activation of our toplevel window.
-  if (aRaise == Raise::Yes) {
+  // aRaise == true means we request activation of our toplevel window.
+  if (aRaise) {
     HeadlessWidget* topLevel = (HeadlessWidget*)GetTopLevelWidget();
 
     // The toplevel only becomes active if it's currently visible; otherwise, it
     // will be activated anyway when it's shown.
     if (topLevel->IsVisible()) topLevel->RaiseWindow();
   }
+  return NS_OK;
 }
 
 void HeadlessWidget::Enable(bool aState) { mEnabled = aState; }
