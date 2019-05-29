@@ -1271,6 +1271,41 @@ void nsDisplayListBuilder::MarkFrameForDisplayIfVisible(
   }
 }
 
+void nsDisplayListBuilder::SetGlassDisplayItem(nsDisplayItem* aItem) {
+  // Web pages or extensions could trigger the "Multiple glass backgrounds
+  // found?" warning by using -moz-appearance:win-borderless-glass etc on their
+  // own elements (as long as they are DocElementBoxFrames, which is rare as
+  // each xul doc only gets one near the root). We only care about first one,
+  // since that will be the background of the root window.
+
+  if (IsPartialUpdate()) {
+    if (aItem->Frame()->IsDocElementBoxFrame()) {
+#ifdef DEBUG
+      if (mHasGlassItemDuringPartial) {
+        NS_WARNING("Multiple glass backgrounds found?");
+      } else
+#endif
+      if (!mHasGlassItemDuringPartial) {
+        mHasGlassItemDuringPartial = true;
+        aItem->SetIsGlassItem();
+      }
+    }
+    return;
+  }
+
+  if (aItem->Frame()->IsDocElementBoxFrame()) {
+#ifdef DEBUG
+    if (mGlassDisplayItem) {
+      NS_WARNING("Multiple glass backgrounds found?");
+    } else
+#endif
+    if (!mGlassDisplayItem) {
+      mGlassDisplayItem = aItem;
+      mGlassDisplayItem->SetIsGlassItem();
+    }
+  }
+}
+
 bool nsDisplayListBuilder::NeedToForceTransparentSurfaceForItem(
     nsDisplayItem* aItem) {
   return aItem == mGlassDisplayItem || aItem->ClearsBackground();
@@ -2229,12 +2264,16 @@ void nsDisplayListBuilder::RemoveModifiedWindowRegions() {
   mRetainedWindowDraggingRegion.RemoveModifiedFramesAndRects();
   mRetainedWindowNoDraggingRegion.RemoveModifiedFramesAndRects();
   mWindowExcludeGlassRegion.RemoveModifiedFramesAndRects();
+
+  mHasGlassItemDuringPartial = false;
 }
 
 void nsDisplayListBuilder::ClearRetainedWindowRegions() {
   mRetainedWindowDraggingRegion.Clear();
   mRetainedWindowNoDraggingRegion.Clear();
   mWindowExcludeGlassRegion.Clear();
+
+  mGlassDisplayItem = nullptr;
 }
 
 const uint32_t gWillChangeAreaMultiplier = 3;
