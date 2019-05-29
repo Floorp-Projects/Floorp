@@ -192,5 +192,15 @@ var TabStateInternal = {
         tabData[key] = value;
       }
     }
+
+    // [Bug 1554512]
+    // If the latest scroll position is on the top, we will delete scroll entry.
+    // When scroll entry is deleted in TabStateCache, it cannot be updated.
+    // To prevent losing the scroll position, we need to add a handing here.
+    if (tabData.scroll) {
+      if (!data.scroll) {
+        delete tabData.scroll;
+      }
+    }
   },
 };
