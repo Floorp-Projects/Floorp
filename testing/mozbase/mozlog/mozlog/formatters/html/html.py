@@ -162,6 +162,9 @@ class HTMLFormatter(base.BaseFormatter):
                     if not isinstance(content, (six.text_type, six.binary_type)):
                         # All types must be json serializable
                         content = json.dumps(content)
+                        # Decode to text type if JSON output is byte string
+                        if not isinstance(content, six.text_type):
+                            content = content.decode('utf-8')
                     # Encode base64 to avoid that some browsers (such as Firefox, Opera)
                     # treats '#' as the start of another link if it is contained in the data URL.
                     if isinstance(content, six.text_type):

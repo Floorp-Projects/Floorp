@@ -347,7 +347,7 @@ class TestHTMLFormatter(FormatterTest):
         self.logger.test_end("int_test", "FAIL",
                              extra={"data": {"foo": "bar"}})
         self.logger.suite_end()
-        self.assertIn("data:text/html;base64,eyJmb28iOiAiYmFyIn0=",
+        self.assertIn("data:text/html;charset=utf-8;base64,eyJmb28iOiAiYmFyIn0=",
                       ''.join(self.loglines))
 
 
