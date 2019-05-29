@@ -20,9 +20,9 @@
 namespace mozilla {
 namespace wr {
 
-wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId,
-                                      uint8_t aChannelIndex,
-                                      wr::ImageRendering aRendering) {
+wr::WrExternalImage wr_renderer_lock_external_image(
+    void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex,
+    wr::ImageRendering aRendering) {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
   MOZ_ASSERT(texture);
@@ -34,8 +34,8 @@ wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId,
   return texture->Lock(aChannelIndex, renderer->gl(), aRendering);
 }
 
-void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId,
-                         uint8_t aChannelIndex) {
+void wr_renderer_unlock_external_image(void* aObj, wr::WrExternalImageId aId,
+                                       uint8_t aChannelIndex) {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
   MOZ_ASSERT(texture);
@@ -75,8 +75,6 @@ RendererOGL::~RendererOGL() {
 wr::WrExternalImageHandler RendererOGL::GetExternalImageHandler() {
   return wr::WrExternalImageHandler{
       this,
-      LockExternalImage,
-      UnlockExternalImage,
   };
 }
 
