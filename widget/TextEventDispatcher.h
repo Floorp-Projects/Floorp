@@ -85,6 +85,18 @@ class TextEventDispatcher final {
   }
 
   /**
+   * OnWidgetChangeIMENotificationRequests() is called when aWidget's
+   * IMENotificationRequest is maybe modified by unusual path.  E.g.,
+   * modified in an async path.
+   */
+  void OnWidgetChangeIMENotificationRequests(nsIWidget* aWidget) {
+    MOZ_ASSERT(aWidget);
+    if (mWidget == aWidget) {
+      UpdateNotificationRequests();
+    }
+  }
+
+  /**
    * GetState() returns current state of this class.
    *
    * @return        NS_OK: Fine to compose text.
