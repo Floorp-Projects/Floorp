@@ -61,7 +61,7 @@ class MockWidget : public nsBaseWidget {
 
   virtual void Enable(bool aState) override {}
   virtual bool IsEnabled() const override { return true; }
-  virtual void SetFocus(Raise) override {}
+  virtual nsresult SetFocus(bool aRaise) override { return NS_OK; }
   virtual nsresult ConfigureChildren(
       const nsTArray<Configuration>& aConfigurations) override {
     return NS_OK;

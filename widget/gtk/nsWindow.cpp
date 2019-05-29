@@ -1466,20 +1466,20 @@ guint32 nsWindow::GetLastUserInputTime() {
   return timestamp;
 }
 
-void nsWindow::SetFocus(Raise aRaise) {
+nsresult nsWindow::SetFocus(bool aRaise) {
   // Make sure that our owning widget has focus.  If it doesn't try to
   // grab it.  Note that we don't set our focus flag in this case.
 
-  LOGFOCUS(("  SetFocus %d [%p]\n", aRaise == Raise::Yes, (void*)this));
+  LOGFOCUS(("  SetFocus %d [%p]\n", aRaise, (void*)this));
 
   GtkWidget* owningWidget = GetMozContainerWidget();
-  if (!owningWidget) return;
+  if (!owningWidget) return NS_ERROR_FAILURE;
 
   // Raise the window if someone passed in true and the prefs are
   // set properly.
   GtkWidget* toplevelWidget = gtk_widget_get_toplevel(owningWidget);
 
-  if (gRaiseWindows && aRaise == Raise::Yes && toplevelWidget &&
+  if (gRaiseWindows && aRaise && toplevelWidget &&
       !gtk_widget_has_focus(owningWidget) &&
       !gtk_widget_has_focus(toplevelWidget)) {
     GtkWidget* top_window = GetToplevelWidget();
@@ -1491,10 +1491,10 @@ void nsWindow::SetFocus(Raise aRaise) {
   }
 
   RefPtr<nsWindow> owningWindow = get_window_for_gtk_widget(owningWidget);
-  if (!owningWindow) return;
+  if (!owningWindow) return NS_ERROR_FAILURE;
 
-  if (aRaise == Raise::Yes) {
-    // means request toplevel activation.
+  if (aRaise) {
+    // aRaise == true means request toplevel activation.
 
     // This is asynchronous.
     // If and when the window manager accepts the request, then the focus
@@ -1513,11 +1513,12 @@ void nsWindow::SetFocus(Raise aRaise) {
 
       if (GTKToolkit) GTKToolkit->SetFocusTimestamp(0);
     }
-    return;
+
+    return NS_OK;
   }
 
-  // aRaise == No means that keyboard events should be dispatched from this
-  // widget.
+  // aRaise == false means that keyboard events should be dispatched
+  // from this widget.
 
   // Ensure owningWidget is the focused GtkWidget within its toplevel window.
   //
@@ -1536,7 +1537,7 @@ void nsWindow::SetFocus(Raise aRaise) {
   // If this is the widget that already has focus, return.
   if (gFocusWindow == this) {
     LOGFOCUS(("  already have focus [%p]\n", (void*)this));
-    return;
+    return NS_OK;
   }
 
   // Set this window to be the focused child window
@@ -1547,6 +1548,8 @@ void nsWindow::SetFocus(Raise aRaise) {
   }
 
   LOGFOCUS(("  widget now has focus in SetFocus() [%p]\n", (void*)this));
+
+  return NS_OK;
 }
 
 LayoutDeviceIntRect nsWindow::GetScreenBounds() {
