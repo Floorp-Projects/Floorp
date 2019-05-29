@@ -42,6 +42,7 @@
   noECC     0       -r_-r_-r_-r_-E  -V_tls1.3:tls1.3_-E_-n_TestUser_-w_nss TLS 1.3 Require client auth on post hs (client auth)
   noECC     0       -r_-r_-r_-E  -V_tls1.3:tls1.3_-E_-n_none_-w_nss TLS 1.3 Request don't require client auth on post hs (client does not provide auth)
   noECC     1       -r_-r_-r_-r_-E  -V_tls1.3:tls1.3_-E_-n_none_-w_nss TLS 1.3 Require client auth on post hs (client does not provide auth)
+  noECC     0       -r_-r_-r_-E_-u  -V_tls1.3:tls1.3_-E_-n_TestUser_-w_nss TLS 1.3 Request don't require client auth on post hs with session ticket (client auth)
 #
 # Use EC cert for client authentication
 #
