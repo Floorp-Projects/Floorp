@@ -6,6 +6,7 @@
 
 #include "DocAccessibleParent.h"
 #include "mozilla/a11y/Platform.h"
+#include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "xpcAccessibleDocument.h"
 #include "xpcAccEvents.h"
@@ -835,6 +836,24 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
   return IPC_OK();
 }
 #endif  // !defined(XP_WIN)
+
+Tuple<DocAccessibleParent*, uint64_t> DocAccessibleParent::GetRemoteEmbedder() {
+  dom::BrowserParent* embeddedBrowser = dom::BrowserParent::GetFrom(Manager());
+  dom::BrowserBridgeParent* bridge = embeddedBrowser->GetBrowserBridgeParent();
+  if (!bridge) {
+    return Tuple<DocAccessibleParent*, uint64_t>(nullptr, 0);
+  }
+  DocAccessibleParent* doc;
+  uint64_t id;
+  Tie(doc, id) = bridge->GetEmbedderAccessible();
+  if (doc && doc->IsShutdown()) {
+    // Sometimes, the embedder document is destroyed before its
+    // BrowserBridgeParent. Don't return a destroyed document.
+    doc = nullptr;
+    id = 0;
+  }
+  return Tuple<DocAccessibleParent*, uint64_t>(doc, id);
+}
 
 }  // namespace a11y
 }  // namespace mozilla
