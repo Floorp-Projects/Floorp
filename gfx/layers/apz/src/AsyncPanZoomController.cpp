@@ -4767,18 +4767,18 @@ void AsyncPanZoomController::NotifyLayersUpdated(
 }
 
 FrameMetrics& AsyncPanZoomController::Metrics() {
+  mRecursiveMutex.AssertCurrentThreadIn();
   return mScrollMetadata.GetMetrics();
 }
 
 const FrameMetrics& AsyncPanZoomController::Metrics() const {
+  mRecursiveMutex.AssertCurrentThreadIn();
   return mScrollMetadata.GetMetrics();
   ;
 }
 
 const FrameMetrics& AsyncPanZoomController::GetFrameMetrics() const {
-  mRecursiveMutex.AssertCurrentThreadIn();
   return Metrics();
-  ;
 }
 
 const ScrollMetadata& AsyncPanZoomController::GetScrollMetadata() const {
