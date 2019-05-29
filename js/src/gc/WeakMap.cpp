@@ -64,7 +64,7 @@ bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
 bool WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker) {
   bool markedAny = false;
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    if (m->marked && m->markEntries(marker)) {
+    if (m->marked && m->markIteratively(marker)) {
       markedAny = true;
     }
   }
@@ -172,8 +172,8 @@ JSObject* ObjectWeakMap::lookup(const JSObject* obj) {
 bool ObjectWeakMap::add(JSContext* cx, JSObject* obj, JSObject* target) {
   MOZ_ASSERT(obj && target);
 
-  Value targetVal(ObjectValue(*target));
-  if (!map.putNew(obj, targetVal)) {
+  MOZ_ASSERT(!map.has(obj));
+  if (!map.put(obj, ObjectValue(*target))) {
     ReportOutOfMemory(cx);
     return false;
   }
