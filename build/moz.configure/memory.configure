@@ -5,11 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@deprecated_option(env='MOZ_JEMALLOC4')
-def moz_jemalloc4(value):
-    die('MOZ_JEMALLOC4 is deprecated')
-
-
 @depends(target)
 def jemalloc_default(target):
     return target.kernel in ('Darwin', 'Linux', 'WINNT')
