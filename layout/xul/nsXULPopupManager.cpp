@@ -2667,8 +2667,7 @@ nsXULMenuCommandEvent::Run() {
     // Deselect ourselves.
     if (mCloseMenuMode != CloseMenuMode_None) menuFrame->SelectMenu(false);
 
-    AutoHandlingUserInputStatePusher userInpStatePusher(
-        mUserInput, nullptr, presShell->GetDocument());
+    AutoHandlingUserInputStatePusher userInpStatePusher(mUserInput);
     RefPtr<Element> menu = mMenu;
     nsContentUtils::DispatchXULCommand(menu, mIsTrusted, nullptr, presShell,
                                        mControl, mAlt, mShift, mMeta);
