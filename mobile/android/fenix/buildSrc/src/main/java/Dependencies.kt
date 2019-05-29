@@ -45,7 +45,7 @@ private object Versions {
     const val mockito = "2.23.0"
     const val mockk = "1.9.kotlin12"
     const val glide = "4.9.0"
-    const val flipper = "0.18.0"
+    const val flipper = "0.21.0"
     const val soLoader = "0.5.1"
 
     const val espresso_core = "2.2.2"
@@ -169,6 +169,7 @@ object Deps {
     const val glideAnnotationProcessor = "com.github.bumptech.glide:compiler:${Versions.glide}"
 
     const val flipper = "com.facebook.flipper:flipper:${Versions.flipper}"
+    const val flipper_noop = "com.facebook.flipper:flipper-noop:${Versions.flipper}"
     const val soLoader = "com.facebook.soloader:soloader:${Versions.soLoader}"
 
     const val espresso_contrib = "com.android.support.test.espresso:espresso-contrib:${Versions.espresso_version}"

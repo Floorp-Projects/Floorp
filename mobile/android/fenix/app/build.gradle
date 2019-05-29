@@ -391,6 +391,7 @@ dependencies {
 
     debugImplementation Deps.flipper
     debugImplementation Deps.soLoader
+    releaseImplementation Deps.flipper_noop
 }
 
 if (project.hasProperty("raptor")) {
