@@ -111,7 +111,7 @@ class PuppetWidget : public nsBaseWidget,
   virtual void Enable(bool aState) override { mEnabled = aState; }
   virtual bool IsEnabled() const override { return mEnabled; }
 
-  virtual nsresult SetFocus(bool aRaise = false) override;
+  virtual void SetFocus(Raise) override;
 
   virtual nsresult ConfigureChildren(
       const nsTArray<Configuration>& aConfigurations) override;
