@@ -13,7 +13,6 @@
 SimpleTest.waitForExplicitFinish();
 
 var HTML_NS = "http://www.w3.org/1999/xhtml";
-var style_text;
 
 function run() {
     var wrappedFrame = SpecialPowers.wrap($("iframe"));
@@ -25,12 +24,12 @@ function run() {
         var style_elem = ifdoc.createElement("style");
         style_elem.setAttribute("type", "text/css");
         ifdoc.getElementsByTagName("head")[0].appendChild(style_elem);
-        var style_text = ifdoc.createCDATASection("");
+        let style_text = ifdoc.createCDATASection("");
         style_elem.appendChild(style_text);
         return style_text;
     }
 
-    style_text = setup_style_text();
+    let style_text = setup_style_text();
     var gCounter = 0;
 
     /*
@@ -225,7 +224,7 @@ function run() {
       function (doc) { return doc.getElementsByTagName("test");},
       function (doc) { return []; }
     );
-    
+
     // 3 tests from http://tc.labs.opera.com/css/namespaces/syntax-003.xml
     test_selector_in_html(
       '@namespace url("test");',
@@ -323,7 +322,7 @@ function run() {
       '<test xmlns="test"/>',
       function (doc) { return []; },
       function (doc) { return doc.getElementsByTagName("test");}
-    );      
+    );
 
     test_selector_in_html(
       '@namespace url("test");',
@@ -331,7 +330,7 @@ function run() {
       '<test xmlns="testing"/>',
       function (doc) { return doc.getElementsByTagName("test");},
       function (doc) { return []; }
-    );      
+    );
 
     test_selector_in_html(
       '@namespace x url("test");',
@@ -339,7 +338,7 @@ function run() {
       '<test xmlns="test"/>',
       function (doc) { return []; },
       function (doc) { return doc.getElementsByTagName("test");}
-    );      
+    );
 
     test_selector_in_html(
       '@namespace x url("test");',
@@ -347,7 +346,7 @@ function run() {
       '<test xmlns="testing"/>',
       function (doc) { return doc.getElementsByTagName("test");},
       function (doc) { return []; }
-    );      
+    );
 
     test_selector_in_html(
       '@namespace url("test");',
@@ -355,7 +354,7 @@ function run() {
       '<test xmlns="testing"/>',
       function (doc) { return doc.getElementsByTagName("test");},
       function (doc) { return []; }
-    );      
+    );
 
     test_selector_in_html(
       '@namespace url("test");',
@@ -363,7 +362,7 @@ function run() {
       '<test xmlns="test"/>',
       function (doc) { return []; },
       function (doc) { return doc.getElementsByTagName("test");}
-    );      
+    );
 
     test_selector_in_html(
       '@namespace x url("test");',
@@ -371,7 +370,7 @@ function run() {
       '<test xmlns="testing"/>',
       function (doc) { return doc.getElementsByTagName("test");},
       function (doc) { return []; }
-    );      
+    );
 
     test_selector_in_html(
       '@namespace x url("test");',
@@ -379,7 +378,7 @@ function run() {
       '<test xmlns="test"/>',
       function (doc) { return []; },
       function (doc) { return doc.getElementsByTagName("test");}
-    );      
+    );
 
     test_selector_in_html(
       '@namespace url("test");',
@@ -387,7 +386,7 @@ function run() {
       '<test xmlns="testing" foo="bar"/>',
       function (doc) { return []; },
       function (doc) { return doc.getElementsByTagName("test");}
-    );      
+    );
 
     test_selector_in_html(
       '@namespace url("test");',
@@ -395,7 +394,7 @@ function run() {
       '<test xmlns="test" foo="bar"/>',
       function (doc) { return []; },
       function (doc) { return doc.getElementsByTagName("test");}
-    );      
+    );
 
     test_selector_in_html(
       '@namespace url("test");',
