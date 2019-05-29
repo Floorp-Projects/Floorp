@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #2531 - Adds link to privacy policy in settings
 - #225 - Adds the ability to delete all browsing data
 - #2903 - Fixed crash when trying to rate the app on a devices without the play store app.
+- #2419 - Adds a deletion state to the history component
 
 ### Changed
 - #2673 - Fixed can't upload files using third party apps from the file manager.
