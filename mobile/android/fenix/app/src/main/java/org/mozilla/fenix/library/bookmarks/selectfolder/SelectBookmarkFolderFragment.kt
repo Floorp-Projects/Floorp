@@ -46,7 +46,6 @@ import org.mozilla.fenix.library.bookmarks.SignInViewModel
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
@@ -158,7 +157,6 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
     }
 
     override fun onAuthenticationProblems() {
-        Settings.getInstance(context!!).setHasAuthenticationProblem(true)
     }
 
     override fun onAuthenticated(account: OAuthAccount) {

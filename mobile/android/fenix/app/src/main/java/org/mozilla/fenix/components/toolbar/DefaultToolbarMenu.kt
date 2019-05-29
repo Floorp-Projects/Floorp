@@ -19,7 +19,7 @@ import org.mozilla.fenix.ext.components
 
 class DefaultToolbarMenu(
     private val context: Context,
-    private val hasSyncError: Boolean = false,
+    private val hasAccountProblem: Boolean = false,
     private val requestDesktopStateProvider: () -> Boolean = { false },
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
@@ -107,13 +107,13 @@ class DefaultToolbarMenu(
             BrowserMenuHighlightableItem(
                 label = context.getString(R.string.browser_menu_settings),
                 imageResource = R.drawable.ic_settings,
-                iconTintColorResource = if (hasSyncError)
+                iconTintColorResource = if (hasAccountProblem)
                     R.color.sync_error_text_color else
                     DefaultThemeManager.resolveAttribute(R.attr.primaryText, context),
-                textColorResource = if (hasSyncError)
+                textColorResource = if (hasAccountProblem)
                     R.color.sync_error_text_color else
                     DefaultThemeManager.resolveAttribute(R.attr.primaryText, context),
-                highlight = if (hasSyncError) {
+                highlight = if (hasAccountProblem) {
                     BrowserMenuHighlightableItem.Highlight(
                         imageResource = R.drawable.ic_alert,
                         backgroundResource = R.color.sync_error_color

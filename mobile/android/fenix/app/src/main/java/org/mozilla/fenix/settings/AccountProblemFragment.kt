@@ -15,7 +15,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 
-class SyncProblemFragment : PreferenceFragmentCompat() {
+class AccountProblemFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
@@ -46,7 +46,7 @@ class SyncProblemFragment : PreferenceFragmentCompat() {
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
             view?.let {
-                (activity as HomeActivity).openToBrowser(BrowserDirection.FromSyncProblem)
+                (activity as HomeActivity).openToBrowser(BrowserDirection.FromAccountProblem)
             }
             true
         }

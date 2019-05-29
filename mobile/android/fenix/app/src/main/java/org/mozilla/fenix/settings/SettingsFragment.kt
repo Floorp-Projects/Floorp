@@ -178,9 +178,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 navigateToAbout()
             }
             resources.getString(pref_key_account) -> {
-                if (org.mozilla.fenix.utils.Settings.getInstance(preference.context).preferences
-                        .getBoolean(context!!.getPreferenceKey(R.string.pref_key_sync_problem), false)) {
-                    navigateToSyncProblem()
+                if (requireComponents.backgroundServices.accountManager.accountNeedsReauth()) {
+                    navigateToAccountProblem()
                 } else {
                     navigateToAccountSettings()
                 }
@@ -314,8 +313,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         Navigation.findNavController(view!!).navigate(directions)
     }
 
-    private fun navigateToSyncProblem() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToSyncProblemFragment()
+    private fun navigateToAccountProblem() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToAccountProblemFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 
@@ -333,7 +332,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onAuthenticated(account: OAuthAccount) {
         updateAuthState(account)
         updateSignInVisibility()
-        displayAccountErrorIfNecessary()
     }
 
     override fun onError(error: Exception) {
@@ -347,7 +345,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onLoggedOut() {
         updateAuthState()
         updateSignInVisibility()
-        displayAccountErrorIfNecessary()
     }
 
     override fun onProfileUpdated(profile: Profile) {
@@ -355,7 +352,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     }
 
     override fun onAuthenticationProblems() {
-        org.mozilla.fenix.utils.Settings.getInstance(context!!).setHasAuthenticationProblem(true)
         displayAccountErrorIfNecessary()
     }
 
@@ -363,9 +359,6 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     private fun updateAuthState(account: OAuthAccount? = null) {
         // Cache the user's auth state to improve performance of sign in visibility
         org.mozilla.fenix.utils.Settings.getInstance(context!!).setHasCachedAccount(account != null)
-
-        // Unset sync problems
-        org.mozilla.fenix.utils.Settings.getInstance(context!!).setHasAuthenticationProblem(false)
     }
 
     private fun updateSignInVisibility() {
@@ -390,59 +383,63 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         }
     }
 
-    private fun updateAccountProfile(profile: Profile, error: Boolean = false) {
+    private fun updateAccountProfile(profile: Profile) {
         launch {
-            val preferenceFirefoxAccount =
-                findPreference<AccountPreference>(context!!.getPreferenceKey(pref_key_account))
+            context?.let { context ->
+                val preferenceFirefoxAccount =
+                    findPreference<AccountPreference>(context.getPreferenceKey(pref_key_account))
 
-            preferenceFirefoxAccount?.title?.setTextColor(
-                R.attr.primaryText.getColorFromAttr(context!!)
-            )
-            preferenceFirefoxAccount?.title?.text = profile.displayName.orEmpty()
-            preferenceFirefoxAccount?.title?.visibility =
-                if (preferenceFirefoxAccount?.title?.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+                preferenceFirefoxAccount?.title?.setTextColor(
+                    R.attr.primaryText.getColorFromAttr(context)
+                )
+                preferenceFirefoxAccount?.title?.text = profile.displayName.orEmpty()
+                preferenceFirefoxAccount?.title?.visibility =
+                    if (preferenceFirefoxAccount?.title?.text.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-            preferenceFirefoxAccount?.summary?.setTextColor(
-                R.attr.primaryText.getColorFromAttr(context!!)
-            )
-            preferenceFirefoxAccount?.summary?.text = profile.email.orEmpty()
+                preferenceFirefoxAccount?.summary?.setTextColor(
+                    R.attr.primaryText.getColorFromAttr(context)
+                )
+                preferenceFirefoxAccount?.summary?.text = profile.email.orEmpty()
 
-            preferenceFirefoxAccount?.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_shortcuts)
-            preferenceFirefoxAccount?.errorIcon?.visibility = View.GONE
-            preferenceFirefoxAccount?.background?.background = null
+                preferenceFirefoxAccount?.icon = ContextCompat.getDrawable(context, R.drawable.ic_shortcuts)
+                preferenceFirefoxAccount?.errorIcon?.visibility = View.GONE
+                preferenceFirefoxAccount?.background?.background = null
+            }
         }
     }
 
     private fun displayAccountErrorIfNecessary() {
-        if (!org.mozilla.fenix.utils.Settings.getInstance(context!!).hasSyncProblem) { return }
-
         launch {
-            val preferenceFirefoxAccount =
-                findPreference<AccountPreference>(context!!.getPreferenceKey(pref_key_account))
+            context?.let { context ->
+                if (context.components.backgroundServices.accountManager.accountNeedsReauth()) { return@launch }
 
-            preferenceFirefoxAccount?.title?.setTextColor(
-                ContextCompat.getColor(
-                    context!!,
-                    R.color.sync_error_text_color
+                val preferenceFirefoxAccount =
+                    findPreference<AccountPreference>(context.getPreferenceKey(pref_key_account))
+
+                preferenceFirefoxAccount?.title?.setTextColor(
+                    ContextCompat.getColor(
+                        context,
+                        R.color.sync_error_text_color
+                    )
                 )
-            )
-            preferenceFirefoxAccount?.title?.text = context!!.getString(R.string.preferences_account_sync_error)
-            preferenceFirefoxAccount?.title?.visibility =
-                if (preferenceFirefoxAccount?.title?.text.isNullOrEmpty()) View.GONE else View.VISIBLE
+                preferenceFirefoxAccount?.title?.text = context.getString(R.string.preferences_account_sync_error)
+                preferenceFirefoxAccount?.title?.visibility =
+                    if (preferenceFirefoxAccount?.title?.text.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-            preferenceFirefoxAccount?.summary?.setTextColor(
-                ContextCompat.getColor(
-                    context!!,
-                    R.color.sync_error_text_color
+                preferenceFirefoxAccount?.summary?.setTextColor(
+                    ContextCompat.getColor(
+                        context,
+                        R.color.sync_error_text_color
+                    )
                 )
-            )
-            preferenceFirefoxAccount?.summary?.text =
-                requireComponents.backgroundServices.accountManager.accountProfile()?.email.orEmpty()
+                preferenceFirefoxAccount?.summary?.text =
+                    context.components.backgroundServices.accountManager.accountProfile()?.email.orEmpty()
 
-            preferenceFirefoxAccount?.icon = ContextCompat.getDrawable(context!!, R.drawable.ic_account_warning)
-            preferenceFirefoxAccount?.errorIcon?.visibility = View.VISIBLE
-            preferenceFirefoxAccount?.background?.background =
-                ContextCompat.getDrawable(context!!, R.color.sync_error_color)
+                preferenceFirefoxAccount?.icon = ContextCompat.getDrawable(context, R.drawable.ic_account_warning)
+                preferenceFirefoxAccount?.errorIcon?.visibility = View.VISIBLE
+                preferenceFirefoxAccount?.background?.background =
+                    ContextCompat.getDrawable(context, R.color.sync_error_color)
+            }
         }
     }
 }

@@ -155,9 +155,6 @@ class Settings private constructor(context: Context) {
     val hasCachedAccount: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_cached_account), false)
 
-    val hasSyncProblem: Boolean
-        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_sync_problem), false)
-
     private val autoBounceQuickActionSheetCount: Int
         get() = (preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action), 0))
 
@@ -235,12 +232,6 @@ class Settings private constructor(context: Context) {
     fun setHasCachedAccount(isCached: Boolean) {
         preferences.edit()
             .putBoolean(appContext.getPreferenceKey(R.string.pref_key_cached_account), isCached)
-            .apply()
-    }
-
-    fun setHasAuthenticationProblem(hasProblem: Boolean) {
-        preferences.edit()
-            .putBoolean(appContext.getPreferenceKey(R.string.pref_key_sync_problem), hasProblem)
             .apply()
     }
 

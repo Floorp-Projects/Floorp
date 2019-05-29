@@ -20,7 +20,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
-import org.mozilla.fenix.utils.Settings
 
 class ToolbarUIView(
     sessionId: String?,
@@ -105,7 +104,7 @@ class ToolbarUIView(
                 )
             } else {
                 DefaultToolbarMenu(this,
-                    hasSyncError = Settings.getInstance(this).hasSyncProblem,
+                    hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
                     requestDesktopStateProvider = { session?.desktopMode ?: false },
                     onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
                 )

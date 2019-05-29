@@ -34,9 +34,9 @@ import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
+import org.mozilla.fenix.settings.AccountProblemFragmentDirections
 import org.mozilla.fenix.settings.PairFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
-import org.mozilla.fenix.settings.SyncProblemFragmentDirections
 import org.mozilla.fenix.settings.TurnOnSyncFragmentDirections
 import org.mozilla.fenix.utils.Settings
 
@@ -201,8 +201,8 @@ open class HomeActivity : AppCompatActivity() {
             BrowserDirection.FromTurnOnSync -> TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToBrowserFragment(
                 customTabSessionId
             )
-            BrowserDirection.FromSyncProblem ->
-                SyncProblemFragmentDirections.actionSyncProblemFragmentToBrowserFragment(customTabSessionId)
+            BrowserDirection.FromAccountProblem ->
+                AccountProblemFragmentDirections.actionAccountProblemFragmentToBrowserFragment(customTabSessionId)
         }
         if (sessionObserver == null)
             sessionObserver = subscribeToSessions()
@@ -292,5 +292,5 @@ open class HomeActivity : AppCompatActivity() {
 enum class BrowserDirection {
     FromGlobal, FromHome, FromSearch, FromSettings, FromBookmarks,
     FromBookmarksFolderSelect, FromHistory, FromPair, FromTurnOnSync,
-    FromSyncProblem
+    FromAccountProblem
 }

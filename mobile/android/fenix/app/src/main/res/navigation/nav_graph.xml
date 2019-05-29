@@ -290,8 +290,8 @@
         <action
             android:id="@+id/action_settingsFragment_to_deleteBrowsingDataFragment"
             app:destination="@id/deleteBrowsingDataFragment" />
-        <action android:id="@+id/action_settingsFragment_to_syncProblemFragment"
-                app:destination="@id/syncProblemFragment"/>
+        <action android:id="@+id/action_settingsFragment_to_accountProblemFragment"
+                app:destination="@id/accountProblemFragment"/>
     </fragment>
     <fragment
         android:id="@+id/dataChoicesFragment"
@@ -457,8 +457,9 @@
             app:popUpTo="@id/quickSettingsSheetDialogFragment"
             app:popUpToInclusive="true" />
     </dialog>
-    <fragment android:id="@+id/syncProblemFragment" android:name="org.mozilla.fenix.settings.SyncProblemFragment"
-              android:label="SyncProblemFragment">
-        <action android:id="@+id/action_syncProblemFragment_to_browserFragment" app:destination="@id/browserFragment"/>
+    <fragment android:id="@+id/accountProblemFragment" android:name="org.mozilla.fenix.settings.AccountProblemFragment"
+              android:label="AccountProblemFragment">
+        <action android:id="@+id/action_accountProblemFragment_to_browserFragment"
+                app:destination="@id/browserFragment"/>
     </fragment>
 </navigation>
