@@ -118,6 +118,75 @@ static int x_error_handler(Display*, XErrorEvent* ev) {
 // care about leaking memory
 extern "C" {
 
+static int get_egl_status(char* buf, int bufsize) {
+  void* libegl = dlopen("libEGL.so.1", RTLD_LAZY);
+  if (!libegl) {
+    libegl = dlopen("libEGL.so", RTLD_LAZY);
+  }
+  if (!libegl) {
+    return 0;
+  }
+
+  typedef void* EGLDisplay;
+  typedef int EGLBoolean;
+  typedef int EGLint;
+
+  typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
+  PFNEGLGETPROCADDRESS eglGetProcAddress =
+      cast<PFNEGLGETPROCADDRESS>(dlsym(libegl, "eglGetProcAddress"));
+
+  if (!eglGetProcAddress) {
+    dlclose(libegl);
+    return 0;
+  }
+
+  typedef EGLDisplay (*PFNEGLGETDISPLAYPROC)(void* native_display);
+  PFNEGLGETDISPLAYPROC eglGetDisplay =
+      cast<PFNEGLGETDISPLAYPROC>(eglGetProcAddress("eglGetDisplay"));
+
+  typedef EGLBoolean (*PFNEGLINITIALIZEPROC)(EGLDisplay dpy, EGLint * major,
+                                             EGLint * minor);
+  PFNEGLINITIALIZEPROC eglInitialize =
+      cast<PFNEGLINITIALIZEPROC>(eglGetProcAddress("eglInitialize"));
+
+  typedef EGLBoolean (*PFNEGLTERMINATEPROC)(EGLDisplay dpy);
+  PFNEGLTERMINATEPROC eglTerminate =
+      cast<PFNEGLTERMINATEPROC>(eglGetProcAddress("eglTerminate"));
+
+  typedef const char* (*PFNEGLGETDISPLAYDRIVERNAMEPROC)(EGLDisplay dpy);
+  PFNEGLGETDISPLAYDRIVERNAMEPROC eglGetDisplayDriverName =
+      cast<PFNEGLGETDISPLAYDRIVERNAMEPROC>(
+          eglGetProcAddress("eglGetDisplayDriverName"));
+
+  if (!eglGetDisplay || !eglInitialize || !eglTerminate ||
+      !eglGetDisplayDriverName) {
+    dlclose(libegl);
+    return 0;
+  }
+
+  EGLDisplay dpy = eglGetDisplay(nullptr);
+  if (!dpy) {
+    dlclose(libegl);
+    return 0;
+  }
+
+  EGLint major, minor;
+  if (!eglInitialize(dpy, &major, &minor)) {
+    dlclose(libegl);
+    return 0;
+  }
+
+  int length = 0;
+  const char* driDriver = eglGetDisplayDriverName(dpy);
+  if (driDriver) {
+    length = snprintf(buf, bufsize, "DRI_DRIVER\n%s\n", driDriver);
+  }
+
+  eglTerminate(dpy);
+  dlclose(libegl);
+  return length;
+}
+
 void glxtest() {
   // we want to redirect to /dev/null stdout, stderr, and while we're at it,
   // any PR logging file descriptors. To that effect, we redirect all positive
@@ -255,7 +324,7 @@ void glxtest() {
     vendorId &= 0xFFFF;
     deviceId &= 0xFFFF;
 
-    length += snprintf(buf + length, bufsize,
+    length += snprintf(buf + length, bufsize - length,
                        "MESA_VENDOR_ID\n0x%04x\n"
                        "MESA_DEVICE_ID\n0x%04x\n"
                        "MESA_ACCELERATED\n%s\n"
@@ -268,13 +337,15 @@ void glxtest() {
   }
 
   // From Mesa's GL/internal/dri_interface.h, to be used by DRI clients.
+  int gotDriDriver = 0;
   typedef const char* (*PFNGLXGETSCREENDRIVERPROC)(Display * dpy, int scrNum);
   PFNGLXGETSCREENDRIVERPROC glXGetScreenDriverProc =
       cast<PFNGLXGETSCREENDRIVERPROC>(glXGetProcAddress("glXGetScreenDriver"));
   if (glXGetScreenDriverProc) {
     const char* driDriver = glXGetScreenDriverProc(dpy, DefaultScreen(dpy));
     if (driDriver) {
-      length += snprintf(buf + length, bufsize, "DRI_DRIVER\n%s\n", driDriver);
+      gotDriDriver = 1;
+      length += snprintf(buf + length, bufsize - length, "DRI_DRIVER\n%s\n", driDriver);
       if (length >= bufsize)
         fatal_error("GL strings length too large for buffer size");
     }
@@ -303,6 +374,15 @@ void glxtest() {
 #endif
 
   dlclose(libgl);
+
+  // If we failed to get the driver name from X, try via EGL_MESA_query_driver.
+  // We are probably using Wayland.
+  if (!gotDriDriver) {
+    length += get_egl_status(buf + length, bufsize - length);
+    if (length >= bufsize) {
+      fatal_error("GL strings length too large for buffer size");
+    }
+  }
 
   ///// Finally write data to the pipe
   mozilla::Unused << write(write_end_of_the_pipe, buf, length);
