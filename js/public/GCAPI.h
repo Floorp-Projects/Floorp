@@ -434,9 +434,9 @@ namespace JS {
   D(DISABLE_GENERATIONAL_GC, 24)           \
   D(FINISH_GC, 25)                         \
   D(PREPARE_FOR_TRACING, 26)               \
+  D(INCREMENTAL_ALLOC_TRIGGER, 27)         \
                                            \
   /* These are reserved for future use. */ \
-  D(RESERVED3, 27)                         \
   D(RESERVED4, 28)                         \
   D(RESERVED5, 29)                         \
   D(RESERVED6, 30)                         \
