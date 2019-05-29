@@ -116,7 +116,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Any weakmap key types that want to participate in the non-iterative
   // ephemeron marking must override this method.
   virtual void markEntry(GCMarker* marker, gc::Cell* markedCell,
-                         JS::GCCellPtr l) = 0;
+                         gc::Cell* l) = 0;
 
   virtual bool markIteratively(GCMarker* marker) = 0;
 
@@ -200,12 +200,12 @@ class WeakMap
   }
 
   void markEntry(GCMarker* marker, gc::Cell* markedCell,
-                 JS::GCCellPtr origKey) override;
+                 gc::Cell* origKey) override;
 
   void trace(JSTracer* trc) override;
 
  protected:
-  static void addWeakEntry(GCMarker* marker, JS::GCCellPtr key,
+  static void addWeakEntry(GCMarker* marker, gc::Cell* key,
                            const gc::WeakMarkable& markable);
 
   bool markIteratively(GCMarker* marker) override;
