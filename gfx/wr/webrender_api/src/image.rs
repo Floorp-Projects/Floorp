@@ -51,6 +51,7 @@ impl BlobImageKey {
 pub struct ExternalImageId(pub u64);
 
 /// Specifies the type of texture target in driver terms.
+#[repr(u8)]
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum TextureTarget {
     /// Standard texture. This maps to GL_TEXTURE_2D in OpenGL.

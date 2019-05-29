@@ -165,7 +165,7 @@ nsresult SVGAnimationElement::BindToTree(Document* aDocument,
   return NS_OK;
 }
 
-void SVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void SVGAnimationElement::UnbindFromTree(bool aNullParent) {
   SMILAnimationController* controller = OwnerDoc()->GetAnimationController();
   if (controller) {
     controller->UnregisterAnimationElement(this);
@@ -176,7 +176,7 @@ void SVGAnimationElement::UnbindFromTree(bool aDeep, bool aNullParent) {
 
   AnimationNeedsResample();
 
-  SVGAnimationElementBase::UnbindFromTree(aDeep, aNullParent);
+  SVGAnimationElementBase::UnbindFromTree(aNullParent);
 }
 
 bool SVGAnimationElement::ParseAttribute(int32_t aNamespaceID,

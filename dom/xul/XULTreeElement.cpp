@@ -28,7 +28,7 @@ JSObject* XULTreeElement::WrapNode(JSContext* aCx,
   return XULTreeElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void XULTreeElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void XULTreeElement::UnbindFromTree(bool aNullParent) {
   // Drop the view's ref to us.
   if (mView) {
     nsCOMPtr<nsITreeSelection> sel;
@@ -40,7 +40,7 @@ void XULTreeElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   }
   mView = nullptr;
 
-  nsXULElement::UnbindFromTree(aDeep, aNullParent);
+  nsXULElement::UnbindFromTree(aNullParent);
 }
 
 void XULTreeElement::DestroyContent() {

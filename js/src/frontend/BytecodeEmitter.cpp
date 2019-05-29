@@ -8768,17 +8768,20 @@ bool BytecodeEmitter::emitClass(
     // in, hence this extra scope.
     Maybe<LexicalScopeEmitter> lse;
     if (constructor->is<LexicalScopeNode>()) {
-      lse.emplace(this);
-      if (!lse->emitScope(
-              ScopeKind::Lexical,
-              constructor->as<LexicalScopeNode>().scopeBindings())) {
-        return false;
+      if (!constructor->as<LexicalScopeNode>().isEmptyScope()) {
+        lse.emplace(this);
+        if (!lse->emitScope(
+                ScopeKind::Lexical,
+                constructor->as<LexicalScopeNode>().scopeBindings())) {
+          return false;
+        }
+
+        // Any class with field initializers will have a constructor
+        if (!emitCreateFieldInitializers(classMembers)) {
+          return false;
+        }
       }
 
-      // Any class with field initializers will have a constructor
-      if (!emitCreateFieldInitializers(classMembers)) {
-        return false;
-      }
       ctor = &constructor->as<LexicalScopeNode>()
                   .scopeBody()
                   ->as<ClassMethod>()

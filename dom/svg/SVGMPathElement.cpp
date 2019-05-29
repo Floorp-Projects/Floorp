@@ -90,9 +90,9 @@ nsresult SVGMPathElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
-void SVGMPathElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void SVGMPathElement::UnbindFromTree(bool aNullParent) {
   UnlinkHrefTarget(true);
-  SVGMPathElementBase::UnbindFromTree(aDeep, aNullParent);
+  SVGMPathElementBase::UnbindFromTree(aNullParent);
 }
 
 bool SVGMPathElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,

@@ -93,12 +93,12 @@ nsresult nsMathMLElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void nsMathMLElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void nsMathMLElement::UnbindFromTree(bool aNullParent) {
   // Without removing the link state we risk a dangling pointer
   // in the mStyledLinks hashtable
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsMathMLElementBase::UnbindFromTree(aDeep, aNullParent);
+  nsMathMLElementBase::UnbindFromTree(aNullParent);
 }
 
 bool nsMathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,

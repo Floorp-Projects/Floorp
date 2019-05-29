@@ -67,19 +67,13 @@ const copySourceItem = (
   selectedSource: Source,
   selectionText: string,
   editorActions: EditorItemActions
-) => {
-  if (selectedSource.isWasm) {
-    return;
-  }
-
-  return {
-    id: "node-menu-copy-source",
-    label: L10N.getStr("copySource.label"),
-    accesskey: L10N.getStr("copySource.accesskey"),
-    disabled: selectionText.length === 0,
-    click: () => copyToTheClipboard(selectionText),
-  };
-};
+) => ({
+  id: "node-menu-copy-source",
+  label: L10N.getStr("copySource.label"),
+  accesskey: L10N.getStr("copySource.accesskey"),
+  disabled: selectionText.length === 0,
+  click: () => copyToTheClipboard(selectionText),
+});
 
 const copySourceUri2Item = (
   selectedSource: Source,
@@ -208,8 +202,12 @@ export function editorMenuItems({
     ...(content && isFulfilled(content)
       ? [copyToClipboardItem(content.value, editorActions)]
       : []),
-    copySourceItem(selectedSource, selectionText, editorActions),
-    copySourceUri2Item(selectedSource, editorActions),
+    ...(!selectedSource.isWasm
+      ? [
+          copySourceItem(selectedSource, selectionText, editorActions),
+          copySourceUri2Item(selectedSource, editorActions),
+        ]
+      : []),
     ...(content && isFulfilled(content)
       ? [downloadFileItem(selectedSource, content.value, editorActions)]
       : []),

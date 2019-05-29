@@ -547,7 +547,7 @@ nsresult HTMLImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void HTMLImageElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLImageElement::UnbindFromTree(bool aNullParent) {
   if (mForm) {
     if (aNullParent || !FindAncestorForm(mForm)) {
       ClearForm(true);
@@ -561,8 +561,8 @@ void HTMLImageElement::UnbindFromTree(bool aDeep, bool aNullParent) {
     mInDocResponsiveContent = false;
   }
 
-  nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsImageLoadingContent::UnbindFromTree(aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
 void HTMLImageElement::UpdateFormOwner() {

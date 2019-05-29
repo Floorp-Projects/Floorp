@@ -1922,45 +1922,54 @@ Function ShouldPromptForProfileCleanup
   SetShellVarContext current
 
   StrCpy $R0 ""
-  ${If} ${FileExists} "$APPDATA\Mozilla\Firefox\profiles.ini"
-    ; See if there's an installation-specific profile for our INSTDIR.
+  ; First look for an install-specific profile, which might be listed as
+  ; either a relative or an absolute path (installs.ini doesn't say which).
+  ${If} ${FileExists} "$APPDATA\Mozilla\Firefox\installs.ini"
     ClearErrors
-    ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Install$AppUserModelID" "Default"
+    ReadINIStr $1 "$APPDATA\Mozilla\Firefox\installs.ini" "$AppUserModelID" "Default"
     ${IfNot} ${Errors}
-      ; We found an installation-specific profile, let's use that one.
-      ; These don't set IsRelative but they're always relative paths.
-      StrCpy $R0 "$APPDATA\Mozilla\Firefox\$1"
-    ${Else}
-      ; We don't have an install-specific profile, so look for an old-style
-      ; default profile instead by checking each numbered Profile section.
-      StrCpy $0 0
-      ${Do}
-        ClearErrors
-        ; Check if the section exists by reading a value that must be present.
-        ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
-        ${If} ${Errors}
-          ; We've run out of profile sections.
-          ${Break}
+      ${GetLongPath} "$APPDATA\Mozilla\Firefox\$1" $2
+      ${If} ${FileExists} $2
+        StrCpy $R0 $2
+      ${Else}
+        ${GetLongPath} "$1" $2
+        ${If} ${FileExists} $2
+          StrCpy $R0 $2
         ${EndIf}
-
-        ClearErrors
-        ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Default"
-        ${IfNot} ${Errors}
-        ${AndIf} $1 == "1"
-          ; We've found the default profile
-          ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
-          ReadINIStr $2 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "IsRelative"
-          ${If} $2 == "1"
-            StrCpy $R0 "$APPDATA\Mozilla\Firefox\$1"
-          ${Else}
-            StrCpy $R0 "$1"
-          ${EndIf}
-          ${Break}
-        ${EndIf}
-
-        IntOp $0 $0 + 1
-      ${Loop}
+      ${EndIf}
     ${EndIf}
+  ${EndIf}
+
+  ${If} $R0 == ""
+    ; We don't have an install-specific profile, so look for an old-style
+    ; default profile instead by checking each numbered Profile section.
+    StrCpy $0 0
+    ${Do}
+      ClearErrors
+      ; Check if the section exists by reading a value that must be present.
+      ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
+      ${If} ${Errors}
+        ; We've run out of profile sections.
+        ${Break}
+      ${EndIf}
+
+      ClearErrors
+      ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Default"
+      ${IfNot} ${Errors}
+      ${AndIf} $1 == "1"
+        ; We've found the default profile
+        ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
+        ReadINIStr $2 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "IsRelative"
+        ${If} $2 == "1"
+          StrCpy $R0 "$APPDATA\Mozilla\Firefox\$1"
+        ${Else}
+          StrCpy $R0 "$1"
+        ${EndIf}
+        ${Break}
+      ${EndIf}
+
+      IntOp $0 $0 + 1
+    ${Loop}
   ${EndIf}
 
   GetFullPathName $R0 $R0

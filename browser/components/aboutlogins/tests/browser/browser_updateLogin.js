@@ -4,7 +4,7 @@
 let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
 const LOGIN_URL = "https://www.example.com";
-let TEST_LOGIN1 = new nsLoginInfo(LOGIN_URL, LOGIN_URL, null, "user1", "pass1", "username", "password");
+let TEST_LOGIN1 = new nsLoginInfo(LOGIN_URL, LOGIN_URL, null, "user1", "pass1");
 
 add_task(async function setup() {
   let storageChangedPromised = TestUtils.topicObserved("passwordmgr-storage-changed",

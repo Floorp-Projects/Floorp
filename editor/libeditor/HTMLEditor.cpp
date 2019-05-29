@@ -759,10 +759,16 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       aKeyboardEvent->PreventDefault();  // consumed
       if (aKeyboardEvent->IsShift()) {
         // Only inserts a <br> element.
-        return InsertLineBreakAsAction();
+        nsresult rv = InsertLineBreakAsAction();
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "InsertLineBreakAsAction() failed");
+        return EditorBase::ToGenericNSResult(rv);
       }
       // uses rules to figure out what to insert
-      return InsertParagraphSeparatorAsAction();
+      nsresult rv = InsertParagraphSeparatorAsAction();
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "InsertParagraphSeparatorAsAction() failed");
+      return EditorBase::ToGenericNSResult(rv);
   }
 
   if (!aKeyboardEvent->IsInputtingText()) {
@@ -997,7 +1003,7 @@ HTMLEditor::InsertLineBreak() {
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertParagraphSeparatorAsSubAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -1030,7 +1036,7 @@ nsresult HTMLEditor::InsertParagraphSeparatorAsAction() {
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
   nsresult rv = InsertParagraphSeparatorAsSubAction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return EditorBase::ToGenericNSResult(rv);
   }
   return NS_OK;
 }
@@ -1806,9 +1812,15 @@ HTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat) {
   RefPtr<nsAtom> tagName = NS_Atomize(lowerCaseTagName);
   MOZ_ASSERT(tagName);
   if (tagName == nsGkAtoms::dd || tagName == nsGkAtoms::dt) {
-    return MakeDefinitionListItemWithTransaction(*tagName);
+    nsresult rv = MakeDefinitionListItemWithTransaction(*tagName);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "MakeDefinitionListItemWithTransaction() failed");
+    return EditorBase::ToGenericNSResult(rv);
   }
-  return InsertBasicBlockWithTransaction(*tagName);
+  nsresult rv = InsertBasicBlockWithTransaction(*tagName);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "InsertBasicBlockWithTransaction() failed");
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 NS_IMETHODIMP

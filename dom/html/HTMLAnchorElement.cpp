@@ -111,7 +111,7 @@ nsresult HTMLAnchorElement::BindToTree(Document* aDocument, nsIContent* aParent,
   return rv;
 }
 
-void HTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent) {
+void HTMLAnchorElement::UnbindFromTree(bool aNullParent) {
   // Cancel any DNS prefetches
   // Note: Must come before ResetLinkState.  If called after, it will recreate
   // mCachedURI based on data that is invalid - due to a call to GetHostname.
@@ -122,7 +122,7 @@ void HTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   // in the mStyledLinks hashtable
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
 static bool IsNodeInEditableRegion(nsINode* aNode) {

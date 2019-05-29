@@ -65,7 +65,7 @@ class DocumentFragment : public FragmentOrElement {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) override {
+  virtual void UnbindFromTree(bool aNullParent) override {
     NS_ASSERTION(false, "Trying to unbind a fragment from a tree");
   }
 

@@ -16,4 +16,7 @@ export type PreviewAction =
   | {|
       +type: "CLEAR_PREVIEW",
       +cx: Context,
+    |}
+  | {|
+      +type: "START_PREVIEW",
     |};

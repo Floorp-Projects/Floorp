@@ -1839,11 +1839,7 @@ static bool ShouldRemoveFromIdTableOnUnbind(const Element& aElement,
   return aNullParent || !aElement.GetParent()->IsInShadowTree();
 }
 
-void Element::UnbindFromTree(bool aDeep, bool aNullParent) {
-  MOZ_ASSERT(aDeep || (!GetUncomposedDoc() && !GetBindingParent()),
-             "Shallow unbind won't clear document and binding parent on "
-             "kids!");
-
+void Element::UnbindFromTree(bool aNullParent) {
   // Make sure to only remove from the ID table if our subtree root is actually
   // changing.
   if (ShouldRemoveFromIdTableOnUnbind(*this, aNullParent)) {
@@ -1999,14 +1995,12 @@ void Element::UnbindFromTree(bool aDeep, bool aNullParent) {
     ResetDir(this);
   }
 
-  if (aDeep) {
-    for (nsIContent* child = GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      // Note that we pass false for aNullParent here, since we don't want
-      // the kids to forget us.  We _do_ want them to forget their binding
-      // parent, though, since this only walks non-anonymous kids.
-      child->UnbindFromTree(true, false);
-    }
+  for (nsIContent* child = GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    // Note that we pass false for aNullParent here, since we don't want
+    // the kids to forget us.  We _do_ want them to forget their binding
+    // parent, though, since this only walks non-anonymous kids.
+    child->UnbindFromTree(false);
   }
 
   nsNodeUtils::ParentChainChanged(this);

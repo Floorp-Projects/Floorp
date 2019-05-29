@@ -5,6 +5,9 @@ const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTest
 
 AddonTestUtils.initMochitest(this);
 
+hookExtensionsTelemetry();
+AddonTestUtils.hookAMTelemetryEvents();
+
 async function createWebExtension(details) {
   let options = {
     manifest: {
@@ -31,11 +34,58 @@ function promiseEvent(eventEmitter, event) {
   });
 }
 
-add_task(async function() {
+async function getAddonElement(managerWindow, addonId) {
+  if (managerWindow.useHtmlViews) {
+    // about:addons is using the new HTML page.
+    const {contentDocument: doc} = managerWindow.document.getElementById("html-view-browser");
+    const card = await BrowserTestUtils.waitForCondition(() =>
+      doc.querySelector(`addon-card[addon-id="${addonId}"]`),
+      `Found entry for sideload extension addon "${addonId}" in HTML about:addons`);
+
+    return card;
+  }
+
+  // about:addons is using the XUL-based views.
+  let list = managerWindow.document.getElementById("addon-list");
+  // Make sure XBL bindings are applied
+  list.clientHeight;
+  const item = Array.from(list.children).find(_item => _item.value == addonId);
+  ok(item, "Found entry for sideloaded extension in about:addons");
+
+  return item;
+}
+
+function assertDisabledSideloadedAddonElement(managerWindow, addonElement) {
+  if (managerWindow.useHtmlViews) {
+    // about:addons is using the new HTML page.
+    const doc = addonElement.ownerDocument;
+    const enableBtn = addonElement.querySelector('[action="toggle-disabled"]');
+    is(doc.l10n.getAttributes(enableBtn).id, "enable-addon-button",
+       "The button has the enable label");
+  } else {
+    addonElement.scrollIntoView({behavior: "instant"});
+    ok(BrowserTestUtils.is_visible(addonElement._enableBtn),
+       "Enable button is visible for sideloaded extension");
+    ok(BrowserTestUtils.is_hidden(addonElement._disableBtn),
+       "Disable button is not visible for sideloaded extension");
+   }
+}
+
+function clickEnableExtension(managerWindow, addonElement) {
+  if (managerWindow.useHtmlViews) {
+    addonElement.querySelector('[action="toggle-disabled"]').click();
+  } else {
+    BrowserTestUtils.synthesizeMouseAtCenter(addonElement._enableBtn, {},
+                                             gBrowser.selectedBrowser);
+  }
+}
+
+async function test_sideloading({useHtmlViews}) {
   const DEFAULT_ICON_URL = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["extensions.htmlaboutaddons.enabled", useHtmlViews],
       ["xpinstall.signatures.required", false],
       ["extensions.autoDisableScopes", 15],
       ["extensions.ui.ignoreUnsigned", true],
@@ -84,8 +134,6 @@ add_task(async function() {
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   });
 
-  hookExtensionsTelemetry();
-  AddonTestUtils.hookAMTelemetryEvents();
 
   let changePromise = new Promise(resolve => {
     ExtensionsUI.on("change", function listener() {
@@ -122,7 +170,9 @@ add_task(async function() {
 
   const VIEW = "addons://list/extension";
   let win = gBrowser.selectedBrowser.contentWindow;
-  ok(!win.gViewController.isLoading, "about:addons view is fully loaded");
+
+  await BrowserTestUtils.waitForCondition(() => !win.gViewController.isLoading,
+                                          "about:addons view is fully loaded");
   is(win.gViewController.currentViewId, VIEW, "about:addons is at extensions list");
 
   // Check the contents of the notification, then choose "Cancel"
@@ -152,27 +202,20 @@ add_task(async function() {
 
   win = await BrowserOpenAddonsMgr(VIEW);
 
-  let list = win.document.getElementById("addon-list");
   if (win.gViewController.isLoading) {
     await new Promise(resolve => win.document.addEventListener("ViewChanged", resolve, {once: true}));
   }
 
-  // Make sure XBL bindings are applied
-  list.clientHeight;
+  // XUL or HTML about:addons addon entry element.
+  const addonElement = await getAddonElement(win, ID2);
 
-  let item = Array.from(list.children).find(_item => _item.value == ID2);
-  ok(item, "Found entry for sideloaded extension in about:addons");
-  item.scrollIntoView({behavior: "instant"});
-
-  ok(BrowserTestUtils.is_visible(item._enableBtn), "Enable button is visible for sideloaded extension");
-  ok(BrowserTestUtils.is_hidden(item._disableBtn), "Disable button is not visible for sideloaded extension");
+  assertDisabledSideloadedAddonElement(win, addonElement);
 
   info("Test enabling sideloaded addon 2 from about:addons enable button");
 
   // When clicking enable we should see the permissions notification
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
-  BrowserTestUtils.synthesizeMouseAtCenter(item._enableBtn, {},
-                                           gBrowser.selectedBrowser);
+  clickEnableExtension(win, addonElement);
   panel = await popupPromise;
   checkNotification(panel, DEFAULT_ICON_URL, [["webextPerms.hostDescription.allUrls"]]);
 
@@ -302,4 +345,12 @@ add_task(async function() {
 
   is(collectedEventsAddon2.length, expectedEventsAddon2.length,
      "Got the expected number of telemetry events for addon2");
+}
+
+add_task(async function test_xul_aboutaddons_sideloading() {
+  await test_sideloading({useHtmlViews: false});
+});
+
+add_task(async function test_html_aboutaddons_sideloading() {
+  await test_sideloading({useHtmlViews: true});
 });
