@@ -31,9 +31,9 @@
 
     <hbox align="center">
       <label control="password" data-l10n-id="remove-password-old-password"/> 
-      <textbox id="password" type="password"
-               oninput="gRemovePasswordDialog.validateInput();"
-               aria-describedby="warnings"/>
+      <html:input id="password" type="password"
+                  oninput="gRemovePasswordDialog.validateInput();"
+                  aria-describedby="warnings"/>
     </hbox>
   </groupbox>
   

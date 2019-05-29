@@ -10,6 +10,16 @@ class PingFilter(object):
         return True
 
 
+class EventPingFilter(PingFilter):
+    """Ping filter that accepts event pings."""
+
+    def __call__(self, ping):
+        if not super(EventPingFilter, self).__call__(ping):
+            return False
+
+        return ping["type"] == "event"
+
+
 class FirstShutdownPingFilter(PingFilter):
     """Ping filter that accepts first-shutdown pings."""
 
@@ -57,6 +67,7 @@ class OptoutPingFilter(PingFilter):
 
 
 ANY_PING = PingFilter()
+EVENT_PING = EventPingFilter()
 FIRST_SHUTDOWN_PING = FirstShutdownPingFilter()
 MAIN_PING = MainPingFilter()
 MAIN_SHUTDOWN_PING = MainPingReasonFilter("shutdown")

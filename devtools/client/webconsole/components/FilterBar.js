@@ -248,6 +248,7 @@ class FilterBar extends Component {
           className: "devtools-separator",
         }),
         SearchBox({
+          type: "filter",
           placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
           keyShortcut: l10n.getStr("webconsole.find.key"),
           onChange: this.onSearchBoxChange,

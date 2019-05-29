@@ -100,10 +100,10 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 LOCAL_INCLUDES += [
-    '/db/sqlite3/src',
     '/dom/base',
     '/dom/storage',
     '/ipc/glue',
+    '/third_party/sqlite3/src',
     '/xpcom/build',
 ]
 

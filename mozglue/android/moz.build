@@ -42,7 +42,6 @@ if CONFIG['MOZ_FOLD_LIBS']:
 LOCAL_INCLUDES += [
     '!/build',
     '../linker',
-    '/db/sqlite3/src',
     '/ipc/chromium/src',
     '/nsprpub/lib/ds',
     '/nsprpub/lib/libc/include',
@@ -60,6 +59,7 @@ LOCAL_INCLUDES += [
     '/security/nss/lib/softoken',
     '/security/nss/lib/ssl',
     '/security/nss/lib/util',
+    '/third_party/sqlite3/src',
     '/toolkit/components/startup',
     '/xpcom/build',
 ]
