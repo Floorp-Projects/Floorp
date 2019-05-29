@@ -2128,23 +2128,11 @@ bool WasmTableObject::getImpl(JSContext* cx, const CallArgs& args) {
 
   switch (table.kind()) {
     case TableKind::FuncRef: {
-      const FunctionTableElem& elem = table.getFuncRef(index);
-      if (!elem.code) {
-        args.rval().setNull();
-        return true;
-      }
-
-      Instance& instance = *elem.tls->instance;
-      const CodeRange& codeRange = *instance.code().lookupFuncRange(elem.code);
-
-      RootedWasmInstanceObject instanceObj(cx, instance.object());
       RootedFunction fun(cx);
-      if (!instanceObj->getExportedFunction(cx, instanceObj,
-                                            codeRange.funcIndex(), &fun)) {
+      if (!table.getFuncRef(cx, index, &fun)) {
         return false;
       }
-
-      args.rval().setObject(*fun);
+      args.rval().setObjectOrNull(fun);
       break;
     }
     case TableKind::AnyRef: {
@@ -2162,36 +2150,6 @@ bool WasmTableObject::getImpl(JSContext* cx, const CallArgs& args) {
 bool WasmTableObject::get(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsTable, getImpl>(cx, args);
-}
-
-static void TableFunctionFill(JSContext* cx, Table* table, HandleFunction value,
-                              uint32_t index, uint32_t limit) {
-  if (!value) {
-    while (index < limit) {
-      table->setNull(index++);
-    }
-    return;
-  }
-
-  RootedWasmInstanceObject instanceObj(cx,
-                                       ExportedFunctionToInstanceObject(value));
-  uint32_t funcIndex = ExportedFunctionToFuncIndex(value);
-
-#ifdef DEBUG
-  RootedFunction f(cx);
-  MOZ_ASSERT(instanceObj->getExportedFunction(cx, instanceObj, funcIndex, &f));
-  MOZ_ASSERT(value == f);
-#endif
-
-  Instance& instance = instanceObj->instance();
-  Tier tier = instance.code().bestTier();
-  const MetadataTier& metadata = instance.metadata(tier);
-  const CodeRange& codeRange =
-      metadata.codeRange(metadata.lookupFuncExport(funcIndex));
-  void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
-  while (index < limit) {
-    table->setFuncRef(index++, code, &instance);
-  }
 }
 
 /* static */
@@ -2218,7 +2176,7 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
       }
       MOZ_ASSERT(index < MaxTableLength);
       static_assert(MaxTableLength < UINT32_MAX, "Invariant");
-      TableFunctionFill(cx, &table, fun, index, index + 1);
+      table.fillFuncRef(index, 1, AnyRef::fromJSObject(fun), cx);
       break;
     }
     case TableKind::AnyRef: {
@@ -2226,7 +2184,7 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
       if (!BoxAnyRef(cx, fillValue, &tmp)) {
         return false;
       }
-      table.setAnyRef(index, tmp);
+      table.fillAnyRef(index, 1, tmp);
       break;
     }
     default: {
@@ -2246,8 +2204,9 @@ bool WasmTableObject::set(JSContext* cx, unsigned argc, Value* vp) {
 
 /* static */
 bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
-  RootedWasmTableObject table(cx,
-                              &args.thisv().toObject().as<WasmTableObject>());
+  RootedWasmTableObject tableObj(
+      cx, &args.thisv().toObject().as<WasmTableObject>());
+  Table& table = tableObj->table();
 
   if (!args.requireAtLeast(cx, "WebAssembly.Table.grow", 1)) {
     return false;
@@ -2258,7 +2217,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  uint32_t oldLength = table->table().grow(delta, cx);
+  uint32_t oldLength = table.grow(delta, cx);
 
   if (oldLength == uint32_t(-1)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GROW,
@@ -2277,12 +2236,12 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
 
   static_assert(MaxTableLength < UINT32_MAX, "Invariant");
 
-  switch (table->table().kind()) {
+  switch (table.kind()) {
     case TableKind::FuncRef: {
       if (fillValue.isNull()) {
 #ifdef DEBUG
         for (uint32_t index = oldLength; index < oldLength + delta; index++) {
-          MOZ_ASSERT(table->table().getFuncRef(index).code == nullptr);
+          MOZ_ASSERT(table.getFuncRef(index).code == nullptr);
         }
 #endif
       } else {
@@ -2290,8 +2249,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
         if (!CheckFuncRefValue(cx, fillValue, &fun)) {
           return false;
         }
-        TableFunctionFill(cx, &table->table(), fun, oldLength,
-                          oldLength + delta);
+        table.fillFuncRef(oldLength, delta, AnyRef::fromJSObject(fun), cx);
       }
       break;
     }
@@ -2301,13 +2259,11 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
         return false;
       }
       if (!tmp.get().isNull()) {
-        for (uint32_t index = oldLength; index < oldLength + delta; index++) {
-          table->table().setAnyRef(index, tmp);
-        }
+        table.fillAnyRef(oldLength, delta, tmp);
       } else {
 #ifdef DEBUG
         for (uint32_t index = oldLength; index < oldLength + delta; index++) {
-          MOZ_ASSERT(table->table().getAnyRef(index).isNull());
+          MOZ_ASSERT(table.getAnyRef(index).isNull());
         }
 #endif
       }
