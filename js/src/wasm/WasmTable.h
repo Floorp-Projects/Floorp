@@ -80,14 +80,19 @@ class Table : public ShareableBase<Table> {
   // Only for function values.  Raw pointer to the table.
   uint8_t* functionBase() const;
 
-  // get/setFuncRef is allowed only on table-of-funcref.
-  // get/setAnyRef is allowed only on table-of-anyref.
+  // set/get/fillFuncRef is allowed only on table-of-funcref.
+  // get/fillAnyRef is allowed only on table-of-anyref.
   // setNull is allowed on either.
+
   const FunctionTableElem& getFuncRef(uint32_t index) const;
+  bool getFuncRef(JSContext* cx, uint32_t index,
+                  MutableHandleFunction fun) const;
   void setFuncRef(uint32_t index, void* code, const Instance* instance);
+  void fillFuncRef(uint32_t index, uint32_t fillCount, AnyRef ref,
+                   JSContext* cx);
 
   AnyRef getAnyRef(uint32_t index) const;
-  void setAnyRef(uint32_t index, AnyRef);
+  void fillAnyRef(uint32_t index, uint32_t fillCount, AnyRef ref);
 
   void setNull(uint32_t index);
 
