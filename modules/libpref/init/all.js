@@ -2681,7 +2681,7 @@ pref("security.allow_eval_with_system_principal", false);
 pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,preferencesbindings.js,lodash.js,jszip.js,sinon-7.2.7.js,jsol.js");
 #endif
 
-#if defined(DEBUG) || defined(FUZZING)
+#ifdef EARLY_BETA_OR_EARLIER
 // Disallow web documents loaded with the SystemPrincipal
 pref("security.disallow_non_local_systemprincipal_in_tests", false);
 #endif
