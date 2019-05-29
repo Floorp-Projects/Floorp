@@ -281,12 +281,15 @@ class SourceTreeItem extends Component<Props, State> {
         <span className="query">{querystring}</span>
       ) : null;
 
+    const title = item.type === "source" ? unescape(item.contents.url) : "";
+
     return (
       <div
         className={classnames("node", { focused })}
         key={item.path}
         onClick={this.onClick}
         onContextMenu={e => this.onContextMenu(e, item)}
+        title={title}
       >
         {this.renderItemArrow()}
         {this.renderIcon(item, depth)}
