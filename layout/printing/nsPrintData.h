@@ -31,13 +31,6 @@ class PrintPreviewUserEventSuppressor;
 // mPreparingForPrint - indicates that we have started Printing but
 //   have not gone to the timer to start printing the pages. It gets turned
 //   off right before we go to the timer.
-//
-// mDocWasToBeDestroyed - Gets set when "someone" tries to unload the document
-//   while we were prparing to Print. This typically happens if a user starts
-//   to print while a page is still loading. If they start printing and pause
-//   at the print dialog and then the page comes in, we then abort printing
-//   because the document is no longer stable.
-//
 //------------------------------------------------------------------------
 class nsPrintData {
   typedef mozilla::PrintPreviewUserEventSuppressor
@@ -77,9 +70,8 @@ class nsPrintData {
   bool mIsIFrameSelected;
   bool mIsParentAFrameSet;
   bool mOnStartSent;
-  bool mIsAborted;            // tells us the document is being aborted
-  bool mPreparingForPrint;    // see comments above
-  bool mDocWasToBeDestroyed;  // see comments above
+  bool mIsAborted;          // tells us the document is being aborted
+  bool mPreparingForPrint;  // see comments above
   bool mShrinkToFit;
   int32_t mNumPrintablePages;
   int32_t mNumPagesPrinted;
