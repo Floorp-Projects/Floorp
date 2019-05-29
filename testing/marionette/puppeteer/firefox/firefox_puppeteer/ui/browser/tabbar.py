@@ -233,7 +233,7 @@ class Tab(UIBaseLib):
 
         :returns: Reference to the tab close button.
         """
-        return self.tab_element.find_element(By.CSS_SELECTOR, '.tab-close-button')
+        return self.tab_element.find_element(By.ANON_ATTRIBUTE, {'anonid': 'close-button'})
 
     @property
     def tab_element(self):

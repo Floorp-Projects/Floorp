@@ -31,7 +31,7 @@ add_task(async function() {
   info("Waiting for the load in that tab to finish");
   await secondTabLoadedPromise;
 
-  let closeBtn = secondTab.closeButton;
+  let closeBtn = document.getAnonymousElementByAttribute(secondTab, "anonid", "close-button");
   info("closing second tab (which will self-close in beforeunload)");
   closeBtn.click();
   ok(secondTab.closing, "Second tab should be marked as closing synchronously.");
