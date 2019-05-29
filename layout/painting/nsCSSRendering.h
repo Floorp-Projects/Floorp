@@ -298,7 +298,9 @@ struct nsCSSRendering {
   static nsIFrame* FindCanvasBackgroundFrame(nsIFrame* aForFrame,
                                              nsIFrame* aRootElementFrame) {
     MOZ_ASSERT(IsCanvasFrame(aForFrame), "not a canvas frame");
-    if (aRootElementFrame) return FindBackgroundStyleFrame(aRootElementFrame);
+    if (aRootElementFrame) {
+      return FindBackgroundStyleFrame(aRootElementFrame);
+    }
 
     // This should always give transparent, so we'll fill it in with the
     // default color if needed.  This seems to happen a bit while a page is

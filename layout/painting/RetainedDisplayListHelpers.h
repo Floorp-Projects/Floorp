@@ -33,7 +33,9 @@ class DisplayItemHashEntry : public PLDHashEntryHdr {
 
   static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    if (!aKey) return 0;
+    if (!aKey) {
+      return 0;
+    }
 
     return mozilla::HashGeneric(aKey->mFrame, aKey->mPerFrameKey);
   }
