@@ -91,10 +91,10 @@ add_task(async function test_cookies_incognito_not_allowed() {
 
     Services.cookies.add("example.org", "/", "public", `foo${Math.random()}`,
                          false, false, false, Number.MAX_SAFE_INTEGER, {},
-                         Ci.nsICookie2.SAMESITE_NONE);
+                         Ci.nsICookie2.SAMESITE_UNSET);
     Services.cookies.add("example.org", "/", "private", `foo${Math.random()}`,
                          false, false, false, Number.MAX_SAFE_INTEGER, {privateBrowsingId: 1},
-                         Ci.nsICookie2.SAMESITE_NONE);
+                         Ci.nsICookie2.SAMESITE_UNSET);
   });
   extension.sendMessage("test-cookie-store");
   await extension.awaitFinish("cookies");

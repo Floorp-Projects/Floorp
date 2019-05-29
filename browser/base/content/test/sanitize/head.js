@@ -34,13 +34,13 @@ function checkIndexedDB(host, originAttributes) {
 function createHostCookie(host, originAttributes) {
   Services.cookies.add(host, "/test", "foo", "bar",
     false, false, false, Date.now() + 24000 * 60 * 60, originAttributes,
-    Ci.nsICookie2.SAMESITE_NONE);
+    Ci.nsICookie2.SAMESITE_UNSET);
 }
 
 function createDomainCookie(host, originAttributes) {
   Services.cookies.add("." + host, "/test", "foo", "bar",
     false, false, false, Date.now() + 24000 * 60 * 60, originAttributes,
-    Ci.nsICookie2.SAMESITE_NONE);
+    Ci.nsICookie2.SAMESITE_UNSET);
 }
 
 function checkCookie(host, originAttributes) {

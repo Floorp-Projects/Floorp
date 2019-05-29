@@ -40,7 +40,7 @@ const PREFERENCE_NAME = "test-pref";
 function add_cookie(aDomain) {
   check_cookie_exists(aDomain, false);
   Services.cookies.add(aDomain, COOKIE_PATH, COOKIE_NAME, "", false, false, false,
-                       COOKIE_EXPIRY, {}, Ci.nsICookie2.SAMESITE_NONE);
+                       COOKIE_EXPIRY, {}, Ci.nsICookie2.SAMESITE_UNSET);
   check_cookie_exists(aDomain, true);
 }
 

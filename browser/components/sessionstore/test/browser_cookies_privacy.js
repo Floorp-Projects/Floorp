@@ -9,7 +9,7 @@ function addCookie(scheme, secure = false) {
                        cookie.secure, /* isHttpOnly = */ false,
                        /* isSession = */ true, MAX_EXPIRY,
                        /* originAttributes = */ {},
-                       Ci.nsICookie2.SAMESITE_NONE);
+                       Ci.nsICookie2.SAMESITE_UNSET);
   return cookie;
 }
 

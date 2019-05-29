@@ -64,7 +64,7 @@ var SessionCookiesInternal = {
                                cookie.value, !!cookie.secure, !!cookie.httponly,
                                /* isSession = */ true, expiry,
                                cookie.originAttributes || {},
-                               Ci.nsICookie2.SAMESITE_NONE);
+                               Ci.nsICookie2.SAMESITE_UNSET);
         } catch (ex) {
           Cu.reportError(`nsCookieService::Add failed with error '${ex}' for cookie ${JSON.stringify(cookie)}.`);
         }

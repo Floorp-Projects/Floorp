@@ -115,8 +115,7 @@ void CookieServiceChild::MoveCookies() {
           cookie->Name(), cookie->Value(), cookie->Host(), cookie->Path(),
           cookie->Expiry(), cookie->LastAccessed(), cookie->CreationTime(),
           cookie->IsSession(), cookie->IsSecure(), cookie->IsHttpOnly(),
-          cookie->OriginAttributesRef(), cookie->SameSite(),
-          cookie->RawSameSite());
+          cookie->OriginAttributesRef(), cookie->SameSite());
       newCookiesList.AppendElement(newCookie);
     }
     cookiesList->SwapElements(newCookiesList);
@@ -224,7 +223,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvAddCookie(
       aCookie.name(), aCookie.value(), aCookie.host(), aCookie.path(),
       aCookie.expiry(), aCookie.lastAccessed(), aCookie.creationTime(),
       aCookie.isSession(), aCookie.isSecure(), aCookie.isHttpOnly(), aAttrs,
-      aCookie.sameSite(), aCookie.rawSameSite());
+      aCookie.sameSite());
   RecordDocumentCookie(cookie, aAttrs);
   return IPC_OK();
 }
@@ -248,7 +247,7 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvTrackCookiesLoad(
         aCookiesList[i].path(), aCookiesList[i].expiry(),
         aCookiesList[i].lastAccessed(), aCookiesList[i].creationTime(),
         aCookiesList[i].isSession(), aCookiesList[i].isSecure(), false, aAttrs,
-        aCookiesList[i].sameSite(), aCookiesList[i].rawSameSite());
+        aCookiesList[i].sameSite());
     RecordDocumentCookie(cookie, aAttrs);
   }
 
@@ -405,8 +404,7 @@ void CookieServiceChild::SetCookieInternal(
       aCookieAttributes.path, aCookieAttributes.expiryTime, currentTimeInUsec,
       nsCookie::GenerateUniqueCreationTime(currentTimeInUsec),
       aCookieAttributes.isSession, aCookieAttributes.isSecure,
-      aCookieAttributes.isHttpOnly, aAttrs, aCookieAttributes.sameSite,
-      aCookieAttributes.rawSameSite);
+      aCookieAttributes.isHttpOnly, aAttrs, aCookieAttributes.sameSite);
 
   RecordDocumentCookie(cookie, aAttrs);
 }
