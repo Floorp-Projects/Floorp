@@ -59,7 +59,7 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   onNetworkEventUpdate = onNetworkEventUpdate.bind(null, aState);
-  aState.dbgClient.addListener("networkEventUpdate", onNetworkEventUpdate);
+  aState.dbgClient.on("networkEventUpdate", onNetworkEventUpdate);
 
   runNextCase(aState);
 }
@@ -79,7 +79,7 @@ function runNextCase(aState) {
   iframe.wrappedJSObject.makeXhrCallback("GET", url);
 }
 
-function onNetworkEventUpdate(aState, aType, aPacket)
+function onNetworkEventUpdate(aState, aPacket)
 {
   function onSecurityInfo(packet) {
     let data = TEST_CASES[gCurrentTestCase];

@@ -169,7 +169,7 @@ function connectRuntime(id) {
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
         // `closed` event will be emitted when disabling remote debugging
         // on the connected remote runtime.
-        clientWrapper.addOneTimeListener("closed", onRemoteDebuggerClientClosed);
+        clientWrapper.once("closed", onRemoteDebuggerClientClosed);
       }
 
       dispatch({
@@ -220,7 +220,7 @@ function disconnectRuntime(id, shouldRedirect = false) {
       }
 
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
-        clientWrapper.removeListener("closed", onRemoteDebuggerClientClosed);
+        clientWrapper.off("closed", onRemoteDebuggerClientClosed);
       }
       await clientWrapper.close();
       if (shouldRedirect) {
@@ -469,7 +469,7 @@ function removeRuntimeListeners() {
     for (const runtime of remoteRuntimes) {
       if (runtime.runtimeDetails) {
         const { clientWrapper } = runtime.runtimeDetails;
-        clientWrapper.removeListener("closed", onRemoteDebuggerClientClosed);
+        clientWrapper.off("closed", onRemoteDebuggerClientClosed);
       }
     }
   };

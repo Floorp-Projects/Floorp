@@ -8,7 +8,7 @@ const promise = require("devtools/shared/deprecated-sync-thenables");
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getStack, callFunctionWithAsyncStack } = require("devtools/shared/platform/stack");
-const eventSource = require("devtools/shared/client/event-source");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {
   ThreadStateTypes,
   UnsolicitedNotifications,
@@ -167,7 +167,7 @@ DebuggerClient.prototype = {
   connect: function(onConnected) {
     const deferred = promise.defer();
 
-    this.addOneTimeListener("connected", (name, applicationType, traits) => {
+    this.once("connected", (applicationType, traits) => {
       this.traits = traits;
       if (onConnected) {
         onConnected(applicationType, traits);
@@ -215,7 +215,7 @@ DebuggerClient.prototype = {
       return deferred.promise;
     }
 
-    this.addOneTimeListener("closed", deferred.resolve);
+    this.once("closed", deferred.resolve);
 
     // Call each client's `detach` method by calling
     // lastly registered ones first to give a chance
@@ -944,7 +944,7 @@ DebuggerClient.prototype = {
   },
 };
 
-eventSource(DebuggerClient.prototype);
+EventEmitter.decorate(DebuggerClient.prototype);
 
 class Request extends EventEmitter {
   constructor(request) {
