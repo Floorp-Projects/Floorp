@@ -39,7 +39,9 @@ add_task(async function test_unifiedComplete() {
       },
     },
   });
-  let context = createContext("moz org", {isPrivate: false});
+  // Also check case insensitivity.
+  let searchString = "MoZ oRg";
+  let context = createContext(searchString, {isPrivate: false});
 
   // Add entries from multiple sources.
   await PlacesUtils.bookmarks.insert({
@@ -70,9 +72,9 @@ add_task(async function test_unifiedComplete() {
   ], context.results.map(m => m.type), "Check result types");
 
   Assert.deepEqual([
-    "moz org",
-    "moz org foo",
-    "moz org bar",
+    searchString,
+    searchString + " foo",
+    searchString + " bar",
     "Test bookmark",
     "Test tab",
     "Test history",
