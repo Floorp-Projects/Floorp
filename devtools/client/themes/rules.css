@@ -693,7 +693,6 @@
 
 #print-simulation-toggle::before {
   background-image: url("chrome://devtools/skin/images/rules-view-print-simulation.svg");
-  background-size: 14px;
 }
 
 .flash-out {
