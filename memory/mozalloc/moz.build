@@ -45,8 +45,6 @@ DEFINES['_GNU_SOURCE'] = True
 
 DisableStlWrapping()
 
-DEFINES['IMPL_MFBT'] = True
-
 LOCAL_INCLUDES += [
     '!/xpcom',
     '/memory/build',
