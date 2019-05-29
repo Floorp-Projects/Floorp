@@ -9,6 +9,7 @@ import base64
 import cgi
 from datetime import datetime
 import os
+import json
 
 from .. import base
 
@@ -158,15 +159,28 @@ class HTMLFormatter(base.BaseFormatter):
                     else:
                         href = content
                 else:
+                    if not isinstance(content, (six.text_type, six.binary_type)):
+                        # All types must be json serializable
+                        content = json.dumps(content)
                     # Encode base64 to avoid that some browsers (such as Firefox, Opera)
                     # treats '#' as the start of another link if it is contained in the data URL.
-                    # Use 'charset=utf-8' to show special characters like Chinese.
-                    utf8_encoded_bytes = six.text_type(content).encode('utf-8',
-                                                                       'xmlcharrefreplace')
-                    b64_encoded_bytes = base64.b64encode(utf8_encoded_bytes)
-                    b64_encoded_str = b64_encoded_bytes.decode()
-                    href = "data:text/html;charset=utf-8;base64,{0}".format(b64_encoded_str)
+                    if isinstance(content, six.text_type):
+                        is_known_utf8 = True
+                        content_bytes = six.text_type(content).encode('utf-8',
+                                                                      'xmlcharrefreplace')
+                    else:
+                        is_known_utf8 = False
+                        content_bytes = content
 
+                    meta = ["text/html"]
+                    if is_known_utf8:
+                        meta.append("charset=utf-8")
+
+                    # base64 is ascii only, which means we don't have to care about encoding
+                    # in the case where we don't know the encoding of the input
+                    b64_bytes = base64.b64encode(content_bytes)
+                    b64_text = b64_bytes.decode()
+                    href = "data:%s;base64,%s" % (";".join(meta), b64_text)
                 links_html.append(html.a(
                     name.title(),
                     class_=name,
