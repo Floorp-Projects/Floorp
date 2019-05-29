@@ -104,7 +104,7 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
 
     marked = true;
     markColor = marker->markColor();
-    (void)markIteratively(marker);
+    (void)markEntries(marker);
     return;
   }
 
@@ -148,7 +148,7 @@ template <class K, class V>
 }
 
 template <class K, class V>
-bool WeakMap<K, V>::markIteratively(GCMarker* marker) {
+bool WeakMap<K, V>::markEntries(GCMarker* marker) {
   MOZ_ASSERT(marked);
   if (marker->markColor() == gc::MarkColor::Black &&
       markColor == gc::MarkColor::Gray) {

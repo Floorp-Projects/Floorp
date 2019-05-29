@@ -11,6 +11,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/DeletePolicy.h"
+#include "gc/Tracer.h"
 #include "gc/Zone.h"
 #include "js/HashTable.h"
 
@@ -118,7 +119,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   virtual void markEntry(GCMarker* marker, gc::Cell* markedCell,
                          gc::Cell* l) = 0;
 
-  virtual bool markIteratively(GCMarker* marker) = 0;
+  virtual bool markEntries(GCMarker* marker) = 0;
 
 #ifdef JS_GC_ZEAL
   virtual bool checkMarking() const = 0;
@@ -192,6 +193,13 @@ class WeakMap
   }
 
   template <typename KeyInput, typename ValueInput>
+  MOZ_MUST_USE bool putNew(KeyInput&& key, ValueInput&& value) {
+    MOZ_ASSERT(key);
+    return Base::putNew(std::forward<KeyInput>(key),
+                        std::forward<ValueInput>(value));
+  }
+
+  template <typename KeyInput, typename ValueInput>
   MOZ_MUST_USE bool relookupOrAdd(AddPtr& ptr, KeyInput&& key,
                                   ValueInput&& value) {
     MOZ_ASSERT(key);
@@ -205,10 +213,13 @@ class WeakMap
   void trace(JSTracer* trc) override;
 
  protected:
+  // We have a key that, if it or its delegate is marked, may lead to a WeakMap
+  // value getting marked. Insert it or its delegate (if any) into the
+  // appropriate zone's gcWeakKeys or gcNurseryWeakKeys.
   static void addWeakEntry(GCMarker* marker, gc::Cell* key,
                            const gc::WeakMarkable& markable);
 
-  bool markIteratively(GCMarker* marker) override;
+  bool markEntries(GCMarker* marker) override;
 
   /**
    * If a wrapper is used as a key in a weakmap, the garbage collector should
