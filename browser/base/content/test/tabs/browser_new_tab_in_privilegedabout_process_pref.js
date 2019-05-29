@@ -17,31 +17,6 @@ const ABOUT_NEWTAB = "about:newtab";
 const ABOUT_WELCOME = "about:welcome";
 const TEST_HTTP = "http://example.org/";
 
-/**
- * Takes a xul:browser and makes sure that the remoteTypes for the browser in
- * both the parent and the child processes are the same.
- *
- * @param {xul:browser} browser
- *        A xul:browser.
- * @param {string} expectedRemoteType
- *        The expected remoteType value for the browser in both the parent
- *        and child processes.
- * @param {optional string} message
- *        If provided, shows this string as the message when remoteType values
- *        do not match. If not present, it uses the default message defined
- *        in the function parameters.
- */
-function checkBrowserRemoteType(
-  browser,
-  expectedRemoteType,
-  message = `Ensures that tab runs in the ${expectedRemoteType} content process.`
-) {
-  // Check both parent and child to ensure that they have the correct remoteType.
-  is(browser.remoteType, expectedRemoteType, message);
-  is(browser.messageManager.remoteType, expectedRemoteType,
-    "Parent and child process should agree on the remote type.");
-}
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
