@@ -83,7 +83,7 @@ addMessageListener("init", ({ domain }) => {
 
   cs.removeAll();
   cs.add(domain, "", "oh", "hai", false, false, true, Math.pow(2, 62), {},
-         Ci.nsICookie2.SAMESITE_NONE);
+         Ci.nsICookie2.SAMESITE_UNSET);
   is(cs.countCookiesFromHost(domain), 1, "number of cookies for domain " + domain);
 
   gObs = new obs();
