@@ -252,14 +252,20 @@ class TouchBarHelper {
    * @param {...*} [otherInputs] (optional)
    *        Additional keys to values in the kBuiltInInputs object in this file.
    */
-  _updateTouchBarInputs(inputName, ...otherInputs) {
-    let input = this.getTouchBarInput(inputName);
-    if (!input || !this.window) {
+  _updateTouchBarInputs(...inputNames) {
+    if (!this.window) {
       return;
     }
-    let inputs = [input];
-    for (let otherInputName of otherInputs) {
-      input = this.getTouchBarInput(otherInputName);
+
+    let inputs = [];
+    for (let inputName of inputNames) {
+      // Updating Touch Bar items isn't cheap in terms of performance, so
+      // only consider this input if it's actually part of the layout.
+      if (!this._storedLayout.includes(inputName)) {
+        continue;
+      }
+
+      let input = this.getTouchBarInput(inputName);
       if (!input) {
         continue;
       }
