@@ -26,6 +26,7 @@ import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.intent.IntentProcessor
+import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
@@ -75,6 +76,9 @@ open class DefaultComponents(private val applicationContext: Context) {
                 .whenSessionsChange()
 
             icons.install(engine, this)
+
+            RecordingDevicesNotificationFeature(applicationContext, sessionManager = this)
+                .enable()
         }
     }
 
