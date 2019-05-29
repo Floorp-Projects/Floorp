@@ -72,11 +72,6 @@ interface nsIRemoteTab : nsISupports
   readonly attribute boolean hasPresented;
 
   /**
-   * Gets all of the WindowGlobalParent actors for this remote tab.
-   */
-  readonly attribute Array<WindowGlobalParent> windowGlobalParents;
-
-  /**
    * Ensures that the content process which has this remote tab has all of the
    * permissions required to load a document with the given principal.
    */
