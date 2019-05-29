@@ -90,14 +90,14 @@ void GamepadServiceTest::DestroyPBackgroundActor() {
 already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
     const nsAString& aID, GamepadMappingType aMapping, GamepadHand aHand,
     uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics,
-    ErrorResult& aRv) {
+    uint32_t aNumLightIndicator, uint32_t aNumTouchEvents, ErrorResult& aRv) {
   if (mShuttingDown) {
     return nullptr;
   }
 
   // Only VR controllers has displayID, we give 0 to the general gamepads.
   GamepadAdded a(nsString(aID), aMapping, aHand, 0, aNumButtons, aNumAxes,
-                 aNumHaptics);
+                 aNumHaptics, aNumLightIndicator, aNumTouchEvents);
   GamepadChangeEventBody body(a);
   GamepadChangeEvent e(0, GamepadServiceType::Standard, body);
 
@@ -239,6 +239,40 @@ void GamepadServiceTest::NewPoseMove(
   }
 
   GamepadPoseInformation a(poseState);
+  GamepadChangeEventBody body(a);
+  GamepadChangeEvent e(aIndex, GamepadServiceType::Standard, body);
+
+  uint32_t id = ++mEventNumber;
+  mChild->SendGamepadTestEvent(id, e);
+}
+
+void GamepadServiceTest::NewTouch(uint32_t aIndex, uint32_t aTouchArrayIndex,
+                                  uint32_t aTouchId, uint8_t aSurfaceId,
+                                  const Float32Array& aPos,
+                                  const Nullable<Float32Array>& aSurfDim) {
+  if (mShuttingDown) {
+    return;
+  }
+
+  GamepadTouchState touchState;
+  touchState.touchId = aTouchId;
+  touchState.surfaceId = aSurfaceId;
+  const Float32Array& value = aPos;
+  value.ComputeLengthAndData();
+  MOZ_ASSERT(value.Length() == 2);
+  touchState.position[0] = value.Data()[0];
+  touchState.position[1] = value.Data()[1];
+
+  if (!aSurfDim.IsNull()) {
+    const Float32Array& value = aSurfDim.Value();
+    value.ComputeLengthAndData();
+    MOZ_ASSERT(value.Length() == 2);
+    touchState.surfaceDimensions[0] = value.Data()[0];
+    touchState.surfaceDimensions[1] = value.Data()[1];
+    touchState.isSurfaceDimensionsValid = true;
+  }
+
+  GamepadTouchInformation a(aTouchArrayIndex, touchState);
   GamepadChangeEventBody body(a);
   GamepadChangeEvent e(aIndex, GamepadServiceType::Standard, body);
 
