@@ -188,7 +188,7 @@ void VRDisplayExternal::StopVRNavigation(const TimeDuration& aTimeout) {
 
 bool VRDisplayExternal::PopulateLayerTexture(
     const layers::SurfaceDescriptor& aTexture, VRLayerTextureType* aTextureType,
-    VRLayerTextureHandle* aTextureHandle) {
+    VRLayerTextureHandle* aTextureHandle, IntSize_POD* aTextureSize) {
   switch (aTexture.type()) {
 #if defined(XP_WIN)
     case SurfaceDescriptor::TSurfaceDescriptorD3D10: {
@@ -197,6 +197,8 @@ bool VRDisplayExternal::PopulateLayerTexture(
       *aTextureType =
           VRLayerTextureType::LayerTextureType_D3D10SurfaceDescriptor;
       *aTextureHandle = (void*)surf.handle();
+      aTextureSize->width = surf.size().width;
+      aTextureSize->height = surf.size().height;
       return true;
     }
 #elif defined(XP_MACOSX)
@@ -207,6 +209,13 @@ bool VRDisplayExternal::PopulateLayerTexture(
       const auto& desc = aTexture.get_SurfaceDescriptorMacIOSurface();
       *aTextureType = VRLayerTextureType::LayerTextureType_MacIOSurface;
       *aTextureHandle = desc.surfaceId();
+      RefPtr<MacIOSurface> surf =
+          MacIOSurface::LookupSurface(desc.surfaceId(), desc.scaleFactor(),
+                                      !desc.isOpaque(), desc.yUVColorSpace());
+      if (surf) {
+        aTextureSize->width = surf->GetDevicePixelWidth();
+        aTextureSize->height = surf->GetDevicePixelHeight();
+      }
       return true;
     }
 #elif defined(MOZ_WIDGET_ANDROID)
@@ -221,6 +230,8 @@ bool VRDisplayExternal::PopulateLayerTexture(
       }
       *aTextureType = VRLayerTextureType::LayerTextureType_GeckoSurfaceTexture;
       *aTextureHandle = desc.handle();
+      aTextureSize->width = desc.size().width;
+      aTextureSize->height = desc.size().height;
       return true;
     }
 #endif
@@ -239,8 +250,8 @@ bool VRDisplayExternal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
              VRLayerType::LayerType_Stereo_Immersive);
   VRLayer_Stereo_Immersive& layer =
       mBrowserState.layerState[0].layer_stereo_immersive;
-  if (!PopulateLayerTexture(aTexture, &layer.textureType,
-                            &layer.textureHandle)) {
+  if (!PopulateLayerTexture(aTexture, &layer.textureType, &layer.textureHandle,
+                            &layer.textureSize)) {
     return false;
   }
   layer.frameId = aFrameId;
