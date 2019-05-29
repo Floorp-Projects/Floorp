@@ -122,9 +122,7 @@ async function initInspectorFront(url) {
  * @return {Promise} Resolves when connected.
  */
 function waitUntilClientConnected(client) {
-  return new Promise(resolve => {
-    client.addOneTimeListener("connected", resolve);
-  });
+  return client.once("connected");
 }
 
 /**

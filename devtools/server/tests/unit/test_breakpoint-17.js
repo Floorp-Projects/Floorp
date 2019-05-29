@@ -30,7 +30,7 @@ const secondLocation = {
 
 add_task(threadClientTest(({ threadClient, debuggee, client }) => {
   return new Promise(resolve => {
-    client.addOneTimeListener("paused", async (event, packet) => {
+    client.on("paused", async (packet) => {
       const [ first, second ] = await set_breakpoints(packet, threadClient);
       test_different_actors(first, second);
       await test_remove_one(first, second, threadClient, debuggee, client);
@@ -76,7 +76,7 @@ function test_remove_one(first, second, threadClient, debuggee, client) {
       Assert.ok(!error, "Should not get an error removing a breakpoint");
 
       let hitSecond;
-      client.addListener("paused", function _onPaused(event, {why, frame}) {
+      client.on("paused", function _onPaused({why, frame}) {
         if (why.type == "breakpoint") {
           hitSecond = true;
           Assert.equal(why.actors.length, 1,
@@ -92,7 +92,7 @@ function test_remove_one(first, second, threadClient, debuggee, client) {
         }
 
         if (why.type == "debuggerStatement") {
-          client.removeListener("paused", _onPaused);
+          client.off("paused", _onPaused);
           Assert.ok(hitSecond,
                     "We should still hit `second`, but not `first`.");
 
