@@ -51,4 +51,6 @@ NSS build tool options:
     --enable-libpkix make libpkix part of the build
     --mozpkix-only   build only static mozpkix and mozpkix-test libraries
                      support for this build option is limited
+    --disable-keylog disable support for logging key data to a file specified
+                     by the SSLKEYLOGFILE environment variable
     -D<gyp-option>   pass an option directly to gyp
