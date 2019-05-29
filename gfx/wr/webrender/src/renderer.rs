@@ -1680,6 +1680,7 @@ pub struct Renderer {
 
     pub renderer_errors: Vec<RendererError>,
 
+    pub(in crate) async_frame_recorder: Option<AsyncScreenshotGrabber>,
     pub(in crate) async_screenshots: Option<AsyncScreenshotGrabber>,
 
     /// List of profile results from previous frames. Can be retrieved
@@ -2184,6 +2185,7 @@ impl Renderer {
             texture_cache_upload_pbo,
             texture_resolver,
             renderer_errors: Vec::new(),
+            async_frame_recorder: None,
             async_screenshots: None,
             #[cfg(feature = "capture")]
             read_fbo,
