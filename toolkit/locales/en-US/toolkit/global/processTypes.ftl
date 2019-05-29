@@ -4,9 +4,13 @@
 
 process-type-web = Web Content
 
-# process used to run privileged pages,
+# process used to run privileged about pages,
 # such as about:home
-process-type-privileged = Privileged Content
+process-type-privilegedabout = Privileged About
+
+# process used to run privileged mozilla pages,
+# such as accounts.firefox.com
+process-type-privilegedmozilla = Privileged Mozilla Content
 
 process-type-extension = Extension
 

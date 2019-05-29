@@ -41,6 +41,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
 <pre id="test">
 <script type="application/javascript">
 
+/* eslint no-shadow: ["error", {"allow": ["prop", "div"]}] */
+
 /** Test for Bug 435441 **/
 
 SimpleTest.requestLongerTimeout(2);
@@ -1183,7 +1185,7 @@ function sample_array(array, count) {
     return array;
   }
   var result = new Array(count);
-  for (var i = 0; i < count; ++i) {
+  for (let i = 0; i < count; ++i) {
     result[i] = array[Math.floor(i * ratio)];
   }
   return result;
@@ -1233,15 +1235,15 @@ for (prop in gCSSProperties) {
 
     var all_computed = [];
     for (var idx in all_values) {
-      var val = all_values[idx];
+      let val = all_values[idx];
       div.style.setProperty(prop, val, "");
       all_computed.push(cs.getPropertyValue(prop));
     }
     div.style.removeProperty(prop);
 
     div.style.setProperty("transition", prop + " 20s linear", "");
-    for (var i = 0; i < all_values.length; ++i) {
-      for (var j = i + 1; j < all_values.length; ++j) {
+    for (let i = 0; i < all_values.length; ++i) {
+      for (let j = i + 1; j < all_values.length; ++j) {
         div.style.setProperty(prop, all_values[i], "");
         is(cs.getPropertyValue(prop), all_computed[i],
            "transitions not supported for property " + prop +
@@ -1911,7 +1913,7 @@ function filter_function_list_equals(computedValStr, expectedList)
     ok(false, "computed style of 'filter' isn't in the format we expect");
     return false;
   }
-  for (var i = 0; i < matches.length; i += 2) {
+  for (let i = 0; i < matches.length; i += 2) {
     var functionName = matches[i];
     var functionValue = matches[i+1];
     var expected = expectedList[i+1]
@@ -1985,7 +1987,7 @@ function test_path_function(prop) {
 }
 
 function test_filter_transition(prop) {
-  for (var i in filterTests) {
+  for (let i in filterTests) {
     var test = filterTests[i];
     div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, test.start, "");
@@ -2897,7 +2899,7 @@ function test_background_position_size_common(prop, doesPropTakeListValues,
 function test_transform_transition(prop) {
   is(prop, "transform", "Unexpected transform property!  Test needs to be fixed");
   var matrix_re = /^matrix\(([^,]*), ([^,]*), ([^,]*), ([^,]*), ([^,]*), ([^,]*)\)$/;
-  for (var i in transformTests) {
+  for (let i in transformTests) {
     var test = transformTests[i];
     if (!("expected" in test)) {
       var v = test.expected_uncomputed;
@@ -2909,7 +2911,7 @@ function test_transform_transition(prop) {
     }
   }
 
-  for (var i in transformTests) {
+  for (let i in transformTests) {
     var test = transformTests[i];
     div.style.setProperty("transition-property", "none", "");
     div.style.setProperty(prop, test.start, "");
@@ -2929,10 +2931,10 @@ function test_transform_transition(prop) {
       var pass = true;
       var actual_split = s(actual);
       var expected_split = s(test.expected);
-      for (var i = 0; i < 6; ++i) {
+      for (let j = 0; j < 6; ++j) {
         // Allow differences of 1 at the sixth decimal place, and allow
         // a drop extra for floating point error from the subtraction.
-        if (Math.abs(Number(actual_split[i]) - Number(expected_split[i])) >
+        if (Math.abs(Number(actual_split[j]) - Number(expected_split[j])) >
               0.0000011) {
           pass = false;
         }

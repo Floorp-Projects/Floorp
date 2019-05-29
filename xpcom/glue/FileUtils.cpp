@@ -35,6 +35,7 @@
 #  include <sys/stat.h>
 #elif defined(XP_WIN)
 #  include <nsWindowsHelpers.h>
+#  include <mozilla/NativeNt.h>
 #  include <mozilla/ScopeExit.h>
 #endif
 
@@ -368,27 +369,25 @@ void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
   if (!fd) {
     return;
   }
-  LARGE_INTEGER fileSize = {};
-  BOOL success = GetFileSizeEx(fd, &fileSize);
-  if (!success || !fileSize.QuadPart ||
-      fileSize.QuadPart > std::numeric_limits<size_t>::max()) {
-    return;
-  }
 
   nsAutoHandle mapping(
       CreateFileMapping(fd, nullptr, SEC_IMAGE | PAGE_READONLY, 0, 0, nullptr));
-
   if (!mapping) {
     return;
   }
 
-  PVOID data =
-      MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, (size_t)fileSize.QuadPart);
-  auto guard = MakeScopeExit([=]() { UnmapViewOfFile(data); });
-
-  if (data) {
-    PrefetchMemory((uint8_t*)data, (size_t)fileSize.QuadPart);
+  PVOID data = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
+  if (!data) {
+    return;
   }
+  auto guard = MakeScopeExit([=]() { UnmapViewOfFile(data); });
+  mozilla::nt::PEHeaders headers(data);
+  Maybe<Span<const uint8_t>> bounds = headers.GetBounds();
+  if (!bounds) {
+    return;
+  }
+
+  PrefetchMemory((uint8_t*)data, bounds->Length());
 
 #elif defined(LINUX) && !defined(ANDROID)
   int fd = open(aFilePath, O_RDONLY);

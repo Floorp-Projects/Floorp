@@ -76,10 +76,10 @@ interface nsIAboutModule : nsISupports
 
     /**
      * A flag that indicates that this URI can be loaded in the privileged
-     * content process if privileged content process is enabled. Ignored unless
+     * activity stream content process if said process is enabled. Ignored unless
      * URI_MUST_LOAD_IN_CHILD is also specified.
      */
-    const unsigned long URI_CAN_LOAD_IN_PRIVILEGED_CHILD = (1 << 8);
+    const unsigned long URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS = (1 << 8);
 
     /**
      * A flag that indicates that this URI must be loaded in an extension process (if available).

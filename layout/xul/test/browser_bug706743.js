@@ -43,6 +43,7 @@ add_task(async function() {
   dragService.startDragSession();
   await BrowserTestUtils.synthesizeMouse("#target", 5, 15, { type: "mousemove" }, browser);
 
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 100));
   removeEventListener("popupshown", tooltipNotExpected, true);
   dragService.endDragSession(true);
@@ -78,7 +79,3 @@ add_task(async function() {
 
   gBrowser.removeCurrentTab();
 });
-
-
-
-

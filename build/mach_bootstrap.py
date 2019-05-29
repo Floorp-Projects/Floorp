@@ -388,6 +388,9 @@ class ImportHook(object):
 
     def __call__(self, name, globals=None, locals=None, fromlist=None,
                  level=-1):
+        if sys.version_info[0] >= 3 and level < 0:
+            level = 0
+
         # name might be a relative import. Instead of figuring out what that
         # resolves to, which is complex, just rely on the real import.
         # Since we don't know the full module name, we can't check sys.modules,

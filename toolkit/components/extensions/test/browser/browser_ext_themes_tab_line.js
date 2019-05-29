@@ -21,7 +21,7 @@ add_task(async function test_support_tab_line() {
 
   info("Checking selected tab line color");
   let selectedTab = document.querySelector(".tabbrowser-tab[selected]");
-  let line = document.getAnonymousElementByAttribute(selectedTab, "class", "tab-line");
+  let line = selectedTab.querySelector(".tab-line");
   Assert.equal(window.getComputedStyle(line).backgroundColor,
                `rgb(${hexToRGB(TAB_LINE_COLOR).join(", ")})`,
                "Tab line should have theme color");

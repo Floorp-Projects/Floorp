@@ -250,4 +250,164 @@ class MozTabpanels extends MozXULElement {
 
 MozXULElement.implementCustomInterface(MozTabpanels, [Ci.nsIDOMXULRelatedElement]);
 customElements.define("tabpanels", MozTabpanels);
+
+MozElements.MozTab = class MozTab extends MozElements.BaseText {
+  constructor() {
+    super();
+
+    this.addEventListener("mousedown", (event) => {
+      if (event.button != 0 || this.disabled) {
+        return;
+      }
+
+      this.parentNode.ariaFocusedItem = null;
+
+      if (this != this.parentNode.selectedItem) { // Not selected yet
+        let stopwatchid = this.parentNode.getAttribute("stopwatchid");
+        if (stopwatchid) {
+          TelemetryStopwatch.start(stopwatchid);
+        }
+
+        // Call this before setting the 'ignorefocus' attribute because this
+        // will pass on focus if the formerly selected tab was focused as well.
+        this.parentNode._selectNewTab(this);
+
+        var isTabFocused = false;
+        try {
+          isTabFocused = (document.commandDispatcher.focusedElement == this);
+        } catch (e) {}
+
+        // Set '-moz-user-focus' to 'ignore' so that PostHandleEvent() can't
+        // focus the tab; we only want tabs to be focusable by the mouse if
+        // they are already focused. After a short timeout we'll reset
+        // '-moz-user-focus' so that tabs can be focused by keyboard again.
+        if (!isTabFocused) {
+          this.setAttribute("ignorefocus", "true");
+          setTimeout(tab => tab.removeAttribute("ignorefocus"), 0, this);
+        }
+
+        if (stopwatchid) {
+          TelemetryStopwatch.finish(stopwatchid);
+        }
+      }
+      // Otherwise this tab is already selected and we will fall
+      // through to mousedown behavior which sets focus on the current tab,
+      // Only a click on an already selected tab should focus the tab itself.
+    });
+
+    this.addEventListener("keydown", (event) => {
+      if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
+        return;
+      }
+      switch (event.keyCode) {
+        case KeyEvent.DOM_VK_LEFT: {
+          let direction = window.getComputedStyle(this.parentNode).direction;
+          this.parentNode.advanceSelectedTab(direction == "ltr" ? -1 : 1,
+                                             this.arrowKeysShouldWrap);
+          event.preventDefault();
+        } break;
+
+        case KeyEvent.DOM_VK_RIGHT: {
+          let direction = window.getComputedStyle(this.parentNode).direction;
+          this.parentNode.advanceSelectedTab(direction == "ltr" ? 1 : -1,
+                                             this.arrowKeysShouldWrap);
+          event.preventDefault();
+        } break;
+
+        case KeyEvent.DOM_VK_UP:
+          this.parentNode.advanceSelectedTab(-1, this.arrowKeysShouldWrap);
+          event.preventDefault();
+        break;
+
+        case KeyEvent.DOM_VK_DOWN:
+          this.parentNode.advanceSelectedTab(1, this.arrowKeysShouldWrap);
+          event.preventDefault();
+        break;
+
+        case KeyEvent.DOM_VK_HOME:
+          this.parentNode._selectNewTab(this.parentNode.children[0]);
+          event.preventDefault();
+        break;
+
+        case KeyEvent.DOM_VK_END:
+          let tabs = this.parentNode.children;
+          this.parentNode._selectNewTab(tabs[tabs.length - 1], -1);
+          event.preventDefault();
+        break;
+      }
+    });
+
+    this.arrowKeysShouldWrap = /Mac/.test(navigator.platform);
+  }
+
+  static get inheritedAttributes() {
+    return {
+      ".tab-middle": "align,dir,pack,orient,selected,visuallyselected",
+      ".tab-icon": "validate,src=image",
+      ".tab-text": "value=label,accesskey,crop,disabled",
+    };
+  }
+
+  get fragment() {
+    if (!this._fragment) {
+      this._fragment = MozXULElement.parseXULToFragment(`
+        <hbox class="tab-middle box-inherit" flex="1">
+          <image class="tab-icon" role="presentation"></image>
+          <label class="tab-text" flex="1" role="presentation"></label>
+        </hbox>
+    `);
+    }
+    return this.ownerDocument.importNode(this._fragment, true);
+  }
+
+  connectedCallback() {
+    if (!this._initialized) {
+      this.textContent = "";
+      this.appendChild(this.fragment);
+      this.initializeAttributeInheritance();
+      this._initialized = true;
+    }
+  }
+
+  set value(val) {
+    this.setAttribute("value", val);
+    return val;
+  }
+
+  get value() {
+    return this.getAttribute("value");
+  }
+
+  get control() {
+    var parent = this.parentNode;
+    return (parent.localName == "tabs") ? parent : null;
+  }
+
+  get selected() {
+    return this.getAttribute("selected") == "true";
+  }
+
+  set _selected(val) {
+    if (val) {
+      this.setAttribute("selected", "true");
+      this.setAttribute("visuallyselected", "true");
+    } else {
+      this.removeAttribute("selected");
+      this.removeAttribute("visuallyselected");
+    }
+
+    return val;
+  }
+
+  set linkedPanel(val) {
+    this.setAttribute("linkedpanel", val);
+  }
+
+  get linkedPanel() {
+    return this.getAttribute("linkedpanel");
+  }
+};
+
+MozXULElement.implementCustomInterface(MozElements.MozTab, [Ci.nsIDOMXULSelectControlItemElement]);
+customElements.define("tab", MozElements.MozTab);
 }

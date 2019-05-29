@@ -33,6 +33,14 @@ ChromeUtils.defineModuleGetter(this, "FxAccountsPairingFlow",
   "resource://gre/modules/FxAccountsPairing.jsm");
 XPCOMUtils.defineLazyPreferenceGetter(this, "pairingEnabled",
   "identity.fxaccounts.pairing.enabled");
+XPCOMUtils.defineLazyPreferenceGetter(this, "separatePrivilegedMozillaWebContentProcess",
+  "browser.tabs.remote.separatePrivilegedMozillaWebContentProcess", false);
+XPCOMUtils.defineLazyPreferenceGetter(this, "separatedMozillaDomains",
+                                      "browser.tabs.remote.separatedMozillaDomains", false,
+                                      false, val => val.split(","));
+XPCOMUtils.defineLazyPreferenceGetter(this, "accountServer",
+                                      "identity.fxaccounts.remote.root", false, false,
+                                      val => Services.io.newURI(val));
 
 // These engines were added years after Sync had been introduced, they need
 // special handling since they are system add-ons and are un-available on
@@ -141,6 +149,16 @@ this.FxAccountsWebChannel.prototype = {
 
   _receiveMessage(message, sendingContext) {
     const {command, data} = message;
+
+    let shouldCheckRemoteType = separatePrivilegedMozillaWebContentProcess &&
+      separatedMozillaDomains.some(function(val) {
+        return accountServer.asciiHost == val || accountServer.asciiHost.endsWith("." + val);
+      });
+    if (shouldCheckRemoteType &&
+        sendingContext.browser.remoteType != "privilegedmozilla") {
+      log.error("Rejected FxA webchannel message from remoteType = " + sendingContext.browser.remoteType);
+      return;
+    }
 
     switch (command) {
       case COMMAND_PROFILE_CHANGE:

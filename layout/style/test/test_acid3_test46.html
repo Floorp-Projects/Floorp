@@ -23,7 +23,7 @@ extracted from the test framework there and put into Mochitest.
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=156716">Mozilla Bug 156716</a>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -78,14 +78,14 @@ function runTest() {
   doc.getElementsByTagName('head')[0].appendChild(style);
   var names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y1', 'y2', 'y3', 'y4'];
   for (var i in names) {
-	var p = doc.createElement('p');
+	let p = doc.createElement('p');
 	p.id = names[i];
 	doc.body.appendChild(p);
   }
   var count = 0;
   var check = function (c, e) {
 	count += 1;
-	var p = doc.getElementById(c);
+	let p = doc.getElementById(c);
 	is(doc.defaultView.getComputedStyle(p).textTransform, e ? 'uppercase' : 'none', "case " + c + " failed (index " + count + ")");
   }
   check('a', true); // 1
@@ -138,4 +138,3 @@ function runTest() {
 </p>
 </body>
 </html>
-

@@ -46,7 +46,7 @@ enum class ProcessType : uint8_t {
   Parent,
   Web,
   Extension,
-  Privileged,
+  PrivilegedAbout,
 };
 
 template <typename T>

@@ -75,13 +75,13 @@ function runTests() {
             ok(false, "nothing to check");
         }
 
-        for (var i = 0; i < should_match.length; ++i) {
-            var e = should_match[i];
+        for (let i = 0; i < should_match.length; ++i) {
+            let e = should_match[i];
             is(ifwin.getComputedStyle(e).zIndex, String(zi),
                "element in " + body_contents + " matched " + selector);
         }
-        for (var i = 0; i < should_not_match.length; ++i) {
-            var e = should_not_match[i];
+        for (let i = 0; i < should_not_match.length; ++i) {
+            let e = should_not_match[i];
             is(ifwin.getComputedStyle(e).zIndex, "auto",
                "element in " + body_contents + " did not match " + selector);
         }
@@ -93,14 +93,14 @@ function runTests() {
         zi = ++gCounter;
         var ser1 = style_text.parentNode.sheet.cssRules[idx].selectorText;
         style_text.data = namespaces + ser1 + "{ z-index: " + zi + " }";
-        for (var i = 0; i < should_match.length; ++i) {
-            var e = should_match[i];
+        for (let i = 0; i < should_match.length; ++i) {
+            let e = should_match[i];
             is(ifwin.getComputedStyle(e).zIndex, String(zi),
                "element in " + body_contents + " matched " + ser1 +
                " which is the reserialization of " + selector);
         }
-        for (var i = 0; i < should_not_match.length; ++i) {
-            var e = should_not_match[i];
+        for (let i = 0; i < should_not_match.length; ++i) {
+            let e = should_not_match[i];
             is(ifwin.getComputedStyle(e).zIndex, "auto",
                "element in " + body_contents + " did not match " + ser1 +
                " which is the reserialization of " + selector);
@@ -150,21 +150,21 @@ function runTests() {
             // remove the uncloned sheet
             links[0].remove();
 
-            var should_match = match_fn(clonedoc);
-            var should_not_match = notmatch_fn(clonedoc);
+            var should_match1 = match_fn(clonedoc);
+            var should_not_match1 = notmatch_fn(clonedoc);
 
-            if (should_match.length + should_not_match.length == 0) {
+            if (should_match1.length + should_not_match1.length == 0) {
                 ok(false, "nothing to check");
             }
 
-            for (var i = 0; i < should_match.length; ++i) {
-                var e = should_match[i];
+            for (let i = 0; i < should_match1.length; ++i) {
+                let e = should_match1[i];
                 is(clonewin.getComputedStyle(e).zIndex, String(zi),
                    "element in " + body_contents + " matched clone of " +
                    selector);
             }
-            for (var i = 0; i < should_not_match.length; ++i) {
-                var e = should_not_match[i];
+            for (let i = 0; i < should_not_match1.length; ++i) {
+                let e = should_not_match1[i];
                 is(clonewin.getComputedStyle(e).zIndex, "auto",
                    "element in " + body_contents + " did not match clone of " +
                    selector);

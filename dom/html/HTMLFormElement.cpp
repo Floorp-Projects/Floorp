@@ -698,7 +698,7 @@ nsresult HTMLFormElement::SubmitSubmission(
     AutoPopupStatePusher popupStatePusher(mSubmitPopupState);
 
     AutoHandlingUserInputStatePusher userInpStatePusher(
-        aFormSubmission->IsInitiatedFromUserInput(), nullptr, doc);
+        aFormSubmission->IsInitiatedFromUserInput());
 
     nsCOMPtr<nsIInputStream> postDataStream;
     rv = aFormSubmission->GetEncodedSubmission(

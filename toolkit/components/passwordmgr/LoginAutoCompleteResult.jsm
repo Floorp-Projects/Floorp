@@ -99,7 +99,7 @@ class InsecureLoginFormAutocompleteItem extends AutocompleteItem {
 class LoginAutocompleteItem extends AutocompleteItem {
   constructor(login, isPasswordField, dateAndTimeFormatter, duplicateUsernames, messageManager) {
     super(SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
-    this._login = login;
+    this._login = login.QueryInterface(Ci.nsILoginMetaInfo);
     this._messageManager = messageManager;
 
     XPCOMUtils.defineLazyGetter(this, "label", () => {
@@ -109,8 +109,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
         if (!username) {
           username = getLocalizedString("noUsername");
         }
-        let meta = login.QueryInterface(Ci.nsILoginMetaInfo);
-        let time = dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
+        let time = dateAndTimeFormatter.format(new Date(login.timePasswordChanged));
         username = getLocalizedString("loginHostAge", [username, time]);
       }
 
@@ -122,14 +121,19 @@ class LoginAutocompleteItem extends AutocompleteItem {
     });
 
     XPCOMUtils.defineLazyGetter(this, "comment", () => {
+      let comment = login.hostname;
       try {
         let uri = Services.io.newURI(login.hostname);
         // Fallback to handle file: URIs
-        return uri.displayHostPort || login.hostname;
+        comment = uri.displayHostPort || login.hostname;
       } catch (ex) {
-        // Fallback to origin below
+        // Fallback to login.hostname set above.
       }
-      return login.hostname;
+
+      return JSON.stringify({
+        guid: login.guid,
+        comment,
+      });
     });
   }
 
