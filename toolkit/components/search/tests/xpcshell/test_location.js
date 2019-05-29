@@ -12,13 +12,10 @@ add_task(async function test_location() {
   equal(Services.prefs.getCharPref("browser.search.region"), "AU", "got the correct region.");
   // check we have "success" recorded in telemetry
   checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS);
-  // a false value for each of SEARCH_SERVICE_COUNTRY_TIMEOUT and SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT
-  for (let hid of ["SEARCH_SERVICE_COUNTRY_TIMEOUT",
-                   "SEARCH_SERVICE_COUNTRY_FETCH_CAUSED_SYNC_INIT"]) {
-    let histogram = Services.telemetry.getHistogramById(hid);
-    let snapshot = histogram.snapshot();
-    deepEqual(snapshot.values, {0: 1, 1: 0}); // boolean probe so 3 buckets, expect 1 result for |0|.
-  }
+  // a false value for SEARCH_SERVICE_COUNTRY_TIMEOUT
+  let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT");
+  let snapshot = histogram.snapshot();
+  deepEqual(snapshot.values, {0: 1, 1: 0}); // boolean probe so 3 buckets, expect 1 result for |0|.
 
   // simple checks for our platform-specific telemetry.  We can't influence
   // what they return (as we can't influence the countryCode the platform
@@ -54,8 +51,8 @@ add_task(async function test_location() {
       expectedResult = countryCode == "AU" ? {0: 1, 1: 0} : {0: 0, 1: 1, 2: 0};
     }
 
-    let histogram = Services.telemetry.getHistogramById(hid);
-    let snapshot = histogram.snapshot();
+    histogram = Services.telemetry.getHistogramById(hid);
+    snapshot = histogram.snapshot();
     deepEqual(snapshot.values, expectedResult);
   }
 });

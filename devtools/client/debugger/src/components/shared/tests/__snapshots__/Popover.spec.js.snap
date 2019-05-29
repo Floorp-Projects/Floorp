@@ -28,13 +28,13 @@ exports[`Popover mount popover 1`] = `
     className="popover orientation-right"
     style={
       Object {
-        "left": 505,
+        "left": 500,
         "top": 250,
       }
     }
   >
     <BracketArrow
-      left={-9}
+      left={-4}
       orientation="left"
       top={-202}
     >
@@ -43,7 +43,7 @@ exports[`Popover mount popover 1`] = `
         style={
           Object {
             "bottom": undefined,
-            "left": -9,
+            "left": -4,
             "top": -202,
           }
         }
@@ -152,13 +152,13 @@ exports[`Popover render 1`] = `
     className="popover orientation-right"
     style={
       Object {
-        "left": 505,
+        "left": 500,
         "top": 250,
       }
     }
   >
     <BracketArrow
-      left={-9}
+      left={-4}
       orientation="left"
       top={-202}
     >
@@ -167,7 +167,7 @@ exports[`Popover render 1`] = `
         style={
           Object {
             "bottom": undefined,
-            "left": -9,
+            "left": -4,
             "top": -202,
           }
         }

@@ -105,8 +105,8 @@ if CONFIG['MOZ_SYSTEM_SQLITE'] and (CONFIG['OS_TARGET'] == 'Android'
     DEFINES['MOZ_MEMORY_TEMP_STORE_PRAGMA'] = True
 
 LOCAL_INCLUDES += [
-    '/db/sqlite3/src',
     '/dom/base',
+    '/third_party/sqlite3/src',
 ]
 
 CXXFLAGS += CONFIG['SQLITE_CFLAGS']

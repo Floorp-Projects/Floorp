@@ -34,7 +34,7 @@ enum class GamepadCapabilityFlags : uint16_t;
 #endif  //  MOZILLA_INTERNAL_API
 namespace gfx {
 
-static const int32_t kVRExternalVersion = 7;
+static const int32_t kVRExternalVersion = 8;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -346,6 +346,7 @@ struct VRLayer_Stereo_Immersive {
   uint64_t inputFrameId;
   VRLayerEyeRect leftEyeRect;
   VRLayerEyeRect rightEyeRect;
+  IntSize_POD textureSize;
 };
 
 struct VRLayerState {

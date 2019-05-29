@@ -8,7 +8,7 @@ if CONFIG['MOZ_SYSTEM_SQLITE']:
     Library('sqlite')
     OS_LIBS += CONFIG['SQLITE_LIBS']
 else:
-    DIRS += ['../../../db/sqlite3/src']
+    DIRS += ['../../../third_party/sqlite3/src']
     if CONFIG['MOZ_FOLD_LIBS']:
         Library('sqlite')
         # When folding libraries, sqlite is actually in the nss library.
@@ -19,4 +19,4 @@ else:
         SharedLibrary('sqlite')
         SHARED_LIBRARY_NAME = 'mozsqlite3'
 
-        SYMBOLS_FILE = '/db/sqlite3/src/sqlite.symbols'
+        SYMBOLS_FILE = '/third_party/sqlite3/src/sqlite.symbols'

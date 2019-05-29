@@ -59,7 +59,6 @@ xpcom/reflect/xptcall/md/unix/.*
 # awk '{print ""$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt
 browser/components/translation/cld2/.*
 browser/extensions/mortar/ppapi/.*
-db/sqlite3/src/.*
 devtools/client/shared/sourceeditor/codemirror/.*
 devtools/client/shared/sourceeditor/tern/.*
 dom/canvas/test/webgl-conf/checkout/closure-library/.*
