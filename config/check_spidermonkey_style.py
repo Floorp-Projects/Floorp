@@ -246,7 +246,6 @@ def check_style(enable_fixup):
     #
     # Examples (filename -> inclname)
     # - "mfbt/Attributes.h"         -> "mozilla/Attributes.h"
-    # - "mfbt/decimal/Decimal.h     -> "mozilla/Decimal.h"
     # - "mozglue/misc/TimeStamp.h   -> "mozilla/TimeStamp.h"
     # - "memory/mozalloc/mozalloc.h -> "mozilla/mozalloc.h"
     # - "js/public/Vector.h"        -> "js/Vector.h"

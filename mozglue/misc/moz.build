@@ -8,6 +8,7 @@ FINAL_LIBRARY = 'mozglue'
 
 EXPORTS.mozilla += [
     'AutoProfilerLabel.h',
+    'decimal/Decimal.h',
     'PlatformConditionVariable.h',
     'PlatformMutex.h',
     'Printf.h',
@@ -75,3 +76,11 @@ else:
         'ConditionVariable_posix.cpp',
         'Mutex_posix.cpp',
     ]
+
+SOURCES += [
+    'decimal/Decimal.cpp',
+]
+
+if CONFIG['CC_TYPE'] == 'clang':
+    # Suppress warnings from third-party V8 Decimal code.
+    SOURCES['decimal/Decimal.cpp'].flags += ['-Wno-implicit-fallthrough']
