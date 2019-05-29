@@ -49,8 +49,8 @@ class GamepadManager final : public nsIObserver {
   void AddGamepad(uint32_t aIndex, const nsAString& aID,
                   GamepadMappingType aMapping, GamepadHand aHand,
                   GamepadServiceType aServiceType, uint32_t aDisplayID,
-                  uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics,
-                  uint32_t aNumLightIndicator, uint32_t aNumTouchEvents);
+                  uint32_t aNumButtons, uint32_t aNumAxes,
+                  uint32_t aNumHaptics);
 
   // Remove the gamepad at |aIndex| from the list of known gamepads.
   void RemoveGamepad(uint32_t aIndex, GamepadServiceType aServiceType);
@@ -77,14 +77,6 @@ class GamepadManager final : public nsIObserver {
                                           ErrorResult& aRv);
   // Send stop haptic events to gamepad channels.
   void StopHaptics();
-
-  // Set light indicator color event to gamepad channels.
-  already_AddRefed<Promise> SetLightIndicatorColor(uint32_t aControllerIdx,
-                                                   uint32_t aLightColorIndex,
-                                                   uint8_t aRed, uint8_t aGreen,
-                                                   uint8_t aBlue,
-                                                   nsIGlobalObject* aGlobal,
-                                                   ErrorResult& aRv);
 
  protected:
   GamepadManager();

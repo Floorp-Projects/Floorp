@@ -33,10 +33,11 @@ class GamepadServiceTest final : public DOMEventTargetHelper {
   GamepadHand LeftHand() const { return GamepadHand::Left; }
   GamepadHand RightHand() const { return GamepadHand::Right; }
 
-  already_AddRefed<Promise> AddGamepad(
-      const nsAString& aID, GamepadMappingType aMapping, GamepadHand aHand,
-      uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics,
-      uint32_t aNumLightIndicator, uint32_t aNumTouchEvents, ErrorResult& aRv);
+  already_AddRefed<Promise> AddGamepad(const nsAString& aID,
+                                       GamepadMappingType aMapping,
+                                       GamepadHand aHand, uint32_t aNumButtons,
+                                       uint32_t aNumAxes, uint32_t aNumHaptics,
+                                       ErrorResult& aRv);
   void RemoveGamepad(uint32_t aIndex);
   void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed,
                       bool aTouched);
@@ -49,9 +50,6 @@ class GamepadServiceTest final : public DOMEventTargetHelper {
                    const Nullable<Float32Array>& aAngAcceleration,
                    const Nullable<Float32Array>& aLinVelocity,
                    const Nullable<Float32Array>& aLinAcceleration);
-  void NewTouch(uint32_t aIndex, uint32_t aTouchArrayIndex, uint32_t aTouchId,
-                uint8_t aSurfaceId, const Float32Array& aPos,
-                const Nullable<Float32Array>& aSurfDim);
   void Shutdown();
 
   static already_AddRefed<GamepadServiceTest> CreateTestService(
