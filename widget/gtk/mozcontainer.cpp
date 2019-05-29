@@ -646,9 +646,9 @@ gboolean moz_container_has_wl_egl_window(MozContainer* container) {
 }
 
 gboolean moz_container_surface_needs_clear(MozContainer* container) {
-  gboolean state = container->surface_needs_clear;
+  int ret = container->surface_needs_clear;
   container->surface_needs_clear = false;
-  return state;
+  return ret;
 }
 #endif
 
