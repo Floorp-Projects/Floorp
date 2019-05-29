@@ -1633,14 +1633,6 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   if (HasFlag(NODE_IS_ANONYMOUS_ROOT)) {
     aParent.SetMayHaveAnonymousChildren();
   }
-  if (aParent.IsInShadowTree()) {
-    ClearSubtreeRootPointer();
-    SetFlags(NODE_IS_IN_SHADOW_TREE);
-    MOZ_ASSERT(aParent.IsContent() &&
-               aParent.AsContent()->GetContainingShadow());
-    ExtendedDOMSlots()->mContainingShadow =
-        aParent.AsContent()->GetContainingShadow();
-  }
 
   // Now set the parent.
   mParent = &aParent;
@@ -1650,41 +1642,25 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
   MOZ_ASSERT(!!GetParent() == aParent.IsContent());
 
-  // XXXbz sXBL/XBL2 issue!
-
   MOZ_ASSERT(!HasAnyOfFlags(Element::kAllServoDescendantBits));
 
   // Finally, set the document
-  if (aParent.IsInUncomposedDoc()) {
-    // Notify XBL- & nsIAnonymousContentCreator-generated
-    // anonymous content that the document is changing.
-    // XXXbz ordering issues here?  Probably not, since ChangeDocumentFor is
-    // just pretty broken anyway....  Need to get it working.
-    // XXXbz XBL doesn't handle this (asserts), and we don't really want
-    // to be doing this during parsing anyway... sort this out.
-    //    aDocument->BindingManager()->ChangeDocumentFor(this, nullptr,
-    //                                                   aDocument);
-
+  if (aParent.IsInUncomposedDoc() || aParent.IsInShadowTree()) {
     // We no longer need to track the subtree pointer (and in fact we'll assert
     // if we do this any later).
     ClearSubtreeRootPointer();
-
-    // Being added to a document.
-    SetIsInDocument();
-    SetIsConnected(true);
-
-    // Clear the lazy frame construction bits.
-    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
-  } else if (IsInShadowTree()) {
     SetIsConnected(aParent.IsInComposedDoc());
-    // We're not in a document, but we did get inserted into a shadow tree.
-    // Since we won't have any restyle data in the document's restyle trackers,
-    // don't let us get inserted with restyle bits set incorrectly.
-    //
-    // Also clear all the other flags that are cleared above when we do get
-    // inserted into a document.
-    //
-    // See the comment about the restyle bits above, it also applies.
+
+    if (aParent.IsInUncomposedDoc()) {
+      SetIsInDocument();
+    } else {
+      SetFlags(NODE_IS_IN_SHADOW_TREE);
+      MOZ_ASSERT(aParent.IsContent() &&
+                 aParent.AsContent()->GetContainingShadow());
+      ExtendedDOMSlots()->mContainingShadow =
+          aParent.AsContent()->GetContainingShadow();
+    }
+    // Clear the lazy frame construction bits.
     UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   } else {
     // If we're not in the doc and not in a shadow tree,

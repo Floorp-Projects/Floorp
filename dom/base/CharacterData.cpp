@@ -408,43 +408,33 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
                  aContext.GetBindingParent() == &aParent,
              "Native anonymous content must have its parent as its "
              "own binding parent");
-
-  Element* bindingParent = aContext.GetBindingParent();
-  if (!bindingParent && aParent.IsContent()) {
-    bindingParent =
-        static_cast<Element*>(aParent.AsContent()->GetBindingParent());
-  }
+  MOZ_ASSERT(aContext.GetBindingParent() || !aParent.IsContent() ||
+                 aContext.GetBindingParent() ==
+                     aParent.AsContent()->GetBindingParent(),
+             "We should be passed the right binding parent");
 
   // First set the binding parent
-  if (bindingParent) {
-    NS_ASSERTION(IsRootOfNativeAnonymousSubtree() ||
-                     !HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE) ||
-                     aParent.IsInNativeAnonymousSubtree(),
-                 "Trying to re-bind content from native anonymous subtree to "
-                 "non-native anonymous parent!");
+  if (Element* bindingParent = aContext.GetBindingParent()) {
     ExtendedContentSlots()->mBindingParent = bindingParent;
-    if (aParent.IsInNativeAnonymousSubtree()) {
-      SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
-    }
-    if (aParent.HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
-      SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
-    }
-    if (HasFlag(NODE_IS_ANONYMOUS_ROOT)) {
-      aParent.SetMayHaveAnonymousChildren();
-    }
-  }
-
-  if (aParent.IsInShadowTree()) {
-    ClearSubtreeRootPointer();
-    SetFlags(NODE_IS_IN_SHADOW_TREE);
-    SetIsConnected(aParent.IsInComposedDoc());
-    MOZ_ASSERT(aParent.IsContent() &&
-               aParent.AsContent()->GetContainingShadow());
-    ExtendedContentSlots()->mContainingShadow =
-        aParent.AsContent()->GetContainingShadow();
   }
 
   const bool hadParent = !!GetParentNode();
+
+  NS_ASSERTION(!aContext.GetBindingParent() ||
+                   IsRootOfNativeAnonymousSubtree() ||
+                   !HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE) ||
+                   aParent.IsInNativeAnonymousSubtree(),
+               "Trying to re-bind content from native anonymous subtree to "
+               "non-native anonymous parent!");
+  if (aParent.IsInNativeAnonymousSubtree()) {
+    SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
+  }
+  if (aParent.HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
+    SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
+  }
+  if (HasFlag(NODE_IS_ANONYMOUS_ROOT)) {
+    aParent.SetMayHaveAnonymousChildren();
+  }
 
   // Set parent
   mParent = &aParent;
@@ -454,25 +444,29 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
   MOZ_ASSERT(!!GetParent() == aParent.IsContent());
 
-  // XXXbz sXBL/XBL2 issue!
-
-  // Set document
-  if (aParent.IsInUncomposedDoc()) {
+  if (aParent.IsInUncomposedDoc() || aParent.IsInShadowTree()) {
     // We no longer need to track the subtree pointer (and in fact we'll assert
     // if we do this any later).
     ClearSubtreeRootPointer();
+    SetIsConnected(aParent.IsInComposedDoc());
 
-    // XXX See the comment in Element::BindToTree
-    SetIsInDocument();
-    SetIsConnected(true);
-    // FIXME(emilio): This should probably be dependent on composed doc, not
-    // uncomposed.
-    if (mText.IsBidi()) {
-      OwnerDoc()->SetBidiEnabled();
+    if (aParent.IsInUncomposedDoc()) {
+      SetIsInDocument();
+      // FIXME(emilio): This should probably be dependent on composed doc, not
+      // uncomposed.
+      if (mText.IsBidi()) {
+        OwnerDoc()->SetBidiEnabled();
+      }
+    } else {
+      SetFlags(NODE_IS_IN_SHADOW_TREE);
+      MOZ_ASSERT(aParent.IsContent() &&
+                 aParent.AsContent()->GetContainingShadow());
+      ExtendedContentSlots()->mContainingShadow =
+          aParent.AsContent()->GetContainingShadow();
     }
     // Clear the lazy frame construction bits.
     UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
-  } else if (!IsInShadowTree()) {
+  } else {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
     SetSubtreeRootPointer(aParent.SubtreeRoot());
