@@ -26,8 +26,10 @@ class AndroidGamepadManager final
     if (aAdded) {
       const int svc_id = service->AddGamepad(
           "android", GamepadMappingType::Standard, GamepadHand::_empty,
-          kStandardGamepadButtons, kStandardGamepadAxes,
-          0);  // TODO: Bug 680289, implement gamepad haptics for Android
+          kStandardGamepadButtons, kStandardGamepadAxes, 0, 0,
+          0);  // TODO: Bug 680289, implement gamepad haptics for Android.
+      // TODO: Bug 1523355, implement gamepad lighindicator and touch for
+      // Android.
       java::AndroidGamepadManager::OnGamepadAdded(aID, svc_id);
 
     } else {
