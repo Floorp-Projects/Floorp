@@ -69,6 +69,10 @@
   padding: 3px 8px 3px 6px;
 }
 
+.sources-list .managed-tree .tree .tree-node:not(.focused):hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
 .sources-list .img {
   margin-inline-end: 4px;
 }
