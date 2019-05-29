@@ -1,6 +1,6 @@
-diff --git a/mozglue/misc/decimal/Decimal.cpp b/mozglue/misc/decimal/Decimal.cpp
---- a/mozglue/misc/decimal/Decimal.cpp
-+++ b/mozglue/misc/decimal/Decimal.cpp
+diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
+--- a/mfbt/decimal/Decimal.cpp
++++ b/mfbt/decimal/Decimal.cpp
 @@ -118,18 +118,18 @@ Decimal SpecialValueHandler::value() con
          ASSERT_NOT_REACHED();
          return m_lhs;
@@ -147,9 +147,9 @@ diff --git a/mozglue/misc/decimal/Decimal.cpp b/mozglue/misc/decimal/Decimal.cpp
  bool Decimal::operator==(const Decimal& rhs) const
  {
      if (isNaN() || rhs.isNaN())
-diff --git a/mozglue/misc/decimal/Decimal.h b/mozglue/misc/decimal/Decimal.h
---- a/mozglue/misc/decimal/Decimal.h
-+++ b/mozglue/misc/decimal/Decimal.h
+diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
+--- a/mfbt/decimal/Decimal.h
++++ b/mfbt/decimal/Decimal.h
 @@ -88,17 +88,17 @@ public:
          int countDigits() const;
          int exponent() const { return m_exponent; }
