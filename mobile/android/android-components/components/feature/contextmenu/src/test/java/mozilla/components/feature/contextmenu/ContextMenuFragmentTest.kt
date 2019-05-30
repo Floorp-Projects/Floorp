@@ -4,15 +4,14 @@
 
 package mozilla.components.feature.contextmenu
 
-import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.session.Session
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -22,13 +21,9 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ContextMenuFragmentTest {
-    private val context: Context get() = ContextThemeWrapper(
-        RuntimeEnvironment.application,
-        R.style.Theme_AppCompat)
 
     @Test
     fun `Build dialog`() {
@@ -38,7 +33,7 @@ class ContextMenuFragmentTest {
         val session = Session("https://www.mozilla.org")
 
         val fragment = spy(ContextMenuFragment.create(session, title, ids, labels))
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(testContext).`when`(fragment).requireContext()
 
         val dialog = fragment.onCreateDialog(null)
 
@@ -57,7 +52,7 @@ class ContextMenuFragmentTest {
 
         val fragment = spy(ContextMenuFragment.create(session, title, ids, labels))
 
-        val inflater = LayoutInflater.from(context)
+        val inflater = LayoutInflater.from(testContext)
         val view = fragment.createDialogTitleView(inflater)
 
         assertEquals(
@@ -75,14 +70,14 @@ class ContextMenuFragmentTest {
 
         val fragment = ContextMenuFragment.create(session, title, ids, labels)
 
-        val inflater = LayoutInflater.from(context)
+        val inflater = LayoutInflater.from(testContext)
         val view = fragment.createDialogContentView(inflater)
 
         val adapter = view.findViewById<RecyclerView>(R.id.recyclerView).adapter as ContextMenuAdapter
 
         assertEquals(3, adapter.itemCount)
 
-        val parent = LinearLayout(context)
+        val parent = LinearLayout(testContext)
 
         val holder = adapter.onCreateViewHolder(parent, 0)
 
@@ -106,11 +101,11 @@ class ContextMenuFragmentTest {
         val fragment = spy(ContextMenuFragment.create(session, title, ids, labels))
         doNothing().`when`(fragment).dismiss()
 
-        val inflater = LayoutInflater.from(context)
+        val inflater = LayoutInflater.from(testContext)
         val view = fragment.createDialogContentView(inflater)
 
         val adapter = view.findViewById<RecyclerView>(R.id.recyclerView).adapter as ContextMenuAdapter
-        val holder = adapter.onCreateViewHolder(LinearLayout(context), 0)
+        val holder = adapter.onCreateViewHolder(LinearLayout(testContext), 0)
         adapter.bindViewHolder(holder, 0)
 
         holder.labelView.performClick()

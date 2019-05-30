@@ -6,8 +6,8 @@ package mozilla.components.feature.contextmenu
 
 import android.content.ClipboardManager
 import android.content.Context
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import android.view.View
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -16,6 +16,7 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -28,11 +29,10 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ContextMenuCandidateTest {
-    private val context: Context get() = RuntimeEnvironment.application
+
     private lateinit var snackbarDelegate: TestSnackbarDelegate
 
     @Before
@@ -42,7 +42,7 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Default candidates sanity check`() {
-        val candidates = ContextMenuCandidate.defaultCandidates(context, mock(), mock())
+        val candidates = ContextMenuCandidate.defaultCandidates(testContext, mock(), mock())
         // Just a sanity check: When changing the list of default candidates be aware that this will affect all
         // consumers of this component using the default list.
         assertEquals(7, candidates.size)
@@ -54,10 +54,10 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
         val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
         val tabsUseCases = TabsUseCases(sessionManager)
-        val parentView = CoordinatorLayout(context)
+        val parentView = CoordinatorLayout(testContext)
 
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-            context, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         // showFor
 
@@ -108,10 +108,10 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
         val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
         val tabsUseCases = TabsUseCases(sessionManager)
-        val parentView = CoordinatorLayout(context)
+        val parentView = CoordinatorLayout(testContext)
 
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-            context, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         // showFor
 
@@ -163,10 +163,10 @@ class ContextMenuCandidateTest {
         doReturn(mock<EngineSession>()).`when`(sessionManager).getOrCreateEngineSession(any())
         val session = Session("https://www.mozilla.org").apply { sessionManager.add(this) }
         val tabsUseCases = TabsUseCases(sessionManager)
-        val parentView = CoordinatorLayout(context)
+        val parentView = CoordinatorLayout(testContext)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
-            context, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         // showFor
 
@@ -222,10 +222,10 @@ class ContextMenuCandidateTest {
         ).apply { sessionManager.add(this) }
 
         val tabsUseCases = TabsUseCases(sessionManager)
-        val parentView = CoordinatorLayout(context)
+        val parentView = CoordinatorLayout(testContext)
 
         val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
-            context, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertEquals(1, sessionManager.size)
 
@@ -238,7 +238,7 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Candidate "Save image"`() {
-        val saveImage = ContextMenuCandidate.createSaveImageCandidate(context)
+        val saveImage = ContextMenuCandidate.createSaveImageCandidate(testContext)
 
         // showFor
 
@@ -287,7 +287,7 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Candidate "Share Link"`() {
-        val context = spy(context)
+        val context = spy(testContext)
 
         val shareLink = ContextMenuCandidate.createShareLinkCandidate(context)
 
@@ -324,10 +324,10 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Candidate "Copy Link"`() {
-        val parentView = CoordinatorLayout(context)
+        val parentView = CoordinatorLayout(testContext)
 
         val copyLink = ContextMenuCandidate.createCopyLinkCandidate(
-            context, parentView, snackbarDelegate)
+            testContext, parentView, snackbarDelegate)
 
         // showFor
 
@@ -359,7 +359,7 @@ class ContextMenuCandidateTest {
 
         assertTrue(snackbarDelegate.hasShownSnackbar)
 
-        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboardManager = testContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         assertEquals(
             "https://getpocket.com",
             clipboardManager.primaryClip!!.getItemAt(0).text
@@ -368,10 +368,10 @@ class ContextMenuCandidateTest {
 
     @Test
     fun `Candidate "Copy Image Location"`() {
-        val parentView = CoordinatorLayout(context)
+        val parentView = CoordinatorLayout(testContext)
 
         val copyImageLocation = ContextMenuCandidate.createCopyImageLocationCandidate(
-            context, parentView, snackbarDelegate)
+            testContext, parentView, snackbarDelegate)
 
         // showFor
 
@@ -403,7 +403,7 @@ class ContextMenuCandidateTest {
 
         assertTrue(snackbarDelegate.hasShownSnackbar)
 
-        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboardManager = testContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         assertEquals(
             "https://firefox.com",
             clipboardManager.primaryClip!!.getItemAt(0).text
