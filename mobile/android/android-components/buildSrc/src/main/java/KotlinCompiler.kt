@@ -13,7 +13,6 @@ object KotlinCompiler {
     @JvmStatic
     val projectsWithWarningsAsErrorsDisabled = setOf(
         "browser-domains",
-        "browser-engine-gecko",
         "browser-engine-servo",
         "browser-storage-sync",
         "feature-accounts",
