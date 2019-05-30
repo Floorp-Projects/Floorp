@@ -1076,6 +1076,11 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
                                            mChildLayersObserverEpoch, true);
   }
 
+  if (!IsRootWebRenderBridgeParent()) {
+    aPayloads.AppendElement(
+        CompositionPayload{CompositionPayloadType::eContentPaint, aFwdTime});
+  }
+
   HoldPendingTransactionId(wrEpoch, aTransactionId, aContainsSVGGroup, aVsyncId,
                            aVsyncStartTime, aRefreshStartTime, aTxnStartTime,
                            aTxnURL, aFwdTime, mIsFirstPaint,
