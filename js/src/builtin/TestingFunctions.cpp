@@ -4435,6 +4435,67 @@ static bool SetGCCallback(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+#ifdef DEBUG
+static bool EnqueueMark(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  auto& queue = cx->runtime()->gc.marker.markQueue;
+
+  if (args.get(0).isString()) {
+    RootedString val(cx, args[0].toString());
+    if (!val->ensureLinear(cx)) {
+      return false;
+    }
+    if (!queue.append(StringValue(val))) {
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
+  } else if (args.get(0).isObject()) {
+    if (!queue.append(args[0])) {
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
+  } else {
+    JS_ReportErrorASCII(cx, "Argument must be a string or object");
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool GetMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  auto& queue = cx->runtime()->gc.marker.markQueue.get();
+
+  RootedObject result(cx, JS_NewArrayObject(cx, queue.length()));
+  if (!result) {
+    return false;
+  }
+  for (size_t i = 0; i < queue.length(); i++) {
+    RootedValue val(cx, queue[i]);
+    if (!JS_WrapValue(cx, &val)) {
+      return false;
+    }
+    if (!JS_SetElement(cx, result, i, val)) {
+      return false;
+    }
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+static bool ClearMarkQueue(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  cx->runtime()->gc.marker.markQueue.clear();
+  args.rval().setUndefined();
+  return true;
+}
+#endif  // DEBUG
+
 static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6351,6 +6412,38 @@ gc::ZealModeHelpText),
 "  Set the GC callback. action may be:\n"
 "    'minorGC' - run a nursery collection\n"
 "    'majorGC' - run a major collection, nesting up to a given 'depth'\n"),
+
+#ifdef DEBUG
+    JS_FN_HELP("enqueueMark", EnqueueMark, 1, 0,
+"enqueueMark(obj|string)",
+"  Add an object to the queue of objects to mark at the beginning every GC. (Note\n"
+"  that the objects will actually be marked at the beginning of every slice, but\n"
+"  after the first slice they will already be marked so nothing will happen.)\n"
+"  \n"
+"  Instead of an object, a few magic strings may be used:\n"
+"    'yield' - cause the current marking slice to end, as if the mark budget were\n"
+"      exceeded.\n"
+"    'enter-weak-marking-mode' - divide the list into two segments. The items after\n"
+"      this string will not be marked until we enter weak marking mode. Note that weak\n"
+"      marking mode may be entered zero or multiple times for one GC.\n"
+"    'abort-weak-marking-mode' - same as above, but then abort weak marking to fall back\n"
+"      on the old iterative marking code path.\n"
+"    'drain' - fully drain the mark stack before continuing.\n"
+"    'set-color-black' - force everything following in the mark queue to be marked black.\n"
+"    'set-color-gray' - continue with the regular GC until gray marking is possible, then force\n"
+"       everything following in the mark queue to be marked gray.\n"
+"    'unset-color' - stop forcing the mark color."),
+
+    JS_FN_HELP("clearMarkQueue", ClearMarkQueue, 0, 0,
+"clearMarkQueue()",
+"  Cancel the special marking of all objects enqueue with enqueueMark()."),
+
+    JS_FN_HELP("getMarkQueue", GetMarkQueue, 0, 0,
+"getMarkQueue()",
+"  Return the current mark queue set up via enqueueMark calls. Note that all\n"
+"  returned values will be wrapped into the current compartment, so this loses\n"
+"  some fidelity."),
+#endif // DEBUG
 
     JS_FN_HELP("getLcovInfo", GetLcovInfo, 1, 0,
 "getLcovInfo(global)",
