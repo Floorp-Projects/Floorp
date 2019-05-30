@@ -31,6 +31,7 @@ class AutoLockGC;
 class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
 class VerifyPreTracer;
+class ZoneAllocator;
 
 namespace gc {
 

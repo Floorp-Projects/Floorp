@@ -8,7 +8,6 @@
 
 #include "builtin/TypedObject.h"
 #include "gc/Policy.h"
-#include "gc/Zone.h"
 #include "js/HashTable.h"
 #include "js/Value.h"
 #include "vm/BigIntType.h"  // JS::BigInt

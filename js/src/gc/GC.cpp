@@ -3414,6 +3414,10 @@ bool GCRuntime::triggerGC(JS::GCReason reason) {
   return true;
 }
 
+void js::gc::MaybeAllocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc) {
+  rt->gc.maybeAllocTriggerZoneGC(Zone::from(zoneAlloc));
+}
+
 void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
   if (!CurrentThreadCanAccessRuntime(rt)) {
     // Zones in use by a helper thread can't be collected.

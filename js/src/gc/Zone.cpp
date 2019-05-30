@@ -31,8 +31,46 @@ using namespace js::gc;
 
 Zone* const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 
+ZoneAllocator::ZoneAllocator(JSRuntime* rt)
+    : JS::shadow::Zone(rt, &rt->gc.marker), zoneSize(&rt->gc.heapSize) {
+  AutoLockGC lock(rt);
+  threshold.updateAfterGC(8192, GC_NORMAL, rt->gc.tunables,
+                          rt->gc.schedulingState, lock);
+  setGCMaxMallocBytes(rt->gc.tunables.maxMallocBytes(), lock);
+  jitCodeCounter.setMax(jit::MaxCodeBytesPerProcess * 0.8, lock);
+}
+
+ZoneAllocator::~ZoneAllocator() {
+  MOZ_ASSERT_IF(runtimeFromAnyThread()->gc.shutdownCollectedEverything(),
+                gcMallocBytes == 0);
+}
+
+void ZoneAllocator::fixupAfterMovingGC() {
+#ifdef DEBUG
+  gcMallocTracker.fixupAfterMovingGC();
+#endif
+}
+
+void js::ZoneAllocator::updateAllGCMallocCountersOnGCStart() {
+  gcMallocCounter.updateOnGCStart();
+  jitCodeCounter.updateOnGCStart();
+}
+
+void js::ZoneAllocator::updateAllGCMallocCountersOnGCEnd(
+    const js::AutoLockGC& lock) {
+  auto& gc = runtimeFromAnyThread()->gc;
+  gcMallocCounter.updateOnGCEnd(gc.tunables, lock);
+  jitCodeCounter.updateOnGCEnd(gc.tunables, lock);
+}
+
+js::gc::TriggerKind js::ZoneAllocator::shouldTriggerGCForTooMuchMalloc() {
+  auto& gc = runtimeFromAnyThread()->gc;
+  return std::max(gcMallocCounter.shouldTriggerGC(gc.tunables),
+                  jitCodeCounter.shouldTriggerGC(gc.tunables));
+}
+
 JS::Zone::Zone(JSRuntime* rt)
-    : JS::shadow::Zone(rt, &rt->gc.marker),
+    : ZoneAllocator(rt),
       // Note: don't use |this| before initializing helperThreadUse_!
       // ProtectedData checks in CheckZone::check may read this field.
       helperThreadUse_(HelperThreadUse::None),
@@ -57,9 +95,6 @@ JS::Zone::Zone(JSRuntime* rt)
       functionToStringCache_(this),
       keepAtomsCount(this, 0),
       purgeAtomsDeferred(this, 0),
-      zoneSize(&rt->gc.heapSize),
-      threshold(),
-      gcDelayBytes(0),
       tenuredStrings(this, 0),
       allocNurseryStrings(this, true),
       propertyTree_(this, this),
@@ -80,12 +115,6 @@ JS::Zone::Zone(JSRuntime* rt)
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
              static_cast<JS::shadow::Zone*>(this));
-
-  AutoLockGC lock(rt);
-  threshold.updateAfterGC(8192, GC_NORMAL, rt->gc.tunables,
-                          rt->gc.schedulingState, lock);
-  setGCMaxMallocBytes(rt->gc.tunables.maxMallocBytes(), lock);
-  jitCodeCounter.setMax(jit::MaxCodeBytesPerProcess * 0.8, lock);
 }
 
 Zone::~Zone() {
@@ -107,8 +136,6 @@ Zone::~Zone() {
     regExps().clear();
   }
 #endif
-
-  MOZ_ASSERT_IF(rt->gc.shutdownCollectedEverything(), gcMallocBytes == 0);
 }
 
 bool Zone::init(bool isSystemArg) {
@@ -469,9 +496,7 @@ void Zone::clearTables() {
 }
 
 void Zone::fixupAfterMovingGC() {
-#ifdef DEBUG
-  gcMallocTracker.fixupAfterMovingGC();
-#endif
+  ZoneAllocator::fixupAfterMovingGC();
   fixupInitialShapeTable();
 }
 
@@ -557,8 +582,9 @@ void Zone::traceAtomCache(JSTracer* trc) {
   }
 }
 
-void* Zone::onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
-                          size_t nbytes, void* reallocPtr) {
+void* ZoneAllocator::onOutOfMemory(js::AllocFunction allocFunc,
+                                   arena_id_t arena, size_t nbytes,
+                                   void* reallocPtr) {
   if (!js::CurrentThreadCanAccessRuntime(runtime_)) {
     return nullptr;
   }
@@ -566,24 +592,26 @@ void* Zone::onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                                                 reallocPtr);
 }
 
-void Zone::reportAllocationOverflow() const {
+void ZoneAllocator::reportAllocationOverflow() const {
   js::ReportAllocationOverflow(nullptr);
 }
 
-void JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
-                                              TriggerKind trigger) {
+void ZoneAllocator::maybeTriggerGCForTooMuchMalloc(
+    js::gc::MemoryCounter& counter, TriggerKind trigger) {
   JSRuntime* rt = runtimeFromAnyThread();
 
   if (!js::CurrentThreadCanAccessRuntime(rt)) {
     return;
   }
 
-  bool wouldInterruptGC = rt->gc.isIncrementalGCInProgress() && !isCollecting();
+  auto zone = JS::Zone::from(this);
+  bool wouldInterruptGC =
+      rt->gc.isIncrementalGCInProgress() && !zone->isCollecting();
   if (wouldInterruptGC && !counter.shouldResetIncrementalGC(rt->gc.tunables)) {
     return;
   }
 
-  if (!rt->gc.triggerZoneGC(this, JS::GCReason::TOO_MUCH_MALLOC,
+  if (!rt->gc.triggerZoneGC(zone, JS::GCReason::TOO_MUCH_MALLOC,
                             counter.bytes(), counter.maxBytes())) {
     return;
   }
@@ -593,7 +621,7 @@ void JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
 
 #ifdef DEBUG
 
-void MemoryTracker::adopt(MemoryTracker& other, Zone* newZone) {
+void MemoryTracker::adopt(MemoryTracker& other) {
   LockGuard<Mutex> lock(mutex);
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
