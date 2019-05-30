@@ -156,7 +156,8 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
-        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) { return }
+        if (navHost.navController.currentDestination?.id == R.id.browserFragment) return
+        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) return
 
         this.intent.putExtra(OPEN_TO_BROWSER, false)
         var customTabSessionId: String? = null
