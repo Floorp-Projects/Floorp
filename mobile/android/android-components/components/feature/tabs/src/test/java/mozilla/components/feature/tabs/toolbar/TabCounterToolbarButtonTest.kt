@@ -11,6 +11,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.tabcounter.TabCounter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -20,7 +21,6 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class TabCounterToolbarButtonTest {
@@ -32,7 +32,7 @@ class TabCounterToolbarButtonTest {
 
         val button = TabCounterToolbarButton(sessionManager) {}
 
-        val view = button.createView(LinearLayout(RuntimeEnvironment.application) as ViewGroup)
+        val view = button.createView(LinearLayout(testContext) as ViewGroup)
             as TabCounter
 
         assertEquals("2", view.getText())
@@ -43,7 +43,7 @@ class TabCounterToolbarButtonTest {
         val sessionManager = spy(SessionManager(mock()))
         val button = TabCounterToolbarButton(sessionManager) {}
 
-        val parent = LinearLayout(RuntimeEnvironment.application)
+        val parent = LinearLayout(testContext)
         button.createView(parent)
 
         verify(sessionManager).register(any(), eq(parent))
@@ -54,7 +54,7 @@ class TabCounterToolbarButtonTest {
         val sessionManager = SessionManager(mock())
 
         val button = TabCounterToolbarButton(sessionManager) {}
-        val parent = spy(LinearLayout(RuntimeEnvironment.application))
+        val parent = spy(LinearLayout(testContext))
         doReturn(true).`when`(parent).isAttachedToWindow
 
         val view = button.createView(parent)
@@ -86,7 +86,7 @@ class TabCounterToolbarButtonTest {
         sessionManager.add(session3)
 
         val button = TabCounterToolbarButton(sessionManager) {}
-        val parent = spy(LinearLayout(RuntimeEnvironment.application))
+        val parent = spy(LinearLayout(testContext))
         doReturn(true).`when`(parent).isAttachedToWindow
 
         val view = button.createView(parent)
@@ -117,7 +117,7 @@ class TabCounterToolbarButtonTest {
         sessionManager.add(session3)
 
         val button = TabCounterToolbarButton(sessionManager) {}
-        val parent = spy(LinearLayout(RuntimeEnvironment.application))
+        val parent = spy(LinearLayout(testContext))
         doReturn(true).`when`(parent).isAttachedToWindow
 
         val view = button.createView(parent)
@@ -135,7 +135,7 @@ class TabCounterToolbarButtonTest {
         val sessionManager = SessionManager(mock())
 
         val button = TabCounterToolbarButton(sessionManager) {}
-        val parent = spy(LinearLayout(RuntimeEnvironment.application))
+        val parent = spy(LinearLayout(testContext))
         doReturn(true).`when`(parent).isAttachedToWindow
 
         val view = button.createView(parent)
@@ -161,7 +161,7 @@ class TabCounterToolbarButtonTest {
         val button = TabCounterToolbarButton(sessionManager) {
             callbackInvoked = true
         }
-        val parent = spy(LinearLayout(RuntimeEnvironment.application))
+        val parent = spy(LinearLayout(testContext))
         doReturn(true).`when`(parent).isAttachedToWindow
 
         val view = button.createView(parent)
