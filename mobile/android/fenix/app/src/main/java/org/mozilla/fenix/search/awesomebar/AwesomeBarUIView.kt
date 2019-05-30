@@ -169,20 +169,15 @@ class AwesomeBarUIView(
             view.addProviders(historyStorageProvider!!)
         }
 
-        view.addProviders(sessionProvider!!)
+        view.addProviders(
+            clipboardSuggestionProvider!!,
+            sessionProvider!!
+        )
     }
 
     private fun showSearchSuggestionProvider() {
         if (Settings.getInstance(container.context).showSearchSuggestions()) {
             view.addProviders(searchSuggestionProvider!!)
-        }
-    }
-
-    private fun updateLinkVisibility() {
-        if (state?.query?.isEmpty() == true) {
-            view.addProviders(clipboardSuggestionProvider!!)
-        } else {
-            view.removeProviders(clipboardSuggestionProvider!!)
         }
     }
 
@@ -213,7 +208,5 @@ class AwesomeBarUIView(
 
         view.onInputChanged(it.query)
         state = it
-
-        updateLinkVisibility()
     }
 }
