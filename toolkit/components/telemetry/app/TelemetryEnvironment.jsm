@@ -559,15 +559,9 @@ EnvironmentAddonBuilder.prototype = {
    * Get the initial set of addons.
    * @returns Promise<void> when the initial load is complete.
    */
-  init() {
-    // Some tests don't initialize the addon manager. This accounts for the
-    // unfortunate reality of life.
-    try {
-      AddonManager.shutdown.addBlocker("EnvironmentAddonBuilder",
-        () => this._shutdownBlocker());
-    } catch (err) {
-      return Promise.reject(err);
-    }
+  async init() {
+    AddonManager.beforeShutdown.addBlocker("EnvironmentAddonBuilder",
+      () => this._shutdownBlocker());
 
     this._pendingTask = (async () => {
       try {
