@@ -44,6 +44,7 @@ import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
@@ -107,6 +108,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
+    private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
     private var findBookmarkJob: Job? = null
     private lateinit var job: Job
@@ -211,6 +213,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         return Gravity.BOTTOM
     }
 
+    @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -341,6 +344,19 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 requireContext(),
                 view.engineView,
                 requireComponents.core.sessionManager
+            ),
+            owner = this,
+            view = view
+        )
+
+        val primaryTextColor = DefaultThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
+        view.swipeRefresh.setColorSchemeColors(primaryTextColor)
+        swipeRefreshFeature.set(
+            feature = SwipeRefreshFeature(
+                requireComponents.core.sessionManager,
+                requireComponents.useCases.sessionUseCases.reload,
+                view.swipeRefresh,
+                customTabSessionId
             ),
             owner = this,
             view = view
