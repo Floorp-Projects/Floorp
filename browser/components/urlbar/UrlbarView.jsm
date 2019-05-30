@@ -80,7 +80,7 @@ class UrlbarView {
     if (!this.isOpen || !this._selected) {
       return -1;
     }
-    return parseInt(this._selected.getAttribute("resultIndex"));
+    return this._selected.result.uiIndex;
   }
 
   set selectedIndex(val) {
@@ -111,19 +111,6 @@ class UrlbarView {
       return null;
     }
     return this._selected.result;
-  }
-
-  /**
-   * Gets the result for the index.
-   * @param {number} index
-   *   The index to look up.
-   * @returns {UrlbarResult}
-   */
-  getResult(index) {
-    if (index < 0 || index > this._queryContext.results.length) {
-      throw new Error(`UrlbarView: Index ${index} is out of bounds`);
-    }
-    return this._queryContext.results[index];
   }
 
   /**
@@ -263,14 +250,10 @@ class UrlbarView {
    * @param {number} index The index of the result that has been removed.
    */
   onQueryResultRemoved(index) {
-    // Change the index for any rows above the removed index.
-    for (let i = index + 1; i < this._rows.children.length; i++) {
-      let child = this._rows.children[i];
-      child.setAttribute("resultIndex", child.getAttribute("resultIndex") - 1);
-    }
-
     let rowToRemove = this._rows.children[index];
     rowToRemove.remove();
+
+    this._updateIndices();
 
     if (rowToRemove != this._selected) {
       return;
@@ -482,6 +465,8 @@ class UrlbarView {
       }
       this._rows.appendChild(row);
     }
+
+    this._updateIndices();
   }
 
   _createRow() {
@@ -532,11 +517,8 @@ class UrlbarView {
   }
 
   _updateRow(item, result) {
-    let resultIndex = this._queryContext.results.indexOf(result);
     item.result = result;
     item.removeAttribute("stale");
-    item.id = "urlbarView-row-" + resultIndex;
-    item.setAttribute("resultIndex", resultIndex);
 
     if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
         !result.payload.isKeywordOffer) {
@@ -632,6 +614,14 @@ class UrlbarView {
     item._elements.get("action").textContent = action;
 
     item._elements.get("titleSeparator").hidden = !action && !setURL;
+  }
+
+  _updateIndices() {
+    for (let i = 0; i < this._rows.children.length; i++) {
+      let item = this._rows.children[i];
+      item.result.uiIndex = i;
+      item.id = "urlbarView-row-" + i;
+    }
   }
 
   _removeStaleRows() {
@@ -799,7 +789,7 @@ class UrlbarView {
       row = row.parentNode;
     }
     this._selectItem(row, { updateInput: false });
-    this.controller.speculativeConnect(this._queryContext, this.selectedIndex, "mousedown");
+    this.controller.speculativeConnect(this.selectedResult, this._queryContext, "mousedown");
   }
 
   _on_mouseup(event) {
@@ -812,7 +802,7 @@ class UrlbarView {
     while (!row.classList.contains("urlbarView-row")) {
       row = row.parentNode;
     }
-    this.input.pickResult(event, parseInt(row.getAttribute("resultIndex")));
+    this.input.pickResult(row.result, event);
   }
 
   _on_overflow(event) {
