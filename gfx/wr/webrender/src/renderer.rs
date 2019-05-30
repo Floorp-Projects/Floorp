@@ -2025,7 +2025,6 @@ impl Renderer {
             options.upload_method.clone(),
             options.cached_programs.take(),
             options.allow_pixel_local_storage_support,
-            options.dump_shader_source.take(),
         );
 
         let supports_dual_source_blending = match gl_type {
@@ -5690,8 +5689,6 @@ pub struct RendererOptions {
     pub batch_lookback_count: usize,
     /// Start the debug server for this renderer.
     pub start_debug_server: bool,
-    /// Output the source of the shader with the given name.
-    pub dump_shader_source: Option<String>,
 }
 
 impl Default for RendererOptions {
@@ -5739,7 +5736,6 @@ impl Default for RendererOptions {
             // be started automatically. Users can explicitly disable this as
             // needed.
             start_debug_server: true,
-            dump_shader_source: None,
         }
     }
 }
@@ -6251,3 +6247,4 @@ enum FramebufferKind {
     Main,
     Other,
 }
+
