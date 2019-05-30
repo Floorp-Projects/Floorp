@@ -13,7 +13,13 @@ import org.json.JSONObject
 class ServoEngineSessionState : EngineSessionState {
     override fun toJSON() = JSONObject()
 
+    override fun equals(other: Any?) =
+        other != null && this::class == other::class
+
+    override fun hashCode() = this::class.hashCode()
+
     companion object {
+        @Suppress("UNUSED_PARAMETER")
         fun fromJSON(json: JSONObject) = ServoEngineSessionState()
     }
 }

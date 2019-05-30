@@ -20,6 +20,16 @@ import org.mockito.Mockito
 inline fun <reified T : Any> mock(): T = Mockito.mock(T::class.java)!!
 
 /**
+ * Enables stubbing methods. Use it when you want the mock to return particular value when particular method is called.
+ *
+ * Alias for [Mockito.when ].
+ *
+ * Taken from [mockito-kotlin](https://github.com/nhaarman/mockito-kotlin/).
+ */
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T> whenever(methodCall: T) = Mockito.`when`(methodCall)!!
+
+/**
  * Creates a custom [MotionEvent] for testing. As of SDK 28 [MotionEvent]s can't be mocked anymore and need to be created
  * through [MotionEvent.obtain].
  */
