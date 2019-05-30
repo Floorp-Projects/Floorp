@@ -409,9 +409,29 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint32_t, (
 ));
 
 MOZ_DEFINE_ENUM_CLASS_WITH_BASE(CompositionPayloadType, uint8_t, (
+  /**
+   * A |CompositionPayload| with this type indicates a key press happened
+   * before composition and will be used to determine latency between key press
+   * and presentation in |mozilla::Telemetry::KEYPRESS_PRESENT_LATENCY|
+   */
   eKeyPress,
+
+  /**
+   * A |CompositionPayload| with this type indicates that an APZ scroll event
+   * occurred that will be included in the composition.
+   */
   eAPZScroll,
+
+  /**
+   * A |CompositionPayload| with this type indicates that an APZ pinch-to-zoom
+   * event occurred that will be included in the composition.
+   */
   eAPZPinchZoom,
+
+  /**
+   * A |CompositionPayload| with this type indicates that content was painted
+   * that will be included in the composition.
+   */
   eContentPaint
 ));
 // clang-format on
