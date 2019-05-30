@@ -7,7 +7,6 @@ package mozilla.components.browser.awesomebar
 import android.content.Context
 import android.util.AttributeSet
 import android.util.LruCache
-import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -185,15 +184,14 @@ class BrowserAwesomeBar @JvmOverloads constructor(
 
     /**
      * Returns a unique suggestion ID to make sure ID's can't collide
-     * across providers. This method is not thread-safe and must be
-     * invoked on the main thread.
+     * across providers.
      *
      * @param suggestion the suggestion for which a unique ID should be
      * generated.
      *
      * @return the unique ID.
      */
-    @MainThread
+    @Synchronized
     fun getUniqueSuggestionId(suggestion: AwesomeBar.Suggestion): Long {
         val key = suggestion.provider.id + "/" + suggestion.id
         return uniqueSuggestionIds[key] ?: run {

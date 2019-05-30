@@ -111,7 +111,7 @@ internal class SuggestionsAdapter(
         return ViewHolderWrapper(layout.createViewHolder(awesomeBar, view, viewType), view)
     }
 
-    override fun getItemId(position: Int): Long {
+    override fun getItemId(position: Int): Long = synchronized(suggestions) {
         val suggestion = suggestions[position]
         return awesomeBar.getUniqueSuggestionId(suggestion)
     }
