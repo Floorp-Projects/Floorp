@@ -6705,6 +6705,7 @@ void Document::TryCancelFrameLoaderInitialization(nsIDocShell* aShell) {
 
 void Document::SetPrototypeDocument(nsXULPrototypeDocument* aPrototype) {
   mPrototypeDocument = aPrototype;
+  mSynchronousDOMContentLoaded = true;
 }
 
 Document* Document::RequestExternalResource(
