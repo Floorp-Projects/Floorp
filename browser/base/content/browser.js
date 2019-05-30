@@ -3230,20 +3230,10 @@ var BrowserOnClick = {
         securityInfo = getSecurityInfo(securityInfoAsString);
         let errorInfo = getDetailedCertErrorInfo(location,
                                                  securityInfo);
-        let validityInfo = {
-          notAfter: securityInfo.serverCert.validity.notAfter / 1000,
-          notBefore: securityInfo.serverCert.validity.notBefore / 1000,
-        };
         browser.messageManager.sendAsyncMessage("CertErrorDetails", {
             code: securityInfo.errorCode,
             info: errorInfo,
             codeString: securityInfo.errorCodeString,
-            certIsUntrusted: securityInfo.isUntrusted,
-            certSubjectAltNames: securityInfo.serverCert.subjectAltNames,
-            validity: validityInfo,
-            url: location,
-            isDomainMismatch: securityInfo.isDomainMismatch,
-            isNotValidAtThisTime: securityInfo.isNotValidAtThisTime,
             frameId,
         });
         break;
