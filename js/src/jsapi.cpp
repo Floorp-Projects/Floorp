@@ -1770,6 +1770,10 @@ JS_PUBLIC_API JSObject* JS_NewObjectForConstructor(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
+  if (!ThrowIfNotConstructing(cx, args, clasp->name)) {
+    return nullptr;
+  }
+
   RootedObject newTarget(cx, &args.newTarget().toObject());
   cx->check(newTarget);
   return CreateThis(cx, Valueify(clasp), newTarget);
