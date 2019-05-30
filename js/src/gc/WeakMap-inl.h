@@ -130,8 +130,9 @@ template <class K, class V>
 /* static */ void WeakMap<K, V>::addWeakEntry(
     GCMarker* marker, gc::Cell* key, const gc::WeakMarkable& markable) {
   Zone* zone = key->asTenured().zone();
-
-  auto p = zone->gcWeakKeys().get(key);
+  auto& weakKeys =
+      gc::IsInsideNursery(key) ? zone->gcNurseryWeakKeys() : zone->gcWeakKeys();
+  auto p = weakKeys.get(key);
   if (p) {
     gc::WeakEntryVector& weakEntries = p->value;
     if (!weakEntries.append(markable)) {
@@ -140,7 +141,7 @@ template <class K, class V>
   } else {
     gc::WeakEntryVector weakEntries;
     MOZ_ALWAYS_TRUE(weakEntries.append(markable));
-    if (!zone->gcWeakKeys().put(key, std::move(weakEntries))) {
+    if (!weakKeys.put(key, std::move(weakEntries))) {
       marker->abortLinearWeakMarking();
     }
   }

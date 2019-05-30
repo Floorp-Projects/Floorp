@@ -12,9 +12,10 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/RelocationOverlay.h"
-
 #include "vm/BigIntType.h"
 #include "vm/RegExpShared.h"
+
+#include "gc/Nursery-inl.h"
 
 namespace js {
 namespace gc {
@@ -114,6 +115,16 @@ inline void RelocationOverlay::forwardTo(Cell* cell) {
   // Cell::getTrackKind() that doesn't rely on this behavior.
   uintptr_t gcFlags = dataWithTag_ & Cell::RESERVED_MASK;
   dataWithTag_ = uintptr_t(cell) | gcFlags | Cell::FORWARD_BIT;
+}
+
+inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell** cellp) {
+  MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
+
+  if ((*cellp)->isTenured()) {
+    return false;
+  }
+
+  return !Nursery::getForwardedPointer(cellp);
 }
 
 #ifdef JSGC_HASH_TABLE_CHECKS

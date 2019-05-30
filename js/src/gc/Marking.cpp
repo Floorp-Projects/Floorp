@@ -2282,6 +2282,9 @@ void GCMarker::stop() {
     if (!zone->gcWeakKeys().clear()) {
       oomUnsafe.crash("clearing weak keys in GCMarker::stop()");
     }
+    if (!zone->gcNurseryWeakKeys().clear()) {
+      oomUnsafe.crash("clearing (nursery) weak keys in GCMarker::stop()");
+    }
   }
 }
 
@@ -2374,6 +2377,8 @@ void GCMarker::repush(JSObject* obj) {
 }
 
 void GCMarker::enterWeakMarkingMode() {
+  MOZ_ASSERT(runtime()->gc.nursery().isEmpty());
+
   MOZ_ASSERT(tag_ == TracerKindTag::Marking);
   if (linearWeakMarkingDisabled_) {
     return;
