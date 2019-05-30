@@ -40,6 +40,7 @@ permalink: /changelog/
 
 * **browser-menu**
   * Fixed a bug where overscroll effects would appear on the overflow menu.
+  * Added enter and exit animations.
 
 * **browser-session**
   * Added handler for `onWebAppManifestLoaded` to update `session.webAppManifest`.

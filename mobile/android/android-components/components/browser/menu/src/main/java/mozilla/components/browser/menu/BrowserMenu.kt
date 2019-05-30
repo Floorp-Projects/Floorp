@@ -44,6 +44,10 @@ class BrowserMenu internal constructor(
                 WindowManager.LayoutParams.WRAP_CONTENT
         ).apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            animationStyle = when (orientation) {
+                Orientation.DOWN -> R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop
+                Orientation.UP -> R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
+            }
             isFocusable = true
             elevation = view.resources.pxToDp(MENU_ELEVATION_DP).toFloat()
 

@@ -47,4 +47,16 @@
         <item name="android:paddingStart">@dimen/mozac_browser_menu_item_image_text_label_padding_start</item>
     </style>
     <!-- BrowserMenuImageText -->
+
+    <!-- Animation -->
+    <style name="Mozac.Browser.Menu.Animation.OverflowMenuTop" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_top</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Animation.OverflowMenuBottom" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_bottom</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+    <!-- Animation -->
 </resources>
