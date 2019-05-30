@@ -10,11 +10,10 @@ namespace dom {
 NS_IMPL_ISUPPORTS(RemoteWebProgressRequest, nsIRequest, nsIChannel,
                   nsIClassifiedChannel, nsIRemoteWebProgressRequest)
 
-NS_IMETHODIMP RemoteWebProgressRequest::Init(nsIURI* aURI, nsIURI* aOriginalURI,
-                                             const nsACString& aMatchedList) {
+NS_IMETHODIMP RemoteWebProgressRequest::Init(nsIURI* aURI,
+                                             nsIURI* aOriginalURI) {
   mURI = aURI;
   mOriginalURI = aOriginalURI;
-  mMatchedList = aMatchedList;
 
   return NS_OK;
 }
