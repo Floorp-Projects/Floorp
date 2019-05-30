@@ -677,6 +677,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  Live,
+  "browser.cache.offline.enable",
+  browser_cache_offline_enable,
+  bool, true
+)
+
 // Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
@@ -883,6 +890,25 @@ VARCACHE_PREF(
 PREF("browser.visited_color", String, "")
 
 //---------------------------------------------------------------------------
+// Prefs starting with "canvas."
+//---------------------------------------------------------------------------
+
+// Add support for canvas path objects
+VARCACHE_PREF(
+  Live,
+  "canvas.path.enabled",
+  canvas_path_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "canvas.capturestream.enabled",
+  canvas_capturestream_enabled,
+  bool, true
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "channelclassifier."
 //---------------------------------------------------------------------------
 
@@ -909,6 +935,37 @@ VARCACHE_PREF(
   bool, PREF_VALUE
 )
 #undef PREF_VALUE
+
+//---------------------------------------------------------------------------
+// Prefs starting with "device."
+//---------------------------------------------------------------------------
+VARCACHE_PREF(
+  Live,
+  "device.sensors.ambientLight.enabled",
+  device_sensors_ambientLight_enabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "device.sensors.motion.enabled",
+  device_sensors_motion_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "device.sensors.orientation.enabled",
+  device_sensors_orientation_enabled,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "device.sensors.proximity.enabled",
+  device_sensors_proximity_enabled,
+  bool, false
+)
 
 //---------------------------------------------------------------------------
 // Prefs starting with "devtools."
@@ -1094,6 +1151,14 @@ VARCACHE_PREF(
   uint32_t, 10 // in seconds
 )
 
+// HTML <dialog> element
+VARCACHE_PREF(
+  Live,
+  "dom.dialog_element.enabled",
+  dom_dialog_element_enabled,
+  bool, false
+)
+
 VARCACHE_PREF(
   Live,
   "dom.disable_open_during_load",
@@ -1153,6 +1218,30 @@ VARCACHE_PREF(
   uint32_t, 1000
 )
 
+// Enable clipboard readText() and writeText() by default
+VARCACHE_PREF(
+  Live,
+  "dom.events.asyncClipboard",
+  dom_events_asyncClipboard,
+  bool, true
+)
+
+// Disable clipboard read() and write() by default
+VARCACHE_PREF(
+  Live,
+  "dom.events.asyncClipboard.dataTransfer",
+  dom_events_asyncClipboard_dataTransfer,
+  bool, false
+)
+
+// Whether to expose test interfaces of various sorts
+VARCACHE_PREF(
+  Live,
+  "dom.expose_test_interfaces",
+  dom_expose_test_interfaces,
+  bool, false
+)
+
 VARCACHE_PREF(
   Live,
   "dom.fetchObserver.enabled",
@@ -1177,36 +1266,72 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Whether the Gamepad API is enabled
+VARCACHE_PREF(
+  Live,
+  "dom.gamepad.enabled",
+  dom_gamepad_enabled,
+  bool, true
+)
+
 // Is Gamepad Extension API enabled?
 VARCACHE_PREF(
   Live,
   "dom.gamepad.extensions.enabled",
-   dom_gamepad_extensions_enabled,
-   bool, true
+  dom_gamepad_extensions_enabled,
+  bool, true
 )
 
-// Is LightIndcator API enabled in Gamepad Extension API?
+// Is LightIndicator API enabled in Gamepad Extension API?
 VARCACHE_PREF(
   Live,
   "dom.gamepad.extensions.lightindicator",
-   dom_gamepad_extensions_lightindicator,
-   bool, false
+  dom_gamepad_extensions_lightindicator,
+  bool, false
 )
 
 // Is MultiTouch API enabled in Gamepad Extension API?
 VARCACHE_PREF(
   Live,
   "dom.gamepad.extensions.multitouch",
-   dom_gamepad_extensions_multitouch,
-   bool, false
+  dom_gamepad_extensions_multitouch,
+  bool, false
 )
 
 // Is Gamepad vibrate haptic feedback function enabled?
 VARCACHE_PREF(
   Live,
   "dom.gamepad.haptic_feedback.enabled",
-   dom_gamepad_haptic_feedback_enabled,
-   bool, true
+  dom_gamepad_haptic_feedback_enabled,
+  bool, true
+)
+
+#ifdef RELEASE_OR_BETA
+# define PREF_VALUE  false
+#else
+# define PREF_VALUE  true
+#endif
+VARCACHE_PREF(
+  Live,
+  "dom.gamepad.non_standard_events.enabled",
+  dom_gamepad_non_standard_events_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+VARCACHE_PREF(
+  Live,
+  "dom.gamepad.test.enabled",
+  dom_gamepad_test_enabled,
+  bool, false
+)
+
+// W3C draft ImageCapture API
+VARCACHE_PREF(
+  Live,
+  "dom.imagecapture.enabled",
+  dom_imagecapture_enabled,
+  bool, false
 )
 
 // Enable passing the "storage" option to indexedDB.open.
@@ -1233,6 +1358,13 @@ VARCACHE_PREF(
   Live,
   "dom.input.skip_cursor_move_for_same_value_set",
   dom_input_skip_cursor_move_for_same_value_set,
+  bool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.IntersectionObserver.enabled",
+  dom_IntersectionObserver_enabled,
   bool, true
 )
 
@@ -1396,6 +1528,28 @@ VARCACHE_PREF(
   "dom.placeholder.show_on_focus",
   dom_placeholder_show_on_focus,
   bool, true
+)
+
+// Presentation API
+VARCACHE_PREF(
+  Live,
+  "dom.presentation.enabled",
+  dom_presentation_enabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.presentation.controller.enabled",
+  dom_presentation_controller_enabled,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.presentation.receiver.enabled",
+  dom_presentation_receiver_enabled,
+  bool, false
 )
 
 VARCACHE_PREF(
@@ -1687,6 +1841,14 @@ VARCACHE_PREF(
   uint32_t, 10*1000
 )
 
+// UDPSocket API
+VARCACHE_PREF(
+  Live,
+  "dom.udpsocket.enabled",
+  dom_udpsocket_enabled,
+  bool, false
+)
+
 VARCACHE_PREF(
   Once,
   "dom.vr.enabled",
@@ -1848,6 +2010,14 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 0
 )
 
+// VR test system.
+VARCACHE_PREF(
+  Live,
+  "dom.vr.test.enabled",
+  dom_vr_test_enabled,
+  bool, false
+)
+
 VARCACHE_PREF(
   Live,
   "dom.vr.require-gesture",
@@ -1892,6 +2062,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for the Web Audio API enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.webaudio.enabled",
+  dom_webaudio_enabled,
+  bool, true
+)
+
 #if !defined(MOZ_WIDGET_ANDROID)
 # define PREF_VALUE true
 #else
@@ -1911,6 +2089,22 @@ VARCACHE_PREF(
   Live,
   "dom.webcomponents.shadowdom.report_usage",
   dom_webcomponents_shadowdom_report_usage,
+  bool, false
+)
+
+// Is support for the Web GPU API enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.webgpu.enable",
+  dom_webgpu_enable,
+  bool, false
+)
+
+// Whether the WebMIDI API is enabled
+VARCACHE_PREF(
+  Live,
+  "dom.webmidi.enabled",
+  dom_webmidi_enabled,
   bool, false
 )
 
@@ -1996,6 +2190,13 @@ VARCACHE_PREF(
   "dom.worker.use_medium_high_event_queue",
   dom_worker_use_medium_high_event_queue,
   RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "dom.worklet.enabled",
+  dom_worklet_enabled,
+  bool, false
 )
 
 // Enable content type normalization of XHR uploads via MIME Sniffing standard
@@ -3949,6 +4150,30 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for DOMMatrix enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.DOMMatrix.enabled",
+  layout_css_DOMMatrix_enabled,
+  bool, true
+)
+
+// Is support for DOMQuad enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.DOMQuad.enabled",
+  layout_css_DOMQuad_enabled,
+  bool, true
+)
+
+// Is support for DOMPoint enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.DOMPoint.enabled",
+  layout_css_DOMPoint_enabled,
+  bool, true
+)
+
 // Are we emulating -moz-{inline}-box layout using CSS flexbox?
 VARCACHE_PREF(
   Live,
@@ -3962,6 +4187,14 @@ VARCACHE_PREF(
   Live,
   "layout.css.font-display.enabled",
   layout_css_font_display_enabled,
+  bool, true
+)
+
+// Is support for document.fonts enabled?
+VARCACHE_PREF(
+  Live,
+  "layout.css.font-loading-api.enabled",
+  layout_css_font_loading_api_enabled,
   bool, true
 )
 
@@ -5921,6 +6154,28 @@ VARCACHE_PREF(
   security_fileuri_strict_origin_policy,
   RelaxedAtomicBool, true
 )
+
+// Hardware Origin-bound Second Factor Support
+VARCACHE_PREF(
+  Live,
+  "security.webauth.webauthn",
+  security_webauth_webauthn,
+  bool, true
+)
+
+// No way to enable on Android, Bug 1552602
+#if defined(MOZ_WIDGET_ANDROID)
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  Live,
+  "security.webauth.u2f",
+  security_webauth_u2f,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
 
 //---------------------------------------------------------------------------
 // Prefs starting with "slider."
