@@ -28,12 +28,12 @@ const secondLocation = {
   column: 18,
 };
 
-add_task(threadClientTest(({ threadClient, debuggee, client }) => {
+add_task(threadClientTest(({ threadClient, debuggee }) => {
   return new Promise(resolve => {
-    client.on("paused", async (packet) => {
+    threadClient.on("paused", async (packet) => {
       const [ first, second ] = await set_breakpoints(packet, threadClient);
       test_different_actors(first, second);
-      await test_remove_one(first, second, threadClient, debuggee, client);
+      await test_remove_one(first, second, threadClient, debuggee);
       resolve();
     });
 
@@ -70,13 +70,13 @@ function test_different_actors(first, second) {
                   "Each breakpoint should have a different actor");
 }
 
-function test_remove_one(first, second, threadClient, debuggee, client) {
+function test_remove_one(first, second, threadClient, debuggee) {
   return new Promise(resolve => {
     first.remove(function({error}) {
       Assert.ok(!error, "Should not get an error removing a breakpoint");
 
       let hitSecond;
-      client.on("paused", function _onPaused({why, frame}) {
+      threadClient.on("paused", function _onPaused({why, frame}) {
         if (why.type == "breakpoint") {
           hitSecond = true;
           Assert.equal(why.actors.length, 1,
@@ -92,7 +92,7 @@ function test_remove_one(first, second, threadClient, debuggee, client) {
         }
 
         if (why.type == "debuggerStatement") {
-          client.off("paused", _onPaused);
+          threadClient.off("paused", _onPaused);
           Assert.ok(hitSecond,
                     "We should still hit `second`, but not `first`.");
 

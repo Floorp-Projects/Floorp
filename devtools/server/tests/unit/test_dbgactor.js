@@ -5,11 +5,11 @@
 
 const xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee, targetFront }) => {
   Assert.equal(xpcInspector.eventLoopNestLevel, 0);
 
   await new Promise(resolve => {
-    client.on("paused", function(packet) {
+    threadClient.on("paused", function(packet) {
       Assert.equal(false, "error" in packet);
       Assert.equal(packet.from, threadClient.actor);
       Assert.equal(packet.type, "paused");
