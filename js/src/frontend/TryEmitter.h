@@ -10,10 +10,10 @@
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
 #include "mozilla/Maybe.h"       // mozilla::Maybe, mozilla::Nothing
 
-#include <stddef.h>  // ptrdiff_t
 #include <stdint.h>  // uint32_t
 
 #include "frontend/BytecodeControlStructures.h"  // TryFinallyControl
+#include "frontend/BytecodeOffset.h"             // BytecodeOffset
 #include "frontend/JumpList.h"                   // JumpList, JumpTarget
 
 namespace js {
@@ -139,7 +139,7 @@ class MOZ_STACK_CLASS TryEmitter {
   unsigned noteIndex_;
 
   // The offset after JSOP_TRY.
-  ptrdiff_t tryStart_;
+  BytecodeOffset tryStart_;
 
   // JSOP_JUMPTARGET after the entire try-catch-finally block.
   JumpList catchAndFinallyJump_;

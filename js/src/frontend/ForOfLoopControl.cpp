@@ -140,12 +140,12 @@ bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
 bool ForOfLoopControl::emitIteratorCloseInInnermostScopeWithTryNote(
     BytecodeEmitter* bce,
     CompletionKind completionKind /* = CompletionKind::Normal */) {
-  ptrdiff_t start = bce->bytecodeSection().offset();
+  BytecodeOffset start = bce->bytecodeSection().offset();
   if (!emitIteratorCloseInScope(bce, *bce->innermostEmitterScope(),
                                 completionKind)) {
     return false;
   }
-  ptrdiff_t end = bce->bytecodeSection().offset();
+  BytecodeOffset end = bce->bytecodeSection().offset();
   return bce->addTryNote(JSTRY_FOR_OF_ITERCLOSE, 0, start, end);
 }
 
@@ -167,7 +167,7 @@ bool ForOfLoopControl::emitIteratorCloseInScope(
 // iterator.
 bool ForOfLoopControl::emitPrepareForNonLocalJumpFromScope(
     BytecodeEmitter* bce, EmitterScope& currentScope, bool isTarget,
-    ptrdiff_t* tryNoteStart) {
+    BytecodeOffset* tryNoteStart) {
   // Pop unnecessary value from the stack.  Effectively this means
   // leaving try-catch block.  However, the performing IteratorClose can
   // reach the depth for try-catch, and effectively re-enter the

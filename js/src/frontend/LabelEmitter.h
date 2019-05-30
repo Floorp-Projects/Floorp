@@ -10,9 +10,8 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"       // Maybe
 
-#include <stddef.h>  // ptrdiff_t
-
 #include "frontend/BytecodeControlStructures.h"  // LabelControl
+#include "frontend/BytecodeOffset.h"             // BytecodeOffset
 #include "frontend/JumpList.h"                   // JumpList
 #include "js/TypeDecls.h"                        // JSAtom
 
@@ -35,7 +34,7 @@ class MOZ_STACK_CLASS LabelEmitter {
   BytecodeEmitter* bce_;
 
   // The offset of the JSOP_LABEL.
-  ptrdiff_t top_ = 0;
+  BytecodeOffset top_;
 
   mozilla::Maybe<LabelControl> controlInfo_;
 

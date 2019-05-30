@@ -8,37 +8,39 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
-#include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, IsJumpOpcode
+#include <stddef.h>  // ptrdiff_t
+
+#include "vm/BytecodeUtil.h"  // GET_JUMP_OFFSET, SET_JUMP_OFFSET, IsJumpOpcode
 
 using namespace js;
 using namespace js::frontend;
 
-void JumpList::push(jsbytecode* code, ptrdiff_t jumpOffset) {
-  if (offset == -1) {
-    SET_JUMP_OFFSET(&code[jumpOffset], END_OF_LIST_DELTA);
+void JumpList::push(jsbytecode* code, BytecodeOffset jumpOffset) {
+  if (!offset.valid()) {
+    SET_JUMP_OFFSET(&code[jumpOffset.value()], END_OF_LIST_DELTA);
   } else {
-    SET_JUMP_OFFSET(&code[jumpOffset], offset - jumpOffset);
+    SET_JUMP_OFFSET(&code[jumpOffset.value()], (offset - jumpOffset).value());
   }
   offset = jumpOffset;
 }
 
 void JumpList::patchAll(jsbytecode* code, JumpTarget target) {
-  if (offset == -1) {
+  if (!offset.valid()) {
     // This list is not used. Nothing to do.
     return;
   }
 
-  ptrdiff_t delta;
-  ptrdiff_t jumpOffset = offset;
+  BytecodeOffsetDiff delta;
+  BytecodeOffset jumpOffset = offset;
   while (true) {
-    jsbytecode* pc = &code[jumpOffset];
+    jsbytecode* pc = &code[jumpOffset.value()];
     MOZ_ASSERT(IsJumpOpcode(JSOp(*pc)));
-    delta = GET_JUMP_OFFSET(pc);
-    MOZ_ASSERT(delta <= 0);
-    ptrdiff_t span = target.offset - jumpOffset;
-    SET_JUMP_OFFSET(pc, span);
+    delta = BytecodeOffsetDiff(GET_JUMP_OFFSET(pc));
+    MOZ_ASSERT(delta.value() == END_OF_LIST_DELTA || delta.value() < 0);
+    BytecodeOffsetDiff span = target.offset - jumpOffset;
+    SET_JUMP_OFFSET(pc, span.value());
 
-    if (delta == END_OF_LIST_DELTA) {
+    if (delta.value() == END_OF_LIST_DELTA) {
       break;
     }
     jumpOffset += delta;
