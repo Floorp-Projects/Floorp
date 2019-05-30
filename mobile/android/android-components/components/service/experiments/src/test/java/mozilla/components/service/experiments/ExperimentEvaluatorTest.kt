@@ -35,6 +35,7 @@ class ExperimentEvaluatorTest {
     private lateinit var branchEditor: SharedPreferences.Editor
     private lateinit var packageManager: PackageManager
     private lateinit var packageInfo: PackageInfo
+    private var currentTime = System.currentTimeMillis() / 1000
 
     private fun testReset(appId: String = "test.appId", versionName: String = "test.version") {
         context = mock()
@@ -81,7 +82,7 @@ class ExperimentEvaluatorTest {
     fun `evaluate empty matchers`() {
         val experiment = createDefaultExperiment(
             id = "testexperiment",
-            lastModified = 1528916183,
+            lastModified = currentTime,
             buckets = Experiment.Buckets(20, 70),
             match = createDefaultMatcher()
         )
@@ -108,7 +109,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 50),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         val evaluator = ExperimentEvaluator()
@@ -136,7 +137,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         val evaluator = ExperimentEvaluator()
@@ -161,7 +162,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         val evaluator = ExperimentEvaluator()
@@ -179,7 +180,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
@@ -200,7 +201,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         val evaluator = ExperimentEvaluator()
@@ -218,7 +219,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "ESP"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
@@ -240,7 +241,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         val evaluator = ExperimentEvaluator()
@@ -266,7 +267,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         val evaluator = ExperimentEvaluator()
@@ -284,7 +285,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
@@ -306,7 +307,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         val evaluator = ExperimentEvaluator()
@@ -324,7 +325,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
@@ -345,7 +346,7 @@ class ExperimentEvaluatorTest {
                 localeCountry = "USA"
             ),
             buckets = Experiment.Buckets(20, 70),
-            lastModified = 1528916183
+            lastModified = currentTime
         )
 
         var evaluator = ExperimentEvaluator(object : ValuesProvider() {

@@ -21,6 +21,8 @@ class KintoExperimentSourceTest {
     private val baseUrl = "http://mydomain.test"
     private val bucketName = "fretboard"
     private val collectionName = "experiments"
+    private var currentTime = System.currentTimeMillis() / 1000
+    private var pastTime = currentTime - 1000
 
     @Test
     fun noExperiments() {
@@ -52,7 +54,7 @@ class KintoExperimentSourceTest {
                         "id": "first-id",
                         "id": "first-id",
                         "description": "first-description",
-                        "last_modified": 1523549895713,
+                        "last_modified": $pastTime,
                         "match": {
                             "locale_language": "eng",
                             "app_id": "first-appId",
@@ -89,14 +91,14 @@ class KintoExperimentSourceTest {
                 regions = listOf()
             ),
             buckets = Experiment.Buckets(0, 100),
-            lastModified = 1523549895713
+            lastModified = pastTime
         )
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(), null))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(expectedExperiment, kintoExperiments.experiments[0])
-        assertEquals(1523549895713, kintoExperiments.lastModified)
+        assertEquals(pastTime, kintoExperiments.lastModified)
     }
 
     @Test
@@ -109,7 +111,7 @@ class KintoExperimentSourceTest {
                     {
                         "id": "first-id",
                         "description": "first-description",
-                        "last_modified": 1523549895713,
+                        "last_modified": $pastTime,
                         "match": {
                             "locale_language": "eng",
                             "app_id": "first-appId",
@@ -146,7 +148,7 @@ class KintoExperimentSourceTest {
                 regions = listOf()
             ),
             buckets = Experiment.Buckets(0, 100),
-            lastModified = 1523549895713
+            lastModified = currentTime
         )
 
         val storageExperiment = createDefaultExperiment(
@@ -158,15 +160,15 @@ class KintoExperimentSourceTest {
                 regions = listOf("US")
             ),
             buckets = Experiment.Buckets(5, 5),
-            lastModified = 1523549890000
+            lastModified = pastTime
         )
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
-        val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549890000))
+        val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), pastTime))
         assertEquals(2, kintoExperiments.experiments.size)
         assertEquals(storageExperiment, kintoExperiments.experiments[0])
         assertEquals(kintoExperiment, kintoExperiments.experiments[1])
-        assertEquals(1523549895713, kintoExperiments.lastModified)
+        assertEquals(pastTime, kintoExperiments.lastModified)
     }
 
     @Test
@@ -182,7 +184,7 @@ class KintoExperimentSourceTest {
                 regions = listOf("US")
             ),
             buckets = Experiment.Buckets(5, 5),
-            lastModified = 1523549890000
+            lastModified = pastTime
         )
 
         val secondExperiment = createDefaultExperiment(
@@ -194,7 +196,7 @@ class KintoExperimentSourceTest {
                 regions = listOf("US")
             ),
             buckets = Experiment.Buckets(5, 5),
-            lastModified = 1523549890000
+            lastModified = pastTime
         )
 
         val json = """
@@ -203,22 +205,22 @@ class KintoExperimentSourceTest {
                     {
                         "deleted": true,
                         "id": "id",
-                        "last_modified": 1523549899999
+                        "last_modified": $currentTime
                     }
                 ]
             }
         """.trimIndent()
 
         `when`(httpClient.fetch(any())).thenReturn(
-                Response("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000",
+                Response("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=$pastTime",
                         200,
                         MutableHeaders(),
                         Response.Body(json.byteInputStream())))
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
-        val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment, secondExperiment), 1523549890000))
+        val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment, secondExperiment), pastTime))
         assertEquals(1, kintoExperiments.experiments.size)
-        assertEquals(1523549899999, kintoExperiments.lastModified)
+        assertEquals(currentTime, kintoExperiments.lastModified)
 
         val json2 = """
             {
@@ -232,9 +234,9 @@ class KintoExperimentSourceTest {
                         MutableHeaders(),
                         Response.Body(json2.byteInputStream())))
 
-        val experimentsResult = experimentSource.getExperiments(ExperimentsSnapshot(kintoExperiments.experiments, 1523549899999))
+        val experimentsResult = experimentSource.getExperiments(ExperimentsSnapshot(kintoExperiments.experiments, currentTime))
         assertEquals(1, experimentsResult.experiments.size)
-        assertEquals(1523549899999, experimentsResult.lastModified)
+        assertEquals(currentTime, experimentsResult.lastModified)
     }
 
     @Test
@@ -248,7 +250,7 @@ class KintoExperimentSourceTest {
                     {
                         "id": "first-id",
                         "description": "first-description",
-                        "last_modified": 1523549895713,
+                        "last_modified": $currentTime,
                         "match": {
                             "locale_language": "eng",
                             "app_id": "first-appId",
@@ -285,7 +287,7 @@ class KintoExperimentSourceTest {
                 regions = listOf()
             ),
             buckets = Experiment.Buckets(0, 100),
-            lastModified = 1523549895713
+            lastModified = currentTime
         )
 
         val storageExperiment = createDefaultExperiment(
@@ -297,20 +299,20 @@ class KintoExperimentSourceTest {
                 regions = listOf("UK")
             ),
             buckets = Experiment.Buckets(20, 180),
-            lastModified = 1523549800000
+            lastModified = pastTime
         )
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
-        val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549800000))
+        val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), pastTime))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(kintoExperiment, kintoExperiments.experiments[0])
-        assertEquals(1523549895713, kintoExperiments.lastModified)
+        assertEquals(currentTime, kintoExperiments.lastModified)
     }
 
     @Test
     fun getExperimentsEmptyDiff() {
         val httpClient = mock(Client::class.java)
-        val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549895713"
+        val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=$pastTime"
 
         val json = """
             {
@@ -333,13 +335,13 @@ class KintoExperimentSourceTest {
                 regions = listOf()
             ),
             buckets = Experiment.Buckets(0, 100),
-            lastModified = 1523549895713
+            lastModified = pastTime
         )
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
-        val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), 1523549895713))
+        val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment), pastTime))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(storageExperiment, kintoExperiments.experiments[0])
-        assertEquals(1523549895713, kintoExperiments.lastModified)
+        assertEquals(pastTime, kintoExperiments.lastModified)
     }
 }

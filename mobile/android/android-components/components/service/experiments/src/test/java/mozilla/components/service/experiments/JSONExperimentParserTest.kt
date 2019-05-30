@@ -17,6 +17,8 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class JSONExperimentParserTest {
+    private var currentTime = System.currentTimeMillis() / 1000
+
     @Test
     fun toJson() {
         val experiment = createDefaultExperiment(
@@ -37,14 +39,14 @@ class JSONExperimentParserTest {
                 Experiment.Branch("branch2", 2),
                 Experiment.Branch("branch3", 1)
             ),
-            lastModified = 1526991669
+            lastModified = currentTime
         )
 
         val jsonObject = JSONExperimentParser().toJson(experiment)
 
         assertEquals("sample-id", jsonObject.getString("id"))
         assertEquals("sample-description", jsonObject.getString("description"))
-        assertEquals(1526991669, jsonObject.getLong("last_modified"))
+        assertEquals(currentTime, jsonObject.getLong("last_modified"))
 
         val buckets = jsonObject.getJSONObject("buckets")
         assertEquals(0, buckets.getInt("start"))
@@ -131,7 +133,7 @@ class JSONExperimentParserTest {
                 "app_id": "sample-appId",
                 "locale_language": "es|en"
               },
-              "last_modified": 1526991669
+              "last_modified": $currentTime
             }
         """.trimIndent()
 
@@ -144,7 +146,7 @@ class JSONExperimentParserTest {
                 regions = listOf("US")
             ),
             buckets = Experiment.Buckets(0, 20),
-            lastModified = 1526991669
+            lastModified = currentTime
         )
         assertEquals(expectedExperiment, JSONExperimentParser().fromJson(JSONObject(json)))
     }
@@ -172,7 +174,7 @@ class JSONExperimentParserTest {
                 "app_id": "sample-appId",
                 "locale_language": "es|en"
               },
-              "last_modified": 1526991669,
+              "last_modified": $currentTime,
               "debug_tags": ["dummy-tag"]
             }
         """.trimIndent()
@@ -187,7 +189,7 @@ class JSONExperimentParserTest {
                 debugTags = listOf("dummy-tags")
             ),
             buckets = Experiment.Buckets(0, 20),
-            lastModified = 1526991669
+            lastModified = currentTime
         )
         assertEquals(expectedExperiment, JSONExperimentParser().fromJson(JSONObject(json)))
     }

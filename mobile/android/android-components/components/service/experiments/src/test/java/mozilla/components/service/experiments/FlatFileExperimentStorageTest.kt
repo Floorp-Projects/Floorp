@@ -20,6 +20,9 @@ import java.nio.file.Paths
 
 @RunWith(RobolectricTestRunner::class)
 class FlatFileExperimentStorageTest {
+    private var currentTime = System.currentTimeMillis() / 1000
+    private var pastTime = currentTime - 1000
+
     private fun checkSavedExperimentsJson(experimentsJson: JSONObject) {
         assertEquals(2, experimentsJson.length())
         val experimentsJsonArray = experimentsJson.getJSONArray("experiments")
@@ -28,7 +31,7 @@ class FlatFileExperimentStorageTest {
 
         assertEquals("sample-id", experiment.getString("id"))
         assertEquals("sample-description", experiment.getString("description"))
-        assertEquals(1526991669L, experiment.getLong("last_modified"))
+        assertEquals(pastTime, experiment.getLong("last_modified"))
 
         val buckets = experiment.getJSONObject("buckets")
         assertEquals(0, buckets.getInt("start"))
@@ -66,12 +69,12 @@ class FlatFileExperimentStorageTest {
                     Experiment.Branch("branch1", 2),
                     Experiment.Branch("branch2", 5)
                 ),
-                lastModified = 1526991669
+                lastModified = pastTime
             )
         )
         val file = File(testContext.filesDir, "experiments.json")
         assertFalse(file.exists())
-        FlatFileExperimentStorage(file).save(ExperimentsSnapshot(experiments, 1526991669))
+        FlatFileExperimentStorage(file).save(ExperimentsSnapshot(experiments, pastTime))
         assertTrue(file.exists())
         val experimentsJson = JSONObject(String(Files.readAllBytes(Paths.get(file.absolutePath))))
         checkSavedExperimentsJson(experimentsJson)
@@ -91,9 +94,9 @@ class FlatFileExperimentStorageTest {
                     Experiment.Branch("branch1", 2),
                     Experiment.Branch("branch2", 5)
                 ),
-                lastModified = 1526991669
+                lastModified = pastTime
             )
-        ), 1526991669))
+        ), pastTime))
 
         FlatFileExperimentStorage(file).save(ExperimentsSnapshot(listOf(
             createDefaultExperiment(
@@ -103,9 +106,9 @@ class FlatFileExperimentStorageTest {
                 branches = listOf(
                     Experiment.Branch("some-branch", 42)
                 ),
-                lastModified = 1526991700
+                lastModified = currentTime
             )
-        ), 1526991700))
+        ), currentTime))
 
         val loadedExperiments = FlatFileExperimentStorage(file).retrieve().experiments
 
@@ -115,7 +118,7 @@ class FlatFileExperimentStorageTest {
 
         assertEquals("sample-id-updated", loadedExperiment.id)
         assertEquals("sample-description-updated", loadedExperiment.description)
-        assertEquals(1526991700L, loadedExperiment.lastModified)
+        assertEquals(currentTime, loadedExperiment.lastModified)
         assertEquals(10, loadedExperiment.buckets.start)
         assertEquals(100, loadedExperiment.buckets.count)
         assertEquals(100, loadedExperiment.buckets.count)
@@ -150,10 +153,10 @@ class FlatFileExperimentStorageTest {
                     }
                   ],
                   "description": "sample-description",
-                  "last_modified": 1526991669
+                  "last_modified": $pastTime
                 }
               ],
-              "last_modified": 1526991669
+              "last_modified": $pastTime
             }
         """.trimIndent()
 
@@ -173,12 +176,12 @@ class FlatFileExperimentStorageTest {
         assertEquals("sample-appId", experiment.match.appId)
         assertEquals(0, experiment.buckets.start)
         assertEquals(20, experiment.buckets.count)
-        assertEquals(1526991669L, experiment.lastModified)
+        assertEquals(pastTime, experiment.lastModified)
         assertEquals(1, experiment.branches.size)
         assertEquals("some-branch", experiment.branches[0].name)
         assertEquals(42, experiment.branches[0].ratio)
 
-        assertEquals(1526991669L, experimentsResult.lastModified)
+        assertEquals(pastTime, experimentsResult.lastModified)
     }
 
     @Test

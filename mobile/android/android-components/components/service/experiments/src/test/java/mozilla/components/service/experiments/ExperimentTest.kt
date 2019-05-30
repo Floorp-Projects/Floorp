@@ -13,6 +13,8 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class ExperimentTest {
+    private var currentTime = System.currentTimeMillis() / 1000
+
     @Test
     fun `test equals()`() {
         val experiment = createDefaultExperiment(
@@ -21,7 +23,7 @@ class ExperimentTest {
             buckets = Experiment.Buckets(0, 100),
             branches = emptyList(),
             match = createDefaultMatcher(),
-            lastModified = 12345,
+            lastModified = currentTime,
             schemaModified = null)
 
         assertTrue(experiment == experiment)

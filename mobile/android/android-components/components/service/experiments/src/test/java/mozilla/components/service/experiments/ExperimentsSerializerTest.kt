@@ -13,13 +13,18 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-val experimentsJson = """
+@RunWith(RobolectricTestRunner::class)
+class ExperimentsSerializerTest {
+    private var currentTime = System.currentTimeMillis() / 1000
+    private var pastTime = currentTime - 1000
+
+    private val experimentsJson = """
 {
   "experiments": [
       {
           "id":"first",
           "description":"Description",
-          "last_modified":1523549895713,
+          "last_modified":$pastTime,
           "buckets":{
               "start":0,
               "count":100
@@ -45,7 +50,7 @@ val experimentsJson = """
       {
           "id":"second",
           "description":"SecondDescription",
-          "last_modified":1523549895749,
+          "last_modified":$currentTime,
           "buckets":{
               "start":5,
               "count":5
@@ -65,23 +70,21 @@ val experimentsJson = """
           }
       }
   ],
-  "last_modified": 1523549895749
+  "last_modified": $currentTime
 }
 """
 
-@RunWith(RobolectricTestRunner::class)
-class ExperimentsSerializerTest {
     @Test
     fun fromJsonValid() {
         val experimentsResult = ExperimentsSerializer().fromJson(experimentsJson)
         val experiments = experimentsResult.experiments
 
         assertEquals(2, experiments.size)
-        assertEquals(1523549895749, experimentsResult.lastModified)
+        assertEquals(currentTime, experimentsResult.lastModified)
 
         assertEquals("first", experiments[0].id)
         assertEquals("Description", experiments[0].description)
-        assertEquals(1523549895713, experiments[0].lastModified)
+        assertEquals(pastTime, experiments[0].lastModified)
 
         assertEquals("eng|es|deu|fra", experiments[0].match.localeLanguage)
         assertEquals("^org.mozilla.firefox_beta${'$'}", experiments[0].match.appId)
@@ -99,7 +102,7 @@ class ExperimentsSerializerTest {
 
         assertEquals("second", experiments[1].id)
         assertEquals("SecondDescription", experiments[1].description)
-        assertEquals(1523549895749, experiments[1].lastModified)
+        assertEquals(currentTime, experiments[1].lastModified)
 
         assertEquals("es|deu", experiments[1].match.localeLanguage)
         assertEquals("^org.mozilla.firefox${'$'}", experiments[1].match.appId)
@@ -140,7 +143,7 @@ class ExperimentsSerializerTest {
                 ),
                 buckets = Experiment.Buckets(0, 100),
                 branches = emptyList(),
-                lastModified = 1523549895713
+                lastModified = pastTime
             ),
             createDefaultExperiment(
                 id = "experiment-2-id",
@@ -155,20 +158,20 @@ class ExperimentsSerializerTest {
                     Experiment.Branch("branch2", 7)
                 ),
                 buckets = Experiment.Buckets(5, 5),
-                lastModified = 1523549895749
+                lastModified = currentTime
             )
         )
 
-        val json = JSONObject(ExperimentsSerializer().toJson(ExperimentsSnapshot(experiments, 1523549895749)))
+        val json = JSONObject(ExperimentsSerializer().toJson(ExperimentsSnapshot(experiments, currentTime)))
         assertEquals(2, json.length())
-        assertEquals(1523549895749, json.getLong("last_modified"))
+        assertEquals(currentTime, json.getLong("last_modified"))
         val experimentsArray = json.getJSONArray("experiments")
         assertEquals(2, experimentsArray.length())
 
         val firstExperiment = experimentsArray[0] as JSONObject
         assertEquals("experiment-1-id", firstExperiment.getString("id"))
         assertEquals("Description", firstExperiment.getString("description"))
-        assertEquals(1523549895713, firstExperiment.getLong("last_modified"))
+        assertEquals(pastTime, firstExperiment.getLong("last_modified"))
 
         val firstExperimentBuckets = firstExperiment.getJSONObject("buckets")
         assertEquals(0, firstExperimentBuckets.getInt("start"))
@@ -186,7 +189,7 @@ class ExperimentsSerializerTest {
         val secondExperiment = experimentsArray[1] as JSONObject
         assertEquals("experiment-2-id", secondExperiment.getString("id"))
         assertEquals("SecondDescription", secondExperiment.getString("description"))
-        assertEquals(1523549895749, secondExperiment.getLong("last_modified"))
+        assertEquals(currentTime, secondExperiment.getLong("last_modified"))
 
         val secondExperimentBuckets = secondExperiment.getJSONObject("buckets")
         assertEquals(5, secondExperimentBuckets.getInt("start"))
