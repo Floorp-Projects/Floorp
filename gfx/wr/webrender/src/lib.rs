@@ -115,7 +115,6 @@ mod renderer;
 mod resource_cache;
 mod scene;
 mod scene_builder;
-mod screen_capture;
 mod segment;
 mod shade;
 mod spatial_node;
@@ -213,12 +212,10 @@ pub use crate::device::{ProgramBinary, ProgramCache, ProgramCacheObserver};
 pub use crate::device::Device;
 pub use crate::frame_builder::ChasePrimitive;
 pub use crate::profiler::{ProfilerHooks, set_profiler_hooks};
-pub use crate::renderer::{
-    AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind, ExternalImage,
-    ExternalImageHandler, ExternalImageSource, GpuProfile, GraphicsApi, GraphicsApiInfo,
-    PipelineInfo, Renderer, RendererOptions, RenderResults, RendererStats, SceneBuilderHooks,
-    ThreadListener, ShaderPrecacheFlags, MAX_VERTEX_TEXTURE_WIDTH,
-};
-pub use crate::screen_capture::{AsyncScreenshotHandle, RecordedFrameHandle};
+pub use crate::renderer::{AsyncPropertySampler, AsyncScreenshotHandle, CpuProfile, DebugFlags};
+pub use crate::renderer::{OutputImageHandler, RendererKind, ExternalImage, ExternalImageHandler};
+pub use crate::renderer::{ExternalImageSource, GpuProfile, GraphicsApi, GraphicsApiInfo, PipelineInfo};
+pub use crate::renderer::{Renderer, RendererOptions, RenderResults, RendererStats, SceneBuilderHooks};
+pub use crate::renderer::{ThreadListener, ShaderPrecacheFlags, MAX_VERTEX_TEXTURE_WIDTH};
 pub use crate::shade::{Shaders, WrShaders};
 pub use api as webrender_api;

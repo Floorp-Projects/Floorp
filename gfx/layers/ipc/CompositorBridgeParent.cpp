@@ -2609,15 +2609,10 @@ int32_t RecordContentFrameTime(
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
     const TimeStamp& aRecordingStart) {
+  mCompositionRecorder.reset(new CompositionRecorder(aRecordingStart));
+
   if (mLayerManager) {
-    mCompositionRecorder = new CompositionRecorder(aRecordingStart);
-    mLayerManager->SetCompositionRecorder(do_AddRef(mCompositionRecorder));
-  } else if (mWrBridge) {
-    RefPtr<WebRenderCompositionRecorder> recorder =
-        new WebRenderCompositionRecorder(aRecordingStart,
-                                         mWrBridge->PipelineId());
-    mCompositionRecorder = recorder;
-    mWrBridge->SetCompositionRecorder(std::move(recorder));
+    mLayerManager->SetCompositionRecorder(mCompositionRecorder.get());
   }
 
   return IPC_OK();
@@ -2627,13 +2622,8 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording() {
   if (mLayerManager) {
     mLayerManager->SetCompositionRecorder(nullptr);
   }
-
-  // If we are using WebRender, the |RenderThread| will have a handle to this
-  // |WebRenderCompositionRecorder|, which it will release once the frames have
-  // been written.
-
   mCompositionRecorder->WriteCollectedFrames();
-  mCompositionRecorder = nullptr;
+  mCompositionRecorder.reset(nullptr);
   return IPC_OK();
 }
 
