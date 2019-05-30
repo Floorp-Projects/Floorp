@@ -8,6 +8,7 @@ class LoginList extends ReflectedFluentElement {
   constructor() {
     super();
     this._logins = [];
+    this._filter = "";
     this._selectedItem = null;
   }
 
@@ -33,32 +34,40 @@ class LoginList extends ReflectedFluentElement {
     for (let login of this._logins) {
       list.append(new LoginListItem(login));
     }
-    document.l10n.setAttributes(this, "login-list", {count: this._logins.length});
+
+    let visibleLoginCount = this._applyFilter();
+    document.l10n.setAttributes(this, "login-list", {count: visibleLoginCount});
+  }
+
+  _applyFilter() {
+    let matchingLoginGuids;
+    if (this._filter) {
+      matchingLoginGuids = this._logins.filter(login => {
+        return login.hostname.toLocaleLowerCase().includes(this._filter) ||
+               login.username.toLocaleLowerCase().includes(this._filter);
+      }).map(login => login.guid);
+    } else {
+      matchingLoginGuids = this._logins.map(login => login.guid);
+    }
+
+    for (let listItem of this.shadowRoot.querySelectorAll("login-list-item")) {
+      if (matchingLoginGuids.includes(listItem.getAttribute("guid"))) {
+        if (listItem.hidden) {
+          listItem.hidden = false;
+        }
+      } else if (!listItem.hidden) {
+        listItem.hidden = true;
+      }
+    }
+
+    return matchingLoginGuids.length;
   }
 
   handleEvent(event) {
     switch (event.type) {
       case "AboutLoginsFilterLogins": {
-        let query = event.detail.toLocaleLowerCase();
-        let matchingLoginGuids;
-        if (query) {
-          matchingLoginGuids = this._logins.filter(login => {
-            return login.hostname.toLocaleLowerCase().includes(query) ||
-                   login.username.toLocaleLowerCase().includes(query);
-          }).map(login => login.guid);
-        } else {
-          matchingLoginGuids = this._logins.map(login => login.guid);
-        }
-        for (let listItem of this.shadowRoot.querySelectorAll("login-list-item")) {
-          if (matchingLoginGuids.includes(listItem.getAttribute("guid"))) {
-            if (listItem.hidden) {
-              listItem.hidden = false;
-            }
-          } else if (!listItem.hidden) {
-            listItem.hidden = true;
-          }
-        }
-        document.l10n.setAttributes(this, "login-list", {count: matchingLoginGuids.length});
+        this._filter = event.detail.toLocaleLowerCase();
+        this.render();
         break;
       }
       case "AboutLoginsLoginSelected": {
