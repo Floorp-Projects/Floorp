@@ -4,12 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdint.h>
+
 namespace mozilla {
 namespace dom {
 
 void StartGamepadMonitoring() {}
 
 void StopGamepadMonitoring() {}
+
+void SetGamepadLightIndicatorColor(uint32_t, uint32_t, uint8_t, uint8_t, uint8_t) {}
 
 }  // namespace dom
 }  // namespace mozilla
