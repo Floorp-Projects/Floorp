@@ -51,7 +51,7 @@ window.onload = function() {
     const onUnexpectedClose = () => {
       ok(false, "Closed unexpectedly");
     };
-    client.addListener("closed", onUnexpectedClose);
+    client.on("closed", onUnexpectedClose);
 
     await client.connect();
 
@@ -60,7 +60,7 @@ window.onload = function() {
     const reply = await client.mainRoot.echo({ message });
     is(reply.message, message, "Echo message matches");
 
-    client.removeListener("closed", onUnexpectedClose);
+    client.off("closed", onUnexpectedClose);
     transport.close();
     listener.close();
     is(DebuggerServer.listeningSockets, 0, "0 listening sockets");

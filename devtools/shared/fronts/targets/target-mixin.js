@@ -410,13 +410,13 @@ function TargetMixin(parentClass) {
       );
       this.threadClient = threadClient;
 
-      this.threadClient.addListener("newSource", this._onNewSource);
+      this.threadClient.on("newSource", this._onNewSource);
 
       return [response, threadClient];
     }
 
     // Listener for "newSource" event fired by the thread actor
-    _onNewSource(type, packet) {
+    _onNewSource(packet) {
       this.emit("source-updated", packet);
     }
 
@@ -444,7 +444,7 @@ function TargetMixin(parentClass) {
      * Setup listeners for remote debugging, updating existing ones as necessary.
      */
     _setupRemoteListeners() {
-      this.client.addListener("closed", this.destroy);
+      this.client.on("closed", this.destroy);
 
       this.on("tabDetached", this.destroy);
     }
@@ -454,12 +454,12 @@ function TargetMixin(parentClass) {
      */
     _teardownRemoteListeners() {
       // Remove listeners set in _setupRemoteListeners
-      this.client.removeListener("closed", this.destroy);
+      this.client.off("closed", this.destroy);
       this.off("tabDetached", this.destroy);
 
       // Remove listeners set in attachThread
       if (this.threadClient) {
-        this.threadClient.removeListener("newSource", this._onNewSource);
+        this.threadClient.off("newSource", this._onNewSource);
       }
 
       // Remove listeners set in attachConsole

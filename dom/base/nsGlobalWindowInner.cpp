@@ -4449,7 +4449,7 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   if (ShouldPartitionStorage(access)) {
     if (!mDoc) {
       access = StorageAccess::eDeny;
-    } else if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+    } else if (!StoragePartitioningEnabled(access, mDoc->CookieSettings())) {
       nsCOMPtr<nsIURI> uri;
       Unused << mDoc->NodePrincipal()->GetURI(getter_AddRefs(uri));
       static const char* kPrefName =

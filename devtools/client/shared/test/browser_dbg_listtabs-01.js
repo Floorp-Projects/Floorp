@@ -77,7 +77,7 @@ function testAttachRemovedTab() {
   return removeTab(gTab2).then(() => {
     const deferred = promise.defer();
 
-    gClient.addListener("paused", () => {
+    gClient.on("paused", () => {
       ok(false, "Attaching to an exited target actor shouldn't generate a pause.");
       deferred.reject();
     });

@@ -43,6 +43,7 @@ pub enum PictureCompositeKey {
     SrgbToLinear,
     LinearToSrgb,
     ComponentTransfer(ItemUid),
+    Flood(ColorU),
 
     // MixBlendMode
     Multiply,
@@ -123,6 +124,7 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
                         PictureCompositeKey::ColorMatrix(quantized_values)
                     }
                     Filter::ComponentTransfer => unreachable!(),
+                    Filter::Flood(color) => PictureCompositeKey::Flood(color.into()),
                 }
             }
             Some(PictureCompositeMode::ComponentTransferFilter(handle)) => {

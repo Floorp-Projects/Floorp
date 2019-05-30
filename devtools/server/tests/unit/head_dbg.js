@@ -396,7 +396,6 @@ async function attachTestThread(client, title, callback = () => {}) {
     autoBlackBox: true,
   });
   Assert.equal(threadClient.state, "paused", "Thread client is paused");
-  Assert.equal(response.type, "paused");
   Assert.ok("why" in response);
   Assert.equal(response.why.type, "attached");
   callback(response, targetFront, threadClient);
@@ -410,7 +409,6 @@ async function attachTestThread(client, title, callback = () => {}) {
 async function attachTestTabAndResume(client, title, callback = () => {}) {
   const { targetFront, threadClient } = await attachTestThread(client, title);
   const response = await threadClient.resume();
-  Assert.equal(response.type, "resumed");
   callback(response, targetFront, threadClient);
   return { targetFront, threadClient };
 }
@@ -615,25 +613,25 @@ const assert = Assert.ok.bind(Assert);
 /**
  * Create a promise that is resolved on the next occurence of the given event.
  *
- * @param DebuggerClient client
+ * @param ThreadClient threadClient
  * @param String event
  * @param Function predicate
  * @returns Promise
  */
-function waitForEvent(client, type, predicate) {
+function waitForEvent(threadClient, type, predicate) {
   if (!predicate) {
-    return client.addOneTimeListener(type);
+    return threadClient.once(type);
   }
 
   return new Promise(function(resolve) {
-    function listener(type, packet) {
+    function listener(packet) {
       if (!predicate(packet)) {
         return;
       }
-      client.removeListener(listener);
+      threadClient.off(type, listener);
       resolve(packet);
     }
-    client.addListener(type, listener);
+    threadClient.on(type, listener);
   });
 }
 
@@ -650,11 +648,11 @@ function waitForEvent(client, type, predicate) {
  * and finally yield the promise.
  *
  * @param Function action
- * @param DebuggerClient client
+ * @param ThreadClient threadClient
  * @returns Promise
  */
-function executeOnNextTickAndWaitForPause(action, client) {
-  const paused = waitForPause(client);
+function executeOnNextTickAndWaitForPause(action, threadClient) {
+  const paused = waitForPause(threadClient);
   executeSoon(action);
   return paused;
 }
@@ -688,8 +686,8 @@ function interrupt(threadClient) {
  * @param ThreadClient threadClient
  * @returns Promise
  */
-function resumeAndWaitForPause(client, threadClient) {
-  const paused = waitForPause(client);
+function resumeAndWaitForPause(threadClient) {
+  const paused = waitForPause(threadClient);
   return resume(threadClient).then(() => paused);
 }
 
@@ -697,13 +695,12 @@ function resumeAndWaitForPause(client, threadClient) {
  * Resume JS execution for a single step and wait for the pause after the step
  * has been taken.
  *
- * @param DebuggerClient client
  * @param ThreadClient threadClient
  * @returns Promise
  */
-function stepIn(client, threadClient) {
+function stepIn(threadClient) {
   dumpn("Stepping in.");
-  const paused = waitForPause(client);
+  const paused = waitForPause(threadClient);
   return threadClient.stepIn()
     .then(() => paused);
 }
@@ -712,14 +709,13 @@ function stepIn(client, threadClient) {
  * Resume JS execution for a step over and wait for the pause after the step
  * has been taken.
  *
- * @param DebuggerClient client
  * @param ThreadClient threadClient
  * @returns Promise
  */
-function stepOver(client, threadClient) {
+function stepOver(threadClient) {
   dumpn("Stepping over.");
   return threadClient.stepOver()
-    .then(() => waitForPause(client));
+    .then(() => waitForPause(threadClient));
 }
 
 /**
@@ -730,10 +726,10 @@ function stepOver(client, threadClient) {
  * @param ThreadClient threadClient
  * @returns Promise
  */
-function stepOut(client, threadClient) {
+function stepOut(threadClient) {
   dumpn("Stepping out.");
   return threadClient.stepOut()
-    .then(() => waitForPause(client));
+    .then(() => waitForPause(threadClient));
 }
 
 /**

@@ -30,7 +30,7 @@ function run_test() {
 }
 
 function test_named_function() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");
@@ -50,7 +50,7 @@ function test_named_function() {
 }
 
 function test_inferred_name_function() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");
@@ -73,7 +73,7 @@ function test_inferred_name_function() {
 }
 
 function test_anonymous_function() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const args = packet.frame.arguments;
 
     Assert.equal(args[0].class, "Function");

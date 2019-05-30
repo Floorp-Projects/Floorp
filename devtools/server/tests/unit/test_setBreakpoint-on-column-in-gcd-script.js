@@ -2,7 +2,7 @@
 
 const SOURCE_URL = getFileUrl("setBreakpoint-on-column-in-gcd-script.js");
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee, targetFront }) => {
   const promise = waitForNewSource(threadClient, SOURCE_URL);
   loadSubScriptWithOptions(SOURCE_URL, {target: debuggee, ignoreCache: true});
   Cu.forceGC(); Cu.forceGC(); Cu.forceGC();
@@ -16,7 +16,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client, targetFront }
     reload(targetFront).then(function() {
       loadSubScriptWithOptions(SOURCE_URL, {target: debuggee, ignoreCache: true});
     });
-  }, client);
+  }, threadClient);
   Assert.equal(packet.type, "paused");
   const why = packet.why;
   Assert.equal(why.type, "breakpoint");

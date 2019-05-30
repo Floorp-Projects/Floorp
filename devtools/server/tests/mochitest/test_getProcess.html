@@ -57,7 +57,7 @@ function runTests() {
   function listProcess() {
     // Call listProcesses in order to start receiving new process notifications
     client.mainRoot.on("processListChanged", function listener() {
-      client.removeListener("processListChanged", listener);
+      client.off("processListChanged", listener);
       ok(true, "Received processListChanged event");
       getProcess();
     });

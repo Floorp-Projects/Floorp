@@ -62,6 +62,7 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/FailedCertSecurityInfoBinding.h"
 #include <bitset>  // for member
 
 // windows.h #defines CreateEvent
@@ -2241,6 +2242,20 @@ class Document : public nsINode,
    * exists. This is only relevant to error pages.
    */
   nsIChannel* GetFailedChannel() const { return mFailedChannel; }
+
+  /**
+   * This function checks if the document that is trying to access
+   * GetFailedCertSecurityInfo is a trusted cert error page or not.
+   */
+  static bool CallerIsTrustedAboutCertError(JSContext* aCx, JSObject* aObject);
+
+  /**
+   * Get the security info (i.e. certificate validity, errorCode, etc) for a
+   * failed Channel. This property is only exposed for about:certerror
+   * documents.
+   */
+  void GetFailedCertSecurityInfo(mozilla::dom::FailedCertSecurityInfo& aInfo,
+                                 ErrorResult& aRv);
 
   /**
    * Set the channel that failed to load and resulted in an error page.

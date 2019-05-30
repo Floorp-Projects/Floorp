@@ -613,6 +613,12 @@ impl YamlHelper for Yaml {
                     matrix.clone_from_slice(&m);
                     Some(FilterOp::ColorMatrix(matrix))
                 }
+                ("flood", ref args, _) if args.len() == 1 => {
+                    let str = format!("---\ncolor: {}\n", args[0]);
+                    let mut yaml_doc = YamlLoader::load_from_str(&str).expect("Failed to parse flood");
+                    let yaml = yaml_doc.pop().unwrap();
+                    Some(FilterOp::Flood(yaml["color"].as_colorf().unwrap()))
+                }
                 (_, _, _) => None,
             }
         } else {

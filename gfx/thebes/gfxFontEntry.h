@@ -407,6 +407,15 @@ class gfxFontEntry {
   // This is only called on platforms where we use FreeType.
   virtual FT_MM_Var* GetMMVar() { return nullptr; }
 
+  // Return true if the font has a 'trak' table (and we can successfully
+  // interpret it), otherwise false. This will load and cache the table
+  // the first time it is called.
+  bool HasTrackingTable();
+
+  // Return the tracking (in font units) to be applied for the given size.
+  // (This is a floating-point number because of possible interpolation.)
+  float TrackingForCSSPx(float aSize) const;
+
   nsCString mName;
   nsCString mFamilyName;
 
@@ -527,6 +536,11 @@ class gfxFontEntry {
     return NS_ERROR_FAILURE;
   }
 
+  // Helper for HasTrackingTable; check/parse the table and cache pointers
+  // to the subtables we need. Returns false on failure, in which case the
+  // table is unusable.
+  bool ParseTrakTable();
+
   // lookup the cmap in cached font data
   virtual already_AddRefed<gfxCharacterMap> GetCMAPFromFontInfo(
       FontInfoData* aFontInfoData, uint32_t& aUVSOffset);
@@ -566,6 +580,17 @@ class gfxFontEntry {
   // graphite table-release callback
   nsDataHashtable<nsPtrHashKey<const void>, void*>* mGrTableMap = nullptr;
 
+  // For AAT font, a strong reference to the 'trak' table (if present).
+  hb_blob_t* const kTrakTableUninitialized = (hb_blob_t* const)(intptr_t(-1));
+  hb_blob_t* mTrakTable = kTrakTableUninitialized;
+  bool TrakTableInitialized() const {
+    return mTrakTable != kTrakTableUninitialized;
+  }
+
+  // Cached pointers to tables within 'trak', initialized by ParseTrakTable.
+  const mozilla::AutoSwap_PRInt16* mTrakValues;
+  const mozilla::AutoSwap_PRInt32* mTrakSizeTable;
+
   // number of current users of this entry's mGrFace
   nsrefcnt mGrFaceRefCnt = 0;
 
@@ -583,6 +608,8 @@ class gfxFontEntry {
   // Font's unitsPerEm from the 'head' table, if available (will be set to
   // kInvalidUPEM for non-sfnt font formats)
   uint16_t mUnitsPerEm = 0;
+
+  uint16_t mNumTrakSizes;
 
  private:
   /**

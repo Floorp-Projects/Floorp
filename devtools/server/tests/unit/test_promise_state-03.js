@@ -19,7 +19,7 @@ function run_test() {
       function(response, targetFront, threadClient) {
         (async function() {
           const packet = await executeOnNextTickAndWaitForPause(
-            () => evalCode(debuggee), client);
+            () => evalCode(debuggee), threadClient);
 
           const grip = packet.frame.environment.bindings.variables.p;
           ok(grip.value.preview);

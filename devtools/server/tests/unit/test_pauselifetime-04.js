@@ -31,7 +31,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const args = packet.frame.arguments;
     const objActor1 = args[0].actor;
 
