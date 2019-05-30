@@ -15,7 +15,6 @@ interface BrowsingModeManager {
 
     val isPrivate: Boolean
     var mode: Mode
-
 }
 
 interface BrowserModeStorage {
@@ -35,7 +34,6 @@ fun Settings.createBrowserModeStorage(): BrowserModeStorage = object : BrowserMo
     override fun setMode(mode: BrowsingModeManager.Mode) {
         this@createBrowserModeStorage.setPrivateMode(mode == BrowsingModeManager.Mode.Private)
     }
-
 }
 
 class DefaultBrowsingModeManager(

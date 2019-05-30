@@ -47,7 +47,6 @@ open class HomeActivity : AppCompatActivity() {
 
     lateinit var themeManager: ThemeManager
 
-
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
     }
@@ -258,20 +257,26 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun createBrowsingModeManager(): BrowsingModeManager {
-        return if (isCustomTab) CustomTabBrowsingModeManager()
-               else DefaultBrowsingModeManager(Settings.getInstance(this).createBrowserModeStorage()) {
-            themeManager.setTheme(when (it.isPrivate()) {
-                true -> ThemeManager.Theme.Private
-                false -> ThemeManager.Theme.Normal
-            })
+        return if (isCustomTab) {
+            CustomTabBrowsingModeManager()
+        } else {
+            DefaultBrowsingModeManager(Settings.getInstance(this).createBrowserModeStorage()) {
+                themeManager.setTheme(when (it.isPrivate()) {
+                    true -> ThemeManager.Theme.Private
+                    false -> ThemeManager.Theme.Normal
+                })
+            }
         }
     }
 
     private fun createThemeManager(currentTheme: ThemeManager.Theme): ThemeManager {
-        return if (isCustomTab) CustomTabThemeManager()
-               else DefaultThemeManager(currentTheme) {
-            setTheme(it)
-            recreate()
+        return if (isCustomTab) {
+            CustomTabThemeManager()
+        } else {
+            DefaultThemeManager(currentTheme) {
+                setTheme(it)
+                recreate()
+            }
         }
     }
 
