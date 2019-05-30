@@ -9,6 +9,7 @@
 
 #include "gc/WeakMap.h"
 
+#include "gc/Zone.h"
 #include "js/TraceKind.h"
 #include "vm/JSContext.h"
 

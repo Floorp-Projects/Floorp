@@ -310,10 +310,13 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 
+#include "gc/GCEnum.h"
 #include "js/HashTable.h"
+#include "threading/ProtectedData.h"
 
 namespace js {
 
+class AutoLockGC;
 class ZoneAllocPolicy;
 
 namespace gc {
@@ -661,7 +664,7 @@ class MemoryTracker {
   ~MemoryTracker();
   void fixupAfterMovingGC();
 
-  void adopt(MemoryTracker& other, Zone* newZone);
+  void adopt(MemoryTracker& other);
 
   void trackMemory(Cell* cell, size_t nbytes, MemoryUse use);
   void untrackMemory(Cell* cell, size_t nbytes, MemoryUse use);
