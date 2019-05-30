@@ -1,4 +1,4 @@
-import {MessageContext} from "fluent";
+import {FluentBundle} from "fluent";
 
 /**
  * Properties that allow rich text MUST be added to this list.
@@ -21,10 +21,10 @@ export const RICH_TEXT_KEYS = Object.keys(RICH_TEXT_CONFIG);
  * Generates an array of messages suitable for fluent's localization provider
  * including all needed strings for rich text.
  * @param {object} content A .content object from an ASR message (i.e. message.content)
- * @returns {MessageContext[]} A array containing the fluent message context
+ * @returns {FluentBundle[]} A array containing the fluent message context
  */
-export function generateMessages(content) {
-  const cx = new MessageContext("en-US");
+export function generateBundles(content) {
+  const bundle = new FluentBundle("en-US");
 
   RICH_TEXT_KEYS.forEach(key => {
     const attrs = RICH_TEXT_CONFIG[key];
@@ -34,7 +34,7 @@ export function generateMessages(content) {
       const attr = attrsToTry.pop();
       string = content[attr];
     }
-    cx.addMessages(`${key} = ${string}`);
+    bundle.addMessages(`${key} = ${string}`);
   });
-  return [cx];
+  return [bundle];
 }

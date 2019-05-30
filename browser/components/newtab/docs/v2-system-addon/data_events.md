@@ -537,9 +537,6 @@ perf: {
 
   // Whether the page is preloaded or not.
   "is_preloaded": [true|false],
-
-  // Whether the page is prerendered or not.
-  "is_prerendered": [true|false]
 }
 ```
 

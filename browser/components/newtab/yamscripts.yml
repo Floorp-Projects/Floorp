@@ -17,7 +17,7 @@ scripts:
     locales: pontoon-to-json --src $npm_package_config_locales_dir --dest data
     webpack: webpack --config webpack.system-addon.config.js
     css: node-sass content-src/styles -o css
-    html: rimraf prerendered && webpack --config webpack.prerender.config.js && node ./bin/render-activity-stream-html.js
+    html: rimraf prerendered && node ./bin/render-activity-stream-html.js
 
 # buildmc: Export code to mozilla central
   buildmc:

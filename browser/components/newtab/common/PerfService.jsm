@@ -15,17 +15,10 @@ if (typeof Services !== "undefined") {
   // Borrow the high-resolution timer from the hidden window....
   // eslint-disable-next-line block-scoped-var
   usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
-} else if (typeof performance !== "undefined") {
+} else {
   // we must be running in content space
   // eslint-disable-next-line no-undef
   usablePerfObj = performance;
-} else {
-  // This is a dummy object so this file doesn't crash in the node prerendering
-  // task.
-  usablePerfObj = {
-    now() {},
-    mark() {},
-  };
 }
 
 function _PerfService(options) {

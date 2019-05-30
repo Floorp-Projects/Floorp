@@ -254,7 +254,6 @@ and losing focus. | :one:
 | `block` | [Optional] An integer to record the 0-based index when user blocks a Pocket tile. | :one:
 | `pocket` | [Optional] An integer to record the 0-based index when user saves a Pocket tile to Pocket. | :one:
 | `user_prefs` | [Required] The encoded integer of user's preferences. | :one: & :four:
-| `is_prerendered` | [Required] A boolean to signify whether the page is prerendered or not | :one:
 | `is_preloaded` | [Required] A boolean to signify whether the page is preloaded or not | :one:
 | `icon_type` | [Optional] ("tippytop", "rich_icon", "screenshot_with_icon", "screenshot", "no_image") | :one:
 | `region` | [Optional] A string maps to pref "browser.search.region", which is essentially the two letter ISO 3166-1 country code populated by the Firefox search service. Note that: 1). it reports "OTHER" for those regions with smaller Firefox user base (less than 10000) so that users cannot be uniquely identified; 2). it reports "UNSET" if this pref is missing; 3). it reports "EMPTY" if the value of this pref is an empty string. | :one:
