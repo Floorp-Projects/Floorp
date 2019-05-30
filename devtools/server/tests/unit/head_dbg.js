@@ -396,7 +396,6 @@ async function attachTestThread(client, title, callback = () => {}) {
     autoBlackBox: true,
   });
   Assert.equal(threadClient.state, "paused", "Thread client is paused");
-  Assert.equal(response.type, "paused");
   Assert.ok("why" in response);
   Assert.equal(response.why.type, "attached");
   callback(response, targetFront, threadClient);
@@ -410,7 +409,6 @@ async function attachTestThread(client, title, callback = () => {}) {
 async function attachTestTabAndResume(client, title, callback = () => {}) {
   const { targetFront, threadClient } = await attachTestThread(client, title);
   const response = await threadClient.resume();
-  Assert.equal(response.type, "resumed");
   callback(response, targetFront, threadClient);
   return { targetFront, threadClient };
 }
@@ -615,14 +613,14 @@ const assert = Assert.ok.bind(Assert);
 /**
  * Create a promise that is resolved on the next occurence of the given event.
  *
- * @param ThreadClient client
+ * @param ThreadClient threadClient
  * @param String event
  * @param Function predicate
  * @returns Promise
  */
-function waitForEvent(client, type, predicate) {
+function waitForEvent(threadClient, type, predicate) {
   if (!predicate) {
-    return client.addOneTimeListener(type);
+    return threadClient.once(type);
   }
 
   return new Promise(function(resolve) {
@@ -630,10 +628,10 @@ function waitForEvent(client, type, predicate) {
       if (!predicate(packet)) {
         return;
       }
-      client.removeListener(type, listener);
+      threadClient.off(type, listener);
       resolve(packet);
     }
-    client.addListener(type, listener);
+    threadClient.on(type, listener);
   });
 }
 

@@ -119,9 +119,9 @@ client.attachThread(response.threadActor).then(function([response, threadClient]
   }
 
   // Attach listeners for thread events.
-  threadClient.addListener("paused", onPause);
-  threadClient.addListener("resumed", fooListener);
-  threadClient.addListener("detached", fooListener);
+  threadClient.on("paused", onPause);
+  threadClient.on("resumed", fooListener);
+  threadClient.on("detached", fooListener);
 
   // Resume the thread.
   threadClient.resume();
@@ -182,9 +182,9 @@ function debugTab() {
       // Attach to the thread (context).
       targetFront.attachThread().then(([response, threadClient]) => {
         // Attach listeners for thread events.
-        threadClient.addListener("paused", onPause);
-        threadClient.addListener("resumed", fooListener);
-        threadClient.addListener("detached", fooListener);
+        threadClient.on("paused", onPause);
+        threadClient.on("resumed", fooListener);
+        threadClient.on("detached", fooListener);
 
         // Resume the thread.
         threadClient.resume();

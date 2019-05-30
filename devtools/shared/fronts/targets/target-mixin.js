@@ -410,13 +410,13 @@ function TargetMixin(parentClass) {
       );
       this.threadClient = threadClient;
 
-      this.threadClient.addListener("newSource", this._onNewSource);
+      this.threadClient.on("newSource", this._onNewSource);
 
       return [response, threadClient];
     }
 
     // Listener for "newSource" event fired by the thread actor
-    _onNewSource(type, packet) {
+    _onNewSource(packet) {
       this.emit("source-updated", packet);
     }
 
@@ -459,7 +459,7 @@ function TargetMixin(parentClass) {
 
       // Remove listeners set in attachThread
       if (this.threadClient) {
-        this.threadClient.removeListener("newSource", this._onNewSource);
+        this.threadClient.off("newSource", this._onNewSource);
       }
 
       // Remove listeners set in attachConsole

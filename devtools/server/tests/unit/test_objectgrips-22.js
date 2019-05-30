@@ -11,7 +11,7 @@ registerCleanupFunction(() => {
 
 add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   await new Promise(function(resolve) {
-    threadClient.addOneTimeListener("paused", async function(event, packet) {
+    threadClient.once("paused", async function(packet) {
       const [grip] = packet.frame.arguments;
       const objClient = threadClient.pauseGrip(grip);
       const {iterator} = await objClient.enumSymbols();

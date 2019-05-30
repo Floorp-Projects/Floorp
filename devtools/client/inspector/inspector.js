@@ -157,8 +157,8 @@ Inspector.prototype = {
       }
       this._replayResumed = !dbg.isPaused();
 
-      this._target.threadClient.addListener("paused", this.handleThreadState);
-      this._target.threadClient.addListener("resumed", this.handleThreadState);
+      this._target.threadClient.on("paused", this.handleThreadState);
+      this._target.threadClient.on("resumed", this.handleThreadState);
     }
 
     await Promise.all([
@@ -1140,8 +1140,8 @@ Inspector.prototype = {
   /**
    * When replaying, reset the inspector whenever the target paused or unpauses.
    */
-  handleThreadState(event) {
-    this._replayResumed = event != "paused";
+  handleThreadState(packet) {
+    this._replayResumed = packet.type != "paused";
     this.onNewRoot();
   },
 
@@ -1378,6 +1378,9 @@ Inspector.prototype = {
     if (this._panelDestroyer) {
       return this._panelDestroyer;
     }
+
+    this._target.threadClient.off("paused", this.handleThreadState);
+    this._target.threadClient.off("resumed", this.handleThreadState);
 
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);

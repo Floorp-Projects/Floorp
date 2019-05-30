@@ -34,7 +34,7 @@ function run_test() {
 }
 
 function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const args = packet.frame.arguments;
 
     const objClient = gThreadClient.pauseGrip(args[0]);

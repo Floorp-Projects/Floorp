@@ -117,9 +117,9 @@ class WebReplayPlayer extends Component {
 
   componentDidMount() {
     this.overlayWidth = this.updateOverlayWidth();
-    this.threadClient.addListener("paused", this.onPaused.bind(this));
-    this.threadClient.addListener("resumed", this.onResumed.bind(this));
-    this.threadClient.addListener("progress", this.onProgress.bind(this));
+    this.threadClient.on("paused", this.onPaused.bind(this));
+    this.threadClient.on("resumed", this.onResumed.bind(this));
+    this.threadClient.on("progress", this.onProgress.bind(this));
 
     this.toolbox.getPanelWhenReady("webconsole").then(panel => {
       const consoleFrame = panel.hud.ui;
@@ -179,7 +179,7 @@ class WebReplayPlayer extends Component {
     return ((1 - ratio) * maxSize) + minSize;
   }
 
-  onPaused(_, packet) {
+  onPaused(packet) {
     if (packet && packet.recordingEndpoint) {
       const { executionPoint, recordingEndpoint } = packet;
       const closestMessage = getClosestMessage(this.state.messages, executionPoint);
@@ -195,11 +195,11 @@ class WebReplayPlayer extends Component {
     }
   }
 
-  onResumed(_, packet) {
+  onResumed(packet) {
     this.setState({ paused: false, closestMessage: null });
   }
 
-  onProgress(_, packet) {
+  onProgress(packet) {
     const { recording, executionPoint } = packet;
     log(`progress: ${recording ? "rec" : "play"} ${executionPoint.progress}`);
 

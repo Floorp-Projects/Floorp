@@ -14,13 +14,13 @@ add_task(threadClientTest(({ threadClient, debuggee, client }) => {
     debuggee.console = { log: x => void x };
 
     // Inline all paused listeners as promises won't resolve when paused
-    threadClient.addOneTimeListener("paused", async (event1, packet1) => {
+    threadClient.once("paused", async (packet1) => {
       await setBreakpoint(packet1, threadClient, client);
 
-      threadClient.addOneTimeListener("paused", (event2, { why }) => {
+      threadClient.once("paused", ({ why }) => {
         Assert.equal(why.type, "breakpoint");
 
-        threadClient.addOneTimeListener("paused", (event3, packet3) => {
+        threadClient.once("paused", (packet3) => {
           testDbgStatement(packet3);
           resolve();
         });
@@ -49,7 +49,7 @@ function setBreakpoint(packet, threadClient, client) {
       threadClient,
       packet.frame.where.actor
     );
-    threadClient.addOneTimeListener("resumed", resolve);
+    threadClient.once("resumed", resolve);
 
     threadClient.setBreakpoint({ sourceUrl: source.url, line: 3 }, {});
     threadClient.resume();
