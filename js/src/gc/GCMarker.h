@@ -7,6 +7,8 @@
 #ifndef gc_GCMarker_h
 #define gc_GCMarker_h
 
+#include "mozilla/Maybe.h"
+
 #include "ds/OrderedHashTable.h"
 #include "js/SliceBudget.h"
 #include "js/TracingAPI.h"
@@ -297,6 +299,15 @@ class GCMarker : public JSTracer {
 
   bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
+  // The mark queue is a testing-only feature for controlling mark ordering and
+  // yield timing.
+  enum MarkQueueProgress {
+    QueueYielded,   // End this incremental GC slice, if possible
+    QueueComplete,  // Done with the queue
+    QueueSuspended  // Continue the GC without ending the slice
+  };
+  MarkQueueProgress processMarkQueue();
+
   MOZ_MUST_USE bool markUntilBudgetExhausted(SliceBudget& budget);
 
   void setGCMode(JSGCMode mode) {
@@ -428,11 +439,31 @@ class GCMarker : public JSTracer {
   /* Assert that start and stop are called with correct ordering. */
   MainThreadData<bool> started;
 
+  /* The test marking queue might want to be marking a particular color. */
+  mozilla::Maybe<js::gc::MarkColor> queueMarkColor;
+
   /*
    * If this is true, all marked objects must belong to a compartment being
    * GCed. This is used to look for compartment bugs.
    */
   MainThreadData<bool> strictCompartmentChecking;
+
+ public:
+  /*
+   * List of objects to mark at the beginning of a GC. May also contains string
+   * directives to change mark color or wait until different phases of the GC.
+   *
+   * This is a WeakCache because not everything in this list is guaranteed to
+   * end up marked (eg if you insert an object from an already-processed sweep
+   * group in the middle of an incremental GC). Also, the mark queue is not
+   * used during shutdown GCs. In either case, unmarked objects may need to be
+   * discarded.
+   */
+
+  JS::WeakCache<GCVector<JS::Heap<JS::Value>, 0, SystemAllocPolicy>> markQueue;
+
+  /* Position within the test mark queue. */
+  size_t queuePos;
 #endif  // DEBUG
 };
 
