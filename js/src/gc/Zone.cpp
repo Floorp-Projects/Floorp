@@ -63,7 +63,7 @@ JS::Zone::Zone(JSRuntime* rt)
       data(this, nullptr),
       isSystem(this, false),
 #ifdef DEBUG
-      gcLastSweepGroupIndex(0),
+      gcSweepGroupIndex(0),
 #endif
       jitZone_(this, nullptr),
       gcScheduled_(false),
