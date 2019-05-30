@@ -1544,8 +1544,6 @@ pref("javascript.options.streams", true);
 
 pref("javascript.options.experimental.fields", false);
 
-pref("javascript.options.experimental.await_fix", false);
-
 // Dynamic module import.
 pref("javascript.options.dynamicImport", true);
 

@@ -3319,7 +3319,7 @@ VARCACHE_PREF(
   Live,
   "javascript.options.experimental.await_fix",
   javascript_options_experimental_await_fix,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, true
 )
 
 // nsJSEnvironmentObserver observes the memory-pressure notifications and
