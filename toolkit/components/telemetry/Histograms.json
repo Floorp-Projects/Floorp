@@ -14634,6 +14634,20 @@
     "bug_numbers": [1499418],
     "description": "GeckoView: Time taken to load a page in ms. This includes all static contents, no dynamic content. Loading of about: pages is not counted."
   },
+  "GV_PAGE_RELOAD_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": [
+      "geckoview-team@mozilla.com",
+      "sefeng@mozilla.com",
+      "perfteam@mozilla.com"
+    ],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1549519],
+    "description": "GeckoView: Time taken to reload a page in ms. This includes all static contents, no dynamic content. Loading of about: pages is not counted."
+  },
   "GV_STARTUP_RUNTIME_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": [
