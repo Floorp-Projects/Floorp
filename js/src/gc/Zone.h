@@ -301,7 +301,7 @@ class Zone : public JS::shadow::Zone,
 
   // For testing purposes, return the index of the sweep group which this zone
   // was swept in in the last GC.
-  unsigned lastSweepGroupIndex() { return gcLastSweepGroupIndex; }
+  unsigned lastSweepGroupIndex() { return gcSweepGroupIndex; }
 #endif
 
   void sweepBreakpoints(js::FreeOp* fop);
@@ -625,7 +625,7 @@ class Zone : public JS::shadow::Zone,
   js::ZoneData<bool> isSystem;
 
 #ifdef DEBUG
-  js::MainThreadData<unsigned> gcLastSweepGroupIndex;
+  js::MainThreadData<unsigned> gcSweepGroupIndex;
 #endif
 
   static js::HashNumber UniqueIdToHash(uint64_t uid);

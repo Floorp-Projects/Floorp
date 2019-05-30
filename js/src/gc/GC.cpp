@@ -5081,10 +5081,13 @@ void GCRuntime::groupZonesForSweeping(JS::GCReason reason) {
   }
 
 #ifdef DEBUG
+  unsigned idx = sweepGroupIndex;
   for (Zone* head = currentSweepGroup; head; head = head->nextGroup()) {
     for (Zone* zone = head; zone; zone = zone->nextNodeInGroup()) {
       MOZ_ASSERT(zone->isGCMarking());
+      zone->gcSweepGroupIndex = idx;
     }
+    idx++;
   }
 
   MOZ_ASSERT_IF(!isIncremental, !currentSweepGroup->nextGroup());
@@ -5761,10 +5764,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(FreeOp* fop,
     if (zone->isAtomsZone()) {
       sweepingAtoms = true;
     }
-
-#ifdef DEBUG
-    zone->gcLastSweepGroupIndex = sweepGroupIndex;
-#endif
   }
 
   validateIncrementalMarking();
@@ -7108,6 +7107,12 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       isCompacting = shouldCompact();
       MOZ_ASSERT(!lastMarkSlice);
       rootsRemoved = false;
+
+#ifdef DEBUG
+      for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+        zone->gcSweepGroupIndex = 0;
+      }
+#endif
 
       incrementalState = State::MarkRoots;
 
