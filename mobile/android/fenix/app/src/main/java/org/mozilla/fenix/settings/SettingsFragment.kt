@@ -411,7 +411,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     private fun displayAccountErrorIfNecessary() {
         launch {
             context?.let { context ->
-                if (context.components.backgroundServices.accountManager.accountNeedsReauth()) { return@launch }
+                if (!context.components.backgroundServices.accountManager.accountNeedsReauth()) { return@launch }
 
                 val preferenceFirefoxAccount =
                     findPreference<AccountPreference>(context.getPreferenceKey(pref_key_account))
