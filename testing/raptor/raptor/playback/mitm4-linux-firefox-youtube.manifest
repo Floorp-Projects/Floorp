@@ -1,0 +1,9 @@
+[
+    {
+        "filename": "mitm4-linux-firefox-youtube.zip",
+        "size": 4927716,
+        "digest": "e599de242bc399ca9b1abb17c761c55f853dff4d9f779f5d01db9ac4743c6a9d2132ff7bcb97615b9fc43d0f7a4c6890732410e82f2ec9b9a657799ab46d35e8",
+        "algorithm": "sha512",
+        "unpack": true
+    }
+]
