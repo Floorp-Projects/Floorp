@@ -11,7 +11,7 @@
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include <stddef.h>  // size_t, ptrdiff_t
+#include <stddef.h>  // size_t
 #include <stdint.h>  // int32_t, uint32_t
 
 #include "frontend/BytecodeControlStructures.h"  // BreakableControl
@@ -312,13 +312,13 @@ class MOZ_STACK_CLASS SwitchEmitter {
   uint32_t caseIndex_ = 0;
 
   // Bytecode offset after emitting `discriminant`.
-  ptrdiff_t top_ = 0;
+  BytecodeOffset top_;
 
   // Bytecode offset of the previous JSOP_CASE.
-  ptrdiff_t lastCaseOffset_ = 0;
+  BytecodeOffset lastCaseOffset_;
 
   // Bytecode offset of the JSOP_JUMPTARGET for default body.
-  JumpTarget defaultJumpTargetOffset_ = {-1};
+  JumpTarget defaultJumpTargetOffset_ = {BytecodeOffset::invalidOffset()};
 
   // Bytecode offset of the JSOP_DEFAULT.
   JumpList condSwitchDefaultOffset_;
@@ -339,7 +339,7 @@ class MOZ_STACK_CLASS SwitchEmitter {
   //   Offset of each JSOP_CASE.
   // Table Switch:
   //   Offset of each JSOP_JUMPTARGET for case.
-  js::Vector<ptrdiff_t, 32, SystemAllocPolicy> caseOffsets_;
+  js::Vector<BytecodeOffset, 32, SystemAllocPolicy> caseOffsets_;
 
   // The state of this emitter.
   //

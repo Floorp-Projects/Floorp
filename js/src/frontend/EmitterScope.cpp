@@ -1055,12 +1055,15 @@ bool EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal) {
     // Popping scopes due to non-local jumps generate additional scope
     // notes. See NonLocalExitControl::prepareForNonLocalJump.
     if (ScopeKindIsInBody(kind)) {
-      // The extra function var scope is never popped once it's pushed,
-      // so its scope note extends until the end of any possible code.
-      uint32_t offset = kind == ScopeKind::FunctionBodyVar
-                            ? UINT32_MAX
-                            : bce->bytecodeSection().offset();
-      bce->bytecodeSection().scopeNoteList().recordEnd(noteIndex_, offset);
+      if (kind == ScopeKind::FunctionBodyVar) {
+        // The extra function var scope is never popped once it's pushed,
+        // so its scope note extends until the end of any possible code.
+        bce->bytecodeSection().scopeNoteList().recordEndFunctionBodyVar(
+            noteIndex_);
+      } else {
+        bce->bytecodeSection().scopeNoteList().recordEnd(
+            noteIndex_, bce->bytecodeSection().offset());
+      }
     }
   }
 

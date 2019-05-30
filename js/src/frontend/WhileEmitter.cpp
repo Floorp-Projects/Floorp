@@ -50,7 +50,7 @@ bool WhileEmitter::emitBody(const Maybe<uint32_t>& whilePos,
     }
   }
 
-  JumpTarget top = {-1};
+  JumpTarget top = {BytecodeOffset::invalidOffset()};
   if (!bce_->emitJumpTarget(&top)) {
     return false;
   }

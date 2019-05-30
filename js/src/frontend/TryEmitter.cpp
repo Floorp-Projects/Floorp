@@ -35,7 +35,6 @@ TryEmitter::TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind)
     controlInfo_.emplace(
         bce_, hasFinally() ? StatementKind::Finally : StatementKind::Try);
   }
-  finallyStart_.offset = 0;
 }
 
 // Emits JSOP_GOTO to the end of try-catch-finally.
@@ -86,9 +85,9 @@ bool TryEmitter::emitTryEnd() {
   }
 
   // Source note points to the jump at the end of the try block.
-  if (!bce_->setSrcNoteOffset(
-          noteIndex_, SrcNote::Try::EndOfTryJumpOffset,
-          bce_->bytecodeSection().offset() - tryStart_ + JSOP_TRY_LENGTH)) {
+  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Try::EndOfTryJumpOffset,
+                              bce_->bytecodeSection().offset() - tryStart_ +
+                                  BytecodeOffsetDiff(JSOP_TRY_LENGTH))) {
     return false;
   }
 
