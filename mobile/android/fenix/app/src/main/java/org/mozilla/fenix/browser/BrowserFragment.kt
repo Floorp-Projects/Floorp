@@ -14,7 +14,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
@@ -155,35 +154,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             }
         )
 
-        toolbarComponent.uiView.view.apply {
-            setBackgroundResource(R.drawable.toolbar_background)
-
-            (layoutParams as CoordinatorLayout.LayoutParams).apply {
-                gravity = getAppropriateLayoutGravity()
-
-                view.nestedScrollQuickAction.visibility = if (gravity == Gravity.TOP) {
-                    View.GONE
-                } else {
-                    View.VISIBLE
-                }
-
-                height = (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt()
-            }
-        }
-
-        view.swipeRefresh.apply {
-            val toolbarSize =
-                (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt() +
-                        (if (customTabSessionId == null) QUICK_ACTION_SHEET_HANDLE_HEIGHT else 0)
-            (layoutParams as CoordinatorLayout.LayoutParams).apply {
-                setMargins(
-                    0,
-                    if (customTabSessionId == null) 0 else toolbarSize,
-                    0,
-                    if (customTabSessionId == null) toolbarSize else 0
-                )
-            }
-        }
         startPostponedEnterTransition()
 
         QuickActionComponent(
@@ -208,14 +178,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         ThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
 
         return view
-    }
-
-    private fun getAppropriateLayoutGravity(): Int {
-        if (customTabSessionId != null) {
-            return Gravity.TOP
-        }
-
-        return Gravity.BOTTOM
     }
 
     @Suppress("LongMethod")
@@ -394,6 +356,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     toolbar,
                     it,
                     activity,
+                    view.nestedScrollQuickAction,
+                    view.swipeRefresh,
                     onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
                 ),
                 owner = this,
@@ -770,6 +734,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         }
     }
 
+    private fun getAppropriateLayoutGravity() = if (customTabSessionId != null) {
+        Gravity.TOP
+    } else {
+        Gravity.BOTTOM
+    }
+
     private fun Session.copyUrl(context: Context) {
         val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipBoard.primaryClip = ClipData.newPlainText(url, url)
@@ -836,8 +806,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
-        private const val TOOLBAR_HEIGHT = 56f
-        private const val QUICK_ACTION_SHEET_HANDLE_HEIGHT = 36
         const val REPORT_SITE_ISSUE_URL =
             "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
     }
