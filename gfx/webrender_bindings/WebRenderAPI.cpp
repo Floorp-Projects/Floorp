@@ -577,34 +577,6 @@ void WebRenderAPI::Capture() {
   wr_api_capture(mDocHandle, path, bits);
 }
 
-void WebRenderAPI::SetCompositionRecorder(
-    RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder) {
-  class SetCompositionRecorderEvent final : public RendererEvent {
-   public:
-    explicit SetCompositionRecorderEvent(
-        RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder)
-        : mRecorder(std::move(aRecorder)) {
-      MOZ_COUNT_CTOR(SetCompositionRecorderEvent);
-    }
-
-    ~SetCompositionRecorderEvent() {
-      MOZ_COUNT_DTOR(SetCompositionRecorderEvent);
-    }
-
-    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
-      MOZ_ASSERT(mRecorder);
-
-      aRenderThread.SetCompositionRecorderForWindow(aWindowId,
-                                                    std::move(mRecorder));
-    }
-
-   private:
-    RefPtr<layers::WebRenderCompositionRecorder> mRecorder;
-  };
-
-  auto event = MakeUnique<SetCompositionRecorderEvent>(std::move(aRecorder));
-  RunOnRenderThread(std::move(event));
-}
 void TransactionBuilder::Clear() { wr_resource_updates_clear(mTxn); }
 
 void TransactionBuilder::Notify(wr::Checkpoint aWhen,
