@@ -3438,7 +3438,8 @@ class Document : public nsINode,
                             mozilla::ErrorResult& rv);
   bool QueryCommandState(const nsAString& aCommandID, mozilla::ErrorResult& rv);
   bool QueryCommandSupported(const nsAString& aCommandID,
-                             mozilla::dom::CallerType aCallerType);
+                             mozilla::dom::CallerType aCallerType,
+                             mozilla::ErrorResult& rv);
   MOZ_CAN_RUN_SCRIPT
   void QueryCommandValue(const nsAString& aCommandID, nsAString& aValue,
                          mozilla::ErrorResult& rv);
