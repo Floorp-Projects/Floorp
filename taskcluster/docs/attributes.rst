@@ -305,3 +305,14 @@ Phabricator revision.
 retrigger
 =========
 Whether the task can be retriggered, or if it needs to be re-run.
+
+disable-push-apk
+================
+Some GeckoView-only Android tasks produce APKs that shouldn't be
+pushed to the Google Play Store.  Set this to ``true`` to disable
+pushing.
+
+disable-build-signing
+=====================
+Some GeckoView-only tasks produce APKs, but not APKs that should be
+signed.  Set this to ``true`` to disable APK signing.
