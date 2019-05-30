@@ -157,6 +157,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Use Raptor to measure memory usage.",
         }],
+        [["--cpu-test"], {
+            "dest": "cpu_test",
+            "action": "store_true",
+            "default": False,
+            "help": "Use Raptor to measure CPU usage"
+        }],
         [["--debug-mode"], {
             "dest": "debug_mode",
             "action": "store_true",
@@ -254,6 +260,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self.host = os.environ['HOST_IP']
         self.power_test = self.config.get('power_test')
         self.memory_test = self.config.get('memory_test')
+        self.cpu_test = self.config.get('cpu_test')
         self.is_release_build = self.config.get('is_release_build')
         self.debug_mode = self.config.get('debug_mode', False)
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
@@ -389,6 +396,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--power-test'])
         if self.config.get('memory_test', False):
             options.extend(['--memory-test'])
+        if self.config.get('cpu_test', False):
+            options.extend(['--cpu-test'])
         for key, value in kw_options.items():
             options.extend(['--%s' % key, value])
 
@@ -519,6 +528,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         if self.config.get('power_test', None):
             expected_perfherder += 1
         if self.config.get('memory_test', None):
+            expected_perfherder += 1
+        if self.config.get('cpu_test', None):
             expected_perfherder += 1
         if len(parser.found_perf_data) != expected_perfherder:
             self.critical("PERFHERDER_DATA was seen %d times, expected %d."
@@ -657,6 +668,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
                 if self.memory_test:
                     src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-memory.json')
+                    self._artifact_perf_data(src, dest)
+
+                if self.cpu_test:
+                    src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-cpu.json')
                     self._artifact_perf_data(src, dest)
 
                 src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'screenshots.html')
