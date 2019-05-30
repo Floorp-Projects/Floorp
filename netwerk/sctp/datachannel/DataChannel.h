@@ -367,26 +367,19 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
 class DataChannel {
  public:
-  enum {
-    CONNECTING = 0U,
-    OPEN = 1U,
-    CLOSING = 2U,
-    CLOSED = 3U,
-    WAITING_TO_OPEN = 4U
-  };
+  enum { CONNECTING = 0U, OPEN = 1U, CLOSING = 2U, CLOSED = 3U };
 
   DataChannel(DataChannelConnection* connection, uint16_t stream,
               uint16_t state, const nsACString& label,
               const nsACString& protocol, uint16_t policy, uint32_t value,
               bool ordered, bool negotiated, DataChannelListener* aListener,
               nsISupports* aContext)
-      : mListenerLock("netwerk::sctp::DataChannel"),
-        mListener(aListener),
+      : mListener(aListener),
         mContext(aContext),
         mConnection(connection),
         mLabel(label),
         mProtocol(protocol),
-        mState(state),
+        mReadyState(state),
         mStream(stream),
         mPrPolicy(policy),
         mPrValue(value),
@@ -463,14 +456,14 @@ class DataChannel {
   uint32_t GetBufferedAmountLowThreshold();
   void SetBufferedAmountLowThreshold(uint32_t aThreshold);
 
+  void AnnounceOpen();
+  // TODO(bug 843625): Optionally pass an error here.
+  void AnnounceClosed();
+
   // Find out state
   uint16_t GetReadyState() {
-    if (mConnection) {
-      MutexAutoLock lock(mConnection->mLock);
-      if (mState == WAITING_TO_OPEN) return CONNECTING;
-      return mState;
-    }
-    return CLOSED;
+    MOZ_ASSERT(NS_IsMainThread());
+    return mReadyState;
   }
 
   void GetLabel(nsAString& aLabel) { CopyUTF8toUTF16(mLabel, aLabel); }
@@ -479,12 +472,10 @@ class DataChannel {
   }
   uint16_t GetStream() { return mStream; }
 
-  void AppReady();
-
   void SendOrQueue(DataChannelOnMessageAvailable* aMessage);
 
  protected:
-  Mutex mListenerLock;  // protects mListener and mContext
+  // These are both mainthread only
   DataChannelListener* mListener;
   nsCOMPtr<nsISupports> mContext;
 
@@ -498,7 +489,8 @@ class DataChannel {
   RefPtr<DataChannelConnection> mConnection;
   nsCString mLabel;
   nsCString mProtocol;
-  uint16_t mState;
+  // This is mainthread only
+  uint16_t mReadyState;
   uint16_t mStream;
   uint16_t mPrPolicy;
   uint32_t mPrValue;
@@ -514,7 +506,6 @@ class DataChannel {
   nsCString mRecvBuffer;
   nsTArray<nsAutoPtr<BufferedOutgoingMsg>>
       mBufferedData;  // GUARDED_BY(mConnection->mLock)
-  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedMessages;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 };
 
@@ -527,8 +518,6 @@ class DataChannelOnMessageAvailable : public Runnable {
     ON_CONNECTION,
     ON_DISCONNECTED,
     ON_CHANNEL_CREATED,
-    ON_CHANNEL_OPEN,
-    ON_CHANNEL_CLOSED,
     ON_DATA_STRING,
     ON_DATA_BINARY,
   }; /* types */
@@ -575,54 +564,42 @@ class DataChannelOnMessageAvailable : public Runnable {
     switch (mType) {
       case ON_DATA_STRING:
       case ON_DATA_BINARY:
-      case ON_CHANNEL_OPEN:
-      case ON_CHANNEL_CLOSED: {
-        MutexAutoLock lock(mChannel->mListenerLock);
         if (!mChannel->mListener) {
           DATACHANNEL_LOG((
               "DataChannelOnMessageAvailable (%d) with null Listener!", mType));
           return NS_OK;
         }
 
-        switch (mType) {
-          case ON_DATA_STRING:
-            mChannel->mListener->OnMessageAvailable(mChannel->mContext, mData);
-            break;
-          case ON_DATA_BINARY:
-            mChannel->mListener->OnBinaryMessageAvailable(mChannel->mContext,
-                                                          mData);
-            break;
-          case ON_CHANNEL_OPEN:
-            mChannel->mListener->OnChannelConnected(mChannel->mContext);
-            break;
-          case ON_CHANNEL_CLOSED:
-            mChannel->mListener->OnChannelClosed(mChannel->mContext);
-            break;
+        if (mChannel->GetReadyState() == DataChannel::CLOSED ||
+            mChannel->GetReadyState() == DataChannel::CLOSING) {
+          // Closed by JS, probably
+          return NS_OK;
+        }
+
+        if (mType == ON_DATA_STRING) {
+          mChannel->mListener->OnMessageAvailable(mChannel->mContext, mData);
+        } else {
+          mChannel->mListener->OnBinaryMessageAvailable(mChannel->mContext,
+                                                        mData);
         }
         break;
-      }
       case ON_DISCONNECTED:
         // If we've disconnected, make sure we close all the streams - from
         // mainthread!
         mConnection->CloseAll();
-        MOZ_FALLTHROUGH;
+        break;
       case ON_CHANNEL_CREATED:
-      case ON_CONNECTION:
-        // WeakPtr - only used/modified/nulled from MainThread so we can use a
-        // WeakPtr here
         if (!mConnection->mListener) {
-          DATACHANNEL_LOG(
-              ("DataChannelOnMessageAvailable (%d) with null Listener", mType));
+          DATACHANNEL_LOG((
+              "DataChannelOnMessageAvailable (%d) with null Listener!", mType));
           return NS_OK;
         }
-        switch (mType) {
-          case ON_CHANNEL_CREATED:
-            // important to give it an already_AddRefed pointer!
-            mConnection->mListener->NotifyDataChannel(mChannel.forget());
-            break;
-          default:
-            break;
-        }
+
+        // important to give it an already_AddRefed pointer!
+        mConnection->mListener->NotifyDataChannel(mChannel.forget());
+        break;
+      case ON_CONNECTION:
+        // TODO: Notify someday? How? What does the spec say about this?
         break;
     }
     return NS_OK;

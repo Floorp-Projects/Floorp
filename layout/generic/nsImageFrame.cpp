@@ -833,8 +833,6 @@ void nsImageFrame::NotifyNewCurrentRequest(imgIRequest* aRequest,
     }
     // Update border+content to account for image change
     InvalidateFrame();
-    // FIXME(emilio): This just workarounds bug 1554755.
-    mMayHaveRoundedCorners = true;
   }
 }
 

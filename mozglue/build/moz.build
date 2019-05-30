@@ -78,13 +78,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT']:
         EXPORTS.mozilla.glue += [
             'WindowsDllServices.h',
         ]
-        USE_LIBS += [
-            'mscom-mozglue',
-        ]
-        if CONFIG['CPU_ARCH'] == 'aarch64':
-            USE_LIBS += [
-                'interceptor',
-            ]
 
     EXPORTS.mozilla += [
         'arm.h',
@@ -117,7 +110,7 @@ USE_LIBS += [
     'mfbt',
 ]
 
-DEFINES['IMPL_MFBT'] = True
+LIBRARY_DEFINES['IMPL_MFBT'] = True
 LIBRARY_DEFINES['MOZ_HAS_MOZGLUE'] = True
 
 if CONFIG['OS_TARGET'] == 'Darwin':

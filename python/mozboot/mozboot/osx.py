@@ -513,6 +513,11 @@ class OSXBootstrapper(BaseBootstrapper):
         self.install_toolchain_static_analysis(
             state_dir, checkout_root, static_analysis.MACOS_CLANG_TIDY)
 
+    def ensure_sccache_packages(self, state_dir, checkout_root):
+        from mozboot import sccache
+
+        self.install_toolchain_artifact(state_dir, checkout_root, sccache.MACOS_SCCACHE)
+
     def ensure_stylo_packages(self, state_dir, checkout_root):
         from mozboot import stylo
         # We installed clang via homebrew earlier.  However, on Android, we're

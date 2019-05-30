@@ -14,12 +14,14 @@ async protocol PGamepadEventChannel {
     async GamepadListenerRemoved();
     async VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                         double aIntensity, double aDuration, uint32_t aPromiseID);
-    async StopVibrateHaptic(uint32_t aGamepadIndex);
+    async StopVibrateHaptic(uint32_t aControllerIdx);
+    async LightIndicatorColor(uint32_t aControllerIdx, uint32_t aLightColorIndex,
+                              uint8_t aRed, uint8_t aGreen, uint8_t aBlue, uint32_t aPromiseID);
 
   child:
     async __delete__();
     async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
-    async ReplyGamepadVibrateHaptic(uint32_t aPromiseID);
+    async ReplyGamepadPromise(uint32_t aPromiseID);
 };
 
 }

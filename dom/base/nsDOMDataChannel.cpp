@@ -397,12 +397,6 @@ nsresult nsDOMDataChannel::NotBuffered(nsISupports* aContext) {
   return NS_OK;
 }
 
-void nsDOMDataChannel::AppReady() {
-  if (!mSentClose) {  // may not be possible, simpler to just test anyways
-    mDataChannel->AppReady();
-  }
-}
-
 //-----------------------------------------------------------------------------
 // Methods that keep alive the DataChannel object when:
 //   1. the object has registered event listeners that can be triggered
@@ -421,8 +415,7 @@ void nsDOMDataChannel::UpdateMustKeepAlive() {
   uint16_t readyState = mDataChannel->GetReadyState();
 
   switch (readyState) {
-    case DataChannel::CONNECTING:
-    case DataChannel::WAITING_TO_OPEN: {
+    case DataChannel::CONNECTING: {
       if (mListenerManager &&
           (mListenerManager->HasListenersFor(nsGkAtoms::onopen) ||
            mListenerManager->HasListenersFor(nsGkAtoms::onmessage) ||

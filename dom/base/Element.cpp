@@ -545,19 +545,19 @@ static bool MayNeedToLoadXBLBinding(const Document& aDocument,
   return aElement.IsAnyOfHTMLElements(nsGkAtoms::object, nsGkAtoms::embed);
 }
 
-bool Element::GetBindingURL(Document* aDocument, css::URLValue** aResult) {
+StyleUrlOrNone Element::GetBindingURL(Document* aDocument) {
   if (!MayNeedToLoadXBLBinding(*aDocument, *this)) {
-    *aResult = nullptr;
-    return true;
+    return StyleUrlOrNone::None();
   }
 
   // Get the computed -moz-binding directly from the ComputedStyle
-  RefPtr<ComputedStyle> sc =
+  RefPtr<ComputedStyle> style =
       nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
-  NS_ENSURE_TRUE(sc, false);
+  if (!style) {
+    return StyleUrlOrNone::None();
+  }
 
-  NS_IF_ADDREF(*aResult = sc->StyleDisplay()->mBinding);
-  return true;
+  return style->StyleDisplay()->mBinding;
 }
 
 JSObject* Element::WrapObject(JSContext* aCx,
@@ -597,17 +597,11 @@ JSObject* Element::WrapObject(JSContext* aCx,
   // since that can destroy the relevant presshell.
 
   {
-    // Make a scope so that ~nsRefPtr can GC before returning obj.
-    RefPtr<css::URLValue> bindingURL;
-    bool ok = GetBindingURL(doc, getter_AddRefs(bindingURL));
-    if (!ok) {
-      dom::Throw(aCx, NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    if (bindingURL) {
-      nsCOMPtr<nsIURI> uri = bindingURL->GetURI();
-      nsCOMPtr<nsIPrincipal> principal = bindingURL->ExtraData()->Principal();
+    StyleUrlOrNone result = GetBindingURL(doc);
+    if (result.IsUrl()) {
+      auto& url = result.AsUrl();
+      nsCOMPtr<nsIURI> uri = url.GetURI();
+      nsCOMPtr<nsIPrincipal> principal = url.ExtraData().Principal();
 
       // We have a binding that must be installed.
       nsXBLService* xblService = nsXBLService::GetInstance();
@@ -1706,8 +1700,7 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
   if (IsInComposedDoc()) {
     // Connected callback must be enqueued whenever a custom element becomes
     // connected.
-    CustomElementData* data = GetCustomElementData();
-    if (data) {
+    if (CustomElementData* data = GetCustomElementData()) {
       if (data->mState == CustomElementData::State::eCustom) {
         nsContentUtils::EnqueueLifecycleCallback(Document::eConnected, this);
       } else {
@@ -2619,18 +2612,16 @@ nsresult Element::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValueOrString* aValue,
                                 bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aName == nsGkAtoms::_class) {
-      if (aValue) {
-        // Note: This flag is asymmetrical. It is never unset and isn't exact.
-        // If it is ever made to be exact, we probably need to handle this
-        // similarly to how ids are handled in PreIdMaybeChange and
-        // PostIdMaybeChange.
-        // Note that SetSingleClassFromParser inlines BeforeSetAttr and
-        // calls SetMayHaveClass directly. Making a subclass take action
-        // on the class attribute in a BeforeSetAttr override would
-        // require revising SetSingleClassFromParser.
-        SetMayHaveClass();
-      }
+    if (aName == nsGkAtoms::_class && aValue) {
+      // Note: This flag is asymmetrical. It is never unset and isn't exact.
+      // If it is ever made to be exact, we probably need to handle this
+      // similarly to how ids are handled in PreIdMaybeChange and
+      // PostIdMaybeChange.
+      // Note that SetSingleClassFromParser inlines BeforeSetAttr and
+      // calls SetMayHaveClass directly. Making a subclass take action
+      // on the class attribute in a BeforeSetAttr override would
+      // require revising SetSingleClassFromParser.
+      SetMayHaveClass();
     }
   }
 

@@ -376,21 +376,6 @@ const KTableEntry nsCSSProps::kTextEmphasisStyleShapeKTable[] = {
     {eCSSKeyword_sesame, NS_STYLE_TEXT_EMPHASIS_STYLE_SESAME},
     {eCSSKeyword_UNKNOWN, -1}};
 
-// keyword tables for SVG properties
-
-const KTableEntry nsCSSProps::kFilterFunctionKTable[] = {
-    {eCSSKeyword_blur, NS_STYLE_FILTER_BLUR},
-    {eCSSKeyword_brightness, NS_STYLE_FILTER_BRIGHTNESS},
-    {eCSSKeyword_contrast, NS_STYLE_FILTER_CONTRAST},
-    {eCSSKeyword_grayscale, NS_STYLE_FILTER_GRAYSCALE},
-    {eCSSKeyword_invert, NS_STYLE_FILTER_INVERT},
-    {eCSSKeyword_opacity, NS_STYLE_FILTER_OPACITY},
-    {eCSSKeyword_saturate, NS_STYLE_FILTER_SATURATE},
-    {eCSSKeyword_sepia, NS_STYLE_FILTER_SEPIA},
-    {eCSSKeyword_hue_rotate, NS_STYLE_FILTER_HUE_ROTATE},
-    {eCSSKeyword_drop_shadow, NS_STYLE_FILTER_DROP_SHADOW},
-    {eCSSKeyword_UNKNOWN, -1}};
-
 int32_t nsCSSProps::FindIndexOfKeyword(nsCSSKeyword aKeyword,
                                        const KTableEntry aTable[]) {
   if (eCSSKeyword_UNKNOWN == aKeyword) {

@@ -2442,7 +2442,7 @@ ResumeMode Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp) {
     }
 
     MOZ_ASSERT(liveStepperCount + suspendedStepperCount ==
-               trappingScript->stepModeCount());
+               trappingScript->stepperCount());
   }
 #endif
 
@@ -4485,7 +4485,7 @@ void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
     DebuggerFrame* frameobj = e.front().value();
     if (frame.hasGlobal(global)) {
       frameobj->freeFrameIterData(fop);
-      frameobj->maybeDecrementFrameScriptStepModeCount(fop, frame);
+      frameobj->maybeDecrementFrameScriptStepperCount(fop, frame);
       e.removeFront();
     }
   }
@@ -7770,7 +7770,7 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
       // lambda. Manually clean it up here.
       FreeOp* fop = cx->runtime()->defaultFreeOp();
       frameobj->freeFrameIterData(fop);
-      frameobj->maybeDecrementFrameScriptStepModeCount(fop, to);
+      frameobj->maybeDecrementFrameScriptStepperCount(fop, to);
 
       ReportOutOfMemory(cx);
       return false;
@@ -7799,7 +7799,7 @@ void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
     FreeOp* fop = cx->runtime()->defaultFreeOp();
     frameobj->freeFrameIterData(fop);
     if (!suspending) {
-      frameobj->maybeDecrementFrameScriptStepModeCount(fop, frame);
+      frameobj->maybeDecrementFrameScriptStepperCount(fop, frame);
     }
 
     Debugger* dbg = Debugger::fromChildJSObject(frameobj);
@@ -9239,15 +9239,15 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
     wasm::DebugFrame* wasmFrame = referent.asWasmDebugFrame();
     if (handler && !prior) {
       // Single stepping toggled off->on.
-      if (!instance->debug().incrementStepModeCount(cx,
-                                                    wasmFrame->funcIndex())) {
+      if (!instance->debug().incrementStepperCount(cx,
+                                                   wasmFrame->funcIndex())) {
         return false;
       }
     } else if (!handler && prior) {
       // Single stepping toggled on->off.
       FreeOp* fop = cx->runtime()->defaultFreeOp();
-      if (!instance->debug().decrementStepModeCount(fop,
-                                                    wasmFrame->funcIndex())) {
+      if (!instance->debug().decrementStepperCount(fop,
+                                                   wasmFrame->funcIndex())) {
         return false;
       }
     }
@@ -9256,18 +9256,18 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
       // Single stepping toggled off->on.
       AutoRealm ar(cx, referent.environmentChain());
       // Ensure observability *before* incrementing the step mode count.
-      // Calling this function after calling incrementStepModeCount
+      // Calling this function after calling incrementStepperCount
       // will make it a no-op.
       Debugger* dbg = frame->owner();
       if (!dbg->ensureExecutionObservabilityOfScript(cx, referent.script())) {
         return false;
       }
-      if (!referent.script()->incrementStepModeCount(cx)) {
+      if (!referent.script()->incrementStepperCount(cx)) {
         return false;
       }
     } else if (!handler && prior) {
       // Single stepping toggled on->off.
-      referent.script()->decrementStepModeCount(cx->runtime()->defaultFreeOp());
+      referent.script()->decrementStepperCount(cx->runtime()->defaultFreeOp());
     }
   }
 
@@ -9567,7 +9567,7 @@ void DebuggerFrame::freeFrameIterData(FreeOp* fop) {
   }
 }
 
-void DebuggerFrame::maybeDecrementFrameScriptStepModeCount(
+void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
     FreeOp* fop, AbstractFramePtr frame) {
   // If this frame has an onStep handler, decrement the script's count.
   if (getReservedSlot(ONSTEP_HANDLER_SLOT).isUndefined()) {
@@ -9575,10 +9575,10 @@ void DebuggerFrame::maybeDecrementFrameScriptStepModeCount(
   }
   if (frame.isWasmDebugFrame()) {
     wasm::Instance* instance = frame.wasmInstance();
-    instance->debug().decrementStepModeCount(
+    instance->debug().decrementStepperCount(
         fop, frame.asWasmDebugFrame()->funcIndex());
   } else {
-    frame.script()->decrementStepModeCount(fop);
+    frame.script()->decrementStepperCount(fop);
   }
 }
 

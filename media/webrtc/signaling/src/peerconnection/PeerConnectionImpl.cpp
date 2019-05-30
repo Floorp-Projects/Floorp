@@ -1127,16 +1127,6 @@ PeerConnectionImpl::CreateDataChannel(
   return NS_OK;
 }
 
-// Not a member function so that we don't need to keep the PC live.
-static void NotifyDataChannel_m(
-    const RefPtr<nsDOMDataChannel>& aChannel,
-    const RefPtr<PeerConnectionObserver>& aObserver) {
-  MOZ_ASSERT(NS_IsMainThread());
-  JSErrorResult rv;
-  aObserver->NotifyDataChannel(*aChannel, rv);
-  aChannel->AppReady();
-}
-
 void PeerConnectionImpl::NotifyDataChannel(
     already_AddRefed<DataChannel> aChannel) {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -1150,10 +1140,8 @@ void PeerConnectionImpl::NotifyDataChannel(
                                      getter_AddRefs(domchannel));
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  RUN_ON_THREAD(
-      mThread,
-      WrapRunnableNM(NotifyDataChannel_m, domchannel.forget(), mPCObserver),
-      NS_DISPATCH_NORMAL);
+  JSErrorResult jrv;
+  mPCObserver->NotifyDataChannel(*domchannel, jrv);
 }
 
 NS_IMETHODIMP

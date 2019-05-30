@@ -352,7 +352,9 @@ this.LoginManagerParent = {
     });
 
     let generatedPassword = null;
-    if (isPasswordField && autocompleteInfo.fieldName == "new-password") {
+    if (isPasswordField &&
+        autocompleteInfo.fieldName == "new-password" &&
+        Services.logins.getLoginSavingEnabled(formOrigin)) {
       generatedPassword = this.getGeneratedPassword(browsingContextId);
     }
 

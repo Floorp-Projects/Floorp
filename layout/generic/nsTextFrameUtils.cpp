@@ -388,7 +388,9 @@ bool nsSkipCharsRunIterator::NextRun() {
         mRemainingLength -= mRunLength;
       }
     }
-    if (!mRemainingLength) return false;
+    if (!mRemainingLength) {
+      return false;
+    }
     int32_t length;
     mSkipped = mIterator.IsOriginalCharSkipped(&length);
     mRunLength = std::min(length, mRemainingLength);

@@ -4733,23 +4733,7 @@ DebugScript* JSScript::getOrCreateDebugScript(JSContext* cx) {
   return borrowed;
 }
 
-void JSScript::setNewStepMode(FreeOp* fop, uint32_t newValue) {
-  DebugScript* debug = debugScript();
-  uint32_t prior = debug->stepMode;
-  debug->stepMode = newValue;
-
-  if (!prior != !newValue) {
-    if (hasBaselineScript()) {
-      baseline->toggleDebugTraps(this, nullptr);
-    }
-
-    if (!debug->needed()) {
-      fop->free_(releaseDebugScript());
-    }
-  }
-}
-
-bool JSScript::incrementStepModeCount(JSContext* cx) {
+bool JSScript::incrementStepperCount(JSContext* cx) {
   cx->check(this);
   MOZ_ASSERT(cx->realm()->isDebuggee());
 
@@ -4760,16 +4744,33 @@ bool JSScript::incrementStepModeCount(JSContext* cx) {
     return false;
   }
 
-  uint32_t count = debug->stepMode;
-  setNewStepMode(cx->runtime()->defaultFreeOp(), count + 1);
+  debug->stepperCount++;
+
+  if (debug->stepperCount == 1) {
+    if (hasBaselineScript()) {
+      baseline->toggleDebugTraps(this, nullptr);
+    }
+  }
+
   return true;
 }
 
-void JSScript::decrementStepModeCount(FreeOp* fop) {
+void JSScript::decrementStepperCount(FreeOp* fop) {
   DebugScript* debug = debugScript();
-  uint32_t count = debug->stepMode;
-  MOZ_ASSERT(count > 0);
-  setNewStepMode(fop, count - 1);
+  MOZ_ASSERT(debug);
+  MOZ_ASSERT(debug->stepperCount > 0);
+
+  debug->stepperCount--;
+
+  if (debug->stepperCount == 0) {
+    if (hasBaselineScript()) {
+      baseline->toggleDebugTraps(this, nullptr);
+    }
+
+    if (!debug->needed()) {
+      fop->free_(releaseDebugScript());
+    }
+  }
 }
 
 BreakpointSite* JSScript::getOrCreateBreakpointSite(JSContext* cx,
