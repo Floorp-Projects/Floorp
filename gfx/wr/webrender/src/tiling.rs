@@ -58,6 +58,7 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub use_dual_source_blending: bool,
     pub use_advanced_blending: bool,
     pub break_advanced_blend_batches: bool,
+    pub batch_lookback_count: usize,
     pub clip_scroll_tree: &'a ClipScrollTree,
     pub data_stores: &'a DataStores,
     pub surfaces: &'a [SurfaceInfo],
@@ -439,6 +440,7 @@ impl RenderTarget for ColorRenderTarget {
                     let mut alpha_batch_builder = AlphaBatchBuilder::new(
                         self.screen_size,
                         ctx.break_advanced_blend_batches,
+                        ctx.batch_lookback_count,
                         *task_id,
                     );
 
