@@ -57,7 +57,7 @@ async function test_frame_packet() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     test_frame_packet();
   });
 

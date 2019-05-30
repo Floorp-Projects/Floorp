@@ -29,7 +29,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   }];
   for (const data of tests) {
     await new Promise(function(resolve) {
-      threadClient.addOneTimeListener("paused", async function(event, packet) {
+      threadClient.once("paused", async function(packet) {
         const [grip] = packet.frame.arguments;
         check_wrapped_primitive_grip(grip, data);
 

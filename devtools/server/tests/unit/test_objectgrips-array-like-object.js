@@ -44,7 +44,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
 
 async function test_object_grip_is_array_like(debuggee, dbgClient, threadClient, object) {
   return new Promise((resolve, reject) => {
-    threadClient.addOneTimeListener("paused", async function(event, packet) {
+    threadClient.once("paused", async function(packet) {
       const [grip] = packet.frame.arguments;
       await threadClient.resume();
       resolve(grip.preview.kind === "ArrayLike");

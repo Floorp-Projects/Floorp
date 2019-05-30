@@ -57,7 +57,7 @@ async function setBreakpoint(threadClient, expectedFile, lineno, options = {}) {
 function resumeThenPauseAtLineFunctionFactory(method) {
   return async function(threadClient, lineno) {
     threadClient[method]();
-    await threadClient.addOneTimeListener("paused", async function(event, packet) {
+    await threadClient.once("paused", async function(packet) {
       const {frames} = await threadClient.getFrames(0, 1);
       const frameLine = frames[0] ? frames[0].where.line : undefined;
       ok(frameLine == lineno, "Paused at line " + frameLine + " expected " + lineno);

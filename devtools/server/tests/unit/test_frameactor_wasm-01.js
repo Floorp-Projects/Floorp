@@ -43,7 +43,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     gThreadClient.getFrames(0, null).then(async function(frameResponse) {
       Assert.equal(frameResponse.frames.length, 4);
 

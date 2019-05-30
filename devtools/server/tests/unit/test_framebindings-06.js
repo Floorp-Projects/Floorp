@@ -29,8 +29,8 @@ function run_test() {
 }
 
 function test_banana_environment() {
-  gThreadClient.addOneTimeListener("paused",
-    function(event, packet) {
+  gThreadClient.once("paused",
+    function(packet) {
       equal(packet.type, "paused");
       const env = packet.frame.environment;
       equal(env.type, "function");

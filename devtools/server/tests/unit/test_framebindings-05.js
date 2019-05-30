@@ -33,7 +33,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const env = packet.frame.environment;
     Assert.notEqual(env, undefined);
 

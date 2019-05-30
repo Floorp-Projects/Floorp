@@ -45,6 +45,8 @@ class WebConsoleWrapper {
     this.document = document;
 
     this.init = this.init.bind(this);
+    this.dispatchPaused = this.dispatchPaused.bind(this);
+    this.dispatchProgress = this.dispatchProgress.bind(this);
 
     this.queuedMessageAdds = [];
     this.queuedMessageUpdates = [];
@@ -272,9 +274,8 @@ class WebConsoleWrapper {
       };
 
       if (this.toolbox) {
-        this.toolbox.threadClient.addListener("paused", this.dispatchPaused.bind(this));
-        this.toolbox.threadClient.addListener(
-          "progress", this.dispatchProgress.bind(this));
+        this.toolbox.threadClient.on("paused", this.dispatchPaused);
+        this.toolbox.threadClient.on("progress", this.dispatchProgress);
 
         Object.assign(serviceContainer, {
           onViewSourceInDebugger: frame => {
@@ -481,13 +482,13 @@ class WebConsoleWrapper {
     store.dispatch(actions.timestampsToggle(enabled));
   }
 
-  dispatchPaused(_, packet) {
+  dispatchPaused(packet) {
     if (packet.executionPoint) {
       store.dispatch(actions.setPauseExecutionPoint(packet.executionPoint));
     }
   }
 
-  dispatchProgress(_, packet) {
+  dispatchProgress(packet) {
     const {executionPoint, recording} = packet;
     const point = recording ? null : executionPoint;
     store.dispatch(actions.setPauseExecutionPoint(point));

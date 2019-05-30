@@ -31,7 +31,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const pauseActor = packet.actor;
 
     // Make a bogus request to the pause-lifetime actor.  Should get
