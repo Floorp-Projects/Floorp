@@ -19,7 +19,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Base64.h"
@@ -42,18 +41,8 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 
 #define METADATA_SUFFIX NS_LITERAL_CSTRING(".metadata")
 
-#define DEFAULT_THREAD_TIMEOUT_MS 5000
-
 namespace mozilla {
 namespace safebrowsing {
-
-bool Classifier::OnUpdateThread() const {
-  bool onthread = false;
-  if (mUpdateThread) {
-    mUpdateThread->IsOnCurrentThread(&onthread);
-  }
-  return onthread;
-}
 
 void Classifier::SplitTables(const nsACString& str,
                              nsTArray<nsCString>& tables) {
@@ -139,9 +128,8 @@ Classifier::Classifier()
     : mIsTableRequestResultOutdated(true),
       mUpdateInterrupted(true),
       mIsClosed(false) {
-  // Make a lazy thread for any IO
-  mUpdateThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                                     NS_LITERAL_CSTRING("Classifier Update"));
+  NS_NewNamedThread(NS_LITERAL_CSTRING("Classifier Update"),
+                    getter_AddRefs(mUpdateThread));
 }
 
 Classifier::~Classifier() { Close(); }
@@ -256,7 +244,8 @@ void Classifier::Close() {
 }
 
 void Classifier::Reset() {
-  MOZ_ASSERT(!OnUpdateThread(), "Reset() MUST NOT be called on update thread");
+  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
+             "Reset() MUST NOT be called on update thread");
 
   LOG(("Reset() is called so we interrupt the update."));
   mUpdateInterrupted = true;
@@ -554,7 +543,7 @@ void Classifier::RemoveUpdateIntermediaries() {
 }
 
 void Classifier::CopyAndInvalidateFullHashCache() {
-  MOZ_ASSERT(!OnUpdateThread(),
+  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
              "CopyAndInvalidateFullHashCache cannot be called on update thread "
              "since it mutates mLookupCaches which is only safe on "
              "worker thread.");
@@ -580,7 +569,7 @@ void Classifier::CopyAndInvalidateFullHashCache() {
 }
 
 void Classifier::MergeNewLookupCaches() {
-  MOZ_ASSERT(!OnUpdateThread(),
+  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
              "MergeNewLookupCaches cannot be called on update thread "
              "since it mutates mLookupCaches which is only safe on "
              "worker thread.");
@@ -687,13 +676,14 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
   }
 
   nsCOMPtr<nsIThread> callerThread = NS_GetCurrentThread();
-  MOZ_ASSERT(!OnUpdateThread());
+  MOZ_ASSERT(callerThread != mUpdateThread);
 
   RefPtr<Classifier> self = this;
   nsCOMPtr<nsIRunnable> bgRunnable = NS_NewRunnableFunction(
       "safebrowsing::Classifier::AsyncApplyUpdates",
       [self, aUpdates, aCallback, callerThread] {
-        MOZ_ASSERT(self->OnUpdateThread(), "MUST be on update thread");
+        MOZ_ASSERT(NS_GetCurrentThread() == self->mUpdateThread,
+                   "MUST be on update thread");
 
         nsresult bgRv;
         nsCString failedTableName;
@@ -830,7 +820,7 @@ nsresult Classifier::ApplyUpdatesForeground(
 }
 
 nsresult Classifier::ApplyFullHashes(ConstTableUpdateArray& aUpdates) {
-  MOZ_ASSERT(!OnUpdateThread(),
+  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
              "ApplyFullHashes() MUST NOT be called on update thread");
   MOZ_ASSERT(
       !NS_IsMainThread(),
@@ -1434,7 +1424,7 @@ nsresult Classifier::UpdateCache(RefPtr<const TableUpdate> aUpdate) {
 RefPtr<LookupCache> Classifier::GetLookupCache(const nsACString& aTable,
                                                bool aForUpdate) {
   // GetLookupCache(aForUpdate==true) can only be called on update thread.
-  MOZ_ASSERT_IF(aForUpdate, OnUpdateThread());
+  MOZ_ASSERT_IF(aForUpdate, NS_GetCurrentThread() == mUpdateThread);
 
   LookupCacheArray& lookupCaches =
       aForUpdate ? mNewLookupCaches : mLookupCaches;
