@@ -465,8 +465,6 @@ fn main() {
         None => webrender::ChasePrimitive::Nothing,
     };
 
-    let dump_shader_source = args.value_of("dump_shader_source").map(String::from);
-
     let mut events_loop = if args.is_present("headless") {
         None
     } else {
@@ -505,7 +503,6 @@ fn main() {
         args.is_present("slow_subpixel"),
         zoom_factor.unwrap_or(1.0),
         chase_primitive,
-        dump_shader_source,
         notifier,
     );
 

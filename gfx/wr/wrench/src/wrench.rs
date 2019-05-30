@@ -181,7 +181,6 @@ impl Wrench {
         disable_dual_source_blending: bool,
         zoom_factor: f32,
         chase_primitive: webrender::ChasePrimitive,
-        dump_shader_source: Option<String>,
         notifier: Option<Box<RenderNotifier>>,
     ) -> Self {
         println!("Shader override path: {:?}", shader_override_path);
@@ -225,7 +224,6 @@ impl Wrench {
             max_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
             allow_dual_source_blending: !disable_dual_source_blending,
             allow_advanced_blend_equation: true,
-            dump_shader_source,
             ..Default::default()
         };
 

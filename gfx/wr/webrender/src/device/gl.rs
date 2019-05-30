@@ -1000,9 +1000,6 @@ pub struct Device {
 
     // GL extensions
     extensions: Vec<String>,
-
-    /// Dumps the source of the shader with the given name
-    dump_shader_source: Option<String>,
 }
 
 /// Contains the parameters necessary to bind a draw target.
@@ -1178,7 +1175,6 @@ impl Device {
         upload_method: UploadMethod,
         cached_programs: Option<Rc<ProgramCache>>,
         allow_pixel_local_storage_support: bool,
-        dump_shader_source: Option<String>,
     ) -> Device {
         let mut max_texture_size = [0];
         let mut max_texture_layers = [0];
@@ -1361,7 +1357,6 @@ impl Device {
             extensions,
             texture_storage_usage,
             optimal_pbo_stride,
-            dump_shader_source,
         }
     }
 
@@ -1708,13 +1703,6 @@ impl Device {
                         return Err(err);
                     }
                 };
-
-            // Check if shader source should be dumped
-            if Some(info.base_filename) == self.dump_shader_source.as_ref().map(String::as_ref) {
-                let path = std::path::Path::new(info.base_filename);
-                std::fs::write(path.with_extension("vert"), vs_source).unwrap();
-                std::fs::write(path.with_extension("frag"), fs_source).unwrap();
-            }
 
             // Attach shaders
             self.gl.attach_shader(program.id, vs_id);
