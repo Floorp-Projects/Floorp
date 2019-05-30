@@ -117,8 +117,7 @@ class nsPrintJob final : public nsIObserver,
   bool IsRangeSelection();
   /// If the returned value is not greater than zero, an error occurred.
   int32_t GetPrintPreviewNumPages();
-  /// Callers are responsible for free'ing aResult.
-  nsresult EnumerateDocumentNames(uint32_t* aCount, char16_t*** aResult);
+  nsresult GetDocumentName(nsAString& aDocName);
   already_AddRefed<nsIPrintSettings> GetCurrentPrintSettings();
 
   // This enum tells indicates what the default should be for the title
