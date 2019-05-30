@@ -164,17 +164,17 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             }
         }
 
-        if (customTabSessionId == null) {
-            view.engineView.asView().apply {
-                (layoutParams as CoordinatorLayout.LayoutParams).apply {
-                    setMargins(
-                        0,
-                        0,
-                        0,
-                        (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt() +
-                            QUICK_ACTION_SHEET_HANDLE_HEIGHT
-                    )
-                }
+        view.engineView.asView().apply {
+            val toolbarSize =
+                (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt() +
+                        (if (customTabSessionId == null) QUICK_ACTION_SHEET_HANDLE_HEIGHT else 0)
+            (layoutParams as CoordinatorLayout.LayoutParams).apply {
+                setMargins(
+                    0,
+                    if (customTabSessionId == null) 0 else toolbarSize,
+                    0,
+                    if (customTabSessionId == null) toolbarSize else 0
+                )
             }
         }
 
