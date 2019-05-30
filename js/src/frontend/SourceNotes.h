@@ -7,6 +7,7 @@
 #ifndef frontend_SourceNotes_h
 #define frontend_SourceNotes_h
 
+#include <stddef.h>  // ptrdiff_t
 #include <stdint.h>
 
 #include "jstypes.h"

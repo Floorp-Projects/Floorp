@@ -10,10 +10,10 @@
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include <stddef.h>  // ptrdiff_t
 #include <stdint.h>  // uint32_t
 
 #include "frontend/BytecodeControlStructures.h"  // LoopControl
+#include "frontend/BytecodeOffset.h"             // BytecodeOffset
 #include "frontend/TDZCheckCache.h"              // TDZCheckCache
 
 namespace js {
@@ -83,10 +83,10 @@ class MOZ_STACK_CLASS CForEmitter {
 
   // The bytecode offset of loop condition.
   // Not the bytecode offset of loop condition expression itself.
-  ptrdiff_t condOffset_ = 0;
+  BytecodeOffset condOffset_;
 
   // The base bytecode offset used by SRC_FOR.
-  ptrdiff_t biasedTop_ = 0;
+  BytecodeOffset biasedTop_;
 
   // Whether the c-style for loop has `cond` and `update`.
   Cond cond_ = Cond::Missing;
