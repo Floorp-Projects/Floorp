@@ -49,8 +49,8 @@ class RecordedFrame {
  * If GPU-accelerated rendering is used, the frames will not be mapped into
  * memory until |WriteCollectedFrames| is called.
  */
-class CompositionRecorder final {
-  NS_INLINE_DECL_REFCOUNTING(CompositionRecorder)
+class CompositionRecorder {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositionRecorder)
 
  public:
   explicit CompositionRecorder(TimeStamp aRecordingStart);
@@ -58,15 +58,15 @@ class CompositionRecorder final {
   /**
    * Record a composited frame.
    */
-  void RecordFrame(RecordedFrame* aFrame);
+  virtual void RecordFrame(RecordedFrame* aFrame);
 
   /**
    * Write out the collected frames as a series of timestamped images.
    */
-  void WriteCollectedFrames();
+  virtual void WriteCollectedFrames();
 
  protected:
-  ~CompositionRecorder();
+  virtual ~CompositionRecorder() = default;
 
  private:
   nsTArray<RefPtr<RecordedFrame>> mCollectedFrames;
