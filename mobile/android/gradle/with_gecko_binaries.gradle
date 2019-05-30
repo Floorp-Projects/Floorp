@@ -74,7 +74,12 @@ ext.configureVariantWithGeckoBinaries = { variant ->
 
         android.sourceSets."${variant.name}".assets.srcDir syncOmnijarFromDistDir.destinationDir
         android.sourceSets."${variant.name}".assets.srcDir syncAssetsFromDistDir.destinationDir
-        android.sourceSets."${variant.name}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
+
+        if (!mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+            android.sourceSets."${variant.name}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
+        } else {
+            android.sourceSets."${variant.name}".jniLibs.srcDir "${topobjdir}/dist/fat-aar/output/jni"
+        }
     }
 }
 
