@@ -22,11 +22,7 @@ class LoginFilter extends ReflectedFluentElement {
   handleEvent(event) {
     switch (event.type) {
       case "input": {
-        this.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
-          bubbles: true,
-          composed: true,
-          detail: event.originalTarget.value,
-        }));
+        this.dispatchFilterEvent(event.originalTarget.value);
         break;
       }
     }
@@ -46,6 +42,7 @@ class LoginFilter extends ReflectedFluentElement {
 
   set value(val) {
     this.shadowRoot.querySelector("input").value = val;
+    this.dispatchFilterEvent(val);
   }
 
   handleSpecialCaseFluentString(attrName) {
@@ -55,6 +52,14 @@ class LoginFilter extends ReflectedFluentElement {
 
     this.shadowRoot.querySelector("input").placeholder = this.getAttribute(attrName);
     return true;
+  }
+
+  dispatchFilterEvent(value) {
+    this.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+      bubbles: true,
+      composed: true,
+      detail: value,
+    }));
   }
 }
 customElements.define("login-filter", LoginFilter);
