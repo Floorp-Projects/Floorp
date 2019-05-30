@@ -3213,15 +3213,26 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::MixBlend(..) if !frame_context.fb_config.gpu_supports_advanced_blend => {}
             PictureCompositeMode::Filter(ref filter) => {
-                if let Filter::ColorMatrix(ref m) = *filter {
-                    if self.extra_gpu_data_handles.is_empty() {
-                        self.extra_gpu_data_handles.push(GpuCacheHandle::new());
-                    }
-                    if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handles[0]) {
-                        for i in 0..5 {
-                            request.push([m[i*4], m[i*4+1], m[i*4+2], m[i*4+3]]);
+                match *filter {
+                    Filter::ColorMatrix(ref m) => {
+                        if self.extra_gpu_data_handles.is_empty() {
+                            self.extra_gpu_data_handles.push(GpuCacheHandle::new());
+                        }
+                        if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handles[0]) {
+                            for i in 0..5 {
+                                request.push([m[i*4], m[i*4+1], m[i*4+2], m[i*4+3]]);
+                            }
                         }
                     }
+                    Filter::Flood(ref color) => {
+                        if self.extra_gpu_data_handles.is_empty() {
+                            self.extra_gpu_data_handles.push(GpuCacheHandle::new());
+                        }
+                        if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handles[0]) {
+                            request.push(color.to_array());
+                        }
+                    }
+                    _ => {}
                 }
             }
             PictureCompositeMode::ComponentTransferFilter(handle) => {

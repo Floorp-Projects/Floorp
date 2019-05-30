@@ -1484,6 +1484,7 @@ impl BatchBuilder {
                                             Filter::SrgbToLinear => 11,
                                             Filter::LinearToSrgb => 12,
                                             Filter::ComponentTransfer => unreachable!(),
+                                            Filter::Flood(..) => 14,
                                         };
 
                                         let user_data = match filter {
@@ -1510,6 +1511,9 @@ impl BatchBuilder {
                                                 picture.extra_gpu_data_handles[0].as_int(gpu_cache)
                                             }
                                             Filter::ComponentTransfer => unreachable!(),
+                                            Filter::Flood(_) => {
+                                                picture.extra_gpu_data_handles[0].as_int(gpu_cache)
+                                            }
                                         };
 
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
@@ -3181,4 +3185,3 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
         )
     }
 }
-
