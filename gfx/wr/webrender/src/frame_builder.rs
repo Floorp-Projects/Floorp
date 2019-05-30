@@ -61,6 +61,7 @@ pub struct FrameBuilderConfig {
     pub gpu_supports_fast_clears: bool,
     pub gpu_supports_advanced_blend: bool,
     pub advanced_blend_is_coherent: bool,
+    pub batch_lookback_count: usize,
 }
 
 /// A set of common / global resources that are retained between
@@ -226,6 +227,7 @@ impl FrameBuilder {
                 gpu_supports_fast_clears: false,
                 gpu_supports_advanced_blend: false,
                 advanced_blend_is_coherent: false,
+                batch_lookback_count: 0,
             },
         }
     }
@@ -592,6 +594,7 @@ impl FrameBuilder {
                     use_dual_source_blending,
                     use_advanced_blending: self.config.gpu_supports_advanced_blend,
                     break_advanced_blend_batches: !self.config.advanced_blend_is_coherent,
+                    batch_lookback_count: self.config.batch_lookback_count,
                     clip_scroll_tree,
                     data_stores,
                     surfaces: &surfaces,
