@@ -81,17 +81,5 @@ function createFakeClient() {
 
   const client = {};
   EventEmitter.decorate(client);
-
-  // Define aliases expected by the remote-client-manager.
-  client.addOneTimeListener = (evt, listener) => {
-    return client.once(evt, listener);
-  };
-  client.addListener = (evt, listener) => {
-    return client.on(evt, listener);
-  };
-  client.removeListener = (evt, listener) => {
-    return client.off(evt, listener);
-  };
-
   return client;
 }

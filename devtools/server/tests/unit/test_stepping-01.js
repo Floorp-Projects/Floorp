@@ -16,15 +16,15 @@ async function testFinish({threadClient, debuggerClient}) {
   do_test_finished();
 }
 
-async function invokeAndPause({global, debuggerClient}, expression) {
+async function invokeAndPause({global, threadClient}, expression) {
   return executeOnNextTickAndWaitForPause(
     () => Cu.evalInSandbox(expression, global),
-    debuggerClient
+    threadClient
   );
 }
 
-async function step({threadClient, debuggerClient}, cmd) {
-  return cmd(debuggerClient, threadClient);
+async function step(threadClient, cmd) {
+  return cmd(threadClient);
 }
 
 function getPauseLocation(packet) {
@@ -37,10 +37,10 @@ function getPauseReturn(packet) {
   return packet.why.frameFinished.return;
 }
 
-async function steps(dbg, sequence) {
+async function steps(threadClient, sequence) {
   const locations = [];
   for (const cmd of sequence) {
-    const packet = await step(dbg, cmd);
+    const packet = await step(threadClient, cmd);
     locations.push(getPauseLocation(packet));
   }
   return locations;
@@ -48,26 +48,28 @@ async function steps(dbg, sequence) {
 
 async function stepOutOfA(dbg, func, expectedLocation) {
   await invokeAndPause(dbg, `${func}()`);
-  await steps(dbg, [stepOver, stepIn]);
+  const { threadClient } = dbg;
+  await steps(threadClient, [stepOver, stepIn]);
 
   dump(`>>> oof\n`);
-  const packet = await step(dbg, stepOut);
+  const packet = await stepOut(threadClient);
   dump(`>>> foo\n`);
 
   deepEqual(getPauseLocation(packet), expectedLocation, `step out location in ${func}`);
 
-  await resume(dbg.threadClient);
+  await resume(threadClient);
 }
 
 async function stepOverInA(dbg, func, expectedLocation) {
   await invokeAndPause(dbg, `${func}()`);
-  await steps(dbg, [stepOver, stepIn]);
+  const { threadClient } = dbg;
+  await steps(threadClient, [stepOver, stepIn]);
 
-  let packet = await step(dbg, stepOver);
+  let packet = await stepOver(threadClient);
   dump(`>> stepOverInA hi\n`);
   equal(getPauseReturn(packet).ownPropertyLength, 1, "a() is returning obj");
 
-  packet = await step(dbg, stepOver);
+  packet = await stepOver(threadClient);
   deepEqual(getPauseLocation(packet), expectedLocation, `step out location in ${func}`);
 
   await resume(dbg.threadClient);

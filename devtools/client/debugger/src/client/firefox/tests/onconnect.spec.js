@@ -14,7 +14,7 @@ const tabTarget = {
 };
 
 const threadClient = {
-  addListener: () => {},
+  on: () => {},
   reconfigure: () => {},
   getSources: () => {
     return {

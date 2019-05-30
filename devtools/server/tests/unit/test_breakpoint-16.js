@@ -11,7 +11,7 @@
 add_task(threadClientTest(({ threadClient, debuggee, client }) => {
   return new Promise(resolve => {
     // Debugger statement
-    client.addOneTimeListener("paused", async function(event, packet) {
+    threadClient.once("paused", async function(packet) {
       const source = await getSourceById(
         threadClient,
         packet.frame.where.actor
@@ -25,7 +25,7 @@ add_task(threadClientTest(({ threadClient, debuggee, client }) => {
 
       threadClient.setBreakpoint(location, {});
 
-      threadClient.addListener("paused", function onPaused(event, packet) {
+      threadClient.on("paused", function onPaused(packet) {
         Assert.equal(packet.type, "paused");
         Assert.equal(packet.why.type, "breakpoint");
         Assert.equal(packet.frame.where.actor, source.actor);
@@ -37,7 +37,7 @@ add_task(threadClientTest(({ threadClient, debuggee, client }) => {
                      timesBreakpointHit);
 
         if (++timesBreakpointHit === 3) {
-          threadClient.removeListener("paused", onPaused);
+          threadClient.off("paused", onPaused);
           threadClient.removeBreakpoint(location);
           threadClient.resume().then(resolve);
         } else {

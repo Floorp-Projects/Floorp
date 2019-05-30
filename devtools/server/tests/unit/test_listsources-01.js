@@ -36,7 +36,7 @@ function run_test() {
 }
 
 function test_simple_listsources() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     gThreadClient.getSources().then(function(response) {
       Assert.ok(response.sources.some(function(s) {
         return s.url && s.url.match(/test_listsources-01.js/);

@@ -30,7 +30,7 @@ const BLACK_BOXED_URL = "http://example.com/black-boxed.min.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 const testBlackBox = async function() {
-  await executeOnNextTickAndWaitForPause(evalCode, gClient);
+  await executeOnNextTickAndWaitForPause(evalCode, gThreadClient);
 
   const { sources } = await getSources(gThreadClient);
   equal(sources.length, 2);

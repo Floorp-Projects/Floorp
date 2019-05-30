@@ -14,10 +14,10 @@ async function testFinish({threadClient, debuggerClient}) {
   do_test_finished();
 }
 
-async function invokeAndPause({global, debuggerClient}, expression) {
+async function invokeAndPause({global, threadClient}, expression) {
   return executeOnNextTickAndWaitForPause(
     () => Cu.evalInSandbox(expression, global),
-    debuggerClient
+    threadClient
   );
 }
 

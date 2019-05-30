@@ -98,6 +98,17 @@ function test_richlistbox()
   is(richListBox.selectedItems.length, 1, "one item selected");
   is(richListBox.selectedItems[0], richListBox.firstChild, "first item selected");
 
+  // Selected item re-insertion should keep the item selected.
+  richListBox.clearSelection();
+  item = richListBox.firstElementChild;
+  richListBox.selectedItem = item;
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], item, "first item selected");
+  item.remove();
+  richListBox.append(item);
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], item, "last (previosly first) item selected");
+
   SimpleTest.finish();
 }
 

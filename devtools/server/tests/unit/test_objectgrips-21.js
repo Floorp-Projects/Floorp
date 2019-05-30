@@ -199,7 +199,7 @@ async function test_unsafe_grips({ threadClient, debuggee, client }, tests, prin
   }.toString());
   for (let data of tests) {
     await new Promise(function(resolve) {
-      threadClient.addOneTimeListener("paused", async function(event, packet) {
+      threadClient.once("paused", async function(packet) {
         const [objGrip, inheritsGrip] = packet.frame.arguments;
         for (const grip of [objGrip, inheritsGrip]) {
           const isUnsafe = grip === objGrip;

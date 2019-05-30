@@ -164,6 +164,11 @@ recurse_win32-artifact:
 	mv $(DIST)/i686/bin/* $(DIST)/i686
 endif
 
+ifdef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+recurse_android-fat-aar-artifact:
+	$(call py_action,fat_aar,$(MOZ_ANDROID_FAT_AAR_ARCHITECTURES) --distdir $(abspath $(DIST)/fat-aar))
+endif # MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+
 ifdef MOZ_WIDGET_TOOLKIT
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites

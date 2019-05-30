@@ -390,7 +390,7 @@ function addDeviceForTest(device) {
 
 async function waitForClientClose(ui) {
   info("Waiting for RDM debugger client to close");
-  await ui.client.addOneTimeListener("closed");
+  await ui.client.once("closed");
   info("RDM's debugger client is now closed");
 }
 

@@ -37,17 +37,17 @@ add_task(async function() {
   const updates = [];
   let netActor = null;
   const onAllNetworkEventUpdateReceived = new Promise(resolve => {
-    const onNetworkEventUpdate = (type, packet) => {
+    const onNetworkEventUpdate = (packet) => {
       updates.push(packet.updateType);
       assertNetworkEventUpdate(netActor, packet);
 
       if (updates.includes("responseContent") &&
           updates.includes("eventTimings")) {
-        client.removeListener("networkEventUpdate", onNetworkEventUpdate);
+        client.off("networkEventUpdate", onNetworkEventUpdate);
         resolve();
       }
     };
-    client.addListener("networkEventUpdate", onNetworkEventUpdate);
+    client.on("networkEventUpdate", onNetworkEventUpdate);
   });
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {

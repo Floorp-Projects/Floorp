@@ -31,14 +31,14 @@ function run_test() {
 }
 
 function test_thread_lifetime() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const pauseGrip = packet.frame.arguments[0];
 
     // Create a thread-lifetime actor for this object.
     gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function(response) {
       // Successful promotion won't return an error.
       Assert.equal(response.error, undefined);
-      gThreadClient.addOneTimeListener("paused", function(event, packet) {
+      gThreadClient.once("paused", function(packet) {
         // Verify that the promoted actor is returned again.
         Assert.equal(pauseGrip.actor, packet.frame.arguments[0].actor);
         // Now that we've resumed, should get unrecognizePacketType for the

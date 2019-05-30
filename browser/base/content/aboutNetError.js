@@ -363,6 +363,212 @@ function initPageCertError() {
 
   let event = new CustomEvent("AboutNetErrorLoad", {bubbles: true});
   document.getElementById("advancedButton").dispatchEvent(event);
+
+  setTechnicalDetailsOnCertError();
+}
+
+function setTechnicalDetailsOnCertError() {
+  let technicalInfo = document.getElementById("badCertTechnicalInfo");
+
+  function setL10NLabel(l10nId, args = {}, attrs = {}, rewrite = true) {
+    let elem = document.createElement("label");
+    if (rewrite) {
+      technicalInfo.textContent = "";
+    }
+    technicalInfo.appendChild(elem);
+
+    let newLines = document.createTextNode("\n \n");
+    technicalInfo.appendChild(newLines);
+
+    if (attrs) {
+      let link = document.createElement("a");
+      for (let attr of Object.keys(attrs)) {
+        link.setAttribute(attr, attrs[attr]);
+      }
+      elem.appendChild(link);
+    }
+
+    if (args) {
+      document.l10n.setAttributes(elem, l10nId, args);
+    } else {
+      document.l10n.setAttributes(elem, l10nId);
+    }
+  }
+
+  let cssClass = getCSSClass();
+  let error =  getErrorCode();
+
+  let hostString = document.location.hostname;
+  let port = document.location.port;
+  if (port && port != 443) {
+    hostString += ":" + port;
+  }
+
+  let l10nId;
+  let args = {
+    hostname: hostString,
+  };
+  let failedCertInfo = document.getFailedCertSecurityInfo();
+  if (failedCertInfo.isUntrusted) {
+    switch (failedCertInfo.errorCodeString) {
+      case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
+        setL10NLabel("cert-error-mitm-intro");
+        setL10NLabel("cert-error-mitm-mozilla", {}, {}, false);
+        setL10NLabel("cert-error-mitm-connection", {}, {}, false);
+        break;
+      case "SEC_ERROR_UNKNOWN_ISSUER":
+        setL10NLabel("cert-error-trust-unknown-issuer-intro");
+        setL10NLabel("cert-error-trust-unknown-issuer", args, {}, false);
+        break;
+      case "SEC_ERROR_CA_CERT_INVALID":
+        setL10NLabel("cert-error-intro", args);
+        setL10NLabel("cert-error-trust-cert-invalid", {}, {}, false);
+        break;
+      case "SEC_ERROR_UNTRUSTED_ISSUER":
+        setL10NLabel("cert-error-intro", args);
+        setL10NLabel("cert-error-trust-untrusted-issuer", {}, {}, false);
+        break;
+      case "SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED":
+        setL10NLabel("cert-error-intro", args);
+        setL10NLabel("cert-error-trust-signature-algorithm-disabled", {}, {}, false);
+        break;
+      case "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE":
+        setL10NLabel("cert-error-intro", args);
+        setL10NLabel("cert-error-trust-expired-issuer", {}, {}, false);
+        break;
+      case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
+        setL10NLabel("cert-error-intro", args);
+        setL10NLabel("cert-error-trust-self-signed", {}, {}, false);
+        break;
+      case "MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED":
+        setL10NLabel("cert-error-intro", args);
+        setL10NLabel("cert-error-trust-symantec", {}, {}, false);
+        break;
+      default:
+        setL10NLabel("cert-error-intro", args);
+        setL10NLabel("cert-error-untrusted-default", {}, {}, false);
+    }
+  }
+
+  if (failedCertInfo.isDomainMismatch) {
+    let subjectAltNames = failedCertInfo.subjectAltNames.split(",");
+    subjectAltNames = subjectAltNames.filter(name => name.length > 0);
+    let numSubjectAltNames = subjectAltNames.length;
+
+    if (numSubjectAltNames != 0) {
+      if (numSubjectAltNames == 1) {
+        args["alt-name"] = subjectAltNames[0];
+
+        // Let's check if we want to make this a link.
+        let okHost = failedCertInfo.subjectAltNames;
+        let href = "";
+        let thisHost = document.location.hostname;
+        let proto = document.location.protocol + "//";
+        // If okHost is a wildcard domain ("*.example.com") let's
+        // use "www" instead.  "*.example.com" isn't going to
+        // get anyone anywhere useful. bug 432491
+        okHost = okHost.replace(/^\*\./, "www.");
+        /* case #1:
+         * example.com uses an invalid security certificate.
+         *
+         * The certificate is only valid for www.example.com
+         *
+         * Make sure to include the "." ahead of thisHost so that
+         * a MitM attack on paypal.com doesn't hyperlink to "notpaypal.com"
+         *
+         * We'd normally just use a RegExp here except that we lack a
+         * library function to escape them properly (bug 248062), and
+         * domain names are famous for having '.' characters in them,
+         * which would allow spurious and possibly hostile matches.
+         */
+
+         if (okHost.endsWith("." + thisHost)) {
+           href = proto + okHost;
+         }
+         /* case #2:
+          * browser.garage.maemo.org uses an invalid security certificate.
+          *
+          * The certificate is only valid for garage.maemo.org
+          */
+         if (thisHost.endsWith("." + okHost)) {
+           href = proto + okHost;
+         }
+
+         // If we set a link, meaning there's something helpful for
+         // the user here, expand the section by default
+         if (href && cssClass != "expertBadCert") {
+           document.getElementById("badCertAdvancedPanel").style.display = "block";
+           if (error == "nssBadCert") {
+             // Toggling the advanced panel must ensure that the debugging
+             // information panel is hidden as well, since it's opened by the
+             // error code link in the advanced panel.
+             let div = document.getElementById("certificateErrorDebugInformation");
+             div.style.display = "none";
+           }
+         }
+
+         // Set the link if we want it.
+         if (href) {
+           setL10NLabel("cert-error-domain-mismatch-single", args, {
+             "href": href,
+             "data-l10n-name": "domain-mismatch-link",
+             "id": "cert_domain_link",
+           });
+         } else {
+           setL10NLabel("cert-error-domain-mismatch-single-nolink", args);
+         }
+      } else {
+        let names = subjectAltNames.join(", ");
+        args["subject-alt-names"] = names;
+        setL10NLabel("cert-error-domain-mismatch-multiple", args);
+      }
+    } else {
+      setL10NLabel("cert-error-domain-mismatch", { hostname: hostString });
+    }
+  }
+
+  if (failedCertInfo.isNotValidAtThisTime) {
+    let notBefore = failedCertInfo.validNotBefore;
+    let notAfter = failedCertInfo.validNotAfter;
+    let formatter = new Intl.DateTimeFormat("default");
+    args = {
+      hostname: hostString,
+    };
+    if (notBefore && (Date.now() < notAfter)) {
+      let notBeforeLocalTime = formatter.format(new Date(notBefore));
+      l10nId = "cert-error-not-yet-valid-now";
+      args["not-before-local-time"] = notBeforeLocalTime;
+    } else {
+      let notAfterLocalTime = formatter.format(new Date(notAfter));
+      l10nId = "cert-error-expired-now";
+      args["not-after-local-time"] = notAfterLocalTime;
+    }
+    setL10NLabel(l10nId, args);
+  }
+
+  setL10NLabel("cert-error-code-prefix-link", { error: failedCertInfo.errorCodeString }, {
+    "title": failedCertInfo.errorCodeString,
+    "id": "errorCode",
+    "data-l10n-name": "error-code-link",
+    "data-telemetry-id": "error_code_link",
+  }, false);
+  let errorCodeLink = document.getElementById("errorCode");
+  if (errorCodeLink) {
+    // We're attaching the event listener to the parent element and not on
+    // the errorCodeLink itself because event listeners cannot be attached
+    // to fluent DOM overlays.
+    technicalInfo.addEventListener("click", handleErrorCodeClick);
+  }
+}
+
+function handleErrorCodeClick(event) {
+  if (event.target.id !== "errorCode") {
+    return;
+  }
+
+  let debugInfo = document.getElementById("certificateErrorDebugInformation");
+  debugInfo.style.display = "block";
+  debugInfo.scrollIntoView({block: "start", behavior: "smooth"});
 }
 
 /* Only do autofocus if we're the toplevel frame; otherwise we
