@@ -3511,7 +3511,6 @@ def getConditionList(idlobj, cxName, objName):
     that needs to run before the list of conditions can be evaluated.
     """
     conditions = []
-    conditionSetup = None
     pref = idlobj.getExtendedAttribute("Pref")
     if pref:
         assert isinstance(pref, list) and len(pref) == 1
@@ -3526,8 +3525,7 @@ def getConditionList(idlobj, cxName, objName):
     if idlobj.getExtendedAttribute("SecureContext"):
         conditions.append("mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(%s, %s)" % (cxName, objName))
 
-    return (CGList((CGGeneric(cond) for cond in conditions), " &&\n"),
-            conditionSetup)
+    return CGList((CGGeneric(cond) for cond in conditions), " &&\n")
 
 
 class CGConstructorEnabled(CGAbstractMethod):
@@ -3571,14 +3569,13 @@ class CGConstructorEnabled(CGAbstractMethod):
                                                    "!NS_IsMainThread()")
             body.append(exposedInWorkerCheck)
 
-        (conditions, conditionsSetup) = getConditionList(iface, "aCx", "aObj")
+        conditions = getConditionList(iface, "aCx", "aObj")
 
         # We should really have some conditions
         assert len(body) or len(conditions)
 
         conditionsWrapper = ""
         if len(conditions):
-            body.append(conditionsSetup);
             conditionsWrapper = CGWrapper(conditions,
                                           pre="return ",
                                           post=";\n",
@@ -13918,12 +13915,7 @@ class CGDictionary(CGThing):
               return false;
             }
             """))
-        (conditions, conditionsSetup) = getConditionList(member, "cx", "*object")
-        if conditionsSetup is not None:
-            raise TypeError("We don't support Pref annotations on dictionary "
-                            "members.  If we start to, we need to make sure all "
-                            "the variable names conditionsSetup uses for a "
-                            "given dictionary are unique.")
+        conditions = getConditionList(member, "cx", "*object")
         if len(conditions) != 0:
             setTempValue = CGIfElseWrapper(conditions.define(),
                                            setTempValue,
@@ -14039,12 +14031,7 @@ class CGDictionary(CGThing):
         if member.canHaveMissingValue():
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
-        (conditions, conditionsSetup) = getConditionList(member, "cx", "obj")
-        if conditionsSetup is not None:
-            raise TypeError("We don't support Pref annotations on dictionary "
-                            "members.  If we start to, we need to make sure all "
-                            "the variable names conditionsSetup uses for a "
-                            "given dictionary are unique.")
+        conditions = getConditionList(member, "cx", "obj")
         if len(conditions) != 0:
             conversion = CGIfWrapper(conversion, conditions.define())
         return conversion
