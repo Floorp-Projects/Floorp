@@ -633,7 +633,7 @@ void GCMarker::markImplicitEdgesHelper(T markedThing) {
   MOZ_ASSERT(zone->isGCMarking());
   MOZ_ASSERT(!zone->isGCSweeping());
 
-  auto p = zone->gcWeakKeys().get(JS::GCCellPtr(markedThing));
+  auto p = zone->gcWeakKeys().get(markedThing);
   if (!p) {
     return;
   }

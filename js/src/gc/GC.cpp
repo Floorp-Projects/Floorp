@@ -4847,7 +4847,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty();
        r.popFront()) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    Zone* zone = gc::TenuredCell::fromPointer(r.front().key.asCell())->zone();
+    Zone* zone = gc::TenuredCell::fromPointer(r.front().key)->zone();
     if (!zone->gcWeakKeys().put(std::move(r.front().key),
                                 std::move(r.front().value))) {
       oomUnsafe.crash("restoring weak keys table for validator");
