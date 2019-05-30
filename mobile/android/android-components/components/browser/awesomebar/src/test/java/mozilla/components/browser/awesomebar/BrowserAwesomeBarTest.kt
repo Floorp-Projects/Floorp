@@ -20,10 +20,10 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import java.util.UUID
@@ -65,8 +65,11 @@ class BrowserAwesomeBarTest {
     @Test
     fun `BrowserAwesomeBar forwards onInputStarted to providers`() {
         val provider1: AwesomeBar.SuggestionProvider = mock()
+        `when`(provider1.id).thenReturn("1")
         val provider2: AwesomeBar.SuggestionProvider = mock()
+        `when`(provider2.id).thenReturn("2")
         val provider3: AwesomeBar.SuggestionProvider = mock()
+        `when`(provider3.id).thenReturn("3")
 
         val awesomeBar = BrowserAwesomeBar(testContext)
         awesomeBar.addProviders(provider1, provider2)
@@ -83,8 +86,11 @@ class BrowserAwesomeBarTest {
     @Test
     fun `BrowserAwesomeBar forwards onInputCancelled to providers`() {
         val provider1: AwesomeBar.SuggestionProvider = mock()
+        `when`(provider1.id).thenReturn("1")
         val provider2: AwesomeBar.SuggestionProvider = mock()
+        `when`(provider2.id).thenReturn("2")
         val provider3: AwesomeBar.SuggestionProvider = mock()
+        `when`(provider3.id).thenReturn("3")
 
         val awesomeBar = BrowserAwesomeBar(testContext)
         awesomeBar.addProviders(provider1, provider2)
@@ -95,10 +101,6 @@ class BrowserAwesomeBarTest {
         verify(provider1).onInputCancelled()
         verify(provider2).onInputCancelled()
         verify(provider3).onInputCancelled()
-
-        verifyNoMoreInteractions(provider1)
-        verifyNoMoreInteractions(provider2)
-        verifyNoMoreInteractions(provider3)
     }
 
     @Test
@@ -385,6 +387,37 @@ class BrowserAwesomeBarTest {
         awesomeBar.getUniqueSuggestionId(AwesomeBar.Suggestion(id = "21", score = 0, provider = provider))
 
         assertEquals(1, awesomeBar.getUniqueSuggestionId(AwesomeBar.Suggestion(id = "1", score = 0, provider = provider)))
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `exception thrown when duplicate provider added`() {
+        val awesomeBar = BrowserAwesomeBar(testContext)
+        val provider1 = mockProvider()
+        `when`(provider1.id).thenReturn("1")
+
+        val provider2 = mockProvider()
+        `when`(provider2.id).thenReturn("2")
+
+        val provider3 = mockProvider()
+        `when`(provider3.id).thenReturn("1")
+
+        awesomeBar.addProviders(provider1, provider2, provider3)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `exception thrown when provider added that already exists`() {
+        val awesomeBar = BrowserAwesomeBar(testContext)
+        val provider1 = mockProvider()
+        `when`(provider1.id).thenReturn("1")
+
+        val provider2 = mockProvider()
+        `when`(provider2.id).thenReturn("2")
+
+        val provider3 = mockProvider()
+        `when`(provider3.id).thenReturn("1")
+
+        awesomeBar.addProviders(provider1)
+        awesomeBar.addProviders(provider2, provider3)
     }
 
     private fun mockProvider(): AwesomeBar.SuggestionProvider = spy(object : AwesomeBar.SuggestionProvider {
