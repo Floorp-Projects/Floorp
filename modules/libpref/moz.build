@@ -49,9 +49,17 @@ DEFINES['MOZ_WIDGET_TOOLKIT'] = CONFIG['MOZ_WIDGET_TOOLKIT']
 if CONFIG['MOZ_ENABLE_WEBRENDER']:
     DEFINES['MOZ_ENABLE_WEBRENDER'] = True
 
-grepref_location = FINAL_TARGET_PP_FILES
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    grepref_location = grepref_location[CONFIG['ANDROID_CPU_ARCH']]
-grepref_location += [
-    'greprefs.js',
-]
+    if not CONFIG['MOZ_ANDROID_FAT_AAR_ARCHITECTURES']:
+        FINAL_TARGET_PP_FILES[CONFIG['ANDROID_CPU_ARCH']] += [
+            'greprefs.js',
+        ]
+    else:
+        for arch in CONFIG['MOZ_ANDROID_FAT_AAR_ARCHITECTURES']:
+            FINAL_TARGET_FILES[arch] += [
+                 '!/dist/fat-aar/output/{arch}/greprefs.js'.format(arch=arch),
+            ]
+else:
+    FINAL_TARGET_PP_FILES += [
+        'greprefs.js',
+    ]
