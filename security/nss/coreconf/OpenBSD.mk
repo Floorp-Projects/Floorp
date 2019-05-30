@@ -36,6 +36,11 @@ DSO_CFLAGS		= -fPIC -DPIC
 DSO_LDOPTS		= -shared -fPIC -Wl,-soname,lib$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
 
 MKSHLIB			= $(CC) $(DSO_LDOPTS)
+ifdef MAPFILE
+	MKSHLIB += -Wl,--version-script,$(MAPFILE)
+endif
+PROCESS_MAP_FILE = grep -v ';-' $< | \
+        sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
 
 USE_SYSTEM_ZLIB		= 1
 ZLIB_LIBS		= -lz
