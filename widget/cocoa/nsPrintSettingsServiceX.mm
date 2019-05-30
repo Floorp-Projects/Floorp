@@ -48,23 +48,12 @@ nsresult nsPrintSettingsServiceX::SerializeToPrintDataChild(nsIPrintSettings* aS
   // printer/printing settings from the OS causes a connection to the
   // printer to be made which is blocked by sandboxing and results in hangs.
   if (aWBP) {
-    // When serializing an nsIWebBrowserPrint, we need to pass up the first
-    // document name. We could pass up the entire collection of document
-    // names, but the OS X printing prompt code only really cares about
-    // the first one, so we just send the first to save IPC traffic.
-    char16_t** docTitles;
-    uint32_t titleCount;
-    nsresult rv = aWBP->EnumerateDocumentNames(&titleCount, &docTitles);
+    // When serializing an nsIWebBrowserPrint, we need to pass up the
+    // document name.
+    nsAutoString docName;
+    nsresult rv = aWBP->GetDocumentName(docName);
     if (NS_SUCCEEDED(rv)) {
-      if (titleCount > 0) {
-        data->printJobName().Assign(docTitles[0]);
-      }
-
-      for (int32_t i = titleCount - 1; i >= 0; i--) {
-        free(docTitles[i]);
-      }
-      free(docTitles);
-      docTitles = nullptr;
+      data->printJobName().Assign(docName.get());
     }
   }
 
