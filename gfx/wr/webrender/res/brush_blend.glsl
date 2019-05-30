@@ -25,6 +25,7 @@ flat varying vec3 vColorOffset;
 flat varying vec4 vUvClipBounds;
 flat varying int vTableAddress;
 flat varying int vFuncs[4];
+flat varying vec4 vFloodColor;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -134,6 +135,11 @@ void brush_vs(
         case 13: {
             // Component Transfer
             vTableAddress = prim_user_data.z;
+            break;
+        }
+        case 14: {
+            // Flood
+            vFloodColor = fetch_from_gpu_cache_1(prim_user_data.z);
             break;
         }
         default: break;
@@ -263,6 +269,10 @@ Fragment brush_fs() {
             colora = ComponentTransfer(colora);
             color = colora.rgb;
             alpha = colora.a;
+            break;
+        case 14: // Flood
+            color = vFloodColor.rgb;
+            alpha = vFloodColor.a;
             break;
         default:
             color = vColorMat * color + vColorOffset;

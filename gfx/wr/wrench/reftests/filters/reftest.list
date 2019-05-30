@@ -44,3 +44,4 @@ skip_on(android) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml  #
 != filter-drop-shadow-huge.yaml blank.yaml
 == filter-blur-scaled.yaml filter-blur-scaled-ref.yaml
 skip_on(android) == filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png  # fails on Android
+== filter-flood.yaml filter-flood-ref.yaml

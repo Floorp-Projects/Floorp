@@ -306,6 +306,9 @@ fn write_stacking_context(
             FilterOp::ComponentTransfer => {
                 filters.push(Yaml::String("component-transfer".to_string()))
             }
+            FilterOp::Flood(color) => {
+                filters.push(Yaml::String(format!("flood({})", color_to_string(color))))
+            }
         }
     }
 
