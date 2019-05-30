@@ -537,6 +537,40 @@ TEST_F(TlsConnectStreamTls13, PostHandshakeAuthDecline) {
                       capture_cert_req->buffer().len()));
 }
 
+// Check if post-handshake auth still works when session tickets are enabled:
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1553443
+TEST_F(TlsConnectStreamTls13, PostHandshakeAuthWithSessionTicketsEnabled) {
+  EnsureTlsSetup();
+  client_->SetupClientAuth();
+  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
+                                      SSL_ENABLE_POST_HANDSHAKE_AUTH, PR_TRUE));
+  EXPECT_EQ(SECSuccess, SSL_OptionSet(client_->ssl_fd(),
+                                      SSL_ENABLE_SESSION_TICKETS, PR_TRUE));
+  EXPECT_EQ(SECSuccess, SSL_OptionSet(server_->ssl_fd(),
+                                      SSL_ENABLE_SESSION_TICKETS, PR_TRUE));
+  size_t called = 0;
+  server_->SetAuthCertificateCallback(
+      [&called](TlsAgent*, PRBool, PRBool) -> SECStatus {
+        called++;
+        return SECSuccess;
+      });
+  Connect();
+  EXPECT_EQ(0U, called);
+  // Send CertificateRequest.
+  EXPECT_EQ(SECSuccess, SSL_GetClientAuthDataHook(
+                            client_->ssl_fd(), GetClientAuthDataHook, nullptr));
+  EXPECT_EQ(SECSuccess, SSL_SendCertificateRequest(server_->ssl_fd()))
+      << "Unexpected error: " << PORT_ErrorToName(PORT_GetError());
+  server_->SendData(50);
+  client_->ReadBytes(50);
+  client_->SendData(50);
+  server_->ReadBytes(50);
+  EXPECT_EQ(1U, called);
+  ScopedCERTCertificate cert1(SSL_PeerCertificate(server_->ssl_fd()));
+  ScopedCERTCertificate cert2(SSL_LocalCertificate(client_->ssl_fd()));
+  EXPECT_TRUE(SECITEM_ItemsAreEqual(&cert1->derCert, &cert2->derCert));
+}
+
 // In TLS 1.3, the client sends its cert rejection on the
 // second flight, and since it has already received the
 // server's Finished, it transitions to complete and
@@ -699,6 +733,44 @@ TEST_P(TlsConnectTls12, ClientAuthInconsistentPssSignatureScheme) {
                                                  ssl_sig_rsa_pss_pss_sha256);
 
   ConnectExpectAlert(server_, kTlsAlertIllegalParameter);
+}
+
+TEST_P(TlsConnectTls13, ClientAuthPkcs1SignatureScheme) {
+  static const SSLSignatureScheme kSignatureScheme[] = {
+      ssl_sig_rsa_pkcs1_sha256, ssl_sig_rsa_pss_rsae_sha256};
+
+  Reset(TlsAgent::kServerRsa, "rsa");
+  client_->SetSignatureSchemes(kSignatureScheme,
+                               PR_ARRAY_SIZE(kSignatureScheme));
+  server_->SetSignatureSchemes(kSignatureScheme,
+                               PR_ARRAY_SIZE(kSignatureScheme));
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+
+  auto capture_cert_verify = MakeTlsFilter<TlsHandshakeRecorder>(
+      client_, kTlsHandshakeCertificateVerify);
+  capture_cert_verify->EnableDecryption();
+
+  Connect();
+  CheckSigScheme(capture_cert_verify, 0, server_, ssl_sig_rsa_pss_rsae_sha256,
+                 1024);
+}
+
+TEST_P(TlsConnectTls13, ClientAuthPkcs1SignatureSchemeOnly) {
+  static const SSLSignatureScheme kSignatureScheme[] = {
+      ssl_sig_rsa_pkcs1_sha256};
+
+  Reset(TlsAgent::kServerRsa, "rsa");
+  client_->SetSignatureSchemes(kSignatureScheme,
+                               PR_ARRAY_SIZE(kSignatureScheme));
+  server_->SetSignatureSchemes(kSignatureScheme,
+                               PR_ARRAY_SIZE(kSignatureScheme));
+  client_->SetupClientAuth();
+  server_->RequestClientAuth(true);
+
+  ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
+  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
 
 class TlsZeroCertificateRequestSigAlgsFilter : public TlsHandshakeFilter {
@@ -933,7 +1005,7 @@ TEST_P(TlsConnectTls13, InconsistentSignatureSchemeAlert) {
   client_->CheckErrorCode(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM);
 }
 
-TEST_P(TlsConnectTls12Plus, RequestClientAuthWithSha384) {
+TEST_P(TlsConnectTls12, RequestClientAuthWithSha384) {
   server_->SetSignatureSchemes(kSignatureSchemeRsaSha384,
                                PR_ARRAY_SIZE(kSignatureSchemeRsaSha384));
   server_->RequestClientAuth(false);
@@ -1395,12 +1467,21 @@ TEST_P(TlsSignatureSchemeConfiguration, SignatureSchemeConfigBoth) {
 INSTANTIATE_TEST_CASE_P(
     SignatureSchemeRsa, TlsSignatureSchemeConfiguration,
     ::testing::Combine(
-        TlsConnectTestBase::kTlsVariantsAll, TlsConnectTestBase::kTlsV12Plus,
+        TlsConnectTestBase::kTlsVariantsAll, TlsConnectTestBase::kTlsV12,
         ::testing::Values(TlsAgent::kServerRsaSign),
         ::testing::Values(ssl_auth_rsa_sign),
         ::testing::Values(ssl_sig_rsa_pkcs1_sha256, ssl_sig_rsa_pkcs1_sha384,
                           ssl_sig_rsa_pkcs1_sha512, ssl_sig_rsa_pss_rsae_sha256,
                           ssl_sig_rsa_pss_rsae_sha384)));
+// RSASSA-PKCS1-v1_5 is not allowed to be used in TLS 1.3
+INSTANTIATE_TEST_CASE_P(
+    SignatureSchemeRsaTls13, TlsSignatureSchemeConfiguration,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                       TlsConnectTestBase::kTlsV13,
+                       ::testing::Values(TlsAgent::kServerRsaSign),
+                       ::testing::Values(ssl_auth_rsa_sign),
+                       ::testing::Values(ssl_sig_rsa_pss_rsae_sha256,
+                                         ssl_sig_rsa_pss_rsae_sha384)));
 // PSS with SHA-512 needs a bigger key to work.
 INSTANTIATE_TEST_CASE_P(
     SignatureSchemeBigRsa, TlsSignatureSchemeConfiguration,
