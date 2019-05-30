@@ -107,9 +107,7 @@ class LoginList extends ReflectedFluentElement {
 
   loginAdded(login) {
     this._logins.push(login);
-    let list = this.shadowRoot.querySelector("ol");
-    list.append(new LoginListItem(login));
-    document.l10n.setAttributes(this, "login-list", {count: this._logins.length});
+    this.render();
   }
 
   loginModified(login) {
@@ -119,25 +117,12 @@ class LoginList extends ReflectedFluentElement {
         break;
       }
     }
-    let list = this.shadowRoot.querySelector("ol");
-    for (let loginListItem of list.children) {
-      if (loginListItem.getAttribute("guid") == login.guid) {
-        loginListItem.update(login);
-        break;
-      }
-    }
+    this.render();
   }
 
   loginRemoved(login) {
     this._logins = this._logins.filter(l => l.guid != login.guid);
-    let list = this.shadowRoot.querySelector("ol");
-    for (let loginListItem of list.children) {
-      if (loginListItem.getAttribute("guid") == login.guid) {
-        loginListItem.remove();
-        break;
-      }
-    }
-    document.l10n.setAttributes(this, "login-list", {count: this._logins.length});
+    this.render();
   }
 }
 customElements.define("login-list", LoginList);
