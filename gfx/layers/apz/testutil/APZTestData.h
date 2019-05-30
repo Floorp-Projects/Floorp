@@ -130,7 +130,7 @@ class APZPaintLogHelper {
  public:
   APZPaintLogHelper(APZTestData* aTestData, SequenceNumber aPaintSequenceNumber)
       : mTestData(aTestData), mPaintSequenceNumber(aPaintSequenceNumber) {
-    MOZ_ASSERT(!aTestData || StaticPrefs::APZTestLoggingEnabled(),
+    MOZ_ASSERT(!aTestData || StaticPrefs::apz_test_logging_enabled(),
                "don't call me");
   }
 

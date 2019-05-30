@@ -202,7 +202,7 @@ class ClientLayerManager final : public LayerManager,
   void LogTestDataForCurrentPaint(ScrollableLayerGuid::ViewID aScrollId,
                                   const std::string& aKey,
                                   const std::string& aValue) {
-    MOZ_ASSERT(StaticPrefs::APZTestLoggingEnabled(), "don't call me");
+    MOZ_ASSERT(StaticPrefs::apz_test_logging_enabled(), "don't call me");
     mApzTestData.LogTestDataForPaint(mPaintSequenceNumber, aScrollId, aKey,
                                      aValue);
   }
@@ -215,18 +215,18 @@ class ClientLayerManager final : public LayerManager,
 
   // TODO(botond): When we start using this and write a wrapper similar to
   // nsLayoutUtils::LogTestDataForPaint(), make sure that wrapper checks
-  // StaticPrefs::APZTestLoggingEnabled().
+  // StaticPrefs::apz_test_logging_enabled().
   void LogTestDataForRepaintRequest(SequenceNumber aSequenceNumber,
                                     ScrollableLayerGuid::ViewID aScrollId,
                                     const std::string& aKey,
                                     const std::string& aValue) {
-    MOZ_ASSERT(StaticPrefs::APZTestLoggingEnabled(), "don't call me");
+    MOZ_ASSERT(StaticPrefs::apz_test_logging_enabled(), "don't call me");
     mApzTestData.LogTestDataForRepaintRequest(aSequenceNumber, aScrollId, aKey,
                                               aValue);
   }
   void LogAdditionalTestData(const std::string& aKey,
                              const std::string& aValue) {
-    MOZ_ASSERT(StaticPrefs::APZTestLoggingEnabled(), "don't call me");
+    MOZ_ASSERT(StaticPrefs::apz_test_logging_enabled(), "don't call me");
     mApzTestData.RecordAdditionalData(aKey, aValue);
   }
 

@@ -8602,7 +8602,7 @@ void nsLayoutUtils::LogAdditionalTestData(nsDisplayListBuilder* aBuilder,
 
 /* static */
 bool nsLayoutUtils::IsAPZTestLoggingEnabled() {
-  return StaticPrefs::APZTestLoggingEnabled();
+  return StaticPrefs::apz_test_logging_enabled();
 }
 
 ////////////////////////////////////////
@@ -9140,7 +9140,7 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       aScrollFrame ? aScrollFrame : aForFrame, isRootContentDocRootScrollFrame,
       metrics));
 
-  if (StaticPrefs::APZPrintTree() || StaticPrefs::APZTestLoggingEnabled()) {
+  if (StaticPrefs::APZPrintTree() || StaticPrefs::apz_test_logging_enabled()) {
     if (nsIContent* content =
             frameForCompositionBoundsCalculation->GetContent()) {
       nsAutoString contentDescription;

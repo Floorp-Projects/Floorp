@@ -560,7 +560,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "apz.test.logging_enabled",
-  APZTestLoggingEnabled,
+  apz_test_logging_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -1690,7 +1690,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "dom.vr.enabled",
-  VREnabled,
+  dom_vr_enabled,
   bool, false
 )
 
@@ -1862,12 +1862,19 @@ VARCACHE_PREF(
   bool, true
 )
 
+// W3C draft pointer events
+#ifdef ANDROID
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
 VARCACHE_PREF(
   Live,
   "dom.w3c_pointer_events.enabled",
-  PointerEventsEnabled,
-  RelaxedAtomicBool, false
+  dom_w3c_pointer_events_enabled,
+  RelaxedAtomicBool, PREF_VALUE
 )
+#undef PREF_VALUE
 
 // In case Touch API is enabled, this pref controls whether to support
 // ontouch* event handlers, document.createTouch, document.createTouchList and
@@ -6167,7 +6174,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "webgl.enable-webgl2",
-  WebGL2Enabled,
+  webgl_enable_webgl2,
   RelaxedAtomicBool, true
 )
 

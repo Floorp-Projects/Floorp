@@ -640,7 +640,7 @@ VRSystemManagerPuppet::VRSystemManagerPuppet()
 
 /*static*/
 already_AddRefed<VRSystemManagerPuppet> VRSystemManagerPuppet::Create() {
-  if (!StaticPrefs::VREnabled() || !StaticPrefs::VRPuppetEnabled()) {
+  if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::VRPuppetEnabled()) {
     return nullptr;
   }
 

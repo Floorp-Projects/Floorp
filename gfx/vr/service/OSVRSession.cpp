@@ -209,7 +209,7 @@ OSVRSession::OSVRSession()
 OSVRSession::~OSVRSession() { Shutdown(); }
 
 bool OSVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
-  if (!StaticPrefs::VREnabled() || !StaticPrefs::VROSVREnabled()) {
+  if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::VROSVREnabled()) {
     return false;
   }
   if (mOSVRInitialized) {
