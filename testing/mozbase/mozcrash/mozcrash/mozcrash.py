@@ -135,6 +135,16 @@ def log_crashes(logger,
     return crash_count
 
 
+# Function signatures of abort functions which should be ignored when
+# determining the appropriate frame for the crash signature.
+ABORT_SIGNATURES = (
+    "Abort(char const*)",
+    "NS_DebugBreak",
+    "mozalloc_abort",
+    "static void Abort(const char *)",
+)
+
+
 class CrashInfo(object):
     """Get information about a crash based on dump files.
 
@@ -275,9 +285,19 @@ class CrashInfo(object):
                 lines = out.splitlines()
                 for i, line in enumerate(lines):
                     if "(crashed)" in line:
-                        match = re.search(r"^ 0  (?:.*!)?(?:void )?([^\[]+)", lines[i + 1])
-                        if match:
-                            signature = "@ %s" % match.group(1).strip()
+                        # Try to find the first frame that isn't an abort
+                        # function to use as the signature.
+                        for line in lines[i + 1:]:
+                            if not line.startswith(" "):
+                                break
+
+                            match = re.search(r"^ \d  (?:.*!)?(?:void )?([^\[]+)", line)
+                            if match:
+                                func = match.group(1).strip()
+                                signature = "@ %s" % func
+
+                                if func not in ABORT_SIGNATURES:
+                                    break
                         break
             else:
                 include_stderr = True
