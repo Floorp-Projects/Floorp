@@ -112,18 +112,21 @@ const observer = {
         if (selectedIndex < 0) {
           break;
         }
-        let style = input.controller.getStyleAt(selectedIndex);
-        if (style != "login" && style != "loginWithOrigin") {
-          break;
-        }
+
         let {focusedInput} = LoginManagerContent._formFillService;
         if (focusedInput.nodePrincipal.isNullPrincipal) {
           // If we have a null principal then prevent any more password manager code from running and
           // incorrectly using the document `location`.
           return;
         }
-        let details = JSON.parse(input.controller.getCommentAt(selectedIndex));
-        LoginManagerContent.onFieldAutoComplete(focusedInput, details.guid);
+
+        let style = input.controller.getStyleAt(selectedIndex);
+        if (style == "login" || style == "loginWithOrigin") {
+          let details = JSON.parse(input.controller.getCommentAt(selectedIndex));
+          LoginManagerContent.onFieldAutoComplete(focusedInput, details.guid);
+        } else if (style == "generatedPassword") {
+          LoginManagerContent._generatedPasswordFilled(focusedInput);
+        }
         break;
       }
     }
@@ -787,7 +790,8 @@ this.LoginManagerContent = {
   },
 
   /**
-   * A username field was filled so try fill in the associated password in the password field.
+   * A username field was filled or tabbed away from so try fill in the
+   * associated password in the password field.
    */
   onUsernameAutocompleted(acInputField, loginGUID = null) {
     log("onUsernameAutocompleted:", acInputField);
@@ -1210,6 +1214,33 @@ this.LoginManagerContent = {
                                       openerTopWindowID,
                                       dismissedPrompt,
                                     });
+  },
+
+  /**
+   * Notify the parent that a generated password was filled into a field so that it can potentially
+   * be saved.
+   * @param {HTMLInputElement} input
+   */
+  _generatedPasswordFilled(input) {
+    log("_generatedPasswordFilled", input);
+    let loginForm = LoginFormFactory.createFromField(input);
+    let win = input.ownerGlobal;
+
+    if (PrivateBrowsingUtils.isContentWindowPrivate(win)) {
+      log("_generatedPasswordFilled: not automatically saving the password in private browsing mode");
+      return;
+    }
+
+    if (!LoginHelper.enabled) {
+      throw new Error("A generated password was filled while the password manager was disabled.");
+    }
+
+    let formActionOrigin = LoginHelper.getFormActionOrigin(loginForm);
+    let messageManager = win.docShell.messageManager;
+    messageManager.sendAsyncMessage("PasswordManager:onGeneratedPasswordFilled", {
+      browsingContextId: win.docShell.browsingContext.id,
+      formActionOrigin,
+    });
   },
 
   /** Remove login field highlight when its value is cleared or overwritten.

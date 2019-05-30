@@ -141,7 +141,8 @@ add_task(async function test_searchAndDedupeLogins_acceptDifferentSubdomains() {
     let guids = await Services.logins.addLogins(tc.logins);
     Assert.strictEqual(guids.length, tc.logins.length, "Check length of added logins");
 
-    let actual = LMP._searchAndDedupeLogins(tc.formActionOrigin, tc.formActionOrigin, {
+    let actual = LMP._searchAndDedupeLogins(tc.formActionOrigin, {
+      formActionOrigin: tc.formActionOrigin,
       looseActionOriginMatch: true,
       acceptDifferentSubdomains: true,
     });
