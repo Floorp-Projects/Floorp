@@ -9,8 +9,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 
-ChromeUtils.defineModuleGetter(this, "BrowserUtils",
-                               "resource://gre/modules/BrowserUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "WebNavigationFrames",
                                "resource://gre/modules/WebNavigationFrames.jsm");
 
@@ -18,9 +16,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
-});
-XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
-  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
 });
 XPCOMUtils.defineLazyPreferenceGetter(this, "mitmErrorPageEnabled",
   "browser.security.newcerterrorpage.mitm.enabled");
@@ -36,12 +31,9 @@ const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 
 const SEC_ERROR_EXPIRED_CERTIFICATE                = SEC_ERROR_BASE + 11;
 const SEC_ERROR_UNKNOWN_ISSUER                     = SEC_ERROR_BASE + 13;
-const SEC_ERROR_UNTRUSTED_ISSUER                   = SEC_ERROR_BASE + 20;
 const SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE         = SEC_ERROR_BASE + 30;
-const SEC_ERROR_CA_CERT_INVALID                    = SEC_ERROR_BASE + 36;
 const SEC_ERROR_REUSED_ISSUER_AND_SERIAL           = SEC_ERROR_BASE + 138;
 const SEC_ERROR_OCSP_INVALID_SIGNING_CERT          = SEC_ERROR_BASE + 144;
-const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED  = SEC_ERROR_BASE + 176;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
 const MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED = MOZILLA_PKIX_ERROR_BASE + 13;
@@ -109,209 +101,6 @@ class NetErrorChild extends ActorChild {
     return {notBefore, notAfter};
   }
 
-  _setTechDetails(input, doc) {
-    // CSS class and error code are set from nsDocShell.
-    let {cssClass, error} = this.getParams(doc);
-    let technicalInfo = doc.getElementById("badCertTechnicalInfo");
-    technicalInfo.textContent = "";
-
-    let uri = Services.io.newURI(input.data.url);
-    let hostString = uri.host;
-    if (uri.port != 443 && uri.port != -1) {
-      hostString = uri.hostPort;
-    }
-
-    let msg1 = gPipNSSBundle.formatStringFromName("certErrorIntro",
-                                                  [hostString], 1);
-    msg1 += "\n\n";
-
-    if (input.data.certIsUntrusted) {
-      switch (input.data.code) {
-        case MOZILLA_PKIX_ERROR_MITM_DETECTED:
-          if (mitmErrorPageEnabled) {
-            let brandName = gBrandBundle.GetStringFromName("brandShortName");
-            msg1 = gPipNSSBundle.GetStringFromName("certErrorMitM");
-            msg1 += "\n\n";
-            msg1 += gPipNSSBundle.formatStringFromName("certErrorMitM2", [brandName], 1);
-            msg1 += "\n\n";
-            msg1 += gPipNSSBundle.formatStringFromName("certErrorMitM3", [brandName], 1);
-            msg1 += "\n";
-            break;
-          }
-          // If the condition is false, fall through...
-        case SEC_ERROR_UNKNOWN_ISSUER:
-          let brandName = gBrandBundle.GetStringFromName("brandShortName");
-          msg1 = "";
-          msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer4", [hostString], 1);
-          msg1 += "\n\n";
-          msg1 += gPipNSSBundle.formatStringFromName("certErrorTrust_UnknownIssuer6", [brandName, hostString], 2);
-          msg1 += "\n\n";
-          break;
-        case SEC_ERROR_CA_CERT_INVALID:
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_CaInvalid") + "\n";
-          break;
-        case SEC_ERROR_UNTRUSTED_ISSUER:
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_Issuer") + "\n";
-          break;
-        case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_SignatureAlgorithmDisabled") + "\n";
-          break;
-        case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_ExpiredIssuer") + "\n";
-          break;
-        case MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_SelfSigned") + "\n";
-          break;
-        // This error code currently only exists for the Symantec distrust, we may need to adjust
-        // it to fit other distrusts later.
-        case MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED:
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_Symantec1") + "\n";
-          break;
-        default:
-          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_Untrusted") + "\n";
-      }
-    }
-
-    technicalInfo.appendChild(doc.createTextNode(msg1));
-
-    if (input.data.isDomainMismatch) {
-      let subjectAltNames = input.data.certSubjectAltNames.split(",");
-      let numSubjectAltNames = subjectAltNames.length;
-
-      subjectAltNames = subjectAltNames.filter(name => name.length > 0);
-      numSubjectAltNames = subjectAltNames.length;
-
-      let msgPrefix = "";
-      if (numSubjectAltNames != 0) {
-        if (numSubjectAltNames == 1) {
-          technicalInfo.textContent = "";
-          let brandName = gBrandBundle.GetStringFromName("brandShortName");
-          msgPrefix = gPipNSSBundle.formatStringFromName("certErrorMismatchSinglePrefix3", [brandName, hostString], 2) + " ";
-          msgPrefix += gPipNSSBundle.GetStringFromName("certErrorMismatchSinglePrefix");
-          // Let's check if we want to make this a link.
-          let okHost = input.data.certSubjectAltNames;
-          let href = "";
-          let thisHost = doc.location.hostname;
-          let proto = doc.location.protocol + "//";
-          // If okHost is a wildcard domain ("*.example.com") let's
-          // use "www" instead.  "*.example.com" isn't going to
-          // get anyone anywhere useful. bug 432491
-          okHost = okHost.replace(/^\*\./, "www.");
-          /* case #1:
-           * example.com uses an invalid security certificate.
-           *
-           * The certificate is only valid for www.example.com
-           *
-           * Make sure to include the "." ahead of thisHost so that
-           * a MitM attack on paypal.com doesn't hyperlink to "notpaypal.com"
-           *
-           * We'd normally just use a RegExp here except that we lack a
-           * library function to escape them properly (bug 248062), and
-           * domain names are famous for having '.' characters in them,
-           * which would allow spurious and possibly hostile matches.
-           */
-          if (okHost.endsWith("." + thisHost)) {
-            href = proto + okHost;
-          }
-          /* case #2:
-           * browser.garage.maemo.org uses an invalid security certificate.
-           *
-           * The certificate is only valid for garage.maemo.org
-           */
-          if (thisHost.endsWith("." + okHost)) {
-            href = proto + okHost;
-          }
-
-          // If we set a link, meaning there's something helpful for
-          // the user here, expand the section by default
-          if (href && cssClass != "expertBadCert") {
-            doc.getElementById("badCertAdvancedPanel").style.display = "block";
-            if (error == "nssBadCert") {
-              // Toggling the advanced panel must ensure that the debugging
-              // information panel is hidden as well, since it's opened by the
-              // error code link in the advanced panel.
-              var div = doc.getElementById("certificateErrorDebugInformation");
-              div.style.display = "none";
-            }
-          }
-
-          // Set the link if we want it.
-          if (href) {
-            let referrerlink = doc.createElement("a");
-            referrerlink.append(input.data.certSubjectAltNames);
-            referrerlink.title = input.data.certSubjectAltNames;
-            referrerlink.id = "cert_domain_link";
-            referrerlink.href = href;
-            let fragment = BrowserUtils.getLocalizedFragment(doc, msgPrefix,
-                                                             referrerlink);
-            technicalInfo.appendChild(fragment);
-          } else {
-            let fragment = BrowserUtils.getLocalizedFragment(doc,
-                                                             msgPrefix,
-                                                             input.data.certSubjectAltNames);
-            technicalInfo.appendChild(fragment);
-          }
-          technicalInfo.append("\n");
-        } else {
-          let msg = "";
-          technicalInfo.textContent = "";
-          let brandName = gBrandBundle.GetStringFromName("brandShortName");
-          msg = gPipNSSBundle.formatStringFromName("certErrorMismatchMultiple3", [brandName, hostString], 2) + " ";
-          for (let i = 0; i < numSubjectAltNames; i++) {
-            msg += subjectAltNames[i];
-            if (i != (numSubjectAltNames - 1)) {
-              msg += ", ";
-            }
-          }
-          technicalInfo.append(msg + "\n");
-        }
-      } else {
-        let msg = "";
-        technicalInfo.textContent = "";
-        let brandName = gBrandBundle.GetStringFromName("brandShortName");
-        msg = gPipNSSBundle.formatStringFromName("certErrorMismatch3", [brandName, hostString], 2) + " ";
-        technicalInfo.append(msg + "\n");
-      }
-    }
-
-    if (input.data.isNotValidAtThisTime) {
-      let msg;
-      if (input.data.validity.notBefore && (Date.now() < input.data.validity.notAfter)) {
-        let notBeforeLocalTime = formatter.format(new Date(input.data.validity.notBefore));
-        msg = gPipNSSBundle.formatStringFromName("certErrorNotYetValidNow3",
-                                                 [hostString, notBeforeLocalTime], 2);
-      } else {
-        let notAfterLocalTime = formatter.format(new Date(input.data.validity.notAfter));
-        msg = gPipNSSBundle.formatStringFromName("certErrorExpiredNow3",
-                                                 [hostString, notAfterLocalTime], 2);
-      }
-      msg += "\n";
-
-      technicalInfo.textContent = "";
-      technicalInfo.append(msg);
-    }
-    technicalInfo.append("\n");
-
-    // Add link to certificate and error message.
-    let linkPrefix = gPipNSSBundle.GetStringFromName("certErrorCodePrefix3");
-    let detailLink = doc.createElement("a");
-    detailLink.append(input.data.codeString);
-    detailLink.title = input.data.codeString;
-    detailLink.id = "errorCode";
-    detailLink.dataset.telemetryId = "error_code_link";
-    let fragment = BrowserUtils.getLocalizedFragment(doc, linkPrefix, detailLink);
-    technicalInfo.appendChild(fragment);
-    var errorCode = doc.getElementById("errorCode");
-    if (errorCode) {
-      errorCode.href = "javascript:void(0)";
-      errorCode.addEventListener("click", () => {
-        let debugInfo = doc.getElementById("certificateErrorDebugInformation");
-        debugInfo.style.display = "block";
-        debugInfo.scrollIntoView({block: "start", behavior: "smooth"});
-      });
-    }
-  }
-
   // eslint-disable-next-line complexity
   onCertErrorDetails(msg, docShell) {
     let doc = docShell.document;
@@ -346,7 +135,6 @@ class NetErrorChild extends ActorChild {
 
     let div = doc.getElementById("certificateErrorText");
     div.textContent = msg.data.info;
-    this._setTechDetails(msg, doc);
     let learnMoreLink = doc.getElementById("learnMoreLink");
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
