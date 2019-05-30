@@ -1293,9 +1293,9 @@ PlacesToolbar.prototype = {
     // The mouse is no longer dragging over the stored menubutton.
     // Close the menubutton, clear out drag styles, and clear all
     // timers for opening/closing it.
-    if (this._overFolder.elt && this._overFolder.elt.lastElementChild) {
-      if (!this._overFolder.elt.lastElementChild.hasAttribute("dragover")) {
-        this._overFolder.elt.lastElementChild.hidePopup();
+    if (this._overFolder.elt && this._overFolder.elt.menupopup) {
+      if (!this._overFolder.elt.menupopup.hasAttribute("dragover")) {
+        this._overFolder.elt.menupopup.hidePopup();
       }
       this._overFolder.elt.removeAttribute("dragover");
       this._overFolder.elt = null;
@@ -1435,7 +1435,7 @@ PlacesToolbar.prototype = {
       // * Timer to open a menubutton that's being dragged over.
       // Set the autoopen attribute on the folder's menupopup so that
       // the menu will automatically close when the mouse drags off of it.
-      this._overFolder.elt.lastElementChild.setAttribute("autoopened", "true");
+      this._overFolder.elt.menupopup.setAttribute("autoopened", "true");
       this._overFolder.elt.open = true;
       this._overFolder.openTimer = null;
     } else if (aTimer == this._overFolder.closeTimer) {
