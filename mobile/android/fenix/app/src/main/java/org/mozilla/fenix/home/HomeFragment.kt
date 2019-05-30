@@ -54,7 +54,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
@@ -76,6 +75,7 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
+import org.mozilla.fenix.utils.allowUndo
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
@@ -552,7 +552,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             useCases.removeAllTabsOfType.invoke(isPrivate)
         }
 
-        CoroutineScope(Dispatchers.Main).allowUndo(
+        allowUndo(
             view!!, getString(R.string.snackbar_tabs_deleted),
             getString(R.string.snackbar_deleted_undo), {
                 deleteAllSessionsJob = null
@@ -594,7 +594,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 }
         }
 
-        CoroutineScope(Dispatchers.Main).allowUndo(
+        allowUndo(
             view!!, getString(R.string.snackbar_tab_deleted),
             getString(R.string.snackbar_deleted_undo), {
                 deleteSessionJob = null

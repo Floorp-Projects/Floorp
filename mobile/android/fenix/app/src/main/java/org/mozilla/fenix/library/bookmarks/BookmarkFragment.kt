@@ -44,12 +44,12 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import org.mozilla.fenix.utils.allowUndo
 import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -261,7 +261,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         getManagedEmitter<BookmarkChange>()
                             .onNext(BookmarkChange.Change(currentRoot - it.item.guid))
 
-                        CoroutineScope(IO).allowUndo(
+                        allowUndo(
                             view!!,
                             getString(R.string.bookmark_deletion_snackbar_message, it.item.url.urlToTrimmedHost()),
                             getString(R.string.bookmark_undo_deletion), { refreshBookmarks() }
@@ -335,7 +335,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 val selectedBookmarks = getSelectedBookmarks()
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot - selectedBookmarks))
 
-                CoroutineScope(IO).allowUndo(
+                allowUndo(
                     view!!, getString(R.string.bookmark_deletion_multiple_snackbar_message),
                     getString(R.string.bookmark_undo_deletion), { refreshBookmarks() }
                 ) {
