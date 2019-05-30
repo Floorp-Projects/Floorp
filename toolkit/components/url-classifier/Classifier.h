@@ -123,8 +123,6 @@ class Classifier {
   void GetCacheInfo(const nsACString& aTable,
                     nsIUrlClassifierCacheInfo** aCache);
 
-  bool OnUpdateThread() const;
-
  private:
   ~Classifier();
 
