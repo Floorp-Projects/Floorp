@@ -28,6 +28,7 @@
 #include "GeckoProfiler.h"
 #include "VideoFrameContainer.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "mtransport/runnable_utils.h"
 #include "VideoUtils.h"
@@ -3310,7 +3311,7 @@ MediaStreamGraph* MediaStreamGraph::GetInstance(
 
     GraphRunType runType = DIRECT_DRIVER;
     if (aGraphDriverRequested != OFFLINE_THREAD_DRIVER &&
-        (Preferences::GetBool("dom.audioworklet.enabled", false) ||
+        (StaticPrefs::dom_audioworklet_enabled() ||
          Preferences::GetBool("media.audiograph.single_thread.enabled",
                               false))) {
       runType = SINGLE_THREAD;
