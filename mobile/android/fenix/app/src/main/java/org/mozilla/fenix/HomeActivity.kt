@@ -187,8 +187,13 @@ open class HomeActivity : AppCompatActivity() {
         val directions = when (from) {
             BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(customTabSessionId)
             BrowserDirection.FromHome -> HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
-            BrowserDirection.FromSearch ->
-                SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
+            BrowserDirection.FromSearch -> {
+                if (!navHost.navController.popBackStack(R.id.browserFragment, false)) {
+                    SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
+                } else {
+                    null
+                }
+            }
             BrowserDirection.FromSettings ->
                 SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(customTabSessionId)
             BrowserDirection.FromBookmarks ->
@@ -208,7 +213,9 @@ open class HomeActivity : AppCompatActivity() {
         if (sessionObserver == null)
             sessionObserver = subscribeToSessions()
 
-        navHost.navController.navigate(directions)
+        directions?.let {
+            navHost.navController.navigate(it)
+        }
     }
 
     private fun load(searchTermOrURL: String, newTab: Boolean, engine: SearchEngine?, forceSearch: Boolean) {

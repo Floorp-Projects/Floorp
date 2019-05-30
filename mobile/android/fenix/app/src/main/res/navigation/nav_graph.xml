@@ -58,7 +58,8 @@
         <action
             android:id="@+id/action_searchFragment_to_browserFragment"
             app:destination="@id/browserFragment"
-            app:popUpTo="@id/homeFragment" />
+            app:popUpTo="@id/searchFragment"
+            app:popUpToInclusive="true" />
         <argument
             android:name="session_id"
             app:argType="string"

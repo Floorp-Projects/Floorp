@@ -120,6 +120,10 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         postponeEnterTransition()
+        sharedElementEnterTransition =
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
+                SHARED_TRANSITION_MS
+            )
         job = Job()
     }
 
@@ -180,11 +184,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 )
             }
         }
-
-        sharedElementEnterTransition =
-            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
-                SHARED_TRANSITION_MS
-            )
         startPostponedEnterTransition()
 
         QuickActionComponent(
