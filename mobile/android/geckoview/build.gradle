@@ -332,10 +332,20 @@ publishing {
                     groupId = 'org.mozilla.geckoview'
 
                     if (mozconfig.substs.MOZ_UPDATE_CHANNEL == 'release') {
-                        // release artifacts don't specify the channel, for the sake of simplicity
-                        artifactId = "geckoview-${mozconfig.substs.ANDROID_CPU_ARCH}"
+                        // Release artifacts don't specify the channel, for the sake of simplicity.
+                        artifactId = 'geckoview'
                     } else {
-                        artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
+                        artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+                    }
+
+                    if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+                        // In automation, per-architecture artifacts identify
+                        // the architecture; multi-architecture artifacts don't.
+                        // When building locally, we produce a "skinny AAR" with
+                        // one target architecture masquerading as a "fat AAR"
+                        // to enable Gradle composite builds to substitute this
+                        // project into consumers easily.
+                        artifactId = "${artifactId}-${mozconfig.substs.ANDROID_CPU_ARCH}"
                     }
 
                     url = 'https://wiki.mozilla.org/Mobile/GeckoView'
