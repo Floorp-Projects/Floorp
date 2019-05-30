@@ -16,3 +16,9 @@ XPCSHELL_TESTS_MANIFESTS += [
     'xpcshell/xpcshell-unpack.ini',
     'xpcshell/xpcshell.ini',
 ]
+
+with Files('test/xpcshell/rs-blocklist/**'):
+    BUG_COMPONENT = ('Toolkit', 'Blockist Implementation')
+
+with Files('test/xpcshell/xml-blocklist/**'):
+    BUG_COMPONENT = ('Toolkit', 'Blockist Implementation')
