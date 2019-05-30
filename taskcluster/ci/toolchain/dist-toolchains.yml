@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "sccache-dist toolchain archive build"
+    worker-type: b-linux
+    run-on-projects:
+        - trunk
+        - try
+    run:
+        using: toolchain-script
+        script: build-dist-toolchains.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+
+clang-dist-toolchain:
+    treeherder:
+        symbol: TL(clang-dist)
+    worker:
+        max-run-time: 1800
+    run:
+        arguments: ['clang']
+        toolchain-artifact: public/build/clang-dist-toolchain.tar.xz
+    toolchains:
+        - linux64-clang-8
+        - linux64-sccache
+
+rustc-dist-toolchain:
+    treeherder:
+        symbol: TL(rustc-dist)
+    worker:
+        max-run-time: 1800
+    run:
+        arguments: ['rustc']
+        toolchain-artifact: public/build/rustc-dist-toolchain.tar.xz
+    toolchains:
+        - linux64-rust-macos-1.35
+        - linux64-sccache
