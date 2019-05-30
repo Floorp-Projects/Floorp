@@ -717,6 +717,7 @@ pub enum FilterOp {
     SrgbToLinear,
     LinearToSrgb,
     ComponentTransfer,
+    Flood(ColorF),
 }
 
 #[repr(u8)]
