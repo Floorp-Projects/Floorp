@@ -1113,8 +1113,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   // @param controls : A Control bar element. Cues' position will be
   //                 affected and repositioned according to it.
   WebVTT.processCues = function(window, cues, overlay, controls) {
+    LOG(`=== processCues ===`);
     if (!cues) {
-      LOG(`Abort processing because no cue.`);
+      LOG(`clear display and abort processing because of no cue.`);
       clearAllCuesDiv(overlay);
       lastDisplayedCueNums = 0;
       return;
