@@ -70,6 +70,7 @@ add_task(async function test_login_item() {
     saveChangesButton.click();
 
     await ContentTaskUtils.waitForCondition(() => {
+      loginListItem = Cu.waiveXrays(loginList.shadowRoot.querySelector("login-list-item"));
       return loginListItem._login.username == usernameInput.value &&
              loginListItem._login.password == passwordInput.value;
     }, "Waiting for corresponding login in login list to update");
