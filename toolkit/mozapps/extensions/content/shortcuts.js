@@ -416,7 +416,7 @@ async function renderAddons(addons) {
       }
 
       frag.appendChild(card);
-    } else {
+    } else if (!addon.hidden) {
       noShortcutAddons.push({ id: addon.id, name: addon.name });
     }
   }
