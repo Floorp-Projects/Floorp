@@ -55,7 +55,7 @@ namespace frontend {
 
 // Offset of a jump target instruction, used for patching jump instructions.
 struct JumpTarget {
-  BytecodeOffset offset;
+  BytecodeOffset offset = BytecodeOffset::invalidOffset();
 };
 
 struct JumpList {

@@ -252,7 +252,7 @@ class BytecodeSection {
   // ---- Jump ----
 
   // Last jump target emitted.
-  JumpTarget lastTarget_ = {BytecodeOffset::invalidOffset()};
+  JumpTarget lastTarget_;
 
   // ---- Stack ----
 
