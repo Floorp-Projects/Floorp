@@ -69,11 +69,11 @@ jobs:
           - mozilla-central
       when: []  # never (hook only)
 
-    - name: nightly-android
+    - name: nightly-geckoview
       job:
           type: decision-task
-          treeherder-symbol: Na
-          target-tasks-method: nightly_fennec
+          treeherder-symbol: Ngv
+          target-tasks-method: nightly_geckoview
           include-push-tasks: true
       run-on-projects:
           - mozilla-central
