@@ -58,5 +58,7 @@ void CompositionRecorder::WriteCollectedFrames() {
   mCollectedFrames.Clear();
 }
 
+void CompositionRecorder::ClearCollectedFrames() { mCollectedFrames.Clear(); }
+
 }  // namespace layers
 }  // namespace mozilla

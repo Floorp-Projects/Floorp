@@ -82,6 +82,19 @@ class WebRenderCompositionRecorder final : public CompositionRecorder {
   bool MaybeRecordFrame(wr::Renderer* aRenderer,
                         wr::WebRenderPipelineInfo* aFrameEpochs);
 
+  /**
+   * Force the composition recorder to finish recording.
+   *
+   * This should only be called if |WriteCollectedFrames| is not to be called,
+   * since the recorder will be in an invalid state to do so.
+   *
+   * This returns whether or not the recorder was recording before this method
+   * was called.
+   *
+   * Note: This method will block acquiring a lock.
+   */
+  bool ForceFinishRecording();
+
  protected:
   ~WebRenderCompositionRecorder() = default;
 
