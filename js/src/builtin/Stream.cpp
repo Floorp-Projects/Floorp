@@ -1132,19 +1132,18 @@ static MOZ_MUST_USE JSObject* ReadableStreamTee_Cancel(
   if (bothBranchesCanceled) {
     // Step 13/14.c.i: Let compositeReason be
     //                 ! CreateArrayFromList(« reason1, reason2 »).
-    RootedNativeObject compositeReason(cx, NewDenseFullyAllocatedArray(cx, 2));
-    if (!compositeReason) {
-      return nullptr;
-    }
-
-    compositeReason->setDenseInitializedLength(2);
-
     RootedValue reason1(cx, unwrappedTeeState->reason1());
     RootedValue reason2(cx, unwrappedTeeState->reason2());
     if (!cx->compartment()->wrap(cx, &reason1) ||
         !cx->compartment()->wrap(cx, &reason2)) {
       return nullptr;
     }
+
+    RootedNativeObject compositeReason(cx, NewDenseFullyAllocatedArray(cx, 2));
+    if (!compositeReason) {
+      return nullptr;
+    }
+    compositeReason->setDenseInitializedLength(2);
     compositeReason->initDenseElement(0, reason1);
     compositeReason->initDenseElement(1, reason2);
     RootedValue compositeReasonVal(cx, ObjectValue(*compositeReason));
