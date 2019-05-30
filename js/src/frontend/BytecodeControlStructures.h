@@ -121,14 +121,14 @@ class LoopControl : public BreakableControl {
   JumpList entryJump_;
 
   // The bytecode offset of JSOP_LOOPHEAD.
-  JumpTarget head_ = {BytecodeOffset::invalidOffset()};
+  JumpTarget head_;
 
   // The target of break statement jumps.
-  JumpTarget breakTarget_ = {BytecodeOffset::invalidOffset()};
+  JumpTarget breakTarget_;
 
   // The target of continue statement jumps, e.g., the update portion of a
   // for(;;) loop.
-  JumpTarget continueTarget_ = {BytecodeOffset::invalidOffset()};
+  JumpTarget continueTarget_;
 
   // Stack depth when this loop was pushed on the control stack.
   int32_t stackDepth_;
