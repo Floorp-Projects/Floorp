@@ -107,6 +107,8 @@ Zone::~Zone() {
     regExps().clear();
   }
 #endif
+
+  MOZ_ASSERT_IF(rt->gc.shutdownCollectedEverything(), gcMallocBytes == 0);
 }
 
 bool Zone::init(bool isSystemArg) {
@@ -468,7 +470,7 @@ void Zone::clearTables() {
 
 void Zone::fixupAfterMovingGC() {
 #ifdef DEBUG
-  gcMallocSize.fixupAfterMovingGC();
+  gcMallocTracker.fixupAfterMovingGC();
 #endif
   fixupInitialShapeTable();
 }
@@ -589,11 +591,9 @@ void JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
   counter.recordTrigger(trigger);
 }
 
-void MemoryTracker::adopt(MemoryTracker& other, Zone* newZone) {
-  bytes_ += other.bytes_;
-  other.bytes_ = 0;
-
 #ifdef DEBUG
+
+void MemoryTracker::adopt(MemoryTracker& other, Zone* newZone) {
   LockGuard<Mutex> lock(mutex);
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -614,10 +614,7 @@ void MemoryTracker::adopt(MemoryTracker& other, Zone* newZone) {
     r.front().key()->zone_ = nullptr;
   }
   other.policyMap.clear();
-#endif
 }
-
-#ifdef DEBUG
 
 static const char* MemoryUseName(MemoryUse use) {
   switch (use) {
@@ -659,7 +656,6 @@ MemoryTracker::~MemoryTracker() {
   }
 
   MOZ_ASSERT(ok);
-  MOZ_ASSERT(bytes() == 0);
 }
 
 void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
@@ -700,7 +696,7 @@ void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   map.remove(ptr);
 }
 
-void MemoryTracker::swapTrackedMemory(Cell* a, Cell* b, MemoryUse use) {
+void MemoryTracker::swapMemory(Cell* a, Cell* b, MemoryUse use) {
   MOZ_ASSERT(a->isTenured());
   MOZ_ASSERT(b->isTenured());
 
@@ -761,8 +757,7 @@ void MemoryTracker::unregisterPolicy(ZoneAllocPolicy* policy) {
   policyMap.remove(ptr);
 }
 
-void MemoryTracker::incTrackedPolicyMemory(ZoneAllocPolicy* policy,
-                                           size_t nbytes) {
+void MemoryTracker::incPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
   LockGuard<Mutex> lock(mutex);
 
   auto ptr = policyMap.lookup(policy);
@@ -773,8 +768,7 @@ void MemoryTracker::incTrackedPolicyMemory(ZoneAllocPolicy* policy,
   ptr->value() += nbytes;
 }
 
-void MemoryTracker::decTrackedPolicyMemory(ZoneAllocPolicy* policy,
-                                           size_t nbytes) {
+void MemoryTracker::decPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
   LockGuard<Mutex> lock(mutex);
 
   auto ptr = policyMap.lookup(policy);

@@ -451,7 +451,15 @@ class Zone : public JS::shadow::Zone,
 
   // Malloc counter used for allocations where size information is
   // available. Used for some internal and all tracked external allocations.
-  js::gc::MemoryTracker gcMallocSize;
+  mozilla::Atomic<size_t, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      gcMallocBytes;
+
+#ifdef DEBUG
+  // In debug builds, malloc allocations can be tracked to make debugging easier
+  // (possible?) if allocation and free sizes don't balance.
+  js::gc::MemoryTracker gcMallocTracker;
+#endif
 
   // Counter of JIT code executable memory for GC scheduling. Also imprecise,
   // since wasm can generate code that outlives a zone.
@@ -503,7 +511,11 @@ class Zone : public JS::shadow::Zone,
   }
   void adoptMallocBytes(Zone* other) {
     gcMallocCounter.adopt(other->gcMallocCounter);
-    gcMallocSize.adopt(other->gcMallocSize, this);
+    gcMallocBytes += other->gcMallocBytes;
+    other->gcMallocBytes = 0;
+#ifdef DEBUG
+    gcMallocTracker.adopt(other->gcMallocTracker, this);
+#endif
   }
   size_t GCMaxMallocBytes() const { return gcMallocCounter.maxBytes(); }
   size_t GCMallocBytes() const { return gcMallocCounter.bytes(); }
@@ -516,35 +528,74 @@ class Zone : public JS::shadow::Zone,
   void updateAllGCMallocCountersOnGCEnd(const js::AutoLockGC& lock);
   js::gc::TriggerKind shouldTriggerGCForTooMuchMalloc();
 
-  // Memory accounting APIs for memory owned by GC cells.
+  // Memory accounting APIs for malloc memory owned by GC cells.
+
   void addCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
-    gcMallocSize.addMemory(cell, nbytes, use);
+    MOZ_ASSERT(cell);
+    MOZ_ASSERT(nbytes);
+    mozilla::DebugOnly<size_t> initialBytes(gcMallocBytes);
+    MOZ_ASSERT(initialBytes + nbytes > initialBytes);
+
+    gcMallocBytes += nbytes;
+    // We don't currently check GC triggers here.
+
+#ifdef DEBUG
+    gcMallocTracker.trackMemory(cell, nbytes, use);
+#endif
   }
+
   void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
-    gcMallocSize.removeMemory(cell, nbytes, use);
+    MOZ_ASSERT(cell);
+    MOZ_ASSERT(nbytes);
+    MOZ_ASSERT(gcMallocBytes >= nbytes);
+
+    gcMallocBytes -= nbytes;
+
+#ifdef DEBUG
+    gcMallocTracker.untrackMemory(cell, nbytes, use);
+#endif
   }
+
   void swapCellMemory(js::gc::Cell* a, js::gc::Cell* b, js::MemoryUse use) {
-    gcMallocSize.swapMemory(a, b, use);
+#ifdef DEBUG
+    gcMallocTracker.swapMemory(a, b, use);
+#endif
   }
+
 #ifdef DEBUG
   void registerPolicy(js::ZoneAllocPolicy* policy) {
-    return gcMallocSize.registerPolicy(policy);
+    return gcMallocTracker.registerPolicy(policy);
   }
   void unregisterPolicy(js::ZoneAllocPolicy* policy) {
-    return gcMallocSize.unregisterPolicy(policy);
+    return gcMallocTracker.unregisterPolicy(policy);
   }
 #endif
+
   void incPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes) {
-    gcMallocSize.incPolicyMemory(policy, nbytes);
+    MOZ_ASSERT(nbytes);
+    mozilla::DebugOnly<size_t> initialBytes(gcMallocBytes);
+    MOZ_ASSERT(initialBytes + nbytes > initialBytes);
+
+    gcMallocBytes += nbytes;
+
+#ifdef DEBUG
+    gcMallocTracker.incPolicyMemory(policy, nbytes);
+#endif
+
     maybeAllocTriggerZoneGC();
   }
   void decPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes) {
-    gcMallocSize.decPolicyMemory(policy, nbytes);
+    MOZ_ASSERT(nbytes);
+    MOZ_ASSERT(gcMallocBytes >= nbytes);
+
+    gcMallocBytes -= nbytes;
+
+#ifdef DEBUG
+    gcMallocTracker.decPolicyMemory(policy, nbytes);
+#endif
   }
 
-  size_t totalBytes() const {
-    return zoneSize.gcBytes() + gcMallocSize.bytes();
-  }
+  size_t totalBytes() const { return zoneSize.gcBytes() + gcMallocBytes; }
 
   void keepAtoms() { keepAtomsCount++; }
   void releaseAtoms();
@@ -740,7 +791,10 @@ namespace js {
  */
 class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
   JS::Zone* zone_;
+
+#ifdef DEBUG
   friend class js::gc::MemoryTracker;  // Can clear |zone_| on merge.
+#endif
 
  public:
   MOZ_IMPLICIT ZoneAllocPolicy(JS::Zone* z) : zone_(z) {
