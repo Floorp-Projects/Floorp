@@ -31,6 +31,7 @@ async function registerAndStartExtension(mockProvider, ext) {
     // We use MockProvider because the "hidden" property cannot
     // be set when "useAddonManager" is passed to loadExtension.
     hidden: ext.manifest.hidden,
+    isSystem: ext.isSystem,
   }]);
   return extension;
 }
@@ -124,6 +125,45 @@ add_task(async function hidden_extension() {
   await closeShortcutsView(doc);
   await hiddenExt1.unload();
   await hiddenExt2.unload();
+
+  mockProvider.unregister();
+});
+
+add_task(async function system_addons_and_shortcuts() {
+  let mockProvider = new MockProvider();
+  let systemExt1 = await registerAndStartExtension(mockProvider, {
+    isSystem: true,
+    manifest: {
+      name: "system with shortcuts",
+      // In practice, all XPIStateLocations with isSystem=true also have
+      // isBuiltin=true, which implies that hidden=true as well.
+      hidden: true,
+      commands: {
+        systemShortcut: {},
+      },
+    },
+  });
+  let systemExt2 = await registerAndStartExtension(mockProvider, {
+    isSystem: true,
+    manifest: {
+      name: "system without shortcuts",
+      hidden: true,
+    },
+  });
+
+  let doc = await loadShortcutsView();
+
+  ok(getShortcutByName(doc, systemExt1, "systemShortcut"),
+     "System add-on with shortcut should have a card");
+
+  is(getShortcutCard(doc, systemExt2), null,
+     "System add-on without shortcut should not have a card");
+  is(getNoShortcutListItem(doc, systemExt2), null,
+     "System add-on without shortcuts should not be listed");
+
+  await closeShortcutsView(doc);
+  await systemExt1.unload();
+  await systemExt2.unload();
 
   mockProvider.unregister();
 });
