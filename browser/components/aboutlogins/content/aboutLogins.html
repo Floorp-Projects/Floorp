@@ -39,6 +39,7 @@
                                  copied-username-button,
                                  delete-button,
                                  edit-button,
+                                 field-required-symbol,
                                  hostname-label,
                                  modal-input-reveal-checkbox-hide,
                                  modal-input-reveal-checkbox-show,
@@ -80,7 +81,7 @@
         <label>
           <span class="hostname-label field-label"></span>
           <span class="hostname-saved-value"></span>
-          <input type="text" name="hostname"/>
+          <input type="url" name="hostname" required />
         </label>
         <button class="open-site-button"></button>
       </div>
@@ -94,7 +95,7 @@
       <div class="detail-row">
         <label>
           <span class="password-label field-label"></span>
-          <modal-input type="password" name="password"/>
+          <modal-input type="password" name="password" required />
         </label>
         <copy-to-clipboard-button class="copy-password-button"></copy-to-clipboard-button>
       </div>
