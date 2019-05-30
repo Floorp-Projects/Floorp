@@ -36,7 +36,7 @@ namespace frontend {
 //     ...
 //     patchJumpsToTarget(brList, label);
 //
-//                 +-> -1
+//                 +-> the delta is END_OF_LIST_DELTA (=0) for the last item)
 //                 |
 //                 |
 //    ifeq ..   <+ +                +-+   ifeq ..
@@ -60,6 +60,9 @@ struct JumpTarget {
 };
 
 struct JumpList {
+  // Delta value for pre-patchJumpsToTarget that marks the end of the link.
+  static const ptrdiff_t END_OF_LIST_DELTA = 0;
+
   JumpList() {}
   // -1 is used to mark the end of jump lists.
   ptrdiff_t offset = -1;

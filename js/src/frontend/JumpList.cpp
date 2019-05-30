@@ -14,18 +14,33 @@ using namespace js;
 using namespace js::frontend;
 
 void JumpList::push(jsbytecode* code, ptrdiff_t jumpOffset) {
-  SET_JUMP_OFFSET(&code[jumpOffset], offset - jumpOffset);
+  if (offset == -1) {
+    SET_JUMP_OFFSET(&code[jumpOffset], END_OF_LIST_DELTA);
+  } else {
+    SET_JUMP_OFFSET(&code[jumpOffset], offset - jumpOffset);
+  }
   offset = jumpOffset;
 }
 
 void JumpList::patchAll(jsbytecode* code, JumpTarget target) {
+  if (offset == -1) {
+    // This list is not used. Nothing to do.
+    return;
+  }
+
   ptrdiff_t delta;
-  for (ptrdiff_t jumpOffset = offset; jumpOffset != -1; jumpOffset += delta) {
+  ptrdiff_t jumpOffset = offset;
+  while (true) {
     jsbytecode* pc = &code[jumpOffset];
     MOZ_ASSERT(IsJumpOpcode(JSOp(*pc)));
     delta = GET_JUMP_OFFSET(pc);
-    MOZ_ASSERT(delta < 0);
+    MOZ_ASSERT(delta <= 0);
     ptrdiff_t span = target.offset - jumpOffset;
     SET_JUMP_OFFSET(pc, span);
+
+    if (delta == END_OF_LIST_DELTA) {
+      break;
+    }
+    jumpOffset += delta;
   }
 }
