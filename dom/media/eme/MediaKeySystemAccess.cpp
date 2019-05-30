@@ -271,9 +271,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       clearkey.mMP4.SetCanDecrypt(EME_CODEC_AAC);
       clearkey.mMP4.SetCanDecrypt(EME_CODEC_FLAC);
       clearkey.mMP4.SetCanDecrypt(EME_CODEC_OPUS);
-      if (Preferences::GetBool("media.eme.vp9-in-mp4.enabled", false)) {
-        clearkey.mMP4.SetCanDecrypt(EME_CODEC_VP9);
-      }
+      clearkey.mMP4.SetCanDecrypt(EME_CODEC_VP9);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
       clearkey.mWebM.SetCanDecrypt(EME_CODEC_VP8);
@@ -363,9 +361,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       }
 #else
       widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
-      if (Preferences::GetBool("media.eme.vp9-in-mp4.enabled", false)) {
-        widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_VP9);
-      }
+      widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_VP9);
       widevine.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
       widevine.mWebM.SetCanDecrypt(EME_CODEC_OPUS);
       widevine.mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);

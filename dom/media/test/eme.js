@@ -408,7 +408,6 @@ function SetupEMEPref(callback) {
   var prefs = [
     [ "media.mediasource.enabled", true ],
     [ "media.mediasource.webm.enabled", true ],
-    [ "media.eme.vp9-in-mp4.enabled", true ],
   ];
 
   if (SpecialPowers.Services.appinfo.name == "B2G" ||
