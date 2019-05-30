@@ -40,6 +40,14 @@ class LoginFilter extends ReflectedFluentElement {
     return this.reflectedFluentIDs;
   }
 
+  get value() {
+    return this.shadowRoot.querySelector("input").value;
+  }
+
+  set value(val) {
+    this.shadowRoot.querySelector("input").value = val;
+  }
+
   handleSpecialCaseFluentString(attrName) {
     if (attrName != "placeholder") {
       return false;
