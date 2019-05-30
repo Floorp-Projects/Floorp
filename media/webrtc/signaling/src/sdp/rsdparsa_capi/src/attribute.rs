@@ -1076,7 +1076,7 @@ pub unsafe extern "C" fn sdp_get_candidates(attributes: *const Vec<SdpAttribute>
     let attr_strings: Vec<String> = (*attributes).iter().filter_map( |x| {
         if let SdpAttribute::Candidate(ref attr) = *x {
             // The serialized attribute starts with "candidate:...", this needs to be removed
-           Some(attr.to_string()[10..].to_string())
+           Some(attr.to_string())
         } else {
            None
         }
