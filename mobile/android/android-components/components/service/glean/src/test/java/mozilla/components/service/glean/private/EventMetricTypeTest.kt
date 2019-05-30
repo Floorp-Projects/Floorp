@@ -4,22 +4,19 @@
 
 package mozilla.components.service.glean.private
 
-import android.content.Context
 import android.os.SystemClock
-import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.resetGlean
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import org.junit.Test
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.lang.NullPointerException
 
 // Declared here, since Kotlin can not declare nested enum classes.
 enum class clickKeys {
@@ -184,8 +181,6 @@ class EventMetricTypeTest {
 
     @Test
     fun `events should not record when upload is disabled`() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-
         val eventMetric = EventMetricType<testNameKeys>(
             disabled = false,
             category = "ui",

@@ -22,22 +22,21 @@ import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.private.StringMetricType
-import mozilla.components.service.glean.private.TimeUnit as GleanTimeUnit
 import mozilla.components.service.glean.private.UuidMetricType
-import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
+import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.utils.getLanguageFromLocale
 import mozilla.components.service.glean.utils.getLocaleTag
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,11 +48,12 @@ import org.robolectric.RobolectricTestRunner
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileReader
-import java.lang.AssertionError
+import java.time.Instant
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import mozilla.components.service.glean.private.TimeUnit as GleanTimeUnit
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -373,7 +373,8 @@ class GleanTest {
             sendInPings = listOf("glean_ping_info"),
             timeUnit = GleanTimeUnit.Day
         )
-        firstRunDateMetric.set(Date(2200, 1, 1))
+        firstRunDateMetric.set(Date.from(
+            Instant.parse("2200-01-01T00:00:00.00Z")))
 
         assertTrue(GleanInternalMetrics.clientId.testHasValue())
         assertTrue(GleanInternalMetrics.firstRunDate.testHasValue())
