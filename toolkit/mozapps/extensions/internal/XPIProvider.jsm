@@ -1553,7 +1553,7 @@ var XPIStates = {
     if (!this._jsonFile) {
       this._jsonFile = new JSONFile({
         path: OS.Path.join(OS.Constants.Path.profileDir, FILE_XPI_STATES),
-        finalizeAt: AddonManager.shutdown,
+        finalizeAt: AddonManagerPrivate.finalShutdown,
         compression: "lz4",
       });
       this._jsonFile.data = this;
@@ -2340,6 +2340,9 @@ var XPIProvider = {
         "XPIProvider shutdown",
         async () => {
           XPIProvider._closing = true;
+
+          XPIDatabase.asyncLoadDB();
+
           await XPIProvider.cleanupTemporaryAddons();
           for (let addon of XPIProvider.sortBootstrappedAddons().reverse()) {
             // If no scope has been loaded for this add-on then there is no need

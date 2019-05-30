@@ -57,6 +57,8 @@ ChromeUtils.defineModuleGetter(this, "RemoteSettings",
                                "resource://services-settings/remote-settings.js");
 ChromeUtils.defineModuleGetter(this, "TestUtils",
                                "resource://testing-common/TestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "setTimeout",
+                               "resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
                                    "@mozilla.org/addons/addon-manager-startup;1",
@@ -300,6 +302,12 @@ function isNightlyChannel() {
 async function restartWithLocales(locales) {
   Services.locale.requestedLocales = locales;
   await promiseRestartManager();
+}
+
+function delay(msec) {
+  return new Promise(resolve => {
+    setTimeout(resolve, msec);
+  });
 }
 
 /**
