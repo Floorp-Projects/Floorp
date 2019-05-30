@@ -31,11 +31,7 @@ fi
 # Enable building ./signmar and running libmar signature tests
 MOZ_ENABLE_SIGNMAR=1
 
-if [ "${MOZ_BROWSER_XUL}" = "1" ]; then
-  BROWSER_CHROME_URL=chrome://browser/content/browser.xul
-else
-  BROWSER_CHROME_URL=chrome://browser/content/browser.xhtml
-fi
+BROWSER_CHROME_URL=chrome://browser/content/browser.xhtml
 
 # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
 # MOZ_BRANDING_DIRECTORY is the default branding directory used when none is
