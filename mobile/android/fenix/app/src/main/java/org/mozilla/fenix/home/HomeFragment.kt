@@ -77,7 +77,6 @@ import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.share.ShareTab
 import org.mozilla.fenix.utils.allowUndo
-import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 

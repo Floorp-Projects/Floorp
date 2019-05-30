@@ -11,10 +11,12 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.RadioButton
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.TypedArrayUtils
 import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
@@ -28,6 +30,19 @@ class RadioButtonPreference : Preference {
 
     init {
         layoutResource = R.layout.preference_widget_radiobutton
+    }
+
+    /* In devices with Android 6, when we use android:button="@null" android:drawableStart doesn't work via xml
+     * as a result we have to apply it programmatically. More info about this issue https://github.com/mozilla-mobile/fenix/issues/1414
+    */
+    fun RadioButton.setStartCheckedIndicator() {
+        val attr =
+            DefaultThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
+        val buttonDrawable = ContextCompat.getDrawable(context, attr)
+        buttonDrawable.apply {
+            this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)
+        }
+        this.setCompoundDrawables(buttonDrawable, null, null, null)
     }
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
@@ -76,6 +91,7 @@ class RadioButtonPreference : Preference {
     private fun bindRadioButton(holder: PreferenceViewHolder) {
         radioButton = holder.findViewById(R.id.radio_button) as RadioButton
         radioButton.isChecked = Settings.getInstance(context).preferences.getBoolean(key, false)
+        radioButton.setStartCheckedIndicator()
     }
 
     private fun initDefaultValue(typedArray: TypedArray) {
