@@ -25,7 +25,6 @@ from mozharness.base.log import FATAL
 class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, SecretsMixin):
     """Manages desktop partner repacks"""
     actions = [
-                "clobber",
                 "get-secrets",
                 "setup",
                 "repack",
