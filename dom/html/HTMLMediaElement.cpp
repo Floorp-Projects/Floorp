@@ -6270,7 +6270,13 @@ void HTMLMediaElement::SetDefaultPlaybackRate(double aDefaultPlaybackRate,
     return;
   }
 
-  mDefaultPlaybackRate = ClampPlaybackRate(aDefaultPlaybackRate);
+  double defaultPlaybackRate = ClampPlaybackRate(aDefaultPlaybackRate);
+
+  if (mDefaultPlaybackRate == defaultPlaybackRate) {
+    return;
+  }
+
+  mDefaultPlaybackRate = defaultPlaybackRate;
   DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
 }
 
