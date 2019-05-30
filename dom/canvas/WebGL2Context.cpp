@@ -31,7 +31,7 @@ UniquePtr<webgl::FormatUsageAuthority> WebGL2Context::CreateFormatUsage(
 }
 
 /*static*/
-bool WebGL2Context::IsSupported() { return StaticPrefs::WebGL2Enabled(); }
+bool WebGL2Context::IsSupported() { return StaticPrefs::webgl_enable_webgl2(); }
 
 /*static*/
 WebGL2Context* WebGL2Context::Create() { return new WebGL2Context(); }

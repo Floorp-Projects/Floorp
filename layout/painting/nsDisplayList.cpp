@@ -1101,7 +1101,7 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
       }
     }
     visible = dirtyRectRelativeToDirtyFrame;
-    if (StaticPrefs::APZTestLoggingEnabled() &&
+    if (StaticPrefs::apz_test_logging_enabled() &&
         presShell->GetDocument()->IsContentDocument()) {
       nsLayoutUtils::LogAdditionalTestData(
           aBuilder, "fixedPosDisplayport",
