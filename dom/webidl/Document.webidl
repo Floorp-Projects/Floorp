@@ -299,6 +299,11 @@ partial interface Document {
   attribute EventHandler onpointerlockerror;
 };
 
+partial interface Document {
+  [Func="Document::CallerIsTrustedAboutCertError", Throws]
+  FailedCertSecurityInfo getFailedCertSecurityInfo();
+};
+
 // https://w3c.github.io/page-visibility/#extensions-to-the-document-interface
 partial interface Document {
   readonly attribute boolean hidden;
