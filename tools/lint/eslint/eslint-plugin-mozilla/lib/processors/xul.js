@@ -38,7 +38,6 @@ const kIfdefStateForLinting = {
   HAVE_SHELL_SERVICE: true,
   MENUBAR_CAN_AUTOHIDE: true,
   MOZILLA_OFFICIAL: true,
-  BROWSER_XHTML: false, // other code can lint browser.xhtml, we hope.
 };
 
 // Anything not in the above list is assumed false.

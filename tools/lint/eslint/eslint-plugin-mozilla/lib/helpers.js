@@ -735,7 +735,7 @@ module.exports = {
 
   get globalScriptPaths() {
     return [
-      path.join(this.rootDir, "browser", "base", "content", "browser.xul"),
+      path.join(this.rootDir, "browser", "base", "content", "browser.xhtml"),
       path.join(this.rootDir, "browser", "base", "content", "global-scripts.inc"),
     ];
   },

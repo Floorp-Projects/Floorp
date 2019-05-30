@@ -19,8 +19,8 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js"
 Services.scriptloader.loadSubScript("chrome://global/content/globalOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://global/content/editMenuOverlay.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/utilityOverlay.js", this);
-#ifdef XP_MACOSX
-Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
-#endif
+if (AppConstants.platform == "macosx") {
+  Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
+}
 
 </script>
