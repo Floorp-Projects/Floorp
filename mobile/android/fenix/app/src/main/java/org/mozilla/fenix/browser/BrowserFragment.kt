@@ -181,6 +181,12 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             }
         }
 
+        sharedElementEnterTransition =
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
+                SHARED_TRANSITION_MS
+            )
+        startPostponedEnterTransition()
+
         QuickActionComponent(
             view.nestedScrollQuickAction,
             ActionBusFactory.get(this),
@@ -222,9 +228,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             owner = this,
             view = view
         )
-
-        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-        startPostponedEnterTransition()
 
         val sessionManager = requireComponents.core.sessionManager
 
@@ -829,6 +832,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     }
 
     companion object {
+        private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2

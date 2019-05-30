@@ -63,7 +63,10 @@ class SearchFragment : Fragment(), BackHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         postponeEnterTransition()
-        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+        sharedElementEnterTransition =
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
+                SHARED_TRANSITION_MS
+            )
     }
 
     override fun onCreateView(
@@ -321,6 +324,7 @@ class SearchFragment : Fragment(), BackHandler {
     }
 
     companion object {
+        private const val SHARED_TRANSITION_MS = 150L
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 }
