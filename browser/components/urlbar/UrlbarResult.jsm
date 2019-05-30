@@ -54,6 +54,9 @@ class UrlbarResult {
     }
     this.source = resultSource;
 
+    // UrlbarView is responsible for updating this.
+    this.uiIndex = -1;
+
     // May be used to indicate an heuristic result. Heuristic results can bypass
     // source filters in the ProvidersManager, that otherwise may skip them.
     this.heuristic = false;
