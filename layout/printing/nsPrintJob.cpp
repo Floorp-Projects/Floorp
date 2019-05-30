@@ -2632,16 +2632,6 @@ void nsPrintJob::SetIsPrintPreview(bool aIsPrintPreview) {
   }
 }
 
-//---------------------------------------------------------------------
-void nsPrintJob::CleanupDocTitleArray(char16_t**& aArray, int32_t& aCount) {
-  for (int32_t i = aCount - 1; i >= 0; i--) {
-    free(aArray[i]);
-  }
-  free(aArray);
-  aArray = nullptr;
-  aCount = 0;
-}
-
 /** ---------------------------------------------------
  *  Get the Focused Frame for a documentviewer
  */
