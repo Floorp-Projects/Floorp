@@ -3916,6 +3916,12 @@ static bool ConvertToMidasInternalCommand(const nsAString& inCommandID,
 bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
                            const nsAString& value,
                            nsIPrincipal& aSubjectPrincipal, ErrorResult& rv) {
+  // Only allow on HTML documents.
+  if (!IsHTMLOrXHTML()) {
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_EXEC_COMMAND);
+    return false;
+  }
+
   //  for optional parameters see dom/src/base/nsHistory.cpp: HistoryImpl::Go()
   //  this might add some ugly JS dependencies?
 
@@ -4046,6 +4052,12 @@ bool Document::ExecCommand(const nsAString& commandID, bool doShowUI,
 bool Document::QueryCommandEnabled(const nsAString& commandID,
                                    nsIPrincipal& aSubjectPrincipal,
                                    ErrorResult& rv) {
+  // Only allow on HTML documents.
+  if (!IsHTMLOrXHTML()) {
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_ENABLED);
+    return false;
+  }
+
   nsAutoCString cmdToDispatch;
   if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
     return false;
@@ -4087,6 +4099,12 @@ bool Document::QueryCommandEnabled(const nsAString& commandID,
 
 bool Document::QueryCommandIndeterm(const nsAString& commandID,
                                     ErrorResult& rv) {
+  // Only allow on HTML documents.
+  if (!IsHTMLOrXHTML()) {
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_INDETERM);
+    return false;
+  }
+
   nsAutoCString cmdToDispatch;
   if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {
     return false;
@@ -4123,6 +4141,12 @@ bool Document::QueryCommandIndeterm(const nsAString& commandID,
 }
 
 bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
+  // Only allow on HTML documents.
+  if (!IsHTMLOrXHTML()) {
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_STATE);
+    return false;
+  }
+
   nsAutoCString cmdToDispatch, paramToCheck;
   bool dummy, dummy2;
   if (!ConvertToMidasInternalCommand(commandID, commandID, cmdToDispatch,
@@ -4180,7 +4204,13 @@ bool Document::QueryCommandState(const nsAString& commandID, ErrorResult& rv) {
 }
 
 bool Document::QueryCommandSupported(const nsAString& commandID,
-                                     CallerType aCallerType) {
+                                     CallerType aCallerType, ErrorResult& rv) {
+  // Only allow on HTML documents.
+  if (!IsHTMLOrXHTML()) {
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_SUPPORTED);
+    return false;
+  }
+
   // Gecko technically supports all the clipboard commands including
   // cut/copy/paste, but non-privileged content will be unable to call
   // paste, and depending on the pref "dom.allow_cut_copy", cut and copy
@@ -4210,6 +4240,12 @@ bool Document::QueryCommandSupported(const nsAString& commandID,
 void Document::QueryCommandValue(const nsAString& commandID, nsAString& aValue,
                                  ErrorResult& rv) {
   aValue.Truncate();
+
+  // Only allow on HTML documents.
+  if (!IsHTMLOrXHTML()) {
+    rv.Throw(NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_VALUE);
+    return;
+  }
 
   nsAutoCString cmdToDispatch, paramStr;
   if (!ConvertToMidasInternalCommand(commandID, cmdToDispatch)) {

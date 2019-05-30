@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html>
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
  <head>
   <title>Editing: designMode attribute test</title>
   <link rel="author" title="Baidu" href="mailto: guopengcheng@baidu.com"/>
@@ -9,24 +9,24 @@
   <div id="log"></div>
  </head>
  <body>
-  <script type="text/javascript">
+  <script type="text/javascript"><![CDATA[
    test(function() {
     assert_equals(document.designMode, "off", "check for designMode value");
-    assert_true(document.queryCommandSupported("delete"));
-    assert_false(document.queryCommandEnabled("delete"));
+    assert_throws("InvalidStateError", function() { document.queryCommandSupported("delete") });
+    assert_throws("InvalidStateError", function() { document.queryCommandEnabled("delete") });
    }, "initial designMode attribute");
    document.designMode="on";
    test(function() {
     assert_equals(document.designMode, "on", "check for designMode value");
-    assert_true(document.queryCommandSupported("delete"));
-    assert_true(document.queryCommandEnabled("delete"));
+    assert_throws("InvalidStateError", function() { document.queryCommandSupported("delete") });
+    assert_throws("InvalidStateError", function() { document.queryCommandEnabled("delete") });
    }, "set designMode = \"on\"");
    document.designMode="off";
    test(function() {
     assert_equals(document.designMode,"off", "check for designMode value");
-    assert_true(document.queryCommandSupported("delete"));
-    assert_false(document.queryCommandEnabled("delete"));
+    assert_throws("InvalidStateError", function() { document.queryCommandSupported("delete") });
+    assert_throws("InvalidStateError", function() { document.queryCommandEnabled("delete") });
    }, "set designMode = \"off\"");
-  </script>
+  ]]></script>
  </body>
 </html>
