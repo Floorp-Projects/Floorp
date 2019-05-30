@@ -409,6 +409,7 @@ already_AddRefed<gfx::DrawTarget> WindowBackBufferShm::Lock() {
       mWaylandBuffer ? wl_proxy_get_id((struct wl_proxy*)mWaylandBuffer) : -1));
 
   gfx::IntSize lockSize(mWidth, mHeight);
+  mIsLocked = true;
   return gfxPlatform::CreateDrawTargetForData(
       static_cast<unsigned char*>(mShmPool.GetImageData()), lockSize,
       BUFFER_BPP * mWidth, GetSurfaceFormat());
@@ -592,9 +593,6 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferToDraw(
 
     return mWaylandBuffer;
   }
-
-  MOZ_ASSERT(!mPendingCommit,
-             "Uncommitted buffer switch, screen artifacts ahead.");
 
   // Front buffer is used by compositor, select a back buffer
   int availableBuffer;
