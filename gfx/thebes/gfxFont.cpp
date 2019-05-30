@@ -2742,8 +2742,6 @@ bool gfxFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                         uint32_t aOffset, uint32_t aLength, Script aScript,
                         bool aVertical, RoundingFlags aRounding,
                         gfxShapedText* aShapedText) {
-  bool ok = false;
-
   // XXX Currently, we do all vertical shaping through harfbuzz.
   // Vertical graphite support may be wanted as a future enhancement.
   if (FontCanSupportGraphite() && !aVertical) {
@@ -2752,26 +2750,42 @@ bool gfxFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
         mGraphiteShaper = MakeUnique<gfxGraphiteShaper>(this);
         Telemetry::ScalarAdd(Telemetry::ScalarID::BROWSER_USAGE_GRAPHITE, 1);
       }
-      ok = mGraphiteShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
-                                      aScript, aVertical, aRounding,
-                                      aShapedText);
+      if (mGraphiteShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
+                                     aScript, aVertical, aRounding,
+                                     aShapedText)) {
+        PostShapingFixup(aDrawTarget, aText, aOffset, aLength, aVertical,
+                         aShapedText);
+        return true;
+      }
     }
   }
 
-  if (!ok) {
-    if (!mHarfBuzzShaper) {
-      mHarfBuzzShaper = MakeUnique<gfxHarfBuzzShaper>(this);
+  if (!mHarfBuzzShaper) {
+    mHarfBuzzShaper = MakeUnique<gfxHarfBuzzShaper>(this);
+  }
+  if (mHarfBuzzShaper->ShapeText(aDrawTarget, aText, aOffset, aLength, aScript,
+                                 aVertical, aRounding, aShapedText)) {
+    PostShapingFixup(aDrawTarget, aText, aOffset, aLength, aVertical,
+                     aShapedText);
+    if (GetFontEntry()->HasTrackingTable()) {
+      // Convert font size from device pixels back to CSS px
+      // to use in selecting tracking value
+      float trackSize = GetAdjustedSize() *
+                        aShapedText->GetAppUnitsPerDevUnit() /
+                        AppUnitsPerCSSPixel();
+      float tracking =
+          GetFontEntry()->TrackingForCSSPx(trackSize) * mFUnitsConvFactor;
+      // Applying tracking is a lot like the adjustment we do for
+      // synthetic bold: we want to apply between clusters, not to
+      // non-spacing glyphs within a cluster. So we can reuse that
+      // helper here.
+      aShapedText->AdjustAdvancesForSyntheticBold(tracking, aOffset, aLength);
     }
-    ok = mHarfBuzzShaper->ShapeText(aDrawTarget, aText, aOffset, aLength,
-                                    aScript, aVertical, aRounding, aShapedText);
+    return true;
   }
 
-  NS_WARNING_ASSERTION(ok, "shaper failed, expect scrambled or missing text");
-
-  PostShapingFixup(aDrawTarget, aText, aOffset, aLength, aVertical,
-                   aShapedText);
-
-  return ok;
+  NS_WARNING_ASSERTION(false, "shaper failed, expect scrambled/missing text");
+  return false;
 }
 
 void gfxFont::PostShapingFixup(DrawTarget* aDrawTarget, const char16_t* aText,
