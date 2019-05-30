@@ -15,7 +15,7 @@ var gCount;
 
 add_task(threadClientTest(({ threadClient, debuggee }) => {
   return new Promise(resolve => {
-    threadClient.addOneTimeListener("paused", async function(event, packet) {
+    threadClient.once("paused", async function(packet) {
       const source = await getSourceById(
         threadClient,
         packet.frame.where.actor
@@ -62,7 +62,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
 
         // After setting all the breakpoints, check that only one has effectively
         // remained.
-        threadClient.addOneTimeListener("paused", function(event, packet) {
+        threadClient.once("paused", function(packet) {
           // Check the return value.
           Assert.equal(packet.type, "paused");
           Assert.equal(packet.frame.where.actor, source.actor);
@@ -73,7 +73,7 @@ add_task(threadClientTest(({ threadClient, debuggee }) => {
           Assert.equal(debuggee.a, 1);
           Assert.equal(debuggee.b, undefined);
 
-          threadClient.addOneTimeListener("paused", function(event, packet) {
+          threadClient.once("paused", function(packet) {
             // We don't expect any more pauses after the breakpoint was hit once.
             Assert.ok(false);
           });

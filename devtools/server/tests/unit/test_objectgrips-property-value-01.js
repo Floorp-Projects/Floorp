@@ -128,7 +128,7 @@ function eval_and_resume(debuggee, threadClient, code, callback) {
 
 function wait_for_pause(threadClient, callback = () => {}) {
   return new Promise((resolve, reject) => {
-    threadClient.addOneTimeListener("paused", function(event, packet) {
+    threadClient.once("paused", function(packet) {
       (async () => {
         try {
           return await callback(packet.frame);

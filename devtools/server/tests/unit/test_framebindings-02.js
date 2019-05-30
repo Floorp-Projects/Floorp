@@ -32,7 +32,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     let parentEnv = packet.frame.environment.parent;
     const bindings = parentEnv.bindings;
     const args = bindings.arguments;

@@ -36,7 +36,7 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box() {
-  gThreadClient.addOneTimeListener("paused", test_black_box_exception);
+  gThreadClient.once("paused", test_black_box_exception);
 
   /* eslint-disable no-multi-spaces, no-unreachable, no-undef */
   Cu.evalInSandbox(
@@ -75,7 +75,7 @@ function test_black_box_exception() {
     await blackBox(sourceFront);
     gThreadClient.pauseOnExceptions(true, false);
 
-    gThreadClient.addOneTimeListener("paused", async function(event, packet) {
+    gThreadClient.once("paused", async function(packet) {
       const source = await getSourceById(gThreadClient, packet.frame.where.actor);
 
       Assert.equal(source.url, SOURCE_URL,

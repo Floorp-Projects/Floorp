@@ -32,7 +32,7 @@ function run_test() {
 }
 
 function test_object_grip() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const person = packet.frame.environment.bindings.variables.person;
 
     Assert.equal(person.value.class, "Object");

@@ -32,7 +32,7 @@ function run_test() {
 }
 
 function test_banana_environment() {
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const environment = packet.frame.environment;
     Assert.equal(environment.type, "function");
 

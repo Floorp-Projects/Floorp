@@ -12,7 +12,7 @@
 add_task(threadClientTest(async ({ threadClient, client, debuggee }) => {
   let packet = null;
 
-  threadClient.addOneTimeListener("paused", function(event, pkt) {
+  threadClient.once("paused", function(pkt) {
     packet = pkt;
     threadClient.resume();
   });
@@ -40,7 +40,7 @@ add_task(threadClientTest(async ({ threadClient, client, debuggee }) => {
   Assert.equal(packet.why.exception, "42");
   packet = null;
 
-  threadClient.addOneTimeListener("paused", function(event, pkt) {
+  threadClient.once("paused", function(pkt) {
     packet = pkt;
     threadClient.resume();
   });
