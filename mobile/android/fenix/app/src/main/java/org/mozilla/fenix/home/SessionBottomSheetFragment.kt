@@ -13,9 +13,9 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.session_bottom_sheet.view.*
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.getColorFromAttr
 
 class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer {
@@ -47,7 +47,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
             drawable?.setColorFilter(
                 ContextCompat.getColor(
                     context!!,
-                    DefaultThemeManager.resolveAttribute(R.attr.accent, context!!)
+                    ThemeManager.resolveAttribute(R.attr.accent, context!!)
                 ), PorterDuff.Mode.SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
@@ -69,7 +69,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
             drawable?.setColorFilter(
                 ContextCompat.getColor(
                     context!!,
-                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, context!!)
+                    ThemeManager.resolveAttribute(R.attr.primaryText, context!!)
                 ), PorterDuff.Mode.SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)

@@ -13,8 +13,8 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.ContextCompat.getColor
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 
 class ClearableEditText @JvmOverloads
 constructor(
@@ -40,7 +40,7 @@ constructor(
         if (lengthAfter != 0 && error == null) {
             setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_clear, 0)
             for (drawable: Drawable in compoundDrawables.filterNotNull()) {
-                val color = DefaultThemeManager.resolveAttribute(R.attr.primaryText, context!!)
+                val color = ThemeManager.resolveAttribute(R.attr.primaryText, context!!)
                 drawable.colorFilter = PorterDuffColorFilter(getColor(context, color), PorterDuff.Mode.SRC_IN)
             }
         } else {

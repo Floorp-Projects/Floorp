@@ -19,8 +19,8 @@ import kotlinx.coroutines.Job
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
@@ -175,7 +175,7 @@ class CollectionItemMenu(
         listOf(
             SimpleBrowserMenuItem(
                 context.getString(R.string.collection_delete),
-                textColorResource = DefaultThemeManager.resolveAttribute(R.attr.destructive, context)
+                textColorResource = ThemeManager.resolveAttribute(R.attr.destructive, context)
             ) {
                 onItemTapped.invoke(Item.DeleteCollection)
             },

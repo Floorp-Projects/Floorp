@@ -9,8 +9,8 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 
 class BookmarkItemMenu(
     private val context: Context,
@@ -59,7 +59,7 @@ class BookmarkItemMenu(
             } else null,
             SimpleBrowserMenuItem(
                 context.getString(R.string.bookmark_menu_delete_button),
-                textColorResource = DefaultThemeManager.resolveAttribute(R.attr.destructive, context)
+                textColorResource = ThemeManager.resolveAttribute(R.attr.destructive, context)
             ) {
                 onItemTapped.invoke(BookmarkItemMenu.Item.Delete)
             }

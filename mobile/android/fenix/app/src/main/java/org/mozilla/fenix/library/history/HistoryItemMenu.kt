@@ -7,8 +7,8 @@ package org.mozilla.fenix.library.history
 import android.content.Context
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 
 class HistoryItemMenu(
     private val context: Context,
@@ -24,7 +24,7 @@ class HistoryItemMenu(
         listOf(
             SimpleBrowserMenuItem(
                 context.getString(R.string.history_delete_item),
-                textColorResource = DefaultThemeManager.resolveAttribute(R.attr.destructive, context)
+                textColorResource = ThemeManager.resolveAttribute(R.attr.destructive, context)
             ) {
                 onItemTapped.invoke(Item.Delete)
             }

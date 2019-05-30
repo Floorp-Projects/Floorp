@@ -21,8 +21,8 @@ import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.utils.Settings
@@ -95,7 +95,7 @@ class AwesomeBarUIView(
             draw?.setColorFilter(
                 ContextCompat.getColor(
                     this,
-                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
+                    ThemeManager.resolveAttribute(R.attr.primaryText, this)
                 ), PorterDuff.Mode.SRC_IN
             )
             clipboardSuggestionProvider = ClipboardSuggestionProvider(
@@ -131,7 +131,7 @@ class AwesomeBarUIView(
                 searchDrawable?.setColorFilter(
                     ContextCompat.getColor(
                         this,
-                        DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
+                        ThemeManager.resolveAttribute(R.attr.primaryText, this)
                     ), PorterDuff.Mode.SRC_IN
                 )
                 defaultSearchSuggestionProvider =
@@ -187,7 +187,7 @@ class AwesomeBarUIView(
             draw?.setColorFilter(
                 ContextCompat.getColor(
                     this,
-                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
+                    ThemeManager.resolveAttribute(R.attr.primaryText, this)
                 ), PorterDuff.Mode.SRC_IN
             )
 

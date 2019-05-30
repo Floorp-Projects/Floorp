@@ -8,8 +8,8 @@ import android.content.Context
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 
 class HomeMenu(
     private val context: Context,
@@ -28,7 +28,7 @@ class HomeMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_settings),
                 R.drawable.ic_settings,
-                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(HomeMenu.Item.Settings)
             },
@@ -36,7 +36,7 @@ class HomeMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_your_library),
                 R.drawable.ic_library,
-                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(HomeMenu.Item.Library)
             },
@@ -45,7 +45,7 @@ class HomeMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_help),
                 R.drawable.ic_help,
-                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(HomeMenu.Item.Help)
             })

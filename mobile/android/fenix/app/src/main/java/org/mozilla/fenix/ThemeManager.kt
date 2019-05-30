@@ -15,44 +15,13 @@ import androidx.core.content.ContextCompat
 
 interface ThemeManager {
     enum class Theme {
-        Normal, Private
+        Normal, Private;
+
+        fun isPrivate(): Boolean = this == Private
     }
 
     val currentTheme: Theme
     fun setTheme(theme: Theme)
-}
-
-fun Activity.setTheme(theme: ThemeManager.Theme) {
-    val themeCode = when (theme) {
-        ThemeManager.Theme.Normal -> R.style.NormalTheme
-        ThemeManager.Theme.Private -> R.style.PrivateTheme
-    }
-
-    setTheme(themeCode)
-}
-
-fun ThemeManager.Theme.isPrivate(): Boolean = this == ThemeManager.Theme.Private
-
-class DefaultThemeManager : ThemeManager {
-    var temporaryThemeManagerStorage = ThemeManager.Theme.Normal
-
-    var onThemeChange: ((ThemeManager.Theme) -> Unit)? = null
-
-    override val currentTheme: ThemeManager.Theme
-        get() = temporaryThemeManagerStorage
-
-    val currentThemeResource: Int = when (currentTheme) {
-        ThemeManager.Theme.Normal -> R.style.NormalTheme
-        ThemeManager.Theme.Private -> R.style.PrivateTheme
-    }
-
-    override fun setTheme(theme: ThemeManager.Theme) {
-        if (temporaryThemeManagerStorage != theme) {
-            temporaryThemeManagerStorage = theme
-
-            onThemeChange?.invoke(currentTheme)
-        }
-    }
 
     companion object {
         fun resolveAttribute(attribute: Int, context: Context): Int {
@@ -133,4 +102,34 @@ class DefaultThemeManager : ThemeManager {
                 )
         }
     }
+}
+
+val ThemeManager.currentThemeResource: Int
+    get() = when (currentTheme) {
+        ThemeManager.Theme.Normal -> R.style.NormalTheme
+        ThemeManager.Theme.Private -> R.style.PrivateTheme
+    }
+
+fun Activity.setTheme(theme: ThemeManager.Theme) {
+    val themeCode = when (theme) {
+        ThemeManager.Theme.Normal -> R.style.NormalTheme
+        ThemeManager.Theme.Private -> R.style.PrivateTheme
+    }
+
+    setTheme(themeCode)
+}
+
+class DefaultThemeManager(private var _currentTheme: ThemeManager.Theme) : ThemeManager {
+    override val currentTheme: ThemeManager.Theme
+        get() = _currentTheme
+
+    override fun setTheme(theme: ThemeManager.Theme) {
+        if (theme == _currentTheme) return
+        _currentTheme = theme
+    }
+}
+
+class CustomTabThemeManager : ThemeManager {
+    override val currentTheme = ThemeManager.Theme.Normal
+    override fun setTheme(theme: ThemeManager.Theme) { /* noop */ }
 }

@@ -19,8 +19,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import mozilla.components.browser.search.SearchEngine
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 import kotlin.coroutines.CoroutineContext
@@ -110,7 +110,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
         val engineIcon = BitmapDrawable(res, engine.icon)
         engineIcon.setBounds(0, 0, iconSize, iconSize)
         val attr =
-            DefaultThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
+            ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
         val buttonDrawable = ContextCompat.getDrawable(context, attr)
         buttonDrawable.apply {
             this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)

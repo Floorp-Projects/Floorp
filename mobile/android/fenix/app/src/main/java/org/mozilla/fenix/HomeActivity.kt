@@ -45,30 +45,25 @@ open class HomeActivity : AppCompatActivity() {
     open val isCustomTab = false
     private var sessionObserver: SessionManager.Observer? = null
 
-    val themeManager = DefaultThemeManager().also {
-        it.onThemeChange = { theme ->
-            setTheme(theme)
-            recreate()
-        }
-    }
+    lateinit var themeManager: ThemeManager
+
 
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
     }
 
-    lateinit var browsingModeManager: DefaultBrowsingModeManager
+    lateinit var browsingModeManager: BrowsingModeManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        browsingModeManager = createBrowsingModeManager()
+        themeManager = createThemeManager(when (browsingModeManager.isPrivate) {
+            true -> ThemeManager.Theme.Private
+            false -> ThemeManager.Theme.Normal
+        })
 
-        themeManager.temporaryThemeManagerStorage =
-            when (Settings.getInstance(this).usePrivateMode) {
-                true -> ThemeManager.Theme.Private
-                false -> ThemeManager.Theme.Normal
-            }
         setTheme(themeManager.currentTheme)
-        DefaultThemeManager.applyStatusBarTheme(window, themeManager, this)
-        browsingModeManager = DefaultBrowsingModeManager(this)
+        ThemeManager.applyStatusBarTheme(window, themeManager, this)
 
         setContentView(R.layout.activity_home)
 
@@ -95,7 +90,6 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        themeManager.onThemeChange = null
         sessionObserver?.let { components.core.sessionManager.unregister(it) }
         super.onDestroy()
     }
@@ -261,6 +255,16 @@ open class HomeActivity : AppCompatActivity() {
         } else if (!session.private && themeManager.currentTheme.isPrivate()) {
             browsingModeManager.mode = BrowsingModeManager.Mode.Normal
         }
+    }
+
+    private fun createBrowsingModeManager(): BrowsingModeManager {
+        return if (isCustomTab) CustomTabBrowsingModeManager()
+               else DefaultBrowsingModeManager(Settings.getInstance(this).createBrowserModeStorage())
+    }
+
+    private fun createThemeManager(currentTheme: ThemeManager.Theme): ThemeManager {
+        return if (isCustomTab) CustomTabThemeManager()
+               else DefaultThemeManager(currentTheme)
     }
 
     private fun subscribeToSessions(): SessionManager.Observer {

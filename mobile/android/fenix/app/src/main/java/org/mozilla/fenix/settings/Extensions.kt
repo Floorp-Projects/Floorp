@@ -12,8 +12,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 
 internal fun SitePermissionsRules.Action.toString(context: Context): String {
     return when (this) {
@@ -103,7 +103,7 @@ fun PhoneFeature.getPreferenceKey(context: Context): String {
 */
 fun RadioButton.setStartCheckedIndicator() {
     val attr =
-        DefaultThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
+        ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
     val buttonDrawable = ContextCompat.getDrawable(context, attr)
     buttonDrawable.apply {
         this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)

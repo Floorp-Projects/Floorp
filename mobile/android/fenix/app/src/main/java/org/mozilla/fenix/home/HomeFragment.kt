@@ -43,10 +43,10 @@ import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.TOP
 import org.jetbrains.anko.constraint.layout.applyConstraintSet
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
@@ -155,7 +155,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
 
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
-        DefaultThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
+        ThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
 
         return view
     }

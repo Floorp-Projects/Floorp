@@ -6,7 +6,7 @@ package org.mozilla.fenix.ext
 
 import android.content.Context
 import androidx.core.content.ContextCompat
-import org.mozilla.fenix.DefaultThemeManager
+import org.mozilla.fenix.ThemeManager
 
-fun Int.getColorIntFromAttr(context: Context): Int = DefaultThemeManager.resolveAttribute(this, context)
+fun Int.getColorIntFromAttr(context: Context): Int = ThemeManager.resolveAttribute(this, context)
 fun Int.getColorFromAttr(context: Context): Int = ContextCompat.getColor(context, this.getColorIntFromAttr(context))

@@ -10,8 +10,8 @@ import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.component_search.*
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.toolbar.BrowserToolbar
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
@@ -60,11 +60,11 @@ class ToolbarComponent(
         )
         getView().textColor = ContextCompat.getColor(
             container.context,
-            DefaultThemeManager.resolveAttribute(R.attr.primaryText, container.context)
+            ThemeManager.resolveAttribute(R.attr.primaryText, container.context)
         )
         getView().hintColor = ContextCompat.getColor(
             container.context,
-            DefaultThemeManager.resolveAttribute(R.attr.secondaryText, container.context)
+            ThemeManager.resolveAttribute(R.attr.secondaryText, container.context)
         )
     }
 }

@@ -16,8 +16,8 @@ import androidx.core.content.res.TypedArrayUtils
 import androidx.core.text.HtmlCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.utils.Settings
 
 class RadioButtonPreference : Preference {
@@ -37,7 +37,7 @@ class RadioButtonPreference : Preference {
     */
     fun RadioButton.setStartCheckedIndicator() {
         val attr =
-            DefaultThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
+            ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
         val buttonDrawable = ContextCompat.getDrawable(context, attr)
         buttonDrawable.apply {
             this?.setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)

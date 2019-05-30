@@ -20,8 +20,8 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
@@ -91,7 +91,7 @@ class ToolbarIntegration(
         sessionId,
         ToolbarFeature.UrlRenderConfiguration(
             PublicSuffixList(context),
-            DefaultThemeManager.resolveAttribute(R.attr.primaryText, context), renderStyle = renderStyle
+            ThemeManager.resolveAttribute(R.attr.primaryText, context), renderStyle = renderStyle
         )
     )
     private var menuPresenter = MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)

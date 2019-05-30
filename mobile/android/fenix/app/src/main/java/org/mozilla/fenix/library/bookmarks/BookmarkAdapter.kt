@@ -23,8 +23,8 @@ import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import kotlin.coroutines.CoroutineContext
@@ -195,9 +195,9 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         private fun setColorsAndIcons(selected: Boolean, item: BookmarkNode) {
             val backgroundTint =
                 if (selected) {
-                    DefaultThemeManager.resolveAttribute(R.attr.accentHighContrast, containerView!!.context)
+                    ThemeManager.resolveAttribute(R.attr.accentHighContrast, containerView!!.context)
                 } else {
-                    DefaultThemeManager.resolveAttribute(R.attr.neutral, containerView!!.context)
+                    ThemeManager.resolveAttribute(R.attr.neutral, containerView!!.context)
                 }
 
             val backgroundTintList = ContextCompat.getColorStateList(containerView.context, backgroundTint)
@@ -277,9 +277,9 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             setMenu(item, containerView!!)
 
             val backgroundTint = if (selected) {
-                DefaultThemeManager.resolveAttribute(R.attr.accentHighContrast, containerView.context)
+                ThemeManager.resolveAttribute(R.attr.accentHighContrast, containerView.context)
             } else {
-                DefaultThemeManager.resolveAttribute(R.attr.neutral, containerView.context)
+                ThemeManager.resolveAttribute(R.attr.neutral, containerView.context)
             }
 
             val backgroundTintList = ContextCompat.getColorStateList(containerView.context, backgroundTint)

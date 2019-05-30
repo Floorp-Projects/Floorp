@@ -12,10 +12,9 @@ import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
-import org.mozilla.fenix.ext.components
 
 class CustomTabToolbarMenu(
     private val context: Context,
@@ -32,14 +31,14 @@ class CustomTabToolbarMenu(
         val back = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back,
             primaryContentDescription = context.getString(R.string.browser_menu_back),
-            primaryImageTintResource = DefaultThemeManager.resolveAttribute(
+            primaryImageTintResource = ThemeManager.resolveAttribute(
                 R.attr.primaryText,
                 context
             ),
             isInPrimaryState = {
                 session?.canGoBack ?: true
             },
-            secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
+            secondaryImageTintResource = ThemeManager.resolveAttribute(
                 R.attr.neutral,
                 context
             ),
@@ -51,14 +50,14 @@ class CustomTabToolbarMenu(
         val forward = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
             primaryContentDescription = context.getString(R.string.browser_menu_forward),
-            primaryImageTintResource = DefaultThemeManager.resolveAttribute(
+            primaryImageTintResource = ThemeManager.resolveAttribute(
                 R.attr.primaryText,
                 context
             ),
             isInPrimaryState = {
                 session?.canGoForward ?: true
             },
-            secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
+            secondaryImageTintResource = ThemeManager.resolveAttribute(
                 R.attr.neutral,
                 context
             ),
@@ -70,7 +69,7 @@ class CustomTabToolbarMenu(
         val refresh = BrowserMenuItemToolbar.TwoStateButton(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
             primaryContentDescription = context.getString(R.string.browser_menu_refresh),
-            primaryImageTintResource = DefaultThemeManager.resolveAttribute(
+            primaryImageTintResource = ThemeManager.resolveAttribute(
                 R.attr.primaryText,
                 context
             ),
@@ -80,7 +79,7 @@ class CustomTabToolbarMenu(
             },
             secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
             secondaryContentDescription = context.getString(R.string.browser_menu_stop),
-            secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
+            secondaryImageTintResource = ThemeManager.resolveAttribute(
                 R.attr.primaryText,
                 context
             ),
@@ -105,11 +104,11 @@ class CustomTabToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_share),
                 R.drawable.mozac_ic_share,
-                textColorResource = DefaultThemeManager.resolveAttribute(
+                textColorResource = ThemeManager.resolveAttribute(
                     R.attr.primaryText,
                     context
                 ),
-                iconTintColorResource = DefaultThemeManager.resolveAttribute(
+                iconTintColorResource = ThemeManager.resolveAttribute(
                     R.attr.primaryText,
                     context
                 )
@@ -122,7 +121,7 @@ class CustomTabToolbarMenu(
                     val appName = context.getString(R.string.app_name)
                     context.getString(R.string.browser_menu_open_in_fenix, appName)
                 }(),
-                textColorResource = DefaultThemeManager.resolveAttribute(
+                textColorResource = ThemeManager.resolveAttribute(
                     R.attr.primaryText,
                     context
                 )
@@ -138,7 +137,7 @@ class CustomTabToolbarMenu(
                     context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
                 }(),
                 ToolbarMenu.CAPTION_TEXT_SIZE,
-                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
             )
         )
     }

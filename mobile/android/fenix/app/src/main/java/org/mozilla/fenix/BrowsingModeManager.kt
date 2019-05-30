@@ -10,40 +10,44 @@ interface BrowsingModeManager {
     enum class Mode {
         Normal, Private
     }
+
+    val isPrivate: Boolean
+    var mode: Mode
+
 }
 
-var temporaryModeStorage: BrowsingModeManager.Mode? = null
-class DefaultBrowsingModeManager(private val homeActivity: HomeActivity) : BrowsingModeManager {
-    val isPrivate: Boolean
+interface BrowserModeStorage {
+    fun setMode(mode: BrowsingModeManager.Mode)
+    fun currentMode(): BrowsingModeManager.Mode
+}
+
+fun Settings.createBrowserModeStorage(): BrowserModeStorage = object : BrowserModeStorage {
+    override fun currentMode(): BrowsingModeManager.Mode {
+        return if (this@createBrowserModeStorage.usePrivateMode) {
+            BrowsingModeManager.Mode.Private
+        } else {
+            BrowsingModeManager.Mode.Normal
+        }
+    }
+
+    override fun setMode(mode: BrowsingModeManager.Mode) {
+        this@createBrowserModeStorage.setPrivateMode(mode == BrowsingModeManager.Mode.Private)
+    }
+
+}
+
+class DefaultBrowsingModeManager(private val storage: BrowserModeStorage) : BrowsingModeManager {
+    override val isPrivate: Boolean
         get() = mode == BrowsingModeManager.Mode.Private
-    var mode: BrowsingModeManager.Mode
-        get() = temporaryModeStorage!!
-        set(value) {
-            temporaryModeStorage = value
-            setPreference()
-            updateTheme(value)
-        }
 
-    private fun updateTheme(mode: BrowsingModeManager.Mode) {
-        homeActivity.themeManager.apply {
-            val newTheme = when (mode) {
-                BrowsingModeManager.Mode.Normal -> ThemeManager.Theme.Normal
-                BrowsingModeManager.Mode.Private -> ThemeManager.Theme.Private
-            }
-            setTheme(newTheme)
-        }
-    }
+    override var mode: BrowsingModeManager.Mode
+        get() = storage.currentMode()
+        set(value) = storage.setMode(value)
+}
 
-    private fun setPreference() {
-        Settings.getInstance(homeActivity).setPrivateMode(isPrivate)
-    }
-
-    init {
-        if (temporaryModeStorage == null) {
-            mode = when (Settings.getInstance(homeActivity).usePrivateMode) {
-                true -> BrowsingModeManager.Mode.Private
-                false -> BrowsingModeManager.Mode.Normal
-            }
-        }
-    }
+class CustomTabBrowsingModeManager : BrowsingModeManager {
+    override val isPrivate = false
+    override var mode: BrowsingModeManager.Mode
+        get() = BrowsingModeManager.Mode.Normal
+        set(_) { return }
 }

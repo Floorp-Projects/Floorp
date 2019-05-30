@@ -16,8 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenu
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.history.HistoryAction
 import org.mozilla.fenix.library.history.HistoryItem
@@ -93,9 +93,9 @@ class HistoryListItemViewHolder(
         if (mode is HistoryState.Mode.Editing) {
             val backgroundTint =
                 if (selected) {
-                    DefaultThemeManager.resolveAttribute(R.attr.accentHighContrast, itemView.context)
+                    ThemeManager.resolveAttribute(R.attr.accentHighContrast, itemView.context)
                 } else {
-                    DefaultThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
+                    ThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
                 }
             val backgroundTintList = ContextCompat.getColorStateList(itemView.context, backgroundTint)
             favicon.backgroundTintList = backgroundTintList
@@ -106,7 +106,7 @@ class HistoryListItemViewHolder(
                 favicon.setImageResource(0)
             }
         } else {
-            val backgroundTint = DefaultThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
+            val backgroundTint = ThemeManager.resolveAttribute(R.attr.neutral, itemView.context)
             val backgroundTintList = ContextCompat.getColorStateList(itemView.context, backgroundTint)
             favicon.backgroundTintList = backgroundTintList
             updateFavIcon(item.url)

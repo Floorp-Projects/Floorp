@@ -10,8 +10,8 @@ import androidx.navigation.Navigation
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.search.SearchEngine
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.search.SearchFragmentDirections
 
 class ShortcutEngineManager(
@@ -70,7 +70,7 @@ class ShortcutEngineManager(
             awesomeBarUIView.search_shortcuts_button.compoundDrawables[0]?.setTint(
                 ContextCompat.getColor(
                     this,
-                    DefaultThemeManager.resolveAttribute(R.attr.foundation, this)
+                    ThemeManager.resolveAttribute(R.attr.foundation, this)
                 )
             )
 
@@ -85,7 +85,7 @@ class ShortcutEngineManager(
             awesomeBarUIView.search_shortcuts_button.compoundDrawables[0]?.setTint(
                 ContextCompat.getColor(
                     this,
-                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
+                    ThemeManager.resolveAttribute(R.attr.primaryText, this)
                 )
             )
 
