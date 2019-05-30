@@ -15,8 +15,6 @@ object KotlinCompiler {
         "browser-domains",
         "feature-accounts",
         "feature-prompts",
-        "service-glean",
-        "support-test",
-        "ui-tabcounter"
+        "service-glean"
     )
 }

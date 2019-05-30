@@ -5,26 +5,23 @@
 package mozilla.components.support.test.robolectric
 
 import android.Manifest.permission.INTERNET
-import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertTrue
 import mozilla.components.support.ktx.android.content.isPermissionGranted
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class PermissionsTest {
 
     @Test
     fun `after call grantPermission this permission must be granted `() {
-        val context = RuntimeEnvironment.application
-
-        var isGranted = context.isPermissionGranted(INTERNET)
+        var isGranted = testContext.isPermissionGranted(INTERNET)
         assertFalse(isGranted)
 
         grantPermission(INTERNET)
-        isGranted = context.isPermissionGranted(INTERNET)
+        isGranted = testContext.isPermissionGranted(INTERNET)
 
         assertTrue(isGranted)
     }

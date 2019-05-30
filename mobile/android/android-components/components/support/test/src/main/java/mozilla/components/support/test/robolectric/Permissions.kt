@@ -4,7 +4,8 @@
 
 package mozilla.components.support.test.robolectric
 
-import org.robolectric.RuntimeEnvironment
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import org.robolectric.Shadows.shadowOf
 
 /**
@@ -13,7 +14,7 @@ import org.robolectric.Shadows.shadowOf
  * @param permissions list of permissions that you need to be granted.
  */
 fun grantPermission(vararg permissions: String) {
-    val application = shadowOf(RuntimeEnvironment.application)
+    val application = shadowOf(getApplicationContext<Application>())
     permissions.map {
         application.grantPermissions(it)
     }

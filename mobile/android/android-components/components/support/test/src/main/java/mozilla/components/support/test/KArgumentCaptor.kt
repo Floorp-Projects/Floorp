@@ -32,12 +32,8 @@ class KArgumentCaptor<out T : Any?>(
 
     @Suppress("UNCHECKED_CAST")
     fun capture(): T {
-        return captor.capture() ?: createInstance(tClass) as T
+        return captor.capture() ?: castNull()
     }
-}
-
-fun <T : Any> createInstance(kClass: KClass<T>): T {
-    return castNull()
 }
 
 /**

@@ -26,6 +26,8 @@ class PixelCopyShadow {
 
         @JvmStatic
         @Implementation
+        // Some parameters are unused but method signature should be the same as for original class.
+        @Suppress("UNUSED_PARAMETER")
         fun request(
             source: Window,
             srcRect: Rect?,
