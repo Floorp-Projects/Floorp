@@ -7,15 +7,14 @@
 #ifndef frontend_TryEmitter_h
 #define frontend_TryEmitter_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // mozilla::Maybe, mozilla::Nothing
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h>  // ptrdiff_t
+#include <stdint.h>  // uint32_t
 
-#include "frontend/BytecodeControlStructures.h"
-#include "frontend/JumpList.h"
-#include "frontend/TDZCheckCache.h"
+#include "frontend/BytecodeControlStructures.h"  // TryFinallyControl
+#include "frontend/JumpList.h"                   // JumpList, JumpTarget
 
 namespace js {
 namespace frontend {

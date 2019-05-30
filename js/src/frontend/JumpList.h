@@ -7,9 +7,9 @@
 #ifndef frontend_JumpList_h
 #define frontend_JumpList_h
 
-#include <stddef.h>
+#include <stddef.h>  // ptrdiff_t
 
-#include "js/TypeDecls.h"
+#include "js/TypeDecls.h"  // jsbytecode
 
 namespace js {
 namespace frontend {

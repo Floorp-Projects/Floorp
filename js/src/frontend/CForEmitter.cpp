@@ -6,11 +6,12 @@
 
 #include "frontend/CForEmitter.h"
 
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/EmitterScope.h"
-#include "frontend/SourceNotes.h"
-#include "vm/Opcodes.h"
-#include "vm/Scope.h"
+#include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
+#include "frontend/EmitterScope.h"     // EmitterScope
+#include "frontend/SourceNotes.h"      // SRC_*, SrcNote
+#include "vm/JSScript.h"               // JSTRY_LOOP
+#include "vm/Opcodes.h"                // JSOP_*
+#include "vm/Scope.h"                  // ScopeKind
 
 using namespace js;
 using namespace js::frontend;

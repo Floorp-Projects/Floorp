@@ -6,16 +6,21 @@
 
 #include "frontend/SwitchEmitter.h"
 
-#include "mozilla/Span.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Span.h"        // mozilla::Span
 
-#include "jsutil.h"
+#include <algorithm>  // std::min, std::max
 
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/SharedContext.h"
-#include "frontend/SourceNotes.h"
-#include "vm/BytecodeUtil.h"
-#include "vm/Opcodes.h"
-#include "vm/Runtime.h"
+#include "jstypes.h"  // JS_BIT
+#include "jsutil.h"  // NumWordsForBitArrayOfLength, IsBitArrayElementSet, SetBitArrayElement
+
+#include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
+#include "frontend/SharedContext.h"    // StatementKind
+#include "frontend/SourceNotes.h"      // SrcNote, SRC_*
+#include "js/TypeDecls.h"              // jsbytecode
+#include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, JUMP_OFFSET_LEN, SET_RESUMEINDEX
+#include "vm/Opcodes.h"       // JSOP_*
+#include "vm/Runtime.h"       // ReportOutOfMemory
 
 using namespace js;
 using namespace js::frontend;

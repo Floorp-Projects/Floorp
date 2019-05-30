@@ -10,10 +10,11 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"       // Maybe
 
+#include <stddef.h>  // ptrdiff_t
+
 #include "frontend/BytecodeControlStructures.h"  // LabelControl
 #include "frontend/JumpList.h"                   // JumpList
-
-class JSAtom;
+#include "js/TypeDecls.h"                        // JSAtom
 
 namespace js {
 namespace frontend {

@@ -10,59 +10,61 @@
 
 #include "frontend/BytecodeEmitter.h"
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/FloatingPoint.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/PodOperations.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/Variant.h"
+#include "mozilla/Casting.h"    // mozilla::AssertedCast
+#include "mozilla/DebugOnly.h"  // mozilla::DebugOnly
+#include "mozilla/FloatingPoint.h"  // mozilla::NumberEqualsInt32, mozilla::NumberIsInt32
+#include "mozilla/Maybe.h"          // mozilla::{Maybe,Nothing,Some}
+#include "mozilla/PodOperations.h"  // mozilla::PodCopy
+#include "mozilla/Sprintf.h"        // SprintfLiteral
+#include "mozilla/Unused.h"         // mozilla::Unused
+#include "mozilla/Variant.h"        // mozilla::AsVariant
 
 #include <string.h>
 
-#include "jsnum.h"
-#include "jstypes.h"
-#include "jsutil.h"
+#include "jsnum.h"    // NumberToAtom
+#include "jstypes.h"  // JS_BIT
+#include "jsutil.h"   // Min
 
-#include "ds/Nestable.h"
-#include "frontend/BytecodeControlStructures.h"
-#include "frontend/CallOrNewEmitter.h"
-#include "frontend/CForEmitter.h"
-#include "frontend/DefaultEmitter.h"  // DefaultEmitter
-#include "frontend/DoWhileEmitter.h"
-#include "frontend/ElemOpEmitter.h"
-#include "frontend/EmitterScope.h"
-#include "frontend/ExpressionStatementEmitter.h"
-#include "frontend/ForInEmitter.h"
-#include "frontend/ForOfEmitter.h"
-#include "frontend/ForOfLoopControl.h"
+#include "ds/Nestable.h"                         // Nestable
+#include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl
+#include "frontend/CallOrNewEmitter.h"           // CallOrNewEmitter
+#include "frontend/CForEmitter.h"                // CForEmitter
+#include "frontend/DefaultEmitter.h"             // DefaultEmitter
+#include "frontend/DoWhileEmitter.h"             // DoWhileEmitter
+#include "frontend/ElemOpEmitter.h"              // ElemOpEmitter
+#include "frontend/EmitterScope.h"               // EmitterScope
+#include "frontend/ExpressionStatementEmitter.h"  // ExpressionStatementEmitter
+#include "frontend/ForInEmitter.h"                // ForInEmitter
+#include "frontend/ForOfEmitter.h"                // ForOfEmitter
+#include "frontend/ForOfLoopControl.h"            // ForOfLoopControl
 #include "frontend/FunctionEmitter.h"  // FunctionEmitter, FunctionScriptEmitter, FunctionParamsEmitter
-#include "frontend/IfEmitter.h"
-#include "frontend/LabelEmitter.h"         // LabelEmitter
+#include "frontend/IfEmitter.h"     // IfEmitter, InternalIfEmitter, CondEmitter
+#include "frontend/LabelEmitter.h"  // LabelEmitter
 #include "frontend/LexicalScopeEmitter.h"  // LexicalScopeEmitter
-#include "frontend/ModuleSharedContext.h"
-#include "frontend/NameOpEmitter.h"
+#include "frontend/ModuleSharedContext.h"  // ModuleSharedContext
+#include "frontend/NameFunctions.h"        // NameFunctions
+#include "frontend/NameOpEmitter.h"        // NameOpEmitter
 #include "frontend/ObjectEmitter.h"  // PropertyEmitter, ObjectEmitter, ClassEmitter
-#include "frontend/ParseNode.h"
-#include "frontend/Parser.h"
-#include "frontend/PropOpEmitter.h"
-#include "frontend/SwitchEmitter.h"
-#include "frontend/TDZCheckCache.h"
-#include "frontend/TryEmitter.h"
-#include "frontend/WhileEmitter.h"
-#include "js/CompileOptions.h"
-#include "vm/AsyncFunction.h"
-#include "vm/BytecodeUtil.h"
-#include "vm/Debugger.h"
-#include "vm/GeneratorObject.h"
-#include "vm/JSAtom.h"
-#include "vm/JSContext.h"
-#include "vm/JSFunction.h"
-#include "vm/JSScript.h"
-#include "vm/Stack.h"
-#include "wasm/AsmJS.h"
+#include "frontend/ParseNode.h"  // ParseNodeKind, ParseNode and subclasses, ObjectBox
+#include "frontend/Parser.h"         // Parser
+#include "frontend/PropOpEmitter.h"  // PropOpEmitter
+#include "frontend/SwitchEmitter.h"  // SwitchEmitter
+#include "frontend/TDZCheckCache.h"  // TDZCheckCache
+#include "frontend/TryEmitter.h"     // TryEmitter
+#include "frontend/WhileEmitter.h"   // WhileEmitter
+#include "js/CompileOptions.h"       // TransitiveCompileOptions, CompileOptions
+#include "vm/AsyncFunction.h"        // AsyncFunctionResolveKind
+#include "vm/BytecodeUtil.h"  // IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
+#include "vm/Debugger.h"      // Debugger
+#include "vm/GeneratorObject.h"  // AbstractGeneratorObject
+#include "vm/JSAtom.h"           // JSAtom, js_*_str
+#include "vm/JSContext.h"        // JSContext
+#include "vm/JSFunction.h"       // FunctionPrefixKind, JSFunction,
+#include "vm/JSScript.h"  // JSScript, ScopeNote, ScriptSourceObject, FieldInitializers, JSScript, LazyScript
+#include "vm/Opcodes.h"   // JSOP_*
+#include "wasm/AsmJS.h"   // IsAsmJSModule
 
-#include "vm/JSObject-inl.h"
+#include "vm/JSObject-inl.h"  // JSObject
 
 using namespace js;
 using namespace js::frontend;

@@ -7,18 +7,19 @@
 #ifndef frontend_BytecodeControlStructures_h
 #define frontend_BytecodeControlStructures_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h>  // ptrdiff_t
+#include <stdint.h>  // int32_t, uint32_t
 
-#include "ds/Nestable.h"
-#include "frontend/JumpList.h"
-#include "frontend/SharedContext.h"
-#include "frontend/TDZCheckCache.h"
-#include "gc/Rooting.h"
-#include "vm/BytecodeUtil.h"
+#include "ds/Nestable.h"        // Nestable
+#include "frontend/JumpList.h"  // JumpList, JumpTarget
+#include "frontend/SharedContext.h"  // StatementKind, StatementKindIsLoop, StatementKindIsUnlabeledBreakTarget
+#include "frontend/TDZCheckCache.h"  // TDZCheckCache
+#include "gc/Rooting.h"              // RootedAtom, HandleAtom
+#include "vm/StringType.h"           // JSAtom
 
 namespace js {
 namespace frontend {
