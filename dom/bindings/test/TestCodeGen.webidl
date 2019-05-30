@@ -1220,6 +1220,12 @@ dictionary DictWithConditionalMembers {
   long funcControlledMember;
   [ChromeOnly, Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   long chromeOnlyFuncControlledMember;
+  // We need a pref name that's in StaticPrefList.h here.
+  [Pref="browser.dom.window.dump.enabled"]
+  long prefControlledMember;
+  [Pref="browser.dom.window.dump.enabled", ChromeOnly,
+   Func="TestFuncControlledMember"]
+  long chromeOnlyFuncAndPrefControlledMember;
 };
 
 interface TestIndexedGetterInterface {
