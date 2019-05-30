@@ -99,6 +99,12 @@ jsreftest:
             windows10-aarch64.*: 2
             android-em-4.*/.*: 2  # bug 1548659
             default: default
+    run-on-projects:
+        by-test-platform:
+            android-em-4.*/.*: ['try', 'mozilla-central']  # bug 1548659
+            windows10-aarch64/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/debug: ['try', 'mozilla-central']
+            default: built-projects
 
 reftest:
     description: "Reftest run"
