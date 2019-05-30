@@ -203,7 +203,8 @@ nsresult LocalStorageManager::GetStorageInternal(
   nsAutoCString originAttrSuffix;
   nsAutoCString originKey;
 
-  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
+  nsresult rv =
+      GenerateOriginKey(aStoragePrincipal, originAttrSuffix, originKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -255,7 +256,7 @@ nsresult LocalStorageManager::GetStorageInternal(
 
     // There is always a single instance of a cache per scope
     // in a single instance of a DOM storage manager.
-    cache = PutCache(originAttrSuffix, originKey, aPrincipal);
+    cache = PutCache(originAttrSuffix, originKey, aStoragePrincipal);
 
 #if !defined(MOZ_WIDGET_ANDROID)
     LocalStorageCacheChild* actor = new LocalStorageCacheChild(cache);
