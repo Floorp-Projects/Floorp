@@ -379,7 +379,9 @@ nsresult WSRunObject::InsertText(Document& aDocument,
                                       aPointAfterInsertedString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // XXX Temporarily, set new insertion point to the original point.
-    *aPointAfterInsertedString = pointToInsert;
+    if (aPointAfterInsertedString) {
+      *aPointAfterInsertedString = pointToInsert;
+    }
     return NS_OK;
   }
   return NS_OK;
