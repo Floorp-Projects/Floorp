@@ -1037,6 +1037,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// Is support for AudioWorklet enabled?
+VARCACHE_PREF(
+  Live,
+  "dom.audioworklet.enabled",
+  dom_audioworklet_enabled,
+  bool, false
+)
+
 // Block multiple external protocol URLs in iframes per single event.
 VARCACHE_PREF(
   Live,
@@ -4922,6 +4930,22 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 5000
 )
 
+// AudioTrack and VideoTrack support
+VARCACHE_PREF(
+  Live,
+  "media.track.enabled",
+  media_track_enabled,
+  bool, false
+)
+
+// TextTrack WebVTT Region extension support.
+VARCACHE_PREF(
+  Live,
+  "media.webvtt.regions.enabled",
+  media_webvtt_regions_enabled,
+  bool, true
+)
+
 VARCACHE_PREF(
   Live,
   "media.webspeech.synth.force_global_queue",
@@ -4954,7 +4978,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.webspeech.recognition.enable",
-  MediaWebspeechRecognitionEnable,
+  media_webspeech_recognition_enable,
   bool, false
 )
 #endif
@@ -4965,6 +4989,15 @@ VARCACHE_PREF(
   MediaWebspeechRecognitionForceEnable,
   bool, false
 )
+
+#ifdef MOZ_WEBSPEECH
+VARCACHE_PREF(
+  Live,
+  "media.webspeech.synth.enabled",
+  media_webspeech_synth_enabled,
+  bool, false
+)
+#endif // MOZ_WEBSPEECH
 
 #if defined(MOZ_WEBM_ENCODER)
 # define PREF_VALUE true

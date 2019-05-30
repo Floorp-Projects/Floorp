@@ -518,14 +518,8 @@ pref("media.getusermedia.screensharing.enabled", true);
 
 pref("media.getusermedia.audiocapture.enabled", false);
 
-// TextTrack WebVTT Region extension support.
-pref("media.webvtt.regions.enabled", true);
-
 // WebVTT pseudo element and class support.
 pref("media.webvtt.pseudo.enabled", true);
-
-// AudioTrack and VideoTrack support
-pref("media.track.enabled", false);
 
 // Whether to enable MediaSource support.
 pref("media.mediasource.enabled", true);
@@ -549,9 +543,6 @@ pref("media.benchmark.timeout", 1000);
 pref("media.media-capabilities.enabled", true);
 pref("media.media-capabilities.screen.enabled", false);
 
-#ifdef MOZ_WEBSPEECH
-pref("media.webspeech.synth.enabled", false);
-#endif
 #ifdef MOZ_WEBM_ENCODER
 pref("media.encoder.webm.enabled", true);
 #endif
