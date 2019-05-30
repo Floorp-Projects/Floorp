@@ -40,11 +40,6 @@ describe("initStore", () => {
 
     assert.doesNotThrow(() => initStore({number: addNumberReducer}));
   });
-  it("should initialize with an initial state if provided as the second argument", () => {
-    store = initStore({number: addNumberReducer}, {number: 42});
-
-    assert.equal(store.getState().number, 42);
-  });
   it("should log errors from failed messages", () => {
     const [, callback] = global.RPMAddMessageListener.firstCall.args;
     globals.sandbox.stub(global.console, "error");

@@ -37,7 +37,9 @@ export class ContextMenu extends React.PureComponent {
   }
 
   render() {
-    return (<span role="menu" className="context-menu" onClick={this.onClick} onKeyDown={this.onClick} tabIndex="0" >
+    // Disabling focus on the menu span allows the first tab to focus on the first menu item instead of the wrapper.
+    // eslint-disable-next-line jsx-a11y/interactive-supports-focus
+    return (<span role="menu" className="context-menu" onClick={this.onClick} onKeyDown={this.onClick} >
       <ul className="context-menu-list">
         {this.props.options.map((option, i) => (option.type === "separator" ?
           (<li key={i} className="separator" />) :

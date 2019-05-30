@@ -539,7 +539,7 @@ export class ASRouterAdminInner extends React.PureComponent {
     }
     const errors = this.refs.targetingParamsEval && this.refs.targetingParamsEval.innerText.length;
     return (
-      <ModalOverlay title="New targeting parameters" button_label={errors ? "Cancel" : "Done"} onDoneButton={this.onPasteTargetingParams}>
+      <ModalOverlay innerStyle="pasteModal" title="New targeting parameters" button_label={errors ? "Cancel" : "Done"} onDismissBundle={this.onPasteTargetingParams}>
         <div className="onboardingMessage">
           <p>
             <textarea onChange={this.onNewTargetingParams} value={this.state.newStringTargetingParameters} rows="20" cols="60" />

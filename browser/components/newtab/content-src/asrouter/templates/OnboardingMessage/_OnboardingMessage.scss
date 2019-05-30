@@ -4,6 +4,7 @@
   grid-template-columns: auto auto auto;
   padding-left: 30px;
   padding-right: 30px;
+  min-height: 500px;
 
   // at 850px, the cards go from vertical layout to horizontal layout
   @media(max-width: 850px) {
