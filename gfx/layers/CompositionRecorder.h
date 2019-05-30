@@ -68,6 +68,8 @@ class CompositionRecorder {
  protected:
   virtual ~CompositionRecorder() = default;
 
+  void ClearCollectedFrames();
+
  private:
   nsTArray<RefPtr<RecordedFrame>> mCollectedFrames;
   TimeStamp mRecordingStart;
