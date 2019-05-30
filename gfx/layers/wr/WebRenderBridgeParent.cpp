@@ -801,11 +801,6 @@ bool WebRenderBridgeParent::IsRootWebRenderBridgeParent() const {
   return !!mWidget;
 }
 
-void WebRenderBridgeParent::SetCompositionRecorder(
-    RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder) {
-  Api(wr::RenderRoot::Default)->SetCompositionRecorder(std::move(aRecorder));
-}
-
 CompositorBridgeParent* WebRenderBridgeParent::GetRootCompositorBridgeParent()
     const {
   if (!mCompositorBridge) {
