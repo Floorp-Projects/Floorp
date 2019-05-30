@@ -972,6 +972,16 @@ static bool EnumerateStandardClasses(JSContext* cx, JS::HandleObject obj,
     return false;
   }
 
+  bool resolved = false;
+  if (!GlobalObject::maybeResolveGlobalThis(cx, global, &resolved)) {
+    return false;
+  }
+  if (resolved || includeResolved) {
+    if (!properties.append(NameToId(cx->names().globalThis))) {
+      return false;
+    }
+  }
+
   if (!EnumerateStandardClassesInTable(cx, global, properties,
                                        standard_class_names, includeResolved)) {
     return false;
