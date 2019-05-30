@@ -126,6 +126,8 @@ inline bool IsAboutToBeFinalized(ReadBarriered<T>* thingp) {
 
 bool IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured);
 
+inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell* cell);
+
 inline Cell* ToMarkable(const Value& v) {
   if (v.isGCThing()) {
     return (Cell*)v.toGCThing();
