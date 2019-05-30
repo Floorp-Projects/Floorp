@@ -81,15 +81,16 @@
 #include global-scripts.inc
 
 <script>
+  /* eslint-env mozilla/browser-window */
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-captivePortal.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-contentblocking.js", this);
-#ifdef MOZ_DATA_REPORTING
-  Services.scriptloader.loadSubScript("chrome://browser/content/browser-data-submission-info-bar.js", this);
-#endif
-#ifndef MOZILLA_OFFICIAL
-  Services.scriptloader.loadSubScript("chrome://browser/content/browser-development-helpers.js", this);
-#endif
+  if (AppConstants.MOZ_DATA_REPORTING) {
+    Services.scriptloader.loadSubScript("chrome://browser/content/browser-data-submission-info-bar.js", this);
+  }
+  if (!AppConstants.MOZILLA_OFFICIAL) {
+    Services.scriptloader.loadSubScript("chrome://browser/content/browser-development-helpers.js", this);
+  }
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-media.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-pageActions.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-plugins.js", this);
