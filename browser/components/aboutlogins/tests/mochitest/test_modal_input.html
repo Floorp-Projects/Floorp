@@ -79,6 +79,17 @@ add_task(async function test_password() {
   is(unlockedValue.value, "",
      "type=password should display nothing when locked without a value (.unlocked-value)");
 });
+
+add_task(async function test_required() {
+  let unlockedValue = gModalInput.shadowRoot.querySelector(".unlocked-value");
+  ok(unlockedValue.checkValidity(), "The modal-input should be valid when before it is required");
+
+  gModalInput.setAttribute("required", "");
+  ok(!unlockedValue.checkValidity(), "Setting 'required' on the modal-input should make the unlocked-value required");
+
+  unlockedValue.value = "foo";
+  ok(unlockedValue.checkValidity(), "Setting a value on the required modal-input should pass validation");
+});
 </script>
 
 </body>
