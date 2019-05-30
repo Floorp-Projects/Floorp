@@ -1770,10 +1770,9 @@ JS_PUBLIC_API JSObject* JS_NewObjectForConstructor(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  Value callee = args.calleev();
-  cx->check(callee);
-  RootedObject obj(cx, &callee.toObject());
-  return CreateThis(cx, Valueify(clasp), obj);
+  RootedObject newTarget(cx, &args.newTarget().toObject());
+  cx->check(newTarget);
+  return CreateThis(cx, Valueify(clasp), newTarget);
 }
 
 JS_PUBLIC_API bool JS_IsNative(JSObject* obj) { return obj->isNative(); }
