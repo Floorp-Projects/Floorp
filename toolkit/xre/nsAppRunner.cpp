@@ -4000,9 +4000,11 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       RemoteResult rr = mRemoteService->StartClient(desktopStartupIDPtr);
       if (rr == REMOTE_FOUND) {
         *aExitFlag = true;
+        mRemoteService->UnlockStartup();
         return 0;
       }
       if (rr == REMOTE_ARG_BAD) {
+        mRemoteService->UnlockStartup();
         return 1;
       }
     }

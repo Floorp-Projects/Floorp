@@ -77,10 +77,10 @@ void nsRemoteService::LockStartup() {
 }
 
 void nsRemoteService::UnlockStartup() {
-  mRemoteLock.Unlock();
-  mRemoteLock.Cleanup();
-
   if (mRemoteLockDir) {
+    mRemoteLock.Unlock();
+    mRemoteLock.Cleanup();
+
     mRemoteLockDir->Remove(false);
     mRemoteLockDir = nullptr;
   }
@@ -174,7 +174,10 @@ void nsRemoteService::StartupServer() {
 
 void nsRemoteService::ShutdownServer() { mRemoteServer = nullptr; }
 
-nsRemoteService::~nsRemoteService() { ShutdownServer(); }
+nsRemoteService::~nsRemoteService() {
+  UnlockStartup();
+  ShutdownServer();
+}
 
 NS_IMETHODIMP
 nsRemoteService::Observe(nsISupports* aSubject, const char* aTopic,

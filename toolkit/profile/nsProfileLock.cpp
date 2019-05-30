@@ -84,7 +84,11 @@ nsProfileLock& nsProfileLock::operator=(nsProfileLock& rhs) {
   return *this;
 }
 
-nsProfileLock::~nsProfileLock() { Unlock(); }
+nsProfileLock::~nsProfileLock() {
+  Unlock();
+  // Note that we don't clean up by default here so on next startup we know when
+  // the profile was last used based on the modification time of the lock file.
+}
 
 #if defined(XP_UNIX)
 
@@ -566,8 +570,14 @@ nsresult nsProfileLock::Unlock(bool aFatalSignal) {
 }
 
 nsresult nsProfileLock::Cleanup() {
+  if (mHaveLock) {
+    return NS_ERROR_FILE_IS_LOCKED;
+  }
+
   if (mLockFile) {
-    return mLockFile->Remove(false);
+    nsresult rv = mLockFile->Remove(false);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mLockFile = nullptr;
   }
 
   return NS_OK;
