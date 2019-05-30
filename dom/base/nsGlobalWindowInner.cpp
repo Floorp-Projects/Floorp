@@ -4594,9 +4594,9 @@ already_AddRefed<CacheStorage> nsGlobalWindowInner::GetCaches(
   if (!mCacheStorage) {
     bool forceTrustedOrigin =
         GetOuterWindow()->GetServiceWorkersTestingEnabled();
-    mCacheStorage = CacheStorage::CreateOnMainThread(cache::DEFAULT_NAMESPACE,
-                                                     this, GetPrincipal(),
-                                                     forceTrustedOrigin, aRv);
+    mCacheStorage = CacheStorage::CreateOnMainThread(
+        cache::DEFAULT_NAMESPACE, this, GetEffectiveStoragePrincipal(),
+        forceTrustedOrigin, aRv);
   }
 
   RefPtr<CacheStorage> ref = mCacheStorage;
@@ -6984,6 +6984,9 @@ void nsGlobalWindowInner::StorageAccessGranted() {
 
   // Reset the IndexedDB factory.
   mIndexedDB = nullptr;
+
+  // Reset DOM Cache
+  mCacheStorage = nullptr;
 }
 
 mozilla::dom::TabGroup* nsPIDOMWindowInner::TabGroup() {

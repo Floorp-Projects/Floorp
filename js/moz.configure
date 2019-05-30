@@ -85,27 +85,6 @@ def static_js(value):
 
 set_define('MOZ_STATIC_JS', static_js)
 
-@deprecated_option(env='DISABLE_SHARED_JS', nargs='?')
-def disable_shared_js(value):
-    # DISABLE_SHARED_JS=1 gets us an empty PositiveOptionValue
-    if value and not len(value):
-        suggestion = '--disable-shared-js'
-    else:
-        suggestion = '--enable-shared-js'
-
-    die('Setting %s is deprecated, use %s instead.',
-        value.format('DISABLE_SHARED_JS'), suggestion)
-
-@deprecated_option(env='DISABLE_EXPORT_JS', nargs='?')
-def disable_export_js(value):
-    # DISABLE_EXPORT_JS=1 gets us an empty PositiveOptionValue
-    if value and not len(value):
-        suggestion = '--disable-export-js'
-    else:
-        suggestion = '--enable-export-js'
-
-    die('Setting %s is deprecated, use %s instead.',
-        value.format('DISABLE_EXPORT_JS'), suggestion)
 
 # JIT support
 # =======================================================

@@ -16,9 +16,7 @@ EXPORTS.mozilla.interceptor += [
 ]
 
 if CONFIG['CPU_ARCH'] == 'aarch64':
-    Library('interceptor')
-
-    DEFINES['IMPL_MFBT'] = True
+    FINAL_LIBRARY = 'mozglue'
 
     UNIFIED_SOURCES += [
         'Arm64.cpp',

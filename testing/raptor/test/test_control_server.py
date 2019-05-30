@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 import mozunit
 import os
+import requests
 import sys
 
 from BaseHTTPServer import HTTPServer
@@ -32,6 +33,33 @@ def test_start_and_stop():
 
     control.stop()
     assert not control._server_thread.is_alive()
+
+
+def test_server_get_timeout(raptor):
+    test_name = "test-name"
+    url = "test-url"
+    metrics = {"metric1": False, "metric2": True, "metric3": True}
+
+    def post_state():
+        requests.post(
+            "http://127.0.0.1:%s/" % raptor.control_server.port,
+            json={
+                "type": "webext_raptor-page-timeout",
+                "data": [test_name, url, metrics]
+            })
+
+    assert len(raptor.results_handler.page_timeout_list) == 0
+
+    post_state()
+
+    assert len(raptor.results_handler.page_timeout_list) == 1
+
+    timeout_details = raptor.results_handler.page_timeout_list[0]
+    assert timeout_details['test_name'] == test_name
+    assert timeout_details['url'] == url
+
+    pending_metrics = [k for k, v in metrics.items() if v]
+    assert len(timeout_details['pending_metrics'].split(', ')) == len(pending_metrics)
 
 
 if __name__ == '__main__':

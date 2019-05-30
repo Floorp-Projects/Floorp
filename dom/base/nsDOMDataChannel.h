@@ -96,8 +96,6 @@ class nsDOMDataChannel final : public mozilla::DOMEventTargetHelper,
 
   virtual nsresult NotBuffered(nsISupports* aContext) override;
 
-  virtual void AppReady();
-
   // if there are "strong event listeners" or outgoing not sent messages
   // then this method keeps the object alive when js doesn't have strong
   // references to it.

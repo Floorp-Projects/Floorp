@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_GamepadRemapping_h_
 #define mozilla_dom_GamepadRemapping_h_
 
+#include "mozilla/dom/GamepadLightIndicator.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -70,11 +72,19 @@ class GamepadRemapper {
  public:
   virtual uint32_t GetAxisCount() const = 0;
   virtual uint32_t GetButtonCount() const = 0;
+  virtual uint32_t GetLightIndicatorCount() const { return 0; }
+  virtual void GetLightIndicators(
+      nsTArray<GamepadLightIndicatorType>& aTypes) const {}
+  virtual uint32_t GetTouchEventCount() const { return 0; }
+  virtual void GetLightColorReport(uint8_t aRed, uint8_t aGreen, uint8_t aBlue,
+                                   std::vector<uint8_t>& aReport) const {}
+
   virtual void SetAxisCount(uint32_t aButtonCount) {}
   virtual void SetButtonCount(uint32_t aButtonCount) {}
   virtual GamepadMappingType GetMappingType() const {
     return GamepadMappingType::Standard;
   }
+  virtual void GetTouchData(uint32_t aIndex, void* aInput) {}
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                                   double aValue) const = 0;
   virtual void RemapButtonEvent(uint32_t aIndex, uint32_t aButton,

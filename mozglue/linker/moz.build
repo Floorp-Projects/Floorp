@@ -17,8 +17,6 @@ Library('linker')
 
 FINAL_LIBRARY = 'mozglue'
 
-DEFINES['IMPL_MFBT'] = True
-
 TEST_DIRS += ['tests']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

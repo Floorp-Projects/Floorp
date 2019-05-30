@@ -1836,6 +1836,15 @@ void nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin& aOffsets) {
   }
 }
 
+static inline bool RadiiAreDefinitelyZero(const BorderRadius& aBorderRadius) {
+  NS_FOR_CSS_HALF_CORNERS(corner) {
+    if (!aBorderRadius.Get(corner).IsDefinitelyZero()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /* virtual */
 bool nsIFrame::GetBorderRadii(const nsSize& aFrameSize,
                               const nsSize& aBorderArea, Sides aSkipSides,
@@ -1857,10 +1866,18 @@ bool nsIFrame::GetBorderRadii(const nsSize& aFrameSize,
     return false;
   }
 
-  const_cast<nsIFrame*>(this)->mMayHaveRoundedCorners =
-      ComputeBorderRadii(StyleBorder()->mBorderRadius, aFrameSize, aBorderArea,
-                         aSkipSides, aRadii);
-  return mMayHaveRoundedCorners;
+  const auto& radii = StyleBorder()->mBorderRadius;
+  const bool hasRadii =
+      ComputeBorderRadii(radii, aFrameSize, aBorderArea, aSkipSides, aRadii);
+  if (!hasRadii) {
+    // TODO(emilio): Maybe we can just remove this bit and do the
+    // IsDefinitelyZero check unconditionally. That should still avoid most of
+    // the work, though maybe not the cache miss of going through the style and
+    // the border struct.
+    const_cast<nsIFrame*>(this)->mMayHaveRoundedCorners =
+        !RadiiAreDefinitelyZero(radii);
+  }
+  return hasRadii;
 }
 
 bool nsIFrame::GetBorderRadii(nscoord aRadii[8]) const {

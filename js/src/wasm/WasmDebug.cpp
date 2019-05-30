@@ -90,21 +90,21 @@ bool DebugState::getOffsetLocation(uint32_t offset, size_t* lineno,
 }
 
 bool DebugState::stepModeEnabled(uint32_t funcIndex) const {
-  return stepModeCounters_.lookup(funcIndex).found();
+  return stepperCounters_.lookup(funcIndex).found();
 }
 
-bool DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex) {
+bool DebugState::incrementStepperCount(JSContext* cx, uint32_t funcIndex) {
   const CodeRange& codeRange =
       codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
   MOZ_ASSERT(codeRange.isFunction());
 
-  StepModeCounters::AddPtr p = stepModeCounters_.lookupForAdd(funcIndex);
+  StepperCounters::AddPtr p = stepperCounters_.lookupForAdd(funcIndex);
   if (p) {
     MOZ_ASSERT(p->value() > 0);
     p->value()++;
     return true;
   }
-  if (!stepModeCounters_.add(p, funcIndex, 1)) {
+  if (!stepperCounters_.add(p, funcIndex, 1)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -112,7 +112,7 @@ bool DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex) {
   AutoWritableJitCode awjc(
       cx->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
       codeRange.end() - codeRange.begin());
-  AutoFlushICache afc("Code::incrementStepModeCount");
+  AutoFlushICache afc("Code::incrementStepperCount");
 
   for (const CallSite& callSite : callSites(Tier::Debug)) {
     if (callSite.kind() != CallSite::Breakpoint) {
@@ -126,24 +126,24 @@ bool DebugState::incrementStepModeCount(JSContext* cx, uint32_t funcIndex) {
   return true;
 }
 
-bool DebugState::decrementStepModeCount(FreeOp* fop, uint32_t funcIndex) {
+bool DebugState::decrementStepperCount(FreeOp* fop, uint32_t funcIndex) {
   const CodeRange& codeRange =
       codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
   MOZ_ASSERT(codeRange.isFunction());
 
-  MOZ_ASSERT(!stepModeCounters_.empty());
-  StepModeCounters::Ptr p = stepModeCounters_.lookup(funcIndex);
+  MOZ_ASSERT(!stepperCounters_.empty());
+  StepperCounters::Ptr p = stepperCounters_.lookup(funcIndex);
   MOZ_ASSERT(p);
   if (--p->value()) {
     return true;
   }
 
-  stepModeCounters_.remove(p);
+  stepperCounters_.remove(p);
 
   AutoWritableJitCode awjc(
       fop->runtime(), code_->segment(Tier::Debug).base() + codeRange.begin(),
       codeRange.end() - codeRange.begin());
-  AutoFlushICache afc("Code::decrementStepModeCount");
+  AutoFlushICache afc("Code::decrementStepperCount");
 
   for (const CallSite& callSite : callSites(Tier::Debug)) {
     if (callSite.kind() != CallSite::Breakpoint) {
@@ -176,7 +176,7 @@ void DebugState::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset,
       code_->lookupFuncRange(codeSegment.base() + debugTrapOffset);
   MOZ_ASSERT(codeRange);
 
-  if (stepModeCounters_.lookup(codeRange->funcIndex())) {
+  if (stepperCounters_.lookup(codeRange->funcIndex())) {
     return;  // no need to toggle when step mode is enabled
   }
 

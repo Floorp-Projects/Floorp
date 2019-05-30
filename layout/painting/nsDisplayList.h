@@ -1602,17 +1602,9 @@ class nsDisplayListBuilder {
    */
   void ClearWindowOpaqueRegion() { mWindowOpaqueRegion.SetEmpty(); }
 
-  void SetGlassDisplayItem(nsDisplayItem* aItem) {
-    if (mGlassDisplayItem) {
-      // Web pages or extensions could trigger this by using
-      // -moz-appearance:win-borderless-glass etc on their own elements.
-      // Keep the first one, since that will be the background of the root
-      // window
-      NS_WARNING("Multiple glass backgrounds found?");
-    } else {
-      mGlassDisplayItem = aItem;
-    }
-  }
+  void SetGlassDisplayItem(nsDisplayItem* aItem);
+  void ClearGlassDisplayItem() { mGlassDisplayItem = nullptr; }
+  nsDisplayItem* GetGlassDisplayItem() { return mGlassDisplayItem; }
 
   bool NeedToForceTransparentSurfaceForItem(nsDisplayItem* aItem);
 
@@ -1920,7 +1912,12 @@ class nsDisplayListBuilder {
   nsRegion mWindowOpaqueRegion;
 
   // The display item for the Windows window glass background, if any
+  // Set during full display list builds or during display list merging only,
+  // partial display list builds don't touch this.
   nsDisplayItem* mGlassDisplayItem;
+  // If we've encountered a glass item yet, only used during partial display
+  // list builds.
+  bool mHasGlassItemDuringPartial;
   // A temporary list that we append scroll info items to while building
   // display items for the contents of frames with SVG effects.
   // Only non-null when ShouldBuildScrollInfoItemsForHoisting() is true.
@@ -2731,6 +2728,9 @@ class nsDisplayItem : public nsDisplayItemBase {
   void SetPainted() { mItemFlags += ItemFlag::Painted; }
 #endif
 
+  void SetIsGlassItem() { mItemFlags += ItemFlag::IsGlassItem; }
+  bool IsGlassItem() { return mItemFlags.contains(ItemFlag::IsGlassItem); }
+
   /**
    * Function to create the WebRenderCommands.
    * We should check if the layer state is
@@ -3048,6 +3048,7 @@ class nsDisplayItem : public nsDisplayItemBase {
     DisableSubpixelAA,
     ForceNotVisible,
     PaintRectValid,
+    IsGlassItem,
 #ifdef MOZ_DUMP_PAINTING
     // True if this frame has been painted.
     Painted,

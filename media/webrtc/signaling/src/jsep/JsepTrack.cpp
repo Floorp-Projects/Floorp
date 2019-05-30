@@ -477,26 +477,16 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
   std::stable_sort(negotiatedCodecs.begin(), negotiatedCodecs.end(),
                    CompareCodec);
 
-  // TODO(bug 814227): Remove this once we're ready to put multiple codecs in an
-  // answer.  For now, remove all but the first codec unless the red codec
-  // exists, in which case we include the others per RFC 5109, section 14.2.
-  if (!negotiatedCodecs.empty() && !red) {
-    std::vector<UniquePtr<JsepCodecDescription>> codecsToKeep;
-
-    bool foundPreferredCodec = false;
-    for (auto& codec : negotiatedCodecs) {
-      if (codec.get() == dtmf) {
-        codecsToKeep.push_back(std::move(codec));
-        // TODO: keep ulpfec when we enable it in Bug 875922
-        // } else if (codec.get() == ulpfec) {
-        //   codecsToKeep.push_back(std::move(codec));
-      } else if (!foundPreferredCodec) {
-        codecsToKeep.insert(codecsToKeep.begin(), std::move(codec));
-        foundPreferredCodec = true;
-      }
-    }
-
-    negotiatedCodecs = std::move(codecsToKeep);
+  if (!red) {
+    // No red, remove ulpfec
+    negotiatedCodecs.erase(
+        std::remove_if(negotiatedCodecs.begin(), negotiatedCodecs.end(),
+                       [ulpfec](const UniquePtr<JsepCodecDescription>& codec) {
+                         return codec.get() == ulpfec;
+                       }),
+        negotiatedCodecs.end());
+    // Make sure there's no dangling ptr here
+    ulpfec = nullptr;
   }
 
   return negotiatedCodecs;

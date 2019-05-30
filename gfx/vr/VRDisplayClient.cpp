@@ -161,7 +161,7 @@ void VRDisplayClient::FireGamepadEvents() {
       dom::GamepadAdded info(NS_ConvertUTF8toUTF16(state.controllerName),
                              dom::GamepadMappingType::_empty, state.hand,
                              mDisplayInfo.mDisplayID, state.numButtons,
-                             state.numAxes, state.numHaptics);
+                             state.numAxes, state.numHaptics, 0, 0);
       dom::GamepadChangeEventBody body(info);
       dom::GamepadChangeEvent event(gamepadId, dom::GamepadServiceType::VR,
                                     body);

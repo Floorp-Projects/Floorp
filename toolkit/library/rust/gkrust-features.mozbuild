@@ -7,7 +7,10 @@
 gkrust_features = ['servo', 'bindgen']
 
 if CONFIG['MOZ_DEBUG']:
-    gkrust_features += ['gecko_debug']
+    gkrust_features += [
+        'gecko_debug',
+        'gecko_refcount_logging',
+    ]
 
 if CONFIG['MOZ_BUILD_WEBRENDER']:
     gkrust_features += ['quantum_render']

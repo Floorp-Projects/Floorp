@@ -197,7 +197,8 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
     return nullptr;
   }
 
-  const PrincipalInfo& principalInfo = aWorkerPrivate->GetPrincipalInfo();
+  const PrincipalInfo& principalInfo =
+      aWorkerPrivate->GetEffectiveStoragePrincipalInfo();
 
   if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
     aRv.Throw(NS_ERROR_FAILURE);
