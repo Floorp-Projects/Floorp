@@ -25,27 +25,28 @@ namespace gc {
 struct Cell;
 
 struct WeakKeyTableHashPolicy {
-  typedef JS::GCCellPtr Lookup;
-  static HashNumber hash(const Lookup& v, const mozilla::HashCodeScrambler&) {
-    return mozilla::HashGeneric(v.asCell());
+  using Lookup = Cell*;
+  static HashNumber hash(const Lookup& v,
+                         const mozilla::HashCodeScrambler& hcs) {
+    return hcs.scramble(mozilla::HashGeneric(v));
   }
-  static bool match(const JS::GCCellPtr& k, const Lookup& l) { return k == l; }
-  static bool isEmpty(const JS::GCCellPtr& v) { return !v; }
-  static void makeEmpty(JS::GCCellPtr* vp) { *vp = nullptr; }
+  static bool match(Cell* const& k, const Lookup& l) { return k == l; }
+  static bool isEmpty(Cell* const& v) { return !v; }
+  static void makeEmpty(Cell** vp) { *vp = nullptr; }
 };
 
 struct WeakMarkable {
   WeakMapBase* weakmap;
-  JS::GCCellPtr key;
+  Cell* key;
 
-  WeakMarkable(WeakMapBase* weakmapArg, JS::GCCellPtr keyArg)
+  WeakMarkable(WeakMapBase* weakmapArg, Cell* keyArg)
       : weakmap(weakmapArg), key(keyArg) {}
 };
 
 using WeakEntryVector = Vector<WeakMarkable, 2, js::SystemAllocPolicy>;
 
 using WeakKeyTable =
-    OrderedHashMap<JS::GCCellPtr, WeakEntryVector, WeakKeyTableHashPolicy,
+    OrderedHashMap<Cell*, WeakEntryVector, WeakKeyTableHashPolicy,
                    js::SystemAllocPolicy>;
 
 /*
