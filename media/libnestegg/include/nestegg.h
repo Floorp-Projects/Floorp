@@ -150,6 +150,30 @@ typedef struct {
   unsigned int crop_left;      /**< Pixels to crop from the left of the frame. */
   unsigned int crop_right;     /**< Pixels to crop from the right of the frame. */
   unsigned int alpha_mode;     /**< 1 if an additional opacity stream is available, otherwise 0. */
+  unsigned int matrix_coefficients;      /**< See Table 4 of ISO/IEC 23001-8:2016. */
+  unsigned int range;                    /**< Clipping of color ranges. */
+  unsigned int transfer_characteristics; /**< See Table 3 of ISO/IEC 23091-4. */
+  unsigned int primaries;                /**< See Table 2 of ISO/IEC 23091-4. */
+  double primary_r_chromacity_x;         /**< Red X chromaticity coordinate per CIE 1931.
+                                              NaN means element not present. */
+  double primary_r_chromacity_y;         /**< Red Y chromaticity coordinate per CIE 1931.
+                                              NaN means element not present. */
+  double primary_g_chromacity_x;         /**< Green X chromaticity coordinate per CIE 1931.
+                                              NaN means element not present. */
+  double primary_g_chromacity_y;         /**< Green Y chromaticity coordinate per CIE 1931.
+                                              NaN means element not present. */
+  double primary_b_chromacity_x;         /**< Blue X chromaticity coordinate per CIE 1931.
+                                              NaN means element not present. */
+  double primary_b_chromacity_y;         /**< Blue Y chromaticity coordinate per CIE 1931.
+                                              NaN means element not present. */
+  double white_point_chromaticity_x;     /**< White X chromaticity coordinate per CIE 1931.
+                                              NaN means element not present. */
+  double white_point_chromaticity_y;     /**< White Y chromaticity coordinate per CIE 1931.
+                                              NaN means element not present. */
+  double luminance_max;                  /**< Maximum luminance in cd/m2.
+                                              NaN means element not present. */
+  double luminance_min;                  /**< Minimum luminance in cd/m2.
+                                              NaN means element not present. */
 } nestegg_video_params;
 
 /** Parameters specific to an audio track. */
