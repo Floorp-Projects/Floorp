@@ -134,6 +134,11 @@ class GeckoViewNavigation extends GeckoViewModule {
         });
         break;
       case "GeckoView:Reload":
+        // At the moment, GeckoView only supports one reload, which uses
+        // nsIWebNavigation.LOAD_FLAGS_NONE flag, and the telemetry doesn't
+        // do anything to differentiate reloads (i.e normal vs skip caches)
+        // So whenever we add more reload methods, please make sure the
+        // telemetry probe is adjusted
         this.browser.reload();
         break;
       case "GeckoView:Stop":
