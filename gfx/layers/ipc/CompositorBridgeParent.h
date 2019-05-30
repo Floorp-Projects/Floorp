@@ -27,6 +27,7 @@
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/layers/CompositionRecorder.h"
 #include "mozilla/layers/CompositorController.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
@@ -72,7 +73,6 @@ class APZSampler;
 class APZUpdater;
 class AsyncCompositionManager;
 class AsyncImagePipelineManager;
-class CompositionRecorder;
 class Compositor;
 class CompositorAnimationStorage;
 class CompositorBridgeParent;
@@ -767,7 +767,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   // mSelfRef is cleared in DeferredDestroy which is scheduled by ActorDestroy.
   RefPtr<CompositorBridgeParent> mSelfRef;
   RefPtr<CompositorAnimationStorage> mAnimationStorage;
-  UniquePtr<CompositionRecorder> mCompositionRecorder;
+  RefPtr<CompositionRecorder> mCompositionRecorder;
 
   TimeDuration mPaintTime;
 
