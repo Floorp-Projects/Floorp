@@ -6,9 +6,13 @@
 
 #include "frontend/TryEmitter.h"
 
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/SourceNotes.h"
-#include "vm/Opcodes.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+
+#include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
+#include "frontend/SharedContext.h"    // StatementKind
+#include "frontend/SourceNotes.h"      // SrcNote, SRC_*
+#include "vm/JSScript.h"               // JSTRY_CATCH, JSTRY_FINALLY
+#include "vm/Opcodes.h"                // JSOP_*
 
 using namespace js;
 using namespace js::frontend;
