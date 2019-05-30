@@ -42,6 +42,7 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   // Get our manager actor.
   BrowserParent* Manager();
 
+#if defined(ACCESSIBILITY)
   /**
    * Get the accessible for this iframe's embedder OuterDocAccessible.
    * This returns the actor for the containing document and the unique id of
@@ -51,6 +52,7 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
     return Tuple<a11y::DocAccessibleParent*, uint64_t>(mEmbedderAccessibleDoc,
                                                        mEmbedderAccessibleID);
   }
+#endif  // defined(ACCESSIBILITY)
 
   // Tear down this BrowserBridgeParent.
   void Destroy();
@@ -93,8 +95,10 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   ~BrowserBridgeParent();
 
   RefPtr<BrowserParent> mBrowserParent;
+#if defined(ACCESSIBILITY)
   RefPtr<a11y::DocAccessibleParent> mEmbedderAccessibleDoc;
   uint64_t mEmbedderAccessibleID;
+#endif  // defined(ACCESSIBILITY)
   bool mIPCOpen;
 };
 
