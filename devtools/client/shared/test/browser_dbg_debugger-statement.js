@@ -34,6 +34,8 @@ async function testEarlyDebuggerStatement(client, tab, targetFront) {
     ok(false, "Pause shouldn't be called before we've attached!");
   };
 
+  // using the DebuggerClient to listen to the pause packet, as the
+  // threadClient is not yet attached.
   client.on("paused", onPaused);
 
   // This should continue without nesting an event loop and calling
@@ -52,7 +54,7 @@ async function testEarlyDebuggerStatement(client, tab, targetFront) {
 
 async function testDebuggerStatement(client, tab, threadClient) {
   const onPaused = new Promise(resolve => {
-    client.on("paused", async (packet) => {
+    threadClient.on("paused", async (packet) => {
       await threadClient.resume();
       ok(true, "The pause handler was triggered on a debugger statement.");
       resolve();
