@@ -22,6 +22,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -104,7 +105,7 @@ class ClipboardSuggestionProviderTest {
     }
 
     @Test
-    fun `provider should return no suggestions if clipboard doesn not contain a url`() {
+    fun `provider should return no suggestions if clipboard does not contain a url`() {
         assertClipboardYieldsNothing("Hello World")
 
         assertClipboardYieldsNothing("Is this mozilla org")
@@ -116,7 +117,13 @@ class ClipboardSuggestionProviderTest {
     fun `provider should allow customization of title and icon on suggestion`() {
         clipboardManager.primaryClip = ClipData.newPlainText("Test label", "http://mozilla.org")
         val bitmap = Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
-        val provider = ClipboardSuggestionProvider(testContext, mock(), title = "My test title", icon = bitmap)
+        val provider = ClipboardSuggestionProvider(
+            testContext,
+            mock(),
+            title = "My test title",
+            icon = bitmap,
+            requireEmptyText = false
+        )
 
         val suggestion = runBlocking {
             provider.onInputStarted()
@@ -145,7 +152,7 @@ class ClipboardSuggestionProviderTest {
 
         val useCase = spy(SessionUseCases(sessionManager).loadUrl)
 
-        val provider = ClipboardSuggestionProvider(testContext, useCase)
+        val provider = ClipboardSuggestionProvider(testContext, useCase, requireEmptyText = false)
 
         provider.onInputStarted()
         val suggestions = provider.onInputChanged("Hello")
@@ -167,6 +174,17 @@ class ClipboardSuggestionProviderTest {
         assertFalse(provider.shouldClearSuggestions)
     }
 
+    @Test
+    fun `provider returns empty list for non-empty text if empty text required`() = runBlocking {
+        clipboardManager.primaryClip = ClipData.newPlainText(
+                "Label",
+                "Hello Mozilla, https://www.mozilla.org")
+
+        val provider = ClipboardSuggestionProvider(testContext, mock(), requireEmptyText = true)
+        val suggestions = provider.onInputChanged("Hello")
+        assertTrue(suggestions.isEmpty())
+    }
+
     private fun assertClipboardYieldsUrl(text: String, url: String) {
         val suggestion = getSuggestionWithClipboard(text)
 
@@ -186,7 +204,7 @@ class ClipboardSuggestionProviderTest {
     }
 
     private fun getSuggestion(): AwesomeBar.Suggestion? = runBlocking {
-        val provider = ClipboardSuggestionProvider(testContext, mock())
+        val provider = ClipboardSuggestionProvider(testContext, mock(), requireEmptyText = false)
 
         provider.onInputStarted()
         val suggestions = provider.onInputChanged("Hello")
