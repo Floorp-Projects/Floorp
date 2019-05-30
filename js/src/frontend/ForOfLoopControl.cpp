@@ -6,9 +6,13 @@
 
 #include "frontend/ForOfLoopControl.h"
 
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/EmitterScope.h"
-#include "frontend/IfEmitter.h"
+#include "jsapi.h"  // CompletionKind
+
+#include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
+#include "frontend/EmitterScope.h"     // EmitterScope
+#include "frontend/IfEmitter.h"        // InternalIfEmitter
+#include "vm/JSScript.h"               // JSTRY_FOR_OF_ITERCLOSE
+#include "vm/Opcodes.h"                // JSOP_*
 
 using namespace js;
 using namespace js::frontend;

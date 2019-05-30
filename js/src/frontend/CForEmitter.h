@@ -7,14 +7,14 @@
 #ifndef frontend_CForEmitter_h
 #define frontend_CForEmitter_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h>  // ptrdiff_t
+#include <stdint.h>  // uint32_t
 
-#include "frontend/BytecodeControlStructures.h"
-#include "frontend/TDZCheckCache.h"
+#include "frontend/BytecodeControlStructures.h"  // LoopControl
+#include "frontend/TDZCheckCache.h"              // TDZCheckCache
 
 namespace js {
 namespace frontend {

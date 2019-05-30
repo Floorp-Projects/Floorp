@@ -20,13 +20,11 @@
 #include "gc/Barrier.h"                // GCPtrObject, GCPtrScope, GCPtrValue
 #include "gc/Rooting.h"                // JS::Rooted
 #include "js/GCVector.h"               // GCVector
-#include "js/TypeDecls.h"              // jsbytecode
+#include "js/TypeDecls.h"              // jsbytecode, JSContext
 #include "js/Value.h"                  // JS::Vector
 #include "js/Vector.h"                 // Vector
 #include "vm/JSScript.h"               // JSTryNote, JSTryNoteKind, ScopeNote
 #include "vm/Opcodes.h"                // JSOP_*
-
-struct JSContext;
 
 namespace js {
 

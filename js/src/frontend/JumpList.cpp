@@ -6,7 +6,9 @@
 
 #include "frontend/JumpList.h"
 
-#include "vm/BytecodeUtil.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+
+#include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, IsJumpOpcode
 
 using namespace js;
 using namespace js::frontend;

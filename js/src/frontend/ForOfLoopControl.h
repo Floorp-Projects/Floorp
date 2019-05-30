@@ -7,14 +7,17 @@
 #ifndef frontend_ForOfLoopControl_h
 #define frontend_ForOfLoopControl_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Attributes.h"  // MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include <stdint.h>
+#include <stddef.h>  // ptrdiff_t
+#include <stdint.h>  // int32_t, uint32_t
 
-#include "frontend/BytecodeControlStructures.h"
-#include "frontend/TryEmitter.h"
-#include "vm/Iteration.h"
+#include "jsapi.h"  // CompletionKind
+
+#include "frontend/BytecodeControlStructures.h"  // NestableControl, LoopControl
+#include "frontend/TryEmitter.h"                 // TryEmitter
+#include "vm/Iteration.h"                        // IteratorKind
 
 namespace js {
 namespace frontend {
