@@ -17,7 +17,6 @@
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/layers/PWebRenderBridgeParent.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
-#include "mozilla/layers/WebRenderCompositionRecorder.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
@@ -272,9 +271,6 @@ class WebRenderBridgeParent final
   bool IsRootWebRenderBridgeParent() const;
   LayersId GetLayersId() const;
   WRRootId GetWRRootId() const;
-
-  void SetCompositionRecorder(
-      RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder);
 
  private:
   class ScheduleSharedSurfaceRelease;
