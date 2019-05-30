@@ -318,7 +318,7 @@ class MOZ_STACK_CLASS SwitchEmitter {
   BytecodeOffset lastCaseOffset_;
 
   // Bytecode offset of the JSOP_JUMPTARGET for default body.
-  JumpTarget defaultJumpTargetOffset_ = {BytecodeOffset::invalidOffset()};
+  JumpTarget defaultJumpTargetOffset_;
 
   // Bytecode offset of the JSOP_DEFAULT.
   JumpList condSwitchDefaultOffset_;
