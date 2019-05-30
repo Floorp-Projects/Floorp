@@ -23,7 +23,12 @@ namespace mozilla {
 namespace dom {
 
 BrowserBridgeParent::BrowserBridgeParent()
-    : mEmbedderAccessibleID(0), mIPCOpen(false) {}
+    :
+#ifdef ACCESSIBILITY
+      mEmbedderAccessibleID(0),
+#endif
+      mIPCOpen(false) {
+}
 
 BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 
