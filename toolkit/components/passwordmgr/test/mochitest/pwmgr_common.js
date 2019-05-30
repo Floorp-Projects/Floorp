@@ -400,11 +400,14 @@ this.LoginManager = new Proxy({}, {
         return val;
       });
 
-      return PWMGR_COMMON_PARENT.sendSyncMessage("proxyLoginManager", {
+      let messageRV = PWMGR_COMMON_PARENT.sendSyncMessage("proxyLoginManager", {
         args: cloneableArgs,
         loginInfoIndices,
         methodName: prop,
-      })[0][0];
+      })[0];
+
+      // Handle methods with no return value such as removeLogin.
+      return messageRV ? messageRV[0] : undefined;
     };
   },
 });

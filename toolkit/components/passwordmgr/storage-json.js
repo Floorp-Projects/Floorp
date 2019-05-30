@@ -305,6 +305,12 @@ this.LoginManagerStorage_json.prototype = {
   }) {
     this._store.ensureDataReady();
 
+    if ("formSubmitURL" in matchData && matchData.formSubmitURL === ""
+        // Carve an exception out for a unit test in test_legacy_empty_formSubmitURL.js
+        && Object.keys(matchData).length != 1) {
+      throw new Error("Searching with an empty `formSubmitURL` doesn't do a wildcard search");
+    }
+
     function match(aLogin) {
       for (let field in matchData) {
         let wantedValue = matchData[field];
