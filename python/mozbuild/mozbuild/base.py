@@ -23,6 +23,8 @@ from mach.mixin.process import ProcessExecutionMixin
 from mozversioncontrol import (
     get_repository_from_build_config,
     get_repository_object,
+    GitRepository,
+    HgRepository,
     InvalidRepoPath,
 )
 
@@ -992,22 +994,32 @@ class MachCommandConditions(object):
     @staticmethod
     def is_hg(cls):
         """Must have a mercurial source checkout."""
-        return getattr(cls, 'substs', {}).get('VCS_CHECKOUT_TYPE') == 'hg'
+        try:
+            return isinstance(cls.repository, HgRepository)
+        except InvalidRepoPath:
+            return False
 
     @staticmethod
     def is_git(cls):
         """Must have a git source checkout."""
-        return getattr(cls, 'substs', {}).get('VCS_CHECKOUT_TYPE') == 'git'
+        try:
+            return isinstance(cls.repository, GitRepository)
+        except InvalidRepoPath:
+            return False
 
     @staticmethod
     def is_artifact_build(cls):
         """Must be an artifact build."""
-        return getattr(cls, 'substs', {}).get('MOZ_ARTIFACT_BUILDS')
+        if hasattr(cls, 'substs'):
+            return getattr(cls, 'substs', {}).get('MOZ_ARTIFACT_BUILDS')
+        return False
 
     @staticmethod
     def is_non_artifact_build(cls):
         """Must not be an artifact build."""
-        return not MachCommandConditions.is_artifact_build(cls)
+        if hasattr(cls, 'substs'):
+            return not MachCommandConditions.is_artifact_build(cls)
+        return False
 
 
 class PathArgument(object):
