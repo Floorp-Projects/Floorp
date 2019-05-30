@@ -17,13 +17,11 @@ import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.*
 import kotlinx.android.synthetic.main.fragment_delete_browsing_data.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
@@ -138,12 +136,9 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
 
         startDeletion()
         launch(Dispatchers.IO) {
-            var jobs = mutableListOf<Deferred<Unit>>()
-            if (openTabsChecked) jobs.add(deleteTabsAsync())
-            if (browsingDataChecked) jobs.add(deleteBrowsingDataAsync())
-            if (collectionsChecked) jobs.add(deleteCollectionsAsync())
-
-            jobs.awaitAll()
+            if (openTabsChecked) deleteTabs()
+            if (browsingDataChecked) deleteBrowsingData()
+            if (collectionsChecked) deleteCollections()
 
             launch(Dispatchers.Main) {
                 finishDeletion()
@@ -220,16 +215,18 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         }
     }
 
-    private fun deleteTabsAsync() = async(Dispatchers.Main) {
-        requireComponents.useCases.tabsUseCases.removeAllTabs.invoke()
+    private suspend fun deleteTabs() {
+        withContext(Dispatchers.Main) {
+            requireComponents.useCases.tabsUseCases.removeAllTabs.invoke()
+        }
     }
 
-    private fun deleteBrowsingDataAsync() = async(Dispatchers.IO) {
+    private suspend fun deleteBrowsingData() {
         requireComponents.core.engine.clearData(Engine.BrowsingData.all())
         requireComponents.core.historyStorage.deleteEverything()
     }
 
-    private fun deleteCollectionsAsync() = async(Dispatchers.IO) {
+    private suspend fun deleteCollections() {
         while (requireComponents.core.tabCollectionStorage.getTabCollectionsCount() != tabCollections.size) {
             delay(DELAY_IN_MILLIS)
         }
