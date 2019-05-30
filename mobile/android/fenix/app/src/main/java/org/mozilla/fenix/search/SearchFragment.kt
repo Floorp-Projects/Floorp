@@ -311,6 +311,8 @@ class SearchFragment : Fragment(), BackHandler {
                 context?.let { context: Context ->
                     if (context.isPermissionGranted(Manifest.permission.CAMERA)) {
                         permissionDidUpdate = true
+                    } else {
+                        view?.search_scan_button?.isChecked = false
                     }
                 }
             }

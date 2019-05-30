@@ -167,7 +167,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             }
         }
 
-        view.engineView.asView().apply {
+        view.swipeRefresh.apply {
             val toolbarSize =
                 (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt() +
                         (if (customTabSessionId == null) QUICK_ACTION_SHEET_HANDLE_HEIGHT else 0)
@@ -692,7 +692,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             ToolbarMenu.Item.SaveToCollection -> showSaveToCollection()
             ToolbarMenu.Item.OpenInFenix -> {
                 // To not get a "Display Already Acquired" error we need to force remove the engineView here
-                browserLayout?.removeView(engineView as View)
+                swipeRefresh?.removeView(engineView as View)
                 val intent = Intent(context, IntentReceiverActivity::class.java)
                 intent.action = Intent.ACTION_VIEW
                 getSessionById()?.customTabConfig = null
