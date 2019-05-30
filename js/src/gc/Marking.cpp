@@ -2396,7 +2396,7 @@ void GCMarker::enterWeakMarkingMode() {
     for (SweepGroupZonesIter zone(runtime()); !zone.done(); zone.next()) {
       for (WeakMapBase* m : zone->gcWeakMapList()) {
         if (m->marked) {
-          (void)m->markIteratively(this);
+          (void)m->markEntries(this);
         }
       }
     }
