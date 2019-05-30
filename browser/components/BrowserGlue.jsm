@@ -32,7 +32,7 @@ let ACTORS = {
 let LEGACY_ACTORS = {
   AboutLogins: {
     child: {
-      matches: ["about:logins"],
+      matches: ["about:logins", "about:logins?*"],
       module: "resource:///actors/AboutLoginsChild.jsm",
       events: {
         "AboutLoginsCreateLogin": {wantUntrusted: true},
