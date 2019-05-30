@@ -35,7 +35,9 @@ def get_dependent_loaded_tasks(config, params, loaded_tasks):
     )
     android_tasks = (
         task for task in tasks_with_matching_kind
-        if task.attributes.get('build_platform', '').startswith('android')
+        if task.attributes.get('build_platform', '').startswith('android') and
+        # Bug 1522581: Some GeckoView-only tasks produce APKs that shouldn't be pushed.
+        not task.attributes.get('disable-push-apk', False)
     )
 
     # XXX Bug 1368484: Aarch64 is not planned to ride the trains regularly. It stayed on central
