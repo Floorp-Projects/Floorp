@@ -57,24 +57,6 @@ add_task(async function testUpdatingCommands() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  let extension2 = ExtensionTestUtils.loadExtension({
-    manifest: {
-      browser_specific_settings: {
-        gecko: {
-          id: "addons@noShorcut",
-        },
-      },
-      name: "no shortcut addon",
-    },
-    background() {
-      browser.test.sendMessage("ready");
-    },
-    useAddonManager: "temporary",
-  });
-
-  await extension2.startup();
-  await extension2.awaitMessage("ready");
-
   async function checkShortcut(name, key, modifiers) {
     EventUtils.synthesizeKey(key, modifiers);
     let message = await extension.awaitMessage("oncommand");
@@ -161,22 +143,8 @@ add_task(async function testUpdatingCommands() {
   checkLabel("commandTwo", "Command Two!");
   checkLabel("_execute_browser_action", "shortcuts-browserAction");
 
-  // Check there is only 1 shortcut card.
-  let shortcutAddonsList = doc.querySelectorAll(".shortcut");
-  is(shortcutAddonsList.length, 1, "There is only 1 addon card with shortcut");
-
-  // Check there is unordered list of shortcut-less addons.
-  let noShortcutAddonsList = doc.querySelector(".shortcuts-no-commands-list");
-  ok(noShortcutAddonsList, "There is an unordered list of addons without shortcuts");
-
-  // Check there is shortcut-less addon in the list.
-  let addon = noShortcutAddonsList.querySelector(`[addon-id="addons@noShorcut"]`);
-  ok(addon, "There is addon without shortcut in unordered list");
-  is(addon.textContent, "no shortcut addon", "The add-on's name is set in the list");
-
   await closeView();
   await extension.unload();
-  await extension2.unload();
 });
 
 async function startExtensionWithCommands(numCommands) {
