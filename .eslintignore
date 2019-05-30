@@ -57,7 +57,6 @@ browser/components/pocket/content/panels/js/vendor/**
 
 # Ignore newtab files
 # Kept in sync with browser/components/newtab/.eslintignore
-browser/components/newtab/bin/prerender.js
 browser/components/newtab/data/
 browser/components/newtab/logs/
 browser/components/newtab/prerendered/

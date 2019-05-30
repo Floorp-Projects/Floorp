@@ -222,9 +222,6 @@ export const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
 
     // The boolean to signify whether the page is preloaded or not.
     is_preloaded: Joi.bool().required(),
-
-    // The boolean to signify whether the page is prerendered or not.
-    is_prerendered: Joi.bool().required(),
   }).required(),
 }));
 

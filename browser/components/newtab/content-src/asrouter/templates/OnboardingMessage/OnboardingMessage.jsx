@@ -59,7 +59,7 @@ export class OnboardingMessage extends React.PureComponent {
     const {props} = this;
     const {button_label, header} = props.extraTemplateStrings;
     return (
-      <ModalOverlay {...props} button_label={button_label} title={header}>
+      <ModalOverlay {...props} button_label={button_label} title={header} >
         <div className="onboardingMessageContainer">
           {props.bundle.map(message => (
             <OnboardingCard key={message.id}

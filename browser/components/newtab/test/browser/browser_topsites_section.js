@@ -15,7 +15,7 @@ test_newtab(
     let found = content.document.querySelector(".topsite-form");
     ok(found && !found.hidden, "Should find a visible topsite form");
 
-    found = content.document.querySelector(".modal-overlay");
+    found = content.document.querySelector(".modalOverlayOuter");
     ok(found && !found.hidden, "Should find a visible overlay");
   }
 );
@@ -78,7 +78,7 @@ test_newtab({
     const topsitesAddBtn = content.document.querySelector(".top-sites .context-menu-item button");
     topsitesAddBtn.click();
 
-    let found = content.document.querySelector(".modal-overlay");
+    let found = content.document.querySelector(".modalOverlayOuter");
     ok(found && !found.hidden, "Should find a visible overlay");
 
     // Write field title

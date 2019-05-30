@@ -35,7 +35,7 @@ module.exports = function inject(src) {
   if (this.cacheable) {
     this.cacheable();
   }
-  const regex = createRequireStringRegex(loaderUtils.parseQuery(this.query));
+  const regex = createRequireStringRegex(loaderUtils.getOptions(this) || {});
 
   return `module.exports = function inject(injections) {
   var module = {exports: {}};
