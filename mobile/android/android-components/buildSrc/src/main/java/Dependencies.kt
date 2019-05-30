@@ -44,7 +44,7 @@ object Versions {
         const val room = "2.0.0"
         const val paging = "2.0.0"
         const val lifecycle = "2.0.0"
-        const val work = "2.0.0"
+        const val work = "2.0.1"
         const val arch_core_testing = "2.0.0"
     }
 
