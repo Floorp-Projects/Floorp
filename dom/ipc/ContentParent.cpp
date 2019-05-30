@@ -5394,8 +5394,13 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
       return NS_ERROR_FAILURE;
     }
 
+    nsCOMPtr<nsIPrincipal> storagePrincipal;
+    rv = ssm->GetChannelResultStoragePrincipal(
+        aChannel, getter_AddRefs(storagePrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsISupports> dummy;
-    rv = lsm->Preload(principal, nullptr, getter_AddRefs(dummy));
+    rv = lsm->Preload(storagePrincipal, nullptr, getter_AddRefs(dummy));
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to preload local storage!");
     }
