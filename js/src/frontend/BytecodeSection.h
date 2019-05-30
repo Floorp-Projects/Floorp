@@ -139,7 +139,8 @@ class BytecodeSection {
 
   // Check if the last emitted opcode is a jump target.
   bool lastOpcodeIsJumpTarget() const {
-    return offset() - lastTarget_.offset == ptrdiff_t(JSOP_JUMPTARGET_LENGTH);
+    return lastTarget_.offset != -1 &&
+           offset() - lastTarget_.offset == ptrdiff_t(JSOP_JUMPTARGET_LENGTH);
   }
 
   // JumpTarget should not be part of the emitted statement, as they can be
@@ -239,7 +240,7 @@ class BytecodeSection {
   // ---- Jump ----
 
   // Last jump target emitted.
-  JumpTarget lastTarget_ = {-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)};
+  JumpTarget lastTarget_ = {-1};
 
   // ---- Stack ----
 
