@@ -981,24 +981,13 @@ MozElements.MozRichlistitem = class MozRichlistitem extends MozElements.BaseText
   get current() {
     return this.getAttribute("current") == "true";
   }
-  disconnectedCallback() {
-    var control = this.control;
-    if (!control)
-      return;
-    // When we are destructed and we are current or selected, unselect ourselves
-    // so that richlistbox's selection doesn't point to something not in the DOM.
-    // We don't want to reset last-selected, so we set _suppressOnSelect.
-    if (this.selected) {
-      var suppressSelect = control._suppressOnSelect;
-      control._suppressOnSelect = true;
-      control.removeItemFromSelection(this);
-      control._suppressOnSelect = suppressSelect;
-    }
-    if (this.current)
-      control.currentItem = null;
-  }
 };
 
 MozXULElement.implementCustomInterface(
   MozElements.MozRichlistitem, [Ci.nsIDOMXULSelectControlItemElement]
 );
+
+// Remove documentURI check when new about:addons interface is finished, see 1554238.
+if (document.documentURI != "about:addons") {
+  customElements.define("richlistitem", MozElements.MozRichlistitem);
+}
