@@ -136,6 +136,7 @@ class ArtifactJob(object):
                  download_tests=True,
                  download_symbols=False,
                  download_host_bins=False,
+                 download_maven_zip=False,
                  substs=None):
         self._package_re = re.compile(self.package_re)
         self._tests_re = None
@@ -144,6 +145,9 @@ class ArtifactJob(object):
         self._host_bins_re = None
         if download_host_bins:
             self._host_bins_re = re.compile(r'public/build/host/bin/(mar|mbsdiff)(.exe)?')
+        self._maven_zip_re = None
+        if download_maven_zip:
+            self._maven_zip_re = re.compile(r'public/build/target\.maven\.zip')
         self._log = log
         self._substs = substs
         self._symbols_archive_suffix = None
@@ -159,9 +163,16 @@ class ArtifactJob(object):
     def find_candidate_artifacts(self, artifacts):
         # TODO: Handle multiple artifacts, taking the latest one.
         tests_artifact = None
+        maven_zip_artifact = None
         for artifact in artifacts:
             name = artifact['name']
-            if self._package_re and self._package_re.match(name):
+            if self._maven_zip_re:
+                if self._maven_zip_re.match(name):
+                    maven_zip_artifact = name
+                    yield name
+                else:
+                    continue
+            elif self._package_re and self._package_re.match(name):
                 yield name
             elif self._host_bins_re and self._host_bins_re.match(name):
                 yield name
@@ -177,6 +188,9 @@ class ArtifactJob(object):
         if self._tests_re and not tests_artifact:
             raise ValueError('Expected tests archive matching "{re}", but '
                              'found none!'.format(re=self._tests_re))
+        if self._maven_zip_re and not maven_zip_artifact:
+            raise ValueError('Expected Maven zip archive matching "{re}", but '
+                             'found none!'.format(re=self._maven_zip_re))
 
     def process_artifact(self, filename, processed_filename):
         if filename.endswith(ArtifactJob._test_zip_archive_suffix) and self._tests_re:
@@ -805,7 +819,8 @@ class Artifacts(object):
     def __init__(self, tree, substs, defines, job=None, log=None,
                  cache_dir='.', hg=None, git=None, skip_cache=False,
                  topsrcdir=None, download_tests=True, download_symbols=False,
-                 download_host_bins=False):
+                 download_host_bins=False,
+                 download_maven_zip=False, no_process=False):
         if (hg and git) or (not hg and not git):
             raise ValueError("Must provide path to exactly one of hg and git")
 
@@ -819,6 +834,7 @@ class Artifacts(object):
         self._cache_dir = cache_dir
         self._skip_cache = skip_cache
         self._topsrcdir = topsrcdir
+        self._no_process = no_process
 
         app = self._substs.get('MOZ_BUILD_APP')
         job_details = COMM_JOB_DETAILS if app == 'comm/mail' else MOZ_JOB_DETAILS
@@ -829,6 +845,7 @@ class Artifacts(object):
                                      download_tests=download_tests,
                                      download_symbols=download_symbols,
                                      download_host_bins=download_host_bins,
+                                     download_maven_zip=download_maven_zip,
                                      substs=self._substs)
         except KeyError:
             self.log(logging.INFO, 'artifact',
@@ -1043,6 +1060,24 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
                  {'filename': filename},
                  'Installing from {filename}')
 
+        # Copy all .so files, avoiding modification where possible.
+        ensureParentDir(mozpath.join(distdir, '.dummy'))
+
+        if self._no_process:
+            orig_basename = os.path.basename(filename)
+            # Turn 'HASH-target...' into 'target...' if possible.  It might not
+            # be possible if the file is given directly on the command line.
+            before, _sep, after = orig_basename.rpartition('-')
+            if re.match(r'[0-9a-fA-F]{16}$', before):
+                orig_basename = after
+            path = mozpath.join(distdir, orig_basename)
+            with FileAvoidWrite(path, mode='rb') as fh:
+                shutil.copyfileobj(open(filename, mode='rb'), fh)
+            self.log(logging.INFO, 'artifact',
+                     {'path': path},
+                     'Copied unprocessed artifact: to {path}')
+            return
+
         # Do we need to post-process?
         processed_filename = filename + PROCESSED_SUFFIX
 
@@ -1066,9 +1101,6 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
         self.log(logging.INFO, 'artifact',
                  {'processed_filename': processed_filename},
                  'Installing from processed {processed_filename}')
-
-        # Copy all .so files, avoiding modification where possible.
-        ensureParentDir(mozpath.join(distdir, '.dummy'))
 
         with zipfile.ZipFile(processed_filename) as zf:
             for info in zf.infolist():

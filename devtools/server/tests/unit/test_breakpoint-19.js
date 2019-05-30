@@ -25,12 +25,12 @@ function setUpCode(debuggee) {
   /* eslint-enable */
 }
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   setBreakpoint(threadClient, { sourceUrl: URL, line: 2});
 
-  await executeOnNextTickAndWaitForPause(() => setUpCode(debuggee), client);
+  await executeOnNextTickAndWaitForPause(() => setUpCode(debuggee), threadClient);
   await resume(threadClient);
 
-  const packet = await executeOnNextTickAndWaitForPause(debuggee.test, client);
+  const packet = await executeOnNextTickAndWaitForPause(debuggee.test, threadClient);
   equal(packet.why.type, "breakpoint");
 }));

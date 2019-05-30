@@ -29,11 +29,11 @@ add_task(async function() {
   const front = await client.mainRoot.getMainProcess();
   const [, threadClient] = await front.attachThread();
   const onResumed = new Promise(resolve => {
-    threadClient.addOneTimeListener("paused", (event, packet) => {
+    threadClient.once("paused", (packet) => {
       equal(packet.why.type, "breakpoint",
           "yay - hit the breakpoint at the first line in our script");
       // Resume again - next stop should be our "debugger" statement.
-      threadClient.addOneTimeListener("paused", (event, packet) => {
+      threadClient.once("paused", (packet) => {
         equal(packet.why.type, "debuggerStatement",
               "yay - hit the 'debugger' statement in our script");
         threadClient.resume().then(resolve);

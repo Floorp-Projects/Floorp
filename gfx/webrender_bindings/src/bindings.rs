@@ -405,14 +405,22 @@ struct WrExternalImage {
     size: usize,
 }
 
-type LockExternalImageCallback = unsafe extern "C" fn(*mut c_void, WrExternalImageId, u8, ImageRendering) -> WrExternalImage;
-type UnlockExternalImageCallback = unsafe extern "C" fn(*mut c_void, WrExternalImageId, u8);
+extern "C" {
+    fn wr_renderer_lock_external_image(
+        renderer: *mut c_void,
+        external_image_id: WrExternalImageId,
+        channel_index: u8,
+        rendering: ImageRendering) -> WrExternalImage;
+    fn wr_renderer_unlock_external_image(
+        renderer: *mut c_void,
+        external_image_id: WrExternalImageId,
+        channel_index: u8);
+}
 
 #[repr(C)]
+#[derive(Copy, Clone, Debug)]
 pub struct WrExternalImageHandler {
     external_image_obj: *mut c_void,
-    lock_func: LockExternalImageCallback,
-    unlock_func: UnlockExternalImageCallback,
 }
 
 impl ExternalImageHandler for WrExternalImageHandler {
@@ -422,7 +430,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
             rendering: ImageRendering)
             -> ExternalImage {
 
-        let image = unsafe { (self.lock_func)(self.external_image_obj, id.into(), channel_index, rendering) };
+        let image = unsafe { wr_renderer_lock_external_image(self.external_image_obj, id.into(), channel_index, rendering) };
         ExternalImage {
             uv: TexelRect::new(image.u0, image.v0, image.u1, image.v1),
             source: match image.image_type {
@@ -437,7 +445,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
               id: ExternalImageId,
               channel_index: u8) {
         unsafe {
-            (self.unlock_func)(self.external_image_obj, id.into(), channel_index);
+            wr_renderer_unlock_external_image(self.external_image_obj, id.into(), channel_index);
         }
     }
 }
@@ -607,17 +615,8 @@ impl RenderNotifier for CppNotifier {
 
 #[no_mangle]
 pub extern "C" fn wr_renderer_set_external_image_handler(renderer: &mut Renderer,
-                                                         external_image_handler: *mut WrExternalImageHandler) {
-    if !external_image_handler.is_null() {
-        renderer.set_external_image_handler(Box::new(unsafe {
-                                                         WrExternalImageHandler {
-                                                             external_image_obj:
-                                                                 (*external_image_handler).external_image_obj,
-                                                             lock_func: (*external_image_handler).lock_func,
-                                                             unlock_func: (*external_image_handler).unlock_func,
-                                                         }
-                                                     }));
-    }
+                                                         external_image_handler: &mut WrExternalImageHandler) {
+    renderer.set_external_image_handler(Box::new(external_image_handler.clone()));
 }
 
 #[no_mangle]

@@ -9,10 +9,10 @@
  * for the first statement and end of the last statement.
  */
 
-add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
+add_task(threadClientTest(async ({ threadClient, debuggee }) => {
   dumpn("Evaluating test code and waiting for first debugger statement");
   const dbgStmt = await executeOnNextTickAndWaitForPause(
-    () => evaluateTestCode(debuggee), client);
+    () => evaluateTestCode(debuggee), threadClient);
   equal(dbgStmt.frame.where.line, 2, "Should be at debugger statement on line 2");
   equal(debuggee.a, undefined);
   equal(debuggee.b, undefined);
@@ -31,7 +31,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   }]);
 
   dumpn("Step Over to line 3");
-  const step1 = await stepOver(client, threadClient);
+  const step1 = await stepOver(threadClient);
   equal(step1.type, "paused");
   equal(step1.why.type, "resumeLimit");
   equal(step1.frame.where.line, 3);
@@ -41,7 +41,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   equal(debuggee.b, undefined);
 
   dumpn("Step Over to line 4");
-  const step2 = await stepOver(client, threadClient);
+  const step2 = await stepOver(threadClient);
   equal(step2.type, "paused");
   equal(step2.why.type, "resumeLimit");
   equal(step2.frame.where.line, 4);
@@ -51,7 +51,7 @@ add_task(threadClientTest(async ({ threadClient, debuggee, client }) => {
   equal(debuggee.b, undefined);
 
   dumpn("Step Over to the end of line 4");
-  const step3 = await stepOver(client, threadClient);
+  const step3 = await stepOver(threadClient);
   equal(step3.type, "paused");
   equal(step3.why.type, "resumeLimit");
   equal(step3.frame.where.line, 4);

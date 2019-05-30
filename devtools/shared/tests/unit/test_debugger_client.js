@@ -27,7 +27,7 @@ async function testCloseLoops() {
 
   await new Promise(resolve => {
     let called = false;
-    client.addListener("closed", async () => {
+    client.on("closed", async () => {
       dump(">> CLOSED\n");
       if (called) {
         ok(false, "Calling client.close from closed event listener introduce loops");
@@ -49,11 +49,11 @@ async function fakeTransportShutdown() {
 
   await new Promise(resolve => {
     const onClosed = async function() {
-      client.removeListener("closed", onClosed);
+      client.off("closed", onClosed);
       ok(true, "Client emitted 'closed' event");
       resolve();
     };
-    client.addListener("closed", onClosed);
+    client.on("closed", onClosed);
     client.transport.close();
   });
 

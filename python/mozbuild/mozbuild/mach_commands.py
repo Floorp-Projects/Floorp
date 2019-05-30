@@ -1328,7 +1328,9 @@ class PackageFrontend(MachCommandBase):
 
     def _make_artifacts(self, tree=None, job=None, skip_cache=False,
                         download_tests=True, download_symbols=False,
-                        download_host_bins=False):
+                        download_host_bins=False,
+                        download_maven_zip=False,
+                        no_process=False):
         state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, 'package-frontend')
 
@@ -1343,6 +1345,16 @@ class PackageFrontend(MachCommandBase):
         # If we're building Thunderbird, we should be checking for comm-central artifacts.
         topsrcdir = self.substs.get('commtopsrcdir', self.topsrcdir)
 
+        if download_maven_zip:
+            if download_tests:
+                raise ValueError('--maven-zip requires --no-tests')
+            if download_symbols:
+                raise ValueError('--maven-zip requires no --symbols')
+            if download_host_bins:
+                raise ValueError('--maven-zip requires no --host-bins')
+            if not no_process:
+                raise ValueError('--maven-zip requires --no-process')
+
         from mozbuild.artifacts import Artifacts
         artifacts = Artifacts(tree, self.substs, self.defines, job,
                               log=self.log, cache_dir=cache_dir,
@@ -1350,7 +1362,9 @@ class PackageFrontend(MachCommandBase):
                               topsrcdir=topsrcdir,
                               download_tests=download_tests,
                               download_symbols=download_symbols,
-                              download_host_bins=download_host_bins)
+                              download_host_bins=download_host_bins,
+                              download_maven_zip=download_maven_zip,
+                              no_process=no_process)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',
@@ -1367,13 +1381,19 @@ class PackageFrontend(MachCommandBase):
     @CommandArgument('--symbols', nargs='?', action=SymbolsAction, help='Download symbols.')
     @CommandArgument('--host-bins', action='store_true', help='Download host binaries.')
     @CommandArgument('--distdir', help='Where to install artifacts to.')
+    @CommandArgument('--no-process', action='store_true',
+                     help="Don't process (unpack) artifact packages, just download them.")
+    @CommandArgument('--maven-zip', action='store_true', help="Download Maven zip (Android-only).")
     def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False,
-                         no_tests=False, symbols=False, host_bins=False, distdir=None):
+                         no_tests=False, symbols=False, host_bins=False, distdir=None,
+                         no_process=False, maven_zip=False):
         self._set_log_level(verbose)
         artifacts = self._make_artifacts(tree=tree, job=job, skip_cache=skip_cache,
                                          download_tests=not no_tests,
                                          download_symbols=symbols,
-                                         download_host_bins=host_bins)
+                                         download_host_bins=host_bins,
+                                         download_maven_zip=maven_zip,
+                                         no_process=no_process)
 
         return artifacts.install_from(source, distdir or self.distdir)
 

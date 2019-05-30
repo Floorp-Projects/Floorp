@@ -158,13 +158,19 @@
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
 #ifdef MOZ_GECKOVIEW_JAR
+#ifndef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+@BINPATH@/@ANDROID_CPU_ARCH@/greprefs.js
 @BINPATH@/@PREF_DIR@/@ANDROID_CPU_ARCH@/geckoview-prefs.js
 #else
+@BINPATH@/*/greprefs.js
+@BINPATH@/@PREF_DIR@/*/geckoview-prefs.js
+#endif # !MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+#else
+@BINPATH@/@ANDROID_CPU_ARCH@/greprefs.js
 @BINPATH@/@PREF_DIR@/mobile.js
-#endif
+#endif # MOZ_GECKOVIEW_JAR
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 @BINPATH@/ua-update.json
-@BINPATH@/@ANDROID_CPU_ARCH@/greprefs.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
 
 ; [Layout Engine Resources]

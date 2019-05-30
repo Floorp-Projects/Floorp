@@ -1490,12 +1490,6 @@ pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 pref("ui.key.menuAccessKeyFocuses", true);
 #endif
 
-#ifdef NIGHTLY_BUILD
-pref("media.eme.vp9-in-mp4.enabled", true);
-#else
-pref("media.eme.vp9-in-mp4.enabled", false);
-#endif
-
 pref("media.eme.hdcp-policy-check.enabled", false);
 
 // Whether we should run a test-pattern through EME GMPs before assuming they'll
@@ -1702,7 +1696,7 @@ pref("dom.ipc.cpows.forbid-unsafe-from-browser", true);
 // detection).
 pref("dom.ipc.processHangMonitor", true);
 
-#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+#if defined(XP_WIN)
 // Allows us to deprioritize the processes of background tabs at an OS level
 pref("dom.ipc.processPriorityManager.enabled", true);
 #endif

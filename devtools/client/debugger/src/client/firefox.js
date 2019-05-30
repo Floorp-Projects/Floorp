@@ -70,7 +70,7 @@ export async function onConnect(connection: any, actions: Object) {
   // paused state.
   const pausedPacket = threadClient.getLastPausePacket();
   if (pausedPacket) {
-    clientEvents.paused(threadClient, "paused", pausedPacket);
+    clientEvents.paused(threadClient, pausedPacket);
   }
 }
 

@@ -44,8 +44,8 @@ class WaylandShmPool {
 class WindowBackBuffer {
  public:
   virtual already_AddRefed<gfx::DrawTarget> Lock() = 0;
-  virtual void Unlock(){};
-  virtual bool IsLocked() { return false; };
+  virtual void Unlock() = 0;
+  virtual bool IsLocked() = 0;
 
   void Attach(wl_surface* aSurface);
   virtual void Detach(wl_buffer* aBuffer) = 0;
@@ -89,9 +89,12 @@ class WindowBackBufferShm : public WindowBackBuffer {
   ~WindowBackBufferShm();
 
   already_AddRefed<gfx::DrawTarget> Lock();
+  bool IsLocked() { return mIsLocked; };
+  void Unlock() { mIsLocked = false; };
 
   void Detach(wl_buffer* aBuffer);
   bool IsAttached() { return mAttached; }
+  void SetAttached() { mAttached = true; };
 
   void Clear();
   bool Resize(int aWidth, int aHeight);
@@ -101,7 +104,6 @@ class WindowBackBufferShm : public WindowBackBuffer {
   int GetHeight() { return mHeight; };
 
   wl_buffer* GetWlBuffer() { return mWaylandBuffer; };
-  void SetAttached() { mAttached = true; };
 
  private:
   void Create(int aWidth, int aHeight);
@@ -116,6 +118,7 @@ class WindowBackBufferShm : public WindowBackBuffer {
   int mWidth;
   int mHeight;
   bool mAttached;
+  bool mIsLocked;
 };
 
 #ifdef HAVE_LIBDRM

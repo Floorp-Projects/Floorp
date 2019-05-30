@@ -46,7 +46,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
 
     this.on("evaluationResult", this.onEvaluationResult);
     this.on("serverNetworkEvent", this.onNetworkEvent);
-    this._client.addListener("networkEventUpdate", this.onNetworkEventUpdate);
+    this._client.on("networkEventUpdate", this.onNetworkEventUpdate);
   }
 
   getNetworkRequest(actorId) {
@@ -113,7 +113,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
    * @param object packet
    *        The message received from the server.
    */
-  _onNetworkEventUpdate(type, packet) {
+  _onNetworkEventUpdate(packet) {
     const networkInfo = this.getNetworkRequest(packet.from);
     if (!networkInfo) {
       return;
@@ -487,7 +487,7 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     }
     this.off("evaluationResult", this.onEvaluationResult);
     this.off("serverNetworkEvent", this.onNetworkEvent);
-    this._client.removeListener("networkEventUpdate",
+    this._client.off("networkEventUpdate",
                                 this.onNetworkEventUpdate);
     this._longStrings = null;
     this._client = null;

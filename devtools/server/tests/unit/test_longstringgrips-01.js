@@ -45,7 +45,7 @@ function test_longstring_grip() {
 
   DebuggerServer.LONG_STRING_LENGTH = 200;
 
-  gThreadClient.addOneTimeListener("paused", function(event, packet) {
+  gThreadClient.once("paused", function(packet) {
     const args = packet.frame.arguments;
     Assert.equal(args.length, 1);
     const grip = args[0];
