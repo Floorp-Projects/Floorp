@@ -8,7 +8,9 @@ import org.mozilla.fenix.utils.Settings
 
 interface BrowsingModeManager {
     enum class Mode {
-        Normal, Private
+        Normal, Private;
+
+        fun isPrivate(): Boolean = this == Private
     }
 
     val isPrivate: Boolean
@@ -36,13 +38,19 @@ fun Settings.createBrowserModeStorage(): BrowserModeStorage = object : BrowserMo
 
 }
 
-class DefaultBrowsingModeManager(private val storage: BrowserModeStorage) : BrowsingModeManager {
+class DefaultBrowsingModeManager(
+    private val storage: BrowserModeStorage,
+    private val modeDidChange: (BrowsingModeManager.Mode) -> Unit
+) : BrowsingModeManager {
     override val isPrivate: Boolean
         get() = mode == BrowsingModeManager.Mode.Private
 
     override var mode: BrowsingModeManager.Mode
         get() = storage.currentMode()
-        set(value) = storage.setMode(value)
+        set(value) {
+            storage.setMode(value)
+            modeDidChange(mode)
+        }
 }
 
 class CustomTabBrowsingModeManager : BrowsingModeManager {

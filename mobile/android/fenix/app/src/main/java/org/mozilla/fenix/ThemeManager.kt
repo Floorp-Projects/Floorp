@@ -119,13 +119,17 @@ fun Activity.setTheme(theme: ThemeManager.Theme) {
     setTheme(themeCode)
 }
 
-class DefaultThemeManager(private var _currentTheme: ThemeManager.Theme) : ThemeManager {
+class DefaultThemeManager(
+    private var _currentTheme: ThemeManager.Theme,
+    private val onThemeChanged: (ThemeManager.Theme) -> Unit
+) : ThemeManager {
     override val currentTheme: ThemeManager.Theme
         get() = _currentTheme
 
     override fun setTheme(theme: ThemeManager.Theme) {
         if (theme == _currentTheme) return
         _currentTheme = theme
+        onThemeChanged(theme)
     }
 }
 
