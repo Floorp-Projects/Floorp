@@ -499,7 +499,7 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
   Document* document = GetComposedDoc();
 
   if (aNullParent) {
-    if (this->IsRootOfNativeAnonymousSubtree()) {
+    if (IsRootOfNativeAnonymousSubtree()) {
       nsNodeUtils::NativeAnonymousChildListChange(this, true);
     }
     if (GetParent()) {

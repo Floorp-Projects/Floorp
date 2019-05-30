@@ -17,8 +17,7 @@ class GamepadEventChannelChild final : public PGamepadEventChannelChild {
   ~GamepadEventChannelChild() {}
   mozilla::ipc::IPCResult RecvGamepadUpdate(
       const GamepadChangeEvent& aGamepadEvent);
-  mozilla::ipc::IPCResult RecvReplyGamepadVibrateHaptic(
-      const uint32_t& aPromiseID);
+  mozilla::ipc::IPCResult RecvReplyGamepadPromise(const uint32_t& aPromiseID);
   void AddPromise(const uint32_t& aID, dom::Promise* aPromise);
 
  private:

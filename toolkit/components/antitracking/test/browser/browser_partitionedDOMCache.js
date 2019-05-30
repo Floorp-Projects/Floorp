@@ -1,6 +1,6 @@
-/* import-globals-from storageprincipal_head.js */
+/* import-globals-from partitionedstorage_head.js */
 
-StoragePrincipalHelper.runTest("DOMCache",
+PartitionedStorageHelper.runTest("DOMCache",
   async (win3rdParty, win1stParty, allowed) => {
     // DOM Cache is not supported. Always blocked.
     await win3rdParty.caches.open("wow").then(
@@ -9,8 +9,8 @@ StoragePrincipalHelper.runTest("DOMCache",
     );
 
     await win1stParty.caches.open("wow").then(
-      _ => { ok(true, "DOM Cache shoulw be available"); },
-      _ => { ok(false, "DOM Cache shoulw be available"); },
+      _ => { ok(true, "DOM Cache should be available"); },
+      _ => { ok(false, "DOM Cache should be available"); },
     );
   },
 
@@ -18,4 +18,8 @@ StoragePrincipalHelper.runTest("DOMCache",
     await new Promise(resolve => {
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
     });
-  });
+  },
+
+  [
+    ["dom.caches.testing.enabled", true],
+  ]);

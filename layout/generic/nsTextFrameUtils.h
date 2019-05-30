@@ -133,8 +133,9 @@ class nsTextFrameUtils {
 
   static void AppendLineBreakOffset(nsTArray<uint32_t>* aArray,
                                     uint32_t aOffset) {
-    if (aArray->Length() > 0 && (*aArray)[aArray->Length() - 1] == aOffset)
+    if (aArray->Length() > 0 && (*aArray)[aArray->Length() - 1] == aOffset) {
       return;
+    }
     aArray->AppendElement(aOffset);
   }
 
