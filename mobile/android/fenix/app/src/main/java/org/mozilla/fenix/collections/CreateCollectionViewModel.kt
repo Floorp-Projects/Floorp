@@ -4,6 +4,7 @@ package org.mozilla.fenix.collections
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import android.view.View
 import androidx.lifecycle.ViewModel
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
@@ -14,4 +15,5 @@ class CreateCollectionViewModel : ViewModel() {
     var saveCollectionStep: SaveCollectionStep = SaveCollectionStep.SelectTabs
     var tabCollections = listOf<TabCollection>()
     var selectedTabCollection: TabCollection? = null
+    var snackbarAnchorView: View? = null
 }

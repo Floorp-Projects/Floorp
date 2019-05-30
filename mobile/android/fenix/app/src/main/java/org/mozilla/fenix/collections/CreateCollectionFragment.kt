@@ -173,8 +173,11 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
                 val string =
                     if (tabSize > 1) context.getString(R.string.create_collection_tabs_saved) else
                         context.getString(R.string.create_collection_tab_saved)
-                FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
-                    .show()
+                val snackbar = FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(string)
+                viewModel.snackbarAnchorView?.let {
+                    snackbar.setAnchorView(it)
+                }
+                snackbar.show()
             }
         }
     }
