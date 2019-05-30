@@ -3193,7 +3193,12 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
 
   // newCookie says whether there are multiple cookies in the header;
   // so we can handle them separately.
-  bool newCookie = ParseAttributes(aCookieHeader, aCookieAttributes);
+  bool acceptedByParser = false;
+  bool newCookie =
+      ParseAttributes(aCookieHeader, aCookieAttributes, acceptedByParser);
+  if (!acceptedByParser) {
+    return newCookie;
+  }
 
   // Collect telemetry on how often secure cookies are set from non-secure
   // origins, and vice-versa.
@@ -3743,7 +3748,10 @@ bool nsCookieService::GetTokenValue(nsACString::const_char_iterator& aIter,
 // folded into the cookie struct here, because we don't know which one to use
 // until we've parsed the header.
 bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
-                                      nsCookieAttributes& aCookieAttributes) {
+                                      nsCookieAttributes& aCookieAttributes,
+                                      bool& aAcceptedByParser) {
+  aAcceptedByParser = false;
+
   static const char kPath[] = "path";
   static const char kDomain[] = "domain";
   static const char kExpires[] = "expires";
@@ -3752,6 +3760,7 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
   static const char kHttpOnly[] = "httponly";
   static const char kSameSite[] = "samesite";
   static const char kSameSiteLax[] = "lax";
+  static const char kSameSiteNone[] = "none";
   static const char kSameSiteStrict[] = "strict";
 
   nsACString::const_char_iterator tempBegin, tempEnd;
@@ -3762,6 +3771,10 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
   aCookieAttributes.isSecure = false;
   aCookieAttributes.isHttpOnly = false;
   aCookieAttributes.sameSite = nsICookie2::SAMESITE_NONE;
+
+  if (StaticPrefs::network_cookie_sameSite_laxByDefault()) {
+    aCookieAttributes.sameSite = nsICookie2::SAMESITE_LAX;
+  }
 
   nsDependentCSubstring tokenString(cookieStart, cookieStart);
   nsDependentCSubstring tokenValue(cookieStart, cookieStart);
@@ -3818,12 +3831,24 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
         aCookieAttributes.sameSite = nsICookie2::SAMESITE_LAX;
       } else if (tokenValue.LowerCaseEqualsLiteral(kSameSiteStrict)) {
         aCookieAttributes.sameSite = nsICookie2::SAMESITE_STRICT;
+      } else if (tokenValue.LowerCaseEqualsLiteral(kSameSiteNone)) {
+        aCookieAttributes.sameSite = nsICookie2::SAMESITE_NONE;
       }
     }
   }
 
+  // If same-site is set to 'none' but this is not a secure context, let's abort
+  // the parsing.
+  if (StaticPrefs::network_cookie_sameSite_laxByDefault() &&
+      StaticPrefs::network_cookie_sameSite_noneRequiresSecure() &&
+      !aCookieAttributes.isSecure &&
+      aCookieAttributes.sameSite == nsICookie2::SAMESITE_NONE) {
+    return newCookie;
+  }
+
   // rebind aCookieHeader, in case we need to process another cookie
   aCookieHeader.Rebind(cookieStart, cookieEnd);
+  aAcceptedByParser = true;
   return newCookie;
 }
 
