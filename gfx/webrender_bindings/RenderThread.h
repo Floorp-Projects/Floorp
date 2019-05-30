@@ -20,6 +20,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/SynchronousTask.h"
+#include "mozilla/layers/WebRenderCompositionRecorder.h"
 #include "mozilla/VsyncDispatcher.h"
 
 #include <list>
@@ -256,6 +257,10 @@ class RenderThread final {
 
   size_t RendererCount();
 
+  void SetCompositionRecorderForWindow(
+      wr::WindowId aWindowId,
+      RefPtr<layers::WebRenderCompositionRecorder>&& aCompositionRecorder);
+
  private:
   explicit RenderThread(base::Thread* aThread);
 
@@ -280,6 +285,8 @@ class RenderThread final {
   RefPtr<gl::GLContext> mSharedGL;
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
+  std::map<wr::WindowId, RefPtr<layers::WebRenderCompositionRecorder>>
+      mCompositionRecorders;
 
   struct WindowInfo {
     bool mIsDestroyed = false;
