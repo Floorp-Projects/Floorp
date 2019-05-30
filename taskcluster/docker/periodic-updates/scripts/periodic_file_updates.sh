@@ -382,18 +382,11 @@ function compare_remote_settings_files {
   return 1
 }
 
-function clone_build_tools {
-  rm -fr "${TOOLSDIR}"
-  CLONE_CMD="${HG} clone https://hg.mozilla.org/build/tools ${TOOLSDIR}"
-  ${CLONE_CMD}
-}
-
 # Clones an hg repo
 function clone_repo {
   cd "${BASEDIR}"
   if [ ! -d "${REPODIR}" ]; then
-    CLONE_CMD="${HG} clone ${HGREPO} ${REPODIR}"
-    ${CLONE_CMD}
+    ${HG} robustcheckout --sharebase /tmp/hg-store -b default "${HGREPO}" "${REPODIR}"
   fi
 
   ${HG} -R ${REPODIR} pull
@@ -612,9 +605,6 @@ else
     exit 2
   fi
 fi
-
-# Currently less reliable than regular 'hg'
-# clone_build_tools
 
 clone_repo
 
