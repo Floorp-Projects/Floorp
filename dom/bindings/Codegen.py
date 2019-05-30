@@ -3515,17 +3515,8 @@ def getConditionList(idlobj, cxName, objName):
     pref = idlobj.getExtendedAttribute("Pref")
     if pref:
         assert isinstance(pref, list) and len(pref) == 1
-        conditionSetup = CGGeneric(fill(
-            """
-            static bool sPrefValue;
-            static bool sPrefCacheSetUp = false;
-            if (!sPrefCacheSetUp) {
-              sPrefCacheSetUp = true;
-              Preferences::AddBoolVarCache(&sPrefValue, "${prefName}");
-            }
-            """,
-            prefName=pref[0]))
-        conditions.append("sPrefValue")
+        conditions.append("StaticPrefs::%s()" %
+                          pref[0].replace(".", "_").replace("-", "_"))
     if idlobj.getExtendedAttribute("ChromeOnly"):
         conditions.append("nsContentUtils::ThreadsafeIsSystemCaller(%s)" % cxName)
     func = idlobj.getExtendedAttribute("Func")
