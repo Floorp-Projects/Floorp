@@ -33,7 +33,7 @@ namespace js {
 // (objects, scripts, etc.) to their representative objects in the Debugger API.
 class CrossCompartmentKey {
  public:
-  // [SMDOC]: Cross-compartment wrapper map entries for Debugger API objects
+  // [SMDOC] Cross-compartment wrapper map entries for Debugger API objects
   //
   // The Debugger API creates objects like Debugger.Object, Debugger.Script,
   // Debugger.Environment, etc. to refer to things in the debuggee. Each
@@ -67,6 +67,14 @@ class CrossCompartmentKey {
   // 3) the specific type of Mumble we're looking for. Since mozilla::Variant
   // distinguishes alternatives by type only, we include a distinct type in
   // WrappedType for each sort of Debugger.Mumble.
+  //
+  // But Debugger wrapper table entries are more than just wrapper entries with
+  // fancy keys. Whereas an ordinary cross-compartment wrapper ensures that the
+  // wrapper's zone is swept no later than the referent's (but possibly
+  // earlier), a debugger cross-compartment entry forces the debuggee's and
+  // debugger's zones to be swept together: they are placed in the same sweep
+  // group. This is necessary to make some of Debugger's nice GC properties work
+  // out.
 
   // Common structure for all Debugger.Mumble keys.
   template <typename Referent>
