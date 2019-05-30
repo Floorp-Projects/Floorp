@@ -2923,23 +2923,13 @@ void gfxPlatform::InitWebRenderConfig() {
     }
   }
 #if defined(MOZ_WIDGET_GTK)
-  else {
-    if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-      // Hardware compositing should be disabled by default if we aren't using
-      // WebRender. We had to check if it is enabled at all, because it may
-      // already have been forced disabled (e.g. safe mode, headless). It may
-      // still be forced on by the user, and if so, this should have no effect.
-      gfxConfig::Disable(Feature::HW_COMPOSITING, FeatureStatus::Blocked,
-                         "Acceleration blocked by platform");
-    }
-
-    if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING) &&
-        !StaticPrefs::GPUProcessAllowSoftware()) {
-      // We have neither WebRender nor OpenGL, and we don't allow the GPU
-      // process for basic compositor.
-      gfxConfig::Disable(Feature::GPU_PROCESS, FeatureStatus::Unavailable,
-                         "Hardware compositing is unavailable.");
-    }
+  else if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
+    // Hardware compositing should be disabled by default if we aren't using
+    // WebRender. We had to check if it is enabled at all, because it may
+    // already have been forced disabled (e.g. safe mode, headless). It may
+    // still be forced on by the user, and if so, this should have no effect.
+    gfxConfig::Disable(Feature::HW_COMPOSITING, FeatureStatus::Blocked,
+                       "Acceleration blocked by platform");
   }
 #endif
 
