@@ -1022,8 +1022,7 @@ void Shape::traceChildren(JSTracer* trc) {
   }
 }
 inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
-  MOZ_ASSERT_IF(markColor() == MarkColor::Gray, shape->isMarkedGray());
-  MOZ_ASSERT_IF(markColor() == MarkColor::Black, shape->isMarkedBlack());
+  MOZ_ASSERT(shape->isMarked(markColor()));
 
   do {
     // Special case: if a base shape has a shape table then all its pointers
@@ -2386,10 +2385,7 @@ void GCMarker::pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end) {
 }
 
 void GCMarker::repush(JSObject* obj) {
-  MOZ_ASSERT_IF(markColor() == MarkColor::Gray,
-                gc::TenuredCell::fromPointer(obj)->isMarkedAny());
-  MOZ_ASSERT_IF(markColor() == MarkColor::Black,
-                gc::TenuredCell::fromPointer(obj)->isMarkedBlack());
+  MOZ_ASSERT(obj->asTenured().isMarkedAtLeast(markColor()));
   pushTaggedPtr(obj);
 }
 
@@ -2458,8 +2454,7 @@ void GCMarker::markDelayedChildren(Arena* arena, MarkColor color) {
   AutoSetMarkColor setColor(*this, color);
   for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
     TenuredCell* t = i.getCell();
-    if ((color == MarkColor::Gray && t->isMarkedGray()) ||
-        (color == MarkColor::Black && t->isMarkedBlack())) {
+    if (t->isMarked(color)) {
       js::TraceChildren(this, t, kind);
     }
   }
