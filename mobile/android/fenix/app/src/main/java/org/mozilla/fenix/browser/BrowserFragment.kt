@@ -121,6 +121,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         job = Job()
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
