@@ -9,6 +9,8 @@
 
 #include "vm/ObjectGroup.h"
 
+#include "gc/Zone.h"
+
 namespace js {
 
 inline bool ObjectGroup::needsSweep() {

@@ -927,24 +927,6 @@ class ErrorCopier {
   ~ErrorCopier();
 };
 
-class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
-  JS::Zone* zone;
-  bool saved;
-
- public:
-  explicit AutoSuppressAllocationMetadataBuilder(JSContext* cx)
-      : AutoSuppressAllocationMetadataBuilder(cx->realm()->zone()) {}
-
-  explicit AutoSuppressAllocationMetadataBuilder(JS::Zone* zone)
-      : zone(zone), saved(zone->suppressAllocationMetadataBuilder) {
-    zone->suppressAllocationMetadataBuilder = true;
-  }
-
-  ~AutoSuppressAllocationMetadataBuilder() {
-    zone->suppressAllocationMetadataBuilder = saved;
-  }
-};
-
 } /* namespace js */
 
 #endif /* vm_Realm_h */
