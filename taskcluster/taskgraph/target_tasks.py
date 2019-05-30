@@ -453,6 +453,7 @@ def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
             'beetmover-geckoview-android-api-16-nightly/opt',
             'beetmover-geckoview-android-x86-nightly/opt',
             'beetmover-geckoview-android-x86_64-nightly/opt',
+            'beetmover-geckoview-android-fat-aar-nightly/opt',
         )
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

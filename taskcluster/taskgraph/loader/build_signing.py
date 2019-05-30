@@ -33,4 +33,6 @@ def loader(kind, path, config, params, loaded_tasks):
         if dependent_task.attributes.get('nightly') or \
                 dependent_task.attributes.get('shippable') or \
                 dependent_task.label in NON_NIGHTLY_LABELS_WHICH_SHOULD_SIGN_BUILDS:
-            yield job
+            # Bug 1522581: Some GeckoView-only tasks produce APKs that shouldn't be signed.
+            if not dependent_task.attributes.get('disable-build-signing', False):
+                yield job
