@@ -52,7 +52,8 @@ size_of_test!(
     ApplicableDeclarationBlock,
     16
 );
-size_of_test!(test_size_of_rule_node, RuleNode, 72);
+
+size_of_test!(test_size_of_rule_node, RuleNode, 88);
 
 // This is huge, but we allocate it on the stack and then never move it,
 // we only pass `&mut SourcePropertyDeclaration` references around.
