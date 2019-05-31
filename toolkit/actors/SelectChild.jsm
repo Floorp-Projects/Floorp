@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["SelectChild"];
 
+const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "BrowserUtils",
@@ -35,10 +36,10 @@ const SUPPORTED_PROPERTIES = [
 // via SelectContentHelper.open.
 var gOpen = false;
 
-var SelectContentHelper = function(aElement, aOptions, aActor) {
+var SelectContentHelper = function(aElement, aOptions, aGlobal) {
   this.element = aElement;
   this.initialSelection = aElement[aElement.selectedIndex] || null;
-  this.actor = aActor;
+  this.global = aGlobal;
   this.closedWithClickOn = false;
   this.isOpenedViaTouch = aOptions.isOpenedViaTouch;
   this._closeAfterBlur = true;
@@ -57,8 +58,15 @@ Object.defineProperty(SelectContentHelper, "open", {
 
 this.SelectContentHelper.prototype = {
   init() {
-    let win = this.element.ownerGlobal;
-    win.addEventListener("pagehide", this, { mozSystemGroup: true });
+    this.global.addMessageListener("Forms:SelectDropDownItem", this);
+    this.global.addMessageListener("Forms:DismissedDropDown", this);
+    this.global.addMessageListener("Forms:MouseOver", this);
+    this.global.addMessageListener("Forms:MouseOut", this);
+    this.global.addMessageListener("Forms:MouseUp", this);
+    this.global.addMessageListener("Forms:SearchFocused", this);
+    this.global.addMessageListener("Forms:BlurDropDown-Pong", this);
+    this.global.addEventListener("pagehide", this, { mozSystemGroup: true });
+    this.global.addEventListener("mozhidedropdown", this, { mozSystemGroup: true });
     this.element.addEventListener("blur", this, { mozSystemGroup: true });
     this.element.addEventListener("transitionend", this, { mozSystemGroup: true });
     let MutationObserver = this.element.ownerGlobal.MutationObserver;
@@ -73,12 +81,19 @@ this.SelectContentHelper.prototype = {
 
   uninit() {
     this.element.openInParentProcess = false;
-    let win = this.element.ownerGlobal;
-    win.removeEventListener("pagehide", this, { mozSystemGroup: true });
+    this.global.removeMessageListener("Forms:SelectDropDownItem", this);
+    this.global.removeMessageListener("Forms:DismissedDropDown", this);
+    this.global.removeMessageListener("Forms:MouseOver", this);
+    this.global.removeMessageListener("Forms:MouseOut", this);
+    this.global.removeMessageListener("Forms:MouseUp", this);
+    this.global.removeMessageListener("Forms:SearchFocused", this);
+    this.global.removeMessageListener("Forms:BlurDropDown-Pong", this);
+    this.global.removeEventListener("pagehide", this, { mozSystemGroup: true });
+    this.global.removeEventListener("mozhidedropdown", this, { mozSystemGroup: true });
     this.element.removeEventListener("blur", this, { mozSystemGroup: true });
     this.element.removeEventListener("transitionend", this, { mozSystemGroup: true });
     this.element = null;
-    this.actor = null;
+    this.global = null;
     this.mut.disconnect();
     this._updateTimer.disarm();
     this._updateTimer = null;
@@ -92,7 +107,7 @@ this.SelectContentHelper.prototype = {
     let computedStyles = getComputedStyles(this.element);
     let options = this._buildOptionList();
     let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(this.element);
-    this.actor.sendAsyncMessage("Forms:ShowDropDown", {
+    this.global.sendAsyncMessage("Forms:ShowDropDown", {
       isOpenedViaTouch: this.isOpenedViaTouch,
       options,
       rect,
@@ -159,7 +174,7 @@ this.SelectContentHelper.prototype = {
     this._setupPseudoClassStyles();
     let computedStyles = getComputedStyles(this.element);
     let defaultStyles = this.element.ownerGlobal.getDefaultComputedStyle(this.element);
-    this.actor.sendAsyncMessage("Forms:UpdateDropDown", {
+    this.global.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
       style: supportedStyles(computedStyles),
@@ -185,10 +200,6 @@ this.SelectContentHelper.prototype = {
         break;
 
       case "Forms:DismissedDropDown": {
-          if (!this.element) {
-            return;
-          }
-
           let win = this.element.ownerGlobal;
           let selectedOption = this.element.item(this.element.selectedIndex);
 
@@ -258,7 +269,7 @@ this.SelectContentHelper.prototype = {
         if (!this._closeAfterBlur || !gOpen) {
           return;
         }
-        this.actor.sendAsyncMessage("Forms:HideDropDown", {});
+        this.global.sendAsyncMessage("Forms:HideDropDown", {});
         this.uninit();
         break;
     }
@@ -268,7 +279,7 @@ this.SelectContentHelper.prototype = {
     switch (event.type) {
       case "pagehide":
         if (this.element.ownerDocument === event.target) {
-          this.actor.sendAsyncMessage("Forms:HideDropDown", {});
+          this.global.sendAsyncMessage("Forms:HideDropDown", {});
           this.uninit();
         }
         break;
@@ -280,12 +291,12 @@ this.SelectContentHelper.prototype = {
         // Send a ping-pong message to make sure that we wait for
         // enough cycles to pass from the potential focusing of the
         // search box to disable closing-after-blur.
-        this.actor.sendAsyncMessage("Forms:BlurDropDown-Ping", {});
+        this.global.sendAsyncMessage("Forms:BlurDropDown-Ping", {});
         break;
       }
       case "mozhidedropdown":
         if (this.element === event.target) {
-          this.actor.sendAsyncMessage("Forms:HideDropDown", {});
+          this.global.sendAsyncMessage("Forms:HideDropDown", {});
           this.uninit();
         }
         break;
@@ -370,45 +381,20 @@ function buildOptionListForChildren(node, uniqueStyles) {
   return result;
 }
 
-
-// Hold the instance of SelectContentHelper created
-// when the dropdown list is opened. This variable helps
-// re-route the received message from SelectChild to SelectContentHelper object.
-let currentSelectContentHelper = new WeakMap();
-
-class SelectChild extends JSWindowActorChild {
+class SelectChild extends ActorChild {
   handleEvent(event) {
     if (SelectContentHelper.open) {
-      // The SelectContentHelper object handles captured
-      // events when the <select> popup is open.
-      let contentHelper = currentSelectContentHelper.get(this);
-      if (contentHelper) {
-        contentHelper.handleEvent(event);
-      }
       return;
     }
 
     switch (event.type) {
-      case "mozshowdropdown":
-        {
-          let contentHelper = new SelectContentHelper(event.target, {isOpenedViaTouch: false}, this);
-          currentSelectContentHelper.set(this, contentHelper);
-          break;
-        }
+    case "mozshowdropdown":
+      new SelectContentHelper(event.target, {isOpenedViaTouch: false}, this.mm);
+      break;
 
-      case "mozshowdropdown-sourcetouch":
-        {
-          let contentHelper = new SelectContentHelper(event.target, {isOpenedViaTouch: true}, this);
-          currentSelectContentHelper.set(this, contentHelper);
-          break;
-        }
-    }
-  }
-
-  receiveMessage(message) {
-    let contentHelper = currentSelectContentHelper.get(this);
-    if (contentHelper) {
-      contentHelper.receiveMessage(message);
+    case "mozshowdropdown-sourcetouch":
+      new SelectContentHelper(event.target, {isOpenedViaTouch: true}, this.mm);
+      break;
     }
   }
 }
