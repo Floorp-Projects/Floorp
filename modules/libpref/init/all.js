@@ -5116,7 +5116,11 @@ pref("gfx.direct3d11.break-on-error", false);
 
 // Prefer flipping between two buffers over copying from our back buffer
 // to the OS.
+#ifdef NIGHTLY_BUILD
 pref("gfx.direct3d11.use-double-buffering", true);
+#else
+pref("gfx.direct3d11.use-double-buffering", false);
+#endif
 
 pref("layers.prefer-opengl", false);
 #endif
