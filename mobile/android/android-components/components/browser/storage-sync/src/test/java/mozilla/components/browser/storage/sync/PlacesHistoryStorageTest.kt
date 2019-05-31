@@ -14,6 +14,7 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -23,10 +24,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class PlacesHistoryStorageTest {
+
     private lateinit var history: PlacesHistoryStorage
 
     @Before
@@ -469,7 +470,7 @@ class PlacesHistoryStorageTest {
 
     // We can't test 'sync' stuff yet, since that exercises the network and we can't mock that out currently.
     // Instead, we test that our wrappers act correctly.
-    class MockingPlacesHistoryStorage(override val places: Connection) : PlacesHistoryStorage(RuntimeEnvironment.application)
+    class MockingPlacesHistoryStorage(override val places: Connection) : PlacesHistoryStorage(testContext)
 
     @Test
     fun `storage passes through sync calls`() = runBlocking {

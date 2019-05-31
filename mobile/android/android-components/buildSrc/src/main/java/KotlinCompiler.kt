@@ -13,7 +13,6 @@ object KotlinCompiler {
     @JvmStatic
     val projectsWithWarningsAsErrorsDisabled = setOf(
         "browser-domains",
-        "browser-storage-sync",
         "feature-accounts",
         "feature-prompts",
         "service-glean",

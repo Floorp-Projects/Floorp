@@ -9,6 +9,7 @@ import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,7 +17,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class PlacesBookmarksStorageTest {
@@ -34,7 +34,7 @@ class PlacesBookmarksStorageTest {
     private val newSeparator = BookmarkNode(BookmarkNodeType.SEPARATOR, "654", "987",
             null, null, null, null)
 
-    class TestablePlacesBookmarksStorage(override val places: Connection) : PlacesBookmarksStorage(RuntimeEnvironment.application)
+    class TestablePlacesBookmarksStorage(override val places: Connection) : PlacesBookmarksStorage(testContext)
 
     @Before
     fun setup() {
