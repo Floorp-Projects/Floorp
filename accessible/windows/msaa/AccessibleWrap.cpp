@@ -1305,15 +1305,15 @@ static already_AddRefed<IDispatch> GetProxiedAccessibleInSubtree(
   auto wrapper = static_cast<DocProxyAccessibleWrap*>(WrapperFor(aDoc));
   RefPtr<IAccessible> comProxy;
   int32_t docWrapperChildId = AccessibleWrap::GetChildIDFor(wrapper);
-  // Only top level document accessible proxies are created with a pointer to
-  // their COM proxy.
-  if (aDoc->IsTopLevel()) {
+  // Only document accessible proxies at the top level of their content process
+  // are created with a pointer to their COM proxy.
+  if (aDoc->IsTopLevelInContentProcess()) {
     wrapper->GetNativeInterface(getter_AddRefs(comProxy));
   } else {
     auto tab = static_cast<dom::BrowserParent*>(aDoc->Manager());
     MOZ_ASSERT(tab);
     DocAccessibleParent* topLevelDoc = tab->GetTopLevelDocAccessible();
-    MOZ_ASSERT(topLevelDoc && topLevelDoc->IsTopLevel());
+    MOZ_ASSERT(topLevelDoc && topLevelDoc->IsTopLevelInContentProcess());
     VARIANT docId = {{{VT_I4}}};
     docId.lVal = docWrapperChildId;
     RefPtr<IDispatch> disp = GetProxiedAccessibleInSubtree(topLevelDoc, docId);
