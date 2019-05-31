@@ -1,7 +1,7 @@
 import {addLocaleData, IntlProvider} from "react-intl";
 import {actionCreators as ac} from "common/Actions.jsm";
 import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content-src/lib/init-store";
-import {generateMessages} from "./rich-text-strings";
+import {generateBundles} from "./rich-text-strings";
 import {ImpressionsWrapper} from "./components/ImpressionsWrapper/ImpressionsWrapper";
 import {LocalizationProvider} from "fluent-react";
 import {NEWTAB_DARK_THEME} from "content-src/lib/constants";
@@ -257,7 +257,7 @@ export class ASRouterUISurface extends React.PureComponent {
         shouldSendImpressionOnUpdate={shouldSendImpressionOnUpdate}
         // This helps with testing
         document={this.props.document}>
-          <LocalizationProvider messages={generateMessages(content)}>
+          <LocalizationProvider bundles={generateBundles(content)}>
             <SnippetComponent
               {...this.state.message}
               UISurface="NEWTAB_FOOTER_BAR"
@@ -298,7 +298,7 @@ export class ASRouterUISurface extends React.PureComponent {
     } else if (message.template === "return_to_amo_overlay") {
       global.document.body.classList.add("amo");
       return (
-        <LocalizationProvider messages={generateMessages({"amo_html": message.content.text})}>
+        <LocalizationProvider messages={generateBundles({"amo_html": message.content.text})}>
           <ReturnToAMO
             {...message}
             UISurface="NEWTAB_OVERLAY"

@@ -146,11 +146,18 @@ add_task(async function test_set_login_empty() {
   is(gLoginItem.shadowRoot.querySelector(".time-changed").textContent, "", "time-changed should be blank when undefined");
   is(gLoginItem.shadowRoot.querySelector(".time-used").textContent, "", "time-used should be blank when undefined");
 
+  let createEventDispatched = false;
+  document.addEventListener("AboutLoginsCreateLogin", event => {
+    createEventDispatched = true;
+  }, {once: true});
+  gLoginItem.shadowRoot.querySelector(".save-changes-button").click();
+  ok(!createEventDispatched, "Clicking the .save-changes-button shouldn't dispatch the event when fields are invalid");
+  ok(hostnameInput.matches(":invalid"), "hostname value is required");
+
   hostnameInput.value = "https://example.com/foo";
   gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value = "user1";
   gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value = "pass1";
 
-  let createEventDispatched = false;
   document.addEventListener("AboutLoginsCreateLogin", event => {
     is(event.detail.guid, undefined, "event should not include guid");
     is(event.detail.hostname, "https://example.com/foo", "event should include hostname");

@@ -1085,7 +1085,7 @@ defaultLayoutResp = {
         {
           "type": "CardGrid",
           "header": {
-            "title": "Tech 🖥",
+            "title": "Tech 💻",
           },
           "feed": {
             "embed_reference": null,

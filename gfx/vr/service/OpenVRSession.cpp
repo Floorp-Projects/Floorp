@@ -250,7 +250,7 @@ OpenVRSession::~OpenVRSession() {
 }
 
 bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
-  if (!StaticPrefs::VREnabled() || !StaticPrefs::VROpenVREnabled()) {
+  if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::VROpenVREnabled()) {
     return false;
   }
   if (mVRSystem != nullptr) {

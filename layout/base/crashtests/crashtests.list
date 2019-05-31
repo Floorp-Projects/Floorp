@@ -202,7 +202,7 @@ load 401734-1.html
 load 401734-2.html
 needs-focus pref(accessibility.browsewithcaret,true) load 403048.html
 load 403175-1.html
-load 403245-1.html # bug 1323652
+load 403245-1.html
 load 403454.html
 load 403569-1.xhtml
 load 403569-2.xhtml
@@ -226,11 +226,11 @@ load 412651-1.html
 load 413587-1.svg
 load 414058-1.html
 load 415503.xhtml
-load 416107.xhtml # bug 1323652
+load 416107.xhtml
 HTTP load 419985.html
 load 420031-1.html
 load 420213-1.html
-load 420219-1.html # bug 1323652
+load 420219-1.html
 load 420651-1.xhtml
 load 421203-1.xul
 load 421432.html
@@ -267,7 +267,7 @@ load 455063-1.html
 load 455063-2.html
 load 455063-3.html
 load 455171-4.html
-load 455623-1.html # bug 1323652
+load 455623-1.html
 load 457362-1.xhtml
 load 457514.html
 asserts(0-1) load 460389-1.html # bug 780985
@@ -393,7 +393,7 @@ load 670226.html
 asserts(2) load 675246-1.xhtml # Bug 675713
 load 690247-1.html
 load 690619-1.html
-load 691118-1.html # bug 1323652
+load 691118-1.html
 load 695861.html
 load 695964-1.svg
 load 698335.html
@@ -402,8 +402,8 @@ load 701504.html
 load 707098.html
 load 709536-1.xhtml
 load 722137.html
-load 725535.html # bug 1323652
-load 727601.html # bug 1323652
+load 725535.html
+load 727601.html
 skip-if(Android) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
 load 736924-1.html
@@ -414,7 +414,7 @@ load 767593-1.html
 load 767593-2.html
 load 770381-1.html
 load 772306.html
-load 788360.html # bug 1323652
+load 788360.html
 load 793848.html
 load 795646.html
 skip load 802902.html # bug 901752

@@ -25,7 +25,7 @@ class nsSVGStopFrame : public nsFrame {
  protected:
   explicit nsSVGStopFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsFrame(aStyle, aPresContext, kClassID) {
-    AddStateBits(NS_FRAME_IS_NONDISPLAY);
+    AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
 
  public:

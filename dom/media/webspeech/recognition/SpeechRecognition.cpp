@@ -196,7 +196,7 @@ bool SpeechRecognition::IsAuthorized(JSContext* aCx, JSObject* aGlobal) {
   return (hasPermission ||
           StaticPrefs::MediaWebspeechRecognitionForceEnable() ||
           StaticPrefs::MediaWebspeechTestEnable()) &&
-         StaticPrefs::MediaWebspeechRecognitionEnable();
+         StaticPrefs::media_webspeech_recognition_enable();
 }
 
 already_AddRefed<SpeechRecognition> SpeechRecognition::Constructor(

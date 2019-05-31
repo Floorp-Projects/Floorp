@@ -22,9 +22,13 @@ class ModalInput extends ReflectedFluentElement {
       this.value = this.getAttribute("value");
     }
 
+    let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
     if (this.getAttribute("type") == "password") {
-      let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
       unlockedValue.setAttribute("type", "password");
+    }
+
+    if (this.hasAttribute("required")) {
+      unlockedValue.setAttribute("required", "");
     }
 
     this.shadowRoot.querySelector(".reveal-checkbox").addEventListener("click", this);
@@ -35,7 +39,7 @@ class ModalInput extends ReflectedFluentElement {
   }
 
   static get observedAttributes() {
-    return ["editing", "type", "value"].concat(ModalInput.reflectedFluentIDs);
+    return ["editing", "required", "type", "value"].concat(ModalInput.reflectedFluentIDs);
   }
 
   handleSpecialCaseFluentString(attrName) {
@@ -64,6 +68,10 @@ class ModalInput extends ReflectedFluentElement {
         if (!isEditing) {
           this.setAttribute("value", unlockedValue.value);
         }
+        break;
+      }
+      case "required": {
+        unlockedValue.toggleAttribute("required", this.hasAttribute("required"));
         break;
       }
       case "type": {
@@ -119,6 +127,22 @@ class ModalInput extends ReflectedFluentElement {
     } else {
       lockedValue.textContent = val;
     }
+  }
+
+  checkValidity() {
+    if (!this.hasAttribute("required")) {
+      return true;
+    }
+    let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
+    return unlockedValue.checkValidity();
+  }
+
+  reportValidity() {
+    if (!this.hasAttribute("required")) {
+      return true;
+    }
+    let unlockedValue = this.shadowRoot.querySelector(".unlocked-value");
+    return unlockedValue.reportValidity();
   }
 
   updateRevealCheckboxTitle() {

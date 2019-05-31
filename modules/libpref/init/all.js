@@ -76,8 +76,6 @@ pref("browser.cache.frecency_half_life_hours", 6);
 // and files are left open given up to the OS to do the cleanup.
 pref("browser.cache.max_shutdown_io_lag", 2);
 
-pref("browser.cache.offline.enable",           true);
-
 // AppCache over insecure connection is disabled by default
 pref("browser.cache.offline.insecure.enable",  false);
 
@@ -175,15 +173,6 @@ pref("dom.performance.time_to_first_interactive.enabled", false);
 // disable the Pointer Lock API altogether.
 pref("dom.pointer-lock.enabled", true);
 
-// Whether the Gamepad API is enabled
-pref("dom.gamepad.enabled", true);
-pref("dom.gamepad.test.enabled", false);
-#ifdef RELEASE_OR_BETA
-pref("dom.gamepad.non_standard_events.enabled", false);
-#else
-pref("dom.gamepad.non_standard_events.enabled", true);
-#endif
-
 // If this is true, TextEventDispatcher dispatches keydown and keyup events
 // even during composition (keypress events are never fired during composition
 // even if this is true).
@@ -227,9 +216,6 @@ pref("dom.inputevent.datatransfer.enabled", true);
 
 // Whether InputEvent.inputType is enabled.
 pref("dom.inputevent.inputtype.enabled", true);
-
-// Whether the WebMIDI API is enabled
-pref("dom.webmidi.enabled", false);
 
 #ifdef JS_BUILD_BINAST
 pref("dom.script_loader.binast_encoding.enabled", false);
@@ -507,8 +493,6 @@ pref("media.getusermedia.agc", 1); // kAdaptiveDigital
 pref("media.navigator.audio.full_duplex", true);
 #endif
 
-pref("dom.webaudio.enabled", true);
-
 // Exposes the navigator.webdriver attribute.
 pref("dom.webdriver.enabled", true);
 
@@ -518,14 +502,8 @@ pref("media.getusermedia.screensharing.enabled", true);
 
 pref("media.getusermedia.audiocapture.enabled", false);
 
-// TextTrack WebVTT Region extension support.
-pref("media.webvtt.regions.enabled", true);
-
 // WebVTT pseudo element and class support.
 pref("media.webvtt.pseudo.enabled", true);
-
-// AudioTrack and VideoTrack support
-pref("media.track.enabled", false);
 
 // Whether to enable MediaSource support.
 pref("media.mediasource.enabled", true);
@@ -549,9 +527,6 @@ pref("media.benchmark.timeout", 1000);
 pref("media.media-capabilities.enabled", true);
 pref("media.media-capabilities.screen.enabled", false);
 
-#ifdef MOZ_WEBSPEECH
-pref("media.webspeech.synth.enabled", false);
-#endif
 #ifdef MOZ_WEBM_ENCODER
 pref("media.encoder.webm.enabled", true);
 #endif
@@ -990,9 +965,6 @@ pref("ui.scrollToClick", 0);
 pref("canvas.focusring.enabled", true);
 pref("canvas.hitregions.enabled", false);
 pref("canvas.filters.enabled", true);
-// Add support for canvas path objects
-pref("canvas.path.enabled", true);
-pref("canvas.capturestream.enabled", true);
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug
@@ -1571,8 +1543,6 @@ pref("javascript.options.spectre.jit_to_C++_calls", true);
 pref("javascript.options.streams", true);
 
 pref("javascript.options.experimental.fields", false);
-
-pref("javascript.options.experimental.await_fix", false);
 
 // Dynamic module import.
 pref("javascript.options.dynamicImport", true);
@@ -3068,15 +3038,6 @@ pref("layout.css.scroll-snap.prediction-max-velocity", 2000);
 // gestures.
 pref("layout.css.scroll-snap.prediction-sensitivity", "0.750");
 
-// Is support for DOMPoint enabled?
-pref("layout.css.DOMPoint.enabled", true);
-
-// Is support for DOMQuad enabled?
-pref("layout.css.DOMQuad.enabled", true);
-
-// Is support for DOMMatrix enabled?
-pref("layout.css.DOMMatrix.enabled", true);
-
 // Is support for GeometryUtils.convert*FromNode enabled?
 #ifdef RELEASE_OR_BETA
 pref("layout.css.convertFromNode.enabled", false);
@@ -3131,9 +3092,6 @@ pref("layout.css.scroll-behavior.spring-constant", "250.0");
 // When equal to 1.0, the system is critically-damped; it will reach the target
 // at the greatest speed without overshooting.
 pref("layout.css.scroll-behavior.damping-ratio", "1.0");
-
-// Is support for document.fonts enabled?
-pref("layout.css.font-loading-api.enabled", true);
 
 // Are inter-character ruby annotations enabled?
 pref("layout.css.ruby.intercharacter.enabled", false);
@@ -4969,8 +4927,6 @@ pref("webgl.dxgl.enabled", true);
 pref("webgl.dxgl.needs-finish", false);
 #endif
 
-pref("dom.webgpu.enable", false);
-
 // sendbuffer of 0 means use OS default, sendbuffer unset means use
 // gecko default which varies depending on windows version and is OS
 // default on non windows
@@ -5155,10 +5111,6 @@ pref("geo.wifi.xhr.timeout", 60000);
 
 // Enable/Disable the various sensor APIs for content
 pref("device.sensors.enabled", true);
-pref("device.sensors.orientation.enabled", true);
-pref("device.sensors.motion.enabled", true);
-pref("device.sensors.proximity.enabled", false);
-pref("device.sensors.ambientLight.enabled", false);
 
 // Enable/Disable the device storage API for content
 pref("device.storage.enabled", false);
@@ -5336,13 +5288,6 @@ pref("dom.w3c_touch_events.enabled", 0);
 pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
-// W3C draft pointer events
-#if !defined(ANDROID)
-pref("dom.w3c_pointer_events.enabled", true);
-#else
-pref("dom.w3c_pointer_events.enabled", false);
-#endif
-
 // Control firing WidgetMouseEvent by handling Windows pointer messages or mouse
 // messages.
 #if defined(XP_WIN)
@@ -5351,9 +5296,6 @@ pref("dom.w3c_pointer_events.dispatch_by_pointer_messages", false);
 
 // W3C pointer events draft
 pref("dom.w3c_pointer_events.implicit_capture", false);
-
-// W3C draft ImageCapture API
-pref("dom.imagecapture.enabled", false);
 
 // W3C MediaDevices devicechange event
 pref("media.ondevicechange.enabled", true);
@@ -5514,8 +5456,6 @@ pref("gfx.vr.osvr.clientKitLibPath", "");
 // When content is failing to submit frames on time or the lower level VR platform API's
 // are rejecting frames, it determines the rate at which RAF callbacks will be called.
 pref("dom.vr.display.rafMaxDuration", 50);
-// VR test system.
-pref("dom.vr.test.enabled", false);
 // Enable the VR Service, which interfaces with VR hardware in a separate thread
 pref("dom.vr.service.enabled", true);
 
@@ -5738,14 +5678,6 @@ pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
 
 pref("beacon.enabled", true);
 
-// UDPSocket API
-pref("dom.udpsocket.enabled", false);
-
-// Presentation API
-pref("dom.presentation.enabled", false);
-pref("dom.presentation.controller.enabled", false);
-pref("dom.presentation.receiver.enabled", false);
-
 // Presentation Device
 pref("dom.presentation.tcp_server.debug", false);
 pref("dom.presentation.discovery.enabled", false);
@@ -5878,9 +5810,6 @@ pref("narrate.voice", " { \"default\": \"automatic\" }");
 // Only make voices that match content language available.
 pref("narrate.filter-voices", true);
 
-// HTML <dialog> element
-pref("dom.dialog_element.enabled", false);
-
 // Allow control characters appear in composition string.
 // When this is false, control characters except
 // CHARACTER TABULATION (horizontal tab) are removed from
@@ -5968,8 +5897,6 @@ pref("browser.sanitizer.loglevel", "Warn");
 // To disable blocking of auth prompts, set the limit to -1.
 pref("prompts.authentication_dialog_abuse_limit", 2);
 
-pref("dom.IntersectionObserver.enabled", true);
-
 // Whether module scripts (<script type="module">) are enabled for content.
 pref("dom.moduleScripts.enabled", true);
 
@@ -6042,10 +5969,6 @@ pref("general.document_open_conversion_depth_limit", 20);
 // documentElement and document.body are passive by default.
 pref("dom.event.default_to_passive_touch_listeners", true);
 
-// Enable clipboard readText() and writeText() by default
-pref("dom.events.asyncClipboard", true);
-// Disable clipboard read() and write() by default
-pref("dom.events.asyncClipboard.dataTransfer", false);
 // Should only be enabled in tests
 pref("dom.events.testing.asyncClipboard", false);
 

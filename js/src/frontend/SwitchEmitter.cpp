@@ -6,16 +6,21 @@
 
 #include "frontend/SwitchEmitter.h"
 
-#include "mozilla/Span.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Span.h"        // mozilla::Span
 
-#include "jsutil.h"
+#include <algorithm>  // std::min, std::max
 
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/SharedContext.h"
-#include "frontend/SourceNotes.h"
-#include "vm/BytecodeUtil.h"
-#include "vm/Opcodes.h"
-#include "vm/Runtime.h"
+#include "jstypes.h"  // JS_BIT
+#include "jsutil.h"  // NumWordsForBitArrayOfLength, IsBitArrayElementSet, SetBitArrayElement
+
+#include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
+#include "frontend/SharedContext.h"    // StatementKind
+#include "frontend/SourceNotes.h"      // SrcNote, SRC_*
+#include "js/TypeDecls.h"              // jsbytecode
+#include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, JUMP_OFFSET_LEN, SET_RESUMEINDEX
+#include "vm/Opcodes.h"       // JSOP_*
+#include "vm/Runtime.h"       // ReportOutOfMemory
 
 using namespace js;
 using namespace js::frontend;
@@ -200,7 +205,8 @@ bool SwitchEmitter::emitTable(const TableGenerator& tableGen) {
   }
 
   // Skip default offset.
-  jsbytecode* pc = bce_->bytecodeSection().code(top_ + JUMP_OFFSET_LEN);
+  jsbytecode* pc =
+      bce_->bytecodeSection().code(top_ + BytecodeOffsetDiff(JUMP_OFFSET_LEN));
 
   // Fill in switch bounds, which we know fit in 16-bit offsets.
   SET_JUMP_OFFSET(pc, tableGen.low());
@@ -389,7 +395,7 @@ bool SwitchEmitter::emitEnd() {
       return false;
     }
   }
-  MOZ_ASSERT(defaultJumpTargetOffset_.offset != -1);
+  MOZ_ASSERT(defaultJumpTargetOffset_.offset.valid());
 
   // Set the default offset (to end of switch if no default).
   jsbytecode* pc;
@@ -400,7 +406,7 @@ bool SwitchEmitter::emitEnd() {
   } else {
     // Fill in the default jump target.
     pc = bce_->bytecodeSection().code(top_);
-    SET_JUMP_OFFSET(pc, defaultJumpTargetOffset_.offset - top_);
+    SET_JUMP_OFFSET(pc, (defaultJumpTargetOffset_.offset - top_).value());
     pc += JUMP_OFFSET_LEN;
   }
 
@@ -421,14 +427,14 @@ bool SwitchEmitter::emitEnd() {
 
     // Use the 'default' offset for missing cases.
     for (uint32_t i = 0, length = caseOffsets_.length(); i < length; i++) {
-      if (caseOffsets_[i] == 0) {
+      if (caseOffsets_[i].value() == 0) {
         caseOffsets_[i] = defaultJumpTargetOffset_.offset;
       }
     }
 
     // Allocate resume index range.
     uint32_t firstResumeIndex = 0;
-    mozilla::Span<ptrdiff_t> offsets =
+    mozilla::Span<BytecodeOffset> offsets =
         mozilla::MakeSpan(caseOffsets_.begin(), caseOffsets_.end());
     if (!bce_->allocateResumeIndexRange(offsets, &firstResumeIndex)) {
       return false;

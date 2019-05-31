@@ -206,7 +206,7 @@ OculusSession::OculusSession()
 OculusSession::~OculusSession() { Shutdown(); }
 
 bool OculusSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
-  if (!StaticPrefs::VREnabled() || !StaticPrefs::VROculusEnabled()) {
+  if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::VROculusEnabled()) {
     return false;
   }
 
