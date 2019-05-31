@@ -4,8 +4,6 @@
 
 package mozilla.components.feature.search
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
@@ -15,23 +13,20 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class SearchUseCasesTest {
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     private lateinit var searchEngine: SearchEngine
     private lateinit var searchEngineManager: SearchEngineManager
@@ -43,7 +38,7 @@ class SearchUseCasesTest {
         searchEngine = mock(SearchEngine::class.java)
         searchEngineManager = mock(SearchEngineManager::class.java)
         sessionManager = mock(SessionManager::class.java)
-        useCases = SearchUseCases(context, searchEngineManager, sessionManager)
+        useCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
     }
 
     @Test
@@ -55,7 +50,7 @@ class SearchUseCasesTest {
         val engineSession = mock(EngineSession::class.java)
 
         `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
-        `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
+        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
         `when`(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
 
         useCases.defaultSearch.invoke(searchTerms, session)
@@ -71,7 +66,7 @@ class SearchUseCasesTest {
 
         val engineSession = mock(EngineSession::class.java)
         `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
-        `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
+        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
         `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
 
         useCases.newTabSearch.invoke(searchTerms, Session.Source.NEW_TAB)
@@ -83,12 +78,12 @@ class SearchUseCasesTest {
         var createdSession: Session? = null
 
         `when`(searchEngine.buildSearchUrl("test")).thenReturn("https://search.example.com")
-        `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
+        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
         `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(mock())
 
         var sessionCreatedForUrl: String? = null
 
-        val searchUseCases = SearchUseCases(context, searchEngineManager, sessionManager) { url ->
+        val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager) { url ->
             sessionCreatedForUrl = url
             Session(url).also { createdSession = it }
         }
@@ -107,7 +102,7 @@ class SearchUseCasesTest {
 
         val engineSession = mock(EngineSession::class.java)
         `when`(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
-        `when`(searchEngineManager.getDefaultSearchEngine(RuntimeEnvironment.application)).thenReturn(searchEngine)
+        `when`(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
         `when`(sessionManager.getOrCreateEngineSession(any())).thenReturn(engineSession)
 
         useCases.newPrivateTabSearch.invoke(searchTerms)

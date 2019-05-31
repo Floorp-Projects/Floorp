@@ -16,7 +16,6 @@ object KotlinCompiler {
         "browser-storage-sync",
         "feature-accounts",
         "feature-prompts",
-        "feature-search",
         "service-glean",
         "support-test",
         "ui-tabcounter"
