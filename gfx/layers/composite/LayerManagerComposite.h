@@ -19,6 +19,7 @@
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/gfx/Rect.h"   // for Rect
 #include "mozilla/gfx/Types.h"  // for SurfaceFormat
+#include "mozilla/layers/CompositionRecorder.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/Effects.h"  // for EffectChain
 #include "mozilla/layers/LayersMessages.h"
@@ -53,7 +54,6 @@ namespace layers {
 class CanvasLayerComposite;
 class ColorLayerComposite;
 class Compositor;
-class CompositionRecorder;
 class ContainerLayerComposite;
 class Diagnostics;
 struct EffectChain;
@@ -199,7 +199,7 @@ class HostLayerManager : public LayerManager {
     mCompositorBridgeID = aID;
   }
 
-  void SetCompositionRecorder(CompositionRecorder* aRecorder) {
+  void SetCompositionRecorder(already_AddRefed<CompositionRecorder> aRecorder) {
     mCompositionRecorder = aRecorder;
   }
 
@@ -216,7 +216,7 @@ class HostLayerManager : public LayerManager {
   bool mWindowOverlayChanged;
   TimeDuration mLastPaintTime;
   TimeStamp mRenderStartTime;
-  CompositionRecorder* mCompositionRecorder = nullptr;
+  RefPtr<CompositionRecorder> mCompositionRecorder = nullptr;
 
   // Render time for the current composition.
   TimeStamp mCompositionTime;
