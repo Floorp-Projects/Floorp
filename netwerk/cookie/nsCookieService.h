@@ -325,9 +325,9 @@ class nsCookieService final : public nsICookieService,
                       uint32_t aRejectedReason, CookieOperation aOperation);
   void NotifyChanged(nsISupports* aSubject, const char16_t* aData,
                      bool aOldCookieIsSession = false, bool aFromHttp = false);
-  void NotifyPurged(nsICookie2* aCookie);
-  already_AddRefed<nsIArray> CreatePurgeList(nsICookie2* aCookie);
-  void CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie2* aCookie);
+  void NotifyPurged(nsICookie* aCookie);
+  already_AddRefed<nsIArray> CreatePurgeList(nsICookie* aCookie);
+  void CreateOrUpdatePurgeList(nsIArray** aPurgeList, nsICookie* aCookie);
   void UpdateCookieOldestTime(DBState* aDBState, nsCookie* aCookie);
 
   nsresult GetCookiesWithOriginAttributes(

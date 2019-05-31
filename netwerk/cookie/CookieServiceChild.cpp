@@ -327,12 +327,12 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
     if (aIsSameSiteForeign) {
       // it if's a cross origin request and the cookie is same site only
       // (strict) don't send it
-      if (sameSiteAttr == nsICookie2::SAMESITE_STRICT) {
+      if (sameSiteAttr == nsICookie::SAMESITE_STRICT) {
         continue;
       }
       // if it's a cross origin request, the cookie is same site lax, but it's
       // not a top-level navigation, don't send it
-      if (sameSiteAttr == nsICookie2::SAMESITE_LAX && !aIsSafeTopLevelNav) {
+      if (sameSiteAttr == nsICookie::SAMESITE_LAX && !aIsSafeTopLevelNav) {
         continue;
       }
     }
