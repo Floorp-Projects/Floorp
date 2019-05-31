@@ -10,9 +10,9 @@ var {
 } = ExtensionUtils;
 
 const SAME_SITE_STATUSES = [
-  "no_restriction", // Index 0 = Ci.nsICookie2.SAMESITE_NONE
-  "lax",            // Index 1 = Ci.nsICookie2.SAMESITE_LAX
-  "strict",         // Index 2 = Ci.nsICookie2.SAMESITE_STRICT
+  "no_restriction", // Index 0 = Ci.nsICookie.SAMESITE_NONE
+  "lax",            // Index 1 = Ci.nsICookie.SAMESITE_LAX
+  "strict",         // Index 2 = Ci.nsICookie.SAMESITE_STRICT
 ];
 
 const isIPv4 = (host) => {
@@ -469,7 +469,7 @@ this.cookies = class extends ExtensionAPI {
           register: fire => {
             let observer = (subject, topic, data) => {
               let notify = (removed, cookie, cause) => {
-                cookie.QueryInterface(Ci.nsICookie2);
+                cookie.QueryInterface(Ci.nsICookie);
 
                 if (extension.whiteListedHosts.matchesCookie(cookie)) {
                   fire.async({removed, cookie: convertCookie({cookie, isPrivate: topic == "private-cookie-changed"}), cause});
@@ -491,7 +491,7 @@ this.cookies = class extends ExtensionAPI {
                 case "batch-deleted":
                   subject.QueryInterface(Ci.nsIArray);
                   for (let i = 0; i < subject.length; i++) {
-                    let cookie = subject.queryElementAt(i, Ci.nsICookie2);
+                    let cookie = subject.queryElementAt(i, Ci.nsICookie);
                     if (!cookie.isSession && cookie.expiry * 1000 <= Date.now()) {
                       notify(true, cookie, "expired");
                     } else {
