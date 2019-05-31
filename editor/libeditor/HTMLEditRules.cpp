@@ -383,12 +383,12 @@ nsresult HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
     }
 
     // Stabilize the document against contenteditable count changes
-    nsHTMLDocument* htmlDoc = HTMLEditorRef().GetHTMLDocument();
-    if (NS_WARN_IF(!htmlDoc)) {
+    Document* doc = HTMLEditorRef().GetDocument();
+    if (NS_WARN_IF(!doc)) {
       return NS_ERROR_FAILURE;
     }
-    if (htmlDoc->GetEditingState() == nsIHTMLDocument::eContentEditable) {
-      htmlDoc->ChangeContentEditableCount(nullptr, +1);
+    if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
+      doc->ChangeContentEditableCount(nullptr, +1);
       mRestoreContentEditableCount = true;
     }
 
@@ -432,12 +432,12 @@ nsresult HTMLEditRules::AfterEdit(EditSubAction aEditSubAction,
 
     // Reset the contenteditable count to its previous value
     if (mRestoreContentEditableCount) {
-      nsHTMLDocument* htmlDoc = HTMLEditorRef().GetHTMLDocument();
-      if (NS_WARN_IF(!htmlDoc)) {
+      Document* doc = HTMLEditorRef().GetDocument();
+      if (NS_WARN_IF(!doc)) {
         return NS_ERROR_FAILURE;
       }
-      if (htmlDoc->GetEditingState() == nsIHTMLDocument::eContentEditable) {
-        htmlDoc->ChangeContentEditableCount(nullptr, -1);
+      if (doc->GetEditingState() == Document::EditingState::eContentEditable) {
+        doc->ChangeContentEditableCount(nullptr, -1);
       }
       mRestoreContentEditableCount = false;
     }

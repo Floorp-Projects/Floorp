@@ -312,11 +312,8 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
     doc->FlushPendingNotifications(mozilla::FlushType::Frames);
     if (mMakeWholeDocumentEditable) {
       doc->SetEditableFlag(true);
-      nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(doc);
-      if (htmlDocument) {
-        // Enable usage of the execCommand API
-        htmlDocument->SetEditingState(nsIHTMLDocument::eDesignMode);
-      }
+      // Enable usage of the execCommand API
+      doc->SetEditingState(Document::EditingState::eDesignMode);
     }
   }
   bool needHTMLController = false;
@@ -504,8 +501,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   auto* window = nsPIDOMWindowOuter::From(aWindow);
 
   RefPtr<Document> doc = window->GetDoc();
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
-  bool stopEditing = htmlDoc && htmlDoc->IsEditingOn();
+  bool stopEditing = doc && doc->IsEditingOn();
   if (stopEditing) {
     RemoveWebProgressListener(window);
   }
@@ -515,7 +511,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy* aWindow) {
 
   RefPtr<HTMLEditor> htmlEditor = docShell->GetHTMLEditor();
   if (stopEditing) {
-    htmlDoc->TearingDownEditor();
+    doc->TearingDownEditor();
   }
 
   if (mComposerCommandsUpdater && htmlEditor) {
@@ -537,10 +533,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy* aWindow) {
 
     if (mMakeWholeDocumentEditable) {
       doc->SetEditableFlag(false);
-      nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(doc);
-      if (htmlDocument) {
-        htmlDocument->SetEditingState(nsIHTMLDocument::eOff);
-      }
+      doc->SetEditingState(Document::EditingState::eOff);
     }
   }
 

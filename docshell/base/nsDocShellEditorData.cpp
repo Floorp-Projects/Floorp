@@ -16,7 +16,7 @@ using namespace mozilla;
 
 nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* aOwningDocShell)
     : mDocShell(aOwningDocShell),
-      mDetachedEditingState(nsIHTMLDocument::eOff),
+      mDetachedEditingState(Document::EditingState::eOff),
       mMakeEditable(false),
       mIsDetached(false),
       mDetachedMakeEditable(false) {
@@ -111,10 +111,7 @@ nsresult nsDocShellEditorData::DetachFromWindow() {
   mMakeEditable = false;
 
   nsCOMPtr<dom::Document> doc = domWindow->GetDoc();
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
-  if (htmlDoc) {
-    mDetachedEditingState = htmlDoc->GetEditingState();
-  }
+  mDetachedEditingState = doc->GetEditingState();
 
   mDocShell = nullptr;
 
@@ -133,10 +130,7 @@ nsresult nsDocShellEditorData::ReattachToWindow(nsIDocShell* aDocShell) {
   mMakeEditable = mDetachedMakeEditable;
 
   RefPtr<dom::Document> doc = domWindow->GetDoc();
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
-  if (htmlDoc) {
-    htmlDoc->SetEditingState(mDetachedEditingState);
-  }
+  doc->SetEditingState(mDetachedEditingState);
 
   return NS_OK;
 }
