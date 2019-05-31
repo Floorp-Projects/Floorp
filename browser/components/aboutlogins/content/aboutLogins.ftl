@@ -32,6 +32,7 @@ login-item =
   .copy-username-button = Copy
   .delete-button = Delete
   .edit-button = Edit
+  .field-required-symbol = *
   .hostname-label = Website Address
   .modal-input-reveal-checkbox-hide = Hide password
   .modal-input-reveal-checkbox-show = Show password

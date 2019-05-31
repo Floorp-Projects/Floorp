@@ -571,7 +571,6 @@ describe("TelemetryFeed", () => {
             load_trigger_type: "menu_plus_or_keyboard",
             visibility_event_rcvd_ts: 20,
             is_preloaded: true,
-            is_prerendered: true,
           },
         });
 
@@ -589,7 +588,6 @@ describe("TelemetryFeed", () => {
           perf: {
             load_trigger_type: "unexpected",
             is_preloaded: true,
-            is_prerendered: true,
           },
         });
 
@@ -1090,16 +1088,6 @@ describe("TelemetryFeed", () => {
       assert.calledWith(eventCreator, au.getPortIdOfSender(action), action.data);
       assert.calledWith(sendEvent, eventCreator.returnValue);
     });
-    it("should call .handlePagePrerendered on a PAGE_PRERENDERED action", () => {
-      const session = {perf: {}};
-      sandbox.stub(instance.sessions, "get").returns(session);
-      sandbox.spy(instance, "handlePagePrerendered");
-
-      instance.onAction(ac.AlsoToMain({type: at.PAGE_PRERENDERED}));
-
-      assert.calledOnce(instance.handlePagePrerendered);
-      assert.ok(session.perf.is_prerendered);
-    });
     it("should call .handleDiscoveryStreamImpressionStats on a DISCOVERY_STREAM_IMPRESSION_STATS action", () => {
       const session = {};
       sandbox.stub(instance.sessions, "get").returns(session);
@@ -1145,19 +1133,6 @@ describe("TelemetryFeed", () => {
       instance.onAction(action);
 
       assert.calledWith(instance.handleTrailheadEnrollEvent, action);
-    });
-  });
-  describe("#handlePagePrerendered", () => {
-    it("should not throw if there is no session for the given port ID", () => {
-      assert.doesNotThrow(() => instance.handlePagePrerendered("doesn't exist"));
-    });
-    it("should set the session as prerendered on a PAGE_PRERENDERED action", () => {
-      const session = {perf: {}};
-      sandbox.stub(instance.sessions, "get").returns(session);
-
-      instance.onAction(ac.AlsoToMain({type: at.PAGE_PRERENDERED}));
-
-      assert.ok(session.perf.is_prerendered);
     });
   });
   describe("#handleNewTabInit", () => {

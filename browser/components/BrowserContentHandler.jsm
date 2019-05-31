@@ -562,6 +562,7 @@ nsBrowserContentHandler.prototype = {
 
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
             if (prefb.prefHasUserValue("app.update.postupdate")) {
+              prefb.clearUserPref("app.update.postupdate");
               overridePage = getPostUpdateOverridePage(overridePage);
               // Send the update ping to signal that the update was successful.
               UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
@@ -571,6 +572,7 @@ nsBrowserContentHandler.prototype = {
             break;
           case OVERRIDE_NEW_BUILD_ID:
             if (prefb.prefHasUserValue("app.update.postupdate")) {
+              prefb.clearUserPref("app.update.postupdate");
               // Send the update ping to signal that the update was successful.
               UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
             }

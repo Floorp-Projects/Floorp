@@ -9,6 +9,7 @@
   height: 100%;
   position: fixed;
   top: 0;
+  left: 0;
   width: 100%;
   display: none;
   z-index: 1100;
@@ -20,10 +21,10 @@
 
 .modalOverlayInner {
   width: 960px;
-  height: 570px;
   position: fixed;
-  top: calc(50% - 285px); // halfway down minus half the height of the modal
+  top: 20%;
   left: calc(50% - 480px); // halfway across minus half the width of the modal
+  max-height: calc(100% - 100px);
   background: $white;
   box-shadow: 0 1px 15px 0 $black-30;
   border-radius: 4px;
@@ -75,6 +76,7 @@
 
   .footer {
     border-top: 1px solid $grey-30;
+    border-radius: 4px;
     height: 70px;
     width: 100%;
     position: absolute;

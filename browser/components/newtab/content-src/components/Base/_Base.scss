@@ -5,10 +5,6 @@
   min-height: 100vh;
   padding: ($section-spacing + $section-vertical-padding) $base-gutter $base-gutter;
 
-  &.fixed-to-top {
-    display: block;
-  }
-
   &.only-search {
     display: block;
     padding-top: 134px;

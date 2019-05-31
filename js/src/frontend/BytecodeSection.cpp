@@ -75,10 +75,8 @@ void CGScopeList::finish(mozilla::Span<GCPtrScope> array) {
 }
 
 bool CGTryNoteList::append(JSTryNoteKind kind, uint32_t stackDepth,
-                           size_t start, size_t end) {
+                           BytecodeOffset start, BytecodeOffset end) {
   MOZ_ASSERT(start <= end);
-  MOZ_ASSERT(size_t(uint32_t(start)) == start);
-  MOZ_ASSERT(size_t(uint32_t(end)) == end);
 
   // Offsets are given relative to sections, but we only expect main-section
   // to have TryNotes. In finish() we will fixup base offset.
@@ -86,8 +84,8 @@ bool CGTryNoteList::append(JSTryNoteKind kind, uint32_t stackDepth,
   JSTryNote note;
   note.kind = kind;
   note.stackDepth = stackDepth;
-  note.start = uint32_t(start);
-  note.length = uint32_t(end - start);
+  note.start = start.toUint32();
+  note.length = (end - start).toUint32();
 
   return list.append(note);
 }
@@ -100,7 +98,7 @@ void CGTryNoteList::finish(mozilla::Span<JSTryNote> array) {
   }
 }
 
-bool CGScopeNoteList::append(uint32_t scopeIndex, uint32_t offset,
+bool CGScopeNoteList::append(uint32_t scopeIndex, BytecodeOffset offset,
                              uint32_t parent) {
   CGScopeNote note;
   mozilla::PodZero(&note);
@@ -109,13 +107,21 @@ bool CGScopeNoteList::append(uint32_t scopeIndex, uint32_t offset,
   // offset if needed.
 
   note.index = scopeIndex;
-  note.start = offset;
+  note.start = offset.toUint32();
   note.parent = parent;
 
   return list.append(note);
 }
 
-void CGScopeNoteList::recordEnd(uint32_t index, uint32_t offset) {
+void CGScopeNoteList::recordEnd(uint32_t index, BytecodeOffset offset) {
+  recordEndImpl(index, offset.toUint32());
+}
+
+void CGScopeNoteList::recordEndFunctionBodyVar(uint32_t index) {
+  recordEndImpl(index, UINT32_MAX);
+}
+
+void CGScopeNoteList::recordEndImpl(uint32_t index, uint32_t offset) {
   MOZ_ASSERT(index < length());
   MOZ_ASSERT(list[index].length == 0);
   list[index].end = offset;
@@ -142,12 +148,13 @@ void CGResumeOffsetList::finish(mozilla::Span<uint32_t> array) {
 BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum)
     : code_(cx),
       notes_(cx),
+      lastNoteOffset_(0),
       tryNoteList_(cx),
       scopeNoteList_(cx),
       resumeOffsetList_(cx),
       currentLine_(lineNum) {}
 
-void BytecodeSection::updateDepth(ptrdiff_t target) {
+void BytecodeSection::updateDepth(BytecodeOffset target) {
   jsbytecode* pc = code(target);
 
   int nuses = StackUses(pc);

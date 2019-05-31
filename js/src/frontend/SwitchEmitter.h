@@ -7,21 +7,22 @@
 #ifndef frontend_SwitchEmitter_h
 #define frontend_SwitchEmitter_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stddef.h>  // size_t
+#include <stdint.h>  // int32_t, uint32_t
 
-#include "frontend/BytecodeControlStructures.h"
-#include "frontend/EmitterScope.h"
-#include "frontend/JumpList.h"
-#include "frontend/TDZCheckCache.h"
-#include "gc/Rooting.h"
-#include "js/AllocPolicy.h"
-#include "js/Value.h"
-#include "js/Vector.h"
-#include "vm/Scope.h"
+#include "frontend/BytecodeControlStructures.h"  // BreakableControl
+#include "frontend/EmitterScope.h"               // EmitterScope
+#include "frontend/JumpList.h"                   // JumpList, JumpTarget
+#include "frontend/TDZCheckCache.h"              // TDZCheckCache
+#include "gc/Rooting.h"                          // Handle
+#include "js/AllocPolicy.h"                      // SystemAllocPolicy
+#include "js/Value.h"                            // JSVAL_INT_MAX, JSVAL_INT_MIN
+#include "js/Vector.h"                           // Vector
+#include "vm/Scope.h"                            // LexicalScope
 
 namespace js {
 namespace frontend {
@@ -311,13 +312,13 @@ class MOZ_STACK_CLASS SwitchEmitter {
   uint32_t caseIndex_ = 0;
 
   // Bytecode offset after emitting `discriminant`.
-  ptrdiff_t top_ = 0;
+  BytecodeOffset top_;
 
   // Bytecode offset of the previous JSOP_CASE.
-  ptrdiff_t lastCaseOffset_ = 0;
+  BytecodeOffset lastCaseOffset_;
 
   // Bytecode offset of the JSOP_JUMPTARGET for default body.
-  JumpTarget defaultJumpTargetOffset_ = {-1};
+  JumpTarget defaultJumpTargetOffset_;
 
   // Bytecode offset of the JSOP_DEFAULT.
   JumpList condSwitchDefaultOffset_;
@@ -338,7 +339,7 @@ class MOZ_STACK_CLASS SwitchEmitter {
   //   Offset of each JSOP_CASE.
   // Table Switch:
   //   Offset of each JSOP_JUMPTARGET for case.
-  js::Vector<ptrdiff_t, 32, SystemAllocPolicy> caseOffsets_;
+  js::Vector<BytecodeOffset, 32, SystemAllocPolicy> caseOffsets_;
 
   // The state of this emitter.
   //

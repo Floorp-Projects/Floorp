@@ -32,7 +32,7 @@ let ACTORS = {
 let LEGACY_ACTORS = {
   AboutLogins: {
     child: {
-      matches: ["about:logins"],
+      matches: ["about:logins", "about:logins?*"],
       module: "resource:///actors/AboutLoginsChild.jsm",
       events: {
         "AboutLoginsCreateLogin": {wantUntrusted: true},
@@ -846,10 +846,7 @@ BrowserGlue.prototype = {
         delete this._distributionCustomizer;
         break;
       case "browser-glue-test": // used by tests
-        if (data == "post-update-notification") {
-          if (Services.prefs.prefHasUserValue("app.update.postupdate"))
-            this._showUpdateNotification();
-        } else if (data == "force-ui-migration") {
+        if (data == "force-ui-migration") {
           this._migrateUI();
         } else if (data == "force-distribution-customization") {
           this._distributionCustomizer.applyCustomizations();
@@ -1611,10 +1608,6 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.init();
     SearchTelemetry.init();
 
-    // Show update notification, if needed.
-    if (Services.prefs.prefHasUserValue("app.update.postupdate"))
-      this._showUpdateNotification();
-
     ExtensionsUI.init();
 
     let signingRequired;
@@ -1946,100 +1939,6 @@ BrowserGlue.prototype = {
       Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
     }
     aCancelQuit.data = buttonPressed != 0;
-  },
-
-  _showUpdateNotification: function BG__showUpdateNotification() {
-    Services.prefs.clearUserPref("app.update.postupdate");
-
-    var um = Cc["@mozilla.org/updates/update-manager;1"].
-             getService(Ci.nsIUpdateManager);
-    try {
-      // If the updates.xml file is deleted then getUpdateAt will throw.
-      var update = um.getUpdateAt(0).QueryInterface(Ci.nsIWritablePropertyBag);
-    } catch (e) {
-      // This should never happen.
-      Cu.reportError("Unable to find update: " + e);
-      return;
-    }
-
-    var actions = update.getProperty("actions");
-    if (!actions || actions.includes("silent"))
-      return;
-
-    var appName = gBrandBundle.GetStringFromName("brandShortName");
-
-    function getNotifyString(aPropData) {
-      var propValue = update.getProperty(aPropData.propName);
-      if (!propValue) {
-        if (aPropData.prefName)
-          propValue = Services.urlFormatter.formatURLPref(aPropData.prefName);
-        else if (aPropData.stringParams)
-          propValue = gBrowserBundle.formatStringFromName(aPropData.stringName,
-                                                          aPropData.stringParams,
-                                                          aPropData.stringParams.length);
-        else
-          propValue = gBrowserBundle.GetStringFromName(aPropData.stringName);
-      }
-      return propValue;
-    }
-
-    if (actions.includes("showNotification")) {
-      let text = getNotifyString({propName: "notificationText",
-                                  stringName: "puNotifyText",
-                                  stringParams: [appName]});
-      let url = getNotifyString({propName: "notificationURL",
-                                 prefName: "startup.homepage_override_url"});
-      let label = getNotifyString({propName: "notificationButtonLabel",
-                                   stringName: "pu.notifyButton.label"});
-      let key = getNotifyString({propName: "notificationButtonAccessKey",
-                                 stringName: "pu.notifyButton.accesskey"});
-
-      let win = BrowserWindowTracker.getTopWindow();
-
-      let buttons = [
-                      {
-                        label,
-                        accessKey: key,
-                        popup:     null,
-                        callback(aNotificationBar, aButton) {
-                          win.openTrustedLinkIn(url, "tab");
-                        },
-                      },
-                    ];
-
-      win.gHighPriorityNotificationBox.appendNotification(text,
-        "post-update-notification", null,
-        win.gHighPriorityNotificationBox.PRIORITY_INFO_LOW, buttons);
-    }
-
-    if (!actions.includes("showAlert"))
-      return;
-
-    let title = getNotifyString({propName: "alertTitle",
-                                 stringName: "puAlertTitle",
-                                 stringParams: [appName]});
-    let text = getNotifyString({propName: "alertText",
-                                stringName: "puAlertText",
-                                stringParams: [appName]});
-    let url = getNotifyString({propName: "alertURL",
-                               prefName: "startup.homepage_override_url"});
-
-    function clickCallback(subject, topic, data) {
-      // This callback will be called twice but only once with this topic
-      if (topic != "alertclickcallback")
-        return;
-      let win = BrowserWindowTracker.getTopWindow();
-      win.openTrustedLinkIn(data, "tab");
-    }
-
-    try {
-      // This will throw NS_ERROR_NOT_AVAILABLE if the notification cannot
-      // be displayed per the idl.
-      this.AlertsService.showAlertNotification(null, title, text,
-                                          true, url, clickCallback);
-    } catch (e) {
-      Cu.reportError(e);
-    }
   },
 
   /**

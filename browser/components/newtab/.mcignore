@@ -7,8 +7,6 @@ npm-debug.log
 .gitignore
 
 /.git/
-/bin/prerender.js
-/bin/prerender.js.map
 /data/locales.json
 /dist/
 /logs/

@@ -1,5 +1,4 @@
-bin/prerender.js                                                                                       
-data/                                                                                                  
-logs/                                                                                                  
-prerendered/                                                                                           
+data/
+logs/
+prerendered/
 vendor/

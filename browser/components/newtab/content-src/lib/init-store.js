@@ -6,7 +6,7 @@ import {applyMiddleware, combineReducers, createStore} from "redux";
 export const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
 export const OUTGOING_MESSAGE_NAME = "ActivityStream:ContentToMain";
 export const INCOMING_MESSAGE_NAME = "ActivityStream:MainToContent";
-export const EARLY_QUEUED_ACTIONS = [at.SAVE_SESSION_PERF_DATA, at.PAGE_PRERENDERED];
+export const EARLY_QUEUED_ACTIONS = [at.SAVE_SESSION_PERF_DATA];
 
 /**
  * A higher-order function which returns a reducer that, on MERGE_STORE action,
@@ -114,10 +114,9 @@ export const queueEarlyMessageMiddleware = store => next => action => {
  * @param  {object} intialState (optional) The initial state of the store, if desired
  * @return {object}          A redux store
  */
-export function initStore(reducers, initialState) {
+export function initStore(reducers) {
   const store = createStore(
     mergeStateReducer(combineReducers(reducers)),
-    initialState,
     global.RPMAddMessageListener && applyMiddleware(rehydrationMiddleware, queueEarlyMessageMiddleware, messageMiddleware)
   );
 

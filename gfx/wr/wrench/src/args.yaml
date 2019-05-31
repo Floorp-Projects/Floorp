@@ -71,6 +71,11 @@ args:
       long: chase
       help: Chase a particular primitive matching the local rect
       takes_value: true
+  - dump_shader_source:
+      long: dump-shader-source
+      help: Dump the source of the specified shader
+      takes_value: true
+      global: true
 
 subcommands:
     - png:

@@ -27,8 +27,6 @@ namespace layers {
 CompositionRecorder::CompositionRecorder(TimeStamp aRecordingStart)
     : mRecordingStart(aRecordingStart) {}
 
-CompositionRecorder::~CompositionRecorder() {}
-
 void CompositionRecorder::RecordFrame(RecordedFrame* aFrame) {
   mCollectedFrames.AppendElement(aFrame);
 }
@@ -59,6 +57,8 @@ void CompositionRecorder::WriteCollectedFrames() {
   }
   mCollectedFrames.Clear();
 }
+
+void CompositionRecorder::ClearCollectedFrames() { mCollectedFrames.Clear(); }
 
 }  // namespace layers
 }  // namespace mozilla
