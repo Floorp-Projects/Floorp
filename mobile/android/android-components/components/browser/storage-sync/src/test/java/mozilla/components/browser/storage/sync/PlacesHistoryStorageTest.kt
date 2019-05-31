@@ -449,9 +449,7 @@ class PlacesHistoryStorageTest {
 
     @Test
     fun `can run maintanence on the store`() = runBlocking {
-        // This will currently crash due to a bug in the native library.
-        // See https://github.com/mozilla/application-services/issues/1117.
-        // history.runMaintenance()
+         history.runMaintenance()
     }
 
     @Test
