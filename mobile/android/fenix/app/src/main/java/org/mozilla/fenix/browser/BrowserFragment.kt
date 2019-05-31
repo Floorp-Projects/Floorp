@@ -547,6 +547,16 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(KEY_CUSTOM_TAB_SESSION_ID, customTabSessionId)
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        customTabSessionId = savedInstanceState?.getString(KEY_CUSTOM_TAB_SESSION_ID)
+    }
+
     override fun onStop() {
         super.onStop()
         sessionObserver?.let {
@@ -823,6 +833,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     companion object {
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
+        private const val KEY_CUSTOM_TAB_SESSION_ID = "custom_tab_session_id"
         private const val REQUEST_CODE_DOWNLOAD_PERMISSIONS = 1
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
