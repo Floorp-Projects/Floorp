@@ -7,6 +7,20 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'DOM: Security')
 
+XPIDL_SOURCES += [
+    'nsITrackingDBService.idl',
+]
+
+XPIDL_MODULE = 'toolkit_antitracking'
+
+EXTRA_JS_MODULES += [
+    'TrackingDBService.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 EXPORTS.mozilla = [
     'AntiTrackingCommon.h',
     'StorageAccess.h',
