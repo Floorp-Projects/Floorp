@@ -98,14 +98,8 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   mBrowserParent->SetOwnerElement(Manager()->GetOwnerElement());
   mBrowserParent->InitRendering();
 
-  RenderFrame* rf = mBrowserParent->GetRenderFrame();
-  if (NS_WARN_IF(!rf)) {
-    MOZ_ASSERT(false, "No RenderFrame");
-    return NS_ERROR_FAILURE;
-  }
-
   // Send the newly created layers ID back into content.
-  Unused << SendSetLayersId(rf->GetLayersId());
+  Unused << SendSetLayersId(mBrowserParent->GetLayersId());
   return NS_OK;
 }
 
@@ -128,11 +122,9 @@ void BrowserBridgeParent::Destroy() {
 IPCResult BrowserBridgeParent::RecvShow(const ScreenIntSize& aSize,
                                         const bool& aParentIsActive,
                                         const nsSizeMode& aSizeMode) {
-  RenderFrame* rf = mBrowserParent->GetRenderFrame();
-  if (!rf->AttachLayerManager()) {
+  if (!mBrowserParent->AttachLayerManager()) {
     MOZ_CRASH();
   }
-
   Unused << mBrowserParent->SendShow(aSize, mBrowserParent->GetShowInfo(),
                                      aParentIsActive, aSizeMode);
   return IPC_OK();

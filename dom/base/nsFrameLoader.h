@@ -74,10 +74,6 @@ class StructuredCloneData;
 namespace ipc {
 class MessageChannel;
 }  // namespace ipc
-
-namespace layout {
-class RenderFrame;
-}  // namespace layout
 }  // namespace mozilla
 
 #if defined(MOZ_WIDGET_GTK)
@@ -101,7 +97,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   typedef mozilla::dom::BrowserParent BrowserParent;
   typedef mozilla::dom::BrowserBridgeChild BrowserBridgeChild;
   typedef mozilla::dom::BrowsingContext BrowsingContext;
-  typedef mozilla::layout::RenderFrame RenderFrame;
 
  public:
   // Called by Frame Elements to create a new FrameLoader.

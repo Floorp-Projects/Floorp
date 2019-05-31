@@ -15,9 +15,6 @@
 
 namespace mozilla {
 class PresShell;
-namespace layout {
-class RenderFrame;
-}
 }  // namespace mozilla
 
 /******************************************************************************
