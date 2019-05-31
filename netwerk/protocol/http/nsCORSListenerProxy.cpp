@@ -1535,16 +1535,18 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
   rv = preflightChannel->SetNotificationCallbacks(preflightListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Per https://fetch.spec.whatwg.org/#cors-preflight-fetch step 1, the
-  // request's referrer and referrer policy should match the original request.
-  nsCOMPtr<nsIReferrerInfo> referrerInfo;
-  rv = reqCh->GetReferrerInfo(getter_AddRefs(referrerInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (referrerInfo) {
-    nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
-        static_cast<dom::ReferrerInfo*>(referrerInfo.get())->Clone();
-    rv = preCh->SetReferrerInfo(newReferrerInfo);
+  if (preCh && reqCh) {
+    // Per https://fetch.spec.whatwg.org/#cors-preflight-fetch step 1, the
+    // request's referrer and referrer policy should match the original request.
+    nsCOMPtr<nsIReferrerInfo> referrerInfo;
+    rv = reqCh->GetReferrerInfo(getter_AddRefs(referrerInfo));
     NS_ENSURE_SUCCESS(rv, rv);
+    if (referrerInfo) {
+      nsCOMPtr<nsIReferrerInfo> newReferrerInfo =
+          static_cast<dom::ReferrerInfo*>(referrerInfo.get())->Clone();
+      rv = preCh->SetReferrerInfo(newReferrerInfo);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // Start preflight
