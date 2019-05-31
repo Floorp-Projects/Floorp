@@ -190,6 +190,14 @@
       ["tabs"]
     ]
   },
+  "urlbar": {
+    "url": "chrome://browser/content/parent/ext-urlbar.js",
+    "schema": "chrome://browser/content/schemas/urlbar.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["urlbar"]
+    ]
+  },
   "urlOverrides": {
     "url": "chrome://browser/content/parent/ext-url-overrides.js",
     "schema": "chrome://browser/content/schemas/url_overrides.json",
