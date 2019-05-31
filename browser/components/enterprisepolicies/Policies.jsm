@@ -1059,6 +1059,7 @@ var Policies = {
   "SearchSuggestEnabled": {
     onBeforeAddons(manager, param) {
       setAndLockPref("browser.urlbar.suggest.searches", param);
+      setAndLockPref("browser.search.suggest.enabled", param);
     },
   },
 
