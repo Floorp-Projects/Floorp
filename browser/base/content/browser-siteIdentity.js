@@ -868,10 +868,8 @@ var gIdentityHandler = {
    * Click handler for the identity-box element in primary chrome.
    */
   handleIdentityButtonEvent(event) {
-    // For Nightly users, show the WIP protections panel if the tracking
-    // protection icon was clicked.
-    if (this._protectionsPanelEnabled &&
-        event.originalTarget.id == "tracking-protection-icon-animatable-image") {
+    // For Nightly users, show the WIP protections panel if the meta key was held.
+    if (this._protectionsPanelEnabled && event.metaKey) {
       gProtectionsHandler.handleProtectionsButtonEvent(event);
       return;
     }
