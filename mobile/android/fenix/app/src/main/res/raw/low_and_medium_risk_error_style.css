@@ -13,7 +13,6 @@ body {
 
 body {
   background-size: 64px var(--moz-background-height);
-  /* background-size: 64px 32px; */
   background-repeat: repeat-x;
   background-color: #f9f9fb;
   color: #15141A;
@@ -79,7 +78,7 @@ button {
   font-size: 14px;
   font-weight: bold;
   position: fixed;
-  bottom: 80px;
+  bottom: 20px;
   text-aligned:center;
   vertical-aligned:center;
   background-image: none;
