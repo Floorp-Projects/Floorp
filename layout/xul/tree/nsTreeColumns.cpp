@@ -6,6 +6,7 @@
 
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
+#include "nsIBoxObject.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
 #include "mozilla/ComputedStyle.h"
