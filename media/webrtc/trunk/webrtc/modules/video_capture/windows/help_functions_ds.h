@@ -16,8 +16,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "api/scoped_refptr.h"
-#include "rtc_base/ref_counter.h"
+#include "rtc_base/scoped_ref_ptr.h"
+#include "rtc_base/refcounter.h"
 
 DEFINE_GUID(MEDIASUBTYPE_I420,
             0x30323449,

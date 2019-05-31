@@ -47,7 +47,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
                         char* deviceUniqueIdUTF8,
                         uint32_t deviceUniqueIdUTF8Length,
                         char* productUniqueIdUTF8,
-                        uint32_t productUniqueIdUTF8Length) override;
+                        uint32_t productUniqueIdUTF8Length,
+                        pid_t* pid) override;
 
   /*
    * Display OS /capture device specific settings dialog

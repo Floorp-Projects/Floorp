@@ -14,7 +14,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
-#include "rtc_base/string_utils.h"
+#include "rtc_base/stringutils.h"
 
 #include <dvdmedia.h>  // VIDEOINFOHEADER2
 #include <initguid.h>
@@ -245,7 +245,7 @@ class MediaTypesEnum : public IEnumMediaTypes {
     auto it = std::find(format_preference_order_.begin(),
                         format_preference_order_.end(), capability_.videoType);
     if (it != format_preference_order_.end()) {
-      RTC_LOG(LS_INFO) << "Selected video type: " << *it;
+      RTC_LOG(LS_INFO) << "Selected video type: " << static_cast<int32_t>(*it);
       // Move it to the front of the list, if it isn't already there.
       if (it != format_preference_order_.begin()) {
         format_preference_order_.splice(format_preference_order_.begin(),
@@ -253,7 +253,7 @@ class MediaTypesEnum : public IEnumMediaTypes {
                                         std::next(it));
       }
     } else {
-      RTC_LOG(LS_WARNING) << "Unsupported video type: " << *it
+      RTC_LOG(LS_WARNING) << "Unsupported video type: " << static_cast<int32_t>(*it)
                           << ", using default preference list.";
     }
   }
@@ -380,7 +380,7 @@ class MediaTypesEnum : public IEnumMediaTypes {
 }  // namespace
 
 CaptureInputPin::CaptureInputPin(CaptureSinkFilter* filter) {
-  capture_checker_.Detach();
+  capture_checker_.DetachFromThread();
   // No reference held to avoid circular references.
   info_.pFilter = filter;
   info_.dir = PINDIR_INPUT;
@@ -404,7 +404,7 @@ void CaptureInputPin::OnFilterActivated() {
   RTC_DCHECK_RUN_ON(&main_checker_);
   runtime_error_ = false;
   flushing_ = false;
-  capture_checker_.Detach();
+  capture_checker_.DetachFromThread();
   capture_thread_id_ = 0;
 }
 
