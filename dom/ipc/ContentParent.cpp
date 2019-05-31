@@ -1203,8 +1203,7 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
         std::move(childEp), tabId,
         aSameTabGroupAs ? aSameTabGroupAs->GetTabId() : TabId(0),
         aContext.AsIPCTabContext(), aBrowsingContext, chromeFlags,
-        constructorSender->ChildID(), constructorSender->IsForBrowser(),
-        /* aIsTopLevel */ true);
+        constructorSender->ChildID(), constructorSender->IsForBrowser());
     if (NS_WARN_IF(!ok)) {
       return nullptr;
     }
