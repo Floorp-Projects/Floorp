@@ -1191,7 +1191,7 @@ class PresShell final : public nsStubDocumentObserver,
   void SetKeyPressEventModel(uint16_t aKeyPressEventModel) {
     mForceUseLegacyKeyCodeAndCharCodeValues |=
         aKeyPressEventModel ==
-        dom::HTMLDocument_Binding::KEYPRESS_EVENT_MODEL_SPLIT;
+        dom::Document_Binding::KEYPRESS_EVENT_MODEL_SPLIT;
   }
 
   bool AddRefreshObserver(nsARefreshObserver* aObserver, FlushType aFlushType);
