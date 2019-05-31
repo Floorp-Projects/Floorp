@@ -168,21 +168,6 @@ enum OpenDBResult { RESULT_OK, RESULT_RETRY, RESULT_FAILURE };
  * class declaration
  ******************************************************************************/
 
-// struct for temporarily storing cookie attributes during header parsing
-struct nsCookieAttributes {
-  nsAutoCString name;
-  nsAutoCString value;
-  nsAutoCString host;
-  nsAutoCString path;
-  nsAutoCString expires;
-  nsAutoCString maxage;
-  int64_t expiryTime;
-  bool isSession;
-  bool isSecure;
-  bool isHttpOnly;
-  int8_t sameSite;
-};
-
 class nsCookieService final : public nsICookieService,
                               public nsICookieManager,
                               public nsIObserver,
@@ -221,7 +206,7 @@ class nsCookieService final : public nsICookieService,
   static bool DomainMatches(nsCookie* aCookie, const nsACString& aHost);
   static bool PathMatches(nsCookie* aCookie, const nsACString& aPath);
   static bool CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
-                           nsCookieAttributes& aCookieAttributes,
+                           mozilla::net::CookieStruct& aCookieData,
                            bool aRequireHostMatch, CookieStatus aStatus,
                            nsDependentCString& aCookieHeader,
                            int64_t aServerTime, bool aFromHttp,
@@ -313,14 +298,20 @@ class nsCookieService final : public nsICookieService,
                             nsDependentCSubstring& aTokenValue,
                             bool& aEqualsFound);
   static bool ParseAttributes(nsDependentCString& aCookieHeader,
-                              nsCookieAttributes& aCookie);
+                              mozilla::net::CookieStruct& aCookieData,
+                              nsACString& aExpires, nsACString& aMaxage);
   bool RequireThirdPartyCheck();
-  static bool CheckDomain(nsCookieAttributes& aCookie, nsIURI* aHostURI,
-                          const nsCString& aBaseDomain, bool aRequireHostMatch);
-  static bool CheckPath(nsCookieAttributes& aCookie, nsIURI* aHostURI);
-  static bool CheckPrefixes(nsCookieAttributes& aCookie, bool aSecureRequest);
-  static bool GetExpiry(nsCookieAttributes& aCookie, int64_t aServerTime,
-                        int64_t aCurrentTime, bool aFromHttp);
+  static bool CheckDomain(mozilla::net::CookieStruct& aCookieData,
+                          nsIURI* aHostURI, const nsCString& aBaseDomain,
+                          bool aRequireHostMatch);
+  static bool CheckPath(mozilla::net::CookieStruct& aCookieData,
+                        nsIURI* aHostURI);
+  static bool CheckPrefixes(mozilla::net::CookieStruct& aCookieData,
+                            bool aSecureRequest);
+  static bool GetExpiry(mozilla::net::CookieStruct& aCookieData,
+                        const nsACString& aExpires, const nsACString& aMaxage,
+                        int64_t aServerTime, int64_t aCurrentTime,
+                        bool aFromHttp);
   void RemoveAllFromMemory();
   already_AddRefed<nsIArray> PurgeCookies(int64_t aCurrentTimeInUsec);
   bool FindCookie(const nsCookieKey& aKey, const nsCString& aHost,

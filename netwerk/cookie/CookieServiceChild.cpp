@@ -395,16 +395,16 @@ uint32_t CookieServiceChild::CountCookiesFromHashTable(
 }
 
 void CookieServiceChild::SetCookieInternal(
-    nsCookieAttributes& aCookieAttributes,
-    const mozilla::OriginAttributes& aAttrs, nsIChannel* aChannel,
-    bool aFromHttp, nsICookiePermission* aPermissionService) {
+    const CookieStruct& aCookieData, const mozilla::OriginAttributes& aAttrs,
+    nsIChannel* aChannel, bool aFromHttp,
+    nsICookiePermission* aPermissionService) {
   int64_t currentTimeInUsec = PR_Now();
   RefPtr<nsCookie> cookie = nsCookie::Create(
-      aCookieAttributes.name, aCookieAttributes.value, aCookieAttributes.host,
-      aCookieAttributes.path, aCookieAttributes.expiryTime, currentTimeInUsec,
+      aCookieData.name(), aCookieData.value(), aCookieData.host(),
+      aCookieData.path(), aCookieData.expiry(), currentTimeInUsec,
       nsCookie::GenerateUniqueCreationTime(currentTimeInUsec),
-      aCookieAttributes.isSession, aCookieAttributes.isSecure,
-      aCookieAttributes.isHttpOnly, aAttrs, aCookieAttributes.sameSite);
+      aCookieData.isSession(), aCookieData.isSecure(), aCookieData.isHttpOnly(),
+      aAttrs, aCookieData.sameSite());
 
   RecordDocumentCookie(cookie, aAttrs);
 }
@@ -612,12 +612,11 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
   int64_t serverTime = nsCookieService::ParseServerTime(serverTimeString);
   bool moreCookies;
   do {
-    nsCookieAttributes cookieAttributes;
+    CookieStruct cookieData;
     bool canSetCookie = false;
     moreCookies = nsCookieService::CanSetCookie(
-        aHostURI, key, cookieAttributes, requireHostMatch, cookieStatus,
-        cookieString, serverTime, aFromHttp, aChannel, canSetCookie,
-        mThirdPartyUtil);
+        aHostURI, key, cookieData, requireHostMatch, cookieStatus, cookieString,
+        serverTime, aFromHttp, aChannel, canSetCookie, mThirdPartyUtil);
 
     // We need to see if the cookie we're setting would overwrite an httponly
     // one. This would not affect anything we send over the net (those come from
@@ -626,10 +625,9 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
     if (cookies && canSetCookie && !aFromHttp) {
       for (uint32_t i = 0; i < cookies->Length(); ++i) {
         RefPtr<nsCookie> cookie = cookies->ElementAt(i);
-        if (cookie->Name().Equals(cookieAttributes.name) &&
-            cookie->Host().Equals(cookieAttributes.host) &&
-            cookie->Path().Equals(cookieAttributes.path) &&
-            cookie->IsHttpOnly()) {
+        if (cookie->Name().Equals(cookieData.name()) &&
+            cookie->Host().Equals(cookieData.host()) &&
+            cookie->Path().Equals(cookieData.path()) && cookie->IsHttpOnly()) {
           // Can't overwrite an httponly cookie from a script context.
           canSetCookie = false;
         }
@@ -639,7 +637,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
     if (canSetCookie) {
       nsCOMPtr<nsICookiePermission> permissionService =
           nsCookiePermission::GetOrCreate();
-      SetCookieInternal(cookieAttributes, attrs, aChannel, aFromHttp,
+      SetCookieInternal(cookieData, attrs, aChannel, aFromHttp,
                         permissionService);
     }
 
