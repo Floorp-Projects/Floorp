@@ -395,6 +395,12 @@ partial namespace ChromeUtils {
   [ChromeOnly]
   void resetLastExternalProtocolIframeAllowed();
 
+  /**
+   * Register a new toplevel window global actor. This method may only be
+   * called in the parent process. |name| must be globally unique.
+   *
+   * See JSWindowActor.webidl for WindowActorOptions fields documentation.
+   */
   [ChromeOnly, Throws]
   void registerWindowActor(DOMString aName, optional WindowActorOptions aOptions);
 
