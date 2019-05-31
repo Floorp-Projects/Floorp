@@ -1494,7 +1494,7 @@ void nsComboboxControlFrame::PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt) {
 
   StrokeOptions strokeOptions;
   nsLayoutUtils::InitDashPattern(strokeOptions, StyleBorderStyle::Dotted);
-  ColorPattern color(ToDeviceColor(StyleColor()->mColor));
+  ColorPattern color(ToDeviceColor(StyleText()->mColor));
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   clipRect.width -= onePixel;
   clipRect.height -= onePixel;
