@@ -14,6 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.Navigation
@@ -317,6 +318,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     toolbar.visibility = View.VISIBLE
                     nestedScrollQuickAction.visibility = View.VISIBLE
                 }
+                changeEngineMargins(swipeRefresh = view.swipeRefresh, inFullScreen = it)
             },
             owner = this,
             view = view
@@ -385,6 +387,21 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
         toolbarComponent.getView().setOnSiteSecurityClickedListener {
             showQuickSettingsDialog()
+        }
+    }
+
+    private fun changeEngineMargins(swipeRefresh: View, inFullScreen: Boolean) {
+        swipeRefresh.apply {
+            val toolbarAndQASSize = resources.getDimension(R.dimen.toolbar_and_qab_height).toInt()
+            val toolbarSize = resources.getDimension(R.dimen.browser_toolbar_height).toInt()
+            (layoutParams as CoordinatorLayout.LayoutParams).apply {
+                setMargins(
+                    0,
+                    if (customTabSessionId == null || inFullScreen) 0 else toolbarSize,
+                    0,
+                    if (inFullScreen) 0 else if (customTabSessionId == null) toolbarAndQASSize else 0
+                )
+            }
         }
     }
 
