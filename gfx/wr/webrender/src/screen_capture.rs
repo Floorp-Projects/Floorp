@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! Screen capture infrastructure for the Gecko Profiler.
+//! Screen capture infrastructure for the Gecko Profiler and Composition Recorder.
 
 use std::collections::HashMap;
 
@@ -18,6 +18,11 @@ use crate::renderer::Renderer;
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct AsyncScreenshotHandle(usize);
 
+/// A handle to a recorded frame that was captured.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RecordedFrameHandle(usize);
+
 /// An asynchronously captured screenshot bound to a PBO which has not yet been mapped for copying.
 struct AsyncScreenshot {
     /// The PBO that will contain the screenshot data.
@@ -26,6 +31,20 @@ struct AsyncScreenshot {
     screenshot_size: DeviceIntSize,
     /// Thge image format of the screenshot.
     image_format: ImageFormat,
+}
+
+/// How the `AsyncScreenshotGrabber` captures frames.
+#[derive(Debug, Eq, PartialEq)]
+enum AsyncScreenshotGrabberMode {
+    /// Capture screenshots for the Gecko profiler.
+    ///
+    /// This mode will asynchronously scale the screenshots captured.
+    ProfilerScreenshots,
+
+    /// Capture screenshots for the CompositionRecorder.
+    ///
+    /// This mode does not scale the captured screenshots.
+    CompositionRecorder,
 }
 
 /// Renderer infrastructure for capturing screenshots and scaling them asynchronously.
@@ -38,6 +57,8 @@ pub(in crate) struct AsyncScreenshotGrabber {
     awaiting_readback: HashMap<AsyncScreenshotHandle, AsyncScreenshot>,
     /// The handle for the net PBO that will be inserted into `in_use_pbos`.
     next_pbo_handle: usize,
+    /// The mode the grabber operates in.
+    mode: AsyncScreenshotGrabberMode,
 }
 
 impl Default for AsyncScreenshotGrabber {
@@ -47,11 +68,20 @@ impl Default for AsyncScreenshotGrabber {
             available_pbos: Vec::new(),
             awaiting_readback: HashMap::new(),
             next_pbo_handle: 1,
+            mode: AsyncScreenshotGrabberMode::ProfilerScreenshots,
         };
     }
 }
 
 impl AsyncScreenshotGrabber {
+    /// Create a new AsyncScreenshotGrabber for the composition recorder.
+    pub fn new_composition_recorder() -> Self {
+        let mut recorder = Self::default();
+        recorder.mode = AsyncScreenshotGrabberMode::CompositionRecorder;
+
+        recorder
+    }
+
     /// Deinitialize the allocated textures and PBOs.
     pub fn deinit(self, device: &mut Device) {
         for texture in self.scaling_textures {
@@ -79,35 +109,62 @@ impl AsyncScreenshotGrabber {
         buffer_size: DeviceIntSize,
         image_format: ImageFormat,
     ) -> (AsyncScreenshotHandle, DeviceIntSize) {
-        let scale = (buffer_size.width as f32 / window_rect.size.width as f32)
-            .min(buffer_size.height as f32 / window_rect.size.height as f32);
-        let screenshot_size = (window_rect.size.to_f32() * scale).round().to_i32();
+        let screenshot_size = match self.mode {
+            AsyncScreenshotGrabberMode::ProfilerScreenshots => {
+                let scale = (buffer_size.width as f32 / window_rect.size.width as f32)
+                    .min(buffer_size.height as f32 / window_rect.size.height as f32);
+
+                (window_rect.size.to_f32() * scale).round().to_i32()
+            }
+
+            AsyncScreenshotGrabberMode::CompositionRecorder => {
+                assert_eq!(buffer_size, window_rect.size);
+                buffer_size
+            }
+        };
+
         let required_size = buffer_size.area() as usize * image_format.bytes_per_pixel() as usize;
 
         assert!(screenshot_size.width <= buffer_size.width);
         assert!(screenshot_size.height <= buffer_size.height);
 
-        let pbo = match self.available_pbos.pop() {
-            Some(pbo) => {
-                assert_eq!(pbo.get_reserved_size(), required_size);
-                pbo
-            }
+        let pbo = match self.mode {
+            AsyncScreenshotGrabberMode::ProfilerScreenshots => match self.available_pbos.pop() {
+                Some(pbo) => {
+                    assert_eq!(pbo.get_reserved_size(), required_size);
+                    pbo
+                }
 
-            None => device.create_pbo_with_size(required_size),
+                None => device.create_pbo_with_size(required_size),
+            },
+
+            // When operating in the `CompositionRecorder` mode, PBOs are not mapped for readback
+            // until the recording has completed, so `self.available_pbos` will always be empty.
+            AsyncScreenshotGrabberMode::CompositionRecorder => {
+                device.create_pbo_with_size(required_size)
+            }
         };
 
-        self.scale_screenshot(
-            device,
-            ReadTarget::Default,
-            window_rect,
-            buffer_size,
-            screenshot_size,
-            image_format,
-            0,
-        );
+        let read_target = match self.mode {
+            AsyncScreenshotGrabberMode::ProfilerScreenshots => {
+                self.scale_screenshot(
+                    device,
+                    ReadTarget::Default,
+                    window_rect,
+                    buffer_size,
+                    screenshot_size,
+                    image_format,
+                    0,
+                );
+
+                ReadTarget::from_texture(&self.scaling_textures[0], 0)
+            }
+
+            AsyncScreenshotGrabberMode::CompositionRecorder => ReadTarget::Default,
+        };
 
         device.read_pixels_into_pbo(
-            ReadTarget::from_texture(&self.scaling_textures[0], 0),
+            read_target,
             DeviceIntRect::new(DeviceIntPoint::new(0, 0), screenshot_size),
             image_format,
             &pbo,
@@ -147,6 +204,8 @@ impl AsyncScreenshotGrabber {
         image_format: ImageFormat,
         level: usize,
     ) {
+        assert_eq!(self.mode, AsyncScreenshotGrabberMode::ProfilerScreenshots);
+
         let texture_size = buffer_size * (1 << level);
         if level == self.scaling_textures.len() {
             let texture = device.create_texture(
@@ -245,13 +304,72 @@ impl AsyncScreenshotGrabber {
             false
         };
 
-        self.available_pbos.push(pbo);
+        match self.mode {
+            AsyncScreenshotGrabberMode::ProfilerScreenshots => self.available_pbos.push(pbo),
+            AsyncScreenshotGrabberMode::CompositionRecorder => device.delete_pbo(pbo),
+        }
+
         success
     }
 }
 
 // Screen-capture specific Renderer impls.
 impl Renderer {
+    /// Record a frame for the Composition Recorder.
+    ///
+    /// The returned handle can be passed to `map_recorded_frame` to copy it into
+    /// a buffer.
+    /// The returned size is the size of the frame.
+    pub fn record_frame(
+        &mut self,
+        image_format: ImageFormat,
+    ) -> Option<(RecordedFrameHandle, DeviceIntSize)> {
+        let device_size = self.device_size()?;
+        self.device.begin_frame();
+
+        let (handle, _) = self
+            .async_frame_recorder
+            .get_or_insert_with(AsyncScreenshotGrabber::new_composition_recorder)
+            .get_screenshot(
+                &mut self.device,
+                DeviceIntRect::new(DeviceIntPoint::new(0, 0), device_size),
+                device_size,
+                image_format,
+            );
+
+        self.device.end_frame();
+
+        Some((RecordedFrameHandle(handle.0), device_size))
+    }
+
+    /// Map a frame captured for the composition recorder into the given buffer.
+    pub fn map_recorded_frame(
+        &mut self,
+        handle: RecordedFrameHandle,
+        dst_buffer: &mut [u8],
+        dst_stride: usize,
+    ) -> bool {
+        if let Some(async_frame_recorder) = self.async_frame_recorder.as_mut() {
+            async_frame_recorder.map_and_recycle_screenshot(
+                &mut self.device,
+                AsyncScreenshotHandle(handle.0),
+                dst_buffer,
+                dst_stride,
+            )
+        } else {
+            false
+        }
+    }
+
+    /// Free the data structures used by the composition recorder.
+    pub fn release_composition_recorder_structures(&mut self) {
+        if let Some(async_frame_recorder) = self.async_frame_recorder.take() {
+            self.device.begin_frame();
+            async_frame_recorder.deinit(&mut self.device);
+            self.device.end_frame();
+        }
+    }
+
     /// Take a screenshot and scale it asynchronously.
     ///
     /// The returned handle can be used to access the mapped screenshot data via
