@@ -24,12 +24,12 @@ CrashReporterClient::~CrashReporterClient() {
 }
 
 void CrashReporterClient::AnnotateCrashReport(CrashReporter::Annotation aKey,
-                                              const nsCString& aData) {
+                                              const nsACString& aData) {
   StaticMutexAutoLock lock(sLock);
   mMetadata->AnnotateCrashReport(aKey, aData);
 }
 
-void CrashReporterClient::AppendAppNotes(const nsCString& aData) {
+void CrashReporterClient::AppendAppNotes(const nsACString& aData) {
   StaticMutexAutoLock lock(sLock);
   mMetadata->AppendAppNotes(aData);
 }
