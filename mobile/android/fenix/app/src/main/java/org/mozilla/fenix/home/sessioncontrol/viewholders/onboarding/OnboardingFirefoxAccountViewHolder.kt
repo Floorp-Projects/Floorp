@@ -39,7 +39,7 @@ class OnboardingFirefoxAccountViewHolder(private val view: View) : RecyclerView.
 
         view.header_text.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
         view.header_text.text =
-            if (!autoSignedIn) view.context.getString(R.string.onboarding_firefox_account_auto_signin_header)
+            if (autoSignedIn) view.context.getString(R.string.onboarding_firefox_account_auto_signin_header)
             else view.context.getString(R.string.onboarding_firefox_account_header, appName)
     }
 
