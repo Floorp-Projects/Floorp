@@ -425,6 +425,7 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "browser.urlbar.suggest.searches": false,
+      "browser.search.suggest.enabled": false,
     },
   },
 
