@@ -186,28 +186,18 @@ class nsIContent : public nsINode {
    */
   nsIContent* FindFirstNonChromeOnlyAccessContent() const;
 
+#ifdef DEBUG
+  void AssertAnonymousSubtreeRelatedInvariants() const;
+#endif
+
   /**
    * Returns true if and only if this node has a parent, but is not in
    * its parent's child list.
    */
   bool IsRootOfAnonymousSubtree() const {
-    NS_ASSERTION(!IsRootOfNativeAnonymousSubtree() ||
-                     (GetParent() && GetBindingParent() == GetParent()),
-                 "root of native anonymous subtree must have parent equal "
-                 "to binding parent");
-    NS_ASSERTION(!GetParent() ||
-                     ((GetBindingParent() == GetParent()) ==
-                      HasFlag(NODE_IS_ANONYMOUS_ROOT)) ||
-                     // Unfortunately default content for XBL insertion points
-                     // is anonymous content that is bound with the parent of
-                     // the insertion point as the parent but the bound element
-                     // for the binding as the binding parent.  So we have to
-                     // complicate the assert a bit here.
-                     (GetBindingParent() &&
-                      (GetBindingParent() == GetParent()->GetBindingParent()) ==
-                          HasFlag(NODE_IS_ANONYMOUS_ROOT)),
-                 "For nodes with parent, flag and GetBindingParent() check "
-                 "should match");
+#ifdef DEBUG
+    AssertAnonymousSubtreeRelatedInvariants();
+#endif
     return HasFlag(NODE_IS_ANONYMOUS_ROOT);
   }
 
@@ -401,7 +391,7 @@ class nsIContent : public nsINode {
    *
    * @return the binding parent
    */
-  virtual nsIContent* GetBindingParent() const {
+  virtual mozilla::dom::Element* GetBindingParent() const {
     const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
     return slots ? slots->mBindingParent.get() : nullptr;
   }
@@ -735,11 +725,10 @@ class nsIContent : public nsINode {
 
     /**
      * The nearest enclosing content node with a binding that created us.
-     * TODO(emilio): This should be an Element*.
      *
      * @see nsIContent::GetBindingParent
      */
-    nsCOMPtr<nsIContent> mBindingParent;
+    RefPtr<mozilla::dom::Element> mBindingParent;
 
     /**
      * @see nsIContent::GetXBLInsertionPoint
