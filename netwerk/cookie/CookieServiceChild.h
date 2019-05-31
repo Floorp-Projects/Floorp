@@ -21,8 +21,6 @@ class nsICookiePermission;
 class nsIEffectiveTLDService;
 class nsILoadInfo;
 
-struct nsCookieAttributes;
-
 namespace mozilla {
 namespace net {
 class CookieStruct;
@@ -59,21 +57,22 @@ class CookieServiceChild : public PCookieServiceChild,
                      nsCString& aOriginatingCharset);
 
   nsresult GetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
-                                   char** aCookieString);
+                                   nsACString& aCookieString);
 
   void GetCookieStringFromCookieHashTable(
       nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
       bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
       bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, nsIChannel* aChannel,
-      nsCString& aCookieString);
+      nsACString& aCookieString);
 
   nsresult SetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
-                                   const char* aCookieString,
-                                   const char* aServerTime, bool aFromHttp);
+                                   const nsACString& aCookieString,
+                                   const nsACString& aServerTime,
+                                   bool aFromHttp);
 
   void RecordDocumentCookie(nsCookie* aCookie, const OriginAttributes& aAttrs);
 
-  void SetCookieInternal(nsCookieAttributes& aCookieAttributes,
+  void SetCookieInternal(const CookieStruct& aCookieData,
                          const mozilla::OriginAttributes& aAttrs,
                          nsIChannel* aChannel, bool aFromHttp,
                          nsICookiePermission* aPermissionService);
@@ -100,15 +99,10 @@ class CookieServiceChild : public PCookieServiceChild,
   mozilla::ipc::IPCResult RecvAddCookie(const CookieStruct& aCookie,
                                         const OriginAttributes& aAttrs);
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-
   CookiesMap mCookiesMap;
   nsCOMPtr<nsITimer> mCookieTimer;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
-  bool mThirdPartySession;
-  bool mThirdPartyNonsecureSession;
-  bool mIPCOpen;
 };
 
 }  // namespace net

@@ -1000,7 +1000,7 @@ var cookieHelpers = {
           const cookies = [];
 
           for (let i = 0; i < cookiesNoInterface.length; i++) {
-            const cookie = cookiesNoInterface.queryElementAt(i, Ci.nsICookie2);
+            const cookie = cookiesNoInterface.queryElementAt(i, Ci.nsICookie);
             cookies.push(cookie);
           }
           cookieHelpers.onCookieChanged(cookies, topic, data);
@@ -1008,7 +1008,7 @@ var cookieHelpers = {
           return;
         }
 
-        const cookie = subject.QueryInterface(Ci.nsICookie2);
+        const cookie = subject.QueryInterface(Ci.nsICookie);
         cookieHelpers.onCookieChanged(cookie, topic, data);
         break;
     }

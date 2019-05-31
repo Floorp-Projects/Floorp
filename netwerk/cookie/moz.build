@@ -10,7 +10,6 @@ with Files('**'):
 # export required interfaces, even if --disable-cookies has been given
 XPIDL_SOURCES += [
     'nsICookie.idl',
-    'nsICookie2.idl',
     'nsICookieManager.idl',
     'nsICookiePermission.idl',
     'nsICookieService.idl',

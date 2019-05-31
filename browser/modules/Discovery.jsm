@@ -111,7 +111,7 @@ const DiscoveryInternal = {
                               true, // session
                               Date.now(),
                               originAttributes,
-                              Ci.nsICookie2.SAMESITE_LAX);
+                              Ci.nsICookie.SAMESITE_LAX);
         }
       }
     }

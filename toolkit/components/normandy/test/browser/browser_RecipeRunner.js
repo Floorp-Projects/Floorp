@@ -538,6 +538,8 @@ decorate_task(
   withPrefEnv({
     set: [
       ["features.normandy-remote-settings.enabled", true],
+      // Enable update timer logs.
+      ["app.update.log", true],
     ],
   }),
   withStub(RecipeRunner, "loadRecipes"),
