@@ -32,18 +32,18 @@ function* do_run_test() {
   Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
   let enumerator = Services.cookiemgr.enumerator;
   Assert.ok(enumerator.hasMoreElements());
-  let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+  let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
   Assert.ok(!enumerator.hasMoreElements());
 
   // Fire 'profile-before-change'.
   do_close_profile();
 
   // Check that the APIs behave appropriately.
-  Assert.equal(Services.cookies.getCookieString(uri, null), null);
-  Assert.equal(Services.cookies.getCookieStringFromHttp(uri, null, null), null);
+  Assert.equal(Services.cookies.getCookieString(uri, null), "");
+  Assert.equal(Services.cookies.getCookieStringFromHttp(uri, null, null), "");
   Services.cookies.setCookieString(uri, null, "oh2=hai", null);
   Services.cookies.setCookieStringFromHttp(uri, null, null, "oh3=hai", null, null);
-  Assert.equal(Services.cookies.getCookieString(uri, null), null);
+  Assert.equal(Services.cookies.getCookieString(uri, null), "");
 
   do_check_throws(function() {
     Services.cookiemgr.removeAll();
@@ -55,7 +55,7 @@ function* do_run_test() {
 
   do_check_throws(function() {
     Services.cookiemgr.add("foo.com", "", "oh4", "hai", false, false, false, 0, {},
-                           Ci.nsICookie2.SAMESITE_NONE);
+                           Ci.nsICookie.SAMESITE_NONE);
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {

@@ -29,7 +29,7 @@ function waitForNewCookie({host, name, value}) {
         return;
       }
 
-      let cookie = subj.QueryInterface(Ci.nsICookie2);
+      let cookie = subj.QueryInterface(Ci.nsICookie);
       if (cookie.host == host && cookie.name == name && cookie.value == value) {
         ok(true, "cookie added by the cookie service");
         Services.obs.removeObserver(observer, topic);

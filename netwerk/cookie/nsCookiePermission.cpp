@@ -6,7 +6,7 @@
 
 #include "nsCookiePermission.h"
 
-#include "nsICookie2.h"
+#include "nsICookie.h"
 #include "nsIServiceManager.h"
 #include "nsICookieManager.h"
 #include "nsICookieService.h"
@@ -80,7 +80,7 @@ nsCookiePermission::SetAccess(nsIURI* aURI, nsCookieAccess aAccess) {
 
 NS_IMETHODIMP
 nsCookiePermission::CanSetCookie(nsIURI* aURI, nsIChannel* aChannel,
-                                 nsICookie2* aCookie, bool* aIsSession,
+                                 nsICookie* aCookie, bool* aIsSession,
                                  int64_t* aExpiry, bool* aResult) {
   NS_ASSERTION(aURI, "null uri");
 

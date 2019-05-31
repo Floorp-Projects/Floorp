@@ -52,7 +52,7 @@ function setCookie(value, expected) {
       Assert.equal(data, expectedInternal.type);
 
       // Check cookie details.
-      let cookie = subject.QueryInterface(Ci.nsICookie2);
+      let cookie = subject.QueryInterface(Ci.nsICookie);
       Assert.equal(cookie.isSession, expectedInternal.isSession);
       Assert.equal(cookie.isSecure, expectedInternal.isSecure);
       Assert.equal(cookie.isHttpOnly, expectedInternal.isHttpOnly);
