@@ -73,6 +73,8 @@ class GeckoEngineSession(
 
     private var initialLoad = true
 
+    private var requestFromWebContent = false
+
     override val coroutineContext: CoroutineContext
         get() = context + job
 
@@ -84,6 +86,7 @@ class GeckoEngineSession(
      * See [EngineSession.loadUrl]
      */
     override fun loadUrl(url: String) {
+        requestFromWebContent = false
         geckoSession.loadUri(url)
     }
 
@@ -91,6 +94,7 @@ class GeckoEngineSession(
      * See [EngineSession.loadData]
      */
     override fun loadData(data: String, mimeType: String, encoding: String) {
+        requestFromWebContent = false
         when (encoding) {
             "base64" -> geckoSession.loadData(data.toByteArray(), mimeType)
             else -> geckoSession.loadString(data, mimeType)
@@ -377,6 +381,10 @@ class GeckoEngineSession(
         }
 
         override fun onPageStop(session: GeckoSession, success: Boolean) {
+            // by the time we reach here, any new request will come from web content.
+            // If it comes from the chrome, loadUrl(url) or loadData(string) will set it to
+            // false.
+            requestFromWebContent = true
             notifyObservers {
                 onProgress(PROGRESS_STOP)
                 onLoadingStateChange(false)

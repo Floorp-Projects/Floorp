@@ -76,6 +76,8 @@ class GeckoEngineSession(
 
     private var initialLoad = true
 
+    private var requestFromWebContent = false
+
     override val coroutineContext: CoroutineContext
         get() = context + job
 
@@ -87,6 +89,7 @@ class GeckoEngineSession(
      * See [EngineSession.loadUrl]
      */
     override fun loadUrl(url: String) {
+        requestFromWebContent = false
         geckoSession.loadUri(url)
     }
 
@@ -94,6 +97,7 @@ class GeckoEngineSession(
      * See [EngineSession.loadData]
      */
     override fun loadData(data: String, mimeType: String, encoding: String) {
+        requestFromWebContent = false
         when (encoding) {
             "base64" -> geckoSession.loadData(data.toByteArray(), mimeType)
             else -> geckoSession.loadString(data, mimeType)
@@ -313,10 +317,12 @@ class GeckoEngineSession(
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
                 notifyObservers {
-                    // Unlike the name LoadRequest.isRedirect may imply this flag is not about http redirects. The flag
-                    // is "true if and only if the request was triggered by user interaction."
-                    // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1545170
-                    onLoadRequest(triggeredByRedirect = request.isRedirect, triggeredByWebContent = true)
+                    // As the name LoadRequest.isRedirect may imply this flag is about http redirects. The flag
+                    // is "True if and only if the request was triggered by an HTTP redirect."
+                    onLoadRequest(
+                        triggeredByRedirect = request.isRedirect,
+                        triggeredByWebContent = requestFromWebContent
+                    )
                 }
 
                 GeckoResult.fromValue(AllowOrDeny.ALLOW)
@@ -384,6 +390,10 @@ class GeckoEngineSession(
         }
 
         override fun onPageStop(session: GeckoSession, success: Boolean) {
+            // by the time we reach here, any new request will come from web content.
+            // If it comes from the chrome, loadUrl(url) or loadData(string) will set it to
+            // false.
+            requestFromWebContent = true
             notifyObservers {
                 onProgress(PROGRESS_STOP)
                 onLoadingStateChange(false)
