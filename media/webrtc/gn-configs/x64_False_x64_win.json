@@ -11774,21 +11774,13 @@
             "sources": [
                 "//modules/video_capture/windows/device_info_ds.cc",
                 "//modules/video_capture/windows/device_info_ds.h",
-                "//modules/video_capture/windows/device_info_mf.cc",
-                "//modules/video_capture/windows/device_info_mf.h",
                 "//modules/video_capture/windows/help_functions_ds.cc",
                 "//modules/video_capture/windows/help_functions_ds.h",
                 "//modules/video_capture/windows/sink_filter_ds.cc",
                 "//modules/video_capture/windows/sink_filter_ds.h",
                 "//modules/video_capture/windows/video_capture_ds.cc",
                 "//modules/video_capture/windows/video_capture_ds.h",
-                "//modules/video_capture/windows/video_capture_factory_windows.cc",
-                "//modules/video_capture/windows/video_capture_mf.cc",
-                "//modules/video_capture/windows/video_capture_mf.h",
-                "//modules/video_capture/windows/BaseFilter.cpp",
-                "//modules/video_capture/windows/BaseInputPin.cpp",
-                "//modules/video_capture/windows/BasePin.cpp",
-                "//modules/video_capture/windows/MediaType.cpp"
+                "//modules/video_capture/windows/video_capture_factory_windows.cc"
             ],
             "type": "source_set"
         },
