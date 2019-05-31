@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
@@ -228,12 +227,7 @@ class HistoryFragment : Fragment(), CoroutineScope by MainScope(), BackHandler {
 
     private fun displayDeleteAllDialog() {
         activity?.let { activity ->
-            AlertDialog.Builder(
-                ContextThemeWrapper(
-                    activity,
-                    R.style.DeleteDialogStyle
-                )
-            ).apply {
+            AlertDialog.Builder(activity).apply {
                 setMessage(R.string.history_delete_all_dialog)
                 setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
                     dialog.cancel()

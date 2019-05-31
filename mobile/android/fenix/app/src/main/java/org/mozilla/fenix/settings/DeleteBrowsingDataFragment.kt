@@ -6,7 +6,6 @@ package org.mozilla.fenix.settings
 
 import android.content.DialogInterface
 import android.os.Bundle
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -108,26 +107,23 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     }
 
     private fun askToDelete() {
-        AlertDialog.Builder(
-            ContextThemeWrapper(
-                activity,
-                R.style.DeleteDialogStyle
-            )
-        ).apply {
-            val appName = context.getString(R.string.app_name)
-            val message = context.getString(R.string.preferences_delete_browsing_data_prompt_message, appName)
-            setMessage(message)
+        context?.let {
+            AlertDialog.Builder(it).apply {
+                val appName = context.getString(R.string.app_name)
+                val message = context.getString(R.string.preferences_delete_browsing_data_prompt_message, appName)
+                setMessage(message)
 
-            setNegativeButton(R.string.preferences_delete_browsing_data_prompt_cancel) { dialog: DialogInterface, _ ->
-                dialog.cancel()
-            }
+                setNegativeButton(R.string.preferences_delete_browsing_data_prompt_cancel) { it: DialogInterface, _ ->
+                    it.cancel()
+                }
 
-            setPositiveButton(R.string.preferences_delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
-                dialog.dismiss()
-                deleteSelected()
-            }
-            create()
-        }.show()
+                setPositiveButton(R.string.preferences_delete_browsing_data_prompt_allow) { it: DialogInterface, _ ->
+                    it.dismiss()
+                    deleteSelected()
+                }
+                create()
+            }.show()
+        }
     }
 
     private fun deleteSelected() {

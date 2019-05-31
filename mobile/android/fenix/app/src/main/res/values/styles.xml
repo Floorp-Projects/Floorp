@@ -15,8 +15,8 @@
         <item name="android:colorAccent">@color/primary_text_normal_theme</item>
         <item name="android:textColorPrimary">@color/primary_text_normal_theme</item>
         <item name="android:textColorSecondary">@color/secondary_text_normal_theme</item>
-        <item name="alertDialogStyle">@style/DialogStyle</item>
-        <item name="alertDialogTheme">@style/DialogStyle</item>
+        <item name="alertDialogStyle">@style/DialogStyleNormal</item>
+        <item name="alertDialogTheme">@style/DialogStyleNormal</item>
 
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="android:colorControlActivated">@color/accent_high_contrast_normal_theme</item>
@@ -55,20 +55,27 @@
         <item name="android:background">?above</item>
         <item name="colorAccent">?accent</item>
         <item name="android:textColorPrimary">?primaryText</item>
-        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
     </style>
 
-    <style name="NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:textColor">?primaryText</item>
+    <style name="DialogStyleLight" parent="DialogStyle">
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyleLight</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyleLight</item>
     </style>
 
-    <style name="PositiveButtonDeleteStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:textColor">?destructive</item>
+    <style name="DialogStyleDark" parent="DialogStyle">
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyleDark</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyleDark</item>
     </style>
 
-    <style name="DeleteDialogStyle" parent="DialogStyle">
-        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonDeleteStyle</item>
+    <style name="DialogButtonStyleLight" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">?accentBright</item>
     </style>
+
+    <style name="DialogButtonStyleDark" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">?accentHighContrast</item>
+    </style>
+
+    <style name="DialogStyleNormal" parent="DialogStyleLight"/>
 
     <style name="PrivateThemeBase" parent="Theme.AppCompat.NoActionBar">
         <!-- Android system styling -->
@@ -82,8 +89,8 @@
         <item name="android:colorControlActivated">@color/accent_high_contrast_private_theme</item>
         <item name="android:textColorPrimary">@color/primary_text_private_theme</item>
         <item name="android:textColorSecondary">@color/secondary_text_private_theme</item>
-        <item name="alertDialogStyle">@style/DialogStyle</item>
-        <item name="alertDialogTheme">@style/DialogStyle</item>
+        <item name="alertDialogStyle">@style/DialogStyleDark</item>
+        <item name="alertDialogTheme">@style/DialogStyleDark</item>
 
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>

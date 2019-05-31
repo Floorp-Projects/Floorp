@@ -8,7 +8,6 @@ import android.content.DialogInterface
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -379,26 +378,23 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun createDeleteCollectionPrompt(tabCollection: TabCollection) {
-        AlertDialog.Builder(
-            ContextThemeWrapper(
-                activity,
-                R.style.DeleteDialogStyle
-            )
-        ).apply {
-            val message = context.getString(R.string.tab_collection_dialog_message, tabCollection.title)
-            setMessage(message)
-            setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
-                dialog.cancel()
-            }
-            setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
-                launch(Dispatchers.IO) {
-                    requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
-                }.invokeOnCompletion {
-                    dialog.dismiss()
+        context?.let {
+            AlertDialog.Builder(it).apply {
+                val message = context.getString(R.string.tab_collection_dialog_message, tabCollection.title)
+                setMessage(message)
+                setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
                 }
-            }
-            create()
-        }.show()
+                setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
+                    launch(Dispatchers.IO) {
+                        requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
+                    }.invokeOnCompletion {
+                        dialog.dismiss()
+                    }
+                }
+                create()
+            }.show()
+        }
     }
 
     @Suppress("ComplexMethod")
