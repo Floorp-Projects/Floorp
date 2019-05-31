@@ -166,9 +166,15 @@
 /* If a program allocates memory for the lifetime of the app, it doesn't make
  * sense to touch memory pages and free that memory at shutdown,
  * unless we are running leak stats.
+ *
+ * Note that we're also setting this for code coverage and pgo profile
+ * generation, because both of those require atexit hooks, which won't fire
+ * if we're using _exit. Bug 1555974 covers improving this.
+ *
  */
 #if defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_VALGRIND) || \
-    defined(MOZ_ASAN) || defined(MOZ_CODE_COVERAGE)
+    defined(MOZ_ASAN) || defined(MOZ_CODE_COVERAGE) ||           \
+    defined(MOZ_PROFILE_GENERATE)
 #  define NS_FREE_PERMANENT_DATA
 #endif
 
