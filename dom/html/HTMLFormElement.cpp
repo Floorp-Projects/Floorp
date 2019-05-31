@@ -10,6 +10,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
@@ -25,6 +26,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
+#include "nsHTMLDocument.h"
 #include "nsInterfaceHashtable.h"
 #include "nsContentList.h"
 #include "nsCOMArray.h"
@@ -255,9 +257,8 @@ nsresult HTMLFormElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(GetUncomposedDoc()));
-  if (htmlDoc) {
-    htmlDoc->AddedForm();
+  if (IsInUncomposedDoc() && aContext.OwnerDoc().IsHTMLOrXHTML()) {
+    aContext.OwnerDoc().AsHTMLDocument()->AddedForm();
   }
 
   return rv;

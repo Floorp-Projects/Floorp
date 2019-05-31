@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/HTMLBaseElementBinding.h"
 #include "mozilla/dom/HTMLDirectoryElementBinding.h"
 #include "mozilla/dom/HTMLHeadElementBinding.h"
@@ -233,10 +234,10 @@ nsresult HTMLSharedElement::BindToTree(BindContext& aContext,
   // need to update here.
   if (mNodeInfo->Equals(nsGkAtoms::base) && IsInUncomposedDoc()) {
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
-      SetBaseURIUsingFirstBaseWithHref(OwnerDoc(), this);
+      SetBaseURIUsingFirstBaseWithHref(&aContext.OwnerDoc(), this);
     }
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
-      SetBaseTargetUsingFirstBaseWithTarget(OwnerDoc(), this);
+      SetBaseTargetUsingFirstBaseWithTarget(&aContext.OwnerDoc(), this);
     }
   }
 

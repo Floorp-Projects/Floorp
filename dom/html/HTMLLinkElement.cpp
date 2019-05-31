@@ -12,6 +12,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLLinkElementBinding.h"
 #include "nsContentUtils.h"
@@ -122,9 +123,9 @@ nsresult HTMLLinkElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (Document* doc = GetComposedDoc()) {
-    if (!doc->NodePrincipal()->IsSystemPrincipal()) {
-      doc->RegisterPendingLinkUpdate(this);
+  if (IsInComposedDoc()) {
+    if (!aContext.OwnerDoc().NodePrincipal()->IsSystemPrincipal()) {
+      aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
     }
     TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
   }
@@ -139,7 +140,7 @@ nsresult HTMLLinkElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   if (IsInUncomposedDoc() &&
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
                   eIgnoreCase)) {
-    OwnerDoc()->LocalizationLinkAdded(this);
+    aContext.OwnerDoc().LocalizationLinkAdded(this);
   }
 
   LinkAdded();
