@@ -763,8 +763,7 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   Zone* valueZone = GetCellZoneFromAnyThread(value);
   MOZ_ASSERT(valueZone == zone || valueZone->isAtomsZone());
 
-  CellColor mapColor =
-      map->markColor == MarkColor::Black ? CellColor::Black : CellColor::Gray;
+  CellColor mapColor = map->markColor;
   if (object && GetCellColor(object) != mapColor) {
     fprintf(stderr, "WeakMap object is marked differently to the map\n");
     fprintf(stderr, "(map %p is %s, object %p is %s)\n", map,
