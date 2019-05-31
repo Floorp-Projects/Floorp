@@ -140,11 +140,6 @@ class SharedContext {
   // should be tested (see JSScript::argIsAliased).
   bool bindingsAccessedDynamically_ : 1;
 
-  // Whether this script, or any of its inner scripts contains a debugger
-  // statement which could potentially read or write anywhere along the
-  // scope chain.
-  bool hasDebuggerStatement_ : 1;
-
   // A direct eval occurs in the body of the script.
   bool hasDirectEval_ : 1;
 
@@ -169,7 +164,6 @@ class SharedContext {
         needsThisTDZChecks_(false),
         hasExplicitUseStrict_(false),
         bindingsAccessedDynamically_(false),
-        hasDebuggerStatement_(false),
         hasDirectEval_(false) {}
 
   // If this is the outermost SharedContext, the Scope that encloses
@@ -211,12 +205,10 @@ class SharedContext {
   bool bindingsAccessedDynamically() const {
     return bindingsAccessedDynamically_;
   }
-  bool hasDebuggerStatement() const { return hasDebuggerStatement_; }
   bool hasDirectEval() const { return hasDirectEval_; }
 
   void setExplicitUseStrict() { hasExplicitUseStrict_ = true; }
   void setBindingsAccessedDynamically() { bindingsAccessedDynamically_ = true; }
-  void setHasDebuggerStatement() { hasDebuggerStatement_ = true; }
   void setHasDirectEval() { hasDirectEval_ = true; }
 
   inline bool allBindingsClosedOver();
