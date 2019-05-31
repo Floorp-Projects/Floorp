@@ -4,6 +4,4 @@
 
 ac_add_options --with-branding=browser/branding/nightly
 
-export MOZ_LTO=cross
-
 . "$topsrcdir/build/mozconfig.common.override"
