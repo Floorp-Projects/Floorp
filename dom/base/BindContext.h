@@ -18,6 +18,12 @@ namespace mozilla {
 namespace dom {
 
 struct MOZ_STACK_CLASS BindContext final {
+  // The document that owns the tree we're getting bound to.
+  //
+  // This is mostly an optimization to avoid silly pointer-chases to get the
+  // OwnerDoc().
+  Document& OwnerDoc() const { return mDoc; }
+
   // Whether our subtree root is changing as a result of this operation.
   bool SubtreeRootChanges() const { return mSubtreeRootChanges; }
 
@@ -31,7 +37,8 @@ struct MOZ_STACK_CLASS BindContext final {
   // FIXME(emilio, bug 1555944): nsIContent::GetBindingParent() should return an
   // Element*.
   explicit BindContext(nsINode& aParentNode)
-      : mSubtreeRootChanges(true),
+      : mDoc(*aParentNode.OwnerDoc()),
+        mSubtreeRootChanges(true),
         mBindingParent(aParentNode.IsContent()
                            ? static_cast<Element*>(
                                  aParentNode.AsContent()->GetBindingParent())
@@ -44,22 +51,27 @@ struct MOZ_STACK_CLASS BindContext final {
   //
   // This constructor is only meant to be used in that situation.
   explicit BindContext(ShadowRoot& aShadowRoot)
-      : mSubtreeRootChanges(false),
+      : mDoc(*aShadowRoot.OwnerDoc()),
+        mSubtreeRootChanges(false),
         mBindingParent(aShadowRoot.Host()) {}
 
   // This constructor is meant to be used when inserting native-anonymous
   // children into a subtree.
   enum ForNativeAnonymous { ForNativeAnonymous };
   BindContext(Element& aParentElement, enum ForNativeAnonymous)
-      : mSubtreeRootChanges(true),
+      : mDoc(*aParentElement.OwnerDoc()),
+        mSubtreeRootChanges(true),
         mBindingParent(&aParentElement) {}
 
   // This is meant to be used to bind XBL anonymous content.
   BindContext(nsXBLBinding& aBinding, Element& aParentElement)
-      : mSubtreeRootChanges(true),
+      : mDoc(*aParentElement.OwnerDoc()),
+        mSubtreeRootChanges(true),
         mBindingParent(aBinding.GetBoundElement()) {}
 
  private:
+  Document& mDoc;
+
   // Whether the bind operation will change the subtree root of the content
   // we're binding.
   const bool mSubtreeRootChanges;

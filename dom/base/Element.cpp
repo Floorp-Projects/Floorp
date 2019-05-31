@@ -1581,6 +1581,7 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
              "Must have content or document parent!");
   MOZ_ASSERT(aParent.OwnerDoc() == OwnerDoc(),
              "Must have the same owner document");
+  MOZ_ASSERT(OwnerDoc() == &aContext.OwnerDoc(), "These should match too");
   MOZ_ASSERT(!IsInUncomposedDoc(), "Already have a document.  Unbind first!");
   MOZ_ASSERT(!IsInComposedDoc(), "Already have a document.  Unbind first!");
   // Note that as we recurse into the kids, they'll have a non-null parent.  So
@@ -1694,7 +1695,7 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   // also need to be told that they are moving.
   if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
     nsXBLBinding* binding =
-        OwnerDoc()->BindingManager()->GetBindingWithContent(this);
+        aContext.OwnerDoc().BindingManager()->GetBindingWithContent(this);
 
     if (binding) {
       binding->BindAnonymousContent(binding->GetAnonymousContent(), this);
@@ -1745,7 +1746,7 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
          pseudoType == PseudoStyleType::after ||
          pseudoType == PseudoStyleType::marker) &&
         EffectSet::GetEffectSet(this, pseudoType)) {
-      if (nsPresContext* presContext = OwnerDoc()->GetPresContext()) {
+      if (nsPresContext* presContext = aContext.OwnerDoc().GetPresContext()) {
         presContext->EffectCompositor()->RequestRestyle(
             this, pseudoType, EffectCompositor::RestyleType::Standard,
             EffectCompositor::CascadeLevel::Animations);

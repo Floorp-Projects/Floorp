@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SMILAnimationFunction.h"
@@ -139,8 +140,9 @@ nsresult SVGAnimationElement::BindToTree(BindContext& aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add myself to the animation controller's master set of animation elements.
-  if (Document* doc = GetComposedDoc()) {
-    if (SMILAnimationController* controller = doc->GetAnimationController()) {
+  if (IsInComposedDoc()) {
+    if (SMILAnimationController* controller =
+            aContext.OwnerDoc().GetAnimationController()) {
       controller->RegisterAnimationElement(this);
     }
     const nsAttrValue* href =

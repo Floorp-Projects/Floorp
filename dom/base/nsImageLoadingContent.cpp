@@ -1613,7 +1613,8 @@ void nsImageLoadingContent::NotifyOwnerDocumentActivityChanged() {
 void nsImageLoadingContent::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
   // We may be getting connected, if so our image should be tracked,
-  if (GetOurCurrentDoc()) {
+  // NOTE(emilio): Using aParent to avoid silly virtual call.
+  if (aParent.IsInComposedDoc()) {
     TrackImage(mCurrentRequest);
     TrackImage(mPendingRequest);
   }

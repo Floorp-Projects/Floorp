@@ -52,7 +52,7 @@ nsresult HTMLScriptElement::BindToTree(BindContext& aContext,
   nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (GetComposedDoc()) {
+  if (IsInComposedDoc()) {
     MaybeProcessScript();
   }
 

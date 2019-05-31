@@ -208,15 +208,15 @@ nsresult HTMLObjectElement::BindToTree(BindContext& aContext,
   // Don't kick off load from being bound to a plugin document - the plugin
   // document will call nsObjectLoadingContent::InitializeFromChannel() for the
   // initial load.
-  //
-  // FIXME(emilio): Seems wasteful to queue the runnable unconditionally
-  // otherwise.
-  nsCOMPtr<nsIPluginDocument> pluginDoc = do_QueryInterface(GetUncomposedDoc());
-  // If we already have all the children, start the load.
-  if (mIsDoneAddingChildren && !pluginDoc) {
-    void (HTMLObjectElement::*start)() = &HTMLObjectElement::StartObjectLoad;
-    nsContentUtils::AddScriptRunner(
-        NewRunnableMethod("dom::HTMLObjectElement::BindToTree", this, start));
+  if (IsInComposedDoc()) {
+    nsCOMPtr<nsIPluginDocument> pluginDoc =
+        do_QueryInterface(&aContext.OwnerDoc());
+    // If we already have all the children, start the load.
+    if (mIsDoneAddingChildren && !pluginDoc) {
+      void (HTMLObjectElement::*start)() = &HTMLObjectElement::StartObjectLoad;
+      nsContentUtils::AddScriptRunner(
+          NewRunnableMethod("dom::HTMLObjectElement::BindToTree", this, start));
+    }
   }
 
   return NS_OK;

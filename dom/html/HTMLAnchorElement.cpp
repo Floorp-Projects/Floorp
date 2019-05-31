@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLAnchorElement.h"
 
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
@@ -101,9 +102,8 @@ nsresult HTMLAnchorElement::BindToTree(BindContext& aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Prefetch links
-  Document* doc = GetComposedDoc();
-  if (doc) {
-    doc->RegisterPendingLinkUpdate(this);
+  if (IsInComposedDoc()) {
+    aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
     TryDNSPrefetch();
   }
 

@@ -74,23 +74,23 @@ nsresult HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
-  Document* document = GetUncomposedDoc();
-  if (!document) {
+  if (!IsInUncomposedDoc()) {
     return rv;
   }
+  Document& doc = aContext.OwnerDoc();
   if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, nsGkAtoms::viewport,
                   eIgnoreCase)) {
     nsAutoString content;
     GetContent(content);
-    nsContentUtils::ProcessViewportInfo(document, content);
+    nsContentUtils::ProcessViewportInfo(&doc, content);
   }
 
-  if (StaticPrefs::security_csp_enable() && !document->IsLoadedAsData() &&
+  if (StaticPrefs::security_csp_enable() && !doc.IsLoadedAsData() &&
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::httpEquiv, nsGkAtoms::headerCSP,
                   eIgnoreCase)) {
     // only accept <meta http-equiv="Content-Security-Policy" content=""> if it
     // appears in the <head> element.
-    Element* headElt = document->GetHeadElement();
+    Element* headElt = doc.GetHeadElement();
     if (headElt && nsContentUtils::ContentIsDescendantOf(this, headElt)) {
       nsAutoString content;
       GetContent(content);
@@ -98,18 +98,17 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
           nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
               content);
 
-      if (nsCOMPtr<nsIContentSecurityPolicy> csp = document->GetCsp()) {
+      if (nsCOMPtr<nsIContentSecurityPolicy> csp = doc.GetCsp()) {
         if (LOG_ENABLED()) {
           nsAutoCString documentURIspec;
-          nsIURI* documentURI = document->GetDocumentURI();
-          if (documentURI) {
+          if (nsIURI* documentURI = doc.GetDocumentURI()) {
             documentURI->GetAsciiSpec(documentURIspec);
           }
 
           LOG(
               ("HTMLMetaElement %p sets CSP '%s' on document=%p, "
                "document-uri=%s",
-               this, NS_ConvertUTF16toUTF8(content).get(), document,
+               this, NS_ConvertUTF16toUTF8(content).get(), &doc,
                documentURIspec.get()));
         }
 
@@ -121,18 +120,18 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
                               false,  // csp via meta tag can not be report only
                               true);  // delivered through the meta tag
         NS_ENSURE_SUCCESS(rv, rv);
-        if (nsPIDOMWindowInner* inner = document->GetInnerWindow()) {
+        if (nsPIDOMWindowInner* inner = doc.GetInnerWindow()) {
           inner->SetCsp(csp);
         }
-        document->ApplySettingsFromCSP(false);
+        doc.ApplySettingsFromCSP(false);
       }
     }
   }
 
   // Referrer Policy spec requires a <meta name="referrer" tag to be in the
   // <head> element.
-  SetMetaReferrer(document);
-  CreateAndDispatchEvent(document, NS_LITERAL_STRING("DOMMetaAdded"));
+  SetMetaReferrer(&doc);
+  CreateAndDispatchEvent(&doc, NS_LITERAL_STRING("DOMMetaAdded"));
   return rv;
 }
 
