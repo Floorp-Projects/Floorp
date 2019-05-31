@@ -1,0 +1,27 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl Element;
+
+[scriptable, uuid(ce572460-b0f2-4650-a9e7-c53a99d3b6ad)]
+interface nsIBoxObject : nsISupports
+{
+  readonly attribute Element element;
+
+  readonly attribute long x;
+  readonly attribute long y;
+  readonly attribute long screenX;
+  readonly attribute long screenY;
+  readonly attribute long width;
+  readonly attribute long height;
+
+  nsISupports getPropertyAsSupports(in wstring propertyName);
+  void setPropertyAsSupports(in wstring propertyName, in nsISupports value);
+  wstring getProperty(in wstring propertyName);
+  void setProperty(in wstring propertyName, in wstring propertyValue);
+  void removeProperty(in wstring propertyName);
+};

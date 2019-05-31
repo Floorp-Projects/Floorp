@@ -321,6 +321,7 @@ void nsNodeUtils::LastRelease(nsINode* aNode) {
   }
 
   if (Element* element = Element::FromNode(aNode)) {
+    element->OwnerDoc()->ClearBoxObjectFor(element);
     NS_ASSERTION(!element->GetXBLBinding(), "Node has binding on destruction");
   }
 
@@ -436,6 +437,7 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
     Document* oldDoc = aNode->OwnerDoc();
     bool wasRegistered = false;
     if (elem) {
+      oldDoc->ClearBoxObjectFor(elem);
       wasRegistered = oldDoc->UnregisterActivityObserver(elem);
     }
 

@@ -28,6 +28,7 @@
 #include "XULDocument.h"
 
 #include "nsError.h"
+#include "nsIBoxObject.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIContentViewer.h"
@@ -42,6 +43,8 @@
 #include "nsDocElementCreatedNotificationRunner.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
+#include "nsPIBoxObject.h"
+#include "mozilla/dom/BoxObject.h"
 #include "nsString.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
