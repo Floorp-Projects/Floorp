@@ -17,6 +17,7 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.segmentAwareDomainMatch
 
 const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
@@ -29,22 +30,32 @@ typealias SyncAuthInfo = mozilla.appservices.places.SyncAuthInfo
 @SuppressWarnings("TooManyFunctions")
 open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), HistoryStorage, SyncableStore {
 
+    override val logger = Logger("PlacesHistoryStorage")
+
     override suspend fun recordVisit(uri: String, visitType: VisitType) {
         withContext(scope.coroutineContext) {
-            places.writer().noteObservation(VisitObservation(uri, visitType = visitType.into()))
+            // Ignore exceptions related to uris. This means we may drop some of the data on the floor
+            // if the underlying storage layer refuses it.
+            ignoreUrlExceptions("recordVisit") {
+                places.writer().noteObservation(VisitObservation(uri, visitType = visitType.into()))
+            }
         }
     }
 
     override suspend fun recordObservation(uri: String, observation: PageObservation) {
         // NB: visitType 'UPDATE_PLACE' means "record meta information about this URL".
         withContext(scope.coroutineContext) {
-            places.writer().noteObservation(
-                    VisitObservation(
-                            url = uri,
-                            visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE,
-                            title = observation.title
-                    )
-            )
+            // Ignore exceptions related to uris. This means we may drop some of the data on the floor
+            // if the underlying storage layer refuses it.
+            ignoreUrlExceptions("recordObservation") {
+                places.writer().noteObservation(
+                        VisitObservation(
+                                url = uri,
+                                visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE,
+                                title = observation.title
+                        )
+                )
+            }
         }
     }
 

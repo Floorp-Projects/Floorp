@@ -40,6 +40,9 @@ permalink: /changelog/
   * Added `EngineView.canScrollVerticallyUp()` for pull to refresh.
   * Added engine API to clear browsing data.
 
+* **browser-storage-sync**
+  * `recordVisit` and `recordObservation` will no longer throw when processing invalid URLs.
+
   ```kotlin
   // Clear all browsing data
   engine.clearData(BrowsingData.all())

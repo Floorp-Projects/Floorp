@@ -20,12 +20,15 @@ import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * Implementation of the [BookmarksStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
 @Suppress("TooManyFunctions")
 open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), BookmarksStorage, SyncableStore {
+
+    override val logger = Logger("PlacesBookmarksStorage")
 
     /**
      * Produces a bookmarks tree for the given guid string.

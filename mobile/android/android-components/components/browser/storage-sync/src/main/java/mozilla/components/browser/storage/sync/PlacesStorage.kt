@@ -12,8 +12,10 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
+import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * A base class for concrete implementations of PlacesStorages
@@ -22,6 +24,8 @@ abstract class PlacesStorage(context: Context) : Storage, SyncableStore {
 
     internal val scope by lazy { CoroutineScope(Dispatchers.IO) }
     private val storageDir by lazy { context.filesDir }
+
+    abstract val logger: Logger
 
     @VisibleForTesting
     internal open val places: Connection by lazy {
@@ -47,5 +51,16 @@ abstract class PlacesStorage(context: Context) : Storage, SyncableStore {
     override fun cleanup() {
         scope.coroutineContext.cancelChildren()
         places.close()
+    }
+
+    /**
+     * Runs [block] described by [operation], ignoring and logging any thrown [UrlParseFailed] exceptions.
+     */
+    protected inline fun ignoreUrlExceptions(operation: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: UrlParseFailed) {
+            logger.warn("Ignoring url exception while running $operation", e)
+        }
     }
 }

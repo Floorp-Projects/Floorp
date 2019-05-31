@@ -322,6 +322,14 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
+    fun `store ignores url parse exceptions during record operations`() = runBlocking {
+        // These aren't valid URIs, and if we're not explicitly ignoring exceptions from the underlying
+        // storage layer, these calls will throw.
+        history.recordVisit("mozilla.org", VisitType.LINK)
+        history.recordObservation("mozilla.org", PageObservation("mozilla"))
+    }
+
+    @Test
     fun `store can delete everything`() = runBlocking {
         history.recordVisit("http://www.mozilla.org", VisitType.TYPED)
         history.recordVisit("http://www.mozilla.org", VisitType.DOWNLOAD)
@@ -449,7 +457,7 @@ class PlacesHistoryStorageTest {
 
     @Test
     fun `can run maintanence on the store`() = runBlocking {
-         history.runMaintenance()
+        history.runMaintenance()
     }
 
     @Test
