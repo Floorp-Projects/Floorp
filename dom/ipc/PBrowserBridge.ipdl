@@ -15,7 +15,6 @@ using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
 using mozilla::a11y::IDispatchHolder from "mozilla/a11y/IPCTypes.h";
-using mozilla::dom::EffectsInfo from "mozilla/dom/TabMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -63,8 +62,6 @@ parent:
   async Show(ScreenIntSize size, bool parentIsActive, nsSizeMode sizeMode);
   async UpdateDimensions(DimensionInfo dimensions) compressall;
   async RenderLayers(bool aEnabled, bool aForceRepaint, LayersObserverEpoch aEpoch);
-
-  async UpdateEffects(EffectsInfo aEffects);
 
   /**
    * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
