@@ -10,12 +10,14 @@ import {
   getViewport,
   getSource,
   getSelectedSource,
+  getSelectedSourceWithContent,
   getBreakpointPositions,
   getBreakpointPositionsForSource,
 } from "../selectors";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
 import { getSelectedLocation } from "../utils/selected-location";
 import { sortSelectedLocations } from "../utils/location";
+import { getLineText } from "../utils/source";
 
 import type { Selector, State } from "../reducers/types";
 
@@ -26,7 +28,7 @@ import type {
   Range,
   BreakpointPositions,
   BreakpointPosition,
-  Source,
+  SourceWithContent,
 } from "../types";
 
 export type ColumnBreakpoint = {|
@@ -96,6 +98,7 @@ function filterByLineCount(positions, selectedSource) {
 function filterVisible(positions, selectedSource, viewport) {
   return positions.filter(columnBreakpoint => {
     const location = getSelectedLocation(columnBreakpoint, selectedSource);
+
     return viewport && contains(location, viewport);
   });
 }
@@ -104,6 +107,20 @@ function filterByBreakpoints(positions, selectedSource, breakpointMap) {
   return positions.filter(position => {
     const location = getSelectedLocation(position, selectedSource);
     return breakpointMap[location.line];
+  });
+}
+
+// Filters out breakpoints to the right of the line. (bug 1552039)
+function filterInLine(positions, selectedSource, selectedContent) {
+  return positions.filter(position => {
+    const location = getSelectedLocation(position, selectedSource);
+    const lineText = getLineText(
+      selectedSource.id,
+      selectedContent,
+      location.line
+    );
+
+    return lineText.length >= (location.column || 0);
   });
 }
 
@@ -131,11 +148,16 @@ export function getColumnBreakpoints(
   positions: ?BreakpointPositions,
   breakpoints: ?(Breakpoint[]),
   viewport: Range,
-  selectedSource: ?Source
+  selectedSourceWithContent: ?SourceWithContent
 ) {
-  if (!positions) {
+  if (!positions || !selectedSourceWithContent) {
     return [];
   }
+
+  const {
+    source: selectedSource,
+    content: selectedContent,
+  } = selectedSourceWithContent;
 
   // We only want to show a column breakpoint if several conditions are matched
   // - it is the first breakpoint to appear at an the original location
@@ -146,6 +168,7 @@ export function getColumnBreakpoints(
   let newPositions = convertToList(positions);
   newPositions = filterByLineCount(newPositions, selectedSource);
   newPositions = filterVisible(newPositions, selectedSource, viewport);
+  newPositions = filterInLine(newPositions, selectedSource, selectedContent);
   newPositions = filterByBreakpoints(
     newPositions,
     selectedSource,
@@ -165,7 +188,7 @@ export const visibleColumnBreakpoints: Selector<ColumnBreakpoints> = createSelec
   getVisibleBreakpointPositions,
   getVisibleBreakpoints,
   getViewport,
-  getSelectedSource,
+  getSelectedSourceWithContent,
   getColumnBreakpoints
 );
 
