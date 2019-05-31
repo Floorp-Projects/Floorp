@@ -212,22 +212,26 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
-     * Sets the size of the text for the title displayed in the toolbar.
+     * Sets the size of the text for the title displayed in the toolbar up to the MAX_TITLE_SIZE
+     * Also resizes url text size to accommodate the title.
      */
     var titleTextSize: Float
         get() = displayToolbar.titleView.textSize
         set(value) {
-            displayToolbar.titleView.textSize = value
+            val newSize = minOf(value, MAX_TITLE_SIZE)
+            displayToolbar.titleView.textSize = newSize
+            textSize = MAX_TEXT_SIZE_WITH_TITLE
         }
 
     /**
-     * Sets the size of the text for the URL/search term displayed in the toolbar.
+     * Sets the size of the text for the URL/search term displayed in the toolbar up to the MAX_TITLE_SIZE.
      */
     var textSize: Float
         get() = displayToolbar.urlView.textSize
         set(value) {
-            displayToolbar.urlView.textSize = value
-            editToolbar.urlView.textSize = value
+            val newSize = minOf(value, MAX_TEXT_SIZE)
+            displayToolbar.urlView.textSize = newSize
+            editToolbar.urlView.textSize = newSize
         }
 
     /**
@@ -678,6 +682,9 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     companion object {
+        private const val MAX_TITLE_SIZE = 10f
+        private const val MAX_TEXT_SIZE_WITH_TITLE = 8f
+        private const val MAX_TEXT_SIZE = 20f
         private const val DEFAULT_TOOLBAR_HEIGHT_DP = 56
         internal const val ACTION_PADDING_DP = 16
         internal val DEFAULT_PADDING =
