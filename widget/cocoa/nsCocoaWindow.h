@@ -230,7 +230,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SetFakeModal(bool aState) override;
   virtual bool IsRunningAppModal() override;
   virtual bool IsVisible() const override;
-  virtual nsresult SetFocus(bool aState = false) override;
+  virtual void SetFocus(Raise) override;
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   virtual LayoutDeviceIntSize ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) override;
