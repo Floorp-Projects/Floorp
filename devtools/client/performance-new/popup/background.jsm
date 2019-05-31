@@ -13,9 +13,7 @@
 // The following are not lazily loaded as they are needed during initialization.f
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-const Loader = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-
-const { loader } = Loader;
+const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 // The following utilities are lazily loaded as they are not needed when controlling the
 // global state of the profiler, and only are used during specific funcationality like
