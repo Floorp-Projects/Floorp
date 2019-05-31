@@ -57,17 +57,18 @@ class CookieServiceChild : public PCookieServiceChild,
                      nsCString& aOriginatingCharset);
 
   nsresult GetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
-                                   char** aCookieString);
+                                   nsACString& aCookieString);
 
   void GetCookieStringFromCookieHashTable(
       nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
       bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
       bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, nsIChannel* aChannel,
-      nsCString& aCookieString);
+      nsACString& aCookieString);
 
   nsresult SetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
-                                   const char* aCookieString,
-                                   const char* aServerTime, bool aFromHttp);
+                                   const nsACString& aCookieString,
+                                   const nsACString& aServerTime,
+                                   bool aFromHttp);
 
   void RecordDocumentCookie(nsCookie* aCookie, const OriginAttributes& aAttrs);
 

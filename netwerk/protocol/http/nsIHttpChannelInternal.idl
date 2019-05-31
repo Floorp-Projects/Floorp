@@ -80,7 +80,7 @@ interface nsIHttpChannelInternal : nsISupports
      * @param aCookieHeader
      *        The cookie header to be parsed.
      */
-    [must_use] void setCookie(in string aCookieHeader);
+    [must_use] void setCookie(in ACString aCookieHeader);
 
     /**
      * Setup this channel as an application cache fallback channel.

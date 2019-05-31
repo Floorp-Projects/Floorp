@@ -12,7 +12,7 @@ function run_test() {
     var uri = makeURI("http://example.com/");
     // Try an expiration time before the epoch
     serv.setCookieString(uri, null, "test=test; path=/; domain=example.com; expires=Sun, 31-Dec-1899 16:00:00 GMT;", null);
-    Assert.equal(serv.getCookieString(uri, null), null);
+    Assert.equal(serv.getCookieString(uri, null), "");
     // Now sanity check
     serv.setCookieString(uri, null, "test2=test2; path=/; domain=example.com;", null);
     Assert.equal(serv.getCookieString(uri, null), "test2=test2");

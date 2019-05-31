@@ -953,8 +953,7 @@ nsresult nsMultiMixedConv::ProcessHeader() {
           do_QueryInterface(mChannel);
       mResponseHeaderValue.CompressWhitespace();
       if (httpInternal) {
-        DebugOnly<nsresult> rv =
-            httpInternal->SetCookie(mResponseHeaderValue.get());
+        DebugOnly<nsresult> rv = httpInternal->SetCookie(mResponseHeaderValue);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
       break;

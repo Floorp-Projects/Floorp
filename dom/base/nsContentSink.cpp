@@ -324,8 +324,8 @@ nsresult nsContentSink::ProcessHeaderData(nsAtom* aHeader,
       mParser->GetChannel(getter_AddRefs(channel));
     }
 
-    rv = cookieServ->SetCookieString(
-        codebaseURI, nullptr, NS_ConvertUTF16toUTF8(aValue).get(), channel);
+    rv = cookieServ->SetCookieString(codebaseURI, nullptr,
+                                     NS_ConvertUTF16toUTF8(aValue), channel);
     if (NS_FAILED(rv)) {
       return rv;
     }

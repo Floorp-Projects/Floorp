@@ -73,7 +73,8 @@ void SetACookie(nsICookieService* aCookieService, const char* aSpec1,
   if (aSpec2) NS_NewURI(getter_AddRefs(uri2), aSpec2);
 
   nsresult rv = aCookieService->SetCookieStringFromHttp(
-      uri1, uri2, nullptr, (char*)aCookieString, aServerTime, nullptr);
+      uri1, uri2, nullptr, nsDependentCString(aCookieString),
+      aServerTime ? nsDependentCString(aServerTime) : VoidCString(), nullptr);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
@@ -109,7 +110,9 @@ void SetASameSiteCookie(nsICookieService* aCookieService, const char* aSpec1,
   loadInfo->SetCookieSettings(cookieSettings);
 
   nsresult rv = aCookieService->SetCookieStringFromHttp(
-      uri1, uri2, nullptr, (char*)aCookieString, aServerTime, dummyChannel);
+      uri1, uri2, nullptr, nsDependentCString(aCookieString),
+      aServerTime ? nsDependentCString(aServerTime) : VoidCString(),
+      dummyChannel);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
@@ -118,8 +121,8 @@ void SetACookieNoHttp(nsICookieService* aCookieService, const char* aSpec,
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aSpec);
 
-  nsresult rv = aCookieService->SetCookieString(uri, nullptr,
-                                                (char*)aCookieString, nullptr);
+  nsresult rv = aCookieService->SetCookieString(
+      uri, nullptr, nsDependentCString(aCookieString), nullptr);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
@@ -131,7 +134,7 @@ void GetACookie(nsICookieService* aCookieService, const char* aSpec1,
   if (aSpec2) NS_NewURI(getter_AddRefs(uri2), aSpec2);
 
   Unused << aCookieService->GetCookieStringFromHttp(uri1, uri2, nullptr,
-                                                    getter_Copies(aCookie));
+                                                    aCookie);
 }
 
 // The cookie string is returned via aCookie.
@@ -140,8 +143,7 @@ void GetACookieNoHttp(nsICookieService* aCookieService, const char* aSpec,
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aSpec);
 
-  Unused << aCookieService->GetCookieString(uri, nullptr,
-                                            getter_Copies(aCookie));
+  Unused << aCookieService->GetCookieString(uri, nullptr, aCookie);
 }
 
 // some #defines for comparison rules
