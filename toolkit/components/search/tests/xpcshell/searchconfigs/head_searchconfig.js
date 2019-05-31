@@ -403,8 +403,13 @@ class SearchConfigTest {
       const code = (typeof rules.codes === "string") ? rules.codes :
        rules.codes[purpose];
       const submission = engine.getSubmission("test", "text/html", purpose);
-      this.assertOk(submission.uri.query.split("&").includes(code),
+      const submissionQueryParams = submission.uri.query.split("&");
+      this.assertOk(submissionQueryParams.includes(code),
         `Expected "${code}" in url "${submission.uri.spec}" from purpose "${purpose}" ${location}`);
+
+      const paramName = code.split("=")[0];
+      this.assertOk(submissionQueryParams.filter(param => param.startsWith(paramName)).length == 1,
+        `Expected only one "${paramName}" parameter in "${submission.uri.spec}" from purpose "${purpose}" ${location}`);
     }
   }
 

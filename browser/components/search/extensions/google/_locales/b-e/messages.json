@@ -16,5 +16,8 @@
   },
   "searchUrlGetParams": {
     "message": "client=firefox-b-e&q={searchTerms}"
+  },
+  "channelPref": {
+    "message": "google_channel_row"
   }
 }
