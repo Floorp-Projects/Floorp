@@ -15,9 +15,9 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="44dp"
-        android:layout_height="60dp"
-        android:src="@drawable/ic_sessions_intro"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:src="@drawable/ic_fx_accounts_avatar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -32,7 +32,7 @@
         android:scrollHorizontally="false"
         android:singleLine="true"
         android:text="Title"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textAppearance="@style/Header16TextStyle"
         app:layout_constraintBottom_toTopOf="@android:id/summary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/imageView"
