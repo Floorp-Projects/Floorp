@@ -36,7 +36,7 @@ BrowserHost* BrowserHost::GetFrom(nsIRemoteTab* aRemoteTab) {
 }
 
 mozilla::layers::LayersId BrowserHost::GetLayersId() const {
-  return mRoot->GetRenderFrame()->GetLayersId();
+  return mRoot->GetLayersId();
 }
 
 BrowsingContext* BrowserHost::GetBrowsingContext() const {

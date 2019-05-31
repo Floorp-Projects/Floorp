@@ -171,7 +171,7 @@ class BrowserParent final : public PBrowserParent,
    */
   a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 
-  layout::RenderFrame* GetRenderFrame();
+  LayersId GetLayersId() const;
 
   // Returns the BrowserBridgeParent if this BrowserParent is for an
   // out-of-process iframe and nullptr otherwise.
@@ -480,6 +480,7 @@ class BrowserParent final : public PBrowserParent,
   void ResumeLoad(uint64_t aPendingSwitchID);
 
   void InitRendering();
+  bool AttachLayerManager();
   void MaybeShowFrame();
 
   bool Show(const ScreenIntSize& aSize, bool aParentIsActive);

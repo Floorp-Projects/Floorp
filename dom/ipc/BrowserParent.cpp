@@ -425,11 +425,11 @@ a11y::DocAccessibleParent* BrowserParent::GetTopLevelDocAccessible() const {
   return nullptr;
 }
 
-RenderFrame* BrowserParent::GetRenderFrame() {
+LayersId BrowserParent::GetLayersId() const {
   if (!mRenderFrame.IsInitialized()) {
-    return nullptr;
+    return LayersId{};
   }
-  return &mRenderFrame;
+  return mRenderFrame.GetLayersId();
 }
 
 BrowserBridgeParent* BrowserParent::GetBrowserBridgeParent() const {
@@ -858,6 +858,10 @@ void BrowserParent::InitRendering() {
   Unused << SendInitRendering(textureFactoryIdentifier, layersId,
                               mRenderFrame.GetCompositorOptions(),
                               mRenderFrame.IsLayersConnected());
+}
+
+bool BrowserParent::AttachLayerManager() {
+  return !!mRenderFrame.AttachLayerManager();
 }
 
 void BrowserParent::MaybeShowFrame() {
