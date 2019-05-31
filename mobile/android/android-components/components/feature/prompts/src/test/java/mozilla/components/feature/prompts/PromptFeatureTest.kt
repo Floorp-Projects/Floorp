@@ -26,15 +26,15 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
-import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level.NONE
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method.HOST
+import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
+import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -419,13 +419,12 @@ class PromptFeatureTest {
         )
 
         timeSelectionTypes.forEach { timeType ->
-
             val session = getSelectedSession()
             var onClearWasCalled = false
             var selectedDate: Date? = null
 
             val promptRequest = PromptRequest.TimeSelection(
-                "title", Date(),
+                "title", Date(0),
                 null,
                 null,
                 timeType,
@@ -437,7 +436,8 @@ class PromptFeatureTest {
 
             session.promptRequest = Consumable.from(promptRequest)
 
-            promptFeature.onConfirm("unknown_sessionId", Date())
+            val now = Date()
+            promptFeature.onConfirm("unknown_sessionId", now)
 
             assertFalse(session.promptRequest.isConsumed())
             assertNull(selectedDate)
@@ -457,12 +457,11 @@ class PromptFeatureTest {
         )
 
         timeSelectionTypes.forEach { _ ->
-
             val session = getSelectedSession()
             var onClearWasCalled = false
             var selectedDate: Date? = null
             val promptRequest = PromptRequest.TimeSelection(
-                "title", Date(),
+                "title", Date(0),
                 null,
                 null,
                 PromptRequest.TimeSelection.Type.DATE,
@@ -473,11 +472,11 @@ class PromptFeatureTest {
             promptFeature.start()
             session.promptRequest = Consumable.from(promptRequest)
 
-            val date = Date()
-            promptFeature.onConfirm(session.id, Date())
+            val now = Date()
+            promptFeature.onConfirm(session.id, now)
 
             assertTrue(session.promptRequest.isConsumed())
-            assertEquals(selectedDate, date)
+            assertEquals(now, selectedDate)
             session.promptRequest = Consumable.from(promptRequest)
 
             promptFeature.onClear(session.id)
