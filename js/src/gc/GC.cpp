@@ -7954,6 +7954,7 @@ void GCRuntime::onOutOfMallocMemory() {
 
   // Make sure we release anything queued for release.
   decommitTask.join();
+  nursery().joinDecommitTask();
 
   // Wait for background free of nursery huge slots to finish.
   sweepTask.join();
