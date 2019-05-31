@@ -16,13 +16,13 @@
   background: url("chrome://browser/skin/downloads/download-icons.svg#default-bar") center no-repeat;
 }
 
-#downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-icon,
-#downloads-button[attention="success"] > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
+#downloads-button[attention="success"] > .toolbarbutton-badge-stack > #downloads-indicator-anchor > #downloads-indicator-icon,
+#downloads-button[attention="success"] > .toolbarbutton-badge-stack > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
   -moz-context-properties: fill, fill-opacity;
   fill: var(--toolbarbutton-icon-fill-attention);
   fill-opacity: 1;
 }
-#downloads-button[progress] > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
+#downloads-button[progress] > .toolbarbutton-badge-stack > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
   background: url("chrome://browser/skin/downloads/download-icons.svg#progress-bar-bg") center no-repeat;
 }
 
@@ -109,7 +109,7 @@
 
 /*** Download notifications ***/
 
-#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+#downloads-button[notification="start"] > .toolbarbutton-badge-stack > #downloads-indicator-anchor > #downloads-indicator-icon {
   animation-name: downloadsIndicatorStartDip;
   /* Upon changing the duration_delay below, please keep the delay time of
      setTimeout() identical in indicator.js for this animation.
@@ -145,7 +145,7 @@
   to    { transform: scale(1); animation-timing-function: ease-in; }
 }
 
-#downloads-button[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+#downloads-button[notification="finish"] > .toolbarbutton-badge-stack > #downloads-indicator-anchor > #downloads-indicator-icon {
   animation-name: downloadsIndicatorFinishPulse;
   animation-delay: 250ms;
   animation-duration: 300ms;
