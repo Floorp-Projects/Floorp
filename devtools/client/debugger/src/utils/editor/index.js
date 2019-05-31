@@ -224,12 +224,11 @@ export function getSourceLocationFromMouseEvent(
     left: e.clientX,
     top: e.clientY,
   });
-  const sourceId = source.id;
 
   return {
-    sourceId,
-    line: fromEditorLine(sourceId, line),
-    column: isWasm(sourceId) ? 0 : ch + 1,
+    sourceId: source.id,
+    line: line + 1,
+    column: ch + 1,
   };
 }
 
