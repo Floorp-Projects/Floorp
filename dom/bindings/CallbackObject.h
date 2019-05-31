@@ -122,10 +122,14 @@ class CallbackObject : public nsISupports {
    * This should only be called if you are certain that the return value won't
    * be passed into a JS API function and that it won't be stored without being
    * rooted (or otherwise signaling the stored value to the CC).
+   *
+   * Note that calling Reset() will also affect the value of any handle
+   * previously returned here. Don't call Reset() if a handle is still in use.
    */
   JS::Handle<JSObject*> CallbackPreserveColor() const {
     // Calling fromMarkedLocation() is safe because we trace our mCallback, and
-    // because the value of mCallback cannot change after if has been set.
+    // because the value of mCallback cannot change after if has been set
+    // (except for calling Reset() as described above).
     return JS::Handle<JSObject*>::fromMarkedLocation(mCallback.address());
   }
   JS::Handle<JSObject*> CallbackGlobalPreserveColor() const {
@@ -225,7 +229,8 @@ class CallbackObject : public nsISupports {
   // Provide a way to clear this object's pointers to GC things after the
   // callback has been run. Note that CallbackOrNull() will return null after
   // this point. This should only be called if the object is known not to be
-  // used again.
+  // used again, and no handles (e.g. those returned by CallbackPreserveColor)
+  // are in use.
   void Reset() { ClearJSReferences(); }
   friend class mozilla::PromiseJobRunnable;
 
