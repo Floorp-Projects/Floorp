@@ -5725,6 +5725,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+VARCACHE_PREF(
+  Live,
+  "network.cookie.thirdparty.nonsecureSessionOnly",
+   network_cookie_thirdparty_nonsecureSessionOnly,
+  bool, false
+)
+
 // Enables the predictive service.
 VARCACHE_PREF(
   Live,

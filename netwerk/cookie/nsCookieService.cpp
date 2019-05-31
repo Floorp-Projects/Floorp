@@ -130,8 +130,6 @@ static const char kPrefMaxNumberOfCookies[] = "network.cookie.maxNumber";
 static const char kPrefMaxCookiesPerHost[] = "network.cookie.maxPerHost";
 static const char kPrefCookieQuotaPerHost[] = "network.cookie.quotaPerHost";
 static const char kPrefCookiePurgeAge[] = "network.cookie.purgeAge";
-static const char kPrefThirdPartyNonsecureSession[] =
-    "network.cookie.thirdparty.nonsecureSessionOnly";
 
 static void bindCookieParameters(mozIStorageBindingParamsArray* aParamsArray,
                                  const nsCookieKey& aKey,
@@ -584,7 +582,6 @@ NS_IMPL_ISUPPORTS(nsCookieService, nsICookieService, nsICookieManager,
 
 nsCookieService::nsCookieService()
     : mDBState(nullptr),
-      mThirdPartyNonsecureSession(false),
       mMaxNumberOfCookies(kMaxNumberOfCookies),
       mMaxCookiesPerHost(kMaxCookiesPerHost),
       mCookieQuotaPerHost(kCookieQuotaPerHost),
@@ -611,7 +608,6 @@ nsresult nsCookieService::Init() {
     prefBranch->AddObserver(kPrefMaxNumberOfCookies, this, true);
     prefBranch->AddObserver(kPrefMaxCookiesPerHost, this, true);
     prefBranch->AddObserver(kPrefCookiePurgeAge, this, true);
-    prefBranch->AddObserver(kPrefThirdPartyNonsecureSession, this, true);
     PrefChanged(prefBranch);
   }
 
@@ -2172,10 +2168,10 @@ void nsCookieService::SetCookieStringInternal(
   nsAutoCString hostFromURI;
   aHostURI->GetHost(hostFromURI);
   CountCookiesFromHost(hostFromURI, &priorCookieCount);
-  CookieStatus cookieStatus = CheckPrefs(
-      cookieSettings, mThirdPartyNonsecureSession, aHostURI, aIsForeign,
-      aIsTrackingResource, aFirstPartyStorageAccessGranted, aCookieHeader.get(),
-      priorCookieCount, aOriginAttrs, &rejectedReason);
+  CookieStatus cookieStatus =
+      CheckPrefs(cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
+                 aFirstPartyStorageAccessGranted, aCookieHeader.get(),
+                 priorCookieCount, aOriginAttrs, &rejectedReason);
 
   MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
 
@@ -2344,11 +2340,6 @@ void nsCookieService::PrefChanged(nsIPrefBranch* aPrefBranch) {
     mCookiePurgeAge =
         int64_t(LIMIT(val, 0, INT32_MAX, INT32_MAX)) * PR_USEC_PER_SEC;
   }
-
-  bool boolval;
-  if (NS_SUCCEEDED(
-          aPrefBranch->GetBoolPref(kPrefThirdPartyNonsecureSession, &boolval)))
-    mThirdPartyNonsecureSession = boolval;
 }
 
 /******************************************************************************
@@ -2996,10 +2987,10 @@ void nsCookieService::GetCookiesForURI(
   uint32_t rejectedReason = aRejectedReason;
   uint32_t priorCookieCount = 0;
   CountCookiesFromHost(hostFromURI, &priorCookieCount);
-  CookieStatus cookieStatus = CheckPrefs(
-      cookieSettings, mThirdPartyNonsecureSession, aHostURI, aIsForeign,
-      aIsTrackingResource, aFirstPartyStorageAccessGranted, nullptr,
-      priorCookieCount, aOriginAttrs, &rejectedReason);
+  CookieStatus cookieStatus =
+      CheckPrefs(cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
+                 aFirstPartyStorageAccessGranted, nullptr, priorCookieCount,
+                 aOriginAttrs, &rejectedReason);
 
   MOZ_ASSERT_IF(rejectedReason, cookieStatus == STATUS_REJECTED);
 
@@ -3931,11 +3922,10 @@ static inline bool IsSubdomainOf(const nsCString& a, const nsCString& b) {
 }
 
 CookieStatus nsCookieService::CheckPrefs(
-    nsICookieSettings* aCookieSettings, bool aThirdPartyNonsecureSession,
-    nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
-    bool aFirstPartyStorageAccessGranted, const char* aCookieHeader,
-    const int aNumOfCookies, const OriginAttributes& aOriginAttrs,
-    uint32_t* aRejectedReason) {
+    nsICookieSettings* aCookieSettings, nsIURI* aHostURI, bool aIsForeign,
+    bool aIsTrackingResource, bool aFirstPartyStorageAccessGranted,
+    const char* aCookieHeader, const int aNumOfCookies,
+    const OriginAttributes& aOriginAttrs, uint32_t* aRejectedReason) {
   nsresult rv;
 
   MOZ_ASSERT(aRejectedReason);
@@ -4034,7 +4024,7 @@ CookieStatus nsCookieService::CheckPrefs(
       return STATUS_ACCEPT_SESSION;
     }
 
-    if (aThirdPartyNonsecureSession) {
+    if (StaticPrefs::network_cookie_thirdparty_nonsecureSessionOnly()) {
       bool isHTTPS = false;
       aHostURI->SchemeIs("https", &isHTTPS);
       if (!isHTTPS) return STATUS_ACCEPT_SESSION;
