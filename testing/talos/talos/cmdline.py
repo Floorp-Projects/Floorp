@@ -122,11 +122,6 @@ def create_parser(mach_interface=False):
     add_arg('--setpref', action='append', default=[], dest="extraPrefs",
             metavar="PREF=VALUE",
             help="defines an extra user preference")
-    add_arg('--mitmproxy',
-            help='Test uses mitmproxy to serve the pages, specify the '
-                 'path and name of the mitmdump file to playback')
-    add_arg('--mitmdumpPath',
-            help="Path to mitmproxy's mitmdump playback tool")
     add_arg("--firstNonBlankPaint", action='store_true', dest="fnbpaint",
             help="Wait for firstNonBlankPaint event before recording the time")
     add_arg('--webServer', dest='webserver',
