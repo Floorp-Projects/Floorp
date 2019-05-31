@@ -33,15 +33,11 @@ struct MOZ_STACK_CLASS BindContext final {
   Element* GetBindingParent() const { return mBindingParent; }
 
   // This constructor should be used for regular appends to content.
-  //
-  // FIXME(emilio, bug 1555944): nsIContent::GetBindingParent() should return an
-  // Element*.
   explicit BindContext(nsINode& aParentNode)
       : mDoc(*aParentNode.OwnerDoc()),
         mSubtreeRootChanges(true),
         mBindingParent(aParentNode.IsContent()
-                           ? static_cast<Element*>(
-                                 aParentNode.AsContent()->GetBindingParent())
+                           ? aParentNode.AsContent()->GetBindingParent()
                            : nullptr) {}
 
   // When re-binding a shadow host into a tree, we re-bind all the shadow tree

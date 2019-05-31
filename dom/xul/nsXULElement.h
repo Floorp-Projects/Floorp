@@ -349,7 +349,7 @@ class nsXULElement : public nsStyledElement {
                                 bool aIsTrustedEvent) override;
   void ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
 
-  nsIContent* GetBindingParent() const final { return mBindingParent; }
+  Element* GetBindingParent() const final { return mBindingParent; }
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
   virtual bool IsFocusableInternal(int32_t* aTabIndex,
@@ -368,7 +368,7 @@ class nsXULElement : public nsStyledElement {
   // This function should ONLY be used by BindToTree implementations.
   // The function exists solely because XUL elements store the binding
   // parent as a member instead of in the slots, as Element does.
-  void SetXULBindingParent(nsIContent* aBindingParent) {
+  void SetXULBindingParent(Element* aBindingParent) {
     mBindingParent = aBindingParent;
   }
 
@@ -541,7 +541,7 @@ class nsXULElement : public nsStyledElement {
    * The nearest enclosing content node with a binding
    * that created us.
    */
-  nsCOMPtr<nsIContent> mBindingParent;
+  RefPtr<Element> mBindingParent;
 
   /**
    * Abandon our prototype linkage, and copy all attributes locally
