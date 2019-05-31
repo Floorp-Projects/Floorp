@@ -4276,7 +4276,8 @@ LayoutDeviceIntSize nsWindow::GetSafeWindowSize(LayoutDeviceIntSize aSize) {
   LayoutDeviceIntSize result = aSize;
   int32_t maxSize = 32767;
   if (mLayerManager && mLayerManager->AsKnowsCompositor()) {
-    maxSize = std::min(maxSize, mLayerManager->AsKnowsCompositor()->GetMaxTextureSize());
+    maxSize = std::min(maxSize,
+                       mLayerManager->AsKnowsCompositor()->GetMaxTextureSize());
   }
   if (result.width > maxSize) {
     result.width = maxSize;
@@ -5112,7 +5113,11 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
 
     // if we've determined that we should still rollup, do it.
     bool usePoint = !aIsWheel && !aAlwaysRollup;
-    IntPoint point = IntPoint::Truncate(aMouseX, aMouseY);
+    IntPoint point;
+    if (usePoint) {
+      LayoutDeviceIntPoint p = GdkEventCoordsToDevicePixels(aMouseX, aMouseY);
+      point = p.ToUnknownPoint();
+    }
     if (rollup &&
         rollupListener->Rollup(popupsToRollup, true,
                                usePoint ? &point : nullptr, nullptr)) {
