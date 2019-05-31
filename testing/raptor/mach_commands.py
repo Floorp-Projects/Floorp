@@ -54,7 +54,7 @@ class RaptorRunner(MozbuildObject):
         if conditions.is_android(self) or kwargs["app"] in FIREFOX_ANDROID_BROWSERS:
             self.binary_path = None
         else:
-            self.binary_path = self.get_binary_path()
+            self.binary_path = kwargs.get("binary") or self.get_binary_path()
 
         self.virtualenv_script = os.path.join(self.topsrcdir, 'third_party', 'python',
                                               'virtualenv', 'virtualenv.py')
