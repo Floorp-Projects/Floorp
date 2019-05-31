@@ -355,7 +355,14 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   if (mEditorStatus != eEditorCreationInProgress) {
     RefPtr<ComposerCommandsUpdater> updater = mComposerCommandsUpdater;
     updater->NotifyDocumentCreated();
-    return NS_ERROR_FAILURE;
+
+    // At this point we have made a final decision that we don't support
+    // editing the current document.  This is an internal failure state, but
+    // we return NS_OK to avoid throwing an exception from the designMode
+    // setter for web compatibility.  The document editing APIs will tell the
+    // developer if editing has been disabled because we're in a document type
+    // that doesn't support editing.
+    return NS_OK;
   }
 
   // Create editor and do other things
