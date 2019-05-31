@@ -830,7 +830,6 @@ linux64-shippable/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-        mozconfig-variant: profile-use
     toolchains:
         - linux64-binutils
         - linux64-clang
