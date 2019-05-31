@@ -4311,7 +4311,9 @@ static void NotifyEditableStateChange(nsINode* aNode, Document* aDocument) {
 void Document::TearingDownEditor() {
   if (IsEditingOn()) {
     mEditingState = EditingState::eTearingDown;
-    RemoveContentEditableStyleSheets();
+    if (IsHTMLOrXHTML()) {
+      RemoveContentEditableStyleSheets();
+    }
   }
 }
 
@@ -4462,7 +4464,9 @@ nsresult Document::EditingStateChanged() {
     // Before making this window editable, we need to modify UA style sheet
     // because new style may change whether focused element will be focusable
     // or not.
-    AddContentEditableStyleSheetsToStyleSet(designMode);
+    if (IsHTMLOrXHTML()) {
+      AddContentEditableStyleSheetsToStyleSet(designMode);
+    }
 
     // Should we update the editable state of all the nodes in the document? We
     // need to do this when the designMode value changes, as that overrides
@@ -4510,7 +4514,13 @@ nsresult Document::EditingStateChanged() {
     // XXX Need to call TearDownEditorOnWindow for all failures.
     htmlEditor = docshell->GetHTMLEditor();
     if (!htmlEditor) {
-      return NS_ERROR_FAILURE;
+      // Return NS_OK even though we've failed to create an editor here.  This
+      // is so that the setter of designMode on non-HTML documents does not
+      // fail.
+      // This is OK to do because in nsEditingSession::SetupEditorOnWindow() we
+      // would detect that we can't support the mimetype if appropriate and
+      // would fall onto the eEditorErrorCantEditMimeType path.
+      return NS_OK;
     }
 
     // If we're entering the design mode, put the selection at the beginning of
