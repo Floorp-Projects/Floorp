@@ -578,7 +578,7 @@ button > hbox > label {
   height: 80px;
   border-radius: 50%;
   border: 1px solid transparent;
-  list-style-image: url(chrome://browser/skin/fxa/avatar-color.svg);
+  list-style-image: url("chrome://browser/skin/preferences/in-content/fxa-avatar.svg");
   margin-inline-end: 24px;
   -moz-user-focus: normal;
 }
