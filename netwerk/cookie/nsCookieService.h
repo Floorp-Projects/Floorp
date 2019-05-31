@@ -213,11 +213,11 @@ class nsCookieService final : public nsICookieService,
                            nsIChannel* aChannel, bool& aSetCookie,
                            mozIThirdPartyUtil* aThirdPartyUtil);
   static CookieStatus CheckPrefs(
-      nsICookieSettings* aCookieSettings, bool aThirdPartySession,
-      bool aThirdPartyNonsecureSession, nsIURI* aHostURI, bool aIsForeign,
-      bool aIsTrackingResource, bool aIsFirstPartyStorageAccessGranted,
-      const char* aCookieHeader, const int aNumOfCookies,
-      const OriginAttributes& aOriginAttrs, uint32_t* aRejectedReason);
+      nsICookieSettings* aCookieSettings, bool aThirdPartyNonsecureSession,
+      nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
+      bool aIsFirstPartyStorageAccessGranted, const char* aCookieHeader,
+      const int aNumOfCookies, const OriginAttributes& aOriginAttrs,
+      uint32_t* aRejectedReason);
   static int64_t ParseServerTime(const nsCString& aServerTime);
 
   static already_AddRefed<nsICookieSettings> GetCookieSettings(
@@ -368,7 +368,6 @@ class nsCookieService final : public nsICookieService,
   RefPtr<DBState> mDefaultDBState;
   RefPtr<DBState> mPrivateDBState;
 
-  bool mThirdPartySession;
   bool mThirdPartyNonsecureSession;
   uint16_t mMaxNumberOfCookies;
   uint16_t mMaxCookiesPerHost;
