@@ -251,7 +251,7 @@ string GenerateSubmissionUrl(const string& aUrl, const string& aId,
 //
 // Returns true if the ping was written out successfully, false otherwise.
 static bool WritePing(const string& aPath, const string& aPing) {
-  ofstream* f = UIOpenWrite(aPath.c_str());
+  ofstream* f = UIOpenWrite(aPath, ios::trunc);
   bool success = false;
 
   if (f->is_open()) {

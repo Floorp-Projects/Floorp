@@ -42,5 +42,6 @@ void SubmitReportChecked(GtkButton* sender, gpointer userData);
 void IncludeURLClicked(GtkButton* sender, gpointer userData);
 void CloseClicked(GtkButton* button, gpointer userData);
 void RestartClicked(GtkButton* button, gpointer userData);
+void SaveSettings(void);
 
 #endif  // CRASHREPORTER_GTK_COMMON_H__
