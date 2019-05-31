@@ -962,9 +962,8 @@ nsresult ContentChild::ProvideWindowCommon(
       nullptr, openerBC, aName, BrowsingContext::Type::Content);
 
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
-  RefPtr<BrowserChild> newChild =
-      new BrowserChild(this, tabId, tabGroup, newTabContext, browsingContext,
-                       aChromeFlags, /* aIsTopLevel */ true);
+  RefPtr<BrowserChild> newChild = new BrowserChild(
+      this, tabId, tabGroup, newTabContext, browsingContext, aChromeFlags);
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -1793,8 +1792,7 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     ManagedEndpoint<PBrowserChild>&& aBrowserEp, const TabId& aTabId,
     const TabId& aSameTabGroupAs, const IPCTabContext& aContext,
     BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, const bool& aIsForBrowser,
-    const bool& aIsTopLevel) {
+    const ContentParentId& aCpID, const bool& aIsForBrowser) {
   MOZ_ASSERT(!IsShuttingDown());
 
   static bool hasRunOnce = false;
@@ -1825,7 +1823,7 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
 
   RefPtr<BrowserChild> browserChild =
       BrowserChild::Create(this, aTabId, aSameTabGroupAs, tc.GetTabContext(),
-                           aBrowsingContext, aChromeFlags, aIsTopLevel);
+                           aBrowsingContext, aChromeFlags);
 
   // Bind the created BrowserChild to IPC to actually link the actor. The ref
   // here is released in DeallocPBrowserChild.

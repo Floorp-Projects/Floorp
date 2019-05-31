@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/BrowserHost.h"
 
-#include "mozilla/Unused.h"
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
@@ -25,9 +24,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowserHost)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserHost)
 
 BrowserHost::BrowserHost(BrowserParent* aParent)
-    : mId(aParent->GetTabId()),
-      mRoot(aParent),
-      mEffectsInfo{EffectsInfo::FullyHidden()} {
+    : mId(aParent->GetTabId()), mRoot(aParent) {
   mRoot->SetBrowserHost(this);
 }
 
@@ -78,14 +75,6 @@ void BrowserHost::UpdateDimensions(const nsIntRect& aRect,
   mRoot->UpdateDimensions(aRect, aSize);
 }
 
-void BrowserHost::UpdateEffects(EffectsInfo aEffects) {
-  if (!mRoot || mEffectsInfo == aEffects) {
-    return;
-  }
-  mEffectsInfo = aEffects;
-  Unused << mRoot->SendUpdateEffects(mEffectsInfo);
-}
-
 /* attribute boolean docShellIsActive; */
 NS_IMETHODIMP
 BrowserHost::GetDocShellIsActive(bool* aDocShellIsActive) {
@@ -124,7 +113,9 @@ BrowserHost::SetRenderLayers(bool aRenderLayers) {
   if (!mRoot) {
     return NS_OK;
   }
-  mRoot->SetRenderLayers(aRenderLayers);
+  VisitAll([&](BrowserParent* aBrowserParent) {
+    aBrowserParent->SetRenderLayers(aRenderLayers);
+  });
   return NS_OK;
 }
 

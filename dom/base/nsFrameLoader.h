@@ -312,8 +312,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
    */
   bool IsRemoteFrame();
 
-  mozilla::dom::RemoteBrowser* GetRemoteBrowser() const;
-
   /**
    * Returns the IPDL actor used if this is a top-level remote browser, or null
    * otherwise.

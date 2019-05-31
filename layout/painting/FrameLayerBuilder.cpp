@@ -12,8 +12,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/dom/EffectsInfo.h"
-#include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/gfx/Matrix.h"
 #include "ActiveLayerTracker.h"
@@ -36,7 +34,6 @@
 #include "nsDocShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsImageFrame.h"
-#include "nsSubDocumentFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
@@ -390,7 +387,7 @@ DisplayItemData::~DisplayItemData() {
   }
 }
 
-void DisplayItemData::NotifyRemoved() {
+void DisplayItemData::ClearAnimationCompositorState() {
   if (mDisplayItemKey > static_cast<uint8_t>(DisplayItemType::TYPE_MAX)) {
     // This is sort of a hack. The display item key has higher bits set, which
     // means that it is not the only display item for the frame.
@@ -399,24 +396,6 @@ void DisplayItemData::NotifyRemoved() {
   }
 
   const DisplayItemType type = GetDisplayItemTypeFromKey(mDisplayItemKey);
-
-  if (type == DisplayItemType::TYPE_REMOTE) {
-    // TYPE_REMOTE doesn't support merging, so access it directly
-    MOZ_ASSERT(mFrameList.Length() == 1);
-    if (mFrameList.Length() != 1) {
-      return;
-    }
-
-    // This is a remote browser that is going away, notify it that it is now
-    // hidden
-    nsIFrame* frame = mFrameList[0];
-    nsSubDocumentFrame* subdoc = static_cast<nsSubDocumentFrame*>(frame);
-    nsFrameLoader* frameLoader = subdoc->FrameLoader();
-    if (frameLoader && frameLoader->GetRemoteBrowser()) {
-      frameLoader->GetRemoteBrowser()->UpdateEffects(
-          mozilla::dom::EffectsInfo::FullyHidden());
-    }
-  }
 
   // FIXME: Bug 1530857: Add background_color.
   if (type != DisplayItemType::TYPE_TRANSFORM &&
@@ -2259,18 +2238,6 @@ void FrameLayerBuilder::RemoveFrameFromLayerManager(
     data->mParent->mDisplayItems.pop_back();
   }
 
-  if (aFrame->IsSubDocumentFrame()) {
-    const nsSubDocumentFrame* subdoc =
-        static_cast<const nsSubDocumentFrame*>(aFrame);
-    nsFrameLoader* frameLoader = subdoc->FrameLoader();
-    if (frameLoader && frameLoader->GetRemoteBrowser()) {
-      // This is a remote browser that is going away, notify it that it is now
-      // hidden
-      frameLoader->GetRemoteBrowser()->UpdateEffects(
-          mozilla::dom::EffectsInfo::FullyHidden());
-    }
-  }
-
   arrayCopy.Clear();
   sDestroyedFrame = nullptr;
 }
@@ -2323,7 +2290,7 @@ void FrameLayerBuilder::WillEndTransaction() {
             GetLastPaintOffset(t), did->mTransform);
       }
 
-      did->NotifyRemoved();
+      did->ClearAnimationCompositorState();
 
       // Remove this item. Swapping it with the last element first is
       // quicker than erasing from the middle.

@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/dom/EffectsInfo.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsILoadContext.h"
 #include "nsISupports.h"
@@ -56,8 +55,6 @@ class RemoteBrowser : public nsISupports {
   virtual bool Show(const ScreenIntSize& aSize, bool aParentIsActive) = 0;
   virtual void UpdateDimensions(const nsIntRect& aRect,
                                 const ScreenIntSize& aSize) = 0;
-
-  virtual void UpdateEffects(EffectsInfo aInfo) = 0;
 };
 
 }  // namespace dom

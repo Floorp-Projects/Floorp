@@ -372,16 +372,6 @@ WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
   return mCanvasRenderer.get();
 }
 
-WebRenderRemoteData::WebRenderRemoteData(RenderRootStateManager* aManager,
-                                         nsDisplayItem* aItem)
-    : WebRenderUserData(aManager, aItem) {}
-
-WebRenderRemoteData::~WebRenderRemoteData() {
-  if (mRemoteBrowser) {
-    mRemoteBrowser->UpdateEffects(mozilla::dom::EffectsInfo::FullyHidden());
-  }
-}
-
 WebRenderRenderRootData::WebRenderRenderRootData(
     RenderRootStateManager* aManager, nsDisplayItem* aItem)
     : WebRenderUserData(aManager, aItem) {}

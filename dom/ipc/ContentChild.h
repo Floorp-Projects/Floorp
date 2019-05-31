@@ -523,8 +523,7 @@ class ContentChild final : public PContentChild,
       ManagedEndpoint<PBrowserChild>&& aBrowserEp, const TabId& aTabId,
       const TabId& aSameTabGroupAs, const IPCTabContext& aContext,
       BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
-      const ContentParentId& aCpID, const bool& aIsForBrowser,
-      const bool& aIsTopLevel);
+      const ContentParentId& aCpID, const bool& aIsForBrowser);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentChild)
 

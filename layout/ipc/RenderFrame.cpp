@@ -21,7 +21,6 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/dom/EffectsInfo.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -218,27 +217,20 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
     return nullptr;
   }
 
-  if (RefPtr<RemoteBrowser> remoteBrowser =
-          GetFrameLoader()->GetRemoteBrowser()) {
-    // Generate an effects update notifying the browser it is visible
-    aBuilder->AddEffectUpdate(remoteBrowser, EffectsInfo::FullyVisible());
-    // FrameLayerBuilder will take care of notifying the browser when it is no
-    // longer visible
-  }
-
   RefPtr<Layer> layer =
       aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this);
 
   if (!layer) {
     layer = aManager->CreateRefLayer();
   }
-  if (!layer || !layer->AsRefLayer()) {
+
+  if (!layer) {
     // Probably a temporary layer manager that doesn't know how to
     // use ref layers.
     return nullptr;
   }
-  RefLayer* refLayer = layer->AsRefLayer();
 
+  static_cast<RefLayer*>(layer.get())->SetReferentId(mLayersId);
   LayoutDeviceIntPoint offset = GetContentRectLayerOffset(Frame(), aBuilder);
   // We can only have an offset if we're a child of an inactive
   // container, but our display item is LAYER_ACTIVE_FORCE which
@@ -248,9 +240,11 @@ already_AddRefed<Layer> nsDisplayRemote::BuildLayer(
   // Remote content can't be repainted by us, so we multiply down
   // the resolution that our container expects onto our container.
   m.PreScale(aContainerParameters.mXScale, aContainerParameters.mYScale, 1.0);
-  refLayer->SetBaseTransform(m);
-  refLayer->SetEventRegionsOverride(mEventRegionsOverride);
-  refLayer->SetReferentId(mLayersId);
+  layer->SetBaseTransform(m);
+
+  if (layer->AsRefLayer()) {
+    layer->AsRefLayer()->SetEventRegionsOverride(mEventRegionsOverride);
+  }
 
   return layer.forget();
 }
@@ -276,21 +270,6 @@ bool nsDisplayRemote::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   if (!mLayersId.IsValid()) {
     return true;
-  }
-
-  if (RefPtr<RemoteBrowser> remoteBrowser =
-          GetFrameLoader()->GetRemoteBrowser()) {
-    // Generate an effects update notifying the browser it is visible
-    aDisplayListBuilder->AddEffectUpdate(remoteBrowser,
-                                         EffectsInfo::FullyVisible());
-
-    // Create a WebRenderRemoteData to notify the RemoteBrowser when it is no
-    // longer visible
-    RefPtr<WebRenderRemoteData> userData =
-        aManager->CommandBuilder()
-            .CreateOrRecycleWebRenderUserData<WebRenderRemoteData>(
-                this, aBuilder.GetRenderRoot(), nullptr);
-    userData->SetRemoteBrowser(remoteBrowser);
   }
 
   mOffset = GetContentRectLayerOffset(mFrame, aDisplayListBuilder);

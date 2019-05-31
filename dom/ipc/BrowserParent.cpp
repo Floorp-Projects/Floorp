@@ -533,9 +533,7 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
   }
 
   VisitChildren([aElement](BrowserBridgeParent* aBrowser) {
-    if (auto* browserParent = aBrowser->GetBrowserParent()) {
-      browserParent->SetOwnerElement(aElement);
-    }
+    aBrowser->GetBrowserParent()->SetOwnerElement(aElement);
   });
 }
 
@@ -1228,12 +1226,9 @@ IPCResult BrowserParent::RecvPBrowserBridgeConstructor(
     PBrowserBridgeParent* aActor, const nsString& aName,
     const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
     const uint32_t& aChromeFlags) {
-  nsresult rv = static_cast<BrowserBridgeParent*>(aActor)->Init(
+  static_cast<BrowserBridgeParent*>(aActor)->Init(
       aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext),
       aChromeFlags);
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL(this, "Failed to construct BrowserBridgeParent");
-  }
   return IPC_OK();
 }
 
