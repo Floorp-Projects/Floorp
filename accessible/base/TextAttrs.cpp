@@ -348,11 +348,11 @@ bool TextAttrsMgr::BGColorTextAttr::GetColor(nsIFrame* aFrame,
 TextAttrsMgr::ColorTextAttr::ColorTextAttr(nsIFrame* aRootFrame,
                                            nsIFrame* aFrame)
     : TTextAttr<nscolor>(!aFrame) {
-  mRootNativeValue = aRootFrame->StyleColor()->mColor.ToColor();
+  mRootNativeValue = aRootFrame->StyleText()->mColor.ToColor();
   mIsRootDefined = true;
 
   if (aFrame) {
-    mNativeValue = aFrame->StyleColor()->mColor.ToColor();
+    mNativeValue = aFrame->StyleText()->mColor.ToColor();
     mIsDefined = true;
   }
 }
@@ -362,7 +362,7 @@ bool TextAttrsMgr::ColorTextAttr::GetValueFor(Accessible* aAccessible,
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     if (nsIFrame* frame = elm->GetPrimaryFrame()) {
-      *aValue = frame->StyleColor()->mColor.ToColor();
+      *aValue = frame->StyleText()->mColor.ToColor();
       return true;
     }
   }

@@ -77,12 +77,12 @@ nscolor StyleColor::CalcColor(const StyleRGBA& aForegroundColor) const {
 template <>
 nscolor StyleColor::CalcColor(const ComputedStyle& aStyle) const {
   // Common case that is numeric color, which is pure background, we
-  // can skip resolving StyleColor().
+  // can skip resolving StyleText().
   // TODO(djg): Is this optimization worth it?
   if (IsNumeric()) {
     return AsNumeric().ToColor();
   }
-  return CalcColor(aStyle.StyleColor()->mColor);
+  return CalcColor(aStyle.StyleText()->mColor);
 }
 
 template <>

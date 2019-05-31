@@ -1635,32 +1635,6 @@ nsChangeHint nsStyleTableBorder::CalcDifference(
 }
 
 // --------------------
-// nsStyleColor
-//
-
-static StyleRGBA DefaultColor(const Document& aDocument) {
-  return StyleRGBA::FromColor(
-      PreferenceSheet::PrefsFor(aDocument).mDefaultColor);
-}
-
-nsStyleColor::nsStyleColor(const Document& aDocument)
-    : mColor(DefaultColor(aDocument)) {
-  MOZ_COUNT_CTOR(nsStyleColor);
-}
-
-nsStyleColor::nsStyleColor(const nsStyleColor& aSource)
-    : mColor(aSource.mColor) {
-  MOZ_COUNT_CTOR(nsStyleColor);
-}
-
-nsChangeHint nsStyleColor::CalcDifference(const nsStyleColor& aNewData) const {
-  if (mColor == aNewData.mColor) {
-    return nsChangeHint(0);
-  }
-  return nsChangeHint_RepaintFrame;
-}
-
-// --------------------
 // nsStyleGradient
 //
 bool nsStyleGradient::operator==(const nsStyleGradient& aOther) const {
@@ -3554,8 +3528,14 @@ nsChangeHint nsStyleTextReset::CalcDifference(
 // nsStyleText
 //
 
+static StyleRGBA DefaultColor(const Document& aDocument) {
+  return StyleRGBA::FromColor(
+      PreferenceSheet::PrefsFor(aDocument).mDefaultColor);
+}
+
 nsStyleText::nsStyleText(const Document& aDocument)
-    : mTextTransform(StyleTextTransform::None()),
+    : mColor(DefaultColor(aDocument)),
+      mTextTransform(StyleTextTransform::None()),
       mTextAlign(NS_STYLE_TEXT_ALIGN_START),
       mTextAlignLast(NS_STYLE_TEXT_ALIGN_AUTO),
       mTextJustify(StyleTextJustify::Auto),
@@ -3588,7 +3568,8 @@ nsStyleText::nsStyleText(const Document& aDocument)
 }
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
-    : mTextTransform(aSource.mTextTransform),
+    : mColor(aSource.mColor),
+      mTextTransform(aSource.mTextTransform),
       mTextAlign(aSource.mTextAlign),
       mTextAlignLast(aSource.mTextAlignLast),
       mTextJustify(aSource.mTextJustify),
@@ -3678,6 +3659,10 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
 
     // We don't add any other hints below.
     return hint;
+  }
+
+  if (mColor != aNewData.mColor) {
+    hint |= nsChangeHint_RepaintFrame;
   }
 
   if (mTextEmphasisColor != aNewData.mTextEmphasisColor ||

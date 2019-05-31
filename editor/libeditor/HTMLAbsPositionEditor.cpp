@@ -629,7 +629,7 @@ nsresult HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(
 
   const uint8_t kBlackBgTrigger = 0xd0;
 
-  const auto& color = style->StyleColor()->mColor;
+  const auto& color = style->StyleText()->mColor;
   if (color.red >= kBlackBgTrigger && color.green >= kBlackBgTrigger &&
       color.blue >= kBlackBgTrigger) {
     aReturn.AssignLiteral("black");
