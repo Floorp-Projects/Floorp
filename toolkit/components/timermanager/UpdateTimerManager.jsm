@@ -12,9 +12,8 @@ const PREF_APP_UPDATE_LOG                 = "app.update.log";
 
 const CATEGORY_UPDATE_TIMER               = "update-timer";
 
-XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function tm_gLogEnabled() {
-  return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false);
-});
+XPCOMUtils.defineLazyPreferenceGetter(this, "gLogEnabled",
+                                      PREF_APP_UPDATE_LOG, false);
 
 /**
  *  Logs a string to the error console.
@@ -128,11 +127,13 @@ TimerManager.prototype = {
     var earliestIntendedTime = null;
     var skippedFirings = false;
     var lastUpdateTime = null;
-    function tryFire(callback, intendedTime) {
+    var timerIDToFire = null;
+    function tryFire(timerID, callback, intendedTime) {
       var selected = false;
       if (intendedTime <= now) {
         if (intendedTime < earliestIntendedTime ||
-            earliestIntendedTime === null) {
+          earliestIntendedTime === null) {
+          timerIDToFire = timerID;
           callbackToFire = callback;
           earliestIntendedTime = intendedTime;
           selected = true;
@@ -187,7 +188,7 @@ TimerManager.prototype = {
         Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
       }
 
-      tryFire(function() {
+      tryFire(timerID, function() {
         try {
           Cc[cid][method](Ci.nsITimerCallback).notify(timer);
           LOG("TimerManager:notify - notified " + cid);
@@ -212,20 +213,18 @@ TimerManager.prototype = {
         timerData.lastUpdateTime = 0;
         Services.prefs.setIntPref(prefLastUpdate, timerData.lastUpdateTime);
       }
-      tryFire(function() {
+      tryFire(timerID, function() {
         if (timerData.callback && timerData.callback.notify) {
           ChromeUtils.idleDispatch(() => {
             try {
               timerData.callback.notify(timer);
-              LOG("TimerManager:notify - notified timerID: " + timerID);
+              LOG(`TimerManager:notify - notified timerID: ${timerID}`);
             } catch (e) {
-              LOG("TimerManager:notify - error notifying timerID: " + timerID +
-                  ", error: " + e);
+              LOG(`TimerManager:notify - error notifying timerID: ${timerID}, error: ${e}`);
             }
           });
         } else {
-          LOG("TimerManager:notify - timerID: " + timerID + " doesn't " +
-              "implement nsITimerCallback - skipping");
+          LOG(`TimerManager:notify - timerID: ${timerID} doesn't implement nsITimerCallback - skipping`);
         }
         lastUpdateTime = now;
         timerData.lastUpdateTime = lastUpdateTime;
@@ -236,6 +235,8 @@ TimerManager.prototype = {
     }
 
     if (callbackToFire) {
+      LOG(`TimerManager:notify - fire timerID: ${timerIDToFire} ` +
+          `intended time: ${earliestIntendedTime} (${new Date(earliestIntendedTime * 1000).toISOString()})`);
       callbackToFire();
     }
 
@@ -283,7 +284,7 @@ TimerManager.prototype = {
    * See nsIUpdateTimerManager.idl
    */
   registerTimer: function TM_registerTimer(id, callback, interval) {
-    LOG("TimerManager:registerTimer - id: " + id);
+    LOG(`TimerManager:registerTimer - timerID: ${id} interval: ${interval}`);
     if (this._timers === null) {
       // Use normal logging since reportError is not available while shutting
       // down.
