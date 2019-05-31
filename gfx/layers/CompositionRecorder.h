@@ -20,6 +20,9 @@ class DataSourceSurface;
 
 namespace layers {
 
+/**
+ * A captured frame from a |LayerManager|.
+ */
 class RecordedFrame {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RecordedFrame)
@@ -38,16 +41,32 @@ class RecordedFrame {
 };
 
 /**
+ * A recorder for composited frames.
  *
+ * This object collects frames sent to it by a |LayerManager| and writes them
+ * out as a series of images until recording has finished.
+ *
+ * If GPU-accelerated rendering is used, the frames will not be mapped into
+ * memory until |WriteCollectedFrames| is called.
  */
 class CompositionRecorder final {
+  NS_INLINE_DECL_REFCOUNTING(CompositionRecorder)
+
  public:
   explicit CompositionRecorder(TimeStamp aRecordingStart);
-  ~CompositionRecorder();
 
+  /**
+   * Record a composited frame.
+   */
   void RecordFrame(RecordedFrame* aFrame);
 
+  /**
+   * Write out the collected frames as a series of timestamped images.
+   */
   void WriteCollectedFrames();
+
+ protected:
+  ~CompositionRecorder();
 
  private:
   nsTArray<RefPtr<RecordedFrame>> mCollectedFrames;
@@ -57,4 +76,4 @@ class CompositionRecorder final {
 }  // namespace layers
 }  // namespace mozilla
 
-#endif  // mozilla_layers_ProfilerScreenshots_h
+#endif  // mozilla_layers_CompositionRecorder_h
