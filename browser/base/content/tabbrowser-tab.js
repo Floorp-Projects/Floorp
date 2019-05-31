@@ -11,171 +11,15 @@ class MozTabbrowserTab extends MozElements.MozTab {
   constructor() {
     super();
 
-    this.addEventListener("mouseover", (event) => {
-      if (event.originalTarget.classList.contains("tab-close-button")) {
-        this.mOverCloseButton = true;
-      }
-      this._mouseenter();
-    });
-
-    this.addEventListener("mouseout", (event) => {
-      if (event.originalTarget.classList.contains("tab-close-button")) {
-        this.mOverCloseButton = false;
-      }
-      this._mouseleave();
-    });
-
-    this.addEventListener("dragstart", (event) => {
-      this.style.MozUserFocus = "";
-    }, true);
-
-    this.addEventListener("dragstart", (event) => {
-      if (this.mOverCloseButton) {
-        event.stopPropagation();
-      }
-    });
-
-    this.addEventListener("mousedown", (event) => {
-      let tabContainer = this.parentNode;
-
-      if (tabContainer._closeTabByDblclick &&
-          event.button == 0 &&
-          event.detail == 1) {
-        this._selectedOnFirstMouseDown = this.selected;
-      }
-
-      if (this.selected) {
-        this.style.MozUserFocus = "ignore";
-      } else if (event.originalTarget.classList.contains("tab-close-button") ||
-                 event.originalTarget.classList.contains("tab-icon-sound") ||
-                 event.originalTarget.classList.contains("tab-icon-overlay")) {
-        // Prevent tabbox.xml from selecting the tab.
-        event.stopPropagation();
-      }
-
-      if (event.button == 1) {
-        gBrowser.warmupTab(gBrowser._findTabToBlurTo(this));
-      }
-
-      if (event.button == 0 && tabContainer._multiselectEnabled) {
-        let shiftKey = event.shiftKey;
-        let accelKey = event.getModifierState("Accel");
-        if (shiftKey) {
-          const lastSelectedTab = gBrowser.lastMultiSelectedTab;
-          if (!accelKey) {
-            gBrowser.selectedTab = lastSelectedTab;
-
-            // Make sure selection is cleared when tab-switch doesn't happen.
-            gBrowser.clearMultiSelectedTabs(false);
-          }
-          gBrowser.addRangeToMultiSelectedTabs(lastSelectedTab, this);
-
-          // Prevent tabbox.xml from selecting the tab.
-          event.stopPropagation();
-        } else if (accelKey) {
-          // Ctrl (Cmd for mac) key is pressed
-          if (this.multiselected) {
-            gBrowser.removeFromMultiSelectedTabs(this, true);
-          } else if (this != gBrowser.selectedTab) {
-            gBrowser.addToMultiSelectedTabs(this, false);
-            gBrowser.lastMultiSelectedTab = this;
-          }
-
-          // Prevent tabbox.xml from selecting the tab.
-          event.stopPropagation();
-        } else if (!this.selected && this.multiselected) {
-          gBrowser.lockClearMultiSelectionOnce();
-        }
-      }
-    }, true);
-
-    this.addEventListener("mouseup", (event) => {
-      // Make sure that clear-selection is released.
-      // Otherwise selection using Shift key may be broken.
-      gBrowser.unlockClearMultiSelection();
-
-      this.style.MozUserFocus = "";
-    });
-
-    this.addEventListener("click", (event) => {
-      if (event.button != 0) {
-        return;
-      }
-
-      if (event.getModifierState("Accel") || event.shiftKey) {
-        return;
-      }
-
-      if (gBrowser.multiSelectedTabsCount > 0 &&
-        !event.originalTarget.classList.contains("tab-close-button") &&
-        !event.originalTarget.classList.contains("tab-icon-sound") &&
-        !event.originalTarget.classList.contains("tab-icon-overlay")) {
-        // Tabs were previously multi-selected and user clicks on a tab
-        // without holding Ctrl/Cmd Key
-
-        // Force positional attributes to update when the
-        // target (of the click) is the "active" tab.
-        let updatePositionalAttr = gBrowser.selectedTab == this;
-
-        gBrowser.clearMultiSelectedTabs(updatePositionalAttr);
-      }
-
-      if (event.originalTarget.classList.contains("tab-icon-sound") ||
-        (event.originalTarget.classList.contains("tab-icon-overlay") &&
-          (event.originalTarget.hasAttribute("soundplaying") ||
-            event.originalTarget.hasAttribute("muted") ||
-            event.originalTarget.hasAttribute("activemedia-blocked")))) {
-        if (this.multiselected) {
-          gBrowser.toggleMuteAudioOnMultiSelectedTabs(this);
-        } else {
-          this.toggleMuteAudio();
-        }
-        return;
-      }
-
-      if (event.originalTarget.classList.contains("tab-close-button")) {
-        if (this.multiselected) {
-          gBrowser.removeMultiSelectedTabs();
-        } else {
-          gBrowser.removeTab(this, {
-            animate: true,
-            byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
-          });
-        }
-        // This enables double-click protection for the tab container
-        // (see tabbrowser-tabs 'click' handler).
-        gBrowser.tabContainer._blockDblClick = true;
-      }
-    });
-
-    this.addEventListener("dblclick", (event) => {
-      if (event.button != 0) {
-        return;
-      }
-
-      // for the one-close-button case
-      if (event.originalTarget.classList.contains("tab-close-button")) {
-        event.stopPropagation();
-      }
-
-      let tabContainer = this.parentNode;
-      if (tabContainer._closeTabByDblclick &&
-        this._selectedOnFirstMouseDown &&
-        this.selected &&
-        !(event.originalTarget.classList.contains("tab-icon-sound") ||
-          event.originalTarget.classList.contains("tab-icon-overlay"))) {
-        gBrowser.removeTab(this, {
-          animate: true,
-          byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
-        });
-      }
-    }, true);
-
-    this.addEventListener("animationend", (event) => {
-      if (event.originalTarget.classList.contains("tab-loading-burst")) {
-        this.removeAttribute("bursting");
-      }
-    });
+    this.addEventListener("mouseover", this);
+    this.addEventListener("mouseout", this);
+    this.addEventListener("dragstart", this, true);
+    this.addEventListener("dragstart", this);
+    this.addEventListener("mousedown", this, true);
+    this.addEventListener("mouseup", this);
+    this.addEventListener("click", this);
+    this.addEventListener("dblclick", this, true);
+    this.addEventListener("animationend", this);
 
     this._selectedOnFirstMouseDown = false;
 
@@ -404,6 +248,175 @@ class MozTabbrowserTab extends MozElements.MozTab {
     this._lastAccessed = this.selected ? Infinity : (aDate || Date.now());
   }
 
+  on_mouseover(event) {
+    if (event.target.classList.contains("tab-close-button")) {
+      this.mOverCloseButton = true;
+    }
+    this._mouseenter();
+  }
+
+  on_mouseout(event) {
+    if (event.target.classList.contains("tab-close-button")) {
+      this.mOverCloseButton = false;
+    }
+    this._mouseleave();
+  }
+
+  on_dragstart(event) {
+    if (event.eventPhase == Event.CAPTURING_PHASE) {
+      this.style.MozUserFocus = "";
+    } else if (this.mOverCloseButton) {
+      event.stopPropagation();
+    }
+  }
+
+  on_mousedown(event) {
+    if (event.eventPhase == Event.BUBBLING_PHASE) {
+      super.on_mousedown(event);
+      return;
+    }
+
+    let tabContainer = this.parentNode;
+
+    if (tabContainer._closeTabByDblclick &&
+        event.button == 0 &&
+        event.detail == 1) {
+      this._selectedOnFirstMouseDown = this.selected;
+    }
+
+    if (this.selected) {
+      this.style.MozUserFocus = "ignore";
+    } else if (event.target.classList.contains("tab-close-button") ||
+               event.target.classList.contains("tab-icon-sound") ||
+               event.target.classList.contains("tab-icon-overlay")) {
+      // Prevent tabbox.js from selecting the tab.
+      event.stopPropagation();
+    }
+
+    if (event.button == 1) {
+      gBrowser.warmupTab(gBrowser._findTabToBlurTo(this));
+    }
+
+    if (event.button == 0 && tabContainer._multiselectEnabled) {
+      let shiftKey = event.shiftKey;
+      let accelKey = event.getModifierState("Accel");
+      if (shiftKey) {
+        const lastSelectedTab = gBrowser.lastMultiSelectedTab;
+        if (!accelKey) {
+          gBrowser.selectedTab = lastSelectedTab;
+
+          // Make sure selection is cleared when tab-switch doesn't happen.
+          gBrowser.clearMultiSelectedTabs(false);
+        }
+        gBrowser.addRangeToMultiSelectedTabs(lastSelectedTab, this);
+
+        // Prevent tabbox.xml from selecting the tab.
+        event.stopPropagation();
+      } else if (accelKey) {
+        // Ctrl (Cmd for mac) key is pressed
+        if (this.multiselected) {
+          gBrowser.removeFromMultiSelectedTabs(this, true);
+        } else if (this != gBrowser.selectedTab) {
+          gBrowser.addToMultiSelectedTabs(this, false);
+          gBrowser.lastMultiSelectedTab = this;
+        }
+
+        // Prevent tabbox.xml from selecting the tab.
+        event.stopPropagation();
+      } else if (!this.selected && this.multiselected) {
+        gBrowser.lockClearMultiSelectionOnce();
+      }
+    }
+  }
+
+  on_mouseup(event) {
+    // Make sure that clear-selection is released.
+    // Otherwise selection using Shift key may be broken.
+    gBrowser.unlockClearMultiSelection();
+
+    this.style.MozUserFocus = "";
+  }
+
+  on_click(event) {
+    if (event.button != 0) {
+      return;
+    }
+
+    if (event.getModifierState("Accel") || event.shiftKey) {
+      return;
+    }
+
+    if (gBrowser.multiSelectedTabsCount > 0 &&
+        !event.target.classList.contains("tab-close-button") &&
+        !event.target.classList.contains("tab-icon-sound") &&
+        !event.target.classList.contains("tab-icon-overlay")) {
+      // Tabs were previously multi-selected and user clicks on a tab
+      // without holding Ctrl/Cmd Key
+
+      // Force positional attributes to update when the
+      // target (of the click) is the "active" tab.
+      let updatePositionalAttr = gBrowser.selectedTab == this;
+
+      gBrowser.clearMultiSelectedTabs(updatePositionalAttr);
+    }
+
+    if (event.target.classList.contains("tab-icon-sound") ||
+        (event.target.classList.contains("tab-icon-overlay") &&
+          (event.target.hasAttribute("soundplaying") ||
+            event.target.hasAttribute("muted") ||
+            event.target.hasAttribute("activemedia-blocked")))) {
+      if (this.multiselected) {
+        gBrowser.toggleMuteAudioOnMultiSelectedTabs(this);
+      } else {
+        this.toggleMuteAudio();
+      }
+      return;
+    }
+
+    if (event.target.classList.contains("tab-close-button")) {
+      if (this.multiselected) {
+        gBrowser.removeMultiSelectedTabs();
+      } else {
+        gBrowser.removeTab(this, {
+          animate: true,
+          byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
+        });
+      }
+      // This enables double-click protection for the tab container
+      // (see tabbrowser-tabs 'click' handler).
+      gBrowser.tabContainer._blockDblClick = true;
+    }
+  }
+
+  on_dblclick(event) {
+    if (event.button != 0) {
+      return;
+    }
+
+    // for the one-close-button case
+    if (event.target.classList.contains("tab-close-button")) {
+      event.stopPropagation();
+    }
+
+    let tabContainer = this.parentNode;
+    if (tabContainer._closeTabByDblclick &&
+        this._selectedOnFirstMouseDown &&
+        this.selected &&
+        !(event.target.classList.contains("tab-icon-sound") ||
+          event.target.classList.contains("tab-icon-overlay"))) {
+      gBrowser.removeTab(this, {
+        animate: true,
+        byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
+      });
+    }
+  }
+
+  on_animationend(event) {
+    if (event.target.classList.contains("tab-loading-burst")) {
+      this.removeAttribute("bursting");
+    }
+  }
+
   /**
    * While it would make sense to track this in a field, the field will get nuked
    * once the node is gone from the DOM, which causes us to think the tab is not
@@ -419,8 +432,9 @@ class MozTabbrowserTab extends MozElements.MozTab {
     let visibleTabs = tabContainer._getVisibleTabs();
     let tabIndex = visibleTabs.indexOf(this);
 
-    if (this.selected)
+    if (this.selected) {
       tabContainer._handleTabSelect();
+    }
 
     if (tabIndex == 0) {
       tabContainer._beforeHoveredTab = null;
