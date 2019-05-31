@@ -419,6 +419,8 @@ class Nursery {
   static const size_t NurseryChunkUsableSize =
       gc::ChunkSize - gc::ChunkTrailerSize;
 
+  void joinDecommitTask() { decommitChunksTask.join(); }
+
  private:
   JSRuntime* runtime_;
 
