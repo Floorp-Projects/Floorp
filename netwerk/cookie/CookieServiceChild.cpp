@@ -262,7 +262,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
     nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
     bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
     bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, nsIChannel* aChannel,
-    nsCString& aCookieString) {
+    nsACString& aCookieString) {
   nsCOMPtr<nsIEffectiveTLDService> TLDService =
       do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   NS_ASSERTION(TLDService, "Can't get TLDService");
@@ -300,7 +300,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
 
   CookieStatus cookieStatus = nsCookieService::CheckPrefs(
       cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
-      aFirstPartyStorageAccessGranted, nullptr,
+      aFirstPartyStorageAccessGranted, VoidCString(),
       CountCookiesFromHashTable(baseDomain, attrs), attrs, &aRejectedReason);
 
   if (cookieStatus != STATUS_ACCEPTED &&
@@ -447,13 +447,11 @@ void CookieServiceChild::RecordDocumentCookie(nsCookie* aCookie,
   cookiesList->AppendElement(aCookie);
 }
 
-nsresult CookieServiceChild::GetCookieStringInternal(nsIURI* aHostURI,
-                                                     nsIChannel* aChannel,
-                                                     char** aCookieString) {
+nsresult CookieServiceChild::GetCookieStringInternal(
+    nsIURI* aHostURI, nsIChannel* aChannel, nsACString& aCookieString) {
   NS_ENSURE_ARG(aHostURI);
-  NS_ENSURE_ARG_POINTER(aCookieString);
 
-  *aCookieString = nullptr;
+  aCookieString.Truncate();
 
   // Fast past: don't bother sending IPC messages about nullprincipal'd
   // documents.
@@ -486,23 +484,18 @@ nsresult CookieServiceChild::GetCookieStringInternal(nsIURI* aHostURI,
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
 
-  nsAutoCString result;
   GetCookieStringFromCookieHashTable(
       aHostURI, isForeign, isTrackingResource, firstPartyStorageAccessGranted,
-      rejectedReason, isSafeTopLevelNav, isSameSiteForeign, aChannel, result);
-
-  if (!result.IsEmpty()) *aCookieString = ToNewCString(result);
+      rejectedReason, isSafeTopLevelNav, isSameSiteForeign, aChannel,
+      aCookieString);
 
   return NS_OK;
 }
 
-nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
-                                                     nsIChannel* aChannel,
-                                                     const char* aCookieString,
-                                                     const char* aServerTime,
-                                                     bool aFromHttp) {
+nsresult CookieServiceChild::SetCookieStringInternal(
+    nsIURI* aHostURI, nsIChannel* aChannel, const nsACString& aCookieString,
+    const nsACString& aServerTime, bool aFromHttp) {
   NS_ENSURE_ARG(aHostURI);
-  NS_ENSURE_ARG_POINTER(aCookieString);
 
   // Fast past: don't bother sending IPC messages about nullprincipal'd
   // documents.
@@ -532,9 +525,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
     }
   }
 
-  nsDependentCString cookieString(aCookieString);
-  nsDependentCString stringServerTime;
-  if (aServerTime) stringServerTime.Rebind(aServerTime);
+  nsCString cookieString(aCookieString);
 
   URIParams hostURIParams;
   SerializeURI(aHostURI, hostURIParams);
@@ -561,7 +552,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
     SendSetCookieString(hostURIParams, channelURIParams, optionalLoadInfoArgs,
                         isForeign, isTrackingResource,
                         firstPartyStorageAccessGranted, rejectedReason, attrs,
-                        cookieString, stringServerTime, aFromHttp);
+                        cookieString, nsCString(aServerTime), aFromHttp);
   }
 
   bool requireHostMatch;
@@ -654,30 +645,30 @@ CookieServiceChild::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMETHODIMP
 CookieServiceChild::GetCookieString(nsIURI* aHostURI, nsIChannel* aChannel,
-                                    char** aCookieString) {
+                                    nsACString& aCookieString) {
   return GetCookieStringInternal(aHostURI, aChannel, aCookieString);
 }
 
 NS_IMETHODIMP
 CookieServiceChild::GetCookieStringFromHttp(nsIURI* aHostURI, nsIURI* aFirstURI,
                                             nsIChannel* aChannel,
-                                            char** aCookieString) {
+                                            nsACString& aCookieString) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 CookieServiceChild::SetCookieString(nsIURI* aHostURI, nsIPrompt* aPrompt,
-                                    const char* aCookieString,
+                                    const nsACString& aCookieString,
                                     nsIChannel* aChannel) {
-  return SetCookieStringInternal(aHostURI, aChannel, aCookieString, nullptr,
-                                 false);
+  return SetCookieStringInternal(aHostURI, aChannel, aCookieString,
+                                 VoidCString(), false);
 }
 
 NS_IMETHODIMP
 CookieServiceChild::SetCookieStringFromHttp(nsIURI* aHostURI, nsIURI* aFirstURI,
                                             nsIPrompt* aPrompt,
-                                            const char* aCookieString,
-                                            const char* aServerTime,
+                                            const nsACString& aCookieString,
+                                            const nsACString& aServerTime,
                                             nsIChannel* aChannel) {
   return SetCookieStringInternal(aHostURI, aChannel, aCookieString, aServerTime,
                                  true);

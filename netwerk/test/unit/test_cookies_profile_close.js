@@ -39,11 +39,11 @@ function* do_run_test() {
   do_close_profile();
 
   // Check that the APIs behave appropriately.
-  Assert.equal(Services.cookies.getCookieString(uri, null), null);
-  Assert.equal(Services.cookies.getCookieStringFromHttp(uri, null, null), null);
+  Assert.equal(Services.cookies.getCookieString(uri, null), "");
+  Assert.equal(Services.cookies.getCookieStringFromHttp(uri, null, null), "");
   Services.cookies.setCookieString(uri, null, "oh2=hai", null);
   Services.cookies.setCookieStringFromHttp(uri, null, null, "oh3=hai", null, null);
-  Assert.equal(Services.cookies.getCookieString(uri, null), null);
+  Assert.equal(Services.cookies.getCookieString(uri, null), "");
 
   do_check_throws(function() {
     Services.cookiemgr.removeAll();
