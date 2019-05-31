@@ -37,6 +37,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import kotlin.coroutines.CoroutineContext
 import android.graphics.drawable.BitmapDrawable
+import android.widget.ImageView
 
 private const val MAX_ITEMS_PER_PAGE = 50
 
@@ -138,14 +139,15 @@ class SitePermissionsExceptionsFragment : Fragment(), View.OnClickListener, Coro
     }
 }
 
-class SitePermissionsViewHolder(val textView: TextView) : RecyclerView.ViewHolder(textView)
+class SitePermissionsViewHolder(val view: View, val iconView: ImageView, val siteTextView: TextView) :
+    RecyclerView.ViewHolder(view)
 
 class ExceptionsAdapter(private val clickListener: View.OnClickListener) :
     PagedListAdapter<SitePermissions, SitePermissionsViewHolder>(diffCallback), CoroutineScope {
     private lateinit var job: Job
 
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
+        get() = Main + job
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
@@ -160,25 +162,28 @@ class ExceptionsAdapter(private val clickListener: View.OnClickListener) :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SitePermissionsViewHolder {
         val context = parent.context
         val inflater = LayoutInflater.from(context)
-        val textView = inflater.inflate(R.layout.fragment_site_permissions_exceptions_item, parent, false) as TextView
-        return SitePermissionsViewHolder(textView)
+        val view = inflater.inflate(R.layout.fragment_site_permissions_exceptions_item, parent, false)
+        val iconView = view.findViewById<ImageView>(R.id.exception_icon)
+        val siteTextView = view.findViewById<TextView>(R.id.exception_text)
+        return SitePermissionsViewHolder(view, iconView, siteTextView)
     }
 
     override fun onBindViewHolder(holder: SitePermissionsViewHolder, position: Int) {
         val sitePermissions = requireNotNull(getItem(position))
-        val context = holder.textView.context
+        val context = holder.view.context
 
         launch(IO) {
+
             val bitmap = context.components.core.icons
-                .loadIcon(IconRequest(sitePermissions.origin)).await().bitmap
+                .loadIcon(IconRequest("https://${sitePermissions.origin}/")).await().bitmap
             launch(Main) {
                 val drawable = BitmapDrawable(context.resources, bitmap)
-                holder.textView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
+                holder.iconView.setImageDrawable(drawable)
             }
         }
-        holder.textView.text = sitePermissions.origin
-        holder.textView.tag = sitePermissions
-        holder.textView.setOnClickListener(clickListener)
+        holder.siteTextView.text = sitePermissions.origin
+        holder.view.tag = sitePermissions
+        holder.view.setOnClickListener(clickListener)
     }
 
     companion object {
