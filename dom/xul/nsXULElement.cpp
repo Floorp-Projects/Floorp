@@ -40,8 +40,6 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsXULControllers.h"
-#include "nsIBoxObject.h"
-#include "nsPIBoxObject.h"
 #include "XULDocument.h"
 #include "nsXULPopupListener.h"
 #include "nsContentUtils.h"
@@ -80,7 +78,6 @@
 #include "XULTreeElement.h"
 
 #include "mozilla/dom/XULElementBinding.h"
-#include "mozilla/dom/BoxObject.h"
 #include "mozilla/dom/XULBroadcastManager.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
@@ -1129,11 +1126,6 @@ nsIControllers* nsXULElement::GetControllers(ErrorResult& rv) {
   }
 
   return Controllers();
-}
-
-already_AddRefed<BoxObject> nsXULElement::GetBoxObject(ErrorResult& rv) {
-  // XXX sXBL/XBL2 issue! Owner or current document?
-  return OwnerDoc()->GetBoxObjectFor(this, rv);
 }
 
 void nsXULElement::Click(CallerType aCallerType) {
