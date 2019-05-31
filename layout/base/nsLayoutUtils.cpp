@@ -4102,9 +4102,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
   // Apply effects updates if we were actually painting
   if (isForPainting) {
-    if (nsIWidget* widget = aFrame->GetNearestWidget()) {
-      ApplyEffectsUpdates(builder.GetEffectUpdates());
-    }
+    ApplyEffectsUpdates(builder.GetEffectUpdates());
   }
 
   builder.Check();
