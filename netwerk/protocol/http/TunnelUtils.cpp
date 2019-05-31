@@ -1038,7 +1038,8 @@ void SpdyConnectTransaction::ForcePlainText() {
 }
 
 void SpdyConnectTransaction::MapStreamToHttpConnection(
-    nsISocketTransport* aTransport, nsHttpConnectionInfo* aConnInfo) {
+    nsISocketTransport* aTransport, nsHttpConnectionInfo* aConnInfo,
+    int32_t httpResponseCode) {
   mConnInfo = aConnInfo;
 
   mTunnelTransport = new SocketTransportShim(aTransport, mIsWebsocket);
@@ -1046,10 +1047,27 @@ void SpdyConnectTransaction::MapStreamToHttpConnection(
   mTunnelStreamOut = new OutputStreamShim(this, mIsWebsocket);
   mTunneledConn = new nsHttpConnection();
 
+  switch (httpResponseCode) {
+    case 404:
+      CreateShimError(NS_ERROR_UNKNOWN_HOST);
+      break;
+    case 407:
+      CreateShimError(NS_ERROR_PROXY_AUTHENTICATION_FAILED);
+      break;
+    case 502:
+      CreateShimError(NS_ERROR_PROXY_BAD_GATEWAY);
+      break;
+    case 504:
+      CreateShimError(NS_ERROR_PROXY_GATEWAY_TIMEOUT);
+      break;
+    default:
+      break;
+  }
+
   // this new http connection has a specific hashkey (i.e. to a particular
   // host via the tunnel) and is associated with the tunnel streams
-  LOG(("SpdyConnectTransaction new httpconnection %p %s\n", mTunneledConn.get(),
-       aConnInfo->HashKey().get()));
+  LOG(("SpdyConnectTransaction %p new httpconnection %p %s\n", this,
+       mTunneledConn.get(), aConnInfo->HashKey().get()));
 
   nsCOMPtr<nsIInterfaceRequestor> callbacks;
   GetSecurityCallbacks(getter_AddRefs(callbacks));
@@ -1202,6 +1220,9 @@ nsresult SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader* reader,
 }
 
 void SpdyConnectTransaction::CreateShimError(nsresult code) {
+  LOG(("SpdyConnectTransaction::CreateShimError %p 0x%08" PRIx32, this,
+       static_cast<uint32_t>(code)));
+
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   MOZ_ASSERT(NS_FAILED(code));
 

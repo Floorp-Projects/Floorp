@@ -12,6 +12,17 @@ function getTestServerPort() {
   return port;
 }
 
+function getTestProxyPort() {
+  let portEnv = Cc["@mozilla.org/process/environment;1"]
+    .getService(Ci.nsIEnvironment).get("MOZHTTP2_PROXY_PORT");
+  let port = parseInt(portEnv, 10);
+  if (!Number.isFinite(port) || port < 1 || port > 65535) {
+    throw new Error(`Invalid port in MOZHTTP2_PROXY_PORT env var: ${portEnv}`);
+  }
+  info(`Using HTTP/2 proxy on port ${port}`);
+  return port;
+}
+
 function readFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
                   .createInstance(Ci.nsIFileInputStream);

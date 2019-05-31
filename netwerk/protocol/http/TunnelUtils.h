@@ -207,7 +207,8 @@ class SpdyConnectTransaction final : public NullHttpTransaction {
   // error.
   void ForcePlainText();
   void MapStreamToHttpConnection(nsISocketTransport* aTransport,
-                                 nsHttpConnectionInfo* aConnInfo);
+                                 nsHttpConnectionInfo* aConnInfo,
+                                 int32_t httpResponseCode);
 
   MOZ_MUST_USE nsresult ReadSegments(nsAHttpSegmentReader* reader,
                                      uint32_t count, uint32_t* countRead) final;
