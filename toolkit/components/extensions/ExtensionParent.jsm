@@ -523,9 +523,14 @@ ProxyMessenger = {
       // special-casing, since their message managers aren't currently
       // connected to the tab's top-level message manager. To deal with
       // this, we find the options <browser> for the tab, and use that
-      // directly, insteead.
+      // directly, instead.
       if (browser.currentURI.specIgnoringRef === "about:addons") {
-        let optionsBrowser = browser.contentDocument.querySelector(".inline-options-browser");
+        let htmlBrowser = browser.contentDocument.getElementById("html-view-browser");
+        // Look in the HTML browser first, if the HTML views aren't being used they
+        // won't have a browser.
+        let optionsBrowser =
+          htmlBrowser.contentDocument.getElementById("addon-inline-options") ||
+          browser.contentDocument.querySelector(".inline-options-browser");
         if (optionsBrowser) {
           browser = optionsBrowser;
         }

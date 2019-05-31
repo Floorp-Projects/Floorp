@@ -59,9 +59,7 @@ async function loadExtension(options) {
   return extension;
 }
 
-add_task(async function test_inline_options() {
-  info(`Test options opened inline`);
-
+async function run_test_inline_options() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
   let extension = await loadExtension({
@@ -200,6 +198,17 @@ add_task(async function test_inline_options() {
   await extension.unload();
 
   BrowserTestUtils.removeTab(tab);
+}
+
+add_task(async function test_inline_options() {
+  for (let htmlEnabled of [false, true]) {
+    info(`Test options opened inline ${htmlEnabled ? "HTML" : "XUL"} about:addons`);
+    await SpecialPowers.pushPrefEnv({
+      set: [["extensions.htmlaboutaddons.enabled", htmlEnabled]],
+    });
+    await run_test_inline_options();
+    await SpecialPowers.popPrefEnv();
+  }
 });
 
 add_task(async function test_tab_options() {
