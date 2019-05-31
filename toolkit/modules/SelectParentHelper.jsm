@@ -28,6 +28,7 @@ const PROPERTIES_RESET_WHEN_ACTIVE = [
 var currentBrowser = null;
 var currentMenulist = null;
 var selectRect = null;
+var actor = null;
 
 var currentZoom = 1;
 var closedWithEnter = false;
@@ -145,7 +146,8 @@ var SelectParentHelper = {
                      selectStyle, selectBackgroundSet, sheet);
   },
 
-  open(browser, menulist, rect, isOpenedViaTouch) {
+  open(browser, menulist, rect, isOpenedViaTouch, selectParentActor) {
+    actor = selectParentActor;
     menulist.hidden = false;
     currentBrowser = browser;
     closedWithEnter = false;
@@ -185,8 +187,9 @@ var SelectParentHelper = {
     menupopup.openPopupAtScreenRect(AppConstants.platform == "macosx" ? "selection" : "after_start", rect.left, rect.top, rect.width, rect.height, false, false);
   },
 
-  hide(menulist, browser) {
-    if (currentBrowser == browser) {
+  hide(menulist, browsingContextId) {
+    let selectBrowsingContextId = actor.manager.browsingContext.id;
+    if (selectBrowsingContextId == browsingContextId) {
       menulist.menupopup.hidePopup();
     }
   },
@@ -201,15 +204,16 @@ var SelectParentHelper = {
         let x = event.screenX, y = event.screenY;
         let onAnchor = !inRect(currentMenulist.menupopup.getOuterScreenRect(), x, y) &&
                         inRect(selectRect, x, y) && currentMenulist.menupopup.state == "open";
-        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseUp", { onAnchor });
+        actor.sendAsyncMessage("Forms:MouseUp", { onAnchor });
         break;
 
       case "mouseover":
-        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseOver", {});
+        actor.sendAsyncMessage("Forms:MouseOver", {});
+
         break;
 
       case "mouseout":
-        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseOut", {});
+        actor.sendAsyncMessage("Forms:MouseOut", {});
         break;
 
       case "keydown":
@@ -220,7 +224,7 @@ var SelectParentHelper = {
 
       case "command":
         if (event.target.hasAttribute("value")) {
-          currentBrowser.messageManager.sendAsyncMessage("Forms:SelectDropDownItem", {
+          actor.sendAsyncMessage("Forms:SelectDropDownItem", {
             value: event.target.value,
             closedWithEnter,
           });
@@ -234,7 +238,7 @@ var SelectParentHelper = {
         break;
 
       case "popuphidden":
-        currentBrowser.messageManager.sendAsyncMessage("Forms:DismissedDropDown", {});
+        actor.sendAsyncMessage("Forms:DismissedDropDown", {});
         let popup = event.target;
         this._unregisterListeners(currentBrowser, popup);
         popup.parentNode.hidden = true;
@@ -242,6 +246,7 @@ var SelectParentHelper = {
         currentMenulist = null;
         selectRect = null;
         currentZoom = 1;
+        actor = null;
         break;
     }
   },
@@ -270,7 +275,7 @@ var SelectParentHelper = {
       // Restore scroll position to what it was prior to the update.
       scrollBox.scrollTop = scrollTop;
     } else if (msg.name == "Forms:BlurDropDown-Ping") {
-      currentBrowser.messageManager.sendAsyncMessage("Forms:BlurDropDown-Pong", {});
+      actor.sendAsyncMessage("Forms:BlurDropDown-Pong", {});
     }
   },
 
@@ -282,8 +287,6 @@ var SelectParentHelper = {
     browser.ownerGlobal.addEventListener("mouseup", this, true);
     browser.ownerGlobal.addEventListener("keydown", this, true);
     browser.ownerGlobal.addEventListener("fullscreen", this, true);
-    browser.messageManager.addMessageListener("Forms:UpdateDropDown", this);
-    browser.messageManager.addMessageListener("Forms:BlurDropDown-Ping", this);
   },
 
   _unregisterListeners(browser, popup) {
@@ -294,8 +297,6 @@ var SelectParentHelper = {
     browser.ownerGlobal.removeEventListener("mouseup", this, true);
     browser.ownerGlobal.removeEventListener("keydown", this, true);
     browser.ownerGlobal.removeEventListener("fullscreen", this, true);
-    browser.messageManager.removeMessageListener("Forms:UpdateDropDown", this);
-    browser.messageManager.removeMessageListener("Forms:BlurDropDown-Ping", this);
   },
 
 };
@@ -547,7 +548,7 @@ function onSearchFocus() {
   let menupopup = searchObj.closest("menupopup");
   menupopup.parentElement.activeChild = null;
   menupopup.setAttribute("ignorekeys", "true");
-  currentBrowser.messageManager.sendAsyncMessage("Forms:SearchFocused", {});
+  actor.sendAsyncMessage("Forms:SearchFocused", {});
 }
 
 function onSearchBlur() {
