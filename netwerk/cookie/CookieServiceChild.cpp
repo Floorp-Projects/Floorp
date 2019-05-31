@@ -55,7 +55,7 @@ already_AddRefed<CookieServiceChild> CookieServiceChild::GetSingleton() {
 NS_IMPL_ISUPPORTS(CookieServiceChild, nsICookieService, nsIObserver,
                   nsITimerCallback, nsISupportsWeakReference)
 
-CookieServiceChild::CookieServiceChild() : mIPCOpen(false) {
+CookieServiceChild::CookieServiceChild() {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
 
   mozilla::dom::ContentChild* cc =
@@ -71,8 +71,6 @@ CookieServiceChild::CookieServiceChild() : mIPCOpen(false) {
 
   // Create a child PCookieService actor.
   gNeckoChild->SendPCookieServiceConstructor(this);
-
-  mIPCOpen = true;
 
   mThirdPartyUtil = ThirdPartyUtil::GetInstance();
   NS_ASSERTION(mThirdPartyUtil, "couldn't get ThirdPartyUtil service");
@@ -127,12 +125,8 @@ CookieServiceChild::Notify(nsITimer* aTimer) {
 
 CookieServiceChild::~CookieServiceChild() { gCookieService = nullptr; }
 
-void CookieServiceChild::ActorDestroy(ActorDestroyReason why) {
-  mIPCOpen = false;
-}
-
 void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
-  if (!mIPCOpen) {
+  if (!CanSend()) {
     return;
   }
 
@@ -563,7 +557,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
   LoadInfoToLoadInfoArgs(loadInfo, &optionalLoadInfoArgs);
 
   // Asynchronously call the parent.
-  if (mIPCOpen) {
+  if (CanSend()) {
     SendSetCookieString(hostURIParams, channelURIParams, optionalLoadInfoArgs,
                         isForeign, isTrackingResource,
                         firstPartyStorageAccessGranted, rejectedReason, attrs,
