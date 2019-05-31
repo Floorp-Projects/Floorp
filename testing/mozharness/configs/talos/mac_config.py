@@ -13,7 +13,6 @@ config = {
         "populate-webroot",
         "create-virtualenv",
         "install",
-        "setup-mitmproxy",
         "run-tests",
     ],
     "run_cmd_checks_enabled": True,

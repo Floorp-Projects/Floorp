@@ -179,7 +179,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
                                           'populate-webroot',
                                           'create-virtualenv',
                                           'install',
-                                          'setup-mitmproxy',
                                           'run-tests',
                                           ])
         kwargs.setdefault('default_actions', ['clobber',
@@ -187,7 +186,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
                                               'populate-webroot',
                                               'create-virtualenv',
                                               'install',
-                                              'setup-mitmproxy',
                                               'run-tests',
                                               ])
         kwargs.setdefault('config', {})
@@ -209,14 +207,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
         self.pagesets_name = None
         self.benchmark_zip = None
-        # some platforms download a mitmproxy release binary
-        self.mitmproxy_rel_bin = None
-        # zip file found on tooltool that contains all of the mitmproxy recordings
-        self.mitmproxy_recording_set = None
-        # files inside the recording set
-        self.mitmproxy_recordings_file_list = self.config.get('mitmproxy', None)
-        # path to mitdump tool itself, in py3 venv
-        self.mitmdump = None
 
     # We accept some configuration options from the try commit message in the format
     # mozharness: <options>
@@ -275,19 +265,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             self.benchmark_zip_manifest = 'jetstream-benchmark.manifest'
             return self.benchmark_zip
 
-    def query_mitmproxy_recordings_file_list(self):
-        """ When using mitmproxy we also need the name of the playback files that are included
-        inside the playback archive.
-        """
-        if self.mitmproxy_recordings_file_list:
-            return self.mitmproxy_recordings_file_list
-        if self.query_talos_json_config() and self.suite is not None:
-            talos_opts = self.talos_json_config['suites'][self.suite].get('talos_options', None)
-            for index, val in enumerate(talos_opts):
-                if val == '--mitmproxy':
-                    self.mitmproxy_recordings_file_list = talos_opts[index + 1]
-            return self.mitmproxy_recordings_file_list
-
     def get_suite_from_test(self):
         """ Retrieve the talos suite name from a given talos test name."""
         # running locally, single test name provided instead of suite; go through tests and
@@ -338,18 +315,7 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             kw_options['title'] = self.config['title']
         if self.symbols_path:
             kw_options['symbolsPath'] = self.symbols_path
-        # if using mitmproxy, we've already created a py3 venv just
-        # for it; need to add the path to that env/mitdump tool
-        if self.mitmdump:
-            kw_options['mitmdumpPath'] = self.mitmdump
-            # also need to have recordings list; get again here from talos.json, in case talos was
-            # invoked via '-a' and therefore the --mitmproxy param wasn't used on command line
-            if not self.config.get('mitmproxy', None):
-                file_list = self.query_mitmproxy_recordings_file_list()
-                if file_list is not None:
-                    kw_options['mitmproxy'] = file_list
-                else:
-                    self.fatal("Talos requires list of mitmproxy playback files, use --mitmproxy")
+
         kw_options.update(kw)
         # talos expects tests to be in the format (e.g.) 'ts:tp5:tsvg'
         tests = kw_options.get('activeTests')
@@ -452,131 +418,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             shutil.copytree(src, dest)
         except Exception:
             self.critical("Error copying webkit benchmarks from %s to %s" % (src, dest))
-
-    def setup_mitmproxy(self):
-        """Some talos tests require the use of mitmproxy to playback the pages,
-        set it up here.
-        """
-        if not self.query_mitmproxy_recording_set():
-            self.info("Skipping: mitmproxy is not required")
-            return
-
-        os_name = self.platform_name()
-
-        # on windows we need to install a pytyon 3 virtual env; on macosx and linux we
-        # use a mitmdump pre-built binary that doesn't need an external python 3
-        if 'win' in os_name:
-            # setup python 3.x virtualenv
-            self.setup_py3_virtualenv()
-
-        # install mitmproxy
-        self.install_mitmproxy()
-
-        # download the recording set; will be overridden by the --no-download
-        if ('talos_extra_options' in self.config and
-                '--no-download' not in self.config['talos_extra_options']) or \
-                'talos_extra_options' not in self.config:
-            self.download_mitmproxy_recording_set()
-        else:
-            self.info("Not downloading mitmproxy recording set because no-download was specified")
-
-    def setup_py3_virtualenv(self):
-        """Mitmproxy needs Python 3.x; set up a separate py 3.x env here"""
-        self.info("Setting up python 3.x virtualenv, required for mitmproxy")
-        # first download the py3 package
-        self.py3_path = self.fetch_python3()
-        # now create the py3 venv
-        self.py3_venv_configuration(python_path=self.py3_path, venv_path='py3venv')
-        self.py3_create_venv()
-        self.py3_install_modules(["cffi==1.10.0"])
-        requirements = [os.path.join(self.talos_path, 'talos',
-                                     'mitmproxy', 'mitmproxy_requirements.txt')]
-        self.py3_install_requirement_files(requirements)
-        # add py3 executables path to system path
-        sys.path.insert(1, self.py3_path_to_executables())
-
-    def install_mitmproxy(self):
-        """Install the mitmproxy tool into the Python 3.x env"""
-        self.info("Installing mitmproxy")
-        if 'win' in self.platform_name():
-            self.py3_install_modules(modules=['mitmproxy'])
-            self.mitmdump = os.path.join(self.py3_path_to_executables(), 'mitmdump')
-        else:
-            # on macosx and linux64 we use a prebuilt mitmproxy release binary
-            mitmproxy_path = os.path.join(self.talos_path, 'talos', 'mitmproxy')
-            self.mitmdump = os.path.join(mitmproxy_path, 'mitmdump')
-            if not os.path.exists(self.mitmdump):
-                # download the mitmproxy release binary; will be overridden by the --no-download
-                if ('talos_extra_options' in self.config and
-                    '--no-download' not in self.config['talos_extra_options']) or \
-                   'talos_extra_options' not in self.config:
-                    if 'osx' in self.platform_name():
-                        _platform = 'osx'
-                    else:
-                        _platform = 'linux64'
-                    self.query_mitmproxy_rel_bin(_platform)
-                    if self.mitmproxy_rel_bin is None:
-                        self.fatal("Aborting: mitmproxy_release_bin_osx not found in talos.json")
-                    self.download_mitmproxy_binary(_platform)
-                else:
-                    self.info("Not downloading mitmproxy rel binary because no-download was "
-                              "specified")
-            self.info('The mitmdump macosx binary is found at: %s' % self.mitmdump)
-        self.run_command([self.mitmdump, '--version'], env=self.query_env())
-
-    def query_mitmproxy_rel_bin(self, platform):
-        """Mitmproxy requires external playback archives to be downloaded and extracted"""
-        if self.mitmproxy_rel_bin:
-            return self.mitmproxy_rel_bin
-        if self.query_talos_json_config() and self.suite is not None:
-            config_key = "mitmproxy_release_bin_" + platform
-            self.mitmproxy_rel_bin = self.talos_json_config['suites'][self.suite].get(config_key,
-                                                                                      False)
-            return self.mitmproxy_rel_bin
-
-    def download_mitmproxy_binary(self, platform):
-        """Download the mitmproxy release binary from tooltool"""
-        self.info("Downloading the mitmproxy release binary using tooltool")
-        dest = os.path.join(self.talos_path, 'talos', 'mitmproxy')
-        _manifest = "mitmproxy-rel-bin-%s.manifest" % platform
-        manifest_file = os.path.join(self.talos_path, 'talos', 'mitmproxy', _manifest)
-
-        if platform in ['osx', 'linux64']:
-            self.tooltool_fetch(
-                manifest_file,
-                output_dir=dest,
-                cache=self.config.get('tooltool_cache')
-            )
-
-            archive = os.path.join(dest, self.mitmproxy_rel_bin)
-            tar = self.query_exe('tar')
-            unzip_cmd = [tar, '-xvzf', archive, '-C', dest]
-            self.run_command(unzip_cmd, halt_on_failure=True)
-
-    def query_mitmproxy_recording_set(self):
-        """Mitmproxy requires external playback archives to be downloaded and extracted"""
-        if self.mitmproxy_recording_set:
-            return self.mitmproxy_recording_set
-        if self.query_talos_json_config() and self.suite is not None:
-            self.mitmproxy_recording_set = (
-                self.talos_json_config['suites'][self.suite].get('mitmproxy_recording_set', False))
-            return self.mitmproxy_recording_set
-
-    def download_mitmproxy_recording_set(self):
-        """Download the set of mitmproxy recording files that will be played back"""
-        self.info("Downloading the mitmproxy recording set using tooltool")
-        dest = os.path.join(self.talos_path, 'talos', 'mitmproxy')
-        manifest_file = os.path.join(self.talos_path, 'talos',
-                                     'mitmproxy', 'mitmproxy-playback-set.manifest')
-        self.tooltool_fetch(
-            manifest_file,
-            output_dir=dest,
-            cache=self.config.get('tooltool_cache')
-        )
-        archive = os.path.join(dest, self.mitmproxy_recording_set)
-        unzip = self.query_exe('unzip')
-        unzip_cmd = [unzip, '-q', '-o', archive, '-d', dest]
-        self.run_command(unzip_cmd, halt_on_failure=True)
 
     # Action methods. {{{1
     # clobber defined in BaseScript
@@ -710,9 +551,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         else:
             env['PYTHONPATH'] = self.talos_path
 
-        # mitmproxy needs path to mozharness when installing the cert
-        env['SCRIPTSPATH'] = scripts_path
-
         if self.repo_path is not None:
             env['MOZ_DEVELOPER_REPO_DIR'] = self.repo_path
         if self.obj_path is not None:
@@ -782,20 +620,3 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
 
         self.record_status(parser.worst_tbpl_status,
                            level=parser.worst_log_level)
-
-    def fetch_python3(self):
-        manifest_file = os.path.join(
-            self.talos_path,
-            'talos',
-            'mitmproxy',
-            self.config.get('python3_manifest')[self.platform_name()])
-        output_dir = self.query_abs_dirs()['abs_work_dir']
-        # Slowdown: The unzipped Python3 installation gets deleted every time
-        self.tooltool_fetch(
-            manifest_file,
-            output_dir=output_dir,
-            cache=self.config.get('tooltool_cache')
-        )
-        python3_path = os.path.join(output_dir, 'python3.6', 'python')
-        self.run_command([python3_path, '--version'], env=self.query_env())
-        return python3_path
