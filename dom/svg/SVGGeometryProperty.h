@@ -10,6 +10,7 @@
 #include "mozilla/dom/SVGElement.h"
 #include "ComputedStyle.h"
 #include "SVGAnimatedLength.h"
+#include "nsComputedDOMStyle.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
 #include "nsSVGImageFrame.h"
@@ -78,6 +79,7 @@ struct Ry {
 namespace details {
 template <class T>
 using AlwaysFloat = float;
+using dummy = int[];
 
 using CtxDirectionType = decltype(SVGContentUtils::X);
 
@@ -187,6 +189,25 @@ float ResolveWith(const ComputedStyle& aStyle, const SVGElement* aElement) {
                                    typename Tag::ResolverType{});
 }
 
+template <class Func>
+bool DoForComputedStyle(SVGElement* aElement, Func aFunc) {
+  if (const nsIFrame* f = aElement->GetPrimaryFrame()) {
+    aFunc(f->Style());
+    return true;
+  }
+
+  if (RefPtr<ComputedStyle> computedStyle =
+          nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr)) {
+    aFunc(computedStyle.get());
+    return true;
+  }
+
+  return false;
+}
+
+#define SVGGEOMETRYPROPERTY_EVAL_ALL(expr) \
+  (void)details::dummy { 0, (static_cast<void>(expr), 0)... }
+
 // To add support for new properties, or to handle special cases for
 // existing properties, you can add a new tag in |Tags| and |ResolverTypes|
 // namespace, then implement the behavior in |details::ResolveImpl|.
@@ -194,12 +215,29 @@ template <class... Tags>
 bool ResolveAll(const SVGElement* aElement,
                 details::AlwaysFloat<Tags>*... aRes) {
   if (nsIFrame const* f = aElement->GetPrimaryFrame()) {
-    using dummy = int[];
-    (void)dummy{0, (*aRes = ResolveWith<Tags>(*f->Style(), aElement), 0)...};
+    SVGGEOMETRYPROPERTY_EVAL_ALL(*aRes =
+                                     ResolveWith<Tags>(*f->Style(), aElement));
     return true;
   }
   return false;
 }
+
+template <class... Tags>
+bool ResolveAllAllowFallback(SVGElement* aElement,
+                             details::AlwaysFloat<Tags>*... aRes) {
+  bool res = DoForComputedStyle(aElement, [&](auto const* style) {
+    SVGGEOMETRYPROPERTY_EVAL_ALL(*aRes = ResolveWith<Tags>(*style, aElement));
+  });
+
+  if (res) {
+    return true;
+  }
+
+  SVGGEOMETRYPROPERTY_EVAL_ALL(*aRes = 0);
+  return false;
+}
+
+#undef SVGGEOMETRYPROPERTY_EVAL_ALL
 
 nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit);
 nsCSSPropertyID AttrEnumToCSSPropId(const SVGElement* aElement,
