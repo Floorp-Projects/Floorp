@@ -49,6 +49,7 @@ import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.CollectionAction
@@ -509,11 +510,15 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     }
 
     private fun removeAllTabsWithUndo(isPrivate: Boolean) {
-        val useCases = requireComponents.useCases.tabsUseCases
+        val currentFilteredSessions =
+            context?.components?.core?.sessionManager?.sessions?.filter { it.private == isPrivate } ?: return
+        val useCases = context?.components?.useCases?.tabsUseCases ?: return
 
         getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.TabsChange(listOf()))
         deleteAllSessionsJob = {
-            useCases.removeAllTabsOfType.invoke(isPrivate)
+            currentFilteredSessions.forEach {
+                useCases.removeTab.invoke(it)
+            }
         }
 
         allowUndo(
@@ -523,7 +528,11 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
                 emitSessionChanges()
             }
         ) {
-            useCases.removeAllTabsOfType.invoke(isPrivate)
+            deleteAllSessionsJob = {
+                currentFilteredSessions.forEach {
+                    useCases.removeTab.invoke(it)
+                }
+            }
         }
     }
 
