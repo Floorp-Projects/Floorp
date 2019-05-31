@@ -98,13 +98,10 @@ class CookieServiceChild : public PCookieServiceChild,
   mozilla::ipc::IPCResult RecvAddCookie(const CookieStruct& aCookie,
                                         const OriginAttributes& aAttrs);
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-
   CookiesMap mCookiesMap;
   nsCOMPtr<nsITimer> mCookieTimer;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
-  bool mIPCOpen;
 };
 
 }  // namespace net
