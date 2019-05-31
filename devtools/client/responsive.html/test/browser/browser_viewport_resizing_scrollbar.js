@@ -9,18 +9,6 @@
 Services.scriptloader.loadSubScript(
   "chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js", this);
 
-// We call this to switch between on/off support for meta viewports.
-async function setTouchAndMetaViewportSupport(ui, value) {
-  const reloadNeeded = await ui.updateTouchSimulation(value);
-  if (reloadNeeded) {
-    info("Reload is needed -- waiting for it.");
-    const reload = waitForViewportLoad(ui);
-    const browser = ui.getViewportBrowser();
-    browser.reload();
-    await reload;
-  }
-}
-
 // The quest for a TEST_ROOT: we have to choose a way of addressing the RDM document
 // such that two things can happen:
 // 1) addRDMTask can load it.
