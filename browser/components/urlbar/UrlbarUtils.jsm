@@ -12,6 +12,7 @@
 var EXPORTED_SYMBOLS = [
   "UrlbarMuxer",
   "UrlbarProvider",
+  "UrlbarProviderExtension",
   "UrlbarQueryContext",
   "UrlbarUtils",
 ];
@@ -527,5 +528,35 @@ class UrlbarProvider {
    */
   cancelQuery(queryContext) {
     throw new Error("Trying to access the base class, must be overridden");
+  }
+}
+
+/**
+ * Class for an Extension UrlbarProvider.
+ */
+class UrlbarProviderExtension extends UrlbarProvider {
+  constructor(name) {
+    super();
+    this._name = name;
+    this.behavior = "inactive";
+  }
+  get name() {
+    return this._name;
+  }
+  get type() {
+    return UrlbarUtils.PROVIDER_TYPE.EXTENSION;
+  }
+  isActive(queryContext) {
+    return this.behavior != "inactive";
+  }
+  isRestricting(queryContext) {
+    return this.behavior == "restricting";
+  }
+  startQuery(queryContext, addCallback) {
+    // TODO (Bug 1547666)
+    return Promise.resolve();
+  }
+  cancelQuery(queryContext) {
+    // TODO (Bug 1547666)
   }
 }
