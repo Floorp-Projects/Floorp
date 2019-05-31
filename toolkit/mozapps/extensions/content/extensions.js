@@ -3842,6 +3842,7 @@ function htmlView(type) {
     async show(param, request, state, refresh) {
       await htmlBrowserLoaded;
       await this.node.contentWindow.show(type, param);
+      gViewController.updateCommands();
       gViewController.notifyViewChanged();
     },
 
