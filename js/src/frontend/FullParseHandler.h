@@ -481,11 +481,16 @@ class FullParseHandler {
                        FunctionSyntaxKind::ClassConstructor ||
                    node->scopeBody()->as<ClassMethod>().method().syntaxKind() ==
                        FunctionSyntaxKind::DerivedClassConstructor);
-        MOZ_ASSERT(!node->isEmptyScope());
-        MOZ_ASSERT(node->scopeBindings()->length == 1);
-        MOZ_ASSERT(node->scopeBindings()->trailingNames[0].name() ==
-                   cx->names().dotInitializers);
-        node->clearScopeBindings();
+        // Check isEmptyScope instead of asserting, because this function must
+        // be idempotent: when parsing via asm.js, this function is called, then
+        // later, after asm.js parsing fails, this function is called again on
+        // the same scope. (See bug 1555979)
+        if (!node->isEmptyScope()) {
+          MOZ_ASSERT(node->scopeBindings()->length == 1);
+          MOZ_ASSERT(node->scopeBindings()->trailingNames[0].name() ==
+                     cx->names().dotInitializers);
+          node->clearScopeBindings();
+        }
       }
     }
   }
