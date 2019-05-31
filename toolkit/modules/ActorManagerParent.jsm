@@ -101,6 +101,20 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {DefaultMap} = ExtensionUtils;
 
 let ACTORS = {
+  BrowserElement: {
+    parent: {
+      moduleURI: "resource://gre/actors/BrowserElementParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/BrowserElementChild.jsm",
+      events: {
+        "DOMWindowClose": {},
+      },
+    },
+
+    allFrames: true,
+  },
 };
 
 let LEGACY_ACTORS = {
@@ -122,21 +136,6 @@ let LEGACY_ACTORS = {
       events: {
         "GloballyAutoplayBlocked": {},
       },
-    },
-  },
-
-  Browser: {
-    child: {
-      module: "resource://gre/actors/BrowserChild.jsm",
-      events: {
-        "DOMWindowClose": {},
-      },
-
-      messages: [
-        "Browser:CreateAboutBlank",
-        "InPermitUnload",
-        "PermitUnload",
-      ],
     },
   },
 

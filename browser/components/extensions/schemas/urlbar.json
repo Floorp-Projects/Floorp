@@ -1,0 +1,85 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[
+  {
+    "namespace": "manifest",
+    "types": [{
+      "$extend": "Permission",
+      "choices": [{
+        "type": "string",
+        "enum": [
+          "urlbar"
+        ]
+      }]
+    }]
+  },
+  {
+    "namespace": "urlbar",
+    "description": "Use the <code>browser.urlbar</code> API to experiment with new features in the URLBar. Restricted to Mozilla privileged WebExtensions.",
+    "permissions": [
+      "urlbar"
+    ],
+    "types": [
+      {
+        "id": "SourceType",
+        "type": "string",
+        "description": "The source of a result.",
+        "enum": ["bookmarks", "history", "search", "tabs", "local", "network"]
+      },
+      {
+        "id": "QueryContext",
+        "type": "object",
+        "description": "Context of the current query request.",
+        "properties": {
+          "isPrivate": {
+            "type": "boolean",
+            "description": "Whether the browser context is private."
+          },
+          "maxResults": {
+            "type": "integer",
+            "description": "The maximum number of results shown to the user."
+          },
+          "searchString": {
+            "type": "string",
+            "description": "The current search string."
+          },
+          "acceptableSources": {
+            "type": "array",
+            "description": "List of acceptable SourceType to return.",
+            "items": {
+              "$ref": "SourceType"
+            }
+          }
+        }
+      }
+    ],
+    "events": [
+      {
+        "name": "onQueryReady",
+        "type": "function",
+        "description": "Fired before starting a search to get the provider's behavior.",
+        "parameters": [
+          {
+            "name": "context",
+            "$ref": "QueryContext"
+          }
+        ],
+        "extraParameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "Name of the provider.",
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          }
+        ],
+        "returns": {
+          "type": "string",
+          "description": "Whether this provider should be queried, and if it wants to restrict results",
+          "enum": ["active", "inactive", "restricting"]
+        }
+      }
+    ]
+  }
+]
