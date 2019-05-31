@@ -167,7 +167,7 @@ nsresult IDBFactory::CreateForMainThreadJS(nsIGlobalObject* aGlobal,
   }
 
   nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-  nsIPrincipal* principal = sop->GetPrincipal();
+  nsIPrincipal* principal = sop->GetEffectiveStoragePrincipal();
   MOZ_ASSERT(principal);
   bool isSystem;
   if (!AllowedForPrincipal(principal, &isSystem)) {
