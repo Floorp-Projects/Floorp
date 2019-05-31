@@ -5,7 +5,7 @@
 
 DevToolsModules(
     'background.jsm',
-    'initializer.js',
+    'menu-button.jsm',
     'popup.js',
 )
 

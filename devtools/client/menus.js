@@ -38,6 +38,7 @@ loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", tru
 
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+loader.lazyImporter(this, "ProfilerMenuButton", "resource://devtools/client/performance-new/popup/menu-button.jsm");
 
 const isAboutDebuggingEnabled =
   Services.prefs.getBoolPref("devtools.aboutdebugging.new-enabled", false);
@@ -99,6 +100,13 @@ exports.menuitems = [
       HUDService.openBrowserConsoleOrFocus();
     },
     keyId: "browserConsole",
+  },
+  { id: "menu_toggleProfilerButtonMenu",
+    l10nKey: "toggleProfilerButtonMenu",
+    checkbox: true,
+    oncommand(event) {
+      ProfilerMenuButton.toggle(event.target.ownerDocument);
+    },
   },
   { id: "menu_responsiveUI",
     l10nKey: "responsiveDesignMode",
