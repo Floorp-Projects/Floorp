@@ -159,6 +159,8 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         delete_browsing_data_wrapper.isClickable = true
         delete_browsing_data_wrapper.alpha = ENABLED_ALPHA
 
+        listOf(open_tabs_item, browsing_data_item, collections_item).forEach { it.isChecked = false }
+
         updateTabCount()
         updateHistoryCount()
         updateCollectionsCount()

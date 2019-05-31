@@ -24,8 +24,9 @@ class DeleteBrowsingDataItem @JvmOverloads constructor(
     val subtitleView: TextView
         get() = subtitle
 
-    val isChecked: Boolean
+    var isChecked: Boolean
         get() = checkbox.isChecked
+        set(value) { checkbox.isChecked = value }
 
     var onCheckListener: ((Boolean) -> Unit)? = null
 
