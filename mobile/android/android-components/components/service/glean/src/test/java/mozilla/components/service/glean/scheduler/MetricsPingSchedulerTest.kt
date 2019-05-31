@@ -25,6 +25,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,7 +39,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.util.Calendar
-import java.util.Date
 import java.util.concurrent.TimeUnit as AndroidTimeUnit
 
 @RunWith(RobolectricTestRunner::class)
@@ -153,33 +153,40 @@ class MetricsPingSchedulerTest {
     }
 
     @Test
-    fun `getLastCollectedDate must report the default when no stored date is available`() {
+    fun `getLastCollectedDate must report null when no stored date is available`() {
         val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
         mps.sharedPreferences.edit().clear().apply()
 
-        val expectedDate = Date()
-        assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
+        assertNull(
+            "null must be reported when no date is stored",
+            mps.getLastCollectedDate()
+        )
     }
 
     @Test
-    fun `getLastCollectedDate must report a valid Date when the stored date is corrupted`() {
+    fun `getLastCollectedDate must report null when the stored date is corrupted`() {
         val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
         mps.sharedPreferences
             .edit()
             .putLong(MetricsPingScheduler.LAST_METRICS_PING_SENT_DATETIME, 123L)
             .apply()
 
-        // Wrong key type should trigger the default date.
-        val expectedDate = Date()
-        assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
+        // Wrong key type should trigger returning null.
+        assertNull(
+            "null must be reported when no date is stored",
+            mps.getLastCollectedDate()
+        )
 
-        // Wrong date format string should trigger the default date.
+        // Wrong date format string should trigger returning null.
         mps.sharedPreferences
             .edit()
             .putString(MetricsPingScheduler.LAST_METRICS_PING_SENT_DATETIME, "not-an-ISO-date")
             .apply()
 
-        assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
+        assertNull(
+            "null must be reported when the date key is of unexpected format",
+            mps.getLastCollectedDate()
+        )
     }
 
     @Test
@@ -188,9 +195,12 @@ class MetricsPingSchedulerTest {
         val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
         mps.updateSentDate(testDate)
 
-        // Wrong key type should trigger the default date.
         val expectedDate = parseISOTimeString(testDate)!!
-        assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
+        assertEquals(
+            "The date the ping was collected must be reported",
+            expectedDate,
+            mps.getLastCollectedDate()
+        )
     }
 
     @Test
@@ -354,6 +364,64 @@ class MetricsPingSchedulerTest {
         verify(mpsSpy, times(1)).schedulePingCollection(fakeNow, sendTheNextCalendarDay = false)
         verify(mpsSpy, never()).schedulePingCollection(fakeNow, sendTheNextCalendarDay = true)
         verify(mpsSpy, never()).collectPingAndReschedule(kotlinFriendlyAny<Calendar>())
+    }
+
+    @Test
+    fun `startupCheck must correctly handle fresh installs (before due time)`() {
+        // Set the current system time to a known datetime: before 4am local.
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 3, 0, 0)
+
+        // Clear the last sent date.
+        val mpsSpy =
+            spy<MetricsPingScheduler>(MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+        mpsSpy.sharedPreferences.edit().clear().apply()
+
+        verify(mpsSpy, never()).collectPingAndReschedule(kotlinFriendlyAny<Calendar>())
+
+        // Make sure to return the fake date when requested.
+        doReturn(fakeNow).`when`(mpsSpy).getCalendarInstance()
+
+        // Trigger the startup check.
+        mpsSpy.startupCheck()
+
+        // Verify that we're immediately collecting.
+        verify(mpsSpy, never()).collectPingAndReschedule(fakeNow)
+        verify(mpsSpy, times(1)).schedulePingCollection(fakeNow, sendTheNextCalendarDay = false)
+    }
+
+    @Test
+    fun `startupCheck must correctly handle fresh installs (after due time)`() {
+        // Set the current system time to a known datetime: after 4am local.
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 6, 0, 0)
+
+        // Clear the last sent date.
+        val mpsSpy =
+            spy<MetricsPingScheduler>(MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+        mpsSpy.sharedPreferences.edit().clear().apply()
+
+        verify(mpsSpy, never()).collectPingAndReschedule(kotlinFriendlyAny<Calendar>())
+
+        // Make sure to return the fake date when requested.
+        doReturn(fakeNow).`when`(mpsSpy).getCalendarInstance()
+
+        // Trigger the startup check.
+        mpsSpy.startupCheck()
+
+        // And that we're storing the current date (this only reports the date, not the time).
+        fakeNow.set(Calendar.HOUR_OF_DAY, 0)
+        assertEquals(
+            "The scheduler must save the date the ping was collected",
+            fakeNow.time,
+            mpsSpy.getLastCollectedDate()
+        )
+
+        // Verify that we're immediately collecting.
+        verify(mpsSpy, times(1)).collectPingAndReschedule(fakeNow)
+        verify(mpsSpy, never()).schedulePingCollection(fakeNow, sendTheNextCalendarDay = false)
     }
 
     @Test

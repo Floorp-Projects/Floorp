@@ -10,17 +10,22 @@ length of this window.
 
 ## Scheduling
 The desired behaviour is to collect the ping at the first available opportunity after 4AM local
-time on a new calendar day. This breaks down into two scenarios:
+time on a new calendar day. This breaks down into three scenarios:
 
-1. the application was just started (after a crash or a long inactivity period);
-2. the application was open and the 4AM due time was hit.
+1. the application was just installed;
+2. the application was just started (after a crash or a long inactivity period);
+3. the application was open and the 4AM due time was hit;
 
-In the first case, if the `metrics` ping was already collected on the current calendar day, a new
+In the first case, since the application was just installed, if the due time for the current calendar
+day has passed, a `metrics` ping is immediately generated and scheduled for sending. Otherwise, if the
+due time for the current calendar day has not passed, a ping collection is scheduled for that time.
+
+In the second case, if the `metrics` ping was already collected on the current calendar day, a new
 collection will be scheduled for the next calendar day, at 4AM. If no collection happened yet,
 and the due time for the current calendar day has passed, a `metrics` ping is immediately generated
 and scheduled for sending.
 
-In the second case, similarly to the previous case, if the `metrics` ping was already collected on the
+In the third case, similarly to the previous case, if the `metrics` ping was already collected on the
 current calendar day when we hit 4AM, then a new collection is scheduled for the next calendar day.
 Otherwise, the `metrics` is immediately collected and scheduled for sending.
 

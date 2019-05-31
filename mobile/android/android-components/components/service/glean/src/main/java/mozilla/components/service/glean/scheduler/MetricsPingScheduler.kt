@@ -158,7 +158,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
      */
     fun startupCheck() {
         val now = getCalendarInstance()
-        val lastSentDate = getLastCollectedDate(now.time)
+        val lastSentDate = getLastCollectedDate()
 
         // We expect to cover 3 cases here:
         //
@@ -169,7 +169,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
         // (3) - the ping was NOT collected the current calendar day, but we still have
         //       some time to the due time; schedule for sending the current calendar day.
 
-        val alreadySentToday = DateUtils.isToday(lastSentDate.time)
+        val alreadySentToday = (lastSentDate != null) && DateUtils.isToday(lastSentDate.time)
         when {
             alreadySentToday -> {
                 // The metrics ping was already sent today. Schedule it for the next
@@ -220,19 +220,22 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
     /**
      * Get the date the metrics ping was last collected.
      *
-     * @param defaultDate the [Date] object to return if no valid last sent date can be found
-     * @return a [Date] object representing the date the metrics ping was last collected
+     * @return a [Date] object representing the date the metrics ping was last collected, or
+     *         null if no metrics ping was previously collected.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun getLastCollectedDate(defaultDate: Date = Date()): Date {
+    internal fun getLastCollectedDate(): Date? {
         val loadedDate = try {
             sharedPreferences.getString(LAST_METRICS_PING_SENT_DATETIME, null)
         } catch (e: ClassCastException) {
-            logger.error("MetricsPingScheduler last stored ping time was not valid")
             null
         }
 
-        return loadedDate?.let { parseISOTimeString(it) } ?: defaultDate
+        if (loadedDate == null) {
+            logger.error("MetricsPingScheduler last stored ping time was not valid")
+        }
+
+        return loadedDate?.let { parseISOTimeString(it) }
     }
 
     /**
