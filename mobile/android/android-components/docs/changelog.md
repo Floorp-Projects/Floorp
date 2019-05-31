@@ -35,10 +35,8 @@ permalink: /changelog/
   * `OAuthAccount` and `DeviceConstellation` methods that returned `Deferred<T>` (for some T) now return `Deferred<T?>`, where `null` means failure.
   * `FirefoxAccount`, `FirefoxDeviceConstellation` and `FirefoxDeviceManager` now handle all expected `FxAException`.
 
-* **engine-gecko-nightly**, **engine-system**, **concept-engine**:
-  * Added `EngineView.canScrollVerticallyUp()` for pull to refresh.
-
 * **engine-gecko-nightly**, **engine-gecko-beta**, **concept-engine**
+  * Added `EngineView.canScrollVerticallyUp()` for pull to refresh.
   * Added engine API to clear browsing data.
 
   ```kotlin
@@ -52,6 +50,9 @@ permalink: /changelog/
   engine.clearData(BrowsingData.select(BrowsingData.COOKIES), host = "mozilla.org")
   ```
 
+* **engine-system**:
+  * Added `EngineView.canScrollVerticallyUp()` for pull to refresh.
+
 * **service-glean**
   * Disabling telemetry through `setUploadEnabled` now clears all metrics (except first_run_date) immediately.
 
@@ -60,7 +61,7 @@ permalink: /changelog/
 
 * **feature-tab-collections**
   * Added option to remove all collections and their tabs: `TabCollectionStorage.removeAllCollections()`.
-  
+
 * **feature-media**
   * Added `RecordingDevicesNotificationFeature` to show an ongoing notification while recording devices (camera, microphone) are used by web content.
 

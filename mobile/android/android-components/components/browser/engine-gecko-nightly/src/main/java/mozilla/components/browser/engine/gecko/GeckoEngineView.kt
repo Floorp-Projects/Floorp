@@ -91,10 +91,7 @@ class GeckoEngineView @JvmOverloads constructor(
         currentSession?.apply { unregister(observer) }
     }
 
-    override fun canScrollVerticallyUp(): Boolean {
-        val result = currentSession?.let { it.scrollY > 0 } != false
-        return result
-    }
+    override fun canScrollVerticallyUp() = currentSession?.let { it.scrollY > 0 } != false
 
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 
