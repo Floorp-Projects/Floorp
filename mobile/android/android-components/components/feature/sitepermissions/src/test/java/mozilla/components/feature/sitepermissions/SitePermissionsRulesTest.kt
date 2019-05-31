@@ -4,9 +4,7 @@
 
 package mozilla.components.feature.sitepermissions
 
-import android.content.Context
 import android.view.View
-import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.Permission.ContentAudioCapture
@@ -18,6 +16,7 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -34,18 +33,17 @@ class SitePermissionsRulesTest {
     private lateinit var rules: SitePermissionsFeature
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
     private lateinit var mockStorage: SitePermissionsStorage
-    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Before
     fun setup() {
         val engine = Mockito.mock(Engine::class.java)
-        anchorView = View(ApplicationProvider.getApplicationContext())
+        anchorView = View(testContext)
         mockSessionManager = Mockito.spy(SessionManager(engine))
         mockOnNeedToRequestPermissions = mock()
         mockStorage = mock()
 
         rules = SitePermissionsFeature(
-            context = context,
+            context = testContext,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
             storage = mockStorage,

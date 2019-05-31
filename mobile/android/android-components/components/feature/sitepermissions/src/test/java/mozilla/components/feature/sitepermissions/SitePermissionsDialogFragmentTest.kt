@@ -12,16 +12,16 @@ import android.widget.Button
 import android.widget.CheckBox
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
-import androidx.test.core.app.ApplicationProvider
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature.PromptsStyling
 import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
@@ -30,7 +30,7 @@ class SitePermissionsDialogFragmentTest {
 
     private val context: Context
         get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext(),
+            testContext,
             R.style.Theme_AppCompat
         )
 

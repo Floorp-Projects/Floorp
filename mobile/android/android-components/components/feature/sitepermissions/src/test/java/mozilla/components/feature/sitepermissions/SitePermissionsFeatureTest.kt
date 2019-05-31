@@ -5,12 +5,10 @@
 package mozilla.components.feature.sitepermissions
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
-import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -24,13 +22,14 @@ import mozilla.components.concept.engine.permission.Permission.ContentVideoCamer
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
 import mozilla.components.concept.engine.permission.Permission.Generic
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
+import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -40,9 +39,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.anyString
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.security.InvalidParameterException
 import java.util.UUID
@@ -55,7 +54,6 @@ class SitePermissionsFeatureTest {
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
     private lateinit var mockStorage: SitePermissionsStorage
     private lateinit var mockFragmentManager: FragmentManager
-    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Before
     fun setup() {
@@ -66,7 +64,7 @@ class SitePermissionsFeatureTest {
         mockFragmentManager = mockFragmentManager()
 
         sitePermissionFeature = SitePermissionsFeature(
-            context = context,
+            context = testContext,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
             storage = mockStorage,
@@ -82,7 +80,7 @@ class SitePermissionsFeatureTest {
         var wasCalled = false
 
         sitePermissionFeature = SitePermissionsFeature(
-            context = context,
+            context = testContext,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
                 wasCalled = true
@@ -103,7 +101,7 @@ class SitePermissionsFeatureTest {
         val session = getSelectedSession()
 
         sitePermissionFeature = SitePermissionsFeature(
-            context = context,
+            context = testContext,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
             },
@@ -129,7 +127,7 @@ class SitePermissionsFeatureTest {
         var wasCalled = false
 
         sitePermissionFeature = SitePermissionsFeature(
-            context = context,
+            context = testContext,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
                 wasCalled = true
@@ -164,7 +162,7 @@ class SitePermissionsFeatureTest {
         var wasCalled = false
 
         sitePermissionFeature = SitePermissionsFeature(
-            context = context,
+            context = testContext,
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = {
                 wasCalled = true
@@ -339,7 +337,7 @@ class SitePermissionsFeatureTest {
             doReturn(permissions).`when`(mockRequest).permissions
 
             val feature = SitePermissionsFeature(
-                context = context,
+                context = testContext,
                 sessionManager = mockSessionManager,
                 fragmentManager = mockFragmentManager,
                 onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
@@ -657,7 +655,7 @@ class SitePermissionsFeatureTest {
     fun `calling onPermissionsResult on a feature session with a sessionId will call grant on the permissionsRequest and consume it`() {
         val session = Session("", id = "sessionIdCustomTabs")
         sitePermissionFeature = SitePermissionsFeature(
-            context = context,
+            context = testContext,
             sessionId = "sessionIdCustomTabs",
             sessionManager = mockSessionManager,
             onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
