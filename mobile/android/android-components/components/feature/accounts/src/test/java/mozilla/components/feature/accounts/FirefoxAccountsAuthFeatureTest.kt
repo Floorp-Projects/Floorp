@@ -11,15 +11,13 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.Config
-import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.SharedPrefAccountStorage
 import mozilla.components.service.fxa.manager.DeviceTuple
+import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
-
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
@@ -27,7 +25,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
 // are created. This is necessary because due to some build issues (native dependencies not available
@@ -37,7 +34,6 @@ class TestableFxaAccountManager(
     context: Context,
     config: Config,
     scopes: Array<String>,
-    accountStorage: AccountStorage = SharedPrefAccountStorage(context),
     val block: () -> OAuthAccount = { mock() }
 ) : FxaAccountManager(context, config, scopes, DeviceTuple("test", DeviceType.MOBILE, listOf()), null) {
     override fun createAccount(config: Config): OAuthAccount {
@@ -111,7 +107,6 @@ class FirefoxAccountsAuthFeatureTest {
     }
 
     private fun prepareAccountManagerForSuccessfulAuthentication(): TestableFxaAccountManager {
-        val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
@@ -119,14 +114,11 @@ class FirefoxAccountsAuthFeatureTest {
         `when`(mockAccount.beginOAuthFlowAsync(any(), anyBoolean())).thenReturn(CompletableDeferred("auth://url"))
         `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred("auth://url"))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
-        // There's no account at the start.
-        `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-            RuntimeEnvironment.application,
+            testContext,
             Config.release("dummyId", "bad://url"),
-            arrayOf("profile", "test-scope"),
-            accountStorage
+            arrayOf("profile", "test-scope")
         ) {
             mockAccount
         }
@@ -139,7 +131,6 @@ class FirefoxAccountsAuthFeatureTest {
     }
 
     private fun prepareAccountManagerForFailedAuthentication(): TestableFxaAccountManager {
-        val accountStorage = mock<AccountStorage>()
         val mockAccount: OAuthAccount = mock()
         val profile = Profile(uid = "testUID", avatar = null, email = "test@example.com", displayName = "test profile")
 
@@ -148,14 +139,11 @@ class FirefoxAccountsAuthFeatureTest {
         `when`(mockAccount.beginOAuthFlowAsync(any(), anyBoolean())).thenReturn(CompletableDeferred(value = null))
         `when`(mockAccount.beginPairingFlowAsync(anyString(), any())).thenReturn(CompletableDeferred(value = null))
         `when`(mockAccount.completeOAuthFlowAsync(anyString(), anyString())).thenReturn(CompletableDeferred(true))
-        // There's no account at the start.
-        `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                RuntimeEnvironment.application,
-                Config.release("dummyId", "bad://url"),
-                arrayOf("profile", "test-scope"),
-                accountStorage
+            testContext,
+            Config.release("dummyId", "bad://url"),
+            arrayOf("profile", "test-scope")
         ) {
             mockAccount
         }
