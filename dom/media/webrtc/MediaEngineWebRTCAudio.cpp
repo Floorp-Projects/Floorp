@@ -1181,4 +1181,7 @@ uint32_t MediaEngineWebRTCAudioCaptureSource::GetBestFitnessDistance(
   return 0;
 }
 
+void MediaEngineWebRTCAudioCaptureSource::GetSettings(
+    dom::MediaTrackSettings& aOutSettings) const {}
+
 }  // namespace mozilla

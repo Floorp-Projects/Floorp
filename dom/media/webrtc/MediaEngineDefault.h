@@ -59,6 +59,7 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
+  void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
   bool IsFake() const override { return true; }
 
@@ -126,6 +127,7 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
+  void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
  protected:
   ~MediaEngineDefaultAudioSource();
