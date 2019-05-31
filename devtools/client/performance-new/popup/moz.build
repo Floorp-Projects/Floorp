@@ -3,20 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'components',
-    'store',
-    'popup',
-]
-
 DevToolsModules(
-    'browser.js',
+    'background.jsm',
     'initializer.js',
-    'panel.js',
-    'utils.js',
+    'popup.js',
 )
 
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
-
 with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Performance Tools (Profiler/Timeline)')
+    BUG_COMPONENT = ('Core', 'Gecko Profiler')
