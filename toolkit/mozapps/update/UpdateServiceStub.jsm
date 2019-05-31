@@ -25,6 +25,7 @@ const KEY_PROFILE_DIR     = "ProfD";
 // ensure that this is a per-installation pref (i.e. to ensure that migration
 // happens for every install rather than once per profile)
 const PREF_PREFIX_UPDATE_DIR_MIGRATED  = "app.update.migrated.updateDir2.";
+const PREF_APP_UPDATE_ALTUPDATEDIRPATH = "app.update.altUpdateDirPath";
 const PREF_APP_UPDATE_LOG              = "app.update.log";
 const PREF_APP_UPDATE_FILE_LOGGING     = "app.update.log.file";
 
@@ -32,8 +33,34 @@ XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
   return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false);
 });
 
+function getUpdateBaseDirNoCreate() {
+  if (Cu.isInAutomation) {
+    // This allows tests to use an alternate updates directory so they can test
+    // startup behavior.
+    const MAGIC_TEST_ROOT_PREFIX = "<test-root>";
+    const PREF_TEST_ROOT = "mochitest.testRoot";
+    let alternatePath =
+      Services.prefs.getCharPref(PREF_APP_UPDATE_ALTUPDATEDIRPATH, null);
+    if (alternatePath && alternatePath.startsWith(MAGIC_TEST_ROOT_PREFIX)) {
+      let testRoot = Services.prefs.getCharPref(PREF_TEST_ROOT);
+      let relativePath = alternatePath.substring(MAGIC_TEST_ROOT_PREFIX.length);
+      if (AppConstants.platform == "win") {
+        relativePath = relativePath.replace(/\//g, "\\");
+      }
+      alternatePath = testRoot + relativePath;
+      let updateDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      updateDir.initWithPath(alternatePath);
+      LOG("getUpdateBaseDirNoCreate returning test directory, path: " +
+          updateDir.path);
+      return updateDir;
+    }
+  }
+
+  return FileUtils.getDir(KEY_UPDROOT, [], false);
+}
+
 function UpdateServiceStub() {
-  let updateDir = FileUtils.getDir(KEY_UPDROOT, [], false);
+  let updateDir = getUpdateBaseDirNoCreate();
   let prefUpdateDirMigrated = PREF_PREFIX_UPDATE_DIR_MIGRATED
                             + updateDir.leafName;
 
