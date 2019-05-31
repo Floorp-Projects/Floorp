@@ -503,13 +503,8 @@ pref("browser.tabs.delayHidingAudioPlayingIconMS", 3000);
 pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 #endif
 
-#ifdef NIGHTLY_BUILD
+// Turn on HTTP response process selection.
 pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
-#else
-// Disabled outside of nightly due to bug 1554217
-pref("browser.tabs.remote.useHTTPResponseProcessSelection", false);
-#endif
-
 
 // Unload tabs when available memory is running low
 pref("browser.tabs.unloadOnLowMemory", true);
