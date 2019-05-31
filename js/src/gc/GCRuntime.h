@@ -653,7 +653,7 @@ class GCRuntime {
   void endSweepPhase(bool lastGC);
   bool allCCVisibleZonesWereCollected() const;
   void sweepZones(FreeOp* fop, bool destroyingRuntime);
-  void decommitAllWithoutUnlocking(const AutoLockGC& lock);
+  void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
   void startDecommit();
   void queueZonesAndStartBackgroundSweep(ZoneList& zones);
   void sweepFromBackgroundThread(AutoLockHelperThreadState& lock);
