@@ -24,21 +24,9 @@
       "suggest_url": "__MSG_suggestUrl__",
       "params": [
         {
-          "name": "client",
-          "condition": "purpose",
-          "purpose": "keyword",
-          "value": "__MSG_param_keyword__"
-        },
-        {
-          "name": "client",
-          "condition": "purpose",
-          "purpose": "searchbar",
-          "value": "__MSG_param_searchbar__"
-        },
-        {
           "name": "channel",
           "condition": "pref",
-          "pref": "google_channel_us"
+          "pref": "__MSG_channel_pref__"
         }
       ],
       "search_url_get_params": "__MSG_searchUrlGetParams__"
