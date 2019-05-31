@@ -5176,13 +5176,8 @@ pref("extensions.webextensions.protocol.remote", true);
 // Enable tab hiding API by default.
 pref("extensions.webextensions.tabhide.enabled", true);
 
-#ifdef NIGHTLY_BUILD
-// Enable userScripts API by default on Nightly.
+// Enable userScripts API by default.
 pref("extensions.webextensions.userScripts.enabled", true);
-#else
-// Disable userScripts API by default on all other channels.
-pref("extensions.webextensions.userScripts.enabled", false);
-#endif
 
 pref("extensions.webextensions.background-delayed-startup", false);
 
