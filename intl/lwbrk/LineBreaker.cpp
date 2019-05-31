@@ -985,13 +985,8 @@ void LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
       state.NotifyNonHyphenCharacter(ch);
       cl = GetClass(ch);
     }
-<<<<<<< local
     if (aWordBreak == LineBreaker::kWordBreak_BreakAll &&
-        (cl == CLASS_CHARACTER || cl == CLASS_CLOSE)) {
-=======
-    if (aWordBreak == WordBreak::BreakAll &&
         (cl == CLASS_CHARACTER || cl == CLASS_CLOSE || cl == CLASS_NUMERIC)) {
->>>>>>> graft
       auto cls = GetLineBreakClass(ch);
       // Don't need to check additional Japanese/Korean classes in 8-bit
       if (cls == U_LB_ALPHABETIC || cls == U_LB_NUMERIC ||
