@@ -218,7 +218,7 @@ class SourceTreeItem extends Component<Props, State> {
 
     if (isDirectory(item)) {
       // Domain level
-      if (depth === 1) {
+      if (depth === 1 && projectRoot === "") {
         return <AccessibleImage className="globe-small" />;
       }
       return <AccessibleImage className="folder" />;
