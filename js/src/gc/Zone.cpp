@@ -31,8 +31,46 @@ using namespace js::gc;
 
 Zone* const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 
+ZoneAllocator::ZoneAllocator(JSRuntime* rt)
+    : JS::shadow::Zone(rt, &rt->gc.marker), zoneSize(&rt->gc.heapSize) {
+  AutoLockGC lock(rt);
+  threshold.updateAfterGC(8192, GC_NORMAL, rt->gc.tunables,
+                          rt->gc.schedulingState, lock);
+  setGCMaxMallocBytes(rt->gc.tunables.maxMallocBytes(), lock);
+  jitCodeCounter.setMax(jit::MaxCodeBytesPerProcess * 0.8, lock);
+}
+
+ZoneAllocator::~ZoneAllocator() {
+  MOZ_ASSERT_IF(runtimeFromAnyThread()->gc.shutdownCollectedEverything(),
+                gcMallocBytes == 0);
+}
+
+void ZoneAllocator::fixupAfterMovingGC() {
+#ifdef DEBUG
+  gcMallocTracker.fixupAfterMovingGC();
+#endif
+}
+
+void js::ZoneAllocator::updateAllGCMallocCountersOnGCStart() {
+  gcMallocCounter.updateOnGCStart();
+  jitCodeCounter.updateOnGCStart();
+}
+
+void js::ZoneAllocator::updateAllGCMallocCountersOnGCEnd(
+    const js::AutoLockGC& lock) {
+  auto& gc = runtimeFromAnyThread()->gc;
+  gcMallocCounter.updateOnGCEnd(gc.tunables, lock);
+  jitCodeCounter.updateOnGCEnd(gc.tunables, lock);
+}
+
+js::gc::TriggerKind js::ZoneAllocator::shouldTriggerGCForTooMuchMalloc() {
+  auto& gc = runtimeFromAnyThread()->gc;
+  return std::max(gcMallocCounter.shouldTriggerGC(gc.tunables),
+                  jitCodeCounter.shouldTriggerGC(gc.tunables));
+}
+
 JS::Zone::Zone(JSRuntime* rt)
-    : JS::shadow::Zone(rt, &rt->gc.marker),
+    : ZoneAllocator(rt),
       // Note: don't use |this| before initializing helperThreadUse_!
       // ProtectedData checks in CheckZone::check may read this field.
       helperThreadUse_(HelperThreadUse::None),
@@ -57,9 +95,6 @@ JS::Zone::Zone(JSRuntime* rt)
       functionToStringCache_(this),
       keepAtomsCount(this, 0),
       purgeAtomsDeferred(this, 0),
-      zoneSize(&rt->gc.heapSize),
-      threshold(),
-      gcDelayBytes(0),
       tenuredStrings(this, 0),
       allocNurseryStrings(this, true),
       propertyTree_(this, this),
@@ -80,12 +115,6 @@ JS::Zone::Zone(JSRuntime* rt)
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
              static_cast<JS::shadow::Zone*>(this));
-
-  AutoLockGC lock(rt);
-  threshold.updateAfterGC(8192, GC_NORMAL, rt->gc.tunables,
-                          rt->gc.schedulingState, lock);
-  setGCMaxMallocBytes(rt->gc.tunables.maxMallocBytes(), lock);
-  jitCodeCounter.setMax(jit::MaxCodeBytesPerProcess * 0.8, lock);
 }
 
 Zone::~Zone() {
@@ -467,9 +496,7 @@ void Zone::clearTables() {
 }
 
 void Zone::fixupAfterMovingGC() {
-#ifdef DEBUG
-  gcMallocSize.fixupAfterMovingGC();
-#endif
+  ZoneAllocator::fixupAfterMovingGC();
   fixupInitialShapeTable();
 }
 
@@ -555,8 +582,9 @@ void Zone::traceAtomCache(JSTracer* trc) {
   }
 }
 
-void* Zone::onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
-                          size_t nbytes, void* reallocPtr) {
+void* ZoneAllocator::onOutOfMemory(js::AllocFunction allocFunc,
+                                   arena_id_t arena, size_t nbytes,
+                                   void* reallocPtr) {
   if (!js::CurrentThreadCanAccessRuntime(runtime_)) {
     return nullptr;
   }
@@ -564,22 +592,26 @@ void* Zone::onOutOfMemory(js::AllocFunction allocFunc, arena_id_t arena,
                                                 reallocPtr);
 }
 
-void Zone::reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
+void ZoneAllocator::reportAllocationOverflow() const {
+  js::ReportAllocationOverflow(nullptr);
+}
 
-void JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
-                                              TriggerKind trigger) {
+void ZoneAllocator::maybeTriggerGCForTooMuchMalloc(
+    js::gc::MemoryCounter& counter, TriggerKind trigger) {
   JSRuntime* rt = runtimeFromAnyThread();
 
   if (!js::CurrentThreadCanAccessRuntime(rt)) {
     return;
   }
 
-  bool wouldInterruptGC = rt->gc.isIncrementalGCInProgress() && !isCollecting();
+  auto zone = JS::Zone::from(this);
+  bool wouldInterruptGC =
+      rt->gc.isIncrementalGCInProgress() && !zone->isCollecting();
   if (wouldInterruptGC && !counter.shouldResetIncrementalGC(rt->gc.tunables)) {
     return;
   }
 
-  if (!rt->gc.triggerZoneGC(this, JS::GCReason::TOO_MUCH_MALLOC,
+  if (!rt->gc.triggerZoneGC(zone, JS::GCReason::TOO_MUCH_MALLOC,
                             counter.bytes(), counter.maxBytes())) {
     return;
   }
@@ -587,23 +619,30 @@ void JS::Zone::maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
   counter.recordTrigger(trigger);
 }
 
-void MemoryTracker::adopt(MemoryTracker& other) {
-  bytes_ += other.bytes_;
-  other.bytes_ = 0;
-
 #ifdef DEBUG
+
+void MemoryTracker::adopt(MemoryTracker& other) {
   LockGuard<Mutex> lock(mutex);
+
   AutoEnterOOMUnsafeRegion oomUnsafe;
+
   for (auto r = other.map.all(); !r.empty(); r.popFront()) {
     if (!map.put(r.front().key(), r.front().value())) {
       oomUnsafe.crash("MemoryTracker::adopt");
     }
   }
   other.map.clear();
-#endif
-}
 
-#ifdef DEBUG
+  // There may still be ZoneAllocPolicies associated with the old zone since
+  // some are not destroyed until the zone itself dies. Instead check there is
+  // no memory associated with them and clear their zone pointer in debug builds
+  // to catch further memory association.
+  for (auto r = other.policyMap.all(); !r.empty(); r.popFront()) {
+    MOZ_ASSERT(r.front().value() == 0);
+    r.front().key()->zone_ = nullptr;
+  }
+  other.policyMap.clear();
+}
 
 static const char* MemoryUseName(MemoryUse use) {
   switch (use) {
@@ -625,18 +664,26 @@ MemoryTracker::~MemoryTracker() {
     return;
   }
 
-  if (map.empty()) {
-    MOZ_ASSERT(bytes() == 0);
-    return;
+  bool ok = true;
+
+  if (!map.empty()) {
+    ok = false;
+    fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
+    for (auto r = map.all(); !r.empty(); r.popFront()) {
+      fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell(),
+              r.front().value(), MemoryUseName(r.front().key().use()));
+    }
   }
 
-  fprintf(stderr, "Missing calls to JS::RemoveAssociatedMemory:\n");
-  for (auto r = map.all(); !r.empty(); r.popFront()) {
-    fprintf(stderr, "  %p 0x%zx %s\n", r.front().key().cell(),
-            r.front().value(), MemoryUseName(r.front().key().use()));
+  if (!policyMap.empty()) {
+    ok = false;
+    fprintf(stderr, "Missing calls to Zone::decPolicyMemory:\n");
+    for (auto r = policyMap.all(); !r.empty(); r.popFront()) {
+      fprintf(stderr, "  %p 0x%zx\n", r.front().key(), r.front().value());
+    }
   }
 
-  MOZ_CRASH();
+  MOZ_ASSERT(ok);
 }
 
 void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
@@ -665,8 +712,8 @@ void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   Key key{cell, use};
   auto ptr = map.lookup(key);
   if (!ptr) {
-    MOZ_CRASH_UNSAFE_PRINTF("Association not found: %p 0x%x %s", cell,
-                            unsigned(nbytes), MemoryUseName(use));
+    MOZ_CRASH_UNSAFE_PRINTF("Association not found: %p 0x%zx %s", cell, nbytes,
+                            MemoryUseName(use));
   }
   if (ptr->value() != nbytes) {
     MOZ_CRASH_UNSAFE_PRINTF(
@@ -677,7 +724,7 @@ void MemoryTracker::untrackMemory(Cell* cell, size_t nbytes, MemoryUse use) {
   map.remove(ptr);
 }
 
-void MemoryTracker::swapTrackedMemory(Cell* a, Cell* b, MemoryUse use) {
+void MemoryTracker::swapMemory(Cell* a, Cell* b, MemoryUse use) {
   MOZ_ASSERT(a->isTenured());
   MOZ_ASSERT(b->isTenured());
 
@@ -691,13 +738,13 @@ void MemoryTracker::swapTrackedMemory(Cell* a, Cell* b, MemoryUse use) {
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
-  if ((sa && !map.put(kb, sa)) ||
-      (sb && !map.put(ka, sb))) {
+  if ((sa && !map.put(kb, sa)) || (sb && !map.put(ka, sb))) {
     oomUnsafe.crash("MemoryTracker::swapTrackedMemory");
   }
 }
 
-size_t MemoryTracker::getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock) {
+size_t MemoryTracker::getAndRemoveEntry(const Key& key,
+                                        LockGuard<Mutex>& lock) {
   auto ptr = map.lookup(key);
   if (!ptr) {
     return 0;
@@ -706,6 +753,66 @@ size_t MemoryTracker::getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock) 
   size_t size = ptr->value();
   map.remove(ptr);
   return size;
+}
+
+void MemoryTracker::registerPolicy(ZoneAllocPolicy* policy) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto ptr = policyMap.lookupForAdd(policy);
+  if (ptr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p already registeredd", policy);
+  }
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  if (!policyMap.add(ptr, policy, 0)) {
+    oomUnsafe.crash("MemoryTracker::incTrackedPolicyMemory");
+  }
+}
+
+void MemoryTracker::unregisterPolicy(ZoneAllocPolicy* policy) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto ptr = policyMap.lookup(policy);
+  if (!ptr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+  }
+  if (ptr->value() != 0) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "ZoneAllocPolicy %p still has 0x%zx bytes associated", policy,
+        ptr->value());
+  }
+
+  policyMap.remove(ptr);
+}
+
+void MemoryTracker::incPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto ptr = policyMap.lookup(policy);
+  if (!ptr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+  }
+
+  ptr->value() += nbytes;
+}
+
+void MemoryTracker::decPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes) {
+  LockGuard<Mutex> lock(mutex);
+
+  auto ptr = policyMap.lookup(policy);
+  if (!ptr) {
+    MOZ_CRASH_UNSAFE_PRINTF("ZoneAllocPolicy %p not found", policy);
+  }
+
+  size_t& value = ptr->value();
+  if (value < nbytes) {
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "ZoneAllocPolicy %p is too small: "
+        "expected at least 0x%zx but got 0x%zx bytes",
+        policy, nbytes, value);
+  }
+
+  value -= nbytes;
 }
 
 void MemoryTracker::fixupAfterMovingGC() {
