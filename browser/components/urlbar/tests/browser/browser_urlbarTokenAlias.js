@@ -308,6 +308,37 @@ add_task(async function enterAndFillAlias() {
 });
 
 
+// Pressing enter on an @ alias autofill should fill it in the urlbar input
+// with a trailing space and move the caret at the end.
+add_task(async function enterAutofillsAlias() {
+  // Do a search for a partial "@" alias.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: ALIAS.substring(0, ALIAS.length - 1),
+    selectionStart: ALIAS.length - 1,
+    selectionEnd: ALIAS.length - 1,
+  });
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.ok(details.autofill);
+
+  // Press Enter.
+  EventUtils.synthesizeKey("KEY_Enter");
+  await waitForAutocompleteResultAt(0);
+
+  // The urlbar input value should be the alias followed by a space so that it's
+  // ready for the user to start typing.
+  let expectedString = `${ALIAS} `;
+  Assert.equal(gURLBar.textValue, expectedString);
+  Assert.equal(gURLBar.selectionStart, expectedString.length);
+  Assert.equal(gURLBar.selectionEnd, expectedString.length);
+  await assertAlias(true);
+
+  await UrlbarTestUtils.promisePopupClose(window,
+    () => EventUtils.synthesizeKey("KEY_Escape"));
+});
+
+
 async function doSimpleTest(revertBetweenSteps) {
   // When autofill is enabled, searching for "@tes" will autofill to "@test",
   // which gets in the way of this test task, so temporarily disable it.
