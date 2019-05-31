@@ -1179,14 +1179,6 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
           mCurrent = profile;
         } else {
-          if (aIsResetting) {
-            // We don't want to create a fresh profile when we're attempting a
-            // profile reset so just bail out here, the calling code will handle
-            // it.
-            *aProfile = nullptr;
-            return NS_OK;
-          }
-
           rv = CreateDefaultProfile(getter_AddRefs(mCurrent));
           if (NS_FAILED(rv)) {
             *aProfile = nullptr;
@@ -1355,13 +1347,6 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
   // If this is a first run then create a new profile.
   if (mIsFirstRun) {
-    if (aIsResetting) {
-      // We don't want to create a fresh profile when we're attempting a
-      // profile reset so just bail out here, the calling code will handle it.
-      *aProfile = nullptr;
-      return NS_OK;
-    }
-
     // If we're configured to always show the profile manager then don't create
     // a new profile to use.
     if (!mStartWithLast) {

@@ -373,40 +373,6 @@ talos-tp5o:
         extra-options:
             - --suite=tp5o
 
-talos-tp6:
-    description: "Talos tp6"
-    try-name: tp6
-    treeherder-symbol: T(tp6)
-    run-on-projects:
-        by-test-platform:
-            linux64-ccov/.*: ['try']
-            windows10-64-ccov/.*: ['try']
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            windows10-aarch64/opt: ['mozilla-central', 'try']
-            macosx.*64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
-            default: ['trunk', 'try']
-    max-run-time: 1200
-    mozharness:
-        extra-options:
-            - --suite=tp6
-
-talos-tp6-stylo-threads:
-    description: "Talos Stylo sequential tp6"
-    try-name: tp6-stylo-threads
-    treeherder-symbol: Tss(tp6)
-    max-run-time: 1200
-    run-on-projects:
-        by-test-platform:
-            linux64-ccov/.*: ['try']
-            windows10-64-ccov/.*: ['try']
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            windows10-aarch64/opt: ['mozilla-central', 'try']
-            macosx.*64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
-            default: ['mozilla-beta', 'trunk', 'try']
-    mozharness:
-        extra-options:
-            - --suite=tp6-stylo-threads
-
 talos-tabswitch:
     description: "Talos page scroll (tabswitch)"
     try-name: tabswitch

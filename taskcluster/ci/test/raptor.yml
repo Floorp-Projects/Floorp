@@ -1478,7 +1478,6 @@ raptor-motionmark-htmlsuite-firefox-profiling:
     try-name: raptor-motionmark-htmlsuite-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-h)
     run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 900
     tier: 2
     mozharness:
         extra-options:
@@ -1565,7 +1564,6 @@ raptor-unity-webgl-firefox-profiling:
     try-name: raptor-unity-webgl-firefox-profiling
     treeherder-symbol: Rap-Prof(ugl)
     run-on-projects: ['mozilla-central', 'try']
-    max-run-time: 900
     tier: 2
     mozharness:
         extra-options:
@@ -1898,6 +1896,7 @@ raptor-tp6-2-firefox-cold:
     description: "Raptor tp6-2 cold page-load on Firefox"
     try-name: raptor-tp6-2-firefox-cold
     treeherder-symbol: Rap(tp6-c-2)
+    max-run-time: 2700
     tier: 2
     mozharness:
         extra-options:

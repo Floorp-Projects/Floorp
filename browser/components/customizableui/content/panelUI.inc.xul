@@ -625,6 +625,10 @@
       <vbox id="PanelUI-developerItems" class="panel-subview-body"/>
     </panelview>
 
+    <panelview id="PanelUI-profiler" flex="1">
+      <iframe id="PanelUI-profilerIframe" className="PanelUI-developer-iframe" />
+    </panelview>
+
     <panelview id="PanelUI-characterEncodingView" flex="1">
       <vbox class="panel-subview-body">
         <vbox id="PanelUI-characterEncodingView-pinned"

@@ -6,7 +6,7 @@
 
 import { makeMockSource } from "../../../utils/test-mockup";
 
-import { getDirectories, createTree } from "../index";
+import { getDirectories, findSourceTreeNodes, createTree } from "../index";
 
 function formatDirectories(source, tree) {
   const paths: any = getDirectories(source, tree);
@@ -62,5 +62,35 @@ describe("getDirectories", () => {
       "FakeThread/b",
       "FakeThread",
     ]);
+  });
+});
+
+describe("findSourceTreeNodes", () => {
+  it("finds a node", () => {
+    const sources = createSources([
+      "http://src/main.js",
+      "http://src/utils/help.js",
+      "http://src/utils/print.js",
+      "http://workers/worker.js",
+    ]);
+
+    const threads = [
+      {
+        actor: "FakeThread",
+        url: "http://a",
+        type: 1,
+        name: "FakeThread",
+      },
+    ];
+
+    const debuggeeUrl = "http://a/";
+    const { sourceTree } = createTree({
+      sources,
+      debuggeeUrl,
+      threads,
+    });
+
+    const nodes = findSourceTreeNodes(sourceTree, "src") || [];
+    expect(nodes[0].path).toEqual("FakeThread/src");
   });
 });

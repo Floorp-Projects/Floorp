@@ -49,7 +49,7 @@ perf-chrome:
         the browser chrome. This skips a number of talos jobs that are unlikely
         to be affected in order to conserve resources.
     query:
-        - "opt-talos- 'chrome | 'svg | 'session | 'tabswitch"
+        - "opt-talos- 'chrome | 'svg | 'session | 'tabswitch | 'other | 'g5"
     rebuild: 6
     selector: fuzzy
 

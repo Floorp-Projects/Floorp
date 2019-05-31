@@ -13,6 +13,9 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/XorShift128PlusRNG.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
+
+using mozilla::ipc::AutoIPCStream;
 
 static LazyLogModule gContentBlockingLog("ContentBlockingLog");
 #define LOG(fmt, ...) \
@@ -109,13 +112,43 @@ static void ReportOriginSingleHash(OriginMetricID aId,
                                            nsCString(aOrigin));
 }
 
-void ContentBlockingLog::ReportLog() {
+void ContentBlockingLog::ReportLog(nsIPrincipal* aFirstPartyPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aFirstPartyPrincipal);
 
+  if (!StaticPrefs::browser_contentblocking_database_enabled()) {
+    return;
+  }
+
+  if (mLog.IsEmpty()) {
+    return;
+  }
+
+  dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+  if (NS_WARN_IF(!contentChild)) {
+    return;
+  }
+
+  nsAutoCString json = Stringify();
+
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), json);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  AutoIPCStream ipcStream;
+  ipcStream.Serialize(stream, contentChild);
+
+  Unused << contentChild->SendReportContentBlockingLog(
+      IPC::Principal(aFirstPartyPrincipal), ipcStream.TakeValue());
+}
+
+void ContentBlockingLog::ReportOrigins() {
   if (!IsReportingEnabled()) {
     return;
   }
-  LOG("ContentBlockingLog::ReportLog [this=%p]", this);
+  LOG("ContentBlockingLog::ReportOrigins [this=%p]", this);
   const bool testMode =
       StaticPrefs::telemetry_origin_telemetry_test_mode_enabled();
   OriginMetricID metricId =

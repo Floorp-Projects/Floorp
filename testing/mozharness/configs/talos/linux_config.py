@@ -20,7 +20,6 @@ config = {
         "populate-webroot",
         "create-virtualenv",
         "install",
-        "setup-mitmproxy",
         "run-tests",
     ],
     "minidump_stackwalk_path": MINIDUMP_STACKWALK_PATH,

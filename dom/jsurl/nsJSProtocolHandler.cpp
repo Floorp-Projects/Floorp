@@ -39,7 +39,6 @@
 #include "nsThreadUtils.h"
 #include "nsIScriptChannel.h"
 #include "mozilla/dom/Document.h"
-#include "nsILoadInfo.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsITextToSubURI.h"
@@ -49,9 +48,9 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/PopupBlocker.h"
-#include "nsILoadInfo.h"
 #include "nsContentSecurityManager.h"
 
+#include "mozilla/LoadInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ipc/URIUtils.h"
 
@@ -160,8 +159,10 @@ nsresult nsJSThunk::EvaluateScript(
   nsresult rv;
 
   // CSP check: javascript: URIs disabled unless "inline" scripts are
-  // allowed.
-  nsCOMPtr<nsIContentSecurityPolicy> csp = loadInfo->GetCsp();
+  // allowed.  Here we use the CSP of the thing that started the load,
+  // which is the CSPToInherit of the loadInfo.
+  nsCOMPtr<nsIContentSecurityPolicy> csp =
+      static_cast<mozilla::net::LoadInfo*>(loadInfo.get())->GetCSPToInherit();
   if (csp) {
     bool allowsInlineScript = true;
     rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
@@ -175,49 +176,32 @@ nsresult nsJSThunk::EvaluateScript(
                               &allowsInlineScript);
 
     // return early if inline scripts are not allowed
-    if (!allowsInlineScript) {
+    if (NS_FAILED(rv) || !allowsInlineScript) {
       return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
   }
 
-  // for document navigations we need to check the CSP of the previous document.
-  csp = nullptr;
-  mozilla::dom::Document* prevDoc = aOriginalInnerWindow->GetExtantDoc();
-  if (prevDoc) {
-    csp = prevDoc->GetCsp();
-  }
-  if (csp) {
-    bool allowsInlineScript = true;
-    rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
-                              EmptyString(),  // aNonce
-                              true,           // aParserCreated
-                              nullptr,        // aElement,
-                              nullptr,        // nsICSPEventListener
-                              EmptyString(),  // aContent
-                              0,              // aLineNumber
-                              0,              // aColumnNumber
-                              &allowsInlineScript);
-    // return early if inline scripts are not allowed
-    if (!allowsInlineScript) {
-      return NS_ERROR_DOM_RETVAL_UNDEFINED;
-    }
-  }
+  // Based on the outcome of https://github.com/whatwg/html/issues/4651 we may
+  // want to also test against the CSP of the document we'll be running against
+  // (which is targetDoc below).  If we do that, we should make sure to only do
+  // that test if targetDoc->NodePrincipal() subsumes
+  // loadInfo->TriggeringPrincipal().  If it doesn't, then someone
+  // more-privileged (our UI or an extension) started the load and the load
+  // should not be subject to the target document's CSP.
+  //
+  // The "more privileged" assumption is safe, because if the triggering
+  // principal does not subsume targetDoc->NodePrincipal() we won't run the
+  // script at all.  More precisely, we test that "principal" subsumes the
+  // target's principal, but "principal" should never be higher-privilege than
+  // the triggering principal here: it's either the triggering principal, or the
+  // principal of the document we started the load against if the triggering
+  // principal is system.
 
   // Get the global object we should be running on.
   nsIScriptGlobalObject* global = GetGlobalObject(aChannel);
   if (!global) {
     return NS_ERROR_FAILURE;
   }
-
-  // Sandboxed document check: javascript: URI's are disabled
-  // in a sandboxed document unless 'allow-scripts' was specified.
-  mozilla::dom::Document* doc = aOriginalInnerWindow->GetExtantDoc();
-  if (doc && doc->HasScriptsBlockedBySandbox()) {
-    return NS_ERROR_DOM_RETVAL_UNDEFINED;
-  }
-
-  // Push our popup control state
-  AutoPopupStatePusher popupStatePusher(aPopupState);
 
   // Make sure we still have the same inner window as we used to.
   nsCOMPtr<nsPIDOMWindowOuter> win = do_QueryInterface(global);
@@ -226,6 +210,17 @@ nsresult nsJSThunk::EvaluateScript(
   if (innerWin != aOriginalInnerWindow) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  mozilla::dom::Document* targetDoc = innerWin->GetExtantDoc();
+
+  // Sandboxed document check: javascript: URI execution is disabled
+  // in a sandboxed document unless 'allow-scripts' was specified.
+  if (targetDoc && targetDoc->HasScriptsBlockedBySandbox()) {
+    return NS_ERROR_DOM_RETVAL_UNDEFINED;
+  }
+
+  // Push our popup control state
+  AutoPopupStatePusher popupStatePusher(aPopupState);
 
   nsCOMPtr<nsIScriptGlobalObject> innerGlobal = do_QueryInterface(innerWin);
 

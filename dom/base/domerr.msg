@@ -168,3 +168,11 @@ DOM4_MSG_DEF(InvalidAccessError, "synchronous XMLHttpRequests do not support tim
 DOM4_MSG_DEF(EncodingError, "Node bound to inactive document.", NS_ERROR_DOM_IMAGE_INACTIVE_DOCUMENT)
 DOM4_MSG_DEF(EncodingError, "Invalid image request.", NS_ERROR_DOM_IMAGE_INVALID_REQUEST)
 DOM4_MSG_DEF(EncodingError, "Invalid encoded image data.", NS_ERROR_DOM_IMAGE_BROKEN)
+
+/* Editing command errors. */
+DOM4_MSG_DEF(InvalidStateError, "execCommand is only supported on HTML documents.", NS_ERROR_DOM_INVALID_STATE_DOCUMENT_EXEC_COMMAND)
+DOM4_MSG_DEF(InvalidStateError, "queryCommandEnabled is only supported on HTML documents.", NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_ENABLED)
+DOM4_MSG_DEF(InvalidStateError, "queryCommandIndeterm is only supported on HTML documents.", NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_INDETERM)
+DOM4_MSG_DEF(InvalidStateError, "queryCommandState is only supported on HTML documents.", NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_STATE)
+DOM4_MSG_DEF(InvalidStateError, "queryCommandSupported is only supported on HTML documents.", NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_SUPPORTED)
+DOM4_MSG_DEF(InvalidStateError, "queryCommandValue is only supported on HTML documents.", NS_ERROR_DOM_INVALID_STATE_DOCUMENT_QUERY_COMMAND_VALUE)
