@@ -37,8 +37,6 @@ namespace mozilla {
 namespace net {
 
 // Pref string constants
-static const char kPrefThirdPartyNonsecureSession[] =
-    "network.cookie.thirdparty.nonsecureSessionOnly";
 static const char kCookieMoveIntervalSecs[] =
     "network.cookie.move.interval_sec";
 
@@ -57,8 +55,7 @@ already_AddRefed<CookieServiceChild> CookieServiceChild::GetSingleton() {
 NS_IMPL_ISUPPORTS(CookieServiceChild, nsICookieService, nsIObserver,
                   nsITimerCallback, nsISupportsWeakReference)
 
-CookieServiceChild::CookieServiceChild()
-    : mThirdPartyNonsecureSession(false), mIPCOpen(false) {
+CookieServiceChild::CookieServiceChild() : mIPCOpen(false) {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
 
   mozilla::dom::ContentChild* cc =
@@ -87,7 +84,6 @@ CookieServiceChild::CookieServiceChild()
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_WARNING_ASSERTION(prefBranch, "no prefservice");
   if (prefBranch) {
-    prefBranch->AddObserver(kPrefThirdPartyNonsecureSession, this, true);
     prefBranch->AddObserver(kCookieMoveIntervalSecs, this, true);
     PrefChanged(prefBranch);
   }
@@ -250,11 +246,6 @@ mozilla::ipc::IPCResult CookieServiceChild::RecvTrackCookiesLoad(
 }
 
 void CookieServiceChild::PrefChanged(nsIPrefBranch* aPrefBranch) {
-  bool boolval;
-  if (NS_SUCCEEDED(
-          aPrefBranch->GetBoolPref(kPrefThirdPartyNonsecureSession, &boolval)))
-    mThirdPartyNonsecureSession = boolval;
-
   int32_t val;
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookieMoveIntervalSecs, &val))) {
     gMoveCookiesIntervalSeconds = clamped<uint32_t>(val, 0, 3600);
@@ -314,8 +305,8 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
       nsCookieService::GetCookieSettings(aChannel);
 
   CookieStatus cookieStatus = nsCookieService::CheckPrefs(
-      cookieSettings, mThirdPartyNonsecureSession, aHostURI, aIsForeign,
-      aIsTrackingResource, aFirstPartyStorageAccessGranted, nullptr,
+      cookieSettings, aHostURI, aIsForeign, aIsTrackingResource,
+      aFirstPartyStorageAccessGranted, nullptr,
       CountCookiesFromHashTable(baseDomain, attrs), attrs, &aRejectedReason);
 
   if (cookieStatus != STATUS_ACCEPTED &&
@@ -419,7 +410,7 @@ bool CookieServiceChild::RequireThirdPartyCheck(nsILoadInfo* aLoadInfo) {
          cookieBehavior ==
              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN ||
          StaticPrefs::network_cookie_thirdparty_sessionOnly() ||
-         mThirdPartyNonsecureSession;
+         StaticPrefs::network_cookie_thirdparty_nonsecureSessionOnly();
 }
 
 void CookieServiceChild::RecordDocumentCookie(nsCookie* aCookie,
@@ -588,8 +579,8 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI* aHostURI,
       nsCookieService::GetCookieSettings(aChannel);
 
   CookieStatus cookieStatus = nsCookieService::CheckPrefs(
-      cookieSettings, mThirdPartyNonsecureSession, aHostURI, isForeign,
-      isTrackingResource, firstPartyStorageAccessGranted, aCookieString,
+      cookieSettings, aHostURI, isForeign, isTrackingResource,
+      firstPartyStorageAccessGranted, aCookieString,
       CountCookiesFromHashTable(baseDomain, attrs), attrs, &rejectedReason);
 
   if (cookieStatus != STATUS_ACCEPTED &&
