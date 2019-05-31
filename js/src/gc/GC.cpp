@@ -7282,9 +7282,11 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       MOZ_FALLTHROUGH;
 
     case State::Compact:
+      MOZ_ASSERT(nursery().isEmpty());
+      storeBuffer().checkEmpty();
+
       if (isCompacting) {
         MOZ_ASSERT(nursery().isEmpty());
-        storeBuffer().checkEmpty();
         if (!startedCompacting) {
           beginCompactPhase();
         }
@@ -7628,13 +7630,13 @@ bool GCRuntime::shouldCollectNurseryForSlice(bool nonincrementalByAPI,
   switch (incrementalState) {
     case State::NotActive:
     case State::Sweep:
+    case State::Finalize:
     case State::Compact:
+    case State::Decommit:
       return true;
     case State::Mark:
       return (nonincrementalByAPI || budget.isUnlimited() || lastMarkSlice ||
               nursery().shouldCollect() || hasIncrementalTwoSliceZealMode());
-    case State::Finalize:
-    case State::Decommit:
     case State::Finish:
       return false;
     case State::MarkRoots:
