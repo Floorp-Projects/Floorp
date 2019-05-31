@@ -1038,7 +1038,7 @@ nsresult Http2Stream::ConvertResponseHeaders(Http2Decompressor* decompressor,
     if ((httpResponseCode / 100) != 2) {
       MapStreamToPlainText();
     }
-    MapStreamToHttpConnection();
+    MapStreamToHttpConnection(httpResponseCode);
     ClearTransactionsBlockedOnTunnel();
   } else if (mIsWebsocket) {
     LOG3(("Http2Stream %p websocket response code %d", this, httpResponseCode));
@@ -1601,12 +1601,14 @@ void Http2Stream::MapStreamToPlainText() {
   qiTrans->ForcePlainText();
 }
 
-void Http2Stream::MapStreamToHttpConnection() {
+void Http2Stream::MapStreamToHttpConnection(int32_t httpResponseCode) {
   RefPtr<SpdyConnectTransaction> qiTrans(
       mTransaction->QuerySpdyConnectTransaction());
   MOZ_ASSERT(qiTrans);
+
   qiTrans->MapStreamToHttpConnection(mSocketTransport,
-                                     mTransaction->ConnectionInfo());
+                                     mTransaction->ConnectionInfo(),
+                                     mIsTunnel ? httpResponseCode : -1);
 }
 
 // -----------------------------------------------------------------------------
