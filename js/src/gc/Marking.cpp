@@ -2567,11 +2567,11 @@ void GCMarker::enterWeakMarkingMode() {
   // gcWeakKeys contains the keys from all weakmaps marked so far, or at least
   // the keys that might still need to be marked through. Scan through
   // gcWeakKeys and mark all values whose keys are marked. This marking may
-  // recursively mark through other weakmap entries (immediately since we are
-  // now in WeakMarking mode). The end result is a consistent state where all
-  // values are marked if both their map and key are marked -- though note that
-  // we may later leave weak marking mode, do some more marking, and then enter
-  // back in.
+  // recursively mark through other weakmap entries (by looking them up in
+  // gcWeakKeys, since we are now in WeakMarking mode). Once the mark stack is
+  // drained, the end result is a consistent state where all values are marked
+  // if both their map and key are marked -- though note that we may later leave
+  // weak marking mode, do some more marking, and then enter back in.
   for (SweepGroupZonesIter zone(runtime(), js::SkipAtoms); !zone.done();
        zone.next()) {
     if (!zone->isGCMarking()) {
@@ -2586,7 +2586,8 @@ void GCMarker::enterWeakMarkingMode() {
     gc::WeakKeyTable::Range r = zone->gcWeakKeys().all();
     while (!r.empty()) {
       gc::Cell* key = r.front().key;
-      if (key->isMarkedAny()) {
+      gc::CellColor keyColor = GetCellColor(key);
+      if (IsMarked(keyColor)) {
         MOZ_ASSERT(key == r.front().key);
         auto& markables = r.front().value;
         r.popFront();  // Pop before any mutations happen.
@@ -2598,9 +2599,17 @@ void GCMarker::enterWeakMarkingMode() {
           // over the ones from before weak marking mode was switched on.
           v.weakmap->markEntry(this, key, v.key);
         }
-        markables.erase(markables.begin(), end < markables.length()
-                                               ? &markables[end]
-                                               : markables.end());
+
+        if (keyColor == gc::CellColor::Black) {
+          // We can't mark the key any more than already is, so it no longer
+          // needs to be in the weak keys table.
+          if (end == markables.length()) {
+            bool found;
+            zone->gcWeakKeys().remove(key, &found);
+          } else {
+            markables.erase(markables.begin(), &markables[end]);
+          }
+        }
       } else {
         r.popFront();
       }
