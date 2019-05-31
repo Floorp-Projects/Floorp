@@ -6,11 +6,8 @@ package mozilla.components.feature.downloads
 
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.content.Context
 import androidx.core.content.PermissionChecker
 import androidx.fragment.app.FragmentManager
-import androidx.test.core.app.ApplicationProvider
-import org.junit.Assert.assertTrue
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -18,22 +15,24 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
-import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.grantPermission
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -42,20 +41,21 @@ class DownloadsFeatureTest {
     private lateinit var feature: DownloadsFeature
     private lateinit var mockDownloadManager: DownloadManager
     private lateinit var mockSessionManager: SessionManager
-    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     @Before
     fun setup() {
         val engine = mock(Engine::class.java)
         mockSessionManager = spy(SessionManager(engine))
         mockDownloadManager = mock()
-        feature = DownloadsFeature(context, downloadManager = mockDownloadManager, sessionManager = mockSessionManager)
+        feature = DownloadsFeature(testContext,
+            downloadManager = mockDownloadManager,
+            sessionManager = mockSessionManager)
     }
 
     @Test
     fun `when valid sessionId is provided, observe it's session`() {
         feature = spy(DownloadsFeature(
-            context,
+            testContext,
             downloadManager = mockDownloadManager,
             sessionManager = mockSessionManager,
             sessionId = "123"
@@ -71,7 +71,7 @@ class DownloadsFeatureTest {
     @Test
     fun `when sessionId is NOT provided, observe selected session`() {
         feature = spy(DownloadsFeature(
-            context,
+            testContext,
             downloadManager = mockDownloadManager,
             sessionManager = mockSessionManager
         ))
@@ -193,8 +193,11 @@ class DownloadsFeatureTest {
 
         val featureWithDialog =
             DownloadsFeature(
-                context, downloadManager = mockDownloadManager, sessionManager = mockSessionManager,
-                fragmentManager = mockFragmentManager, dialog = mockDialog
+                testContext,
+                downloadManager = mockDownloadManager,
+                sessionManager = mockSessionManager,
+                fragmentManager = mockFragmentManager,
+                dialog = mockDialog
             )
 
         grantPermissions()
@@ -223,7 +226,7 @@ class DownloadsFeatureTest {
 
         val feature =
             DownloadsFeature(
-                context,
+                testContext,
                 downloadManager = mockDownloadManager,
                 sessionId = "sessionId",
                 sessionManager = mockSessionManager,
@@ -251,7 +254,7 @@ class DownloadsFeatureTest {
 
         val feature =
             DownloadsFeature(
-                context,
+                testContext,
                 downloadManager = mockDownloadManager,
                 sessionId = "sessionId",
                 sessionManager = mockSessionManager,
@@ -272,7 +275,9 @@ class DownloadsFeatureTest {
 
         val featureWithDialog =
             DownloadsFeature(
-                context, downloadManager = mockDownloadManager, sessionManager = mockSessionManager,
+                testContext,
+                downloadManager = mockDownloadManager,
+                sessionManager = mockSessionManager,
                 fragmentManager = mockFragmentManager
             )
 

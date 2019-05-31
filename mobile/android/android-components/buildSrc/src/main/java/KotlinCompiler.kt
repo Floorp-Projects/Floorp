@@ -15,7 +15,6 @@ object KotlinCompiler {
         "browser-domains",
         "browser-storage-sync",
         "feature-accounts",
-        "feature-downloads",
         "feature-prompts",
         "feature-search",
         "service-glean",

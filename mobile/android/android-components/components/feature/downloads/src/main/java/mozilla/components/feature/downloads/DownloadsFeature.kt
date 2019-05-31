@@ -95,7 +95,10 @@ class DownloadsFeature(
      * Notifies the feature that the permissions request was completed. It will then
      * either trigger or clear the pending download.
      */
-    fun onPermissionsResult(permissions: Array<String>, grantResults: IntArray) {
+    fun onPermissionsResult(
+        @Suppress("UNUSED_PARAMETER") permissions: Array<String>,
+        @Suppress("UNUSED_PARAMETER") grantResults: IntArray
+    ) {
         if (applicationContext.isPermissionGranted(INTERNET, WRITE_EXTERNAL_STORAGE)) {
             activeSession?.let { session ->
                 session.download.consume {

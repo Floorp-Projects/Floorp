@@ -9,13 +9,13 @@ import android.content.DialogInterface.BUTTON_POSITIVE
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.Download
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -46,7 +46,7 @@ class SimpleDownloadDialogFragmentTest {
         }
 
         dialog.onStartDownload = onStartDownload
-        dialog.testingContext = RuntimeEnvironment.application
+        dialog.testingContext = testContext
 
         performClick(BUTTON_POSITIVE)
 
