@@ -6,9 +6,10 @@
 
 #include "frontend/BytecodeControlStructures.h"
 
-#include "frontend/BytecodeEmitter.h"
-#include "frontend/EmitterScope.h"
-#include "vm/Opcodes.h"
+#include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
+#include "frontend/EmitterScope.h"     // EmitterScope
+#include "frontend/SourceNotes.h"      // SRC_*
+#include "vm/Opcodes.h"                // JSOP_*
 
 using namespace js;
 using namespace js::frontend;
@@ -30,7 +31,7 @@ bool BreakableControl::patchBreaks(BytecodeEmitter* bce) {
 }
 
 LabelControl::LabelControl(BytecodeEmitter* bce, JSAtom* label,
-                           ptrdiff_t startOffset)
+                           BytecodeOffset startOffset)
     : BreakableControl(bce, StatementKind::Label),
       label_(bce->cx, label),
       startOffset_(startOffset) {}
@@ -110,7 +111,7 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
   }
 
   head_ = {bce->bytecodeSection().offset()};
-  ptrdiff_t off;
+  BytecodeOffset off;
   if (!bce->emitJumpTargetOp(JSOP_LOOPHEAD, &off)) {
     return false;
   }
@@ -131,7 +132,7 @@ bool LoopControl::emitLoopEntry(BytecodeEmitter* bce,
 
   MOZ_ASSERT(loopDepth_ > 0);
 
-  ptrdiff_t off;
+  BytecodeOffset off;
   if (!bce->emitJumpTargetOp(JSOP_LOOPENTRY, &off)) {
     return false;
   }
@@ -153,7 +154,7 @@ bool LoopControl::emitLoopEnd(BytecodeEmitter* bce, JSOp op) {
 }
 
 bool LoopControl::patchBreaksAndContinues(BytecodeEmitter* bce) {
-  MOZ_ASSERT(continueTarget_.offset != -1);
+  MOZ_ASSERT(continueTarget_.offset.valid());
   if (!patchBreaks(bce)) {
     return false;
   }

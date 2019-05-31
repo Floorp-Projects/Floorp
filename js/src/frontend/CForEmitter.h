@@ -7,14 +7,14 @@
 #ifndef frontend_CForEmitter_h
 #define frontend_CForEmitter_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 
-#include <stddef.h>
-#include <stdint.h>
+#include <stdint.h>  // uint32_t
 
-#include "frontend/BytecodeControlStructures.h"
-#include "frontend/TDZCheckCache.h"
+#include "frontend/BytecodeControlStructures.h"  // LoopControl
+#include "frontend/BytecodeOffset.h"             // BytecodeOffset
+#include "frontend/TDZCheckCache.h"              // TDZCheckCache
 
 namespace js {
 namespace frontend {
@@ -83,10 +83,10 @@ class MOZ_STACK_CLASS CForEmitter {
 
   // The bytecode offset of loop condition.
   // Not the bytecode offset of loop condition expression itself.
-  ptrdiff_t condOffset_ = 0;
+  BytecodeOffset condOffset_;
 
   // The base bytecode offset used by SRC_FOR.
-  ptrdiff_t biasedTop_ = 0;
+  BytecodeOffset biasedTop_;
 
   // Whether the c-style for loop has `cond` and `update`.
   Cond cond_ = Cond::Missing;

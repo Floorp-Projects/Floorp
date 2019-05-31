@@ -96,6 +96,7 @@ add_task(async function test_filtered_list() {
     detail: "user2",
   }));
   is(countSpan.textContent, "1", "Count should match result amount");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(!loginListItems[1].hidden, "user2 should be visible");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
@@ -104,6 +105,7 @@ add_task(async function test_filtered_list() {
     detail: "user",
   }));
   is(countSpan.textContent, "2", "Count should match result amount");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
@@ -112,6 +114,7 @@ add_task(async function test_filtered_list() {
     detail: "foo",
   }));
   is(countSpan.textContent, "0", "Count should match result amount");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(loginListItems[1].hidden, "user2 should be hidden");
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
@@ -120,6 +123,7 @@ add_task(async function test_filtered_list() {
     detail: "",
   }));
   is(countSpan.textContent, "2", "Count should be reset to full list length");
+  loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
   ok(!loginListItems[0].hidden, "user1 should be visible");
   ok(!loginListItems[1].hidden, "user2 should be visible");
 });
@@ -161,6 +165,30 @@ add_task(async function test_login_removed() {
   is(loginListItems.length, 2, "New login should be removed from the list");
   is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
   is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
+});
+
+add_task(async function test_login_added_filtered() {
+  let countSpan = gLoginList.shadowRoot.querySelector(".count");
+  is(countSpan.textContent, "2", "Count should match full list length");
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    composed: true,
+    detail: "user1",
+  }));
+  is(countSpan.textContent, "1", "Count should match result amount");
+
+  let newLogin = Object.assign({}, TEST_LOGIN_1, {username: "user22", guid: "111222"});
+  gLoginList.loginAdded(newLogin);
+  await asyncElementRendered();
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll("login-list-item");
+  is(loginListItems.length, 3, "New login should be added to the list");
+  is(loginListItems[0].getAttribute("guid"), TEST_LOGIN_1.guid, "login-list-item1 should have correct guid attribute");
+  is(loginListItems[1].getAttribute("guid"), TEST_LOGIN_2.guid, "login-list-item2 should have correct guid attribute");
+  is(loginListItems[2].getAttribute("guid"), newLogin.guid, "login-list-item3 should have correct guid attribute");
+  ok(!loginListItems[0].hidden, "login-list-item1 should be visible");
+  ok(loginListItems[1].hidden, "login-list-item2 should be hidden");
+  ok(loginListItems[2].hidden, "login-list-item3 should be hidden");
+  is(countSpan.textContent, "1", "Count should remain unchanged");
 });
 </script>
 

@@ -143,3 +143,65 @@ BEGIN_TEST(testNewObject_IsMapObject) {
   return true;
 }
 END_TEST(testNewObject_IsMapObject)
+
+static const JSClassOps Base_classOps = {};
+
+static const JSClass Base_class = {"Base",
+                                   0,  // flags
+                                   &Base_classOps};
+
+BEGIN_TEST(testNewObject_Subclassing) {
+  JSObject* proto =
+      JS_InitClass(cx, global, nullptr, &Base_class, Base_constructor, 0,
+                   nullptr, nullptr, nullptr, nullptr);
+  if (!proto) {
+    return false;
+  }
+
+  // Calling Base without `new` should fail with a TypeError.
+  JS::RootedValue expectedError(cx);
+  EVAL("TypeError", &expectedError);
+  JS::RootedValue actualError(cx);
+  EVAL(
+      "try {\n"
+      "  Base();\n"
+      "} catch (e) {\n"
+      "  e.constructor;\n"
+      "}\n",
+      &actualError);
+  CHECK_SAME(actualError, expectedError);
+
+  // Check prototype chains when a JS class extends a base class that's
+  // implemented in C++ using JS_NewObjectForConstructor.
+  EXEC(
+      "class MyClass extends Base {\n"
+      "  ok() { return true; }\n"
+      "}\n"
+      "let myObj = new MyClass();\n");
+
+  JS::RootedValue result(cx);
+  EVAL("myObj.ok()", &result);
+  CHECK_SAME(result, JS::TrueValue());
+
+  EVAL("myObj.__proto__ === MyClass.prototype", &result);
+  CHECK_SAME(result, JS::TrueValue());
+  EVAL("myObj.__proto__.__proto__ === Base.prototype", &result);
+  CHECK_SAME(result, JS::TrueValue());
+
+  EVAL("myObj", &result);
+  CHECK_EQUAL(JS_GetClass(&result.toObject()), &Base_class);
+
+  return true;
+}
+
+static bool Base_constructor(JSContext* cx, unsigned argc, JS::Value* vp) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  JS::RootedObject obj(cx, JS_NewObjectForConstructor(cx, &Base_class, args));
+  if (!obj) {
+    return false;
+  }
+  args.rval().setObject(*obj);
+  return true;
+}
+
+END_TEST(testNewObject_Subclassing)

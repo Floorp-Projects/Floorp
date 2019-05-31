@@ -10,16 +10,17 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE, MOZ_STACK_CLASS, MOZ_ALWAYS_INLINE, MOZ_RAII
 #include "mozilla/Maybe.h"  // Maybe
 
-#include <stddef.h>  // size_t, ptrdiff_t
+#include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
-#include "frontend/EmitterScope.h"   // EmitterScope
-#include "frontend/TDZCheckCache.h"  // TDZCheckCache
-#include "js/RootingAPI.h"           // JS::Handle, JS::Rooted
-#include "vm/BytecodeUtil.h"         // JSOp
-#include "vm/JSAtom.h"               // JSAtom
-#include "vm/NativeObject.h"         // PlainObject
-#include "vm/Scope.h"                // LexicalScope
+#include "frontend/BytecodeOffset.h"  // BytecodeOffset
+#include "frontend/EmitterScope.h"    // EmitterScope
+#include "frontend/TDZCheckCache.h"   // TDZCheckCache
+#include "js/RootingAPI.h"            // JS::Handle, JS::Rooted
+#include "vm/BytecodeUtil.h"          // JSOp
+#include "vm/JSAtom.h"                // JSAtom
+#include "vm/NativeObject.h"          // PlainObject
+#include "vm/Scope.h"                 // LexicalScope
 
 namespace js {
 
@@ -383,7 +384,7 @@ class MOZ_STACK_CLASS ObjectEmitter : public PropertyEmitter {
  private:
   // The offset of JSOP_NEWINIT, which is replced by JSOP_NEWOBJECT later
   // when the object is known to have a fixed shape.
-  ptrdiff_t top_ = 0;
+  BytecodeOffset top_;
 
 #ifdef DEBUG
   // The state of this emitter.

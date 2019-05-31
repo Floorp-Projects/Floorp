@@ -92,7 +92,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_search_engine": "Adaugă motor de căutare",
   "section_menu_action_move_up": "Mută în sus",
   "section_menu_action_move_down": "Mută în jos",
-  "section_menu_action_privacy_notice": "Politica de confidențialitate",
+  "section_menu_action_privacy_notice": "Declarație de confidențialitate",
   "firstrun_title": "Ia Firefox cu tine",
   "firstrun_content": "Ia marcajele, istoricul, parolele și alte setări cu tine pe toate dispozitivele.",
   "firstrun_learn_more_link": "Află mai multe despre Conturi Firefox",
@@ -102,7 +102,7 @@ window.gActivityStreamStrings = {
   "firstrun_invalid_input": "Necesită o adresă de e-mail validă",
   "firstrun_extra_legal_links": "Prin continuare, ești de acord cu {terms} și {privacy}.",
   "firstrun_terms_of_service": "Termenii de utilizare a serviciului",
-  "firstrun_privacy_notice": "Politica de confidențialitate",
+  "firstrun_privacy_notice": "Declarație de confidențialitate",
   "firstrun_continue_to_login": "Continuă",
   "firstrun_skip_login": "Omite acest pas",
   "context_menu_title": "Deschide meniul"

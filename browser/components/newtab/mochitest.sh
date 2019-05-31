@@ -14,7 +14,7 @@ cd /activity-stream && npm install . && npm run buildmc
 
 # Build latest m-c with Activity Stream changes
 cd /mozilla-central && ./mach build \
-  && ./mach lint -l codespell browser/components/newtab \
+  && ./mach lint browser/components/newtab \
   && ./mach test browser/components/newtab/test/browser --headless \
   && ./mach test browser/components/newtab/test/xpcshell \
   && ./mach test --log-tbpl test_run_log \

@@ -9,7 +9,5 @@ interface nsIURI;
 [scriptable, uuid(e14ff4c2-7e26-4748-8755-dfd074b9c746)]
 interface nsIRemoteWebProgressRequest : nsISupports
 {
-  void init(in nsIURI aURI,
-            in nsIURI aOriginalURI,
-            in ACString aMatchedList);
+  void init(in nsIURI aURI, in nsIURI aOriginalURI);
 };

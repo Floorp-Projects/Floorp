@@ -4848,7 +4848,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty();
        r.popFront()) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    Zone* zone = gc::TenuredCell::fromPointer(r.front().key.asCell())->zone();
+    Zone* zone = gc::TenuredCell::fromPointer(r.front().key)->zone();
     if (!zone->gcWeakKeys().put(std::move(r.front().key),
                                 std::move(r.front().value))) {
       oomUnsafe.crash("restoring weak keys table for validator");
@@ -5039,11 +5039,47 @@ bool Zone::findSweepGroupEdges(Zone* atomsZone) {
   return WeakMapBase::findSweepGroupEdges(this);
 }
 
+static bool AddEdgesForMarkQueue(GCMarker& marker) {
+#ifdef DEBUG
+  // For testing only.
+  //
+  // Add edges between all objects mentioned in the test mark queue, since
+  // otherwise they will get marked in a different order than their sweep
+  // groups. Note that this is only done at the beginning of an incremental
+  // collection, so it is possible for objects to be added later that do not
+  // follow the sweep group ordering. These objects will wait until their sweep
+  // group comes up, or will be skipped if their sweep group is already past.
+  JS::Zone* prevZone = nullptr;
+  for (size_t i = 0; i < marker.markQueue.length(); i++) {
+    Value val = marker.markQueue[i].get().unbarrieredGet();
+    if (!val.isObject()) {
+      continue;
+    }
+    JSObject* obj = &val.toObject();
+    JS::Zone* zone = obj->zone();
+    if (!zone->isGCMarking()) {
+      continue;
+    }
+    if (prevZone && prevZone != zone) {
+      if (!prevZone->addSweepGroupEdgeTo(zone)) {
+        return false;
+      }
+    }
+    prevZone = zone;
+  }
+#endif
+  return true;
+}
+
 bool GCRuntime::findSweepGroupEdges() {
   for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
     if (!zone->findSweepGroupEdges(atomsZone)) {
       return false;
     }
+  }
+
+  if (!AddEdgesForMarkQueue(marker)) {
+    return false;
   }
 
   return Debugger::findSweepGroupEdges(rt);
@@ -5082,10 +5118,13 @@ void GCRuntime::groupZonesForSweeping(JS::GCReason reason) {
   }
 
 #ifdef DEBUG
+  unsigned idx = sweepGroupIndex;
   for (Zone* head = currentSweepGroup; head; head = head->nextGroup()) {
     for (Zone* zone = head; zone; zone = zone->nextNodeInGroup()) {
       MOZ_ASSERT(zone->isGCMarking());
+      zone->gcSweepGroupIndex = idx;
     }
+    idx++;
   }
 
   MOZ_ASSERT_IF(!isIncremental, !currentSweepGroup->nextGroup());
@@ -5762,10 +5801,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(FreeOp* fop,
     if (zone->isAtomsZone()) {
       sweepingAtoms = true;
     }
-
-#ifdef DEBUG
-    zone->gcLastSweepGroupIndex = sweepGroupIndex;
-#endif
   }
 
   validateIncrementalMarking();
@@ -5990,6 +6025,11 @@ IncrementalProgress GCRuntime::markUntilBudgetExhausted(
 
   /* Run a marking slice and return whether the stack is now empty. */
   gcstats::AutoPhase ap(stats(), phase);
+
+  if (marker.processMarkQueue() == GCMarker::QueueYielded) {
+    return NotFinished;
+  }
+
   return marker.markUntilBudgetExhausted(sliceBudget) ? Finished : NotFinished;
 }
 
@@ -7112,6 +7152,12 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       MOZ_ASSERT(!lastMarkSlice);
       rootsRemoved = false;
 
+#ifdef DEBUG
+      for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+        zone->gcSweepGroupIndex = 0;
+      }
+#endif
+
       incrementalState = State::MarkRoots;
 
       MOZ_FALLTHROUGH;
@@ -7730,6 +7776,13 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
   AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
   AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
   AutoEnqueuePendingParseTasksAfterGC aept(*this);
+
+#ifdef DEBUG
+  if (IsShutdownGC(reason)) {
+    marker.markQueue.clear();
+    marker.queuePos = 0;
+  }
+#endif
 
   bool repeat;
   do {

@@ -53,3 +53,8 @@ Services.prefs.setBoolPref("browser.newtabpage.activity-stream.asrouter.devtools
 
 **4. Go to `about:newtab#devtools`**
 There should be a "cfr-remote" provider listed.
+
+## Using the staging server for Remote CFR
+
+If your message is published in the staging environment the easiest way to test is using the [Remote Settings Devtools](https://github.com/mozilla/remote-settings-devtools/releases) addon. You can install this by going to `about:debugging` and using the `Load Temporary Addon` feature.
+The devtools allow you to switch your profile between production and staging and takes care of correctly flipping all the required preferences.

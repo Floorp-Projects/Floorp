@@ -5,7 +5,6 @@
 
 const {actionCreators: ac, actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
 const {Prefs} = ChromeUtils.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm");
-const {PrerenderData} = ChromeUtils.import("resource://activity-stream/common/PrerenderData.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
@@ -20,27 +19,11 @@ this.PrefsFeed = class PrefsFeed {
     this._prefs = new Prefs();
   }
 
-  // If any of the prefs are set to something other than what the
-  // prerendered version of AS expects, we can't use it.
-  async _setPrerenderPref() {
-    const indexedDBPrefs = await this._storage.getAll();
-    const prefsAreValid = PrerenderData.arePrefsValid(pref => this._prefs.get(pref), indexedDBPrefs);
-    this._prefs.set("prerender", prefsAreValid);
-  }
-
-  _checkPrerender(name) {
-    if (PrerenderData.invalidatingPrefs.includes(name)) {
-      this._setPrerenderPref();
-    }
-  }
-
   onPrefChanged(name, value) {
     const prefItem = this._prefMap.get(name);
     if (prefItem) {
       this.store.dispatch(ac[prefItem.skipBroadcast ? "OnlyToMain" : "BroadcastToContent"]({type: at.PREF_CHANGED, data: {name, value}}));
     }
-
-    this._checkPrerender(name);
   }
 
   init() {
@@ -78,8 +61,6 @@ this.PrefsFeed = class PrefsFeed {
 
     // Set the initial state of all prefs in redux
     this.store.dispatch(ac.BroadcastToContent({type: at.PREFS_INITIAL_VALUES, data: values}));
-
-    this._setPrerenderPref();
   }
 
   removeListeners() {
@@ -90,7 +71,6 @@ this.PrefsFeed = class PrefsFeed {
     const name = id === "topsites" ? id : `feeds.section.${id}`;
     try {
       await this._storage.set(name, value);
-      this._setPrerenderPref();
     } catch (e) {
       Cu.reportError("Could not set section preferences.");
     }

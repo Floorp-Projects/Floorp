@@ -180,8 +180,7 @@ class RemoteWebProgressManager {
     if (json.requestURI) {
       request = new RemoteWebProgressRequest(
         Services.io.newURI(json.requestURI),
-        Services.io.newURI(json.originalRequestURI),
-        json.matchedList);
+        Services.io.newURI(json.originalRequestURI));
       request = request.QueryInterface(Ci.nsIRequest);
     }
 

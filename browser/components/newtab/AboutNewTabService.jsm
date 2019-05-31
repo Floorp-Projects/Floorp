@@ -31,14 +31,12 @@ const IS_PRIVILEGED_PROCESS = Services.appinfo.remoteType === E10SUtils.PRIVILEG
 const IS_RELEASE_OR_BETA = AppConstants.RELEASE_OR_BETA;
 
 const PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS = "browser.tabs.remote.separatePrivilegedContentProcess";
-const PREF_ACTIVITY_STREAM_PRERENDER_ENABLED = "browser.newtabpage.activity-stream.prerender";
 const PREF_ACTIVITY_STREAM_DEBUG = "browser.newtabpage.activity-stream.debug";
 
 function AboutNewTabService() {
   Services.obs.addObserver(this, TOPIC_APP_QUIT);
   Services.obs.addObserver(this, TOPIC_LOCALES_CHANGE);
   Services.prefs.addObserver(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS, this);
-  Services.prefs.addObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
   if (!IS_RELEASE_OR_BETA) {
     Services.prefs.addObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
   }
@@ -90,7 +88,6 @@ AboutNewTabService.prototype = {
 
   _newTabURL: ABOUT_URL,
   _activityStreamEnabled: false,
-  _activityStreamPrerender: false,
   _activityStreamPath: "",
   _activityStreamDebug: false,
   _privilegedAboutContentProcess: false,
@@ -109,9 +106,6 @@ AboutNewTabService.prototype = {
         if (data === PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS) {
           this._privilegedAboutContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS);
           this.updatePrerenderedPath();
-          this.notifyChange();
-        } else if (data === PREF_ACTIVITY_STREAM_PRERENDER_ENABLED) {
-          this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
           this.notifyChange();
         } else if (!IS_RELEASE_OR_BETA && data === PREF_ACTIVITY_STREAM_DEBUG) {
           this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
@@ -157,10 +151,6 @@ AboutNewTabService.prototype = {
             `${BASE_URL}prerendered/${this.activityStreamLocale}/activity-stream-strings.js`,
             `${BASE_URL}data/content/activity-stream.bundle.js`,
           ];
-
-          if (this._activityStreamPrerender) {
-            scripts.unshift(`${BASE_URL}prerendered/static/activity-stream-initial-state.js`);
-          }
 
           for (let script of scripts) {
             Services.scriptloader.loadSubScript(script, win); // Synchronous call
@@ -217,7 +207,6 @@ AboutNewTabService.prototype = {
       this._activityStreamEnabled = false;
     }
     this._privilegedAboutContentProcess = Services.prefs.getBoolPref(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS);
-    this._activityStreamPrerender = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED);
     if (!IS_RELEASE_OR_BETA) {
       this._activityStreamDebug = Services.prefs.getBoolPref(PREF_ACTIVITY_STREAM_DEBUG, false);
     }
@@ -245,13 +234,11 @@ AboutNewTabService.prototype = {
   get defaultURL() {
     // Generate the desired activity stream resource depending on state, e.g.,
     // resource://activity-stream/prerendered/ar/activity-stream.html
-    // resource://activity-stream/prerendered/en-US/activity-stream-prerendered.html
     // resource://activity-stream/prerendered/static/activity-stream-debug.html
     return [
       "resource://activity-stream/prerendered/",
       this._activityStreamPath,
       "activity-stream",
-      this._activityStreamPrerender ? "-prerendered" : "",
       // Debug version loads dev scripts but noscripts separately loads scripts
       this._activityStreamDebug && !this._privilegedAboutContentProcess ? "-debug" : "",
       this._privilegedAboutContentProcess ? "-noscripts" : "",
@@ -262,15 +249,10 @@ AboutNewTabService.prototype = {
   /*
    * Returns the about:welcome URL
    *
-   * This is calculated in the same way the default URL is, except that we don't
-   * allow prerendering.
+   * This is calculated in the same way the default URL is.
    */
   get welcomeURL() {
-    const prerenderEnabled = this._activityStreamPrerender;
-    this._activityStreamPrerender = false;
-    const url = this.defaultURL;
-    this._activityStreamPrerender = prerenderEnabled;
-    return url;
+    return this.defaultURL;
   },
 
   get newTabURL() {
@@ -299,10 +281,6 @@ AboutNewTabService.prototype = {
 
   get activityStreamEnabled() {
     return this._activityStreamEnabled;
-  },
-
-  get activityStreamPrerender() {
-    return this._activityStreamPrerender;
   },
 
   get activityStreamDebug() {
@@ -352,7 +330,6 @@ AboutNewTabService.prototype = {
     Services.obs.removeObserver(this, TOPIC_APP_QUIT);
     Services.obs.removeObserver(this, TOPIC_LOCALES_CHANGE);
     Services.prefs.removeObserver(PREF_SEPARATE_PRIVILEGEDABOUT_CONTENT_PROCESS, this);
-    Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_PRERENDER_ENABLED, this);
     if (!IS_RELEASE_OR_BETA) {
       Services.prefs.removeObserver(PREF_ACTIVITY_STREAM_DEBUG, this);
     }

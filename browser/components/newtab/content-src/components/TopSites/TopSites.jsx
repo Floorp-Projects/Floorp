@@ -4,6 +4,7 @@ import {CollapsibleSection} from "content-src/components/CollapsibleSection/Coll
 import {ComponentPerfTimer} from "content-src/components/ComponentPerfTimer/ComponentPerfTimer";
 import {connect} from "react-redux";
 import {injectIntl} from "react-intl";
+import {ModalOverlayWrapper} from "../../asrouter/components/ModalOverlay/ModalOverlay";
 import React from "react";
 import {SearchShortcutsForm} from "./SearchShortcutsForm";
 import {TOP_SITES_MAX_SITES_PER_ROW} from "common/Reducers.jsm";
@@ -139,26 +140,24 @@ export class _TopSites extends React.PureComponent {
         <div className="edit-topsites-wrapper">
           {editForm &&
             <div className="edit-topsites">
-              <div className="modal-overlay" onClick={this.onEditFormClose} role="presentation" />
-              <div className="modal">
+              <ModalOverlayWrapper unstyled={true} onClose={this.onEditFormClose} innerClassName="modal" >
                 <TopSiteForm
                   site={props.TopSites.rows[editForm.index]}
                   onClose={this.onEditFormClose}
                   dispatch={this.props.dispatch}
                   intl={this.props.intl}
                   {...editForm} />
-              </div>
+              </ModalOverlayWrapper>
             </div>
           }
           {showSearchShortcutsForm &&
             <div className="edit-search-shortcuts">
-              <div className="modal-overlay" onClick={this.onSearchShortcutsFormClose} role="presentation" />
-              <div className="modal">
+              <ModalOverlayWrapper unstyled={true} onClose={this.onSearchShortcutsFormClose} innerClassName="modal" >
                 <SearchShortcutsForm
                   TopSites={props.TopSites}
                   onClose={this.onSearchShortcutsFormClose}
                   dispatch={this.props.dispatch} />
-              </div>
+              </ModalOverlayWrapper>
             </div>
           }
         </div>
