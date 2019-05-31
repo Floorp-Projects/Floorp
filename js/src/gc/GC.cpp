@@ -937,7 +937,7 @@ bool Chunk::decommitOneFreeArena(JSRuntime* rt, AutoLockGC& lock) {
   return ok;
 }
 
-void Chunk::decommitAllArenasWithoutUnlocking(const AutoLockGC& lock) {
+void Chunk::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
   for (size_t i = 0; i < ArenasPerChunk; ++i) {
     if (decommittedArenas.get(i) || arenas[i].allocated()) {
       continue;
@@ -3546,11 +3546,11 @@ void GCRuntime::triggerFullGCForAtoms(JSContext* cx) {
 
 // Do all possible decommit immediately from the current thread without
 // releasing the GC lock or allocating any memory.
-void GCRuntime::decommitAllWithoutUnlocking(const AutoLockGC& lock) {
+void GCRuntime::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
   MOZ_ASSERT(emptyChunks(lock).count() == 0);
   for (ChunkPool::Iter chunk(availableChunks(lock)); !chunk.done();
        chunk.next()) {
-    chunk->decommitAllArenasWithoutUnlocking(lock);
+    chunk->decommitFreeArenasWithoutUnlocking(lock);
   }
   MOZ_ASSERT(availableChunks(lock).verify());
 }
@@ -7289,11 +7289,9 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       MOZ_FALLTHROUGH;
 
     case State::Compact:
-      MOZ_ASSERT(nursery().isEmpty());
-      storeBuffer().checkEmpty();
-
       if (isCompacting) {
         MOZ_ASSERT(nursery().isEmpty());
+        storeBuffer().checkEmpty();
         if (!startedCompacting) {
           beginCompactPhase();
         }
@@ -7637,11 +7635,11 @@ bool GCRuntime::shouldCollectNurseryForSlice(bool nonincrementalByAPI,
   switch (incrementalState) {
     case State::NotActive:
     case State::Sweep:
-    case State::Finalize:
     case State::Compact:
-    case State::Decommit:
       return true;
     case State::Mark:
+    case State::Finalize:
+    case State::Decommit:
       return (nonincrementalByAPI || budget.isUnlimited() || lastMarkSlice ||
               nursery().shouldCollect() || hasIncrementalTwoSliceZealMode());
     case State::Finish:
@@ -7963,6 +7961,7 @@ void GCRuntime::onOutOfMallocMemory() {
 
   // Make sure we release anything queued for release.
   decommitTask.join();
+  nursery().joinDecommitTask();
 
   // Wait for background free of nursery huge slots to finish.
   sweepTask.join();
@@ -7982,7 +7981,7 @@ void GCRuntime::onOutOfMallocMemory(const AutoLockGC& lock) {
   // Immediately decommit as many arenas as possible in the hopes that this
   // might let the OS scrape together enough pages to satisfy the failing
   // malloc request.
-  decommitAllWithoutUnlocking(lock);
+  decommitFreeArenasWithoutUnlocking(lock);
 }
 
 void GCRuntime::minorGC(JS::GCReason reason, gcstats::PhaseKind phase) {

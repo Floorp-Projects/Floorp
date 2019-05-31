@@ -323,10 +323,19 @@ class TaskGraphGenerator(object):
         do_not_optimize = set(parameters.get('do_not_optimize', []))
         if not parameters.get('optimize_target_tasks', True):
             do_not_optimize = set(target_task_set.graph.nodes).union(do_not_optimize)
-        optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
-                                                                    parameters,
-                                                                    do_not_optimize,
-                                                                    existing_tasks=existing_tasks)
+
+        # this is used for testing experimental optimization strategies
+        strategies = os.environ.get('TASKGRAPH_OPTIMIZE_STRATEGIES')
+        if strategies:
+            strategies = find_object(strategies)
+
+        optimized_task_graph, label_to_taskid = optimize_task_graph(
+            target_task_graph,
+            parameters,
+            do_not_optimize,
+            existing_tasks=existing_tasks,
+            strategies=strategies,
+        )
 
         yield verifications('optimized_task_graph', optimized_task_graph, graph_config)
 

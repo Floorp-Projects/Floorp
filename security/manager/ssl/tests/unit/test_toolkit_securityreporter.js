@@ -92,7 +92,7 @@ function run_test() {
   // Add a cookie so that we can assert it's not sent along with the report.
   Services.cookies.add("localhost", "/", "foo", "bar",
                        false, false, false, Date.now() + 24000 * 60 * 60, {},
-                       Ci.nsICookie2.SAMESITE_NONE);
+                       Ci.nsICookie.SAMESITE_NONE);
 
   registerCleanupFunction(() => {
     Services.cookies.removeAll();

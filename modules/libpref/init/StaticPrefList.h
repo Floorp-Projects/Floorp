@@ -14,10 +14,10 @@
 //
 // The file is separated into sections, where the sections are determined by
 // the first segment of the prefnames within (e.g. "network.predictor.enabled"
-// is within the "Network" section). Sections must be kept in alphabetical
-// order, but prefs within sections need not be.
-// Please follow the existing naming convention when considering adding a new
-// pref and whether you need a new section.
+// is within the `Prefs starting with "network."` section). Sections must be
+// kept in alphabetical order, but prefs within sections need not be. Please
+// follow the existing naming convention when considering adding a new pref and
+// whether you need a new section.
 //
 // Normal prefs
 // ------------
@@ -37,11 +37,16 @@
 // VarCache prefs
 // --------------
 // A VarCache pref is a special type of pref. It can be accessed via the normal
-// pref hash table lookup functions, but it also has an associated global
-// variable (the VarCache) that mirrors the pref value in the prefs hash table,
-// and a getter function that reads that global variable. Using the getter to
-// read the pref's value has the two following advantages over the normal API
-// functions.
+// pref hash table lookup functions, but it also has:
+//
+// - an associated global variable (the VarCache) that mirrors the pref value
+//   in the prefs hash table (unless the update policy is `Skip` or `Once`, see
+//   below); and
+//
+// - a getter function that reads that global variable.
+//
+// Using the getter to read the pref's value has the two following advantages
+// over the normal API functions.
 //
 // - A direct global variable access is faster than a hash table lookup.
 //
@@ -59,14 +64,18 @@
 //     <cpp-type>, <default-value>
 //   )
 //
-// - <update-policy> is one of the following: Skip, Once, Live
-//      Skip: Set the value to <default-value>, skip any Preferences calls.
-//            This policy should be rarely used and its use is discouraged.
-//      Once: Evaluate the pref once, and unchanged during the session once
-//            enterprisepolicies have been loaded.
-//            This is useful for features where you want to ignore any pref
-//            changes until the start of the next browser session.
-//      Live: Evaluate the pref and set callback so it stays current/live.
+// - <update-policy> is one of the following:
+//
+//   * Live: Evaluate the pref and set callback so it stays current/live. This
+//     is the normal policy.
+//
+//   * Skip: Set the value to <default-value>, skip any Preferences calls. This
+//     policy should be rarely used and its use is discouraged.
+//
+//   * Once: Evaluate the pref once, and unchanged during the session once
+//     enterprise policies have been loaded. This is useful for features where
+//     you want to ignore any pref changes until the start of the next browser
+//     session.
 //
 // - <pref-name-string> is the same as for normal prefs.
 //
@@ -920,7 +929,7 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// Prefs starting with "Clipboard."
+// Prefs starting with "clipboard."
 //---------------------------------------------------------------------------
 
 #if !defined(ANDROID) && !defined(XP_MACOSX) && defined(XP_UNIX)
@@ -2235,7 +2244,7 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// Full-screen prefs
+// Prefs starting with "full-screen-api."
 //---------------------------------------------------------------------------
 
 VARCACHE_PREF(
@@ -2260,9 +2269,9 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// Prefs starting with "Fuzzing.". It's important that these can only be checked in fuzzing
-// builds (when FUZZING is defined), otherwise you could enable the fuzzing
-// stuff on your regular build which would be bad :)
+// Prefs starting with "fuzzing.". It's important that these can only be
+// checked in fuzzing builds (when FUZZING is defined), otherwise you could
+// enable the fuzzing stuff on your regular build which would be bad :)
 //---------------------------------------------------------------------------
 
 #ifdef FUZZING
@@ -2448,55 +2457,7 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// Prefs starting with "gl." (OpenGL)
-//---------------------------------------------------------------------------
-
-VARCACHE_PREF(
-  Live,
-  "gl.allow-high-power",
-  GLAllowHighPower,
-  RelaxedAtomicBool, true
-)
-
-VARCACHE_PREF(
-  Live,
-  "gl.ignore-dx-interop2-blacklist",
-  IgnoreDXInterop2Blacklist,
-  RelaxedAtomicBool, false
-)
-
-VARCACHE_PREF(
-  Live,
-  "gl.msaa-level",
-  MSAALevel,
-  RelaxedAtomicUint32, 2
-)
-
-#if defined(XP_MACOSX)
-VARCACHE_PREF(
-  Live,
-  "gl.multithreaded",
-  GLMultithreaded,
-  RelaxedAtomicBool, false
-)
-
-#endif
-VARCACHE_PREF(
-  Live,
-  "gl.require-hardware",
-  RequireHardwareGL,
-  RelaxedAtomicBool, false
-)
-
-VARCACHE_PREF(
-  Live,
-  "gl.use-tls-is-current",
-  UseTLSIsCurrent,
-  RelaxedAtomicInt32, 0
-)
-
-//---------------------------------------------------------------------------
-// Prefs starting with "Graphics."
+// Prefs starting with "gfx."
 //---------------------------------------------------------------------------
 
 VARCACHE_PREF(
@@ -3058,7 +3019,55 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// HTML5 parser prefs
+// Prefs starting with "gl." (OpenGL)
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  Live,
+  "gl.allow-high-power",
+  GLAllowHighPower,
+  RelaxedAtomicBool, true
+)
+
+VARCACHE_PREF(
+  Live,
+  "gl.ignore-dx-interop2-blacklist",
+  IgnoreDXInterop2Blacklist,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gl.msaa-level",
+  MSAALevel,
+  RelaxedAtomicUint32, 2
+)
+
+#if defined(XP_MACOSX)
+VARCACHE_PREF(
+  Live,
+  "gl.multithreaded",
+  GLMultithreaded,
+  RelaxedAtomicBool, false
+)
+#endif
+
+VARCACHE_PREF(
+  Live,
+  "gl.require-hardware",
+  RequireHardwareGL,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "gl.use-tls-is-current",
+  UseTLSIsCurrent,
+  RelaxedAtomicInt32, 0
+)
+
+//---------------------------------------------------------------------------
+// Prefs starting with "html5."
 //---------------------------------------------------------------------------
 
 // Toggle which thread the HTML5 parser uses for stream parsing.
@@ -3089,7 +3098,7 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// Prefs starting with "Image."
+// Prefs starting with "image."
 //---------------------------------------------------------------------------
 
 VARCACHE_PREF(
@@ -3275,7 +3284,7 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// Prefs starting with "JavaScript."
+// Prefs starting with "javascript."
 //---------------------------------------------------------------------------
 
 // BigInt API
@@ -3365,7 +3374,7 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// Graphic Layers prefs
+// Prefs starting with "layers."
 //---------------------------------------------------------------------------
 
 VARCACHE_PREF(
@@ -3849,9 +3858,10 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
-// We allow for configurable and rectangular tile size to avoid wasting memory on devices whose
-// screen size does not align nicely to the default tile size. Although layers can be any size,
-// they are often the same size as the screen, especially for width.
+// We allow for configurable and rectangular tile size to avoid wasting memory
+// on devices whose screen size does not align nicely to the default tile size.
+// Although layers can be any size, they are often the same size as the screen,
+// especially for width.
 VARCACHE_PREF(
   Once,
   "layers.tile-width",
@@ -3951,7 +3961,7 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// Prefs starting with "Layout."
+// Prefs starting with "layout."
 //---------------------------------------------------------------------------
 
 // Debug-only pref to force enable the AccessibleCaret. If you want to
@@ -4705,8 +4715,8 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 512000 // Measured in KiB
 )
 
-// Size of file backed MediaCache while on a connection which is cellular (3G, etc),
-// and thus assumed to be "expensive".
+// Size of file backed MediaCache while on a connection which is cellular (3G,
+// etc), and thus assumed to be "expensive".
 VARCACHE_PREF(
   Live,
   "media.cache_size.cellular",
@@ -5708,6 +5718,20 @@ VARCACHE_PREF(
   RelaxedAtomicInt32, 0
 )
 
+VARCACHE_PREF(
+  Live,
+  "network.cookie.thirdparty.sessionOnly",
+   network_cookie_thirdparty_sessionOnly,
+  bool, false
+)
+
+VARCACHE_PREF(
+  Live,
+  "network.cookie.thirdparty.nonsecureSessionOnly",
+   network_cookie_thirdparty_nonsecureSessionOnly,
+  bool, false
+)
+
 // Enables the predictive service.
 VARCACHE_PREF(
   Live,
@@ -6221,6 +6245,17 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Prefs starting with "thread."
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  Live,
+  "threads.medium_high_event_queue.enabled",
+  threads_medium_high_event_queue_enabled,
+  RelaxedAtomicBool, true
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "toolkit."
 //---------------------------------------------------------------------------
 
@@ -6236,17 +6271,6 @@ VARCACHE_PREF(
   "toolkit.scrollbox.verticalScrollDistance",
   ToolkitVerticalScrollDistance,
   RelaxedAtomicInt32, 3
-)
-
-//---------------------------------------------------------------------------
-// Prefs starting with "thread."
-//---------------------------------------------------------------------------
-
-VARCACHE_PREF(
-  Live,
-  "threads.medium_high_event_queue.enabled",
-  threads_medium_high_event_queue_enabled,
-  RelaxedAtomicBool, true
 )
 
 //---------------------------------------------------------------------------
@@ -6277,7 +6301,7 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
-// View source prefs
+// Prefs starting with "view_source."
 //---------------------------------------------------------------------------
 
 VARCACHE_PREF(
