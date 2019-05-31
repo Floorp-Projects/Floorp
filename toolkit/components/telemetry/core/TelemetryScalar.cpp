@@ -827,7 +827,7 @@ class KeyedScalar {
   typedef mozilla::Pair<nsCString, nsCOMPtr<nsIVariant>> KeyValuePair;
 
   explicit KeyedScalar(const BaseScalarInfo& info)
-      : mScalarInfo(info), mMaximumNumberOfKeys(kMaximumNumberOfKeys){};
+      : mScalarName(info.name()), mMaximumNumberOfKeys(kMaximumNumberOfKeys){};
   ~KeyedScalar() = default;
 
   // Set, Add and SetMaximum functions as described in the Telemetry IDL.
@@ -865,8 +865,8 @@ class KeyedScalar {
  private:
   typedef nsClassHashtable<nsCStringHashKey, ScalarBase> ScalarKeysMapType;
 
+  const nsCString mScalarName;
   ScalarKeysMapType mScalarKeys;
-  const BaseScalarInfo& mScalarInfo;
   uint32_t mMaximumNumberOfKeys;
 
   ScalarResult GetScalarForKey(const StaticMutexAutoLock& locker,
@@ -1012,6 +1012,10 @@ nsresult internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
                                        ProcessID aProcessStorage,
                                        KeyedScalar** aRet);
 
+// Forward declaration
+nsresult internal_GetEnumByScalarName(const StaticMutexAutoLock& lock,
+                                      const nsACString& aName, ScalarKey* aId);
+
 /**
  * Get the scalar for the referenced key.
  * If there's no such key, instantiate a new Scalar object with the
@@ -1036,6 +1040,14 @@ ScalarResult KeyedScalar::GetScalarForKey(const StaticMutexAutoLock& locker,
     return ScalarResult::Ok;
   }
 
+  ScalarKey uniqueId;
+  nsresult rv = internal_GetEnumByScalarName(locker, mScalarName, &uniqueId);
+  if (NS_FAILED(rv)) {
+    return (rv == NS_ERROR_FAILURE) ? ScalarResult::NotInitialized
+                                    : ScalarResult::UnknownScalar;
+  }
+
+  const BaseScalarInfo& info = internal_GetScalarInfo(locker, uniqueId);
   if (mScalarKeys.Count() >= mMaximumNumberOfKeys) {
     if (aKey.EqualsLiteral("telemetry.keyed_scalars_exceed_limit")) {
       return ScalarResult::TooManyKeys;
@@ -1056,13 +1068,12 @@ ScalarResult KeyedScalar::GetScalarForKey(const StaticMutexAutoLock& locker,
       return ScalarResult::TooManyKeys;
     }
 
-    scalarExceed->AddValue(locker, NS_ConvertUTF8toUTF16(mScalarInfo.name()),
-                           1);
+    scalarExceed->AddValue(locker, NS_ConvertUTF8toUTF16(info.name()), 1);
 
     return ScalarResult::TooManyKeys;
   }
 
-  scalar = internal_ScalarAllocate(mScalarInfo);
+  scalar = internal_ScalarAllocate(info);
   if (!scalar) {
     return ScalarResult::InvalidType;
   }
