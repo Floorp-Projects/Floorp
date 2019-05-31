@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="stylesheet" href="chrome://global/content/tabprompts.css">
+    <link rel="stylesheet" href="chrome://global/skin/tabprompts.css">
+
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
 
@@ -17,8 +20,12 @@
   <body>
     <message-bar-stack id="abuse-reports-messages" reverse max-message-bar-count="3">
     </message-bar-stack>
-    <div id="main">
-    </div>
+
+    <div id="main"></div>
+
+    <!-- Include helpers for the inline options browser select and context menus. -->
+    <content-select-dropdown></content-select-dropdown>
+    <proxy-context-menu id="contentAreaContextMenu"></proxy-context-menu>
 
     <template name="addon-options">
       <panel-list>
@@ -89,6 +96,7 @@
     <template name="addon-details">
       <div class="deck-tab-group">
         <named-deck-button deck="details-deck" name="details" data-l10n-id="details-addon-button"></named-deck-button>
+        <named-deck-button deck="details-deck" name="preferences" data-l10n-id="preferences-addon-button"></named-deck-button>
         <named-deck-button deck="details-deck" name="permissions" data-l10n-id="permissions-addon-button"></named-deck-button>
         <named-deck-button deck="details-deck" name="release-notes" data-l10n-id="release-notes-addon-button"></named-deck-button>
       </div>
@@ -159,6 +167,7 @@
             </div>
           </div>
         </section>
+        <inline-options-browser name="preferences"></inline-options-browser>
         <addon-permissions-list name="permissions"></addon-permissions-list>
         <update-release-notes name="release-notes"></update-release-notes>
       </named-deck>

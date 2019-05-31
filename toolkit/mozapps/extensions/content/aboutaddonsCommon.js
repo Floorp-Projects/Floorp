@@ -5,8 +5,8 @@
 
 "use strict";
 
-/* exported attachUpdateHandler, getBrowserElement, loadReleaseNotes,
-            openOptionsInTab, shouldShowPermissionsPrompt,
+/* exported attachUpdateHandler, gBrowser, getBrowserElement, loadReleaseNotes,
+            openOptionsInTab, promiseEvent, shouldShowPermissionsPrompt,
             showPermissionsPrompt */
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -21,6 +21,12 @@ ChromeUtils.defineModuleGetter(this, "Extension",
 
 function getBrowserElement() {
   return window.docShell.chromeEventHandler;
+}
+
+function promiseEvent(event, target, capture = false) {
+  return new Promise(resolve => {
+    target.addEventListener(event, resolve, {capture, once: true});
+  });
 }
 
 function attachUpdateHandler(install) {
@@ -149,3 +155,18 @@ function showPermissionsPrompt(addon) {
     Services.obs.notifyObservers(subject, "webextension-permission-prompt");
   });
 }
+
+// Stub tabbrowser implementation for use by the tab-modal alert code
+// when an alert/prompt/confirm method is called in a WebExtensions options_ui
+// page (See Bug 1385548 for rationale).
+var gBrowser = {
+  getTabModalPromptBox(browser) {
+    const parentWindow = window.docShell.chromeEventHandler.ownerGlobal;
+
+    if (parentWindow.gBrowser) {
+      return parentWindow.gBrowser.getTabModalPromptBox(browser);
+    }
+
+    return null;
+  },
+};
