@@ -95,7 +95,7 @@ class Preview extends PureComponent<Props, State> {
   onTokenEnter = ({ target, tokenPos }) => {
     const { cx, editor, updatePreview, preview } = this.props;
 
-    if (cx.isPaused || (!preview || target !== preview.target)) {
+    if (cx.isPaused && (!preview || target !== preview.target)) {
       updatePreview(cx, target, tokenPos, editor.codeMirror);
     }
   };
