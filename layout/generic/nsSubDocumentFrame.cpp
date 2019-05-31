@@ -47,7 +47,6 @@
 
 using namespace mozilla;
 using mozilla::dom::Document;
-using mozilla::layout::RenderFrame;
 
 static bool sShowPreviousPage = true;
 
