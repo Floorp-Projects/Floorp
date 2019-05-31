@@ -36,6 +36,7 @@ class DocAccessibleParent : public ProxyAccessible,
         mEmulatedWindowHandle(nullptr),
 #endif  // defined(XP_WIN)
         mTopLevel(false),
+        mTopLevelInContentProcess(false),
         mShutdown(false) {
     sMaxDocID++;
     mActorID = sMaxDocID;
@@ -43,8 +44,26 @@ class DocAccessibleParent : public ProxyAccessible,
     LiveDocs().Put(mActorID, this);
   }
 
-  void SetTopLevel() { mTopLevel = true; }
+  /**
+   * Set this as a top level document; i.e. it is not embedded by another remote
+   * document. This also means it is a top level document in its content
+   * process.
+   * Tab documents are top level documents.
+   */
+  void SetTopLevel() {
+    mTopLevel = true;
+    mTopLevelInContentProcess = true;
+  }
   bool IsTopLevel() const { return mTopLevel; }
+
+  /**
+   * Set this as a top level document in its content process.
+   * Note that this could be an out-of-process iframe embedded by a remote
+   * embedder document. In that case, IsToplevel() will return false, but
+   * IsTopLevelInContentProcess() will return true.
+   */
+  void SetTopLevelInContentProcess() { mTopLevelInContentProcess = true; }
+  bool IsTopLevelInContentProcess() const { return mTopLevelInContentProcess; }
 
   bool IsShutdown() const { return mShutdown; }
 
@@ -279,6 +298,7 @@ class DocAccessibleParent : public ProxyAccessible,
   nsTHashtable<ProxyEntry> mAccessibles;
   uint64_t mActorID;
   bool mTopLevel;
+  bool mTopLevelInContentProcess;
   bool mShutdown;
 
   static uint64_t sMaxDocID;
