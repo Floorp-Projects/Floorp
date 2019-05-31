@@ -12,12 +12,8 @@
 #include "gc/Barrier.h"
 #include "gc/DeletePolicy.h"
 #include "gc/Tracer.h"
-#include "gc/Zone.h"
+#include "gc/ZoneAllocator.h"
 #include "js/HashTable.h"
-
-namespace JS {
-class Zone;
-}  // namespace JS
 
 namespace js {
 

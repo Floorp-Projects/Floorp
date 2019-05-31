@@ -367,6 +367,24 @@ inline bool ObjectGroup::hasUnanalyzedPreliminaryObjects() {
          maybePreliminaryObjectsDontCheckGeneration();
 }
 
+class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
+  JS::Zone* zone;
+  bool saved;
+
+ public:
+  explicit AutoSuppressAllocationMetadataBuilder(JSContext* cx)
+      : AutoSuppressAllocationMetadataBuilder(cx->realm()->zone()) {}
+
+  explicit AutoSuppressAllocationMetadataBuilder(JS::Zone* zone)
+      : zone(zone), saved(zone->suppressAllocationMetadataBuilder) {
+    zone->suppressAllocationMetadataBuilder = true;
+  }
+
+  ~AutoSuppressAllocationMetadataBuilder() {
+    zone->suppressAllocationMetadataBuilder = saved;
+  }
+};
+
 /*
  * Structure for type inference entry point functions. All functions which can
  * change type information must use this, and functions which depend on
