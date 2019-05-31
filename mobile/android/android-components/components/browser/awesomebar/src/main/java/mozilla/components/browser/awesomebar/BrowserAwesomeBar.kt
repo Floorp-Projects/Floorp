@@ -43,7 +43,7 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr), AwesomeBar {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val jobDispatcher = Executors.newFixedThreadPool(PROVIDER_QUERY_THREADS).asCoroutineDispatcher()
+    internal var jobDispatcher = Executors.newFixedThreadPool(PROVIDER_QUERY_THREADS).asCoroutineDispatcher()
     private val providers: MutableList<AwesomeBar.SuggestionProvider> = mutableListOf()
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val uniqueSuggestionIds = LruCache<String, Long>(INITIAL_NUMBER_OF_PROVIDERS * PROVIDER_MAX_SUGGESTIONS)
@@ -137,6 +137,8 @@ class BrowserAwesomeBar @JvmOverloads constructor(
         job?.cancel()
 
         job = scope.launch {
+            suggestionsAdapter.optionallyClearSuggestions()
+
             providers.forEach { provider ->
                 launch {
                     val suggestions = withContext(jobDispatcher) { provider.block() }
@@ -148,8 +150,6 @@ class BrowserAwesomeBar @JvmOverloads constructor(
                 }
             }
         }
-
-        suggestionsAdapter.optionallyClearSuggestions()
     }
 
     internal fun processProviderSuggestions(suggestions: List<AwesomeBar.Suggestion>): List<AwesomeBar.Suggestion> {

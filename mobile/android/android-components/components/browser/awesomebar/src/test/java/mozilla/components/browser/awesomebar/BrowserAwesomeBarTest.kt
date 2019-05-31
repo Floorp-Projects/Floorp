@@ -4,7 +4,10 @@
 
 package mozilla.components.browser.awesomebar
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.awesomebar.transform.SuggestionTransformer
@@ -27,6 +30,8 @@ import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import java.util.UUID
+import org.mockito.Mockito.inOrder
+import java.util.concurrent.Executor
 
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
@@ -418,6 +423,41 @@ class BrowserAwesomeBarTest {
 
         awesomeBar.addProviders(provider1)
         awesomeBar.addProviders(provider2, provider3)
+    }
+
+    @Test
+    fun `clears suggestions before new ones are produced`() {
+        val provider = mockProvider()
+
+        var mainRunnable: Runnable? = null
+        val fakeMainDispatcher = Executor {
+            if (mainRunnable == null) {
+                mainRunnable = it
+            } else {
+                it.run()
+            }
+        }.asCoroutineDispatcher()
+
+        val fakeJobDispatcher = Executor {
+            it.run()
+        }.asCoroutineDispatcher() as ExecutorCoroutineDispatcher
+
+        val adapter: SuggestionsAdapter = mock()
+        val awesomeBar = BrowserAwesomeBar(testContext)
+        awesomeBar.scope = CoroutineScope(fakeMainDispatcher)
+        awesomeBar.jobDispatcher = fakeJobDispatcher
+        awesomeBar.suggestionsAdapter = adapter
+        awesomeBar.addProviders(provider)
+
+        runBlocking {
+            val inOrder = inOrder(adapter, provider)
+            awesomeBar.onInputChanged("Hello!")
+            verify(adapter, never()).optionallyClearSuggestions()
+            mainRunnable?.run()
+
+            inOrder.verify(adapter).optionallyClearSuggestions()
+            inOrder.verify(provider).onInputChanged("Hello!")
+        }
     }
 
     private fun mockProvider(): AwesomeBar.SuggestionProvider = spy(object : AwesomeBar.SuggestionProvider {
