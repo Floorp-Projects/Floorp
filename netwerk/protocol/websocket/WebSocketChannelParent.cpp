@@ -27,7 +27,6 @@ WebSocketChannelParent::WebSocketChannelParent(
     PBOverrideStatus aOverrideStatus, uint32_t aSerial)
     : mAuthProvider(aAuthProvider),
       mLoadContext(aLoadContext),
-      mIPCOpen(true),
       mSerial(aSerial) {
   // Websocket channels can't have a private browsing override
   MOZ_ASSERT_IF(!aLoadContext, aOverrideStatus == kPBOverride_Unset);
@@ -41,7 +40,7 @@ mozilla::ipc::IPCResult WebSocketChannelParent::RecvDeleteSelf() {
   mChannel = nullptr;
   mAuthProvider = nullptr;
   IProtocol* mgr = Manager();
-  if (mIPCOpen && !Send__delete__(this)) {
+  if (CanRecv() && !Send__delete__(this)) {
     return IPC_FAIL_NO_REASON(mgr);
   }
   return IPC_OK();
@@ -202,8 +201,8 @@ WebSocketChannelParent::OnStart(nsISupports* aContext) {
     encrypted = channel->IsEncrypted();
     httpChannelId = channel->HttpChannelId();
   }
-  if (!mIPCOpen || !SendOnStart(protocol, extensions, effectiveURL, encrypted,
-                                httpChannelId)) {
+  if (!CanRecv() || !SendOnStart(protocol, extensions, effectiveURL, encrypted,
+                                 httpChannelId)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -212,7 +211,7 @@ WebSocketChannelParent::OnStart(nsISupports* aContext) {
 NS_IMETHODIMP
 WebSocketChannelParent::OnStop(nsISupports* aContext, nsresult aStatusCode) {
   LOG(("WebSocketChannelParent::OnStop() %p\n", this));
-  if (!mIPCOpen || !SendOnStop(aStatusCode)) {
+  if (!CanRecv() || !SendOnStop(aStatusCode)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -222,7 +221,7 @@ NS_IMETHODIMP
 WebSocketChannelParent::OnMessageAvailable(nsISupports* aContext,
                                            const nsACString& aMsg) {
   LOG(("WebSocketChannelParent::OnMessageAvailable() %p\n", this));
-  if (!mIPCOpen || !SendOnMessageAvailable(nsCString(aMsg))) {
+  if (!CanRecv() || !SendOnMessageAvailable(nsCString(aMsg))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -232,7 +231,7 @@ NS_IMETHODIMP
 WebSocketChannelParent::OnBinaryMessageAvailable(nsISupports* aContext,
                                                  const nsACString& aMsg) {
   LOG(("WebSocketChannelParent::OnBinaryMessageAvailable() %p\n", this));
-  if (!mIPCOpen || !SendOnBinaryMessageAvailable(nsCString(aMsg))) {
+  if (!CanRecv() || !SendOnBinaryMessageAvailable(nsCString(aMsg))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -241,7 +240,7 @@ WebSocketChannelParent::OnBinaryMessageAvailable(nsISupports* aContext,
 NS_IMETHODIMP
 WebSocketChannelParent::OnAcknowledge(nsISupports* aContext, uint32_t aSize) {
   LOG(("WebSocketChannelParent::OnAcknowledge() %p\n", this));
-  if (!mIPCOpen || !SendOnAcknowledge(aSize)) {
+  if (!CanRecv() || !SendOnAcknowledge(aSize)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -251,7 +250,7 @@ NS_IMETHODIMP
 WebSocketChannelParent::OnServerClose(nsISupports* aContext, uint16_t code,
                                       const nsACString& reason) {
   LOG(("WebSocketChannelParent::OnServerClose() %p\n", this));
-  if (!mIPCOpen || !SendOnServerClose(code, nsCString(reason))) {
+  if (!CanRecv() || !SendOnServerClose(code, nsCString(reason))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -266,8 +265,6 @@ void WebSocketChannelParent::ActorDestroy(ActorDestroyReason why) {
     Unused << mChannel->Close(nsIWebSocketChannel::CLOSE_GOING_AWAY,
                               NS_LITERAL_CSTRING("Child was killed"));
   }
-
-  mIPCOpen = false;
 }
 
 //-----------------------------------------------------------------------------
