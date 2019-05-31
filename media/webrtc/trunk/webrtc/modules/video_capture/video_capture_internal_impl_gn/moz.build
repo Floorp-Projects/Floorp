@@ -178,20 +178,14 @@ if CONFIG["OS_TARGET"] == "WINNT":
     ]
 
     SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseFilter.cpp",
         "/media/webrtc/trunk/webrtc/modules/video_capture/windows/device_info_ds.cc",
         "/media/webrtc/trunk/webrtc/modules/video_capture/windows/help_functions_ds.cc",
         "/media/webrtc/trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc"
     ]
 
     UNIFIED_SOURCES += [
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseInputPin.cpp",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/BasePin.cpp",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/device_info_mf.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/MediaType.cpp",
         "/media/webrtc/trunk/webrtc/modules/video_capture/windows/video_capture_ds.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/video_capture_factory_windows.cc",
-        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/video_capture_mf.cc"
+        "/media/webrtc/trunk/webrtc/modules/video_capture/windows/video_capture_factory_windows.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":
