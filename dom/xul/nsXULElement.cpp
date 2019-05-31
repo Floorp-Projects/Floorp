@@ -621,7 +621,7 @@ void nsXULElement::UpdateEditableState(bool aNotify) {
 
 class XULInContentErrorReporter : public Runnable {
  public:
-  explicit XULInContentErrorReporter(Document* aDocument)
+  explicit XULInContentErrorReporter(Document& aDocument)
       : mozilla::Runnable("XULInContentErrorReporter"), mDocument(aDocument) {}
 
   NS_IMETHOD Run() override {
@@ -630,7 +630,7 @@ class XULInContentErrorReporter : public Runnable {
   }
 
  private:
-  nsCOMPtr<Document> mDocument;
+  OwningNonNull<Document> mDocument;
 };
 
 static bool NeedTooltipSupport(const nsXULElement& aXULElement) {
@@ -648,11 +648,12 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = nsStyledElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  Document& doc = aContext.OwnerDoc();
+
   // FIXME(emilio): Could use IsInComposedDoc().
-  Document* doc = OwnerDoc();
   if (!aContext.GetBindingParent() && IsInUncomposedDoc() &&
-      !doc->IsLoadedAsInteractiveData() && !doc->AllowXULXBL() &&
-      !doc->HasWarnedAbout(Document::eImportXULIntoContent)) {
+      !doc.IsLoadedAsInteractiveData() && !doc.AllowXULXBL() &&
+      !doc.HasWarnedAbout(Document::eImportXULIntoContent)) {
     nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(doc));
   }
 
@@ -661,7 +662,7 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
 #ifdef DEBUG
-  if (!doc->AllowXULXBL() && !doc->IsUnstyledDocument()) {
+  if (!doc.AllowXULXBL() && !doc.IsUnstyledDocument()) {
     // To save CPU cycles and memory, non-XUL documents only load the user
     // agent style sheet rules for a minimal set of XUL elements such as
     // 'scrollbar' that may be created implicitly for their content (those
@@ -691,10 +692,10 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   if (XULBroadcastManager::MayNeedListener(*this)) {
-    if (!doc->HasXULBroadcastManager()) {
-      doc->InitializeXULBroadcastManager();
+    if (!doc.HasXULBroadcastManager()) {
+      doc.InitializeXULBroadcastManager();
     }
-    XULBroadcastManager* broadcastManager = doc->GetXULBroadcastManager();
+    XULBroadcastManager* broadcastManager = doc.GetXULBroadcastManager();
     broadcastManager->AddListener(this);
   }
   return rv;

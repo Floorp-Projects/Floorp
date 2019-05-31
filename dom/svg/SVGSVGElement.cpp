@@ -373,7 +373,7 @@ nsresult SVGSVGElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   // NOTE(emilio): Using aParent because we still haven't called our base class.
   // FIXME(emilio, bug 1555948): Should probably use IsInComposedDoc()?
   if (aParent.IsInUncomposedDoc()) {
-    if ((smilController = OwnerDoc()->GetAnimationController())) {
+    if ((smilController = aContext.OwnerDoc().GetAnimationController())) {
       // SMIL is enabled in this document
       if (WillBeOutermostSVG(aParent, aContext.GetBindingParent())) {
         // We'll be the outermost <svg> element.  We'll need a time container.
