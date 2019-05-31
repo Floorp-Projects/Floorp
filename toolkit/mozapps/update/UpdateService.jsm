@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}");
 
+const PREF_APP_UPDATE_ALTUPDATEDIRPATH     = "app.update.altUpdateDirPath";
 const PREF_APP_UPDATE_ALTWINDOWTYPE        = "app.update.altwindowtype";
 const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
@@ -37,6 +38,7 @@ const PREF_APP_UPDATE_BITS_INTRIALGROUP    = "app.update.BITS.inTrialGroup";
 const PREF_APP_UPDATE_CANCELATIONS         = "app.update.cancelations";
 const PREF_APP_UPDATE_CANCELATIONS_OSX     = "app.update.cancelations.osx";
 const PREF_APP_UPDATE_CANCELATIONS_OSX_MAX = "app.update.cancelations.osx.max";
+const PREF_APP_UPDATE_DISABLEDFORTESTING   = "app.update.disabledForTesting";
 const PREF_APP_UPDATE_DOORHANGER           = "app.update.doorhanger";
 const PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS    = "app.update.download.attempts";
 const PREF_APP_UPDATE_DOWNLOAD_MAXATTEMPTS = "app.update.download.maxAttempts";
@@ -44,7 +46,6 @@ const PREF_APP_UPDATE_ELEVATE_NEVER        = "app.update.elevate.never";
 const PREF_APP_UPDATE_ELEVATE_VERSION      = "app.update.elevate.version";
 const PREF_APP_UPDATE_ELEVATE_ATTEMPTS     = "app.update.elevate.attempts";
 const PREF_APP_UPDATE_ELEVATE_MAXATTEMPTS  = "app.update.elevate.maxAttempts";
-const PREF_APP_UPDATE_DISABLEDFORTESTING   = "app.update.disabledForTesting";
 const PREF_APP_UPDATE_IDLETIME             = "app.update.idletime";
 const PREF_APP_UPDATE_LOG                  = "app.update.log";
 const PREF_APP_UPDATE_LOG_FILE             = "app.update.log.file";
@@ -676,6 +677,29 @@ function LOG(string) {
  * @return  nsIFile object for the location specified.
  */
 function getUpdateDirCreate(pathArray) {
+  if (Cu.isInAutomation) {
+    // This allows tests to use an alternate updates directory so they can test
+    // startup behavior.
+    const MAGIC_TEST_ROOT_PREFIX = "<test-root>";
+    const PREF_TEST_ROOT = "mochitest.testRoot";
+    let alternatePath =
+      Services.prefs.getCharPref(PREF_APP_UPDATE_ALTUPDATEDIRPATH, null);
+    if (alternatePath && alternatePath.startsWith(MAGIC_TEST_ROOT_PREFIX)) {
+      let testRoot = Services.prefs.getCharPref(PREF_TEST_ROOT);
+      let relativePath = alternatePath.substring(MAGIC_TEST_ROOT_PREFIX.length);
+      if (AppConstants.platform == "win") {
+        relativePath = relativePath.replace(/\//g, "\\");
+      }
+      alternatePath = testRoot + relativePath;
+      let updateDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      updateDir.initWithPath(alternatePath);
+      for (let i = 0; i < pathArray.length; ++i) {
+        updateDir.append(pathArray[i]);
+      }
+      return updateDir;
+    }
+  }
+
   return FileUtils.getDir(KEY_UPDROOT, pathArray, true);
 }
 
@@ -4033,7 +4057,7 @@ Downloader.prototype = {
         this._bitsActiveNotifications = true;
       }
 
-      let updateRootDir = FileUtils.getDir("UpdRootD", [], true);
+      let updateRootDir = FileUtils.getDir(KEY_UPDROOT, [], true);
       let jobName = "MozillaUpdate " + updateRootDir.leafName;
       let updatePath = updateDir.path;
       if (!Bits.initialized) {
