@@ -42,19 +42,19 @@ interface nsICookieTransactionCallback : nsISupports
  *          explanation of data strings below.
  * subject: see below.
  * data   : "deleted"
- *          a cookie was deleted. the subject is an nsICookie2 representing
+ *          a cookie was deleted. the subject is an nsICookie representing
  *          the deleted cookie.
  *          "added"
- *          a cookie was added. the subject is an nsICookie2 representing
+ *          a cookie was added. the subject is an nsICookie representing
  *          the added cookie.
  *          "changed"
- *          a cookie was changed. the subject is an nsICookie2 representing
+ *          a cookie was changed. the subject is an nsICookie representing
  *          the new cookie. (note that host, path, and name are invariant
  *          for a given cookie; other parameters may change.)
  *          "batch-deleted"
  *          a set of cookies was purged (typically, because they have either
  *          expired or because the cookie list has grown too large). The subject
- *          is an nsIArray of nsICookie2's representing the deleted cookies.
+ *          is an nsIArray of nsICookie's representing the deleted cookies.
  *          Note that the array could contain a single cookie.
  *          "cleared"
  *          the entire cookie list was cleared. the subject is null.

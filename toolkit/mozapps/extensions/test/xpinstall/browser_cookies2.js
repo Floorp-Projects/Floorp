@@ -9,7 +9,7 @@ function test() {
 
   Services.cookies.add("example.com", "/browser/" + RELATIVE_DIR, "xpinstall",
     "true", false, false, true, (Date.now() / 1000) + 60, {},
-    Ci.nsICookie2.SAMESITE_NONE);
+    Ci.nsICookie.SAMESITE_NONE);
 
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);

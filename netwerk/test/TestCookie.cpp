@@ -8,7 +8,7 @@
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
-#include "nsICookie2.h"
+#include "nsICookie.h"
 #include <stdio.h>
 #include "plstr.h"
 #include "nsNetUtil.h"
@@ -857,7 +857,7 @@ TEST(TestCookie, TestCookieMain)
                             true,       // is session
                             INT64_MAX,  // expiry time
                             &attrs,     // originAttributes
-                            nsICookie2::SAMESITE_NONE)));
+                            nsICookie::SAMESITE_NONE)));
   EXPECT_TRUE(NS_SUCCEEDED(
       cookieMgr2->AddNative(NS_LITERAL_CSTRING("cookiemgr.test"),  // domain
                             NS_LITERAL_CSTRING("/foo"),            // path
@@ -868,7 +868,7 @@ TEST(TestCookie, TestCookieMain)
                             true,                            // is session
                             PR_Now() / PR_USEC_PER_SEC + 2,  // expiry time
                             &attrs,                          // originAttributes
-                            nsICookie2::SAMESITE_NONE)));
+                            nsICookie::SAMESITE_NONE)));
   EXPECT_TRUE(NS_SUCCEEDED(
       cookieMgr2->AddNative(NS_LITERAL_CSTRING("new.domain"),  // domain
                             NS_LITERAL_CSTRING("/rabbit"),     // path
@@ -879,21 +879,21 @@ TEST(TestCookie, TestCookieMain)
                             true,                              // is session
                             INT64_MAX,                         // expiry time
                             &attrs,  // originAttributes
-                            nsICookie2::SAMESITE_NONE)));
+                            nsICookie::SAMESITE_NONE)));
   // confirm using enumerator
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   EXPECT_TRUE(
       NS_SUCCEEDED(cookieMgr->GetEnumerator(getter_AddRefs(enumerator))));
   int32_t i = 0;
   bool more;
-  nsCOMPtr<nsICookie2> expiredCookie, newDomainCookie;
+  nsCOMPtr<nsICookie> expiredCookie, newDomainCookie;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&more)) && more) {
     nsCOMPtr<nsISupports> cookie;
     if (NS_FAILED(enumerator->GetNext(getter_AddRefs(cookie)))) break;
     ++i;
 
     // keep tabs on the second and third cookies, so we can check them later
-    nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
+    nsCOMPtr<nsICookie> cookie2(do_QueryInterface(cookie));
     if (!cookie2) break;
     nsAutoCString name;
     cookie2->GetName(name);
@@ -941,7 +941,7 @@ TEST(TestCookie, TestCookieMain)
                             true,                              // is session
                             INT64_MIN,                         // expiry time
                             &attrs,  // originAttributes
-                            nsICookie2::SAMESITE_NONE)));
+                            nsICookie::SAMESITE_NONE)));
   EXPECT_TRUE(NS_SUCCEEDED(cookieMgr2->CookieExistsNative(
       NS_LITERAL_CSTRING("new.domain"), NS_LITERAL_CSTRING("/rabbit"),
       NS_LITERAL_CSTRING("test3"), &attrs, &found)));
@@ -1072,24 +1072,24 @@ TEST(TestCookie, TestCookieMain)
     ++i;
 
     // keep tabs on the second and third cookies, so we can check them later
-    nsCOMPtr<nsICookie2> cookie2(do_QueryInterface(cookie));
+    nsCOMPtr<nsICookie> cookie2(do_QueryInterface(cookie));
     if (!cookie2) break;
     nsAutoCString name;
     cookie2->GetName(name);
     int32_t sameSiteAttr;
     cookie2->GetSameSite(&sameSiteAttr);
     if (name.EqualsLiteral("unset")) {
-      EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_NONE);
+      EXPECT_TRUE(sameSiteAttr == nsICookie::SAMESITE_NONE);
     } else if (name.EqualsLiteral("unspecified")) {
-      EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_NONE);
+      EXPECT_TRUE(sameSiteAttr == nsICookie::SAMESITE_NONE);
     } else if (name.EqualsLiteral("empty")) {
-      EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_NONE);
+      EXPECT_TRUE(sameSiteAttr == nsICookie::SAMESITE_NONE);
     } else if (name.EqualsLiteral("bogus")) {
-      EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_NONE);
+      EXPECT_TRUE(sameSiteAttr == nsICookie::SAMESITE_NONE);
     } else if (name.EqualsLiteral("strict")) {
-      EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_STRICT);
+      EXPECT_TRUE(sameSiteAttr == nsICookie::SAMESITE_STRICT);
     } else if (name.EqualsLiteral("lax")) {
-      EXPECT_TRUE(sameSiteAttr == nsICookie2::SAMESITE_LAX);
+      EXPECT_TRUE(sameSiteAttr == nsICookie::SAMESITE_LAX);
     }
   }
 

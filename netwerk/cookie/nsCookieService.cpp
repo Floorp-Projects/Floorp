@@ -2264,7 +2264,7 @@ void nsCookieService::NotifyChanged(nsISupports* aSubject,
 }
 
 already_AddRefed<nsIArray> nsCookieService::CreatePurgeList(
-    nsICookie2* aCookie) {
+    nsICookie* aCookie) {
   nsCOMPtr<nsIMutableArray> removedList =
       do_CreateInstance(NS_ARRAY_CONTRACTID);
   removedList->AppendElement(aCookie);
@@ -2272,7 +2272,7 @@ already_AddRefed<nsIArray> nsCookieService::CreatePurgeList(
 }
 
 void nsCookieService::CreateOrUpdatePurgeList(nsIArray** aPurgedList,
-                                              nsICookie2* aCookie) {
+                                              nsICookie* aCookie) {
   if (!*aPurgedList) {
     COOKIE_LOGSTRING(LogLevel::Debug, ("Creating new purge list"));
     nsCOMPtr<nsIArray> purgedList = CreatePurgeList(aCookie);
@@ -2400,7 +2400,7 @@ nsCookieService::GetEnumerator(nsISimpleEnumerator** aEnumerator) {
     }
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie2));
+  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie));
 }
 
 NS_IMETHODIMP
@@ -2424,7 +2424,7 @@ nsCookieService::GetSessionEnumerator(nsISimpleEnumerator** aEnumerator) {
     }
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie2));
+  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie));
 }
 
 NS_IMETHODIMP
@@ -2859,7 +2859,7 @@ nsCookieService::ImportCookies(nsIFile* aCookieFile) {
         nsCookie::GenerateUniqueCreationTime(currentTimeInUsec), false,
         Substring(buffer, secureIndex, expiresIndex - secureIndex - 1)
             .EqualsLiteral(kTrue),
-        isHttpOnly, key.mOriginAttributes, nsICookie2::SAMESITE_NONE);
+        isHttpOnly, key.mOriginAttributes, nsICookie::SAMESITE_NONE);
     if (!newCookie) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3044,12 +3044,12 @@ void nsCookieService::GetCookiesForURI(
     if (aIsSameSiteForeign) {
       // it if's a cross origin request and the cookie is same site only
       // (strict) don't send it
-      if (sameSiteAttr == nsICookie2::SAMESITE_STRICT) {
+      if (sameSiteAttr == nsICookie::SAMESITE_STRICT) {
         continue;
       }
       // if it's a cross origin request, the cookie is same site lax, but it's
       // not a top-level navigation, don't send it
-      if (sameSiteAttr == nsICookie2::SAMESITE_LAX && !aIsSafeTopLevelNav) {
+      if (sameSiteAttr == nsICookie::SAMESITE_LAX && !aIsSafeTopLevelNav) {
         continue;
       }
     }
@@ -3311,8 +3311,7 @@ bool nsCookieService::CanSetCookie(nsIURI* aHostURI, const nsCookieKey& aKey,
 
   // If the new cookie is same-site but in a cross site context,
   // browser must ignore the cookie.
-  if ((aCookieData.sameSite() != nsICookie2::SAMESITE_NONE) &&
-      aThirdPartyUtil) {
+  if ((aCookieData.sameSite() != nsICookie::SAMESITE_NONE) && aThirdPartyUtil) {
     // Do not treat loads triggered by web extensions as foreign
     bool addonAllowsLoad = false;
     if (aChannel) {
@@ -3376,7 +3375,7 @@ bool nsCookieService::SetCookieInternal(nsIURI* aHostURI,
     bool permission;
     mPermissionService->CanSetCookie(
         aHostURI, aChannel,
-        static_cast<nsICookie2*>(static_cast<nsCookie*>(cookie)),
+        static_cast<nsICookie*>(static_cast<nsCookie*>(cookie)),
         &cookieData.isSession(), &cookieData.expiry(), &permission);
     if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
@@ -3754,7 +3753,7 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
 
   aCookieData.isSecure() = false;
   aCookieData.isHttpOnly() = false;
-  aCookieData.sameSite() = nsICookie2::SAMESITE_NONE;
+  aCookieData.sameSite() = nsICookie::SAMESITE_NONE;
 
   nsDependentCSubstring tokenString(cookieStart, cookieStart);
   nsDependentCSubstring tokenValue(cookieStart, cookieStart);
@@ -3808,9 +3807,9 @@ bool nsCookieService::ParseAttributes(nsDependentCString& aCookieHeader,
 
     else if (tokenString.LowerCaseEqualsLiteral(kSameSite)) {
       if (tokenValue.LowerCaseEqualsLiteral(kSameSiteLax)) {
-        aCookieData.sameSite() = nsICookie2::SAMESITE_LAX;
+        aCookieData.sameSite() = nsICookie::SAMESITE_LAX;
       } else if (tokenValue.LowerCaseEqualsLiteral(kSameSiteStrict)) {
-        aCookieData.sameSite() = nsICookie2::SAMESITE_STRICT;
+        aCookieData.sameSite() = nsICookie::SAMESITE_STRICT;
       }
     }
   }
@@ -4589,7 +4588,7 @@ nsCookieService::GetCookiesFromHost(const nsACString& aHost,
     cookieList.AppendObject(cookies[i]);
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie2));
+  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie));
 }
 
 NS_IMETHODIMP
@@ -4646,7 +4645,7 @@ nsresult nsCookieService::GetCookiesWithOriginAttributes(
     }
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookies, NS_GET_IID(nsICookie2));
+  return NS_NewArrayEnumerator(aEnumerator, cookies, NS_GET_IID(nsICookie));
 }
 
 NS_IMETHODIMP

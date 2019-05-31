@@ -68,8 +68,8 @@ already_AddRefed<nsCookie> nsCookie::Create(
 
   // If aSameSite is not a sensible value, assume strict
   if (cookie->mData.sameSite() < 0 ||
-      cookie->mData.sameSite() > nsICookie2::SAMESITE_STRICT) {
-    cookie->mData.sameSite() = nsICookie2::SAMESITE_STRICT;
+      cookie->mData.sameSite() > nsICookie::SAMESITE_STRICT) {
+    cookie->mData.sameSite() = nsICookie::SAMESITE_STRICT;
   }
 
   return cookie.forget();
@@ -172,4 +172,4 @@ nsCookie::GetExpires(uint64_t* aExpires) {
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsCookie, nsICookie2, nsICookie)
+NS_IMPL_ISUPPORTS(nsCookie, nsICookie)
