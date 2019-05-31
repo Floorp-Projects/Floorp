@@ -5,24 +5,42 @@
 // @flow
 
 import { createParentMap } from "./utils";
+import flattenDeep from "lodash/flattenDeep";
 import type { TreeNode, TreeDirectory } from "./types";
 import type { Source } from "../../types";
 
-function _traverse(subtree: TreeNode, source: Source) {
-  if (subtree.type === "source") {
-    if (subtree.contents.id === source.id) {
+function findSourceItem(sourceTree: TreeDirectory, source: Source): ?TreeNode {
+  function _traverse(subtree: TreeNode) {
+    if (subtree.type === "source") {
+      if (subtree.contents.id === source.id) {
+        return subtree;
+      }
+
+      return null;
+    }
+
+    const matches = subtree.contents.map(child => _traverse(child));
+    return matches && matches.filter(Boolean)[0];
+  }
+
+  return _traverse(sourceTree);
+}
+
+export function findSourceTreeNodes(sourceTree: TreeDirectory, path: string) {
+  function _traverse(subtree: TreeNode) {
+    if (subtree.path.endsWith(path)) {
       return subtree;
     }
 
-    return null;
+    if (subtree.type === "directory") {
+      const matches = subtree.contents.map(child => _traverse(child));
+      return matches && matches.filter(Boolean);
+    }
   }
 
-  const matches = subtree.contents.map(child => _traverse(child, source));
-  return matches && matches.filter(Boolean)[0];
-}
-
-function findSourceItem(sourceTree: TreeDirectory, source: Source): ?TreeNode {
-  return _traverse(sourceTree, source);
+  const result = _traverse(sourceTree);
+  // $FlowIgnore
+  return Array.isArray(result) ? flattenDeep(result) : result;
 }
 
 function getAncestors(sourceTree: TreeDirectory, item: ?TreeNode) {

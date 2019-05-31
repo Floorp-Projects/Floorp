@@ -14,7 +14,7 @@ import { createSelector } from "reselect";
 
 import { getDisplayName } from "../utils/workers";
 
-import type { Selector } from "./types";
+import type { Selector, State } from "./types";
 import type { MainThread, WorkerList, Thread } from "../types";
 import type { Action } from "../actions/types";
 
@@ -94,5 +94,14 @@ export const getThreads: Selector<Thread[]> = createSelector(
   getWorkers,
   (mainThread, workers) => [mainThread, ...sortBy(workers, getDisplayName)]
 );
+
+// checks if a path begins with a thread actor
+// e.g "server1.conn0.child1/workerTarget22/context1/dbg-workers.glitch.me"
+export function startsWithThreadActor(state: State, path: string) {
+  const threadActors = getThreads(state).map(t => t.actor);
+
+  const match = path.match(new RegExp(`(${threadActors.join("|")})\/(.*)`));
+  return match && match[1];
+}
 
 type OuterState = { debuggee: DebuggeeState };

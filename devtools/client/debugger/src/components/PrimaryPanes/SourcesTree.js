@@ -35,6 +35,7 @@ import {
   createTree,
   getDirectories,
   isDirectory,
+  findSourceTreeNodes,
   getSourceFromNode,
   nodeHasChildren,
   updateTree,
@@ -80,8 +81,8 @@ type State = {
 
 type SetExpanded = (item: TreeNode, expanded: boolean, altKey: boolean) => void;
 
-function shouldAutoExpand(depth, item, debuggeeUrl) {
-  if (depth !== 1) {
+function shouldAutoExpand(depth, item, debuggeeUrl, projectRoot) {
+  if (projectRoot != "" || depth !== 1) {
     return false;
   }
 
@@ -214,20 +215,14 @@ class SourcesTree extends Component<Props, State> {
     );
   }
 
-  getRoots = () => {
-    const { projectRoot } = this.props;
-    const { sourceTree } = this.state;
-
+  getRoots = (sourceTree, projectRoot) => {
     const sourceContents = sourceTree.contents[0];
-    const rootLabel = projectRoot.split("/").pop();
 
-    // The "sourceTree.contents[0]" check ensures that there are contents
-    // A custom root with no existing sources will be ignored
     if (projectRoot && sourceContents) {
-      if (sourceContents && sourceContents.name !== rootLabel) {
-        return sourceContents.contents[0].contents;
-      }
-      return sourceContents.contents;
+      const roots = findSourceTreeNodes(sourceTree, projectRoot);
+      // NOTE if there is one root, we want to show its content
+      // TODO with multiple roots we should try and show the thread name
+      return roots && roots.length == 1 ? roots[0].contents : roots;
     }
 
     return sourceTree.contents;
@@ -253,7 +248,7 @@ class SourcesTree extends Component<Props, State> {
         threads={threads}
         depth={depth}
         focused={focused}
-        autoExpand={shouldAutoExpand(depth, item, debuggeeUrl)}
+        autoExpand={shouldAutoExpand(depth, item, debuggeeUrl, projectRoot)}
         expanded={expanded}
         focusItem={this.onFocus}
         selectItem={this.selectItem}
@@ -266,9 +261,9 @@ class SourcesTree extends Component<Props, State> {
   };
 
   renderTree() {
-    const { expanded, focused } = this.props;
+    const { expanded, focused, projectRoot } = this.props;
 
-    const { highlightItems, listItems, parentMap } = this.state;
+    const { highlightItems, listItems, parentMap, sourceTree } = this.state;
 
     const treeProps = {
       autoExpandAll: false,
@@ -278,7 +273,7 @@ class SourcesTree extends Component<Props, State> {
       getChildren: this.getChildren,
       getParent: (item: $Shape<TreeNode>) => parentMap.get(item),
       getPath: this.getPath,
-      getRoots: this.getRoots,
+      getRoots: () => this.getRoots(sourceTree, projectRoot),
       highlightItems,
       itemHeight: 21,
       key: this.isEmpty() ? "empty" : "full",
