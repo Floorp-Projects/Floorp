@@ -50,6 +50,8 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
     return 0;
   }
 
+  void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
+
   void Draw();
 
   class StartRunnable : public Runnable {
