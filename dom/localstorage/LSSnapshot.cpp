@@ -17,6 +17,89 @@ const uint32_t kSnapshotTimeoutMs = 20000;
 
 }  // namespace
 
+/**
+ * Coalescing manipulation queue used by `LSSnapshot`.  Used by `LSSnapshot` to
+ * buffer and coalesce manipulations before they are sent to the parent process,
+ * when a Snapshot Checkpoints. (This can only be done when there are no
+ * observers for other content processes.)
+ */
+class SnapshotWriteOptimizer final
+    : public LSWriteOptimizer<nsAString, nsString> {
+ public:
+  void Enumerate(nsTArray<LSWriteInfo>& aWriteInfos);
+};
+
+void SnapshotWriteOptimizer::Enumerate(nsTArray<LSWriteInfo>& aWriteInfos) {
+  AssertIsOnOwningThread();
+
+  // The mWriteInfos hash table contains all write infos, but it keeps them in
+  // an arbitrary order, which means write infos need to be sorted before being
+  // processed.
+
+  nsTArray<WriteInfo*> writeInfos;
+  GetSortedWriteInfos(writeInfos);
+
+  for (WriteInfo* writeInfo : writeInfos) {
+    switch (writeInfo->GetType()) {
+      case WriteInfo::InsertItem: {
+        auto insertItemInfo = static_cast<InsertItemInfo*>(writeInfo);
+
+        LSSetItemInfo setItemInfo;
+        setItemInfo.key() = insertItemInfo->GetKey();
+        setItemInfo.value() = LSValue(insertItemInfo->GetValue());
+
+        aWriteInfos.AppendElement(std::move(setItemInfo));
+
+        break;
+      }
+
+      case WriteInfo::UpdateItem: {
+        auto updateItemInfo = static_cast<UpdateItemInfo*>(writeInfo);
+
+        if (updateItemInfo->UpdateWithMove()) {
+          // See the comment in LSWriteOptimizer::InsertItem for more details
+          // about the UpdateWithMove flag.
+
+          LSRemoveItemInfo removeItemInfo;
+          removeItemInfo.key() = updateItemInfo->GetKey();
+
+          aWriteInfos.AppendElement(std::move(removeItemInfo));
+        }
+
+        LSSetItemInfo setItemInfo;
+        setItemInfo.key() = updateItemInfo->GetKey();
+        setItemInfo.value() = LSValue(updateItemInfo->GetValue());
+
+        aWriteInfos.AppendElement(std::move(setItemInfo));
+
+        break;
+      }
+
+      case WriteInfo::DeleteItem: {
+        auto deleteItemInfo = static_cast<DeleteItemInfo*>(writeInfo);
+
+        LSRemoveItemInfo removeItemInfo;
+        removeItemInfo.key() = deleteItemInfo->GetKey();
+
+        aWriteInfos.AppendElement(std::move(removeItemInfo));
+
+        break;
+      }
+
+      case WriteInfo::Truncate: {
+        LSClearInfo clearInfo;
+
+        aWriteInfos.AppendElement(std::move(clearInfo));
+
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Bad type!");
+    }
+  }
+}
+
 LSSnapshot::LSSnapshot(LSDatabase* aDatabase)
     : mDatabase(aDatabase),
       mActor(nullptr),
@@ -25,6 +108,7 @@ LSSnapshot::LSSnapshot(LSDatabase* aDatabase)
       mExactUsage(0),
       mPeakUsage(0),
       mLoadState(LoadState::Initial),
+      mHasOtherProcessObservers(false),
       mExplicit(false),
       mHasPendingStableStateCallback(false),
       mHasPendingTimerCallback(false),
@@ -102,11 +186,19 @@ nsresult LSSnapshot::Init(const nsAString& aKey,
 
   mLoadState = aInitInfo.loadState();
 
+  mHasOtherProcessObservers = aInitInfo.hasOtherProcessObservers();
+
   mExplicit = aExplicit;
 
 #ifdef DEBUG
   mInitialized = true;
 #endif
+
+  if (mHasOtherProcessObservers) {
+    mWriteAndNotifyInfos = new nsTArray<LSWriteAndNotifyInfo>();
+  } else {
+    mWriteOptimizer = new SnapshotWriteOptimizer();
+  }
 
   if (!mExplicit) {
     mTimer = NS_NewTimer();
@@ -241,12 +333,24 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
       mLength++;
     }
 
-    LSSetItemInfo setItemInfo;
-    setItemInfo.key() = aKey;
-    setItemInfo.oldValue() = LSValue(oldValue);
-    setItemInfo.value() = LSValue(aValue);
+    if (mHasOtherProcessObservers) {
+      MOZ_ASSERT(mWriteAndNotifyInfos);
 
-    mWriteInfos.AppendElement(std::move(setItemInfo));
+      LSSetItemAndNotifyInfo setItemAndNotifyInfo;
+      setItemAndNotifyInfo.key() = aKey;
+      setItemAndNotifyInfo.oldValue() = LSValue(oldValue);
+      setItemAndNotifyInfo.value() = LSValue(aValue);
+
+      mWriteAndNotifyInfos->AppendElement(std::move(setItemAndNotifyInfo));
+    } else {
+      MOZ_ASSERT(mWriteOptimizer);
+
+      if (oldValue.IsVoid()) {
+        mWriteOptimizer->InsertItem(aKey, aValue);
+      } else {
+        mWriteOptimizer->UpdateItem(aKey, aValue);
+      }
+    }
   }
 
   aNotifyInfo.changed() = changed;
@@ -287,11 +391,19 @@ nsresult LSSnapshot::RemoveItem(const nsAString& aKey,
       mLength--;
     }
 
-    LSRemoveItemInfo removeItemInfo;
-    removeItemInfo.key() = aKey;
-    removeItemInfo.oldValue() = LSValue(oldValue);
+    if (mHasOtherProcessObservers) {
+      MOZ_ASSERT(mWriteAndNotifyInfos);
 
-    mWriteInfos.AppendElement(std::move(removeItemInfo));
+      LSRemoveItemAndNotifyInfo removeItemAndNotifyInfo;
+      removeItemAndNotifyInfo.key() = aKey;
+      removeItemAndNotifyInfo.oldValue() = LSValue(oldValue);
+
+      mWriteAndNotifyInfos->AppendElement(std::move(removeItemAndNotifyInfo));
+    } else {
+      MOZ_ASSERT(mWriteOptimizer);
+
+      mWriteOptimizer->DeleteItem(aKey);
+    }
   }
 
   aNotifyInfo.changed() = changed;
@@ -334,9 +446,17 @@ nsresult LSSnapshot::Clear(LSNotifyInfo& aNotifyInfo) {
 
     mValues.Clear();
 
-    LSClearInfo clearInfo;
+    if (mHasOtherProcessObservers) {
+      MOZ_ASSERT(mWriteAndNotifyInfos);
 
-    mWriteInfos.AppendElement(std::move(clearInfo));
+      LSClearInfo clearInfo;
+
+      mWriteAndNotifyInfos->AppendElement(std::move(clearInfo));
+    } else {
+      MOZ_ASSERT(mWriteOptimizer);
+
+      mWriteOptimizer->Truncate();
+    }
   }
 
   aNotifyInfo.changed() = changed;
@@ -593,25 +713,66 @@ nsresult LSSnapshot::EnsureAllKeys() {
     newValues.Put(key, VoidString());
   }
 
-  for (uint32_t index = 0; index < mWriteInfos.Length(); index++) {
-    const LSWriteInfo& writeInfo = mWriteInfos[index];
+  if (mHasOtherProcessObservers) {
+    MOZ_ASSERT(mWriteAndNotifyInfos);
 
-    switch (writeInfo.type()) {
-      case LSWriteInfo::TLSSetItemInfo: {
-        newValues.Put(writeInfo.get_LSSetItemInfo().key(), VoidString());
-        break;
-      }
-      case LSWriteInfo::TLSRemoveItemInfo: {
-        newValues.Remove(writeInfo.get_LSRemoveItemInfo().key());
-        break;
-      }
-      case LSWriteInfo::TLSClearInfo: {
-        newValues.Clear();
-        break;
-      }
+    if (!mWriteAndNotifyInfos->IsEmpty()) {
+      for (uint32_t index = 0; index < mWriteAndNotifyInfos->Length();
+           index++) {
+        const LSWriteAndNotifyInfo& writeAndNotifyInfo =
+            mWriteAndNotifyInfos->ElementAt(index);
 
-      default:
-        MOZ_CRASH("Should never get here!");
+        switch (writeAndNotifyInfo.type()) {
+          case LSWriteAndNotifyInfo::TLSSetItemAndNotifyInfo: {
+            newValues.Put(writeAndNotifyInfo.get_LSSetItemAndNotifyInfo().key(),
+                          VoidString());
+            break;
+          }
+          case LSWriteAndNotifyInfo::TLSRemoveItemAndNotifyInfo: {
+            newValues.Remove(
+                writeAndNotifyInfo.get_LSRemoveItemAndNotifyInfo().key());
+            break;
+          }
+          case LSWriteAndNotifyInfo::TLSClearInfo: {
+            newValues.Clear();
+            break;
+          }
+
+          default:
+            MOZ_CRASH("Should never get here!");
+        }
+      }
+    }
+  } else {
+    MOZ_ASSERT(mWriteOptimizer);
+
+    if (mWriteOptimizer->HasWrites()) {
+      nsTArray<LSWriteInfo> writeInfos;
+      mWriteOptimizer->Enumerate(writeInfos);
+
+      MOZ_ASSERT(!writeInfos.IsEmpty());
+
+      for (uint32_t index = 0; index < writeInfos.Length(); index++) {
+        const LSWriteInfo& writeInfo = writeInfos[index];
+
+        switch (writeInfo.type()) {
+          case LSWriteInfo::TLSSetItemInfo: {
+            newValues.Put(writeInfo.get_LSSetItemInfo().key(), VoidString());
+            break;
+          }
+          case LSWriteInfo::TLSRemoveItemInfo: {
+            newValues.Remove(writeInfo.get_LSRemoveItemInfo().key());
+            break;
+          }
+          case LSWriteInfo::TLSClearInfo: {
+            newValues.Clear();
+            break;
+          }
+
+          default:
+            MOZ_CRASH("Should never get here!");
+        }
+      }
     }
   }
 
@@ -679,10 +840,27 @@ nsresult LSSnapshot::Checkpoint() {
   MOZ_ASSERT(mInitialized);
   MOZ_ASSERT(!mSentFinish);
 
-  if (!mWriteInfos.IsEmpty()) {
-    MOZ_ALWAYS_TRUE(mActor->SendCheckpoint(mWriteInfos));
+  if (mHasOtherProcessObservers) {
+    MOZ_ASSERT(mWriteAndNotifyInfos);
 
-    mWriteInfos.Clear();
+    if (!mWriteAndNotifyInfos->IsEmpty()) {
+      MOZ_ALWAYS_TRUE(mActor->SendCheckpointAndNotify(*mWriteAndNotifyInfos));
+
+      mWriteAndNotifyInfos->Clear();
+    }
+  } else {
+    MOZ_ASSERT(mWriteOptimizer);
+
+    if (mWriteOptimizer->HasWrites()) {
+      nsTArray<LSWriteInfo> writeInfos;
+      mWriteOptimizer->Enumerate(writeInfos);
+
+      MOZ_ASSERT(!writeInfos.IsEmpty());
+
+      MOZ_ALWAYS_TRUE(mActor->SendCheckpoint(writeInfos));
+
+      mWriteOptimizer->Reset();
+    }
   }
 
   return NS_OK;

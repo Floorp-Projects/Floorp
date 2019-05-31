@@ -1866,6 +1866,13 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
         .Finalize(aURI);
   }
 
+#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+  rv = NS_NewMailnewsURI(aURI, aSpec, aCharset, aBaseURI, aIOService);
+  if (rv != NS_ERROR_UNKNOWN_PROTOCOL) {
+    return rv;
+  }
+#endif
+
   if (aBaseURI) {
     nsAutoCString newSpec;
     rv = aBaseURI->Resolve(aSpec, newSpec);
@@ -1882,10 +1889,6 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
         .SetSpec(newSpec)
         .Finalize(aURI);
   }
-
-#if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
-  return NS_NewMailnewsURI(aURI, aSpec, aCharset, aBaseURI, aIOService);
-#endif
 
   // Falls back to external protocol handler.
   return NS_MutateURI(new nsSimpleURI::Mutator()).SetSpec(aSpec).Finalize(aURI);

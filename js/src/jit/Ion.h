@@ -14,6 +14,7 @@
 #include "jit/JitOptions.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
+#include "vm/TypeInference.h"
 
 namespace js {
 namespace jit {
