@@ -14,6 +14,6 @@ dbg.onDebuggerStatement = function (frame) {
   }
   log += frame.environment.getVariable("x");
 };
-g.eval("for (let x = 0; x < 2; x++) debugger;");
+g.eval("for (let x = 0; x < 2; x++) { eval(\"\"); debugger; }");
 gc();
 assertEq(log, "0false1");

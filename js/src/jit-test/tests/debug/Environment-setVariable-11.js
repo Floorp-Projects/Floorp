@@ -12,5 +12,5 @@ dbg.onDebuggerStatement = function (frame) {
     assertThrowsInstanceOf(function () { env.setVariable("f", frame.callee) }, TypeError);
     hits++;
 };
-g.eval("(function f() { debugger; })();");
+g.eval("(function f() { eval(\"\"); debugger; })();");
 assertEq(hits, 1);

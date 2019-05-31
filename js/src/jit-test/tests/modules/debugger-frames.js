@@ -82,6 +82,7 @@ f = g2.eval(
         let y = 5;
         const z = 6;
 
+        eval("");
         debugger;
     \`);
     m.declarationInstantiation();

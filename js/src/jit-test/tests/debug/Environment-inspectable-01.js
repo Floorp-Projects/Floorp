@@ -7,7 +7,7 @@ var g2 = newGlobal({newCompartment: true});
 g2.g1 = g1;
 g1.g2 = g2;
 
-g1.eval('function f(xf) { return function h(xh) { debugger; } }');
+g1.eval('function f(xf) { return function h(xh) { eval(""); debugger; } }');
 g1.eval('var h = f("value of xf");');
 
 // To ensure that xk gets located on the heap, and thus outlives its stack frame, we
