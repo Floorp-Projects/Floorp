@@ -214,7 +214,7 @@ function convertResultToMatches(context, result, urls) {
       continue;
     }
     // Manage autofill and preselected properties for the first match.
-    if (i == 0) {
+    if (i == 0 && style.includes("heuristic")) {
       if (style.includes("autofill") && result.defaultIndex == 0) {
         let autofillValue = result.getValueAt(i);
         if (autofillValue.toLocaleLowerCase()
@@ -227,10 +227,9 @@ function convertResultToMatches(context, result, urls) {
           };
         }
       }
-      if (style.includes("heuristic")) {
-        context.preselected = true;
-        match.heuristic = true;
-      }
+
+      context.preselected = true;
+      match.heuristic = true;
     }
     matches.push(match);
   }
