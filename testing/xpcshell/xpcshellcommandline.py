@@ -15,6 +15,9 @@ def add_common_arguments(parser):
     parser.add_argument("--verbose",
                         action="store_true", dest="verbose", default=False,
                         help="always print stdout and stderr from tests")
+    parser.add_argument('--verbose-if-fails',
+                        action='store_true', dest="verboseIfFails", default=False,
+                        help='Output the log if a test fails, even when run in parallel')
     parser.add_argument("--keep-going",
                         action="store_true", dest="keepGoing", default=False,
                         help="continue running tests after test killed with control-C (SIGINT)")
