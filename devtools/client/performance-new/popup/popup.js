@@ -99,6 +99,7 @@ function initializePopup() {
     .addEventListener("click", async () => {
       if (document.documentElement.classList.contains("status-running")) {
         await background.captureProfile();
+        window.gClosePopup();
       }
     });
 
@@ -175,6 +176,12 @@ function renderState(state) {
   }
 
   renderControls(state);
+
+  window.requestAnimationFrame(() => {
+    if (window.gResizePopup) {
+      window.gResizePopup(document.body.clientHeight);
+    }
+  });
 }
 
 function renderControls(state) {
