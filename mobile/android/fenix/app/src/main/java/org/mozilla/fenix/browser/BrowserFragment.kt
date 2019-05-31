@@ -34,6 +34,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -92,6 +93,7 @@ import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
+
     private lateinit var toolbarComponent: ToolbarComponent
 
     private var sessionObserver: Session.Observer? = null
@@ -100,6 +102,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
+    private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
     private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
@@ -220,6 +223,17 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 onNeedToRequestPermissions = { permissions ->
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                 }),
+            owner = this,
+            view = view
+        )
+
+        appLinksFeature.set(
+            feature = AppLinksFeature(
+                requireContext(),
+                sessionManager = sessionManager,
+                sessionId = customTabSessionId,
+                fragmentManager = requireFragmentManager()
+            ),
             owner = this,
             view = view
         )
