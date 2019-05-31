@@ -329,6 +329,12 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NET_INTERRUPT"] = FAILURE(71)
     # The connection attempt to a proxy failed.
     errors["NS_ERROR_PROXY_CONNECTION_REFUSED"] = FAILURE(72)
+    # The proxy requires authentication; used when we can't easily propagate 407s.
+    errors["NS_ERROR_PROXY_AUTHENTICATION_FAILED"] = FAILURE(407)
+    # The proxy failed to connect the remote server.
+    errors["NS_ERROR_PROXY_BAD_GATEWAY"] = FAILURE(502)
+    # The proxy did get any response from the remote server in time.
+    errors["NS_ERROR_PROXY_GATEWAY_TIMEOUT"] = FAILURE(504)
     # A transfer was only partially done when it completed.
     errors["NS_ERROR_NET_PARTIAL_TRANSFER"] = FAILURE(76)
     # HTTP/2 detected invalid TLS configuration

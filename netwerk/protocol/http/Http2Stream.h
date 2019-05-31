@@ -369,7 +369,7 @@ class Http2Stream : public nsAHttpSegmentReader,
  private:
   void ClearTransactionsBlockedOnTunnel();
   void MapStreamToPlainText();
-  void MapStreamToHttpConnection();
+  void MapStreamToHttpConnection(int32_t httpResponseCode = -1);
 
   bool mIsTunnel;
   bool mPlainTextTunnel;
