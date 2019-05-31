@@ -60,9 +60,6 @@ enum class RustSdpProtocolValue {
   kRustDtlsSctp,
   kRustUdpDtlsSctp,
   kRustTcpDtlsSctp,
-  kRustRtpAvp,
-  kRustRtpAvpf,
-  kRustRtpSavp,
 };
 
 enum class RustSdpFormatType { kRustIntegers, kRustStrings };
