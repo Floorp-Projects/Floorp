@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarProviderExtension: "resource:///modules/UrlbarUtils.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -71,6 +72,51 @@ class ProvidersManager {
       let {[symbol]: muxer} = ChromeUtils.import(module, {});
       this.registerMuxer(muxer);
     }
+
+    // Extension listeners.
+    this._extensionListeners = new Map([
+      ["queryready", new Map()],
+    ]);
+  }
+
+  /**
+   * Registers an extension listener for a specific event.
+   * When queries are executed the extension gets queries through these
+   * listeners. There can only be one listener per [provider, event] tuple.
+   * For the special and mandatory "queryready" event, this also registers a
+   * new extension provider.
+   * @param {string} providerName
+   *   The name of the provider to add.
+   * @param {string} eventName
+   *   The name of the event to register.
+   * @param {function} callback
+   *   The callback to be invoked. Gets the UrlbarQueryContext as argument and
+   *   returns a string having a value of "active", "inactive" or "restricting".
+   */
+  addExtensionListener(providerName, eventName, callback) {
+    // The "queryready" event is the first one to be registered, and it's
+    // mandatory, thus we register and unregister the provider on it.
+    if (eventName == "queryready") {
+      let provider = new UrlbarProviderExtension(providerName);
+      this.registerProvider(provider);
+    }
+    this._extensionListeners.get(eventName).set(providerName, callback);
+  }
+
+  /**
+   * Removes a previously added extension listener.
+   * For the special and mandatory "queryready" event, this also unregisters a
+   * previously added extension provider.
+   * @param {string} providerName
+   *   The name of the provider to remove.
+   * @param {string} eventName
+   *   The name of the event to unregister.
+   */
+  removeExtensionListener(providerName, eventName) {
+    this._extensionListeners.get(eventName).delete(providerName);
+    if (eventName == "queryready") {
+      this.unregisterProvider({name: providerName}, true);
+    }
   }
 
   /**
@@ -95,11 +141,16 @@ class ProvidersManager {
   /**
    * Unregisters a previously registered provider object.
    * @param {object} provider
+   * @param {boolean} isExtensionRequest
+   *   Whether this request comes from an extension. Extensions can only remove
+   *   EXTENSION providers.
    */
-  unregisterProvider(provider) {
+  unregisterProvider(provider, isExtensionRequest = false) {
     logger.info(`Unregistering provider ${provider.name}`);
-    let index = this.providers.indexOf(provider);
-    if (index != -1) {
+    let index = this.providers.findIndex(p => p.name == provider.name);
+    if (index != -1 &&
+        (!isExtensionRequest ||
+         this.providers[index].type == UrlbarUtils.PROVIDER_TYPE.EXTENSION)) {
       this.providers.splice(index, 1);
     }
   }
@@ -147,6 +198,37 @@ class ProvidersManager {
     let providers = queryContext.providers ?
                       this.providers.filter(p => queryContext.providers.includes(p.name)) :
                       this.providers;
+
+    // Apply tokenization.
+    UrlbarTokenizer.tokenize(queryContext);
+
+    // Array of acceptable RESULT_SOURCE values for this query. Providers can
+    // use queryContext.acceptableSources to decide whether they want to be
+    // invoked or not.
+    queryContext.acceptableSources = getAcceptableMatchSources(queryContext);
+    logger.debug(`Acceptable sources ${queryContext.acceptableSources}`);
+
+    // Update behavior for extension providers.
+    for (let [name, listener] of this._extensionListeners.get("queryready")) {
+      let behavior = "inactive";
+      // Handle bogus case where the extension may not be responding or may
+      // throw.
+      let timeoutPromise = new Promise((resolve, reject) => new SkippableTimer(() => {
+        Cu.reportError("An extension didn't handle the queryready callback");
+        reject();
+      }, 50));
+      try {
+        behavior = await Promise.race([timeoutPromise, listener(queryContext)]);
+      } catch (ex) {}
+      // Look up the provider and set its properties accordingly.
+      let provider =
+        UrlbarProvidersManager.providers.find(p => p.name == name);
+      if (provider) {
+        provider.behavior = behavior;
+      } else {
+        Cu.reportError("Couldn't find expected urlbar provider " + name);
+      }
+    }
 
     let query = new Query(queryContext, controller, muxer, providers);
     this.queries.set(queryContext, query);
@@ -206,8 +288,8 @@ class Query {
    *        The controller to be notified
    * @param {object} muxer
    *        The muxer to sort results
-   * @param {object} providers
-   *        Map of all the providers by type and name
+   * @param {Array} providers
+   *        Array of all the providers.
    */
   constructor(queryContext, controller, muxer, providers) {
     this.context = queryContext;
@@ -219,11 +301,9 @@ class Query {
     this.canceled = false;
     this.complete = false;
 
-    // Array of acceptable RESULT_SOURCE values for this query. Providers can
-    // use queryContext.acceptableSources to decide whether they want to be
-    // invoked or not.
-    // This is also used to filter results in add().
-    this.acceptableSources = [];
+    // This is used as a last safety filter in add(), thus we keep an unmodified
+    // copy of it.
+    this.acceptableSources = queryContext.acceptableSources.slice();
   }
 
   /**
@@ -234,12 +314,6 @@ class Query {
       throw new Error("This Query has been started already");
     }
     this.started = true;
-    UrlbarTokenizer.tokenize(this.context);
-
-    this.acceptableSources = getAcceptableMatchSources(this.context);
-    logger.debug(`Acceptable sources ${this.acceptableSources}`);
-    // Pass a copy so the provider can't modify our local version.
-    this.context.acceptableSources = this.acceptableSources.slice();
 
     // Check which providers should be queried.
     let providers = this.providers.filter(p => p.isActive(this.context));
