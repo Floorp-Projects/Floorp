@@ -25,6 +25,8 @@ HERE = os.path.dirname(os.path.realpath(__file__))
 BENCHMARK_REPOSITORY = 'https://github.com/mozilla/perf-automation'
 BENCHMARK_REVISION = '2720cdc790828952964524bb44ce8b4c14670e90'
 
+FIREFOX_ANDROID_BROWSERS = ["fennec", "geckoview", "refbrow", "fenix"]
+
 
 class RaptorRunner(MozbuildObject):
     def run_test(self, raptor_args, kwargs):
@@ -48,8 +50,12 @@ class RaptorRunner(MozbuildObject):
                                            'mozharness')
         self.config_file_path = os.path.join(self._topobjdir, 'testing',
                                              'raptor-in_tree_conf.json')
-        self.binary_path = self.get_binary_path() if kwargs['app'] not in \
-            ['geckoview', 'fennec', 'refbrow', 'fenix'] else None
+
+        if conditions.is_android(self) or kwargs["app"] in FIREFOX_ANDROID_BROWSERS:
+            self.binary_path = None
+        else:
+            self.binary_path = self.get_binary_path()
+
         self.virtualenv_script = os.path.join(self.topsrcdir, 'third_party', 'python',
                                               'virtualenv', 'virtualenv.py')
         self.virtualenv_path = os.path.join(self._topobjdir, 'testing',
@@ -182,12 +188,12 @@ class MachRaptor(MachCommandBase):
              description='Run raptor performance tests.',
              parser=create_parser)
     def run_raptor_test(self, **kwargs):
-
         build_obj = MozbuildObject.from_environment(cwd=HERE)
 
-        firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
+        is_android = conditions.is_android(build_obj) or \
+            kwargs['app'] in FIREFOX_ANDROID_BROWSERS
 
-        if conditions.is_android(build_obj) or kwargs['app'] in firefox_android_browsers:
+        if is_android:
             from mozrunner.devices.android_device import verify_android_device
             from mozdevice import ADBAndroid, ADBHost
             if not verify_android_device(build_obj, install=True, app=kwargs['binary'],
@@ -201,7 +207,7 @@ class MachRaptor(MachCommandBase):
         raptor = self._spawn(RaptorRunner)
 
         try:
-            if kwargs['app'] in firefox_android_browsers and kwargs['power_test']:
+            if is_android and kwargs['power_test']:
                 device = ADBAndroid(verbose=True)
                 adbhost = ADBHost(verbose=True)
                 device_serial = "%s:5555" % device.get_ip_address()
@@ -219,7 +225,7 @@ class MachRaptor(MachCommandBase):
             return 1
         finally:
             try:
-                if kwargs['app'] in firefox_android_browsers and kwargs['power_test']:
+                if is_android and kwargs['power_test']:
                     raw_input("Connect device via USB and press Enter/return...")
                     device = ADBAndroid(device=device_serial, verbose=True)
                     device.command_output(["usb"])
