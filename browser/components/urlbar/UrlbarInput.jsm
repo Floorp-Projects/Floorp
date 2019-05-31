@@ -466,6 +466,13 @@ class UrlbarInput {
       }
       case UrlbarUtils.RESULT_TYPE.SEARCH: {
         if (result.payload.isKeywordOffer) {
+          if (result.autofill) {
+            // The user confirmed an autofilled alias, so just move the caret
+            // to the end of it. Because there's a trailing space in the value,
+            // the user can directly start typing a query string at that point.
+            let value = result.autofill.value;
+            this.selectionStart = this.selectionEnd = value.length;
+          }
           // Picking a keyword offer just fills it in the input and doesn't
           // visit anything.  The user can then type a search string.  Also
           // start a new search so that the offer appears in the view by itself
