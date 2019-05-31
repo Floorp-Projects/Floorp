@@ -341,7 +341,7 @@ class SearchConfigTest {
       if (rule.codes) {
         this._assertCorrectCodes(location, engine, rule);
       }
-      if (rule.searchUrlCode || rule.searchFormUrlCode) {
+      if (rule.searchUrlCode || rule.searchFormUrlCode || rule.suggestUrlCode) {
         this._assertCorrectUrlCode(location, engine, rule);
       }
       if (rule.aliases) {
@@ -422,12 +422,17 @@ class SearchConfigTest {
     if (rule.searchUrlCode) {
       const submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
       this.assertOk(submission.uri.query.split("&").includes(rule.searchUrlCode),
-        `Expected "${rule.searchUrlCode}" in "${submission.uri.spec}"`);
+        `Expected "${rule.searchUrlCode}" in search url "${submission.uri.spec}"`);
     }
     if (rule.searchFormUrlCode) {
       const uri = engine.searchForm;
       this.assertOk(uri.includes(rule.searchFormUrlCode),
         `Expected "${rule.searchFormUrlCode}" in "${uri}"`);
+    }
+    if (rule.suggestUrlCode) {
+      const submission = engine.getSubmission("test", URLTYPE_SUGGEST_JSON);
+      this.assertOk(submission.uri.query.split("&").includes(rule.suggestUrlCode),
+        `Expected "${rule.suggestUrlCode}" in suggestion url "${submission.uri.spec}"`);
     }
   }
 

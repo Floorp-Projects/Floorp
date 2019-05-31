@@ -26,6 +26,8 @@ const test = new SearchConfigTest({
   details: [{
     included: [{}],
     domain: "baidu.com",
+    searchUrlCode: "tn=monline_7_dg",
+    suggestUrlCode: "tn=monline_7_dg",
   }],
 });
 
