@@ -274,6 +274,7 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* GetGtkWidget() { return mShell; }
   nsIFrame* GetFrame();
   bool IsDestroyed() { return mIsDestroyed; }
+  bool IsWaylandPopup();
 
   void DispatchDragEvent(mozilla::EventMessage aMsg,
                          const LayoutDeviceIntPoint& aRefPoint, guint aTime);
@@ -610,7 +611,6 @@ class nsWindow final : public nsBaseWidget {
 
   void ForceTitlebarRedraw();
 
-  bool IsWaylandPopup();
   GtkWidget* ConfigureWaylandPopupWindows();
   void HideWaylandWindow();
   void HideWaylandTooltips();

@@ -689,6 +689,29 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockImageSurface(
       WindowBackBuffer::GetSurfaceFormat());
 }
 
+static bool IsWindowFullScreenUpdate(LayoutDeviceIntRect& screenRect,
+                                     const LayoutDeviceIntRegion& aRegion) {
+  if (aRegion.GetNumRects() > 1) return false;
+
+  IntRect rect = aRegion.RectIter().Get().ToUnknownRect();
+  return (rect.x == 0 && rect.y == 0 && screenRect.width == rect.width &&
+          screenRect.height == rect.height);
+}
+
+static bool IsPopupFullScreenUpdate(LayoutDeviceIntRect& screenRect,
+                                    const LayoutDeviceIntRegion& aRegion) {
+  // We know that popups can be drawn from two parts; a panel and an arrow.
+  // Assume we redraw whole popups when we have two rects and bounding
+  // box is equal to window borders.
+  if (aRegion.GetNumRects() > 2) return false;
+
+  gfx::IntRect bounds = aRegion.GetBounds().ToUnknownRect();
+  gfx::IntSize lockSize(bounds.XMost(), bounds.YMost());
+
+  return (screenRect.width == lockSize.width &&
+          screenRect.height == lockSize.height);
+}
+
 /*
   There are some situations which can happen here:
 
@@ -715,10 +738,16 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
               screenRect.width, lockSize.height));
 
   // Are we asked for entire nsWindow to draw?
+  bool isTransparentPopup =
+      mWindow->IsWaylandPopup() &&
+      (eTransparencyTransparent == mWindow->GetTransparencyMode());
+
   mDrawToWaylandBufferDirectly =
-      (aRegion.GetNumRects() == 1 && bounds.x == 0 && bounds.y == 0 &&
-       lockSize.width == screenRect.width &&
-       lockSize.height == screenRect.height);
+      isTransparentPopup ? IsPopupFullScreenUpdate(screenRect, aRegion)
+                         : IsWindowFullScreenUpdate(screenRect, aRegion);
+
+  bool needsClear = mWindow->WaylandSurfaceNeedsClear() ||
+                    (isTransparentPopup && mDrawToWaylandBufferDirectly);
 
   if (mDrawToWaylandBufferDirectly) {
     // If there's any pending image commit scratch them as we're going
@@ -726,8 +755,7 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     mDelayedImageCommits.Clear();
 
     RefPtr<gfx::DrawTarget> dt = LockWaylandBuffer(
-        screenRect.width, screenRect.height,
-        mWindow->WaylandSurfaceNeedsClear(),
+        screenRect.width, screenRect.height, needsClear,
         /* aFullScreenUpdate */ true, /* aNoBackBufferCopy */ true);
     if (dt) {
       // When we have a request to update whole screen at once
