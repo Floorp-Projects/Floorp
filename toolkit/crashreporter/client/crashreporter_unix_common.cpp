@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 using namespace CrashReporter;
+using std::ios_base;
 using std::sort;
 using std::string;
 using std::vector;
@@ -119,30 +120,11 @@ bool UIFileExists(const string& path) {
 
 bool UIDeleteFile(const string& file) { return (unlink(file.c_str()) != -1); }
 
-std::ifstream* UIOpenRead(const string& filename, bool binary) {
-  std::ios_base::openmode mode = std::ios::in;
-
-  if (binary) {
-    mode = mode | std::ios::binary;
-  }
-
+std::ifstream* UIOpenRead(const string& filename, ios_base::openmode mode) {
   return new std::ifstream(filename.c_str(), mode);
 }
 
-std::ofstream* UIOpenWrite(const string& filename,
-                           bool append,  // append=false
-                           bool binary)  // binary=false
-{
-  std::ios_base::openmode mode = std::ios::out;
-
-  if (append) {
-    mode = mode | std::ios::app;
-  }
-
-  if (binary) {
-    mode = mode | std::ios::binary;
-  }
-
+std::ofstream* UIOpenWrite(const string& filename, ios_base::openmode mode) {
   return new std::ofstream(filename.c_str(), mode);
 }
 

@@ -28,6 +28,7 @@
 
 using std::auto_ptr;
 using std::ifstream;
+using std::ios;
 using std::istream;
 using std::istringstream;
 using std::ofstream;
@@ -94,23 +95,6 @@ static string Unescape(const string& str) {
   return ret;
 }
 
-static string Escape(const string& str) {
-  string ret;
-  for (string::const_iterator iter = str.begin(); iter != str.end(); iter++) {
-    if (*iter == '\\') {
-      ret += "\\\\";
-    } else if (*iter == '\n') {
-      ret += "\\n";
-    } else if (*iter == '\t') {
-      ret += "\\t";
-    } else {
-      ret.push_back(*iter);
-    }
-  }
-
-  return ret;
-}
-
 bool ReadStrings(istream& in, StringTable& strings, bool unescape) {
   string currentSection;
   while (!in.eof()) {
@@ -131,40 +115,10 @@ bool ReadStrings(istream& in, StringTable& strings, bool unescape) {
 
 bool ReadStringsFromFile(const string& path, StringTable& strings,
                          bool unescape) {
-  ifstream* f = UIOpenRead(path);
+  ifstream* f = UIOpenRead(path, ios::in);
   bool success = false;
   if (f->is_open()) {
     success = ReadStrings(*f, strings, unescape);
-    f->close();
-  }
-
-  delete f;
-  return success;
-}
-
-bool WriteStrings(ostream& out, const string& header, StringTable& strings,
-                  bool escape) {
-  out << "[" << header << "]" << std::endl;
-  for (StringTable::iterator iter = strings.begin(); iter != strings.end();
-       iter++) {
-    out << iter->first << "=";
-    if (escape)
-      out << Escape(iter->second);
-    else
-      out << iter->second;
-
-    out << std::endl;
-  }
-
-  return true;
-}
-
-bool WriteStringsToFile(const string& path, const string& header,
-                        StringTable& strings, bool escape) {
-  ofstream* f = UIOpenWrite(path.c_str());
-  bool success = false;
-  if (f->is_open()) {
-    success = WriteStrings(*f, header, strings, escape);
     f->close();
   }
 
@@ -199,7 +153,7 @@ static void AppendToEventFile(const string& aKey, const string& aValue) {
 
   string localId = GetDumpLocalID();
   string path = gEventsPath + UI_DIR_SEPARATOR + localId;
-  ofstream* f = UIOpenWrite(path.c_str(), true);
+  ofstream* f = UIOpenWrite(path, ios::app);
 
   if (f->is_open()) {
     *f << aKey << "=" << aValue << std::endl;
@@ -218,7 +172,7 @@ static void WriteSubmissionEvent(SubmissionResult result,
 
   string localId = GetDumpLocalID();
   string fpath = gEventsPath + UI_DIR_SEPARATOR + localId + "-submission";
-  ofstream* f = UIOpenWrite(fpath.c_str(), false, true);
+  ofstream* f = UIOpenWrite(fpath, ios::binary);
   time_t tm;
   time(&tm);
 
@@ -248,7 +202,7 @@ void LogMessage(const std::string& message) {
 
 static void OpenLogFile() {
   string logPath = gSettingsPath + UI_DIR_SEPARATOR + "submit.log";
-  gLogStream.reset(UIOpenWrite(logPath.c_str(), true));
+  gLogStream.reset(UIOpenWrite(logPath, ios::app));
 }
 
 static bool ReadConfig() {
@@ -323,7 +277,7 @@ static bool AddSubmittedReport(const string& serverResponse) {
     string reportPath = gSettingsPath + UI_DIR_SEPARATOR + "EndOfLife" +
                         responseItems["StopSendingReportsFor"];
 
-    ofstream* reportFile = UIOpenWrite(reportPath);
+    ofstream* reportFile = UIOpenWrite(reportPath, ios::trunc);
     if (reportFile->is_open()) {
       // don't really care about the contents
       *reportFile << 1 << "\n";
@@ -348,7 +302,7 @@ static bool AddSubmittedReport(const string& serverResponse) {
   string path =
       submittedDir + UI_DIR_SEPARATOR + responseItems["CrashID"] + ".txt";
 
-  ofstream* file = UIOpenWrite(path);
+  ofstream* file = UIOpenWrite(path, ios::trunc);
   if (!file->is_open()) {
     delete file;
     return false;
@@ -458,7 +412,7 @@ static string ComputeDumpHash() {
 
   HASH_Begin(hashContext);
 
-  ifstream* f = UIOpenRead(gReporterDumpFile, /* binary */ true);
+  ifstream* f = UIOpenRead(gReporterDumpFile, ios::binary);
   bool error = false;
 
   // Read the minidump contents
