@@ -1408,12 +1408,15 @@ void nsCookieService::InitDBConn() {
 
   for (uint32_t i = 0; i < mReadArray.Length(); ++i) {
     CookieDomainTuple& tuple = mReadArray[i];
+    MOZ_ASSERT(!tuple.cookie->isSession());
+
     RefPtr<nsCookie> cookie = nsCookie::Create(
-        tuple.cookie->name, tuple.cookie->value, tuple.cookie->host,
-        tuple.cookie->path, tuple.cookie->expiry, tuple.cookie->lastAccessed,
-        tuple.cookie->creationTime, false, tuple.cookie->isSecure,
-        tuple.cookie->isHttpOnly, tuple.cookie->originAttributes,
-        tuple.cookie->sameSite);
+        tuple.cookie->name(), tuple.cookie->value(), tuple.cookie->host(),
+        tuple.cookie->path(), tuple.cookie->expiry(),
+        tuple.cookie->lastAccessed(), tuple.cookie->creationTime(),
+        tuple.cookie->isSession(), tuple.cookie->isSecure(),
+        tuple.cookie->isHttpOnly(), tuple.originAttributes,
+        tuple.cookie->sameSite());
 
     AddCookieToList(tuple.key, cookie, mDefaultDBState, nullptr, false);
   }
@@ -2593,8 +2596,8 @@ nsCookieService::RemoveNative(const nsACString& aHost, const nsACString& aName,
  ******************************************************************************/
 
 // Extract data from a single result row and create an nsCookie.
-mozilla::UniquePtr<ConstCookie> nsCookieService::GetCookieFromRow(
-    mozIStorageStatement* aRow, const OriginAttributes& aOriginAttributes) {
+mozilla::UniquePtr<CookieStruct> nsCookieService::GetCookieFromRow(
+    mozIStorageStatement* aRow) {
   // Skip reading 'baseDomain' -- up to the caller.
   nsCString name, value, host, path;
   DebugOnly<nsresult> rv = aRow->GetUTF8String(IDX_NAME, name);
@@ -2614,9 +2617,9 @@ mozilla::UniquePtr<ConstCookie> nsCookieService::GetCookieFromRow(
   int32_t sameSite = aRow->AsInt32(IDX_SAME_SITE);
 
   // Create a new constCookie and assign the data.
-  return mozilla::MakeUnique<ConstCookie>(
-      name, value, host, path, expiry, lastAccessed, creationTime, isSecure,
-      isHttpOnly, aOriginAttributes, sameSite);
+  return mozilla::MakeUnique<CookieStruct>(
+      name, value, host, path, expiry, lastAccessed, creationTime, isHttpOnly,
+      false, isSecure, sameSite);
 }
 
 void nsCookieService::EnsureReadComplete(bool aInitDBConn) {
@@ -2727,7 +2730,8 @@ OpenDBResult nsCookieService::Read() {
     nsCookieKey key(baseDomain, attrs);
     CookieDomainTuple* tuple = mReadArray.AppendElement();
     tuple->key = std::move(key);
-    tuple->cookie = GetCookieFromRow(stmt, attrs);
+    tuple->originAttributes = attrs;
+    tuple->cookie = GetCookieFromRow(stmt);
   }
 
   COOKIE_LOGSTRING(LogLevel::Debug,
