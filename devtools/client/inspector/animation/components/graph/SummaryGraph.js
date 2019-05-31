@@ -38,10 +38,11 @@ class SummaryGraph extends PureComponent {
     this.props.selectAnimation(this.props.animation);
   }
 
-  /* eslint-disable complexity */
   getTitleText(state) {
     const getTime =
       time => getFormatStr("player.timeLabel", numberWithDecimals(time / 1000, 2));
+    const getTimeOrInfinity =
+      time => time === Infinity ? getStr("player.infiniteDurationText") : getTime(time);
 
     let text = "";
 
@@ -58,9 +59,7 @@ class SummaryGraph extends PureComponent {
 
     // Adding the duration.
     text += getStr("player.animationDurationLabel") + " ";
-    text += state.duration === Infinity
-              ? getStr("player.infiniteDurationText")
-              : getTime(state.duration);
+    text += getTimeOrInfinity(state.duration);
     text += "\n";
 
     // Adding the endDelay.
@@ -81,9 +80,7 @@ class SummaryGraph extends PureComponent {
     if (state.iterationStart !== 0) {
       text += getFormatStr("player.animationIterationStartLabel2",
                            state.iterationStart,
-                           state.duration === Infinity
-                             ? getStr("player.infiniteDurationText")
-                             : getTime(state.iterationStart * state.duration));
+                           getTimeOrInfinity(state.iterationStart * state.duration));
       text += "\n";
     }
 
@@ -137,7 +134,6 @@ class SummaryGraph extends PureComponent {
 
     return text;
   }
-  /* eslint-enable complexity */
 
   render() {
     const {
