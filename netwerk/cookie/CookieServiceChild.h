@@ -21,8 +21,6 @@ class nsICookiePermission;
 class nsIEffectiveTLDService;
 class nsILoadInfo;
 
-struct nsCookieAttributes;
-
 namespace mozilla {
 namespace net {
 class CookieStruct;
@@ -73,7 +71,7 @@ class CookieServiceChild : public PCookieServiceChild,
 
   void RecordDocumentCookie(nsCookie* aCookie, const OriginAttributes& aAttrs);
 
-  void SetCookieInternal(nsCookieAttributes& aCookieAttributes,
+  void SetCookieInternal(const CookieStruct& aCookieData,
                          const mozilla::OriginAttributes& aAttrs,
                          nsIChannel* aChannel, bool aFromHttp,
                          nsICookiePermission* aPermissionService);
