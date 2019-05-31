@@ -7,8 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Web Storage")
 
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-
 XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell.ini'
 ]

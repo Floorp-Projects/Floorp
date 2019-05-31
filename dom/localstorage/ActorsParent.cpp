@@ -1678,7 +1678,9 @@ class Datastore final
   int64_t mSizeOfKeys;
   int64_t mSizeOfItems;
   bool mClosed;
+#ifdef DEBUG
   bool mInUpdateBatch;
+#endif
 
  public:
   // Created by PrepareDatastoreOp.
@@ -1757,6 +1759,8 @@ class Datastore final
 
   void Clear(Database* aDatabase);
 
+  void PrivateBrowsingClear();
+
   void BeginUpdateBatch(int64_t aSnapshotInitialUsage);
 
   int64_t EndUpdateBatch(int64_t aSnapshotPeakUsage);
@@ -1791,6 +1795,8 @@ class Datastore final
 
   void NotifySnapshots(Database* aDatabase, const nsAString& aKey,
                        const LSValue& aOldValue, bool aAffectsOrder);
+
+  void MarkSnapshotsDirty();
 };
 
 class PreparedDatastore {
@@ -3652,7 +3658,7 @@ bool RecvLSClearPrivateBrowsing() {
       MOZ_ASSERT(datastore);
 
       if (datastore->PrivateBrowsingId()) {
-        datastore->Clear(nullptr);
+        datastore->PrivateBrowsingClear();
       }
     }
   }
@@ -4792,8 +4798,12 @@ Datastore::Datastore(const nsACString& aOrigin, uint32_t aPrivateBrowsingId,
       mUpdateBatchUsage(-1),
       mSizeOfKeys(aSizeOfKeys),
       mSizeOfItems(aSizeOfItems),
-      mClosed(false),
-      mInUpdateBatch(false) {
+      mClosed(false)
+#ifdef DEBUG
+      ,
+      mInUpdateBatch(false)
+#endif
+{
   AssertIsOnBackgroundThread();
 
   mValues.SwapElements(aValues);
@@ -5254,7 +5264,9 @@ void Datastore::RemoveItem(Database* aDatabase, const nsString& aKey) {
 
 void Datastore::Clear(Database* aDatabase) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
   MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(mInUpdateBatch);
 
   if (mValues.Count()) {
     int64_t delta = 0;
@@ -5270,16 +5282,9 @@ void Datastore::Clear(Database* aDatabase) {
 
     mValues.Clear();
 
-    if (mInUpdateBatch) {
-      mWriteOptimizer.Truncate();
+    mWriteOptimizer.Truncate();
 
-      mUpdateBatchUsage += delta;
-    } else {
-      mOrderedItems.Clear();
-
-      DebugOnly<bool> ok = UpdateUsage(delta);
-      MOZ_ASSERT(ok);
-    }
+    mUpdateBatchUsage += delta;
 
     mSizeOfKeys = 0;
     mSizeOfItems = 0;
@@ -5287,6 +5292,27 @@ void Datastore::Clear(Database* aDatabase) {
     if (IsPersistent()) {
       mConnection->Clear(delta);
     }
+  }
+}
+
+void Datastore::PrivateBrowsingClear() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mPrivateBrowsingId);
+  MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(!mInUpdateBatch);
+
+  if (mValues.Count()) {
+    MarkSnapshotsDirty();
+
+    mValues.Clear();
+
+    mOrderedItems.Clear();
+
+    DebugOnly<bool> ok = UpdateUsage(-mSizeOfItems);
+    MOZ_ASSERT(ok);
+
+    mSizeOfKeys = 0;
+    mSizeOfItems = 0;
   }
 }
 
@@ -5303,7 +5329,9 @@ void Datastore::BeginUpdateBatch(int64_t aSnapshotInitialUsage) {
     mConnection->BeginUpdateBatch();
   }
 
+#ifdef DEBUG
   mInUpdateBatch = true;
+#endif
 }
 
 int64_t Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage) {
@@ -5341,7 +5369,9 @@ int64_t Datastore::EndUpdateBatch(int64_t aSnapshotPeakUsage) {
     mConnection->EndUpdateBatch();
   }
 
+#ifdef DEBUG
   mInUpdateBatch = false;
+#endif
 
   return result;
 }
@@ -5524,12 +5554,10 @@ void Datastore::CleanupMetadata() {
 void Datastore::NotifySnapshots(Database* aDatabase, const nsAString& aKey,
                                 const LSValue& aOldValue, bool aAffectsOrder) {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aDatabase);
 
   for (auto iter = mDatabases.ConstIter(); !iter.Done(); iter.Next()) {
     Database* database = iter.Get()->GetKey();
-
-    MOZ_ASSERT(database);
-
     if (database == aDatabase) {
       continue;
     }
@@ -5537,6 +5565,19 @@ void Datastore::NotifySnapshots(Database* aDatabase, const nsAString& aKey,
     Snapshot* snapshot = database->GetSnapshot();
     if (snapshot) {
       snapshot->SaveItem(aKey, aOldValue, aAffectsOrder);
+    }
+  }
+}
+
+void Datastore::MarkSnapshotsDirty() {
+  AssertIsOnBackgroundThread();
+
+  for (auto iter = mDatabases.ConstIter(); !iter.Done(); iter.Next()) {
+    Database* database = iter.Get()->GetKey();
+
+    Snapshot* snapshot = database->GetSnapshot();
+    if (snapshot) {
+      snapshot->MarkDirty();
     }
   }
 }
