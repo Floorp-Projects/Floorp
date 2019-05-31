@@ -14,6 +14,7 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import java.lang.IllegalArgumentException
+import java.util.Locale
 
 sealed class Event {
 
@@ -171,10 +172,10 @@ sealed class Event {
                 }
 
             val countLabel: String
-                get() = "${source.searchEngine.name.toLowerCase()}_$label"
+                get() = "${source.searchEngine.name.toLowerCase(Locale.ROOT)}.$label"
 
             val sourceLabel: String
-                get() = "${source.descriptor}_$label"
+                get() = "${source.descriptor}.$label"
         }
 
         override val extras: Map<String, String>?
