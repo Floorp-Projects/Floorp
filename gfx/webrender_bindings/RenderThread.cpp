@@ -236,6 +236,28 @@ void RenderThread::SetCompositionRecorderForWindow(
   MOZ_ASSERT(IsInRenderThread());
   MOZ_ASSERT(GetRenderer(aWindowId));
 
+  auto it = mCompositionRecorders.find(aWindowId);
+  if (it != mCompositionRecorders.end() && it->second->ForceFinishRecording()) {
+    // This case should never occur since the |CompositorBridgeParent| will
+    // receive its "EndRecording" IPC message before another "BeginRecording"
+    // IPC message.
+    //
+    // However, if we do hit this case, then we should handle it gracefully.
+    // We free the structures here because any captured frames are not going
+    // to be read back.
+    if (RendererOGL* renderer = GetRenderer(aWindowId)) {
+      wr_renderer_release_composition_recorder_structures(
+          renderer->GetRenderer());
+    }
+  }
+
+  // If we have finished recording, then we have received
+  // |SetCompositionRecorderEvent| after the compositor brige parent finished
+  // writing but before we handled another frame to delete the data structure.
+  //
+  // In this case we do not need to free the |wr::Renderer|'s composition
+  // recorder structures since we can re-use them.
+
   mCompositionRecorders[aWindowId] = std::move(aCompositionRecorder);
 }
 
