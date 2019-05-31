@@ -253,7 +253,7 @@ android-api-16/pgo:
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: api-16-profile-use
+        custom-build-variant-cfg: api-16
 
 android-api-16-without-google-play-services/opt:
     description: "Android 4.0 api-16+ (without Google Play Services) Opt"
@@ -299,12 +299,12 @@ android-api-16-nightly/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
-        custom-build-variant-cfg: api-16-profile-use
+        custom-build-variant-cfg: api-16
         update-channel: nightly
 
 android-api-16-beta/opt:
     description: "Android 4.0 api-16+ Beta"
-    use-pgo: android-api-16/pgo
+    use-pgo: android-api-16-beta/pgo
     attributes:
         nightly: true
         enable-full-crashsymbols: true
@@ -335,7 +335,7 @@ android-api-16-beta/opt:
 
 android-api-16-beta-test/opt:
     description: "Android 4.0 api-16+ Beta"
-    use-pgo: android-api-16/pgo
+    use-pgo: android-api-16-beta/pgo
     attributes:
         enable-full-crashsymbols: true
         release-type: beta
@@ -393,7 +393,7 @@ android-aarch64/pgo:
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: aarch64-pgo
+        custom-build-variant-cfg: aarch64
 
 android-aarch64/debug:
     description: "Android 5.0 AArch64 Debug"
@@ -462,7 +462,7 @@ android-aarch64-nightly/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
-        custom-build-variant-cfg: aarch64-pgo
+        custom-build-variant-cfg: aarch64
         update-channel: nightly
 
 android-aarch64-beta/opt:
@@ -493,7 +493,7 @@ android-aarch64-beta/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
-        custom-build-variant-cfg: aarch64-beta-pgo
+        custom-build-variant-cfg: aarch64-beta
         update-channel: beta
 
 android-x86_64/opt:
