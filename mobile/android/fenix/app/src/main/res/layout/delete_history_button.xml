@@ -17,8 +17,4 @@
     android:textStyle="bold"
     android:theme="@style/Theme.MaterialComponents.Light"
     app:backgroundTint="?neutral"
-    app:icon="@drawable/ic_delete"
-    app:iconGravity="textStart"
-    app:iconPadding="8dp"
-    app:iconTint="?destructive"
     app:rippleColor="?secondaryText" />
