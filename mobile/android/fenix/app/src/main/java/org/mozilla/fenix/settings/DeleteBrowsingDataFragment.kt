@@ -222,7 +222,9 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
     }
 
     private suspend fun deleteBrowsingData() {
-        requireComponents.core.engine.clearData(Engine.BrowsingData.all())
+        withContext(Dispatchers.Main) {
+            requireComponents.core.engine.clearData(Engine.BrowsingData.all())
+        }
         requireComponents.core.historyStorage.deleteEverything()
     }
 
