@@ -17,7 +17,7 @@ function basicSweeping() {
 
   finishgc();
   startgc(100000, 'shrinking');
-  gcslice();
+  finishgc();
 
   assertEq(wm1.get(hold).name, 'val2');
   assertEq(nondeterministicGetWeakMapKeys(wm1).length, 1);
@@ -41,7 +41,7 @@ function weakGraph() {
 
   finishgc();
   startgc(100000, 'shrinking');
-  gcslice();
+  finishgc();
 
   assertEq(obj2.name, "obj2");
   assertEq(wm1.get(obj2).name, "obj3");
@@ -70,7 +70,7 @@ function deadWeakMap() {
 
   finishgc();
   startgc(100000, 'shrinking');
-  gcslice();
+  finishgc();
 
   assertEq(obj2.name, "obj2");
   assertEq(finalizeCount(), initialCount + 1);
@@ -98,7 +98,7 @@ function deadKeys() {
 
   finishgc();
   startgc(100000, 'shrinking');
-  gcslice();
+  finishgc();
 
   assertEq(finalizeCount(), initialCount + 2);
   assertEq(nondeterministicGetWeakMapKeys(wm1).length, 0);
@@ -132,7 +132,7 @@ function weakKeysRealloc() {
   var initialCount = finalizeCount();
   finishgc();
   startgc(100000, 'shrinking');
-  gcslice();
+  finishgc();
   assertEq(finalizeCount(), initialCount + 1);
 }
 
