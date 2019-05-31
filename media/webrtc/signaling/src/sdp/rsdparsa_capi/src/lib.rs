@@ -45,10 +45,10 @@ pub unsafe extern "C" fn parse_sdp(sdp: StringView,
 
     let parser_result = rsdparsa::parse_sdp(&sdp_str, fail_on_warning);
     match parser_result {
-        Ok(mut parsed) => {
+        Ok(parsed) => {
             *error = match parsed.warnings.len(){
                 0 => ptr::null(),
-                _ => Box::into_raw(Box::new(parsed.warnings.remove(0))),
+                _ => Box::into_raw(Box::new(parsed.warnings[0].clone())),
             };
             *session = Rc::into_raw(Rc::new(parsed));
             NS_OK
