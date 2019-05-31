@@ -206,6 +206,8 @@ class WeakMap
     return p;
   }
 
+  Ptr unbarrieredLookup(const Lookup& l) const { return Base::lookup(l); }
+
   AddPtr lookupForAdd(const Lookup& l) {
     AddPtr p = Base::lookupForAdd(l);
     if (p) {
