@@ -319,15 +319,23 @@ class GeckoWebViewProvider : IWebViewProvider {
             var categories = geckoRuntime!!.settings.contentBlocking.categories
             if (settings.shouldBlockSocialTrackers()) {
                 categories = categories or ContentBlocking.AT_SOCIAL
+            } else {
+                categories = categories and ContentBlocking.AT_SOCIAL.inv()
             }
             if (settings.shouldBlockAdTrackers()) {
                 categories = categories or ContentBlocking.AT_AD
+            } else {
+                categories = categories and ContentBlocking.AT_AD.inv()
             }
             if (settings.shouldBlockAnalyticTrackers()) {
                 categories = categories or ContentBlocking.AT_ANALYTIC
+            } else {
+                categories = categories and ContentBlocking.AT_ANALYTIC.inv()
             }
             if (settings.shouldBlockOtherTrackers()) {
                 categories = categories or ContentBlocking.AT_CONTENT
+            } else {
+                categories = categories and ContentBlocking.AT_CONTENT.inv()
             }
 
             geckoRuntime!!.settings.contentBlocking.categories = categories
