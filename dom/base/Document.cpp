@@ -9822,7 +9822,8 @@ void Document::Destroy() {
 
   // Make sure to report before IPC closed.
   if (!nsContentUtils::IsInPrivateBrowsing(this)) {
-    mContentBlockingLog.ReportLog();
+    mContentBlockingLog.ReportLog(NodePrincipal());
+    mContentBlockingLog.ReportOrigins();
   }
 
   mIsGoingAway = true;
