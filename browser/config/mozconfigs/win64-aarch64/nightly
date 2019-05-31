@@ -2,7 +2,7 @@
 . "$topsrcdir/browser/config/mozconfigs/win64-aarch64/common-win64"
 . "$topsrcdir/browser/config/mozconfigs/win64-aarch64/common-opt"
 
-export MOZ_LTO=cross
+export MOZ_LTO=1
 
 ac_add_options --with-branding=browser/branding/nightly
 
