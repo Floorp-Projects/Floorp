@@ -27,8 +27,6 @@ namespace layers {
 CompositionRecorder::CompositionRecorder(TimeStamp aRecordingStart)
     : mRecordingStart(aRecordingStart) {}
 
-CompositionRecorder::~CompositionRecorder() {}
-
 void CompositionRecorder::RecordFrame(RecordedFrame* aFrame) {
   mCollectedFrames.AppendElement(aFrame);
 }
