@@ -44,7 +44,6 @@
             android:textColor="?secondaryText"
             android:textSize="12sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/close_tab_button"
             app:layout_constraintStart_toEndOf="@id/favicon_image"
             app:layout_constraintTop_toTopOf="@id/favicon_image" />
 

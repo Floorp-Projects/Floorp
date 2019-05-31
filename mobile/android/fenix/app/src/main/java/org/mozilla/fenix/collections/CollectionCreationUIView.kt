@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.AutoTransition
@@ -67,15 +68,12 @@ class CollectionCreationUIView(
             R.layout.component_collection_creation_name_collection
         )
 
-        view.close_icon.apply {
+        view.bottom_bar_icon_button.apply {
             increaseTapArea(increaseButtonByDps)
-            setOnClickListener {
-                actionEmitter.onNext(CollectionCreationAction.Close)
-            }
         }
 
         view.name_collection_edittext.setOnEditorActionListener { v, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE && !v.text.toString().isEmpty()) {
+            if (actionId == EditorInfo.IME_ACTION_DONE && v.text.toString().isNotEmpty()) {
                 when (step) {
                     is SaveCollectionStep.NameCollection -> {
                         actionEmitter.onNext(
@@ -93,10 +91,6 @@ class CollectionCreationUIView(
                 }
             }
             false
-        }
-
-        view.add_collection_button.setOnClickListener {
-            actionEmitter.onNext(CollectionCreationAction.AddNewCollection)
         }
 
         view.tab_list.run {
@@ -118,6 +112,8 @@ class CollectionCreationUIView(
 
         when (it.saveCollectionStep) {
             is SaveCollectionStep.SelectTabs -> {
+                view.tab_list.isClickable = true
+
                 back_button.setOnClickListener {
                     actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.SelectTabs))
                 }
@@ -134,6 +130,18 @@ class CollectionCreationUIView(
                         actionEmitter.onNext(CollectionCreationAction.SelectAllTapped)
                     }
                 }
+
+                view.bottom_button_bar_layout.setOnClickListener(null)
+                view.bottom_button_bar_layout.isClickable = false
+
+                val drawable = view.context.getDrawable(R.drawable.ic_close)
+                drawable?.setTint(ContextCompat.getColor(view.context, R.color.photonWhite))
+                view.bottom_bar_icon_button.setImageDrawable(drawable)
+
+                view.bottom_bar_icon_button.setOnClickListener {
+                    actionEmitter.onNext(CollectionCreationAction.Close)
+                }
+
                 TransitionManager.beginDelayedTransition(
                     view.collection_constraint_layout,
                     transition
@@ -156,7 +164,7 @@ class CollectionCreationUIView(
                     )
                 }
 
-                view.select_tabs_layout_text.text = selectTabsText
+                view.bottom_bar_text.text = selectTabsText
 
                 save_button.setOnClickListener { _ ->
                     if (selectedCollection != null) {
@@ -178,8 +186,22 @@ class CollectionCreationUIView(
                 }
             }
             is SaveCollectionStep.SelectCollection -> {
-                // Only show selected tabs and hide checkboxes
-                collectionCreationTabListAdapter.updateData(it.selectedTabs.toList(), setOf(), true)
+                view.tab_list.isClickable = false
+
+                save_button.visibility = View.GONE
+
+                view.bottom_bar_text.text =
+                    view.context.getString(R.string.create_collection_add_new_collection)
+
+                val drawable = view.context.getDrawable(R.drawable.ic_new)
+                drawable?.setTint(ContextCompat.getColor(view.context, R.color.photonWhite))
+                view.bottom_bar_icon_button.setImageDrawable(drawable)
+                view.bottom_bar_icon_button.setOnClickListener(null)
+
+                view.bottom_button_bar_layout.isClickable = true
+                view.bottom_button_bar_layout.setOnClickListener {
+                    actionEmitter.onNext(CollectionCreationAction.AddNewCollection)
+                }
 
                 back_button.setOnClickListener {
                     actionEmitter.onNext(CollectionCreationAction.BackPressed(SaveCollectionStep.SelectCollection))
@@ -194,6 +216,9 @@ class CollectionCreationUIView(
                     view.context.getString(R.string.create_collection_select_collection)
             }
             is SaveCollectionStep.NameCollection -> {
+                view.tab_list.isClickable = false
+
+                collectionCreationTabListAdapter.updateData(it.selectedTabs.toList(), it.selectedTabs, true)
                 back_button.setOnClickListener {
                     name_collection_edittext.hideKeyboard()
                     val handler = Handler()
@@ -231,6 +256,8 @@ class CollectionCreationUIView(
                     view.context.getString(R.string.create_collection_name_collection)
             }
             is SaveCollectionStep.RenameCollection -> {
+                view.tab_list.isClickable = false
+
                 it.selectedTabCollection?.let { tabCollection ->
                     tabCollection.tabs.map { tab ->
                         Tab(
@@ -240,7 +267,7 @@ class CollectionCreationUIView(
                             tab.title
                         )
                     }.let { tabs ->
-                        collectionCreationTabListAdapter.updateData(tabs, setOf(), true)
+                        collectionCreationTabListAdapter.updateData(tabs, tabs.toSet(), true)
                     }
                 }
 

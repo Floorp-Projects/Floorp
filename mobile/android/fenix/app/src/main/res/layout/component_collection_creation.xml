@@ -44,37 +44,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/add_collection_button"
+        app:layout_constraintBottom_toTopOf="@id/bottom_button_bar_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/back_button"/>
-
-    <TextView
-        android:id="@+id/add_collection_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?foundation"
-        android:foreground="?android:attr/selectableItemBackground"
-        android:drawableStart="@drawable/ic_new"
-        android:drawablePadding="14dp"
-        android:drawableTint="?accent"
-        android:paddingStart="20dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
-        android:text="@string/create_collection_add_new_collection"
-        android:textColor="?primaryText"
-        android:textSize="16sp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/divider"
-        tools:targetApi="m" />
-
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?neutralFaded"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent" />
 
     <EditText
         android:id="@+id/name_collection_edittext"
@@ -105,7 +78,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        app:layout_constraintBottom_toTopOf="@id/add_tabs_layout"
+        app:layout_constraintBottom_toTopOf="@id/bottom_button_bar_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/back_button" />
@@ -123,10 +96,11 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/add_tabs_layout"
+        android:id="@+id/bottom_button_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:foreground="@drawable/rounded_ripple"
         android:background="@drawable/add_tabs_to_collection_background"
         android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -134,7 +108,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageButton
-            android:id="@+id/close_icon"
+            android:id="@+id/bottom_bar_icon_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
@@ -147,7 +121,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/select_tabs_layout_text"
+            android:id="@+id/bottom_bar_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -160,7 +134,7 @@
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/save_button"
-            app:layout_constraintStart_toEndOf="@id/close_icon"
+            app:layout_constraintStart_toEndOf="@id/bottom_bar_icon_button"
             app:layout_constraintTop_toTopOf="parent" />
 
         <Button

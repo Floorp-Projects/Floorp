@@ -7,7 +7,6 @@ package org.mozilla.fenix.collections
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -25,9 +24,8 @@ import kotlin.coroutines.CoroutineContext
 class CollectionCreationTabListAdapter(
     val actionEmitter: Observer<CollectionCreationAction>
 ) : RecyclerView.Adapter<TabViewHolder>() {
-
     private var tabs: List<Tab> = listOf()
-    private var selectedTabs: Set<Tab> = setOf()
+    private var selectedTabs: MutableSet<Tab> = mutableSetOf()
     private lateinit var job: Job
     private var hideCheckboxes = false
 
@@ -35,13 +33,40 @@ class CollectionCreationTabListAdapter(
         val view =
             LayoutInflater.from(parent.context).inflate(TabViewHolder.LAYOUT_ID, parent, false)
 
-        return TabViewHolder(view, actionEmitter, job)
+        return TabViewHolder(view, job)
+    }
+
+    override fun onBindViewHolder(holder: TabViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+        } else {
+            when (payloads[0]) {
+                is CheckChanged -> {
+                    val checkChanged = payloads[0] as CheckChanged
+                    if (checkChanged.shouldBeChecked) {
+                        holder.view.tab_selected_checkbox.isChecked = true
+                    } else if (checkChanged.shouldBeUnchecked) {
+                        holder.view.tab_selected_checkbox.isChecked = false
+                    }
+                }
+            }
+        }
     }
 
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         val tab = tabs[position]
         val isSelected = selectedTabs.contains(tab)
         holder.bind(tab, isSelected, hideCheckboxes)
+        holder.view.tab_selected_checkbox.setOnCheckedChangeListener { _, isChecked ->
+            val action = if (isChecked) {
+                selectedTabs.add(tab)
+                CollectionCreationAction.AddTabToSelection(tab)
+            } else {
+                selectedTabs.remove(tab)
+                CollectionCreationAction.RemoveTabFromSelection(tab)
+            }
+            actionEmitter.onNext(action)
+        }
     }
 
     override fun getItemCount(): Int = tabs.size
@@ -69,7 +94,7 @@ class CollectionCreationTabListAdapter(
         )
 
         this.tabs = tabs
-        this.selectedTabs = selectedTabs
+        this.selectedTabs = selectedTabs.toMutableSet()
         this.hideCheckboxes = hideCheckboxes
 
         diffUtil.dispatchUpdatesTo(this)
@@ -88,20 +113,27 @@ private class TabDiffUtil(
         old[oldItemPosition].sessionId == new[newItemPosition].sessionId
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        val isSameTab = old[oldItemPosition].url == new[newItemPosition].url
-        val sameSelectedState =
-            oldSelected.contains(old[oldItemPosition]) == newSelected.contains(new[newItemPosition])
+        val isSameTab = old[oldItemPosition].sessionId == new[newItemPosition].sessionId
+        val sameSelectedState = oldSelected.contains(old[oldItemPosition]) == newSelected.contains(new[newItemPosition])
         val isSameHideCheckboxes = oldHideCheckboxes == newHideCheckboxes
         return isSameTab && sameSelectedState && isSameHideCheckboxes
+    }
+
+    override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
+        val shouldBeChecked = newSelected.contains(new[newItemPosition]) && !oldSelected.contains(old[oldItemPosition])
+        val shouldBeUnchecked =
+            !newSelected.contains(new[newItemPosition]) && oldSelected.contains(old[oldItemPosition])
+        return CheckChanged(shouldBeChecked, shouldBeUnchecked)
     }
 
     override fun getOldListSize(): Int = old.size
     override fun getNewListSize(): Int = new.size
 }
 
+data class CheckChanged(val shouldBeChecked: Boolean, val shouldBeUnchecked: Boolean)
+
 class TabViewHolder(
     val view: View,
-    actionEmitter: Observer<CollectionCreationAction>,
     val job: Job
 ) :
     RecyclerView.ViewHolder(view), CoroutineScope {
@@ -111,14 +143,6 @@ class TabViewHolder(
 
     private var tab: Tab? = null
     private val checkbox = view.tab_selected_checkbox!!
-    private val checkboxListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
-        tab?.apply {
-            val action = if (isChecked) CollectionCreationAction.AddTabToSelection(this)
-            else CollectionCreationAction.RemoveTabFromSelection(this)
-
-            actionEmitter.onNext(action)
-        }
-    }
 
     init {
         view.collection_item_tab.setOnClickListener {
@@ -128,16 +152,13 @@ class TabViewHolder(
 
     fun bind(tab: Tab, isSelected: Boolean, shouldHideCheckBox: Boolean) {
         this.tab = tab
-
         view.hostname.text = tab.hostname
         view.tab_title.text = tab.title
         checkbox.visibility = if (shouldHideCheckBox) View.INVISIBLE else View.VISIBLE
         view.isClickable = !shouldHideCheckBox
-        checkbox.setOnCheckedChangeListener(null)
         if (checkbox.isChecked != isSelected) {
             checkbox.isChecked = isSelected
         }
-        checkbox.setOnCheckedChangeListener(checkboxListener)
 
         launch(Dispatchers.IO) {
             val bitmap = view.favicon_image.context.components.core.icons

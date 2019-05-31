@@ -62,6 +62,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
+import org.mozilla.fenix.collections.getStepForCollectionsSize
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.metrics.Event
@@ -698,8 +699,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             viewModel?.tabs = listOf(tabs)
             val selectedSet = mutableSetOf(tabs)
             viewModel?.selectedTabs = selectedSet
-            viewModel?.saveCollectionStep = SaveCollectionStep.SelectCollection
             viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
+            viewModel?.saveCollectionStep =
+                viewModel?.tabCollections?.getStepForCollectionsSize() ?: SaveCollectionStep.SelectCollection
             viewModel?.snackbarAnchorView = nestedScrollQuickAction
             view?.let {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()

@@ -17,3 +17,6 @@ class CreateCollectionViewModel : ViewModel() {
     var selectedTabCollection: TabCollection? = null
     var snackbarAnchorView: View? = null
 }
+
+fun List<TabCollection>.getStepForCollectionsSize(): SaveCollectionStep =
+    if (isEmpty()) SaveCollectionStep.NameCollection else SaveCollectionStep.SelectCollection
