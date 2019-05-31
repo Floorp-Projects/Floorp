@@ -4788,9 +4788,11 @@ window._gBrowser = {
         el.setAttribute("data-l10n-id", el.getAttribute("data-lazy-l10n-id"));
         el.removeAttribute("data-lazy-l10n-id");
       });
+      this.tabContainer.removeEventListener("contextmenu", tabContextFTLInserter, true);
       this.tabContainer.removeEventListener("mouseover", tabContextFTLInserter);
       this.tabContainer.removeEventListener("focus", tabContextFTLInserter, true);
     };
+    this.tabContainer.addEventListener("contextmenu", tabContextFTLInserter, true);
     this.tabContainer.addEventListener("mouseover", tabContextFTLInserter);
     this.tabContainer.addEventListener("focus", tabContextFTLInserter, true);
   },
