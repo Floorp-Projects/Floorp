@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 html {
   background: rgb(250,250,250);
   font: message-box;
@@ -281,11 +285,6 @@ kbd {
 .range-with-value {
   display: flex;
   flex-flow: row nowrap;
-}
-
-body.no-windowlength .settings-setting-label.windowlength,
-body.no-windowlength .range-with-value.windowlength {
-  display: none;
 }
 
 .range-input {

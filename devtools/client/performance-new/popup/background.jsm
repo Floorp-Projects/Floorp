@@ -1,116 +1,108 @@
-/* global browser */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-const DEFAULT_VIEWER_URL = "https://profiler.firefox.com";
+/**
+ * This file contains all of the background logic for controlling the state and
+ * configuration of the profiler. It is in a JSM so that the logic can be shared
+ * with both the popup client, and the keyboard shortcuts. The shortcuts don't need
+ * access to any UI, and need to be loaded independent of the popup.
+ */
+
+// The following are not lazily loaded as they are needed during initialization.f
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const Loader = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+
+const { loader } = Loader;
+
+// The following utilities are lazily loaded as they are not needed when controlling the
+// global state of the profiler, and only are used during specific funcationality like
+// symbolication or capturing a profile.
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "ProfilerGetSymbols",
+  "resource://gre/modules/ProfilerGetSymbols.jsm");
+loader.lazyRequireGetter(this, "receiveProfile",
+  "devtools/client/performance-new/browser", true);
+
+// This pref contains the JSON serialization of the popup's profiler state with
+// a string key based off of the debug name and breakpad id.
+const PROFILER_STATE_PREF = "devtools.performance.popup";
 const DEFAULT_WINDOW_LENGTH = 20; // 20sec
 
-const tabToConnectionMap = new Map();
+// This Map caches the symbols from the shared libraries.
+const symbolCache = new Map();
 
-var profilerState;
-var profileViewerURL = DEFAULT_VIEWER_URL;
-var isMigratedToNewUrl;
+const primeSymbolStore = libs => {
+  for (const {path, debugName, debugPath, breakpadId} of libs) {
+    symbolCache.set(`${debugName}/${breakpadId}`, {path, debugPath});
+  }
+};
+
+const state = intializeState();
 
 function adjustState(newState) {
   // Deep clone the object, since this can be called through popup.html,
   // which can be unloaded thus leaving this object dead.
   newState = JSON.parse(JSON.stringify(newState));
-  Object.assign(window.profilerState, newState);
-  browser.storage.local.set({ profilerState: window.profilerState });
-}
+  Object.assign(state, newState);
 
-function makeProfileAvailableToTab(profile, port) {
-  port.postMessage({ type: "ProfilerConnectToPage", payload: profile });
-
-  port.onMessage.addListener(async message => {
-    if (message.type === "ProfilerGetSymbolTable") {
-      const { debugName, breakpadId } = message;
-      try {
-        const [
-          addresses,
-          index,
-          buffer,
-        ] = await browser.geckoProfiler.getSymbols(debugName, breakpadId);
-
-        port.postMessage({
-          type: "ProfilerGetSymbolTableReply",
-          status: "success",
-          result: [addresses, index, buffer],
-          debugName,
-          breakpadId,
-        });
-      } catch (e) {
-        port.postMessage({
-          type: "ProfilerGetSymbolTableReply",
-          status: "error",
-          error: `${e}`,
-          debugName,
-          breakpadId,
-        });
-      }
-    }
-  });
-}
-
-async function createAndWaitForTab(url) {
-  const tabPromise = browser.tabs.create({
-    active: true,
-    url,
-  });
-
-  return tabPromise;
-}
-
-function getProfilePreferablyAsArrayBuffer() {
-  // This is a compatibility wrapper for Firefox builds from before 1362800
-  // landed. We can remove it once Nightly switches to 56.
-  if ("getProfileAsArrayBuffer" in browser.geckoProfiler) {
-    return browser.geckoProfiler.getProfileAsArrayBuffer();
+  try {
+    Services.prefs.setStringPref(PROFILER_STATE_PREF,
+      JSON.stringify(state));
+  } catch (error) {
+    console.error("Unable to save the profiler state for the popup.");
+    throw error;
   }
-  return browser.geckoProfiler.getProfile();
+}
+
+function getSymbols(debugName, breakpadId) {
+  if (symbolCache.size === 0) {
+    primeSymbolStore(Services.profiler.sharedLibraries);
+  }
+
+  const cachedLibInfo = symbolCache.get(`${debugName}/${breakpadId}`);
+  if (!cachedLibInfo) {
+    throw new Error(
+      `The library ${debugName} ${breakpadId} is not in the ` +
+      "Services.profiler.sharedLibraries list, so the local path for it is not known " +
+      "and symbols for it can not be obtained. This usually happens if a content " +
+      "process uses a library that's not used in the parent process - " +
+      "Services.profiler.sharedLibraries only knows about libraries in the " +
+      "parent process.");
+  }
+
+  const {path, debugPath} = cachedLibInfo;
+  if (!OS.Path.split(path).absolute) {
+    throw new Error(
+      "Services.profiler.sharedLibraries did not contain an absolute path for " +
+      `the library ${debugName} ${breakpadId}, so symbols for this library can not ` +
+      "be obtained.");
+  }
+
+  return ProfilerGetSymbols.getSymbolTable(path, debugPath, breakpadId);
 }
 
 async function captureProfile() {
+  if (!state.isRunning) {
+    // The profiler is not active, ignore this shortcut.
+    return;
+  }
   // Pause profiler before we collect the profile, so that we don't capture
   // more samples while the parent process waits for subprocess profiles.
-  await browser.geckoProfiler.pause().catch(() => {});
+  Services.profiler.PauseSampling();
 
-  const profilePromise = getProfilePreferablyAsArrayBuffer().catch(
+  const profile = await Services.profiler.getProfileDataAsArrayBuffer().catch(
     e => {
       console.error(e);
       return {};
     }
   );
 
-  const tabOpenPromise = createAndWaitForTab(profileViewerURL + "/from-addon");
+  receiveProfile(profile, getSymbols);
 
-  try {
-    const [profile, tab] = await Promise.all([profilePromise, tabOpenPromise]);
-
-    const connection = tabToConnectionMap.get(tab.id);
-
-    if (connection) {
-      // If, for instance, it takes a long time to load the profile,
-      // then our onDOMContentLoaded handler and our runtime.onConnect handler
-      // have already connected to the page. All we need to do then is
-      // provide the profile.
-      makeProfileAvailableToTab(profile, connection.port);
-    } else {
-      // If our onDOMContentLoaded handler and our runtime.onConnect handler
-      // haven't connected to the page, set this so that they'll have a
-      // profile they can provide once they do.
-      tabToConnectionMap.set(tab.id, { profile });
-    }
-  } catch (e) {
-    console.error(e);
-    // const { tab } = await tabOpenPromise;
-    // TODO data URL doesn't seem to be working. Permissions issue?
-    // await browser.tabs.update(tab.id, { url: `data:text/html,${encodeURIComponent(e.toString)}` });
-  }
-
-  try {
-    await browser.geckoProfiler.resume();
-  } catch (e) {
-    console.error(e);
-  }
+  Services.profiler.ResumeSampling();
 }
 
 /**
@@ -122,185 +114,152 @@ function getEnabledFeatures(features, threads) {
   if (threads.length > 0) {
     enabledFeatures.push("threads");
   }
-  const supportedFeatures = Object.values(
-    browser.geckoProfiler.ProfilerFeature
-  );
+  const supportedFeatures = Services.profiler.GetFeatures([]);
   return enabledFeatures.filter(feature => supportedFeatures.includes(feature));
 }
 
-async function startProfiler() {
-  const settings = window.profilerState;
-  const threads = settings.threads.split(",");
-  const options = {
-    bufferSize: settings.buffersize,
-    interval: settings.interval,
-    features: getEnabledFeatures(settings.features, threads),
-    threads,
-  };
-  if (
-    browser.geckoProfiler.supports &&
-    browser.geckoProfiler.supports.WINDOWLENGTH
-  ) {
-    options.windowLength =
-      settings.windowLength !== settings.infiniteWindowLength
-        ? settings.windowLength
-        : 0;
-  }
-  await browser.geckoProfiler.start(options);
+function startProfiler() {
+  const threads = state.threads.split(",");
+  const features = getEnabledFeatures(state.features, threads);
+  const windowLength = state.windowLength !== state.infiniteWindowLength
+  ? state.windowLength
+  : 0;
+
+  const { buffersize, interval } = state;
+
+  Services.profiler.StartProfiler(buffersize, interval, features, threads, windowLength);
 }
 
 async function stopProfiler() {
-  await browser.geckoProfiler.stop();
+  Services.profiler.StopProfiler();
 }
 
-/* exported restartProfiler */
-async function restartProfiler() {
-  await stopProfiler();
-  await startProfiler();
+function toggleProfiler() {
+  if (state.isRunning) {
+    stopProfiler();
+  } else {
+    startProfiler();
+  }
 }
 
-(async () => {
-  const storageResults = await browser.storage.local.get({
-    profilerState: null,
-    profileViewerURL: DEFAULT_VIEWER_URL,
-    // This value is to check whether or not folks have been migrated from
-    // perf-html.io to profiler.firefox.com
-    isMigratedToNewUrl: false,
-  });
+function restartProfiler() {
+  stopProfiler();
+  startProfiler();
+}
 
-  // Assign to global variables:
-  window.profilerState = storageResults.profilerState;
-  window.profileViewerURL = storageResults.profileViewerURL;
+// This running observer was adapted from the web extension.
+const isRunningObserver = {
+  _observers: new Set(),
 
-  if (!storageResults.isMigratedToNewUrl) {
-    if (window.profileViewerURL.startsWith("https://perf-html.io")) {
-      // This user needs to be migrated from perf-html.io to profiler.firefox.com.
-      // This is only done one time.
-      window.profileViewerURL = DEFAULT_VIEWER_URL;
-    }
-    // Store the fact that this migration check has been done, and optionally update
-    // the url if it was changed.
-    await browser.storage.local.set({
-      isMigratedToNewUrl: true,
-      profileViewerURL: window.profileViewerURL,
-    });
-  }
-
-  if (!window.profilerState) {
-    window.profilerState = {};
-
-    const features = {
-      java: false,
-      js: true,
-      leaf: true,
-      mainthreadio: false,
-      memory: false,
-      privacy: false,
-      responsiveness: true,
-      screenshots: false,
-      seqstyle: false,
-      stackwalk: true,
-      tasktracer: false,
-      trackopts: false,
-      jstracer: false,
-    };
-
-    const platform = await browser.runtime.getPlatformInfo();
-    switch (platform.os) {
-      case "mac":
-        // Screenshots are currently only working on mac.
-        features.screenshots = true;
-        break;
-      case "android":
-        // Java profiling is only meaningful on android.
-        features.java = true;
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "profiler-started":
+      case "profiler-stopped":
+        // Make the observer calls asynchronous.
+        const isRunningPromise = Promise.resolve(topic === "profiler-started");
+        for (const observer of this._observers) {
+          isRunningPromise.then(observer);
+        }
         break;
     }
+  },
 
-    adjustState({
-      isRunning: false,
-      settingsOpen: false,
-      buffersize: 10000000, // 90MB
-      windowLength: DEFAULT_WINDOW_LENGTH,
-      interval: 1,
-      features,
-      threads: "GeckoMain,Compositor",
-    });
-  } else if (window.profilerState.windowLength === undefined) {
-    // We have `windowprofilerState` but no `windowLength`.
-    // That means we've upgraded the gecko profiler addon from an older version.
-    // Adding the default window legth in that case.
-    adjustState({
-      windowLength: DEFAULT_WINDOW_LENGTH,
-    });
+  _startListening() {
+    Services.obs.addObserver(this, "profiler-started");
+    Services.obs.addObserver(this, "profiler-stopped");
+  },
+
+  _stopListening() {
+    Services.obs.removeObserver(this, "profiler-started");
+    Services.obs.removeObserver(this, "profiler-stopped");
+  },
+
+  addObserver(observer) {
+    if (this._observers.size === 0) {
+      this._startListening();
+    }
+
+    this._observers.add(observer);
+    // Notify the observers the current state asynchronously.
+    Promise.resolve(Services.profiler.IsActive()).then(observer);
+  },
+
+  removeObserver(observer) {
+    if (this._observers.delete(observer) && this._observers.size === 0) {
+      this._stopListening();
+    }
+  },
+};
+
+function getStoredStateOrNull() {
+  // Pull out the stored state from preferences, it is a raw string.
+  const storedStateString = Services.prefs.getStringPref(PROFILER_STATE_PREF, "");
+  if (storedStateString === "") {
+    return null;
   }
 
-  browser.geckoProfiler.onRunning.addListener(isRunning => {
-    adjustState({ isRunning });
+  try {
+    // Attempt to parse the results.
+    return JSON.parse(storedStateString);
+  } catch (error) {
+    console.error(`Could not parse the stored state for the profile in the ` +
+      `preferences ${PROFILER_STATE_PREF}`);
+  }
+  return null;
+}
 
-    // With "path: null" we'll get the default icon for the browser action, which
-    // is theme-aware.
-    // The on state does not need to be theme-aware because we want to highlight
-    // the icon in blue regardless of whether a dark or a light theme is in use.
-    browser.browserAction.setIcon({
-      path: isRunning ? "icons/toolbar_on.png" : null,
-    });
+function intializeState() {
+  const storedState = getStoredStateOrNull();
+  if (storedState) {
+    return storedState;
+  }
 
-    browser.browserAction.setTitle({
-      title: isRunning ? "Gecko Profiler (on)" : null,
-    });
+  const features = {
+    java: false,
+    js: true,
+    leaf: true,
+    mainthreadio: false,
+    memory: false,
+    privacy: false,
+    responsiveness: true,
+    screenshots: false,
+    seqstyle: false,
+    stackwalk: true,
+    tasktracer: false,
+    trackopts: false,
+    jstracer: false,
+  };
 
-    for (const popup of browser.extension.getViews({ type: "popup" })) {
-      popup.renderState(window.profilerState);
-    }
-  });
+  if (AppConstants.platform === "android") {
+    // Java profiling is only meaningful on android.
+    features.java = true;
+  }
 
-  browser.storage.onChanged.addListener(changes => {
-    if (changes.profileViewerURL) {
-      profileViewerURL = changes.profileViewerURL.newValue;
-    }
-  });
+  return {
+    isRunning: false,
+    settingsOpen: false,
+    buffersize: 10000000, // 90MB
+    windowLength: DEFAULT_WINDOW_LENGTH,
+    interval: 1,
+    features,
+    threads: "GeckoMain,Compositor",
+  };
+}
 
-  browser.commands.onCommand.addListener(command => {
-    if (command === "ToggleProfiler") {
-      if (window.profilerState.isRunning) {
-        stopProfiler();
-      } else {
-        startProfiler();
-      }
-    } else if (command === "CaptureProfile") {
-      if (window.profilerState.isRunning) {
-        captureProfile();
-      }
-    }
-  });
+isRunningObserver.addObserver(isRunning => {
+  adjustState({ isRunning });
+});
 
-  browser.runtime.onConnect.addListener(port => {
-    const tabId = port.sender.tab.id;
-    const connection = tabToConnectionMap.get(tabId);
-    if (connection && connection.profile) {
-      makeProfileAvailableToTab(connection.profile, port);
-    } else {
-      tabToConnectionMap.set(tabId, { port });
-    }
-  });
+const platform = AppConstants.platform;
 
-  browser.tabs.onRemoved.addListener(tabId => {
-    tabToConnectionMap.delete(tabId);
-  });
-
-  browser.webNavigation.onDOMContentLoaded.addListener(
-    async ({ frameId, tabId, url }) => {
-      if (frameId !== 0) {
-        return;
-      }
-      if (url.startsWith(profileViewerURL)) {
-        browser.tabs.executeScript(tabId, { file: "content.js" });
-      } else {
-        // As soon as we navigate away from the profile report, clean
-        // this up so we don't leak it.
-        tabToConnectionMap.delete(tabId);
-      }
-    }
-  );
-})();
+var EXPORTED_SYMBOLS = [
+  "adjustState",
+  "captureProfile",
+  "state",
+  "startProfiler",
+  "stopProfiler",
+  "restartProfiler",
+  "toggleProfiler",
+  "isRunningObserver",
+  "platform",
+];

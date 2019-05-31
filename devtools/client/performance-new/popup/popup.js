@@ -1,4 +1,11 @@
-/* global browser */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+const background =
+  ChromeUtils.import("resource://devtools/client/performance-new/popup/background.jsm");
+
 const intervalScale = makeExponentialScale(0.01, 100);
 const buffersizeScale = makeExponentialScale(10000, 100000000);
 // Window Length accepts a numerical value between 1-N. We also need to put an
@@ -44,6 +51,105 @@ const threadMap = {
   "style-thread": "StyleThread",
 };
 
+function initializePopup() {
+  const updateIsRunning = () => {
+    renderState(background.state);
+  };
+  background.isRunningObserver.addObserver(updateIsRunning);
+
+  window.addEventListener("unload", () => {
+    background.isRunningObserver.removeObserver(updateIsRunning);
+  });
+
+  for (const name of features) {
+    setupFeatureCheckbox(name);
+  }
+
+  for (const name in threadMap) {
+    setupThreadCheckbox(name);
+  }
+
+  document
+    .querySelector("#perf-settings-thread-text")
+    .addEventListener("change", async e => {
+      background.adjustState({ threads: e.target.value });
+      renderState(background.state);
+    });
+
+  document
+    .querySelector(".settings-apply-button")
+    .addEventListener("click", async () => {
+      background.restartProfiler();
+    });
+
+  document.querySelector(".button-start").addEventListener("click", async () => {
+    background.startProfiler();
+    background.adjustState({ isRunning: true });
+    renderState(background.state);
+  });
+
+  document.querySelector(".button-cancel").addEventListener("click", async () => {
+    background.stopProfiler();
+    background.adjustState({ isRunning: false });
+    renderState(background.state);
+  });
+
+  document
+    .querySelector("#button-capture")
+    .addEventListener("click", async () => {
+      if (document.documentElement.classList.contains("status-running")) {
+        await background.captureProfile();
+      }
+    });
+
+  document
+    .querySelector("#settings-label")
+    .addEventListener("click", async () => {
+      const { settingsOpen } = background.state;
+      background.adjustState({
+        settingsOpen: !settingsOpen,
+      });
+      renderState(background.state);
+    });
+
+  document.querySelector(".interval-range").addEventListener("input", async e => {
+    const frac = e.target.value / 100;
+    background.adjustState({
+      interval: intervalScale.fromFractionToSingleDigitValue(frac),
+    });
+    renderState(background.state);
+  });
+
+  document
+    .querySelector(".buffersize-range")
+    .addEventListener("input", async e => {
+      const frac = e.target.value / 100;
+      background.adjustState({
+        buffersize: buffersizeScale.fromFractionToSingleDigitValue(frac),
+      });
+      renderState(background.state);
+    });
+
+  document
+    .querySelector(".windowlength-range")
+    .addEventListener("input", async e => {
+      const frac = e.target.value / 100;
+      background.adjustState({
+        windowLength: windowLengthScale.fromFractionToSingleDigitValue(frac),
+      });
+      renderState(background.state);
+    });
+
+  window.onload = () => {
+    // Letting the background script know how the infiniteWindowLength is represented.
+    background.adjustState({
+      infiniteWindowLength,
+    });
+  };
+
+  renderState(background.state);
+}
+
 function renderState(state) {
   const { isRunning, settingsOpen, interval, buffersize, windowLength } = state;
   document.documentElement.classList.toggle("status-running", isRunning);
@@ -79,11 +185,11 @@ function renderControls(state) {
   document.querySelector(".windowlength-range").value =
     windowLengthScale.fromValueToFraction(state.windowLength) * 100;
 
-  for (let name of features) {
+  for (const name of features) {
     document.getElementById(featurePrefix + name).value = state[name];
   }
 
-  for (let name in threadMap) {
+  for (const name in threadMap) {
     document.getElementById(
       threadPrefix + name
     ).checked = state.threads.includes(threadMap[name]);
@@ -158,114 +264,27 @@ function calculateOverhead(state) {
   );
 }
 
-function getBackground() {
-  return browser.runtime.getBackgroundPage();
-}
-
-document.querySelector(".button-start").addEventListener("click", async () => {
-  const background = await getBackground();
-  await background.startProfiler();
-  background.adjustState({ isRunning: true });
-  renderState(background.profilerState);
-});
-
-document.querySelector(".button-cancel").addEventListener("click", async () => {
-  const background = await getBackground();
-  await background.stopProfiler();
-  background.adjustState({ isRunning: false });
-  renderState(background.profilerState);
-});
-
-document
-  .querySelector("#button-capture")
-  .addEventListener("click", async () => {
-    if (document.documentElement.classList.contains("status-running")) {
-      const background = await getBackground();
-      await background.captureProfile();
-      window.close();
-    }
-  });
-
-document
-  .querySelector("#settings-label")
-  .addEventListener("click", async () => {
-    const background = await getBackground();
-    background.adjustState({
-      settingsOpen: !background.profilerState.settingsOpen,
-    });
-    renderState(background.profilerState);
-  });
-
-document.querySelector(".interval-range").addEventListener("input", async e => {
-  const background = await getBackground();
-  const frac = e.target.value / 100;
-  background.adjustState({
-    interval: intervalScale.fromFractionToSingleDigitValue(frac),
-  });
-  renderState(background.profilerState);
-});
-
-document
-  .querySelector(".buffersize-range")
-  .addEventListener("input", async e => {
-    const background = await getBackground();
-    const frac = e.target.value / 100;
-    background.adjustState({
-      buffersize: buffersizeScale.fromFractionToSingleDigitValue(frac),
-    });
-    renderState(background.profilerState);
-  });
-
-document
-  .querySelector(".windowlength-range")
-  .addEventListener("input", async e => {
-    const background = await getBackground();
-    const frac = e.target.value / 100;
-    background.adjustState({
-      windowLength: windowLengthScale.fromFractionToSingleDigitValue(frac),
-    });
-    renderState(background.profilerState);
-  });
-
-window.onload = async () => {
-  if (
-    !browser.geckoProfiler.supports ||
-    !browser.geckoProfiler.supports.WINDOWLENGTH
-  ) {
-    document.body.classList.add("no-windowlength");
-  }
-
-  // Letting the background script know how the infiniteWindowLength is represented.
-  const background = await getBackground();
-  background.adjustState({
-    infiniteWindowLength,
-  });
-};
-
 /**
  * This helper initializes and adds listeners to the features checkboxes that
  * will adjust the profiler state when changed.
  */
 async function setupFeatureCheckbox(name) {
-  const platform = await browser.runtime.getPlatformInfo();
-
   // Java profiling is only meaningful on android.
   if (name == "java") {
-    if (platform.os !== "android") {
+    if (background.platform !== "android") {
       document.querySelector("#java").style.display = "none";
       return;
     }
   }
 
   const checkbox = document.querySelector(`#${featurePrefix}${name}`);
-  const background = await getBackground();
-  checkbox.checked = background.profilerState.features[name];
+  checkbox.checked = background.state.features[name];
 
   checkbox.addEventListener("change", async e => {
-    const features = Object.assign({}, background.profilerState.features);
-    features[name] = e.target.checked;
-    background.adjustState({ features });
-    renderState(background.profilerState);
+    const newFeatures = Object.assign({}, background.state.features);
+    newFeatures[name] = e.target.checked;
+    background.adjustState({ features: newFeatures });
+    renderState(background.state);
   });
 }
 
@@ -275,11 +294,10 @@ async function setupFeatureCheckbox(name) {
  */
 async function setupThreadCheckbox(name) {
   const checkbox = document.querySelector(`#${threadPrefix}${name}`);
-  const background = await getBackground();
-  checkbox.checked = background.profilerState.threads.includes(threadMap[name]);
+  checkbox.checked = background.state.threads.includes(threadMap[name]);
 
   checkbox.addEventListener("change", async e => {
-    let threads = background.profilerState.threads;
+    let threads = background.state.threads;
     if (e.target.checked) {
       threads += "," + e.target.value;
     } else {
@@ -288,7 +306,7 @@ async function setupThreadCheckbox(name) {
         .join(",");
     }
     background.adjustState({ threads });
-    renderState(background.profilerState);
+    renderState(background.state);
   });
 }
 
@@ -309,28 +327,6 @@ function threadTextToList(threads) {
   );
 }
 
-for (const name of features) {
-  setupFeatureCheckbox(name);
-}
-
-for (const name in threadMap) {
-  setupThreadCheckbox(name);
-}
-
-document
-  .querySelector("#perf-settings-thread-text")
-  .addEventListener("change", async e => {
-    const background = await getBackground();
-    background.adjustState({ threads: e.target.value });
-    renderState(background.profilerState);
-  });
-
-document
-  .querySelector(".settings-apply-button")
-  .addEventListener("click", async () => {
-    (await getBackground()).restartProfiler();
-  });
-
 function makeExponentialScale(rangeStart, rangeEnd) {
   const startExp = Math.log(rangeStart);
   const endExp = Math.log(rangeEnd);
@@ -348,38 +344,35 @@ function makeExponentialScale(rangeStart, rangeEnd) {
   };
 }
 
-const prettyBytes = (function(module) {
-  "use strict";
-  const UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+const UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
-  module.exports = num => {
-    if (!Number.isFinite(num)) {
-      throw new TypeError(
-        `Expected a finite number, got ${typeof num}: ${num}`
-      );
-    }
-
-    const neg = num < 0;
-
-    if (neg) {
-      num = -num;
-    }
-
-    if (num < 1) {
-      return (neg ? "-" : "") + num + " B";
-    }
-
-    const exponent = Math.min(
-      Math.floor(Math.log(num) / Math.log(1000)),
-      UNITS.length - 1
+function prettyBytes(num) {
+  if (!Number.isFinite(num)) {
+    throw new TypeError(
+      `Expected a finite number, got ${typeof num}: ${num}`
     );
-    const numStr = Number((num / Math.pow(1000, exponent)).toPrecision(3));
-    const unit = UNITS[exponent];
+  }
 
-    return (neg ? "-" : "") + numStr + " " + unit;
-  };
+  const neg = num < 0;
 
-  return module;
-})({}).exports;
+  if (neg) {
+    num = -num;
+  }
 
-getBackground().then(background => renderState(background.profilerState));
+  if (num < 1) {
+    return (neg ? "-" : "") + num + " B";
+  }
+
+  const exponent = Math.min(
+    Math.floor(Math.log(num) / Math.log(1000)),
+    UNITS.length - 1
+  );
+  const numStr = Number((num / Math.pow(1000, exponent)).toPrecision(3));
+  const unit = UNITS[exponent];
+
+  return (neg ? "-" : "") + numStr + " " + unit;
+}
+
+module.exports = {
+  initializePopup,
+};
