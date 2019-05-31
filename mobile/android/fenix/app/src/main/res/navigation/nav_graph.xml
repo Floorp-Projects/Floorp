@@ -188,7 +188,7 @@
             app:argType="string" />
         <action
             android:id="@+id/action_bookmarkFragment_to_browserFragment"
-            app:popUpTo="@id/bookmarkFragment"
+            app:popUpTo="@id/libraryFragment"
             app:popUpToInclusive="true"
             app:destination="@id/browserFragment" />
         <action

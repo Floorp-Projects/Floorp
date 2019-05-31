@@ -149,7 +149,6 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
-        if (navHost.navController.currentDestination?.id == R.id.browserFragment) return
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) return
 
         this.intent.putExtra(OPEN_TO_BROWSER, false)
@@ -177,32 +176,34 @@ open class HomeActivity : AppCompatActivity() {
 
     @Suppress("ComplexMethod")
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
-        val directions = when (from) {
-            BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(customTabSessionId)
-            BrowserDirection.FromHome -> HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
-            BrowserDirection.FromSearch -> {
-                if (!navHost.navController.popBackStack(R.id.browserFragment, false)) {
+        if (navHost.navController.currentDestination?.id == R.id.browserFragment) return
+        val directions = if (!navHost.navController.popBackStack(R.id.browserFragment, false)) {
+            when (from) {
+                BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(customTabSessionId)
+                BrowserDirection.FromHome ->
+                    HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId)
+                BrowserDirection.FromSearch ->
                     SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
-                } else {
-                    null
-                }
+                BrowserDirection.FromSettings ->
+                    SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(customTabSessionId)
+                BrowserDirection.FromBookmarks ->
+                    BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(customTabSessionId)
+                BrowserDirection.FromBookmarksFolderSelect ->
+                    SelectBookmarkFolderFragmentDirections
+                        .actionBookmarkSelectFolderFragmentToBrowserFragment(customTabSessionId)
+                BrowserDirection.FromHistory ->
+                    HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
+                BrowserDirection.FromPair ->
+                    PairFragmentDirections.actionPairFragmentToBrowserFragment(customTabSessionId)
+                BrowserDirection.FromTurnOnSync ->
+                    TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToBrowserFragment(customTabSessionId)
+                BrowserDirection.FromAccountProblem ->
+                    AccountProblemFragmentDirections.actionAccountProblemFragmentToBrowserFragment(customTabSessionId)
             }
-            BrowserDirection.FromSettings ->
-                SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(customTabSessionId)
-            BrowserDirection.FromBookmarks ->
-                BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(customTabSessionId)
-            BrowserDirection.FromBookmarksFolderSelect ->
-                SelectBookmarkFolderFragmentDirections
-                    .actionBookmarkSelectFolderFragmentToBrowserFragment(customTabSessionId)
-            BrowserDirection.FromHistory ->
-                HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
-            BrowserDirection.FromPair -> PairFragmentDirections.actionPairFragmentToBrowserFragment(customTabSessionId)
-            BrowserDirection.FromTurnOnSync -> TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToBrowserFragment(
-                customTabSessionId
-            )
-            BrowserDirection.FromAccountProblem ->
-                AccountProblemFragmentDirections.actionAccountProblemFragmentToBrowserFragment(customTabSessionId)
+        } else {
+            null
         }
+
         if (sessionObserver == null)
             sessionObserver = subscribeToSessions()
 
