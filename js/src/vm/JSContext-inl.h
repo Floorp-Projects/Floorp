@@ -10,6 +10,7 @@
 #include "vm/JSContext.h"
 
 #include "builtin/Object.h"
+#include "gc/Zone.h"
 #include "jit/JitFrames.h"
 #include "proxy/Proxy.h"
 #include "vm/BigIntType.h"

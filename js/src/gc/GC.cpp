@@ -3414,7 +3414,11 @@ bool GCRuntime::triggerGC(JS::GCReason reason) {
   return true;
 }
 
-void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone) {
+void js::gc::MaybeAllocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc) {
+  rt->gc.maybeAllocTriggerZoneGC(Zone::from(zoneAlloc));
+}
+
+void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
   if (!CurrentThreadCanAccessRuntime(rt)) {
     // Zones in use by a helper thread can't be collected.
     MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone());
@@ -3423,7 +3427,7 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone) {
 
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
-  size_t usedBytes = zone->totalBytes();
+  size_t usedBytes = zone->totalBytes();  // This already includes |nbytes|.
   size_t thresholdBytes = zone->threshold.gcTriggerBytes();
 
   if (usedBytes >= thresholdBytes) {
@@ -3442,11 +3446,12 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone) {
   size_t igcThresholdBytes = thresholdBytes * zoneGCThresholdFactor;
 
   if (usedBytes >= igcThresholdBytes) {
-    // Reduce the delay to the start of the next incremental slice.
-    if (zone->gcDelayBytes < ArenaSize) {
+    // During an incremental GC, reduce the delay to the start of the next
+    // incremental slice.
+    if (zone->gcDelayBytes < nbytes) {
       zone->gcDelayBytes = 0;
     } else {
-      zone->gcDelayBytes -= ArenaSize;
+      zone->gcDelayBytes -= nbytes;
     }
 
     if (!zone->gcDelayBytes) {
@@ -3454,7 +3459,7 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone) {
       // to try to avoid performing non-incremental GCs on zones
       // which allocate a lot of data, even when incremental slices
       // can't be triggered via scheduling in the event loop.
-      triggerZoneGC(zone, JS::GCReason::ALLOC_TRIGGER, usedBytes,
+      triggerZoneGC(zone, JS::GCReason::INCREMENTAL_ALLOC_TRIGGER, usedBytes,
                     igcThresholdBytes);
 
       // Delay the next slice until a certain amount of allocation
@@ -6883,6 +6888,7 @@ void GCRuntime::finishCollection() {
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     if (zone->isCollecting()) {
       zone->changeGCState(Zone::Finished, Zone::NoGC);
+      zone->gcDelayBytes = 0;
       zone->notifyObservingDebuggers();
     }
 
@@ -6967,6 +6973,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
       for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         zone->setNeedsIncrementalBarrier(false);
         zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
+        zone->gcDelayBytes = 0;
         zone->arenas.unmarkPreMarkedFreeCells();
       }
 
@@ -7494,7 +7501,7 @@ static void ScheduleZones(GCRuntime* gc) {
   }
 }
 
-static void UnScheduleZones(GCRuntime* gc) {
+static void UnscheduleZones(GCRuntime* gc) {
   for (ZonesIter zone(gc->rt, WithAtoms); !zone.done(); zone.next()) {
     zone->unscheduleGC();
   }
@@ -7838,7 +7845,7 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
 #endif
   stats().writeLogMessage("GC ending in state %s", StateName(incrementalState));
 
-  UnScheduleZones(this);
+  UnscheduleZones(this);
 }
 
 js::AutoEnqueuePendingParseTasksAfterGC::

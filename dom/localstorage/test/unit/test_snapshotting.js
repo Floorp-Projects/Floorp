@@ -11,15 +11,15 @@ async function testSteps() {
   Services.prefs.setBoolPref("dom.storage.snapshot_reusing", false);
 
   const items = [
-    { key: "key1", value: "value1" },
-    { key: "key2", value: "value2" },
-    { key: "key3", value: "value3" },
-    { key: "key4", value: "value4" },
-    { key: "key5", value: "value5" },
-    { key: "key6", value: "value6" },
-    { key: "key7", value: "value7" },
-    { key: "key8", value: "value8" },
-    { key: "key9", value: "value9" },
+    { key: "key01", value: "value01" },
+    { key: "key02", value: "value02" },
+    { key: "key03", value: "value03" },
+    { key: "key04", value: "value04" },
+    { key: "key05", value: "value05" },
+    { key: "key06", value: "value06" },
+    { key: "key07", value: "value07" },
+    { key: "key08", value: "value08" },
+    { key: "key09", value: "value09" },
     { key: "key10", value: "value10" },
   ];
 
@@ -194,14 +194,14 @@ async function testSteps() {
       // 3rd snapshot
 
       // Force key2 to load.
-      storage.getItem("key2");
+      storage.getItem("key02");
 
       // Fill out write infos a bit.
-      storage.removeItem("key5");
-      storage.setItem("key5", "value5");
-      storage.removeItem("key5");
+      storage.removeItem("key05");
+      storage.setItem("key05", "value05");
+      storage.removeItem("key05");
       storage.setItem("key11", "value11");
-      storage.setItem("key5", "value5");
+      storage.setItem("key05", "value05");
 
       items.push({ key: "key11", value: "value11" });
 

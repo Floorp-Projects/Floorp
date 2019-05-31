@@ -9,7 +9,7 @@
 
 #include "gc/FreeOp.h"
 
-#include "gc/Zone.h"
+#include "gc/ZoneAllocator.h"
 
 namespace js {
 

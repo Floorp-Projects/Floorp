@@ -310,9 +310,15 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 
+#include "gc/GCEnum.h"
 #include "js/HashTable.h"
+#include "threading/ProtectedData.h"
 
 namespace js {
+
+class AutoLockGC;
+class ZoneAllocPolicy;
+
 namespace gc {
 
 struct Cell;
@@ -645,6 +651,8 @@ class ZoneHeapThreshold {
                                         const AutoLockGC& lock);
 };
 
+#ifdef DEBUG
+
 // Counts memory associated with GC things in a zone.
 //
 // In debug builds, this records details of the cell the memory allocations is
@@ -652,51 +660,21 @@ class ZoneHeapThreshold {
 // builds it's just a counter.
 class MemoryTracker {
  public:
-#ifdef DEBUG
   MemoryTracker();
   ~MemoryTracker();
   void fixupAfterMovingGC();
-#endif
-
-  void addMemory(Cell* cell, size_t nbytes, MemoryUse use) {
-    MOZ_ASSERT(cell);
-    MOZ_ASSERT(nbytes);
-    mozilla::DebugOnly<size_t> initialBytes(bytes_);
-    MOZ_ASSERT(initialBytes + nbytes > initialBytes);
-
-    bytes_ += nbytes;
-
-#ifdef DEBUG
-    trackMemory(cell, nbytes, use);
-#endif
-  }
-  void removeMemory(Cell* cell, size_t nbytes, MemoryUse use) {
-    MOZ_ASSERT(cell);
-    MOZ_ASSERT(nbytes);
-    MOZ_ASSERT(bytes_ >= nbytes);
-
-    bytes_ -= nbytes;
-
-#ifdef DEBUG
-    untrackMemory(cell, nbytes, use);
-#endif
-  }
-  void swapMemory(Cell* a, Cell* b, MemoryUse use) {
-#ifdef DEBUG
-    swapTrackedMemory(a, b, use);
-#endif
-  }
-
-  size_t bytes() const { return bytes_; }
 
   void adopt(MemoryTracker& other);
 
- private:
-  mozilla::Atomic<size_t, mozilla::Relaxed,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      bytes_;
+  void trackMemory(Cell* cell, size_t nbytes, MemoryUse use);
+  void untrackMemory(Cell* cell, size_t nbytes, MemoryUse use);
+  void swapMemory(Cell* a, Cell* b, MemoryUse use);
+  void registerPolicy(ZoneAllocPolicy* policy);
+  void unregisterPolicy(ZoneAllocPolicy* policy);
+  void incPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes);
+  void decPolicyMemory(ZoneAllocPolicy* policy, size_t nbytes);
 
-#ifdef DEBUG
+ private:
   struct Key {
     Key(Cell* cell, MemoryUse use);
     Cell* cell() const;
@@ -720,17 +698,23 @@ class MemoryTracker {
     static void rekey(Key& k, const Key& newKey);
   };
 
+  // Map containing the allocated size associated with (cell, use) pairs.
   using Map = HashMap<Key, size_t, Hasher, SystemAllocPolicy>;
 
-  void trackMemory(Cell* cell, size_t nbytes, MemoryUse use);
-  void untrackMemory(Cell* cell, size_t nbytes, MemoryUse use);
-  void swapTrackedMemory(Cell* a, Cell* b, MemoryUse use);
+  // Map containing the allocated size associated with each instance of a
+  // container that uses ZoneAllocPolicy.
+  using ZoneAllocPolicyMap =
+      HashMap<ZoneAllocPolicy*, size_t, DefaultHasher<ZoneAllocPolicy*>,
+              SystemAllocPolicy>;
+
   size_t getAndRemoveEntry(const Key& key, LockGuard<Mutex>& lock);
 
   Mutex mutex;
   Map map;
-#endif
+  ZoneAllocPolicyMap policyMap;
 };
+
+#endif  // DEBUG
 
 }  // namespace gc
 }  // namespace js
