@@ -115,6 +115,22 @@ let ACTORS = {
 
     allFrames: true,
   },
+  Select: {
+    parent: {
+      moduleURI: "resource://gre/actors/SelectParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/SelectChild.jsm",
+      events: {
+        "mozshowdropdown": {},
+        "mozshowdropdown-sourcetouch": {},
+        "mozhidedropdown": { mozSystemGroup: true },
+      },
+    },
+
+    allFrames: true,
+  },
 };
 
 let LEGACY_ACTORS = {
@@ -276,16 +292,6 @@ let LEGACY_ACTORS = {
       messages: [
         "Browser:PurgeSessionHistory",
       ],
-    },
-  },
-
-  Select: {
-    child: {
-      module: "resource://gre/actors/SelectChild.jsm",
-      events: {
-        "mozshowdropdown": {},
-        "mozshowdropdown-sourcetouch": {},
-      },
     },
   },
 
