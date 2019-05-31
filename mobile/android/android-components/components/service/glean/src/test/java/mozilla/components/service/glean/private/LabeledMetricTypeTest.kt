@@ -268,6 +268,59 @@ class LabeledMetricTypeTest {
     }
 
     @Test
+    fun `Ensure labels pass regex matching`() {
+        CountersStorageEngine.clearAllStores()
+
+        val counterMetric = CounterMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "labeled_counter_metric",
+            sendInPings = listOf("metrics")
+        )
+
+        val labeledCounterMetric = LabeledMetricType<CounterMetricType>(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "labeled_counter_metric",
+            sendInPings = listOf("metrics"),
+            subMetric = counterMetric
+        )
+
+        // Add some passing labels
+        CountersStorageEngine.record(labeledCounterMetric["this.is.fine"], 1)
+        CountersStorageEngine.record(labeledCounterMetric["this.is_still_fine"], 1)
+        CountersStorageEngine.record(labeledCounterMetric["thisisfine"], 1)
+
+        // Add some labels that fail the regex to ensure they get filtered to "__other__"
+        CountersStorageEngine.record(
+            labeledCounterMetric["this.is.not_fine_due_to_the_length_being_too_long"],
+            1)
+        CountersStorageEngine.record(labeledCounterMetric["1.not_fine"], 1)
+        CountersStorageEngine.record(labeledCounterMetric["this.is-not-fine"], 1)
+        CountersStorageEngine.record(labeledCounterMetric["this.\$isnotfine"], 1)
+
+        val snapshot = CountersStorageEngine.getSnapshot(storeName = "metrics", clearStore = false)
+        // This snapshot includes:
+        // - The 3 valid values from above
+        // - The error counter
+        // - The invalid (__other__) value
+        assertEquals(5, snapshot!!.size)
+
+        // Make sure the passing labels were accepted
+        assertEquals(1, snapshot["telemetry.labeled_counter_metric/this.is.fine"])
+        assertEquals(1, snapshot["telemetry.labeled_counter_metric/this.is_still_fine"])
+        assertEquals(1, snapshot["telemetry.labeled_counter_metric/thisisfine"])
+
+        // Make sure we see the bad labels went to "__other__"
+        assertEquals(
+            4,
+            labeledCounterMetric["__other__"].testGetValue()
+        )
+    }
+
+    @Test
     fun `Test labeled timespan metric type`() {
         TimespansStorageEngine.clearAllStores()
 

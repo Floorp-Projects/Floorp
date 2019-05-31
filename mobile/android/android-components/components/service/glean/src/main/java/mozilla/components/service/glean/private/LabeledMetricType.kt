@@ -37,7 +37,24 @@ data class LabeledMetricType<T>(
     companion object {
         private const val MAX_LABELS = 16
         private const val OTHER_LABEL = "__other__"
-        private val labelRegex = Regex("^[a-z_][a-z0-9_]{0,29}$")
+
+        // This regex is used for matching against labels and should allow for dots and/or
+        // snake_case.
+        private val labelRegex = Regex("^[a-z_][a-z0-9_]{0,29}(\\.[a-z0-9_]{0,29})*$")
+        // Some examples of good and bad labels:
+        //
+        // Good:
+        //   this.is.fine
+        //   this_is_fine_too
+        //   this.is_still_fine
+        //   thisisfine
+        //   this.is_fine.2
+        // Bad:
+        //   this.is.not_fine_due_tu_the_length_being_too_long_i_thing.i.guess
+        //   1.not_fine
+        //   this.is-not-fine
+        //   this.$isnotfine
+
         private const val MAX_LABEL_LENGTH = 30
     }
 
@@ -102,7 +119,7 @@ data class LabeledMetricType<T>(
                     recordError(
                         this,
                         ErrorType.InvalidLabel,
-                        "label must be snake_case, got '$label'",
+                        "label must be dotted snake_case, got '$label'",
                         logger
                     )
                     return OTHER_LABEL
