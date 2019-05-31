@@ -44,7 +44,7 @@
       const videoConstraints = {
         deviceId: settings1.deviceId,
         width: {
-          exact: settings1.width / 2
+          ideal: settings1.width / 2
         }
       };
 
@@ -54,10 +54,10 @@
       }).then(mediaStream => {
         const settings2 = mediaStream.getVideoTracks()[0].getSettings();
         assert_equals(settings1.deviceId, settings2.deviceId);
-        assert_equals(settings1.width / 2, settings2.width);
+        assert_between_inclusive(settings2.width, settings1.width / 2, settings1.width);
       });
     });
-  }, 'A device can be opened twice with different resolutions');
+  }, 'A device can be opened twice with different resolutions requested');
 
   promise_test(t => {
     return navigator.mediaDevices.enumerateDevices().then(async devices => {
