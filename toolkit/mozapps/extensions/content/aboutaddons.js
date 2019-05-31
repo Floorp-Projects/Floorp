@@ -5,7 +5,7 @@
 /* exported initialize, hide, show */
 /* import-globals-from aboutaddonsCommon.js */
 /* import-globals-from abuse-reports.js */
-/* global windowRoot */
+/* global MozXULElement, windowRoot */
 
 "use strict";
 
@@ -14,6 +14,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
+  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
@@ -25,6 +28,11 @@ XPCOMUtils.defineLazyGetter(this, "browserBundle", () => {
 XPCOMUtils.defineLazyGetter(this, "brandBundle", () => {
   return Services.strings.createBundle(
       "chrome://branding/locale/brand.properties");
+});
+XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
+  const {ExtensionParent} =
+    ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+  return ExtensionParent.extensionStylesheets;
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -587,7 +595,8 @@ class AddonOptions extends HTMLElement {
         el.hidden = card.expanded;
         break;
       case "preferences":
-        el.hidden = getOptionsType(addon) !== "tab";
+        el.hidden = getOptionsType(addon) !== "tab" &&
+          (getOptionsType(addon) !== "inline" || card.expanded);
         break;
     }
   }
@@ -687,6 +696,208 @@ class FiveStarRating extends HTMLElement {
   }
 }
 customElements.define("five-star-rating", FiveStarRating);
+
+class ContentSelectDropdown extends HTMLElement {
+  connectedCallback() {
+    if (this.children.length > 0) {
+      return;
+    }
+    // This creates the menulist and menupopup elements needed for the inline
+    // browser to support <select> elements and context menus.
+    this.appendChild(MozXULElement.parseXULToFragment(`
+      <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
+        <menupopup rolluponmousewheel="true" activateontab="true"
+                   position="after_start" level="parent"/>
+      </menulist>
+    `));
+  }
+}
+customElements.define("content-select-dropdown", ContentSelectDropdown);
+
+class ProxyContextMenu extends HTMLElement {
+  openPopupAtScreen(...args) {
+    const parentContextMenuPopup =
+      windowRoot.ownerGlobal.document.getElementById("contentAreaContextMenu");
+    return parentContextMenuPopup.openPopupAtScreen(...args);
+  }
+}
+customElements.define("proxy-context-menu", ProxyContextMenu);
+
+class InlineOptionsBrowser extends HTMLElement {
+  constructor() {
+    super();
+    // Force the options_ui remote browser to recompute window.mozInnerScreenX
+    // and window.mozInnerScreenY when the "addon details" page has been
+    // scrolled (See Bug 1390445 for rationale).
+    // Also force a repaint to fix an issue where the click location was
+    // getting out of sync (see bug 1548687).
+    this.updatePositionTask = new DeferredTask(() => {
+      if (this.browser && this.browser.isRemoteBrowser) {
+        // Select boxes can appear in the wrong spot after scrolling, this will
+        // clear that up. Bug 1390445.
+        this.browser.frameLoader.requestUpdatePosition();
+        // Sometimes after scrolling the inner brower needs to repaint to get
+        // the right mouse position. Force that to happen. Bug 1548687.
+        window.windowUtils.flushApzRepaints();
+      }
+    }, 100);
+  }
+
+  connectedCallback() {
+    window.addEventListener("scroll", this, true);
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener("scroll", this, true);
+  }
+
+  handleEvent(e) {
+    if (e.type == "scroll") {
+      this.updatePositionTask.arm();
+    }
+  }
+
+  setAddon(addon) {
+    this.addon = addon;
+  }
+
+  destroyBrowser() {
+    this.textContent = "";
+  }
+
+  ensureBrowserCreated() {
+    if (this.childElementCount === 0) {
+      this.render();
+    }
+  }
+
+  async render() {
+    let {addon} = this;
+    if (!addon) {
+      throw new Error("addon required to create inline options");
+    }
+
+    let browser = document.createXULElement("browser");
+    browser.setAttribute("type", "content");
+    browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("id", "addon-inline-options");
+    browser.setAttribute("transparent", "true");
+    browser.setAttribute("forcemessagemanager", "true");
+    browser.setAttribute("selectmenulist", "ContentSelectDropdown");
+    browser.setAttribute("autocompletepopup", "PopupAutoComplete");
+
+    // The outer about:addons document listens for key presses to focus
+    // the search box when / is pressed.  But if we're focused inside an
+    // options page, don't let those keypresses steal focus.
+    browser.addEventListener("keypress", event => {
+      event.stopPropagation();
+    });
+
+    let {optionsURL, optionsBrowserStyle} = addon;
+    if (addon.isWebExtension) {
+      let policy = ExtensionParent.WebExtensionPolicy.getByID(addon.id);
+      browser.sameProcessAsFrameLoader = policy.extension.groupFrameLoader;
+    }
+
+    let readyPromise;
+    let remoteSubframes =
+      window.docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes;
+    let loadRemote = E10SUtils.canLoadURIInRemoteType(
+      optionsURL, remoteSubframes, E10SUtils.EXTENSION_REMOTE_TYPE);
+    if (loadRemote) {
+      browser.setAttribute("remote", "true");
+      browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
+
+      readyPromise = promiseEvent("XULFrameLoaderCreated", browser);
+
+      readyPromise.then(() => {
+        if (!browser.messageManager) {
+          // Early exit if the the extension page's XUL browser has been
+          // destroyed in the meantime (e.g. because the extension has been
+          // reloaded while the options page was still loading).
+          return;
+        }
+
+        // Subscribe a "contextmenu" listener to handle the context menus for
+        // the extension option page running in the extension process (the
+        // context menu will be handled only for extension running in OOP mode,
+        // but that's ok as it is the default on any platform that uses these
+        // extensions options pages).
+        browser.messageManager.addMessageListener("contextmenu", message => {
+          windowRoot.ownerGlobal.openContextMenu(message);
+        });
+      });
+    } else {
+      readyPromise = promiseEvent("load", browser, true);
+    }
+
+    let stack = document.createXULElement("stack");
+    stack.classList.add("inline-options-stack");
+    stack.appendChild(browser);
+    this.appendChild(stack);
+    this.browser = browser;
+
+    // Force bindings to apply synchronously.
+    browser.clientTop;
+
+    await readyPromise;
+
+    if (!browser.messageManager) {
+      // If the browser.messageManager is undefined, the browser element has
+      // been removed from the document in the meantime (e.g. due to a rapid
+      // sequence of addon reload), return null.
+      return;
+    }
+
+    ExtensionParent.apiManager.emit("extension-browser-inserted", browser);
+
+    await new Promise(resolve => {
+      let messageListener = {
+        receiveMessage({name, data}) {
+          if (name === "Extension:BrowserResized") {
+            // Add a pixel to work around a scrolling issue, bug 1548687.
+            browser.style.height = `${data.height + 1}px`;
+          } else if (name === "Extension:BrowserContentLoaded") {
+            resolve();
+          }
+        },
+      };
+
+      let mm = browser.messageManager;
+
+      if (!mm) {
+        // If the browser.messageManager is undefined, the browser element has
+        // been removed from the document in the meantime (e.g. due to a rapid
+        // sequence of addon reload), return null.
+        resolve();
+        return;
+      }
+
+      mm.loadFrameScript("chrome://extensions/content/ext-browser-content.js",
+                         false, true);
+      mm.loadFrameScript("chrome://browser/content/content.js", false, true);
+      mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
+      mm.addMessageListener("Extension:BrowserResized", messageListener);
+
+      let browserOptions = {
+        fixedWidth: true,
+        isInline: true,
+      };
+
+      if (optionsBrowserStyle) {
+        browserOptions.stylesheets = extensionStylesheets;
+      }
+
+      mm.sendAsyncMessage("Extension:InitBrowser", browserOptions);
+
+      browser.loadURI(optionsURL, {
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+    });
+  }
+}
+customElements.define("inline-options-browser", InlineOptionsBrowser);
 
 class UpdateReleaseNotes extends HTMLElement {
   connectedCallback() {
@@ -810,17 +1021,25 @@ class AddonDetails extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.inlineOptions.destroyBrowser();
     this.deck.removeEventListener("view-changed", this);
   }
 
   handleEvent(e) {
     if (e.type == "view-changed" && e.target == this.deck) {
-      if (this.deck.selectedViewName == "release-notes") {
-        let releaseNotes = this.querySelector("update-release-notes");
-        let uri = this.releaseNotesUri;
-        if (uri) {
-          releaseNotes.loadForUri(uri);
-        }
+      switch (this.deck.selectedViewName) {
+        case "release-notes":
+          let releaseNotes = this.querySelector("update-release-notes");
+          let uri = this.releaseNotesUri;
+          if (uri) {
+            releaseNotes.loadForUri(uri);
+          }
+          break;
+        case "preferences":
+          if (getOptionsType(this.addon) == "inline") {
+            this.inlineOptions.ensureBrowserCreated();
+          }
+          break;
       }
     }
   }
@@ -844,6 +1063,8 @@ class AddonDetails extends HTMLElement {
     permsBtn.hidden = addon.type != "extension";
     let notesBtn = getButtonByName("release-notes");
     notesBtn.hidden = !this.releaseNotesUri;
+    let prefsBtn = getButtonByName("preferences");
+    prefsBtn.hidden = getOptionsType(addon) !== "inline";
 
     // Hide the tab group if "details" is the only visible button.
     this.tabGroup.hidden = Array.from(this.tabGroup.children).every(button => {
@@ -880,6 +1101,10 @@ class AddonDetails extends HTMLElement {
     // Set the add-on for the permissions section.
     this.permissionsList = this.querySelector("addon-permissions-list");
     this.permissionsList.setAddon(addon);
+
+    // Set the add-on for the preferences section.
+    this.inlineOptions = this.querySelector("inline-options-browser");
+    this.inlineOptions.setAddon(addon);
 
     // Full description.
     let description = this.querySelector(".addon-detail-description");
@@ -976,6 +1201,13 @@ class AddonDetails extends HTMLElement {
     }
 
     this.update();
+  }
+
+  showPrefs() {
+    if (getOptionsType(this.addon) == "inline") {
+      this.deck.selectedViewName = "preferences";
+      this.inlineOptions.ensureBrowserCreated();
+    }
   }
 }
 customElements.define("addon-details", AddonDetails);
@@ -1120,6 +1352,8 @@ class AddonCard extends HTMLElement {
         case "preferences":
           if (getOptionsType(addon) == "tab") {
             openOptionsInTab(addon.optionsURL);
+          } else if (getOptionsType(addon) == "inline") {
+            loadViewFn("detail", this.addon.id, "preferences");
           }
           break;
         case "remove":
@@ -1314,6 +1548,10 @@ class AddonCard extends HTMLElement {
     }
 
     this.sendEvent("update");
+  }
+
+  showPrefs() {
+    this.details.showPrefs();
   }
 
   expand() {
@@ -2073,7 +2311,9 @@ class ListView {
 
 class DetailView {
   constructor({param, root}) {
-    this.id = param;
+    let [id, selectedTab] = param.split("/");
+    this.id = id;
+    this.selectedTab = selectedTab;
     this.root = root;
   }
 
@@ -2096,6 +2336,9 @@ class DetailView {
     card.setAddon(addon);
     card.expand();
     await card.render();
+    if (this.selectedTab === "preferences") {
+      card.showPrefs();
+    }
 
     this.root.textContent = "";
     this.root.appendChild(card);
