@@ -33,7 +33,10 @@
 namespace mozilla {
 
 using namespace mozilla::gfx;
+using dom::MediaSourceEnum;
+using dom::MediaTrackConstraints;
 using dom::MediaTrackSettings;
+using dom::VideoFacingModeEnum;
 
 static nsString DefaultVideoName() {
   // For the purpose of testing we allow to change the name of the fake device
@@ -64,7 +67,19 @@ static nsString DefaultVideoName() {
  */
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
-    : mTimer(nullptr), mName(DefaultVideoName()) {}
+    : mTimer(nullptr),
+      mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()),
+      mName(DefaultVideoName()) {
+  mSettings->mWidth.Construct(
+      int32_t(MediaEnginePrefs::DEFAULT_43_VIDEO_WIDTH));
+  mSettings->mHeight.Construct(
+      int32_t(MediaEnginePrefs::DEFAULT_43_VIDEO_HEIGHT));
+  mSettings->mFrameRate.Construct(double(MediaEnginePrefs::DEFAULT_VIDEO_FPS));
+  mSettings->mFacingMode.Construct(
+      NS_ConvertASCIItoUTF16(dom::VideoFacingModeEnumValues::strings
+                                 [uint8_t(VideoFacingModeEnum::Environment)]
+                                     .value));
+}
 
 MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource() = default;
 
@@ -97,11 +112,12 @@ uint32_t MediaEngineDefaultVideoSource::GetBestFitnessDistance(
 void MediaEngineDefaultVideoSource::GetSettings(
     MediaTrackSettings& aOutSettings) const {
   MOZ_ASSERT(NS_IsMainThread());
+  aOutSettings = *mSettings;
 }
 
 nsresult MediaEngineDefaultVideoSource::Allocate(
-    const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
+    const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
+    const nsString& aDeviceId,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
@@ -137,6 +153,14 @@ nsresult MediaEngineDefaultVideoSource::Allocate(
       );
   mOpts.mWidth = std::max(160, std::min(mOpts.mWidth, 4096)) & ~1;
   mOpts.mHeight = std::max(90, std::min(mOpts.mHeight, 2160)) & ~1;
+
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [settings = mSettings, frameRate = mOpts.mFPS,
+                 width = mOpts.mWidth, height = mOpts.mHeight]() {
+        settings->mFrameRate.Value() = frameRate;
+        settings->mWidth.Value() = width;
+        settings->mHeight.Value() = height;
+      }));
 
   mState = kAllocated;
   return NS_OK;
@@ -267,9 +291,8 @@ nsresult MediaEngineDefaultVideoSource::Stop() {
 }
 
 nsresult MediaEngineDefaultVideoSource::Reconfigure(
-    const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-    const char** aOutBadConstraint) {
+    const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
+    const nsString& aDeviceId, const char** aOutBadConstraint) {
   return NS_OK;
 }
 
@@ -392,11 +415,15 @@ uint32_t MediaEngineDefaultAudioSource::GetBestFitnessDistance(
 void MediaEngineDefaultAudioSource::GetSettings(
     MediaTrackSettings& aOutSettings) const {
   MOZ_ASSERT(NS_IsMainThread());
+  aOutSettings.mAutoGainControl.Construct(false);
+  aOutSettings.mEchoCancellation.Construct(false);
+  aOutSettings.mNoiseSuppression.Construct(false);
+  aOutSettings.mChannelCount.Construct(1);
 }
 
 nsresult MediaEngineDefaultAudioSource::Allocate(
-    const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
+    const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
+    const nsString& aDeviceId,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
@@ -498,9 +525,8 @@ nsresult MediaEngineDefaultAudioSource::Stop() {
 }
 
 nsresult MediaEngineDefaultAudioSource::Reconfigure(
-    const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-    const char** aOutBadConstraint) {
+    const MediaTrackConstraints& aConstraints, const MediaEnginePrefs& aPrefs,
+    const nsString& aDeviceId, const char** aOutBadConstraint) {
   return NS_OK;
 }
 
@@ -521,12 +547,12 @@ void AudioSourcePullListener::NotifyPull(MediaStreamGraph* aGraph,
 }
 
 void MediaEngineDefault::EnumerateDevices(
-    uint64_t aWindowId, dom::MediaSourceEnum aMediaSource,
-    MediaSinkEnum aMediaSink, nsTArray<RefPtr<MediaDevice>>* aDevices) {
+    uint64_t aWindowId, MediaSourceEnum aMediaSource, MediaSinkEnum aMediaSink,
+    nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
 
   switch (aMediaSource) {
-    case dom::MediaSourceEnum::Camera: {
+    case MediaSourceEnum::Camera: {
       // Only supports camera video sources. See Bug 1038241.
       auto newSource = MakeRefPtr<MediaEngineDefaultVideoSource>();
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
@@ -535,7 +561,7 @@ void MediaEngineDefault::EnumerateDevices(
           NS_LITERAL_STRING("")));
       return;
     }
-    case dom::MediaSourceEnum::Microphone: {
+    case MediaSourceEnum::Microphone: {
       auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
           newSource, newSource->GetName(),
