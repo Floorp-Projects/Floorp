@@ -9,27 +9,45 @@
  * new browser windows. The application, either Mozilla or an embedding app,
  * must provide an implementation of the Window Watcher component and
  * notify the WindowWatcher during application initialization.
+ *
  * @see nsIWindowWatcher
  */
 
 #include "nsISupports.idl"
 
+interface nsIRemoteTab;
+interface nsIURI;
 interface nsIWebBrowserChrome;
+interface mozIDOMWindowProxy;
 
 [scriptable, uuid(30465632-A777-44cc-90F9-8145475EF999)]
 interface nsIWindowCreator : nsISupports {
 
   /** Create a new window. Gecko will/may call this method, if made
       available to it, to create new windows.
-      @param parent parent window, if any. null if not. the newly created
+      @param parent Parent window, if any. Null if not. The newly created
                     window should be made a child/dependent window of
                     the parent, if any (and if the concept applies
                     to the underlying OS).
-      @param chromeFlags chrome features from nsIWebBrowserChrome
-      @return the new window
+      @param chromeFlags Chrome features from nsIWebBrowserChrome
+      @param aOpeningTab The RemoteTab that is trying to open this new chrome
+                         window. Can be nullptr.
+      @param aOpener The window which is trying to open this new chrome window.
+                     Can be nullptr
+      @param aNextRemoteTabId The integer ID of the next remote tab actor to use.
+                              0 means there is no next remote tab ID to use.
+      @param cancel Return |true| to reject window creation. If true the
+                    implementation has determined the window should not
+                    be created at all. The caller should not default
+                    to any possible backup scheme for creating the window.
+      @return the new window. Will be null if canceled or an error occurred.
   */
   nsIWebBrowserChrome createChromeWindow(in nsIWebBrowserChrome parent,
-                                         in uint32_t chromeFlags);
+                                         in uint32_t chromeFlags,
+                                         in nsIRemoteTab aOpeningTab,
+                                         in mozIDOMWindowProxy aOpener,
+                                         in unsigned long long aNextRemoteTabId,
+                                         out boolean cancel);
 };
 
 %{C++
