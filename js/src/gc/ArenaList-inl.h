@@ -10,6 +10,7 @@
 #include "gc/ArenaList.h"
 
 #include "gc/Heap.h"
+#include "gc/Zone.h"
 
 void js::gc::SortedArenaListSegment::append(Arena* arena) {
   MOZ_ASSERT(arena);

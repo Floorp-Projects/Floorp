@@ -758,8 +758,7 @@ ModuleObject* ModuleObject::create(JSContext* cx) {
 
   self->initReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
 
-  FunctionDeclarationVector* funDecls =
-      cx->new_<FunctionDeclarationVector>(cx->zone());
+  FunctionDeclarationVector* funDecls = cx->new_<FunctionDeclarationVector>();
   if (!funDecls) {
     return nullptr;
   }

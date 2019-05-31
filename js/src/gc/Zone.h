@@ -12,6 +12,7 @@
 #include "mozilla/SegmentedVector.h"
 
 #include "gc/FindSCCs.h"
+#include "gc/ZoneAllocator.h"
 #include "js/GCHashTable.h"
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
@@ -136,14 +137,16 @@ namespace JS {
 //
 // We always guarantee that a zone has at least one live compartment by refusing
 // to delete the last compartment in a live zone.
-class Zone : public JS::shadow::Zone,
-             public js::gc::GraphNodeBase<JS::Zone>,
-             public js::MallocProvider<JS::Zone> {
+class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
  public:
   explicit Zone(JSRuntime* rt);
   ~Zone();
   MOZ_MUST_USE bool init(bool isSystem);
   void destroy(js::FreeOp* fop);
+
+  static JS::Zone* from(ZoneAllocator* zoneAlloc) {
+    return static_cast<Zone*>(zoneAlloc);
+  }
 
  private:
   enum class HelperThreadUse : uint32_t { None, Pending, Active };
@@ -221,11 +224,6 @@ class Zone : public JS::shadow::Zone,
     return js::gc::ZoneAllCellIter<T>(const_cast<Zone*>(this),
                                       std::forward<Args>(args)...);
   }
-
-  MOZ_MUST_USE void* onOutOfMemory(js::AllocFunction allocFunc,
-                                   arena_id_t arena, size_t nbytes,
-                                   void* reallocPtr = nullptr);
-  void reportAllocationOverflow();
 
   void beginSweepTypes();
 
@@ -444,35 +442,6 @@ class Zone : public JS::shadow::Zone,
  private:
   js::ZoneData<JS::WeakCache<TypeDescrObjectSet>> typeDescrObjects_;
 
-  // Malloc counter to measure memory pressure for GC scheduling. This counter
-  // is used for allocations where the size of the allocation is not known on
-  // free. Currently this is used for all internal malloc allocations.
-  js::gc::MemoryCounter gcMallocCounter;
-
-  // Malloc counter used for allocations where size information is
-  // available. Used for some internal and all tracked external allocations.
-  js::gc::MemoryTracker gcMallocSize;
-
-  // Counter of JIT code executable memory for GC scheduling. Also imprecise,
-  // since wasm can generate code that outlives a zone.
-  js::gc::MemoryCounter jitCodeCounter;
-
-  void updateMemoryCounter(js::gc::MemoryCounter& counter, size_t nbytes) {
-    JSRuntime* rt = runtimeFromAnyThread();
-
-    counter.update(nbytes);
-    auto trigger = counter.shouldTriggerGC(rt->gc.tunables);
-    if (MOZ_LIKELY(trigger == js::gc::NoTrigger) ||
-        trigger <= counter.triggered()) {
-      return;
-    }
-
-    maybeTriggerGCForTooMuchMalloc(counter, trigger);
-  }
-
-  void maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
-                                      js::gc::TriggerKind trigger);
-
   js::MainThreadData<js::UniquePtr<js::RegExpZone>> regExps_;
 
  public:
@@ -483,42 +452,6 @@ class Zone : public JS::shadow::Zone,
   }
 
   bool addTypeDescrObject(JSContext* cx, HandleObject obj);
-
-  void setGCMaxMallocBytes(size_t value, const js::AutoLockGC& lock) {
-    gcMallocCounter.setMax(value, lock);
-  }
-  void updateMallocCounter(size_t nbytes) {
-    updateMemoryCounter(gcMallocCounter, nbytes);
-  }
-  void adoptMallocBytes(Zone* other) {
-    gcMallocCounter.adopt(other->gcMallocCounter);
-    gcMallocSize.adopt(other->gcMallocSize);
-  }
-  size_t GCMaxMallocBytes() const { return gcMallocCounter.maxBytes(); }
-  size_t GCMallocBytes() const { return gcMallocCounter.bytes(); }
-
-  void updateJitCodeMallocBytes(size_t nbytes) {
-    updateMemoryCounter(jitCodeCounter, nbytes);
-  }
-
-  void updateAllGCMallocCountersOnGCStart();
-  void updateAllGCMallocCountersOnGCEnd(const js::AutoLockGC& lock);
-  js::gc::TriggerKind shouldTriggerGCForTooMuchMalloc();
-
-  // Memory accounting APIs for memory owned by GC cells.
-  void addCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
-    gcMallocSize.addMemory(cell, nbytes, use);
-  }
-  void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
-    gcMallocSize.removeMemory(cell, nbytes, use);
-  }
-  void swapCellMemory(js::gc::Cell* a, js::gc::Cell* b, js::MemoryUse use) {
-    gcMallocSize.swapMemory(a, b, use);
-  }
-
-  size_t totalBytes() const {
-    return zoneSize.gcBytes() + gcMallocSize.bytes();
-  }
 
   void keepAtoms() { keepAtomsCount++; }
   void releaseAtoms();
@@ -569,16 +502,6 @@ class Zone : public JS::shadow::Zone,
   js::FunctionToStringCache& functionToStringCache() {
     return functionToStringCache_.ref();
   }
-
-  // Track heap size under this Zone.
-  js::gc::HeapSize zoneSize;
-
-  // Thresholds used to trigger GC.
-  js::gc::ZoneHeapThreshold threshold;
-
-  // Amount of data to allocate before triggering a new incremental slice for
-  // the current GC.
-  js::UnprotectedData<size_t> gcDelayBytes;
 
   js::ZoneData<uint32_t> tenuredStrings;
   js::ZoneData<bool> allocNurseryStrings;
@@ -699,92 +622,5 @@ class Zone : public JS::shadow::Zone,
 };
 
 }  // namespace JS
-
-namespace js {
-
-/*
- * Allocation policy that uses Zone::pod_malloc and friends, so that memory
- * pressure is accounted for on the zone. This is suitable for memory associated
- * with GC things allocated in the zone.
- *
- * Since it doesn't hold a JSContext (those may not live long enough), it can't
- * report out-of-memory conditions itself; the caller must check for OOM and
- * take the appropriate action.
- *
- * FIXME bug 647103 - replace these *AllocPolicy names.
- */
-class ZoneAllocPolicy {
-  JS::Zone* const zone;
-
- public:
-  MOZ_IMPLICIT ZoneAllocPolicy(JS::Zone* z) : zone(z) {}
-
-  template <typename T>
-  T* maybe_pod_malloc(size_t numElems) {
-    return zone->maybe_pod_malloc<T>(numElems);
-  }
-  template <typename T>
-  T* maybe_pod_calloc(size_t numElems) {
-    return zone->maybe_pod_calloc<T>(numElems);
-  }
-  template <typename T>
-  T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
-    return zone->maybe_pod_realloc<T>(p, oldSize, newSize);
-  }
-  template <typename T>
-  T* pod_malloc(size_t numElems) {
-    return zone->pod_malloc<T>(numElems);
-  }
-  template <typename T>
-  T* pod_calloc(size_t numElems) {
-    return zone->pod_calloc<T>(numElems);
-  }
-  template <typename T>
-  T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
-    return zone->pod_realloc<T>(p, oldSize, newSize);
-  }
-
-  template <typename T>
-  void free_(T* p, size_t numElems = 0) {
-    js_free(p);
-  }
-  void reportAllocOverflow() const {}
-
-  MOZ_MUST_USE bool checkSimulatedOOM() const {
-    return !js::oom::ShouldFailWithOOM();
-  }
-};
-
-// Convenience functions for memory accounting on the zone.
-
-// Associate malloc memory with a GC thing. This call must be matched by a
-// following call to RemoveCellMemory with the same size and use. The total
-// amount of malloc memory associated with a zone is used to trigger GC.
-inline void AddCellMemory(gc::TenuredCell* cell, size_t nbytes, MemoryUse use) {
-  if (nbytes) {
-    cell->zone()->addCellMemory(cell, nbytes, use);
-  }
-}
-inline void AddCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
-  if (cell->isTenured()) {
-    AddCellMemory(&cell->asTenured(), nbytes, use);
-  }
-}
-
-// Remove association between malloc memory and a GC thing. This call must
-// follow a call to AddCellMemory with the same size and use.
-inline void RemoveCellMemory(gc::TenuredCell* cell, size_t nbytes,
-                             MemoryUse use) {
-  if (nbytes) {
-    cell->zoneFromAnyThread()->removeCellMemory(cell, nbytes, use);
-  }
-}
-inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
-  if (cell->isTenured()) {
-    RemoveCellMemory(&cell->asTenured(), nbytes, use);
-  }
-}
-
-}  // namespace js
 
 #endif  // gc_Zone_h

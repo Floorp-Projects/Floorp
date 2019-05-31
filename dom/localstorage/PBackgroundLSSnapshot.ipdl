@@ -18,14 +18,12 @@ namespace dom {
 struct LSSetItemInfo
 {
   nsString key;
-  LSValue oldValue;
   LSValue value;
 };
 
 struct LSRemoveItemInfo
 {
   nsString key;
-  LSValue oldValue;
 };
 
 struct LSClearInfo
@@ -42,6 +40,29 @@ union LSWriteInfo
   LSClearInfo;
 };
 
+struct LSSetItemAndNotifyInfo
+{
+  nsString key;
+  LSValue oldValue;
+  LSValue value;
+};
+
+struct LSRemoveItemAndNotifyInfo
+{
+  nsString key;
+  LSValue oldValue;
+};
+
+/**
+ * Union of LocalStorage mutation types.
+ */
+union LSWriteAndNotifyInfo
+{
+  LSSetItemAndNotifyInfo;
+  LSRemoveItemAndNotifyInfo;
+  LSClearInfo;
+};
+
 sync protocol PBackgroundLSSnapshot
 {
   manager PBackgroundLSDatabase;
@@ -50,6 +71,8 @@ parent:
   async DeleteMe();
 
   async Checkpoint(LSWriteInfo[] writeInfos);
+
+  async CheckpointAndNotify(LSWriteAndNotifyInfo[] writeAndNotifyInfos);
 
   async Finish();
 

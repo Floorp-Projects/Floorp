@@ -17,24 +17,6 @@ inline bool JS::Zone::requireGCTracer() const {
 }
 #endif
 
-inline void JS::Zone::updateAllGCMallocCountersOnGCStart() {
-  gcMallocCounter.updateOnGCStart();
-  jitCodeCounter.updateOnGCStart();
-}
-
-inline void JS::Zone::updateAllGCMallocCountersOnGCEnd(
-    const js::AutoLockGC& lock) {
-  auto& gc = runtimeFromAnyThread()->gc;
-  gcMallocCounter.updateOnGCEnd(gc.tunables, lock);
-  jitCodeCounter.updateOnGCEnd(gc.tunables, lock);
-}
-
-inline js::gc::TriggerKind JS::Zone::shouldTriggerGCForTooMuchMalloc() {
-  auto& gc = runtimeFromAnyThread()->gc;
-  return std::max(gcMallocCounter.shouldTriggerGC(gc.tunables),
-                  jitCodeCounter.shouldTriggerGC(gc.tunables));
-}
-
 /* static */ inline js::HashNumber JS::Zone::UniqueIdToHash(uint64_t uid) {
   return mozilla::HashGeneric(uid);
 }
