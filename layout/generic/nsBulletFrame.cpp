@@ -688,7 +688,7 @@ Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
     }
   }
 
-  nscolor color = nsLayoutUtils::GetColor(this, &nsStyleColor::mColor);
+  nscolor color = nsLayoutUtils::GetColor(this, &nsStyleText::mColor);
 
   DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
   int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();

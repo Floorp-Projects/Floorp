@@ -45,52 +45,6 @@ class nsIHTMLDocument : public nsISupports {
   // not the rest?
   virtual int32_t GetNumFormsSynchronous() = 0;
 
-  /**
-   * Should be called when an element's editable changes as a result of
-   * changing its contentEditable attribute/property.
-   *
-   * @param aElement the element for which the contentEditable
-   *                 attribute/property was changed
-   * @param aChange +1 if the contentEditable attribute/property was changed to
-   *                true, -1 if it was changed to false
-   */
-  virtual nsresult ChangeContentEditableCount(nsIContent* aElement,
-                                              int32_t aChange) = 0;
-
-  enum EditingState {
-    eTearingDown = -2,
-    eSettingUp = -1,
-    eOff = 0,
-    eDesignMode,
-    eContentEditable
-  };
-
-  /**
-   * Returns whether the document is editable.
-   */
-  bool IsEditingOn() {
-    return GetEditingState() == eDesignMode ||
-           GetEditingState() == eContentEditable;
-  }
-
-  /**
-   * Returns the editing state of the document (not editable, contentEditable or
-   * designMode).
-   */
-  virtual EditingState GetEditingState() = 0;
-
-  /**
-   * Set the editing state of the document. Don't use this if you want
-   * to enable/disable editing, call EditingStateChanged() or
-   * SetDesignMode().
-   */
-  virtual nsresult SetEditingState(EditingState aState) = 0;
-
-  /**
-   * Called when this nsIHTMLDocument's editor is destroyed.
-   */
-  virtual void TearingDownEditor() = 0;
-
   virtual void SetIsXHTML(bool aXHTML) = 0;
 };
 

@@ -250,6 +250,14 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/developer.svg");
 }
 
+#profiler-button {
+  list-style-image: url("chrome://devtools/skin/images/profiler-stopwatch.svg");
+}
+
+#PanelUI-profilerIframe {
+  width: 352px;
+}
+
 #preferences-button {
   list-style-image: url("chrome://browser/skin/settings.svg");
 }

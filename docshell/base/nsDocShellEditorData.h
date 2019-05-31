@@ -12,7 +12,7 @@
 
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/RefPtr.h"
-#include "nsIHTMLDocument.h"
+#include "mozilla/dom/Document.h"
 
 class nsIDocShell;
 class nsEditingSession;
@@ -47,7 +47,7 @@ class nsDocShellEditorData {
 
   // Backup for the corresponding nsIHTMLDocument's  editing state while
   // the editor is detached.
-  nsIHTMLDocument::EditingState mDetachedEditingState;
+  mozilla::dom::Document::EditingState mDetachedEditingState;
 
   // Indicates whether to make an editor after a url load.
   bool mMakeEditable;

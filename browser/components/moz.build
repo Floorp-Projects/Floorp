@@ -92,8 +92,12 @@ EXTRA_JS_MODULES += [
 BROWSER_CHROME_MANIFESTS += [
     'safebrowsing/content/test/browser.ini',
     'tests/browser/browser.ini',
-    'tests/browser/whats_new_page/browser.ini'
 ]
+
+if CONFIG['MOZ_UPDATER']:
+    BROWSER_CHROME_MANIFESTS += [
+        'tests/browser/whats_new_page/browser.ini',
+    ]
 
 XPCSHELL_TESTS_MANIFESTS += [
     'tests/unit/xpcshell.ini'

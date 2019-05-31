@@ -127,9 +127,8 @@ bool SVGCircleElement::GetGeometryBounds(
 
 already_AddRefed<Path> SVGCircleElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, r;
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::R>(this, &x, &y,
-                                                               &r);
+  SVGGeometryProperty::ResolveAllAllowFallback<SVGT::Cx, SVGT::Cy, SVGT::R>(
+      this, &x, &y, &r);
 
   if (r <= 0.0f) {
     return nullptr;

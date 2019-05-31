@@ -25,6 +25,7 @@ loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugge
 loader.lazyRequireGetter(this, "BrowserMenus", "devtools/client/framework/browser-menus");
 loader.lazyRequireGetter(this, "appendStyleSheet", "devtools/client/shared/stylesheet-utils", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
+loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 
@@ -112,6 +113,25 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       toggleMenuItem("menu_webreplay", recordReplayEnabled);
     } catch (e) {
       // devtools.recordreplay.enabled only exists on certain platforms.
+    }
+
+    // The profiler's popup is experimental. The plan is to eventually turn it on
+    // everywhere, but while it's under active development we don't want everyone
+    // having it enabled. For now the default pref is to turn it on with Nightly,
+    // with the option to flip the pref in other releases. This feature flag will
+    // go away once it is fully shipped.
+    const isPopupFeatureFlagEnabled = Services.prefs.getBoolPref(
+      "devtools.performance.popup.feature-flag", AppConstants.NIGHTLY_BUILD);
+    // If the feature flag is disabled, hide the menu item.
+    toggleMenuItem("menu_toggleProfilerButtonMenu", isPopupFeatureFlagEnabled);
+
+    if (isPopupFeatureFlagEnabled) {
+      // Did the user enable the profiler button in the menu? If it is then update the
+      // initial UI to show the menu item as checked.
+      if (Services.prefs.getBoolPref("devtools.performance.popup.enabled", false)) {
+        const cmd = doc.getElementById("menu_toggleProfilerButtonMenu");
+        cmd.setAttribute("checked", "true");
+      }
     }
   },
 

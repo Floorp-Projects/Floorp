@@ -17,10 +17,9 @@
  * before including this file.
  *
  * Note that, currently, there is a restriction that all fields in a
- * style struct must have the same type.
+ * each entry must have the same type, otherwise you need two entries.
  */
 
-STYLE_STRUCT(Color, (mColor))
 STYLE_STRUCT(Background, (mBackgroundColor))
 STYLE_STRUCT(Border, (mBorderTopColor,
                       mBorderRightColor,
@@ -28,6 +27,7 @@ STYLE_STRUCT(Border, (mBorderTopColor,
                       mBorderLeftColor))
 STYLE_STRUCT(Outline, (mOutlineColor))
 STYLE_STRUCT(Column, (mColumnRuleColor))
+STYLE_STRUCT(Text, (mColor))
 STYLE_STRUCT(Text, (mTextEmphasisColor,
                     mWebkitTextFillColor,
                     mWebkitTextStrokeColor))

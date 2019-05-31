@@ -160,6 +160,7 @@ class XPCShellTestThread(Thread):
         self.app_dir_key = kwargs.get('app_dir_key')
         self.interactive = kwargs.get('interactive')
         self.prefsFile = kwargs.get('prefsFile')
+        self.verboseIfFails = kwargs.get('verboseIfFails')
 
         # only one of these will be set to 1. adding them to the totals in
         # the harness
@@ -758,6 +759,8 @@ class XPCShellTestThread(Thread):
                     self.log.test_end(name, status, expected=status,
                                       message="Test failed or timed out, will retry")
                     self.clean_temp_dirs(path)
+                    if self.verboseIfFails and not self.verbose:
+                        self.log_full_output()
                     return
 
                 self.log.test_end(name, status, expected=expected, message=message)
@@ -1131,9 +1134,11 @@ class XPCShellTests(object):
                 # tell us it's started
                 msg = process.stdout.readline()
                 if 'server listening' in msg:
-                    searchObj = re.search(r'HTTP2 server listening on port (.*)', msg, 0)
+                    searchObj = re.search(r'HTTP2 server listening on ports ([0-9]+),([0-9]+)',
+                                          msg, 0)
                     if searchObj:
                         self.env["MOZHTTP2_PORT"] = searchObj.group(1)
+                        self.env["MOZHTTP2_PROXY_PORT"] = searchObj.group(2)
             except OSError as e:
                 # This occurs if the subprocess couldn't be started
                 self.log.error('Could not run %s server: %s' % (name, str(e)))
@@ -1277,6 +1282,7 @@ class XPCShellTests(object):
         self.dump_tests = options.get('dump_tests')
         self.interactive = options.get('interactive')
         self.verbose = options.get('verbose')
+        self.verboseIfFails = options.get('verboseIfFails')
         self.keepGoing = options.get('keepGoing')
         self.logfiles = options.get('logfiles')
         self.totalChunks = options.get('totalChunks')
@@ -1369,6 +1375,7 @@ class XPCShellTests(object):
             'interactive': self.interactive,
             'app_dir_key': appDirKey,
             'prefsFile': self.prefsFile,
+            'verboseIfFails': self.verboseIfFails,
         }
 
         if self.sequential:

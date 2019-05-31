@@ -66,9 +66,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
                                      bool aReset = true,
                                      nsIContentSink* aSink = nullptr) override;
 
-  virtual void BeginLoad() override;
-  virtual void EndLoad() override;
-
  protected:
   virtual bool UseWidthDeviceWidthFallbackViewport() const override;
 
@@ -88,41 +85,13 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   virtual void AddedForm() override;
   virtual void RemovedForm() override;
   virtual int32_t GetNumFormsSynchronous() override;
-  virtual void TearingDownEditor() override;
   virtual void SetIsXHTML(bool aXHTML) override {
     mType = (aXHTML ? eXHTML : eHTML);
   }
 
-  nsresult ChangeContentEditableCount(nsIContent* aElement,
-                                      int32_t aChange) override;
-  void DeferredContentEditableCountChange(nsIContent* aElement);
-
-  virtual EditingState GetEditingState() override { return mEditingState; }
-
-  class nsAutoEditingState {
-   public:
-    nsAutoEditingState(nsHTMLDocument* aDoc, EditingState aState)
-        : mDoc(aDoc), mSavedState(aDoc->mEditingState) {
-      aDoc->mEditingState = aState;
-    }
-    ~nsAutoEditingState() { mDoc->mEditingState = mSavedState; }
-
-   private:
-    nsHTMLDocument* mDoc;
-    EditingState mSavedState;
-  };
-  friend class nsAutoEditingState;
-
-  void EndUpdate() override;
-
-  virtual void SetMayStartLayout(bool aMayStartLayout) override;
-
-  virtual nsresult SetEditingState(EditingState aState) override;
-
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const override;
 
-  virtual void RemovedFromDocShell() override;
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
 
   virtual void DocAddSizeOfExcludingThis(
@@ -145,27 +114,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
     }
   }
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  void GetDesignMode(nsAString& aDesignMode);
-  void SetDesignMode(const nsAString& aDesignMode,
-                     nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& rv);
-  void SetDesignMode(const nsAString& aDesignMode,
-                     const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal,
-                     mozilla::ErrorResult& rv);
-  MOZ_CAN_RUN_SCRIPT
-  bool ExecCommand(const nsAString& aCommandID, bool aDoShowUI,
-                   const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,
-                   mozilla::ErrorResult& rv);
-  bool QueryCommandEnabled(const nsAString& aCommandID,
-                           nsIPrincipal& aSubjectPrincipal,
-                           mozilla::ErrorResult& rv);
-  bool QueryCommandIndeterm(const nsAString& aCommandID,
-                            mozilla::ErrorResult& rv);
-  bool QueryCommandState(const nsAString& aCommandID, mozilla::ErrorResult& rv);
-  bool QueryCommandSupported(const nsAString& aCommandID,
-                             mozilla::dom::CallerType aCallerType);
-  MOZ_CAN_RUN_SCRIPT
-  void QueryCommandValue(const nsAString& aCommandID, nsAString& aValue,
-                         mozilla::ErrorResult& rv);
   void GetFgColor(nsAString& aFgColor);
   void SetFgColor(const nsAString& aFgColor);
   void GetLinkColor(nsAString& aLinkColor);
@@ -194,8 +142,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
 
   void UserInteractionForTesting();
 
-  void SetKeyPressEventModel(uint16_t aKeyPressEventModel);
-
  protected:
   ~nsHTMLDocument();
 
@@ -204,11 +150,6 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   nsIContent* MatchId(nsIContent* aContent, const nsAString& aId);
 
   static void DocumentWriteTerminationFunc(nsISupports* aRef);
-
-  /**
-   * Like IsEditingOn(), but will flush as needed first.
-   */
-  bool IsEditingOnAfterFlush();
 
   // A helper class to keep nsContentList objects alive for a short period of
   // time. Note, when the final Release is called on an nsContentList object, it
@@ -256,44 +197,10 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   static void TryFallback(int32_t& aCharsetSource,
                           NotNull<const Encoding*>& aEncoding);
 
-  /**
-   * MaybeDispatchCheckKeyPressEventModelEvent() dispatches
-   * "CheckKeyPressEventModel" event to check whether we should dispatch
-   * keypress events in confluent model or split model.  This should be
-   * called only when mEditingState is changed to eDesignMode or
-   * eConentEditable at first time.
-   */
-  void MaybeDispatchCheckKeyPressEventModelEvent();
-
   // Load flags of the document's channel
   uint32_t mLoadFlags;
 
   bool mWarnedWidthHeight;
-
-  /* Midas implementation */
-  nsCommandManager* GetMidasCommandManager();
-
-  RefPtr<nsCommandManager> mMidasCommandManager;
-
-  nsresult TurnEditingOff();
-  // MOZ_CAN_RUN_SCRIPT_BOUNDARY because this is called from all sorts
-  // of places, and I'm pretty sure the exact ExecCommand call it
-  // makes cannot actually run script.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult EditingStateChanged();
-  void MaybeEditingStateChanged();
-
-  uint32_t mContentEditableCount;
-  EditingState mEditingState;
-
-  /**
-   * Temporary flag that is set in EndUpdate() to ignore
-   * MaybeEditingStateChanged() script runners from a nested scope.
-   */
-  bool mPendingMaybeEditingStateChanged;
-
-  // mHasBeenEditable is set to true when mEditingState is firstly set to
-  // eDesignMode or eContentEditable.
-  bool mHasBeenEditable;
 
   /**
    * Set to true once we know that we are loading plain text content.
