@@ -557,10 +557,6 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
       mDocProxyStream = docHolder.GetPreservedStream();
 #  endif  // defined(MOZ_SANDBOX)
     }
-    // Send a COM proxy for the embedder OuterDocAccessible to the embedded
-    // document process. This will be returned as the parent of the
-    // embedded document.
-    aChildDoc->SendParentCOMProxy(WrapperFor(outerDoc));
   }
 #endif  // defined(XP_WIN)
 
@@ -738,7 +734,10 @@ void DocAccessibleParent::MaybeInitWindowEmulation() {
   MOZ_ASSERT(hWnd);
 }
 
-void DocAccessibleParent::SendParentCOMProxy(Accessible* aOuterDoc) {
+/**
+ * @param aCOMProxy COM Proxy to the document in the content process.
+ */
+void DocAccessibleParent::SendParentCOMProxy() {
   // Make sure that we're not racing with a tab shutdown
   auto tab = static_cast<dom::BrowserParent*>(Manager());
   MOZ_ASSERT(tab);
@@ -746,8 +745,13 @@ void DocAccessibleParent::SendParentCOMProxy(Accessible* aOuterDoc) {
     return;
   }
 
+  Accessible* outerDoc = OuterDocOfRemoteBrowser();
+  if (!outerDoc) {
+    return;
+  }
+
   RefPtr<IAccessible> nativeAcc;
-  aOuterDoc->GetNativeInterface(getter_AddRefs(nativeAcc));
+  outerDoc->GetNativeInterface(getter_AddRefs(nativeAcc));
   MOZ_ASSERT(nativeAcc);
 
   RefPtr<IDispatch> wrapped(
