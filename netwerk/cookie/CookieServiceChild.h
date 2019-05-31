@@ -104,7 +104,6 @@ class CookieServiceChild : public PCookieServiceChild,
   nsCOMPtr<nsITimer> mCookieTimer;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
-  bool mThirdPartySession;
   bool mThirdPartyNonsecureSession;
   bool mIPCOpen;
 };
