@@ -708,6 +708,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+VARCACHE_PREF(
+  Live,
+  "browser.contentblocking.database.enabled",
+  browser_contentblocking_database_enabled,
+  bool, true
+)
+
 // How many recent block/unblock actions per origins we remember in the
 // Content Blocking log for each top-level window.
 VARCACHE_PREF(

@@ -216,6 +216,7 @@
 #include "nsPluginHost.h"
 #include "nsPluginTags.h"
 #include "nsIBlocklistService.h"
+#include "nsITrackingDBService.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "nsICaptivePortalService.h"
@@ -223,6 +224,8 @@
 #include "nsIBidiKeyboard.h"
 #include "nsLayoutStylesheetCache.h"
 #include "MMPrinter.h"
+#include "nsStreamUtils.h"
+#include "nsIAsyncInputStream.h"
 
 #include "mozilla/Sprintf.h"
 
@@ -5494,6 +5497,26 @@ mozilla::ipc::IPCResult ContentParent::RecvRecordOrigin(
     const uint32_t& aMetricId, const nsCString& aOrigin) {
   Telemetry::RecordOrigin(static_cast<Telemetry::OriginMetricID>(aMetricId),
                           aOrigin);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvReportContentBlockingLog(
+    const Principal& aPrincipal, const IPCStream& aIPCStream) {
+  nsCOMPtr<nsITrackingDBService> trackingDBService =
+      do_GetService("@mozilla.org/tracking-db-service;1");
+  if (NS_WARN_IF(!trackingDBService)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aIPCStream);
+  nsCOMPtr<nsIAsyncInputStream> asyncStream;
+  nsresult rv = NS_MakeAsyncNonBlockingInputStream(stream.forget(),
+                                                   getter_AddRefs(asyncStream));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  trackingDBService->RecordContentBlockingLog(principal, asyncStream);
   return IPC_OK();
 }
 
