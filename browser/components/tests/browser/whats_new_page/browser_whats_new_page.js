@@ -23,7 +23,7 @@ add_task(async function whats_new_page() {
      gBrowser.selectedBrowser.currentURI.spec == "https://example.com/"),
     "Waiting for the expected page to reopen");
   is(gBrowser.selectedBrowser.currentURI.spec, "https://example.com/",
-           "The what's new page's url should equal https://example.com/");
+     "The what's new page's url should equal https://example.com/");
   gBrowser.removeTab(gBrowser.selectedTab);
 
   // Leave no trace. Since this test modifies its support files put them back in

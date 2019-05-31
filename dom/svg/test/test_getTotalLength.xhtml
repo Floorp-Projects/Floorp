@@ -16,6 +16,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1474284
   <path id="path1" stroke="#000" fill="none"
         d="M 50,40
            C 50,40 0,60 30,20"/>
+  <symbol font-size="10" width="20em" height="20em">
+    <rect id="r1" x="5em" y="6em" width="20%" height="30%" />
+  </symbol>
 </svg>
 
 <pre id="test">
@@ -30,6 +33,10 @@ function expectValue(id, expected) {
 
 function run() {
   expectValue("path1", 55.19);
+
+  let r1 = document.getElementById("r1");
+  is(r1.getTotalLength(), 200, "getTotalLength() should work for display:none element");
+
   SimpleTest.finish();
 }
 

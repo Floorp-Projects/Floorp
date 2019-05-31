@@ -1550,6 +1550,68 @@ class Document : public nsINode,
   // Sets the cache sizes for the current generation.
   void SetCachedSizes(nsTabSizes* aSizes);
 
+  /**
+   * Should be called when an element's editable changes as a result of
+   * changing its contentEditable attribute/property.
+   *
+   * @param aElement the element for which the contentEditable
+   *                 attribute/property was changed
+   * @param aChange +1 if the contentEditable attribute/property was changed to
+   *                true, -1 if it was changed to false
+   */
+  nsresult ChangeContentEditableCount(nsIContent* aElement, int32_t aChange);
+  void DeferredContentEditableCountChange(nsIContent* aElement);
+
+  enum class EditingState : int8_t {
+    eTearingDown = -2,
+    eSettingUp = -1,
+    eOff = 0,
+    eDesignMode,
+    eContentEditable
+  };
+
+  /**
+   * Returns the editing state of the document (not editable, contentEditable or
+   * designMode).
+   */
+  EditingState GetEditingState() const { return mEditingState; }
+
+  /**
+   * Returns whether the document is editable.
+   */
+  bool IsEditingOn() const {
+    return GetEditingState() == EditingState::eDesignMode ||
+           GetEditingState() == EditingState::eContentEditable;
+  }
+
+  class MOZ_STACK_CLASS nsAutoEditingState {
+   public:
+    nsAutoEditingState(Document* aDoc, EditingState aState)
+        : mDoc(aDoc), mSavedState(aDoc->mEditingState) {
+      aDoc->mEditingState = aState;
+    }
+    ~nsAutoEditingState() { mDoc->mEditingState = mSavedState; }
+
+   private:
+    RefPtr<Document> mDoc;
+    EditingState mSavedState;
+  };
+  friend class nsAutoEditingState;
+
+  /**
+   * Set the editing state of the document. Don't use this if you want
+   * to enable/disable editing, call EditingStateChanged() or
+   * SetDesignMode().
+   */
+  nsresult SetEditingState(EditingState aState);
+
+  /**
+   * Called when this Document's editor is destroyed.
+   */
+  void TearingDownEditor();
+
+  void SetKeyPressEventModel(uint16_t aKeyPressEventModel);
+
  protected:
   friend class nsUnblockOnloadEvent;
 
@@ -1608,6 +1670,32 @@ class Document : public nsINode,
    * Do the tree-disconnection that ResetToURI and document.open need to do.
    */
   void DisconnectNodeTree();
+
+  /**
+   * Like IsEditingOn(), but will flush as needed first.
+   */
+  bool IsEditingOnAfterFlush();
+
+  /**
+   * MaybeDispatchCheckKeyPressEventModelEvent() dispatches
+   * "CheckKeyPressEventModel" event to check whether we should dispatch
+   * keypress events in confluent model or split model.  This should be
+   * called only when mEditingState is changed to eDesignMode or
+   * eConentEditable at first time.
+   */
+  void MaybeDispatchCheckKeyPressEventModelEvent();
+
+  /* Midas implementation */
+  nsCommandManager* GetMidasCommandManager();
+
+  nsresult TurnEditingOff();
+
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY because this is called from all sorts
+  // of places, and I'm pretty sure the exact ExecCommand call it
+  // makes cannot actually run script.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult EditingStateChanged();
+
+  void MaybeEditingStateChanged();
 
  private:
   class SelectorCacheKey {
@@ -2040,10 +2128,10 @@ class Document : public nsINode,
   // content model or of style data, EndUpdate must be called afterward.
   // To make this easy and painless, use the mozAutoDocUpdate helper class.
   void BeginUpdate();
-  virtual void EndUpdate();
+  void EndUpdate();
   uint32_t UpdateNestingLevel() { return mUpdateNestLevel; }
 
-  virtual void BeginLoad();
+  void BeginLoad();
   virtual void EndLoad();
 
   enum ReadyState {
@@ -2344,7 +2432,7 @@ class Document : public nsINode,
    * be rendered in "zombie state" until the next document is ready.
    * The document should save form control state.
    */
-  virtual void RemovedFromDocShell();
+  void RemovedFromDocShell();
 
   /**
    * Get the layout history state that should be used to save and restore state
@@ -2539,7 +2627,7 @@ class Document : public nsINode,
 
   bool MayStartLayout() { return mMayStartLayout; }
 
-  virtual void SetMayStartLayout(bool aMayStartLayout);
+  void SetMayStartLayout(bool aMayStartLayout);
 
   already_AddRefed<nsIDocumentEncoder> GetCachedEncoder();
 
@@ -2773,7 +2861,7 @@ class Document : public nsINode,
   /**
    * Test whether we should be firing a load event for this document after a
    * document.close().  This is public and on Document, instead of being private
-   * to nsHTMLDocument, because we need to go through the normal docloader logic
+   * to Document, because we need to go through the normal docloader logic
    * for the readystate change to READYSTATE_COMPLETE with the normal timing and
    * semantics of firing the load event; we just don't want to fire the load
    * event if this tests true.  So we need the docloader to be able to access
@@ -3333,6 +3421,28 @@ class Document : public nsINode,
   Nullable<WindowProxyHolder> GetDefaultView() const;
   Element* GetActiveElement();
   bool HasFocus(ErrorResult& rv) const;
+  void GetDesignMode(nsAString& aDesignMode);
+  void SetDesignMode(const nsAString& aDesignMode,
+                     nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& rv);
+  void SetDesignMode(const nsAString& aDesignMode,
+                     const mozilla::Maybe<nsIPrincipal*>& aSubjectPrincipal,
+                     mozilla::ErrorResult& rv);
+  MOZ_CAN_RUN_SCRIPT
+  bool ExecCommand(const nsAString& aCommandID, bool aDoShowUI,
+                   const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,
+                   mozilla::ErrorResult& rv);
+  bool QueryCommandEnabled(const nsAString& aCommandID,
+                           nsIPrincipal& aSubjectPrincipal,
+                           mozilla::ErrorResult& rv);
+  bool QueryCommandIndeterm(const nsAString& aCommandID,
+                            mozilla::ErrorResult& rv);
+  bool QueryCommandState(const nsAString& aCommandID, mozilla::ErrorResult& rv);
+  bool QueryCommandSupported(const nsAString& aCommandID,
+                             mozilla::dom::CallerType aCallerType,
+                             mozilla::ErrorResult& rv);
+  MOZ_CAN_RUN_SCRIPT
+  void QueryCommandValue(const nsAString& aCommandID, nsAString& aValue,
+                         mozilla::ErrorResult& rv);
   nsIHTMLCollection* Applets();
   nsIHTMLCollection* Anchors();
   TimeStamp LastFocusTime() const;
@@ -4444,6 +4554,16 @@ class Document : public nsINode,
   // allowed?
   bool mTooDeepWriteRecursion : 1;
 
+  /**
+   * Temporary flag that is set in EndUpdate() to ignore
+   * MaybeEditingStateChanged() script runners from a nested scope.
+   */
+  bool mPendingMaybeEditingStateChanged : 1;
+
+  // mHasBeenEditable is set to true when mEditingState is firstly set to
+  // eDesignMode or eContentEditable.
+  bool mHasBeenEditable : 1;
+
   uint8_t mPendingFullscreenRequests;
 
   uint8_t mXMLDeclarationBits;
@@ -4459,6 +4579,9 @@ class Document : public nsINode,
   // would block the parser, then mWriteLevel will be incorrect until the parser
   // finishes processing that script.
   uint32_t mWriteLevel;
+
+  uint32_t mContentEditableCount;
+  EditingState mEditingState;
 
   // Compatibility mode
   nsCompatibility mCompatMode;
@@ -4656,6 +4779,8 @@ class Document : public nsINode,
   TimeStamp mPageUnloadingEventTimeStamp;
 
   RefPtr<DocGroup> mDocGroup;
+
+  RefPtr<nsCommandManager> mMidasCommandManager;
 
   // The set of all the tracking script URLs.  URLs are added to this set by
   // calling NoteScriptTrackingStatus().  Currently we assume that a URL not

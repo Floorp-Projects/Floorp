@@ -68,42 +68,8 @@
                 "\"c:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/xperf.exe\""
             ]
         },
-        "tp6": {
-            "tests": ["tp6_youtube", "tp6_amazon", "tp6_facebook"],
-            "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
-            "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",
-            "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
-            "talos_options": [
-                "--mitmproxy",
-                "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
-                "--firstNonBlankPaint"
-            ]
-        },
-        "tp6-stylo-threads": {
-            "tests": ["tp6_youtube", "tp6_amazon", "tp6_facebook"],
-            "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
-            "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",
-            "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
-            "talos_options": [
-                "--stylo-threads=1",
-                "--mitmproxy",
-                "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
-                "--firstNonBlankPaint"
-            ]
-        },
         "h1": {
             "tests": ["ts_paint_heavy"]
-        },
-        "h2": {
-            "tests": ["tp6_google_heavy", "tp6_youtube_heavy", "tp6_amazon_heavy", "tp6_facebook_heavy"],
-            "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
-            "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",
-            "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
-            "talos_options": [
-                "--mitmproxy",
-                "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
-                "--firstNonBlankPaint"
-            ]
         }
     }
 }

@@ -3912,8 +3912,6 @@ CookieStatus nsCookieService::CheckPrefs(
 
   MOZ_ASSERT(aRejectedReason);
 
-  uint32_t aInputRejectedReason = *aRejectedReason;
-
   *aRejectedReason = 0;
 
   // don't let ftp sites get/set cookies (could be a security issue)
@@ -3958,7 +3956,14 @@ CookieStatus nsCookieService::CheckPrefs(
   // access to the first-party cookie jar.
   if (aIsForeign && aIsTrackingResource && !aFirstPartyStorageAccessGranted &&
       aCookieSettings->GetRejectThirdPartyTrackers()) {
-    if (StoragePartitioningEnabled(aInputRejectedReason, aCookieSettings)) {
+    // Explicitly pass nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
+    // here to ensure that we are testing the partitioning configuration only
+    // for the nsICookieService::BEHAVIOR_REJECT_TRACKER configuration.
+    // When partitioning for BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN, we
+    // don't want to give a free pass to tracker cookies here!
+    if (StoragePartitioningEnabled(
+            nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
+            aCookieSettings)) {
       MOZ_ASSERT(!aOriginAttrs.mFirstPartyDomain.IsEmpty(),
                  "We must have a StoragePrincipal here!");
       return STATUS_ACCEPTED;

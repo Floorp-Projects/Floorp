@@ -434,10 +434,9 @@ nsresult nsGenericHTMLElement::BindToTree(Document* aDocument,
 
   if (HasFlag(NODE_IS_EDITABLE) && GetContentEditableValue() == eTrue &&
       IsInComposedDoc()) {
-    nsCOMPtr<nsIHTMLDocument> htmlDocument =
-        do_QueryInterface(GetComposedDoc());
-    if (htmlDocument) {
-      htmlDocument->ChangeContentEditableCount(this, +1);
+    Document* doc = GetComposedDoc();
+    if (doc) {
+      doc->ChangeContentEditableCount(this, +1);
     }
   }
 
@@ -460,10 +459,9 @@ void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
   RemoveFromNameTable();
 
   if (GetContentEditableValue() == eTrue) {
-    nsCOMPtr<nsIHTMLDocument> htmlDocument =
-        do_QueryInterface(GetComposedDoc());
-    if (htmlDocument) {
-      htmlDocument->ChangeContentEditableCount(this, -1);
+    Document* doc = GetComposedDoc();
+    if (doc) {
+      doc->ChangeContentEditableCount(this, -1);
     }
   }
 
@@ -2459,9 +2457,7 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
   }
 
   if (aChange != 0) {
-    if (nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(document)) {
-      htmlDocument->ChangeContentEditableCount(this, aChange);
-    }
+    document->ChangeContentEditableCount(this, aChange);
   }
 
   if (document->HasFlag(NODE_IS_EDITABLE)) {

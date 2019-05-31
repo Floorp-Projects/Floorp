@@ -6,6 +6,7 @@
 DIRS += [
     'components',
     'store',
+    'popup',
 ]
 
 DevToolsModules(

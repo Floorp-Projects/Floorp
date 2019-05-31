@@ -130,6 +130,18 @@ DevToolsLoader.prototype = {
   },
 
   /**
+   * A dummy version of lazyRequireGetter, in case a provider hasn't been chosen yet when
+   * this is first called.  This will then be replaced by the real version.
+   * @see setProvider
+   */
+  lazyRequireGetter: function() {
+    if (!this._provider) {
+      this._loadProvider();
+    }
+    return this.lazyRequireGetter.apply(this, arguments);
+  },
+
+  /**
    * Return true if |id| refers to something requiring help from a
    * loader plugin.
    */

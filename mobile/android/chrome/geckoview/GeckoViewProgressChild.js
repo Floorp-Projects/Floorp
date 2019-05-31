@@ -11,6 +11,7 @@ const {HistogramStopwatch} = ChromeUtils.import("resource://gre/modules/GeckoVie
 const PAGE_LOAD_PROGRESS_PROBE =
   new HistogramStopwatch("GV_PAGE_LOAD_PROGRESS_MS", content);
 const PAGE_LOAD_PROBE = new HistogramStopwatch("GV_PAGE_LOAD_MS", content);
+const PAGE_RELOAD_PROBE = new HistogramStopwatch("GV_PAGE_RELOAD_MS", content);
 
 class GeckoViewProgressChild extends GeckoViewChildModule {
   onInit() {
@@ -45,15 +46,32 @@ class GeckoViewProgressChild extends GeckoViewChildModule {
 
     debug `onStateChange: uri=${uri}`;
 
+    let isPageReload = false;
+    if (aWebProgress.loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD) {
+      isPageReload = true;
+    }
+
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-      PAGE_LOAD_PROBE.start();
+      if (!isPageReload) {
+        PAGE_LOAD_PROBE.start();
+      } else {
+        PAGE_RELOAD_PROBE.start();
+      }
       ProgressTracker.start(uri);
     } else if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
                !aWebProgress.isLoadingDocument) {
-      PAGE_LOAD_PROBE.finish();
+      if (!isPageReload) {
+        PAGE_LOAD_PROBE.finish();
+      } else {
+        PAGE_RELOAD_PROBE.finish();
+      }
       ProgressTracker.stop();
     } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_REDIRECTING) {
-      PAGE_LOAD_PROBE.start();
+      if (!isPageReload) {
+        PAGE_LOAD_PROBE.start();
+      } else {
+        PAGE_RELOAD_PROBE.start();
+      }
       ProgressTracker.start(uri);
     }
   }

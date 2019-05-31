@@ -2241,10 +2241,11 @@ void nsFocusManager::UpdateCaret(bool aMoveCaretToFocus, bool aUpdateVisibility,
   focusedDocShell->GetEditable(&isEditable);
 
   if (isEditable) {
-    nsCOMPtr<nsIHTMLDocument> doc = do_QueryInterface(presShell->GetDocument());
+    Document* doc = presShell->GetDocument();
 
     bool isContentEditableDoc =
-        doc && doc->GetEditingState() == nsIHTMLDocument::eContentEditable;
+        doc &&
+        doc->GetEditingState() == Document::EditingState::eContentEditable;
 
     bool isFocusEditable = aContent && aContent->HasFlag(NODE_IS_EDITABLE);
     if (!isContentEditableDoc || isFocusEditable) return;

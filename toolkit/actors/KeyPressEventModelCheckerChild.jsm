@@ -16,7 +16,7 @@ class KeyPressEventModelCheckerChild extends ActorChild {
   // Currently, the event is dispatched only when the document becomes editable
   // because of contenteditable.  If you need to add new editor which is in
   // designMode, you need to change MaybeDispatchCheckKeyPressEventModelEvent()
-  // of nsHTMLDocument.
+  // of Document.
   handleEvent(aEvent) {
     if (!AppConstants.DEBUG) {
       // Stop propagation in opt build to save the propagation cost.
@@ -25,13 +25,13 @@ class KeyPressEventModelCheckerChild extends ActorChild {
       aEvent.stopImmediatePropagation();
     }
 
-    // Currently, even if we set HTMLDocument.KEYPRESS_EVENT_MODEL_CONFLATED
+    // Currently, even if we set Document.KEYPRESS_EVENT_MODEL_CONFLATED
     // here, conflated model isn't used forcibly.  If you need it, you need
     // to change WidgetKeyboardEvent, dom::KeyboardEvent and PresShell.
-    let model = HTMLDocument.KEYPRESS_EVENT_MODEL_DEFAULT;
+    let model = Document.KEYPRESS_EVENT_MODEL_DEFAULT;
     if (this._isOldOfficeOnlineServer(aEvent.target) ||
         this._isOldConfluence(aEvent.target.ownerGlobal)) {
-      model = HTMLDocument.KEYPRESS_EVENT_MODEL_SPLIT;
+      model = Document.KEYPRESS_EVENT_MODEL_SPLIT;
     }
     aEvent.target.setKeyPressEventModel(model);
   }

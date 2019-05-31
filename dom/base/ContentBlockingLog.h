@@ -158,7 +158,8 @@ class ContentBlockingLog final {
     }
   }
 
-  void ReportLog();
+  void ReportOrigins();
+  void ReportLog(nsIPrincipal* aFirstPartyPrincipal);
 
   nsAutoCString Stringify() {
     nsAutoCString buffer;

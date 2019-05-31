@@ -51,7 +51,6 @@ class TalosRunner(MozbuildObject):
         default_actions = ['populate-webroot']
         default_actions.extend([
             'create-virtualenv',
-            'setup-mitmproxy',
             'run-tests',
         ])
         self.config = {

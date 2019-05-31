@@ -49,6 +49,7 @@ include protocol PSessionStorageObserver;
 include DOMTypes;
 include JavaScriptTypes;
 include IPCBlob;
+include IPCStream;
 include PTabContext;
 include URIParams;
 include PluginTypes;
@@ -1367,6 +1368,8 @@ parent:
     async RecordChildEvents(ChildEventData[] events);
     async RecordDiscardedData(DiscardedData data);
     async RecordOrigin(uint32_t metricId, nsCString origin);
+
+    async ReportContentBlockingLog(Principal firstPartyPrincipal, IPCStream aJSONStream);
 
     sync GetA11yContentId() returns (uint32_t aContentId);
     async A11yHandlerControl(uint32_t aPid,

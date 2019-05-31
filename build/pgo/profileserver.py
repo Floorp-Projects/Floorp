@@ -63,12 +63,17 @@ if __name__ == '__main__':
         for path in prefpaths:
             prefs.update(Preferences.read_prefs(path))
 
-        interpolation = {"server": "%s:%d" % httpd.httpd.server_address,
-                         "OOP": "false"}
+        interpolation = {"server": "%s:%d" % httpd.httpd.server_address}
         for k, v in prefs.items():
             if isinstance(v, string_types):
                 v = v.format(**interpolation)
             prefs[k] = Preferences.cast(v)
+
+        # Enforce e10s. This isn't in one of the user.js files because those
+        # are shared with android, which doesn't want this on. We can't
+        # interpolate because the formatting code only works for strings,
+        # and this is a bool pref.
+        prefs["browser.tabs.remote.autostart"] = True
 
         profile = FirefoxProfile(profile=profilePath,
                                  preferences=prefs,
@@ -80,10 +85,12 @@ if __name__ == '__main__':
         env = os.environ.copy()
         env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
         env["XPCOM_DEBUG_BREAK"] = "warn"
-        # TODO should use e10s and gather data from all processes (bug 1196094).
-        # Note that unittest-required/user.js sets the autostart pref, but it
-        # is ignored by the code in nsAppRunner.
-        env["MOZ_FORCE_DISABLE_E10S"] = "1"
+        # We disable sandboxing to make writing profiling data actually work
+        # Bug 1553850 considers fixing this.
+        env["MOZ_DISABLE_CONTENT_SANDBOX"] = "1"
+
+        # Ensure different pids write to different files
+        env["LLVM_PROFILE_FILE"] = "default_%p_random_%m.profraw"
 
         # For VC12+, make sure we can find the right bitness of pgort1x0.dll
         if not substs.get('HAVE_64BIT_BUILD'):

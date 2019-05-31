@@ -73,7 +73,6 @@ talos:
     - talos-tp5o
     - talos-perf-reftest
     - talos-perf-reftest-singletons
-    - talos-tp6-stylo-threads
     - talos-tabswitch
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
     # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
@@ -379,7 +378,6 @@ macosx64-talos:
     - talos-tp5o
     - talos-perf-reftest
     - talos-perf-reftest-singletons
-    - talos-tp6-stylo-threads
     # - talos-tabswitch # Bug 1453007 times out
     # - talos-h1 # too long to unpack profile- Bug 1442893
 
@@ -563,6 +561,7 @@ android-hw-arm7-raptor:
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
     - raptor-speedometer-refbrow
+    - raptor-youtube-playback-geckoview
     - raptor-tp6m-1-geckoview
     - raptor-tp6m-2-geckoview
     - raptor-tp6m-3-geckoview

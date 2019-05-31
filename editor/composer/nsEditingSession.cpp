@@ -312,11 +312,8 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
     doc->FlushPendingNotifications(mozilla::FlushType::Frames);
     if (mMakeWholeDocumentEditable) {
       doc->SetEditableFlag(true);
-      nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(doc);
-      if (htmlDocument) {
-        // Enable usage of the execCommand API
-        htmlDocument->SetEditingState(nsIHTMLDocument::eDesignMode);
-      }
+      // Enable usage of the execCommand API
+      doc->SetEditingState(Document::EditingState::eDesignMode);
     }
   }
   bool needHTMLController = false;
@@ -358,7 +355,14 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   if (mEditorStatus != eEditorCreationInProgress) {
     RefPtr<ComposerCommandsUpdater> updater = mComposerCommandsUpdater;
     updater->NotifyDocumentCreated();
-    return NS_ERROR_FAILURE;
+
+    // At this point we have made a final decision that we don't support
+    // editing the current document.  This is an internal failure state, but
+    // we return NS_OK to avoid throwing an exception from the designMode
+    // setter for web compatibility.  The document editing APIs will tell the
+    // developer if editing has been disabled because we're in a document type
+    // that doesn't support editing.
+    return NS_OK;
   }
 
   // Create editor and do other things
@@ -504,8 +508,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   auto* window = nsPIDOMWindowOuter::From(aWindow);
 
   RefPtr<Document> doc = window->GetDoc();
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
-  bool stopEditing = htmlDoc && htmlDoc->IsEditingOn();
+  bool stopEditing = doc && doc->IsEditingOn();
   if (stopEditing) {
     RemoveWebProgressListener(window);
   }
@@ -515,7 +518,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy* aWindow) {
 
   RefPtr<HTMLEditor> htmlEditor = docShell->GetHTMLEditor();
   if (stopEditing) {
-    htmlDoc->TearingDownEditor();
+    doc->TearingDownEditor();
   }
 
   if (mComposerCommandsUpdater && htmlEditor) {
@@ -537,10 +540,7 @@ nsEditingSession::TearDownEditorOnWindow(mozIDOMWindowProxy* aWindow) {
 
     if (mMakeWholeDocumentEditable) {
       doc->SetEditableFlag(false);
-      nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(doc);
-      if (htmlDocument) {
-        htmlDocument->SetEditingState(nsIHTMLDocument::eOff);
-      }
+      doc->SetEditingState(Document::EditingState::eOff);
     }
   }
 

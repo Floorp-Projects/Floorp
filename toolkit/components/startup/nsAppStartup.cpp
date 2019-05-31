@@ -224,8 +224,8 @@ nsresult nsAppStartup::Init() {
 // nsAppStartup->nsISupports
 //
 
-NS_IMPL_ISUPPORTS(nsAppStartup, nsIAppStartup, nsIWindowCreator,
-                  nsIWindowCreator2, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsAppStartup, nsIAppStartup, nsIWindowCreator, nsIObserver,
+                  nsISupportsWeakReference)
 
 //
 // nsAppStartup->nsIAppStartup
@@ -585,34 +585,10 @@ nsAppStartup::GetInterrupted(bool* aInterrupted) {
 NS_IMETHODIMP
 nsAppStartup::CreateChromeWindow(nsIWebBrowserChrome* aParent,
                                  uint32_t aChromeFlags,
+                                 nsIRemoteTab* aOpeningTab,
+                                 mozIDOMWindowProxy* aOpener,
+                                 uint64_t aNextRemoteTabId, bool* aCancel,
                                  nsIWebBrowserChrome** _retval) {
-  bool cancel;
-  return CreateChromeWindow2(aParent, aChromeFlags, nullptr, nullptr, 0,
-                             &cancel, _retval);
-}
-
-//
-// nsAppStartup->nsIWindowCreator2
-//
-
-NS_IMETHODIMP
-nsAppStartup::SetScreenId(uint32_t aScreenId) {
-  nsCOMPtr<nsIAppShellService> appShell(
-      do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-  if (!appShell) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return appShell->SetScreenId(aScreenId);
-}
-
-NS_IMETHODIMP
-nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome* aParent,
-                                  uint32_t aChromeFlags,
-                                  nsIRemoteTab* aOpeningTab,
-                                  mozIDOMWindowProxy* aOpener,
-                                  uint64_t aNextRemoteTabId, bool* aCancel,
-                                  nsIWebBrowserChrome** _retval) {
   NS_ENSURE_ARG_POINTER(aCancel);
   NS_ENSURE_ARG_POINTER(_retval);
   *aCancel = false;
