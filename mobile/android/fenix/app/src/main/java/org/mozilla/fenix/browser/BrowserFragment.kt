@@ -199,7 +199,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 ContextMenuCandidate.defaultCandidates(
                     requireContext(),
                     requireComponents.useCases.tabsUseCases,
-                    view
+                    view,
+                    FenixSnackbarDelegate(
+                        view,
+                        if (getSessionById()?.isCustomTabSession() == true) null else nestedScrollQuickAction
+                    )
                 ),
                 view.engineView
             ),
