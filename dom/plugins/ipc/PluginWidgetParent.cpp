@@ -141,7 +141,7 @@ void PluginWidgetParent::ParentDestroy() {
 mozilla::ipc::IPCResult PluginWidgetParent::RecvSetFocus(const bool& aRaise) {
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvSetFocus(%d)\n", aRaise);
-  mWidget->SetFocus(aRaise);
+  mWidget->SetFocus(aRaise ? nsIWidget::Raise::Yes : nsIWidget::Raise::No);
   return IPC_OK();
 }
 
