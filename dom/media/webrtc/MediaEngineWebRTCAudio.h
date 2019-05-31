@@ -316,6 +316,7 @@ class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource {
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const override;
+  void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
  protected:
   virtual ~MediaEngineWebRTCAudioCaptureSource() = default;

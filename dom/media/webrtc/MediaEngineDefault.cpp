@@ -33,6 +33,7 @@
 namespace mozilla {
 
 using namespace mozilla::gfx;
+using dom::MediaTrackSettings;
 
 static nsString DefaultVideoName() {
   // For the purpose of testing we allow to change the name of the fake device
@@ -91,6 +92,11 @@ uint32_t MediaEngineDefaultVideoSource::GetBestFitnessDistance(
   }
 #endif
   return distance;
+}
+
+void MediaEngineDefaultVideoSource::GetSettings(
+    MediaTrackSettings& aOutSettings) const {
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 nsresult MediaEngineDefaultVideoSource::Allocate(
@@ -381,6 +387,11 @@ uint32_t MediaEngineDefaultAudioSource::GetBestFitnessDistance(
   }
 #endif
   return distance;
+}
+
+void MediaEngineDefaultAudioSource::GetSettings(
+    MediaTrackSettings& aOutSettings) const {
+  MOZ_ASSERT(NS_IsMainThread());
 }
 
 nsresult MediaEngineDefaultAudioSource::Allocate(

@@ -398,4 +398,9 @@ nsresult MediaEngineTabVideoSource::Stop() {
   return NS_OK;
 }
 
+void MediaEngineTabVideoSource::GetSettings(
+    MediaTrackSettings& aOutSettings) const {
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
 }  // namespace mozilla
