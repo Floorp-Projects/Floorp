@@ -27,6 +27,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.requireComponents
 import kotlin.coroutines.CoroutineContext
 
@@ -164,6 +165,10 @@ class DeleteBrowsingDataFragment : Fragment(), CoroutineScope {
         updateTabCount()
         updateHistoryCount()
         updateCollectionsCount()
+
+        FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_SHORT)
+            .setText(resources.getString(R.string.preferences_delete_browsing_data_snackbar))
+            .show()
     }
 
     private fun updateDeleteButton() {

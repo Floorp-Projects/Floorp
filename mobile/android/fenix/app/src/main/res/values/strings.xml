@@ -598,6 +598,8 @@
     <string name="preferences_delete_browsing_data_prompt_cancel">Don’t allow</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="preferences_delete_browsing_data_prompt_allow">Allow</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Browsing data deleted</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
