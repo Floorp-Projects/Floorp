@@ -11,7 +11,7 @@
 #ifndef MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_VIDEO_CAPTURE_DS_H_
 #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_VIDEO_CAPTURE_DS_H_
 
-#include "api/scoped_refptr.h"
+#include "rtc_base/scoped_ref_ptr.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "modules/video_capture/windows/device_info_ds.h"
 
