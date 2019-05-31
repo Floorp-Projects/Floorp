@@ -76,6 +76,8 @@ interface XULElement : Element {
 
   [Throws, ChromeOnly]
   readonly attribute XULControllers             controllers;
+  [Throws]
+  readonly attribute BoxObject?                 boxObject;
 
   [SetterThrows]
   attribute long tabIndex;

@@ -46,6 +46,7 @@ namespace css {
 class StyleRule;
 }  // namespace css
 namespace dom {
+class BoxObject;
 class HTMLIFrameElement;
 class PrototypeDocumentContentSink;
 enum class CallerType : uint32_t;
@@ -510,6 +511,10 @@ class nsXULElement : public nsStyledElement {
     SetXULBoolAttr(nsGkAtoms::allowevents, aAllowEvents);
   }
   nsIControllers* GetControllers(mozilla::ErrorResult& rv);
+  // Note: this can only fail if the do_CreateInstance for the boxobject
+  // contact fails for some reason.
+  already_AddRefed<mozilla::dom::BoxObject> GetBoxObject(
+      mozilla::ErrorResult& rv);
   void Click(mozilla::dom::CallerType aCallerType);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoCommand();
   // Style() inherited from nsStyledElement
