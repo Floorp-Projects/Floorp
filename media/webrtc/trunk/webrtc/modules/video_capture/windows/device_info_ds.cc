@@ -13,7 +13,7 @@
 #include "modules/video_capture/video_capture_config.h"
 #include "modules/video_capture/windows/help_functions_ds.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/string_utils.h"
+#include "rtc_base/stringutils.h"
 
 #include <dvdmedia.h>
 
@@ -107,7 +107,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
                                     char* deviceUniqueIdUTF8,
                                     uint32_t deviceUniqueIdUTF8Length,
                                     char* productUniqueIdUTF8,
-                                    uint32_t productUniqueIdUTF8Length) {
+                                    uint32_t productUniqueIdUTF8Length,
+                                    pid_t *pid) {
   ReadLockScoped cs(_apiLock);
   const int32_t result = GetDeviceInfo(
       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,

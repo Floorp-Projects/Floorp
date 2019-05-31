@@ -14,6 +14,7 @@
 
 #include "modules/video_capture/windows/help_functions_ds.h"
 
+#include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
 #include <cguid.h>
