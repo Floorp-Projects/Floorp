@@ -196,7 +196,6 @@ var didRst = false;
 var rstConnection = null;
 var illegalheader_conn = null;
 
-var ns_confirm = 0;
 var cname_confirm = 0;
 
 function handleRequest(req, res) {
@@ -553,7 +552,6 @@ function handleRequest(req, res) {
 
   }
   else if (u.pathname == "/doh") {
-    ns_confirm = 0; // back to first reply for dns-confirm
     cname_confirm = 0; // back to first reply for dns-cname
 
     let responseIP = u.query["responseIP"];
@@ -604,18 +602,54 @@ function handleRequest(req, res) {
     function emitResponse(response, requestPayload) {
       let packet = dnsPacket.decode(requestPayload);
 
+      function responseType() {
+        if (packet.questions.length > 0 &&
+          packet.questions[0].name == "confirm.example.com" &&
+          packet.questions[0].type == "NS") {
+          return "NS";
+        }
+
+        return ip.isV4Format(responseIP) ? "A" : "AAAA";
+      }
+
+      function responseData() {
+        if (packet.questions.length > 0 &&
+          packet.questions[0].name == "confirm.example.com" &&
+          packet.questions[0].type == "NS") {
+          return "ns.example.com";
+        }
+
+        return responseIP;
+      }
+
+      let answers = [];
+      if (responseIP != "none" && responseType() == packet.questions[0].type) {
+        answers.push({
+          name: u.query["hostname"] ? u.query["hostname"] : packet.questions[0].name,
+          ttl: 55,
+          type: responseType(),
+          flush: false,
+          data: responseData(),
+        });
+      }
+
+      if (u.query["cnameloop"]) {
+        answers.push({
+          name: "cname.example.com",
+          type: "CNAME",
+          ttl: 55,
+          class: "IN",
+          flush: false,
+          data: "pointing-elsewhere.example.com",
+        });
+      }
+
       let buf = dnsPacket.encode({
-        type: 'query',
+        type: 'response',
         id: packet.id,
         flags: dnsPacket.RECURSION_DESIRED,
         questions: packet.questions,
-        answers: [{
-          name: packet.questions[0].name,
-          ttl: 55,
-          type: ip.isV4Format(responseIP) ? "A" : "AAAA",
-          flush: false,
-          data: responseIP,
-        }],
+        answers: answers,
       });
 
       response.setHeader('Content-Length', buf.length);
@@ -683,56 +717,8 @@ function handleRequest(req, res) {
     return;
 
   }
-  else if (u.pathname === "/dns-cname-loop") {
-    // asking for cname.example.com
-    var content;
-    // ... this always sends a CNAME back to pointing-elsewhere.example.com. Loop time!
-    content = new Buffer("00000100000100010000000005636E616D65076578616D706C6503636F6D0000050001C00C0005000100000037002012706F696E74696E672D656C73657768657265076578616D706C65C01A00", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-
-  }
-  else if (u.pathname === "/dns-ns") {
-    // confirm.example.com has NS entry ns.example.com
-    var content= new Buffer("00000100000100010000000007636F6E6669726D076578616D706C6503636F6D0000020001C00C00020001000000370012026E73076578616D706C6503636F6D010A00", "hex");
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
   else if (u.pathname === '/dns-750ms') {
     // it's just meant to be this slow - the test doesn't care about the actual response
-    return;
-  }
-  // for use with test_trr.js
-  else if (u.pathname === "/dns-confirm") {
-    if (0 == ns_confirm) {
-      // confirm.example.com has NS entry ns.example.com
-      var content= new Buffer("00000100000100010000000007636F6E6669726D076578616D706C6503636F6D0000020001C00C00020001000000370012026E73076578616D706C6503636F6D010A00", "hex");
-      ns_confirm++;
-    } else if (2 >= ns_confirm) {
-      // next response: 10b-100.example.com has AAAA entry 1::FFFF
-
-      // we expect two requests for this name (A + AAAA), respond identically
-      // for both and expect the client to reject the wrong one
-      var content= new Buffer("000001000001000100000000" + "073130622d313030" +
-                              "076578616D706C6503636F6D00001C0001C00C001C00010000003700100001000000000000000000000000FFFF", "hex");
-      ns_confirm++;
-    } else {
-      // everything else is just wrong
-      return;
-    }
-    res.setHeader('Content-Type', 'application/dns-message');
-    res.setHeader('Content-Length', content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
     return;
   }
   // for use with test_esni_dns_fetch.js

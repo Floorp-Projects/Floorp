@@ -26,7 +26,7 @@ module.exports = Object.assign(
     redux: "devtools/client/shared/vendor/redux",
     "prop-types": "devtools/client/shared/vendor/react-prop-types",
     "devtools-modules/src/menu": "devtools/client/framework/menu",
-    "devtools-modules/src/menu-item": "devtools/client/framework/menu-item",
+    "devtools-modules/src/menu/menu-item": "devtools/client/framework/menu-item",
     "devtools-services": "Services",
     "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
     "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis"

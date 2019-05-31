@@ -416,7 +416,7 @@ async function renderAddons(addons) {
       }
 
       frag.appendChild(card);
-    } else {
+    } else if (!addon.hidden) {
       noShortcutAddons.push({ id: addon.id, name: addon.name });
     }
   }
@@ -432,7 +432,7 @@ async function render() {
   loadTemplates();
   let allAddons = await AddonManager.getAddonsByTypes(["extension"]);
   let addons = allAddons
-    .filter(addon => !addon.isSystem && addon.isActive)
+    .filter(addon => addon.isActive)
     .sort((a, b) => a.name.localeCompare(b.name));
   let frag;
 

@@ -440,21 +440,15 @@ def target_tasks_pine(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-@_target_task('nightly_fennec')
-def target_tasks_nightly_fennec(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required for a nightly build of fennec. The
-    nightly build process involves a pipeline of builds, signing,
-    and, eventually, uploading the tasks to balrog."""
+@_target_task('nightly_geckoview')
+def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required to ship geckoview nightly. The
+    nightly build process involves a pipeline of builds and an upload to
+    maven.mozilla.org."""
     def filter(task):
         # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be
         # uploaded
-        return task.label in (
-            'beetmover-geckoview-android-aarch64-nightly/opt',
-            'beetmover-geckoview-android-api-16-nightly/opt',
-            'beetmover-geckoview-android-x86-nightly/opt',
-            'beetmover-geckoview-android-x86_64-nightly/opt',
-            'beetmover-geckoview-android-fat-aar-nightly/opt',
-        )
+        return task.kind == 'beetmover-geckoview'
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 

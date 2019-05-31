@@ -58,20 +58,6 @@ CookieServiceParent::CookieServiceParent() {
   mProcessingCookie = false;
 }
 
-void GetInfoFromCookie(nsCookie* aCookie, CookieStruct& aCookieStruct) {
-  aCookieStruct.name() = aCookie->Name();
-  aCookieStruct.value() = aCookie->Value();
-  aCookieStruct.host() = aCookie->Host();
-  aCookieStruct.path() = aCookie->Path();
-  aCookieStruct.expiry() = aCookie->Expiry();
-  aCookieStruct.lastAccessed() = aCookie->LastAccessed();
-  aCookieStruct.creationTime() = aCookie->CreationTime();
-  aCookieStruct.isSession() = aCookie->IsSession();
-  aCookieStruct.isSecure() = aCookie->IsSecure();
-  aCookieStruct.isHttpOnly() = aCookie->IsHttpOnly();
-  aCookieStruct.sameSite() = aCookie->SameSite();
-}
-
 void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
   uint32_t len = 0;
   aCookieList->GetLength(&len);
@@ -83,7 +69,7 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
     nsCOMPtr<nsICookie> xpcCookie = do_QueryElementAt(aCookieList, i);
     auto cookie = static_cast<nsCookie*>(xpcCookie.get());
     attrs = cookie->OriginAttributesRef();
-    GetInfoFromCookie(cookie, cookieStruct);
+    cookieStruct = cookie->ToIPC();
     if (cookie->IsHttpOnly()) {
       // Child only needs to exist if an HttpOnly cookie exists, not its value
       cookieStruct.value() = "";
@@ -99,8 +85,7 @@ void CookieServiceParent::RemoveAll() { Unused << SendRemoveAll(); }
 void CookieServiceParent::RemoveCookie(nsICookie* aCookie) {
   auto cookie = static_cast<nsCookie*>(aCookie);
   OriginAttributes attrs = cookie->OriginAttributesRef();
-  CookieStruct cookieStruct;
-  GetInfoFromCookie(cookie, cookieStruct);
+  CookieStruct cookieStruct = cookie->ToIPC();
   if (cookie->IsHttpOnly()) {
     cookieStruct.value() = "";
   }
@@ -110,8 +95,7 @@ void CookieServiceParent::RemoveCookie(nsICookie* aCookie) {
 void CookieServiceParent::AddCookie(nsICookie* aCookie) {
   auto cookie = static_cast<nsCookie*>(aCookie);
   OriginAttributes attrs = cookie->OriginAttributesRef();
-  CookieStruct cookieStruct;
-  GetInfoFromCookie(cookie, cookieStruct);
+  CookieStruct cookieStruct = cookie->ToIPC();
   if (cookie->IsHttpOnly()) {
     cookieStruct.value() = "";
   }
@@ -166,18 +150,11 @@ void CookieServiceParent::SerialializeCookieList(
   for (uint32_t i = 0; i < aFoundCookieList.Length(); i++) {
     nsCookie* cookie = aFoundCookieList.ElementAt(i);
     CookieStruct* cookieStruct = aCookiesList.AppendElement();
-    cookieStruct->name() = cookie->Name();
-    if (!cookie->IsHttpOnly()) {
-      cookieStruct->value() = cookie->Value();
+    *cookieStruct = cookie->ToIPC();
+    if (cookie->IsHttpOnly()) {
+      // Value only needs to exist if an HttpOnly cookie exists.
+      cookieStruct->value() = "";
     }
-    cookieStruct->host() = cookie->Host();
-    cookieStruct->path() = cookie->Path();
-    cookieStruct->expiry() = cookie->Expiry();
-    cookieStruct->lastAccessed() = cookie->LastAccessed();
-    cookieStruct->creationTime() = cookie->CreationTime();
-    cookieStruct->isSession() = cookie->IsSession();
-    cookieStruct->isSecure() = cookie->IsSecure();
-    cookieStruct->sameSite() = cookie->SameSite();
   }
 }
 

@@ -42,19 +42,19 @@ interface nsICookieTransactionCallback : nsISupports
  *          explanation of data strings below.
  * subject: see below.
  * data   : "deleted"
- *          a cookie was deleted. the subject is an nsICookie2 representing
+ *          a cookie was deleted. the subject is an nsICookie representing
  *          the deleted cookie.
  *          "added"
- *          a cookie was added. the subject is an nsICookie2 representing
+ *          a cookie was added. the subject is an nsICookie representing
  *          the added cookie.
  *          "changed"
- *          a cookie was changed. the subject is an nsICookie2 representing
+ *          a cookie was changed. the subject is an nsICookie representing
  *          the new cookie. (note that host, path, and name are invariant
  *          for a given cookie; other parameters may change.)
  *          "batch-deleted"
  *          a set of cookies was purged (typically, because they have either
  *          expired or because the cookie list has grown too large). The subject
- *          is an nsIArray of nsICookie2's representing the deleted cookies.
+ *          is an nsIArray of nsICookie's representing the deleted cookies.
  *          Note that the array could contain a single cookie.
  *          "cleared"
  *          the entire cookie list was cleared. the subject is null.
@@ -107,7 +107,7 @@ interface nsICookieService : nsISupports
    *
    * @return the resulting cookie string
    */
-  string getCookieString(in nsIURI aURI, in nsIChannel aChannel);
+  ACString getCookieString(in nsIURI aURI, in nsIChannel aChannel);
 
   /*
    * Get the complete cookie string associated with the URI.
@@ -132,7 +132,8 @@ interface nsICookieService : nsISupports
    *
    * @return the resulting cookie string
    */
-  string getCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI, in nsIChannel aChannel);
+  ACString getCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI,
+                                   in nsIChannel aChannel);
 
   /*
    * Set the cookie string associated with the URI.
@@ -155,7 +156,8 @@ interface nsICookieService : nsISupports
    *        to determine the originating URI of the document; if it is not
    *        provided, the cookies will be assumed third-party.)
    */
-  void setCookieString(in nsIURI aURI, in nsIPrompt aPrompt, in string aCookie, in nsIChannel aChannel);
+  void setCookieString(in nsIURI aURI, in nsIPrompt aPrompt,
+                       in ACString aCookie, in nsIChannel aChannel);
 
   /*
    * Set the cookie string and expires associated with the URI.
@@ -190,7 +192,9 @@ interface nsICookieService : nsISupports
    *        to determine the originating URI of the document; if it is not
    *        provided, the cookies will be assumed third-party.)
    */
-  void setCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI, in nsIPrompt aPrompt, in string aCookie, in string aServerTime, in nsIChannel aChannel);
+  void setCookieStringFromHttp(in nsIURI aURI, in nsIURI aFirstURI,
+                               in nsIPrompt aPrompt, in ACString aCookie,
+                               in ACString aServerTime, in nsIChannel aChannel);
 
 
   /*

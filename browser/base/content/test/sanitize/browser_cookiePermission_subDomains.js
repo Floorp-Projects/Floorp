@@ -22,7 +22,7 @@ add_task(async function subDomains() {
 
   Services.cookies.add(uriA.host, "/test", "a", "b",
     false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie2.SAMESITE_NONE);
+    Ci.nsICookie.SAMESITE_NONE);
 
   await createIndexedDB(uriA.host, {});
 
@@ -31,7 +31,7 @@ add_task(async function subDomains() {
 
   Services.cookies.add(uriB.host, "/test", "c", "d",
     false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie2.SAMESITE_NONE);
+    Ci.nsICookie.SAMESITE_NONE);
 
   await createIndexedDB(uriB.host, {});
 
@@ -76,7 +76,7 @@ add_task(async function subDomains() {
 
   Services.cookies.add(uriA.host, "/test", "a", "b",
     false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie2.SAMESITE_NONE);
+    Ci.nsICookie.SAMESITE_NONE);
 
   await createIndexedDB(uriA.host, {});
 
@@ -84,7 +84,7 @@ add_task(async function subDomains() {
 
   Services.cookies.add(uriB.host, "/test", "c", "d",
     false, false, false, Date.now() + 24000 * 60 * 60, {},
-    Ci.nsICookie2.SAMESITE_NONE);
+    Ci.nsICookie.SAMESITE_NONE);
 
   await createIndexedDB(uriB.host, {});
 

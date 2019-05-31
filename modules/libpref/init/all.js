@@ -1227,6 +1227,7 @@ pref("editor.positioning.offset",            0);
 
 // Scripts & Windows prefs
 pref("dom.disable_beforeunload",            false);
+pref("dom.beforeunload_timeout_ms",         1000);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
 
@@ -2326,8 +2327,6 @@ pref("network.proxy.no_proxies_on",         "");
 pref("network.proxy.allow_hijacking_localhost", false);
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
-pref("network.cookie.thirdparty.sessionOnly", false);
-pref("network.cookie.thirdparty.nonsecureSessionOnly", false);
 
 // The interval in seconds to move the cookies in the child process.
 // Set to 0 to disable moving the cookies.

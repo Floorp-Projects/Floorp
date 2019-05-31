@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsICookie2;
+interface nsICookie;
 interface nsIURI;
 interface nsIChannel;
 interface nsIPrincipal;
@@ -82,7 +82,7 @@ interface nsICookiePermission : nsISupports
    */
   boolean canSetCookie(in nsIURI     aURI,
                        in nsIChannel aChannel,
-                       in nsICookie2 aCookie,
+                       in nsICookie aCookie,
                        inout boolean aIsSession,
                        inout int64_t aExpiry);
 };

@@ -1,0 +1,22 @@
+<script>
+function go() {
+  var b = document.getElementById("b")
+  c.setAttribute("refX", "0")
+  b.getCTM()
+}
+function eh1() {
+  c.addEventListener("DOMAttrModified", eh2)
+}
+function eh2() {
+  var f = document.getElementById("f")
+  d.replaceWith("")
+  f.before(a)
+}
+</script>
+<body onload=go()>
+<table background="X">A</table>
+<svg id="a">
+<line id="b">
+<tspan id="d">
+<textPath id="f">
+<animateTransform id="c" onbegin="eh1()">

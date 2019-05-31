@@ -243,7 +243,13 @@ BrowserHost::GetHasBeforeUnload(bool* aHasBeforeUnload) {
     *aHasBeforeUnload = false;
     return NS_OK;
   }
-  *aHasBeforeUnload = mRoot->GetHasBeforeUnload();
+  bool result = false;
+
+  VisitAll([&result](BrowserParent* aBrowserParent) {
+    result |= aBrowserParent->GetHasBeforeUnload();
+  });
+
+  *aHasBeforeUnload = result;
   return NS_OK;
 }
 

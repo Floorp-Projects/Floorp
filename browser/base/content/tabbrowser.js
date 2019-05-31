@@ -44,7 +44,6 @@ window._gBrowser = {
     let messageManager = window.getGroupMessageManager("browsers");
     if (gMultiProcessBrowser) {
       messageManager.addMessageListener("DOMTitleChanged", this);
-      messageManager.addMessageListener("DOMWindowClose", this);
       window.messageManager.addMessageListener("contextmenu", this);
       messageManager.addMessageListener("Browser:Init", this);
     } else {
@@ -2868,9 +2867,10 @@ window._gBrowser = {
 
   _hasBeforeUnload(aTab) {
     let browser = aTab.linkedBrowser;
-    return browser.isRemoteBrowser && browser.frameLoader &&
-           browser.frameLoader.remoteTab &&
-           browser.frameLoader.remoteTab.hasBeforeUnload;
+    if (browser.isRemoteBrowser && browser.frameLoader) {
+      return PermitUnloader.hasBeforeUnload(browser.frameLoader);
+    }
+    return false;
   },
 
   _beginRemoveTab(aTab, {
@@ -4335,25 +4335,6 @@ window._gBrowser = {
           tab.setAttribute("titlechanged", "true");
         break;
       }
-      case "DOMWindowClose":
-      {
-        if (this.tabs.length == 1) {
-          // We already did PermitUnload in the content process
-          // for this tab (the only one in the window). So we don't
-          // need to do it again for any tabs.
-          window.skipNextCanClose = true;
-          window.close();
-          return undefined;
-        }
-
-        let tab = this.getTabForBrowser(browser);
-        if (tab) {
-          // Skip running PermitUnload since it already happened in
-          // the content process.
-          this.removeTab(tab, { skipPermitUnload: true });
-        }
-        break;
-      }
       case "contextmenu":
       {
         openContextMenu(aMessage);
@@ -4540,25 +4521,48 @@ window._gBrowser = {
     });
 
     this.addEventListener("DOMWindowClose", (event) => {
-      if (!event.isTrusted)
-        return;
+      let browser = event.target;
+      if (!browser.isRemoteBrowser) {
+        if (!event.isTrusted) {
+          // If the browser is not remote, then we expect the event to be trusted.
+          // In the remote case, the DOMWindowClose event is captured in content,
+          // a message is sent to the parent, and another DOMWindowClose event
+          // is re-dispatched on the actual browser node. In that case, the event
+          // won't  be marked as trusted, since it's synthesized by JavaScript.
+          return;
+        }
+        // In the parent-process browser case, it's possible that the browser
+        // that fired DOMWindowClose is actually a child of another browser. We
+        // want to find the top-most browser to determine whether or not this is
+        // for a tab or not. The chromeEventHandler will be the top-most browser.
+        browser = event.target.docShell.chromeEventHandler;
+      }
 
       if (this.tabs.length == 1) {
-        // We already did PermitUnload in nsGlobalWindow::Close
-        // for this tab. There are no other tabs we need to do
-        // PermitUnload for.
+        // We already did PermitUnload in the content process
+        // for this tab (the only one in the window). So we don't
+        // need to do it again for any tabs.
         window.skipNextCanClose = true;
+        // In the parent-process browser case, the nsCloseEvent will actually take
+        // care of tearing down the window, but we need to do this ourselves in the
+        // content-process browser case. Doing so in both cases doesn't appear to
+        // hurt.
+        window.close();
         return;
       }
 
-      let browser = event.target.docShell.chromeEventHandler;
       let tab = this.getTabForBrowser(browser);
       if (tab) {
-        // Skip running PermitUnload since it already happened.
+        // Skip running PermitUnload since it already happened in
+        // the content process.
         this.removeTab(tab, { skipPermitUnload: true });
+        // If we don't preventDefault on the DOMWindowClose event, then
+        // in the parent-process browser case, we're telling the platform
+        // to close the entire window. Calling preventDefault is our way of
+        // saying we took care of this close request by closing the tab.
         event.preventDefault();
       }
-    }, true);
+    });
 
     this.addEventListener("DOMWillOpenModalDialog", (event) => {
       if (!event.isTrusted)

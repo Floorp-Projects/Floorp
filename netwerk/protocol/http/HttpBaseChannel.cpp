@@ -2115,22 +2115,24 @@ HttpBaseChannel::GetResponseVersion(uint32_t* major, uint32_t* minor) {
   return NS_OK;
 }
 
-void HttpBaseChannel::NotifySetCookie(char const* aCookie) {
+void HttpBaseChannel::NotifySetCookie(const nsACString& aCookie) {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     nsAutoString cookie;
-    CopyASCIItoUTF16(mozilla::MakeStringSpan(aCookie), cookie);
     obs->NotifyObservers(static_cast<nsIChannel*>(this),
-                         "http-on-response-set-cookie", cookie.get());
+                         "http-on-response-set-cookie",
+                         NS_ConvertASCIItoUTF16(aCookie).get());
   }
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetCookie(const char* aCookieHeader) {
+HttpBaseChannel::SetCookie(const nsACString& aCookieHeader) {
   if (mLoadFlags & LOAD_ANONYMOUS) return NS_OK;
 
   // empty header isn't an error
-  if (!(aCookieHeader && *aCookieHeader)) return NS_OK;
+  if (aCookieHeader.IsEmpty()) {
+    return NS_OK;
+  }
 
   nsICookieService* cs = gHttpHandler->GetCookieService();
   NS_ENSURE_TRUE(cs, NS_ERROR_FAILURE);
@@ -2139,7 +2141,7 @@ HttpBaseChannel::SetCookie(const char* aCookieHeader) {
   // empty date is not an error
   Unused << mResponseHead->GetHeader(nsHttp::Date, date);
   nsresult rv = cs->SetCookieStringFromHttp(mURI, nullptr, nullptr,
-                                            aCookieHeader, date.get(), this);
+                                            aCookieHeader, date, this);
   if (NS_SUCCEEDED(rv)) {
     NotifySetCookie(aCookieHeader);
   }
@@ -3042,11 +3044,11 @@ void HttpBaseChannel::AddCookiesToRequest() {
   }
 
   bool useCookieService = (XRE_IsParentProcess());
-  nsCString cookie;
+  nsAutoCString cookie;
   if (useCookieService) {
     nsICookieService* cs = gHttpHandler->GetCookieService();
     if (cs) {
-      cs->GetCookieStringFromHttp(mURI, nullptr, this, getter_Copies(cookie));
+      cs->GetCookieStringFromHttp(mURI, nullptr, this, cookie);
     }
 
     if (cookie.IsEmpty()) {

@@ -141,7 +141,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           // Expire in 15 minutes:
           let expireTime = Math.floor(Date.now() / 1000) + 15 * 60;
           Services.cookies.add(arguments[0], arguments[1], arguments[2], arguments[3],
-                               true, false, false, expireTime, {}, Ci.nsICookie2.SAMESITE_NONE);
+                               true, false, false, expireTime, {}, Ci.nsICookie.SAMESITE_NONE);
         """, script_args=(self._cookieHost, self._cookiePath, self._cookieName, self._cookieValue))
 
     def createSession(self):
@@ -320,7 +320,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
             let cookie = null;
             while (cookieEnum.hasMoreElements()) {
               let hostCookie = cookieEnum.getNext();
-              hostCookie.QueryInterface(Ci.nsICookie2);
+              hostCookie.QueryInterface(Ci.nsICookie);
               // getCookiesFromHost returns any cookie from the BASE host.
               if (hostCookie.rawHost != arguments[0])
                 continue;

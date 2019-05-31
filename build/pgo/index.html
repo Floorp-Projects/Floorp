@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- var list = 
+/* global Quitter */
+
+ var list =
      [
   "js-input/webkit/PerformanceTests/Speedometer/index.html",
   "blueprint/sample.html",
@@ -37,17 +39,17 @@
   "js-input/sunspider/string-fasta.html",
   "js-input/sunspider/string-tagcloud.html",
   "js-input/sunspider/string-unpack-code.html",
-  "js-input/sunspider/string-validate-input.html"
+  "js-input/sunspider/string-validate-input.html",
      ];
  var defaultInterval = 2000;
  var idx = 0;
  var w;
- 
- window.onload = function () {
+
+ window.onload = function() {
      w = window.open("about:blank");
      window.setTimeout(loadURL, defaultInterval);
  };
- function loadURL () {
+ function loadURL() {
      var interval = defaultInterval;
      if (idx == 0) {
          interval = 90000;
@@ -61,8 +63,9 @@
      }
  }
  var i;
- 
- for(i=0; i < list.length;i++) {
+
+ for (i = 0; i < list.length;i++) {
+     // eslint-disable-next-line no-unsanitized/method
      document.write(list[i]);
      document.write("<br>");
  }

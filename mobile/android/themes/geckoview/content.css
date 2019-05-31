@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import "defines.css";
-@import "scrollbar.css";
 
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -26,6 +25,7 @@ xul|scrollbar {
   background-image: none !important;
   border: 0px solid transparent !important;
   pointer-events: none;
+  display: block;
 }
 
 /* Scrollbar code will reset the margin to the correct side depending on

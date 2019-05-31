@@ -102,8 +102,10 @@ var Utils = {
     let changes = [];
     // If no changes since last time, go on with empty list of changes.
     if (response.status != 304) {
+      const is404FromCustomServer = response.status == 404 && Services.prefs.prefHasUserValue("services.settings.server");
+
       const ct = response.headers.get("Content-Type");
-      if (!ct || !ct.includes("application/json")) {
+      if (!is404FromCustomServer && (!ct || !ct.includes("application/json"))) {
         throw new Error(`Unexpected content-type "${ct}"`);
       }
       let payload;
@@ -117,7 +119,6 @@ var Utils = {
         // If the server is failing, the JSON response might not contain the
         // expected data. For example, real server errors (Bug 1259145)
         // or dummy local server for tests (Bug 1481348)
-        const is404FromCustomServer = response.status == 404 && Services.prefs.prefHasUserValue("services.settings.server");
         if (!is404FromCustomServer) {
           throw new Error(`Server error ${response.status} ${response.statusText}: ${JSON.stringify(payload)}`);
         }

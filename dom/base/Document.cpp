@@ -3702,8 +3702,8 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
       }
     }
 
-    nsCString cookie;
-    service->GetCookieString(codebaseURI, channel, getter_Copies(cookie));
+    nsAutoCString cookie;
+    service->GetCookieString(codebaseURI, channel, cookie);
     // CopyUTF8toUTF16 doesn't handle error
     // because it assumes that the input is valid.
     UTF_8_ENCODING->DecodeWithoutBOMHandling(cookie, aCookie);
@@ -3761,7 +3761,7 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
     }
 
     NS_ConvertUTF16toUTF8 cookie(aCookie);
-    service->SetCookieString(codebaseURI, nullptr, cookie.get(), channel);
+    service->SetCookieString(codebaseURI, nullptr, cookie, channel);
   }
 }
 
@@ -6705,6 +6705,7 @@ void Document::TryCancelFrameLoaderInitialization(nsIDocShell* aShell) {
 
 void Document::SetPrototypeDocument(nsXULPrototypeDocument* aPrototype) {
   mPrototypeDocument = aPrototype;
+  mSynchronousDOMContentLoaded = true;
 }
 
 Document* Document::RequestExternalResource(

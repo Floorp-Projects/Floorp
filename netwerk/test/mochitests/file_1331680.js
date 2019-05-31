@@ -4,7 +4,7 @@ let cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
 var observer = {
   observe: function(subject, topic, data) {
     if (topic == "cookie-changed") {
-      let cookie = subject.QueryInterface(Ci.nsICookie2);
+      let cookie = subject.QueryInterface(Ci.nsICookie);
       sendAsyncMessage("cookieName", cookie.name + "=" + cookie.value);
       sendAsyncMessage("cookieOperation", data);
     }

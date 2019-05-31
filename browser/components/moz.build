@@ -13,9 +13,6 @@ with Files("distribution.js"):
 with Files("tests/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("tests/browser/browser_bug538331.js"):
-    BUG_COMPONENT = ("Toolkit", "Application Update")
-
 with Files("tests/browser/browser_contentpermissionprompt.js"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
@@ -94,7 +91,8 @@ EXTRA_JS_MODULES += [
 
 BROWSER_CHROME_MANIFESTS += [
     'safebrowsing/content/test/browser.ini',
-    'tests/browser/browser.ini'
+    'tests/browser/browser.ini',
+    'tests/browser/whats_new_page/browser.ini'
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
