@@ -10,6 +10,7 @@ var result = g.eval("(" + function outer(outerarg) {
         var outervar = 200;
         function inner(innerarg) {
             var innervar = 400;
+            eval("");
             debugger;
             return innerarg + innervar;
         }

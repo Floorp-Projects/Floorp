@@ -43,7 +43,7 @@ function test(code, debugStmts, followupStmts) {
     var hits = 0;
 
     var g = newGlobal({newCompartment: true});
-    g.eval("function debugMe() { var x = 'wrong-x'; debugger; }");
+    g.eval("function debugMe() { var x = 'wrong-x'; eval(\"\"); debugger; }");
     g.capture = null;
 
     var dbg = Debugger(g);
@@ -70,16 +70,16 @@ function test(code, debugStmts, followupStmts) {
 
 for (var s of cases) {
     // Test triggering the debugger right in the scope in which x is bound.
-    test(s, "debugger; assertEq(x, 'ok');");
+    test(s, "eval(\"\"); debugger; assertEq(x, 'ok');");
 
     // Test calling a function that triggers the debugger.
     test(s, "debugMe(); assertEq(x, 'ok');");
 
     // Test triggering the debugger from a scope nested in x's scope.
-    test(s, "{ let y = 'irrelevant'; (function (z) { { let zz = y; debugger; } })(); } assertEq(x, 'ok');"),
+    test(s, "{ let y = 'irrelevant'; (function (z) { { let zz = y; eval(\"\"); debugger; } })(); } assertEq(x, 'ok');"),
 
     // Test closing over the variable and triggering the debugger later, after
     // leaving the variable's scope.
-    test(s, "capture = {dbg: function () { debugger; }, get x() { return x; }};",
+    test(s, "capture = {dbg: function () { eval(\"\"); debugger; }, get x() { return x; }};",
             "assertEq(capture.x, VAL); capture.dbg(); assertEq(capture.x, 'ok');");
 }

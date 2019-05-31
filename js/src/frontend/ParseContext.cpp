@@ -590,13 +590,6 @@ bool ParseContext::declareFunctionArgumentsObject(
     if (sc()->bindingsAccessedDynamically()) {
       funbox->setDefinitelyNeedsArgsObj();
     }
-
-    // If a script contains the debugger statement either directly or
-    // within an inner function, the arguments object should be created
-    // eagerly so the Debugger API may observe bindings.
-    if (sc()->hasDebuggerStatement()) {
-      funbox->setDefinitelyNeedsArgsObj();
-    }
   }
 
   return true;

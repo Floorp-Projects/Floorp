@@ -89,9 +89,6 @@ static inline void PropagateTransitiveParseFlags(const T* inner, U* outer) {
   if (inner->bindingsAccessedDynamically()) {
     outer->setBindingsAccessedDynamically();
   }
-  if (inner->hasDebuggerStatement()) {
-    outer->setHasDebuggerStatement();
-  }
   if (inner->hasDirectEval()) {
     outer->setHasDirectEval();
   }
@@ -6710,9 +6707,6 @@ GeneralParser<ParseHandler, Unit>::debuggerStatement() {
     return null();
   }
   p.end = pos().end;
-
-  pc_->sc()->setBindingsAccessedDynamically();
-  pc_->sc()->setHasDebuggerStatement();
 
   return handler_.newDebuggerStatement(p);
 }
