@@ -714,12 +714,16 @@ static void qcms_transform_data_tetra_clut_template(const qcms_transform *transf
 	}	
 }
 
+static void qcms_transform_data_tetra_clut_rgb(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length) {
+	qcms_transform_data_tetra_clut_template<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX>(transform, src, dest, length);
+}
+
 static void qcms_transform_data_tetra_clut_rgba(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length) {
 	qcms_transform_data_tetra_clut_template<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX, RGBA_A_INDEX>(transform, src, dest, length);
 }
 
-static void qcms_transform_data_tetra_clut(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length) {
-	qcms_transform_data_tetra_clut_template<RGBA_R_INDEX, RGBA_G_INDEX, RGBA_B_INDEX>(transform, src, dest, length);
+static void qcms_transform_data_tetra_clut_bgra(const qcms_transform *transform, const unsigned char *src, unsigned char *dest, size_t length) {
+	qcms_transform_data_tetra_clut_template<BGRA_R_INDEX, BGRA_G_INDEX, BGRA_B_INDEX, BGRA_A_INDEX>(transform, src, dest, length);
 }
 
 template <size_t kRIndex, size_t kGIndex, size_t kBIndex, size_t kAIndex = NO_A_INDEX>
@@ -1101,9 +1105,12 @@ qcms_transform* qcms_transform_precacheLUT_float(qcms_transform *transform, qcms
 			transform->grid_size = samples;
 			if (in_type == QCMS_DATA_RGBA_8) {
 				transform->transform_fn = qcms_transform_data_tetra_clut_rgba;
-			} else {
-				transform->transform_fn = qcms_transform_data_tetra_clut;
+			} else if (in_type == QCMS_DATA_BGRA_8) {
+				transform->transform_fn = qcms_transform_data_tetra_clut_bgra;
+			} else if (in_type == QCMS_DATA_RGB_8) {
+				transform->transform_fn = qcms_transform_data_tetra_clut_rgb;
 			}
+			assert(transform->transform_fn);
 		}
 	}
 
@@ -1162,7 +1169,7 @@ qcms_transform* qcms_transform_create(
 
 	// This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
 	if (qcms_supports_iccv4 &&
-			(in_type == QCMS_DATA_RGB_8 || in_type == QCMS_DATA_RGBA_8) &&
+			(in_type == QCMS_DATA_RGB_8 || in_type == QCMS_DATA_RGBA_8 || in_type == QCMS_DATA_BGRA_8) &&
 			(in->A2B0 || out->B2A0 || in->mAB || out->mAB))
 		{
 		// Precache the transformation to a CLUT 33x33x33 in size.

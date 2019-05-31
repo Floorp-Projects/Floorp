@@ -553,7 +553,7 @@ bool StartOffThreadIonFree(jit::IonBuilder* builder,
 struct AllCompilations {};
 struct ZonesInState {
   JSRuntime* runtime;
-  JS::Zone::GCState state;
+  JS::shadow::Zone::GCState state;
 };
 struct CompilationsUsingNursery {
   JSRuntime* runtime;
@@ -582,7 +582,7 @@ inline void CancelOffThreadIonCompile(Zone* zone) {
 }
 
 inline void CancelOffThreadIonCompile(JSRuntime* runtime,
-                                      JS::Zone::GCState state) {
+                                      JS::shadow::Zone::GCState state) {
   CancelOffThreadIonCompile(CompilationSelector(ZonesInState{runtime, state}),
                             true);
 }
