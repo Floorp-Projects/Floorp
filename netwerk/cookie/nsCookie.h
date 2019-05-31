@@ -12,6 +12,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/net/NeckoChannelParams.h"
 
 using mozilla::OriginAttributes;
 
@@ -27,6 +28,8 @@ using mozilla::OriginAttributes;
  ******************************************************************************/
 
 class nsCookie final : public nsICookie2 {
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+
  public:
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -35,24 +38,9 @@ class nsCookie final : public nsICookie2 {
 
  private:
   // for internal use only. see nsCookie::Create().
-  nsCookie(const char* aName, const char* aValue, const char* aHost,
-           const char* aPath, const char* aEnd, int64_t aExpiry,
-           int64_t aLastAccessed, int64_t aCreationTime, bool aIsSession,
-           bool aIsSecure, bool aIsHttpOnly,
-           const OriginAttributes& aOriginAttributes, int32_t aSameSite)
-      : mName(aName),
-        mValue(aValue),
-        mHost(aHost),
-        mPath(aPath),
-        mEnd(aEnd),
-        mExpiry(aExpiry),
-        mLastAccessed(aLastAccessed),
-        mCreationTime(aCreationTime),
-        mIsSession(aIsSession),
-        mIsSecure(aIsSecure),
-        mIsHttpOnly(aIsHttpOnly),
-        mOriginAttributes(aOriginAttributes),
-        mSameSite(aSameSite) {}
+  nsCookie(const mozilla::net::CookieStruct& aCookieData,
+           const OriginAttributes& aOriginAttributes)
+      : mData(aCookieData), mOriginAttributes(aOriginAttributes) {}
 
  public:
   // Generate a unique and monotonically increasing creation time. See comment
@@ -67,74 +55,57 @@ class nsCookie final : public nsICookie2 {
       bool aIsSecure, bool aIsHttpOnly,
       const OriginAttributes& aOriginAttributes, int32_t aSameSite);
 
+  static already_AddRefed<nsCookie> Create(
+      const mozilla::net::CookieStruct& aCookieData,
+      const OriginAttributes& aOriginAttributes);
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   // fast (inline, non-xpcom) getters
-  inline const nsDependentCString Name() const {
-    return nsDependentCString(mName, mValue - 1);
+  inline const nsCString& Name() const { return mData.name(); }
+  inline const nsCString& Value() const { return mData.value(); }
+  inline const nsCString& Host() const { return mData.host(); }
+  inline nsDependentCSubstring RawHost() const {
+    return nsDependentCSubstring(mData.host(), IsDomain() ? 1 : 0);
   }
-  inline const nsDependentCString Value() const {
-    return nsDependentCString(mValue, mHost - 1);
-  }
-  inline const nsDependentCString Host() const {
-    return nsDependentCString(mHost, mPath - 1);
-  }
-  inline const nsDependentCString RawHost() const {
-    return nsDependentCString(IsDomain() ? mHost + 1 : mHost, mPath - 1);
-  }
-  inline const nsDependentCString Path() const {
-    return nsDependentCString(mPath, mEnd);
-  }
-  inline int64_t Expiry() const { return mExpiry; }  // in seconds
+  inline const nsCString& Path() const { return mData.path(); }
+  inline int64_t Expiry() const { return mData.expiry(); }  // in seconds
   inline int64_t LastAccessed() const {
-    return mLastAccessed;
+    return mData.lastAccessed();
   }  // in microseconds
   inline int64_t CreationTime() const {
-    return mCreationTime;
+    return mData.creationTime();
   }  // in microseconds
-  inline bool IsSession() const { return mIsSession; }
-  inline bool IsDomain() const { return *mHost == '.'; }
-  inline bool IsSecure() const { return mIsSecure; }
-  inline bool IsHttpOnly() const { return mIsHttpOnly; }
+  inline bool IsSession() const { return mData.isSession(); }
+  inline bool IsDomain() const { return *mData.host().get() == '.'; }
+  inline bool IsSecure() const { return mData.isSecure(); }
+  inline bool IsHttpOnly() const { return mData.isHttpOnly(); }
   inline const OriginAttributes& OriginAttributesRef() const {
     return mOriginAttributes;
   }
-  inline int32_t SameSite() const { return mSameSite; }
+  inline int32_t SameSite() const { return mData.sameSite(); }
 
   // setters
-  inline void SetExpiry(int64_t aExpiry) { mExpiry = aExpiry; }
-  inline void SetLastAccessed(int64_t aTime) { mLastAccessed = aTime; }
-  inline void SetIsSession(bool aIsSession) { mIsSession = aIsSession; }
+  inline void SetExpiry(int64_t aExpiry) { mData.expiry() = aExpiry; }
+  inline void SetLastAccessed(int64_t aTime) { mData.lastAccessed() = aTime; }
+  inline void SetIsSession(bool aIsSession) { mData.isSession() = aIsSession; }
   // Set the creation time manually, overriding the monotonicity checks in
   // Create(). Use with caution!
-  inline void SetCreationTime(int64_t aTime) { mCreationTime = aTime; }
+  inline void SetCreationTime(int64_t aTime) { mData.creationTime() = aTime; }
 
   bool IsStale() const;
+
+  const mozilla::net::CookieStruct& ToIPC() const { return mData; }
 
  protected:
   virtual ~nsCookie() = default;
 
  private:
   // member variables
-  // we use char* ptrs to store the strings in a contiguous block,
-  // so we save on the overhead of using nsCStrings. However, we
-  // store a terminating null for each string, so we can hand them
-  // out as nsCStrings.
   //
   // Please update SizeOfIncludingThis if this strategy changes.
-  const char* mName;
-  const char* mValue;
-  const char* mHost;
-  const char* mPath;
-  const char* mEnd;
-  int64_t mExpiry;
-  int64_t mLastAccessed;
-  int64_t mCreationTime;
-  bool mIsSession;
-  bool mIsSecure;
-  bool mIsHttpOnly;
+  mozilla::net::CookieStruct mData;
   mozilla::OriginAttributes mOriginAttributes;
-  int32_t mSameSite;
 };
 
 // Comparator class for sorting cookies before sending to a server.
