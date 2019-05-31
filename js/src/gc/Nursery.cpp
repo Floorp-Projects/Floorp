@@ -133,7 +133,7 @@ void js::NurseryDecommitChunksTask::run() {
 }
 
 void js::NurseryDecommitChunksTask::decommitChunk(Chunk* chunk) {
-  MarkPagesUnused(&chunk->arenas[0], ArenaSize * ArenasPerChunk);
+  chunk->decommitAllArenas();
   {
     AutoLockGC lock(runtime());
     runtime()->gc.recycleChunk(chunk, lock);
