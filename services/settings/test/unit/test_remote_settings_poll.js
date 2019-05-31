@@ -453,7 +453,7 @@ add_task(clear_state);
 
 add_task(async function test_server_404_response() {
   function simulateDummy404(request, response) {
-    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+    response.setHeader("Content-Type", "text/html; charset=UTF-8");
     response.write("<html></html>");
     response.setStatusLine(null, 404, "OK");
   }
