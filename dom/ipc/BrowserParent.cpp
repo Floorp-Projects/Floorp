@@ -2817,9 +2817,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetNativeChildOfShareableWindow(
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvDispatchFocusToTopLevelWindow() {
-  nsCOMPtr<nsIWidget> widget = GetTopLevelWidget();
-  if (widget) {
-    widget->SetFocus(false);
+  if (nsCOMPtr<nsIWidget> widget = GetTopLevelWidget()) {
+    widget->SetFocus(nsIWidget::Raise::No);
   }
   return IPC_OK();
 }
