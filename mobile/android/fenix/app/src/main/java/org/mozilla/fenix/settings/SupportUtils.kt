@@ -10,6 +10,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.IntentReceiverActivity
+import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getColorFromAttr
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.Locale
@@ -45,6 +47,7 @@ object SupportUtils {
     }
 
     fun createCustomTabIntent(context: Context, url: String) = Intent(Intent.ACTION_VIEW).apply {
+        putExtra("android.support.customtabs.extra.TOOLBAR_COLOR", R.attr.foundation.getColorFromAttr(context))
         putExtra("android.support.customtabs.extra.SESSION", true)
         setClassName(context.applicationContext, IntentReceiverActivity::class.java.name)
         data = Uri.parse(url)
