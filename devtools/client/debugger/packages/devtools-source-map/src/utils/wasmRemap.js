@@ -56,7 +56,7 @@ class WasmRemap {
       column: 0,
     };
     if (this._computeColumnSpans) {
-      generatedPosition.lastColumn = 0;
+      generatedPosition.lastColumn = Infinity;
     }
     return generatedPosition;
   }
@@ -95,7 +95,6 @@ class WasmRemap {
           source,
           generatedLine: generatedColumn,
           generatedColumn: 0,
-          lastGeneratedColumn: 0,
           originalLine,
           originalColumn,
           name,
