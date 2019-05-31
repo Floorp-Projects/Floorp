@@ -13,6 +13,7 @@
 #include "SVGAnimatedLength.h"
 #include "SVGCircleElement.h"
 #include "SVGEllipseElement.h"
+#include "SVGGeometryProperty.h"
 #include "SVGRectElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/gfx/2D.h"
@@ -133,15 +134,19 @@ FillRule SVGGeometryElement::GetFillRule() {
   FillRule fillRule =
       FillRule::FILL_WINDING;  // Equivalent to StyleFillRule::Nonzero
 
-  if (auto* f = GetPrimaryFrame()) {
-    MOZ_ASSERT(f->StyleSVG()->mFillRule == StyleFillRule::Nonzero ||
-               f->StyleSVG()->mFillRule == StyleFillRule::Evenodd);
+  bool res = SVGGeometryProperty::DoForComputedStyle(
+      this, [&](const ComputedStyle* s) {
+        const auto* styleSVG = s->StyleSVG();
 
-    if (f->StyleSVG()->mFillRule == StyleFillRule::Evenodd) {
-      fillRule = FillRule::FILL_EVEN_ODD;
-    }
-  } else {
-    // ReportToConsole
+        MOZ_ASSERT(styleSVG->mFillRule == StyleFillRule::Nonzero ||
+                   styleSVG->mFillRule == StyleFillRule::Evenodd);
+
+        if (styleSVG->mFillRule == StyleFillRule::Evenodd) {
+          fillRule = FillRule::FILL_EVEN_ODD;
+        }
+      });
+
+  if (!res) {
     NS_WARNING("Couldn't get ComputedStyle for content in GetFillRule");
   }
 

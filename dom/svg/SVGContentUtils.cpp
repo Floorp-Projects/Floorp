@@ -29,6 +29,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "SVGAnimationElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "SVGGeometryProperty.h"
 #include "nsContentUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
@@ -255,93 +256,97 @@ static DashState GetStrokeDashData(
 
 void SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                        SVGElement* aElement,
-                                       ComputedStyle* aComputedStyle,
+                                       const ComputedStyle* aComputedStyle,
                                        SVGContextPaint* aContextPaint,
                                        StrokeOptionFlags aFlags) {
-  ComputedStyle* computedStyle;
+  auto doCompute = [&](const ComputedStyle* computedStyle) {
+    const nsStyleSVG* styleSVG = computedStyle->StyleSVG();
+
+    bool checkedDashAndStrokeIsDashed = false;
+    if (aFlags != eIgnoreStrokeDashing) {
+      DashState dashState =
+          GetStrokeDashData(aStrokeOptions, aElement, styleSVG, aContextPaint);
+
+      if (dashState == eNoStroke) {
+        // Hopefully this will shortcircuit any stroke operations:
+        aStrokeOptions->mLineWidth = 0;
+        return;
+      }
+      if (dashState == eContinuousStroke && aStrokeOptions->mDashPattern) {
+        // Prevent our caller from wasting time looking at a pattern without
+        // gaps:
+        aStrokeOptions->DiscardDashPattern();
+      }
+      checkedDashAndStrokeIsDashed = (dashState == eDashedStroke);
+    }
+
+    aStrokeOptions->mLineWidth =
+        GetStrokeWidth(aElement, computedStyle, aContextPaint);
+
+    aStrokeOptions->mMiterLimit = Float(styleSVG->mStrokeMiterlimit);
+
+    switch (styleSVG->mStrokeLinejoin) {
+      case NS_STYLE_STROKE_LINEJOIN_MITER:
+        aStrokeOptions->mLineJoin = JoinStyle::MITER_OR_BEVEL;
+        break;
+      case NS_STYLE_STROKE_LINEJOIN_ROUND:
+        aStrokeOptions->mLineJoin = JoinStyle::ROUND;
+        break;
+      case NS_STYLE_STROKE_LINEJOIN_BEVEL:
+        aStrokeOptions->mLineJoin = JoinStyle::BEVEL;
+        break;
+    }
+
+    if (ShapeTypeHasNoCorners(aElement) && !checkedDashAndStrokeIsDashed) {
+      // Note: if aFlags == eIgnoreStrokeDashing then we may be returning the
+      // wrong linecap value here, since the actual linecap used on render in
+      // this case depends on whether the stroke is dashed or not.
+      aStrokeOptions->mLineCap = CapStyle::BUTT;
+    } else {
+      switch (styleSVG->mStrokeLinecap) {
+        case NS_STYLE_STROKE_LINECAP_BUTT:
+          aStrokeOptions->mLineCap = CapStyle::BUTT;
+          break;
+        case NS_STYLE_STROKE_LINECAP_ROUND:
+          aStrokeOptions->mLineCap = CapStyle::ROUND;
+          break;
+        case NS_STYLE_STROKE_LINECAP_SQUARE:
+          aStrokeOptions->mLineCap = CapStyle::SQUARE;
+          break;
+      }
+    }
+  };
+
   if (aComputedStyle) {
-    computedStyle = aComputedStyle;
-  } else if (auto* f = aElement->GetPrimaryFrame()) {
-    computedStyle = f->Style();
+    doCompute(aComputedStyle);
   } else {
-    return;
-  }
-
-  const nsStyleSVG* styleSVG = computedStyle->StyleSVG();
-
-  bool checkedDashAndStrokeIsDashed = false;
-  if (aFlags != eIgnoreStrokeDashing) {
-    DashState dashState =
-        GetStrokeDashData(aStrokeOptions, aElement, styleSVG, aContextPaint);
-
-    if (dashState == eNoStroke) {
-      // Hopefully this will shortcircuit any stroke operations:
-      aStrokeOptions->mLineWidth = 0;
-      return;
-    }
-    if (dashState == eContinuousStroke && aStrokeOptions->mDashPattern) {
-      // Prevent our caller from wasting time looking at a pattern without gaps:
-      aStrokeOptions->DiscardDashPattern();
-    }
-    checkedDashAndStrokeIsDashed = (dashState == eDashedStroke);
-  }
-
-  aStrokeOptions->mLineWidth =
-      GetStrokeWidth(aElement, computedStyle, aContextPaint);
-
-  aStrokeOptions->mMiterLimit = Float(styleSVG->mStrokeMiterlimit);
-
-  switch (styleSVG->mStrokeLinejoin) {
-    case NS_STYLE_STROKE_LINEJOIN_MITER:
-      aStrokeOptions->mLineJoin = JoinStyle::MITER_OR_BEVEL;
-      break;
-    case NS_STYLE_STROKE_LINEJOIN_ROUND:
-      aStrokeOptions->mLineJoin = JoinStyle::ROUND;
-      break;
-    case NS_STYLE_STROKE_LINEJOIN_BEVEL:
-      aStrokeOptions->mLineJoin = JoinStyle::BEVEL;
-      break;
-  }
-
-  if (ShapeTypeHasNoCorners(aElement) && !checkedDashAndStrokeIsDashed) {
-    // Note: if aFlags == eIgnoreStrokeDashing then we may be returning the
-    // wrong linecap value here, since the actual linecap used on render in this
-    // case depends on whether the stroke is dashed or not.
-    aStrokeOptions->mLineCap = CapStyle::BUTT;
-  } else {
-    switch (styleSVG->mStrokeLinecap) {
-      case NS_STYLE_STROKE_LINECAP_BUTT:
-        aStrokeOptions->mLineCap = CapStyle::BUTT;
-        break;
-      case NS_STYLE_STROKE_LINECAP_ROUND:
-        aStrokeOptions->mLineCap = CapStyle::ROUND;
-        break;
-      case NS_STYLE_STROKE_LINECAP_SQUARE:
-        aStrokeOptions->mLineCap = CapStyle::SQUARE;
-        break;
-    }
+    SVGGeometryProperty::DoForComputedStyle(aElement, doCompute);
   }
 }
 
 Float SVGContentUtils::GetStrokeWidth(SVGElement* aElement,
-                                      ComputedStyle* aComputedStyle,
+                                      const ComputedStyle* aComputedStyle,
                                       SVGContextPaint* aContextPaint) {
-  ComputedStyle* computedStyle;
+  Float res = 0.0;
+
+  auto doCompute = [&](ComputedStyle const* computedStyle) {
+    const nsStyleSVG* styleSVG = computedStyle->StyleSVG();
+
+    if (aContextPaint && styleSVG->StrokeWidthFromObject()) {
+      res = aContextPaint->GetStrokeWidth();
+      return;
+    }
+
+    res = SVGContentUtils::CoordToFloat(aElement, styleSVG->mStrokeWidth);
+  };
+
   if (aComputedStyle) {
-    computedStyle = aComputedStyle;
-  } else if (auto* f = aElement->GetPrimaryFrame()) {
-    computedStyle = f->Style();
+    doCompute(aComputedStyle);
   } else {
-    return 0.0f;
+    SVGGeometryProperty::DoForComputedStyle(aElement, doCompute);
   }
 
-  const nsStyleSVG* styleSVG = computedStyle->StyleSVG();
-
-  if (aContextPaint && styleSVG->StrokeWidthFromObject()) {
-    return aContextPaint->GetStrokeWidth();
-  }
-
-  return SVGContentUtils::CoordToFloat(aElement, styleSVG->mStrokeWidth);
+  return res;
 }
 
 float SVGContentUtils::GetFontSize(Element* aElement) {

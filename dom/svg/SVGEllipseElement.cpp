@@ -139,9 +139,9 @@ bool SVGEllipseElement::GetGeometryBounds(
 already_AddRefed<Path> SVGEllipseElement::BuildPath(PathBuilder* aBuilder) {
   float x, y, rx, ry;
 
-  MOZ_ASSERT(GetPrimaryFrame());
-  SVGGeometryProperty::ResolveAll<SVGT::Cx, SVGT::Cy, SVGT::Rx, SVGT::Ry>(
-      this, &x, &y, &rx, &ry);
+  SVGGeometryProperty::ResolveAllAllowFallback<SVGT::Cx, SVGT::Cy, SVGT::Rx,
+                                               SVGT::Ry>(this, &x, &y, &rx,
+                                                         &ry);
 
   if (rx <= 0.0f || ry <= 0.0f) {
     return nullptr;
