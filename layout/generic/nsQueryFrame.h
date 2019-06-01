@@ -66,7 +66,7 @@ class nsQueryFrame {
   enum FrameIID {
 #define FRAME_ID(classname, ...) classname##_id,
 #define ABSTRACT_FRAME_ID(classname) classname##_id,
-#include "mozilla/FrameIdList.h"
+#include "nsFrameIdList.h"
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
 
@@ -80,7 +80,7 @@ class nsQueryFrame {
   enum class ClassID : uint8_t {
 #define FRAME_ID(classname, ...) classname##_id,
 #define ABSTRACT_FRAME_ID(classname)
-#include "mozilla/FrameIdList.h"
+#include "nsFrameIdList.h"
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
   };
