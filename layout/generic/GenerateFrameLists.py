@@ -36,4 +36,4 @@ def generate_frame_type_list_h(output, *ignore):
     groups = grouped_frame_classes()
     output.write(HEADER)
     for group in groups:
-        output.write("FRAME_TYPE(%s)\n" % group[0].ty)
+        output.write("FRAME_TYPE(%s, %s, %s)\n" % (group[0].ty, group[0].cls, group[-1].cls))

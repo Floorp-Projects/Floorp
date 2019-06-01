@@ -169,7 +169,7 @@ class Selection;
 namespace mozilla {
 
 enum class LayoutFrameType : uint8_t {
-#define FRAME_TYPE(ty_) ty_,
+#define FRAME_TYPE(ty_, ...) ty_,
 #include "mozilla/FrameTypeList.h"
 #undef FRAME_TYPE
 };
@@ -2795,9 +2795,10 @@ class nsIFrame : public nsQueryFrame {
     return sLayoutFrameTypes[uint8_t(mClass)];
   }
 
-#define FRAME_TYPE(name_)                             \
-  bool Is##name_##Frame() const {                     \
-    return Type() == mozilla::LayoutFrameType::name_; \
+#define FRAME_TYPE(name_, first_class_, last_class_)                 \
+  bool Is##name_##Frame() const {                                    \
+    return uint8_t(mClass) >= uint8_t(ClassID::first_class_##_id) && \
+           uint8_t(mClass) <= uint8_t(ClassID::last_class_##_id);    \
   }
 #include "mozilla/FrameTypeList.h"
 #undef FRAME_TYPE
