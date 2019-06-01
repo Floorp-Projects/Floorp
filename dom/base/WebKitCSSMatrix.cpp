@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/WebKitCSSMatrixBinding.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsPresContext.h"
 #include "nsGlobalWindowInner.h"
 
@@ -18,8 +18,8 @@ namespace dom {
 static const double sRadPerDegree = 2.0 * M_PI / 360.0;
 
 bool WebKitCSSMatrix::FeatureEnabled(JSContext* aCx, JSObject* aObj) {
-  return Preferences::GetBool("layout.css.DOMMatrix.enabled", false) &&
-         Preferences::GetBool("layout.css.prefixes.webkit", false);
+  return StaticPrefs::layout_css_DOMMatrix_enabled() &&
+         StaticPrefs::layout_css_prefixes_webkit();
 }
 
 already_AddRefed<WebKitCSSMatrix> WebKitCSSMatrix::Constructor(

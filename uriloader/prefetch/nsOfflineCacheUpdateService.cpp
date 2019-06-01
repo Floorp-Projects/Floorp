@@ -37,6 +37,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -50,7 +51,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 static nsOfflineCacheUpdateService* gOfflineCacheUpdateService = nullptr;
-static bool sAllowOfflineCache = true;
 static bool sAllowInsecureOfflineCache = true;
 
 nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::mAllowedDomains =
@@ -239,8 +239,6 @@ NS_IMPL_ISUPPORTS(nsOfflineCacheUpdateService, nsIOfflineCacheUpdateService,
 nsOfflineCacheUpdateService::nsOfflineCacheUpdateService()
     : mDisabled(false), mUpdateRunning(false) {
   MOZ_ASSERT(NS_IsMainThread());
-  Preferences::AddBoolVarCache(&sAllowOfflineCache,
-                               "browser.cache.offline.enable", true);
   Preferences::AddBoolVarCache(&sAllowInsecureOfflineCache,
                                "browser.cache.offline.insecure.enable", true);
 }
@@ -531,7 +529,7 @@ static nsresult OfflineAppPermForPrincipal(nsIPrincipal* aPrincipal,
                                            bool pinned, bool* aAllowed) {
   *aAllowed = false;
 
-  if (!sAllowOfflineCache) {
+  if (!StaticPrefs::browser_cache_offline_enable()) {
     return NS_OK;
   }
 
@@ -623,7 +621,7 @@ NS_IMETHODIMP
 nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal* aPrincipal) {
   nsresult rv;
 
-  if (!sAllowOfflineCache) {
+  if (!StaticPrefs::browser_cache_offline_enable()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
