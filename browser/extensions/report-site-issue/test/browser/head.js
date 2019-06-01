@@ -10,8 +10,8 @@ const PREF_WC_REPORTER_ENDPOINT = "extensions.webcompat-reporter.newIssueEndpoin
 
 const TEST_ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
 const TEST_PAGE = TEST_ROOT + "test.html";
-const FASTCLICK_TEST_PAGE1 = TEST_ROOT + "fastclick1.html";
-const FASTCLICK_TEST_PAGE2 = TEST_ROOT + "fastclick2.html";
+const FRAMEWORKS_TEST_PAGE = TEST_ROOT + "frameworks.html";
+const FASTCLICK_TEST_PAGE = TEST_ROOT + "fastclick.html";
 const NEW_ISSUE_PAGE = TEST_ROOT + "webcompat.html";
 
 const WC_ADDON_ID = "webcompat-reporter@mozilla.org";
@@ -186,8 +186,10 @@ async function startIssueServer() {
     const postData = JSON.parse(getRequestData(request));
     const url = postData.url;
     const details = JSON.stringify(postData.details);
+    const label = JSON.stringify(postData.extra_labels);
     const output = landingTemplate.replace("$$URL$$", url)
-                                  .replace("$$DETAILS$$", details);
+                                  .replace("$$DETAILS$$", details)
+                                  .replace("$$LABEL$$", label);
     response.write(output);
   });
 
