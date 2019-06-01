@@ -149,7 +149,7 @@ void nsPresArena<ArenaSize>::AddSizeOfExcludingThis(
     aSizes.mArenaSizes.NS_ARENA_SIZES_FIELD(classname) += totalSize; \
     break;
 #define ABSTRACT_FRAME_ID(...)
-#include "mozilla/FrameIdList.h"
+#include "nsFrameIdList.h"
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
       case eArenaObjectID_nsLineBox:

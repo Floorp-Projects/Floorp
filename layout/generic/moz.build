@@ -96,6 +96,7 @@ EXPORTS += [
     'nsContainerFrame.h',
     'nsDirection.h',
     'nsFrame.h',
+    'nsFrameIdList.h',
     'nsFrameList.h',
     'nsFrameSelection.h',
     'nsFrameState.h',
@@ -132,13 +133,12 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    '!FrameIdList.h',
-    '!FrameTypeList.h',
     'AspectRatio.h',
     'AutoCopyListener.h',
     'ColumnUtils.h',
     'CSSAlignUtils.h',
     'CSSOrderAwareFrameIterator.h',
+    'FrameTypeList.h',
     'ReflowInput.h',
     'ReflowOutput.h',
     'ViewportFrame.h',
@@ -221,14 +221,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'nsPluginFrame.cpp',
 ]
-
-GENERATED_FILES += [
-    'FrameIdList.h',
-    'FrameTypeList.h',
-]
-
-GENERATED_FILES['FrameIdList.h'].script = 'GenerateFrameLists.py:generate_frame_id_list_h'
-GENERATED_FILES['FrameTypeList.h'].script = 'GenerateFrameLists.py:generate_frame_type_list_h'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
