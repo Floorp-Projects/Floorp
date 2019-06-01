@@ -32,7 +32,7 @@ namespace net {
 class TRR;
 enum ResolverMode {
   MODE_NATIVEONLY,  // 0 - TRR OFF (by default)
-  MODE_PARALLEL,    // 1 - race and use the first response
+  MODE_RESERVED1,   // 1 - Reserved value. Used to be parallel resolve.
   MODE_TRRFIRST,    // 2 - fallback to native on TRR failure
   MODE_TRRONLY,     // 3 - don't even fallback
   MODE_SHADOW,      // 4 - race for stats, but always use native result

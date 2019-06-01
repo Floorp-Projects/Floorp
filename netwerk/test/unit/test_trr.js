@@ -343,12 +343,16 @@ add_task(async function test18() {
   Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
 });
 
-// TRR-race and a CNAME loop
+// Test that MODE_RESERVED1 (previously MODE_PARALLEL) is treated as TRR off.
 add_task(async function test19() {
   dns.clearCache(true);
-  Services.prefs.setIntPref("network.trr.mode", 1); // Race them!
+  Services.prefs.setIntPref("network.trr.mode", 1); // MODE_RESERVED1. Interpreted as TRR off.
   Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=none&cnameloop=true`);
   await new DNSListener("test19.example.com", "127.0.0.1");
+
+  Services.prefs.setIntPref("network.trr.mode", 1); // MODE_RESERVED1. Interpreted as TRR off.
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`);
+  await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
 // TRR-first and a CNAME loop
