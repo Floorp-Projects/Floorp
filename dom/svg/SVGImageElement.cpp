@@ -264,26 +264,11 @@ bool SVGImageElement::GetGeometryBounds(
 }
 
 already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
-  // We get called in order to get bounds for this element, and for
-  // hit-testing against it. For that we just pretend to be a rectangle.
-
-  float x, y, width, height;
-  SVGGeometryProperty::ResolveAllAllowFallback<SVGT::X, SVGT::Y, SVGT::Width,
-                                               SVGT::Height>(this, &x, &y,
-                                                             &width, &height);
-
-  if (width <= 0 || height <= 0) {
-    return nullptr;
-  }
-
-  Rect r(x, y, width, height);
-  aBuilder->MoveTo(r.TopLeft());
-  aBuilder->LineTo(r.TopRight());
-  aBuilder->LineTo(r.BottomRight());
-  aBuilder->LineTo(r.BottomLeft());
-  aBuilder->Close();
-
-  return aBuilder->Finish();
+  // To get bound, the faster method GetGeometryBounds() should already return
+  // success. For render and hittest, nsSVGImageFrame should have its own
+  // implementation that doesn't need to build path for an image.
+  MOZ_CRASH("There is no reason to call BuildPath for SVGImageElement");
+  return nullptr;
 }
 
 //----------------------------------------------------------------------
