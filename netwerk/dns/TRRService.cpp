@@ -125,7 +125,7 @@ void TRRService::GetPrefBranch(nsIPrefBranch** result) {
 nsresult TRRService::ReadPrefs(const char* name) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   if (!name || !strcmp(name, TRR_PREF("mode"))) {
-    // 0 - off, 1 - reserved, 2 - TRR first, 3 - TRR only, 4 - shadow,
+    // 0 - off, 1 - reserved, 2 - TRR first, 3 - TRR only, 4 - reserved,
     // 5 - explicit off
     uint32_t tmp;
     if (NS_SUCCEEDED(Preferences::GetUint(TRR_PREF("mode"), &tmp))) {
@@ -133,6 +133,9 @@ nsresult TRRService::ReadPrefs(const char* name) {
         tmp = MODE_TRROFF;
       }
       if (tmp == MODE_RESERVED1) {
+        tmp = MODE_TRROFF;
+      }
+      if (tmp == MODE_RESERVED4) {
         tmp = MODE_TRROFF;
       }
       mMode = tmp;

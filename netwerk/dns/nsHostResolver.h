@@ -35,7 +35,7 @@ enum ResolverMode {
   MODE_RESERVED1,   // 1 - Reserved value. Used to be parallel resolve.
   MODE_TRRFIRST,    // 2 - fallback to native on TRR failure
   MODE_TRRONLY,     // 3 - don't even fallback
-  MODE_SHADOW,      // 4 - race for stats, but always use native result
+  MODE_RESERVED4,   // 4 - Reserved value. Used to be race TRR with native.
   MODE_TRROFF       // 5 - identical to MODE_NATIVEONLY but explicitly selected
 };
 }  // namespace net
