@@ -276,7 +276,7 @@ SurfaceFactory::~SurfaceFactory() {
   while (!mRecycleTotalPool.empty()) {
     RefPtr<layers::SharedSurfaceTextureClient> tex = *mRecycleTotalPool.begin();
     StopRecycling(tex);
-    tex->CancelWaitForRecycle();
+    tex->CancelWaitForNotifyNotUsed();
   }
 
   MOZ_RELEASE_ASSERT(mRecycleTotalPool.empty(),

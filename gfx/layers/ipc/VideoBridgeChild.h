@@ -55,7 +55,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   // ClientIPCAllocator
   base::ProcessId GetParentPid() const override { return OtherPid(); }
   MessageLoop* GetMessageLoop() const override { return mMessageLoop; }
-  void CancelWaitForRecycle(uint64_t aTextureId) override {
+  void CancelWaitForNotifyNotUsed(uint64_t aTextureId) override {
     MOZ_ASSERT(false, "NO RECYCLING HERE");
   }
 

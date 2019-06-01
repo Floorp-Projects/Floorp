@@ -125,7 +125,7 @@ void CompositorBridgeChild::AfterDestroy() {
 
 void CompositorBridgeChild::Destroy() {
   // This must not be called from the destructor!
-  mTexturesWaitingRecycled.clear();
+  mTexturesWaitingNotifyNotUsed.clear();
 
   // Destroying the layer manager may cause all sorts of things to happen, so
   // let's make sure there is still a reference to keep this alive whatever
@@ -834,23 +834,23 @@ void CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
   }
 
   aClient->SetLastFwdTransactionId(GetFwdTransactionId());
-  mTexturesWaitingRecycled.emplace(aClient->GetSerial(), aClient);
+  mTexturesWaitingNotifyNotUsed.emplace(aClient->GetSerial(), aClient);
 }
 
 void CompositorBridgeChild::NotifyNotUsed(uint64_t aTextureId,
                                           uint64_t aFwdTransactionId) {
-  auto it = mTexturesWaitingRecycled.find(aTextureId);
-  if (it != mTexturesWaitingRecycled.end()) {
+  auto it = mTexturesWaitingNotifyNotUsed.find(aTextureId);
+  if (it != mTexturesWaitingNotifyNotUsed.end()) {
     if (aFwdTransactionId < it->second->GetLastFwdTransactionId()) {
       // Released on host side, but client already requested newer use texture.
       return;
     }
-    mTexturesWaitingRecycled.erase(it);
+    mTexturesWaitingNotifyNotUsed.erase(it);
   }
 }
 
-void CompositorBridgeChild::CancelWaitForRecycle(uint64_t aTextureId) {
-  mTexturesWaitingRecycled.erase(aTextureId);
+void CompositorBridgeChild::CancelWaitForNotifyNotUsed(uint64_t aTextureId) {
+  mTexturesWaitingNotifyNotUsed.erase(aTextureId);
 }
 
 TextureClientPool* CompositorBridgeChild::GetTexturePool(

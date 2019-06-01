@@ -122,7 +122,7 @@ class ClientIPCAllocator : public ISurfaceAllocator {
 
   virtual MessageLoop* GetMessageLoop() const = 0;
 
-  virtual void CancelWaitForRecycle(uint64_t aTextureId) = 0;
+  virtual void CancelWaitForNotifyNotUsed(uint64_t aTextureId) = 0;
 };
 
 /// Methods that are specific to the host/parent side.

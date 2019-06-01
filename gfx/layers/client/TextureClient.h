@@ -596,7 +596,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   uint64_t GetSerial() const { return mSerial; }
   void GPUVideoDesc(SurfaceDescriptorGPUVideo* aOutDesc);
 
-  void CancelWaitForRecycle();
+  void CancelWaitForNotifyNotUsed();
 
   /**
    * Set last transaction id of CompositableForwarder.
