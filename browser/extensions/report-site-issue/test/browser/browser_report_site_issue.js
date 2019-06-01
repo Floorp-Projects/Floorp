@@ -79,6 +79,8 @@ add_task(async function test_opened_page() {
     ok(typeof details.channel == "string", "Details has a channel string.");
     ok(typeof details.hasTouchScreen == "boolean", "Details has a hasTouchScreen flag.");
     ok(typeof details.hasFastClick == "undefined", "Details does not have FastClick if not found.");
+    ok(typeof details.hasMobify == "undefined", "Details does not have Mobify if not found.");
+    ok(typeof details.hasMarfeel == "undefined", "Details does not have Marfeel if not found.");
     ok(typeof details["mixed active content blocked"] == "boolean", "Details has a mixed active content blocked flag.");
     ok(typeof details["mixed passive content blocked"] == "boolean", "Details has a mixed passive content blocked flag.");
     ok(typeof details["tracking content blocked"] == "string", "Details has a tracking content blocked string.");
@@ -98,8 +100,26 @@ add_task(async function test_opened_page() {
   BrowserTestUtils.removeTab(tab1);
 });
 
-add_task(async function test_fastclick_detection1() {
-  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, FASTCLICK_TEST_PAGE1);
+add_task(async function test_framework_detection() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, FRAMEWORKS_TEST_PAGE);
+  let tab2 = await clickToReportAndAwaitReportTabLoad();
+
+  await ContentTask.spawn(tab2.linkedBrowser, {}, async function(args) {
+    let doc = content.document;
+    let detailsParam = doc.getElementById("details").innerText;
+    const details = JSON.parse(detailsParam);
+    ok(typeof details == "object", "Details param is a stringified JSON object.");
+    is(details.hasFastClick, true, "FastClick was found.");
+    is(details.hasMobify, true, "Mobify was found.");
+    is(details.hasMarfeel, true, "Marfeel was found.");
+  });
+
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+});
+
+add_task(async function test_fastclick_detection() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, FASTCLICK_TEST_PAGE);
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
   await ContentTask.spawn(tab2.linkedBrowser, {}, async function(args) {
@@ -114,16 +134,18 @@ add_task(async function test_fastclick_detection1() {
   BrowserTestUtils.removeTab(tab1);
 });
 
-add_task(async function test_fastclick_detection2() {
-  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, FASTCLICK_TEST_PAGE2);
+add_task(async function test_framework_label() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, FRAMEWORKS_TEST_PAGE);
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
   await ContentTask.spawn(tab2.linkedBrowser, {}, async function(args) {
     let doc = content.document;
-    let detailsParam = doc.getElementById("details").innerText;
-    const details = JSON.parse(detailsParam);
-    ok(typeof details == "object", "Details param is a stringified JSON object.");
-    is(details.hasFastClick, true, "FastClick was found.");
+    let labelParam = doc.getElementById("label").innerText;
+    const label = JSON.parse(labelParam);
+    ok(typeof label == "object", "Label param is a stringified JSON object.");
+    is(label.includes("type-fastclick"), true, "FastClick was found.");
+    is(label.includes("type-mobify"), true, "Mobify was found.");
+    is(label.includes("type-marfeel"), true, "Marfeel was found.");
   });
 
   BrowserTestUtils.removeTab(tab2);
