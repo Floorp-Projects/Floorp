@@ -141,24 +141,24 @@ void ImageBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
     return;
   }
   aClient->SetLastFwdTransactionId(GetFwdTransactionId());
-  mTexturesWaitingRecycled.emplace(aClient->GetSerial(), aClient);
+  mTexturesWaitingNotifyNotUsed.emplace(aClient->GetSerial(), aClient);
 }
 
 void ImageBridgeChild::NotifyNotUsed(uint64_t aTextureId,
                                      uint64_t aFwdTransactionId) {
-  auto it = mTexturesWaitingRecycled.find(aTextureId);
-  if (it != mTexturesWaitingRecycled.end()) {
+  auto it = mTexturesWaitingNotifyNotUsed.find(aTextureId);
+  if (it != mTexturesWaitingNotifyNotUsed.end()) {
     if (aFwdTransactionId < it->second->GetLastFwdTransactionId()) {
       // Released on host side, but client already requested newer use texture.
       return;
     }
-    mTexturesWaitingRecycled.erase(it);
+    mTexturesWaitingNotifyNotUsed.erase(it);
   }
 }
 
-void ImageBridgeChild::CancelWaitForRecycle(uint64_t aTextureId) {
+void ImageBridgeChild::CancelWaitForNotifyNotUsed(uint64_t aTextureId) {
   MOZ_ASSERT(InImageBridgeChildThread());
-  mTexturesWaitingRecycled.erase(aTextureId);
+  mTexturesWaitingNotifyNotUsed.erase(aTextureId);
 }
 
 // Singleton
@@ -247,7 +247,7 @@ ImageBridgeChild::ImageBridgeChild(uint32_t aNamespace)
 ImageBridgeChild::~ImageBridgeChild() { delete mTxn; }
 
 void ImageBridgeChild::MarkShutDown() {
-  mTexturesWaitingRecycled.clear();
+  mTexturesWaitingNotifyNotUsed.clear();
 
   mCanSend = false;
 }

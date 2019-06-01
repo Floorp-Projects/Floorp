@@ -567,10 +567,9 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
 nsresult nsObjectLoadingContent::BindToTree(BindContext& aContext,
                                             nsINode& aParent) {
   nsImageLoadingContent::BindToTree(aContext, aParent);
-  // NOTE(emilio): Using aParent to avoid silly QI.
   // FIXME(emilio): Should probably use composed doc?
-  if (aParent.IsInUncomposedDoc()) {
-    aContext.OwnerDoc().AddPlugin(this);
+  if (Document* doc = aContext.GetUncomposedDoc()) {
+    doc->AddPlugin(this);
   }
   return NS_OK;
 }

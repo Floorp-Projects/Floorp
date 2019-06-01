@@ -17,6 +17,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/StaticPtr.h"
 
 #include "nsAutoPtr.h"
@@ -40,10 +41,6 @@ namespace dom {
 
 namespace {
 
-const char* kGamepadEnabledPref = "dom.gamepad.enabled";
-const char* kGamepadEventsEnabledPref =
-    "dom.gamepad.non_standard_events.enabled";
-
 const nsTArray<RefPtr<nsGlobalWindowInner>>::index_type NoIndex =
     nsTArray<RefPtr<nsGlobalWindowInner>>::NoIndex;
 
@@ -65,7 +62,7 @@ GamepadManager::GamepadManager()
 nsresult GamepadManager::Init() {
   mEnabled = IsAPIEnabled();
   mNonstandardEventsEnabled =
-      Preferences::GetBool(kGamepadEventsEnabledPref, false);
+      StaticPrefs::dom_gamepad_non_standard_events_enabled();
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
 
@@ -417,7 +414,7 @@ already_AddRefed<GamepadManager> GamepadManager::GetService() {
 
 // static
 bool GamepadManager::IsAPIEnabled() {
-  return Preferences::GetBool(kGamepadEnabledPref, false);
+  return StaticPrefs::dom_gamepad_enabled();
 }
 
 bool GamepadManager::MaybeWindowHasSeenGamepad(nsGlobalWindowInner* aWindow,

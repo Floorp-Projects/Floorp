@@ -481,6 +481,8 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
   UpdateEditableState(false);
 
   MOZ_ASSERT(OwnerDoc() == aParent.OwnerDoc(), "Bound to wrong document");
+  MOZ_ASSERT(IsInComposedDoc() == aContext.InComposedDoc());
+  MOZ_ASSERT(IsInUncomposedDoc() == aContext.InUncomposedDoc());
   MOZ_ASSERT(&aParent == GetParentNode(), "Bound to wrong parent node");
   MOZ_ASSERT(aContext.GetBindingParent() == GetBindingParent(),
              "Bound to wrong binding parent");

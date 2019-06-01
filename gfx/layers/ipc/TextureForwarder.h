@@ -52,7 +52,7 @@ class LayersIPCChannel : public LayersIPCActor,
     return nullptr;
   }
 
-  virtual void CancelWaitForRecycle(uint64_t aTextureId) = 0;
+  virtual void CancelWaitForNotifyNotUsed(uint64_t aTextureId) = 0;
 
   virtual wr::MaybeExternalImageId GetNextExternalImageId() {
     return Nothing();

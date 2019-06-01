@@ -82,7 +82,7 @@ class CrashReporterHost {
   void AddAnnotation(CrashReporter::Annotation aKey, bool aValue);
   void AddAnnotation(CrashReporter::Annotation aKey, int aValue);
   void AddAnnotation(CrashReporter::Annotation aKey, unsigned int aValue);
-  void AddAnnotation(CrashReporter::Annotation aKey, const nsCString& aValue);
+  void AddAnnotation(CrashReporter::Annotation aKey, const nsACString& aValue);
 
   bool HasMinidump() const { return !mDumpID.IsEmpty(); }
   const nsString& MinidumpID() const {

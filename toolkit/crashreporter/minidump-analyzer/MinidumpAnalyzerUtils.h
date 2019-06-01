@@ -99,11 +99,6 @@ static inline std::wstring UTF8ToWide(const std::string& aUtf8Str,
   return MBCPToWide(aUtf8Str, CP_UTF8, aSuccess);
 }
 
-static inline std::wstring MBCSToWide(const std::string& aMbStr,
-                                      bool* aSuccess = nullptr) {
-  return MBCPToWide(aMbStr, CP_ACP, aSuccess);
-}
-
 static inline std::string WideToMBCS(const std::wstring& aWide,
                                      bool* aSuccess = nullptr) {
   return WideToMBCP(aWide, CP_ACP, aSuccess);
@@ -111,10 +106,6 @@ static inline std::string WideToMBCS(const std::wstring& aWide,
 
 static inline std::string UTF8ToMBCS(const std::string& aUtf8) {
   return WideToMBCS(UTF8ToWide(aUtf8));
-}
-
-static inline std::string MBCSToUTF8(const std::string& aMbcs) {
-  return WideToUTF8(MBCSToWide(aMbcs));
 }
 
 #endif  // XP_WIN

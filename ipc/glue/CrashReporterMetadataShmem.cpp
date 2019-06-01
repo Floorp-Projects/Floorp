@@ -29,12 +29,12 @@ CrashReporterMetadataShmem::~CrashReporterMetadataShmem() {
 }
 
 void CrashReporterMetadataShmem::AnnotateCrashReport(Annotation aKey,
-                                                     const nsCString& aData) {
+                                                     const nsACString& aData) {
   mAnnotations[aKey] = aData;
   SyncNotesToShmem();
 }
 
-void CrashReporterMetadataShmem::AppendAppNotes(const nsCString& aData) {
+void CrashReporterMetadataShmem::AppendAppNotes(const nsACString& aData) {
   mAppNotes.Append(aData);
   mAnnotations[Annotation::Notes] = mAppNotes;
   SyncNotesToShmem();

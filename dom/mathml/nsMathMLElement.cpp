@@ -82,13 +82,13 @@ nsresult nsMathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   // FIXME(emilio): Probably should be composed, this uses all the other link
   // infrastructure.
-  if (IsInUncomposedDoc()) {
-    aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
+  if (Document* doc = aContext.GetUncomposedDoc()) {
+    doc->RegisterPendingLinkUpdate(this);
   }
 
   // Set the bit in the document for telemetry.
-  if (IsInComposedDoc()) {
-    aContext.OwnerDoc().SetMathMLEnabled();
+  if (Document* doc = aContext.GetComposedDoc()) {
+    doc->SetMathMLEnabled();
   }
 
   return rv;

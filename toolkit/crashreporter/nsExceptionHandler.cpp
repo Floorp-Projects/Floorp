@@ -230,8 +230,6 @@ static const char* androidStartServiceCommand = nullptr;
 static Mutex* crashReporterAPILock;
 static Mutex* notesFieldLock;
 static AnnotationTable crashReporterAPIData_Table;
-static nsCString* crashReporterAPIData = nullptr;
-static nsCString* crashEventAPIData = nullptr;
 static nsCString* notesField = nullptr;
 static bool isGarbageCollecting;
 static uint32_t eventloopNestingLevel = 0;
@@ -635,13 +633,7 @@ static void WriteLiteral(PlatformWriter& pw, const char (&str)[N]) {
 }
 
 static void WriteString(PlatformWriter& pw, const char* str) {
-#ifdef XP_LINUX
-  size_t len = my_strlen(str);
-#else
-  size_t len = strlen(str);
-#endif
-
-  pw.WriteBuffer(str, len);
+  pw.WriteBuffer(str, my_strlen(str));
 }
 
 static void WriteAnnotation(PlatformWriter& pw, const Annotation name,
@@ -830,22 +822,18 @@ static bool LaunchCrashHandlerService(XP_CHAR* aProgramPath,
 #endif
 
 static void WriteEscapedMozCrashReason(PlatformWriter& aWriter) {
-  const char* reason;
-  size_t len;
-
-  if (gMozCrashReason != nullptr) {
-    reason = gMozCrashReason;
-    len = strlen(reason);
-  } else {
+  if (gMozCrashReason == nullptr) {
     return;  // No crash reason, bail out
   }
+
+  const char* reason = gMozCrashReason;
+  size_t len = my_strlen(gMozCrashReason);
 
   WriteString(aWriter, AnnotationToString(Annotation::MozCrashReason));
   WriteLiteral(aWriter, "=");
 
-  // The crash reason might be non-null-terminated in the case of a rust panic,
-  // it has also not being escaped so escape it one character at a time and
-  // write out the resulting string.
+  // The crash reason might not be escaped so escape it one character at a time
+  // and write out the resulting string.
   for (size_t i = 0; i < len; i++) {
     if (reason[i] == '\\') {
       WriteLiteral(aWriter, "\\\\");
@@ -861,7 +849,12 @@ static void WriteEscapedMozCrashReason(PlatformWriter& aWriter) {
 
 static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
                                                 time_t crashTime) {
-  pw.WriteBuffer(crashEventAPIData->get(), crashEventAPIData->Length());
+  for (auto key : MakeEnumeratedRange(Annotation::Count)) {
+    const nsCString& value = crashReporterAPIData_Table[key];
+    if (!value.IsEmpty()) {
+      WriteAnnotation(pw, key, value.get());
+    }
+  }
 
   if (currentSessionId) {
     WriteAnnotation(pw, Annotation::TelemetrySessionId, currentSessionId);
@@ -1211,9 +1204,6 @@ static void PrepareChildExceptionTimeAnnotations(void* context) {
   char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {
     XP_STOA(gOOMAllocationSize, oomAllocationSizeBuffer, 10);
-  }
-
-  if (oomAllocationSizeBuffer[0]) {
     WriteAnnotation(apiData, Annotation::OOMAllocationSize,
                     oomAllocationSizeBuffer);
   }
@@ -1341,18 +1331,13 @@ static bool ShouldReport() {
 
 static bool Filter(void* context) {
   mozilla::IOInterposer::Disable();
-#  if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
-  DllBlocklist_Shutdown();
-#  endif
   return true;
 }
 
 static bool ChildFilter(void* context) {
-  bool result = Filter(context);
-  if (result) {
-    PrepareChildExceptionTimeAnnotations(context);
-  }
-  return result;
+  mozilla::IOInterposer::Disable();
+  PrepareChildExceptionTimeAnnotations(context);
+  return true;
 }
 
 #endif  // !defined(XP_WIN)
@@ -1401,10 +1386,6 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
   // this environment variable prevents us from launching
   // the crash reporter client
   doReport = ShouldReport();
-
-  // allocate our strings
-  crashReporterAPIData = new nsCString();
-  crashEventAPIData = new nsCString();
 
   NS_ASSERTION(!crashReporterAPILock, "Shouldn't have a lock yet");
   crashReporterAPILock = new Mutex("crashReporterAPILock");
@@ -1850,12 +1831,6 @@ nsresult UnsetExceptionHandler() {
   delete notesFieldLock;
   notesFieldLock = nullptr;
 
-  delete crashReporterAPIData;
-  crashReporterAPIData = nullptr;
-
-  delete crashEventAPIData;
-  crashEventAPIData = nullptr;
-
   delete notesField;
   notesField = nullptr;
 
@@ -2024,22 +1999,6 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data) {
   MutexAutoLock lock(*crashReporterAPILock);
 
   crashReporterAPIData_Table[key] = escapedData;
-
-  // now rebuild the file contents
-  crashReporterAPIData->Truncate(0);
-  crashEventAPIData->Truncate(0);
-  for (auto key : MakeEnumeratedRange(Annotation::Count)) {
-    nsDependentCString str(AnnotationToString(key));
-    const nsCString& entry = crashReporterAPIData_Table[key];
-    if (!entry.IsEmpty()) {
-      NS_NAMED_LITERAL_CSTRING(kEquals, "=");
-      NS_NAMED_LITERAL_CSTRING(kNewline, "\n");
-      nsAutoCString line = str + kEquals + entry + kNewline;
-
-      crashReporterAPIData->Append(line);
-      crashEventAPIData->Append(line);
-    }
-  }
 
   return NS_OK;
 }
