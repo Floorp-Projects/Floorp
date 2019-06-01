@@ -36,6 +36,8 @@ class MozTabbrowserTab extends MozElements.MozTab {
     this.mOverCloseButton = false;
 
     this.mCorrespondingMenuitem = null;
+
+    this.closing = false;
   }
 
   static get inheritedAttributes() {
@@ -417,12 +419,6 @@ class MozTabbrowserTab extends MozElements.MozTab {
     }
   }
 
-  /**
-   * While it would make sense to track this in a field, the field will get nuked
-   * once the node is gone from the DOM, which causes us to think the tab is not
-   * closed, which causes us to make wrong decisions. So we use an expando instead.
-   * <field name="closing">false</field>
-   */
   _mouseenter() {
     if (this.hidden || this.closing) {
       return;
