@@ -85,16 +85,10 @@ host_fetches = {
             # An extension to `fetch` syntax.
             'path': 'ffmpeg-4.0.3-64bit-static',
         },
-        # TODO: install a static ImageMagick.  These binaries are not
-        # statically linked, so they will (mostly) fail at runtime due to
-        # missing dependencies.  For now we require folks to install
-        # ImageMagick globally with their package manager of choice.
-        'ImageMagick': {
-            'type': 'static-url',
-            'url': 'https://imagemagick.org/download/binaries/ImageMagick-x86_64-pc-linux-gnu.tar.gz',  # noqa
-            # An extension to `fetch` syntax.
-            'path': 'ImageMagick-6.9.2',
-        },
+        # TODO: install a static ImageMagick.  All easily available binaries are
+        # not statically linked, so they will (mostly) fail at runtime due to
+        # missing dependencies.  For now we require folks to install ImageMagick
+        # globally with their package manager of choice.
     },
     'win64': {
         'ffmpeg': {
@@ -136,6 +130,23 @@ class MachBrowsertime(MachCommandBase):
         from mozbuild.artifact_cache import ArtifactCache
         sys.path.append(mozpath.join(self.topsrcdir, 'tools', 'lint', 'eslint'))
         import setup_helper
+
+        if host_platform().startswith('linux'):
+            # On Linux ImageMagick needs to be installed manually, and `mach bootstrap` doesn't
+            # do that (yet).  Provide some guidance.
+            import which
+            im_programs = ('compare', 'convert', 'mogrify')
+            try:
+                for im_program in im_programs:
+                    which.which(im_program)
+            except which.WhichError as e:
+                print('Error: {} On Linux, ImageMagick must be on the PATH. '
+                      'Install ImageMagick manually and try again (or update PATH). '
+                      'On Ubuntu and Debian, try `sudo apt-get install imagemagick`. '
+                      'On Fedora, try `sudo dnf install imagemagick`. '
+                      'On CentOS, try `sudo yum install imagemagick`.'
+                      .format(e))
+                return 1
 
         # Download the visualmetrics.py requirements.
         artifact_cache = ArtifactCache(self.artifact_cache_path,
@@ -238,14 +249,17 @@ class MachBrowsertime(MachCommandBase):
             self.state_path,
             fetches['ffmpeg']['path'])
 
-        path_to_imagemagick = mozpath.join(
-            self.state_path,
-            fetches['ImageMagick']['path'])
+        path_to_imagemagick = None
+        if 'ImageMagick' in fetches:
+            path_to_imagemagick = mozpath.join(
+                self.state_path,
+                fetches['ImageMagick']['path'])
 
-        path = [
-            path_to_ffmpeg if host_platform().startswith('linux') else mozpath.join(path_to_ffmpeg, 'bin'),  # noqa
-            self.state_path if host_platform().startswith('win') else mozpath.join(path_to_imagemagick, 'bin'),  # noqa
-        ] + path
+        if path_to_imagemagick:
+            # ImageMagick ships ffmpeg (on Windows, at least) so we
+            # want to ensure that our ffmpeg goes first, just in case.
+            path.insert(0, self.state_path if host_platform().startswith('win') else mozpath.join(path_to_imagemagick, 'bin'))  # noqa
+        path.insert(0, path_to_ffmpeg if host_platform().startswith('linux') else mozpath.join(path_to_ffmpeg, 'bin'))  # noqa
 
         # Ensure that bare `node` and `npm` in scripts, including post-install
         # scripts, finds the binary we're invoking with.  Without this, it's
@@ -258,13 +272,19 @@ class MachBrowsertime(MachCommandBase):
         # virtualenv Python.
         path = [os.path.dirname(self.virtualenv_manager.python_path)] + path
 
-        return {
-            # See https://imagemagick.org/script/download.php.  Harmless on other platforms.
-            'LD_LIBRARY_PATH': mozpath.join(path_to_imagemagick, 'lib'),
-            'DYLD_LIBRARY_PATH': mozpath.join(path_to_imagemagick, 'lib'),
-            'MAGICK_HOME': path_to_imagemagick,
+        append_env = {
             'PATH': os.pathsep.join(path),
         }
+
+        if path_to_imagemagick:
+            append_env.update({
+                # See https://imagemagick.org/script/download.php.  Harmless on other platforms.
+                'LD_LIBRARY_PATH': mozpath.join(path_to_imagemagick, 'lib'),
+                'DYLD_LIBRARY_PATH': mozpath.join(path_to_imagemagick, 'lib'),
+                'MAGICK_HOME': path_to_imagemagick,
+            })
+
+        return append_env
 
     def _activate_virtualenv(self, *args, **kwargs):
         MachCommandBase._activate_virtualenv(self, *args, **kwargs)
