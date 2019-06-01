@@ -14,7 +14,11 @@ import {
   getColumnBreakpoints,
   getFirstBreakpointPosition,
 } from "../visibleColumnBreakpoints";
-import { makeMockSource, makeMockBreakpoint } from "../../utils/test-mockup";
+import {
+  makeMockSource,
+  makeMockSourceWithContent,
+  makeMockBreakpoint,
+} from "../../utils/test-mockup";
 
 function pp(line, column) {
   return {
@@ -31,6 +35,17 @@ function bp(line, column) {
   return makeMockBreakpoint(defaultSource(), line, column);
 }
 
+const source = makeMockSourceWithContent(
+  undefined,
+  "foo.js",
+  undefined,
+  `function foo() {
+  console.log("hello");
+}
+console.log('bye');
+`
+);
+
 describe("visible column breakpoints", () => {
   it("simple", () => {
     const viewport = {
@@ -40,7 +55,12 @@ describe("visible column breakpoints", () => {
     const pausePoints = { [1]: [pp(1, 1), pp(1, 5)], [3]: [pp(3, 1)] };
     const breakpoints = [bp(1, 1), bp(4, 0), bp(4, 3)];
 
-    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
+    const columnBps = getColumnBreakpoints(
+      pausePoints,
+      breakpoints,
+      viewport,
+      source
+    );
     expect(columnBps).toMatchSnapshot();
   });
 
@@ -51,7 +71,12 @@ describe("visible column breakpoints", () => {
     };
     const pausePoints = { [1]: [pp(1, 1), pp(1, 3)], [2]: [pp(2, 1)] };
     const breakpoints = [bp(1, 1)];
-    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
+    const columnBps = getColumnBreakpoints(
+      pausePoints,
+      breakpoints,
+      viewport,
+      source
+    );
     expect(columnBps).toMatchSnapshot();
   });
 
@@ -63,7 +88,29 @@ describe("visible column breakpoints", () => {
     const pausePoints = { [1]: [pp(1, 1), pp(1, 3)], [20]: [pp(20, 1)] };
     const breakpoints = [bp(1, 1)];
 
-    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
+    const columnBps = getColumnBreakpoints(
+      pausePoints,
+      breakpoints,
+      viewport,
+      source
+    );
+    expect(columnBps).toMatchSnapshot();
+  });
+
+  it("doesnt show breakpoints to the right", () => {
+    const viewport = {
+      start: { line: 1, column: 0 },
+      end: { line: 10, column: 10 },
+    };
+    const pausePoints = { [1]: [pp(1, 1), pp(1, 15)], [20]: [pp(20, 1)] };
+    const breakpoints = [bp(1, 1), bp(1, 15)];
+
+    const columnBps = getColumnBreakpoints(
+      pausePoints,
+      breakpoints,
+      viewport,
+      source
+    );
     expect(columnBps).toMatchSnapshot();
   });
 });
@@ -75,16 +122,16 @@ describe("getFirstBreakpointPosition", () => {
 
     await dispatch(actions.newGeneratedSource(makeSource("foo1")));
 
-    const source = selectors.getSourceFromId(getState(), "foo1");
+    const fooSource = selectors.getSourceFromId(getState(), "foo1");
     dispatch({
       type: "ADD_BREAKPOINT_POSITIONS",
       positions: [pp(1, 5), pp(1, 3)],
-      source,
+      source: fooSource,
     });
 
     const position = getFirstBreakpointPosition(getState(), {
       line: 1,
-      sourceId: source.id,
+      sourceId: fooSource.id,
     });
 
     if (!position) {

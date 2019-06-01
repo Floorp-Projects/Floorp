@@ -35,6 +35,7 @@ class nsPluginInstanceOwner;
 
 namespace mozilla {
 namespace dom {
+struct BindContext;
 template <typename T>
 class Sequence;
 struct MozPluginParameter;
@@ -316,8 +317,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
 
   void DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner);
 
-  nsresult BindToTree(mozilla::dom::Document* aDocument, nsIContent* aParent,
-                      nsIContent* aBindingParent);
+  nsresult BindToTree(mozilla::dom::BindContext&, nsINode& aParent);
   void UnbindFromTree(bool aNullParent = true);
 
   /**

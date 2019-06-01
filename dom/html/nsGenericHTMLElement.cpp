@@ -25,6 +25,7 @@
 #include "nsQueryObject.h"
 #include "nsIContentInlines.h"
 #include "nsIContentViewer.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMWindow.h"
@@ -417,27 +418,22 @@ EventStates nsGenericHTMLElement::IntrinsicState() const {
   return state;
 }
 
-nsresult nsGenericHTMLElement::BindToTree(Document* aDocument,
-                                          nsIContent* aParent,
-                                          nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElementBase::BindToTree(aDocument, aParent, aBindingParent);
+nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
+                                          nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument) {
+  if (IsInUncomposedDoc()) {
     RegAccessKey();
     if (HasName() && CanHaveName(NodeInfo()->NameAtom())) {
-      aDocument->AddToNameTable(this,
-                                GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
+      aContext.OwnerDoc().AddToNameTable(
+          this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
     }
   }
 
   if (HasFlag(NODE_IS_EDITABLE) && GetContentEditableValue() == eTrue &&
       IsInComposedDoc()) {
-    Document* doc = GetComposedDoc();
-    if (doc) {
-      doc->ChangeContentEditableCount(this, +1);
-    }
+    aContext.OwnerDoc().ChangeContentEditableCount(this, +1);
   }
 
   // We need to consider a labels element is moved to another subtree
@@ -1593,11 +1589,9 @@ nsIContent::IMEState nsGenericHTMLFormElement::GetDesiredIMEState() {
   return state;
 }
 
-nsresult nsGenericHTMLFormElement::BindToTree(Document* aDocument,
-                                              nsIContent* aParent,
-                                              nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
+                                              nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // An autofocus event has to be launched if the autofocus attribute is
@@ -1605,8 +1599,8 @@ nsresult nsGenericHTMLFormElement::BindToTree(Document* aDocument,
   // the document should not be already loaded and the "browser.autofocus"
   // preference should be 'true'.
   if (IsAutofocusable() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
-      StaticPrefs::browser_autofocus() && aDocument) {
-    aDocument->SetAutoFocusElement(this);
+      StaticPrefs::browser_autofocus() && IsInUncomposedDoc()) {
+    aContext.OwnerDoc().SetAutoFocusElement(this);
   }
 
   // If @form is set, the element *has* to be in a composed document, otherwise
@@ -1616,7 +1610,7 @@ nsresult nsGenericHTMLFormElement::BindToTree(Document* aDocument,
   // We should not call UpdateFormOwner if none of these conditions are
   // fulfilled.
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ? IsInComposedDoc()
-                                                  : !!aParent) {
+                                                  : aParent.IsContent()) {
     UpdateFormOwner(true, nullptr);
   }
 

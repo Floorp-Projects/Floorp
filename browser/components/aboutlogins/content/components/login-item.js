@@ -219,6 +219,7 @@ class LoginItem extends ReflectedFluentElement {
       return;
     }
 
+    this.toggleEditing(false);
     this._login = login;
     this.render();
   }
@@ -227,6 +228,8 @@ class LoginItem extends ReflectedFluentElement {
     if (login.guid != this._login.guid) {
       return;
     }
+
+    this.toggleEditing(false);
     this._login = {};
     this.render();
   }

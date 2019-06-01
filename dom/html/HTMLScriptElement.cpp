@@ -47,13 +47,12 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLScriptElement, nsGenericHTMLElement,
                             nsIScriptLoaderObserver, nsIScriptElement,
                             nsIMutationObserver)
 
-nsresult HTMLScriptElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                       nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLScriptElement::BindToTree(BindContext& aContext,
+                                       nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (GetComposedDoc()) {
+  if (IsInComposedDoc()) {
     MaybeProcessScript();
   }
 

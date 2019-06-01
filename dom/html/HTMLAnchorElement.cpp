@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLAnchorElement.h"
 
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
@@ -93,18 +94,16 @@ bool HTMLAnchorElement::HasDeferredDNSPrefetchRequest() {
   return HasFlag(HTML_ANCHOR_DNS_PREFETCH_DEFERRED);
 }
 
-nsresult HTMLAnchorElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                       nsIContent* aBindingParent) {
+nsresult HTMLAnchorElement::BindToTree(BindContext& aContext,
+                                       nsINode& aParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Prefetch links
-  Document* doc = GetComposedDoc();
-  if (doc) {
-    doc->RegisterPendingLinkUpdate(this);
+  if (IsInComposedDoc()) {
+    aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
     TryDNSPrefetch();
   }
 

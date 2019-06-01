@@ -118,6 +118,7 @@ def use_profile_data(config, jobs):
         dependencies = 'generate-profile-{}'.format(name)
         job.setdefault('dependencies', {})['generate-profile'] = dependencies
         job.setdefault('fetches', {})['generate-profile'] = ['profdata.tar.xz']
+        job['worker']['env'].update({"MOZ_PGO_PROFILE_USE": "1"})
         yield job
 
 

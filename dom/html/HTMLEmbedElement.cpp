@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventStates.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -73,24 +74,24 @@ void HTMLEmbedElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
   nsImageLoadingContent::AsyncEventRunning(aEvent);
 }
 
-nsresult HTMLEmbedElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLEmbedElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsObjectLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
+  rv = nsObjectLoadingContent::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Don't kick off load from being bound to a plugin document - the plugin
-  // document will call nsObjectLoadingContent::InitializeFromChannel() for the
-  // initial load.
-  nsCOMPtr<nsIPluginDocument> pluginDoc = do_QueryInterface(aDocument);
-
-  if (!pluginDoc) {
-    void (HTMLEmbedElement::*start)() = &HTMLEmbedElement::StartObjectLoad;
-    nsContentUtils::AddScriptRunner(
-        NewRunnableMethod("dom::HTMLEmbedElement::BindToTree", this, start));
+  if (IsInComposedDoc()) {
+    // Don't kick off load from being bound to a plugin document - the plugin
+    // document will call nsObjectLoadingContent::InitializeFromChannel() for the
+    // initial load.
+    nsCOMPtr<nsIPluginDocument> pluginDoc =
+        do_QueryInterface(&aContext.OwnerDoc());
+    if (!pluginDoc) {
+      void (HTMLEmbedElement::*start)() = &HTMLEmbedElement::StartObjectLoad;
+      nsContentUtils::AddScriptRunner(
+          NewRunnableMethod("dom::HTMLEmbedElement::BindToTree", this, start));
+    }
   }
 
   return NS_OK;

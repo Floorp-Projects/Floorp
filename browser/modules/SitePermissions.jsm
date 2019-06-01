@@ -185,7 +185,7 @@ const GloballyBlockedPermissions = {
           browser.removeProgressListener(this);
         }
       },
-    });
+    }, Ci.nsIWebProgress.NOTIFY_LOCATION);
   },
 
   // Removes a permission with the specified id for the specified browser.

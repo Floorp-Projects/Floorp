@@ -542,16 +542,6 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
     if (pn) {
-      if (sc->isEvalContext() && sc->hasDebuggerStatement() &&
-          !cx->helperThread()) {
-        // If the eval'ed script contains any debugger statement, force
-        // construction of arguments objects for the caller script and any other
-        // scripts it is transitively nested inside. The debugger can access any
-        // variable on the scope chain.
-        if (!info.deoptimizeArgumentsInEnclosingScripts(cx, environment)) {
-          return nullptr;
-        }
-      }
       if (!emitter->emitScript(pn)) {
         return nullptr;
       }

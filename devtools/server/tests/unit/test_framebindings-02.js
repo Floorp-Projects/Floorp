@@ -64,6 +64,7 @@ function test_pause_frame() {
       var a = 1;
       var b = true;
       var c = { a: "a" };
+      eval("");
       debugger;
     }
     stopMe(42, true, "nasu", null, undefined, { foo: "bar" });

@@ -30,7 +30,7 @@ dbg.onDebuggerStatement = function (frame) {
 
 g.eval("var g;" +
        "{ let y = 1; " +
-       "  g = function () { debugger; };" +
+       "  g = function () { eval(''); debugger; };" +
        "  { let z = 2; " +
        "    g();" +
        "  }"+
@@ -47,7 +47,7 @@ dbg.onDebuggerStatement = function (frame) {
 };
 
 g.eval("var g;" +
-       "function h() { debugger };" +
+       "function h() { eval(''); debugger; };" +
        "for (var x of [true, false]) {" +
        "  { let y = x; " +
        "    { let z = x; " +

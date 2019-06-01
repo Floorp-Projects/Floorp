@@ -16,6 +16,7 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocShell.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -563,15 +564,14 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
   return docShell.forget();
 }
 
-nsresult nsObjectLoadingContent::BindToTree(Document* aDocument,
-                                            nsIContent* aParent,
-                                            nsIContent* aBindingParent) {
-  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
-
-  if (aDocument) {
-    aDocument->AddPlugin(this);
+nsresult nsObjectLoadingContent::BindToTree(BindContext& aContext,
+                                            nsINode& aParent) {
+  nsImageLoadingContent::BindToTree(aContext, aParent);
+  // NOTE(emilio): Using aParent to avoid silly QI.
+  // FIXME(emilio): Should probably use composed doc?
+  if (aParent.IsInUncomposedDoc()) {
+    aContext.OwnerDoc().AddPlugin(this);
   }
-
   return NS_OK;
 }
 

@@ -43,11 +43,16 @@ class FullParseHandler {
 
   /*
    * If this is a full parse to construct the bytecode for a function that
-   * was previously lazily parsed, that lazy function and the current index
-   * into its inner functions. We do not want to reparse the inner functions.
+   * was previously lazily parsed, we still don't want to full parse the
+   * inner functions. These members are used for this functionality:
+   *
+   * - lazyOuterFunction_ holds the lazyScript for this current parse
+   * - lazyInnerFunctionIndex is used as we skip over inner functions
+   *   (see skipLazyInnerFunction),
    */
   const Rooted<LazyScript*> lazyOuterFunction_;
   size_t lazyInnerFunctionIndex;
+
   size_t lazyClosedOverBindingIndex;
 
   const SourceKind sourceKind_;

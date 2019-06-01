@@ -12,6 +12,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLLinkElementBinding.h"
 #include "nsContentUtils.h"
@@ -116,17 +117,15 @@ bool HTMLLinkElement::HasDeferredDNSPrefetchRequest() {
   return HasFlag(HTML_LINK_DNS_PREFETCH_DEFERRED);
 }
 
-nsresult HTMLLinkElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                     nsIContent* aBindingParent) {
+nsresult HTMLLinkElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (Document* doc = GetComposedDoc()) {
-    if (!doc->NodePrincipal()->IsSystemPrincipal()) {
-      doc->RegisterPendingLinkUpdate(this);
+  if (IsInComposedDoc()) {
+    if (!aContext.OwnerDoc().NodePrincipal()->IsSystemPrincipal()) {
+      aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
     }
     TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender();
   }
@@ -136,12 +135,15 @@ nsresult HTMLLinkElement::BindToTree(Document* aDocument, nsIContent* aParent,
   nsContentUtils::AddScriptRunner(
       NewRunnableMethod("dom::HTMLLinkElement::BindToTree", this, update));
 
-  if (aDocument && AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel,
-                               nsGkAtoms::localization, eIgnoreCase)) {
-    aDocument->LocalizationLinkAdded(this);
+  // FIXME(emilio, bug 1555947): Why does this use the uncomposed doc but the
+  // attribute change code the composed doc?
+  if (IsInUncomposedDoc() &&
+      AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
+                  eIgnoreCase)) {
+    aContext.OwnerDoc().LocalizationLinkAdded(this);
   }
 
-  CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
+  LinkAdded();
 
   return rv;
 }

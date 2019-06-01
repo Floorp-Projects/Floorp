@@ -50,8 +50,7 @@ class SVGScriptElement final : public SVGScriptElementBase,
   virtual bool HasScriptContent() override;
 
   // nsIContent specializations:
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,

@@ -43,8 +43,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement, public Link {
   // DOM memory reporter participant
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                int32_t* aTabIndex) override;

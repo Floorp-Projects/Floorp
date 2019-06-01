@@ -37,6 +37,16 @@ const TEST_LOGIN_1 = {
   timeLastUsed: "4000",
 };
 
+const TEST_LOGIN_2 = {
+  guid: "987654321",
+  hostname: "https://example.com",
+  username: "user2",
+  password: "pass2",
+  timeCreated: "2000",
+  timePasswordChanged: "4000",
+  timeLastUsed: "8000",
+};
+
 add_task(async function setup() {
   stubFluentL10n({
     "time-created": "timeCreated",
@@ -128,6 +138,19 @@ add_task(async function test_edit_login_cancel() {
     ok(!gLoginItem.hasAttribute("editing"), "loginItem should not be in 'edit' mode");
     ok(!gLoginItem.hasAttribute("isNewLogin"), "loginItem should not be in 'isNewLogin' mode");
   }
+});
+
+add_task(async function test_reveal_password_change_selected_login() {
+  gLoginItem.setLogin(TEST_LOGIN_1);
+  let passwordInput = gLoginItem.shadowRoot.querySelector('modal-input[name="password"]');
+  let revealCheckbox = passwordInput.shadowRoot.querySelector(".reveal-checkbox");
+
+  ok(!revealCheckbox.checked, "reveal-checkbox should not be checked by default");
+  revealCheckbox.click();
+  ok(revealCheckbox.checked, "reveal-checkbox should be checked after clicking");
+
+  gLoginItem.setLogin(TEST_LOGIN_2);
+  ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked when changing logins");
 });
 
 add_task(async function test_set_login_empty() {

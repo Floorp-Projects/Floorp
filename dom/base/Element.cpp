@@ -17,6 +17,7 @@
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Attr.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Flex.h"
 #include "mozilla/dom/Grid.h"
 #include "mozilla/dom/ScriptLoader.h"
@@ -1575,126 +1576,97 @@ void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {
   }
 }
 
-nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
-                             nsIContent* aBindingParent) {
-  MOZ_ASSERT(aParent || aDocument, "Must have document if no parent!");
-  MOZ_ASSERT((NODE_FROM(aParent, aDocument)->OwnerDoc() == OwnerDoc()),
+nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
+  MOZ_ASSERT(aParent.IsContent() || aParent.IsDocument(),
+             "Must have content or document parent!");
+  MOZ_ASSERT(aParent.OwnerDoc() == OwnerDoc(),
              "Must have the same owner document");
-  MOZ_ASSERT(!aParent || aDocument == aParent->GetUncomposedDoc(),
-             "aDocument must be current doc of aParent");
-  MOZ_ASSERT(!IsInComposedDoc(), "Already have a document.  Unbind first!");
+  MOZ_ASSERT(OwnerDoc() == &aContext.OwnerDoc(), "These should match too");
   MOZ_ASSERT(!IsInUncomposedDoc(), "Already have a document.  Unbind first!");
+  MOZ_ASSERT(!IsInComposedDoc(), "Already have a document.  Unbind first!");
   // Note that as we recurse into the kids, they'll have a non-null parent.  So
   // only assert if our parent is _changing_ while we have a parent.
-  MOZ_ASSERT(!GetParent() || aParent == GetParent(),
+  MOZ_ASSERT(!GetParentNode() || &aParent == GetParentNode(),
              "Already have a parent.  Unbind first!");
-  MOZ_ASSERT(!GetBindingParent() || aBindingParent == GetBindingParent() ||
-                 (!aBindingParent && aParent &&
-                  aParent->GetBindingParent() == GetBindingParent()),
-             "Already have a binding parent.  Unbind first!");
-  MOZ_ASSERT(aBindingParent != this,
+  MOZ_ASSERT(
+      !GetBindingParent() ||
+          aContext.GetBindingParent() == GetBindingParent() ||
+          (!aContext.GetBindingParent() && aParent.IsContent() &&
+           aParent.AsContent()->GetBindingParent() == GetBindingParent()),
+      "Already have a binding parent.  Unbind first!");
+  MOZ_ASSERT(aContext.GetBindingParent() != this,
              "Content must not be its own binding parent");
-  MOZ_ASSERT(!IsRootOfNativeAnonymousSubtree() || aBindingParent == aParent,
+  MOZ_ASSERT(!IsRootOfNativeAnonymousSubtree() ||
+                 aContext.GetBindingParent() == &aParent,
              "Native anonymous content must have its parent as its "
              "own binding parent");
-  MOZ_ASSERT(aBindingParent || !aParent ||
-                 aBindingParent == aParent->GetBindingParent(),
+  MOZ_ASSERT(aContext.GetBindingParent() || !aParent.IsContent() ||
+                 aContext.GetBindingParent() ==
+                     aParent.AsContent()->GetBindingParent(),
              "We should be passed the right binding parent");
 
 #ifdef MOZ_XUL
   // First set the binding parent
-  nsXULElement* xulElem = nsXULElement::FromNode(this);
-  if (xulElem) {
-    xulElem->SetXULBindingParent(aBindingParent);
+  if (nsXULElement* xulElem = nsXULElement::FromNode(this)) {
+    xulElem->SetXULBindingParent(aContext.GetBindingParent());
   } else
 #endif
   {
-    if (aBindingParent) {
-      nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-
-      slots->mBindingParent = aBindingParent;  // Weak, so no addref happens.
+    if (Element* bindingParent = aContext.GetBindingParent()) {
+      ExtendedDOMSlots()->mBindingParent = bindingParent;
     }
   }
 
   const bool hadParent = !!GetParentNode();
-  const bool wasInShadowTree = IsInShadowTree();
 
-  NS_ASSERTION(!aBindingParent || IsRootOfNativeAnonymousSubtree() ||
+  NS_ASSERTION(!aContext.GetBindingParent() ||
+                   IsRootOfNativeAnonymousSubtree() ||
                    !HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE) ||
-                   (aParent && aParent->IsInNativeAnonymousSubtree()),
+                   aParent.IsInNativeAnonymousSubtree(),
                "Trying to re-bind content from native anonymous subtree to "
                "non-native anonymous parent!");
-  if (aParent) {
-    if (aParent->IsInNativeAnonymousSubtree()) {
-      SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
-    }
-    if (aParent->HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
-      SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
-    }
-    if (HasFlag(NODE_IS_ANONYMOUS_ROOT)) {
-      aParent->SetMayHaveAnonymousChildren();
-    }
-    if (aParent->IsInShadowTree()) {
-      ClearSubtreeRootPointer();
-      SetFlags(NODE_IS_IN_SHADOW_TREE);
-      MOZ_ASSERT(aParent->GetContainingShadow());
-      ExtendedDOMSlots()->mContainingShadow = aParent->GetContainingShadow();
-    }
+  if (aParent.IsInNativeAnonymousSubtree()) {
+    SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
   }
-
-  MOZ_ASSERT_IF(wasInShadowTree, IsInShadowTree());
+  if (aParent.HasFlag(NODE_HAS_BEEN_IN_UA_WIDGET)) {
+    SetFlags(NODE_HAS_BEEN_IN_UA_WIDGET);
+  }
+  if (HasFlag(NODE_IS_ANONYMOUS_ROOT)) {
+    aParent.SetMayHaveAnonymousChildren();
+  }
 
   // Now set the parent.
-  if (aParent) {
-    if (!GetParent()) {
-      NS_ADDREF(aParent);
-    }
-    mParent = aParent;
-  } else {
-    mParent = aDocument;
+  mParent = &aParent;
+  if (!hadParent && aParent.IsContent()) {
+    SetParentIsContent(true);
+    NS_ADDREF(mParent);
   }
-  SetParentIsContent(aParent);
-
-  // XXXbz sXBL/XBL2 issue!
+  MOZ_ASSERT(!!GetParent() == aParent.IsContent());
 
   MOZ_ASSERT(!HasAnyOfFlags(Element::kAllServoDescendantBits));
 
   // Finally, set the document
-  if (aDocument) {
-    // Notify XBL- & nsIAnonymousContentCreator-generated
-    // anonymous content that the document is changing.
-    // XXXbz ordering issues here?  Probably not, since ChangeDocumentFor is
-    // just pretty broken anyway....  Need to get it working.
-    // XXXbz XBL doesn't handle this (asserts), and we don't really want
-    // to be doing this during parsing anyway... sort this out.
-    //    aDocument->BindingManager()->ChangeDocumentFor(this, nullptr,
-    //                                                   aDocument);
-
+  if (aParent.IsInUncomposedDoc() || aParent.IsInShadowTree()) {
     // We no longer need to track the subtree pointer (and in fact we'll assert
     // if we do this any later).
     ClearSubtreeRootPointer();
+    SetIsConnected(aParent.IsInComposedDoc());
 
-    // Being added to a document.
-    SetIsInDocument();
-    SetIsConnected(true);
-
+    if (aParent.IsInUncomposedDoc()) {
+      SetIsInDocument();
+    } else {
+      SetFlags(NODE_IS_IN_SHADOW_TREE);
+      MOZ_ASSERT(aParent.IsContent() &&
+                 aParent.AsContent()->GetContainingShadow());
+      ExtendedDOMSlots()->mContainingShadow =
+          aParent.AsContent()->GetContainingShadow();
+    }
     // Clear the lazy frame construction bits.
-    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
-  } else if (IsInShadowTree()) {
-    SetIsConnected(aParent->IsInComposedDoc());
-    // We're not in a document, but we did get inserted into a shadow tree.
-    // Since we won't have any restyle data in the document's restyle trackers,
-    // don't let us get inserted with restyle bits set incorrectly.
-    //
-    // Also clear all the other flags that are cleared above when we do get
-    // inserted into a document.
-    //
-    // See the comment about the restyle bits above, it also applies.
     UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   } else {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
-    SetSubtreeRootPointer(aParent->SubtreeRoot());
+    SetSubtreeRootPointer(aParent.SubtreeRoot());
   }
 
   if (IsInComposedDoc()) {
@@ -1714,7 +1686,7 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
   //  because it has to happen after updating the parent pointer, but before
   //  recursively binding the kids.
   if (IsHTMLElement()) {
-    SetDirOnBind(this, aParent);
+    SetDirOnBind(this, nsIContent::FromNode(aParent));
   }
 
   UpdateEditableState(false);
@@ -1723,7 +1695,7 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
   // also need to be told that they are moving.
   if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
     nsXBLBinding* binding =
-        OwnerDoc()->BindingManager()->GetBindingWithContent(this);
+        aContext.OwnerDoc().BindingManager()->GetBindingWithContent(this);
 
     if (binding) {
       binding->BindAnonymousContent(binding->GetAnonymousContent(), this);
@@ -1734,7 +1706,7 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
   nsresult rv;
   for (nsIContent* child = GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    rv = child->BindToTree(aDocument, this, aBindingParent);
+    rv = child->BindToTree(aContext, *this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1745,7 +1717,7 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
 
   // Ensure we only add to the table once, in the case we move the ShadowRoot
   // around.
-  if (HasID() && !wasInShadowTree) {
+  if (HasID() && aContext.SubtreeRootChanges()) {
     AddToIdTable(DoGetID());
   }
 
@@ -1767,14 +1739,14 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
   //
   // Also, if this _is_ needed, then it's wrong and should use GetComposedDoc()
   // to account for Shadow DOM.
-  if (aDocument && MayHaveAnimations()) {
+  if (aParent.IsInUncomposedDoc() && MayHaveAnimations()) {
     PseudoStyleType pseudoType = GetPseudoElementType();
     if ((pseudoType == PseudoStyleType::NotPseudo ||
          pseudoType == PseudoStyleType::before ||
          pseudoType == PseudoStyleType::after ||
          pseudoType == PseudoStyleType::marker) &&
         EffectSet::GetEffectSet(this, pseudoType)) {
-      if (nsPresContext* presContext = aDocument->GetPresContext()) {
+      if (nsPresContext* presContext = aContext.OwnerDoc().GetPresContext()) {
         presContext->EffectCompositor()->RequestRestyle(
             this, pseudoType, EffectCompositor::RestyleType::Standard,
             EffectCompositor::CascadeLevel::Animations);
@@ -1785,11 +1757,14 @@ nsresult Element::BindToTree(Document* aDocument, nsIContent* aParent,
   // XXXbz script execution during binding can trigger some of these
   // postcondition asserts....  But we do want that, since things will
   // generally be quite broken when that happens.
-  MOZ_ASSERT(aDocument == GetUncomposedDoc(), "Bound to wrong document");
-  MOZ_ASSERT(aParent == GetParent(), "Bound to wrong parent");
-  MOZ_ASSERT(aBindingParent == GetBindingParent(),
+  MOZ_ASSERT(OwnerDoc() == aParent.OwnerDoc(), "Bound to wrong document");
+  MOZ_ASSERT(&aParent == GetParentNode(), "Bound to wrong parent node");
+  MOZ_ASSERT(aContext.GetBindingParent() == GetBindingParent(),
              "Bound to wrong binding parent");
-
+  MOZ_ASSERT(aParent.IsInUncomposedDoc() == IsInUncomposedDoc());
+  MOZ_ASSERT(aParent.IsInComposedDoc() == IsInComposedDoc());
+  MOZ_ASSERT(aParent.IsInShadowTree() == IsInShadowTree());
+  MOZ_ASSERT(aParent.SubtreeRoot() == SubtreeRoot());
   return NS_OK;
 }
 

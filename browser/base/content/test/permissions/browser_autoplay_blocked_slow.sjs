@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const DELAY_MS = "1000";
+const DELAY_MS = 200;
 
 const AUTOPLAY_HTML = `<!DOCTYPE HTML>
 <html dir="ltr" xml:lang="en-US" lang="en-US">
@@ -12,7 +12,9 @@ const AUTOPLAY_HTML = `<!DOCTYPE HTML>
     <audio autoplay="autoplay" >
       <source src="audio.ogg" />
     </audio>
-    <script>setTimeout(() => { document.location.href = '#foo'; }, 500);</script>
+    <script>
+      document.location.href = '#foo';
+    </script>
   </body>
 </html>`;
 

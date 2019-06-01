@@ -127,6 +127,8 @@ class ModalInput extends ReflectedFluentElement {
     } else {
       lockedValue.textContent = val;
     }
+    let revealCheckbox = this.shadowRoot.querySelector(".reveal-checkbox");
+    revealCheckbox.checked = false;
   }
 
   checkValidity() {

@@ -147,8 +147,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
 
   // SVGElement overrides
 
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent) override;
   virtual SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
@@ -197,8 +196,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
    * basically a simplified version of GetOwnerSVGElement that uses the parent
    * parameters passed in instead.
    */
-  bool WillBeOutermostSVG(nsIContent* aParent,
-                          nsIContent* aBindingParent) const;
+  bool WillBeOutermostSVG(nsINode& aParent, Element* aBindingParent) const;
 
   // invalidate viewbox -> viewport xform & inform frames
   void InvalidateTransformNotifyFrame();

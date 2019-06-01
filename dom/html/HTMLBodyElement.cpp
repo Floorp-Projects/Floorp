@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLBodyElement.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/HTMLEditor.h"
@@ -283,12 +284,10 @@ bool HTMLBodyElement::IsEventAttributeNameInternal(nsAtom* aName) {
       aName, EventNameType_HTML | EventNameType_HTMLBodyOrFramesetOnly);
 }
 
-nsresult HTMLBodyElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                     nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLBodyElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
-  return mAttrs.ForceMapped(this, OwnerDoc());
+  return mAttrs.ForceMapped(this, &aContext.OwnerDoc());
 }
 
 nsresult HTMLBodyElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,

@@ -10265,12 +10265,8 @@ bool nsDisplaySVGWrapper::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (StaticPrefs::WebRenderBlobInvalidation()) {
-    return nsDisplayWrapList::CreateWebRenderCommands(
-        aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
-  }
-
-  return false;
+  return nsDisplayWrapList::CreateWebRenderCommands(
+      aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
 }
 
 nsDisplayForeignObject::nsDisplayForeignObject(nsDisplayListBuilder* aBuilder,
@@ -10326,14 +10322,10 @@ bool nsDisplayForeignObject::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  if (StaticPrefs::WebRenderBlobInvalidation()) {
-    AutoRestore<bool> restoreDoGrouping(aManager->CommandBuilder().mDoGrouping);
-    aManager->CommandBuilder().mDoGrouping = false;
-    return nsDisplayWrapList::CreateWebRenderCommands(
-        aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
-  } else {
-    return false;
-  }
+  AutoRestore<bool> restoreDoGrouping(aManager->CommandBuilder().mDoGrouping);
+  aManager->CommandBuilder().mDoGrouping = false;
+  return nsDisplayWrapList::CreateWebRenderCommands(
+      aBuilder, aResources, aSc, aManager, aDisplayListBuilder);
 }
 
 void nsDisplayListCollection::SerializeWithCorrectZOrder(

@@ -45,8 +45,7 @@ class HTMLOutputElement final : public nsGenericHTMLFormElement,
 
   EventStates IntrinsicState() const override;
 
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
   // This function is called when a callback function from nsIMutationObserver
   // has to be used to update the defaultValue attribute.

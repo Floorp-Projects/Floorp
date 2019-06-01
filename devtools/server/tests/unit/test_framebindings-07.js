@@ -62,6 +62,7 @@ function test_banana_environment() {
   gDebuggee.eval("function banana(x) {\n" +
                  "  return function banana2(y) {\n" +
                  "    return function banana3(z) {\n" +
+                 "      eval(\"\");\n" +
                  "      debugger;\n" +
                  "    };\n" +
                  "  };\n" +

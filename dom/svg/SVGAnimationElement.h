@@ -35,8 +35,7 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 
   // nsIContent specializations
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent) override;
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;

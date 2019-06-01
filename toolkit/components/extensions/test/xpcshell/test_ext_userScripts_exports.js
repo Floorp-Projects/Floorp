@@ -13,12 +13,6 @@ server.registerDirectory("/data/", do_get_file("data"));
 
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
-// Turn on the userScripts API using the related pref.
-Services.prefs.setBoolPref("extensions.webextensions.userScripts.enabled", true);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("extensions.webextensions.userScripts.enabled");
-});
-
 // A small utility function used to test the expected behaviors of the userScripts API method
 // wrapper.
 async function test_userScript_APIMethod({

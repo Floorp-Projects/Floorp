@@ -1023,11 +1023,9 @@ void HTMLTableElement::ReleaseInheritedAttributes() {
   NS_IF_RELEASE(mTableInheritedAttributes);
 }
 
-nsresult HTMLTableElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
+nsresult HTMLTableElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   ReleaseInheritedAttributes();
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
   BuildInheritedAttributes();
   return NS_OK;

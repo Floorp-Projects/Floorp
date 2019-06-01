@@ -180,13 +180,12 @@ SVGElement::StringAttributesInfo SVGScriptElement::GetStringInfo() {
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult SVGScriptElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
-  nsresult rv =
-      SVGScriptElementBase::BindToTree(aDocument, aParent, aBindingParent);
+nsresult SVGScriptElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = SVGScriptElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument) {
+  // FIXME(emilio, bug 1555949): Should be IsInComposedDoc().
+  if (IsInUncomposedDoc()) {
     MaybeProcessScript();
   }
 

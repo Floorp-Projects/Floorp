@@ -132,13 +132,12 @@ void SVGFEImageElement::MaybeLoadSVGImage() {
   }
 }
 
-nsresult SVGFEImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                       nsIContent* aBindingParent) {
-  nsresult rv =
-      SVGFEImageElementBase::BindToTree(aDocument, aParent, aBindingParent);
+nsresult SVGFEImageElement::BindToTree(BindContext& aContext,
+                                       nsINode& aParent) {
+  nsresult rv = SVGFEImageElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
+  nsImageLoadingContent::BindToTree(aContext, aParent);
 
   if (mStringAttributes[HREF].IsExplicitlySet() ||
       mStringAttributes[XLINK_HREF].IsExplicitlySet()) {

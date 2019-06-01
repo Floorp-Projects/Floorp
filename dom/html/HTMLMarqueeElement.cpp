@@ -46,11 +46,9 @@ JSObject* HTMLMarqueeElement::WrapNode(JSContext* aCx,
   return dom::HTMLMarqueeElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult HTMLMarqueeElement::BindToTree(Document* aDocument,
-                                        nsIContent* aParent,
-                                        nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLMarqueeElement::BindToTree(BindContext& aContext,
+                                        nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsInComposedDoc()) {
