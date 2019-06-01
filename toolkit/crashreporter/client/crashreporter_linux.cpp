@@ -16,6 +16,7 @@
 
 #define LABEL_MAX_CHAR_WIDTH 48
 
+using std::ios;
 using std::string;
 using std::vector;
 
@@ -63,6 +64,53 @@ static void LoadSettings() {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck),
                                  enabled);
   }
+}
+
+static string Escape(const string& str) {
+  string ret;
+  for (auto c : str) {
+    if (c == '\\') {
+      ret += "\\\\";
+    } else if (c == '\n') {
+      ret += "\\n";
+    } else if (c == '\t') {
+      ret += "\\t";
+    } else {
+      ret.push_back(c);
+    }
+  }
+
+  return ret;
+}
+
+static bool WriteStrings(ostream& out, const string& header,
+                         StringTable& strings, bool escape) {
+  out << "[" << header << "]" << std::endl;
+  for (const auto& iter : strings) {
+    out << iter.first << "=";
+    if (escape) {
+      out << Escape(iter.second);
+    } else {
+      out << iter.second;
+    }
+
+    out << std::endl;
+  }
+
+  return true;
+}
+
+static bool WriteStringsToFile(const string& path, const string& header,
+                               StringTable& strings, bool escape) {
+  ofstream* f = UIOpenWrite(path, ios::trunc);
+  bool success = false;
+  if (f->is_open()) {
+    success = WriteStrings(*f, header, strings, escape);
+    f->close();
+  }
+
+  delete f;
+  return success;
 }
 
 void SaveSettings() {

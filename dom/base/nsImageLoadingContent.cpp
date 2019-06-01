@@ -13,6 +13,7 @@
 #include "nsImageLoadingContent.h"
 #include "nsError.h"
 #include "nsIContent.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
@@ -1613,8 +1614,7 @@ void nsImageLoadingContent::NotifyOwnerDocumentActivityChanged() {
 void nsImageLoadingContent::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
   // We may be getting connected, if so our image should be tracked,
-  // NOTE(emilio): Using aParent to avoid silly virtual call.
-  if (aParent.IsInComposedDoc()) {
+  if (aContext.InComposedDoc()) {
     TrackImage(mCurrentRequest);
     TrackImage(mPendingRequest);
   }

@@ -245,7 +245,7 @@ void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
 }
 
 void CrashReporterHost::AddAnnotation(CrashReporter::Annotation aKey,
-                                      const nsCString& aValue) {
+                                      const nsACString& aValue) {
   mExtraAnnotations[aKey] = aValue;
 }
 
