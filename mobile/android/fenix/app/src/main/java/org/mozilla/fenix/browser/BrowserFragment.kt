@@ -394,12 +394,17 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         swipeRefresh.apply {
             val toolbarAndQASSize = resources.getDimension(R.dimen.toolbar_and_qab_height).toInt()
             val toolbarSize = resources.getDimension(R.dimen.browser_toolbar_height).toInt()
+            val (topMargin, bottomMargin) = when {
+                inFullScreen -> Pair(0, 0)
+                customTabSessionId == null -> Pair(0, toolbarAndQASSize)
+                else -> Pair(toolbarSize, 0)
+            }
             (layoutParams as CoordinatorLayout.LayoutParams).apply {
                 setMargins(
                     0,
-                    if (customTabSessionId == null || inFullScreen) 0 else toolbarSize,
+                    topMargin,
                     0,
-                    if (inFullScreen) 0 else if (customTabSessionId == null) toolbarAndQASSize else 0
+                    bottomMargin
                 )
             }
         }
