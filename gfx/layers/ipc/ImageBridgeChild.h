@@ -289,7 +289,7 @@ class ImageBridgeChild final : public PImageBridgeChild,
    */
   void NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId);
 
-  void CancelWaitForRecycle(uint64_t aTextureId) override;
+  void CancelWaitForNotifyNotUsed(uint64_t aTextureId) override;
 
   bool DestroyInTransaction(PTextureChild* aTexture) override;
   bool DestroyInTransaction(const CompositableHandle& aHandle);
@@ -394,7 +394,8 @@ class ImageBridgeChild final : public PImageBridgeChild,
    * Hold TextureClients refs until end of their usages on host side.
    * It defer calling of TextureClient recycle callback.
    */
-  std::unordered_map<uint64_t, RefPtr<TextureClient>> mTexturesWaitingRecycled;
+  std::unordered_map<uint64_t, RefPtr<TextureClient>>
+      mTexturesWaitingNotifyNotUsed;
 
   /**
    * Mapping from async compositable IDs to image containers.
