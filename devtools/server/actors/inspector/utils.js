@@ -302,7 +302,7 @@ function getClosestBackgroundColor(node) {
 function getClosestBackgroundImage(node) {
   let current = node;
 
-  while (current.ownerDocument) {
+  while (current) {
     const computedStyle = CssLogic.getComputedStyle(current);
     if (computedStyle) {
       const currentBackgroundImage = computedStyle.getPropertyValue("background-image");
