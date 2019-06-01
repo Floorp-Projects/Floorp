@@ -93,6 +93,10 @@ async function withNewWindow(callback) {
 
   let input = new UrlbarInput(inputOptions);
 
+  // Flush pending styles explicitely to make sure the added textbox and
+  // popupset are styled before proceeding test.  See bug 1488871 comment 26.
+  doc.documentElement.getBoundingClientRect();
+
   await callback(input);
 
   await BrowserTestUtils.closeWindow(win);
