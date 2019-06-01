@@ -469,8 +469,7 @@ void AddrHostRecord::ResolveComplete() {
     }
   }
 
-  if (mTRRUsed && mNativeUsed &&
-      ((mResolverMode == MODE_SHADOW) || (mResolverMode == MODE_PARALLEL))) {
+  if (mTRRUsed && mNativeUsed && ((mResolverMode == MODE_SHADOW))) {
     // both were used, accumulate comparative success
     AccumulateCategorical(
         mNativeSuccess && mTRRSuccess
@@ -505,9 +504,6 @@ void AddrHostRecord::ResolveComplete() {
     case MODE_TRROFF:
       AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::nativeOnly);
       break;
-    case MODE_PARALLEL:
-      AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::trrRace);
-      break;
     case MODE_TRRFIRST:
       AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::trrFirst);
       break;
@@ -516,6 +512,9 @@ void AddrHostRecord::ResolveComplete() {
       break;
     case MODE_SHADOW:
       AccumulateCategorical(Telemetry::LABELS_DNS_LOOKUP_ALGORITHM::trrShadow);
+      break;
+    case MODE_RESERVED1:
+      MOZ_DIAGNOSTIC_ASSERT(false, "MODE_RESERVED1 should not be used");
       break;
   }
 
@@ -1414,6 +1413,7 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
   }
 
   ResolverMode mode = rec->mResolverMode = Mode();
+  MOZ_ASSERT(mode != MODE_RESERVED1);
 
   if (rec->IsAddrRecord()) {
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
@@ -1448,7 +1448,7 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
     rv = TrrLookup(rec);
   }
 
-  if ((mode == MODE_PARALLEL) || TRR_DISABLED(mode) || (mode == MODE_SHADOW) ||
+  if (TRR_DISABLED(mode) || (mode == MODE_SHADOW) ||
       ((mode == MODE_TRRFIRST) && NS_FAILED(rv)) ||
       (mode == MODE_TRRONLY && skipTRR)) {
     if (!rec->IsAddrRecord()) {
