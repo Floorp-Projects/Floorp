@@ -499,7 +499,7 @@ void CanvasClientSharedSurface::OnDetach() { ClearSurfaces(); }
 
 void CanvasClientSharedSurface::ClearSurfaces() {
   if (mFront) {
-    mFront->CancelWaitForRecycle();
+    mFront->CancelWaitForNotifyNotUsed();
   }
   mFront = nullptr;
   mNewFront = nullptr;
