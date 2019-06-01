@@ -15,7 +15,6 @@ import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
-import org.junit.Assume.assumeTrue
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -224,8 +223,6 @@ class MediaElementTest : BaseSessionTest() {
     @WithDevToolsAPI
     @Test
     fun oggPlayMediaFromScript() {
-        // disable test on Android debug & pgo for frequently failing #Bug 1554117
-        Assume.assumeTrue(false)
         playMediaFromScript(VIDEO_OGG_PATH)
     }
 
