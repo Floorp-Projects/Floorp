@@ -262,13 +262,4 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>This web page at %1$s has been reported as a deceptive site and has been blocked based on your security preferences.</p>
     ]]></string>
-
-    <!-- The tile for the list of external apps to open the link in -->
-    <string name="mozac_feature_applinks_open_in">Open in…</string>
-    <!-- The description to warn users that their private browsing session changes  -->
-    <string name="mozac_feature_applinks_confirm_dialog_title">Open in app? Your activity may no longer be private.</string>
-    <!-- Opens the selected time -->
-    <string name="mozac_feature_applinks_confirm_dialog_confirm">Open</string>
-    <!-- Cancels the prompt -->
-    <string name="mozac_feature_applinks_confirm_dialog_deny">Cancel</string>
 </resources>
