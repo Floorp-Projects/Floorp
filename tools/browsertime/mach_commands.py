@@ -377,6 +377,7 @@ class MachBrowsertime(MachCommandBase):
                 video,
                 '--orange',
                 '--perceptual',
+                '--contentful',
                 '--force',
                 '--renderignore',
                 '5',
