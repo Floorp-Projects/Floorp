@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/SVGSVGElement.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SMILAnimationFunction.h"
@@ -131,19 +132,17 @@ float SVGAnimationElement::GetSimpleDuration(ErrorResult& rv) {
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult SVGAnimationElement::BindToTree(Document* aDocument,
-                                         nsIContent* aParent,
-                                         nsIContent* aBindingParent) {
+nsresult SVGAnimationElement::BindToTree(BindContext& aContext,
+                                         nsINode& aParent) {
   MOZ_ASSERT(!mHrefTarget.get(),
              "Shouldn't have href-target yet (or it should've been cleared)");
-  nsresult rv =
-      SVGAnimationElementBase::BindToTree(aDocument, aParent, aBindingParent);
+  nsresult rv = SVGAnimationElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add myself to the animation controller's master set of animation elements.
-  if (Document* doc = GetComposedDoc()) {
-    SMILAnimationController* controller = doc->GetAnimationController();
-    if (controller) {
+  if (IsInComposedDoc()) {
+    if (SMILAnimationController* controller =
+            aContext.OwnerDoc().GetAnimationController()) {
       controller->RegisterAnimationElement(this);
     }
     const nsAttrValue* href =

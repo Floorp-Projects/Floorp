@@ -260,12 +260,10 @@ nsresult PuppetWidget::ConfigureChildren(
   return NS_OK;
 }
 
-nsresult PuppetWidget::SetFocus(bool aRaise) {
-  if (aRaise && mBrowserChild) {
+void PuppetWidget::SetFocus(Raise aRaise) {
+  if (aRaise == Raise::Yes && mBrowserChild) {
     mBrowserChild->SendRequestFocus(true);
   }
-
-  return NS_OK;
 }
 
 void PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect) {

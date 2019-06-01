@@ -1054,7 +1054,7 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
       Debugger* dbg = Debugger::fromChildJSObject(frameobj);
       EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
-      if (dbg->enabled && frameobj->onPopHandler()) {
+      if (dbg->enabled && frameobj->isLive() && frameobj->onPopHandler()) {
         OnPopHandler* handler = frameobj->onPopHandler();
 
         Maybe<AutoRealm> ar;

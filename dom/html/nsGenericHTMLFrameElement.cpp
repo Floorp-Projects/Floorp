@@ -213,11 +213,9 @@ void nsGenericHTMLFrameElement::LoadSrc() {
   mFrameLoader->LoadFrame(origSrc);
 }
 
-nsresult nsGenericHTMLFrameElement::BindToTree(Document* aDocument,
-                                               nsIContent* aParent,
-                                               nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult nsGenericHTMLFrameElement::BindToTree(BindContext& aContext,
+                                               nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsInComposedDoc()) {

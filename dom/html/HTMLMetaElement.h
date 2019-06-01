@@ -21,8 +21,7 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLMetaElement, nsGenericHTMLElement)
 
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
 
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,

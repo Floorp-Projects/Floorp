@@ -34,8 +34,7 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
 
   // Override BindToTree() so that we can trigger a load when we add a
   // child source element.
-  virtual nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
 
   // If this element's media attr matches for its owner document.  Returns true
   // if no media attr was set.

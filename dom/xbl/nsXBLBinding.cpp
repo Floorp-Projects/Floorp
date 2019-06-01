@@ -16,6 +16,7 @@
 #include "nsReadableUtils.h"
 #include "plstr.h"
 #include "nsIContent.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "ChildIterator.h"
@@ -165,13 +166,15 @@ void nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the enclosing parent element.
   Document* doc = aElement->GetUncomposedDoc();
+  Element* element = aElement->AsElement();
 
   nsAutoScriptBlocker scriptBlocker;
+  BindContext context(*this, *element);
   for (nsIContent* child = aAnonParent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     child->UnbindFromTree();
     child->SetFlags(NODE_IS_ANONYMOUS_ROOT);
-    nsresult rv = child->BindToTree(doc, aElement, mBoundElement);
+    nsresult rv = child->BindToTree(context, *element);
     if (NS_FAILED(rv)) {
       // Oh, well... Just give up.
       // XXXbz This really shouldn't be a void method!

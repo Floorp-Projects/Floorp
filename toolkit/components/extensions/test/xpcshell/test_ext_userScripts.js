@@ -33,12 +33,6 @@ add_task(async function setup_test_environment() {
   registerCleanupFunction(() => {
     Services.obs.removeObserver(permissionObserver, "webextension-optional-permission-prompt");
   });
-
-  // Turn on the userScripts API using the related pref.
-  Services.prefs.setBoolPref("extensions.webextensions.userScripts.enabled", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("extensions.webextensions.userScripts.enabled");
-  });
 });
 
 // Test that there is no userScripts API namespace when the manifest doesn't include a user_scripts

@@ -35,8 +35,7 @@ class nsMathMLElement final : public nsMathMLElementBase,
   // Implementation of nsISupports is inherited from nsMathMLElementBase
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsresult BindToTree(Document* aDocument, nsIContent* aParent,
-                      nsIContent* aBindingParent) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
 
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,

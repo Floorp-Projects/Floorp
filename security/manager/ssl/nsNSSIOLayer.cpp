@@ -2511,9 +2511,10 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
     allocatedState = new SharedSSLState(providerTlsFlags);
     sharedState = allocatedState.get();
   } else {
-    sharedState = (providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE)
-                      ? PrivateSSLState()
-                      : PublicSSLState();
+    bool isPrivate = providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE ||
+                     originAttributes.mPrivateBrowsingId !=
+                         OriginAttributes().mPrivateBrowsingId;
+    sharedState = isPrivate ? PrivateSSLState() : PublicSSLState();
   }
 
   nsNSSSocketInfo* infoObject =

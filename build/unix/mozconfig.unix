@@ -25,7 +25,12 @@ else
 
     if [ -n "$MOZ_PGO" ]; then
         if [ -z "$USE_ARTIFACT" ]; then
-            ac_add_options --enable-lto
+            export MOZ_LTO=1
+            if [ -n "$MOZ_PGO_PROFILE_USE" ]; then
+                ac_add_options --enable-profile-use
+                ac_add_options --with-pgo-jarlog=/builds/worker/fetches/en-US.log
+                ac_add_options --with-pgo-profile-path=/builds/worker/fetches
+            fi
         fi
         export LLVM_PROFDATA="$TOOLTOOL_DIR/clang/bin/llvm-profdata"
         export AR="$topsrcdir/clang/bin/llvm-ar"
