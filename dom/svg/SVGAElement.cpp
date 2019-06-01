@@ -161,8 +161,8 @@ nsresult SVGAElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   nsresult rv = SVGAElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (IsInComposedDoc()) {
-    aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
+  if (Document* doc = aContext.GetComposedDoc()) {
+    doc->RegisterPendingLinkUpdate(this);
   }
 
   return NS_OK;
