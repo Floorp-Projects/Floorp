@@ -4199,7 +4199,7 @@ class nsIFrame : public nsQueryFrame {
 
   /**
    * To be overridden by frame classes that have a varying IsLeaf() state and
-   * is indicating that with DynamicLeaf in nsFrameIdList.h.
+   * is indicating that with DynamicLeaf in FrameIdList.h.
    * @see IsLeaf()
    */
   virtual bool IsLeafDynamic() const { return false; }
@@ -4551,7 +4551,7 @@ class nsIFrame : public nsQueryFrame {
   static const mozilla::LayoutFrameType sLayoutFrameTypes[
 #define FRAME_ID(...) 1 +
 #define ABSTRACT_FRAME_ID(...)
-#include "nsFrameIdList.h"
+#include "mozilla/FrameIdList.h"
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
       0];
@@ -4565,7 +4565,7 @@ class nsIFrame : public nsQueryFrame {
   static const FrameClassBits sFrameClassBits[
 #define FRAME_ID(...) 1 +
 #define ABSTRACT_FRAME_ID(...)
-#include "nsFrameIdList.h"
+#include "mozilla/FrameIdList.h"
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
       0];
