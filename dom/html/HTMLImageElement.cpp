@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLImageElementBinding.h"
+#include "mozilla/dom/BindContext.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -491,22 +492,17 @@ bool HTMLImageElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   return false;
 }
 
-nsresult HTMLImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                      nsIContent* aBindingParent) {
-  nsresult rv =
-      nsGenericHTMLElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult HTMLImageElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsImageLoadingContent::BindToTree(aDocument, aParent, aBindingParent);
+  nsImageLoadingContent::BindToTree(aContext, aParent);
 
-  if (aParent) {
-    UpdateFormOwner();
-  }
+  UpdateFormOwner();
 
   if (HaveSrcsetOrInPicture()) {
-    Document* doc = GetComposedDoc();
-    if (doc && !mInDocResponsiveContent) {
-      doc->AddResponsiveContent(this);
+    if (IsInComposedDoc() && !mInDocResponsiveContent) {
+      aContext.OwnerDoc().AddResponsiveContent(this);
       mInDocResponsiveContent = true;
     }
 
@@ -537,7 +533,7 @@ nsresult HTMLImageElement::BindToTree(Document* aDocument, nsIContent* aParent,
     // If loading is temporarily disabled, don't even launch MaybeLoadImage.
     // Otherwise MaybeLoadImage may run later when someone has reenabled
     // loading.
-    if (LoadingEnabled() && OwnerDoc()->ShouldLoadImages()) {
+    if (LoadingEnabled() && aContext.OwnerDoc().ShouldLoadImages()) {
       nsContentUtils::AddScriptRunner(
           NewRunnableMethod<bool>("dom::HTMLImageElement::MaybeLoadImage", this,
                                   &HTMLImageElement::MaybeLoadImage, false));

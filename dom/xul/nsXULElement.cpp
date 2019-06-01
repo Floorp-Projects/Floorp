@@ -12,6 +12,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
@@ -620,7 +621,7 @@ void nsXULElement::UpdateEditableState(bool aNotify) {
 
 class XULInContentErrorReporter : public Runnable {
  public:
-  explicit XULInContentErrorReporter(Document* aDocument)
+  explicit XULInContentErrorReporter(Document& aDocument)
       : mozilla::Runnable("XULInContentErrorReporter"), mDocument(aDocument) {}
 
   NS_IMETHOD Run() override {
@@ -629,7 +630,7 @@ class XULInContentErrorReporter : public Runnable {
   }
 
  private:
-  nsCOMPtr<Document> mDocument;
+  OwningNonNull<Document> mDocument;
 };
 
 static bool NeedTooltipSupport(const nsXULElement& aXULElement) {
@@ -643,20 +644,25 @@ static bool NeedTooltipSupport(const nsXULElement& aXULElement) {
          aXULElement.GetBoolAttr(nsGkAtoms::tooltiptext);
 }
 
-nsresult nsXULElement::BindToTree(Document* aDocument, nsIContent* aParent,
-                                  nsIContent* aBindingParent) {
-  if (!aBindingParent && aDocument && !aDocument->IsLoadedAsInteractiveData() &&
-      !aDocument->AllowXULXBL() &&
-      !aDocument->HasWarnedAbout(Document::eImportXULIntoContent)) {
-    nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(aDocument));
-  }
-
-  nsresult rv = nsStyledElement::BindToTree(aDocument, aParent, aBindingParent);
+nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsStyledElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Document* doc = GetComposedDoc();
+  Document& doc = aContext.OwnerDoc();
+
+  // FIXME(emilio): Could use IsInComposedDoc().
+  if (!aContext.GetBindingParent() && IsInUncomposedDoc() &&
+      !doc.IsLoadedAsInteractiveData() && !doc.AllowXULXBL() &&
+      !doc.HasWarnedAbout(Document::eImportXULIntoContent)) {
+    nsContentUtils::AddScriptRunner(new XULInContentErrorReporter(doc));
+  }
+
+  if (!IsInComposedDoc()) {
+    return rv;
+  }
+
 #ifdef DEBUG
-  if (doc && !doc->AllowXULXBL() && !doc->IsUnstyledDocument()) {
+  if (!doc.AllowXULXBL() && !doc.IsUnstyledDocument()) {
     // To save CPU cycles and memory, non-XUL documents only load the user
     // agent style sheet rules for a minimal set of XUL elements such as
     // 'scrollbar' that may be created implicitly for their content (those
@@ -676,23 +682,22 @@ nsresult nsXULElement::BindToTree(Document* aDocument, nsIContent* aParent,
   }
 #endif
 
-  if (doc && NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
+  if (NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
     // Create our XUL key listener and hook it up.
     nsXBLService::AttachGlobalKeyHandler(this);
   }
 
-  if (doc && NeedTooltipSupport(*this)) {
+  if (NeedTooltipSupport(*this)) {
     AddTooltipSupport();
   }
 
-  if (doc && XULBroadcastManager::MayNeedListener(*this)) {
-    if (!doc->HasXULBroadcastManager()) {
-      doc->InitializeXULBroadcastManager();
+  if (XULBroadcastManager::MayNeedListener(*this)) {
+    if (!doc.HasXULBroadcastManager()) {
+      doc.InitializeXULBroadcastManager();
     }
-    XULBroadcastManager* broadcastManager = doc->GetXULBroadcastManager();
+    XULBroadcastManager* broadcastManager = doc.GetXULBroadcastManager();
     broadcastManager->AddListener(this);
   }
-
   return rv;
 }
 

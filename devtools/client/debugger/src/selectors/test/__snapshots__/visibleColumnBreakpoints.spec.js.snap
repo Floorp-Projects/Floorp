@@ -1,5 +1,35 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`visible column breakpoints doesnt show breakpoints to the right 1`] = `
+Array [
+  Object {
+    "breakpoint": Object {
+      "astLocation": null,
+      "disabled": false,
+      "generatedLocation": Object {
+        "column": 1,
+        "line": 1,
+        "sourceId": "foo",
+      },
+      "id": "breakpoint",
+      "location": Object {
+        "column": 1,
+        "line": 1,
+        "sourceId": "foo",
+      },
+      "options": Object {},
+      "originalText": "text",
+      "text": "text",
+    },
+    "location": Object {
+      "column": 1,
+      "line": 1,
+      "sourceId": "foo",
+    },
+  },
+]
+`;
+
 exports[`visible column breakpoints ignores single breakpoints 1`] = `
 Array [
   Object {

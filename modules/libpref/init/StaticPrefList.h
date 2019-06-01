@@ -2928,13 +2928,6 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
-  "gfx.webrender.blob.invalidation",
-  WebRenderBlobInvalidation,
-  RelaxedAtomicBool, false
-)
-
-VARCACHE_PREF(
-  Live,
   "gfx.webrender.blob.paint-flashing",
   WebRenderBlobPaintFlashing,
   RelaxedAtomicBool, false

@@ -89,6 +89,17 @@ else
     ac_add_options --with-pocket-api-keyfile="$topsrcdir/mobile/android/base/pocket-api-sandbox.token"
 fi
 
+if [ -n "$MOZ_PGO_PROFILE_USE" ]; then
+    export LLVM_PROFDATA="$topsrcdir/clang/bin/llvm-profdata"
+
+    ac_add_options --enable-profile-use
+
+    # This is disabled because jarlog re-ordering breaks apk publishing tasks,
+    # see bug 1539933.
+    # ac_add_options --with-pgo-jarlog=/builds/worker/fetches/en-US.log
+    ac_add_options --with-pgo-profile-path=/builds/worker/fetches
+fi
+
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 

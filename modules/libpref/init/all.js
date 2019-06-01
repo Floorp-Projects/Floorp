@@ -903,7 +903,6 @@ pref("gfx.compositor.glcontext.opaque", false);
 
 pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.blob-images", true);
-pref("gfx.webrender.blob.invalidation", true);
 pref("gfx.webrender.blob.paint-flashing", false);
 
 // WebRender debugging utilities.
@@ -5152,13 +5151,8 @@ pref("extensions.webextensions.protocol.remote", true);
 // Enable tab hiding API by default.
 pref("extensions.webextensions.tabhide.enabled", true);
 
-#ifdef NIGHTLY_BUILD
-// Enable userScripts API by default on Nightly.
+// Enable userScripts API by default.
 pref("extensions.webextensions.userScripts.enabled", true);
-#else
-// Disable userScripts API by default on all other channels.
-pref("extensions.webextensions.userScripts.enabled", false);
-#endif
 
 pref("extensions.webextensions.background-delayed-startup", false);
 
@@ -5176,7 +5170,7 @@ pref("extensions.webextensions.performanceCountersMaxAge", 5000);
 // The HTML about:addons page.
 pref("extensions.htmlaboutaddons.enabled", false);
 // Whether to allow the inline options browser in HTML about:addons page.
-pref("extensions.htmlaboutaddons.inline-options.enabled", false);
+pref("extensions.htmlaboutaddons.inline-options.enabled", true);
 
 // Report Site Issue button
 // Note that on enabling the button in other release channels, make sure to
