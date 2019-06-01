@@ -265,7 +265,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
         findInPageIntegration.set(
             feature = FindInPageIntegration(
-                requireComponents.core.sessionManager, view.findInPageView, view.engineView
+                requireComponents.core.sessionManager, view.findInPageView, view.engineView, toolbar
             ),
             owner = this,
             view = view

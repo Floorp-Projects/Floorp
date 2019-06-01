@@ -41,7 +41,6 @@
         android:clickable="true"
         android:visibility="gone"
         app:findInPageNoMatchesTextColor="?attr/destructive"
-        app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior"
         mozac:findInPageButtonsTint="?primaryText"
         mozac:findInPageResultCountTextColor="?primaryText" />
 

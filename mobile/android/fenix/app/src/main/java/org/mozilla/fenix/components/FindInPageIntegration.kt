@@ -22,7 +22,8 @@ import org.mozilla.fenix.test.Mockable
 class FindInPageIntegration(
     private val sessionManager: SessionManager,
     private val view: FindInPageView,
-    engineView: EngineView
+    engineView: EngineView,
+    private val toolbar: BrowserToolbar
 ) : LifecycleAwareFeature, BackHandler {
     private val feature = FindInPageFeature(sessionManager, view, engineView, ::onClose)
 
@@ -43,12 +44,14 @@ class FindInPageIntegration(
     }
 
     private fun onClose() {
+        toolbar.visibility = View.VISIBLE
         view.asView().visibility = View.GONE
     }
 
     private fun launch() {
         val session = sessionManager.selectedSession ?: return
 
+        toolbar.visibility = View.GONE
         view.asView().visibility = View.VISIBLE
         feature.bind(session)
     }
