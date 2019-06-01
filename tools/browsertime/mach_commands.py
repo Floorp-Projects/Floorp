@@ -37,6 +37,7 @@ import sys
 
 from mach.decorators import CommandArgument, CommandProvider, Command
 from mozbuild.base import MachCommandBase
+from mozbuild.util import mkdir
 import mozpack.path as mozpath
 
 
@@ -148,6 +149,7 @@ class MachBrowsertime(MachCommandBase):
             if fetch.get('unpack', True):
                 cwd = os.getcwd()
                 try:
+                    mkdir(self.state_path)
                     os.chdir(self.state_path)
                     self.log(
                         logging.INFO,
