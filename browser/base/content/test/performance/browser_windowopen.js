@@ -72,6 +72,16 @@ add_task(async function() {
                          AppConstants.MOZ_DEV_EDITION ? inRange(r.x1, 100, 120) :
                                                         inRange(r.x1, 65, 100),
         },
+        {name: "bug 1555842 - the urlbar shouldn't flicker",
+         condition: r => {
+           let inputFieldRect = win.gURLBar.inputField.getBoundingClientRect();
+
+           return (!AppConstants.DEBUG ||
+                   AppConstants.platform == "linux" && AppConstants.ASAN) &&
+                  r.x1 >= inputFieldRect.left && r.x2 <= inputFieldRect.right &&
+                  r.y1 >= inputFieldRect.top && r.y2 <= inputFieldRect.bottom;
+         },
+        },
       ],
     },
   };
