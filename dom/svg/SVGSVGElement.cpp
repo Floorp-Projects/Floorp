@@ -370,10 +370,9 @@ SMILTimeContainer* SVGSVGElement::GetTimedDocumentRoot() {
 nsresult SVGSVGElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   SMILAnimationController* smilController = nullptr;
 
-  // NOTE(emilio): Using aParent because we still haven't called our base class.
-  // FIXME(emilio, bug 1555948): Should probably use IsInComposedDoc()?
-  if (aParent.IsInUncomposedDoc()) {
-    if ((smilController = aContext.OwnerDoc().GetAnimationController())) {
+  // FIXME(emilio, bug 1555948): Should probably use composed doc.
+  if (Document* doc = aContext.GetUncomposedDoc()) {
+    if ((smilController = doc->GetAnimationController())) {
       // SMIL is enabled in this document
       if (WillBeOutermostSVG(aParent, aContext.GetBindingParent())) {
         // We'll be the outermost <svg> element.  We'll need a time container.
