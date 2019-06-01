@@ -5,7 +5,7 @@
   "license": "MPL-2.0",
   "dependencies": {},
   "devDependencies": {
-    "browsertime": "https://github.com/ncalexan/browsertime/tarball/4f8738e2225b3298556308c0d8c916d3b22e9741"
+    "browsertime": "https://github.com/mozilla/browsertime/tarball/e09ad6e8c4754bdd8688b569d9ea1482933a06dd"
   },
   "notes(private)": "We don't want to publish to npm, so this is marked as private",
   "private": true
