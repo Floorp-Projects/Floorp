@@ -498,9 +498,6 @@ void CanvasClientSharedSurface::Updated(wr::RenderRoot aRenderRoot) {
 void CanvasClientSharedSurface::OnDetach() { ClearSurfaces(); }
 
 void CanvasClientSharedSurface::ClearSurfaces() {
-  if (mFront) {
-    mFront->CancelWaitForRecycle();
-  }
   mFront = nullptr;
   mNewFront = nullptr;
   mShSurfClient = nullptr;

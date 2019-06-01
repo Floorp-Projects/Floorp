@@ -28,7 +28,7 @@ add_task(function setup() {
   // make all native resolve calls "secretly" resolve localhost instead
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
-  // 0 - off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow
+  // 0 - off, 1 - reserved, 2 - TRR first, 3  - TRR only, 4 - reserved
   Services.prefs.setIntPref("network.trr.mode", 2); // TRR first
   Services.prefs.setBoolPref("network.trr.wait-for-portal", false);
   // don't confirm that TRR is working, just go!
@@ -299,21 +299,29 @@ add_task(async function test13() {
   await new DNSListener("test13.example.com", "127.0.0.1");
 });
 
-// TRR-shadow gets a 404 back from DOH
+// Test that MODE_RESERVED4 (previously MODE_SHADOW) is treated as TRR off.
 add_task(async function test14() {
   dns.clearCache(true);
-  Services.prefs.setIntPref("network.trr.mode", 4); // TRR-shadow
+  Services.prefs.setIntPref("network.trr.mode", 4); // MODE_RESERVED4. Interpreted as TRR off.
   Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/404`);
   await new DNSListener("test14.example.com", "127.0.0.1");
+
+  Services.prefs.setIntPref("network.trr.mode", 4); // MODE_RESERVED4. Interpreted as TRR off.
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`);
+  await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
-// TRR-shadow and timed out TRR
+// Test that MODE_RESERVED4 (previously MODE_SHADOW) is treated as TRR off.
 add_task(async function test15() {
   dns.clearCache(true);
-  Services.prefs.setIntPref("network.trr.mode", 4); // TRR-shadow
+  Services.prefs.setIntPref("network.trr.mode", 4); // MODE_RESERVED4. Interpreted as TRR off.
   Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-750ms`);
   Services.prefs.setIntPref("network.trr.request-timeout", 10);
   await new DNSListener("test15.example.com", "127.0.0.1");
+
+  Services.prefs.setIntPref("network.trr.mode", 4); // MODE_RESERVED4. Interpreted as TRR off.
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`);
+  await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
 // TRR-first and timed out TRR
@@ -343,12 +351,16 @@ add_task(async function test18() {
   Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
 });
 
-// TRR-race and a CNAME loop
+// Test that MODE_RESERVED1 (previously MODE_PARALLEL) is treated as TRR off.
 add_task(async function test19() {
   dns.clearCache(true);
-  Services.prefs.setIntPref("network.trr.mode", 1); // Race them!
+  Services.prefs.setIntPref("network.trr.mode", 1); // MODE_RESERVED1. Interpreted as TRR off.
   Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=none&cnameloop=true`);
   await new DNSListener("test19.example.com", "127.0.0.1");
+
+  Services.prefs.setIntPref("network.trr.mode", 1); // MODE_RESERVED1. Interpreted as TRR off.
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`);
+  await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
 // TRR-first and a CNAME loop
@@ -359,12 +371,16 @@ add_task(async function test20() {
   await new DNSListener("test20.example.com", "127.0.0.1");
 });
 
-// TRR-shadow and a CNAME loop
+// Test that MODE_RESERVED4 (previously MODE_SHADOW) is treated as TRR off.
 add_task(async function test21() {
   dns.clearCache(true);
-  Services.prefs.setIntPref("network.trr.mode", 4); // shadow
+  Services.prefs.setIntPref("network.trr.mode", 4); // MODE_RESERVED4. Interpreted as TRR off.
   Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=none&cnameloop=true`);
   await new DNSListener("test21.example.com", "127.0.0.1");
+
+  Services.prefs.setIntPref("network.trr.mode", 4); // MODE_RESERVED4. Interpreted as TRR off.
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`);
+  await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
 // verify that basic A record name mismatch gets rejected.
