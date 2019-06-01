@@ -15,6 +15,8 @@ const Config = {
   },
 };
 
+const FRAMEWORK_KEYS = ["hasFastClick", "hasMobify", "hasMarfeel"];
+
 browser.pageActionExtras.setLabelForHistogram("webcompat");
 
 browser.pageAction.onClicked.addListener(tab => {
@@ -61,10 +63,34 @@ function hasFastClickPageScript() {
   return false;
 }
 
-function checkForFastClick(tabId) {
+function hasMobifyPageScript() {
+  const win = window.wrappedJSObject;
+  return !!(win.Mobify && win.Mobify.Tag);
+}
+
+function hasMarfeelPageScript() {
+  const win = window.wrappedJSObject;
+  return !!win.marfeel;
+}
+
+function checkForFrameworks(tabId) {
   return browser.tabs.executeScript(tabId, {
-    code: `${hasFastClickPageScript};hasFastClickPageScript()`,
-  }).then(([hasFastClick]) => hasFastClick).catch(() => false);
+    code: `
+      (function() {
+        ${hasFastClickPageScript};
+        ${hasMobifyPageScript};
+        ${hasMarfeelPageScript};
+        
+        const result = {
+          hasFastClick: hasFastClickPageScript(),
+          hasMobify: hasMobifyPageScript(),
+          hasMarfeel: hasMarfeelPageScript(),
+        }
+
+        return result;
+      })();
+    `,
+  }).then(([results]) => results).catch(() => false);
 }
 
 function getWebCompatInfoForTab(tab) {
@@ -76,13 +102,13 @@ function getWebCompatInfoForTab(tab) {
     browser.browserInfo.getUpdateChannel(),
     browser.browserInfo.hasTouchScreen(),
     browser.tabExtras.getWebcompatInfo(id),
-    checkForFastClick(id),
+    checkForFrameworks(id),
     browser.tabs.captureTab(id, Config.screenshotFormat).catch(e => {
       console.error("WebCompat Reporter: getting a screenshot failed", e);
       return Promise.resolve(undefined);
     }),
   ]).then(([blockList, buildID, graphicsPrefs, channel, hasTouchScreen,
-            frameInfo, hasFastClick, screenshot]) => {
+            frameInfo, frameworks, screenshot]) => {
     if (channel !== "linux") {
       delete graphicsPrefs["layers.acceleration.force-enabled"];
     }
@@ -97,7 +123,7 @@ function getWebCompatInfoForTab(tab) {
         buildID,
         channel,
         consoleLog,
-        hasFastClick,
+        frameworks,
         hasTouchScreen,
         "mixed active content blocked": frameInfo.hasMixedActiveContentBlocked,
         "mixed passive content blocked": frameInfo.hasMixedDisplayContentBlocked,
@@ -130,18 +156,22 @@ async function openWebCompatTab(compatInfo) {
     utm_campaign: "report-site-issue-button",
     src: "desktop-reporter",
     details,
-    label: [],
+    extra_labels: [],
   };
-  if (details.hasFastClick) {
-    params.label.push("type-fastclick");
-  } else {
-    delete details.hasFastClick;
+
+  for (let framework of FRAMEWORK_KEYS) {
+    if (details.frameworks[framework]) {
+      params.details[framework] = true;
+      params.extra_labels.push(framework.replace(/^has/, "type-").toLowerCase());
+    }
   }
+  delete details.frameworks;
+
   if (details["gfx.webrender.all"] || details["gfx.webrender.enabled"]) {
-    params.label.push("type-webrender-enabled");
+    params.extra_labels.push("type-webrender-enabled");
   }
   if (compatInfo.hasTrackingContentBlocked) {
-    params.label.push(`type-tracking-protection-${compatInfo.blockList}`);
+    params.extra_labels.push(`type-tracking-protection-${compatInfo.blockList}`);
   }
 
   const tab = await browser.tabs.create({url: "about:blank"});
