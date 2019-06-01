@@ -331,6 +331,39 @@ class MachBrowsertime(MachCommandBase):
 
         return self.node([self.browsertime_path] + ['--version'])
 
+    def extra_default_args(self, args=[]):
+        # Add Mozilla-specific default arguments.  This is tricky because browsertime is quite
+        # loose about arguments; repeat arguments are generally accepted but then produce
+        # difficult to interpret type errors.
+
+        def matches(args, *flags):
+            'Return True if any argument matches any of the given flags (maybe with an argument).'
+            for flag in flags:
+                if flag in args or any(arg.startswith(flag + '=') for arg in args):
+                    return True
+            return False
+
+        extra_args = []
+
+        # Default to Firefox.  Override with `-b ...` or `--browser=...`.
+        specifies_browser = matches(args, '-b', '--browser')
+        if not specifies_browser:
+            extra_args.extend(('-b', 'firefox'))
+
+        # Default to not collect HAR.  Override with `--skipHar=false`.
+        specifies_har = matches(args, '--har', '--skipHar', '--gzipHar')
+        if not specifies_har:
+            extra_args.append('--skipHar')
+
+        if extra_args:
+            self.log(
+                logging.DEBUG,
+                'browsertime',
+                {'extra_args': extra_args},
+                'Running browsertime with extra default arguments: {extra_args}')
+
+        return extra_args
+
     @Command('browsertime', category='testing',
              description='Run [browsertime](https://github.com/sitespeedio/browsertime) '
                          'performance tests.')
@@ -356,7 +389,7 @@ class MachBrowsertime(MachCommandBase):
 
         self._activate_virtualenv()
 
-        return self.node([self.browsertime_path] + args)
+        return self.node([self.browsertime_path] + self.extra_default_args(args) + args)
 
     @Command('visualmetrics', category='testing',
              description='Run visualmetrics.py')
