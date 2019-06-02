@@ -23,9 +23,6 @@ add_task(async function setup() {
 add_task(async function test_addEngineWithDetails() {
   Assert.ok(!Services.search.isInitialized);
 
-  Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
-          .setBoolPref("reset.enabled", true);
-
   await Services.search.addEngineWithDetails(kSearchEngineID, {
     template: kSearchEngineURL,
     description: kDescription,
