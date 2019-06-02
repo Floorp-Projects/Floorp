@@ -396,10 +396,6 @@ pref("browser.search.hiddenOneOffs", "");
 // Mirrors whether the search-container widget is in the navigation toolbar.
 pref("browser.search.widget.inNavBar", false);
 
-#ifndef RELEASE_OR_BETA
-pref("browser.search.reset.enabled", true);
-#endif
-
 pref("browser.sessionhistory.max_entries", 50);
 
 // Built-in default permissions.
