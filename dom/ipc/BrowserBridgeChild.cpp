@@ -22,8 +22,10 @@ namespace mozilla {
 namespace dom {
 
 BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader,
-                                       BrowsingContext* aBrowsingContext)
-    : mLayersId{0},
+                                       BrowsingContext* aBrowsingContext,
+                                       TabId aId)
+    : mId{aId},
+      mLayersId{0},
       mIPCOpen(true),
       mFrameLoader(aFrameLoader),
       mBrowsingContext(aBrowsingContext) {}

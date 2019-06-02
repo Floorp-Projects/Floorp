@@ -708,7 +708,8 @@ class BrowserChild final : public BrowserChildBase,
 
   PBrowserBridgeChild* AllocPBrowserBridgeChild(
       const nsString& aName, const nsString& aRemoteType,
-      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags);
+      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
+      const TabId& aTabId);
 
   bool DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor);
 
