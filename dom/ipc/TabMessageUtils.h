@@ -14,6 +14,9 @@
 #include "nsIRemoteTab.h"
 #include "nsPIDOMWindow.h"
 #include "nsCOMPtr.h"
+#include "mozilla/dom/EffectsInfo.h"
+#include "mozilla/layers/LayersMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -72,6 +75,20 @@ struct ParamTraits<nsIRemoteTab::NavigationType>
           nsIRemoteTab::NavigationType,
           nsIRemoteTab::NavigationType::NAVIGATE_BACK,
           nsIRemoteTab::NavigationType::NAVIGATE_URL> {};
+
+template <>
+struct ParamTraits<mozilla::dom::EffectsInfo> {
+  typedef mozilla::dom::EffectsInfo paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mVisible);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mVisible);
+  }
+};
 
 }  // namespace IPC
 

@@ -86,7 +86,7 @@ class DisplayItemData final {
   nsDisplayItemGeometry* GetGeometry() const { return mGeometry.get(); }
   const DisplayItemClip& GetClip() const { return mClip; }
   void Invalidate() { mIsInvalid = true; }
-  void ClearAnimationCompositorState();
+  void NotifyRemoved();
   void SetItem(nsPaintedDisplayItem* aItem) { mItem = aItem; }
   nsPaintedDisplayItem* GetItem() const { return mItem; }
   nsIFrame* FirstFrame() const { return mFrameList[0]; }
