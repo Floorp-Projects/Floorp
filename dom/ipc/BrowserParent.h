@@ -843,13 +843,6 @@ class BrowserParent final : public PBrowserParent,
   LayoutDeviceIntPoint mClientOffset;
   LayoutDeviceIntPoint mChromeOffset;
 
-  nsTArray<nsTArray<IPCDataTransferItem>> mInitialDataTransferItems;
-
-  RefPtr<gfx::DataSourceSurface> mDnDVisualization;
-  bool mDragValid;
-  LayoutDeviceIntRect mDragRect;
-  nsCOMPtr<nsIPrincipal> mDragPrincipal;
-
   // When loading a new tab or window via window.open, the child is
   // responsible for loading the URL it wants into the new BrowserChild. When
   // the parent receives the CreateWindow message, though, it sends a LoadURL

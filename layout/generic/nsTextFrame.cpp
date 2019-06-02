@@ -9694,7 +9694,7 @@ bool nsTextFrame::IsEmpty() {
 
   bool isEmpty =
       IsAllWhitespace(TextFragment(), textStyle->mWhiteSpace !=
-                                           mozilla::StyleWhiteSpace::PreLine);
+                                          mozilla::StyleWhiteSpace::PreLine);
   AddStateBits(isEmpty ? TEXT_IS_ONLY_WHITESPACE : TEXT_ISNOT_ONLY_WHITESPACE);
   return isEmpty;
 }

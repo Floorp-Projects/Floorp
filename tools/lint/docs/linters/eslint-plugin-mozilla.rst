@@ -18,7 +18,7 @@ http://eslint.org/docs/user-guide/configuring#specifying-environments
 browser-window
 --------------
 
-Defines the environment for scripts that are in the main browser.xul scope.
+Defines the environment for scripts that are in the main browser.xhtml scope.
 
 chrome-worker
 -------------
