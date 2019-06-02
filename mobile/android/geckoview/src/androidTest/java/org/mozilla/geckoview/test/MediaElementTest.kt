@@ -221,6 +221,7 @@ class MediaElementTest : BaseSessionTest() {
     }
 
     @WithDevToolsAPI
+    @Ignore //disable test for frequent failures Bug 1554117
     @Test
     fun oggPlayMediaFromScript() {
         playMediaFromScript(VIDEO_OGG_PATH)
