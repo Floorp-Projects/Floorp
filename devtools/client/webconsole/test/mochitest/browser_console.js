@@ -103,7 +103,7 @@ async function testMessages(hud) {
     "error thrown from test-cu-reporterror.js via Cu.reportError()");
   await checkMessageExists(hud, "error from nuked globals");
   await checkMessageExists(hud, "message from content window");
-  await checkMessageExists(hud, "browser.xul");
+  await checkMessageExists(hud, "browser.xhtml");
   await checkMessageExists(hud, "framescript-eval");
   await checkMessageExists(hud, "framescript-message");
   await checkMessageExists(hud, "foobarException");

@@ -435,6 +435,13 @@ add_task(async function test_execute() {
     // Get all the other hosts currently saved in the permission manager.
     let hostsInPermissionManager = getAllDisabledHostsFromPermissionManager();
 
+    // Converted to punycode
+    disabledHosts = [
+      "http://disabled1.example.com",
+      "http://xn--pss.net",
+      "http://xn--19g.com",
+    ];
+
     // All disabledHosts should have migrated to the permission manager
     LoginTestUtils.assertDisabledHostsEqual(disabledHosts, hostsInPermissionManager);
 

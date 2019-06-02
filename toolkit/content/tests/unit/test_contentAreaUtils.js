@@ -14,7 +14,7 @@ function test_urlSecurityCheck() {
   var nullPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
 
   const HTTP_URI = "http://www.mozilla.org/";
-  const CHROME_URI = "chrome://browser/content/browser.xul";
+  const CHROME_URI = "chrome://browser/content/browser.xhtml";
   const DISALLOW_INHERIT_PRINCIPAL =
     Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
 

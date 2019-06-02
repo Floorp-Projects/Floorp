@@ -409,7 +409,6 @@ class nsHttpChannel final : public HttpBaseChannel,
                                      int64_t* aContentLength);
   bool ShouldUpdateOfflineCacheEntry();
   MOZ_MUST_USE nsresult ReadFromCache(bool alreadyMarkedValid);
-  MOZ_MUST_USE nsresult ContinueReadFromCache(nsresult rv);
   void CloseCacheEntry(bool doomOnFailure);
   void CloseOfflineCacheEntry();
   MOZ_MUST_USE nsresult InitCacheEntry();

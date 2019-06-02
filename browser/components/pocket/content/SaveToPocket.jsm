@@ -240,7 +240,7 @@ var SaveToPocket = {
     } else {
       Services.obs.removeObserver(this, "browser-delayed-startup-finished");
       PocketOverlay.startup();
-      // The title for the button is extracted from browser.xul where it comes from a DTD.
+      // The title for the button is extracted from browser.xhtml where it comes from a DTD.
       // If we don't have this, there's also no possibility of there being a reader
       // mode tab already loaded. We'll get an Reader:OnSetup message when that happens.
       if (this._readerButtonData.title) {
