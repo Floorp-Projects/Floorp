@@ -87,6 +87,7 @@ using mozilla::a11y::IAccessibleHolder from "mozilla/a11y/IPCTypes.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::EffectsInfo from "mozilla/dom/TabMessageUtils.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
 namespace dom {
@@ -187,7 +188,8 @@ parent:
      * Construct a new Remote iframe actor.
      */
     async PBrowserBridge(nsString aPresentationURL, nsString aRemoteType,
-                         BrowsingContext aBrowsingContext, uint32_t aChromeFlags);
+                         BrowsingContext aBrowsingContext, uint32_t aChromeFlags,
+                         TabId tabId);
 
     /**
      * Sends an NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW to be adopted by the

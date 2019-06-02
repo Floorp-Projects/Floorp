@@ -47,6 +47,7 @@ class RemoteBrowser : public nsISupports {
   // Try to cast this RemoteBrowser to a BrowserBridgeHost, may return null
   virtual BrowserBridgeHost* AsBrowserBridgeHost() = 0;
 
+  virtual TabId GetTabId() const = 0;
   virtual LayersId GetLayersId() const = 0;
   virtual BrowsingContext* GetBrowsingContext() const = 0;
   virtual nsILoadContext* GetLoadContext() const = 0;
