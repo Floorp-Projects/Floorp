@@ -13,13 +13,18 @@
 "use strict";
 
 const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 add_task(async function() {
   let addon = await AddonManager.getAddonByID("default-theme@mozilla.org");
 
+  // Dev edition uses a different default theme on desktop.
+  const expectActive = (!AppConstants.MOZ_DEV_EDITION ||
+                        AppConstants.MOZ_BUILD_APP !== "browser");
+
   ok(addon != null, "Default theme exists");
   is(addon.type, "theme", "Add-on type is correct");
-  is(addon.isActive, true, "Add-on is active");
+  is(addon.isActive, expectActive, "Add-on is active?");
   is(addon.hidden, false, "Add-on is not hidden");
 });
 

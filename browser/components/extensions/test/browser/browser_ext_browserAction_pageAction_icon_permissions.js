@@ -138,7 +138,7 @@ add_task(async function testSecureURLsDenied() {
       browser.tabs.query({active: true, currentWindow: true}, tabs => {
         let tabId = tabs[0].id;
 
-        let urls = ["chrome://browser/content/browser.xul",
+        let urls = ["chrome://browser/content/browser.xhtml",
                     "javascript:true"];
 
         let promises = [];
@@ -169,7 +169,7 @@ add_task(async function testSecureURLsDenied() {
 add_task(async function testSecureManifestURLsDenied() {
   // Test URLs included in the manifest.
 
-  let urls = ["chrome://browser/content/browser.xul",
+  let urls = ["chrome://browser/content/browser.xhtml",
               "javascript:true"];
 
   let apis = ["browser_action", "page_action"];
