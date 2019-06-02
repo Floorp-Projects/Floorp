@@ -15,7 +15,7 @@
 #include "nsFrameLoader.h"
 #include "nsStyleStructInlines.h"
 #include "nsSubDocumentFrame.h"
-#include "RenderFrame.h"
+#include "RemoteLayerTreeOwner.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -42,16 +42,16 @@ static already_AddRefed<LayerManager> GetLayerManager(
   return nullptr;
 }
 
-RenderFrame::RenderFrame()
+RemoteLayerTreeOwner::RemoteLayerTreeOwner()
     : mLayersId{0},
       mBrowserParent(nullptr),
       mLayerManager(nullptr),
       mInitialized(false),
       mLayersConnected(false) {}
 
-RenderFrame::~RenderFrame() {}
+RemoteLayerTreeOwner::~RemoteLayerTreeOwner() {}
 
-bool RenderFrame::Initialize(BrowserParent* aBrowserParent) {
+bool RemoteLayerTreeOwner::Initialize(BrowserParent* aBrowserParent) {
   if (mInitialized || !aBrowserParent) {
     return false;
   }
@@ -72,7 +72,7 @@ bool RenderFrame::Initialize(BrowserParent* aBrowserParent) {
   return true;
 }
 
-void RenderFrame::Destroy() {
+void RemoteLayerTreeOwner::Destroy() {
   if (mLayersId.IsValid()) {
     GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, mTabProcessId);
   }
@@ -81,7 +81,8 @@ void RenderFrame::Destroy() {
   mLayerManager = nullptr;
 }
 
-void RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions) {
+void RemoteLayerTreeOwner::EnsureLayersConnected(
+    CompositorOptions* aCompositorOptions) {
   RefPtr<LayerManager> lm = GetLayerManager(mBrowserParent);
   if (!lm) {
     return;
@@ -96,7 +97,7 @@ void RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions) {
   *aCompositorOptions = mCompositorOptions;
 }
 
-LayerManager* RenderFrame::AttachLayerManager() {
+LayerManager* RemoteLayerTreeOwner::AttachLayerManager() {
   RefPtr<LayerManager> lm;
   if (mBrowserParent) {
     lm = GetLayerManager(mBrowserParent);
@@ -113,9 +114,11 @@ LayerManager* RenderFrame::AttachLayerManager() {
   return mLayerManager;
 }
 
-void RenderFrame::OwnerContentChanged() { Unused << AttachLayerManager(); }
+void RemoteLayerTreeOwner::OwnerContentChanged() {
+  Unused << AttachLayerManager();
+}
 
-void RenderFrame::GetTextureFactoryIdentifier(
+void RemoteLayerTreeOwner::GetTextureFactoryIdentifier(
     TextureFactoryIdentifier* aTextureFactoryIdentifier) const {
   RefPtr<LayerManager> lm =
       mBrowserParent ? GetLayerManager(mBrowserParent) : nullptr;
