@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layout_RenderFrame_h
-#define mozilla_layout_RenderFrame_h
+#ifndef mozilla_layout_RemoteLayerTreeOwner_h
+#define mozilla_layout_RemoteLayerTreeOwner_h
 
 #include "base/process.h"
 
@@ -32,18 +32,18 @@ struct TextureFactoryIdentifier;
 namespace layout {
 
 /**
- * RenderFrame connects and manages layer trees for remote frames. It is
- * directly owned by a BrowserParent and always lives in the parent process.
+ * RemoteLayerTreeOwner connects and manages layer trees for remote frames. It
+ * is directly owned by a BrowserParent and always lives in the parent process.
  */
-class RenderFrame final {
+class RemoteLayerTreeOwner final {
   typedef mozilla::layers::CompositorOptions CompositorOptions;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::LayersId LayersId;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
 
  public:
-  RenderFrame();
-  virtual ~RenderFrame();
+  RemoteLayerTreeOwner();
+  virtual ~RemoteLayerTreeOwner();
 
   bool Initialize(dom::BrowserParent* aBrowserParent);
   void Destroy();
@@ -77,7 +77,7 @@ class RenderFrame final {
 
   bool mInitialized;
   // A flag that indicates whether or not the compositor knows about the
-  // layers id. In some cases this RenderFrame is not connected to the
+  // layers id. In some cases this RemoteLayerTreeOwner is not connected to the
   // compositor and so this flag is false.
   bool mLayersConnected;
 };
@@ -85,4 +85,4 @@ class RenderFrame final {
 }  // namespace layout
 }  // namespace mozilla
 
-#endif  // mozilla_layout_RenderFrame_h
+#endif  // mozilla_layout_RemoteLayerTreeOwner_h

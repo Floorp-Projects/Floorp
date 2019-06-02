@@ -34,7 +34,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/layout/RenderFrame.h"
+#include "mozilla/layout/RemoteLayerTreeOwner.h"
 #include "mozilla/plugins/PPluginWidgetParent.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
@@ -182,7 +182,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mBrowserBridgeParent(nullptr),
       mBrowserHost(nullptr),
       mContentCache(*this),
-      mRenderFrame{},
+      mRemoteLayerTreeOwner{},
       mLayerTreeEpoch{1},
       mChildToParentConversionMatrix{},
       mRect(0, 0, 0, 0),
@@ -426,10 +426,10 @@ a11y::DocAccessibleParent* BrowserParent::GetTopLevelDocAccessible() const {
 }
 
 LayersId BrowserParent::GetLayersId() const {
-  if (!mRenderFrame.IsInitialized()) {
+  if (!mRemoteLayerTreeOwner.IsInitialized()) {
     return LayersId{};
   }
-  return mRenderFrame.GetLayersId();
+  return mRemoteLayerTreeOwner.GetLayersId();
 }
 
 BrowserBridgeParent* BrowserParent::GetBrowserBridgeParent() const {
@@ -526,8 +526,8 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
     }
   }
 
-  if (mRenderFrame.IsInitialized()) {
-    mRenderFrame.OwnerContentChanged();
+  if (mRemoteLayerTreeOwner.IsInitialized()) {
+    mRemoteLayerTreeOwner.OwnerContentChanged();
   }
 
   // Set our BrowsingContext's embedder if we're not embedded within a
@@ -623,8 +623,8 @@ void BrowserParent::Destroy() {
 
 mozilla::ipc::IPCResult BrowserParent::RecvEnsureLayersConnected(
     CompositorOptions* aCompositorOptions) {
-  if (mRenderFrame.IsInitialized()) {
-    mRenderFrame.EnsureLayersConnected(aCompositorOptions);
+  if (mRemoteLayerTreeOwner.IsInitialized()) {
+    mRemoteLayerTreeOwner.EnsureLayersConnected(aCompositorOptions);
   }
   return IPC_OK();
 }
@@ -638,12 +638,12 @@ mozilla::ipc::IPCResult BrowserParent::Recv__delete__() {
 }
 
 void BrowserParent::ActorDestroy(ActorDestroyReason why) {
-  if (mRenderFrame.IsInitialized()) {
+  if (mRemoteLayerTreeOwner.IsInitialized()) {
     // It's important to unmap layers after the remote browser has been
     // destroyed, otherwise it may still send messages to the compositor which
     // will reject them, causing assertions.
-    RemoveBrowserParentFromTable(mRenderFrame.GetLayersId());
-    mRenderFrame.Destroy();
+    RemoveBrowserParentFromTable(mRemoteLayerTreeOwner.GetLayersId());
+    mRemoteLayerTreeOwner.Destroy();
   }
 
   // Even though BrowserParent::Destroy calls this, we need to do it here too in
@@ -845,23 +845,23 @@ void BrowserParent::ResumeLoad(uint64_t aPendingSwitchID) {
 }
 
 void BrowserParent::InitRendering() {
-  if (mRenderFrame.IsInitialized()) {
+  if (mRemoteLayerTreeOwner.IsInitialized()) {
     return;
   }
-  mRenderFrame.Initialize(this);
+  mRemoteLayerTreeOwner.Initialize(this);
 
-  layers::LayersId layersId = mRenderFrame.GetLayersId();
+  layers::LayersId layersId = mRemoteLayerTreeOwner.GetLayersId();
   AddBrowserParentToTable(layersId, this);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
-  mRenderFrame.GetTextureFactoryIdentifier(&textureFactoryIdentifier);
+  mRemoteLayerTreeOwner.GetTextureFactoryIdentifier(&textureFactoryIdentifier);
   Unused << SendInitRendering(textureFactoryIdentifier, layersId,
-                              mRenderFrame.GetCompositorOptions(),
-                              mRenderFrame.IsLayersConnected());
+                              mRemoteLayerTreeOwner.GetCompositorOptions(),
+                              mRemoteLayerTreeOwner.IsLayersConnected());
 }
 
 bool BrowserParent::AttachLayerManager() {
-  return !!mRenderFrame.AttachLayerManager();
+  return !!mRemoteLayerTreeOwner.AttachLayerManager();
 }
 
 void BrowserParent::MaybeShowFrame() {
@@ -878,8 +878,8 @@ bool BrowserParent::Show(const ScreenIntSize& size, bool aParentIsActive) {
     return false;
   }
 
-  MOZ_ASSERT(mRenderFrame.IsInitialized());
-  if (!mRenderFrame.AttachLayerManager()) {
+  MOZ_ASSERT(mRemoteLayerTreeOwner.IsInitialized());
+  if (!mRemoteLayerTreeOwner.AttachLayerManager()) {
     return false;
   }
 
@@ -2943,12 +2943,13 @@ void BrowserParent::ApzAwareEventRoutingToChild(
       // There may be cases where the APZ hit-testing code came to a different
       // conclusion than the main-thread hit-testing code as to where the event
       // is destined. In such cases the layersId of the APZ result may not match
-      // the layersId of this renderframe. In such cases the main-thread hit-
-      // testing code "wins" so we need to update the guid to reflect this.
-      if (mRenderFrame.IsInitialized()) {
-        if (aOutTargetGuid->mLayersId != mRenderFrame.GetLayersId()) {
+      // the layersId of this RemoteLayerTreeOwner. In such cases the
+      // main-thread hit- testing code "wins" so we need to update the guid to
+      // reflect this.
+      if (mRemoteLayerTreeOwner.IsInitialized()) {
+        if (aOutTargetGuid->mLayersId != mRemoteLayerTreeOwner.GetLayersId()) {
           *aOutTargetGuid =
-              ScrollableLayerGuid(mRenderFrame.GetLayersId(), 0,
+              ScrollableLayerGuid(mRemoteLayerTreeOwner.GetLayersId(), 0,
                                   ScrollableLayerGuid::NULL_SCROLL_ID);
         }
       }
@@ -3147,8 +3148,8 @@ bool BrowserParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
   }
 
   bool success = false;
-  if (mRenderFrame.IsInitialized()) {
-    layers::LayersId layersId = mRenderFrame.GetLayersId();
+  if (mRemoteLayerTreeOwner.IsInitialized()) {
+    layers::LayersId layersId = mRemoteLayerTreeOwner.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
       SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
                                gfxUtils::GetContentRenderRoot());
@@ -3176,8 +3177,8 @@ void BrowserParent::StopApzAutoscroll(nsViewID aScrollId,
     return;
   }
 
-  if (mRenderFrame.IsInitialized()) {
-    layers::LayersId layersId = mRenderFrame.GetLayersId();
+  if (mRemoteLayerTreeOwner.IsInitialized()) {
+    layers::LayersId layersId = mRemoteLayerTreeOwner.GetLayersId();
     if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
       SLGuidAndRenderRoot guid(layersId, aPresShellId, aScrollId,
                                gfxUtils::GetContentRenderRoot());

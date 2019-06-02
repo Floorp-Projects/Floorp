@@ -20,7 +20,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/layout/RenderFrame.h"
+#include "mozilla/layout/RemoteLayerTreeOwner.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Move.h"
 #include "nsCOMPtr.h"
@@ -840,7 +840,7 @@ class BrowserParent final : public PBrowserParent,
 
   ContentCacheInParent mContentCache;
 
-  layout::RenderFrame mRenderFrame;
+  layout::RemoteLayerTreeOwner mRemoteLayerTreeOwner;
   LayersObserverEpoch mLayerTreeEpoch;
 
   Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
