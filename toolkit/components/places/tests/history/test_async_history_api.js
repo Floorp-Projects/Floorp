@@ -343,7 +343,7 @@ add_task(async function test_non_addable_uri_errors() {
     "mailbox:Inbox",
     "moz-anno:favicon:http://mozilla.org/made-up-favicon",
     "view-source:http://mozilla.org",
-    "chrome://browser/content/browser.xul",
+    "chrome://browser/content/browser.xhtml",
     "resource://gre-resources/hiddenWindow.html",
     "data:,Hello%2C%20World!",
     "javascript:alert('hello wolrd!');",

@@ -196,7 +196,7 @@ async function dropLinksOnBrowser(browser, type) {
   await expectLink(browser,
                     [],
                     [ [ { type: "text/x-moz-url",
-                          data: "chrome://browser/content/browser.xul" } ] ],
+                          data: "chrome://browser/content/browser.xhtml" } ] ],
                     "text/x-moz-url chrome url drop on browser " + type);
 
   if (browser.type == "content") {

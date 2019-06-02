@@ -165,6 +165,26 @@ nsresult nsAboutProtocolHandler::CreateNewURI(const nsACString& aSpec,
   return NS_OK;
 }
 
+// The list of about: paths which are always allowed, regardless of enterprise
+// policies.
+//
+// Note: This is stored as a two-dimensional array, with each element the size
+// of the longest string in the list, for space efficiency. An array of
+// character pointers would consume more space than the extra padding in
+// shorter strings, and would require per-process relocations at load time.
+//
+// Important: This list MUST be kept sorted!
+static const char kAboutPageEnterpriseWhitelist[][10] = {
+    // clang-format off
+    "blank",
+    "certerror",
+    "home",
+    "neterror",
+    "newtab",
+    "welcome",
+    // clang-format on
+};
+
 NS_IMETHODIMP
 nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                                    nsIChannel** result) {
@@ -178,17 +198,18 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
   nsAutoCString path;
   nsresult rv2 = NS_GetAboutModuleName(uri, path);
   if (NS_SUCCEEDED(rv2)) {
+    size_t matchIdx;
     if (path.EqualsLiteral("srcdoc")) {
       // about:srcdoc is meant to be unresolvable, yet is included in the
       // about lookup tables so that it can pass security checks when used in
       // a srcdoc iframe.  To ensure that it stays unresolvable, we pretend
       // that it doesn't exist.
       rv = NS_ERROR_FACTORY_NOT_REGISTERED;
-    } else if (!path.EqualsLiteral("blank") &&
-               !path.EqualsLiteral("neterror") && !path.EqualsLiteral("home") &&
-               !path.EqualsLiteral("welcome") &&
-               !path.EqualsLiteral("newtab") &&
-               !path.EqualsLiteral("certerror")) {
+    } else if (!BinarySearchIf(
+                   kAboutPageEnterpriseWhitelist, 0,
+                   ArrayLength(kAboutPageEnterpriseWhitelist),
+                   [&path](const char* aOther) { return path.Compare(aOther); },
+                   &matchIdx)) {
       nsCOMPtr<nsIEnterprisePolicies> policyManager =
           do_GetService("@mozilla.org/enterprisepolicies;1", &rv2);
       if (NS_SUCCEEDED(rv2)) {

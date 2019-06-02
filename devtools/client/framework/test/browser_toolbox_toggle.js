@@ -19,7 +19,7 @@ add_task(async function() {
 
   // Test with ACCEL+SHIFT+I / ACCEL+ALT+I (MacOSX) ; modifiers should match :
   // - toolbox-key-toggle in devtools/client/framework/toolbox-window.xul
-  // - key_devToolboxMenuItem in browser/base/content/browser.xul
+  // - key_devToolboxMenuItem in browser/base/content/browser.xhtml
   info("Test toggle using CTRL+SHIFT+I/CMD+ALT+I");
   await testToggle("I", {
     accelKey: true,

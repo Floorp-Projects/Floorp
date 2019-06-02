@@ -20,12 +20,14 @@ namespace mozilla {
 namespace dom {
 class ContentParent;
 class DataTransfer;
+class RemoteDragStartData;
 } // namespace dom
 } // namespace mozilla
 %}
 
 [ptr] native ContentParentPtr(mozilla::dom::ContentParent);
 [ptr] native DataTransferPtr(mozilla::dom::DataTransfer);
+[ptr] native RemoteDragStartDataPtr(mozilla::dom::RemoteDragStartData);
 native EventMessage(mozilla::EventMessage);
 
 [scriptable, uuid(ebd6b3a2-af16-43af-a698-3091a087dd62), builtinclass]
@@ -94,6 +96,18 @@ interface nsIDragService : nsISupports
                                   in long aImageY,
                                   in DragEvent aDragEvent,
                                   in DataTransferPtr aDataTransfer);
+
+  /** Start a drag session with the data in aDragStartData from a child process.
+   *  Other arguments are the same as invokeDragSessionWithImage.
+   */
+  [noscript, can_run_script]
+  void invokeDragSessionWithRemoteImage(in Node aDOMNode,
+                                        in nsIPrincipal aPrincipal,
+                                        in nsIArray aTransferableArray,
+                                        in unsigned long aActionType,
+                                        in RemoteDragStartDataPtr aDragStartData,
+                                        in DragEvent aDragEvent,
+                                        in DataTransferPtr aDataTransfer);
 
   /**
    * Start a modal drag session using the selection as the drag image.

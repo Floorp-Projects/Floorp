@@ -54,7 +54,7 @@ describe("XULDocument", () => {
     );
 
     expect(renderedComponent.text()).toEqual(
-      "XULDocument chrome://browser/content/browser.xul"
+      "XULDocument chrome://browser/content/browser.xhtml"
     );
     expectActorAttribute(renderedComponent, stub.actor);
   });
