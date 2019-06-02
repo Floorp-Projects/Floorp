@@ -180,7 +180,7 @@ var PlacesOrganizer = {
       let findKey = document.getElementById("key_find");
       findKey.setAttribute("command", "OrganizerCommand_find:all");
 
-      // 2. Disable some keybindings from browser.xul
+      // 2. Disable some keybindings from browser.xhtml
       let elements = ["cmd_handleBackspace", "cmd_handleShiftBackspace"];
       for (let i = 0; i < elements.length; i++) {
         document.getElementById(elements[i]).setAttribute("disabled", "true");

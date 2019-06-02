@@ -402,6 +402,7 @@ ElementEditor.prototype = {
 
     if (this.textEditor && this.textEditor.node != node) {
       this.elt.removeChild(this.textEditor.elt);
+      this.textEditor.destroy();
       this.textEditor = null;
     }
 

@@ -276,6 +276,7 @@ nsBaseDragService::InvokeDragSessionWithImage(
   mDragPopup = nullptr;
   mImage = aImage;
   mImageOffset = CSSIntPoint(aImageX, aImageY);
+  mDragStartData = nullptr;
 
   mScreenPosition.x = aDragEvent->ScreenX(CallerType::System);
   mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
@@ -308,6 +309,34 @@ nsBaseDragService::InvokeDragSessionWithImage(
 }
 
 NS_IMETHODIMP
+nsBaseDragService::InvokeDragSessionWithRemoteImage(
+    nsINode* aDOMNode, nsIPrincipal* aPrincipal, nsIArray* aTransferableArray,
+    uint32_t aActionType, RemoteDragStartData* aDragStartData,
+    DragEvent* aDragEvent, DataTransfer* aDataTransfer) {
+  NS_ENSURE_TRUE(aDragEvent, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aDataTransfer, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
+
+  mDataTransfer = aDataTransfer;
+  mSelection = nullptr;
+  mHasImage = true;
+  mDragPopup = nullptr;
+  mImage = nullptr;
+  mDragStartData = aDragStartData;
+  mImageOffset = CSSIntPoint(0, 0);
+
+  mScreenPosition.x = aDragEvent->ScreenX(CallerType::System);
+  mScreenPosition.y = aDragEvent->ScreenY(CallerType::System);
+  mInputSource = aDragEvent->MozInputSource();
+
+  nsresult rv =
+      InvokeDragSession(aDOMNode, aPrincipal, aTransferableArray, aActionType,
+                        nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+  mRegion = Nothing();
+  return rv;
+}
+
+NS_IMETHODIMP
 nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
                                                   nsIPrincipal* aPrincipal,
                                                   nsIArray* aTransferableArray,
@@ -324,6 +353,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
   mDragPopup = nullptr;
   mImage = nullptr;
   mImageOffset = CSSIntPoint();
+  mDragStartData = nullptr;
   mRegion = Nothing();
 
   mScreenPosition.x = aDragEvent->ScreenX(CallerType::System);
@@ -437,6 +467,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   mHasImage = false;
   mUserCancelled = false;
   mDragPopup = nullptr;
+  mDragStartData = nullptr;
   mImage = nullptr;
   mImageOffset = CSSIntPoint();
   mScreenPosition = CSSIntPoint();
@@ -562,19 +593,12 @@ nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
 
   *aPresContext = presShell->GetPresContext();
 
-  RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(dragNode);
-  if (flo) {
-    RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
-    if (fl) {
-      auto* bp = fl->GetBrowserParent();
-      if (bp && bp->TakeDragVisualization(*aSurface, aScreenDragRect)) {
-        if (mImage) {
-          // Just clear the surface if chrome has overridden it with an image.
-          *aSurface = nullptr;
-        }
-
-        return NS_OK;
-      }
+  if (mDragStartData) {
+    if (mImage) {
+      // Just clear the surface if chrome has overridden it with an image.
+      *aSurface = nullptr;
+    } else {
+      *aSurface = mDragStartData->TakeVisualization(aScreenDragRect);
     }
   }
 

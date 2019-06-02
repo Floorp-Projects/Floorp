@@ -59,7 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789773
    function finishTest() {
      webProgress.removeProgressListener(testProgressListener);
      ok(true, "Loaded the popup window without spinning forever in the event loop!");
-     ok(calledListenerForBrowserChromeURL, "Should have called the progress listener for browser.xul");
+     ok(calledListenerForBrowserChromeURL, "Should have called the progress listener for browser.xhtml");
      popup.close();
      SimpleTest.finish();
    }

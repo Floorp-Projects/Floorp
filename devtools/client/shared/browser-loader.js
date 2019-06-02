@@ -25,6 +25,7 @@ const BROWSER_BASED_DIRS = [
   "resource://devtools/client/inspector/fonts",
   "resource://devtools/client/inspector/grids",
   "resource://devtools/client/inspector/layout",
+  "resource://devtools/client/inspector/markup",
   "resource://devtools/client/jsonview",
   "resource://devtools/client/netmonitor/src/utils",
   "resource://devtools/client/shared/source-map",
