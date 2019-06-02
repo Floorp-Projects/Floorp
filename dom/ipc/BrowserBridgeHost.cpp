@@ -23,6 +23,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserBridgeHost)
 BrowserBridgeHost::BrowserBridgeHost(BrowserBridgeChild* aChild)
     : mBridge(aChild) {}
 
+TabId BrowserBridgeHost::GetTabId() const { return mBridge->GetTabId(); }
+
 mozilla::layers::LayersId BrowserBridgeHost::GetLayersId() const {
   return mBridge->GetLayersId();
 }

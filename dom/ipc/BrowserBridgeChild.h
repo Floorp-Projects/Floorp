@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/PBrowserBridgeChild.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/ipc/IdType.h"
 
 namespace mozilla {
 
@@ -26,6 +27,8 @@ class ContentChild;
  */
 class BrowserBridgeChild : public PBrowserBridgeChild {
  public:
+  typedef mozilla::layers::LayersId LayersId;
+
   NS_INLINE_DECL_REFCOUNTING(BrowserBridgeChild);
 
   BrowserChild* Manager() {
@@ -33,7 +36,10 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
     return static_cast<BrowserChild*>(PBrowserBridgeChild::Manager());
   }
 
-  mozilla::layers::LayersId GetLayersId() { return mLayersId; }
+  TabId GetTabId() { return mId; }
+
+  LayersId GetLayersId() { return mLayersId; }
+
   nsFrameLoader* GetFrameLoader() const { return mFrameLoader; }
 
   BrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
@@ -64,7 +70,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   friend class PBrowserBridgeChild;
 
   BrowserBridgeChild(nsFrameLoader* aFrameLoader,
-                     BrowsingContext* aBrowsingContext);
+                     BrowsingContext* aBrowsingContext, TabId aId);
 
   mozilla::ipc::IPCResult RecvSetLayersId(
       const mozilla::layers::LayersId& aLayersId);
@@ -82,7 +88,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
  private:
   ~BrowserBridgeChild();
 
-  mozilla::layers::LayersId mLayersId;
+  TabId mId;
+  LayersId mLayersId;
   bool mIPCOpen;
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<BrowsingContext> mBrowsingContext;
