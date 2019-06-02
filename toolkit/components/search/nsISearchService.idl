@@ -217,18 +217,12 @@ interface nsISearchService : nsISupports
   Promise init();
 
   /**
-   * Redo asynchronous initialization
-   *
-   * Exposed for testing initializations
+   * Exposed for testing.
    */
   void reInit([optional] in boolean skipRegionCheck);
-
-  /**
-   * Clear locally stored data
-   *
-   * Exposed for testing initializations
-   */
   void reset();
+  Promise ensureBuiltinExtension(in AString id,
+                                [optional] in jsval locales);
 
   /**
    * Determine whether initialization has been completed.
@@ -361,7 +355,8 @@ interface nsISearchService : nsISupports
   /**
    * Adds search providers to the search service.  If the search
    * service is configured to load multiple locales for the extension,
-   * it may load more than one search engine.
+   * it may load more than one search engine. If called directly
+   * ensure the extension has been initialised.
    *
    * @param extension
    *        The extension to load from.
