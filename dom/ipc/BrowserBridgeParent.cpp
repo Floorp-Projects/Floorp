@@ -87,7 +87,7 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   bool ok = constructorSender->SendConstructBrowser(
       std::move(childEp), tabId, TabId(0), tabContext.AsIPCTabContext(),
       aBrowsingContext, aChromeFlags, constructorSender->ChildID(),
-      constructorSender->IsForBrowser());
+      constructorSender->IsForBrowser(), /* aIsTopLevel */ false);
   if (NS_WARN_IF(!ok)) {
     MOZ_ASSERT(false, "Browser Constructor Failed");
     return NS_ERROR_FAILURE;
@@ -151,6 +151,11 @@ IPCResult BrowserBridgeParent::RecvResumeLoad(uint64_t aPendingSwitchID) {
 IPCResult BrowserBridgeParent::RecvUpdateDimensions(
     const DimensionInfo& aDimensions) {
   Unused << mBrowserParent->SendUpdateDimensions(aDimensions);
+  return IPC_OK();
+}
+
+IPCResult BrowserBridgeParent::RecvUpdateEffects(const EffectsInfo& aEffects) {
+  Unused << mBrowserParent->SendUpdateEffects(aEffects);
   return IPC_OK();
 }
 
