@@ -18,7 +18,8 @@ add_task(async function test_selectedEngine() {
   // Test the selectedEngine pref.
   Services.prefs.setCharPref(kSelectedEnginePref, kTestEngineName);
 
-  await asyncReInit();
+  Services.search.reset();
+  await Services.search.init(true);
   Assert.equal(Services.search.defaultEngine.name, defaultEngineName);
 
   Services.prefs.clearUserPref(kSelectedEnginePref);
@@ -26,7 +27,8 @@ add_task(async function test_selectedEngine() {
   // Test the defaultenginename pref.
   Services.prefs.setCharPref(kDefaultenginenamePref, kTestEngineName);
 
-  await asyncReInit();
+  Services.search.reset();
+  await Services.search.init(true);
   Assert.equal(Services.search.defaultEngine.name, defaultEngineName);
 
   Services.prefs.clearUserPref(kDefaultenginenamePref);
@@ -45,7 +47,8 @@ add_task(async function test_persistAcrossRestarts() {
   Assert.equal(metadata.hash.length, 44);
 
   // Re-init and check the engine is still the same.
-  await asyncReInit();
+  Services.search.reset();
+  await Services.search.init(true);
   Assert.equal(Services.search.defaultEngine.name, kTestEngineName);
 
   // Cleanup (set the engine back to default).
@@ -66,7 +69,8 @@ add_task(async function test_ignoreInvalidHash() {
   await promiseSaveGlobalMetadata(metadata);
 
   // Re-init the search service, and check that the json file is ignored.
-  await asyncReInit();
+  Services.search.reset();
+  await Services.search.init(true);
   Assert.equal(Services.search.defaultEngine.name, getDefaultEngineName());
 });
 
@@ -136,7 +140,8 @@ add_task(async function test_fallback_kept_after_restart() {
   await promiseAfterCache();
 
   // After a restart, the defaultEngine value should still be unchanged.
-  await asyncReInit();
+  Services.search.reset();
+  await Services.search.init(true);
   Assert.equal(Services.search.defaultEngine.name, defaultName);
 });
 

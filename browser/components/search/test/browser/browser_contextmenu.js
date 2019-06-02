@@ -5,6 +5,7 @@
  */
 
 const ENGINE_NAME = "mozSearch";
+const ENGINE_ID = "mozsearch-engine@search.mozilla.org";
 
 add_task(async function() {
   // We want select events to be fired.
@@ -12,6 +13,8 @@ add_task(async function() {
 
   await Services.search.init();
 
+  // replace the path we load search engines from with
+  // the path to our test data.
   let searchExtensions = getChromeDir(getResolvedURI(gTestPath));
   searchExtensions.append("mozsearch");
   let resProt = Services.io.getProtocolHandler("resource")
@@ -20,9 +23,10 @@ add_task(async function() {
   resProt.setSubstitution("search-extensions",
                           Services.io.newURI("file://" + searchExtensions.path));
 
-  let addonPath = "resource://search-extensions/mozsearch-engine/";
-  await AddonManager.installBuiltinAddon(addonPath);
+  await Services.search.ensureBuiltinExtension(ENGINE_ID);
+
   let engine = await Services.search.getEngineByName(ENGINE_NAME);
+  ok(engine, "Got a search engine");
   let defaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
 
