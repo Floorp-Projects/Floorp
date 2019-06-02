@@ -856,10 +856,6 @@ MOZ_MUST_USE nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status) {
 template <class T>
 inline void HttpAsyncAborter<T>::HandleAsyncAbort() {
   MOZ_ASSERT(!mCallOnResume, "How did that happen?");
-  nsresult status = mThis->mStatus;
-  MOZ_LOG(gHttpLog, LogLevel::Debug,
-          ("HttpAsyncAborter::HandleAsyncAbort [this=%p status=%" PRIx32 "]\n",
-           mThis, static_cast<uint32_t>(status)));
 
   if (mThis->mSuspendCount) {
     MOZ_LOG(

@@ -83,7 +83,7 @@ It's recommended to use SVG since it keeps the CSS clean when supporting multipl
 
 * Read [Writing Efficient CSS](https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Writing_efficient_CSS).
 * Use an iframe where possible so your rules are scoped to the smallest possible set of nodes.<!--TODO: is this still true? and also refine exactly when it is appropriate to use an iframe. Examples might help-->
-* If your CSS is used in `browser.xul`, you need to take special care with performance:
+* If your CSS is used in `browser.xhtml`, you need to take special care with performance:
  * Descendent selectors should be avoided.
  * If possible, find ways to use **only** id selectors, class selectors and selector groups.
 

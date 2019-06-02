@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* This file is loaded by both browser.xul and toolbox.xul. Therefore, rules
+/* This file is loaded by both browser.xhtml and toolbox.xul. Therefore, rules
    defined here can not rely on toolbox.xul variables. */
 
 /* Splitters */
@@ -35,7 +35,7 @@
 }
 
 #appcontent[devtoolstheme="light"] {
-  /* These variables are used in browser.xul but inside the toolbox they are overridden by --theme-splitter-color */
+  /* These variables are used in browser.xhtml but inside the toolbox they are overridden by --theme-splitter-color */
   --devtools-splitter-color: #dde1e4;
 }
 

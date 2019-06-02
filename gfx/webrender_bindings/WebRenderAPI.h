@@ -26,6 +26,8 @@
 class nsDisplayItem;
 class nsDisplayTransform;
 
+#undef None
+
 namespace mozilla {
 
 struct ActiveScrolledRoot;

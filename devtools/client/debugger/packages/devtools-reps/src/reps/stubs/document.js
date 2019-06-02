@@ -47,7 +47,7 @@ stubs.set("XULDocument", {
     nodeType: 9,
     nodeName: "#document",
     isConnected: true,
-    location: "chrome://browser/content/browser.xul",
+    location: "chrome://browser/content/browser.xhtml",
   },
 });
 

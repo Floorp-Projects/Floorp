@@ -20,9 +20,9 @@
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
-#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PaymentRequestParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
+#include "mozilla/dom/RemoteDragStartData.h"
 #include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
 #include "mozilla/EventStateManager.h"
@@ -48,7 +48,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
-#include "nsContentAreaDragDrop.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsFocusManager.h"
@@ -196,11 +195,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mSizeMode(nsSizeMode_Normal),
       mClientOffset{},
       mChromeOffset{},
-      mInitialDataTransferItems{},
-      mDnDVisualization{},
-      mDragValid(false),
-      mDragRect{},
-      mDragPrincipal{},
       mCreatingWindow(false),
       mDelayedURL{},
       mDelayedFrameScripts{},
@@ -3487,7 +3481,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     Maybe<Shmem>&& aVisualDnDData, const uint32_t& aStride,
     const gfx::SurfaceFormat& aFormat, const LayoutDeviceIntRect& aDragRect,
     nsIPrincipal* aPrincipal) {
-  mInitialDataTransferItems.Clear();
   PresShell* presShell = mFrameElement->OwnerDoc()->GetPresShell();
   if (!presShell) {
     Unused << Manager()->SendEndDragSession(true, true, LayoutDeviceIntPoint(),
@@ -3498,9 +3491,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     return IPC_OK();
   }
 
-  EventStateManager* esm = presShell->GetPresContext()->EventStateManager();
-  for (uint32_t i = 0; i < aTransfers.Length(); ++i) {
-    mInitialDataTransferItems.AppendElement(std::move(aTransfers[i].items()));
+  RefPtr<RemoteDragStartData> dragStartData = new RemoteDragStartData(
+      this, std::move(aTransfers), aDragRect, aPrincipal);
+
+  if (!aVisualDnDData.isNothing() && aVisualDnDData.ref().IsReadable() &&
+      aVisualDnDData.ref().Size<char>() >= aDragRect.height * aStride) {
+    dragStartData->SetVisualization(gfx::CreateDataSourceSurfaceFromData(
+        gfx::IntSize(aDragRect.width, aDragRect.height), aFormat,
+        aVisualDnDData.ref().get<uint8_t>(), aStride));
   }
 
   nsCOMPtr<nsIDragService> dragService =
@@ -3509,88 +3507,15 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
     dragService->MaybeAddChildProcess(Manager());
   }
 
-  if (aVisualDnDData.isNothing() || !aVisualDnDData.ref().IsReadable() ||
-      aVisualDnDData.ref().Size<char>() < aDragRect.height * aStride) {
-    mDnDVisualization = nullptr;
-  } else {
-    mDnDVisualization = gfx::CreateDataSourceSurfaceFromData(
-        gfx::IntSize(aDragRect.width, aDragRect.height), aFormat,
-        aVisualDnDData.ref().get<uint8_t>(), aStride);
-  }
-
-  mDragValid = true;
-  mDragRect = aDragRect;
-  mDragPrincipal = aPrincipal;
-
-  esm->BeginTrackingRemoteDragGesture(mFrameElement);
+  presShell->GetPresContext()
+      ->EventStateManager()
+      ->BeginTrackingRemoteDragGesture(mFrameElement, dragStartData);
 
   if (aVisualDnDData.isSome()) {
     Unused << DeallocShmem(aVisualDnDData.ref());
   }
 
   return IPC_OK();
-}
-
-void BrowserParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer,
-                                        nsIPrincipal** aPrincipal) {
-  NS_IF_ADDREF(*aPrincipal = mDragPrincipal);
-
-  for (uint32_t i = 0; i < mInitialDataTransferItems.Length(); ++i) {
-    nsTArray<IPCDataTransferItem>& itemArray = mInitialDataTransferItems[i];
-    for (auto& item : itemArray) {
-      RefPtr<nsVariantCC> variant = new nsVariantCC();
-      // Special case kFilePromiseMime so that we get the right
-      // nsIFlavorDataProvider for it.
-      if (item.flavor().EqualsLiteral(kFilePromiseMime)) {
-        RefPtr<nsISupports> flavorDataProvider =
-            new nsContentAreaDragDropDataProvider();
-        variant->SetAsISupports(flavorDataProvider);
-      } else if (item.data().type() == IPCDataTransferData::TnsString) {
-        variant->SetAsAString(item.data().get_nsString());
-      } else if (item.data().type() == IPCDataTransferData::TIPCBlob) {
-        RefPtr<BlobImpl> impl =
-            IPCBlobUtils::Deserialize(item.data().get_IPCBlob());
-        variant->SetAsISupports(impl);
-      } else if (item.data().type() == IPCDataTransferData::TShmem) {
-        if (nsContentUtils::IsFlavorImage(item.flavor())) {
-          // An image! Get the imgIContainer for it and set it in the variant.
-          nsCOMPtr<imgIContainer> imageContainer;
-          nsresult rv = nsContentUtils::DataTransferItemToImage(
-              item, getter_AddRefs(imageContainer));
-          if (NS_FAILED(rv)) {
-            continue;
-          }
-          variant->SetAsISupports(imageContainer);
-        } else {
-          Shmem data = item.data().get_Shmem();
-          variant->SetAsACString(
-              nsDependentCSubstring(data.get<char>(), data.Size<char>()));
-        }
-
-        mozilla::Unused << DeallocShmem(item.data().get_Shmem());
-      }
-
-      // We set aHidden to false, as we don't need to worry about hiding data
-      // from content in the parent process where there is no content.
-      // XXX: Nested Content Processes may change this
-      aDataTransfer->SetDataWithPrincipalFromOtherProcess(
-          NS_ConvertUTF8toUTF16(item.flavor()), variant, i, mDragPrincipal,
-          /* aHidden = */ false);
-    }
-  }
-  mInitialDataTransferItems.Clear();
-  mDragPrincipal = nullptr;
-}
-
-bool BrowserParent::TakeDragVisualization(
-    RefPtr<mozilla::gfx::SourceSurface>& aSurface,
-    LayoutDeviceIntRect* aDragRect) {
-  if (!mDragValid) return false;
-
-  aSurface = mDnDVisualization.forget();
-  *aDragRect = mDragRect;
-  mDragValid = false;
-  return true;
 }
 
 bool BrowserParent::AsyncPanZoomEnabled() const {

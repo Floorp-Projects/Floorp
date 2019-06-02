@@ -257,7 +257,7 @@ add_task(async function test_update_url_security() {
       version: "0.1",
       updates: [
         { version: "0.2",
-          update_link: "chrome://browser/content/browser.xul",
+          update_link: "chrome://browser/content/browser.xhtml",
           update_hash: "sha256:08ac852190ecd81f40a514ea9299fe9143d9ab5e296b97e73fb2a314de49648a" },
         { version: "0.3",
           update_link: "http://example.com/update.xpi",

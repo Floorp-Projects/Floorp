@@ -31,7 +31,7 @@ add_task(async function test_error_cases() {
 });
 
 add_task(async function test_insertMany() {
-  const BAD_URLS = ["about:config", "chrome://browser/content/browser.xul"];
+  const BAD_URLS = ["about:config", "chrome://browser/content/browser.xhtml"];
   const GOOD_URLS = [1, 2, 3].map(x => { return `http://mozilla.com/${x}`; });
 
   let makePageInfos = async function(urls, filter = x => x) {
