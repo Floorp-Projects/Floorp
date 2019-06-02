@@ -743,9 +743,10 @@ SearchService.prototype = {
   _visibleDefaultEngines: [],
   _searchDefault: null,
   _searchOrder: [],
-  // Stores a map of the built in engines installed and their params so
-  // they can be reconstructed in restarts.
-  _extensions: new Map(),
+  // A Set of installed search extensions reported by AddonManager
+  // startup before SearchSevice has started. Will be installed
+  // during init().
+  _startupExtensions: new Set(),
 
   get _sortedEngines() {
     if (!this.__sortedEngines)
@@ -883,26 +884,6 @@ SearchService.prototype = {
       return !cache.visibleDefaultEngines.includes(engineName);
     }
 
-    // Parse the engine name into the extension name + locale pair, some engines
-    // will be exempt (ie yahoo-jp-auctions), can turn this from a whitelist to a
-    // blacklist when more engines are multilocale than not.
-    function parseEngineName(engineName) {
-      let [name, locale] = engineName.split(/-(.+)/);
-
-      if (!MULTI_LOCALE_ENGINES.includes(name)) {
-        return [engineName, DEFAULT_TAG];
-      }
-
-      if (!locale) {
-        locale = DEFAULT_TAG;
-      }
-      return [name, locale];
-    }
-
-    function extensionId(name) {
-      return name + "@" + EXT_SIGNING_ADDRESS;
-    }
-
     let buildID = Services.appinfo.platformBuildID;
     let rebuildCache = gEnvironment.get("RELOAD_ENGINES") ||
                        !cache.engines ||
@@ -911,38 +892,6 @@ SearchService.prototype = {
                        cache.buildID != buildID ||
                        cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
                        this._visibleDefaultEngines.some(notInCacheVisibleEngines);
-
-    await WebExtensionPolicy.readyPromise;
-
-    // If we are reiniting, delete previously installed built in
-    // extensions that arent in the current engine list.
-    for (let id of this._extensions.keys()) {
-      let policy = WebExtensionPolicy.getByID(id);
-      if (!policy) {
-        // If we are reiniting due to a remote settings update, we may have
-        // removed all the engines and be rebuilding without the cache. In this
-        // case, we won't have the cached engines loaded, so just skip this check.
-        continue;
-      }
-      let extension = policy.extension;
-      if (extension.addonData.builtIn && !engines.some(name => extensionId(name) === id)) {
-        this._extensions.delete(id);
-      }
-    }
-
-    // Turn our engine list into a list of extension names + the locales
-    // to be installed.
-    for (let engine of engines) {
-      let [extensionName, locale] = parseEngineName(engine);
-      let id = extensionId(extensionName);
-      let localeMap = this._extensions.get(id) || new Map();
-      let params = localeMap.get(locale);
-
-      if (!params) {
-        localeMap.set(locale, !rebuildCache);
-        this._extensions.set(id, localeMap);
-      }
-    }
 
     if (!rebuildCache) {
       SearchUtils.log("_loadEngines: loading from cache directories");
@@ -963,33 +912,15 @@ SearchService.prototype = {
       let enginesFromURLs = await this._loadFromChromeURLs(engines, isReload);
       enginesFromURLs.forEach(this._addEngineToStore, this);
     } else {
-      for (let [id, localeMap] of this._extensions) {
-        let policy = WebExtensionPolicy.getByID(id);
-        if (policy) {
-          SearchUtils.log("_loadEngines: Found previously installed extension");
-          await this.addEnginesFromExtension(policy.extension);
-        } else {
-          SearchUtils.log("_loadEngines: Installing " + id);
-          // We may have marked these as loading from the cache previously
-          // but if there wasnt an valid cache, mark as installing.
-          for (let [locale, installed] of localeMap) {
-            if (installed === true) {
-              localeMap.set(locale, null);
-            }
-          }
-          this._extensions.set(id, localeMap);
-          let path = EXT_SEARCH_PREFIX + id.split("@")[0] + "/";
-          try {
-            await AddonManager.installBuiltinAddon(path);
-            // The AddonManager will install the engine asynchronously
-            // We can manually wait on that happening here.
-            await ExtensionParent.apiManager.global.pendingSearchSetupTasks.get(id);
-            SearchUtils.log("_loadEngines: " + id + " installed");
-          } catch (err) {
-            this._extensions.delete(id);
-            Cu.reportError("Failed to install engine: " + err.message + "\n" + err.stack);
-          }
-        }
+      let engineList = this._enginesToLocales(engines);
+      for (let [id, locales] of engineList) {
+        await this.ensureBuiltinExtension(id, locales);
+      }
+
+      SearchUtils.log("_loadEngines: loading " +
+        this._startupExtensions.size + " engines reported by AddonManager startup");
+      for (let extension of this._startupExtensions) {
+        await this._installExtensionEngine(extension, [DEFAULT_TAG]);
       }
     }
 
@@ -999,6 +930,72 @@ SearchService.prototype = {
     this._loadEnginesMetadataFromCache(cache);
 
     SearchUtils.log("_loadEngines: done using rebuilt cache");
+  },
+
+  /**
+   * Ensures a built in search WebExtension is installed, installing
+   * it if necessary.
+   *
+   * @returns {Promise} A promise, resolved successfully once the
+   * extension is installed and registered by the SearchService.
+   */
+  async ensureBuiltinExtension(id, locales = [DEFAULT_TAG]) {
+    SearchUtils.log("ensureBuiltinExtension: " + id);
+    try {
+      let policy = WebExtensionPolicy.getByID(id);
+      if (!policy) {
+        SearchUtils.log("ensureBuiltinExtension: Installing " + id);
+        let path = EXT_SEARCH_PREFIX + id.split("@")[0] + "/";
+        await AddonManager.installBuiltinAddon(path);
+        policy = WebExtensionPolicy.getByID(id);
+      }
+      // On startup the extension may have not finished parsing the
+      // manifest, wait for that here.
+      await policy.readyPromise;
+      await this._installExtensionEngine(policy.extension, locales);
+      SearchUtils.log("ensureBuiltinExtension: " + id + " installed.");
+    } catch (err) {
+      Cu.reportError("Failed to install engine: " + err.message + "\n" + err.stack);
+    }
+  },
+
+  /**
+   * Converts array of engines into a Map of extensions + the locales
+   * of those extensions to install.
+   *
+   * @return {Map} A Map of extension names + locales.
+   */
+  _enginesToLocales(engines) {
+    let engineLocales = new Map();
+    for (let engine of engines) {
+      let [extensionName, locale] = this._parseEngineName(engine);
+      let id = extensionName + "@" + EXT_SIGNING_ADDRESS;
+      let locales = engineLocales.get(id) || new Set();
+      locales.add(locale);
+      engineLocales.set(id, locales);
+    }
+    return engineLocales;
+  },
+
+  /**
+   * Parse the engine name into the extension name + locale pair
+   * some engines will be exempt (ie yahoo-jp-auctions), can turn
+   * this from a whitelist to a blacklist when more engines
+   * are multilocale than not.
+   *
+   * @return {Array} The extension name and the locale to use.
+   */
+  _parseEngineName(engineName) {
+    let [name, locale] = engineName.split(/-(.+)/);
+
+    if (!MULTI_LOCALE_ENGINES.includes(name)) {
+      return [engineName, DEFAULT_TAG];
+    }
+
+    if (!locale) {
+      locale = DEFAULT_TAG;
+    }
+    return [name, locale];
   },
 
   /**
@@ -1116,8 +1113,13 @@ SearchService.prototype = {
    */
   reset() {
     gInitialized = false;
-    this._extensions = new Map();
-    this._startupExtensions = new Map();
+    this._initStarted = this.__sortedEngines =
+      this._currentEngine = this._searchDefault = null;
+    this._startupExtensions = new Set();
+    this._engines = {};
+    this._visibleDefaultEngines = [];
+    this._searchOrder = [];
+    this._metaData = {};
   },
 
   /**
@@ -1828,7 +1830,7 @@ SearchService.prototype = {
   },
 
   async addEngineWithDetails(name, iconURL, alias, description, method, template, extensionID) {
-    SearchUtils.log("addEngineWithDetails: Adding \"" + template + "\".");
+    SearchUtils.log("addEngineWithDetails: Adding \"" + name + "\".");
     let isCurrent = false;
     var params;
 
@@ -1849,8 +1851,7 @@ SearchService.prototype = {
     // We install search extensions during the init phase, both built in
     // web extensions freshly installed (via addEnginesFromExtension) or
     // user installed extensions being reenabled calling this directly.
-    if (!gInitialized && !this._extensions.has(params.extensionID)) {
-      SearchUtils.log("addEngineWithDetails: Not expecting " + params.extensionID);
+    if (!gInitialized && !isBuiltin) {
       await this.init(true);
     }
     if (!name)
@@ -1889,42 +1890,35 @@ SearchService.prototype = {
 
   async addEnginesFromExtension(extension) {
     SearchUtils.log("addEnginesFromExtension: " + extension.id);
-    try {
-      // When Firefox starts, the AddonManager will report all the currently
-      // installed search addons to us, keep the user installed engines
-      // but the Builtin ones we will install during init().
-      if (!gInitialized && extension.addonData.builtIn &&
-          !this._extensions.has(extension.id)) {
-        return [];
-      }
-
-      if (!this._extensions.has(extension.id)) {
-        SearchUtils.log("addEnginesFromExtension: User installed extension " + extension.id);
-        this._extensions.set(extension.id, new Map([[DEFAULT_TAG, null]]));
-      }
-
-      let installLocale = async (locale) => {
-        let manifest = (locale === DEFAULT_TAG) ? extension.manifest :
-            (await extension.getLocalizedManifest(locale));
-        return this._addEngineForManifest(extension, manifest, locale);
-      };
-
-      let engines = [];
-      for (let [locale, installed] of this._extensions.get(extension.id)) {
-        // If we have installed the engine from cache previously then
-        // no need to reinstall.
-        if (installed !== true) {
-          SearchUtils.log("addEnginesFromExtension: installing locale: " +
-              extension.id + ":" + locale);
-          engines.push(await installLocale(locale));
-        }
-      }
-      return engines;
-    } catch (err) {
-      SearchUtils.log("addEnginesFromExtension: Failed to install " + extension.id + ": \"" +
-          err.message + "\"\n" + err.stack);
+    if (extension.addonData.builtIn) {
+      SearchUtils.log("addEnginesFromExtension: Ignoring builtIn engine.");
       return [];
     }
+    // If we havent started SearchService yet, store this extension
+    // to install in SearchService.init().
+    if (!gInitialized) {
+      this._startupExtensions.add(extension);
+      return [];
+    }
+    return this._installExtensionEngine(extension, [DEFAULT_TAG]);
+  },
+
+  async _installExtensionEngine(extension, locales) {
+    SearchUtils.log("installExtensionEngine: " + extension.id);
+
+    let installLocale = async (locale) => {
+      let manifest = (locale === DEFAULT_TAG) ? extension.manifest :
+        (await extension.getLocalizedManifest(locale));
+      return this._addEngineForManifest(extension, manifest, locale);
+    };
+
+    let engines = [];
+    for (let locale of locales) {
+      SearchUtils.log("addEnginesFromExtension: installing locale: " +
+        extension.id + ":" + locale);
+      engines.push(await installLocale(locale));
+    }
+    return engines;
   },
 
   async _addEngineForManifest(extension, manifest, locale = DEFAULT_TAG) {
@@ -1979,10 +1973,6 @@ SearchService.prototype = {
       mozParams: searchProvider.params,
     };
 
-    let localeMap = this._extensions.get(extension.id);
-    localeMap.set(locale, params);
-    this._extensions.set(extension.id, localeMap);
-
     return this.addEngineWithDetails(params.name, params);
   },
 
@@ -2022,16 +2012,9 @@ SearchService.prototype = {
 
   async removeWebExtensionEngine(id) {
     SearchUtils.log("removeWebExtensionEngine: " + id);
-    let localeMap = this._extensions.get(id);
-    if (!localeMap) {
-      Cu.reportError("Cannot find extension (" + id + ") to remove");
-      return;
-    }
-    for (let params of localeMap.values()) {
-      let engine = await this.getEngineByName(params.name);
+    for (let engine of await this.getEnginesByExtensionID(id)) {
       await this.removeEngine(engine);
     }
-    this._extensions.delete(id);
   },
 
   async removeEngine(engine) {
