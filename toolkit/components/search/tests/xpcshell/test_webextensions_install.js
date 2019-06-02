@@ -19,7 +19,7 @@ AddonTestUtils.overrideCertDB();
 async function restart() {
   Services.search.reset();
   await promiseRestartManager();
-  await asyncReInit({waitForRegionFetch: true, skipReset: true});
+  await Services.search.init(false);
 }
 
 async function getEngineNames() {
@@ -92,9 +92,8 @@ add_task(async function basic_install_test() {
 
   // User uninstalls their engine
   await extension.awaitStartup();
-  let commitPromise = promiseAfterCache();
   await extension.unload();
-  await commitPromise;
+  await promiseAfterCache();
   Assert.deepEqual((await getEngineNames()), ["Plain"]);
 });
 
