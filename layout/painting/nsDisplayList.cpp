@@ -61,6 +61,7 @@
 #include "ImageLayers.h"
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
+#include "nsSubDocumentFrame.h"
 #include "StickyScrollContainer.h"
 #include "mozilla/AnimationPerformanceWarning.h"
 #include "mozilla/AnimationUtils.h"
@@ -102,7 +103,6 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
-#include "mozilla/layout/RenderFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
