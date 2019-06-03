@@ -12,11 +12,18 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
+import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.mozilla.fenix.R
 
 class PairInstructionsFragment : BottomSheetDialogFragment() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(DialogFragment.STYLE_NO_TITLE, R.style.FirefoxAccountsDialogStyle)
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_pair_instructions, container, false)
     }
