@@ -144,18 +144,21 @@ void Mutations::Disconnect() {
 }
 
 void Mutations::StartRefreshObserver() {
-  if (!mDocumentL10n) {
+  if (!mDocumentL10n || mRefreshObserver) {
     return;
   }
 
   if (!mRefreshDriver) {
     nsPresContext* ctx = mDocumentL10n->GetDocument()->GetPresContext();
-    if (!ctx) {
-      return;
+    if (ctx) {
+      mRefreshDriver = ctx->RefreshDriver();
     }
-    mRefreshDriver = ctx->RefreshDriver();
   }
 
+  // If we can't start the refresh driver, it means
+  // that the presContext is not available yet.
+  // In that case, we'll trigger the flush of pending
+  // elements in Document::CreatePresShell.
   if (mRefreshDriver) {
     mRefreshDriver->AddRefreshObserver(this, FlushType::Style);
     mRefreshObserver = true;
@@ -170,6 +173,12 @@ void Mutations::StopRefreshObserver() {
   if (mRefreshDriver) {
     mRefreshDriver->RemoveRefreshObserver(this, FlushType::Style);
     mRefreshObserver = false;
+  }
+}
+
+void Mutations::OnCreatePresShell() {
+  if (!mPendingElements.IsEmpty()) {
+    StartRefreshObserver();
   }
 }
 

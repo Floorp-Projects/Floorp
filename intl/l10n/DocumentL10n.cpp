@@ -788,5 +788,7 @@ void DocumentL10n::SetRootInfo(Element* aElement) {
   aElement->SetAttr(kNameSpaceID_None, dirAtom, dir, true);
 }
 
+void DocumentL10n::OnCreatePresShell() { mMutations->OnCreatePresShell(); }
+
 }  // namespace dom
 }  // namespace mozilla
