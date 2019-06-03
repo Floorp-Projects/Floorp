@@ -5867,6 +5867,13 @@ already_AddRefed<nsIPrincipal> HTMLMediaElement::GetCurrentPrincipal() {
   return nullptr;
 }
 
+bool HTMLMediaElement::HadCrossOriginRedirects() {
+  if (mDecoder) {
+    return mDecoder->HadCrossOriginRedirects();
+  }
+  return false;
+}
+
 already_AddRefed<nsIPrincipal> HTMLMediaElement::GetCurrentVideoPrincipal() {
   if (mDecoder) {
     return mDecoder->GetCurrentPrincipal();

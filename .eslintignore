@@ -23,8 +23,6 @@ dom/encoding/**
 dom/events/**
 dom/fetch/**
 dom/file/**
-dom/flex/**
-dom/grid/**
 dom/html/**
 dom/jsurl/**
 dom/media/test/**

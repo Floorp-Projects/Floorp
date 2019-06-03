@@ -49,8 +49,12 @@ add_task(async function add_search_engine_match() {
     null,
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix("bacon")
   );
-  await Promise.all([Services.search.addEngineWithDetails("bacon", "", "pork", "Search Bacon",
-    "GET", "http://www.bacon.moz/?search={searchTerms}"), promiseTopic]);
+  await Promise.all([Services.search.addEngineWithDetails("bacon", {
+    alias: "pork",
+    description: "Search Bacon",
+    method: "GET",
+    template: "http://www.bacon.moz/?search={searchTerms}",
+  }), promiseTopic]);
   await promiseTopic;
   let matchedEngine =
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix("bacon");
@@ -92,8 +96,12 @@ add_task(async function test_aliased_search_engine_match_upper_case_alias() {
     null,
     await PlacesSearchAutocompleteProvider.engineForDomainPrefix("patch")
   );
-  await Promise.all([Services.search.addEngineWithDetails("patch", "", "PR", "Search Patch",
-    "GET", "http://www.patch.moz/?search={searchTerms}"), promiseTopic]);
+  await Promise.all([Services.search.addEngineWithDetails("patch", {
+    alias: "PR",
+    description: "Search Patch",
+    method: "GET",
+    template: "http://www.patch.moz/?search={searchTerms}",
+  }), promiseTopic]);
   // lower case
   let matchedEngine =
     await PlacesSearchAutocompleteProvider.engineForAlias("pr");
