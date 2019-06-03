@@ -77,8 +77,6 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   mozilla::ipc::IPCResult RecvSetEmbeddedDocAccessibleCOMProxy(
       const IDispatchHolder& aCOMProxy);
 
-  mozilla::ipc::IPCResult RecvFireFrameLoadEvent(bool aIsTrusted);
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
