@@ -72,7 +72,7 @@ class PromptFeatureTest {
         val engine = Mockito.mock(Engine::class.java)
         mockFragmentManager = mockFragmentManager()
 
-        mockSessionManager = Mockito.spy(SessionManager(engine))
+        mockSessionManager = spy(SessionManager(engine))
         promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
     }
 
