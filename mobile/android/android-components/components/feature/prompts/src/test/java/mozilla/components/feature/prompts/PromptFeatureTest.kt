@@ -17,6 +17,7 @@ import android.content.Intent.EXTRA_MIME_TYPES
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
@@ -54,6 +55,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import java.security.InvalidParameterException
 import java.util.Date
 import java.util.UUID
@@ -587,6 +589,31 @@ class PromptFeatureTest {
 
             val allowMultipleFiles = extras!!.getBoolean(EXTRA_ALLOW_MULTIPLE)
             assertTrue(allowMultipleFiles)
+        }
+    }
+
+    @Test
+    fun `buildFileChooserIntent with files extension types must produce an intent with the correct mime types`() {
+        val shadowMimeTypeMap = shadowOf(MimeTypeMap.getSingleton())
+        shadowMimeTypeMap.addExtensionMimeTypMapping(".gif", "image/gif")
+        shadowMimeTypeMap.addExtensionMimeTypMapping(
+            "docx",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+
+        promptFeature = PromptFeature(null, mock(), mockSessionManager, null, mockFragmentManager) { }
+
+        val intent = promptFeature.buildFileChooserIntent(true, arrayOf(".gif", "image/jpeg", "docx", ".fun"))
+
+        with(intent) {
+
+            assertEquals(action, ACTION_GET_CONTENT)
+
+            val mimeTypes = extras!!.get(EXTRA_MIME_TYPES) as Array<*>
+            assertEquals(mimeTypes[0], "image/gif")
+            assertEquals(mimeTypes[1], "image/jpeg")
+            assertEquals(mimeTypes[2], "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            assertEquals(mimeTypes[3], "*/*")
         }
     }
 
