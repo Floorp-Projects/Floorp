@@ -53,7 +53,7 @@ size_of_test!(
     16
 );
 
-size_of_test!(test_size_of_rule_node, RuleNode, 88);
+size_of_test!(test_size_of_rule_node, RuleNode, 80);
 
 // This is huge, but we allocate it on the stack and then never move it,
 // we only pass `&mut SourcePropertyDeclaration` references around.
