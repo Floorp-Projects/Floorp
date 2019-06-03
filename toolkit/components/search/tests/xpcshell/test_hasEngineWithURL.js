@@ -19,8 +19,8 @@ function checkEngineState(exists, engine) {
 
 // Add a search engine for testing.
 async function addEngineWithParams(engine) {
-  await Services.search.addEngineWithDetails(engine.name, null, null, null,
-                                             engine.method, engine.formURL);
+  await Services.search.addEngineWithDetails(engine.name,
+    {method: engine.method, template: engine.formURL});
 
   let addedEngine = Services.search.getEngineByName(engine.name);
   for (let param of engine.queryParams) {

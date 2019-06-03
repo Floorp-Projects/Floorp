@@ -32,7 +32,8 @@ add_task(async function setup() {
 });
 
 async function addAndMakeDefault(name, searchURL) {
-  await Services.search.addEngineWithDetails(name, null, null, null, "GET", searchURL);
+  await Services.search.addEngineWithDetails(name,
+    {method: "GET", template: searchURL});
   let engine = Services.search.getEngineByName(name);
   await Services.search.setDefault(engine);
   return engine;
