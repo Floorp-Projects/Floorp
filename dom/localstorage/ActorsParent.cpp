@@ -3148,28 +3148,38 @@ void RequestAllowToCloseIf(P aPredicate) {
   databases.Clear();
 }
 
-bool VerifyPrincipalInfo(const Maybe<ContentParentId>& aContentParentId,
-                         const PrincipalInfo& aPrincipalInfo,
-                         const PrincipalInfo& aStoragePrincipalInfo,
-                         const Maybe<nsID>& aClientId) {
+bool VerifyPrincipalInfo(const PrincipalInfo& aPrincipalInfo,
+                         const PrincipalInfo& aStoragePrincipalInfo) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
     return false;
   }
 
-  if (gClientValidation && aClientId.isSome()) {
+  if (NS_WARN_IF(!StoragePrincipalHelper::
+                     VerifyValidStoragePrincipalInfoForPrincipalInfo(
+                         aStoragePrincipalInfo, aPrincipalInfo))) {
+    return false;
+  }
+
+  return true;
+}
+
+bool VerifyClientId(const Maybe<ContentParentId>& aContentParentId,
+                    const PrincipalInfo& aPrincipalInfo,
+                    const Maybe<nsID>& aClientId) {
+  AssertIsOnBackgroundThread();
+
+  if (gClientValidation) {
+    if (NS_WARN_IF(aClientId.isNothing())) {
+      return false;
+    }
+
     RefPtr<ClientManagerService> svc = ClientManagerService::GetInstance();
     if (svc && NS_WARN_IF(!svc->HasWindow(aContentParentId, aPrincipalInfo,
                                           aClientId.ref()))) {
       return false;
     }
-  }
-
-  if (NS_WARN_IF(!StoragePrincipalHelper::
-                     VerifyValidStoragePrincipalInfoForPrincipalInfo(
-                         aStoragePrincipalInfo, aPrincipalInfo))) {
-    return false;
   }
 
   return true;
@@ -6331,9 +6341,8 @@ bool LSRequestBase::VerifyRequestParams() {
       const LSRequestCommonParams& params =
           mParams.get_LSRequestPreloadDatastoreParams().commonParams();
 
-      if (NS_WARN_IF(
-              !VerifyPrincipalInfo(mContentParentId, params.principalInfo(),
-                                   params.storagePrincipalInfo(), Nothing()))) {
+      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo(),
+                                          params.storagePrincipalInfo()))) {
         return false;
       }
 
@@ -6351,9 +6360,15 @@ bool LSRequestBase::VerifyRequestParams() {
 
       const LSRequestCommonParams& commonParams = params.commonParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(
-              mContentParentId, commonParams.principalInfo(),
-              commonParams.storagePrincipalInfo(), params.clientId()))) {
+      if (NS_WARN_IF(
+              !VerifyPrincipalInfo(commonParams.principalInfo(),
+                                   commonParams.storagePrincipalInfo()))) {
+        return false;
+      }
+
+      if (NS_WARN_IF(!VerifyClientId(mContentParentId,
+                                     commonParams.principalInfo(),
+                                     params.clientId()))) {
         return false;
       }
 
@@ -6369,9 +6384,13 @@ bool LSRequestBase::VerifyRequestParams() {
       const LSRequestPrepareObserverParams& params =
           mParams.get_LSRequestPrepareObserverParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(
-              mContentParentId, params.principalInfo(),
-              params.storagePrincipalInfo(), params.clientId()))) {
+      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo(),
+                                          params.storagePrincipalInfo()))) {
+        return false;
+      }
+
+      if (NS_WARN_IF(!VerifyClientId(mContentParentId, params.principalInfo(),
+                                     params.clientId()))) {
         return false;
       }
 
@@ -8032,9 +8051,8 @@ bool LSSimpleRequestBase::VerifyRequestParams() {
       const LSSimpleRequestPreloadedParams& params =
           mParams.get_LSSimpleRequestPreloadedParams();
 
-      if (NS_WARN_IF(
-              !VerifyPrincipalInfo(mContentParentId, params.principalInfo(),
-                                   params.storagePrincipalInfo(), Nothing()))) {
+      if (NS_WARN_IF(!VerifyPrincipalInfo(params.principalInfo(),
+                                          params.storagePrincipalInfo()))) {
         return false;
       }
 
