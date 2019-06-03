@@ -1693,12 +1693,10 @@ void nsBaseWidget::NotifyThemeChanged() {
   }
 }
 
-void nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
-                                        UIStateChangeType aShowFocusRings) {
+void nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowFocusRings) {
   if (Document* doc = GetDocument()) {
-    nsPIDOMWindowOuter* win = doc->GetWindow();
-    if (win) {
-      win->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);
+    if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
+      win->SetKeyboardIndicators(aShowFocusRings);
     }
   }
 }

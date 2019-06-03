@@ -2800,7 +2800,7 @@ nsIPrincipal* nsGlobalWindowOuter::GetEffectiveStoragePrincipal() {
 //*****************************************************************************
 
 void nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
-    UIStateChangeType aShowAccelerators, UIStateChangeType aShowFocusRings) {
+    UIStateChangeType aShowFocusRings) {
   MOZ_ASSERT(!GetCurrentInnerWindow());
 
   nsPIDOMWindowOuter* piWin = GetPrivateRoot();
@@ -2816,15 +2816,11 @@ void nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
     return;
   }
 
-  if (aShowAccelerators != UIStateChangeType_NoChange) {
-    windowRoot->SetShowAccelerators(aShowAccelerators == UIStateChangeType_Set);
-  }
   if (aShowFocusRings != UIStateChangeType_NoChange) {
     windowRoot->SetShowFocusRings(aShowFocusRings == UIStateChangeType_Set);
   }
 
-  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowAccelerators,
-                                                        aShowFocusRings);
+  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowFocusRings);
 }
 
 Element* nsPIDOMWindowOuter::GetFrameElementInternal() const {
@@ -6855,7 +6851,7 @@ bool nsGlobalWindowOuter::ShouldShowFocusRing() {
 }
 
 void nsGlobalWindowOuter::SetKeyboardIndicators(
-    UIStateChangeType aShowAccelerators, UIStateChangeType aShowFocusRings) {
+    UIStateChangeType aShowFocusRings) {
   nsPIDOMWindowOuter* piWin = GetPrivateRoot();
   if (!piWin) {
     return;
@@ -6871,15 +6867,11 @@ void nsGlobalWindowOuter::SetKeyboardIndicators(
     return;
   }
 
-  if (aShowAccelerators != UIStateChangeType_NoChange) {
-    windowRoot->SetShowAccelerators(aShowAccelerators == UIStateChangeType_Set);
-  }
   if (aShowFocusRings != UIStateChangeType_NoChange) {
     windowRoot->SetShowFocusRings(aShowFocusRings == UIStateChangeType_Set);
   }
 
-  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowAccelerators,
-                                                        aShowFocusRings);
+  nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(this, aShowFocusRings);
 
   bool newShouldShowFocusRing = ShouldShowFocusRing();
   if (mInnerWindow && nsGlobalWindowInner::Cast(mInnerWindow)->mHasFocus &&

@@ -715,10 +715,9 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   bool IsRootOuterWindow() { return mIsRootOuterWindow; }
 
   /**
-   * Set initial keyboard indicator state for accelerators and focus rings.
+   * Set initial keyboard indicator state for focus rings.
    */
-  void SetInitialKeyboardIndicators(UIStateChangeType aShowAccelerators,
-                                    UIStateChangeType aShowFocusRings);
+  void SetInitialKeyboardIndicators(UIStateChangeType aShowFocusRings);
 
   // Internal getter/setter for the frame element, this version of the
   // getter crosses chrome boundaries whereas the public scriptable
@@ -959,8 +958,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   /**
    * Set the keyboard indicator state for accelerators and focus rings.
    */
-  virtual void SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
-                                     UIStateChangeType aShowFocusRings) = 0;
+  virtual void SetKeyboardIndicators(UIStateChangeType aShowFocusRings) = 0;
 
   /**
    * Indicates that the page in the window has been hidden. This is used to
