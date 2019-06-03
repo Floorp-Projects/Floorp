@@ -31,6 +31,39 @@
 
 namespace vixl {
 
+
+// Currently computes I and D cache line size.
+void CPU::SetUp() {
+  uint32_t cache_type_register = GetCacheType();
+
+  // The cache type register holds information about the caches, including I
+  // D caches line size.
+  static const int kDCacheLineSizeShift = 16;
+  static const int kICacheLineSizeShift = 0;
+  static const uint32_t kDCacheLineSizeMask = 0xf << kDCacheLineSizeShift;
+  static const uint32_t kICacheLineSizeMask = 0xf << kICacheLineSizeShift;
+
+  // The cache type register holds the size of the I and D caches in words as
+  // a power of two.
+  uint32_t dcache_line_size_power_of_two =
+      (cache_type_register & kDCacheLineSizeMask) >> kDCacheLineSizeShift;
+  uint32_t icache_line_size_power_of_two =
+      (cache_type_register & kICacheLineSizeMask) >> kICacheLineSizeShift;
+
+  dcache_line_size_ = 4 << dcache_line_size_power_of_two;
+  icache_line_size_ = 4 << icache_line_size_power_of_two;
+
+  // Bug 1521158 suggests that having CPU with different cache line sizes could
+  // cause issues as we would only invalidate half of the cache line of we
+  // invalidate every 128 bytes, but other little cores have a different stride
+  // such as 64 bytes. To be conservative, we will try reducing the stride to 32
+  // bytes, which should be smaller than any known cache line.
+  const uint32_t conservative_line_size = 32;
+  dcache_line_size_ = std::min(dcache_line_size_, conservative_line_size);
+  icache_line_size_ = std::min(icache_line_size_, conservative_line_size);
+}
+
+
 uint32_t CPU::GetCacheType() {
 #if defined(__aarch64__) && !defined(_MSC_VER)
   uint64_t cache_type_register;
@@ -38,7 +71,7 @@ uint32_t CPU::GetCacheType() {
   __asm__ __volatile__ ("mrs %[ctr], ctr_el0"  // NOLINT
                         : [ctr] "=r" (cache_type_register));
   VIXL_ASSERT(IsUint32(cache_type_register));
-  return cache_type_register;
+  return static_cast<uint32_t>(cache_type_register);
 #else
   // This will lead to a cache with 1 byte long lines, which is fine since
   // neither EnsureIAndDCacheCoherency nor the simulator will need this
