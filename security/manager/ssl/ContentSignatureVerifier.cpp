@@ -17,6 +17,7 @@
 #include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 #include "nsPromiseFlatString.h"
+#include "nsProxyRelease.h"
 #include "nsSecurityHeaderParser.h"
 #include "nsWhitespaceTokenizer.h"
 #include "mozpkix/pkix.h"
@@ -50,7 +51,8 @@ class VerifyContentSignatureTask : public CryptoTask {
         mCertChain(aCertChain),
         mHostname(aHostname),
         mSignatureVerified(false),
-        mPromise(aPromise) {}
+        mPromise(new nsMainThreadPtrHolder<Promise>(
+            "VerifyContentSignatureTask::mPromise", aPromise)) {}
 
  private:
   virtual nsresult CalculateResult() override;
@@ -61,7 +63,7 @@ class VerifyContentSignatureTask : public CryptoTask {
   nsCString mCertChain;
   nsCString mHostname;
   bool mSignatureVerified;
-  RefPtr<Promise> mPromise;
+  nsMainThreadPtrHandle<Promise> mPromise;
 };
 
 NS_IMETHODIMP
@@ -84,7 +86,7 @@ ContentSignatureVerifier::AsyncVerifyContentSignature(
 
   RefPtr<VerifyContentSignatureTask> task(new VerifyContentSignatureTask(
       aData, aCSHeader, aCertChain, aHostname, promise));
-  nsresult rv = task->Dispatch("ContentSig");
+  nsresult rv = task->Dispatch();
   if (NS_FAILED(rv)) {
     return rv;
   }
