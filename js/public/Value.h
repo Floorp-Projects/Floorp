@@ -1036,17 +1036,6 @@ static inline Value CanonicalizedDoubleValue(double d) {
   return Value::fromDouble(CanonicalizeNaN(d));
 }
 
-static inline bool IsCanonicalized(double d) {
-  if (mozilla::IsInfinite(d) || mozilla::IsFinite(d)) {
-    return true;
-  }
-
-  uint64_t bits;
-  mozilla::BitwiseCast<uint64_t>(d, &bits);
-  return (bits & ~mozilla::FloatingPoint<double>::kSignBit) ==
-         detail::CanonicalizedNaNBits;
-}
-
 static inline constexpr Value NaNValue() {
   uint64_t rawBits = detail::CanonicalizedNaNBits;
 #if defined(JS_PUNBOX64)
