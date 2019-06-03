@@ -216,7 +216,13 @@ class DocAccessibleParent : public ProxyAccessible,
 
 #if defined(XP_WIN)
   void MaybeInitWindowEmulation();
-  void SendParentCOMProxy();
+
+  /**
+   * @param aOuterDoc The OuterDocAccessible to be returned as the parent of
+   *        this document. Only GetNativeInterface() is called on this, so it
+   *        may be a ProxyAccessibleWrap or similar.
+   */
+  void SendParentCOMProxy(Accessible* aOuterDoc);
 
   virtual mozilla::ipc::IPCResult RecvGetWindowedPluginIAccessible(
       const WindowsHandle& aHwnd, IAccessibleHolder* aPluginCOMProxy) override;
