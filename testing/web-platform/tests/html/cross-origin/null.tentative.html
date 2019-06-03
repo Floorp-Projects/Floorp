@@ -1,4 +1,5 @@
 <!doctype html>
+<meta name="timeout" content="long">
 <title>Cross-Origin header and nested navigable resource without such header</title>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
@@ -62,5 +63,32 @@ async_test(t => {
   }, 500);
 }, "Top-level with null policy: navigating a frame back from a blocked page should work.");
 
+async_test(t => {
+  let pageLoaded = false;
+  const CHANNEL_NAME = "usecredentials-null-top-navigation";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  let finished = false;
+  bc.onmessage = t.step_func((event) => {
+    pageLoaded = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  const SECOND_CHANNEL = "usecredentials-null-top-navigation-final";
+  let bc2 = new BroadcastChannel(SECOND_CHANNEL);
+  bc2.onmessage = t.step_func((event) => {
+    finished = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  let win = window.open(`resources/navigate_usecredentials.sub.html?channelName=${CHANNEL_NAME}&to=navigate_null.sub.html?channelName=${SECOND_CHANNEL}`, "_blank", "noopener");
+
+  t.step_timeout(() => {
+    assert_equals(pageLoaded, true, "Opening a null window (noopener) from usecredentials window should work");
+    assert_equals(finished, true, "Navigating a top level window out of an usecredentials policy should work");
+    t.done();
+  }, 500);
+}, "Top-level noopener popup with use-credentials policy: navigating to a different (null) policy should work");
 
 </script>
