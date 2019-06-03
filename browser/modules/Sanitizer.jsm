@@ -444,7 +444,8 @@ var Sanitizer = {
         await clearData(range, Ci.nsIClearDataService.CLEAR_PERMISSIONS |
                                Ci.nsIClearDataService.CLEAR_CONTENT_PREFERENCES |
                                Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
-                               Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS);
+                               Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+                               Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS);
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
       },
     },
