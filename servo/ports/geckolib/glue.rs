@@ -4924,6 +4924,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
 ) {
     use style::properties::longhands::background_image::SpecifiedValue as BackgroundImage;
     use style::properties::PropertyDeclaration;
+    use style::stylesheets::CorsMode;
     use style::values::generics::image::Image;
     use style::values::specified::url::SpecifiedImageUrl;
     use style::values::Either;
@@ -4939,7 +4940,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetBackgroundImage(
         None,
         None,
     );
-    let url = SpecifiedImageUrl::parse_from_string(string.into(), &context);
+    let url = SpecifiedImageUrl::parse_from_string(string.into(), &context, CorsMode::None);
     let decl = PropertyDeclaration::BackgroundImage(BackgroundImage(vec![Either::Second(
         Image::Url(url),
     )].into()));
