@@ -31,6 +31,8 @@ add_task(function setup() {
   // 0 - off, 1 - reserved, 2 - TRR first, 3  - TRR only, 4 - reserved
   Services.prefs.setIntPref("network.trr.mode", 2); // TRR first
   Services.prefs.setBoolPref("network.trr.wait-for-portal", false);
+  // By default wait for all responses before notifying the listeners.
+  Services.prefs.setBoolPref("network.trr.wait-for-A-and-AAAA", true);
   // don't confirm that TRR is working, just go!
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
 
@@ -54,6 +56,8 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.trr.request-timeout");
   Services.prefs.clearUserPref("network.trr.disable-ECS");
   Services.prefs.clearUserPref("network.trr.early-AAAA");
+  Services.prefs.clearUserPref("network.trr.skip-AAAA-when-not-supported");
+  Services.prefs.clearUserPref("network.trr.wait-for-A-and-AAAA");
   Services.prefs.clearUserPref("network.trr.excluded-domains");
 
   Services.prefs.clearUserPref("network.http.spdy.enabled");
@@ -173,8 +177,67 @@ add_task(async function test5b() {
 
 // verify AAAA entry
 add_task(async function test6() {
-  dns.clearCache(true);
 
+  Services.prefs.setBoolPref("network.trr.wait-for-A-and-AAAA", true);
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2020&delayIPv4=100`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2030&delayIPv4=100`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2020&delayIPv6=100`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2030&delayIPv6=100`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", true); // ignored when wait-for-A-and-AAAA is true
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2020`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", false); // ignored when wait-for-A-and-AAAA is true
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2030`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+
+  Services.prefs.setBoolPref("network.trr.wait-for-A-and-AAAA", false);
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2020&delayIPv4=100`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", false);
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2030&delayIPv4=100`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", true);
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2020&delayIPv6=100`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+
+  dns.clearCache(true);
+  Services.prefs.setBoolPref("network.trr.early-AAAA", false);
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2030&delayIPv6=100`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2030");
+
+  dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.early-AAAA", true);
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/doh?responseIP=2020:2020::2020`);
@@ -186,6 +249,7 @@ add_task(async function test6() {
   await new DNSListener("aaaa.example.com", "2020:2020::2030");
 
   Services.prefs.clearUserPref("network.trr.early-AAAA");
+  Services.prefs.clearUserPref("network.trr.wait-for-A-and-AAAA");
 });
 
 // verify RFC1918 address from the server is rejected
