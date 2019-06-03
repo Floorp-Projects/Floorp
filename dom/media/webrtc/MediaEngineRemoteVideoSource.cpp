@@ -31,6 +31,42 @@ using dom::MediaTrackConstraintSet;
 using dom::MediaTrackSettings;
 using dom::VideoFacingModeEnum;
 
+static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
+  // Set facing mode based on device name.
+#if defined(ANDROID)
+  // Names are generated. Example: "Camera 0, Facing back, Orientation 90"
+  //
+  // See media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/
+  // webrtc/videoengine/VideoCaptureDeviceInfoAndroid.java
+
+  if (aDeviceName.Find(NS_LITERAL_STRING("Facing back")) != kNotFound) {
+    return Some(VideoFacingModeEnum::Environment);
+  }
+  if (aDeviceName.Find(NS_LITERAL_STRING("Facing front")) != kNotFound) {
+    return Some(VideoFacingModeEnum::User);
+  }
+#endif  // ANDROID
+#ifdef XP_MACOSX
+  // Kludge to test user-facing cameras on OSX.
+  if (aDeviceName.Find(NS_LITERAL_STRING("Face")) != -1) {
+    return Some(VideoFacingModeEnum::User);
+  }
+#endif
+#ifdef XP_WIN
+  // The cameras' name of Surface book are "Microsoft Camera Front" and
+  // "Microsoft Camera Rear" respectively.
+
+  if (aDeviceName.Find(NS_LITERAL_STRING("Front")) != kNotFound) {
+    return Some(VideoFacingModeEnum::User);
+  }
+  if (aDeviceName.Find(NS_LITERAL_STRING("Rear")) != kNotFound) {
+    return Some(VideoFacingModeEnum::Environment);
+  }
+#endif  // WINDOWS
+
+  return Nothing();
+}
+
 MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
     int aIndex, camera::CaptureEngine aCapEngine, bool aScary)
     : mCaptureIndex(aIndex),
@@ -113,49 +149,29 @@ void MediaEngineRemoteVideoSource::SetName(nsString aName) {
   AssertIsOnOwningThread();
 
   mDeviceName = std::move(aName);
-  bool hasFacingMode = false;
-  VideoFacingModeEnum facingMode = VideoFacingModeEnum::User;
 
-  // Set facing mode based on device name.
-#if defined(ANDROID)
-  // Names are generated. Example: "Camera 0, Facing back, Orientation 90"
-  //
-  // See media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/
-  // webrtc/videoengine/VideoCaptureDeviceInfoAndroid.java
+  Maybe<VideoFacingModeEnum> facingMode;
+  if (GetMediaSource() == MediaSourceEnum::Camera) {
+    // Only cameras can have a facing mode.
+    facingMode = GetFacingMode(mDeviceName);
+  }
 
-  if (mDeviceName.Find(NS_LITERAL_STRING("Facing back")) != kNotFound) {
-    hasFacingMode = true;
-    facingMode = VideoFacingModeEnum::Environment;
-  } else if (mDeviceName.Find(NS_LITERAL_STRING("Facing front")) != kNotFound) {
-    hasFacingMode = true;
-    facingMode = VideoFacingModeEnum::User;
-  }
-#endif  // ANDROID
-#ifdef XP_MACOSX
-  // Kludge to test user-facing cameras on OSX.
-  if (mDeviceName.Find(NS_LITERAL_STRING("Face")) != -1) {
-    hasFacingMode = true;
-    facingMode = VideoFacingModeEnum::User;
-  }
-#endif
-#ifdef XP_WIN
-  // The cameras' name of Surface book are "Microsoft Camera Front" and
-  // "Microsoft Camera Rear" respectively.
-
-  if (mDeviceName.Find(NS_LITERAL_STRING("Front")) != kNotFound) {
-    hasFacingMode = true;
-    facingMode = VideoFacingModeEnum::User;
-  } else if (mDeviceName.Find(NS_LITERAL_STRING("Rear")) != kNotFound) {
-    hasFacingMode = true;
-    facingMode = VideoFacingModeEnum::Environment;
-  }
-#endif  // WINDOWS
-  if (hasFacingMode) {
+  if (facingMode.isSome()) {
     mFacingMode.Assign(NS_ConvertUTF8toUTF16(
-        dom::VideoFacingModeEnumValues::strings[uint32_t(facingMode)].value));
+        dom::VideoFacingModeEnumValues::strings[uint32_t(*facingMode)].value));
   } else {
     mFacingMode.Truncate();
   }
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaEngineRemoteVideoSource::SetName (facingMode updater)",
+      [settings = mSettings, hasFacingMode = facingMode.isSome(),
+       mode = mFacingMode]() {
+        if (!hasFacingMode) {
+          settings->mFacingMode.Reset();
+          return;
+        }
+        settings->mFacingMode.Construct(mode);
+      }));
 }
 
 nsString MediaEngineRemoteVideoSource::GetName() const {
