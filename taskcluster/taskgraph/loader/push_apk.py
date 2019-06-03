@@ -33,21 +33,9 @@ def get_dependent_loaded_tasks(config, params, loaded_tasks):
     tasks_with_matching_kind = (
         task for task in nightly_tasks if task.kind in config.get('kind-dependencies')
     )
-    android_tasks = (
+    return [
         task for task in tasks_with_matching_kind
         if task.attributes.get('build_platform', '').startswith('android') and
         # Bug 1522581: Some GeckoView-only tasks produce APKs that shouldn't be pushed.
         not task.attributes.get('disable-push-apk', False)
-    )
-
-    # XXX Bug 1368484: Aarch64 is not planned to ride the trains regularly. It stayed on central
-    # for a couple of cycles, and is planned to stay on mozilla-beta until 68.
-    if params['project'] in ('mozilla-central', 'mozilla-beta', 'try'):
-        shipping_tasks = list(android_tasks)
-    else:
-        shipping_tasks = [
-            task for task in android_tasks
-            if 'aarch64' not in task.attributes.get('build_platform', '')
-        ]
-
-    return shipping_tasks
+    ]
