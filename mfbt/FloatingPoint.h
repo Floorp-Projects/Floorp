@@ -278,6 +278,18 @@ static MOZ_ALWAYS_INLINE T NegativeInfinity() {
 }
 
 /**
+ * Computes the bit pattern for an infinity with the specified sign bit.
+ */
+template <typename T, int SignBit>
+struct InfinityBits {
+  using Traits = FloatingPoint<T>;
+
+  static_assert(SignBit == 0 || SignBit == 1, "bad sign bit");
+  static constexpr typename Traits::Bits value =
+      (SignBit * Traits::kSignBit) | Traits::kExponentBits;
+};
+
+/**
  * Computes the bit pattern for a NaN with the specified sign bit and
  * significand bits.
  */
