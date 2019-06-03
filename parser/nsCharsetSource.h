@@ -14,14 +14,14 @@
 #define kCharsetFromCache 5
 #define kCharsetFromParentFrame 6
 #define kCharsetFromAutoDetection 7
-#define kCharsetFromHintPrevDoc 8
-#define kCharsetFromMetaPrescan 9  // this one and smaller: HTML5 Tentative
-#define kCharsetFromMetaTag 10     // this one and greater: HTML5 Confident
-#define kCharsetFromIrreversibleAutoDetection 11
-#define kCharsetFromChannel 12
-#define kCharsetFromOtherComponent 13
-#define kCharsetFromParentForced 14  // propagates to child frames
-#define kCharsetFromUserForced 15    // propagates to child frames
+#define kCharsetFromMetaPrescan 8  // this one and smaller: HTML5 Tentative
+#define kCharsetFromMetaTag 9      // this one and greater: HTML5 Confident
+#define kCharsetFromIrreversibleAutoDetection 10
+#define kCharsetFromChannel 11
+#define kCharsetFromOtherComponent 12
+#define kCharsetFromParentForced 13  // propagates to child frames
+#define kCharsetFromUserForced 14    // propagates to child frames
+#define kCharsetFromUserForcedAutoDetection 15
 #define kCharsetFromByteOrderMark 16
 #define kCharsetFromUtf8OnlyMime 17  // For JSON, WebVTT and such
 #define kCharsetFromBuiltIn 18       // resource: URLs
