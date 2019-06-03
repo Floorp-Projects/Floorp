@@ -36,13 +36,7 @@ using namespace mozilla::dom;
 
 nsWindowRoot::nsWindowRoot(nsPIDOMWindowOuter* aWindow) {
   mWindow = aWindow;
-
-  // Keyboard indicators are not shown on Mac by default.
-#if defined(XP_MACOSX)
-  mShowFocusRings = false;
-#else
-  mShowFocusRings = true;
-#endif
+  mShowFocusRings = StaticPrefs::browser_display_show_focus_rings();
 }
 
 nsWindowRoot::~nsWindowRoot() {
