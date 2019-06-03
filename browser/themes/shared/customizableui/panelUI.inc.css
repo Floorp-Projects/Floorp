@@ -568,7 +568,9 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 #appMenu-fxa-avatar {
   pointer-events: none;
-  list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
+  list-style-image: var(--avatar-image-url);
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 /* Handle different UI states. */
@@ -697,26 +699,31 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   --avatar-image-url: url(chrome://browser/skin/fxa/avatar.svg);
 }
 
-:root[fxastatus="unverified"] #fxa-avatar-image {
-  list-style-image: url(chrome://browser/skin/fxa/avatar-confirm.svg);
+:root[fxastatus="unverified"] {
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-confirm.svg);
 }
 
-:root[fxastatus="not_configured"] #fxa-avatar-image {
-  list-style-image: url(chrome://browser/skin/fxa/avatar-empty.svg);
+:root[fxastatus="not_configured"] {
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-empty.svg);
 }
 
-:root[fxastatus="not_configured"][fxa_avatar_badged="badged"] #fxa-avatar-image {
-  list-style-image: url(chrome://browser/skin/fxa/avatar-empty-badged.svg);
+:root[fxastatus="not_configured"][fxa_avatar_badged="badged"] {
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-empty-badged.svg);
 }
 
 :root:not([fxatoolbarmenu]) #fxa-toolbar-menu-button {
   display: none;
 }
 
+#fxa-menu-avatar,
+#fxa-avatar-image {
+  list-style-image: var(--avatar-image-url);
+}
+
+/* Non-signedin statuses icons are not totally round. */
 :root[fxastatus="signedin"] #fxa-menu-avatar,
 :root[fxastatus="signedin"] #fxa-avatar-image {
   border-radius: 50%;
-  list-style-image: var(--avatar-image-url);
 }
 
 :root[fxastatus="signedin"] #PanelUI-fxa-signin,
@@ -796,7 +803,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 .fxaChooseWhatToSyncDevices {
   height: 102px;
   width: 201px;
-  list-style-image: url(chrome://browser/skin/fxa/choose-what-to-sync-devices.svg);
+  list-style-image: url(chrome://browser/skin/fxa/sync-devices.svg);
 }
 
 .fxaGraphicMail {
@@ -806,7 +813,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 }
 
 #PanelUI-remotetabs {
-  --panel-ui-sync-illustration-height: 91px;
+  --panel-ui-sync-illustration-height: 141px;
 }
 
 .PanelUI-fxa-signin-instruction-label,
@@ -885,7 +892,7 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   /* If you change the margin here, the min-height of the synced tabs panel
     (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
     need adjusting (see bug 1248506) */
-  width: 104px;
+  width: 204px;
   height: var(--panel-ui-sync-illustration-height);
   margin: 38px 0 15px;
   -moz-context-properties: fill;
