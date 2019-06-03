@@ -20,6 +20,9 @@ class nsIURI;
 
 class ExpandedPrincipal;
 
+namespace Json {
+class Value;
+}
 namespace mozilla {
 namespace dom {
 class Document;
@@ -67,11 +70,14 @@ class SiteIdentifier {
  */
 class BasePrincipal : public nsJSPrincipals {
  public:
+  // Warning: this enum impacts Principal serialization into JSON format.
+  // Only update if you know exactly what you are doing
   enum PrincipalKind {
-    eNullPrincipal,
+    eNullPrincipal = 0,
     eCodebasePrincipal,
     eExpandedPrincipal,
-    eSystemPrincipal
+    eSystemPrincipal,
+    eKindMax = eSystemPrincipal
   };
 
   explicit BasePrincipal(PrincipalKind aKind);
@@ -119,6 +125,12 @@ class BasePrincipal : public nsJSPrincipals {
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
   NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
   NS_IMETHOD GetSiteOrigin(nsACString& aOrigin) override;
+
+  nsresult ToJSON(nsACString& aJSON);
+  static already_AddRefed<BasePrincipal> FromJSON(const nsACString& aJSON);
+  // Method populates a passed Json::Value with serializable fields
+  // which represent all of the fields to deserialize the principal
+  virtual nsresult PopulateJSONObject(Json::Value& aObject);
 
   virtual bool AddonHasPermission(const nsAtom* aPerm);
 

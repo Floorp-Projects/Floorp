@@ -1153,6 +1153,40 @@ nsScriptSecurityManager::CreateCodebasePrincipalFromOrigin(
 }
 
 NS_IMETHODIMP
+nsScriptSecurityManager::PrincipalToJSON(nsIPrincipal* aPrincipal,
+                                         nsACString& aJSON) {
+  aJSON.Truncate();
+  if (!aPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
+
+  BasePrincipal::Cast(aPrincipal)->ToJSON(aJSON);
+
+  if (aJSON.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::JSONToPrincipal(const nsACString& aJSON,
+                                         nsIPrincipal** aPrincipal) {
+  if (aJSON.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::FromJSON(aJSON);
+
+  if (!principal) {
+    return NS_ERROR_FAILURE;
+  }
+
+  principal.forget(aPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScriptSecurityManager::CreateNullPrincipal(
     JS::Handle<JS::Value> aOriginAttributes, JSContext* aCx,
     nsIPrincipal** aPrincipal) {

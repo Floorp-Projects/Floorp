@@ -5,7 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestOriginAttributes.cpp'
+    'TestOriginAttributes.cpp',
+    'TestPrincipalSerialization.cpp'
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
