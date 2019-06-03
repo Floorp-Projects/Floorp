@@ -5,6 +5,7 @@ add_task(async function test_abort_merging() {
   let buf = await openMirror("abort_merging");
 
   let promise = new Promise((resolve, reject) => {
+    buf.merger.finalize();
     let callback = {
       handleResult() {
         reject(new Error("Shouldn't have merged after aborting"));
@@ -14,12 +15,7 @@ add_task(async function test_abort_merging() {
         resolve();
       },
     };
-    // `merge` schedules a runnable to start the merge on the storage thread, on
-    // the next turn of the event loop. In the same turn, before the runnable is
-    // scheduled, we call `finalize`, which sets the abort controller's aborted
-    // flag.
     buf.merger.merge(0, 0, [], callback);
-    buf.merger.finalize();
   });
 
   await promise;

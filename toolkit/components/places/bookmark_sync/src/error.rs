@@ -22,6 +22,7 @@ pub enum Error {
     MalformedString(Box<dyn error::Error + Send + Sync + 'static>),
     MergeConflict,
     UnknownItemValidity(i64),
+    DidNotRun,
 }
 
 impl error::Error for Error {
@@ -65,7 +66,9 @@ impl From<Error> for nsresult {
                 dogear::ErrorKind::Abort => NS_ERROR_ABORT,
                 _ => NS_ERROR_FAILURE,
             },
-            Error::InvalidLocalRoots | Error::InvalidRemoteRoots => NS_ERROR_UNEXPECTED,
+            Error::InvalidLocalRoots | Error::InvalidRemoteRoots | Error::DidNotRun => {
+                NS_ERROR_UNEXPECTED
+            }
             Error::Storage(err) => err.into(),
             Error::Nsresult(result) => result.clone(),
             Error::UnknownItemKind(_)
@@ -92,6 +95,7 @@ impl fmt::Display for Error {
             Error::UnknownItemValidity(validity) => {
                 write!(f, "Unknown item validity {} in database", validity)
             }
+            Error::DidNotRun => write!(f, "Failed to run merge on storage thread"),
         }
     }
 }

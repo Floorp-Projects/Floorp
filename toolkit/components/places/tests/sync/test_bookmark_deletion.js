@@ -4,12 +4,11 @@
 add_task(async function test_complex_orphaning() {
   let now = Date.now();
 
-  let mergeTelemetryEvents = [];
+  let mergeTelemetryCounts;
   let buf = await openMirror("complex_orphaning", {
-    recordTelemetryEvent(object, method, value, extra) {
-      equal(object, "mirror", "Wrong object for telemetry event");
-      if (method == "merge") {
-        mergeTelemetryEvents.push({ value, extra });
+    recordStepTelemetry(name, took, counts) {
+      if (name == "merge") {
+        mergeTelemetryCounts = counts.filter(({ count }) => count > 0);
       }
     },
   });
@@ -124,11 +123,12 @@ add_task(async function test_complex_orphaning() {
   info("Apply remote");
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-  deepEqual(mergeTelemetryEvents, [{
-    value: "structure",
-    extra: { remoteRevives: 0, localDeletes: 1, localRevives: 0,
-             remoteDeletes: 1 },
-  }], "Should record telemetry with structure change counts");
+  deepEqual(mergeTelemetryCounts, [
+    { name: "items", count: 9 },
+    { name: "deletes", count: 2 },
+    { name: "localDeletes", count: 1 },
+    { name: "remoteDeletes", count: 1 },
+  ], "Should record telemetry with structure change counts");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
@@ -210,12 +210,11 @@ add_task(async function test_complex_orphaning() {
 });
 
 add_task(async function test_locally_modified_remotely_deleted() {
-  let mergeTelemetryEvents = [];
+  let mergeTelemetryCounts;
   let buf = await openMirror("locally_modified_remotely_deleted", {
-    recordTelemetryEvent(object, method, value, extra) {
-      equal(object, "mirror", "Wrong object for telemetry event");
-      if (method == "merge") {
-        mergeTelemetryEvents.push({ value, extra });
+    recordStepTelemetry(name, took, counts) {
+      if (name == "merge") {
+        mergeTelemetryCounts = counts.filter(({ count }) => count > 0);
       }
     },
   });
@@ -330,11 +329,12 @@ add_task(async function test_locally_modified_remotely_deleted() {
   info("Apply remote");
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-  deepEqual(mergeTelemetryEvents, [{
-    value: "structure",
-    extra: { remoteRevives: 0, localDeletes: 0, localRevives: 1,
-             remoteDeletes: 2 },
-  }], "Should record telemetry for local item and remote folder deletions");
+  deepEqual(mergeTelemetryCounts, [
+    { name: "items", count: 7 },
+    { name: "deletes", count: 4 },
+    { name: "localRevives", count: 1 },
+    { name: "remoteDeletes", count: 2 },
+  ], "Should record telemetry for local item and remote folder deletions");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
@@ -376,12 +376,11 @@ add_task(async function test_locally_modified_remotely_deleted() {
 add_task(async function test_locally_deleted_remotely_modified() {
   let now = Date.now();
 
-  let mergeTelemetryEvents = [];
+  let mergeTelemetryCounts;
   let buf = await openMirror("locally_deleted_remotely_modified", {
-    recordTelemetryEvent(object, method, value, extra) {
-      equal(object, "mirror", "Wrong object for telemetry event");
-      if (method == "merge") {
-        mergeTelemetryEvents.push({ value, extra });
+    recordStepTelemetry(name, took, counts) {
+      if (name == "merge") {
+        mergeTelemetryCounts = counts.filter(({ count }) => count > 0);
       }
     },
   });
@@ -491,11 +490,12 @@ add_task(async function test_locally_deleted_remotely_modified() {
   info("Apply remote");
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-  deepEqual(mergeTelemetryEvents, [{
-    value: "structure",
-    extra: { remoteRevives: 1, localDeletes: 2, localRevives: 0,
-             remoteDeletes: 0 },
-  }], "Should record telemetry for remote item and local folder deletions");
+  deepEqual(mergeTelemetryCounts, [
+    { name: "items", count: 7 },
+    { name: "deletes", count: 4 },
+    { name: "remoteRevives", count: 1 },
+    { name: "localDeletes", count: 2 },
+  ], "Should record telemetry for remote item and local folder deletions");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {

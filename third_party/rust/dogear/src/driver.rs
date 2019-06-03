@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::Arguments;
+use std::{fmt::Arguments, time::Duration};
 
 use log::{Level, LevelFilter, Log};
 
 use crate::error::{ErrorKind, Result};
 use crate::guid::Guid;
+use crate::merge::StructureCounts;
+use crate::tree::ProblemCounts;
 
 /// An abort signal is used to abort merging. Implementations of `AbortSignal`
 /// can store an aborted flag, usually as an atomic integer or Boolean, set
@@ -51,6 +53,30 @@ impl AbortSignal for DefaultAbortSignal {
     fn aborted(&self) -> bool {
         false
     }
+}
+
+/// A merge telemetry event.
+pub enum TelemetryEvent {
+    FetchLocalTree(TreeStats),
+    FetchNewLocalContents(ContentsStats),
+    FetchRemoteTree(TreeStats),
+    FetchNewRemoteContents(ContentsStats),
+    Merge(Duration, StructureCounts),
+    Apply(Duration),
+}
+
+/// Records the time taken to build a local or remote tree, number of items
+/// in the tree, and structure problem counts.
+pub struct TreeStats {
+    pub time: Duration,
+    pub items: usize,
+    pub problems: ProblemCounts,
+}
+
+/// Records the number of and time taken to fetch local or remote contents.
+pub struct ContentsStats {
+    pub time: Duration,
+    pub items: usize,
 }
 
 /// A merge driver provides methods to customize merging behavior.
@@ -88,6 +114,13 @@ pub trait Driver {
     fn logger(&self) -> &dyn Log {
         log::logger()
     }
+
+    /// Records a merge telemetry event.
+    ///
+    /// The default implementation is a no-op that discards the event.
+    /// Implementations can override this method to capture event and bookmark
+    /// validation telemetry.
+    fn record_telemetry_event(&self, _: TelemetryEvent) {}
 }
 
 /// A default implementation of the merge driver.

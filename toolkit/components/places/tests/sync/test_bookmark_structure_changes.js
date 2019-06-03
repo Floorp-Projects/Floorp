@@ -586,12 +586,11 @@ add_task(async function test_move_into_parent_sibling() {
 });
 
 add_task(async function test_complex_move_with_additions() {
-  let mergeTelemetryEvents = [];
+  let mergeTelemetryCounts;
   let buf = await openMirror("complex_move_with_additions", {
-    recordTelemetryEvent(object, method, value, extra) {
-      equal(object, "mirror", "Wrong object for telemetry event");
-      if (method == "merge") {
-        mergeTelemetryEvents.push({ value, extra });
+    recordStepTelemetry(name, took, counts) {
+      if (name == "merge") {
+        mergeTelemetryCounts = counts;
       }
     },
   });
@@ -683,11 +682,15 @@ add_task(async function test_complex_move_with_additions() {
   let observer = expectBookmarkChangeNotifications();
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-  deepEqual(mergeTelemetryEvents, [{
-    value: "structure",
-    extra: { remoteRevives: 0, localDeletes: 0, localRevives: 0,
-             remoteDeletes: 0 },
-  }], "Should record telemetry with structure change counts");
+  deepEqual(mergeTelemetryCounts, [
+    { name: "items", count: 9 },
+    { name: "deletes", count: 0 },
+    { name: "dupes", count: 0 },
+    { name: "remoteRevives", count: 0 },
+    { name: "localDeletes", count: 0 },
+    { name: "localRevives", count: 0 },
+    { name: "remoteDeletes", count: 0 },
+  ], "Should record telemetry with structure change counts");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {

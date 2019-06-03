@@ -5,10 +5,40 @@
 #include "nsISupports.idl"
 
 interface mozIStorageConnection;
+interface nsIPropertyBag;
 
+// A progress listener used to record telemetry.
+[scriptable, uuid(6239ffe3-6ffd-49ac-8b1d-958407395bf9)]
+interface mozISyncedBookmarksMirrorProgressListener : nsISupports {
+  // Called after the merger fetches the local tree from Places, with the time
+  // taken to build the tree, number of items in the tree, and a map of
+  // structure problem counts for validation telemetry.
+  void onFetchLocalTree(in long long took, in long long itemCount,
+                        in nsIPropertyBag problems);
+
+  // Called after the merger fetches content info from Places for deduping.
+  void onFetchNewLocalContents(in long long took, in long long itemCount);
+
+  // Called after the merger builds the remote tree from the mirror database.
+  void onFetchRemoteTree(in long long took, in long long itemCount,
+                         in nsIPropertyBag problems);
+
+  // Called after the merger fetches remote content info from the mirror.
+  void onFetchNewRemoteContents(in long long took, in long long itemCount);
+
+  // Called after the merger builds the merged tree, including structure change
+  // counts for event telemetry.
+  void onMerge(in long long took, in nsIPropertyBag counts);
+
+  // Called after the merger finishes applying the merged tree to Places and
+  // staging outgoing items.
+  void onApply(in long long took);
+};
+
+// A callback called when the merge finishes.
 [scriptable, uuid(d23fdfea-92c8-409d-a516-08ae395d578f)]
 interface mozISyncedBookmarksMirrorCallback : nsISupports {
-  void handleResult(in nsISupports result);
+  void handleSuccess();
   void handleError(in nsresult code, in AString message);
 };
 
@@ -55,10 +85,12 @@ interface mozISyncedBookmarksMerger : nsISupports {
   // Optional; used for logging.
   attribute mozISyncedBookmarksMirrorLogger logger;
 
-  // Merges the local and remote bookmark trees. Stores the merged tree in the
-  // `mergeStates` table. Calls `callback.handleResult(nsIPropertyBag2)` with
-  // telemetry stats on success, or `callback.handleError(error)` if an error
-  // occurs.
+  // Merges the local and remote bookmark trees, applies the merged tree to
+  // Places, and stages locally changed and reconciled items for upload. When
+  // the merge finishes, either `callback.handleSuccess` or
+  // `callback.handleError` are called. If `callback` also implements
+  // `mozISyncedBookmarksMergerProgressListener`, the merger reports progress
+  // after each step.
   void merge(in long long localTimeSeconds,
              in long long remoteTimeSeconds,
              in Array<AString> weakUploads,

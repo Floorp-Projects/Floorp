@@ -1219,6 +1219,8 @@ BufferedBookmarksStore.prototype = {
         this.engine.service.recordTelemetryEvent(object, method, value,
                                                  extra);
       },
+      recordStepTelemetry() {},
+      recordValidationTelemetry() {},
     });
   },
 

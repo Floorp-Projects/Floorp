@@ -2,22 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::{cell::RefCell, fmt::Write, mem, sync::Arc, time::Duration};
+use std::{cell::RefCell, fmt::Write, mem, sync::Arc};
 
 use atomic_refcell::AtomicRefCell;
-use dogear::{MergeTimings, Stats, Store, StructureCounts};
+use dogear::{AbortSignal, Store};
 use log::LevelFilter;
 use moz_task::{Task, TaskRunnable, ThreadPtrHandle, ThreadPtrHolder};
-use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_UNEXPECTED, NS_OK};
+use nserror::{nsresult, NS_ERROR_ABORT, NS_ERROR_NOT_AVAILABLE, NS_OK};
 use nsstring::nsString;
 use storage::Conn;
-use storage_variant::HashPropertyBag;
 use thin_vec::ThinVec;
 use xpcom::{
     interfaces::{
         mozIStorageConnection, mozISyncedBookmarksMirrorCallback, mozISyncedBookmarksMirrorLogger,
+        mozISyncedBookmarksMirrorProgressListener,
     },
-    RefPtr,
+    RefPtr, XpCom,
 };
 
 use crate::driver::{AbortController, Driver, Logger};
@@ -53,6 +53,9 @@ impl SyncedBookmarksMerger {
 
     xpcom_method!(set_db => SetDb(connection: *const mozIStorageConnection));
     fn set_db(&self, connection: Option<&mozIStorageConnection>) -> Result<(), nsresult> {
+        if self.controller.aborted() {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        }
         self.db
             .replace(connection.map(|connection| Conn::wrap(RefPtr::new(connection))));
         Ok(())
@@ -68,6 +71,9 @@ impl SyncedBookmarksMerger {
 
     xpcom_method!(set_logger => SetLogger(logger: *const mozISyncedBookmarksMirrorLogger));
     fn set_logger(&self, logger: Option<&mozISyncedBookmarksMirrorLogger>) -> Result<(), nsresult> {
+        if self.controller.aborted() {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        }
         self.logger.replace(logger.map(RefPtr::new));
         Ok(())
     }
@@ -87,10 +93,27 @@ impl SyncedBookmarksMerger {
         weak_uploads: Option<&ThinVec<nsString>>,
         callback: &mozISyncedBookmarksMirrorCallback,
     ) -> Result<(), nsresult> {
+        if self.controller.aborted() {
+            return unsafe {
+                callback.HandleError(
+                    NS_ERROR_ABORT,
+                    &*nsString::from("Can't merge with finalized merger"),
+                )
+            }
+            .to_result();
+        }
         let callback = RefPtr::new(callback);
         let db = match *self.db.borrow() {
             Some(ref db) => db.clone(),
-            None => return Err(NS_ERROR_FAILURE),
+            None => {
+                return unsafe {
+                    callback.HandleError(
+                        NS_ERROR_NOT_AVAILABLE,
+                        &*nsString::from("Can't merge without database connection"),
+                    )
+                }
+                .to_result()
+            }
         };
         let logger = &*self.logger.borrow();
         let async_thread = db.thread()?;
@@ -129,8 +152,9 @@ struct MergeTask {
     local_time_millis: i64,
     remote_time_millis: i64,
     weak_uploads: Vec<nsString>,
+    progress: Option<ThreadPtrHandle<mozISyncedBookmarksMirrorProgressListener>>,
     callback: ThreadPtrHandle<mozISyncedBookmarksMirrorCallback>,
-    result: AtomicRefCell<Option<error::Result<Stats>>>,
+    result: AtomicRefCell<error::Result<()>>,
 }
 
 impl MergeTask {
@@ -165,6 +189,11 @@ impl MergeTask {
             )?),
             None => None,
         };
+        let progress = callback
+            .query_interface::<mozISyncedBookmarksMirrorProgressListener>()
+            .and_then(|p| {
+                ThreadPtrHolder::new(cstr!("mozISyncedBookmarksMirrorProgressListener"), p).ok()
+            });
         Ok(MergeTask {
             db: db.clone(),
             controller,
@@ -173,8 +202,9 @@ impl MergeTask {
             local_time_millis: local_time_seconds * 1000,
             remote_time_millis: remote_time_seconds * 1000,
             weak_uploads,
+            progress,
             callback: ThreadPtrHolder::new(cstr!("mozISyncedBookmarksMirrorCallback"), callback)?,
-            result: AtomicRefCell::default(),
+            result: AtomicRefCell::new(Err(error::Error::DidNotRun)),
         })
     }
 }
@@ -190,37 +220,15 @@ impl Task for MergeTask {
             &self.weak_uploads,
         );
         let log = Logger::new(self.max_log_level, self.logger.clone());
-        let driver = Driver::new(log);
-        *self.result.borrow_mut() = Some(store.merge_with_driver(&driver, &*self.controller));
+        let driver = Driver::new(log, self.progress.clone());
+        *self.result.borrow_mut() = store.merge_with_driver(&driver, &*self.controller);
     }
 
     fn done(&self) -> Result<(), nsresult> {
         let callback = self.callback.get().unwrap();
-        match self.result.borrow_mut().take() {
-            Some(Ok(stats)) => {
-                let mut telem = HashPropertyBag::new();
-                telem.set("fetchLocalTreeTime", stats.time(|t| t.fetch_local_tree));
-                telem.set(
-                    "fetchNewLocalContentsTime",
-                    stats.time(|t| t.fetch_new_local_contents),
-                );
-                telem.set("fetchRemoteTreeTime", stats.time(|t| t.fetch_remote_tree));
-                telem.set(
-                    "fetchNewRemoteContentsTime",
-                    stats.time(|t| t.fetch_new_remote_contents),
-                );
-                telem.set("mergeTime", stats.time(|t| t.merge));
-                telem.set("mergedNodesCount", stats.count(|c| c.merged_nodes));
-                telem.set("mergedDeletionsCount", stats.count(|c| c.merged_deletions));
-                telem.set("remoteRevivesCount", stats.count(|c| c.remote_revives));
-                telem.set("localDeletesCount", stats.count(|c| c.local_deletes));
-                telem.set("localRevivesCount", stats.count(|c| c.local_revives));
-                telem.set("remoteDeletesCount", stats.count(|c| c.remote_deletes));
-                telem.set("dupesCount", stats.count(|c| c.dupes));
-                telem.set("applyTime", stats.time(|t| t.apply));
-                unsafe { callback.HandleResult(telem.bag().coerce()) }
-            }
-            Some(Err(err)) => {
+        match mem::replace(&mut *self.result.borrow_mut(), Err(error::Error::DidNotRun)) {
+            Ok(()) => unsafe { callback.HandleSuccess() },
+            Err(err) => {
                 let message = {
                     let mut message = nsString::new();
                     match write!(message, "{}", err) {
@@ -230,31 +238,7 @@ impl Task for MergeTask {
                 };
                 unsafe { callback.HandleError(err.into(), &*message) }
             }
-            None => unsafe {
-                callback.HandleError(
-                    NS_ERROR_UNEXPECTED,
-                    &*nsString::from("Failed to run merge on storage thread"),
-                )
-            },
         }
         .to_result()
-    }
-}
-
-/// Extension methods that convert timings and counters into types that we
-/// can store in a `HashPropertyBag`.
-trait StatsExt {
-    fn time(&self, func: impl FnOnce(&MergeTimings) -> Duration) -> i64;
-    fn count(&self, func: impl FnOnce(&StructureCounts) -> usize) -> i64;
-}
-
-impl StatsExt for Stats {
-    fn time(&self, func: impl FnOnce(&MergeTimings) -> Duration) -> i64 {
-        let d = func(&self.timings);
-        d.as_secs() as i64 * 1000 + i64::from(d.subsec_millis())
-    }
-
-    fn count(&self, func: impl FnOnce(&StructureCounts) -> usize) -> i64 {
-        func(&self.counts) as i64
     }
 }
