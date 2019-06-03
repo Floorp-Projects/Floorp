@@ -1272,20 +1272,22 @@ nsresult WorkerPrivate::SetCSPFromHeaderValues(
   AssertIsOnMainThread();
   MOZ_DIAGNOSTIC_ASSERT(!mLoadInfo.mCSP);
 
-  if (nsContentUtils::IsSystemPrincipal(mLoadInfo.mPrincipal)) {
-    // After Bug 1496418 we can remove the early return and apply
-    // a CSP even when loading using a SystemPrincipal.
-    return NS_OK;
-  }
-
   NS_ConvertASCIItoUTF16 cspHeaderValue(aCSPHeaderValue);
   NS_ConvertASCIItoUTF16 cspROHeaderValue(aCSPReportOnlyHeaderValue);
 
   nsresult rv;
   nsCOMPtr<nsIContentSecurityPolicy> csp = new nsCSPContext();
 
+  // First, we try to query the URI from the Principal, but
+  // in case selfURI remains empty (e.g in case the Principal
+  // is a SystemPrincipal) then we fall back and use the
+  // base URI as selfURI for CSP.
   nsCOMPtr<nsIURI> selfURI;
   mLoadInfo.mPrincipal->GetURI(getter_AddRefs(selfURI));
+  if (!selfURI) {
+    selfURI = mLoadInfo.mBaseURI;
+  }
+  MOZ_ASSERT(selfURI, "need a self URI for CSP");
 
   rv = csp->SetRequestContextWithPrincipal(mLoadInfo.mPrincipal, selfURI,
                                            EmptyString(), 0);
