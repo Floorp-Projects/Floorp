@@ -576,7 +576,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
 
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
-        customTabSessionId = savedInstanceState?.getString(KEY_CUSTOM_TAB_SESSION_ID)
+        savedInstanceState?.getString(KEY_CUSTOM_TAB_SESSION_ID)?.let {
+            if (requireComponents.core.sessionManager.findSessionById(it)?.customTabConfig != null) {
+                customTabSessionId = it
+            }
+        }
     }
 
     override fun onStop() {
