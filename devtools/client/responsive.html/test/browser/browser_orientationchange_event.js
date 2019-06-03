@@ -25,8 +25,8 @@ addRDMTask(TEST_URL, async function({ ui }) {
           ok(true, "'orientationchange' event fired");
           is(content.screen.orientation.type, "landscape-primary",
             "Orientation state was updated to landscape-primary");
-          is(content.screen.orientation.angle, 270,
-            "Orientation angle was updated to 270 degrees.");
+          is(content.screen.orientation.angle, 90,
+            "Orientation angle was updated to 90 degrees.");
           resolve();
         });
       });
