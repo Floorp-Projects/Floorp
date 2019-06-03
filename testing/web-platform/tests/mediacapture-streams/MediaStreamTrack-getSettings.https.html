@@ -9,79 +9,79 @@
 
   // https://w3c.github.io/mediacapture-main/archives/20170605/getusermedia.html
 
-  promise_test(t => {
-    const constraints = {
-      video: true,
-      audio: false
-    };
-
-    return navigator.mediaDevices.getUserMedia(constraints)
-    .then(mediaStream => {
-      const settings1 = mediaStream.getVideoTracks()[0].getSettings();
-      const videoConstraints = {
-        deviceId: settings1.deviceId
-      };
-
-      return navigator.mediaDevices.getUserMedia({
-        video: videoConstraints,
-        audio: false
-      }).then(mediaStream => {
-        const settings2 = mediaStream.getVideoTracks()[0].getSettings();
-        assert_equals(settings1.deviceId, settings2.deviceId);
-      });
-    });
-  }, 'A device can be opened twice and have the same device ID');
-
-  promise_test(t => {
-    const constraints = {
-      video: true,
-      audio: false
-    };
-
-    return navigator.mediaDevices.getUserMedia(constraints)
-    .then(mediaStream => {
-      const settings1 = mediaStream.getVideoTracks()[0].getSettings();
-      const videoConstraints = {
-        deviceId: settings1.deviceId,
-        width: {
-          ideal: settings1.width / 2
-        }
-      };
-
-      return navigator.mediaDevices.getUserMedia({
-        video: videoConstraints,
-        audio: false
-      }).then(mediaStream => {
-        const settings2 = mediaStream.getVideoTracks()[0].getSettings();
-        assert_equals(settings1.deviceId, settings2.deviceId);
-        assert_between_inclusive(settings2.width, settings1.width / 2, settings1.width);
-      });
-    });
-  }, 'A device can be opened twice with different resolutions requested');
-
-  promise_test(t => {
-    return navigator.mediaDevices.enumerateDevices().then(async devices => {
-      for (var device of devices) {
-        if (device.kind == "audiooutput")
-          continue;
-        var device_id_constraint = {deviceId: {exact: device.deviceId}};
-        var constraints = device.kind == "audioinput"
-          ? {audio: device_id_constraint}
-          : {video: device_id_constraint};
-
-        var stream = await navigator.mediaDevices.getUserMedia(constraints);
-        assert_equals(stream.getTracks()[0].getSettings().groupId,
-                      device.groupId);
-        assert_greater_than(device.groupId.length, 0);
-      }
-    });
-  }, 'groupId is correctly reported by getSettings() for all devices');
-
   async function createAudioStreamAndGetSettings(t) {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true});
     t.add_cleanup(() => stream.getAudioTracks()[0].stop());
     return stream.getAudioTracks()[0].getSettings();
   }
+
+  async function createVideoStreamAndGetSettings(t) {
+    const stream = await navigator.mediaDevices.getUserMedia({video: true});
+    t.add_cleanup(() => stream.getVideoTracks()[0].stop());
+    return stream.getVideoTracks()[0].getSettings();
+  }
+
+  promise_test(async t => {
+    const mediaStream1 = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false,
+    });
+    t.add_cleanup(() => mediaStream1.getVideoTracks()[0].stop());
+    const settings1 = mediaStream1.getVideoTracks()[0].getSettings();
+
+    const mediaStream2 = await navigator.mediaDevices.getUserMedia({
+      video: {
+        deviceId: settings1.deviceId,
+      },
+      audio: false
+    });
+    t.add_cleanup(() => mediaStream2.getVideoTracks()[0].stop());
+    const settings2 = mediaStream2.getVideoTracks()[0].getSettings();
+
+    assert_equals(settings1.deviceId, settings2.deviceId);
+  }, 'A device can be opened twice and have the same device ID');
+
+  promise_test(async t => {
+    const mediaStream1 = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: false,
+    });
+    t.add_cleanup(() => mediaStream1.getVideoTracks()[0].stop());
+    const settings1 = mediaStream1.getVideoTracks()[0].getSettings();
+
+    const mediaStream2 = await navigator.mediaDevices.getUserMedia({
+      video: {
+        deviceId: settings1.deviceId,
+        width: {
+          ideal: settings1.width / 2,
+        },
+      },
+      audio: false
+    });
+    t.add_cleanup(() => mediaStream2.getVideoTracks()[0].stop());
+    const settings2 = mediaStream2.getVideoTracks()[0].getSettings();
+
+    assert_equals(settings1.deviceId, settings2.deviceId);
+    assert_between_inclusive(settings2.width, settings1.width / 2, settings1.width);
+  }, 'A device can be opened twice with different resolutions requested');
+
+  promise_test(async t => {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    for (const device of devices) {
+      if (device.kind == "audiooutput") {
+        continue;
+      }
+      const device_id_constraint = {deviceId: {exact: device.deviceId}};
+      const constraints = device.kind == "audioinput"
+        ? {audio: device_id_constraint}
+        : {video: device_id_constraint};
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      assert_equals(stream.getTracks()[0].getSettings().groupId,
+                    device.groupId);
+      assert_greater_than(device.groupId.length, 0);
+    }
+  }, 'groupId is correctly reported by getSettings() for all devices');
 
   promise_test(async t => {
     const settings = await createAudioStreamAndGetSettings(t);
@@ -147,12 +147,6 @@
                   "channelCount should exist and it should be a number.");
     assert_greater_than(settings.channelCount, 0);
   }, 'channelCount is reported by getSettings() for getUserMedia() audio tracks');
-
-  async function createVideoStreamAndGetSettings(t) {
-    const stream = await navigator.mediaDevices.getUserMedia({video: true});
-    t.add_cleanup(() => stream.getVideoTracks()[0].stop());
-    return stream.getVideoTracks()[0].getSettings();
-  }
 
   promise_test(async t => {
     const settings = await createVideoStreamAndGetSettings(t);
