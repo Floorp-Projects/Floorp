@@ -482,7 +482,6 @@ def target_tasks_nightly_geckoview(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-
 def make_desktop_nightly_filter(platforms):
     """Returns a filter that gets all nightly tasks on the given platform."""
     def filter(task, parameters):
