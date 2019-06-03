@@ -132,6 +132,9 @@ permalink: /changelog/
 
   * Checkout the component documentation for more details.
 
+* **support-ktx**
+  * Added `Context.hasCamera()` to check if the device has a camera.
+
 # 0.54.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.53.0...v0.54.0)

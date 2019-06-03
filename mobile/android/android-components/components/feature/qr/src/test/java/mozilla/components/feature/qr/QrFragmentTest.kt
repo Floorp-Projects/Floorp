@@ -32,6 +32,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.mockito.ArgumentMatchers.anyString
+import java.lang.IllegalStateException
 
 @RunWith(RobolectricTestRunner::class)
 class QrFragmentTest {
@@ -64,6 +65,7 @@ class QrFragmentTest {
         verify(qrFragment, never()).openCamera(anyInt(), anyInt())
 
         `when`(qrFragment.textureView.isAvailable).thenReturn(true)
+        qrFragment.cameraId = "mockCamera"
         qrFragment.onResume()
         verify(qrFragment, times(2)).startBackgroundThread()
         verify(qrFragment).openCamera(anyInt(), anyInt())
@@ -177,6 +179,25 @@ class QrFragmentTest {
             qrFragment.openCamera(1920, 1080)
         } catch (e: CameraAccessException) {
             fail("CameraAccessException should have been caught and logged, not re-thrown.")
+        }
+    }
+
+    @Test
+    fun `throws exception on device without camera`() {
+        val qrFragment = spy(QrFragment.newInstance(mock(QrFragment.OnScanCompleteListener::class.java)))
+        `when`(qrFragment.setUpCameraOutputs(anyInt(), anyInt())).then { }
+
+        val cameraManager: CameraManager = mock()
+        val activity: FragmentActivity = mock()
+        `when`(activity.getSystemService(Context.CAMERA_SERVICE)).thenReturn(cameraManager)
+        `when`(qrFragment.activity).thenReturn(activity)
+
+        qrFragment.cameraId = null
+        try {
+            qrFragment.openCamera(1920, 1080)
+            fail("Expected IllegalStateException")
+        } catch (e: IllegalStateException) {
+            assertEquals("No camera found on device", e.message)
         }
     }
 

@@ -5,11 +5,13 @@
 package mozilla.components.support.ktx.android.content
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.hardware.camera2.CameraManager
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.test.argumentCaptor
 import org.junit.Assert.assertEquals
@@ -20,9 +22,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowApplication
 import org.robolectric.shadows.ShadowProcess
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowCameraCharacteristics
 
 @RunWith(RobolectricTestRunner::class)
 class ContextTest {
@@ -122,5 +127,15 @@ class ContextTest {
         }
 
         assertFalse(wasExecuted)
+    }
+
+    @Test
+    fun `hasCamera returns true if the device has a camera`() {
+        val context = Robolectric.buildActivity(Activity::class.java).get()
+        assertFalse(context.hasCamera())
+
+        val cameraManager: CameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        shadowOf(cameraManager).addCamera("camera0", ShadowCameraCharacteristics.newCameraCharacteristics())
+        assertTrue(context.hasCamera())
     }
 }

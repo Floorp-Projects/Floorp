@@ -326,13 +326,19 @@ class QrFragment : Fragment() {
      * Opens the camera specified by [QrFragment.cameraId].
      */
     @SuppressLint("MissingPermission")
+    @Suppress("ThrowsCount")
     internal fun openCamera(width: Int, height: Int) {
-        setUpCameraOutputs(width, height)
-        configureTransform(width, height)
-
-        val activity = activity
-        val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager?
         try {
+            setUpCameraOutputs(width, height)
+            if (cameraId == null) {
+                throw IllegalStateException("No camera found on device")
+            }
+
+            configureTransform(width, height)
+
+            val activity = activity
+            val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager?
+
             if (!cameraOpenCloseLock.tryAcquire(CAMERA_CLOSE_LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
                 throw IllegalStateException("Time out waiting to lock camera opening.")
             }

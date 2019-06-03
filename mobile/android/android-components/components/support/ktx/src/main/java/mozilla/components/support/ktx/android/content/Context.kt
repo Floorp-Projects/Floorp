@@ -18,6 +18,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat.checkSelfPermission
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.ktx.R
+import android.hardware.camera2.CameraManager
 
 /**
  * The (visible) version name of the application, as specified by the <manifest> tag's versionName
@@ -62,6 +63,13 @@ fun Context.isOSOnLowMemory(): Boolean {
 fun Context.isPermissionGranted(vararg permission: String): Boolean {
     return permission.all { checkSelfPermission(this, it) == PERMISSION_GRANTED }
 }
+
+/**
+ * Checks whether or not the device has a camera.
+ *
+ * @return true if a camera was found, otherwise false.
+ */
+fun Context.hasCamera(): Boolean = systemService<CameraManager>(Context.CAMERA_SERVICE).cameraIdList.isNotEmpty()
 
 /**
  *  Shares content via [ACTION_SEND] intent.
