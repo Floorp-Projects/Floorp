@@ -278,16 +278,8 @@ add_task(async function test_different_but_compatible_bookmark_types() {
 });
 
 add_task(async function test_incompatible_types() {
-  let sawMismatchError = false;
-  let recordTelemetryEvent = (object, method, value, extra) => {
-    // expecting to see an error for kind mismatches.
-    if (method == "apply" && value == "error" &&
-        extra && extra.why == "Can't merge local kind Bookmark and remote kind Folder") {
-      sawMismatchError = true;
-    }
-  };
   try {
-    let buf = await openMirror("incompatible_types", {recordTelemetryEvent});
+    let buf = await openMirror("incompatible_types");
 
     await PlacesUtils.bookmarks.insertTree({
       guid: PlacesUtils.bookmarks.menuGuid,
@@ -319,7 +311,6 @@ add_task(async function test_incompatible_types() {
     await PlacesTestUtils.markBookmarksAsSynced();
 
     await Assert.rejects(buf.apply(), /Can't merge local kind Bookmark and remote kind Folder/);
-    Assert.ok(sawMismatchError, "saw expected mismatch event");
   } finally {
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesSyncUtils.bookmarks.reset();

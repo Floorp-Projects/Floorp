@@ -2,12 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function test_duping_local_newer() {
-  let mergeTelemetryEvents = [];
+  let mergeTelemetryCounts;
   let buf = await openMirror("duping_local_newer", {
-    recordTelemetryEvent(object, method, value, extra) {
-      equal(object, "mirror", "Wrong object for telemetry event");
-      if (method == "merge") {
-        mergeTelemetryEvents.push({ value, extra });
+    recordStepTelemetry(name, took, counts) {
+      if (name == "merge") {
+        mergeTelemetryCounts = counts.filter(({ count }) => count > 0);
       }
     },
   });
@@ -82,11 +81,10 @@ add_task(async function test_duping_local_newer() {
     remoteTimeSeconds: localModified / 1000,
   });
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-  deepEqual(mergeTelemetryEvents, [{
-    value: "structure",
-    extra: { remoteRevives: 0, localDeletes: 0, localRevives: 0,
-             remoteDeletes: 0 },
-  }], "Should record telemetry with dupe counts");
+  deepEqual(mergeTelemetryCounts, [
+    { name: "items", count: 8 },
+    { name: "dupes", count: 2 },
+  ], "Should record telemetry with dupe counts");
 
   let menuInfo = await PlacesUtils.bookmarks.fetch(
     PlacesUtils.bookmarks.menuGuid);
