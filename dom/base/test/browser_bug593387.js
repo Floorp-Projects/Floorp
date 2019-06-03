@@ -7,6 +7,10 @@
 */
 
 add_task(async function test() {
+  // We have to disable CSP for this test otherwise the CSP of about:mozilla will
+  // block the dynamic frame creation.
+  await SpecialPowers.pushPrefEnv({"set": [["security.csp.enable", false],]});
+
   await BrowserTestUtils.withNewTab({ gBrowser,
                                       url: "chrome://global/content/mozilla.xhtml" },
                                      async function(newBrowser) {

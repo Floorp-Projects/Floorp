@@ -113,10 +113,10 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   return true;
 }
 
-/* nsIContentPolicy implementation */
-NS_IMETHODIMP
-CSPService::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
-                       const nsACString& aMimeTypeGuess, int16_t* aDecision) {
+/* static */ nsresult CSPService::ConsultCSP(nsIURI* aContentLocation,
+                                             nsILoadInfo* aLoadInfo,
+                                             const nsACString& aMimeTypeGuess,
+                                             int16_t* aDecision) {
   if (!aContentLocation) {
     return NS_ERROR_FAILURE;
   }
@@ -204,6 +204,13 @@ CSPService::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
+}
+
+/* nsIContentPolicy implementation */
+NS_IMETHODIMP
+CSPService::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
+                       const nsACString& aMimeTypeGuess, int16_t* aDecision) {
+  return ConsultCSP(aContentLocation, aLoadInfo, aMimeTypeGuess, aDecision);
 }
 
 NS_IMETHODIMP
