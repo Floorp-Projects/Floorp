@@ -174,7 +174,6 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
       const groupMessage = createWarningGroupMessage(
         warningGroupMessageId, warningGroupType, newMessage);
       state = addMessage(groupMessage, state, filtersState, prefsState, uiState);
-      state.warningGroupsById.set(warningGroupMessageId, []);
     }
 
     // We add the new message to the appropriate warningGroup.
@@ -213,6 +212,11 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
         state.visibleMessages.splice(warningMessageIndex, 1, warningGroupMessageId);
       }
     }
+  }
+
+  // If we're creating a warningGroup, we init the array for its children.
+  if (isWarningGroup(newMessage)) {
+    state.warningGroupsById.set(newMessage.id, []);
   }
 
   const addedMessage = Object.freeze(newMessage);
@@ -508,43 +512,116 @@ function messages(state = MessageState(), action, filtersState, prefsState, uiSt
         removedActors: [],
       };
 
+    case constants.WARNING_GROUPS_TOGGLE:
+      // There's no warningGroups, and the pref was set to false,
+      // we don't need to do anything.
+      if (!prefsState.groupWarnings && state.warningGroupsById.size === 0) {
+        return state;
+      }
+
+      let needSort = false;
+      const messageEntries = state.messagesById.entries();
+      for (const [msgId, message] of messageEntries) {
+        const warningGroupType = getWarningGroupType(message);
+        if (warningGroupType) {
+          const warningGroupMessageId = getParentWarningGroupMessageId(message);
+
+          // If there's no warning group for the type/innerWindowID yet.
+          if (!state.messagesById.has(warningGroupMessageId)) {
+            // We create it and add it to the store.
+            const groupMessage = createWarningGroupMessage(
+              warningGroupMessageId, warningGroupType, message);
+            state = addMessage(groupMessage, state, filtersState, prefsState, uiState);
+          }
+
+          // We add the new message to the appropriate warningGroup.
+          const warningGroup = state.warningGroupsById.get(warningGroupMessageId);
+          if (warningGroup && !warningGroup.includes(msgId)) {
+            warningGroup.push(msgId);
+          }
+
+          needSort = true;
+        }
+      }
+
+      // If we don't have any warning messages that could be in a group, we don't do
+      // anything.
+      if (!needSort) {
+        return state;
+      }
+
+      return setVisibleMessages({
+        messagesState: state,
+        filtersState,
+        prefsState,
+        uiState,
+        // If the user disabled warning groups, we want the messages to be sorted by their
+        // timestamps.
+        forceTimestampSort: !prefsState.groupWarnings,
+      });
+
     case constants.FILTER_TOGGLE:
     case constants.FILTER_TEXT_SET:
     case constants.FILTERS_CLEAR:
     case constants.DEFAULT_FILTERS_RESET:
     case constants.SHOW_CONTENT_MESSAGES_TOGGLE:
-      const messagesToShow = [];
-      const filtered = getDefaultFiltersCounter();
-
-      messagesById.forEach((message, msgId) => {
-        const { visible, cause } = getMessageVisibility(message, {
-          messagesState: state,
-          filtersState,
-          prefsState,
-          uiState,
-        });
-
-        if (visible) {
-          messagesToShow.push(msgId);
-        } else if (DEFAULT_FILTERS.includes(cause)) {
-          filtered.global = filtered.global + 1;
-          filtered[cause] = filtered[cause] + 1;
-        }
+      return setVisibleMessages({
+        messagesState: state,
+        filtersState,
+        prefsState,
+        uiState,
       });
-
-      const filteredState = {
-        ...state,
-        visibleMessages: messagesToShow,
-        filteredMessagesCount: filtered,
-      };
-      maybeSortVisibleMessages(filteredState, true);
-
-      return filteredState;
   }
 
   return state;
 }
 /* eslint-enable complexity */
+
+function setVisibleMessages({
+  messagesState,
+  filtersState,
+  prefsState,
+  uiState,
+  forceTimestampSort = false,
+}) {
+  const {
+    messagesById,
+  } = messagesState;
+
+  const messagesToShow = [];
+  const filtered = getDefaultFiltersCounter();
+
+  messagesById.forEach((message, msgId) => {
+    const { visible, cause } = getMessageVisibility(message, {
+      messagesState,
+      filtersState,
+      prefsState,
+      uiState,
+    });
+
+    if (visible) {
+      messagesToShow.push(msgId);
+    } else if (DEFAULT_FILTERS.includes(cause)) {
+      filtered.global = filtered.global + 1;
+      filtered[cause] = filtered[cause] + 1;
+    }
+  });
+
+  const newState = {
+    ...messagesState,
+    visibleMessages: messagesToShow,
+    filteredMessagesCount: filtered,
+  };
+
+  maybeSortVisibleMessages(
+    newState,
+    // Only sort for warningGroups if the feature is enabled
+    prefsState.groupWarnings,
+    forceTimestampSort
+  );
+
+  return newState;
+}
 
 /**
  * Returns the new current group id given the previous current group and the groupsById
@@ -1294,8 +1371,13 @@ function messageCountSinceLastExecutionPoint(state, id) {
  *                                           messages. Default to false, as in some
  *                                           situations we already take care of putting
  *                                           the ids at the right position.
+ * @param {Boolean} timeStampSort: set to true to sort messages by their timestamps.
  */
-function maybeSortVisibleMessages(state, sortWarningGroupMessage = false) {
+function maybeSortVisibleMessages(
+  state,
+  sortWarningGroupMessage = false,
+  timeStampSort = false,
+) {
   // When using log points while replaying, messages can be added out of order
   // with respect to how they originally executed. Use the execution point
   // information in the messages to sort visible messages according to how
@@ -1366,6 +1448,15 @@ function maybeSortVisibleMessages(state, sortWarningGroupMessage = false) {
       }
 
       return 0;
+    });
+  }
+
+  if (timeStampSort) {
+    state.visibleMessages.sort((a, b) => {
+      const messageA = state.messagesById.get(a);
+      const messageB = state.messagesById.get(b);
+
+      return messageA.timeStamp < messageB.timeStamp ? -1 : 1;
     });
   }
 }

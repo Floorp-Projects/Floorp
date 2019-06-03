@@ -20,6 +20,7 @@ const {
   SIDEBAR_CLOSE,
   SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
   TIMESTAMPS_TOGGLE,
+  WARNING_GROUPS_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 function persistToggle() {
@@ -46,6 +47,13 @@ function timestampsToggle(visible) {
   return {
     type: TIMESTAMPS_TOGGLE,
     visible,
+  };
+}
+
+function warningGroupsToggle(value) {
+  return {
+    type: WARNING_GROUPS_TOGGLE,
+    value,
   };
 }
 
@@ -121,4 +129,5 @@ module.exports = {
   sidebarClose,
   splitConsoleCloseButtonToggle,
   timestampsToggle,
+  warningGroupsToggle,
 };

@@ -374,6 +374,11 @@ class WebConsoleWrapper {
         store.dispatch(actions.timestampsToggle(enabled));
       });
 
+      this.prefsObservers.set(PREFS.FEATURES.GROUP_WARNINGS, () => {
+        const enabled = Services.prefs.getBoolPref(PREFS.FEATURES.GROUP_WARNINGS);
+        store.dispatch(actions.warningGroupsToggle(enabled));
+      });
+
       for (const [pref, observer] of this.prefsObservers) {
         Services.prefs.addObserver(pref, observer);
       }
