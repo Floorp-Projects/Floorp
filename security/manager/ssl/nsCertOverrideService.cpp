@@ -507,6 +507,28 @@ nsCertOverrideService::ClearValidityOverride(const nsACString& aHostName,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCertOverrideService::ClearAllOverrides() {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  {
+    MutexAutoLock lock(mMutex);
+    mSettingsTable.Clear();
+    Write(lock);
+  }
+
+  nsCOMPtr<nsINSSComponent> nss(do_GetService(PSM_COMPONENT_CONTRACTID));
+  if (nss) {
+    SSL_ClearSessionCache();
+  } else {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return NS_OK;
+}
+
 void nsCertOverrideService::CountPermanentOverrideTelemetry(
     const MutexAutoLock& aProofOfLock) {
   uint32_t overrideCount = 0;

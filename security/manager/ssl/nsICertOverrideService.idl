@@ -115,6 +115,11 @@ interface nsICertOverrideService : nsISupports {
                              in int32_t aPort);
 
   /**
+   *  Remove all overrides.
+   */
+  void clearAllOverrides();
+
+  /**
    *  Is the given cert used in rules?
    *
    *  @param aCert The cert we're looking for
