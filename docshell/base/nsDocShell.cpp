@@ -8924,33 +8924,29 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
     targetDocShell = do_QueryInterface(webNav);
   }
 
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(targetDocShell, rv);
   //
   // Transfer the load to the target DocShell... Pass empty string as the
   // window target name from to prevent recursive retargeting!
   //
-  if (NS_SUCCEEDED(rv) && targetDocShell) {
-    nsDocShell* docShell = nsDocShell::Cast(targetDocShell);
-    // No window target
-    aLoadState->SetTarget(EmptyString());
-    // No forced download
-    aLoadState->SetFileName(VoidString());
-    rv = docShell->InternalLoad(aLoadState, aDocShell, aRequest);
+  nsDocShell* docShell = nsDocShell::Cast(targetDocShell);
+  // No window target
+  aLoadState->SetTarget(EmptyString());
+  // No forced download
+  aLoadState->SetFileName(VoidString());
+  rv = docShell->InternalLoad(aLoadState, aDocShell, aRequest);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_SUCCEEDED(rv)) {
-      // Switch to target tab if we're currently focused window.
-      // Take loadDivertedInBackground into account so the behavior would be
-      // the same as how the tab first opened.
-      bool isTargetActive = false;
-      targetDocShell->GetIsActive(&isTargetActive);
-      nsCOMPtr<nsPIDOMWindowOuter> domWin = targetDocShell->GetWindow();
-      if (mIsActive && !isTargetActive && domWin &&
-          !Preferences::GetBool("browser.tabs.loadDivertedInBackground",
-                                false)) {
-        if (NS_FAILED(nsContentUtils::DispatchFocusChromeEvent(domWin))) {
-          return NS_ERROR_FAILURE;
-        }
-      }
-    }
+  // Switch to target tab if we're currently focused window.
+  // Take loadDivertedInBackground into account so the behavior would be
+  // the same as how the tab first opened.
+  bool isTargetActive = false;
+  targetDocShell->GetIsActive(&isTargetActive);
+  nsCOMPtr<nsPIDOMWindowOuter> domWin = targetDocShell->GetWindow();
+  if (mIsActive && !isTargetActive && domWin &&
+      !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false)) {
+    nsFocusManager::FocusWindow(domWin);
   }
 
   // Else we ran out of memory, or were a popup and got blocked,

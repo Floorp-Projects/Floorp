@@ -26,6 +26,7 @@
 #include "mozilla/StorageAccess.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsContentUtils.h"
+#include "nsFocusManager.h"
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
 
@@ -528,14 +529,10 @@ RefPtr<ClientOpPromise> ClientSource::Focus(const ClientFocusArgs& aArgs) {
   }
 
   MOZ_ASSERT(NS_IsMainThread());
-
-  nsresult rv = nsContentUtils::DispatchFocusChromeEvent(outer);
-  if (NS_FAILED(rv)) {
-    return ClientOpPromise::CreateAndReject(rv, __func__);
-  }
+  nsFocusManager::FocusWindow(outer);
 
   ClientState state;
-  rv = SnapshotState(&state);
+  nsresult rv = SnapshotState(&state);
   if (NS_FAILED(rv)) {
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }

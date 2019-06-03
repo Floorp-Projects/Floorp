@@ -3728,7 +3728,7 @@ Tab.prototype = {
     this.browser.addEventListener("pageshow", this, true);
     this.browser.addEventListener("MozApplicationManifest", this, true);
     this.browser.addEventListener("TabPreZombify", this, true);
-    this.browser.addEventListener("DOMWindowFocus", this, true);
+    this.browser.addEventListener("framefocusrequested", this, true);
     this.browser.addEventListener("focusin", this, true);
     this.browser.addEventListener("focusout", this, true);
     this.browser.addEventListener("TabSelect", this, true);
@@ -3870,7 +3870,7 @@ Tab.prototype = {
     this.browser.removeEventListener("pageshow", this, true);
     this.browser.removeEventListener("MozApplicationManifest", this, true);
     this.browser.removeEventListener("TabPreZombify", this, true);
-    this.browser.removeEventListener("DOMWindowFocus", this, true);
+    this.browser.removeEventListener("framefocusrequested", this, true);
     this.browser.removeEventListener("focusin", this, true);
     this.browser.removeEventListener("focusout", this, true);
     this.browser.removeEventListener("TabSelect", this, true);
@@ -4389,12 +4389,15 @@ Tab.prototype = {
         break;
       }
 
-      case "DOMWindowFocus": {
-        GlobalEventDispatcher.sendRequest({
-          type: "Tab:Select",
-          tabID: this.id,
-          foreground: true,
-        });
+      case "framefocusrequested": {
+        if (BrowserApp.selectedTab !== this) {
+          GlobalEventDispatcher.sendRequest({
+            type: "Tab:Select",
+            tabID: this.id,
+            foreground: true,
+          });
+          aEvent.preventDefault();
+        }
         break;
       }
 

@@ -58,6 +58,11 @@ class nsFocusManager final : public nsIFocusManager,
   static nsresult Init();
   static void Shutdown();
 
+  // Simple helper to call SetFocusedWindow on the instance.
+  //
+  // This raises the window and switches to the tab as needed.
+  static void FocusWindow(nsPIDOMWindowOuter* aWindow);
+
   void PrefChanged(const char* aPref);
 
   /**

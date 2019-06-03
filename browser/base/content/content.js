@@ -68,7 +68,3 @@ ContentMetaHandler.init(this);
 
 // This is a temporary hack to prevent regressions (bug 1471327).
 void content;
-
-addEventListener("DOMWindowFocus", function(event) {
-  sendAsyncMessage("DOMWindowFocus", {});
-}, false);
