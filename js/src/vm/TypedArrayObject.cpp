@@ -1977,7 +1977,7 @@ bool TypedArrayObjectTemplate<float>::getElementPure(TypedArrayObject* tarray,
    * This could be removed for platforms/compilers known to convert a 32-bit
    * non-canonical nan to a 64-bit canonical nan.
    */
-  *vp = DoubleValue(CanonicalizeNaN(dval));
+  *vp = JS::CanonicalizedDoubleValue(dval);
   return true;
 }
 
@@ -1994,7 +1994,7 @@ bool TypedArrayObjectTemplate<double>::getElementPure(TypedArrayObject* tarray,
    * confuse the engine into interpreting a double-typed jsval as an
    * object-typed jsval.
    */
-  *vp = DoubleValue(CanonicalizeNaN(val));
+  *vp = JS::CanonicalizedDoubleValue(val);
   return true;
 }
 

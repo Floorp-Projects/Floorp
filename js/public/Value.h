@@ -1030,19 +1030,8 @@ static inline Value DoubleValue(double dbl) {
   return v;
 }
 
-static constexpr Value CanonicalNaNValue() {
-  uint64_t rawBits = detail::CanonicalizedNaNBits;
-#if defined(JS_PUNBOX64)
-  rawBits += JSVAL_PUN64_DOUBLE_ADJUST;
-#endif
-  return Value::fromRawBits(rawBits);
-}
-
 static inline Value CanonicalizedDoubleValue(double d) {
-  if (MOZ_UNLIKELY(mozilla::IsNaN(d))) {
-    return CanonicalNaNValue();
-  }
-  return Value::fromDouble(d);
+  return Value::fromDouble(CanonicalizeNaN(d));
 }
 
 static inline bool IsCanonicalized(double d) {
