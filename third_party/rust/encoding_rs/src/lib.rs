@@ -11,7 +11,7 @@
     feature = "cargo-clippy",
     allow(doc_markdown, inline_always, new_ret_no_self)
 )]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.16")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.17")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -5635,7 +5635,7 @@ mod tests {
         let deserialized: Demo = serde_json::from_str(&serialized).unwrap();
         assert_eq!(deserialized, demo);
 
-        let bincoded = bincode::serialize(&demo, bincode::Infinite).unwrap();
+        let bincoded = bincode::serialize(&demo).unwrap();
         let debincoded: Demo = bincode::deserialize(&bincoded[..]).unwrap();
         assert_eq!(debincoded, demo);
     }
