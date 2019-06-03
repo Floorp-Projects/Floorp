@@ -84,6 +84,7 @@ SystemPrincipal::Read(nsIObjectInputStream* aStream) {
 
 NS_IMETHODIMP
 SystemPrincipal::Write(nsIObjectOutputStream* aStream) {
-  // no-op: CID is sufficient to identify the mSystemPrincipal singleton
+  // Read is used still for legacy principals
+  MOZ_RELEASE_ASSERT(false, "Old style serialization is removed");
   return NS_OK;
 }

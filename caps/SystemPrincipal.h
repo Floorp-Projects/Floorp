@@ -22,6 +22,10 @@
   }
 #define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
 
+namespace Json {
+class Value;
+}
+
 namespace mozilla {
 
 class SystemPrincipal final : public BasePrincipal {

@@ -9660,15 +9660,19 @@ bool nsContentUtils::QueryTriggeringPrincipal(
     return result;
   }
 
-  nsCOMPtr<nsISupports> serializedPrincipal;
-  NS_DeserializeObject(NS_ConvertUTF16toUTF8(loadingStr),
-                       getter_AddRefs(serializedPrincipal));
-  nsCOMPtr<nsIPrincipal> serializedPrin =
-      do_QueryInterface(serializedPrincipal);
-  if (serializedPrin) {
-    result = true;
-    serializedPrin.forget(aTriggeringPrincipal);
+  nsCString binary;
+  nsresult rv = Base64Decode(NS_ConvertUTF16toUTF8(loadingStr), binary);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrincipal> serializedPrin = BasePrincipal::FromJSON(binary);
+    if (serializedPrin) {
+      result = true;
+      serializedPrin.forget(aTriggeringPrincipal);
+    }
   } else {
+    MOZ_ASSERT(false, "Unable to deserialize base64 principal");
+  }
+
+  if (!result) {
     // Fallback if the deserialization is failed.
     loadingPrincipal.forget(aTriggeringPrincipal);
   }

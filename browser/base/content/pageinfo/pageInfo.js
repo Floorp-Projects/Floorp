@@ -9,6 +9,10 @@
 /* import-globals-from permissions.js */
 /* import-globals-from security.js */
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+});
+
 // define a js object to implement nsITreeView
 function pageInfoTreeView(treeid, copycol) {
   // copycol is the index number for the column that we want to add to
@@ -807,9 +811,7 @@ function makePreview(row) {
     var physWidth = 0, physHeight = 0;
     var width = 0, height = 0;
 
-    let serial = Cc["@mozilla.org/network/serialization-helper;1"]
-                   .getService(Ci.nsISerializationHelper);
-    let triggeringPrinStr = serial.serializeToString(gDocInfo.principal);
+    let triggeringPrinStr = E10SUtils.serializePrincipal(gDocInfo.principal);
     if ((item.HTMLLinkElement || item.HTMLInputElement ||
          item.HTMLImageElement || item.SVGImageElement ||
          (item.HTMLObjectElement && mimeType && mimeType.startsWith("image/")) ||
