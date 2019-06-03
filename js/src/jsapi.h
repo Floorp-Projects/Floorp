@@ -250,12 +250,6 @@ JS_PUBLIC_API bool JS_StringHasBeenPinned(JSContext* cx, JSString* str);
 extern JS_PUBLIC_API int64_t JS_Now(void);
 
 /** Don't want to export data, so provide accessors for non-inline Values. */
-extern JS_PUBLIC_API JS::Value JS_GetNaNValue(JSContext* cx);
-
-extern JS_PUBLIC_API JS::Value JS_GetNegativeInfinityValue(JSContext* cx);
-
-extern JS_PUBLIC_API JS::Value JS_GetPositiveInfinityValue(JSContext* cx);
-
 extern JS_PUBLIC_API JS::Value JS_GetEmptyStringValue(JSContext* cx);
 
 extern JS_PUBLIC_API JSString* JS_GetEmptyString(JSContext* cx);
