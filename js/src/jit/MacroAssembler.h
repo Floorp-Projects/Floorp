@@ -377,6 +377,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void Push(const ImmPtr imm) PER_SHARED_ARCH;
   void Push(const ImmGCPtr ptr) PER_SHARED_ARCH;
   void Push(FloatRegister reg) PER_SHARED_ARCH;
+  void PushBoxed(FloatRegister reg) PER_ARCH;
   void PushFlags() DEFINED_ON(x86_shared);
   void Push(jsid id, Register scratchReg);
   void Push(const Address& addr);

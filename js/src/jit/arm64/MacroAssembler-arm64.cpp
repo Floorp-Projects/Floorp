@@ -603,6 +603,12 @@ void MacroAssembler::Push(FloatRegister f) {
   adjustFrame(sizeof(double));
 }
 
+void MacroAssembler::PushBoxed(FloatRegister reg) {
+  subFromStackPtr(Imm32(sizeof(double)));
+  boxDouble(reg, Address(getStackPointer(), 0));
+  adjustFrame(sizeof(double));
+}
+
 void MacroAssembler::Pop(Register reg) {
   pop(reg);
   adjustFrame(-1 * int64_t(sizeof(int64_t)));
