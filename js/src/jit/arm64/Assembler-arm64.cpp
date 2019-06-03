@@ -624,9 +624,13 @@ void Assembler::TraceDataRelocations(JSTracer* trc, JitCode* code,
     uintptr_t* literalAddr = load->LiteralAddress<uintptr_t*>();
     uintptr_t literal = *literalAddr;
 
-    // All pointers on AArch64 will have the top bits cleared.
-    // If those bits are not cleared, this must be a Value.
+    // Data relocations can be for Values or for raw pointers. If a Value is
+    // zero-tagged, we can trace it as if it were a raw pointer. If a Value
+    // is not zero-tagged, we have to interpret it as a Value to ensure that the
+    // tag bits are masked off to recover the actual pointer.
+
     if (literal >> JSVAL_TAG_SHIFT) {
+      // This relocation is a Value with a non-zero tag.
       Value v = Value::fromRawBits(literal);
       TraceManuallyBarrieredEdge(trc, &v, "ion-masm-value");
       if (*literalAddr != v.asRawBits()) {
@@ -637,6 +641,7 @@ void Assembler::TraceDataRelocations(JSTracer* trc, JitCode* code,
       continue;
     }
 
+    // This relocation is a raw pointer or a Value with a zero tag.
     // No barriers needed since the pointers are constants.
     TraceManuallyBarrieredGenericPointerEdge(
         trc, reinterpret_cast<gc::Cell**>(literalAddr), "ion-masm-ptr");
