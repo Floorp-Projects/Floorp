@@ -15,8 +15,6 @@
 using namespace js;
 using namespace js::jit;
 
-using JS::DoubleNaNValue;
-
 static void EnsureOperandNotFloat32(TempAllocator& alloc, MInstruction* def,
                                     unsigned op) {
   MDefinition* in = def->getOperand(op);
@@ -959,7 +957,7 @@ bool StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc,
       break;
     case MIRType::Undefined:
       value->setImplicitlyUsedUnchecked();
-      value = MConstant::New(alloc, DoubleNaNValue());
+      value = MConstant::New(alloc, JS::NaNValue());
       ins->block()->insertBefore(ins, value->toInstruction());
       break;
     case MIRType::Object:

@@ -59,7 +59,6 @@
 using namespace js;
 
 using JS::AutoStableStringChars;
-using JS::DoubleNaNValue;
 using mozilla::Atomic;
 using mozilla::DebugOnly;
 using mozilla::NegativeInfinity;
@@ -132,9 +131,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       selfHostingGlobal_(nullptr),
       gc(thisFromCtor()),
       gcInitialized(false),
-      NaNValue(DoubleNaNValue()),
-      negativeInfinityValue(DoubleValue(NegativeInfinity<double>())),
-      positiveInfinityValue(DoubleValue(PositiveInfinity<double>())),
       emptyString(nullptr),
       defaultFreeOp_(nullptr),
 #if !EXPOSE_INTL_API

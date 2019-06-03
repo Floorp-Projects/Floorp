@@ -43,7 +43,6 @@ using mozilla::ArrayLength;
 using mozilla::AssertedCast;
 using mozilla::Maybe;
 
-using JS::DoubleNaNValue;
 using JS::RegExpFlag;
 using JS::RegExpFlags;
 using JS::TrackedOutcome;
