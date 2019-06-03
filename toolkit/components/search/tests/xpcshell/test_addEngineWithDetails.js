@@ -14,7 +14,8 @@ add_task(async function setup() {
 add_task(async function test_addEngineWithDetails() {
   Assert.ok(!Services.search.isInitialized);
 
-  await Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get", kSearchEngineURL);
+  await Services.search.addEngineWithDetails(kSearchEngineID,
+    {method: "get", template: kSearchEngineURL});
 
   // An engine added with addEngineWithDetails should have a load path, even
   // though we can't point to a specific file.

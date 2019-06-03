@@ -74,8 +74,8 @@ add_task(taskWithNewTab(async function test_disabled_ac() {
   let suggestOpenPages = Preferences.get("browser.urlbar.suggest.openpage");
   Preferences.set("browser.urlbar.suggest.openpage", false);
 
-  await Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-    "http://example.com/?q={searchTerms}");
+  await Services.search.addEngineWithDetails("MozSearch",
+    {method: "GET", template: "http://example.com/?q={searchTerms}"});
   let engine = Services.search.getEngineByName("MozSearch");
   let originalEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);

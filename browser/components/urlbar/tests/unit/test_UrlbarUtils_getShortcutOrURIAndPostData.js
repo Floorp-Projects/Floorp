@@ -148,7 +148,11 @@ async function setupKeywords() {
     }
 
     if (data instanceof searchKeywordData) {
-      await Services.search.addEngineWithDetails(data.keyword, "", data.keyword, "", data.method, data.uri.spec);
+      await Services.search.addEngineWithDetails(data.keyword, {
+        alias: data.keyword,
+        method: data.method,
+        template: data.uri.spec,
+      });
       let addedEngine = Services.search.getEngineByName(data.keyword);
       if (data.postData) {
         let [paramName, paramValue] = data.postData.split("=");
