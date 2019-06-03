@@ -835,9 +835,9 @@ class WidgetEvent : public WidgetEventTime {
   void SetDefaultComposed() {
     switch (mClass) {
       case eCompositionEventClass:
-        mFlags.mComposed = mMessage == eCompositionStart ||
-                           mMessage == eCompositionUpdate ||
-                           mMessage == eCompositionEnd;
+        mFlags.mComposed =
+            mMessage == eCompositionStart || mMessage == eCompositionUpdate ||
+            mMessage == eCompositionChange || mMessage == eCompositionEnd;
         break;
       case eDragEventClass:
         // All drag & drop events are composed
@@ -900,6 +900,7 @@ class WidgetEvent : public WidgetEventTime {
         aEventTypeArg.EqualsLiteral("compositionstart") ||
         aEventTypeArg.EqualsLiteral("compositionupdate") ||
         aEventTypeArg.EqualsLiteral("compositionend") ||
+        aEventTypeArg.EqualsLiteral("text") ||
         // drag and drop events
         aEventTypeArg.EqualsLiteral("dragstart") ||
         aEventTypeArg.EqualsLiteral("drag") ||
