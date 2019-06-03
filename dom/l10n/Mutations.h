@@ -46,6 +46,13 @@ class Mutations final : public nsStubMutationObserver,
    */
   void Disconnect();
 
+  /**
+   * Called when PresShell gets created for the document.
+   * If there are already pending mutations, this
+   * will schedule the refresh driver to translate them.
+   */
+  void OnCreatePresShell();
+
  protected:
   bool mObserving = false;
   bool mRefreshObserver = false;
