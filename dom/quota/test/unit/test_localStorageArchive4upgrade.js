@@ -32,6 +32,13 @@ async function testSteps() {
     return Services.domStorageManager.createStorage(null, principal, principal, "");
   }
 
+  info("Setting pref");
+
+  // xpcshell globals don't have associated clients in the Clients API sense, so
+  // we need to disable client validation so that this unit test is allowed to
+  // use LocalStorage.
+  Services.prefs.setBoolPref("dom.storage.client_validation", false);
+
   info("Clearing");
 
   let request = clear();
