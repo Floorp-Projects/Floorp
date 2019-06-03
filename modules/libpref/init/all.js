@@ -5536,6 +5536,10 @@ pref("network.trr.request-timeout", 1500);
 pref("network.trr.early-AAAA", false);
 // When true, it only sends AAAA when the system has IPv6 connectivity
 pref("network.trr.skip-AAAA-when-not-supported", true);
+// When true, the DNS request will wait for both A and AAAA responses
+// (if both have been requested) before notifying the listeners.
+// When true, it effectively cancels `network.trr.early-AAAA`
+pref("network.trr.wait-for-A-and-AAAA", true);
 // Explicitly disable ECS (EDNS Client Subnet, RFC 7871)
 pref("network.trr.disable-ECS", true);
 // After this many failed TRR requests in a row, consider TRR borked
