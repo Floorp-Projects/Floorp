@@ -96,7 +96,7 @@ jobs:
           android-release-type: beta
       run-on-projects:
           - mozilla-beta
-      when: []	# never (hook only)
+      when: []    # never (hook only)
 
 
     - name: searchfox-index
