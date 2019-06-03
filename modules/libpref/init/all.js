@@ -5534,6 +5534,8 @@ pref("network.trr.blacklist-duration", 60);
 pref("network.trr.request-timeout", 1500);
 // Allow AAAA entries to be used "early", before the A results are in
 pref("network.trr.early-AAAA", false);
+// When true, it only sends AAAA when the system has IPv6 connectivity
+pref("network.trr.skip-AAAA-when-not-supported", true);
 // Explicitly disable ECS (EDNS Client Subnet, RFC 7871)
 pref("network.trr.disable-ECS", true);
 // After this many failed TRR requests in a row, consider TRR borked
