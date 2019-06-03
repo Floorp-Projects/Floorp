@@ -5,36 +5,6 @@
 
 // Test viewport resizing, with and without meta viewport support.
 
-// We call this to switch between on/off support for meta viewports.
-async function setTouchAndMetaViewportSupport(ui, value) {
-  const reloadNeeded = await ui.updateTouchSimulation(value);
-  if (reloadNeeded) {
-    info("Reload is needed -- waiting for it.");
-    const reload = waitForViewportLoad(ui);
-    const browser = ui.getViewportBrowser();
-    browser.reload();
-    await reload;
-  }
-}
-
-// This function check that zoom, layout viewport width and height
-// are all as expected.
-async function testViewportZoomWidthAndHeight(message, ui, zoom, width, height) {
-  const resolution = await spawnViewportTask(ui, {}, function() {
-    return content.windowUtils.getResolution();
-  });
-  is(resolution, zoom, message + " should have expected zoom.");
-
-  const layoutSize = await spawnViewportTask(ui, {}, function() {
-    return {
-      width: content.screen.width,
-      height: content.screen.height,
-    };
-  });
-  is(layoutSize.width, width, message + " should have expected layout width.");
-  is(layoutSize.height, height, message + " should have expected layout height.");
-}
-
 const TEST_URL = "data:text/html;charset=utf-8," +
   "<head><meta name=\"viewport\" content=\"width=300\"/></head>" +
   "<body>meta viewport width 300</body>";
