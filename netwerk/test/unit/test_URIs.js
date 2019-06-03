@@ -633,6 +633,12 @@ function check_mozextension_query() {
   Assert.equal(uri.query, "u=https%3A%2F%2Fnews.ycombinator.com%2F");
 }
 
+function check_resolve() {
+  let base = gIoService.newURI("http://example.com");
+  let uri = gIoService.newURI("tel::+371 27028456", "utf-8", base);
+  Assert.equal(uri.spec, "tel::+371 27028456");
+}
+
 // TEST MAIN FUNCTION
 // ------------------
 function run_test()
@@ -641,6 +647,7 @@ function run_test()
   check_space_escaping();
   check_schemeIsNull();
   check_mozextension_query();
+  check_resolve();
 
   // UTF-8 check - From bug 622981
   // ASCII
