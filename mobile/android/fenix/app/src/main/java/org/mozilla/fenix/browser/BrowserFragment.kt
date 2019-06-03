@@ -92,6 +92,8 @@ import org.mozilla.fenix.quickactionsheet.QuickActionState
 import org.mozilla.fenix.quickactionsheet.QuickActionViewModel
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
+import java.net.MalformedURLException
+import java.net.URL
 import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -839,8 +841,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private fun findBookmarkedURL(session: Session?): Boolean {
         session?.let {
             return runBlocking {
-                val list = requireComponents.core.bookmarksStorage.getBookmarksWithUrl(it.url)
-                list.isNotEmpty() && list[0].url == it.url
+                try {
+                    val url = URL(it.url).toString()
+                    val list = requireComponents.core.bookmarksStorage.getBookmarksWithUrl(url)
+                    list.isNotEmpty() && list[0].url == url
+                } catch (e: MalformedURLException) {
+                    false
+                }
             }
         }
         return false
