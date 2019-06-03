@@ -78,7 +78,7 @@ body {
 </style>
 
 <script>
-'use strict';
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 
@@ -97,7 +97,6 @@ function runTests() {
 
   if ((grid.cols.lines.length == 6) &&
       (grid.rows.lines.length == 4)) {
-
     // test explicit / implicit lines
     is(grid.cols.lines[0].type, "explicit", "Grid column line 1 is explicit.");
     is(grid.cols.lines[4].type, "implicit", "Grid column line 5 is implicit.");
@@ -140,7 +139,6 @@ function runTests() {
 
   if ((grid.cols.tracks.length == 5) &&
       (grid.rows.tracks.length == 3)) {
-
     // test explicit / implicit tracks
     is(grid.cols.tracks[0].type, "explicit", "Grid column track 1 is explicit.");
     is(grid.cols.tracks[3].type, "implicit", "Grid column track 4 is implicit.");
@@ -156,8 +154,8 @@ function runTests() {
     "Grid.areas property has length that respects implicit expansion."
   );
 
-  for (var i = 0; i < grid.areas.length; i++) {
-    var area = grid.areas[i];
+  for (let i = 0; i < grid.areas.length; i++) {
+    let area = grid.areas[i];
     if (area.name == "areaD") {
       is(area.type, "implicit", area.name + " is implicit.");
 
@@ -189,8 +187,8 @@ function runTests() {
     "Grid.areas property has length that respects implicit expansion."
   );
 
-  for (var i = 0; i < grid.areas.length; i++) {
-    var area = grid.areas[i];
+  for (let i = 0; i < grid.areas.length; i++) {
+    let area = grid.areas[i];
     if (area.name == "areaA") {
       is(area.type, "implicit", area.name + " is implicit.");
 
@@ -240,8 +238,8 @@ function runTests() {
     "Grid.areas property reports 4 areas."
   );
 
-  for (var i = 0; i < grid.areas.length; i++) {
-    var area = grid.areas[i];
+  for (let i = 0; i < grid.areas.length; i++) {
+    let area = grid.areas[i];
     if (area.name == "areaC") {
       // test lines of implicit area
       is(area.rowStart, 1, area.name + " has start row line of 1.");
@@ -309,8 +307,8 @@ function runTests() {
   grid = wrapper.getGridFragments()[0];
 
   // Test that lineName-reversed implicit areas have the correct names.
-  for (var i = 0; i < grid.areas.length; i++) {
-    var area = grid.areas[i];
+  for (let i = 0; i < grid.areas.length; i++) {
+    let area = grid.areas[i];
     // test the resulting start/end lines of the areas has:
     // Start line: [a-end]
     // End Line: [a-start]

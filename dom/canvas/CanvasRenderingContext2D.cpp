@@ -4238,6 +4238,11 @@ CanvasRenderingContext2D::CachedSurfaceFromElement(Element* aElement) {
     return res;
   }
 
+  if (NS_FAILED(imgRequest->GetHadCrossOriginRedirects(
+          &res.mHadCrossOriginRedirects))) {
+    return res;
+  }
+
   res.mSourceSurface = CanvasImageCache::LookupAllCanvas(aElement);
   if (!res.mSourceSurface) {
     return res;
@@ -4251,7 +4256,8 @@ CanvasRenderingContext2D::CachedSurfaceFromElement(Element* aElement) {
   res.mSize = res.mSourceSurface->GetSize();
   res.mPrincipal = principal.forget();
   res.mImageRequest = imgRequest.forget();
-  res.mIsWriteOnly = CheckWriteOnlySecurity(res.mCORSUsed, res.mPrincipal);
+  res.mIsWriteOnly = CheckWriteOnlySecurity(res.mCORSUsed, res.mPrincipal,
+                                            res.mHadCrossOriginRedirects);
 
   return res;
 }
