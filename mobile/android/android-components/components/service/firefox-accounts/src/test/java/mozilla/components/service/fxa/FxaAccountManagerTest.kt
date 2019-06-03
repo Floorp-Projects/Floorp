@@ -795,11 +795,12 @@ class FxaAccountManagerTest {
 
         verify(accountObserver, times(1)).onAuthenticationProblems()
         assertTrue(manager.accountNeedsReauth())
+        assertEquals(mockAccount, manager.authenticatedAccount())
 
         // Able to re-authenticate.
         reset(accountObserver)
         assertEquals("auth://url", manager.beginAuthenticationAsync().await())
-        assertNull(manager.authenticatedAccount())
+        assertEquals(mockAccount, manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
         manager.finishAuthenticationAsync("dummyCode", "dummyState").await()

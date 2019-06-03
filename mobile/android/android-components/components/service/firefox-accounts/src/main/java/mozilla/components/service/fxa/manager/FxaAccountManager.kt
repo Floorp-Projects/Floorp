@@ -237,12 +237,14 @@ open class FxaAccountManager(
 
     /**
      * Main point for interaction with an [OAuthAccount] instance.
-     * @return [OAuthAccount] if we're in an authenticated state, null otherwise.
+     * @return [OAuthAccount] if we're in an authenticated state, null otherwise. Returned [OAuthAccount]
+     * may need to be re-authenticated; consumers are expected to check [accountNeedsReauth].
      */
     fun authenticatedAccount(): OAuthAccount? {
         return when (state) {
             AccountState.AuthenticatedWithProfile,
-            AccountState.AuthenticatedNoProfile -> account
+            AccountState.AuthenticatedNoProfile,
+            AccountState.AuthenticationProblem -> account
             else -> null
         }
     }
