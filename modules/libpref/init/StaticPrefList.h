@@ -770,6 +770,19 @@ VARCACHE_PREF(
 PREF("browser.display.focus_text_color", String, "")
 PREF("browser.display.foreground_color", String, "")
 
+VARCACHE_PREF(
+  Live,
+  "browser.display.show_focus_rings",
+  browser_display_show_focus_rings,
+  bool,
+  // Focus rings are not shown on Mac or Android by default.
+#if defined(XP_MACOSX) || defined(ANDROID)
+  false
+#else
+  true
+#endif
+)
+
 // In theory: 0 = never, 1 = quick, 2 = always, though we always just use it as
 // a bool!
 VARCACHE_PREF(
