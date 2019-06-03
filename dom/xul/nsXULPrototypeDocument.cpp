@@ -102,11 +102,13 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream) {
   mURI = do_QueryInterface(supports);
 
   // nsIPrincipal mNodeInfoManager->mPrincipal
-  rv = aStream->ReadObject(true, getter_AddRefs(supports));
+  nsAutoCString JSON;
+  rv = aStream->ReadCString(JSON);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(supports);
+  nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::FromJSON(JSON);
+
   // Better safe than sorry....
   mNodeInfoManager->SetDocumentPrincipal(principal);
 
@@ -237,8 +239,10 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream) {
   rv = aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), true);
 
   // nsIPrincipal mNodeInfoManager->mPrincipal
-  nsresult tmp =
-      aStream->WriteObject(mNodeInfoManager->DocumentPrincipal(), true);
+  nsAutoCString JSON;
+  mozilla::BasePrincipal::Cast(mNodeInfoManager->DocumentPrincipal())
+      ->ToJSON(JSON);
+  nsresult tmp = aStream->WriteStringZ(JSON.get());
   if (NS_FAILED(tmp)) {
     rv = tmp;
   }

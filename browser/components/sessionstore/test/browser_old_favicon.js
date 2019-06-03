@@ -5,8 +5,6 @@
  * Ensure that we can restore old style favicon and principals.
  */
 add_task(async function test_label_and_icon() {
-  let helper = Cc["@mozilla.org/network/serialization-helper;1"].getService(Ci.nsISerializationHelper);
-
   // Make sure that tabs are restored on demand as otherwise the tab will start
   // loading immediately and override the icon.
   await SpecialPowers.pushPrefEnv({
@@ -19,7 +17,7 @@ add_task(async function test_label_and_icon() {
   await promiseBrowserLoaded(browser);
 
   let contentPrincipal = browser.contentPrincipal;
-  let serializedPrincipal = helper.serializeToString(contentPrincipal);
+  let serializedPrincipal = E10SUtils.serializePrincipal(contentPrincipal);
 
   // Retrieve the tab state.
   await TabStateFlusher.flush(browser);
