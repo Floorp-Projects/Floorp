@@ -1579,7 +1579,8 @@ add_task(async function test_defaultSearchEngine() {
   // Add a new search engine (this will have no engine identifier).
   const SEARCH_ENGINE_ID = "telemetry_default";
   const SEARCH_ENGINE_URL = "http://www.example.org/?search={searchTerms}";
-  await Services.search.addEngineWithDetails(SEARCH_ENGINE_ID, "", null, "", "get", SEARCH_ENGINE_URL);
+  await Services.search.addEngineWithDetails(SEARCH_ENGINE_ID,
+    {method: "get", template: SEARCH_ENGINE_URL});
 
   // Register a new change listener and then wait for the search engine change to be notified.
   let deferred = PromiseUtils.defer();

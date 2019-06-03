@@ -15,8 +15,8 @@ add_task(async function searchEngines() {
   let schemes = ["http", "https"];
   for (let i = 0; i < schemes.length; i++) {
     let scheme = schemes[i];
-    await Services.search.addEngineWithDetails("TestEngine", "", "", "", "GET",
-                                               scheme + "://www.example.com/");
+    await Services.search.addEngineWithDetails("TestEngine",
+      {method: "GET", template: scheme + "://www.example.com/"});
     let engine = Services.search.getEngineByName("TestEngine");
     engine.addParam("q", "{searchTerms}", null);
 

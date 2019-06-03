@@ -14,8 +14,12 @@ add_task(async function() {
     "bjh074uPjgeqAXE1NzSdPnvDz84M0AEUvXLgAsW379u1z5swBen3jxo2zZ892cHB4%2BvQp0KlA" +
     "fwI1cHJyghQFBwfv2rULokFXV%2FfixYu7d%2B8GGqGgoMDKyrpu3br9%2B%2FcDuXl5eVA%2FA" +
     "EWBfoWHAdAYoNuAYQ0XAeoUERFhGDYAAPoUaT2dfWJuAAAAAElFTkSuQmCC";
-  await Services.search.addEngineWithDetails("MozSearch", ICON_URI, "moz", "",
-    "GET", "http://example.com/?q={searchTerms}");
+  await Services.search.addEngineWithDetails("MozSearch", {
+    iconURL: ICON_URI,
+    alias: "moz",
+    method: "GET",
+    template: "http://example.com/?q={searchTerms}",
+  });
   let engine = Services.search.getEngineByName("MozSearch");
   let originalEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);

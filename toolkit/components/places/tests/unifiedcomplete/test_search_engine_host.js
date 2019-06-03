@@ -3,8 +3,8 @@
 
 add_task(async function test_searchEngine_autoFill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("MySearchEngine", "", "", "",
-                                             "GET", "http://my.search.com/");
+  await Services.search.addEngineWithDetails("MySearchEngine",
+    {method: "GET", template: "http://my.search.com/"});
   let engine = Services.search.getEngineByName("MySearchEngine");
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
 

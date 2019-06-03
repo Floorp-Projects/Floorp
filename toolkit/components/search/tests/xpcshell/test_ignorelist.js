@@ -23,21 +23,26 @@ add_task(async function test_ignoreList() {
 
   let updatePromise = SearchTestUtils.promiseSearchNotification("settings-update-complete");
 
-  await Services.search.addEngineWithDetails(kSearchEngineID1, "", "", "", "get", kSearchEngineURL1);
+  await Services.search.addEngineWithDetails(kSearchEngineID1,
+    {method: "get", template: kSearchEngineURL1});
 
   await updatePromise;
 
   let engine = Services.search.getEngineByName(kSearchEngineID1);
   Assert.equal(engine, null, "Engine with ignored search params should not exist");
 
-  await Services.search.addEngineWithDetails(kSearchEngineID2, "", "", "", "get", kSearchEngineURL2);
+  await Services.search.addEngineWithDetails(kSearchEngineID2,
+    {method: "get", template: kSearchEngineURL2});
 
   // An ignored engine shouldn't be available at all
   engine = Services.search.getEngineByName(kSearchEngineID2);
   Assert.equal(engine, null, "Engine with ignored search params of a different case should not exist");
 
-  await Services.search.addEngineWithDetails(kSearchEngineID3, "", "", "", "get",
-                                             kSearchEngineURL3, kExtensionID);
+  await Services.search.addEngineWithDetails(kSearchEngineID3, {
+    method: "get",
+    template: kSearchEngineURL3,
+    extensionID: kExtensionID,
+  });
 
   // An ignored engine shouldn't be available at all
   engine = Services.search.getEngineByName(kSearchEngineID3);

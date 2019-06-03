@@ -8,10 +8,16 @@ const SUGGESTIONS_ENGINE_NAME = "engine-suggestions.xml";
 add_task(async function basicGetAndPost() {
   // Note that head_autocomplete.js has already added a MozSearch engine.
   // Here we add another engine with a search alias.
-  await Services.search.addEngineWithDetails("AliasedGETMozSearch", "", "get", "",
-                                             "GET", "http://s.example.com/search");
-  await Services.search.addEngineWithDetails("AliasedPOSTMozSearch", "", "post", "",
-                                             "POST", "http://s.example.com/search");
+  await Services.search.addEngineWithDetails("AliasedGETMozSearch", {
+    alias: "get",
+    method: "GET",
+    template: "http://s.example.com/search",
+  });
+  await Services.search.addEngineWithDetails("AliasedPOSTMozSearch", {
+    alias: "post",
+    method: "POST",
+    template: "http://s.example.com/search",
+  });
 
   await PlacesTestUtils.addVisits("http://s.example.com/search?q=firefox");
   let historyMatch = {

@@ -36,8 +36,8 @@ add_task(async function test_trailing_space_noautofill() {
 
 add_task(async function test_searchEngine_autofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("CakeSearch", "", "", "",
-                                             "GET", "http://cake.search/");
+  await Services.search.addEngineWithDetails("CakeSearch",
+    {method: "GET", template: "http://cake.search/"});
   let engine = Services.search.getEngineByName("CakeSearch");
   engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
@@ -54,8 +54,8 @@ add_task(async function test_searchEngine_autofill() {
 
 add_task(async function test_searchEngine_prefix_space_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("CupcakeSearch", "", "", "",
-                                             "GET", "http://cupcake.search/");
+  await Services.search.addEngineWithDetails("CupcakeSearch",
+    {method: "GET", template: "http://cupcake.search/"});
   let engine = Services.search.getEngineByName("CupcakeSearch");
   engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
@@ -72,8 +72,8 @@ add_task(async function test_searchEngine_prefix_space_noautofill() {
 
 add_task(async function test_searchEngine_trailing_space_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("BaconSearch", "", "", "",
-                                             "GET", "http://bacon.search/");
+  await Services.search.addEngineWithDetails("BaconSearch",
+    {method: "GET", template: "http://bacon.search/"});
   let engine = Services.search.getEngineByName("BaconSearch");
   engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
@@ -90,8 +90,8 @@ add_task(async function test_searchEngine_trailing_space_noautofill() {
 
 add_task(async function test_searchEngine_www_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("HamSearch", "", "", "",
-                                             "GET", "http://ham.search/");
+  await Services.search.addEngineWithDetails("HamSearch",
+    {method: "GET", template: "http://ham.search/"});
   let engine = Services.search.getEngineByName("HamSearch");
   engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
@@ -108,8 +108,8 @@ add_task(async function test_searchEngine_www_noautofill() {
 
 add_task(async function test_searchEngine_different_scheme_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("PieSearch", "", "", "",
-                                             "GET", "https://pie.search/");
+  await Services.search.addEngineWithDetails("PieSearch",
+    {method: "GET", template: "https://pie.search/"});
   let engine = Services.search.getEngineByName("PieSearch");
   engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));
@@ -126,8 +126,8 @@ add_task(async function test_searchEngine_different_scheme_noautofill() {
 
 add_task(async function test_searchEngine_matching_prefix_autofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  await Services.search.addEngineWithDetails("BeanSearch", "", "", "",
-                                             "GET", "http://www.bean.search/");
+  await Services.search.addEngineWithDetails("BeanSearch",
+    {method: "GET", template: "http://www.bean.search/"});
   let engine = Services.search.getEngineByName("BeanSearch");
   engine.addParam("q", "{searchTerms}", null);
   registerCleanupFunction(async () => Services.search.removeEngine(engine));

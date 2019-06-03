@@ -532,8 +532,8 @@ add_task(async function ensure_search_engine() {
   for (let engine of await Services.search.getEngines()) {
     await Services.search.removeEngine(engine);
   }
-  await Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-                                             "http://s.example.com/search");
+  await Services.search.addEngineWithDetails("MozSearch",
+    {method: "GET", template: "http://s.example.com/search"});
   let engine = Services.search.getEngineByName("MozSearch");
   await Services.search.setDefault(engine);
 });
