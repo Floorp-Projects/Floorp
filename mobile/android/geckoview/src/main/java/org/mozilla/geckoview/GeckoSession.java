@@ -427,9 +427,9 @@ public class GeckoSession implements Parcelable {
                 "GeckoView:ContentCrash",
                 "GeckoView:ContextMenu",
                 "GeckoView:DOMTitleChanged",
-                "GeckoView:DOMWindowFocus",
                 "GeckoView:DOMWindowClose",
                 "GeckoView:ExternalResponse",
+                "GeckoView:FocusRequest",
                 "GeckoView:FullScreenEnter",
                 "GeckoView:FullScreenExit",
                 "GeckoView:WebAppManifest",
@@ -462,7 +462,7 @@ public class GeckoSession implements Parcelable {
                 } else if ("GeckoView:DOMTitleChanged".equals(event)) {
                     delegate.onTitleChange(GeckoSession.this,
                                            message.getString("title"));
-                } else if ("GeckoView:DOMWindowFocus".equals(event)) {
+                } else if ("GeckoView:FocusRequest".equals(event)) {
                     delegate.onFocusRequest(GeckoSession.this);
                 } else if ("GeckoView:DOMWindowClose".equals(event)) {
                     delegate.onCloseRequest(GeckoSession.this);

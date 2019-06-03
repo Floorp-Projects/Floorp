@@ -4163,19 +4163,6 @@ nsresult nsContentUtils::DispatchChromeEvent(
   return err.StealNSResult();
 }
 
-/* static */
-nsresult nsContentUtils::DispatchFocusChromeEvent(nsPIDOMWindowOuter* aWindow) {
-  MOZ_ASSERT(aWindow);
-
-  RefPtr<Document> doc = aWindow->GetExtantDoc();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return DispatchChromeEvent(doc, aWindow, NS_LITERAL_STRING("DOMWindowFocus"),
-                             CanBubble::eYes, Cancelable::eYes);
-}
-
 void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise) {
   RefPtr<Element> target = &aFrameElement;
   bool defaultAction = true;
