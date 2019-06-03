@@ -11,61 +11,44 @@
 const {PrefObserver} = require("devtools/client/shared/prefs");
 
 const TEST_URI = `data:text/html;charset=utf-8,
-  Web Console test for bug 1307871 - preference for toggling timestamps in messages
-  <script>
-    window.logMessage = function () {
-      console.log("simple text message");
-    };
-  </script>`;
+  Web Console test for bug 1307871 - preference for toggling timestamps in messages`;
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Call the log function defined in the test page");
+  const onMessage = waitForMessage(hud, "simple text message");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
-    content.wrappedJSObject.logMessage();
+    content.wrappedJSObject.console.log("simple text message");
   });
+  const message = await onMessage;
 
-  await testPrefDefaults(hud);
+  const prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
+  ok(!prefValue, "Messages should have no timestamp by default (pref check)");
+  ok(!message.node.querySelector(".timestamp"),
+    "Messages should have no timestamp by default (element check)");
 
+  info("Open the settings panel");
   const observer = new PrefObserver("");
   const toolbox = gDevTools.getToolbox(hud.target);
-  const optionsPanel = await toolbox.selectTool("options");
-  await togglePref(optionsPanel, observer);
+  const {panelDoc, panelWin} = await toolbox.selectTool("options");
+
+  info("Change Timestamp preference");
+  const prefChanged = observer.once(PREF_MESSAGE_TIMESTAMP, () => {});
+  const checkbox = panelDoc.getElementById("webconsole-timestamp-messages");
+
+  // We use executeSoon here to ensure that the element is in view and clickable.
+  checkbox.scrollIntoView();
+  executeSoon(() => EventUtils.synthesizeMouseAtCenter(checkbox, {}, panelWin));
+
+  await prefChanged;
   observer.destroy();
 
   // Switch back to the console as it won't update when it is in background
+  info("Go back to console");
   await toolbox.selectTool("webconsole");
-
-  await testChangedPref(hud);
+  ok(message.node.querySelector(".timestamp"), "Messages should have timestamp");
 
   Services.prefs.clearUserPref(PREF_MESSAGE_TIMESTAMP);
 });
-
-async function testPrefDefaults(hud) {
-  const prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
-  ok(!prefValue, "Messages should have no timestamp by default (pref check)");
-  const message = await waitFor(() => findMessage(hud, "simple text message"));
-  is(message.querySelectorAll(".timestamp").length, 0,
-     "Messages should have no timestamp by default (element check)");
-}
-
-async function togglePref(panel, observer) {
-  info("Options panel opened");
-
-  info("Changing pref");
-  const prefChanged = observer.once(PREF_MESSAGE_TIMESTAMP, () => {});
-  const checkbox = panel.panelDoc.getElementById("webconsole-timestamp-messages");
-  checkbox.click();
-
-  await prefChanged;
-}
-
-async function testChangedPref(hud) {
-  const prefValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
-  ok(prefValue, "Messages should have timestamps (pref check)");
-  const message = await waitFor(() => findMessage(hud, "simple text message"));
-  is(message.querySelectorAll(".timestamp").length, 1,
-     "Messages should have timestamp (element check)");
-}
