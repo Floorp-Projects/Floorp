@@ -6949,8 +6949,8 @@
   "ENCODING_OVERRIDE_SITUATION": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["hsivonen@mozilla.com"],
-    "bug_numbers": [840476, 977573, 1513473],
-    "expires_in_version": "69",
+    "bug_numbers": [840476, 977573, 1513473, 1554592],
+    "expires_in_version": "72",
     "releaseChannelCollection": "opt-out",
     "kind": "categorical",
     "labels": ["Local", "RemoteTld", "RemoteNonTld", "LocalChardet", "RemoteChardet", "Labeled", "AlreadyOverridden", "Bug"],
