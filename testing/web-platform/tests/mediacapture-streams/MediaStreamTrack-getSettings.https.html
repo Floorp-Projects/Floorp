@@ -64,10 +64,9 @@
 
   promise_test(async t => {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    for (const device of devices) {
-      if (device.kind == "audiooutput") {
-        continue;
-      }
+    const inputDevices = devices.filter(d => d.kind != "audiooutput");
+    assert_greater_than(inputDevices.length, 0);
+    for (const device of inputDevices) {
       const device_id_constraint = {deviceId: {exact: device.deviceId}};
       const constraints = device.kind == "audioinput"
         ? {audio: device_id_constraint}
@@ -78,7 +77,7 @@
                     device.groupId);
       assert_greater_than(device.groupId.length, 0);
     }
-  }, 'groupId is correctly reported by getSettings() for all devices');
+  }, 'groupId is correctly reported by getSettings() for all input devices');
 
   promise_test(async t => {
     const settings = await createTrackAndGetSettings(t, "audio");
