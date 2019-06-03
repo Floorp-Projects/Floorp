@@ -208,9 +208,9 @@ static Value ToJSValue(const Val& val) {
     case ValType::I32:
       return Int32Value(val.i32());
     case ValType::F32:
-      return DoubleValue(JS::CanonicalizeNaN(double(val.f32())));
+      return JS::CanonicalizedDoubleValue(double(val.f32()));
     case ValType::F64:
-      return DoubleValue(JS::CanonicalizeNaN(val.f64()));
+      return JS::CanonicalizedDoubleValue(val.f64());
     case ValType::FuncRef:
     case ValType::AnyRef:
       return UnboxAnyRef(val.ref());
