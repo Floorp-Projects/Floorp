@@ -296,10 +296,6 @@ panel[type="arrow"] {
     -moz-window-transform: none;
   }
 %else
-  panel[type="arrow"] {
-    will-change: transform, opacity; /* workaround for bug 1414033 */
-  }
-
   panel[type="arrow"]:not([animate="false"]) {
     opacity: 0;
     transform: translateY(-70px);
