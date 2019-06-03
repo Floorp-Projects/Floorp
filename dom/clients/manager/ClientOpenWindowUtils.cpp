@@ -10,6 +10,7 @@
 #include "ClientState.h"
 #include "mozilla/SystemGroup.h"
 #include "nsContentUtils.h"
+#include "nsFocusManager.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDOMChromeWindow.h"
@@ -276,14 +277,10 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
 
   RefPtr<ClientOpPromise::Private> promise = aPromise;
 
-  nsresult rv = nsContentUtils::DispatchFocusChromeEvent(aOuterWindow);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->Reject(rv, __func__);
-    return;
-  }
+  nsFocusManager::FocusWindow(aOuterWindow);
 
   nsCOMPtr<nsIURI> baseURI;
-  rv = NS_NewURI(getter_AddRefs(baseURI), aArgs.baseURL());
+  nsresult rv = NS_NewURI(getter_AddRefs(baseURI), aArgs.baseURL());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->Reject(rv, __func__);
     return;
