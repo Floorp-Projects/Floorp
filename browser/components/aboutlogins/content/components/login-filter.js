@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals ReflectedFluentElement */
+import ReflectedFluentElement from "chrome://browser/content/aboutlogins/components/reflected-fluent-element.js";
 
-class LoginFilter extends ReflectedFluentElement {
+export default class LoginFilter extends ReflectedFluentElement {
   connectedCallback() {
     if (this.children.length) {
       return;
