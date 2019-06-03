@@ -99,8 +99,10 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Über %1$s</string>
-    <!-- Preference linking to the privacy policy -->
-    <string name="preferences_privacy_policy">Datenschutzerklärung</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_notice">Datenschutzhinweis</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Ihre Rechte</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">Passwörter</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
@@ -123,6 +125,8 @@
     <string name="preferences_sign_in_description">Synchronisieren Sie Lesezeichen, Chronik und mehr mit Ihrem Firefox-Konto</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-Konto</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Stellen Sie die Verbindung erneut her, um die Synchronisierung fortzusetzen</string>
     <!-- Preference for language -->
     <string name="preferences_language">Sprache</string>
     <!-- Preference for data choices -->
@@ -148,8 +152,10 @@
     <string name="preferences_sync_bookmarks">Lesezeichen</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Abmelden</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Gerätename</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing">Synchronisation läuft</string>
+    <string name="sync_syncing_in_progress">Synchronisation läuft…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Synchronisierung fehlgeschlagen. Letzte erfolgreiche Synchronisation: %s</string>
     <!-- Label summary showing never synced -->
@@ -164,6 +170,13 @@
     <string name="fxa_received_tab_channel_name">Empfangene Tabs</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_description">Benachrichtigungen für Tabs, die von anderen Firefox-Geräten empfangen wurden.</string>
+
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Tab empfangen</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Tabs empfangen</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Tab von %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -201,6 +214,11 @@
     <string name="preferences_sync_sign_in">Anmelden</string>
     <!-- Preference for account creation -->
     <string name="preferences_sync_create_account">Konto erstellen</string>
+
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Melden Sie sich an, um die Verbindung wiederherzustellen</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Konto löschen</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
@@ -318,6 +336,8 @@
     <string name="history_delete_all">Chronik löschen</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Soll Ihre Chronik wirklich gelöscht werden?</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Leeren</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Löschen</string>
     <!-- History multi select title in app bar
@@ -483,6 +503,8 @@
 
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Alle auswählen</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Alle abwählen</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">Zu speichernde Tabs auswählen</string>
 
@@ -522,7 +544,7 @@
     <string name="sync_send_to_all">An alle Geräte senden</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Wieder mit Sync verbinden</string>
-    <!-- An option from the share dialog to reconnect to sync -->
+    <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Offline</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Weiteres Gerät verbinden</string>
@@ -565,7 +587,101 @@
     <string name="url_copied">Adresse kopiert</string>
 
 
+    <!-- Sample text for accessiblity font size -->
     <string name="accessibility_text_size_sample_text">Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.</string>
+    <!-- Summary for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Text auf Websites vergrößern oder verkleinern</string>
+    <!-- Title for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Schriftgröße</string>
+
+    <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">Automatische Schriftgrößenanpassung</string>
+    <!-- Summary for Accessiblity Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Die Schriftgröße entspricht Ihren Android-Einstellungen. Deaktivieren Sie diese Option, um die Schriftgröße hier zu verwalten.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Browser-Daten löschen</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">Offene Tabs</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d Tabs</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Browser-Chronik und Website-Daten</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d Adressen</string>
+    <!-- Title for the collections item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_collections_title">Sammlungen</string>
+    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
+        number of collections that will be deleted -->
+    <string name="preferences_delete_browsing_data_collections_subtitle">%d Sammlungen</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Browser-Daten löschen</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
+    <string name="preferences_delete_browsing_data_prompt_message">%s erlauben, Ihre Browser-Daten zu löschen?</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="preferences_delete_browsing_data_prompt_cancel">Nicht erlauben</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="preferences_delete_browsing_data_prompt_allow">Erlauben</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Willkommen bei %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Haben Sie schon ein Konto?</string>
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">%s kennenlernen</string>
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Wählen Sie Ihr Theme</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description">Dunkles Theme: Schont die Batterie und Ihre Augen.</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Machen Sie das Beste aus %s.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated -->
+    <string name="onboarding_firefox_account_auto_signin_header">Sie sind auf diesem Handy bei einem anderen Firefox-Browser angemeldet.</string>
+    <!-- text for the button to sign into your Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Bei Firefox anmelden</string>
+    <!-- text for the button to stay signed into your Firefox account. -->
+    <string name="onboarding_firefox_account_stay_signed_in">Angemeldet bleiben</string>
+    <!-- text for the button to sign out of your Firefox account. -->
+    <string name="onboarding_firefox_account_sign_out">Abmelden</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Schützen Sie sich</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description">%s blockiert Werbe-Tracker, die Sie im Internet verfolgen.
+    </string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Privat surfen</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description">Wenn Sie das %s-Symbol sehen, ist das private Surfen nur einen Fingertipp entfernt.
+   </string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Ihre Privatsphäre</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Wir haben %s so konzipiert, dass Sie die Kontrolle darüber haben, was Sie
+        im Internet und was Sie mit uns teilen.
+    </string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Lesen Sie unseren Datenschutzhinweis</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Lossurfen</string>
+
+    <!-- Onboarding theme -->
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Automatisch</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Passt sich Ihren Geräteeinstellungen an</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Dunkles Theme</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Helles Theme</string>
 </resources>

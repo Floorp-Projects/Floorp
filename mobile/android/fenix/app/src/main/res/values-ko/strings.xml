@@ -102,8 +102,10 @@
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s 정보</string>
-    <!-- Preference linking to the privacy policy -->
-    <string name="preferences_privacy_policy">개인 정보 보호 정책</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_notice">개인 정보 보호 정책</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">사용자 권리</string>
     <!-- Preference for settings related to saved passwords -->
     <string name="preferences_passwords">암호</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
@@ -126,6 +128,8 @@
     <string name="preferences_sign_in_description">Firefox 계정으로 북마크, 방문 기록 등을 동기화하세요</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox 계정</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">다시 연결하여 동기화를 재개하십시오.</string>
     <!-- Preference for language -->
     <string name="preferences_language">언어</string>
     <!-- Preference for data choices -->
@@ -150,6 +154,8 @@
     <string name="preferences_sync_bookmarks">북마크</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">로그아웃</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">기기명</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing">동기화중</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
@@ -166,6 +172,13 @@
     <string name="fxa_received_tab_channel_name">받은 탭</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="fxa_received_tab_channel_description">다른 Firefox 기기에서받은 탭에 대한 알림입니다.</string>
+
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">전송 받은 탭</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">전송 받은 탭</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s에서 온 탭</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
@@ -204,6 +217,11 @@
     <string name="preferences_sync_sign_in">로그인</string>
     <!-- Preference for account creation -->
     <string name="preferences_sync_create_account">계정 생성</string>
+
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">재연결을 위해 로그인</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">계정 삭제</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
@@ -322,6 +340,8 @@
     <string name="history_delete_all">방문 기록 삭제</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">방문 기록을 삭제하시겠습니까?</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">삭제</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">삭제</string>
     <!-- History multi select title in app bar
@@ -489,6 +509,8 @@
 
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">모두 선택</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">모두 선택 해제</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
     <string name="create_collection_save_to_collection_empty">저장할 탭 선택</string>
 
@@ -528,7 +550,7 @@
     <string name="sync_send_to_all">모든 기기에 다 보내기</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">동기화에 다시 연결</string>
-    <!-- An option from the share dialog to reconnect to sync -->
+    <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">오프라인</string>
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">다른 기기에 연결</string>
@@ -572,7 +594,23 @@
     <string name="url_copied">URL 복사됨</string>
 
 
+    <!-- Sample text for accessiblity font size -->
     <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.</string>
+    <!-- Summary for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">웹 사이트의 텍스트를 더 크게 또는 더 작게 함</string>
+    <!-- Title for Accessiblity Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">글자 크기</string>
-</resources>
+
+    <!-- Title for Accessiblity Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">자동 글꼴 크기 조정</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">인터넷 사용 정보 삭제</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">열린 탭</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">탭 %d개</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">탐색 기록 및 사이트 데이터</string>
+
+    </resources>
