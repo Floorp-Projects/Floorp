@@ -366,7 +366,7 @@ static const float PretenureThreshold = 0.6f;
 static const float PretenureGroupThreshold = 3000;
 
 /* JSGC_MIN_LAST_DITCH_GC_PERIOD */
-static const TimeDuration MinLastDitchGCPeriod = TimeDuration::FromSeconds(60);
+static const auto MinLastDitchGCPeriod = 60;  // in seconds
 
 }  // namespace TuningDefaults
 }  // namespace gc
@@ -1620,7 +1620,8 @@ GCSchedulingTunables::GCSchedulingTunables()
           TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction),
       pretenureThreshold_(TuningDefaults::PretenureThreshold),
       pretenureGroupThreshold_(TuningDefaults::PretenureGroupThreshold),
-      minLastDitchGCPeriod_(TuningDefaults::MinLastDitchGCPeriod) {}
+      minLastDitchGCPeriod_(
+          TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod)) {}
 
 void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
   switch (key) {
@@ -1716,7 +1717,8 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
       pretenureGroupThreshold_ = TuningDefaults::PretenureGroupThreshold;
       break;
     case JSGC_MIN_LAST_DITCH_GC_PERIOD:
-      minLastDitchGCPeriod_ = TuningDefaults::MinLastDitchGCPeriod;
+      minLastDitchGCPeriod_ =
+          TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod);
       break;
     case JSGC_ZONE_ALLOC_DELAY_KB:
       zoneAllocDelayBytes_ = TuningDefaults::ZoneAllocDelayBytes;
