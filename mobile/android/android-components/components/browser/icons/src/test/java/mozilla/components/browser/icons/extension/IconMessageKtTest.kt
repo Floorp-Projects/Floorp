@@ -5,6 +5,7 @@
 package mozilla.components.browser.icons.extension
 
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.concept.engine.manifest.Size
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,19 +18,19 @@ class IconMessageKtTest {
         val resources = listOf(
             IconRequest.Resource(
                 url = "https://www.mozilla.org/icon64.png",
-                sizes = listOf(IconRequest.Resource.Size(64, 64)),
+                sizes = listOf(Size(64, 64)),
                 mimeType = "image/png",
                 type = IconRequest.Resource.Type.FAVICON
             ),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/icon128.png",
-                sizes = listOf(IconRequest.Resource.Size(128, 128)),
+                sizes = listOf(Size(128, 128)),
                 mimeType = "image/png",
                 type = IconRequest.Resource.Type.FAVICON
             ),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/icon128.png",
-                sizes = listOf(IconRequest.Resource.Size(180, 180)),
+                sizes = listOf(Size(180, 180)),
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
             )
         )

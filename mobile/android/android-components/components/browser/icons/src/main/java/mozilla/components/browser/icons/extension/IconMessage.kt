@@ -5,11 +5,11 @@
 package mozilla.components.browser.icons.extension
 
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.lang.IllegalArgumentException
 
 private val typeMap: Map<String, IconRequest.Resource.Type> = mutableMapOf(
     "icon" to IconRequest.Resource.Type.FAVICON,
@@ -97,33 +97,23 @@ private fun JSONObject.toIconResource(): IconRequest.Resource? {
     }
 }
 
-@Suppress("ReturnCount")
-private fun JSONArray?.toResourceSizes(): List<IconRequest.Resource.Size> {
-    if (this == null) {
-        return emptyList()
-    }
+private fun JSONArray?.toResourceSizes(): List<Size> {
+    this ?: return emptyList()
 
-    try {
-        val sizes = mutableListOf<IconRequest.Resource.Size>()
+    return try {
+        val sizes = mutableListOf<Size>()
 
         for (i in 0 until length()) {
-            val size = getString(i).split("x")
-            if (size.size != 2) {
-                continue
-            }
-
-            val width = size[0].toInt()
-            val height = size[1].toInt()
-
-            sizes.add(IconRequest.Resource.Size(width, height))
+            val raw = getString(i)
+            Size.parse(raw)?.let { sizes.add(it) }
         }
 
-        return sizes
+        sizes
     } catch (e: JSONException) {
         Logger.warn("Could not parse message from icons extensions", e)
-        return emptyList()
+        emptyList()
     } catch (e: NumberFormatException) {
         Logger.warn("Could not parse message from icons extensions", e)
-        return emptyList()
+        emptyList()
     }
 }

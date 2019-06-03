@@ -4,6 +4,8 @@
 
 package mozilla.components.browser.icons
 
+import mozilla.components.concept.engine.manifest.Size as HtmlSize
+
 /**
  * A request to load an [Icon].
  *
@@ -40,7 +42,7 @@ data class IconRequest(
     data class Resource(
         val url: String,
         val type: Type,
-        val sizes: List<Size> = emptyList(),
+        val sizes: List<HtmlSize> = emptyList(),
         val mimeType: String? = null
     ) {
         /**
@@ -112,10 +114,5 @@ data class IconRequest(
              */
             MICROSOFT_TILE
         }
-
-        data class Size(
-            val width: Int,
-            val height: Int
-        )
     }
 }

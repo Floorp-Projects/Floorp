@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.generator.IconGenerator
+import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -71,19 +72,19 @@ class BrowserIconsTest {
                 resources = listOf(
                     IconRequest.Resource(
                         url = server.url("icon64.png").toString(),
-                        sizes = listOf(IconRequest.Resource.Size(64, 64)),
+                        sizes = listOf(Size(64, 64)),
                         mimeType = "image/png",
                         type = IconRequest.Resource.Type.FAVICON
                     ),
                     IconRequest.Resource(
                         url = server.url("icon128.png").toString(),
-                        sizes = listOf(IconRequest.Resource.Size(128, 128)),
+                        sizes = listOf(Size(128, 128)),
                         mimeType = "image/png",
                         type = IconRequest.Resource.Type.FAVICON
                     ),
                     IconRequest.Resource(
                         url = server.url("icon128.png").toString(),
-                        sizes = listOf(IconRequest.Resource.Size(180, 180)),
+                        sizes = listOf(Size(180, 180)),
                         type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
                     )
                 )

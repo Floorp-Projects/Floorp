@@ -99,23 +99,12 @@ private fun parseIcons(json: JSONObject): List<WebAppManifest.Icon> {
         .toList()
 }
 
-private fun parseIconSizes(json: JSONObject): List<WebAppManifest.Icon.Size> {
+private fun parseIconSizes(json: JSONObject): List<Size> {
     val sizes = json.optString("sizes") ?: return emptyList()
 
     return sizes
         .split(whitespace)
-        .map { it.split("x") }
-        .filter { it.size == 2 }
-        .mapNotNull {
-            try {
-                WebAppManifest.Icon.Size(
-                    Integer.parseInt(it[0]),
-                    Integer.parseInt(it[1])
-                )
-            } catch (e: java.lang.NumberFormatException) {
-                null
-            }
-        }
+        .mapNotNull { Size.parse(it) }
 }
 
 private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {

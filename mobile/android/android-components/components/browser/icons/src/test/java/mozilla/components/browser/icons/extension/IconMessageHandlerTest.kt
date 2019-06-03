@@ -12,6 +12,7 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.session.Session
+import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
@@ -125,7 +126,7 @@ class IconMessageHandlerTest {
             assertEquals("https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395367/favicon-16x16.0.png", url)
             assertEquals(IconRequest.Resource.Type.FAVICON, type)
             assertEquals(1, sizes.size)
-            assertEquals(IconRequest.Resource.Size(16, 16), sizes[0])
+            assertEquals(Size(16, 16), sizes[0])
         }
 
         with(request.resources[1]) {
@@ -133,7 +134,7 @@ class IconMessageHandlerTest {
             assertEquals("https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395363/favicon-32x32.0.png", url)
             assertEquals(IconRequest.Resource.Type.FAVICON, type)
             assertEquals(1, sizes.size)
-            assertEquals(IconRequest.Resource.Size(32, 32), sizes[0])
+            assertEquals(Size(32, 32), sizes[0])
         }
 
         with(request.resources[2]) {
@@ -141,7 +142,7 @@ class IconMessageHandlerTest {
             assertEquals("https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395365/favicon-96x96.0.png", url)
             assertEquals(IconRequest.Resource.Type.FAVICON, type)
             assertEquals(1, sizes.size)
-            assertEquals(IconRequest.Resource.Size(96, 96), sizes[0])
+            assertEquals(Size(96, 96), sizes[0])
         }
 
         with(request.resources[3]) {
@@ -149,7 +150,7 @@ class IconMessageHandlerTest {
             assertEquals("https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395351/android-chrome-192x192.0.png", url)
             assertEquals(IconRequest.Resource.Type.FAVICON, type)
             assertEquals(1, sizes.size)
-            assertEquals(IconRequest.Resource.Size(192, 192), sizes[0])
+            assertEquals(Size(192, 192), sizes[0])
         }
 
         with(request.resources[4]) {
@@ -164,7 +165,7 @@ class IconMessageHandlerTest {
             assertEquals("https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395359/ios-icon.0.png", url)
             assertEquals(IconRequest.Resource.Type.APPLE_TOUCH_ICON, type)
             assertEquals(1, sizes.size)
-            assertEquals(IconRequest.Resource.Size(180, 180), sizes[0])
+            assertEquals(Size(180, 180), sizes[0])
         }
 
         with(request.resources[6]) {

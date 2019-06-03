@@ -5,6 +5,7 @@
 package mozilla.components.browser.icons.pipeline
 
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.concept.engine.manifest.Size
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -15,14 +16,14 @@ class IconResourceComparatorTest {
             IconRequest.Resource(
                 url = "https://www.mozilla.org/media/img/favicon/favicon-196x196.c80e6abe0767.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(IconRequest.Resource.Size(196, 196))),
+                sizes = listOf(Size(196, 196))),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/media/img/favicon.d4f1f46b91f4.ico",
                 type = IconRequest.Resource.Type.FAVICON),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/media/img/favicon/apple-touch-icon-180x180.8772ec154918.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(180, 180))),
+                sizes = listOf(Size(180, 180))),
             IconRequest.Resource(
                 url = "https://www.mozilla.org/media/img/mozorg/mozilla-256.4720741d4108.jpg",
                 type = IconRequest.Resource.Type.OPENGRAPH)
@@ -73,7 +74,7 @@ class IconResourceComparatorTest {
             IconRequest.Resource(
                 url = "https://static.xx.fbcdn.net/rsrc.php/v3/ya/r/O2aKM2iSbOw.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(IconRequest.Resource.Size(196, 196))
+                sizes = listOf(Size(196, 196))
             )
         )
 
@@ -141,37 +142,37 @@ class IconResourceComparatorTest {
             IconRequest.Resource(
                 url = "https://images-na.ssl-images-amazon.com/images/G/01/anywhere/a_smile_57x57._CB368212015_.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(57, 57))
+                sizes = listOf(Size(57, 57))
             ),
             IconRequest.Resource(
                 url = "https://images-na.ssl-images-amazon.com/images/G/01/anywhere/a_smile_72x72._CB368212002_.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(72, 72))
+                sizes = listOf(Size(72, 72))
             ),
             IconRequest.Resource(
                 url = "https://images-na.ssl-images-amazon.com/images/G/01/anywhere/a_smile_114x114._CB368212020_.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(114, 114))
+                sizes = listOf(Size(114, 114))
             ),
             IconRequest.Resource(
                 url = "https://images-na.ssl-images-amazon.com/images/G/01/anywhere/a_smile_120x120._CB368246573_.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(120, 120))
+                sizes = listOf(Size(120, 120))
             ),
             IconRequest.Resource(
                 url = "https://images-na.ssl-images-amazon.com/images/G/01/anywhere/a_smile_144x144._CB368211973_.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(144, 144))
+                sizes = listOf(Size(144, 144))
             ),
             IconRequest.Resource(
                 url = "https://images-na.ssl-images-amazon.com/images/G/01/anywhere/a_smile_152x152._CB368246573_.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(152, 152))
+                sizes = listOf(Size(152, 152))
             ),
             IconRequest.Resource(
                 url = "https://images-na.ssl-images-amazon.com/images/G/01/anywhere/a_smile_196x196._CB368246573_.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(196, 196))
+                sizes = listOf(Size(196, 196))
             )
         )
 
@@ -251,26 +252,26 @@ class IconResourceComparatorTest {
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395367/favicon-16x16.0.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(IconRequest.Resource.Size(16, 16))),
+                sizes = listOf(Size(16, 16))),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395363/favicon-32x32.0.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(IconRequest.Resource.Size(32, 32))),
+                sizes = listOf(Size(32, 32))),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395365/favicon-96x96.0.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(IconRequest.Resource.Size(96, 96))),
+                sizes = listOf(Size(96, 96))),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395351/android-chrome-192x192.0.png",
                 type = IconRequest.Resource.Type.FAVICON,
-                sizes = listOf(IconRequest.Resource.Size(192, 192))),
+                sizes = listOf(Size(192, 192))),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395361/favicon-64x64.0.ico",
                 type = IconRequest.Resource.Type.FAVICON),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/7395359/ios-icon.0.png",
                 type = IconRequest.Resource.Type.APPLE_TOUCH_ICON,
-                sizes = listOf(IconRequest.Resource.Size(180, 180))),
+                sizes = listOf(Size(180, 180))),
             IconRequest.Resource(
                 url = "https://cdn.vox-cdn.com/uploads/chorus_asset/file/9672633/VergeOG.0_1200x627.0.png",
                 type = IconRequest.Resource.Type.OPENGRAPH),

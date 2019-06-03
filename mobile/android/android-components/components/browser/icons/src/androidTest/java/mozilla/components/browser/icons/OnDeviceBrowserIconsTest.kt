@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.generator.IconGenerator
+import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
@@ -35,7 +36,7 @@ class OnDeviceBrowserIconsTest {
                         "JAgIiL7K5Sff88mvxibpEBCQqzt3NLkWxCZJEBAQ3Ra/2LNfdf//8SAgILpzufsjBATkGdQ6kquOTZ" +
                         "IgICB69NzmuNztDAEBkauLTU6uBDVXHJtkQUBAqivu7V5ObnZjUHGjY5MkCAjIBymjUnvFUjKoAAAA" +
                         "AElFTkSuQmCC",
-                    sizes = listOf(IconRequest.Resource.Size(64, 64)),
+                    sizes = listOf(Size(64, 64)),
                     mimeType = "image/png",
                     type = IconRequest.Resource.Type.FAVICON
                 )))

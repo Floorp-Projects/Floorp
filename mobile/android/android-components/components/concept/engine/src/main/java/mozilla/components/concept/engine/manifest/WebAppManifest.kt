@@ -120,11 +120,6 @@ data class WebAppManifest(
              */
             ANY
         }
-
-        data class Size(
-            val width: Int,
-            val height: Int
-        )
     }
 
     /**
