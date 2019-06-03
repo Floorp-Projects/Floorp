@@ -174,8 +174,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   if (XRE_IsContentProcess()) {
     BrowserChild* browserChild = BrowserChild::GetFrom(win);
     if (browserChild) {
-      browserChild->SendShowCanvasPermissionPrompt(origin,
-                                                   isAutoBlockCanvas);
+      browserChild->SendShowCanvasPermissionPrompt(origin, isAutoBlockCanvas);
     }
   } else {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -295,12 +294,17 @@ bool HasDrawWindowPrivilege(JSContext* aCx, JSObject* /* unused */) {
                                              nsGkAtoms::all_urlsPermission);
 }
 
-bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal) {
+bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal,
+                            bool aHadCrossOriginRedirects) {
   if (!aPrincipal) {
     return true;
   }
 
   if (!aCORSUsed) {
+    if (aHadCrossOriginRedirects) {
+      return true;
+    }
+
     nsIGlobalObject* incumbentSettingsObject = dom::GetIncumbentGlobal();
     if (NS_WARN_IF(!incumbentSettingsObject)) {
       return true;
