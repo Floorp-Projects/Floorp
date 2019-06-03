@@ -926,7 +926,6 @@ function buildHelpMenu() {
     let menuitem = document.getElementById("helpPolicySupport");
     menuitem.hidden = false;
     menuitem.setAttribute("label", supportMenu.Title);
-    menuitem.setAttribute("href", supportMenu.URL);
     if ("AccessKey" in supportMenu) {
       menuitem.setAttribute("accesskey", supportMenu.AccessKey);
     }
