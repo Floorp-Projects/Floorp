@@ -579,6 +579,12 @@ template void MacroAssembler::storeUnboxedValue(
     const ConstantOrRegister& value, MIRType valueType,
     const BaseObjectElementIndex& dest, MIRType slotType);
 
+void MacroAssembler::PushBoxed(FloatRegister reg) {
+  subq(Imm32(sizeof(double)), StackPointer);
+  boxDouble(reg, Address(StackPointer, 0));
+  adjustFrame(sizeof(double));
+}
+
 // ========================================================================
 // wasm support
 

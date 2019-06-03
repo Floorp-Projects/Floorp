@@ -4184,6 +4184,11 @@ void MacroAssembler::Push(FloatRegister reg) {
   adjustFrame(r.size());
 }
 
+void MacroAssembler::PushBoxed(FloatRegister reg) {
+  MOZ_ASSERT(reg.isDouble());
+  Push(reg);
+}
+
 void MacroAssembler::Pop(Register reg) {
   ma_pop(reg);
   adjustFrame(-sizeof(intptr_t));
