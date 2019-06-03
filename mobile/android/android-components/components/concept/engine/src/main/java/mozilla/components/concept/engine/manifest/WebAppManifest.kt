@@ -91,14 +91,14 @@ data class WebAppManifest(
      * @property sizes A list of image dimensions.
      * @property type A hint as to the media type of the image. The purpose of this member is to allow a user agent to
      * quickly ignore images of media types it does not support.
-     * @property purpose Defines the purpose of the image, for example that the image is intended to serve some special
+     * @property purpose Defines the purposes of the image, for example that the image is intended to serve some special
      * purpose in the context of the host OS (i.e., for better integration).
      */
     data class Icon(
         val src: String,
         val sizes: List<Size> = emptyList(),
         val type: String? = null,
-        val purpose: Purpose = Purpose.ANY
+        val purpose: Set<Purpose> = setOf(Purpose.ANY)
     ) {
         enum class Purpose {
             /**

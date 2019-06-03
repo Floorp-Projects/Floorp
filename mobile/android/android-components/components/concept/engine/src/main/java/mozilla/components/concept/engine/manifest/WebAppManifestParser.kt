@@ -57,6 +57,8 @@ class WebAppManifestParser {
     }
 }
 
+private val whitespace = "\\s+".toRegex()
+
 private fun getDisplayMode(json: JSONObject): WebAppManifest.DisplayMode {
     return when (json.optString("display")) {
         "standalone" -> WebAppManifest.DisplayMode.STANDALONE
@@ -91,7 +93,7 @@ private fun parseIcons(json: JSONObject): List<WebAppManifest.Icon> {
                 src = obj.getString("src"),
                 sizes = parseIconSizes(obj),
                 type = obj.optString("type", null),
-                purpose = parsePurpose(obj)
+                purpose = parsePurposes(obj)
             )
         }
         .toList()
@@ -101,7 +103,7 @@ private fun parseIconSizes(json: JSONObject): List<WebAppManifest.Icon.Size> {
     val sizes = json.optString("sizes") ?: return emptyList()
 
     return sizes
-        .split(" ")
+        .split(whitespace)
         .map { it.split("x") }
         .filter { it.size == 2 }
         .mapNotNull {
@@ -116,13 +118,21 @@ private fun parseIconSizes(json: JSONObject): List<WebAppManifest.Icon.Size> {
         }
 }
 
-private fun parsePurpose(json: JSONObject): WebAppManifest.Icon.Purpose {
-    return when (json.optString("purpose")) {
-        "badge" -> WebAppManifest.Icon.Purpose.BADGE
-        "maskable" -> WebAppManifest.Icon.Purpose.MASKABLE
-        "any" -> WebAppManifest.Icon.Purpose.ANY
-        else -> WebAppManifest.Icon.Purpose.ANY
-    }
+private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
+    val purposes = json.optString("purpose") ?: return emptySet()
+
+    return purposes
+        .split(whitespace)
+        .mapNotNull {
+            when (it.toLowerCase()) {
+                "badge" -> WebAppManifest.Icon.Purpose.BADGE
+                "maskable" -> WebAppManifest.Icon.Purpose.MASKABLE
+                "any" -> WebAppManifest.Icon.Purpose.ANY
+                else -> null
+            }
+        }
+        .toSet()
+        .ifEmpty { setOf(WebAppManifest.Icon.Purpose.ANY) }
 }
 
 private fun parseTextDirection(json: JSONObject): WebAppManifest.TextDirection {

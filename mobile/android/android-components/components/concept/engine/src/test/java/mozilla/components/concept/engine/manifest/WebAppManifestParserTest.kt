@@ -72,12 +72,12 @@ class WebAppManifestParserTest {
         assertEquals(168, manifest.icons[4].sizes[0].height)
         assertEquals(192, manifest.icons[5].sizes[0].height)
 
-        assertEquals(WebAppManifest.Icon.Purpose.ANY, manifest.icons[0].purpose)
-        assertEquals(WebAppManifest.Icon.Purpose.ANY, manifest.icons[1].purpose)
-        assertEquals(WebAppManifest.Icon.Purpose.ANY, manifest.icons[2].purpose)
-        assertEquals(WebAppManifest.Icon.Purpose.ANY, manifest.icons[3].purpose)
-        assertEquals(WebAppManifest.Icon.Purpose.ANY, manifest.icons[4].purpose)
-        assertEquals(WebAppManifest.Icon.Purpose.ANY, manifest.icons[5].purpose)
+        assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), manifest.icons[0].purpose)
+        assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), manifest.icons[1].purpose)
+        assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), manifest.icons[2].purpose)
+        assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), manifest.icons[3].purpose)
+        assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), manifest.icons[4].purpose)
+        assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), manifest.icons[5].purpose)
     }
 
     @Test
@@ -108,7 +108,7 @@ class WebAppManifestParserTest {
             assertEquals(1, sizes.size)
             assertEquals(192, sizes[0].width)
             assertEquals(192, sizes[0].height)
-            assertEquals(WebAppManifest.Icon.Purpose.ANY, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
         }
 
         manifest.icons[1].apply {
@@ -117,7 +117,7 @@ class WebAppManifestParserTest {
             assertEquals(1, sizes.size)
             assertEquals(512, sizes[0].width)
             assertEquals(512, sizes[0].height)
-            assertEquals(WebAppManifest.Icon.Purpose.ANY, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
         }
     }
 
@@ -150,7 +150,7 @@ class WebAppManifestParserTest {
             assertEquals(1, sizes.size)
             assertEquals(192, sizes[0].width)
             assertEquals(192, sizes[0].height)
-            assertEquals(WebAppManifest.Icon.Purpose.ANY, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
         }
 
         manifest.icons[1].apply {
@@ -159,7 +159,7 @@ class WebAppManifestParserTest {
             assertEquals(1, sizes.size)
             assertEquals(512, sizes[0].width)
             assertEquals(512, sizes[0].height)
-            assertEquals(WebAppManifest.Icon.Purpose.ANY, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
         }
     }
 
@@ -214,7 +214,7 @@ class WebAppManifestParserTest {
             assertEquals(1, sizes.size)
             assertEquals(64, sizes[0].width)
             assertEquals(64, sizes[0].height)
-            assertEquals(WebAppManifest.Icon.Purpose.ANY, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
         }
 
         manifest.icons[1].apply {
@@ -223,7 +223,7 @@ class WebAppManifestParserTest {
             assertEquals(1, sizes.size)
             assertEquals(64, sizes[0].width)
             assertEquals(64, sizes[0].height)
-            assertEquals(WebAppManifest.Icon.Purpose.ANY, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
         }
 
         manifest.icons[2].apply {
@@ -232,7 +232,7 @@ class WebAppManifestParserTest {
             assertEquals(1, sizes.size)
             assertEquals(128, sizes[0].width)
             assertEquals(128, sizes[0].height)
-            assertEquals(WebAppManifest.Icon.Purpose.ANY, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
         }
     }
 
@@ -276,7 +276,7 @@ class WebAppManifestParserTest {
             assertEquals(96, sizes[1].height)
             assertEquals(128, sizes[2].width)
             assertEquals(128, sizes[2].height)
-            assertEquals(WebAppManifest.Icon.Purpose.BADGE, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.BADGE), purpose)
         }
 
         manifest.icons[1].apply {
@@ -286,7 +286,7 @@ class WebAppManifestParserTest {
             assertEquals("image/png", type)
             assertEquals(512, sizes[0].width)
             assertEquals(512, sizes[0].height)
-            assertEquals(WebAppManifest.Icon.Purpose.MASKABLE, purpose)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.MASKABLE, WebAppManifest.Icon.Purpose.ANY), purpose)
         }
     }
 
