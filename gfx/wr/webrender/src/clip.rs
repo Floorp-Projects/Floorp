@@ -7,7 +7,7 @@ use api::{BoxShadowClipMode, ImageKey, ImageRendering};
 use api::units::*;
 use crate::border::{ensure_no_corner_overlap, BorderRadiusAu};
 use crate::box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use crate::clip_scroll_tree::{CoordinateSystemId, ClipScrollTree, SpatialNodeIndex};
+use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, CoordinateSystemId, ClipScrollTree, SpatialNodeIndex};
 use crate::ellipse::Ellipse;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use crate::gpu_types::{BoxShadowStretchMode};
@@ -481,6 +481,8 @@ pub struct ClipChainInstance {
     // Combined clip rect in picture space (may
     // be more conservative that local_clip_rect).
     pub pic_clip_rect: PictureRect,
+    // Space, in which the `pic_clip_rect` is defined.
+    pub pic_spatial_node_index: SpatialNodeIndex,
 }
 
 impl ClipChainInstance {
@@ -494,6 +496,7 @@ impl ClipChainInstance {
             has_non_local_clips: false,
             needs_mask: false,
             pic_clip_rect: PictureRect::zero(),
+            pic_spatial_node_index: ROOT_SPATIAL_NODE_INDEX,
         }
     }
 }
@@ -730,6 +733,7 @@ impl ClipStore {
             has_non_local_clips,
             local_clip_rect,
             pic_clip_rect,
+            pic_spatial_node_index: prim_to_pic_mapper.ref_spatial_node_index,
             needs_mask,
         })
     }
