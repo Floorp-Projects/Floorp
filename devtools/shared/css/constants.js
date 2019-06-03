@@ -23,3 +23,9 @@ exports.CSS_TYPES = {
  "gradient": 4,
  "timing-function": 10,
 };
+
+/**
+ * Supported pseudo-class locks in the order in which they appear in the pseudo-class
+ * panel in the Rules sidebar panel of the Inspector.
+ */
+exports.PSEUDO_CLASSES = [":hover", ":active", ":focus", ":focus-within"];

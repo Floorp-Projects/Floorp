@@ -10,7 +10,8 @@ const promise = require("promise");
 const Services = require("Services");
 const flags = require("devtools/shared/flags");
 const {l10n} = require("devtools/shared/inspector/css-logic");
-const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
+const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 const OutputParser = require("devtools/client/shared/output-parser");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const ElementStyle = require("devtools/client/inspector/rules/models/element-style");
@@ -138,10 +139,6 @@ function CssRuleView(inspector, document, store) {
   this.pseudoClassToggle = doc.getElementById("pseudo-class-panel-toggle");
   this.classPanel = doc.getElementById("ruleview-class-panel");
   this.classToggle = doc.getElementById("class-panel-toggle");
-  this.hoverCheckbox = doc.getElementById("pseudo-hover-toggle");
-  this.activeCheckbox = doc.getElementById("pseudo-active-toggle");
-  this.focusCheckbox = doc.getElementById("pseudo-focus-toggle");
-  this.focusWithinCheckbox = doc.getElementById("pseudo-focus-within-toggle");
 
   this._initPrintSimulation();
 
@@ -160,10 +157,8 @@ function CssRuleView(inspector, document, store) {
   this.searchClearButton.addEventListener("click", this._onClearSearch);
   this.pseudoClassToggle.addEventListener("click", this._onTogglePseudoClassPanel);
   this.classToggle.addEventListener("click", this._onToggleClassPanel);
-  this.hoverCheckbox.addEventListener("click", this._onTogglePseudoClass);
-  this.activeCheckbox.addEventListener("click", this._onTogglePseudoClass);
-  this.focusCheckbox.addEventListener("click", this._onTogglePseudoClass);
-  this.focusWithinCheckbox.addEventListener("click", this._onTogglePseudoClass);
+  // The "change" event bubbles up from checkbox inputs nested within the panel container.
+  this.pseudoClassPanel.addEventListener("change", this._onTogglePseudoClass);
 
   if (flags.testing) {
     // In tests, we start listening immediately to avoid having to simulate a mousemove.
@@ -183,6 +178,7 @@ function CssRuleView(inspector, document, store) {
   this._prefObserver.on(PREF_UA_STYLES, this._handleUAStylePrefChange);
   this._prefObserver.on(PREF_DEFAULT_COLOR_UNIT, this._handleDefaultColorUnitPrefChange);
 
+  this.pseudoClassCheckboxes = this._createPseudoClassCheckboxes();
   this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
 
   // Add the tooltips and highlighters to the view
@@ -772,23 +768,17 @@ CssRuleView.prototype = {
     this.addRuleButton.removeEventListener("click", this._onAddRule);
     this.searchField.removeEventListener("input", this._onFilterStyles);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
+    this.pseudoClassPanel.removeEventListener("change", this._onTogglePseudoClass);
     this.pseudoClassToggle.removeEventListener("click", this._onTogglePseudoClassPanel);
     this.classToggle.removeEventListener("click", this._onToggleClassPanel);
-    this.hoverCheckbox.removeEventListener("click", this._onTogglePseudoClass);
-    this.activeCheckbox.removeEventListener("click", this._onTogglePseudoClass);
-    this.focusCheckbox.removeEventListener("click", this._onTogglePseudoClass);
-    this.focusWithinCheckbox.removeEventListener("click", this._onTogglePseudoClass);
 
     this.searchField = null;
     this.searchClearButton = null;
     this.pseudoClassPanel = null;
     this.pseudoClassToggle = null;
+    this.pseudoClassCheckboxes = null;
     this.classPanel = null;
     this.classToggle = null;
-    this.hoverCheckbox = null;
-    this.activeCheckbox = null;
-    this.focusCheckbox = null;
-    this.focusWithinCheckbox = null;
 
     this.inspector = null;
     this.styleDocument = null;
@@ -924,10 +914,37 @@ CssRuleView.prototype = {
    * attributes for each checkbox.
    */
   clearPseudoClassPanel: function() {
-    this.hoverCheckbox.checked = this.hoverCheckbox.disabled = false;
-    this.activeCheckbox.checked = this.activeCheckbox.disabled = false;
-    this.focusCheckbox.checked = this.focusCheckbox.disabled = false;
-    this.focusWithinCheckbox.checked = this.focusWithinCheckbox.disabled = false;
+    this.pseudoClassCheckboxes.forEach(checkbox => {
+      checkbox.checked = false;
+      checkbox.disabled = false;
+    });
+  },
+
+  /**
+   * For each item in PSEUDO_CLASSES, create a checkbox input element for toggling a
+   * pseudo-class on the selected element and append it to the pseudo-class panel.
+   *
+   * Returns an array with the checkbox input elements for pseudo-classes.
+   *
+   * @return {Array}
+   */
+  _createPseudoClassCheckboxes: function() {
+    const doc = this.styleDocument;
+    const fragment = doc.createDocumentFragment();
+
+    for (const pseudo of PSEUDO_CLASSES) {
+      const label = doc.createElement("label");
+      const checkbox = doc.createElement("input");
+      checkbox.setAttribute("tabindex", "-1");
+      checkbox.setAttribute("type", "checkbox");
+      checkbox.setAttribute("value", pseudo);
+
+      label.append(checkbox, pseudo);
+      fragment.append(label);
+    }
+
+    this.pseudoClassPanel.append(fragment);
+    return Array.from(this.pseudoClassPanel.querySelectorAll("input[type=checkbox]"));
   },
 
   /**
@@ -935,33 +952,17 @@ CssRuleView.prototype = {
    */
   refreshPseudoClassPanel: function() {
     if (!this._elementStyle || !this.inspector.selection.isElementNode()) {
-      this.hoverCheckbox.disabled = true;
-      this.activeCheckbox.disabled = true;
-      this.focusCheckbox.disabled = true;
-      this.focusWithinCheckbox.disabled = true;
+      this.pseudoClassCheckboxes.forEach(checkbox => {
+        checkbox.disabled = true;
+      });
       return;
     }
 
-    for (const pseudoClassLock of this._elementStyle.element.pseudoClassLocks) {
-      switch (pseudoClassLock) {
-        case ":hover": {
-          this.hoverCheckbox.checked = true;
-          break;
-        }
-        case ":active": {
-          this.activeCheckbox.checked = true;
-          break;
-        }
-        case ":focus": {
-          this.focusCheckbox.checked = true;
-          break;
-        }
-        case ":focus-within": {
-          this.focusWithinCheckbox.checked = true;
-          break;
-        }
-      }
-    }
+    const pseudoClassLocks = this._elementStyle.element.pseudoClassLocks;
+    this.pseudoClassCheckboxes.forEach(checkbox => {
+      checkbox.disabled = false;
+      checkbox.checked = pseudoClassLocks.includes(checkbox.value);
+    });
   },
 
   _populate: function() {
@@ -1483,21 +1484,17 @@ CssRuleView.prototype = {
     this.hideClassPanel();
 
     this.pseudoClassToggle.classList.add("checked");
-    this.hoverCheckbox.setAttribute("tabindex", "0");
-    this.activeCheckbox.setAttribute("tabindex", "0");
-    this.focusCheckbox.setAttribute("tabindex", "0");
-    this.focusWithinCheckbox.setAttribute("tabindex", "0");
-
+    this.pseudoClassCheckboxes.forEach(checkbox => {
+      checkbox.setAttribute("tabindex", "0");
+    });
     this.pseudoClassPanel.hidden = false;
   },
 
   hidePseudoClassPanel: function() {
     this.pseudoClassToggle.classList.remove("checked");
-    this.hoverCheckbox.setAttribute("tabindex", "-1");
-    this.activeCheckbox.setAttribute("tabindex", "-1");
-    this.focusCheckbox.setAttribute("tabindex", "-1");
-    this.focusWithinCheckbox.setAttribute("tabindex", "-1");
-
+    this.pseudoClassCheckboxes.forEach(checkbox => {
+      checkbox.setAttribute("tabindex", "-1");
+    });
     this.pseudoClassPanel.hidden = true;
   },
 
@@ -1506,7 +1503,7 @@ CssRuleView.prototype = {
    * the pseudo class for the current selected element.
    */
   _onTogglePseudoClass: function(event) {
-    const target = event.currentTarget;
+    const target = event.target;
     this.inspector.togglePseudoClass(target.value);
   },
 

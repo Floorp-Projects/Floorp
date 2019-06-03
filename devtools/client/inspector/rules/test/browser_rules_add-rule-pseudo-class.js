@@ -47,48 +47,19 @@ async function setPseudoLocks(inspector, view, pseudoClasses) {
   }
 
   for (const pseudoClass of pseudoClasses) {
-    switch (pseudoClass) {
-      case ":hover":
-        view.hoverCheckbox.click();
-        await inspector.once("rule-view-refreshed");
-        break;
-      case ":active":
-        view.activeCheckbox.click();
-        await inspector.once("rule-view-refreshed");
-        break;
-      case ":focus":
-        view.focusCheckbox.click();
-        await inspector.once("rule-view-refreshed");
-        break;
-      case ":focus-within":
-        view.focusWithinCheckbox.click();
-        await inspector.once("rule-view-refreshed");
-        break;
+    const checkbox = getPseudoClassCheckbox(view, pseudoClass);
+    if (checkbox) {
+      checkbox.click();
     }
+    await inspector.once("rule-view-refreshed");
   }
 }
 
 async function resetPseudoLocks(inspector, view) {
-  if (!view.hoverCheckbox.checked &&
-      !view.activeCheckbox.checked &&
-      !view.focusCheckbox.checked &&
-      !view.focusWithinCheckbox.checked) {
-    return;
-  }
-  if (view.hoverCheckbox.checked) {
-    view.hoverCheckbox.click();
-    await inspector.once("rule-view-refreshed");
-  }
-  if (view.activeCheckbox.checked) {
-    view.activeCheckbox.click();
-    await inspector.once("rule-view-refreshed");
-  }
-  if (view.focusCheckbox.checked) {
-    view.focusCheckbox.click();
-    await inspector.once("rule-view-refreshed");
-  }
-  if (view.focusWithinCheckbox.checked) {
-    view.focusWithinCheckbox.click();
-    await inspector.once("rule-view-refreshed");
+  for (const checkbox of view.pseudoClassCheckboxes) {
+    if (checkbox.checked) {
+      checkbox.click();
+      await inspector.once("rule-view-refreshed");
+    }
   }
 }
