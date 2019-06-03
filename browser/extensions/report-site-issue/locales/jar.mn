@@ -4,5 +4,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [features/webcompat-reporter@mozilla.org] @AB_CD@.jar:
-% locale webcompat-reporter @AB_CD@ %locale/@AB_CD@/
+% locale report-site-issue @AB_CD@ %locale/@AB_CD@/
   locale/@AB_CD@/webcompat.properties (%webcompat.properties)
