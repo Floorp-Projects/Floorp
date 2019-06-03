@@ -344,6 +344,10 @@ constexpr uint64_t CanonicalizedNaNBits =
     mozilla::SpecificNaNBits<double, detail::CanonicalizedNaNSignBit,
                              detail::CanonicalizedNaNSignificand>::value;
 
+constexpr int InfinitySignBit = 0;
+constexpr uint64_t InfinityBits =
+    mozilla::InfinityBits<double, detail::InfinitySignBit>::value;
+
 }  // namespace detail
 
 /**
