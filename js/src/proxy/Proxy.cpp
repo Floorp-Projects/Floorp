@@ -724,7 +724,7 @@ static void proxy_Finalize(FreeOp* fop, JSObject* obj) {
   obj->as<ProxyObject>().handler()->finalize(fop, obj);
 
   if (!obj->as<ProxyObject>().usingInlineValueArray()) {
-    js_free(js::detail::GetProxyDataLayout(obj)->values());
+    fop->free_(js::detail::GetProxyDataLayout(obj)->values());
   }
 }
 
