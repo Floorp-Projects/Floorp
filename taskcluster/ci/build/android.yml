@@ -333,6 +333,29 @@ android-api-16-beta/opt:
         custom-build-variant-cfg: api-16-beta
         update-channel: beta
 
+android-api-16-beta-test/opt:
+    description: "Android 4.0 api-16+ Beta"
+    use-pgo: android-api-16/pgo
+    attributes:
+        enable-full-crashsymbols: true
+        release-type: beta
+    shipping-phase: build
+    shipping-product: fennec
+    index:
+        job-name: android-api-16-beta-opt
+    treeherder:
+        platform: android-4-0-armv7-api16-beta/opt
+        symbol: B
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: api-16-beta
+        update-channel: beta
+
 android-aarch64/opt:
     description: "Android 5.0 AArch64 Opt"
     index:
@@ -546,6 +569,28 @@ android-x86_64-beta/opt:
         config:
             - builds/releng_base_android_64_builds.py
             - taskcluster_nightly.py
+        custom-build-variant-cfg: x86_64-beta
+        update-channel: beta
+
+android-x86_64-beta-test/opt:
+    description: "Android 5.0 x86-64 Beta"
+    attributes:
+        enable-full-crashsymbols: true
+        release-type: beta
+    shipping-phase: build
+    shipping-product: fennec
+    index:
+        job-name: android-x86_64-beta-opt
+    treeherder:
+        platform: android-5-0-x86_64-beta/opt
+        symbol: B
+    worker-type: b-linux
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: x86_64-beta
         update-channel: beta
 

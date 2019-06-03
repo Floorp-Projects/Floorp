@@ -380,6 +380,12 @@ android-em-4.3-arm7-api-16/opt:
         - android-common-tests
         - android-opt-tests
 
+android-em-4.3-arm7-api-16-beta/opt:
+    build-platform: android-api-16-beta-test/opt
+    test-sets:
+        - android-common-tests
+        - android-opt-tests
+
 android-em-4.3-arm7-api-16/pgo:
     build-platform: android-api-16-pgo/opt
     test-sets:
@@ -409,6 +415,11 @@ android-em-7.0-x86-beta/opt:
 
 android-em-7.0-x86_64-beta/debug:
     build-platform: android-x86_64-beta/debug
+    test-sets:
+        - android-x86_64-tests
+
+android-em-7.0-x86_64-beta/opt:
+    build-platform: android-x86_64-beta-test/opt
     test-sets:
         - android-x86_64-tests
 
