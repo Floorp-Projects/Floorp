@@ -1780,9 +1780,14 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       // If mFirstTRR is set, merge those addresses into current set!
       if (addrRec->mFirstTRR) {
         if (NS_SUCCEEDED(status)) {
+          LOG(("Merging responses"));
           merge_rrset(newRRSet, addrRec->mFirstTRR);
         } else {
+          LOG(("Will use previous response"));
           newRRSet.swap(addrRec->mFirstTRR);  // transfers
+          // We must use the status of the first response, otherwise we'll
+          // pass an error result to the consumers.
+          status = addrRec->mFirstTRRresult;
         }
         addrRec->mFirstTRR = nullptr;
       }
