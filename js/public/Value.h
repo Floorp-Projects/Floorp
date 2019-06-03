@@ -534,8 +534,6 @@ union alignas(8) Value {
     MOZ_ASSERT(isDouble());
   }
 
-  void setNaN() { setDouble(GenericNaN()); }
-
   void setString(JSString* str) {
     MOZ_ASSERT(js::gc::IsCellPointerValid(str));
     asBits_ = bitsFromTagAndPayload(JSVAL_TAG_STRING, PayloadType(str));
@@ -1049,10 +1047,20 @@ static inline bool IsCanonicalized(double d) {
          detail::CanonicalizedNaNBits;
 }
 
-static inline Value DoubleNaNValue() {
-  Value v;
-  v.setNaN();
-  return v;
+static inline constexpr Value NaNValue() {
+  uint64_t rawBits = detail::CanonicalizedNaNBits;
+#if defined(JS_PUNBOX64)
+  rawBits += JSVAL_PUN64_DOUBLE_ADJUST;
+#endif
+  return Value::fromRawBits(rawBits);
+}
+
+static inline Value InfinityValue() {
+  uint64_t rawBits = detail::InfinityBits;
+#if defined(JS_PUNBOX64)
+  rawBits += JSVAL_PUN64_DOUBLE_ADJUST;
+#endif
+  return Value::fromRawBits(rawBits);
 }
 
 static inline Value Float32Value(float f) {

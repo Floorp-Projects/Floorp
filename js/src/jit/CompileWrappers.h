@@ -42,8 +42,6 @@ class CompileRuntime {
   const JSAtomState& names();
   const PropertyName* emptyString();
   const StaticStrings& staticStrings();
-  const Value& NaNValue();
-  const Value& positiveInfinityValue();
   const WellKnownSymbols& wellKnownSymbols();
 
   const void* mainContextPtr();

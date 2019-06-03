@@ -1414,8 +1414,8 @@ JSObject* js::InitNumberClass(JSContext* cx, Handle<GlobalObject*> global) {
     return nullptr;
   }
 
-  RootedValue valueNaN(cx, cx->runtime()->NaNValue);
-  RootedValue valueInfinity(cx, cx->runtime()->positiveInfinityValue);
+  RootedValue valueNaN(cx, JS::NaNValue());
+  RootedValue valueInfinity(cx, JS::InfinityValue());
 
   // ES5 15.1.1.1, 15.1.1.2
   if (!NativeDefineDataProperty(
