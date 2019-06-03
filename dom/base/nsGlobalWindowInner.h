@@ -1197,6 +1197,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // activation flag.
   bool ShouldResetBrowsingContextUserGestureActivation();
 
+  // Try to fire the "load" event on our content embedder if we're an iframe.
+  void FireFrameLoadEvent(bool aIsTrusted);
+
  public:
   // Dispatch a runnable related to the global.
   virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
