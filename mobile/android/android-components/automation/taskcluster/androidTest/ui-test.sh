@@ -100,14 +100,9 @@ echo
 echo "EXECUTE TEST(S)"
 echo
 $JAVA_BIN -jar $FLANK_BIN android run --config=$flank_template --max-test-shards=$num_shards --app=$APK_APP --test=$APK_TEST --project=$GOOGLE_PROJECT
-echo
-echo
-
 exitcode=$?
-failure_check
-echo
-echo
 
+echo
 echo
 echo "COPY ARTIFACTS"
 echo
