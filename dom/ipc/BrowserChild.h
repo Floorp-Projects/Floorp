@@ -739,7 +739,6 @@ class BrowserChild final : public BrowserChildBase,
   mozilla::ipc::IPCResult RecvParentActivated(const bool& aActivated);
 
   mozilla::ipc::IPCResult RecvSetKeyboardIndicators(
-      const UIStateChangeType& aShowAccelerators,
       const UIStateChangeType& aShowFocusRings);
 
   mozilla::ipc::IPCResult RecvStopIMEStateManagement();

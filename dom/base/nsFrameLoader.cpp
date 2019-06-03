@@ -3451,7 +3451,6 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   bool isPrivate = parentContext->UsePrivateBrowsing();
   attrs.SyncAttributesWithPrivateBrowsing(isPrivate);
 
-  UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
   uint64_t chromeOuterWindowID = 0;
 
@@ -3459,8 +3458,6 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   if (doc) {
     nsCOMPtr<nsPIWindowRoot> root = nsContentUtils::GetWindowRoot(doc);
     if (root) {
-      showAccelerators = root->ShowAccelerators() ? UIStateChangeType_Set
-                                                  : UIStateChangeType_Clear;
       showFocusRings = root->ShowFocusRings() ? UIStateChangeType_Set
                                               : UIStateChangeType_Clear;
 
@@ -3472,8 +3469,8 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   }
 
   bool tabContextUpdated = aTabContext->SetTabContext(
-      OwnerIsMozBrowserFrame(), chromeOuterWindowID, showAccelerators,
-      showFocusRings, attrs, presentationURLStr);
+      OwnerIsMozBrowserFrame(), chromeOuterWindowID, showFocusRings, attrs,
+      presentationURLStr);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;

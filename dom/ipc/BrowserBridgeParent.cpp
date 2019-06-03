@@ -44,8 +44,8 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   attrs.mInIsolatedMozBrowser = false;
   attrs.SyncAttributesWithPrivateBrowsing(false);
   MutableTabContext tabContext;
-  tabContext.SetTabContext(false, 0, UIStateChangeType_Set,
-                           UIStateChangeType_Set, attrs, aPresentationURL);
+  tabContext.SetTabContext(false, 0, UIStateChangeType_Set, attrs,
+                           aPresentationURL);
 
   ProcessPriority initialPriority = PROCESS_PRIORITY_FOREGROUND;
 
