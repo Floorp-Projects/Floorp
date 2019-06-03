@@ -1299,6 +1299,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleLetterSpacing mLetterSpacing;
   mozilla::StyleLineHeight mLineHeight;
   mozilla::LengthPercentage mTextIndent;
+
+  mozilla::StyleLengthOrAuto mTextUnderlineOffset;
+
   nscoord mWebkitTextStrokeWidth;  // coord
 
   mozilla::StyleArcSlice<mozilla::StyleSimpleShadow> mTextShadow;
