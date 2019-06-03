@@ -23,3 +23,5 @@
 % http://localhost/tests/perf-reftest-singletons/id-getter-5.html
 % http://localhost/tests/perf-reftest-singletons/id-getter-6.html
 % http://localhost/tests/perf-reftest-singletons/id-getter-7.html
+
+% http://localhost/tests/perf-reftest-singletons/abspos-reflow-1.html
