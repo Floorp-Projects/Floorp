@@ -184,13 +184,13 @@ CSSToScreenScale MobileViewportManager::ClampZoom(
 CSSToScreenScale MobileViewportManager::ScaleZoomWithDisplayWidth(
     const CSSToScreenScale& aZoom, const float& aDisplayWidthChangeRatio,
     const CSSSize& aNewViewport, const CSSSize& aOldViewport) {
-  float cssViewportChangeRatio = (aOldViewport.width == 0)
-                                     ? 1.0f
-                                     : aNewViewport.width / aOldViewport.width;
-  CSSToScreenScale newZoom(aZoom.scale * aDisplayWidthChangeRatio /
-                           cssViewportChangeRatio);
-  MVM_LOG("%p: Old zoom was %f, changed by %f/%f to %f\n", this, aZoom.scale,
-          aDisplayWidthChangeRatio, cssViewportChangeRatio, newZoom.scale);
+  float inverseCssWidthChangeRatio =
+      (aNewViewport.width == 0) ? 1.0f
+                                : aOldViewport.width / aNewViewport.width;
+  CSSToScreenScale newZoom(aZoom.scale * aDisplayWidthChangeRatio *
+                           inverseCssWidthChangeRatio);
+  MVM_LOG("%p: Old zoom was %f, changed by %f * %f to %f\n", this, aZoom.scale,
+          aDisplayWidthChangeRatio, inverseCssWidthChangeRatio, newZoom.scale);
   return newZoom;
 }
 
