@@ -45,6 +45,8 @@ class PreferenceExperimentAction extends BaseAction {
       isHighPopulation,
       isEnrollmentPaused,
       slug,
+      userFacingName,
+      userFacingDescription,
     } = recipe.arguments;
 
     this.seenExperimentNames.push(slug);
@@ -82,6 +84,8 @@ class PreferenceExperimentAction extends BaseAction {
         branch: branch.slug,
         preferences: branch.preferences,
         experimentType,
+        userFacingName,
+        userFacingDescription,
       });
     } else {
       // If the experiment exists, and isn't expired, bump the lastSeen date.
@@ -119,7 +123,7 @@ class PreferenceExperimentAction extends BaseAction {
   async _finalize() {
     const activeExperiments = await PreferenceExperiments.getAllActive();
     return Promise.all(activeExperiments.map(experiment => {
-      if (this.name != experiment.action) {
+      if (this.name != experiment.actionName) {
         // Another action is responsible for cleaning this one
         // up. Leave it alone.
         return null;
