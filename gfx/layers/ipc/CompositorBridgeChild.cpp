@@ -53,7 +53,6 @@
 #include "VsyncSource.h"
 
 using mozilla::Unused;
-using mozilla::dom::BrowserChildBase;
 using mozilla::gfx::GPUProcessManager;
 using mozilla::layers::LayerTransactionChild;
 
@@ -645,17 +644,15 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvRemotePaintIsReady() {
   // do_QueryReference so I'm using static_cast<>
   MOZ_LAYERS_LOG(
       ("[RemoteGfx] CompositorBridgeChild received RemotePaintIsReady"));
-  RefPtr<nsISupports> iBrowserChildBase(do_QueryReferent(mWeakBrowserChild));
-  if (!iBrowserChildBase) {
+  RefPtr<nsIBrowserChild> iBrowserChild(do_QueryReferent(mWeakBrowserChild));
+  if (!iBrowserChild) {
     MOZ_LAYERS_LOG(
         ("[RemoteGfx] Note: BrowserChild was released before "
          "RemotePaintIsReady. "
          "MozAfterRemotePaint will not be sent to listener."));
     return IPC_OK();
   }
-  BrowserChildBase* browserChildBase =
-      static_cast<BrowserChildBase*>(iBrowserChildBase.get());
-  BrowserChild* browserChild = static_cast<BrowserChild*>(browserChildBase);
+  BrowserChild* browserChild = static_cast<BrowserChild*>(iBrowserChild.get());
   MOZ_ASSERT(browserChild);
   Unused << browserChild->SendRemotePaintIsReady();
   mWeakBrowserChild = nullptr;
@@ -668,7 +665,7 @@ void CompositorBridgeChild::RequestNotifyAfterRemotePaint(
              "NULL BrowserChild not allowed in "
              "CompositorBridgeChild::RequestNotifyAfterRemotePaint");
   mWeakBrowserChild =
-      do_GetWeakReference(static_cast<dom::BrowserChildBase*>(aBrowserChild));
+      do_GetWeakReference(static_cast<dom::BrowserChild*>(aBrowserChild));
   if (!mCanSend) {
     return;
   }
@@ -677,13 +674,11 @@ void CompositorBridgeChild::RequestNotifyAfterRemotePaint(
 
 void CompositorBridgeChild::CancelNotifyAfterRemotePaint(
     BrowserChild* aBrowserChild) {
-  RefPtr<nsISupports> iBrowserChildBase(do_QueryReferent(mWeakBrowserChild));
-  if (!iBrowserChildBase) {
+  RefPtr<nsIBrowserChild> iBrowserChild(do_QueryReferent(mWeakBrowserChild));
+  if (!iBrowserChild) {
     return;
   }
-  BrowserChildBase* browserChildBase =
-      static_cast<BrowserChildBase*>(iBrowserChildBase.get());
-  BrowserChild* browserChild = static_cast<BrowserChild*>(browserChildBase);
+  BrowserChild* browserChild = static_cast<BrowserChild*>(iBrowserChild.get());
   if (browserChild == aBrowserChild) {
     mWeakBrowserChild = nullptr;
   }
