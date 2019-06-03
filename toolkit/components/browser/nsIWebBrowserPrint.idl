@@ -102,13 +102,11 @@ interface nsIWebBrowserPrint : nsISupports
                     in nsIWebProgressListener aWPListener);
 
   /**
-   * Print Preview - Navigates within the window
-   *
    * @param aNavType - navigation enum
    * @param aPageNum - page num to navigate to when aNavType = ePrintPreviewGoToPageNum
    * @return void
    */
-  void printPreviewNavigate(in short aNavType, in long aPageNum);
+  void printPreviewScrollToPage(in short aNavType, in long aPageNum);
 
   /**
    * Cancels the current print
