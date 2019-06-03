@@ -166,7 +166,7 @@ void TypedArrayObject::finalize(FreeOp* fop, JSObject* obj) {
 
   // Free the data slot pointer if it does not point into the old JSObject.
   if (!curObj->hasInlineElements()) {
-    fop->free_(curObj->elements());
+    js_free(curObj->elements());
   }
 }
 
