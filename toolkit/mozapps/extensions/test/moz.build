@@ -8,7 +8,6 @@ DIRS += ['browser']
 
 BROWSER_CHROME_MANIFESTS += ['xpinstall/browser.ini']
 MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
-MOCHITEST_CHROME_MANIFESTS += ['mochitest/chrome.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
     'xpcshell/rs-blocklist/xpcshell.ini',
