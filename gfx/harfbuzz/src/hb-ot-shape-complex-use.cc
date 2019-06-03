@@ -246,6 +246,7 @@ data_destroy_use (void *data)
 enum syllable_type_t {
   independent_cluster,
   virama_terminated_cluster,
+  sakot_terminated_cluster,
   standard_cluster,
   number_joiner_terminated_cluster,
   numeral_cluster,
@@ -294,7 +295,7 @@ setup_rphf_mask (const hb_ot_shape_plan_t *plan,
 
   foreach_syllable (buffer, start, end)
   {
-    unsigned int limit = info[start].use_category() == USE_R ? 1 : MIN (3u, end - start);
+    unsigned int limit = info[start].use_category() == USE_R ? 1 : hb_min (3u, end - start);
     for (unsigned int i = start; i < start + limit; i++)
       info[i].mask |= mask;
   }
@@ -337,6 +338,7 @@ setup_topographical_masks (const hb_ot_shape_plan_t *plan,
 	break;
 
       case virama_terminated_cluster:
+      case sakot_terminated_cluster:
       case standard_cluster:
       case number_joiner_terminated_cluster:
       case numeral_cluster:
@@ -443,6 +445,7 @@ reorder_syllable (hb_buffer_t *buffer, unsigned int start, unsigned int end)
   /* Only a few syllable types need reordering. */
   if (unlikely (!(FLAG_UNSAFE (syllable_type) &
 		  (FLAG (virama_terminated_cluster) |
+		   FLAG (sakot_terminated_cluster) |
 		   FLAG (standard_cluster) |
 		   FLAG (broken_cluster) |
 		   0))))
@@ -526,7 +529,8 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
   if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
     return;
 
-  /* Note: This loop is extra overhead, but should not be measurable. */
+  /* Note: This loop is extra overhead, but should not be measurable.
+   * TODO Use a buffer scratch flag to remove the loop. */
   bool has_broken_syllables = false;
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
@@ -560,7 +564,6 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
       ginfo.cluster = buffer->cur().cluster;
       ginfo.mask = buffer->cur().mask;
       ginfo.syllable() = buffer->cur().syllable();
-      /* TODO Set glyph_props? */
 
       /* Insert dottedcircle after possible Repha. */
       while (buffer->idx < buffer->len && buffer->successful &&

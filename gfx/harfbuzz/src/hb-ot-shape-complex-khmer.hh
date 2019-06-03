@@ -105,7 +105,7 @@ set_khmer_properties (hb_glyph_info_t &info)
       case POS_ABOVE_C:	cat = OT_VAbv; break;
       case POS_POST_C:	cat = OT_VPst; break;
       default: assert (0);
-    };
+    }
 
   info.khmer_category() = cat;
 }

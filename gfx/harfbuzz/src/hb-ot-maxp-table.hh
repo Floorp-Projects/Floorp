@@ -77,7 +77,7 @@ struct maxp
 
   void set_num_glyphs (unsigned int count)
   {
-    numGlyphs.set (count);
+    numGlyphs = count;
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -119,13 +119,13 @@ struct maxp
     if (maxp_prime->version.major == 1)
     {
       maxpV1Tail &v1 = StructAfter<maxpV1Tail> (*maxp_prime);
-      v1.maxZones.set (1);
-      v1.maxTwilightPoints.set (0);
-      v1.maxStorage.set (0);
-      v1.maxFunctionDefs.set (0);
-      v1.maxInstructionDefs.set (0);
-      v1.maxStackElements.set (0);
-      v1.maxSizeOfInstructions.set (0);
+      v1.maxZones = 1;
+      v1.maxTwilightPoints = 0;
+      v1.maxStorage = 0;
+      v1.maxFunctionDefs = 0;
+      v1.maxInstructionDefs = 0;
+      v1.maxStackElements = 0;
+      v1.maxSizeOfInstructions = 0;
     }
   }
 

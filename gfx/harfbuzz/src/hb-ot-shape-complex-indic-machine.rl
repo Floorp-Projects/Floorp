@@ -64,14 +64,14 @@ reph = (Ra H | Repha);		# possible reph
 cn = c.ZWJ?.n?;
 forced_rakar = ZWJ H ZWJ Ra;
 symbol = Symbol.N?;
-matra_group = z{0,3}.M.N?.(H | forced_rakar)?;
-syllable_tail = (z?.SM.SM?.ZWNJ?)? A{0,3}?;
+matra_group = z*.M.N?.(H | forced_rakar)?;
+syllable_tail = (z?.SM.SM?.ZWNJ?)? A*;
 halant_group = (z?.H.(ZWJ.N?)?);
 final_halant_group = halant_group | H.ZWNJ;
 medial_group = CM?;
-halant_or_matra_group = (final_halant_group | matra_group{0,4});
+halant_or_matra_group = (final_halant_group | matra_group*);
 
-complex_syllable_tail = (halant_group.cn){0,4} medial_group halant_or_matra_group syllable_tail;
+complex_syllable_tail = (halant_group.cn)* medial_group halant_or_matra_group syllable_tail;
 
 consonant_syllable =	(Repha|CS)? cn complex_syllable_tail;
 vowel_syllable =	reph? V.n? (ZWJ | complex_syllable_tail);

@@ -278,7 +278,7 @@ matra_position_indic (hb_codepoint_t u, indic_position_t side)
     case POS_POST_C:	return MATRA_POS_RIGHT (u);
     case POS_ABOVE_C:	return MATRA_POS_TOP (u);
     case POS_BELOW_C:	return MATRA_POS_BOTTOM (u);
-  };
+  }
   return side;
 }
 

@@ -96,7 +96,7 @@ _hb_ft_font_create (FT_Face ft_face, bool symbol, bool unref)
 
   ft_font->load_flags = FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING;
 
-  ft_font->cached_x_scale.set (0);
+  ft_font->cached_x_scale.set_relaxed (0);
   ft_font->advance_cache.init ();
 
   return ft_font;
@@ -439,7 +439,7 @@ hb_ft_get_glyph_from_name (hb_font_t *font HB_UNUSED,
   else {
     /* Make a nul-terminated version. */
     char buf[128];
-    len = MIN (len, (int) sizeof (buf) - 1);
+    len = hb_min (len, (int) sizeof (buf) - 1);
     strncpy (buf, name, len);
     buf[len] = '\0';
     *glyph = FT_Get_Name_Index (ft_face, buf);
@@ -748,7 +748,7 @@ hb_ft_font_create_referenced (FT_Face ft_face)
 static void free_static_ft_library ();
 #endif
 
-static struct hb_ft_library_lazy_loader_t : hb_lazy_loader_t<hb_remove_pointer (FT_Library),
+static struct hb_ft_library_lazy_loader_t : hb_lazy_loader_t<hb_remove_pointer<FT_Library>,
 							     hb_ft_library_lazy_loader_t>
 {
   static FT_Library create ()

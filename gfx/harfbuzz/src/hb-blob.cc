@@ -30,7 +30,7 @@
  * http://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html
  * https://www.oracle.com/technetwork/articles/servers-storage-dev/standardheaderfiles-453865.html
  */
-#ifndef _POSIX_C_SOURCE
+#if !defined(_POSIX_C_SOURCE) && !defined(_MSC_VER) && !defined(__NetBSD__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-macros"
 #define _POSIX_C_SOURCE 200809L
@@ -155,7 +155,7 @@ hb_blob_create_sub_blob (hb_blob_t    *parent,
   hb_blob_make_immutable (parent);
 
   blob = hb_blob_create (parent->data + offset,
-			 MIN (length, parent->length - offset),
+			 hb_min (length, parent->length - offset),
 			 HB_MEMORY_MODE_READONLY,
 			 hb_blob_reference (parent),
 			 _hb_blob_destroy);

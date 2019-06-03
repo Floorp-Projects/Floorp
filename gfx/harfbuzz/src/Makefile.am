@@ -87,17 +87,6 @@ HBSOURCES += $(HB_CORETEXT_sources)
 HBHEADERS += $(HB_CORETEXT_headers)
 endif
 
-if HAVE_UCDN
-SUBDIRS += hb-ucdn
-HBCFLAGS += -I$(srcdir)/hb-ucdn
-HBLIBS   += hb-ucdn/libhb-ucdn.la
-HBSOURCES += $(HB_UCDN_sources)
-hb-ucdn/libhb-ucdn.la: ucdn
-ucdn:
-	@$(MAKE) $(AM_MAKEFLAGS) -C hb-ucdn
-endif
-DIST_SUBDIRS += hb-ucdn
-
 
 BUILT_SOURCES += \
 	hb-version.h
@@ -258,6 +247,7 @@ GENERATORS = \
 	gen-indic-table.py \
 	gen-os2-unicode-ranges.py \
 	gen-tag-table.py \
+	gen-ucd-table.py \
 	gen-use-table.py \
 	gen-vowel-constraints.py \
 	$(NULL)
@@ -310,9 +300,9 @@ noinst_PROGRAMS = \
 	main \
 	test \
 	test-buffer-serialize \
-	test-name-table \
-	test-size-params \
-	test-would-substitute \
+	test-ot-name \
+	test-gpos-size-params \
+	test-gsub-would-substitute \
 	$(NULL)
 bin_PROGRAMS =
 
@@ -328,17 +318,17 @@ test_buffer_serialize_SOURCES = test-buffer-serialize.cc
 test_buffer_serialize_CPPFLAGS = $(HBCFLAGS)
 test_buffer_serialize_LDADD = libharfbuzz.la $(HBLIBS)
 
-test_name_table_SOURCES = test-name-table.cc
-test_name_table_CPPFLAGS = $(HBCFLAGS)
-test_name_table_LDADD = libharfbuzz.la $(HBLIBS)
+test_ot_name_SOURCES = test-ot-name.cc
+test_ot_name_CPPFLAGS = $(HBCFLAGS)
+test_ot_name_LDADD = libharfbuzz.la $(HBLIBS)
 
-test_size_params_SOURCES = test-size-params.cc
-test_size_params_CPPFLAGS = $(HBCFLAGS)
-test_size_params_LDADD = libharfbuzz.la $(HBLIBS)
+test_gpos_size_params_SOURCES = test-gpos-size-params.cc
+test_gpos_size_params_CPPFLAGS = $(HBCFLAGS)
+test_gpos_size_params_LDADD = libharfbuzz.la $(HBLIBS)
 
-test_would_substitute_SOURCES = test-would-substitute.cc
-test_would_substitute_CPPFLAGS = $(HBCFLAGS) $(FREETYPE_CFLAGS)
-test_would_substitute_LDADD = libharfbuzz.la $(HBLIBS) $(FREETYPE_LIBS)
+test_gsub_would_substitute_SOURCES = test-gsub-would-substitute.cc
+test_gsub_would_substitute_CPPFLAGS = $(HBCFLAGS) $(FREETYPE_CFLAGS)
+test_gsub_would_substitute_LDADD = libharfbuzz.la $(HBLIBS) $(FREETYPE_LIBS)
 
 if HAVE_FREETYPE
 if HAVE_CAIRO_FT
@@ -384,15 +374,23 @@ dump_use_data_SOURCES = dump-use-data.cc hb-ot-shape-complex-use-table.cc
 dump_use_data_CPPFLAGS = $(HBCFLAGS)
 dump_use_data_LDADD = libharfbuzz.la $(HBLIBS)
 
-COMPILED_TESTS = test-iter test-ot-tag test-unicode-ranges
+COMPILED_TESTS = test-algs test-iter test-meta test-ot-tag test-unicode-ranges
 COMPILED_TESTS_CPPFLAGS = $(HBCFLAGS) -DMAIN -UNDEBUG
 COMPILED_TESTS_LDADD = libharfbuzz.la $(HBLIBS)
 check_PROGRAMS += $(COMPILED_TESTS)
 TESTS += $(COMPILED_TESTS)
 
+test_algs_SOURCES = test-algs.cc hb-static.cc
+test_algs_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_algs_LDADD = $(COMPILED_TESTS_LDADD)
+
 test_iter_SOURCES = test-iter.cc hb-static.cc
 test_iter_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_iter_LDADD = $(COMPILED_TESTS_LDADD)
+
+test_meta_SOURCES = test-meta.cc hb-static.cc
+test_meta_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_meta_LDADD = $(COMPILED_TESTS_LDADD)
 
 test_ot_tag_SOURCES = hb-ot-tag.cc
 test_ot_tag_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)

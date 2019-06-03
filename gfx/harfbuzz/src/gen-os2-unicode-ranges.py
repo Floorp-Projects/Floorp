@@ -1,8 +1,10 @@
+#!/usr/bin/python
+
 # -*- coding: utf-8 -*-
 
 # Generates the code for a sorted unicode range array as used in hb-ot-os2-unicode-ranges.hh
 # Input is a tab seperated list of unicode ranges from the otspec
-# (https://docs.microsoft.com/en-us/typography/opentype/spec/os2#ulunicoderange1).
+# (https://docs.microsoft.com/en-us/typography/opentype/spec/os2#ur).
 
 from __future__ import print_function, division, absolute_import
 

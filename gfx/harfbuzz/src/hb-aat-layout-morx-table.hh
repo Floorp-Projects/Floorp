@@ -88,7 +88,7 @@ struct RearrangementSubtable
 	start = buffer->idx;
 
       if (flags & MarkLast)
-	end = MIN (buffer->idx + 1, buffer->len);
+	end = hb_min (buffer->idx + 1, buffer->len);
 
       if ((flags & Verb) && start < end)
       {
@@ -117,14 +117,14 @@ struct RearrangementSubtable
 	};
 
 	unsigned int m = map[flags & Verb];
-	unsigned int l = MIN<unsigned int> (2, m >> 4);
-	unsigned int r = MIN<unsigned int> (2, m & 0x0F);
+	unsigned int l = hb_min (2u, m >> 4);
+	unsigned int r = hb_min (2u, m & 0x0F);
 	bool reverse_l = 3 == (m >> 4);
 	bool reverse_r = 3 == (m & 0x0F);
 
 	if (end - start >= l + r)
 	{
-	  buffer->merge_clusters (start, MIN (buffer->idx + 1, buffer->len));
+	  buffer->merge_clusters (start, hb_min (buffer->idx + 1, buffer->len));
 	  buffer->merge_clusters (start, end);
 
 	  hb_glyph_info_t *info = buffer->info;
@@ -261,13 +261,13 @@ struct ContextualSubtable
       }
       if (replacement)
       {
-	buffer->unsafe_to_break (mark, MIN (buffer->idx + 1, buffer->len));
+	buffer->unsafe_to_break (mark, hb_min (buffer->idx + 1, buffer->len));
 	buffer->info[mark].codepoint = *replacement;
 	ret = true;
       }
 
       replacement = nullptr;
-      unsigned int idx = MIN (buffer->idx, buffer->len - 1);
+      unsigned int idx = hb_min (buffer->idx, buffer->len - 1);
       if (Types::extended)
       {
 	if (entry.data.currentIndex != 0xFFFF)
@@ -337,9 +337,9 @@ struct ContextualSubtable
       const EntryData &data = entries[i].data;
 
       if (data.markIndex != 0xFFFF)
-	num_lookups = MAX<unsigned int> (num_lookups, 1 + data.markIndex);
+	num_lookups = hb_max (num_lookups, 1 + data.markIndex);
       if (data.currentIndex != 0xFFFF)
-	num_lookups = MAX<unsigned int> (num_lookups, 1 + data.currentIndex);
+	num_lookups = hb_max (num_lookups, 1 + data.currentIndex);
     }
 
     return_trace (substitutionTables.sanitize (c, this, num_lookups));
@@ -744,7 +744,7 @@ struct InsertionSubtable
 
 	buffer->move_to (end + count);
 
-	buffer->unsafe_to_break_from_outbuffer (mark, MIN (buffer->idx + 1, buffer->len));
+	buffer->unsafe_to_break_from_outbuffer (mark, hb_min (buffer->idx + 1, buffer->len));
       }
 
       if (flags & SetMark)
@@ -883,17 +883,17 @@ struct ChainSubtable
     Insertion		= 5
   };
 
-  template <typename context_t>
-  typename context_t::return_t dispatch (context_t *c) const
+  template <typename context_t, typename ...Ts>
+  typename context_t::return_t dispatch (context_t *c, Ts&&... ds) const
   {
     unsigned int subtable_type = get_type ();
     TRACE_DISPATCH (this, subtable_type);
     switch (subtable_type) {
-    case Rearrangement:		return_trace (c->dispatch (u.rearrangement));
-    case Contextual:		return_trace (c->dispatch (u.contextual));
-    case Ligature:		return_trace (c->dispatch (u.ligature));
-    case Noncontextual:		return_trace (c->dispatch (u.noncontextual));
-    case Insertion:		return_trace (c->dispatch (u.insertion));
+    case Rearrangement:		return_trace (c->dispatch (u.rearrangement, hb_forward<Ts> (ds)...));
+    case Contextual:		return_trace (c->dispatch (u.contextual, hb_forward<Ts> (ds)...));
+    case Ligature:		return_trace (c->dispatch (u.ligature, hb_forward<Ts> (ds)...));
+    case Noncontextual:		return_trace (c->dispatch (u.noncontextual, hb_forward<Ts> (ds)...));
+    case Insertion:		return_trace (c->dispatch (u.insertion, hb_forward<Ts> (ds)...));
     default:			return_trace (c->default_return_value ());
     }
   }
@@ -969,7 +969,7 @@ struct Chain
   void apply (hb_aat_apply_context_t *c,
 		     hb_mask_t flags) const
   {
-    const ChainSubtable<Types> *subtable = &StructAfter<ChainSubtable<Types> > (featureZ.as_array (featureCount));
+    const ChainSubtable<Types> *subtable = &StructAfter<ChainSubtable<Types>> (featureZ.as_array (featureCount));
     unsigned int count = subtableCount;
     for (unsigned int i = 0; i < count; i++)
     {
@@ -1031,7 +1031,7 @@ struct Chain
       if (unlikely (!c->buffer->successful)) return;
 
     skip:
-      subtable = &StructAfter<ChainSubtable<Types> > (*subtable);
+      subtable = &StructAfter<ChainSubtable<Types>> (*subtable);
       c->set_lookup_index (c->lookup_index + 1);
     }
   }
@@ -1049,13 +1049,13 @@ struct Chain
     if (!c->check_array (featureZ.arrayZ, featureCount))
       return_trace (false);
 
-    const ChainSubtable<Types> *subtable = &StructAfter<ChainSubtable<Types> > (featureZ.as_array (featureCount));
+    const ChainSubtable<Types> *subtable = &StructAfter<ChainSubtable<Types>> (featureZ.as_array (featureCount));
     unsigned int count = subtableCount;
     for (unsigned int i = 0; i < count; i++)
     {
       if (!subtable->sanitize (c))
 	return_trace (false);
-      subtable = &StructAfter<ChainSubtable<Types> > (*subtable);
+      subtable = &StructAfter<ChainSubtable<Types>> (*subtable);
     }
 
     return_trace (true);
@@ -1095,7 +1095,7 @@ struct mortmorx
     for (unsigned int i = 0; i < count; i++)
     {
       map->chain_flags.push (chain->compile_flags (mapper));
-      chain = &StructAfter<Chain<Types> > (*chain);
+      chain = &StructAfter<Chain<Types>> (*chain);
     }
   }
 
@@ -1109,7 +1109,7 @@ struct mortmorx
     {
       chain->apply (c, c->plan->aat_map.chain_flags[i]);
       if (unlikely (!c->buffer->successful)) return;
-      chain = &StructAfter<Chain<Types> > (*chain);
+      chain = &StructAfter<Chain<Types>> (*chain);
     }
   }
 
@@ -1125,7 +1125,7 @@ struct mortmorx
     {
       if (!chain->sanitize (c, version))
 	return_trace (false);
-      chain = &StructAfter<Chain<Types> > (*chain);
+      chain = &StructAfter<Chain<Types>> (*chain);
     }
 
     return_trace (true);

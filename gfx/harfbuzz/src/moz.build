@@ -54,7 +54,6 @@ UNIFIED_SOURCES += [
     'hb-ot-layout.cc',
     'hb-ot-map.cc',
     'hb-ot-math.cc',
-    'hb-ot-name-language.cc',
     'hb-ot-name.cc',
     'hb-ot-shape-complex-arabic.cc',
     'hb-ot-shape-complex-default.cc',
@@ -103,6 +102,7 @@ DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
 DEFINES['HAVE_OT'] = 1
 DEFINES['HAVE_ROUND'] = 1
 DEFINES['HB_NO_MT'] = True
+DEFINES['HB_NO_UCD'] = True
 DEFINES['HB_NO_UNICODE_FUNCS'] = True
 # Cancel the effect of the -DDEBUG macro if present,
 # because harfbuzz uses that name for its own purposes

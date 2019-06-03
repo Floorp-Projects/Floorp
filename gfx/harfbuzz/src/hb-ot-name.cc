@@ -58,6 +58,11 @@ const hb_ot_name_entry_t *
 hb_ot_name_list_names (hb_face_t    *face,
 		       unsigned int *num_entries /* OUT */)
 {
+#ifdef HB_NO_NAME
+  if (num_entries)
+    *num_entries = 0;
+  return 0;
+#endif
   const OT::name_accelerator_t &name = *face->table.name;
   if (num_entries) *num_entries = name.names.length;
   return (const hb_ot_name_entry_t *) name.names;
@@ -93,7 +98,7 @@ hb_ot_name_convert_utf (hb_bytes_t                       bytes,
 
       dst = dst_next;
       src = src_next;
-    };
+    }
 
     *text_size = dst - text;
     *dst = 0; /* NUL-terminate. */
@@ -105,7 +110,7 @@ hb_ot_name_convert_utf (hb_bytes_t                       bytes,
   {
     src = in_utf_t::next (src, src_end, &unicode, replacement);
     dst_len += out_utf_t::encode_len (unicode);
-  };
+  }
   return dst_len;
 }
 
@@ -167,6 +172,11 @@ hb_ot_name_get_utf8 (hb_face_t       *face,
 		     unsigned int    *text_size /* IN/OUT */,
 		     char            *text      /* OUT */)
 {
+#ifdef HB_NO_NAME
+  if (text_size)
+    *text_size = 0;
+  return 0;
+#endif
   return hb_ot_name_get_utf<hb_utf8_t> (face, name_id, language, text_size,
 					(hb_utf8_t::codepoint_t *) text);
 }
@@ -194,6 +204,11 @@ hb_ot_name_get_utf16 (hb_face_t       *face,
 		      unsigned int    *text_size /* IN/OUT */,
 		      uint16_t        *text      /* OUT */)
 {
+#ifdef HB_NO_NAME
+  if (text_size)
+    *text_size = 0;
+  return 0;
+#endif
   return hb_ot_name_get_utf<hb_utf16_t> (face, name_id, language, text_size, text);
 }
 
@@ -220,5 +235,10 @@ hb_ot_name_get_utf32 (hb_face_t       *face,
 		      unsigned int    *text_size /* IN/OUT */,
 		      uint32_t        *text      /* OUT */)
 {
+#ifdef HB_NO_NAME
+  if (text_size)
+    *text_size = 0;
+  return 0;
+#endif
   return hb_ot_name_get_utf<hb_utf32_t> (face, name_id, language, text_size, text);
 }

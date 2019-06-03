@@ -34,6 +34,10 @@
 void hb_aat_map_builder_t::add_feature (hb_tag_t tag,
 					unsigned int value)
 {
+#ifdef HB_NO_SHAPE_AAT
+  return;
+#endif
+
   if (tag == HB_TAG ('a','a','l','t'))
   {
     feature_info_t *info = features.push();
@@ -53,6 +57,10 @@ void hb_aat_map_builder_t::add_feature (hb_tag_t tag,
 void
 hb_aat_map_builder_t::compile (hb_aat_map_t  &m)
 {
+#ifdef HB_NO_SHAPE_AAT
+  return;
+#endif
+
   /* Sort features and merge duplicates */
   if (features.length)
   {

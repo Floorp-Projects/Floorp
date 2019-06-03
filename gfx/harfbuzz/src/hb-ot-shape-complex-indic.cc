@@ -274,7 +274,11 @@ struct indic_shape_plan_t
   const indic_config_t *config;
 
   bool is_old_spec;
+#ifndef HB_NO_UNISCRIBE_BUG_COMPATIBLE
   bool uniscribe_bug_compatible;
+#else
+  static constexpr bool uniscribe_bug_compatible = false;
+#endif
   mutable hb_atomic_int_t virama_glyph;
 
   would_substitute_feature_t rphf;
@@ -300,7 +304,9 @@ data_create_indic (const hb_ot_shape_plan_t *plan)
     }
 
   indic_plan->is_old_spec = indic_plan->config->has_old_spec && ((plan->map.chosen_script[0] & 0x000000FFu) != '2');
+#ifndef HB_NO_UNISCRIBE_BUG_COMPATIBLE
   indic_plan->uniscribe_bug_compatible = hb_options ().uniscribe_bug_compatible;
+#endif
   indic_plan->virama_glyph.set_relaxed (-1);
 
   /* Use zero-context would_substitute() matching for new-spec of the main
@@ -645,7 +651,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
   /* Reorder characters */
 
   for (unsigned int i = start; i < base; i++)
-    info[i].indic_position() = MIN (POS_PRE_C, (indic_position_t) info[i].indic_position());
+    info[i].indic_position() = hb_min (POS_PRE_C, (indic_position_t) info[i].indic_position());
 
   if (base < end)
     info[base].indic_position() = POS_BASE_C;
@@ -801,7 +807,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 	  unsigned int j = start + info[i].syllable();
 	  while (j != i)
 	  {
-	    max = MAX (max, j);
+	    max = hb_max (max, j);
 	    unsigned int next = start + info[j].syllable();
 	    info[j].syllable() = 255; /* So we don't process j later again. */
 	    j = next;
@@ -918,11 +924,10 @@ initial_reordering_standalone_cluster (const hb_ot_shape_plan_t *plan,
 				       hb_buffer_t *buffer,
 				       unsigned int start, unsigned int end)
 {
-  const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
-
   /* We treat placeholder/dotted-circle as if they are consonants, so we
    * should just chain.  Only if not in compatibility mode that is... */
 
+  const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) plan->data;
   if (indic_plan->uniscribe_bug_compatible)
   {
     /* For dotted-circle, this is what Uniscribe does:
@@ -1008,7 +1013,6 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
       ginfo.cluster = buffer->cur().cluster;
       ginfo.mask = buffer->cur().mask;
       ginfo.syllable() = buffer->cur().syllable();
-      /* TODO Set glyph_props? */
 
       /* Insert dottedcircle after possible Repha. */
       while (buffer->idx < buffer->len && buffer->successful &&
@@ -1232,14 +1236,14 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 
 	  /* Note: this merge_clusters() is intentionally *after* the reordering.
 	   * Indic matra reordering is special and tricky... */
-	  buffer->merge_clusters (new_pos, MIN (end, base + 1));
+	  buffer->merge_clusters (new_pos, hb_min (end, base + 1));
 
 	  new_pos--;
 	}
     } else {
       for (unsigned int i = start; i < base; i++)
 	if (info[i].indic_position () == POS_PRE_M) {
-	  buffer->merge_clusters (i, MIN (end, base + 1));
+	  buffer->merge_clusters (i, hb_min (end, base + 1));
 	  break;
 	}
     }
@@ -1372,13 +1376,15 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
        * TEST: U+0930,U+094D,U+0915,U+094B,U+094D
        */
       if (!indic_plan->uniscribe_bug_compatible &&
-	  unlikely (is_halant (info[new_reph_pos]))) {
+	  unlikely (is_halant (info[new_reph_pos])))
+      {
 	for (unsigned int i = base + 1; i < new_reph_pos; i++)
 	  if (info[i].indic_category() == OT_M) {
 	    /* Ok, got it. */
 	    new_reph_pos--;
 	  }
       }
+
       goto reph_move;
     }
 
@@ -1591,11 +1597,10 @@ decompose_indic (const hb_ot_shape_normalize_context_t *c,
      *   https://docs.microsoft.com/en-us/typography/script-development/sinhala#shaping
      */
 
+
     const indic_shape_plan_t *indic_plan = (const indic_shape_plan_t *) c->plan->data;
-
     hb_codepoint_t glyph;
-
-    if (hb_options ().uniscribe_bug_compatible ||
+    if (indic_plan->uniscribe_bug_compatible ||
 	(c->font->get_nominal_glyph (ab, &glyph) &&
 	 indic_plan->pstf.would_substitute (&glyph, 1, c->font->face)))
     {

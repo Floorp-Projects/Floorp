@@ -81,7 +81,7 @@ struct lcar
   protected:
   FixedVersion<>version;	/* Version number of the ligature caret table */
   HBUINT16	format;		/* Format of the ligature caret table. */
-  Lookup<OffsetTo<LigCaretClassEntry> >
+  Lookup<OffsetTo<LigCaretClassEntry>>
 		lookup;		/* data Lookup table associating glyphs */
 
   public:

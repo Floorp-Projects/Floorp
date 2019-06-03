@@ -144,7 +144,7 @@ struct IndexSubtableFormat1Or3
   }
 
   IndexSubtableHeader	header;
-  UnsizedArrayOf<Offset<OffsetType> >
+  UnsizedArrayOf<Offset<OffsetType>>
  			offsetArrayZ;
   public:
   DEFINE_SIZE_ARRAY(8, offsetArrayZ);
@@ -349,15 +349,15 @@ struct CBLC
     if (unlikely (!count))
       return Null(BitmapSizeTable);
 
-    unsigned int requested_ppem = MAX (font->x_ppem, font->y_ppem);
+    unsigned int requested_ppem = hb_max (font->x_ppem, font->y_ppem);
     if (!requested_ppem)
       requested_ppem = 1<<30; /* Choose largest strike. */
     unsigned int best_i = 0;
-    unsigned int best_ppem = MAX (sizeTables[0].ppemX, sizeTables[0].ppemY);
+    unsigned int best_ppem = hb_max (sizeTables[0].ppemX, sizeTables[0].ppemY);
 
     for (unsigned int i = 1; i < count; i++)
     {
-      unsigned int ppem = MAX (sizeTables[i].ppemX, sizeTables[i].ppemY);
+      unsigned int ppem = hb_max (sizeTables[i].ppemX, sizeTables[i].ppemY);
       if ((requested_ppem <= ppem && ppem < best_ppem) ||
 	  (requested_ppem > best_ppem && ppem > best_ppem))
       {
@@ -442,12 +442,12 @@ struct CBDT
       }
 
       /* Convert to font units. */
-      double x_scale = upem / (double) strike.ppemX;
-      double y_scale = upem / (double) strike.ppemY;
-      extents->x_bearing = round (extents->x_bearing * x_scale);
-      extents->y_bearing = round (extents->y_bearing * y_scale);
-      extents->width = round (extents->width * x_scale);
-      extents->height = round (extents->height * y_scale);
+      float x_scale = upem / (float) strike.ppemX;
+      float y_scale = upem / (float) strike.ppemY;
+      extents->x_bearing = roundf (extents->x_bearing * x_scale);
+      extents->y_bearing = roundf (extents->y_bearing * y_scale);
+      extents->width = roundf (extents->width * x_scale);
+      extents->height = roundf (extents->height * y_scale);
 
       return true;
     }

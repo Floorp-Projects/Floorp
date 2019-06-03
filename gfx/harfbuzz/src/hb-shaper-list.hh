@@ -45,10 +45,6 @@ HB_SHAPER_IMPLEMENT (directwrite)
 #endif
 #ifdef HAVE_CORETEXT
 HB_SHAPER_IMPLEMENT (coretext)
-
-/* Only picks up fonts that have a "mort" or "morx" table.
-   Probably going to be removed https://github.com/harfbuzz/harfbuzz/issues/1478 */
-HB_SHAPER_IMPLEMENT (coretext_aat)
 #endif
 
 #ifdef HAVE_FALLBACK

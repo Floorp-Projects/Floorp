@@ -81,7 +81,7 @@ struct hb_blob_t
 template <typename P>
 struct hb_blob_ptr_t
 {
-  typedef typename hb_remove_pointer (P) T;
+  typedef hb_remove_pointer<P> T;
 
   hb_blob_ptr_t (hb_blob_t *b_ = nullptr) : b (b_) {}
   hb_blob_t * operator = (hb_blob_t *b_) { return b = b_; }

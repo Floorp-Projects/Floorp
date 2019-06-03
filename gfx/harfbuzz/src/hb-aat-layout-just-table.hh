@@ -309,7 +309,7 @@ struct WidthDeltaPair
   public:
   DEFINE_SIZE_STATIC (24);
 };
-  
+
 typedef OT::LArrayOf<WidthDeltaPair> WidthDeltaCluster;
 
 struct JustificationCategory
@@ -371,7 +371,7 @@ struct JustificationHeader
 				 * of postcompensation subtable (set to zero if none).
 				 *
 				 * The postcompensation subtable, if present in the font. */
-  Lookup<OffsetTo<WidthDeltaCluster> >
+  Lookup<OffsetTo<WidthDeltaCluster>>
   		lookupTable;	/* Lookup table associating glyphs with width delta
 				 * clusters. See the description of Width Delta Clusters
 				 * table for details on how to interpret the lookup values. */

@@ -153,7 +153,7 @@ struct BaseCoord
 
 struct FeatMinMaxRecord
 {
-  static int cmp (const void *key_, const void *entry_)
+  HB_INTERNAL static int cmp (const void *key_, const void *entry_)
   {
     hb_tag_t key = * (hb_tag_t *) key_;
     const FeatMinMaxRecord &entry = * (const FeatMinMaxRecord *) entry_;
@@ -271,7 +271,7 @@ struct BaseValues
 
 struct BaseLangSysRecord
 {
-  static int cmp (const void *key_, const void *entry_)
+  HB_INTERNAL static int cmp (const void *key_, const void *entry_)
   {
     hb_tag_t key = * (hb_tag_t *) key_;
     const BaseLangSysRecord &entry = * (const BaseLangSysRecord *) entry_;
@@ -345,7 +345,7 @@ struct BaseScript
 struct BaseScriptList;
 struct BaseScriptRecord
 {
-  static int cmp (const void *key_, const void *entry_)
+  HB_INTERNAL static int cmp (const void *key_, const void *entry_)
   {
     hb_tag_t key = * (hb_tag_t *) key_;
     const BaseScriptRecord &entry = * (const BaseScriptRecord *) entry_;
@@ -447,7 +447,7 @@ struct Axis
   }
 
   protected:
-  OffsetTo<SortedArrayOf<Tag> >
+  OffsetTo<SortedArrayOf<Tag>>
 		baseTagList;	/* Offset to BaseTagList table, from beginning
 				 * of Axis table (may be NULL)
 				 * Array of 4-byte baseline identification tags — must

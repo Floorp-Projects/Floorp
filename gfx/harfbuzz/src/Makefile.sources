@@ -16,6 +16,7 @@ HB_BASE_sources = \
 	hb-aat-ltag-table.hh \
 	hb-aat-map.cc \
 	hb-aat-map.hh \
+	hb-algs.hh \
 	hb-array.hh \
 	hb-atomic.hh \
 	hb-blob.cc \
@@ -30,8 +31,9 @@ HB_BASE_sources = \
 	hb-cff1-interp-cs.hh \
 	hb-cff2-interp-cs.hh \
 	hb-common.cc \
+	hb-config.hh \
 	hb-debug.hh \
-	hb-dsalgs.hh \
+	hb-dispatch.hh \
 	hb-face.cc \
 	hb-face.hh \
 	hb-font.cc \
@@ -41,6 +43,7 @@ HB_BASE_sources = \
 	hb-machinery.hh \
 	hb-map.cc \
 	hb-map.hh \
+	hb-meta.hh \
 	hb-mutex.hh \
 	hb-null.hh \
 	hb-object.hh \
@@ -82,7 +85,7 @@ HB_BASE_sources = \
 	hb-ot-math-table.hh \
 	hb-ot-math.cc \
 	hb-ot-maxp-table.hh \
-	hb-ot-name-language.cc \
+	hb-ot-name-language-static.hh \
 	hb-ot-name-language.hh \
 	hb-ot-name-table.hh \
 	hb-ot-name.cc \
@@ -127,6 +130,9 @@ HB_BASE_sources = \
 	hb-ot-var-mvar-table.hh \
 	hb-ot-var.cc \
 	hb-ot-vorg-table.hh \
+	hb-pool.hh \
+	hb-sanitize.hh \
+	hb-serialize.hh \
 	hb-set-digest.hh \
 	hb-set.cc \
 	hb-set.hh \
@@ -139,6 +145,8 @@ HB_BASE_sources = \
 	hb-shaper.hh \
 	hb-static.cc \
 	hb-string-array.hh \
+	hb-ucd-table.hh \
+	hb-ucd.cc \
 	hb-unicode-emoji-table.hh \
 	hb-unicode.cc \
 	hb-unicode.hh \
@@ -218,9 +226,6 @@ HB_DIRECTWRITE_headers = hb-directwrite.h
 HB_UNISCRIBE_sources = hb-uniscribe.cc
 HB_UNISCRIBE_headers = hb-uniscribe.h
 
-# Additional supplemental sources
-HB_UCDN_sources  = hb-ucdn.cc
-
 # Sources for libharfbuzz-gobject and libharfbuzz-icu
 HB_ICU_sources = hb-icu.cc
 HB_ICU_headers = hb-icu.h
@@ -236,9 +241,6 @@ HB_SUBSET_sources = \
 	hb-subset-cff1.hh \
 	hb-subset-cff2.cc \
 	hb-subset-cff2.hh \
-	hb-subset-glyf.cc \
-	hb-subset-glyf.hh \
-	hb-subset-glyf.hh \
 	hb-subset-input.cc \
 	hb-subset-input.hh \
 	hb-subset-plan.cc \

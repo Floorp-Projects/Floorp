@@ -78,7 +78,7 @@ struct hmtxvmtx
 
     unsigned int length;
     H *table = (H *) hb_blob_get_data (dest_blob, &length);
-    table->numberOfLongMetrics.set (num_hmetrics);
+    table->numberOfLongMetrics = num_hmetrics;
 
     bool result = plan->add_table (H::tableTag, dest_blob);
     hb_blob_destroy (dest_blob);
@@ -128,12 +128,12 @@ struct hmtxvmtx
       bool has_advance = i < num_advances;
       if (has_advance)
       {
-        ((LongMetric *) dest_pos)->advance.set (advance);
-        ((LongMetric *) dest_pos)->sb.set (side_bearing);
+        ((LongMetric *) dest_pos)->advance = advance;
+        ((LongMetric *) dest_pos)->sb = side_bearing;
       }
       else
       {
-        ((FWORD *) dest_pos)->set (side_bearing);
+        *((FWORD *) dest_pos) = side_bearing;
       }
       dest_pos += (has_advance ? 4 : 2);
     }
@@ -240,7 +240,7 @@ struct hmtxvmtx
 	  return default_advance;
       }
 
-      return table->longMetricZ[MIN (glyph, (uint32_t) num_advances - 1)].advance;
+      return table->longMetricZ[hb_min (glyph, (uint32_t) num_advances - 1)].advance;
     }
 
     unsigned int get_advance (hb_codepoint_t  glyph,

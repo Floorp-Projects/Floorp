@@ -160,13 +160,13 @@ serialize_fdselect_3_4 (hb_serialize_context_t *c,
   TRACE_SERIALIZE (this);
   FDSELECT3_4 *p = c->allocate_size<FDSELECT3_4> (size);
   if (unlikely (p == nullptr)) return_trace (false);
-  p->nRanges ().set (fdselect_ranges.length);
+  p->nRanges () = fdselect_ranges.length;
   for (unsigned int i = 0; i < fdselect_ranges.length; i++)
   {
-    p->ranges[i].first.set (fdselect_ranges[i].glyph);
-    p->ranges[i].fd.set (fdselect_ranges[i].code);
+    p->ranges[i].first = fdselect_ranges[i].glyph;
+    p->ranges[i].fd = fdselect_ranges[i].code;
   }
-  p->sentinel().set (num_glyphs);
+  p->sentinel() = num_glyphs;
   return_trace (true);
 }
 
@@ -186,7 +186,7 @@ hb_serialize_cff_fdselect (hb_serialize_context_t *c,
   TRACE_SERIALIZE (this);
   FDSelect  *p = c->allocate_min<FDSelect> ();
   if (unlikely (p == nullptr)) return_trace (false);
-  p->format.set (fdselect_format);
+  p->format = fdselect_format;
   size -= FDSelect::min_size;
 
   switch (fdselect_format)
@@ -205,7 +205,7 @@ hb_serialize_cff_fdselect (hb_serialize_context_t *c,
 	{
 	  fd = fdselect_ranges[range_index++].code;
 	}
-	p->fds[i].set (fd);
+	p->fds[i] = fd;
       }
       break;
     }
