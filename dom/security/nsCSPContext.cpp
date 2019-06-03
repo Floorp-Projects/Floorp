@@ -406,11 +406,6 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString, bool aReportOnly,
   MOZ_ASSERT(
       mSelfURI,
       "did you forget to call setRequestContextWith{Document,Principal}?");
-  // After Bug 1496418 we can remove that assertion because we will allow
-  // CSP on system privileged documents.
-  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mLoadingPrincipal),
-             "Do not call setRequestContextWith{Document,Principal} using "
-             "SystemPrincipal");
   NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_UNEXPECTED);
   NS_ENSURE_TRUE(mSelfURI, NS_ERROR_UNEXPECTED);
 
@@ -725,10 +720,6 @@ nsCSPContext::SetRequestContextWithDocument(Document* aDocument) {
 
   MOZ_ASSERT(mLoadingPrincipal, "need a valid requestPrincipal");
   MOZ_ASSERT(mSelfURI, "need mSelfURI to translate 'self' into actual URI");
-  // After Bug 1496418 we can remove that assertion because we will allow
-  // CSP on system privileged documents.
-  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mLoadingPrincipal),
-             "do not apply CSP to system privileged documents");
   return NS_OK;
 }
 
@@ -752,10 +743,6 @@ nsCSPContext::SetRequestContextWithPrincipal(nsIPrincipal* aRequestPrincipal,
 
   MOZ_ASSERT(mLoadingPrincipal, "need a valid requestPrincipal");
   MOZ_ASSERT(mSelfURI, "need mSelfURI to translate 'self' into actual URI");
-  // After Bug 1496418 we can remove that assertion because we will allow
-  // CSP on system privileged documents.
-  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(mLoadingPrincipal),
-             "do not apply CSP to system privileged documents");
   return NS_OK;
 }
 

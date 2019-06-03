@@ -2974,13 +2974,6 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     return NS_OK;
   }
 
-  // If this is a system privileged document - do not apply a CSP.
-  // After Bug 1496418 we can remove the early return and apply
-  // a CSP even when loading using a SystemPrincipal.
-  if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
-    return NS_OK;
-  }
-
   MOZ_ASSERT(!mCSP, "where did mCSP get set if not here?");
 
   // If there is a CSP that needs to be inherited either from the

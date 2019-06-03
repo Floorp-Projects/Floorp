@@ -28,6 +28,12 @@ class CSPService : public nsIContentPolicy, public nsIChannelEventSink {
 
   CSPService();
 
+  // helper function to avoid creating a new instance of the
+  // cspservice everytime we call content policies.
+  static nsresult ConsultCSP(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
+                             const nsACString& aMimeTypeGuess,
+                             int16_t* aDecision);
+
  protected:
   virtual ~CSPService();
 };
