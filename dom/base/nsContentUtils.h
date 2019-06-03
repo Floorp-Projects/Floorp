@@ -2744,8 +2744,7 @@ class nsContentUtils {
    * includes Windows headers which aren't allowed there.
    */
   static void SetKeyboardIndicatorsOnRemoteChildren(
-      nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowAccelerators,
-      UIStateChangeType aShowFocusRings);
+      nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowFocusRings);
 
   /**
    * Given an nsIFile, attempts to read it into aString.

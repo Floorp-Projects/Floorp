@@ -916,9 +916,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   virtual bool ShouldShowFocusRing() override;
 
-  virtual void SetKeyboardIndicators(
-      UIStateChangeType aShowAccelerators,
-      UIStateChangeType aShowFocusRings) override;
+  virtual void SetKeyboardIndicators(UIStateChangeType aShowFocusRings)
+      override;
 
  public:
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
