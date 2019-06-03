@@ -218,6 +218,84 @@ add_task(async function test_get_can_verify_signature() {
 });
 add_task(clear_state);
 
+add_task(async function test_get_does_not_verify_signature_if_load_dump() {
+  if (IS_ANDROID) {
+    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+    return;
+  }
+
+  let called;
+  clientWithDump._verifier = {
+    async asyncVerifyContentSignature(serialized, signature) {
+      called = true;
+      return true;
+    },
+  };
+
+  // When dump is loaded, signature is not verified.
+  const records = await clientWithDump.get({ verifySignature: true });
+  ok(records.length > 0, "dump is loaded");
+  ok(!called, "signature is missing but not verified");
+
+  // If metadata is missing locally, it is not fetched if `syncIfEmpty` is disabled.
+  let error;
+  try {
+    await clientWithDump.get({ verifySignature: true, syncIfEmpty: false });
+  } catch (e) {
+    error = e;
+  }
+  ok(!called, "signer was not called");
+  equal(error.message, "Missing signature (main/language-dictionaries)", "signature is missing locally");
+
+  // If metadata is missing locally, it is fetched by default (`syncIfEmpty: true`)
+  await clientWithDump.get({ verifySignature: true });
+  const metadata = await (await clientWithDump.openCollection()).metadata();
+  ok(Object.keys(metadata).length > 0, "metadata was fetched");
+  ok(called, "signature was verified for the data that was in dump");
+});
+add_task(clear_state);
+
+add_task(async function test_sync_pulls_metadata_if_missing_with_dump_is_up_to_date() {
+  if (IS_ANDROID) {
+    // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
+    return;
+  }
+
+  let called;
+  clientWithDump._verifier = {
+    async asyncVerifyContentSignature(serialized, signature) {
+      called = true;
+      return true;
+    },
+  };
+  // When dump is loaded, signature is not verified.
+  const records = await clientWithDump.get({ verifySignature: true });
+  ok(records.length > 0, "dump is loaded");
+  ok(!called, "signature is missing but not verified");
+
+  // Synchronize the collection (local data is up-to-date, collection last modified > 42)
+  // Signature verification is disabled (see `clear_state()`), so we don't bother with
+  // fetching metadata.
+  await clientWithDump.maybeSync(42);
+  let metadata = await (await clientWithDump.openCollection()).metadata();
+  ok(!metadata, "metadata was not fetched");
+
+  // Synchronize again the collection (up-to-date, since collection last modified still > 42)
+  clientWithDump.verifySignature = true;
+  await clientWithDump.maybeSync(42);
+
+  // With signature verification, metadata was fetched.
+  metadata = await (await clientWithDump.openCollection()).metadata();
+  ok(Object.keys(metadata).length > 0, "metadata was fetched");
+  ok(called, "signature was verified for the data that was in dump");
+
+  // Metadata is present, signature will now verified.
+  called = false;
+  await clientWithDump.get({ verifySignature: true });
+  ok(called, "local signature is verified");
+});
+add_task(clear_state);
+
 add_task(async function test_sync_event_provides_information_about_records() {
   let eventData;
   client.on("sync", ({ data }) => eventData = data);
