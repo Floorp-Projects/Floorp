@@ -9,16 +9,13 @@
 
   // https://w3c.github.io/mediacapture-main/archives/20170605/getusermedia.html
 
-  async function createAudioStreamAndGetSettings(t) {
-    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
-    t.add_cleanup(() => stream.getAudioTracks()[0].stop());
-    return stream.getAudioTracks()[0].getSettings();
-  }
-
-  async function createVideoStreamAndGetSettings(t) {
-    const stream = await navigator.mediaDevices.getUserMedia({video: true});
-    t.add_cleanup(() => stream.getVideoTracks()[0].stop());
-    return stream.getVideoTracks()[0].getSettings();
+  async function createTrackAndGetSettings(t, kind) {
+    const constraints = {};
+    constraints[kind] = true;
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    assert_equals(stream.getTracks().length, 1);
+    t.add_cleanup(() => stream.getTracks()[0].stop());
+    return stream.getTracks()[0].getSettings();
   }
 
   promise_test(async t => {
@@ -84,84 +81,84 @@
   }, 'groupId is correctly reported by getSettings() for all devices');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.deviceId), "string",
                   "deviceId should exist and it should be a string.");
   }, 'deviceId is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.groupId), "string",
                   "groupId should exist and it should be a string.");
   }, 'groupId is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.volume), "number",
                   "volume should exist and it should be a number.");
     assert_between_inclusive(settings.volume, 0.0, 1.0);
   }, 'volume is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.sampleRate), "number",
                   "sampleRate should exist and it should be a number.");
     assert_greater_than(settings.sampleRate, 0);
   }, 'sampleRate is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.sampleSize), "number",
                   "sampleSize should exist and it should be a number.");
     assert_greater_than(settings.sampleSize, 0);
   }, 'sampleSize is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.echoCancellation), "boolean",
                   "echoCancellation should exist and it should be a boolean.");
   }, 'echoCancellation is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.autoGainControl), "boolean",
                   "autoGainControl should exist and it should be a boolean.");
   }, 'autoGainControl is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.noiseSuppression), "boolean",
                   "noiseSuppression should exist and it should be a boolean.");
   }, 'noiseSuppression is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.latency), "number",
                   "latency should exist and it should be a number.");
     assert_greater_than_equal(settings.latency,0);
   }, 'latency is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createAudioStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "audio");
     assert_equals(typeof(settings.channelCount), "number",
                   "channelCount should exist and it should be a number.");
     assert_greater_than(settings.channelCount, 0);
   }, 'channelCount is reported by getSettings() for getUserMedia() audio tracks');
 
   promise_test(async t => {
-    const settings = await createVideoStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "video");
     assert_equals(typeof(settings.deviceId), "string",
                   "deviceId should exist and it should be a string.");
   }, 'deviceId is reported by getSettings() for getUserMedia() video tracks');
 
   promise_test(async t => {
-    const settings = await createVideoStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "video");
     assert_equals(typeof(settings.groupId), "string",
                   "groupId should exist and it should be a string.");
   }, 'groupId is reported by getSettings() for getUserMedia() video tracks');
 
   promise_test(async t => {
-    const settings = await createVideoStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "video");
     assert_equals(typeof(settings.width), "number",
                   "width should exist and it should be a number.");
     assert_true(Number.isInteger(settings.width), "width should be an integer.");
@@ -169,7 +166,7 @@
   }, 'width is reported by getSettings() for getUserMedia() video tracks');
 
   promise_test(async t => {
-    const settings = await createVideoStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "video");
     assert_equals(typeof(settings.height), "number",
                   "height should exist and it should be a number.");
     assert_true(Number.isInteger(settings.height), "height should be an integer.");
@@ -177,21 +174,21 @@
   }, 'height is reported by getSettings() for getUserMedia() video tracks');
 
   promise_test(async t => {
-    const settings = await createVideoStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "video");
     assert_equals(typeof(settings.aspectRatio), "number",
                   "aspectRatio should exist and it should be a number.");
     assert_greater_than_equal(settings.aspectRatio, 0);
   }, 'aspectRatio is reported by getSettings() for getUserMedia() video tracks');
 
   promise_test(async t => {
-    const settings = await createVideoStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "video");
     assert_equals(typeof(settings.frameRate), "number",
                   "frameRate should exist and it should be a number.");
     assert_greater_than_equal(settings.frameRate, 0);
   }, 'frameRate is reported by getSettings() for getUserMedia() video tracks');
 
   promise_test(async t => {
-    const settings = await createVideoStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "video");
     // facingMode not treated as mandatory because not all platforms provide
     // this information.
     if (settings.facingMode) {
@@ -203,7 +200,7 @@
   }, 'facingMode is reported by getSettings() for getUserMedia() video tracks');
 
   promise_test(async t => {
-    const settings = await createVideoStreamAndGetSettings(t);
+    const settings = await createTrackAndGetSettings(t, "video");
     assert_equals(typeof(settings.resizeMode), "string",
                 "resizeMode should exist and it should be a string.");
     assert_in_array(settings.resizeMode, ['none', 'crop-and-scale']);
