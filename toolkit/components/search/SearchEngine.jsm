@@ -1848,21 +1848,6 @@ SearchEngine.prototype = {
     return type;
   },
 
-  get _isWhiteListed() {
-    let url = this._getURLOfType(SearchUtils.URL_TYPE.SEARCH).template;
-    let hostname = SearchUtils.makeURI(url).host;
-    let whitelist = Services.prefs.getDefaultBranch(SearchUtils.BROWSER_SEARCH_PREF)
-                            .getCharPref("reset.whitelist")
-                            .split(",");
-    if (whitelist.includes(hostname)) {
-      SearchUtils.log("The hostname " + hostname + " is white listed, " +
-          "we won't show the search reset prompt");
-      return true;
-    }
-
-    return false;
-  },
-
   // from nsISearchEngine
   getSubmission(data, responseType, purpose) {
     if (!responseType) {

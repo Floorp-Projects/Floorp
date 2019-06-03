@@ -12,8 +12,8 @@ registerCleanupFunction(async function cleanup() {
 let originalEngine;
 add_task(async function test_setup() {
   // Stop search-engine loads from hitting the network
-  await Services.search.addEngineWithDetails("MozSearch", "", "", "", "GET",
-    "http://example.com/?q={searchTerms}");
+  await Services.search.addEngineWithDetails("MozSearch",
+    {method: "GET", template: "http://example.com/?q={searchTerms}"});
   let engine = Services.search.getEngineByName("MozSearch");
   originalEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);

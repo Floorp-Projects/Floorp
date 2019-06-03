@@ -2248,7 +2248,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 82;
+    const UI_VERSION = 83;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -2342,11 +2342,8 @@ BrowserGlue.prototype = {
             !Services.search.originalDefaultEngine.wrappedJSObject._isDefault)
           return;
 
-        if (currentEngine._loadPath.startsWith("[https]")) {
-          Services.prefs.setCharPref("browser.search.reset.status", "pending");
-        } else {
+        if (!currentEngine._loadPath.startsWith("[https]")) {
           Services.search.resetToOriginalDefaultEngine();
-          Services.prefs.setCharPref("browser.search.reset.status", "silent");
         }
       });
 
@@ -2555,6 +2552,10 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 82) {
       this._migrateXULStoreForDocument("chrome://browser/content/browser.xul",
                                        "chrome://browser/content/browser.xhtml");
+    }
+
+    if (currentUIVersion < 83) {
+      Services.prefs.clearUserPref("browser.search.reset.status");
     }
 
     // Update the migration version.
