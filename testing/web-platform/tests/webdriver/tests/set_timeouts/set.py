@@ -91,4 +91,4 @@ def test_script_value_null(session):
     response = set_timeouts(session, {"script": None})
     assert_success(response)
 
-    assert session.timeouts.script == None
+    assert session.timeouts.script is None
