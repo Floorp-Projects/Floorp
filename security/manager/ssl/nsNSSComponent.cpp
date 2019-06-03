@@ -44,6 +44,7 @@
 #include "nsLiteralString.h"
 #include "nsNSSCertificateDB.h"
 #include "nsNSSHelper.h"
+#include "nsNetCID.h"
 #include "nsPK11TokenDB.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
@@ -529,7 +530,7 @@ void nsNSSComponent::MaybeImportEnterpriseRoots() {
   if (importEnterpriseRoots) {
     RefPtr<BackgroundImportEnterpriseCertsTask> task =
         new BackgroundImportEnterpriseCertsTask(this);
-    Unused << task->Dispatch("EnterpriseCrts");
+    Unused << task->Dispatch();
   }
 }
 
@@ -611,40 +612,22 @@ class LoadLoadableRootsTask final : public Runnable {
   bool mImportEnterpriseRoots;
   uint32_t mFamilySafetyMode;
   Vector<nsCString> mPossibleLoadableRootsLocations;
-  nsCOMPtr<nsIThread> mThread;
 };
 
 nsresult LoadLoadableRootsTask::Dispatch() {
-  // Can't add 'this' as the event to run, since mThread may not be set yet
-  nsresult rv = NS_NewNamedThread("LoadRoots", getter_AddRefs(mThread), nullptr,
-                                  nsIThreadManager::DEFAULT_STACK_SIZE);
-  if (NS_FAILED(rv)) {
-    return rv;
+  // The stream transport service (note: not the socket transport service) can
+  // be used to perform background tasks or I/O that would otherwise block the
+  // main thread.
+  nsCOMPtr<nsIEventTarget> target(
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+  if (!target) {
+    return NS_ERROR_FAILURE;
   }
-
-  // Note: event must not null out mThread!
-  return mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  return target->Dispatch(this, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
 LoadLoadableRootsTask::Run() {
-  // First we Run() on the "LoadRoots" thread, do our work, and then we Run()
-  // again on the main thread so we can shut down the thread (since we don't
-  // need it any more). We can't shut down the thread while we're *on* the
-  // thread, which is why we do the dispatch to the main thread. CryptoTask.cpp
-  // (which informs this code) says that we can't null out mThread. This appears
-  // to be because its refcount could be decreased while this dispatch is being
-  // processed, so it might get prematurely destroyed. I'm not sure this makes
-  // sense but it'll get cleaned up in our destructor anyway, so it's fine to
-  // not null it out here (as long as we don't run twice on the main thread,
-  // which shouldn't be possible).
-  if (NS_IsMainThread()) {
-    if (mThread) {
-      mThread->Shutdown();
-    }
-    return NS_OK;
-  }
-
   nsresult loadLoadableRootsResult = LoadLoadableRoots();
   if (NS_WARN_IF(NS_FAILED(loadLoadableRootsResult))) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("LoadLoadableRoots failed"));
@@ -686,9 +669,7 @@ LoadLoadableRootsTask::Run() {
               ("failed to notify loadable roots loaded monitor"));
     }
   }
-
-  // Go back to the main thread to clean up this worker thread.
-  return NS_DispatchToMainThread(this);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
