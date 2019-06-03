@@ -3771,7 +3771,7 @@ void CodeGenerator::visitStackArgT(LStackArgT* lir) {
   Address dest(masm.getStackPointer(), stack_offset);
 
   if (arg->isFloatReg()) {
-    masm.storeDouble(ToFloatRegister(arg), dest);
+    masm.boxDouble(ToFloatRegister(arg), dest);
   } else if (arg->isRegister()) {
     masm.storeValue(ValueTypeFromMIRType(argType), ToRegister(arg), dest);
   } else {
@@ -10150,7 +10150,7 @@ void CodeGenerator::visitSetFrameArgumentT(LSetFrameArgumentT* lir) {
   if (type == MIRType::Double) {
     // Store doubles directly.
     FloatRegister input = ToFloatRegister(lir->input());
-    masm.storeDouble(input, Address(masm.getStackPointer(), argOffset));
+    masm.boxDouble(input, Address(masm.getStackPointer(), argOffset));
 
   } else {
     Register input = ToRegister(lir->input());
@@ -11754,7 +11754,7 @@ void CodeGenerator::emitLoadElementT(LLoadElementT* lir, const T& source) {
 
   AnyRegister output = ToAnyRegister(lir->output());
   if (lir->mir()->loadDoubles()) {
-    masm.loadDouble(source, output.fpu());
+    masm.unboxDouble(source, output.fpu());
   } else {
     masm.loadUnboxedValue(source, lir->mir()->type(), output);
   }
