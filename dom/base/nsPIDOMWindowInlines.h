@@ -72,6 +72,10 @@ mozilla::dom::BrowsingContext* nsPIDOMWindowOuter::GetBrowsingContext() const {
   return mBrowsingContext;
 }
 
+mozilla::dom::BrowsingContext* nsPIDOMWindowInner::GetBrowsingContext() const {
+  return mBrowsingContext;
+}
+
 mozilla::dom::Element* nsPIDOMWindowOuter::GetFocusedElement() const {
   return mInnerWindow ? mInnerWindow->GetFocusedElement() : nullptr;
 }
