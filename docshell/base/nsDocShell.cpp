@@ -5079,11 +5079,9 @@ nsDocShell::Destroy() {
     mSessionHistory = nullptr;
   }
 
-  // Either `Detach` our BrowsingContext if this window is closing, or prepare
-  // the BrowsingContext for the switch to continue.
-  if (mSkipBrowsingContextDetachOnDestroy) {
-    mBrowsingContext->PrepareForProcessChange();
-  } else {
+  // This will be skipped in cases where we want to preserve the browsing
+  // context between loads.
+  if (!mSkipBrowsingContextDetachOnDestroy) {
     mBrowsingContext->Detach();
   }
 
