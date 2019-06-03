@@ -26,8 +26,8 @@ use crate::error::{Error, ErrorKind, Result};
 use crate::guid::{Guid, ROOT_GUID, UNFILED_GUID};
 use crate::merge::{Merger, StructureCounts};
 use crate::tree::{
-    Builder, Content, DivergedParent, DivergedParentGuid, Item, Kind, Problem, Problems, Tree,
-    Validity,
+    Builder, Content, DivergedParent, DivergedParentGuid, Item, Kind, Problem, ProblemCounts,
+    Problems, Tree, Validity,
 };
 
 #[derive(Debug)]
@@ -2803,7 +2803,19 @@ fn problems() {
                 DivergedParentGuid::Missing("folderKKKKKK".into()).into(),
             ]),
         )
-        .note(&"bookmarkLLLL".into(), Problem::DivergedParents(Vec::new()));
+        .note(&"bookmarkLLLL".into(), Problem::DivergedParents(Vec::new()))
+        .note(
+            &"folderMMMMMM".into(),
+            Problem::MissingChild {
+                child_guid: "bookmarkNNNN".into(),
+            },
+        )
+        .note(
+            &"folderMMMMMM".into(),
+            Problem::MissingChild {
+                child_guid: "bookmarkOOOO".into(),
+            },
+        );
 
     let mut summary = problems.summarize().collect::<Vec<_>>();
     summary.sort_by(|a, b| a.guid().cmp(b.guid()));
@@ -2819,8 +2831,23 @@ fn problems() {
             "bookmarkHHHH is in children of folderIIIIII, is in children of folderJJJJJJ, and has \
              nonexistent parent folderKKKKKK",
             "bookmarkLLLL has diverged parents",
+            "folderMMMMMM has nonexistent child bookmarkNNNN",
+            "folderMMMMMM has nonexistent child bookmarkOOOO",
             "menu________ is a user content root, but is in children of unfiled_____",
             "toolbar_____ is a user content root",
         ]
+    );
+
+    assert_eq!(
+        problems.counts(),
+        ProblemCounts {
+            orphans: 1,
+            misparented_roots: 2,
+            multiple_parents_by_children: 3,
+            missing_parent_guids: 1,
+            non_folder_parent_guids: 1,
+            parent_child_disagreements: 6,
+            missing_children: 2,
+        }
     );
 }
