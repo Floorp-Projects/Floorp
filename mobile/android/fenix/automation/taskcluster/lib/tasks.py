@@ -77,7 +77,7 @@ class TaskBuilder(object):
 
         capitalized_track = upper_case_first_letter(track)
         gradle_commands = (
-            './gradlew --no-daemon -PcrashReports=true -Ptelemetry=true -PversionName={} clean test assemble{}'.format(
+            './gradlew --no-daemon -PversionName={} clean test assemble{}'.format(
                 version_name, capitalized_track),
         )
 
@@ -107,6 +107,30 @@ class TaskBuilder(object):
                     'platform': 'android-all',
                 },
                 'symbol': '{}-A'.format(track),
+                'tier': 1,
+            },
+        )
+
+    def craft_assemble_raptor_task(self, variant):
+        command = ' && '.join((
+            'echo "https://fake@sentry.prod.mozaws.net/368" > .sentry_token',
+            'echo "--" > .adjust_token',
+            'echo "-:-" > .leanplum_token',
+            './gradlew --no-daemon clean assemble{}'.format(variant.for_gradle_command),
+        ))
+
+        return self._craft_build_ish_task(
+            name='assemble: {}'.format(variant.raw),
+            description='Building and testing variant {}'.format(variant.raw),
+            command=command,
+            artifacts=_craft_artifacts_from_variant(variant),
+            treeherder={
+                'groupSymbol': variant.build_type,
+                'jobKind': 'build',
+                'machine': {
+                    'platform': variant.platform,
+                },
+                'symbol': 'A',
                 'tier': 1,
             },
         )
@@ -379,13 +403,13 @@ class TaskBuilder(object):
     ):
         staging_prefix = '.staging' if is_staging else ''
         routes = [
-            "index.project.mobile.fenix.v2{}.raptor.{}.{}.{}.latest.{}".format(
+            "index.project.mobile.fenix.v2{}.performance-test.{}.{}.{}.latest.{}".format(
                 staging_prefix, self.date.year, self.date.month, self.date.day, variant.abi
             ),
-            "index.project.mobile.fenix.v2{}.raptor.{}.{}.{}.revision.{}.{}".format(
+            "index.project.mobile.fenix.v2{}.performance-test.{}.{}.{}.revision.{}.{}".format(
                 staging_prefix, self.date.year, self.date.month, self.date.day, self.commit, variant.abi
             ),
-            "index.project.mobile.fenix.v2{}.raptor.latest.{}".format(staging_prefix, variant.abi),
+            "index.project.mobile.fenix.v2{}.performance-test.latest.{}".format(staging_prefix, variant.abi),
         ]
 
         return self._craft_signing_task(
@@ -549,7 +573,7 @@ class TaskBuilder(object):
                     "--cfg=mozharness/configs/raptor/android_hw_config.py",
                     "--test={}".format(test_name),
                     "--app=fenix",
-                    "--binary=org.mozilla.fenix.raptor",
+                    "--binary=org.mozilla.fenix.performancetest",
                     "--activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity",
                     "--download-symbols=ondemand",
                 ]],

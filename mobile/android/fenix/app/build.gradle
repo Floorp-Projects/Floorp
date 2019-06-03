@@ -21,7 +21,8 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: 'true'
         manifestPlaceholders.isRaptorEnabled = "false"
-        resValue "bool", "IS_DEBUG", "true"
+        resValue "bool", "IS_DEBUG", "false"
+        buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
     }
 
     def releaseTemplate = {
@@ -37,17 +38,19 @@ android {
             minifyEnabled false
             applicationIdSuffix ".debug"
             manifestPlaceholders.isRaptorEnabled = "true"
+            resValue "bool", "IS_DEBUG", "true"
         }
-        raptor releaseTemplate >> { // the ">>" concatenates the raptor-specific options with the template
+        forPerformanceTest releaseTemplate >> { // the ">>" concatenates the raptor-specific options with the template
             manifestPlaceholders.isRaptorEnabled = "true"
-            applicationIdSuffix ".raptor"
+            applicationIdSuffix ".performancetest"
+            debuggable true
         }
         nightly releaseTemplate >> {
-            resValue "bool", "IS_DEBUG", "false"
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
         beta releaseTemplate >> {
             applicationIdSuffix ".beta"
-            resValue "bool", "IS_DEBUG", "false"
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
         }
     }
 
@@ -125,10 +128,10 @@ android.applicationVariants.all { variant ->
 
     def buildType = variant.buildType.name
     def versionCode = null
-    def releaseChannels = ["nightly", "beta", "release"]
-    def isReleased = releaseChannels.contains(buildType)
+    def isDebug = variant.buildType.resValues['IS_DEBUG']?.value ?: false
+    def useReleaseVersioning = variant.buildType.buildConfigFields['USE_RELEASE_VERSIONING']?.value ?: false
 
-    if (isReleased) {
+    if (useReleaseVersioning) {
         versionCode = generatedVersionCode
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the
@@ -171,32 +174,29 @@ android.applicationVariants.all { variant ->
     }
 
     println("----------------------------------------------")
-    println("Variant name: " + variant.name)
-    println("Build type:   " + variant.buildType.name)
-    println("Flavor:       " + variant.flavorName)
-    println("Version code: " + (versionCode ?: variant.mergedFlavor.versionCode))
+    println("Variant name:      " + variant.name)
+    println("Build type:        " + variant.buildType.name)
+    println("Flavor:            " + variant.flavorName)
+    println("Version code:      " + (versionCode ?: variant.mergedFlavor.versionCode))
+    println("Telemetry enabled: " + !isDebug)
 
 // -------------------------------------------------------------------------------------------------
 // BuildConfig: Set variables for Sentry, Crash Reporting, and Telemetry
 // -------------------------------------------------------------------------------------------------
 
-    // Reading sentry token from local file (if it exists). In a release task on taskcluster it will be available.
-    try {
-        def token = new File("${rootDir}/.sentry_token").text.trim()
-        buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
-    } catch (FileNotFoundException ignored) {
-        buildConfigField 'String', 'SENTRY_TOKEN', 'null'
-    }
-
-    // Activating crash reporting only if command line parameter was provided (in automation)
-    if (project.hasProperty("crashReports") && project.property("crashReports") == "true") {
+    buildConfigField 'String', 'SENTRY_TOKEN', 'null'
+    if (!isDebug) {
         buildConfigField 'boolean', 'CRASH_REPORTING', 'true'
+        // Reading sentry token from local file (if it exists). In a release task on taskcluster it will be available.
+        try {
+            def token = new File("${rootDir}/.sentry_token").text.trim()
+            buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
+        } catch (FileNotFoundException ignored) {}
     } else {
         buildConfigField 'boolean', 'CRASH_REPORTING', 'false'
     }
 
-    // Activating telemetry only if command line parameter was provided (in automation)
-    if (project.hasProperty("telemetry") && project.property("telemetry") == "true") {
+    if (!isDebug) {
         buildConfigField 'boolean', 'TELEMETRY', 'true'
     } else {
         buildConfigField 'boolean', 'TELEMETRY', 'false'
@@ -213,7 +213,7 @@ android.applicationVariants.all { variant ->
 
     print("Adjust token: ")
 
-    if (isReleased) {
+    if (!isDebug) {
         try {
             def token = new File("${rootDir}/.adjust_token").text.trim()
             buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
@@ -249,7 +249,7 @@ android.applicationVariants.all { variant ->
 // -------------------------------------------------------------------------------------------------
 // Feature build flags
 // -------------------------------------------------------------------------------------------------
-    buildConfigField 'Boolean', 'SEND_TAB_ENABLED', (buildType == "nightly" || !isReleased).toString()
+    buildConfigField 'Boolean', 'SEND_TAB_ENABLED', (buildType == "nightly" || isDebug).toString()
 }
 
 androidExtensions {
@@ -393,10 +393,6 @@ dependencies {
     debugImplementation Deps.flipper
     debugImplementation Deps.soLoader
     releaseImplementation Deps.flipper_noop
-}
-
-if (project.hasProperty("raptor")) {
-    android.defaultConfig.manifestPlaceholders.isRaptorEnabled = "true"
 }
 
 // -------------------------------------------------------------------------------------------------

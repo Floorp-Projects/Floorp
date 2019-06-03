@@ -5,20 +5,21 @@
 package org.mozilla.fenix
 
 enum class ReleaseChannel {
-    Debug, Nightly, Beta, Release;
+    Debug, Nightly, Beta, Production;
 
     val isReleased: Boolean
         get() = when (this) {
-            Release, Beta, Nightly -> true
-            else -> false
+            Debug -> false
+            else -> true
         }
 }
 
 object Config {
     val channel = when (BuildConfig.BUILD_TYPE) {
-        "release" -> ReleaseChannel.Release
+        "production" -> ReleaseChannel.Production
         "beta" -> ReleaseChannel.Beta
         "nightly" -> ReleaseChannel.Nightly
-        else -> ReleaseChannel.Debug
+        "debug" -> ReleaseChannel.Debug
+        else -> ReleaseChannel.Production // Performance-test builds should test production behaviour
     }
 }

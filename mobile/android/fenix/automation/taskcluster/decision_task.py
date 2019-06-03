@@ -89,9 +89,9 @@ def raptor(is_staging):
     mozharness_task_id = fetch_mozharness_task_id(geckoview_nightly_version)
     gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
 
-    for variant in [Variant.from_values(abi, False, 'raptor') for abi in ('aarch64', 'arm')]:
+    for variant in [Variant.from_values(abi, False, 'forPerformanceTest') for abi in ('aarch64', 'arm')]:
         assemble_task_id = taskcluster.slugId()
-        build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
+        build_tasks[assemble_task_id] = BUILDER.craft_assemble_raptor_task(variant)
         signing_task_id = taskcluster.slugId()
         signing_tasks[signing_task_id] = BUILDER.craft_raptor_signing_task(assemble_task_id, variant, is_staging)
 
