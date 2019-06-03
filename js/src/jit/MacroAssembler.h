@@ -1700,7 +1700,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   template <class T>
   inline void storeDouble(FloatRegister src, const T& dest);
 
-  inline void boxDouble(FloatRegister src, const Address& dest);
+  template <class T>
+  inline void boxDouble(FloatRegister src, const T& dest);
+
   using MacroAssemblerSpecific::boxDouble;
 
   inline void storeUncanonicalizedFloat32(FloatRegister src,
@@ -2572,9 +2574,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
       if (src.type() == MIRType::Float32) {
         ScratchDoubleScope fpscratch(*this);
         convertFloat32ToDouble(reg, fpscratch);
-        storeDouble(fpscratch, dest);
+        boxDouble(fpscratch, dest);
       } else {
-        storeDouble(reg, dest);
+        boxDouble(reg, dest);
       }
     } else {
       storeValue(ValueTypeFromMIRType(src.type()), src.typedReg().gpr(), dest);
