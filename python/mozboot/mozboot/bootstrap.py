@@ -249,7 +249,7 @@ class Bootstrapper(object):
             elif distro in DEBIAN_DISTROS:
                 cls = DebianBootstrapper
                 args['distro'] = distro
-            elif distro == 'Gentoo Base System':
+            elif distro in ('Gentoo Base System', 'Funtoo Linux - baselayout '):
                 cls = GentooBootstrapper
             elif os.path.exists('/etc/arch-release'):
                 # Even on archlinux, platform.linux_distribution() returns ['','','']
