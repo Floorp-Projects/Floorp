@@ -389,11 +389,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   inline nsIDocShell* GetDocShell() const;
 
   /**
-   * Get the browsing context in this window.
-   */
-  inline mozilla::dom::BrowsingContext* GetBrowsingContext() const;
-
-  /**
    * Call this to indicate that some node (this window, its document,
    * or content in that document) has a paint event listener.
    */
@@ -631,8 +626,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   nsTArray<mozilla::dom::AudioContext*> mAudioContexts;  // Weak
 
   RefPtr<mozilla::dom::TabGroup> mTabGroup;
-
-  RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
   // A unique (as long as our 64-bit counter doesn't roll over) id for
   // this window.
