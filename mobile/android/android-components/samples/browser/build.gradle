@@ -48,7 +48,7 @@ android {
         servo {
             dimension "engine"
         }
-        
+
         // Processor architecture
         arm {
             dimension "abi"
@@ -76,7 +76,13 @@ android {
             setIgnore(true)
         }
 
-        if (flavors.contains("gecko") && flavors.contains("universal")) {
+        // Only allow "universal" flavors of "system" and "geckoviewNightly" engines
+        if (flavors.contains("universal") && !(flavors.contains("system") || flavors.contains("geckonightly"))) {
+            setIgnore(true)
+        }
+
+        // Ignore all non-universal GeckoView Nightly builds
+        if (!flavors.contains("universal") && flavors.contains("geckonightly")) {
             setIgnore(true)
         }
 
@@ -87,10 +93,6 @@ android {
 }
 
 configurations {
-    geckoNightlyArmImplementation {}
-    geckoNightlyX86Implementation {}
-    geckoNightlyAarch64Implementation {}
-
     geckoBetaArmImplementation {}
     geckoBetaX86Implementation {}
     geckoBetaAarch64Implementation {}
@@ -150,9 +152,7 @@ dependencies {
     servoArmImplementation Dependencies.mozilla_servo_arm
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
-    geckoNightlyArmImplementation Gecko.geckoview_nightly_arm
-    geckoNightlyX86Implementation Gecko.geckoview_nightly_x86
-    geckoNightlyAarch64Implementation Gecko.geckoview_nightly_aarch64
+    geckoNightlyImplementation Gecko.geckoview_nightly
 
     geckoBetaImplementation project(':browser-engine-gecko-beta')
     geckoBetaArmImplementation Gecko.geckoview_beta_arm

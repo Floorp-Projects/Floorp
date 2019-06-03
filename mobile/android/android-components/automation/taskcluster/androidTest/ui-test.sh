@@ -76,14 +76,12 @@ set +e
 
 if [[ "${device_type,,}" == "x86" ]]
 then
-    deviceType="X86"
     flank_template="$FLANK_CONF_X86"
 else
-    deviceType="Arm"
     flank_template="$FLANK_CONF_ARM"
 fi
 
-APK_APP="./samples/${component}/build/outputs/apk/geckoNightly${deviceType}/debug/samples-browser-geckoNightly-${deviceType,,}-debug.apk"
+APK_APP="./samples/${component}/build/outputs/apk/geckoNightlyUniversal/debug/samples-browser-geckoNightly-universal-debug.apk"
 APK_TEST="./components/${component}/engine-gecko-nightly/build/outputs/apk/androidTest/debug/browser-engine-gecko-nightly-debug-androidTest.apk"
 
 

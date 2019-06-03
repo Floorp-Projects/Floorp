@@ -90,7 +90,7 @@ def create_module_tasks(module):
                 ["ServoArm", "ServoX86", "SystemUniversal"],
                 [
                     "GeckoBetaAarch64", "GeckoBetaArm", "GeckoBetaX86",
-                    "GeckoNightlyAarch64", "GeckoNightlyArm", "GeckoNightlyX86",
+                    "GeckoNightlyUniversal",
                     "GeckoReleaseAarch64", "GeckoReleaseArm", "GeckoReleaseX86"
                 ]
             ),

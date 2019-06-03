@@ -53,6 +53,9 @@ permalink: /changelog/
 * **engine-system**:
   * Added `EngineView.canScrollVerticallyUp()` for pull to refresh.
 
+* **browser-engine-gecko-nightly**
+  * This component now has a hard dependency on the new [universal GeckoView build](https://bugzilla.mozilla.org/show_bug.cgi?id=1508976) that is no longer architecture specific (ARM, x86, ..). With that apps no longer need to specify the GeckoView build themselves and synchronize the used version with Android Components. Additionally apps can now make use of [APK splits](https://developer.android.com/studio/build/configure-apk-splits) or [Android App Bundles (AAB)](https://developer.android.com/guide/app-bundle).
+
 * **service-glean**
   * Disabling telemetry through `setUploadEnabled` now clears all metrics (except first_run_date) immediately.
 
