@@ -393,9 +393,8 @@ add_task(async function testTabCreateRelated() {
 });
 
 add_task(async function testLastTabRemoval() {
-  const CLOSE_WINDOW_PREF = "browser.tabs.closeWindowWithLastTab";
   await SpecialPowers.pushPrefEnv({set: [
-    [CLOSE_WINDOW_PREF, false],
+    ["browser.tabs.closeWindowWithLastTab", false],
   ]});
 
   async function background() {
@@ -429,7 +428,7 @@ add_task(async function testLastTabRemoval() {
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(newWin);
-  SpecialPowers.clearUserPref(CLOSE_WINDOW_PREF);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function testTabActivationEvent() {
