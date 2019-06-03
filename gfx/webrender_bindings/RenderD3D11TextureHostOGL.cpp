@@ -70,6 +70,8 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
           gl::GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
       !egl->IsExtensionSupported(
           gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture)) {
+    gfxCriticalNote
+        << "RenderDXGITextureHostOGL egl extensions are not suppored";
     return false;
   }
 
@@ -84,15 +86,21 @@ bool RenderDXGITextureHostOGL::EnsureLockable(wr::ImageRendering aRendering) {
   // There's a chance this might fail if we end up on d3d9 angle for some
   // reason.
   if (!device) {
+    gfxCriticalNote << "RenderDXGITextureHostOGL device is not available";
     return false;
   }
 
   // Get the D3D11 texture from shared handle.
-  if (FAILED(device->OpenSharedResource(
-          (HANDLE)mHandle, __uuidof(ID3D11Texture2D),
-          (void**)(ID3D11Texture2D**)getter_AddRefs(mTexture)))) {
+  HRESULT hr = device->OpenSharedResource(
+      (HANDLE)mHandle, __uuidof(ID3D11Texture2D),
+      (void**)(ID3D11Texture2D**)getter_AddRefs(mTexture));
+  if (FAILED(hr)) {
     NS_WARNING(
-        "RenderDXGITextureHostOGL::Lock(): Failed to open shared texture");
+        "RenderDXGITextureHostOGL::EnsureLockable(): Failed to open shared "
+        "texture");
+    gfxCriticalNote
+        << "RenderDXGITextureHostOGL Failed to open shared texture, hr="
+        << gfx::hexa(hr);
     return false;
   }
 
@@ -301,6 +309,8 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
           gl::GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
       !egl->IsExtensionSupported(
           gl::GLLibraryEGL::ANGLE_stream_producer_d3d_texture)) {
+    gfxCriticalNote
+        << "RenderDXGIYCbCrTextureHostOGL egl extensions are not suppored";
     return false;
   }
 
@@ -315,17 +325,23 @@ bool RenderDXGIYCbCrTextureHostOGL::EnsureLockable(
   // There's a chance this might fail if we end up on d3d9 angle for some
   // reason.
   if (!device) {
+    gfxCriticalNote << "RenderDXGIYCbCrTextureHostOGL device is not available";
     return false;
   }
 
   for (int i = 0; i < 3; ++i) {
     // Get the R8 D3D11 texture from shared handle.
-    if (FAILED(device->OpenSharedResource(
-            (HANDLE)mHandles[i], __uuidof(ID3D11Texture2D),
-            (void**)(ID3D11Texture2D**)getter_AddRefs(mTextures[i])))) {
+    HRESULT hr = device->OpenSharedResource(
+        (HANDLE)mHandles[i], __uuidof(ID3D11Texture2D),
+        (void**)(ID3D11Texture2D**)getter_AddRefs(mTextures[i]));
+    if (FAILED(hr)) {
       NS_WARNING(
-          "RenderDXGIYCbCrTextureHostOGL::Lock(): Failed to open shared "
+          "RenderDXGIYCbCrTextureHostOGL::EnsureLockable(): Failed to open "
+          "shared "
           "texture");
+      gfxCriticalNote
+          << "RenderDXGIYCbCrTextureHostOGL Failed to open shared texture, hr="
+          << gfx::hexa(hr);
       return false;
     }
   }
