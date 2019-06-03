@@ -406,6 +406,8 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
     }
 
     clientId = Some(clientInfo.ref().Id());
+  } else if (Preferences::GetBool("dom.storage.client_validation")) {
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<LSObject> object =
