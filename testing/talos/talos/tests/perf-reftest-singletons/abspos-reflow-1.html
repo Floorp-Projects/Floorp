@@ -1,0 +1,26 @@
+<!doctype html>
+<script src="util.js"></script>
+<script>
+window.onload = function() {
+  const dom = build_dom(5000, "div", {
+    attributes: {
+      style: "position: absolute; left: 0px; top: 0px;",
+    },
+  });
+
+  document.body.appendChild(dom);
+  flush_layout();
+
+  perf_start();
+  for (const element of dom.querySelectorAll("*")) {
+    if (!element.childElementCount) {
+      flush_layout(element);
+      element.style.left = "auto";
+    }
+  }
+  flush_layout();
+  perf_finish();
+};
+</script>
+<body>
+</body>
