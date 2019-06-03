@@ -56,6 +56,7 @@ import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -185,7 +186,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         return view
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -334,18 +335,23 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             view = view
         )
 
-        val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
-        view.swipeRefresh.setColorSchemeColors(primaryTextColor)
-        swipeRefreshFeature.set(
-            feature = SwipeRefreshFeature(
-                requireComponents.core.sessionManager,
-                requireComponents.useCases.sessionUseCases.reload,
-                view.swipeRefresh,
-                customTabSessionId
-            ),
-            owner = this,
-            view = view
-        )
+        if (BuildConfig.PULL_TO_REFRESH_ENABLED) {
+            val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
+            view.swipeRefresh.setColorSchemeColors(primaryTextColor)
+            swipeRefreshFeature.set(
+                feature = SwipeRefreshFeature(
+                    requireComponents.core.sessionManager,
+                    requireComponents.useCases.sessionUseCases.reload,
+                    view.swipeRefresh,
+                    customTabSessionId
+                ),
+                owner = this,
+                view = view
+            )
+        } else {
+            // Disable pull to refresh
+            view.swipeRefresh.setOnChildScrollUpCallback { _, _ -> true }
+        }
 
         readerViewFeature.set(
             feature = ReaderViewFeature(
