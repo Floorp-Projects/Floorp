@@ -151,9 +151,15 @@ abstract class GeneralSyncManager : SyncManager, Observable<SyncStatusObserver> 
         syncDispatcher = null
     }
 
-    override fun syncNow(startup: Boolean) = synchronized(this) {
-        logger.debug("Requesting immediate sync")
-        syncDispatcher!!.syncNow(startup)
+    override fun syncNow(startup: Boolean) {
+        synchronized(this) {
+            // TODO This is a workaround until we figure out why we get into this state.
+            // https://github.com/mozilla-mobile/android-components/issues/3226
+            syncDispatcher?.let {
+                logger.debug("Requesting immediate sync")
+                it.syncNow(startup)
+            }
+        }
     }
 
     override fun isSyncRunning(): Boolean {

@@ -88,6 +88,8 @@ permalink: /changelog/
     </intent-filter>
   </service>
   ```
+* **feature-sync**
+  * Fixed a bug that caused the Sync Manager to crash on initial startup cases.
 
 * **feature-push**
   * 🆕 Added a new component for Autopush messaging support.

@@ -228,16 +228,20 @@ class GeneralSyncManagerTest {
         verify(statusObserver).onError(exception)
     }
 
-    @Test(expected = KotlinNullPointerException::class)
+    @Test
     fun `calling syncNow on startup before authenticating is a mistake`() {
-        val manager = TestSyncManager(mock()) { _, _ -> }
+        val dispatcher: SyncDispatcher = mock()
+        val manager = TestSyncManager(dispatcher) { _, _ -> }
         manager.syncNow(true)
+        verify(dispatcher, never()).syncNow(true)
     }
 
-    @Test(expected = KotlinNullPointerException::class)
+    @Test
     fun `calling syncNow not on startup before authenticating is a mistake`() {
-        val manager = TestSyncManager(mock()) { _, _ -> }
-        manager.syncNow(false)
+        val dispatcher: SyncDispatcher = mock()
+        val manager = TestSyncManager(dispatcher) { _, _ -> }
+        manager.syncNow(true)
+        verify(dispatcher, never()).syncNow(true)
     }
 
     @Test
