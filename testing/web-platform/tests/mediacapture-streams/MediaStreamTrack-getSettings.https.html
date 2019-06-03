@@ -28,7 +28,7 @@
 
     const mediaStream2 = await navigator.mediaDevices.getUserMedia({
       video: {
-        deviceId: settings1.deviceId,
+        deviceId: {exact: settings1.deviceId},
       },
       audio: false
     });
@@ -48,7 +48,7 @@
 
     const mediaStream2 = await navigator.mediaDevices.getUserMedia({
       video: {
-        deviceId: settings1.deviceId,
+        deviceId: {exact: settings1.deviceId},
         width: {
           ideal: settings1.width / 2,
         },
