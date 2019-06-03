@@ -272,6 +272,8 @@ class AssemblerX86Shared : public AssemblerShared {
   CompactBufferWriter dataRelocations_;
 
   void writeDataRelocation(ImmGCPtr ptr) {
+    // Raw GC pointer relocations and Value relocations both end up in
+    // Assembler::TraceDataRelocations.
     if (ptr.value) {
       if (gc::IsInsideNursery(ptr.value)) {
         embedsNurseryPointers_ = true;
