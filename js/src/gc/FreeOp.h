@@ -50,11 +50,7 @@ class FreeOp : public JSFreeOp {
 
   void free_(void* p) { js_free(p); }
 
-  // Free memory associated with a GC thing and update the memory accounting.
-  //
-  // The memory should have been associated with the GC thing using
-  // js::InitReservedSlot or js::InitObjectPrivate, or possibly
-  // js::AddCellMemory.
+  // Free memory that was associated with a GC thing using js::AddCellMemory.
   void free_(gc::Cell* cell, void* p, size_t nbytes, MemoryUse use);
 
   // Queue an allocation to be freed when the FreeOp is destroyed.
@@ -86,23 +82,16 @@ class FreeOp : public JSFreeOp {
     }
   }
 
-  // Delete a C++ object that associated with a GC thing and update the memory
-  // accounting. The size is determined by the type T.
-  //
-  // The memory should have been associated with the GC thing using
-  // js::InitReservedSlot or js::InitObjectPrivate, or possibly
-  // js::AddCellMemory.
+  // Delete a C++ object that was associated with a GC thing using
+  // js::AddCellMemory. The size is determined by the type T.
   template <class T>
   void delete_(gc::Cell* cell, T* p, MemoryUse use) {
     delete_(cell, p, sizeof(T), use);
   }
 
-  // Delete a C++ object that associated with a GC thing and update the memory
-  // accounting.
-  //
-  // The memory should have been associated with the GC thing using
-  // js::InitReservedSlot or js::InitObjectPrivate, or possibly
-  // js::AddCellMemory.
+  // Delete a C++ object that was associated with a GC thing using
+  // js::AddCellMemory. The size of the allocation is passed in to allow for
+  // allocations with trailing data after the object.
   template <class T>
   void delete_(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use) {
     if (p) {
