@@ -928,9 +928,9 @@ void RegExpShared::discardJitCode() {
 
 void RegExpShared::finalize(FreeOp* fop) {
   for (auto& comp : compilationArray) {
-    fop->free_(comp.byteCode);
+    js_free(comp.byteCode);
   }
-  this->~RegExpShared();
+  tables.~JitCodeTables();
 }
 
 /* static */
