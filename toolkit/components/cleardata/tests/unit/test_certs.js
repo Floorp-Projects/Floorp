@@ -16,6 +16,8 @@ add_task(async function() {
   Assert.ok(Services.clearData);
 
   const TEST_URI = Services.io.newURI("http://test.com/");
+  const ANOTHER_TEST_URI = Services.io.newURI("https://example.com/");
+  const YET_ANOTHER_TEST_URI = Services.io.newURI("https://example.test/");
   let cert = certDB.constructX509FromBase64(CERT_TEST);
   let flags = Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS;
 
@@ -46,4 +48,27 @@ add_task(async function() {
 
   Assert.equal(overrideService.isCertUsedForOverrides(cert, true, true), 0,
                "Cert should not be used for override now");
+
+  for (let uri of [TEST_URI, ANOTHER_TEST_URI, YET_ANOTHER_TEST_URI]) {
+    overrideService.rememberValidityOverride(
+      uri.asciiHost, uri.port,
+      cert,
+      flags,
+      false
+    );
+    Assert.ok(overrideService.hasMatchingOverride(uri.asciiHost, uri.port, cert, {}, {}),
+              `Should have added override for ${uri.asciiHost}:${uri.port}`);
+  }
+
+  await new Promise(aResolve => {
+    Services.clearData.deleteData(flags, value => {
+      Assert.equal(value, 0);
+      aResolve();
+    });
+  });
+
+  for (let uri of [TEST_URI, ANOTHER_TEST_URI, YET_ANOTHER_TEST_URI]) {
+    Assert.ok(!overrideService.hasMatchingOverride(uri.asciiHost, uri.port, cert, {}, {}),
+              `Should have removed override for ${uri.asciiHost}:${uri.port}`);
+  }
 });
