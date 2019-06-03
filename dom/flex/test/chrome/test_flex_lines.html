@@ -251,7 +251,7 @@ function runTests() {
        crossSize: 20,
        itemCount: 3 }],
 
-	// other strange types of flex containers
+    // other strange types of flex containers
     [{ itemCount: 3 }],
     [{ crossStart: 100,
        crossSize: 300,
@@ -268,17 +268,17 @@ function runTests() {
 
   for (let i = 0; i < children.length; ++i) {
     let flex = children.item(i).getAsFlexContainer();
-	ok(flex, "Document child index " + i + " is a flex container.");
-	if (flex) {
-	  let values = expectedValues[i];
+    ok(flex, "Document child index " + i + " is a flex container.");
+    if (flex) {
+      let values = expectedValues[i];
 
-	  let lines = flex.getLines();
-	  is(lines.length, values.length, "Flex index " + i + " has expected number of lines.");
+      let lines = flex.getLines();
+      is(lines.length, values.length, "Flex index " + i + " has expected number of lines.");
 
-      for (let j = 0; j < lines.length; ++j) {
-	    testLineMatchesExpectedValues(lines[j], values[j], j, i);
-	  }
-	}
+       for (let j = 0; j < lines.length; ++j) {
+        testLineMatchesExpectedValues(lines[j], values[j], j, i);
+      }
+    }
   }
 
   SimpleTest.finish();
