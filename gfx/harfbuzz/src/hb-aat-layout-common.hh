@@ -125,7 +125,7 @@ struct LookupFormat2
 
   protected:
   HBUINT16	format;		/* Format identifier--format = 2 */
-  VarSizedBinSearchArrayOf<LookupSegmentSingle<T> >
+  VarSizedBinSearchArrayOf<LookupSegmentSingle<T>>
 		segments;	/* The actual segments. These must already be sorted,
 				 * according to the first word in each one (the last
 				 * glyph in each segment). */
@@ -153,18 +153,18 @@ struct LookupSegmentArray
 		  first <= last &&
 		  valuesZ.sanitize (c, base, last - first + 1));
   }
-  template <typename T2>
-  bool sanitize (hb_sanitize_context_t *c, const void *base, T2 user_data) const
+  template <typename ...Ts>
+  bool sanitize (hb_sanitize_context_t *c, const void *base, Ts&&... ds) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&
 		  first <= last &&
-		  valuesZ.sanitize (c, base, last - first + 1, user_data));
+		  valuesZ.sanitize (c, base, last - first + 1, hb_forward<Ts> (ds)...));
   }
 
   GlyphID	last;		/* Last GlyphID in this segment */
   GlyphID	first;		/* First GlyphID in this segment */
-  NNOffsetTo<UnsizedArrayOf<T> >
+  NNOffsetTo<UnsizedArrayOf<T>>
 		valuesZ;	/* A 16-bit offset from the start of
 				 * the table to the data. */
   public:
@@ -196,7 +196,7 @@ struct LookupFormat4
 
   protected:
   HBUINT16	format;		/* Format identifier--format = 4 */
-  VarSizedBinSearchArrayOf<LookupSegmentArray<T> >
+  VarSizedBinSearchArrayOf<LookupSegmentArray<T>>
 		segments;	/* The actual segments. These must already be sorted,
 				 * according to the first word in each one (the last
 				 * glyph in each segment). */
@@ -253,7 +253,7 @@ struct LookupFormat6
 
   protected:
   HBUINT16	format;		/* Format identifier--format = 6 */
-  VarSizedBinSearchArrayOf<LookupSingle<T> >
+  VarSizedBinSearchArrayOf<LookupSingle<T>>
 		entries;	/* The actual entries, sorted by glyph index. */
   public:
   DEFINE_SIZE_ARRAY (8, entries);
@@ -419,7 +419,7 @@ struct Lookup
 /* Ugly hand-coded null objects for template Lookup<> :(. */
 extern HB_INTERNAL const unsigned char _hb_Null_AAT_Lookup[2];
 template <typename T>
-struct Null<AAT::Lookup<T> > {
+struct Null<AAT::Lookup<T>> {
   static AAT::Lookup<T> const & get_null ()
   { return *reinterpret_cast<const AAT::Lookup<T> *> (_hb_Null_AAT_Lookup); }
 };
@@ -510,7 +510,7 @@ struct StateTable
   const Entry<Extra> &get_entry (int state, unsigned int klass) const
   {
     if (unlikely (klass >= nClasses))
-      klass = StateTable<Types, Entry<Extra> >::CLASS_OUT_OF_BOUNDS;
+      klass = StateTable<Types, Entry<Extra>>::CLASS_OUT_OF_BOUNDS;
 
     const HBUSHORT *states = (this+stateArrayTable).arrayZ;
     const Entry<Extra> *entries = (this+entryTable).arrayZ;
@@ -576,7 +576,7 @@ struct StateTable
 	  if (unlikely (stop > states))
 	    return_trace (false);
 	  for (const HBUSHORT *p = states; stop < p; p--)
-	    num_entries = MAX<unsigned int> (num_entries, *(p - 1) + 1);
+	    num_entries = hb_max (num_entries, *(p - 1) + 1);
 	  state_neg = min_state;
 	}
       }
@@ -597,7 +597,7 @@ struct StateTable
 	  if (unlikely (stop < states))
 	    return_trace (false);
 	  for (const HBUSHORT *p = &states[state_pos * num_classes]; p < stop; p++)
-	    num_entries = MAX<unsigned int> (num_entries, *p + 1);
+	    num_entries = hb_max (num_entries, *p + 1);
 	  state_pos = max_state + 1;
 	}
       }
@@ -611,8 +611,8 @@ struct StateTable
 	for (const Entry<Extra> *p = &entries[entry]; p < stop; p++)
 	{
 	  int newState = new_state (p->newState);
-	  min_state = MIN (min_state, newState);
-	  max_state = MAX (max_state, newState);
+	  min_state = hb_min (min_state, newState);
+	  max_state = hb_max (max_state, newState);
 	}
 	entry = num_entries;
       }
@@ -631,7 +631,7 @@ struct StateTable
 		classTable;	/* Offset to the class table. */
   NNOffsetTo<UnsizedArrayOf<HBUSHORT>, HBUINT>
 		stateArrayTable;/* Offset to the state array. */
-  NNOffsetTo<UnsizedArrayOf<Entry<Extra> >, HBUINT>
+  NNOffsetTo<UnsizedArrayOf<Entry<Extra>>, HBUINT>
 		entryTable;	/* Offset to the entry array. */
 
   public:

@@ -28,6 +28,7 @@
 #define HB_SET_HH
 
 #include "hb.hh"
+#include "hb-machinery.hh"
 
 
 /*
@@ -39,7 +40,7 @@
 
 struct hb_set_t
 {
-  HB_NO_COPY_ASSIGN (hb_set_t);
+  HB_DELETE_COPY_ASSIGN (hb_set_t);
   hb_set_t ()  { init (); }
   ~hb_set_t () { fini (); }
 
@@ -69,7 +70,7 @@ struct hb_set_t
 
     void add (hb_codepoint_t g) { elt (g) |= mask (g); }
     void del (hb_codepoint_t g) { elt (g) &= ~mask (g); }
-    bool has (hb_codepoint_t g) const { return !!(elt (g) & mask (g)); }
+    bool get (hb_codepoint_t g) const { return elt (g) & mask (g); }
 
     void add_range (hb_codepoint_t a, hb_codepoint_t b)
     {
@@ -186,7 +187,7 @@ struct hb_set_t
   hb_object_header_t header;
   bool successful; /* Allocations successful */
   mutable unsigned int population;
-  hb_vector_t<page_map_t> page_map;
+  hb_sorted_vector_t<page_map_t> page_map;
   hb_vector_t<page_t> pages;
 
   void init_shallow ()
@@ -227,11 +228,18 @@ struct hb_set_t
     return true;
   }
 
+  void reset ()
+  {
+    if (unlikely (hb_object_is_immutable (this)))
+      return;
+    clear ();
+    successful = true;
+  }
+
   void clear ()
   {
     if (unlikely (hb_object_is_immutable (this)))
       return;
-    successful = true;
     population = 0;
     page_map.resize (0);
     pages.resize (0);
@@ -301,7 +309,7 @@ struct hb_set_t
       {
 	page->add (g);
 
-	array = (const T *) ((const char *) array + stride);
+	array = &StructAtOffsetUnaligned<T> (array, stride);
 	count--;
       }
       while (count && (g = *array, start <= g && g < end));
@@ -357,15 +365,26 @@ struct hb_set_t
     for (unsigned int i = a; i < b + 1; i++)
       del (i);
   }
-  bool has (hb_codepoint_t g) const
+  bool get (hb_codepoint_t g) const
   {
     const page_t *page = page_for (g);
     if (!page)
       return false;
-    return page->has (g);
+    return page->get (g);
   }
-  bool intersects (hb_codepoint_t first,
-			  hb_codepoint_t last) const
+
+  /* Has interface. */
+  static constexpr bool SENTINEL = false;
+  typedef bool value_t;
+  value_t operator [] (hb_codepoint_t k) const { return get (k); }
+  bool has (hb_codepoint_t k) const { return (*this)[k] != SENTINEL; }
+  /* Predicate. */
+  bool operator () (hb_codepoint_t k) const { return has (k); }
+
+  /* Sink interface. */
+  hb_set_t& operator << (hb_codepoint_t v) { add (v); return *this; }
+
+  bool intersects (hb_codepoint_t first, hb_codepoint_t last) const
   {
     hb_codepoint_t c = first - 1;
     return next (&c) && c <= last;
@@ -422,8 +441,8 @@ struct hb_set_t
     return true;
   }
 
-  template <class Op>
-  void process (const hb_set_t *other)
+  template <typename Op>
+  void process (const Op& op, const hb_set_t *other)
   {
     if (unlikely (!successful)) return;
 
@@ -477,7 +496,7 @@ struct hb_set_t
 	b--;
 	count--;
 	page_map[count] = page_map[a];
-	Op::process (page_at (count).v, page_at (a).v, other->page_at (b).v);
+	page_at (count).v = op (page_at (a).v, other->page_at (b).v);
       }
       else if (page_map[a - 1].major > other->page_map[b - 1].major)
       {
@@ -523,19 +542,19 @@ struct hb_set_t
 
   void union_ (const hb_set_t *other)
   {
-    process<HbOpOr> (other);
+    process (hb_bitwise_or, other);
   }
   void intersect (const hb_set_t *other)
   {
-    process<HbOpAnd> (other);
+    process (hb_bitwise_and, other);
   }
   void subtract (const hb_set_t *other)
   {
-    process<HbOpMinus> (other);
+    process (hb_bitwise_sub, other);
   }
   void symmetric_difference (const hb_set_t *other)
   {
-    process<HbOpXor> (other);
+    process (hb_bitwise_xor, other);
   }
   bool next (hb_codepoint_t *codepoint) const
   {
@@ -671,27 +690,29 @@ struct hb_set_t
   /*
    * Iterator implementation.
    */
-  struct const_iter_t : hb_sorted_iter_t<const_iter_t, const hb_codepoint_t>
+  struct iter_t : hb_iter_with_fallback_t<iter_t, hb_codepoint_t>
   {
-    const_iter_t (const hb_set_t &s_) :
-      s (s_), v (INVALID), l (s.get_population () + 1) { __next__ (); }
+    static constexpr bool is_sorted_iterator = true;
+    iter_t (const hb_set_t &s_ = Null(hb_set_t)) :
+      s (&s_), v (INVALID), l (s->get_population () + 1) { __next__ (); }
 
-    typedef hb_codepoint_t __item_type__;
+    typedef hb_codepoint_t __item_t__;
     hb_codepoint_t __item__ () const { return v; }
     bool __more__ () const { return v != INVALID; }
-    void __next__ () { s.next (&v); if (l) l--; }
-    void __prev__ () { s.previous (&v); }
-    unsigned __len__ () { return l; }
+    void __next__ () { s->next (&v); if (l) l--; }
+    void __prev__ () { s->previous (&v); }
+    unsigned __len__ () const { return l; }
+    iter_t end () const { return iter_t (*s); }
+    bool operator != (const iter_t& o) const
+    { return s != o.s || v != o.v; }
 
     protected:
-    const hb_set_t &s;
+    const hb_set_t *s;
     hb_codepoint_t v;
     unsigned l;
   };
-  const_iter_t const_iter () const { return const_iter_t (*this); }
-  operator const_iter_t () const { return const_iter (); }
-  typedef const_iter_t iter_t;
-  iter_t iter () const { return const_iter (); }
+  iter_t iter () const { return iter_t (*this); }
+  operator iter_t () const { return iter (); }
 
   protected:
 

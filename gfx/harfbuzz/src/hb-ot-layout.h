@@ -93,6 +93,17 @@ hb_ot_tags_to_script_and_language (hb_tag_t       script_tag,
 HB_EXTERN hb_bool_t
 hb_ot_layout_has_glyph_classes (hb_face_t *face);
 
+/**
+ * hb_ot_layout_glyph_class_t:
+ * @HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED: Glyphs not matching the other classifications
+ * @HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH: Spacing, single characters, capable of accepting marks
+ * @HB_OT_LAYOUT_GLYPH_CLASS_LIGATURE: Glyphs that represent ligation of multiple characters
+ * @HB_OT_LAYOUT_GLYPH_CLASS_MARK: Non-spacing, combining glyphs that represent marks
+ * @HB_OT_LAYOUT_GLYPH_CLASS_COMPONENT: Spacing glyphs that represent part of a single character
+ *
+ * The GDEF classes defined for glyphs.
+ *
+ **/
 typedef enum {
   HB_OT_LAYOUT_GLYPH_CLASS_UNCLASSIFIED	= 0,
   HB_OT_LAYOUT_GLYPH_CLASS_BASE_GLYPH	= 1,

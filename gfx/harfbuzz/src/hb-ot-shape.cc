@@ -55,7 +55,8 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t          *planner,
 			      const hb_feature_t             *user_features,
 			      unsigned int                    num_user_features);
 
-static bool
+#ifndef HB_NO_SHAPE_AAT
+static inline bool
 _hb_apply_morx (hb_face_t *face)
 {
   if (hb_options ().aat &&
@@ -69,14 +70,17 @@ _hb_apply_morx (hb_face_t *face)
 					       0, nullptr, nullptr)) &&
 	 hb_aat_layout_has_substitution (face);
 }
+#endif
 
 hb_ot_shape_planner_t::hb_ot_shape_planner_t (hb_face_t                     *face,
 					      const hb_segment_properties_t *props) :
 						face (face),
 						props (*props),
 						map (face, props),
-						aat_map (face, props),
-						apply_morx (_hb_apply_morx (face))
+						aat_map (face, props)
+#ifndef HB_NO_SHAPE_AAT
+						, apply_morx (_hb_apply_morx (face))
+#endif
 {
   shaper = hb_ot_shape_complex_categorize (this);
 
@@ -124,24 +128,36 @@ hb_ot_shape_planner_t::compile (hb_ot_shape_plan_t           &plan,
    * Decide who does substitutions. GSUB, morx, or fallback.
    */
 
+#ifndef HB_NO_SHAPE_AAT
   plan.apply_morx = apply_morx;
+#endif
 
   /*
    * Decide who does positioning. GPOS, kerx, kern, or fallback.
    */
 
-  if (hb_options ().aat && hb_aat_layout_has_positioning (face))
+  if (0)
+    ;
+#ifndef HB_NO_SHAPE_AAT
+  else if (hb_options ().aat && hb_aat_layout_has_positioning (face))
     plan.apply_kerx = true;
+#endif
   else if (!apply_morx && !disable_gpos && hb_ot_layout_has_positioning (face))
     plan.apply_gpos = true;
+#ifndef HB_NO_SHAPE_AAT
   else if (hb_aat_layout_has_positioning (face))
     plan.apply_kerx = true;
+#endif
 
   if (!plan.apply_kerx && !has_gpos_kern)
   {
     /* Apparently Apple applies kerx if GPOS kern was not applied. */
-    if (hb_aat_layout_has_positioning (face))
+    if (0)
+      ;
+#ifndef HB_NO_SHAPE_AAT
+    else if (hb_aat_layout_has_positioning (face))
       plan.apply_kerx = true;
+#endif
     else if (hb_ot_layout_has_kerning (face))
       plan.apply_kern = true;
   }
@@ -158,8 +174,10 @@ hb_ot_shape_planner_t::compile (hb_ot_shape_plan_t           &plan,
   plan.fallback_mark_positioning = plan.adjust_mark_positioning_when_zeroing &&
 				   script_fallback_mark_positioning;
 
+#ifndef HB_NO_SHAPE_AAT
   /* Currently we always apply trak. */
   plan.apply_trak = plan.requested_tracking && hb_aat_layout_has_tracking (face);
+#endif
 }
 
 bool
@@ -962,12 +980,12 @@ hb_ot_shape_internal (hb_ot_shape_context_t *c)
   c->buffer->scratch_flags = HB_BUFFER_SCRATCH_FLAG_DEFAULT;
   if (likely (!hb_unsigned_mul_overflows (c->buffer->len, HB_BUFFER_MAX_LEN_FACTOR)))
   {
-    c->buffer->max_len = MAX (c->buffer->len * HB_BUFFER_MAX_LEN_FACTOR,
+    c->buffer->max_len = hb_max (c->buffer->len * HB_BUFFER_MAX_LEN_FACTOR,
 			      (unsigned) HB_BUFFER_MAX_LEN_MIN);
   }
   if (likely (!hb_unsigned_mul_overflows (c->buffer->len, HB_BUFFER_MAX_OPS_FACTOR)))
   {
-    c->buffer->max_ops = MAX (c->buffer->len * HB_BUFFER_MAX_OPS_FACTOR,
+    c->buffer->max_ops = hb_max (c->buffer->len * HB_BUFFER_MAX_OPS_FACTOR,
 			      (unsigned) HB_BUFFER_MAX_OPS_MIN);
   }
 

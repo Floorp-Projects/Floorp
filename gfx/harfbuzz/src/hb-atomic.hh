@@ -33,6 +33,7 @@
 #define HB_ATOMIC_HH
 
 #include "hb.hh"
+#include "hb-meta.hh"
 
 
 /*
@@ -106,7 +107,7 @@ _hb_atomic_ptr_impl_cmplexch (const void **P, const void *O_, const void *N)
 
 static inline void _hb_memory_barrier ()
 {
-#if !defined(MemoryBarrier)
+#ifndef MemoryBarrier
   /* MinGW has a convoluted history of supporting MemoryBarrier. */
   LONG dummy = 0;
   InterlockedExchange (&dummy, 1);
@@ -215,7 +216,7 @@ static_assert ((sizeof (long) == sizeof (void *)), "");
 
 #define HB_ATOMIC_INT_NIL 1 /* Warn that fallback implementation is in use. */
 
-#define _hb_memory_barrier()
+#define _hb_memory_barrier()			do {} while (0)
 
 #define hb_atomic_int_impl_add(AI, V)		((*(AI) += (V)) - (V))
 
@@ -226,7 +227,7 @@ static_assert ((sizeof (long) == sizeof (void *)), "");
 
 #define hb_atomic_int_impl_add(AI, V)		((*(AI) += (V)) - (V))
 
-#define _hb_memory_barrier()
+#define _hb_memory_barrier()			do {} while (0)
 
 #define hb_atomic_ptr_impl_cmpexch(P,O,N)	(* (void **) (P) == (void *) (O) ? (* (void **) (P) = (void *) (N), true) : false)
 
@@ -282,7 +283,7 @@ struct hb_atomic_int_t
 template <typename P>
 struct hb_atomic_ptr_t
 {
-  typedef typename hb_remove_pointer (P) T;
+  typedef hb_remove_pointer<P> T;
 
   void init (T* v_ = nullptr) { set_relaxed (v_); }
   void set_relaxed (T* v_) { hb_atomic_ptr_impl_set_relaxed (&v, v_); }

@@ -165,7 +165,7 @@ struct feat
     unsigned int feature_count = featureNameCount;
     if (count && *count)
     {
-      unsigned int len = MIN (feature_count - start_offset, *count);
+      unsigned int len = hb_min (feature_count - start_offset, *count);
       for (unsigned int i = 0; i < len; i++)
 	features[i] = namesZ[i + start_offset].get_feature_type ();
       *count = len;
