@@ -232,10 +232,11 @@ body {
 
 .deck .syncIllustration,
 .deck .syncIllustrationIssue {
-  height: 91px;
+  height: 174px;
   margin: 38px 8px 15px;
   background-position: center;
   background-repeat: no-repeat;
+  background-size: contain;
 }
 
 .deck .syncIllustration {
