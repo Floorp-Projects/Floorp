@@ -3309,6 +3309,9 @@ pref("dom.ipc.processCount.privilegedabout", 1);
 // to avoid multiple of these content processes
 pref("dom.ipc.processCount.privilegedmozilla", 1);
 
+// Isolated content processes are always one-per-origin.
+pref("dom.ipc.processCount.webIsolated", 1);
+
 // Keep a single privileged about process alive for performance reasons.
 // e.g. we do not want to throw content processes out every time we navigate
 // away from about:newtab.
