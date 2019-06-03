@@ -43,6 +43,7 @@ class MessageContainer extends Component {
       getMessage: PropTypes.func.isRequired,
       isPaused: PropTypes.bool.isRequired,
       pausedExecutionPoint: PropTypes.any,
+      inWarningGroup: PropTypes.bool,
     };
   }
 
@@ -52,29 +53,21 @@ class MessageContainer extends Component {
     };
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    const repeatChanged = this.props.repeat !== nextProps.repeat;
-    const openChanged = this.props.open !== nextProps.open;
-    const payloadChanged = this.props.payload !== nextProps.payload;
-    const tableDataChanged = this.props.tableData !== nextProps.tableData;
-    const timestampVisibleChanged =
-      this.props.timestampsVisible !== nextProps.timestampsVisible;
-    const networkMessageUpdateChanged =
-      this.props.networkMessageUpdate !== nextProps.networkMessageUpdate;
-    const pausedChanged = this.props.isPaused !== nextProps.isPaused;
-    const executionPointChanged =
-      this.props.pausedExecutionPoint !== nextProps.pausedExecutionPoint;
-    const badgeChanged = this.props.badge !== nextProps.badge;
+  shouldComponentUpdate(nextProps) {
+    const triggeringUpdateProps = [
+      "repeat",
+      "open",
+      "payload",
+      "tableData",
+      "timestampsVisible",
+      "networkMessageUpdate",
+      "isPaused",
+      "pausedExecutionPoint",
+      "badge",
+      "inWarningGroup",
+    ];
 
-    return repeatChanged
-      || badgeChanged
-      || openChanged
-      || payloadChanged
-      || tableDataChanged
-      || timestampVisibleChanged
-      || networkMessageUpdateChanged
-      || pausedChanged
-      || executionPointChanged;
+    return triggeringUpdateProps.some(prop => this.props[prop] !== nextProps[prop]);
   }
 
   render() {
