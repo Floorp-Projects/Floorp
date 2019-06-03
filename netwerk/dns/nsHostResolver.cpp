@@ -45,6 +45,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/net/NetworkConnectivityService.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -1240,10 +1241,15 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
     }
     bool sendAgain;
 
+    RefPtr<NetworkConnectivityService> ncs =
+        NetworkConnectivityService::GetSingleton();
+
     do {
       sendAgain = false;
       if ((TRRTYPE_AAAA == rectype) && gTRRService &&
-          gTRRService->DisableIPv6()) {
+          (gTRRService->DisableIPv6() ||
+           (gTRRService->CheckIPv6Connectivity() &&
+            ncs->GetIPv6() == nsINetworkConnectivityService::NOT_AVAILABLE))) {
         break;
       }
       LOG(("TRR Resolve %s type %d\n", addrRec->host.get(), (int)rectype));
