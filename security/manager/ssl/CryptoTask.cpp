@@ -6,28 +6,26 @@
 
 #include "CryptoTask.h"
 #include "nsNSSComponent.h"
+#include "nsNetCID.h"
 
 namespace mozilla {
 
-nsresult CryptoTask::Dispatch(const nsACString& taskThreadName) {
-  MOZ_ASSERT(taskThreadName.Length() <= 15);
-
+nsresult CryptoTask::Dispatch() {
   // Ensure that NSS is initialized, since presumably CalculateResult
   // will use NSS functions
   if (!EnsureNSSInitializedChromeOrContent()) {
     return NS_ERROR_FAILURE;
   }
 
-  // Can't add 'this' as the event to run, since mThread may not be set yet
-  nsresult rv =
-      NS_NewNamedThread(taskThreadName, getter_AddRefs(mThread), nullptr,
-                        nsIThreadManager::DEFAULT_STACK_SIZE);
-  if (NS_FAILED(rv)) {
-    return rv;
+  // The stream transport service (note: not the socket transport service) can
+  // be used to perform background tasks or I/O that would otherwise block the
+  // main thread.
+  nsCOMPtr<nsIEventTarget> target(
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+  if (!target) {
+    return NS_ERROR_FAILURE;
   }
-
-  // Note: event must not null out mThread!
-  return mThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  return target->Dispatch(this, NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
@@ -37,21 +35,8 @@ CryptoTask::Run() {
     NS_DispatchToMainThread(this);
   } else {
     // back on the main thread
-
     CallCallback(mRv);
-
-    // Not all uses of CryptoTask use a transient thread
-    if (mThread) {
-      // Don't leak threads!
-      mThread->Shutdown();  // can't Shutdown from the thread itself, darn
-      // Don't null out mThread!
-      // See bug 999104.  We must hold a ref to the thread across Dispatch()
-      // since the internal mThread ref could be released while processing
-      // the Dispatch(), and Dispatch/PutEvent itself doesn't hold a ref; it
-      // assumes the caller does.
-    }
   }
-
   return NS_OK;
 }
 

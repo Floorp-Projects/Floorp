@@ -402,7 +402,7 @@ LocalCertService::GetOrCreateCert(const nsACString& aNickname,
   }
 
   RefPtr<LocalCertGetTask> task(new LocalCertGetTask(aNickname, aCallback));
-  return task->Dispatch("LocalCertGet");
+  return task->Dispatch();
 }
 
 NS_IMETHODIMP
@@ -424,7 +424,7 @@ LocalCertService::RemoveCert(const nsACString& aNickname,
 
   RefPtr<LocalCertRemoveTask> task(
       new LocalCertRemoveTask(aNickname, aCallback));
-  return task->Dispatch("LocalCertRm");
+  return task->Dispatch();
 }
 
 NS_IMETHODIMP
