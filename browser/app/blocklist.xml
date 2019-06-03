@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1559147777278" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1559563142131" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3130,6 +3130,22 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="c34988ff-b712-4123-ad14-11d24d2d3a18" id="@yt-adblock">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e57383a8-d67b-40b9-8df0-ac8a8a6321fb" id="/^((\{0c955fab-3d51-4989-aca5-d806cf0f2ea4\})|(\{1b382a66-46e8-4d33-a8a4-a857dc03cf12\})|(\{3f41aff5-f248-4b99-9c76-b7d192d9e979\})|(\{5c3d28a2-b778-4b48-9d71-da6fc2c37ccd\})|(\{8ef9fda9-1384-4efa-bbac-02f76f9a75dc\})|(\{8fd2e113-76cc-45cd-b4b0-cbef46166d76\})|(\{9c914f01-3e9f-45af-8d53-618ce7659d96\})|(\{70d353ca-2edb-4196-9294-d80cbca9ae3a\})|(\{79fba572-6a81-42be-abf8-92037bd908db\})|(\{106c67c5-a780-4076-af33-94945b16d4f1\})|(\{177bb2d7-15a6-475a-a34a-94f964b22731\})|(\{248d26ad-c8d7-4a1c-8d7e-22a36226f52b\})|(\{679b892e-c913-4993-bc18-1b737ac5de8d\})|(\{877e11b1-0725-41f9-b0e0-1b89cd88097a\})|(\{902b9979-3273-44cd-a717-8c55aec563fe\})|(\{3515e081-cd1d-482c-898a-62ade3007f8d\})|(\{4080f1c9-b07f-408e-9678-bdda4822f536\})|(\{7631efe5-237b-44e3-9193-205346744e31\})|(\{8157ad65-a32e-41f3-b99f-5c6f60a82d3e\})|(\{9434fbdd-d45c-43ee-98ac-a1c794f89c43\})|(\{19976dc8-c059-4058-a7b4-ba734cde798f\})|(\{32678e4c-b8df-4a19-91d8-3294b84ce78a\})|(\{773450d4-d2d7-48c2-9378-5affb64c4575\})|(\{894136b3-8133-432a-b46d-6f528608aa49\})|(\{7804268c-4d4f-44c1-a53c-2680e61b6687\})|(\{a12fdc00-7623-459d-8188-8e954b6f6eb7\})|(\{a46f0ac4-bd96-475d-bba6-2ab01575e06f\})|(\{c7dfadc5-8d54-4f00-bc2f-c1ba1483eb41\})|(\{cc89ddb5-7f2d-4b9c-bcf6-fc8057869838\})|(\{d7c4c15f-e91d-496d-8f78-79809c114a57\})|(\{d2925b02-9e1e-4b81-9a72-714a772be945\})|(\{dc59a997-f35a-4fa6-9ac0-40c1dce4829b\})|(\{def69fda-720f-4e2b-8783-93491939d9a1\})|(\{dfbe87b9-0fb6-41fb-a143-f8e0a47452f7\})|(\{f778e9f0-ea54-4264-83fb-6783906bce17\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="10b029a4-72af-4e6a-b53a-492b94d1813f" id="/^((\{3d35fa06-3f8e-457c-9ffa-a115f33e8e7b\})|(\{fd834065-2938-4522-ae8c-55592bf7e870\})|(\{d52afc01-3504-45eb-aa06-3fa55d2dc7cd\})|(\{2a34eba4-2a55-4863-91a6-c389d8e108c9\})|(\{45082e42-ceef-4df8-9f27-b5adf766ed8d\})|(\{8f77cfd1-6eee-4489-93d0-ae8627d8211d\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="740446f0-e16d-484d-a946-873f92d78c79" id="/^((\{e914f532-5b99-4c2c-a6d9-56c6f9e07f09\})|(\{d7904110-ef0b-4daf-8fe1-1627c9cd14b9\})|(\{091d1ebc-55f9-4af0-871a-b3b383b70241\})|(\{eaf253cb-0418-4994-98cd-4fcfb5b827c1\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="a9526a76-d420-4adf-9a57-7096172d6077" id="/^((jid1-93CWPmRaVPjRQA@jetpack)|(\{3c78ca35-67af-4917-a24b-7699456ca61e\})|(\{8a8f48ed-3daf-41b9-88f4-73730459aaf6\})|(\{f906b9c7-576c-45ad-8f48-358271e15e5b\})|(\{de4f3cf2-cd35-4a2f-a405-33a4a29918a2\})|(\{7a365978-94e2-49d4-b5f7-6178dc80ed69\})|(\{dbc00301-7930-4421-91d8-23bf463228c2\})|(\{4f42055b-fd40-4b98-b71f-a58725d729d1\})|(\{8b6ae26a-4479-4727-bd89-46aef6f6e5d6\})|(\{b6a95353-bf1f-4c03-b4e5-43eca107ecbf\})|(\{933d68b5-80f4-44ba-bceb-2a6338c0ac7e\})|(\{cc9eb257-0f4e-423a-b124-318c59271a3b\})|(\{d0dc10cb-6b80-4e88-aec9-605d4e75ae59\})|(\{8dc1a829-e888-4ce5-a19e-614277de4d7a\})|(\{81ad5a42-34cb-4c35-b354-2306dbe418fb\})|(\{2fe8edfa-61ab-4257-848b-59def269a511\})|(\{55de894d-cfd0-4654-af30-719020792149\})|(\{4b9ffc29-0e02-4583-89d9-495084f96b43\})|(\{aa94dd9b-7d23-4776-ac2e-9939a3cf7bb0\})|(\{b43a0fd7-b010-42ae-a613-db7e792c995f\})|(\{af57625d-4b59-4028-874d-767a37bc9ebd\})|(\{84387d47-147e-4d50-8a3a-6e2bb4b522e5\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
