@@ -97,12 +97,12 @@ struct CFFIndex
   unsigned int offset_array_size () const
   { return calculate_offset_array_size (offSize, count); }
 
-  static unsigned int calculate_serialized_size (unsigned int offSize, unsigned int count, unsigned int dataSize)
+  static unsigned int calculate_serialized_size (unsigned int offSize_, unsigned int count, unsigned int dataSize)
   {
     if (count == 0)
       return COUNT::static_size;
     else
-      return min_size + calculate_offset_array_size (offSize, count) + dataSize;
+      return min_size + calculate_offset_array_size (offSize_, count) + dataSize;
   }
 
   bool serialize (hb_serialize_context_t *c, const CFFIndex &src)
@@ -124,15 +124,15 @@ struct CFFIndex
     {
       COUNT *dest = c->allocate_min<COUNT> ();
       if (unlikely (dest == nullptr)) return_trace (false);
-      dest->set (0);
+      *dest = 0;
     }
     else
     {
       /* serialize CFFIndex header */
       if (unlikely (!c->extend_min (*this))) return_trace (false);
-      this->count.set (byteArray.length);
-      this->offSize.set (offSize_);
-      if (!unlikely (c->allocate_size<HBUINT8> (offSize_ * (byteArray.length + 1))))
+      this->count = byteArray.length;
+      this->offSize = offSize_;
+      if (unlikely (!c->allocate_size<HBUINT8> (offSize_ * (byteArray.length + 1))))
 	return_trace (false);
 
       /* serialize indices */
@@ -167,7 +167,7 @@ struct CFFIndex
     byteArray.resize (buffArray.length);
     for (unsigned int i = 0; i < byteArray.length; i++)
     {
-      byteArray[i] = byte_str_t (buffArray[i].arrayZ (), buffArray[i].length);
+      byteArray[i] = byte_str_t (buffArray[i].arrayZ, buffArray[i].length);
     }
     bool result = this->serialize (c, offSize_, byteArray);
     byteArray.fini ();
@@ -181,7 +181,7 @@ struct CFFIndex
     for (; size; size--)
     {
       --p;
-      p->set (offset & 0xFF);
+      *p = offset & 0xFF;
       offset >>= 8;
     }
   }
@@ -275,9 +275,9 @@ struct CFFIndexOf : CFFIndex<COUNT>
     TRACE_SERIALIZE (this);
     /* serialize CFFIndex header */
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    this->count.set (dataArrayLen);
-    this->offSize.set (offSize_);
-    if (!unlikely (c->allocate_size<HBUINT8> (offSize_ * (dataArrayLen + 1))))
+    this->count = dataArrayLen;
+    this->offSize = offSize_;
+    if (unlikely (!c->allocate_size<HBUINT8> (offSize_ * (dataArrayLen + 1))))
       return_trace (false);
 
     /* serialize indices */
@@ -376,11 +376,11 @@ struct Dict : UnsizedByteStr
     if (unlikely (p == nullptr)) return_trace (false);
     if (Is_OpCode_ESC (op))
     {
-      p->set (OpCode_escape);
+      *p = OpCode_escape;
       op = Unmake_OpCode_ESC (op);
       p++;
     }
-    p->set (op);
+    *p = op;
     return_trace (true);
   }
 
@@ -477,9 +477,9 @@ struct FDArray : CFFIndexOf<COUNT, FontDict>
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    this->count.set (fontDicts.length);
-    this->offSize.set (offSize_);
-    if (!unlikely (c->allocate_size<HBUINT8> (offSize_ * (fontDicts.length + 1))))
+    this->count = fontDicts.length;
+    this->offSize = offSize_;
+    if (unlikely (!c->allocate_size<HBUINT8> (offSize_ * (fontDicts.length + 1))))
       return_trace (false);
 
     /* serialize font dict offsets */
@@ -514,9 +514,9 @@ struct FDArray : CFFIndexOf<COUNT, FontDict>
   {
     TRACE_SERIALIZE (this);
     if (unlikely (!c->extend_min (*this))) return_trace (false);
-    this->count.set (fdCount);
-    this->offSize.set (offSize_);
-    if (!unlikely (c->allocate_size<HBUINT8> (offSize_ * (fdCount + 1))))
+    this->count = fdCount;
+    this->offSize = offSize_;
+    if (unlikely (!c->allocate_size<HBUINT8> (offSize_ * (fdCount + 1))))
       return_trace (false);
 
     /* serialize font dict offsets */
@@ -589,7 +589,7 @@ struct FDSelect0 {
 
 template <typename GID_TYPE, typename FD_TYPE>
 struct FDSelect3_4_Range {
-  bool sanitize (hb_sanitize_context_t *c, const void */*nullptr*/, unsigned int fdcount) const
+  bool sanitize (hb_sanitize_context_t *c, const void * /*nullptr*/, unsigned int fdcount) const
   {
     TRACE_SANITIZE (this);
     return_trace (first < c->get_num_glyphs () && (fd < fdcount));

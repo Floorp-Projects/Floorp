@@ -51,8 +51,8 @@
   HB_FONT_FUNC_IMPLEMENT (glyph_v_advances) \
   HB_FONT_FUNC_IMPLEMENT (glyph_h_origin) \
   HB_FONT_FUNC_IMPLEMENT (glyph_v_origin) \
-  HB_FONT_FUNC_IMPLEMENT (glyph_h_kerning) \
-  HB_FONT_FUNC_IMPLEMENT (glyph_v_kerning) \
+  HB_IF_NOT_DEPRECATED (HB_FONT_FUNC_IMPLEMENT (glyph_h_kerning)) \
+  HB_IF_NOT_DEPRECATED (HB_FONT_FUNC_IMPLEMENT (glyph_v_kerning)) \
   HB_FONT_FUNC_IMPLEMENT (glyph_extents) \
   HB_FONT_FUNC_IMPLEMENT (glyph_contour_point) \
   HB_FONT_FUNC_IMPLEMENT (glyph_name) \
@@ -304,17 +304,25 @@ struct hb_font_t
   hb_position_t get_glyph_h_kerning (hb_codepoint_t left_glyph,
 				     hb_codepoint_t right_glyph)
   {
+#ifdef HB_DISABLE_DEPRECATED
+    return 0;
+#else
     return klass->get.f.glyph_h_kerning (this, user_data,
 					 left_glyph, right_glyph,
 					 klass->user_data.glyph_h_kerning);
+#endif
   }
 
   hb_position_t get_glyph_v_kerning (hb_codepoint_t top_glyph,
 				     hb_codepoint_t bottom_glyph)
   {
+#ifdef HB_DISABLE_DEPRECATED
+    return 0;
+#else
     return klass->get.f.glyph_v_kerning (this, user_data,
 					 top_glyph, bottom_glyph,
 					 klass->user_data.glyph_v_kerning);
+#endif
   }
 
   hb_bool_t get_glyph_extents (hb_codepoint_t glyph,
@@ -607,7 +615,7 @@ struct hb_font_t
     return (hb_position_t) (scaled / upem);
   }
   hb_position_t em_scalef (float v, int scale)
-  { return (hb_position_t) round (v * scale / face->get_upem ()); }
+  { return (hb_position_t) roundf (v * scale / face->get_upem ()); }
   float em_fscale (int16_t v, int scale)
   { return (float) v * scale / face->get_upem (); }
 };

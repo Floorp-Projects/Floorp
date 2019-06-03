@@ -160,8 +160,8 @@ struct OS2
 
     uint16_t min_cp, max_cp;
     find_min_and_max_codepoint (plan->unicodes, &min_cp, &max_cp);
-    os2_prime->usFirstCharIndex.set (min_cp);
-    os2_prime->usLastCharIndex.set (max_cp);
+    os2_prime->usFirstCharIndex = min_cp;
+    os2_prime->usLastCharIndex = max_cp;
 
     _update_unicode_ranges (plan->unicodes, os2_prime->ulUnicodeRange);
     bool result = plan->add_table (HB_OT_TAG_OS2, os2_prime_blob);
@@ -174,7 +174,7 @@ struct OS2
 			       HBUINT32 ulUnicodeRange[4]) const
   {
     for (unsigned int i = 0; i < 4; i++)
-      ulUnicodeRange[i].set (0);
+      ulUnicodeRange[i] = 0;
 
     hb_codepoint_t cp = HB_SET_VALUE_INVALID;
     while (codepoints->next (&cp)) {
@@ -184,14 +184,14 @@ struct OS2
 	unsigned int block = bit / 32;
 	unsigned int bit_in_block = bit % 32;
 	unsigned int mask = 1 << bit_in_block;
-	ulUnicodeRange[block].set (ulUnicodeRange[block] | mask);
+	ulUnicodeRange[block] = ulUnicodeRange[block] | mask;
       }
       if (cp >= 0x10000 && cp <= 0x110000)
       {
 	/* the spec says that bit 57 ("Non Plane 0") implies that there's
 	   at least one codepoint beyond the BMP; so I also include all
 	   the non-BMP codepoints here */
-	ulUnicodeRange[1].set (ulUnicodeRange[1] | (1 << 25));
+	ulUnicodeRange[1] = ulUnicodeRange[1] | (1 << 25);
       }
     }
   }

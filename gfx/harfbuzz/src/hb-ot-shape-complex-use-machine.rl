@@ -49,7 +49,7 @@ N	= 4; # BASE_NUM
 GB	= 5; # BASE_OTHER
 CGJ	= 6; # CGJ
 #F	= 7; # CONS_FINAL
-FM	= 8; # CONS_FINAL_MOD
+#FM	= 8; # CONS_FINAL_MOD
 #M	= 9; # CONS_MED
 #CM	= 10; # CONS_MOD
 SUB	= 11; # CONS_SUB
@@ -66,6 +66,9 @@ S	= 19; # SYM
 VS	= 21; # VARIATION_SELECTOR
 #V	= 36; # VOWEL
 #VM	= 40; # VOWEL_MOD
+CS	= 43; # CONS_WITH_STACKER
+HVM	= 44; # HALANT_OR_VOWEL_MODIFIER
+Sk	= 48; # SAKOT
 
 FAbv	= 24; # CONS_FINAL_ABOVE
 FBlw	= 25; # CONS_FINAL_BELOW
@@ -86,11 +89,11 @@ VMPst	= 39; # VOWEL_MOD_POST
 VMPre	= 23; # VOWEL_MOD_PRE
 SMAbv	= 41; # SYM_MOD_ABOVE
 SMBlw	= 42; # SYM_MOD_BELOW
-CS	= 43; # CONS_WITH_STACKER
+FMAbv	= 45; # CONS_FINAL_MOD	UIPC = Top
+FMBlw	= 46; # CONS_FINAL_MOD	UIPC = Bottom
+FMPst	= 47; # CONS_FINAL_MOD	UIPC = Not_Applicable
 
-HVM	= 44; # HALANT_OR_VOWEL_MODIFIER
-
-h = H | HVM; # https://github.com/harfbuzz/harfbuzz/issues/1102
+h = H | HVM | Sk;
 
 # Override: Adhoc ZWJ placement. https://github.com/harfbuzz/harfbuzz/issues/542#issuecomment-353169729
 consonant_modifiers = CMAbv* CMBlw* ((ZWJ?.h.ZWJ? B | SUB) VS? CMAbv? CMBlw*)*;
@@ -98,39 +101,55 @@ consonant_modifiers = CMAbv* CMBlw* ((ZWJ?.h.ZWJ? B | SUB) VS? CMAbv? CMBlw*)*;
 medial_consonants = MPre? MAbv? MBlw?.MBlw? MPst?;
 dependent_vowels = VPre* VAbv* VBlw* VPst*;
 vowel_modifiers = HVM? VMPre* VMAbv* VMBlw* VMPst*;
-final_consonants = FAbv* FBlw* FPst* FM?;
+final_consonants = FAbv* FBlw* FPst*;
+final_modifiers = FMAbv* FMBlw* | FMPst?;
 
-complex_syllable_tail =
+complex_syllable_start = (R | CS)? (B | GB) VS?;
+complex_syllable_middle =
 	consonant_modifiers
 	medial_consonants
 	dependent_vowels
 	vowel_modifiers
-	final_consonants
+	(Sk B)*
 ;
+complex_syllable_tail =
+	complex_syllable_middle
+	final_consonants
+	final_modifiers
+;
+number_joiner_terminated_cluster_tail = (HN N VS?)* HN;
+numeral_cluster_tail = (HN N VS?)+;
+symbol_cluster_tail = SMAbv+ SMBlw* | SMBlw+;
 
 virama_terminated_cluster =
-	(R|CS)? (B | GB) VS?
+	complex_syllable_start
 	consonant_modifiers
 	ZWJ?.h.ZWJ?
 ;
+sakot_terminated_cluster =
+	complex_syllable_start
+	complex_syllable_middle
+	Sk
+;
 standard_cluster =
-	(R|CS)? (B | GB) VS?
+	complex_syllable_start
 	complex_syllable_tail
 ;
 broken_cluster =
 	R?
-	complex_syllable_tail
+	(complex_syllable_tail | number_joiner_terminated_cluster_tail | numeral_cluster_tail | symbol_cluster_tail)
 ;
 
-number_joiner_terminated_cluster = N VS? (HN N VS?)* HN;
-numeral_cluster = N VS? (HN N VS?)*;
-symbol_cluster = S VS? SMAbv* SMBlw*;
+number_joiner_terminated_cluster = N VS? number_joiner_terminated_cluster_tail;
+numeral_cluster = N VS? numeral_cluster_tail?;
+symbol_cluster = (S | GB) VS? symbol_cluster_tail?;
 independent_cluster = (IND | O | Rsv | WJ) VS?;
 other = any;
 
 main := |*
 	independent_cluster			=> { found_syllable (independent_cluster); };
 	virama_terminated_cluster		=> { found_syllable (virama_terminated_cluster); };
+	sakot_terminated_cluster		=> { found_syllable (sakot_terminated_cluster); };
 	standard_cluster			=> { found_syllable (standard_cluster); };
 	number_joiner_terminated_cluster	=> { found_syllable (number_joiner_terminated_cluster); };
 	numeral_cluster				=> { found_syllable (numeral_cluster); };

@@ -80,10 +80,16 @@ struct hb_ot_shape_plan_t
   bool adjust_mark_positioning_when_zeroing : 1;
 
   bool apply_gpos : 1;
-  bool apply_kerx : 1;
   bool apply_kern : 1;
+#ifndef HB_NO_SHAPE_AAT
+  bool apply_kerx : 1;
   bool apply_morx : 1;
   bool apply_trak : 1;
+#else
+  static constexpr bool apply_kerx = false;
+  static constexpr bool apply_morx = false;
+  static constexpr bool apply_trak = false;
+#endif
 
   void collect_lookups (hb_tag_t table_tag, hb_set_t *lookups) const
   {
@@ -113,7 +119,11 @@ struct hb_ot_shape_planner_t
   hb_segment_properties_t props;
   hb_ot_map_builder_t map;
   hb_aat_map_builder_t aat_map;
+#ifndef HB_NO_SHAPE_AAT
   bool apply_morx : 1;
+#else
+  static constexpr bool apply_morx = false;
+#endif
   bool script_zero_marks : 1;
   bool script_fallback_mark_positioning : 1;
   const struct hb_ot_complex_shaper_t *shaper;

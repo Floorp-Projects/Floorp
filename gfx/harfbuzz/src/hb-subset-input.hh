@@ -40,16 +40,17 @@ struct hb_subset_input_t
 
   hb_set_t *unicodes;
   hb_set_t *glyphs;
+  hb_set_t *name_ids;
+  hb_set_t *drop_tables;
 
-  bool drop_hints : 1;
-  bool drop_layout : 1;
-  bool desubroutinize : 1;
-  bool retain_gids : 1;
+  bool drop_hints;
+  bool desubroutinize;
+  bool retain_gids;
   /* TODO
    *
    * features
    * lookups
-   * nameIDs
+   * name_ids
    * ...
    */
 };

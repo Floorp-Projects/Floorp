@@ -1,3 +1,28 @@
+Overview of changes leading to 2.5.1
+Friday, May 31, 2019
+====================================
+- Fix build with various versions of Visual Studio.
+- Improved documentation, thanks to Nathan Willis.
+- Bugfix in subsetting glyf table.
+- Improved scripts for cross-compiling for Windows using mingw.
+- Rename HB_MATH_GLYPH_PART_FLAG_EXTENDER to HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER.
+  A deprecated macro is added for backwards-compatibility.
+
+
+Overview of changes leading to 2.5.0
+Friday, May 24, 2019
+====================================
+- This release does not include much functional changes, but includes major internal
+  code-base changes.  We now require C++11.  Support for gcc 4.8 and earlier has been
+  dropped.
+- New hb-config.hh facility for compiling smaller library for embedded and web usecases.
+- New Unicode Character Databse implementation that is half the size of previously-used
+  UCDN.
+- Subsetter improvements.
+- Improved documentation, thanks to Nathan Willis.
+- Misc shaping fixes.
+
+
 Overview of changes leading to 2.4.0
 Monday, March 25, 2019
 ====================================
