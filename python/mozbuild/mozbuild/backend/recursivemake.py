@@ -1782,7 +1782,10 @@ class RecursiveMakeBackend(CommonBackend):
         for source in sorted(webidls.all_preprocessed_sources()):
             basename = os.path.basename(source)
             rule = mk.create_rule([basename])
-            rule.add_dependencies([source, '$(GLOBAL_DEPS)'])
+            # GLOBAL_DEPS would be used here, but due to the include order of
+            # our makefiles it's not set early enough to be useful, so we use
+            # WEBIDL_PP_DEPS, which has analagous content.
+            rule.add_dependencies([source, '$(WEBIDL_PP_DEPS)'])
             rule.add_commands([
                 # Remove the file before writing so bindings that go from
                 # static to preprocessed don't end up writing to a symlink,
