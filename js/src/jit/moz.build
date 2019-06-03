@@ -177,6 +177,7 @@ elif CONFIG['JS_CODEGEN_ARM64']:
         'arm64/MoveEmitter-arm64.cpp',
         'arm64/Trampoline-arm64.cpp',
         'arm64/vixl/Assembler-vixl.cpp',
+        'arm64/vixl/Cpu-Features-vixl.cpp',
         'arm64/vixl/Cpu-vixl.cpp',
         'arm64/vixl/Decoder-vixl.cpp',
         'arm64/vixl/Instructions-vixl.cpp',

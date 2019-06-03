@@ -474,7 +474,9 @@ void MemOperand::AddOffset(int64_t offset) {
 
 // Assembler
 Assembler::Assembler(PositionIndependentCodeOption pic)
-    : pic_(pic) {
+    : pic_(pic),
+      cpu_features_(CPUFeatures::AArch64LegacyBaseline())
+{
 }
 
 
@@ -2439,6 +2441,12 @@ void Assembler::fcsel(const VRegister& vd,
   VIXL_ASSERT(vd.Is1S() || vd.Is1D());
   VIXL_ASSERT(AreSameFormat(vd, vn, vm));
   Emit(FPType(vd) | FCSEL | Rm(vm) | Cond(cond) | Rn(vn) | Rd(vd));
+}
+
+void Assembler::fjcvtzs(const Register& rd, const VRegister& vn) {
+  VIXL_ASSERT(CPUHas(CPUFeatures::kFP, CPUFeatures::kJSCVT));
+  VIXL_ASSERT(rd.IsW() && vn.Is1D());
+  Emit(FJCVTZS | Rn(vn) | Rd(rd));
 }
 
 
@@ -5007,6 +5015,44 @@ LoadLiteralOp Assembler::LoadLiteralOpFor(const CPURegister& rt) {
         return LDR_q_lit;
     }
   }
+}
+
+
+bool Assembler::CPUHas(const CPURegister& rt) const {
+  // Core registers are available without any particular CPU features.
+  if (rt.IsRegister()) return true;
+  VIXL_ASSERT(rt.IsVRegister());
+  // The architecture does not allow FP and NEON to be implemented separately,
+  // but we can crudely categorise them based on register size, since FP only
+  // uses D, S and (occasionally) H registers.
+  if (rt.IsH() || rt.IsS() || rt.IsD()) {
+    return CPUHas(CPUFeatures::kFP) || CPUHas(CPUFeatures::kNEON);
+  }
+  VIXL_ASSERT(rt.IsB() || rt.IsQ());
+  return CPUHas(CPUFeatures::kNEON);
+}
+
+
+bool Assembler::CPUHas(const CPURegister& rt, const CPURegister& rt2) const {
+  // This is currently only used for loads and stores, where rt and rt2 must
+  // have the same size and type. We could extend this to cover other cases if
+  // necessary, but for now we can avoid checking both registers.
+  VIXL_ASSERT(AreSameSizeAndType(rt, rt2));
+  USE(rt2);
+  return CPUHas(rt);
+}
+
+
+bool Assembler::CPUHas(SystemRegister sysreg) const {
+  switch (sysreg) {
+    case RNDR:
+    case RNDRRS:
+      return CPUHas(CPUFeatures::kRNG);
+    case FPCR:
+    case NZCV:
+      break;
+  }
+  return true;
 }
 
 
