@@ -438,6 +438,7 @@ impl FrameBuilder {
             DeviceIntPoint::zero(),
             UvRectKind::Rect,
             root_spatial_node_index,
+            root_spatial_node_index,
             global_device_pixel_scale,
         );
 

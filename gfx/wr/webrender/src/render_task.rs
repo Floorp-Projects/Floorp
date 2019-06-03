@@ -516,6 +516,7 @@ pub struct PictureTask {
     pub content_origin: DeviceIntPoint,
     pub uv_rect_handle: GpuCacheHandle,
     pub root_spatial_node_index: SpatialNodeIndex,
+    pub surface_spatial_node_index: SpatialNodeIndex,
     uv_rect_kind: UvRectKind,
     device_pixel_scale: DevicePixelScale,
 }
@@ -754,6 +755,7 @@ impl RenderTask {
         content_origin: DeviceIntPoint,
         uv_rect_kind: UvRectKind,
         root_spatial_node_index: SpatialNodeIndex,
+        surface_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
     ) -> Self {
         let size = match location {
@@ -777,6 +779,7 @@ impl RenderTask {
                 uv_rect_handle: GpuCacheHandle::new(),
                 uv_rect_kind,
                 root_spatial_node_index,
+                surface_spatial_node_index,
                 device_pixel_scale,
             }),
             clear_mode: ClearMode::Transparent,
@@ -2055,7 +2058,7 @@ fn blur_task_graph() {
 
     // Insert a task that is an odd number > 1 of passes away from its dependency.
     // This should force us to mark the dependency "for saving" to keep its content valid
-    // until the task can access it. 
+    // until the task can access it.
     let vblur4 = tasks.add(RenderTask::new_test(color, dyn_location(160, 160), vec![scale2]));
     let hblur4 = tasks.add(RenderTask::new_test(color, dyn_location(160, 160), vec![vblur4]));
 
@@ -2106,7 +2109,7 @@ fn blur_task_graph() {
 
     assert_eq!(passes[7].tasks, vec![main_pic]);
 
-    // See vblur4's comment above. 
+    // See vblur4's comment above.
     assert!(tasks[scale2].saved_index.is_some());
 }
 
