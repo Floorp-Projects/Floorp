@@ -751,6 +751,8 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvQueryVisitedState(
       InfallibleTArray<URIParams>&& aURIs);
 
+  mozilla::ipc::IPCResult RecvFireFrameLoadEvent(bool aIsTrusted);
+
  private:
   void SuppressDisplayport(bool aEnabled);
 

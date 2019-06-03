@@ -3684,6 +3684,17 @@ mozilla::ipc::IPCResult BrowserParent::RecvGetSystemFont(nsCString* aFontName) {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvFireFrameLoadEvent(bool aIsTrusted) {
+  BrowserBridgeParent* bridge = GetBrowserBridgeParent();
+  if (!bridge) {
+    NS_WARNING("Received `load` event on unbridged BrowserParent!");
+    return IPC_OK();
+  }
+
+  Unused << bridge->SendFireFrameLoadEvent(aIsTrusted);
+  return IPC_OK();
+}
+
 NS_IMETHODIMP
 FakeChannel::OnAuthAvailable(nsISupports* aContext,
                              nsIAuthInformation* aAuthInfo) {
