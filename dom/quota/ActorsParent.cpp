@@ -3139,7 +3139,7 @@ bool QuotaManager::IsOSMetadata(const nsAString& aFileName) {
   return aFileName.EqualsLiteral(DSSTORE_FILE_NAME) ||
          aFileName.EqualsLiteral(DESKTOP_FILE_NAME) ||
          aFileName.LowerCaseEqualsLiteral(DESKTOP_INI_FILE_NAME) ||
-         aFileName.EqualsLiteral(THUMBS_DB_FILE_NAME);
+         aFileName.LowerCaseEqualsLiteral(THUMBS_DB_FILE_NAME);
 }
 
 // static
