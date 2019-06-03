@@ -2368,6 +2368,10 @@ HTMLInputElement::GetFilesOrDirectoriesInternal() const {
 void HTMLInputElement::SetFilesOrDirectories(
     const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories,
     bool aSetValueChanged) {
+  if (NS_WARN_IF(mType != NS_FORM_INPUT_FILE)) {
+    return;
+  }
+
   MOZ_ASSERT(mFileData);
 
   mFileData->ClearGetFilesHelpers();
