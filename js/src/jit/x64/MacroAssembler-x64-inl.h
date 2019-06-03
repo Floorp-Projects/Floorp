@@ -816,7 +816,7 @@ void MacroAssemblerX64::loadInt32OrDouble(const T& src, FloatRegister dest) {
   convertInt32ToDouble(src, dest);
   jump(&end);
   bind(&notInt32);
-  loadDouble(src, dest);
+  unboxDouble(src, dest);
   bind(&end);
 }
 
@@ -832,9 +832,11 @@ void MacroAssemblerX64::ensureDouble(const ValueOperand& source,
     asMasm().branchTestInt32(Assembler::NotEqual, tag, failure);
   }
 
-  ScratchRegisterScope scratch(asMasm());
-  unboxInt32(source, scratch);
-  convertInt32ToDouble(scratch, dest);
+  {
+    ScratchRegisterScope scratch(asMasm());
+    unboxInt32(source, scratch);
+    convertInt32ToDouble(scratch, dest);
+  }
   jump(&done);
 
   bind(&isDouble);

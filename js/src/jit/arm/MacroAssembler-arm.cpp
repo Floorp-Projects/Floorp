@@ -2797,8 +2797,13 @@ void MacroAssemblerARMCompat::unboxDouble(const ValueOperand& operand,
 void MacroAssemblerARMCompat::unboxDouble(const Address& src,
                                           FloatRegister dest) {
   MOZ_ASSERT(dest.isDouble());
-  ScratchRegisterScope scratch(asMasm());
-  ma_vldr(src, dest, scratch);
+  loadDouble(src, dest);
+}
+
+void MacroAssemblerARMCompat::unboxDouble(const BaseIndex& src,
+                                          FloatRegister dest) {
+  MOZ_ASSERT(dest.isDouble());
+  loadDouble(src, dest);
 }
 
 void MacroAssemblerARMCompat::unboxValue(const ValueOperand& src,

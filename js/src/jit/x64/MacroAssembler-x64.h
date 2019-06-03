@@ -728,7 +728,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void unboxInt32(const Address& src, Register dest) {
     unboxInt32(Operand(src), dest);
   }
-  void unboxDouble(const Address& src, FloatRegister dest) {
+  template <typename T>
+  void unboxDouble(const T& src, FloatRegister dest) {
     loadDouble(Operand(src), dest);
   }
 
