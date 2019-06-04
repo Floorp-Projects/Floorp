@@ -268,11 +268,15 @@ class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
   void decMemory(size_t nbytes) { zone_->decPolicyMemory(this, nbytes); }
 };
 
-// Convenience functions for memory accounting on the zone.
+// Functions for memory accounting on the zone.
 
-// Associate malloc memory with a GC thing. This call must be matched by a
+// Associate malloc memory with a GC thing. This call should be matched by a
 // following call to RemoveCellMemory with the same size and use. The total
 // amount of malloc memory associated with a zone is used to trigger GC.
+//
+// You should use InitReservedSlot / InitObjectPrivate in preference to this
+// where possible.
+
 inline void AddCellMemory(gc::TenuredCell* cell, size_t nbytes, MemoryUse use) {
   if (nbytes) {
     ZoneAllocator::from(cell->zone())->addCellMemory(cell, nbytes, use);
@@ -284,8 +288,9 @@ inline void AddCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
   }
 }
 
-// Remove association between malloc memory and a GC thing. This call must
+// Remove association between malloc memory and a GC thing. This call should
 // follow a call to AddCellMemory with the same size and use.
+
 inline void RemoveCellMemory(gc::TenuredCell* cell, size_t nbytes,
                              MemoryUse use) {
   if (nbytes) {
@@ -297,6 +302,39 @@ inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
   if (cell->isTenured()) {
     RemoveCellMemory(&cell->asTenured(), nbytes, use);
   }
+}
+
+// Initialize an object's reserved slot with a private value pointing to
+// malloc-allocated memory and associate the memory with the object.
+//
+// This call should be matched with a call to FreeOp::free_/delete_ in the
+// object's finalizer to free the memory and update the memory accounting.
+
+inline void InitReservedSlot(NativeObject* obj, uint32_t slot, void* ptr,
+                             size_t nbytes, MemoryUse use) {
+  AddCellMemory(obj, nbytes, use);
+  obj->initReservedSlot(slot, PrivateValue(ptr));
+}
+template <typename T>
+inline void InitReservedSlot(NativeObject* obj, uint32_t slot, T* ptr,
+                             MemoryUse use) {
+  InitReservedSlot(obj, slot, ptr, sizeof(T), use);
+}
+
+// Initialize an object's private slot with a pointer to malloc-allocated memory
+// and associate the memory with the object.
+//
+// This call should be matched with a call to FreeOp::free_/delete_ in the
+// object's finalizer to free the memory and update the memory accounting.
+
+inline void InitObjectPrivate(NativeObject* obj, void* ptr, size_t nbytes,
+                              MemoryUse use) {
+  AddCellMemory(obj, nbytes, use);
+  obj->initPrivate(ptr);
+}
+template <typename T>
+inline void InitObjectPrivate(NativeObject* obj, T* ptr, MemoryUse use) {
+  InitObjectPrivate(obj, ptr, sizeof(T), use);
 }
 
 }  // namespace js
