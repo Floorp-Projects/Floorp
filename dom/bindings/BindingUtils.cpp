@@ -1731,45 +1731,51 @@ static void DEBUG_CheckXBLLookup(JSContext* cx, JS::PropertyDescriptor* desc) {
                  JSPROP_PERMANENT | JSPROP_READONLY, desc, cacheOnHolder);
     }
 
-    if (id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE) &&
-        DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj))
-            ->wantsInterfaceHasInstance) {
-      cacheOnHolder = true;
-      JSNativeWrapper interfaceIsInstanceWrapper = {InterfaceIsInstance,
-                                                    nullptr};
-      JSObject* funObj =
-          XrayCreateFunction(cx, wrapper, interfaceIsInstanceWrapper, 1, id);
-      if (!funObj) {
-        return false;
-      }
+    if (id.get() == GetJSIDByIndex(cx, XPCJSContext::IDX_ISINSTANCE)) {
+      const js::Class* objClass = js::GetObjectClass(obj);
+      if (IsDOMIfaceAndProtoClass(objClass) &&
+          DOMIfaceAndProtoJSClass::FromJSClass(objClass)
+              ->wantsInterfaceHasInstance) {
+        cacheOnHolder = true;
+        JSNativeWrapper interfaceIsInstanceWrapper = {InterfaceIsInstance,
+                                                      nullptr};
+        JSObject* funObj =
+            XrayCreateFunction(cx, wrapper, interfaceIsInstanceWrapper, 1, id);
+        if (!funObj) {
+          return false;
+        }
 
-      desc.value().setObject(*funObj);
-      desc.setAttributes(0);
-      desc.object().set(wrapper);
-      desc.setSetter(nullptr);
-      desc.setGetter(nullptr);
-      return true;
+        desc.value().setObject(*funObj);
+        desc.setAttributes(0);
+        desc.object().set(wrapper);
+        desc.setSetter(nullptr);
+        desc.setGetter(nullptr);
+        return true;
+      }
     }
 
     if (id.get() == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                        cx, JS::SymbolCode::hasInstance)) &&
-        DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj))
-            ->wantsInterfaceHasInstance) {
-      cacheOnHolder = true;
-      JSNativeWrapper interfaceHasInstanceWrapper = {InterfaceHasInstance,
-                                                     nullptr};
-      JSObject* funObj =
-          XrayCreateFunction(cx, wrapper, interfaceHasInstanceWrapper, 1, id);
-      if (!funObj) {
-        return false;
-      }
+                        cx, JS::SymbolCode::hasInstance))) {
+      const js::Class* objClass = js::GetObjectClass(obj);
+      if (IsDOMIfaceAndProtoClass(objClass) &&
+          DOMIfaceAndProtoJSClass::FromJSClass(objClass)
+              ->wantsInterfaceHasInstance) {
+        cacheOnHolder = true;
+        JSNativeWrapper interfaceHasInstanceWrapper = {InterfaceHasInstance,
+                                                       nullptr};
+        JSObject* funObj =
+            XrayCreateFunction(cx, wrapper, interfaceHasInstanceWrapper, 1, id);
+        if (!funObj) {
+          return false;
+        }
 
-      desc.value().setObject(*funObj);
-      desc.setAttributes(JSPROP_READONLY | JSPROP_PERMANENT);
-      desc.object().set(wrapper);
-      desc.setSetter(nullptr);
-      desc.setGetter(nullptr);
-      return true;
+        desc.value().setObject(*funObj);
+        desc.setAttributes(JSPROP_READONLY | JSPROP_PERMANENT);
+        desc.object().set(wrapper);
+        desc.setSetter(nullptr);
+        desc.setGetter(nullptr);
+        return true;
+      }
     }
   } else {
     MOZ_ASSERT(IsInterfacePrototype(type));
