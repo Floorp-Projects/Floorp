@@ -278,6 +278,7 @@ var gPlayTests = [
   { name:"test-7-6.1.opus", type:"audio/ogg; codecs=opus", duration:11.690 },
   { name:"test-8-7.1.opus", type:"audio/ogg; codecs=opus", duration:13.478 },
 
+  { name: "av1.mp4", type:"video/mp4", duration:1.00 },
   { name:"gizmo-short.mp4", type:"video/mp4", duration:0.27, contentDuration:0.267 },
   // Test playback of a MP4 file with a non-zero start time (and audio starting
   // a second later).
@@ -321,11 +322,6 @@ var gPlayTests = [
   // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN },
 ];
-
-if (!(manifestNavigator().userAgent.includes("Windows") &&
-      !manifestNavigator().userAgent.includes("x64"))) {
-  gPlayTests.push({ name: "av1.mp4", type:"video/mp4", duration:1.00 });
-}
 
 var gSeekToNextFrameTests = [
   // Test playback of a WebM file with vp9 video
