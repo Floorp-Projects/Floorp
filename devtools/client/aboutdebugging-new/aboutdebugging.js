@@ -61,7 +61,10 @@ const AboutDebugging = {
     const width = this.getRoundedViewportWidth();
     this.actions.recordTelemetryEvent("open_adbg", { width });
 
-    await l10n.init();
+    await l10n.init([
+      "branding/brand.ftl",
+      "devtools/aboutdebugging.ftl",
+    ]);
 
     this.actions.createThisFirefoxRuntime();
 
