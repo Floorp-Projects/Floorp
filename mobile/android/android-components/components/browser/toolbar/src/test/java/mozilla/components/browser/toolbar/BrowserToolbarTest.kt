@@ -758,11 +758,42 @@ class BrowserToolbarTest {
     fun `titleTextSize changes display titleView`() {
         val toolbar = BrowserToolbar(context)
 
-        assertTrue(toolbar.displayToolbar.titleView.textSize != 12f)
+        assertTrue(toolbar.displayToolbar.titleView.textSize != 4f)
 
+        toolbar.titleTextSize = 4f
+
+        assertEquals(4f, toolbar.displayToolbar.titleView.textSize)
+    }
+
+    @Test
+    fun `setting titleTextSize updated textSize`() {
+        val toolbar = BrowserToolbar(context)
+
+        assertNotEquals(BrowserToolbar.MAX_TEXT_SIZE_WITH_TITLE, toolbar.displayToolbar.urlView.textSize)
         toolbar.titleTextSize = 12f
+        assertEquals(BrowserToolbar.MAX_TEXT_SIZE_WITH_TITLE, toolbar.displayToolbar.urlView.textSize)
+    }
 
-        assertEquals(12f, toolbar.displayToolbar.titleView.textSize)
+    @Test
+    fun `setting textSize above max sets it to max`() {
+        val toolbar = BrowserToolbar(context)
+
+        assertNotEquals(BrowserToolbar.MAX_TEXT_SIZE, toolbar.displayToolbar.urlView.textSize)
+
+        toolbar.textSize = 100f
+
+        assertEquals(BrowserToolbar.MAX_TEXT_SIZE, toolbar.displayToolbar.urlView.textSize)
+    }
+
+    @Test
+    fun `setting titleTextSize above max sets it to max`() {
+        val toolbar = BrowserToolbar(context)
+
+        assertNotEquals(BrowserToolbar.MAX_TITLE_SIZE, toolbar.displayToolbar.titleView.textSize)
+
+        toolbar.titleTextSize = 100f
+
+        assertEquals(BrowserToolbar.MAX_TITLE_SIZE, toolbar.displayToolbar.titleView.textSize)
     }
 
     @Test

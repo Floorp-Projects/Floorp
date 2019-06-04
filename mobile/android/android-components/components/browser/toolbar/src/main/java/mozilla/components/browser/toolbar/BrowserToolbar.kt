@@ -682,9 +682,9 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     companion object {
-        private const val MAX_TITLE_SIZE = 10f
-        private const val MAX_TEXT_SIZE_WITH_TITLE = 8f
-        private const val MAX_TEXT_SIZE = 20f
+        internal const val MAX_TITLE_SIZE = 10f
+        internal const val MAX_TEXT_SIZE_WITH_TITLE = 8f
+        internal const val MAX_TEXT_SIZE = 20f
         private const val DEFAULT_TOOLBAR_HEIGHT_DP = 56
         internal const val ACTION_PADDING_DP = 16
         internal val DEFAULT_PADDING =
