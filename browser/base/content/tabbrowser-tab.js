@@ -15,7 +15,7 @@ class MozTabbrowserTab extends MozElements.MozTab {
     this.addEventListener("mouseout", this);
     this.addEventListener("dragstart", this, true);
     this.addEventListener("dragstart", this);
-    this.addEventListener("mousedown", this, true);
+    this.addEventListener("mousedown", this);
     this.addEventListener("mouseup", this);
     this.addEventListener("click", this);
     this.addEventListener("dblclick", this, true);
@@ -273,11 +273,7 @@ class MozTabbrowserTab extends MozElements.MozTab {
   }
 
   on_mousedown(event) {
-    if (event.eventPhase == Event.BUBBLING_PHASE) {
-      super.on_mousedown(event);
-      return;
-    }
-
+    let eventMaySelectTab = true;
     let tabContainer = this.parentNode;
 
     if (tabContainer._closeTabByDblclick &&
@@ -291,8 +287,7 @@ class MozTabbrowserTab extends MozElements.MozTab {
     } else if (event.target.classList.contains("tab-close-button") ||
                event.target.classList.contains("tab-icon-sound") ||
                event.target.classList.contains("tab-icon-overlay")) {
-      // Prevent tabbox.js from selecting the tab.
-      event.stopPropagation();
+      eventMaySelectTab = false;
     }
 
     if (event.button == 1) {
@@ -303,6 +298,7 @@ class MozTabbrowserTab extends MozElements.MozTab {
       let shiftKey = event.shiftKey;
       let accelKey = event.getModifierState("Accel");
       if (shiftKey) {
+        eventMaySelectTab = false;
         const lastSelectedTab = gBrowser.lastMultiSelectedTab;
         if (!accelKey) {
           gBrowser.selectedTab = lastSelectedTab;
@@ -311,23 +307,22 @@ class MozTabbrowserTab extends MozElements.MozTab {
           gBrowser.clearMultiSelectedTabs(false);
         }
         gBrowser.addRangeToMultiSelectedTabs(lastSelectedTab, this);
-
-        // Prevent tabbox.xml from selecting the tab.
-        event.stopPropagation();
       } else if (accelKey) {
         // Ctrl (Cmd for mac) key is pressed
+        eventMaySelectTab = false;
         if (this.multiselected) {
           gBrowser.removeFromMultiSelectedTabs(this, true);
         } else if (this != gBrowser.selectedTab) {
           gBrowser.addToMultiSelectedTabs(this, false);
           gBrowser.lastMultiSelectedTab = this;
         }
-
-        // Prevent tabbox.xml from selecting the tab.
-        event.stopPropagation();
       } else if (!this.selected && this.multiselected) {
         gBrowser.lockClearMultiSelectionOnce();
       }
+    }
+
+    if (eventMaySelectTab) {
+      super.on_mousedown(event);
     }
   }
 
