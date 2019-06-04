@@ -15,7 +15,6 @@ enum {
   kCharsetFromCache,
   kCharsetFromParentFrame,
   kCharsetFromAutoDetection,
-  kCharsetFromHintPrevDoc,
   kCharsetFromMetaPrescan,  // this one and smaller: HTML5 Tentative
   kCharsetFromMetaTag,      // this one and greater: HTML5 Confident
   kCharsetFromIrreversibleAutoDetection,
