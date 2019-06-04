@@ -4,7 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RegisteredThread.h"
+#include "BaseProfiler.h"
+
+#ifdef MOZ_BASE_PROFILER
+
+#  include "RegisteredThread.h"
 
 RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread,
                                    void* aStackTop)
@@ -19,10 +23,10 @@ RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread,
   MOZ_COUNT_CTOR(RegisteredThread);
 
   // We don't have to guess on mac
-#if defined(GP_OS_darwin)
+#  if defined(GP_OS_darwin)
   pthread_t self = pthread_self();
   mStackTop = pthread_get_stackaddr_np(self);
-#endif
+#  endif
 }
 
 RegisteredThread::~RegisteredThread() { MOZ_COUNT_DTOR(RegisteredThread); }
@@ -41,3 +45,5 @@ size_t RegisteredThread::SizeOfIncludingThis(
 
   return n;
 }
+
+#endif  // MOZ_BASE_PROFILER
