@@ -28,7 +28,6 @@ const BROWSER_BASED_DIRS = [
   "resource://devtools/client/inspector/markup",
   "resource://devtools/client/jsonview",
   "resource://devtools/client/netmonitor/src/utils",
-  "resource://devtools/client/shared/fluent-l10n",
   "resource://devtools/client/shared/source-map",
   "resource://devtools/client/shared/redux",
   "resource://devtools/client/shared/vendor",
