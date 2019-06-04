@@ -84,8 +84,12 @@ class ObserverRegistry<T> : Observable<T> {
             pausedObservers.remove(observer)
         }
 
+        // Unregister observers
         lifecycleObservers[observer]?.remove()
         viewObservers[observer]?.remove()
+        // Remove observers from map
+        lifecycleObservers.remove(observer)
+        viewObservers.remove(observer)
     }
 
     override fun unregisterObservers() {
@@ -95,6 +99,8 @@ class ObserverRegistry<T> : Observable<T> {
             }
             observers.clear()
             pausedObservers.clear()
+            lifecycleObservers.clear()
+            viewObservers.clear()
         }
     }
 
