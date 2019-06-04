@@ -277,6 +277,7 @@ class MachCommands(MachCommandBase):
             del params["test_objects"]
 
         wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
+        wpt_setup._mach_context = self._mach_context
         wpt_runner = WebPlatformTestsRunner(wpt_setup)
 
         if params["log_mach_screenshot"] is None:
