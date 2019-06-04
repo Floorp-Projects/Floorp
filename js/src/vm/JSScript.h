@@ -471,6 +471,11 @@ struct SourceTypeTraits<char16_t> {
 
 class ScriptSourceHolder;
 
+// Retrievable source can be retrieved using the source hook (and therefore
+// need not be XDR'd, can be discarded if desired because it can always be
+// reconstituted later, etc.).
+enum class SourceRetrievable { Yes, No };
+
 class ScriptSource {
   friend class SourceCompressionTask;
 
@@ -534,7 +539,7 @@ class ScriptSource {
   };
 
   // Uncompressed source text.
-  template <typename Unit>
+  template <typename Unit, SourceRetrievable CanRetrieve>
   class Uncompressed : public UncompressedData<Unit> {
     using Base = UncompressedData<Unit>;
 
@@ -554,7 +559,7 @@ class ScriptSource {
   };
 
   // Compressed source text.
-  template <typename Unit>
+  template <typename Unit, SourceRetrievable CanRetrieve>
   struct Compressed : public CompressedData<Unit> {
     using Base = CompressedData<Unit>;
 
@@ -590,15 +595,24 @@ class ScriptSource {
   };
 
   using SourceType =
-      mozilla::Variant<Compressed<mozilla::Utf8Unit>,
-                       Uncompressed<mozilla::Utf8Unit>, Compressed<char16_t>,
-                       Uncompressed<char16_t>, Retrievable<mozilla::Utf8Unit>,
-                       Retrievable<char16_t>, Missing, BinAST>;
+      mozilla::Variant<Compressed<mozilla::Utf8Unit, SourceRetrievable::Yes>,
+                       Uncompressed<mozilla::Utf8Unit, SourceRetrievable::Yes>,
+                       Compressed<mozilla::Utf8Unit, SourceRetrievable::No>,
+                       Uncompressed<mozilla::Utf8Unit, SourceRetrievable::No>,
+                       Compressed<char16_t, SourceRetrievable::Yes>,
+                       Uncompressed<char16_t, SourceRetrievable::Yes>,
+                       Compressed<char16_t, SourceRetrievable::No>,
+                       Uncompressed<char16_t, SourceRetrievable::No>,
+                       Retrievable<mozilla::Utf8Unit>, Retrievable<char16_t>,
+                       Missing, BinAST>;
   SourceType data;
 
   // If the GC calls triggerConvertToCompressedSource with PinnedUnits present,
   // the first PinnedUnits (that is, bottom of the stack) will install the
   // compressed chars upon destruction.
+  //
+  // Retrievability isn't part of the type here because uncompressed->compressed
+  // transitions must preserve existing retrievability.
   PinnedUnitsBase* pinnedUnitsStack_;
   mozilla::MaybeOneOf<CompressedData<mozilla::Utf8Unit>,
                       CompressedData<char16_t>>
@@ -674,17 +688,6 @@ class ScriptSource {
                          mozilla::recordreplay::Behavior::DontPreserve>
       idCount_;
 
-  // If this field is true, we can call JSRuntime::sourceHook to load the source
-  // on demand.  Thus if this contains compressed/uncompressed data, we don't
-  // have to preserve it while we're not using it, because we can use the source
-  // hook to load it when we need it.
-  //
-  // This field is always true for retrievable source.  It *may* be true for
-  // compressed/uncompressed source (if retrievable source was rewritten to
-  // compressed/uncompressed source loaded using the source hook).  It is always
-  // false for missing or BinAST source.
-  bool sourceRetrievable_ : 1;
-
   bool hasIntroductionOffset_ : 1;
   bool containsAsmJS_ : 1;
 
@@ -721,7 +724,6 @@ class ScriptSource {
         introductionType_(nullptr),
         xdrEncoder_(nullptr),
         id_(++idCount_),
-        sourceRetrievable_(false),
         hasIntroductionOffset_(false),
         containsAsmJS_(false) {}
 
@@ -760,7 +762,6 @@ class ScriptSource {
                                  const JS::ReadOnlyCompileOptions& options,
                                  JS::SourceText<Unit>& srcBuf);
 
-  bool sourceRetrievable() const { return sourceRetrievable_; }
   bool hasSourceText() const {
     return hasUncompressedSource() || hasCompressedSource();
   }
@@ -778,7 +779,9 @@ class ScriptSource {
  private:
   template <typename Unit>
   struct UncompressedDataMatcher {
-    const UncompressedData<Unit>* operator()(const Uncompressed<Unit>& u) {
+    template <SourceRetrievable CanRetrieve>
+    const UncompressedData<Unit>* operator()(
+        const Uncompressed<Unit, CanRetrieve>& u) {
       return &u;
     }
 
@@ -800,7 +803,9 @@ class ScriptSource {
  private:
   template <typename Unit>
   struct CompressedDataMatcher {
-    const CompressedData<Unit>* operator()(const Compressed<Unit>& c) {
+    template <SourceRetrievable CanRetrieve>
+    const CompressedData<Unit>* operator()(
+        const Compressed<Unit, CanRetrieve>& c) {
       return &c;
     }
 
@@ -839,13 +844,13 @@ class ScriptSource {
 
  private:
   struct HasUncompressedSource {
-    template <typename Unit>
-    bool operator()(const Uncompressed<Unit>&) {
+    template <typename Unit, SourceRetrievable CanRetrieve>
+    bool operator()(const Uncompressed<Unit, CanRetrieve>&) {
       return true;
     }
 
-    template <typename Unit>
-    bool operator()(const Compressed<Unit>&) {
+    template <typename Unit, SourceRetrievable CanRetrieve>
+    bool operator()(const Compressed<Unit, CanRetrieve>&) {
       return false;
     }
 
@@ -864,51 +869,84 @@ class ScriptSource {
     return data.match(HasUncompressedSource());
   }
 
+ private:
+  template <typename Unit>
+  struct IsUncompressed {
+    template <SourceRetrievable CanRetrieve>
+    bool operator()(const Uncompressed<Unit, CanRetrieve>&) {
+      return true;
+    }
+
+    template <typename T>
+    bool operator()(const T&) {
+      return false;
+    }
+  };
+
+ public:
   template <typename Unit>
   bool isUncompressed() const {
-    return data.is<Uncompressed<Unit>>();
+    return data.match(IsUncompressed<Unit>());
   }
 
  private:
   struct HasCompressedSource {
-    template <typename Unit>
-    bool operator()(const Compressed<Unit>&) {
+    template <typename Unit, SourceRetrievable CanRetrieve>
+    bool operator()(const Compressed<Unit, CanRetrieve>&) {
       return true;
     }
 
-    template <typename Unit>
-    bool operator()(const Uncompressed<Unit>&) {
+    template <typename T>
+    bool operator()(const T&) {
       return false;
     }
-
-    template <typename Unit>
-    bool operator()(const Retrievable<Unit>&) {
-      return false;
-    }
-
-    bool operator()(const BinAST&) { return false; }
-
-    bool operator()(const Missing&) { return false; }
   };
 
  public:
   bool hasCompressedSource() const { return data.match(HasCompressedSource()); }
 
+ private:
+  template <typename Unit>
+  struct IsCompressed {
+    template <SourceRetrievable CanRetrieve>
+    bool operator()(const Compressed<Unit, CanRetrieve>&) {
+      return true;
+    }
+
+    template <typename T>
+    bool operator()(const T&) {
+      return false;
+    }
+  };
+
+ public:
   template <typename Unit>
   bool isCompressed() const {
-    return data.is<Compressed<Unit>>();
+    return data.match(IsCompressed<Unit>());
   }
 
  private:
   template <typename Unit>
   struct SourceTypeMatcher {
-    template <template <typename C> class Data>
-    bool operator()(const Data<Unit>&) {
+    template <template <typename C, SourceRetrievable R> class Data,
+              SourceRetrievable CanRetrieve>
+    bool operator()(const Data<Unit, CanRetrieve>&) {
       return true;
     }
 
-    template <template <typename C> class Data, typename NotUnit>
-    bool operator()(const Data<NotUnit>&) {
+    template <template <typename C, SourceRetrievable R> class Data,
+              typename NotUnit, SourceRetrievable CanRetrieve>
+    bool operator()(const Data<NotUnit, CanRetrieve>&) {
+      return false;
+    }
+
+    bool operator()(const Retrievable<Unit>&) {
+      MOZ_CRASH("source type only applies where actual text is available");
+      return false;
+    }
+
+    template <typename NotUnit>
+    bool operator()(const Retrievable<NotUnit>&) {
       return false;
     }
 
@@ -931,13 +969,13 @@ class ScriptSource {
 
  private:
   struct UncompressedLengthMatcher {
-    template <typename Unit>
-    size_t operator()(const Uncompressed<Unit>& u) {
+    template <typename Unit, SourceRetrievable CanRetrieve>
+    size_t operator()(const Uncompressed<Unit, CanRetrieve>& u) {
       return u.length();
     }
 
-    template <typename Unit>
-    size_t operator()(const Compressed<Unit>& u) {
+    template <typename Unit, SourceRetrievable CanRetrieve>
+    size_t operator()(const Compressed<Unit, CanRetrieve>& u) {
       return u.uncompressedLength;
     }
 
@@ -982,7 +1020,8 @@ class ScriptSource {
   template <typename Unit>
   MOZ_MUST_USE bool setUncompressedSourceHelper(JSContext* cx,
                                                 EntryUnits<Unit>&& source,
-                                                size_t length);
+                                                size_t length,
+                                                SourceRetrievable retrievable);
 
  public:
   // Initialize a fresh |ScriptSource| with unretrievable, uncompressed source.
@@ -1042,14 +1081,14 @@ class ScriptSource {
                                              SharedImmutableString& compressed)
         : source_(source), compressed_(compressed) {}
 
-    template <typename Unit>
-    void operator()(const Uncompressed<Unit>&) {
+    template <typename Unit, SourceRetrievable CanRetrieve>
+    void operator()(const Uncompressed<Unit, CanRetrieve>&) {
       source_->triggerConvertToCompressedSource<Unit>(std::move(compressed_),
                                                       source_->length());
     }
 
-    template <typename Unit>
-    void operator()(const Compressed<Unit>&) {
+    template <typename Unit, SourceRetrievable CanRetrieve>
+    void operator()(const Compressed<Unit, CanRetrieve>&) {
       MOZ_CRASH(
           "can't set compressed source when source is already compressed -- "
           "ScriptSource::tryCompressOffThread shouldn't have queued up this "
@@ -1172,15 +1211,18 @@ class ScriptSource {
   }
 
  private:
+  template <typename Unit,
+            template <typename U, SourceRetrievable CanRetrieve> class Data,
+            XDRMode mode>
+  static void codeRetrievable(ScriptSource* ss);
+
   template <typename Unit, XDRMode mode>
   static MOZ_MUST_USE XDRResult codeUncompressedData(XDRState<mode>* const xdr,
-                                                     ScriptSource* const ss,
-                                                     bool retrievable);
+                                                     ScriptSource* const ss);
 
   template <typename Unit, XDRMode mode>
   static MOZ_MUST_USE XDRResult codeCompressedData(XDRState<mode>* const xdr,
-                                                   ScriptSource* const ss,
-                                                   bool retrievable);
+                                                   ScriptSource* const ss);
 
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult codeBinASTData(XDRState<mode>* const xdr,
