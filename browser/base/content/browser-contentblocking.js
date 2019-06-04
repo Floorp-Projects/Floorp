@@ -816,6 +816,11 @@ var ContentBlocking = {
     return this.identityPopup = document.getElementById("identity-popup");
   },
 
+  get protectionsPopup() {
+    delete this.protectionsPopup;
+    return this.protectionsPopup = document.getElementById("protections-popup");
+  },
+
   strings: {
     get appMenuTitle() {
       delete this.appMenuTitle;
@@ -1157,9 +1162,11 @@ var ContentBlocking = {
     // occurs on the page.  Note that merely allowing the loading of content that
     // we could have blocked does not trigger the appearance of the shield.
     // This state will be overriden later if there's an exception set for this site.
-    this.content.toggleAttribute("detected", anyDetected);
-    this.content.toggleAttribute("blocking", anyBlocking);
-    this.content.toggleAttribute("hasException", hasException);
+    for (let elt of [this.content, this.protectionsPopup]) {
+      elt.toggleAttribute("detected", anyDetected);
+      elt.toggleAttribute("blocking", anyBlocking);
+      elt.toggleAttribute("hasException", hasException);
+    }
 
     this.iconBox.toggleAttribute("active", anyBlocking);
     this.iconBox.toggleAttribute("hasException", hasException);
