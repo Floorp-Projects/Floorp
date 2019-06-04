@@ -3,6 +3,14 @@
   --addon-icon-size: 32px;
 }
 
+*|*[hidden] {
+  display: none !important;
+}
+
+.header-name {
+  -moz-user-select: initial;
+}
+
 #main {
   margin-inline-start: 28px;
   margin-bottom: 28px;
@@ -56,7 +64,7 @@ addon-card:not([expanded]) > .addon.card:hover {
   display: flex;
 }
 
-addon-list .addon.card {
+addon-list addon-card > .addon.card {
   -moz-user-select: none;
 }
 
@@ -143,6 +151,11 @@ addon-card:not([expanded]) .addon-description {
   margin-inline-end: -8px;
 }
 
+/* Recommended add-ons on list views */
+.recommended-heading {
+  margin-bottom: 16px;
+}
+
 /* Discopane extensions to the add-on card */
 
 recommended-addon-card .addon-name {
@@ -203,15 +216,15 @@ recommended-addon-card .addon-description:not(:empty) {
   flex-shrink: 0;
 }
 
-.discopane-footer {
+.view-footer {
   text-align: center;
 }
 
-.discopane-footer > * {
+.view-footer-item {
   margin-top: 30px;
 }
 
-.discopane-privacy-policy-link {
+.privacy-policy-link {
   font-size: small;
 }
 
@@ -338,7 +351,7 @@ panel-item-separator {
   margin: 6px 0;
 }
 
-panel-item-separator[hidden] {
+.hide-amo-link .amo-link-container {
   display: none;
 }
 
