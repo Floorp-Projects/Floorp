@@ -324,7 +324,7 @@ add_task(async function remove_multiple_bookmarks() {
                                   bm1.guid, bm1.parentGuid,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                    { name: "onItemRemoved",
-                     arguments: [ itemId2, parentId2, bm2.index, bm2.type, bm2.url,
+                     arguments: [ itemId2, parentId2, bm2.index - 1, bm2.type, bm2.url,
                                   bm2.guid, bm2.parentGuid,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                  ]);
