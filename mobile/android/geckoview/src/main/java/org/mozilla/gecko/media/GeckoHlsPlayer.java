@@ -382,9 +382,12 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on GeckoHlsPlayerThread from ExoPlayer
     @Override
-    public void onPositionDiscontinuity() {
+    public synchronized void onPositionDiscontinuity() {
         if (DEBUG) {
             Log.d(LOGTAG, "positionDiscontinuity");
+        }
+        if (mVRenderer != null) {
+            mVRenderer.onPositionDiscontinuity();
         }
     }
 
