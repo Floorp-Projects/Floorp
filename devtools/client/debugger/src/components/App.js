@@ -119,7 +119,7 @@ class App extends Component<Props, State> {
     ];
     searchKeys.forEach(key => shortcuts.on(key, this.toggleQuickOpenModal));
 
-    shortcuts.on(L10N.getStr("gotoLineModal.key2"), (_, e) =>
+    shortcuts.on(L10N.getStr("gotoLineModal.key3"), (_, e) =>
       this.toggleQuickOpenModal(_, e, ":")
     );
 
@@ -141,7 +141,7 @@ class App extends Component<Props, State> {
     ];
     searchKeys.forEach(key => shortcuts.off(key, this.toggleQuickOpenModal));
 
-    shortcuts.off(L10N.getStr("gotoLineModal.key2"), this.toggleQuickOpenModal);
+    shortcuts.off(L10N.getStr("gotoLineModal.key3"), this.toggleQuickOpenModal);
 
     shortcuts.off("Escape", this.onEscape);
   }
