@@ -321,7 +321,7 @@ var gSyncPane = {
     } else {
       fxaLoginStatus.removeAttribute("hasName");
     }
-    if (state.avatarURL && !state.avatarIsDefault) {
+    if (state.avatarURL) {
       let bgImage = "url(\"" + state.avatarURL + "\")";
       let profileImageElement = document.querySelector("#fxaLoginVerified > .fxaProfileImage");
       profileImageElement.style.listStyleImage = bgImage;
