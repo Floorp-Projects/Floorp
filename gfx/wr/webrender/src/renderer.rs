@@ -2582,7 +2582,7 @@ impl Renderer {
             let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
 
             let render_tasks = &render_doc.frame.render_tasks;
-            match render_tasks.tasks.last() {
+            match render_tasks.tasks.first() {
                 Some(main_task) => main_task.print_with(&mut builder, render_tasks),
                 None => continue,
             };
