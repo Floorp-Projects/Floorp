@@ -9,6 +9,7 @@ import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
@@ -21,6 +22,8 @@ import kotlin.math.roundToInt
 class RuntimeSettingsTest : BaseSessionTest() {
 
     @Test fun automaticFontSize() {
+        // disable test on pgo for frequently failing Bug 1538430
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
         val settings = sessionRule.runtime.settings
         var initialFontSize = 2.15f
         var initialFontInflation = true
