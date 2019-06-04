@@ -1017,6 +1017,20 @@ void Statistics::endGC() {
     runtime->addTelemetry(JS_TELEMETRY_GC_NON_INCREMENTAL_REASON,
                           uint32_t(nonincrementalReason_));
   }
+
+#ifdef DEBUG
+  // Reset happens non-incrementally, so only the last slice can be reset.
+  for (size_t i = 0; i < slices_.length() - 1; i++) {
+    MOZ_ASSERT(!slices_[i].wasReset());
+  }
+#endif
+  const auto& lastSlice = slices_.back();
+  runtime->addTelemetry(JS_TELEMETRY_GC_RESET, lastSlice.wasReset());
+  if (lastSlice.wasReset()) {
+    runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON,
+                          uint32_t(lastSlice.resetReason));
+  }
+
   runtime->addTelemetry(JS_TELEMETRY_GC_INCREMENTAL_DISABLED,
                         !runtime->gc.isIncrementalGCAllowed());
   runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_TOTAL_MS, t(sccTotal));
@@ -1102,11 +1116,6 @@ void Statistics::endSlice() {
     writeLogMessage("end slice");
     TimeDuration sliceTime = slice.end - slice.start;
     runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
-    runtime->addTelemetry(JS_TELEMETRY_GC_RESET, slice.wasReset());
-    if (slice.wasReset()) {
-      runtime->addTelemetry(JS_TELEMETRY_GC_RESET_REASON,
-                            uint32_t(slice.resetReason));
-    }
 
     if (slice.budget.isTimeBudget()) {
       int64_t budget_ms = slice.budget.timeBudget.budget;
