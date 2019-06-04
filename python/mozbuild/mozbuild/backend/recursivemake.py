@@ -485,7 +485,7 @@ class RecursiveMakeBackend(CommonBackend):
                 '.cpp': 'HOST_CPPSRCS',
             }
             variables = [suffix_map[obj.canonical_suffix]]
-            if isinstance(obj, GeneratedSources):
+            if isinstance(obj, HostGeneratedSources):
                 variables.append('GARBAGE')
                 base = backend_file.objdir
             else:
