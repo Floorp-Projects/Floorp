@@ -93,8 +93,11 @@ NS_IMETHODIMP nsIconChannel::IconAsyncOpenTask::Run() {
   HICON hIcon = nullptr;
   nsresult rv =
       mChannel->GetHIconFromFile(mLocalFile, mPath, mInfoFlags, &hIcon);
+  // Effectively give ownership of mChannel to the runnable so it get released
+  // on the main thread.
+  RefPtr<nsIconChannel> channel = mChannel.forget();
   nsCOMPtr<nsIRunnable> task = NewRunnableMethod<HICON, nsresult>(
-      "nsIconChannel::FinishAsyncOpen", mChannel,
+      "nsIconChannel::FinishAsyncOpen", channel,
       &nsIconChannel::FinishAsyncOpen, hIcon, rv);
   mTarget->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
   return NS_OK;
@@ -152,6 +155,10 @@ nsIconChannel::IconSyncOpenTask::Run() {
   mRv = mChannel->GetHIconFromFile(mLocalFile, mPath, mInfoFlags, &mHIcon);
   mDone = true;
   mMonitor.NotifyAll();
+  // Do this little dance because nsIconChannel multiple inherits from
+  // nsISupports.
+  nsCOMPtr<nsIChannel> channel = mChannel.forget();
+  NS_ProxyRelease("IconSyncOpenTask::mChannel", mTarget, channel.forget());
   return NS_OK;
 }
 
