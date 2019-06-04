@@ -502,6 +502,9 @@ nsresult MultiStateCommandBase::DoCommand(Command aCommand,
 nsresult MultiStateCommandBase::DoCommandParam(Command aCommand,
                                                const nsAString& aStringParam,
                                                TextEditor& aTextEditor) const {
+  NS_WARNING_ASSERTION(aCommand != Command::FormatJustify,
+                       "Command::FormatJustify should be used only for "
+                       "IsCommandEnabled() and GetCommandStateParams()");
   HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
