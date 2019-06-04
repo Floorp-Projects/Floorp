@@ -153,6 +153,7 @@ class IndexConsumer : public ASTConsumer,
 private:
   CompilerInstance &CI;
   SourceManager &SM;
+  LangOptions &LO;
   std::map<FileID, std::unique_ptr<FileInfo>> FileMap;
   MangleContext *CurMangleContext;
   ASTContext *AstContext;
@@ -213,6 +214,9 @@ private:
     return getFileInfo(Loc)->Interesting;
   }
 
+  // Convert location to "line:column" or "line:column-column" given length.
+  // In resulting string rep, line is 1-based and zero-padded to 5 digits, while
+  // column is 0-based and unpadded.
   std::string locationToString(SourceLocation Loc, size_t Length = 0) {
     std::pair<FileID, unsigned> Pair = SM.getDecomposedLoc(Loc);
 
@@ -233,6 +237,8 @@ private:
     }
   }
 
+  // Convert SourceRange to "line-line".
+  // In the resulting string rep, line is 1-based.
   std::string lineRangeToString(SourceRange Range) {
     std::pair<FileID, unsigned> Begin = SM.getDecomposedLoc(Range.getBegin());
     std::pair<FileID, unsigned> End = SM.getDecomposedLoc(Range.getEnd());
@@ -248,6 +254,33 @@ private:
     }
 
     return stringFormat("%d-%d", Line1, Line2);
+  }
+
+  // Convert SourceRange to "line:column-line:column".
+  // In the resulting string rep, line is 1-based, column is 0-based.
+  std::string fullRangeToString(SourceRange Range) {
+    std::pair<FileID, unsigned> Begin = SM.getDecomposedLoc(Range.getBegin());
+    std::pair<FileID, unsigned> End = SM.getDecomposedLoc(Range.getEnd());
+
+    bool IsInvalid;
+    unsigned Line1 = SM.getLineNumber(Begin.first, Begin.second, &IsInvalid);
+    if (IsInvalid) {
+      return "";
+    }
+    unsigned Column1 = SM.getColumnNumber(Begin.first, Begin.second, &IsInvalid);
+    if (IsInvalid) {
+      return "";
+    }
+    unsigned Line2 = SM.getLineNumber(End.first, End.second, &IsInvalid);
+    if (IsInvalid) {
+      return "";
+    }
+    unsigned Column2 = SM.getColumnNumber(End.first, End.second, &IsInvalid);
+    if (IsInvalid) {
+      return "";
+    }
+
+    return stringFormat("%d:%d-%d:%d", Line1, Column1 - 1, Line2, Column2 - 1);
   }
 
   // Returns the qualified name of `d` without considering template parameters.
@@ -416,7 +449,7 @@ private:
 
 public:
   IndexConsumer(CompilerInstance &CI)
-      : CI(CI), SM(CI.getSourceManager()), CurMangleContext(nullptr),
+      : CI(CI), SM(CI.getSourceManager()), LO(CI.getLangOpts()), CurMangleContext(nullptr),
         AstContext(nullptr), CurDeclContext(nullptr), TemplateStack(nullptr) {
     CI.getPreprocessor().addPPCallbacks(
         llvm::make_unique<PreprocessorHook>(this));
@@ -873,7 +906,8 @@ public:
                        std::string QualName, SourceLocation Loc,
                        const std::vector<std::string> &Symbols,
                        Context TokenContext = Context(), int Flags = 0,
-                       SourceRange PeekRange = SourceRange()) {
+                       SourceRange PeekRange = SourceRange(),
+                       SourceRange NestingRange = SourceRange()) {
     if (!shouldVisit(Loc)) {
       return;
     }
@@ -956,6 +990,13 @@ public:
     Fmt.add("loc", RangeStr);
     Fmt.add("source", 1);
 
+    if (NestingRange.isValid()) {
+      std::string NestingRangeStr = fullRangeToString(NestingRange);
+      if (!NestingRangeStr.empty()) {
+        Fmt.add("nestingRange", NestingRangeStr);
+      }
+    }
+
     std::string Syntax;
     if (Flags & NoCrossref) {
       Fmt.add("syntax", "");
@@ -985,13 +1026,36 @@ public:
   void visitIdentifier(const char *Kind, const char *SyntaxKind,
                        std::string QualName, SourceLocation Loc, std::string Symbol,
                        Context TokenContext = Context(), int Flags = 0,
-                       SourceRange PeekRange = SourceRange()) {
+                       SourceRange PeekRange = SourceRange(),
+                       SourceRange NestingRange = SourceRange()) {
     std::vector<std::string> V = {Symbol};
-    visitIdentifier(Kind, SyntaxKind, QualName, Loc, V, TokenContext, Flags, PeekRange);
+    visitIdentifier(Kind, SyntaxKind, QualName, Loc, V, TokenContext, Flags,
+                    PeekRange, NestingRange);
   }
 
   void normalizeLocation(SourceLocation *Loc) {
     *Loc = SM.getSpellingLoc(*Loc);
+  }
+
+  // For cases where the left-brace is not directly accessible from the AST,
+  // helper to use the lexer to find the brace.  Make sure you're picking the
+  // start location appropriately!
+  SourceLocation findLeftBraceFromLoc(SourceLocation Loc) {
+    return Lexer::findLocationAfterToken(Loc, tok::l_brace, SM, LO, false);
+  }
+
+  // If the provided statement is compound, return its range.
+  SourceRange getCompoundStmtRange(Stmt* D) {
+    if (!D) {
+      return SourceRange();
+    }
+
+    CompoundStmt *D2 = dyn_cast<CompoundStmt>(D);
+    if (D2) {
+      return D2->getSourceRange();
+    }
+
+    return SourceRange();
   }
 
   SourceRange getFunctionPeekRange(FunctionDecl* D) {
@@ -1054,6 +1118,8 @@ public:
     return RC->getSourceRange();
   }
 
+  // Sanity checks that all ranges are in the same file, returning the first if
+  // they're in different files.  Unions the ranges based on which is first.
   SourceRange combineRanges(SourceRange Range1, SourceRange Range2) {
     if (Range1.isInvalid()) {
       return Range2;
@@ -1081,6 +1147,10 @@ public:
     }
   }
 
+  // Given a location and a range, returns the range if:
+  // - The location and the range live in the same file.
+  // - The range is well ordered (end is not before begin).
+  // Returns an empty range otherwise.
   SourceRange validateRange(SourceLocation Loc, SourceRange Range) {
     std::pair<FileID, unsigned> Decomposed = SM.getDecomposedLoc(Loc);
     std::pair<FileID, unsigned> Begin = SM.getDecomposedLoc(Range.getBegin());
@@ -1121,6 +1191,9 @@ public:
     const char *Kind = "def";
     const char *PrettyKind = "?";
     SourceRange PeekRange(D->getBeginLoc(), D->getEndLoc());
+    // The nesting range identifies the left brace and right brace, which
+    // heavily depends on the AST node type.
+    SourceRange NestingRange;
     if (FunctionDecl *D2 = dyn_cast<FunctionDecl>(D)) {
       if (D2->isTemplateInstantiation()) {
         D = D2->getTemplateInstantiationPattern();
@@ -1128,12 +1201,32 @@ public:
       Kind = D2->isThisDeclarationADefinition() ? "def" : "decl";
       PrettyKind = "function";
       PeekRange = getFunctionPeekRange(D2);
+
+      // Only emit the nesting range if:
+      // - This is a definition AND
+      // - This isn't a template instantiation.  Function templates'
+      //   instantiations can end up as a definition with a Loc at their point
+      //   of declaration but with the CompoundStmt of the template's
+      //   point of definition.  This really messes up the nesting range logic.
+      //   At the time of writing this, the test repo's `big_header.h`'s
+      //   `WhatsYourVector_impl::forwardDeclaredTemplateThingInlinedBelow` as
+      //   instantiated by `big_cpp.cpp` triggers this phenomenon.
+      //
+      // Note: As covered elsewhere, template processing is tricky and it's
+      // conceivable that we may change traversal patterns in the future,
+      // mooting this guard.
+      if (D2->isThisDeclarationADefinition() &&
+          !D2->isTemplateInstantiation()) {
+        // The CompoundStmt range is the brace range.
+        NestingRange = getCompoundStmtRange(D2->getBody());
+      }
     } else if (TagDecl *D2 = dyn_cast<TagDecl>(D)) {
       Kind = D2->isThisDeclarationADefinition() ? "def" : "decl";
       PrettyKind = "type";
 
       if (D2->isThisDeclarationADefinition() && D2->getDefinition() == D2) {
         PeekRange = getTagPeekRange(D2);
+        NestingRange = D2->getBraceRange();
       } else {
         PeekRange = SourceRange();
       }
@@ -1154,6 +1247,13 @@ public:
       Kind = "def";
       PrettyKind = "namespace";
       PeekRange = SourceRange(Loc, Loc);
+      NamespaceDecl *D2 = dyn_cast<NamespaceDecl>(D);
+      if (D2) {
+        // There's no exposure of the left brace so we have to find it.
+        NestingRange = SourceRange(
+          findLeftBraceFromLoc(D2->isAnonymousNamespace() ? D2->getBeginLoc() : Loc),
+          D2->getRBraceLoc());
+      }
     } else if (isa<FieldDecl>(D)) {
       Kind = "def";
       PrettyKind = "field";
@@ -1167,6 +1267,7 @@ public:
     SourceRange CommentRange = getCommentRange(D);
     PeekRange = combineRanges(PeekRange, CommentRange);
     PeekRange = validateRange(Loc, PeekRange);
+    NestingRange = validateRange(Loc, NestingRange);
 
     std::vector<std::string> Symbols = {getMangledName(CurMangleContext, D)};
     if (CXXMethodDecl::classof(D)) {
@@ -1207,7 +1308,7 @@ public:
     }
 
     visitIdentifier(Kind, PrettyKind, getQualifiedName(D), Loc, Symbols,
-                    getContext(D), Flags, PeekRange);
+                    getContext(D), Flags, PeekRange, NestingRange);
 
     return true;
   }
