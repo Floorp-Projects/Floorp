@@ -30,7 +30,6 @@
 #include "mozilla/dom/Document.h"  // for Document
 #include "nsIDocumentStateListener.h"
 #include "nsIEditor.h"                   // for nsIEditor
-#include "nsIHTMLDocument.h"             // for nsIHTMLDocument, etc
 #include "nsIInterfaceRequestorUtils.h"  // for do_GetInterface
 #include "nsIPlaintextEditor.h"          // for nsIPlaintextEditor, etc
 #include "nsIRefreshURI.h"               // for nsIRefreshURI

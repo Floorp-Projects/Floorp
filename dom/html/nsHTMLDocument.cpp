@@ -160,8 +160,7 @@ nsHTMLDocument::~nsHTMLDocument() {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, Document, mAll)
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHTMLDocument, Document,
-                                             nsIHTMLDocument)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(nsHTMLDocument, Document)
 
 JSObject* nsHTMLDocument::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {

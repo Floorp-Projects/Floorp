@@ -28,7 +28,6 @@
 #include "nsIDTD.h"
 #include "nsIFormControl.h"
 #include "nsIFormProcessor.h"
-#include "nsIHTMLDocument.h"
 #include "nsIMutationObserver.h"
 #include "nsINode.h"
 #include "nsIObserverService.h"

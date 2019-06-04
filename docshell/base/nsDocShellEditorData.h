@@ -45,7 +45,7 @@ class nsDocShellEditorData {
   // If this frame is editable, store HTML editor here. It's owned here.
   RefPtr<mozilla::HTMLEditor> mHTMLEditor;
 
-  // Backup for the corresponding nsIHTMLDocument's  editing state while
+  // Backup for the corresponding HTMLDocument's  editing state while
   // the editor is detached.
   mozilla::dom::Document::EditingState mDetachedEditingState;
 

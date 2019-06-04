@@ -32,7 +32,6 @@
 #include "nsIDOMWindow.h"
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
-#include "nsIHTMLDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIURL.h"
 #include "nsEscape.h"

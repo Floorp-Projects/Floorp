@@ -7,7 +7,6 @@
 #include "nsHtml5DocumentBuilder.h"
 
 #include "mozilla/dom/ScriptLoader.h"
-#include "nsIHTMLDocument.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsNameSpaceManager.h"
 #include "nsStyleLinkElement.h"

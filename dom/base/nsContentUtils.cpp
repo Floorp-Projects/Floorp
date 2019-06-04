@@ -158,7 +158,6 @@
 #include "nsIForm.h"
 #include "nsIFragmentContentSink.h"
 #include "nsContainerFrame.h"
-#include "nsIHTMLDocument.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIdleService.h"
 #include "nsIImageLoadingContent.h"
@@ -2656,14 +2655,13 @@ nsresult nsContentUtils::GenerateStateKey(nsIContent* aContent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIHTMLDocument> htmlDocument =
-      do_QueryInterface(aContent->GetUncomposedDoc());
+  RefPtr<Document> doc = aContent->GetUncomposedDoc();
 
   KeyAppendInt(partID, aKey);  // first append a partID
   bool generatedUniqueKey = false;
 
-  if (htmlDocument) {
-    nsHTMLDocument* htmlDoc = static_cast<nsHTMLDocument*>(htmlDocument.get());
+  if (doc && doc->IsHTMLOrXHTML()) {
+    nsHTMLDocument* htmlDoc = doc->AsHTMLDocument();
     RefPtr<nsContentList> htmlForms;
     RefPtr<nsContentList> htmlFormControls;
     htmlDoc->GetFormsAndFormControls(getter_AddRefs(htmlForms),
@@ -2708,7 +2706,7 @@ nsresult nsContentUtils::GenerateStateKey(nsIContent* aContent,
           // highly likely guess that the highest form parsed so far is the one.
           // This code should not be on trunk, only branch.
           //
-          index = htmlDocument->GetNumFormsSynchronous() - 1;
+          index = htmlDoc->GetNumFormsSynchronous() - 1;
         }
         if (index > -1) {
           KeyAppendInt(index, aKey);
@@ -4520,10 +4518,6 @@ already_AddRefed<DocumentFragment> nsContentUtils::CreateContextualFragment(
   // for compiling event handlers... so just bail out.
   RefPtr<Document> document = aContextNode->OwnerDoc();
   bool isHTML = document->IsHTMLDocument();
-#ifdef DEBUG
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
-  NS_ASSERTION(!isHTML || htmlDoc, "Should have HTMLDocument here!");
-#endif
 
   if (isHTML) {
     RefPtr<DocumentFragment> frag =

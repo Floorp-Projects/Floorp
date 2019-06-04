@@ -16,7 +16,6 @@
 #include "ContentParent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIHTMLDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIFormControl.h"
@@ -40,6 +39,7 @@
 #include "nsStyleCoord.h"
 #include "BrowserChild.h"
 #include "nsFrameLoader.h"
+#include "nsHTMLDocument.h"
 #include "nsNumberControlFrame.h"
 #include "nsNetUtil.h"
 #include "nsRange.h"
@@ -3839,8 +3839,7 @@ Element* nsFocusManager::GetRootForFocus(nsPIDOMWindowOuter* aWindow,
   }
 
   // Finally, check if this is a frameset
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
-  if (htmlDoc) {
+  if (aDocument && aDocument->IsHTMLOrXHTML()) {
     Element* htmlChild = aDocument->GetHtmlChildElement(nsGkAtoms::frameset);
     if (htmlChild) {
       // In document navigation mode, return the frameset so that navigation
