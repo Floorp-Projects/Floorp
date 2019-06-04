@@ -57,9 +57,16 @@ class CollectionViewHolder(
         collection_overflow_button.run {
             increaseTapArea(buttonIncreaseDps)
             setOnClickListener {
+                val location = IntArray(2)
+                it.getLocationInWindow(location)
                 collectionMenu.menuBuilder
                     .build(view.context)
-                    .show(anchor = it, orientation = BrowserMenu.Orientation.DOWN)
+                    .show(
+                        anchor = it,
+                        orientation = if (location[1] > (rootView.measuredHeight / 2))
+                            BrowserMenu.Orientation.UP else
+                            BrowserMenu.Orientation.DOWN
+                    )
             }
         }
 
