@@ -118,7 +118,6 @@ async_test(t => {
 
   let win = window.open(`resources/navigate_anonymous.sub.html?channelName=${CHANNEL_NAME}&to=navigate_null.sub.html?channelName=${SECOND_CHANNEL}`, "_blank", "noopener");
 
-  }, 500);
 }, "Top-level noopener with anonymous policy: navigating to a different policy should work");
 
 promise_test(t => {
@@ -128,5 +127,93 @@ promise_test(t => {
     assert_equals(r.type, "cors", "type should have been changed to cors");
   });
 }, "Fetch policy: anonymous policy no-cors fetches should be changed to cors");
+
+
+async_test(t => {
+  let pageLoaded = false;
+  const CHANNEL_NAME = "anon-null-window";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  bc.onmessage = t.step_func_done((event) => {
+    pageLoaded = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  const SECOND_CHANNEL = "anon-null-window-second";
+  let navigated = false;
+  let bc2 = new BroadcastChannel(SECOND_CHANNEL);
+  bc2.onmessage = t.step_func((event) => {
+    navigated = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  let win = window.open(`resources/navigate_anonymous.sub.html?channelName=${CHANNEL_NAME}&to=navigate_null.sub.html?channelName=${SECOND_CHANNEL}`, "_blank");
+  t.add_cleanup(() => win.close());
+  t.step_timeout(() => {
+    assert_equals(pageLoaded, true, "Opening the popup window from anon window should work");
+    assert_equals(navigated, false, "Navigating the popup to a null policy should fail");
+    t.done();
+  }, 500);
+}, "Top-level popup with anonymous policy: Navigating the popup to a null policy should fail.");
+
+async_test(t => {
+  let pageLoaded = false;
+  const CHANNEL_NAME = "anon-null-window";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  bc.onmessage = t.step_func_done((event) => {
+    pageLoaded = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  const SECOND_CHANNEL = "anon-null-window-second";
+  let navigated = false;
+  let bc2 = new BroadcastChannel(SECOND_CHANNEL);
+  bc2.onmessage = t.step_func((event) => {
+    navigated = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  let win = window.open(`resources/navigate_anonymous.sub.html?clearOpener=true&channelName=${CHANNEL_NAME}&to=navigate_null.sub.html?channelName=${SECOND_CHANNEL}`, "_blank");
+  t.add_cleanup(() => win.close());
+  t.step_timeout(() => {
+    assert_equals(pageLoaded, true, "Opening the popup window from anon window should work");
+    assert_equals(navigated, false, "Navigating the popup to a null policy should fail");
+    t.done();
+  }, 500);
+}, "Top-level popup with anonymous policy: Navigating the popup to a null policy should fail. (even when we clear the opener)");
+
+async_test(t => {
+  let popupLoaded = false;
+  const CHANNEL_NAME = "anon-null-window-no-opener";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  bc.onmessage = t.step_func_done((event) => {
+    let payload = event.data;
+    if (payload == "loaded") {
+      t.step_timeout(() => {
+        assert_equals(popupLoaded, true, "Opening the popup window (noopener) from anon window should work");
+        assert_equals(navigated, false, "Navigating the popup to a null policy should fail");
+        t.done();
+      }, 500);
+    } else if (payload == "popup-loaded") {
+      popupLoaded = true;
+    } else {
+      assert_unreached(`unexpected payload ${payload}`);
+    }
+  });
+
+  const SECOND_CHANNEL = "anon-null-window-second-popup";
+  let navigated = false;
+  let bc2 = new BroadcastChannel(SECOND_CHANNEL);
+  bc2.onmessage = t.step_func((event) => {
+    navigated = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  let win = window.open(`resources/popup_and_close.sub.html?channelName=${CHANNEL_NAME}&to=navigate_null.sub.html?channelName=${SECOND_CHANNEL}`, "_blank", "noopener");
+}, "Top-level popup with anonymous policy: Navigating the popup to a null policy should fail. (even opener window is closed)");
 
 </script>
