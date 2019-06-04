@@ -211,15 +211,15 @@ class EngineRecord {
       log.error(`Multiple validations occurred for engine ${this.name}!`);
       return;
     }
-    let { problems, version, duration, recordCount } = validationResult;
+    let { problems, version, took, checked } = validationResult;
     let validation = {
       version: version || 0,
-      checked: recordCount || 0,
+      checked: checked || 0,
     };
-    if (duration > 0) {
-      validation.took = Math.round(duration);
+    if (took > 0) {
+      validation.took = Math.round(took);
     }
-    let summarized = problems.getSummary(true).filter(({count}) => count > 0);
+    let summarized = problems.filter(({count}) => count > 0);
     if (summarized.length) {
       validation.problems = summarized;
     }
