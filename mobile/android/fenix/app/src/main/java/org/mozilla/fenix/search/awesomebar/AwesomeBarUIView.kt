@@ -8,6 +8,7 @@ import android.graphics.PorterDuff
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
@@ -21,6 +22,7 @@ import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
@@ -156,6 +158,15 @@ class AwesomeBarUIView(
                 )
 
             shortcutEngineManager.shortcutsEnginePickerProvider = shortcutsEnginePickerProvider
+
+            val listener = object : RecyclerView.OnFlingListener() {
+                override fun onFling(velocityX: Int, velocityY: Int): Boolean {
+                    view.hideKeyboard()
+                    return false
+                }
+            }
+
+            view.onFlingListener = listener
         }
     }
 

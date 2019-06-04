@@ -60,12 +60,20 @@
         app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
         app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper" />
 
+    <View
+        android:id="@+id/search_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?neutralFaded"
+        app:layout_constraintBottom_toTopOf="@id/pill_wrapper"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <LinearLayout
         android:id="@+id/pill_wrapper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="?foundation"
-        android:elevation="10dp"
         android:orientation="horizontal"
         android:paddingStart="20dp"
         android:paddingTop="4dp"
