@@ -7,8 +7,10 @@ package mozilla.components.browser.engine.gecko.media
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.concept.engine.media.RecordingDevice
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.MediaElement
+import org.mozilla.geckoview.GeckoSession.MediaDelegate.RecordingDevice as GeckoRecordingDevice
 
 /**
  * [GeckoSession.MediaDelegate] implementation for wrapping [MediaElement] instances in [GeckoMedia] ([Media]) and
@@ -34,4 +36,30 @@ internal class GeckoMediaDelegate(
             engineSession.notifyObservers { onMediaRemoved(media) }
         }
     }
+
+    override fun onRecordingStatusChanged(
+        session: GeckoSession,
+        devices: Array<out GeckoRecordingDevice>
+    ) {
+        val genericDevices = devices.map { it.toRecordingDevice() }
+        engineSession.notifyObservers {
+            onRecordingStateChanged(genericDevices)
+        }
+    }
+}
+
+private fun GeckoRecordingDevice.toRecordingDevice(): RecordingDevice {
+    val type = when (type) {
+        GeckoRecordingDevice.Type.CAMERA -> RecordingDevice.Type.CAMERA
+        GeckoRecordingDevice.Type.MICROPHONE -> RecordingDevice.Type.MICROPHONE
+        else -> throw IllegalStateException("Unknown device type: $type")
+    }
+
+    val status = when (status) {
+        GeckoRecordingDevice.Status.INACTIVE -> RecordingDevice.Status.INACTIVE
+        GeckoRecordingDevice.Status.RECORDING -> RecordingDevice.Status.RECORDING
+        else -> throw IllegalStateException("Unknown device status: $status")
+    }
+
+    return RecordingDevice(type, status)
 }

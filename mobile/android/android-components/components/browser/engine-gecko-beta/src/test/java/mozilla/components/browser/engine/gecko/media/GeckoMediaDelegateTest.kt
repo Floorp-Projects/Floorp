@@ -3,16 +3,20 @@ package mozilla.components.browser.engine.gecko.media
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.MediaElement
+import org.mozilla.geckoview.MockRecordingDevice
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -80,5 +84,46 @@ class GeckoMediaDelegateTest {
         engineSession.geckoSession.mediaDelegate!!.onMediaRemove(mock(), mediaElement)
 
         assertFalse(onMediaRemovedExecuted)
+    }
+
+    @Test
+    fun `WHEN recording state changes THEN observers are notified`() {
+        val engineSession = GeckoEngineSession(mock())
+
+        var observedDevices: List<RecordingDevice> = listOf()
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onRecordingStateChanged(devices: List<RecordingDevice>) {
+                observedDevices = devices
+            }
+        })
+
+        assertTrue(observedDevices.isEmpty())
+
+        engineSession.geckoSession.mediaDelegate!!.onRecordingStatusChanged(mock(), arrayOf(
+            MockRecordingDevice(
+                GeckoSession.MediaDelegate.RecordingDevice.Type.CAMERA,
+                GeckoSession.MediaDelegate.RecordingDevice.Status.RECORDING)
+        ))
+
+        assertEquals(1, observedDevices.size)
+        assertEquals(RecordingDevice(RecordingDevice.Type.CAMERA, RecordingDevice.Status.RECORDING), observedDevices[0])
+
+        engineSession.geckoSession.mediaDelegate!!.onRecordingStatusChanged(mock(), arrayOf(
+            MockRecordingDevice(
+                GeckoSession.MediaDelegate.RecordingDevice.Type.CAMERA,
+                GeckoSession.MediaDelegate.RecordingDevice.Status.RECORDING),
+            MockRecordingDevice(
+                GeckoSession.MediaDelegate.RecordingDevice.Type.MICROPHONE,
+                GeckoSession.MediaDelegate.RecordingDevice.Status.INACTIVE)
+        ))
+
+        assertEquals(2, observedDevices.size)
+        assertEquals(RecordingDevice(RecordingDevice.Type.CAMERA, RecordingDevice.Status.RECORDING), observedDevices[0])
+        assertEquals(RecordingDevice(RecordingDevice.Type.MICROPHONE, RecordingDevice.Status.INACTIVE), observedDevices[1])
+
+        engineSession.geckoSession.mediaDelegate!!.onRecordingStatusChanged(mock(), emptyArray())
+
+        assertTrue(observedDevices.isEmpty())
     }
 }
