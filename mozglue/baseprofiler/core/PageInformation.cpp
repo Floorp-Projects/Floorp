@@ -12,25 +12,26 @@
 
 #  include "BaseProfileJSONWriter.h"
 
-PageInformation::PageInformation(const nsID& aDocShellId,
+PageInformation::PageInformation(const std::string& aDocShellId,
                                  uint32_t aDocShellHistoryId,
-                                 const nsCString& aUrl, bool aIsSubFrame)
+                                 const std::string& aUrl, bool aIsSubFrame)
     : mDocShellId(aDocShellId),
       mDocShellHistoryId(aDocShellHistoryId),
       mUrl(aUrl),
-      mIsSubFrame(aIsSubFrame) {}
+      mIsSubFrame(aIsSubFrame),
+      mRefCnt(0) {}
 
 bool PageInformation::Equals(PageInformation* aOtherPageInfo) {
   return DocShellHistoryId() == aOtherPageInfo->DocShellHistoryId() &&
-         DocShellId().Equals(aOtherPageInfo->DocShellId()) &&
+         DocShellId() == aOtherPageInfo->DocShellId() &&
          IsSubFrame() == aOtherPageInfo->IsSubFrame();
 }
 
 void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) {
   aWriter.StartObjectElement();
-  aWriter.StringProperty("docshellId", nsIDToCString(DocShellId()).get());
+  aWriter.StringProperty("docshellId", DocShellId().c_str());
   aWriter.DoubleProperty("historyId", DocShellHistoryId());
-  aWriter.StringProperty("url", Url().get());
+  aWriter.StringProperty("url", Url().c_str());
   aWriter.BoolProperty("isSubFrame", IsSubFrame());
   aWriter.EndObject();
 }
