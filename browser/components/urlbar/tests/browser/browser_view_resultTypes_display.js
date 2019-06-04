@@ -15,9 +15,12 @@ function assertElementsDisplayed(details, expected) {
   if (expected.separator) {
     Assert.notEqual(window.getComputedStyle(details.element.separator).display,
                     "none", "Should be displaying a separator");
+    Assert.notEqual(window.getComputedStyle(details.element.separator).visibility,
+                    "collapse", "Should be displaying a separator");
   } else {
-    Assert.equal(window.getComputedStyle(details.element.separator).display,
-                 "none", "Should not be displaying a separator");
+    Assert.ok(window.getComputedStyle(details.element.separator).display == "none" ||
+              window.getComputedStyle(details.element.separator).visibility == "collapse",
+              "Should not be displaying a separator");
   }
 }
 
