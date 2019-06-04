@@ -194,14 +194,17 @@ bool SHistoryParent::RecvFindEntryForBFCache(const uint64_t& aSharedID,
         aSharedID) {
       if (!aIncludeCurrentEntry && i == currentIndex) {
         *aEntry = (PSHEntryParent*)nullptr;
+        *aIndex = -1;
       } else {
         SHEntryParent::GetOrCreate(Manager(), entry, *aEntry);
+        *aIndex = i;
       }
 
       return true;
     }
   }
   *aEntry = (PSHEntryParent*)nullptr;
+  *aIndex = -1;
   return true;
 }
 
