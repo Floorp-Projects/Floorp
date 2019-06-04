@@ -58,8 +58,7 @@
       release-types: [release]
       products: [firefox]
       update-channel: release
-      # show for all updates
-      # otherwise add a 'versions: ["<67.0.x"]' line for some value of x
+      versions: ["<67.0.1"]
       locales:
           - de
           - en-CA
