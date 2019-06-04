@@ -215,6 +215,10 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
           name: "parentChildDisagreements",
           count: 1,
         }], "Buffered engine should report parent-child disagreement");
+        deepEqual(engineData.steps.map(step => step.name), ["fetchLocalTree",
+          "fetchNewLocalContents", "fetchRemoteTree", "fetchNewRemoteContents",
+          "merge", "apply", "notifyObservers",
+          "fetchLocalChangeRecords"], "Buffered engine should report all merge steps");
       }
     } else {
       // The legacy engine doesn't report validation failures for this case,

@@ -1226,7 +1226,13 @@ BufferedBookmarksStore.prototype = {
         this.engine.service.recordTelemetryEvent(object, method, value,
                                                  extra);
       },
-      recordStepTelemetry() {},
+      recordStepTelemetry: (name, took, counts) => {
+        Observers.notify("weave:engine:sync:step", {
+          name,
+          took,
+          counts,
+        }, this.name);
+      },
       recordValidationTelemetry: (took, checked, problems) => {
         Observers.notify("weave:engine:validate:finish", {
           version: BUFFERED_BOOKMARK_VALIDATOR_VERSION,
