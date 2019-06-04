@@ -648,7 +648,7 @@
   },
   "GC_IN_PROGRESS_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["smaug@mozilla.com"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "smaug@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 10000,
@@ -852,7 +852,7 @@
   "GC_NURSERY_BYTES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
-    "expires_in_version": "never",
+    "expires_in_version": "72",
     "kind": "linear",
     "high": 16777216,
     "n_buckets": 16,
