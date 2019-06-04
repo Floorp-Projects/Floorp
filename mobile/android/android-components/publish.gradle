@@ -59,6 +59,8 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
     }
 
     task zipMavenArtifacts(type: Zip) {
+        dependsOn publish
+
         from "${project.buildDir}/maven"
 
         include '**/*.aar'
