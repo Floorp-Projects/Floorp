@@ -631,15 +631,6 @@ var gUnseekableTests = [
   { name:"bogus.duh", type:"bogus/duh"}
 ];
 
-function isWindows32() {
-    return navigator.userAgent.includes("Windows") &&
-        !navigator.userAgent.includes("Win64");
-}
-
-function isAndroid() {
-    return navigator.userAgent.includes("Android");
-}
-
 var androidVersion = -1; // non-Android platforms
 if (manifestNavigator().userAgent.includes("Mobile") ||
     manifestNavigator().userAgent.includes("Tablet")) {
@@ -1866,11 +1857,6 @@ function mediaTestCleanup(callback) {
       A[i] = null;
     }
     SpecialPowers.exactGC(callback);
-}
-
-// B2G emulator and Android 2.3 are condidered slow platforms
-function isSlowPlatform() {
-  return SpecialPowers.Services.appinfo.name == "B2G" || getAndroidVersion() == 10;
 }
 
 async function dumpDebugInfoForToken(token) {
