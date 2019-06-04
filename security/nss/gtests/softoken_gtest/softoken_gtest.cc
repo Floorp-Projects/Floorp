@@ -1,9 +1,3 @@
-#include <cstdlib>
-#if defined(_WIN32)
-#include <windows.h>
-#include <codecvt>
-#endif
-
 #include "cert.h"
 #include "certdb.h"
 #include "nspr.h"
@@ -12,92 +6,12 @@
 #include "secerr.h"
 
 #include "nss_scoped_ptrs.h"
+#include "util.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
 namespace nss_test {
-
-// Given a prefix, attempts to create a unique directory that the user can do
-// work in without impacting other tests. For example, if given the prefix
-// "scratch", a directory like "scratch05c17b25" will be created in the current
-// working directory (or the location specified by NSS_GTEST_WORKDIR, if
-// defined).
-// Upon destruction, the implementation will attempt to delete the directory.
-// However, no attempt is made to first remove files in the directory - the
-// user is responsible for this. If the directory is not empty, deleting it will
-// fail.
-// Statistically, it is technically possible to fail to create a unique
-// directory name, but this is extremely unlikely given the expected workload of
-// this implementation.
-class ScopedUniqueDirectory {
- public:
-  explicit ScopedUniqueDirectory(const std::string &prefix);
-
-  // NB: the directory must be empty upon destruction
-  ~ScopedUniqueDirectory() { assert(rmdir(mPath.c_str()) == 0); }
-
-  const std::string &GetPath() { return mPath; }
-  const std::string &GetUTF8Path() { return mUTF8Path; }
-
- private:
-  static const int RETRY_LIMIT = 5;
-  static void GenerateRandomName(/*in/out*/ std::string &prefix);
-  static bool TryMakingDirectory(/*in/out*/ std::string &prefix);
-
-  std::string mPath;
-  std::string mUTF8Path;
-};
-
-ScopedUniqueDirectory::ScopedUniqueDirectory(const std::string &prefix) {
-  std::string path;
-  const char *workingDirectory = PR_GetEnvSecure("NSS_GTEST_WORKDIR");
-  if (workingDirectory) {
-    path.assign(workingDirectory);
-  }
-  path.append(prefix);
-  for (int i = 0; i < RETRY_LIMIT; i++) {
-    std::string pathCopy(path);
-    // TryMakingDirectory will modify its input. If it fails, we want to throw
-    // away the modified result.
-    if (TryMakingDirectory(pathCopy)) {
-      mPath.assign(pathCopy);
-      break;
-    }
-  }
-  assert(mPath.length() > 0);
-#if defined(_WIN32)
-  // sqldb always uses UTF-8 regardless of the current system locale.
-  DWORD len =
-      MultiByteToWideChar(CP_ACP, 0, mPath.data(), mPath.size(), nullptr, 0);
-  std::vector<wchar_t> buf(len, L'\0');
-  MultiByteToWideChar(CP_ACP, 0, mPath.data(), mPath.size(), buf.data(),
-                      buf.size());
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-  mUTF8Path = converter.to_bytes(std::wstring(buf.begin(), buf.end()));
-#else
-  mUTF8Path = mPath;
-#endif
-}
-
-void ScopedUniqueDirectory::GenerateRandomName(std::string &prefix) {
-  std::stringstream ss;
-  ss << prefix;
-  // RAND_MAX is at least 32767.
-  ss << std::setfill('0') << std::setw(4) << std::hex << rand() << rand();
-  // This will overwrite the value of prefix. This is a little inefficient, but
-  // at least it makes the code simple.
-  ss >> prefix;
-}
-
-bool ScopedUniqueDirectory::TryMakingDirectory(std::string &prefix) {
-  GenerateRandomName(prefix);
-#if defined(_WIN32)
-  return _mkdir(prefix.c_str()) == 0;
-#else
-  return mkdir(prefix.c_str(), 0777) == 0;
-#endif
-}
 
 class SoftokenTest : public ::testing::Test {
  protected:

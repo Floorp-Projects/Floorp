@@ -491,11 +491,11 @@ cleanup:
 ** This implments steps 4 thorough 22 of FIPS 186-3 A.1.2.1 and
 **                steps 16 through 34 of FIPS 186-2 C.6
 */
-#define MAX_ST_SEED_BITS (HASH_LENGTH_MAX * PR_BITS_PER_BYTE)
 static SECStatus
 makePrimefromPrimesShaweTaylor(
     HASH_HashType hashtype,          /* selected Hashing algorithm */
     unsigned int length,             /* input. Length of prime in bits. */
+    unsigned int seedlen,            /* input seed length in bits */
     mp_int *c0,                      /* seed prime */
     mp_int *q,                       /* sub prime, can be 1 */
     mp_int *prime,                   /* output.  */
@@ -557,7 +557,7 @@ makePrimefromPrimesShaweTaylor(
     old_counter = *prime_gen_counter;
     /*
     ** Comment: Generate a pseudorandom integer x in the interval
-    ** [2**(lenght-1), 2**length].
+    ** [2**(length-1), 2**length].
     **
     ** Step 6/18 x = 0
     */
@@ -569,11 +569,10 @@ makePrimefromPrimesShaweTaylor(
     for (i = 0; i < iterations; i++) {
         /* is bigger than prime_seed should get to */
         CHECK_SEC_OK(addToSeedThenHash(hashtype, prime_seed, i,
-                                       MAX_ST_SEED_BITS, &x[(iterations - i - 1) * hashlen]));
+                                       seedlen, &x[(iterations - i - 1) * hashlen]));
     }
     /* Step 8/20 prime_seed = prime_seed + iterations + 1 */
-    CHECK_SEC_OK(addToSeed(prime_seed, iterations, MAX_ST_SEED_BITS,
-                           prime_seed));
+    CHECK_SEC_OK(addToSeed(prime_seed, iterations, seedlen, prime_seed));
     /*
     ** Step 9/21 x = 2 ** (length-1) + x mod 2 ** (length-1)
     **
@@ -595,7 +594,7 @@ makePrimefromPrimesShaweTaylor(
     x[offset] = (mask & x[offset]) | bit;
     /*
     ** Comment: Generate a candidate prime c in the interval
-    ** [2**(lenght-1), 2**length].
+    ** [2**(length-1), 2**length].
     **
     ** Step 10 t = ceiling(x/(2q(p0)))
     ** Step 22 t = ceiling(x/(2(c0)))
@@ -624,7 +623,7 @@ step_23:
         /* t = 2**(length-1) + 2qc0 -1 */
         CHECK_MPI_OK(mp_add(&two_length_minus_1, &t, &t));
         /* t = floor((2**(length-1)+2qc0 -1)/2qco)
-         *   = ceil(2**(lenght-2)/2qc0) */
+         *   = ceil(2**(length-2)/2qc0) */
         CHECK_MPI_OK(mp_div(&t, &c0_2, &t, NULL));
         CHECK_MPI_OK(mp_mul(&t, &c0_2, &c));
         CHECK_MPI_OK(mp_add_d(&c, (mp_digit)1, &c)); /* c= 2tqc0 + 1*/
@@ -645,13 +644,11 @@ step_23:
     ** NOTE: we reuse the x array for 'a' initially.
     */
     for (i = 0; i < iterations; i++) {
-        /* MAX_ST_SEED_BITS is bigger than prime_seed should get to */
         CHECK_SEC_OK(addToSeedThenHash(hashtype, prime_seed, i,
-                                       MAX_ST_SEED_BITS, &x[(iterations - i - 1) * hashlen]));
+                                       seedlen, &x[(iterations - i - 1) * hashlen]));
     }
     /* Step 16/28 prime_seed = prime_seed + iterations + 1 */
-    CHECK_SEC_OK(addToSeed(prime_seed, iterations, MAX_ST_SEED_BITS,
-                           prime_seed));
+    CHECK_SEC_OK(addToSeed(prime_seed, iterations, seedlen, prime_seed));
     /* Step 17/29 a = 2 + (a mod (c-3)). */
     CHECK_MPI_OK(mp_read_unsigned_octets(&a, x, iterations * hashlen));
     CHECK_MPI_OK(mp_sub_d(&c, (mp_digit)3, &z)); /* z = c -3 */
@@ -742,6 +739,7 @@ makePrimefromSeedShaweTaylor(
     int hashlen = HASH_ResultLen(hashtype);
     int outlen = hashlen * PR_BITS_PER_BYTE;
     int offset;
+    int seedlen = input_seed->len * 8; /*seedlen is in bits */
     unsigned char bit, mask;
     unsigned char x[HASH_LENGTH_MAX * 2];
     mp_digit dummy;
@@ -775,7 +773,7 @@ makePrimefromSeedShaweTaylor(
             goto cleanup;
         }
         /* Steps 16-34 */
-        rv = makePrimefromPrimesShaweTaylor(hashtype, length, &c0, &one,
+        rv = makePrimefromPrimesShaweTaylor(hashtype, length, seedlen, &c0, &one,
                                             prime, prime_seed, prime_gen_counter);
         goto cleanup; /* we're done, one way or the other */
     }
@@ -787,8 +785,7 @@ makePrimefromSeedShaweTaylor(
 step_5:
     /* Step 5 c = Hash(prime_seed) xor Hash(prime_seed+1). */
     CHECK_SEC_OK(HASH_HashBuf(hashtype, x, prime_seed->data, prime_seed->len));
-    CHECK_SEC_OK(addToSeedThenHash(hashtype, prime_seed, 1,
-                                   MAX_ST_SEED_BITS, &x[hashlen]));
+    CHECK_SEC_OK(addToSeedThenHash(hashtype, prime_seed, 1, seedlen, &x[hashlen]));
     for (i = 0; i < hashlen; i++) {
         x[i] = x[i] ^ x[i + hashlen];
     }
@@ -817,7 +814,7 @@ step_5:
     /* Step 8 prime_gen_counter = prime_gen_counter + 1 */
     (*prime_gen_counter)++;
     /* Step 9 prime_seed = prime_seed + 2 */
-    CHECK_SEC_OK(addToSeed(prime_seed, 2, MAX_ST_SEED_BITS, prime_seed));
+    CHECK_SEC_OK(addToSeed(prime_seed, 2, seedlen, prime_seed));
     /* Step 10 Perform deterministic primality test on c. For example, since
     ** c is small, it's primality can be tested by trial division, See
     ** See Appendic C.7.
@@ -890,7 +887,8 @@ findQfromSeed(
     mp_int *Q_,                 /* output. */
     unsigned int *qseed_len,    /* output */
     HASH_HashType *hashtypePtr, /* output. Hash uses */
-    pqgGenType *typePtr)        /* output. Generation Type used */
+    pqgGenType *typePtr,        /* output. Generation Type used */
+    unsigned int *qgen_counter) /* output. q_counter */
 {
     HASH_HashType hashtype;
     SECItem firstseed = { 0, 0, 0 };
@@ -964,6 +962,7 @@ findQfromSeed(
             *qseed_len = qseed.len;
             *hashtypePtr = hashtype;
             *typePtr = FIPS186_3_ST_TYPE;
+            *qgen_counter = count;
             SECITEM_FreeItem(&qseed, PR_FALSE);
             return SECSuccess;
         }
@@ -1390,19 +1389,26 @@ step_5:
         CHECK_SEC_OK(makePrimefromSeedShaweTaylor(hashtype, (L + 1) / 2 + 1,
                                                   &qseed, &p0, &pseed, &pgen_counter));
         /* Steps 4-22 FIPS 186-3 appendix A.1.2.1.2 */
-        CHECK_SEC_OK(makePrimefromPrimesShaweTaylor(hashtype, L,
+        CHECK_SEC_OK(makePrimefromPrimesShaweTaylor(hashtype, L, seedBytes * 8,
                                                     &p0, &Q, &P, &pseed, &pgen_counter));
 
         /* combine all the seeds */
-        seed->len = firstseed.len + qseed.len + pseed.len;
+        if ((qseed.len > firstseed.len) || (pseed.len > firstseed.len)) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE); /* shouldn't happen */
+            goto cleanup;
+        }
+        /* If the seed overflows, then pseed and qseed may have leading zeros which the mpl code clamps.
+         * we want to make sure those are added back in so the individual seed lengths are predictable from
+         * the overall seed length */
+        seed->len = firstseed.len * 3;
         seed->data = PORT_ArenaZAlloc(verify->arena, seed->len);
         if (seed->data == NULL) {
             goto cleanup;
         }
         PORT_Memcpy(seed->data, firstseed.data, firstseed.len);
-        PORT_Memcpy(seed->data + firstseed.len, pseed.data, pseed.len);
-        PORT_Memcpy(seed->data + firstseed.len + pseed.len, qseed.data, qseed.len);
-        counter = 0; /* (qgen_counter << 16) | pgen_counter; */
+        PORT_Memcpy(seed->data + 2 * firstseed.len - pseed.len, pseed.data, pseed.len);
+        PORT_Memcpy(seed->data + 3 * firstseed.len - qseed.len, qseed.data, qseed.len);
+        counter = (qgen_counter << 16) | pgen_counter;
 
         /* we've generated both P and Q now, skip to generating G */
         goto generate_G;
@@ -1622,6 +1628,7 @@ PQG_VerifyParams(const PQGParams *params,
     int j;
     unsigned int counter_max = 0; /* handle legacy L < 1024 */
     unsigned int qseed_len;
+    unsigned int qgen_counter_ = 0;
     SECItem pseed_ = { 0, 0, 0 };
     HASH_HashType hashtype;
     pqgGenType type;
@@ -1701,48 +1708,55 @@ PQG_VerifyParams(const PQGParams *params,
     /* Steps 7-12 are done only if the optional PQGVerify is supplied. */
     /* continue processing P */
     /* 7.  counter < 4*L */
-    CHECKPARAM((vfy->counter == -1) || (vfy->counter < counter_max));
     /* 8.  g >= N and g < 2*L   (g is length of seed in bits) */
-    g = vfy->seed.len * 8;
-    CHECKPARAM(g >= N && g < counter_max / 2);
+    /* step 7 and 8 are delayed until we determine which type of generation
+     * was used */
     /* 9.  Q generated from SEED matches Q in PQGParams. */
     /* This function checks all possible hash and generation types to
      * find a Q_ which matches Q. */
+    g = vfy->seed.len * 8;
     CHECKPARAM(findQfromSeed(L, N, g, &vfy->seed, &Q, &Q_, &qseed_len,
-                             &hashtype, &type) == SECSuccess);
+                             &hashtype, &type, &qgen_counter_) == SECSuccess);
     CHECKPARAM(mp_cmp(&Q, &Q_) == 0);
+    /* now we can do steps 7  & 8*/
+    if ((type == FIPS186_1_TYPE) || (type == FIPS186_3_TYPE)) {
+        CHECKPARAM((vfy->counter == -1) || (vfy->counter < counter_max));
+        CHECKPARAM(g >= N && g < counter_max / 2);
+    }
     if (type == FIPS186_3_ST_TYPE) {
         SECItem qseed = { 0, 0, 0 };
         SECItem pseed = { 0, 0, 0 };
         unsigned int first_seed_len;
-        unsigned int pgen_counter = 0;
+        unsigned int pgen_counter_ = 0;
+        unsigned int qgen_counter = (vfy->counter >> 16) & 0xffff;
+        unsigned int pgen_counter = (vfy->counter) & 0xffff;
 
         /* extract pseed and qseed from domain_parameter_seed, which is
          * first_seed || pseed || qseed. qseed is first_seed + small_integer
-         * pseed is qseed + small_integer. This means most of the time
+         * mod the length of first_seed. pseed is qseed + small_integer mod
+         * the length of first_seed. This means most of the time
          * first_seed.len == qseed.len == pseed.len. Rarely qseed.len and/or
-         * pseed.len will be one greater than first_seed.len, so we can
-         * depend on the fact that
-         *   first_seed.len = floor(domain_parameter_seed.len/3).
-         * findQfromSeed returned qseed.len, so we can calculate pseed.len as
-         *   pseed.len = domain_parameter_seed.len - first_seed.len - qseed.len
-         * this is probably over kill, since 99.999% of the time they will all
-         * be equal.
-         *
-         * With the lengths, we can now find the offsets;
+         * pseed.len will be smaller because mpi clamps them. pqgGen
+         * automatically adds the zero pad back though, so we can depend
+         * domain_parameter_seed.len to be a multiple of three. We only have
+         * to deal with the fact that the returned seeds from our functions
+         * could be shorter.
+         *   first_seed.len = domain_parameter_seed.len/3
+         * We can now find the offsets;
          * first_seed.data = domain_parameter_seed.data + 0
          * pseed.data = domain_parameter_seed.data + first_seed.len
          * qseed.data = domain_parameter_seed.data
          *         + domain_paramter_seed.len - qseed.len
-         *
+         * We deal with pseed possibly having zero pad in the pseed check later.
          */
         first_seed_len = vfy->seed.len / 3;
         CHECKPARAM(qseed_len < vfy->seed.len);
         CHECKPARAM(first_seed_len * 8 > N - 1);
-        CHECKPARAM(first_seed_len + qseed_len < vfy->seed.len);
+        CHECKPARAM(first_seed_len * 8 < counter_max / 2);
+        CHECKPARAM(first_seed_len >= qseed_len);
         qseed.len = qseed_len;
         qseed.data = vfy->seed.data + vfy->seed.len - qseed.len;
-        pseed.len = vfy->seed.len - (first_seed_len + qseed_len);
+        pseed.len = first_seed_len;
         pseed.data = vfy->seed.data + first_seed_len;
 
         /*
@@ -1754,14 +1768,34 @@ PQG_VerifyParams(const PQGParams *params,
         ** (ST_Random_Prime((ceil(length/2)+1, input_seed)
         */
         CHECK_SEC_OK(makePrimefromSeedShaweTaylor(hashtype, (L + 1) / 2 + 1,
-                                                  &qseed, &p0, &pseed_, &pgen_counter));
+                                                  &qseed, &p0, &pseed_, &pgen_counter_));
         /* Steps 4-22 FIPS 186-3 appendix A.1.2.1.2 */
-        CHECK_SEC_OK(makePrimefromPrimesShaweTaylor(hashtype, L,
-                                                    &p0, &Q_, &P_, &pseed_, &pgen_counter));
+        CHECK_SEC_OK(makePrimefromPrimesShaweTaylor(hashtype, L, first_seed_len * 8,
+                                                    &p0, &Q_, &P_, &pseed_, &pgen_counter_));
         CHECKPARAM(mp_cmp(&P, &P_) == 0);
         /* make sure pseed wasn't tampered with (since it is part of
          * calculating G) */
+        if (pseed.len > pseed_.len) {
+            /* handle the case of zero pad for pseed */
+            int extra = pseed.len - pseed_.len;
+            int i;
+            for (i = 0; i < extra; i++) {
+                if (pseed.data[i] != 0) {
+                    *result = SECFailure;
+                    goto cleanup;
+                }
+            }
+            pseed.data += extra;
+            pseed.len -= extra;
+            /* the rest is handled in the normal compare below */
+        }
         CHECKPARAM(SECITEM_CompareItem(&pseed, &pseed_) == SECEqual);
+        if (vfy->counter != -1) {
+            CHECKPARAM(pgen_counter < counter_max);
+            CHECKPARAM(qgen_counter < counter_max);
+            CHECKPARAM((pgen_counter_ == pgen_counter));
+            CHECKPARAM((qgen_counter_ == qgen_counter));
+        }
     } else if (vfy->counter == -1) {
         /* If counter is set to -1, we are really only verifying G, skip
          * the remainder of the checks for P */
