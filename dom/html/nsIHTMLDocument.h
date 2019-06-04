@@ -44,8 +44,6 @@ class nsIHTMLDocument : public nsISupports {
   // XXXbz is this still needed now that we can flush just content,
   // not the rest?
   virtual int32_t GetNumFormsSynchronous() = 0;
-
-  virtual void SetIsXHTML(bool aXHTML) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)

@@ -85,9 +85,7 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   virtual void AddedForm() override;
   virtual void RemovedForm() override;
   virtual int32_t GetNumFormsSynchronous() override;
-  virtual void SetIsXHTML(bool aXHTML) override {
-    mType = (aXHTML ? eXHTML : eHTML);
-  }
+  void SetIsXHTML(bool aXHTML) { mType = (aXHTML ? eXHTML : eHTML); }
 
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const override;
