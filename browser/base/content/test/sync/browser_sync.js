@@ -42,13 +42,14 @@ add_task(async function test_ui_state_signedin() {
   checkPanelUIStatusBar({
     label: "Foo Bar",
     fxastatus: "signedin",
+    avatarURL: "https://foo.bar",
     syncing: false,
     syncNowTooltip: lastSyncTooltip,
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-main", false);
   checkMenuBarItem("sync-syncnowitem");
   checkFxaToolbarButtonPanel("PanelUI-fxa-menu");
-  checkFxAAvatar("signedin");
+  checkFxaToolbarButtonAvatar("signedin");
   gSync.relativeTimeFormat = origRelativeTimeFormat;
 });
 
@@ -91,7 +92,7 @@ add_task(async function test_ui_state_unconfigured() {
   checkRemoteTabsPanel("PanelUI-remotetabs-setupsync");
   checkMenuBarItem("sync-setup");
   checkFxaToolbarButtonPanel("PanelUI-fxa-signin");
-  checkFxAAvatar("not_configured");
+  checkFxaToolbarButtonAvatar("not_configured");
 });
 
 add_task(async function test_ui_state_unverified() {
@@ -110,13 +111,14 @@ add_task(async function test_ui_state_unverified() {
     label: expectedLabel,
     tooltip: tooltipText,
     fxastatus: "unverified",
+    avatarURL: null,
     syncing: false,
     syncNowTooltip: tooltipText,
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-unverified", false);
   checkMenuBarItem("sync-unverifieditem");
   checkFxaToolbarButtonPanel("PanelUI-fxa-unverified");
-  checkFxAAvatar("unverified");
+  checkFxaToolbarButtonAvatar("unverified");
 });
 
 add_task(async function test_ui_state_loginFailed() {
@@ -133,19 +135,21 @@ add_task(async function test_ui_state_loginFailed() {
     label: expectedLabel,
     tooltip: tooltipText,
     fxastatus: "login-failed",
+    avatarURL: null,
     syncing: false,
     syncNowTooltip: tooltipText,
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-reauthsync", false);
   checkMenuBarItem("sync-reauthitem");
   checkFxaToolbarButtonPanel("PanelUI-fxa-unverified");
-  checkFxAAvatar("unverified");
+  checkFxaToolbarButtonAvatar("unverified");
 });
 
-function checkPanelUIStatusBar({label, tooltip, fxastatus, syncing, syncNowTooltip}) {
+function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, syncNowTooltip}) {
   let labelNode = document.getElementById("appMenu-fxa-label");
   let tooltipNode = document.getElementById("appMenu-fxa-status");
   let statusNode = document.getElementById("appMenu-fxa-container");
+  let avatar = document.getElementById("appMenu-fxa-avatar");
 
   is(labelNode.getAttribute("label"), label, "fxa label has the right value");
   if (tooltipNode.getAttribute("tooltiptext")) {
@@ -155,6 +159,11 @@ function checkPanelUIStatusBar({label, tooltip, fxastatus, syncing, syncNowToolt
     is(statusNode.getAttribute("fxastatus"), fxastatus, "fxa fxastatus has the right value");
   } else {
     ok(!statusNode.hasAttribute("fxastatus"), "fxastatus is unset");
+  }
+  if (avatarURL) {
+    is(avatar.style.listStyleImage, `url("${avatarURL}")`, "fxa avatar URL is set");
+  } else {
+    ok(!statusNode.style.listStyleImage, "fxa avatar URL is unset");
   }
 }
 
@@ -203,20 +212,15 @@ async function checkFxaToolbarButtonPanel(expectedShownItemId) {
 }
 
 // fxaStatus is one of 'not_configured', 'unverified', or 'signedin'.
-function checkFxAAvatar(fxaStatus) {
-  const avatarContainers = [
-    document.getElementById("appMenu-fxa-avatar"),
-    document.getElementById("fxa-avatar-image"),
-  ];
-  for (const avatar of avatarContainers) {
-    const avatarURL = getComputedStyle(avatar).listStyleImage;
-    const expected = {
-      not_configured: "url(\"chrome://browser/skin/fxa/avatar-empty-badged.svg\")",
-      unverified: "url(\"chrome://browser/skin/fxa/avatar-confirm.svg\")",
-      signedin: "url(\"chrome://browser/skin/fxa/avatar.svg\")",
-    };
-    ok(avatarURL == expected[fxaStatus], `expected avatar URL to be ${expected[fxaStatus]}, got ${avatarURL}`);
-  }
+function checkFxaToolbarButtonAvatar(fxaStatus) {
+  const avatar = document.getElementById("fxa-avatar-image");
+  const avatarURL = getComputedStyle(avatar).listStyleImage;
+  const expected = {
+    not_configured: "url(\"chrome://browser/skin/fxa/avatar-empty-badged.svg\")",
+    unverified: "url(\"chrome://browser/skin/fxa/avatar-confirm.svg\")",
+    signedin: "url(\"chrome://browser/skin/fxa/avatar.svg\")",
+  };
+  ok(avatarURL == expected[fxaStatus], `expected avatar URL to be ${expected[fxaStatus]}, but got ${avatarURL}`);
 }
 
 // Only one item displayed at a time.
