@@ -264,7 +264,7 @@ class ConnectPage extends PureComponent {
       ),
       Localized(
         {
-          id: "about-debugging-setup-this-firefox",
+          id: "about-debugging-setup-this-firefox2",
           a: Link({
             to: `/runtime/${RUNTIMES.THIS_FIREFOX}`,
           }),
