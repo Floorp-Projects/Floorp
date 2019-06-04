@@ -85,12 +85,11 @@
             return;
         }
 
-        // Test anonymous buttons
-        var dlg = window.top.document;
-        var buttonBox = dlg.getAnonymousElementByAttribute(dlg.documentElement,
-                                                           "anonid", "buttons");
-        if (buttonBox)
+        // Test dialog buttons
+        let buttonBox = window.top.document.documentElement.buttonBox;
+        if (buttonBox) {
           this.fireAccessKeyButton(buttonBox, charPressedLower);
+        }
       });
     }
 

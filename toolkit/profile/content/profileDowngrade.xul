@@ -25,7 +25,8 @@
 #else
         buttonlabelaccept="&window.quit-nonwin;"
 #endif
-        buttons="accept,extra1" buttonpack="end">
+        buttons="accept,extra1" buttonpack="end"
+        nobuttonspacer="true">
 
   <script src="profileDowngrade.js"/>
   <script src="chrome://global/content/customElements.js"/>

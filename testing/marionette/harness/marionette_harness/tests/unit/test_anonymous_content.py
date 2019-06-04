@@ -51,35 +51,26 @@ class TestAnonymousNodes(WindowManagerMixin, MarionetteTestCase):
         not_existent = (By.ANON_ATTRIBUTE, {"anonid": "notexistent"},)
 
         # By using the window document element
-        start_node = self.marionette.find_element(By.CSS_SELECTOR, ":root")
+        start_node = self.marionette.find_element(By.ID, "container3")
         button = start_node.find_element(*accept_button)
         self.assertEquals(HTMLElement, type(button))
         with self.assertRaises(NoSuchElementException):
             start_node.find_element(*not_existent)
 
-        # By using the default start node
-        self.assertEquals(button, self.marionette.find_element(*accept_button))
-        with self.assertRaises(NoSuchElementException):
-            self.marionette.find_element(*not_existent)
-
     def test_find_anonymous_elements_by_attribute(self):
         dialog_buttons = (By.ANON_ATTRIBUTE, {"anonid": "buttons"},)
         not_existent = (By.ANON_ATTRIBUTE, {"anonid": "notexistent"},)
 
-        # By using the window document element
-        start_node = self.marionette.find_element(By.CSS_SELECTOR, ":root")
+        start_node = self.marionette.find_element(By.ID, "container3")
         buttons = start_node.find_elements(*dialog_buttons)
         self.assertEquals(1, len(buttons))
         self.assertEquals(HTMLElement, type(buttons[0]))
         self.assertListEqual([], start_node.find_elements(*not_existent))
 
-        # By using the default start node
-        self.assertListEqual(buttons, self.marionette.find_elements(*dialog_buttons))
-        self.assertListEqual([], self.marionette.find_elements(*not_existent))
-
     def test_find_anonymous_children(self):
-        self.assertEquals(HTMLElement, type(self.marionette.find_element(By.ANON, None)))
-        self.assertEquals(3, len(self.marionette.find_elements(By.ANON, None)))
+        start_node = self.marionette.find_element(By.ID, "container3")
+        self.assertEquals(HTMLElement, type(start_node.find_element(By.ANON, None)))
+        self.assertEquals(3, len(start_node.find_elements(By.ANON, None)))
 
         frame = self.marionette.find_element(By.ID, "framebox")
         with self.assertRaises(NoSuchElementException):

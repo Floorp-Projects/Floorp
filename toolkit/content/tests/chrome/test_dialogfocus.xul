@@ -62,9 +62,18 @@ function runTest()
 
   function checkDialogFocus(event)
   {
-    info("checkDialogFocus()");
+    info(`checkDialogFocus()`);
+    let match = false;
+    let activeElement = win.document.activeElement;
+
+    if (activeElement == win.document.documentElement) {
+      let shadowActiveElement =
+        win.document.documentElement.shadowRoot.activeElement;
+      if (shadowActiveElement) {
+        activeElement = shadowActiveElement;
+      }
+    }
     // if full keyboard access is not on, just skip the tests
-    var match = false;
     if (fullKeyboardAccess) {
       if (!(event.target instanceof Element)) {
         info("target not an Element");
@@ -72,44 +81,51 @@ function runTest()
       }
 
       if (expectedFocus == "textbox-yes")
-        match = (win.document.activeElement == win.document.getElementById(expectedFocus).inputField);
+        match = (activeElement == win.document.getElementById(expectedFocus).inputField);
       else if (expectedFocus[0] == "_")
-        match = (win.document.activeElement.dlgType == expectedFocus.substring(1));
+        match = (activeElement.dlgType == expectedFocus.substring(1));
       else
-        match = (win.document.activeElement.id == expectedFocus);
+        match = (activeElement.id == expectedFocus);
       info("match = " + match);
       if (!match)
         return;
     }
     else {
-      match = (win.document.activeElement == win.document.documentElement);
+      match = (activeElement == win.document.documentElement);
       info("match = " + match);
     }
 
     win.removeEventListener("focus", checkDialogFocusEvent, true);
+    win.document.documentElement.shadowRoot.removeEventListener(
+      "focus", checkDialogFocusEvent, true);
     ok(match, "focus step " + step);
 
     win.close();
     SimpleTest.waitForFocus(runTest, window);
   }
 
-  function checkDialogFocusRoot(event) {
-    if (event.target == win) {
-      is(win.document.activeElement, win.document.documentElement, "No other focus but root");
-      win.close();
-      SimpleTest.waitForFocus(runTest, window);
-    }
-  }
-
+  let finalCheckInitiated = false;
   function checkDialogFocusEvent(event) {
     // Delay to have time for focus/blur to occur.
     if (expectedFocus == "root") {
-      setTimeout(checkDialogFocusRoot, 0, event);
+      if (!finalCheckInitiated) {
+        setTimeout(() => {
+          is(win.document.activeElement, win.document.documentElement,
+             "No other focus but root");
+          win.close();
+          SimpleTest.waitForFocus(runTest, window);
+        }, 0);
+        finalCheckInitiated = true;
+      }
     } else {
       checkDialogFocus(event);
     }
   }
   win.addEventListener("focus", checkDialogFocusEvent, true);
+  win.addEventListener("load", () => {
+    win.document.documentElement.shadowRoot.addEventListener(
+      "focus", checkDialogFocusEvent, true);
+  });
 }
 
 SimpleTest.waitForFocus(startTest, window);
