@@ -124,16 +124,6 @@ class nsHTMLDocument : public mozilla::dom::Document {
     }
   }
   void GetSupportedNames(nsTArray<nsString>& aNames);
-  void GetFgColor(nsAString& aFgColor);
-  void SetFgColor(const nsAString& aFgColor);
-  void GetLinkColor(nsAString& aLinkColor);
-  void SetLinkColor(const nsAString& aLinkColor);
-  void GetVlinkColor(nsAString& aAvlinkColor);
-  void SetVlinkColor(const nsAString& aVlinkColor);
-  void GetAlinkColor(nsAString& aAlinkColor);
-  void SetAlinkColor(const nsAString& aAlinkColor);
-  void GetBgColor(nsAString& aBgColor);
-  void SetBgColor(const nsAString& aBgColor);
   void Clear() const {
     // Deprecated
   }
