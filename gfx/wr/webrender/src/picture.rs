@@ -2523,6 +2523,7 @@ impl PicturePrimitive {
                             device_rect.origin,
                             uv_rect_kind,
                             raster_spatial_node_index,
+                            surface_spatial_node_index,
                             device_pixel_scale,
                         );
 
@@ -2572,6 +2573,7 @@ impl PicturePrimitive {
                             device_rect.origin,
                             uv_rect_kind,
                             raster_spatial_node_index,
+                            surface_spatial_node_index,
                             device_pixel_scale,
                         );
                         picture_task.mark_for_saving();
@@ -2616,6 +2618,7 @@ impl PicturePrimitive {
                             clipped.origin,
                             uv_rect_kind,
                             raster_spatial_node_index,
+                            surface_spatial_node_index,
                             device_pixel_scale,
                         );
 
@@ -2650,6 +2653,7 @@ impl PicturePrimitive {
                             clipped.origin,
                             uv_rect_kind,
                             raster_spatial_node_index,
+                            surface_spatial_node_index,
                             device_pixel_scale,
                         );
 
@@ -2673,6 +2677,7 @@ impl PicturePrimitive {
                             clipped.origin,
                             uv_rect_kind,
                             raster_spatial_node_index,
+                            surface_spatial_node_index,
                             device_pixel_scale,
                         );
 
@@ -2704,6 +2709,7 @@ impl PicturePrimitive {
                             clipped.origin,
                             uv_rect_kind,
                             raster_spatial_node_index,
+                            surface_spatial_node_index,
                             device_pixel_scale,
                         );
 

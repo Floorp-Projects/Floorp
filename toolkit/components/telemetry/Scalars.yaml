@@ -3584,9 +3584,10 @@ encoding:
     bug_numbers:
       - 840476
       - 1513473
+      - 1554592
     description: >-
       Whether the Text Encoding menu was used to override an encoding in this subsession.
-    expires: "69"
+    expires: "72"
     kind: boolean
     notification_emails:
       - hsivonen@mozilla.com

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:title="@string/multiprocess" android:id="@+id/action_e10s" android:checkable="true"
-          android:showAsAction="never"/>
-    <item android:title="@string/tracking_protection" android:id="@+id/action_tp" android:showAsAction="never"
+        app:showAsAction="never"/>
+    <item android:title="@string/tracking_protection" android:id="@+id/action_tp" app:showAsAction="never"
           android:checkable="true"/>
     <item android:title="@string/private_browsing" android:checkable="true" android:id="@+id/action_pb"/>
     <item android:title="@string/remote_debugging" android:checkable="true" android:id="@+id/action_remote_debugging"/>
+    <item android:title="@string/new_tab" android:id="@+id/action_new_tab"/>
+    <item android:title="@string/close_tab" android:id="@+id/action_close_tab"/>
     <item android:title="@string/forward" android:id="@+id/action_forward"/>
     <item android:title="@string/reload" android:id="@+id/action_reload"/>
 </menu>

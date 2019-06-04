@@ -666,6 +666,7 @@ impl BatchBuilder {
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         root_spatial_node_index: SpatialNodeIndex,
+        surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
     ) {
         // Add each run in this picture to the batch.
@@ -679,6 +680,7 @@ impl BatchBuilder {
                 prim_headers,
                 transforms,
                 root_spatial_node_index,
+                surface_spatial_node_index,
                 z_generator,
             );
         }
@@ -698,6 +700,7 @@ impl BatchBuilder {
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
         root_spatial_node_index: SpatialNodeIndex,
+        surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
     ) {
         if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
@@ -735,6 +738,11 @@ impl BatchBuilder {
 
         if is_chased {
             println!("\tbatch {:?} with bound {:?}", prim_rect, bounding_rect);
+        }
+
+        if !bounding_rect.is_empty() {
+            debug_assert_eq!(prim_info.clip_chain.pic_spatial_node_index, surface_spatial_node_index,
+                "The primitive's bounding box is specified in a different coordinate system from the current batch!");
         }
 
         match prim_instance.kind {
@@ -1186,10 +1194,8 @@ impl BatchBuilder {
                             render_tasks,
                         ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
-                        let surface = ctx
-                            .surfaces[raster_config.surface_index.0]
-                            .render_tasks
-                            .map(|s| s.root);
+                        let surface = &ctx.surfaces[raster_config.surface_index.0];
+                        let surface_task = surface.render_tasks.map(|s| s.root);
 
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { .. } => {
@@ -1199,6 +1205,14 @@ impl BatchBuilder {
                                 // picture like a normal pass-through picture, adding
                                 // any child primitives into the parent surface batches.
                                 if !tile_cache.is_enabled {
+                                    // Forcefully break the batches if the
+                                    if surface.surface_spatial_node_index != surface_spatial_node_index {
+                                        self.batcher.push_new_batch_list(
+                                            Vec::new(),
+                                            Vec::new(),
+                                        );
+                                    }
+
                                     self.add_pic_to_batch(
                                         picture,
                                         ctx,
@@ -1208,8 +1222,16 @@ impl BatchBuilder {
                                         prim_headers,
                                         transforms,
                                         root_spatial_node_index,
+                                        surface.surface_spatial_node_index,
                                         z_generator,
                                     );
+
+                                    if surface.surface_spatial_node_index != surface_spatial_node_index {
+                                        self.batcher.push_new_batch_list(
+                                            Vec::new(),
+                                            Vec::new(),
+                                        );
+                                    }
 
                                     return;
                                 }
@@ -1331,6 +1353,7 @@ impl BatchBuilder {
                                             prim_headers,
                                             transforms,
                                             root_spatial_node_index,
+                                            surface.surface_spatial_node_index,
                                             z_generator,
                                         );
 
@@ -1349,7 +1372,7 @@ impl BatchBuilder {
                                             BrushBatchKind::Image(ImageBufferKind::Texture2DArray)
                                         );
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                            surface.expect("bug: surface must be allocated by now"),
+                                            surface_task.expect("bug: surface must be allocated by now"),
                                             gpu_cache,
                                         );
                                         let key = BatchKey::new(
@@ -1405,7 +1428,7 @@ impl BatchBuilder {
                                         let content_key = BatchKey::new(kind, non_segmented_blend_mode, content_textures);
 
                                         // Retrieve the UV rect addresses for shadow/content.
-                                        let cache_task_id = surface
+                                        let cache_task_id = surface_task
                                             .expect("bug: surface must be allocated by now");
                                         let shadow_uv_rect_address = render_tasks[cache_task_id]
                                             .get_texture_address(gpu_cache)
@@ -1517,7 +1540,7 @@ impl BatchBuilder {
                                         };
 
                                         let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                            surface.expect("bug: surface must be allocated by now"),
+                                            surface_task.expect("bug: surface must be allocated by now"),
                                             gpu_cache,
                                         );
 
@@ -1562,7 +1585,7 @@ impl BatchBuilder {
                                 let user_data = filter_data.gpu_cache_handle.as_int(gpu_cache);
 
                                 let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                    surface.expect("bug: surface must be allocated by now"),
+                                    surface_task.expect("bug: surface must be allocated by now"),
                                     gpu_cache,
                                 );
 
@@ -1593,7 +1616,7 @@ impl BatchBuilder {
                             }
                             PictureCompositeMode::MixBlend(mode) if ctx.use_advanced_blending => {
                                 let (uv_rect_address, textures) = render_tasks.resolve_surface(
-                                    surface.expect("bug: surface must be allocated by now"),
+                                    surface_task.expect("bug: surface must be allocated by now"),
                                     gpu_cache,
                                 );
                                 let key = BatchKey::new(
@@ -1623,7 +1646,7 @@ impl BatchBuilder {
                                 );
                             }
                             PictureCompositeMode::MixBlend(mode) => {
-                                let cache_task_id = surface.expect("bug: surface must be allocated by now");
+                                let cache_task_id = surface_task.expect("bug: surface must be allocated by now");
                                 let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
                                 let key = BatchKey::new(
@@ -1659,7 +1682,7 @@ impl BatchBuilder {
                                 );
                             }
                             PictureCompositeMode::Blit(_) => {
-                                let cache_task_id = surface.expect("bug: surface must be allocated by now");
+                                let cache_task_id = surface_task.expect("bug: surface must be allocated by now");
                                 let uv_rect_address = render_tasks[cache_task_id]
                                     .get_texture_address(gpu_cache)
                                     .as_int();
@@ -1739,6 +1762,7 @@ impl BatchBuilder {
                             prim_headers,
                             transforms,
                             root_spatial_node_index,
+                            surface_spatial_node_index,
                             z_generator,
                         );
                     }

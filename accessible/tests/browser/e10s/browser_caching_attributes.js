@@ -19,7 +19,7 @@ const defaultAttributes = {
   "text-indent": "0px",
   "id": "textbox",
   "tag": "input",
-  "display": "inline"
+  "display": "inline-block"
 };
 
 /**

@@ -14,8 +14,7 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 const { render, unmountComponentAtNode } = require("devtools/client/shared/vendor/react-dom");
 const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
-const { L10nRegistry } = require("resource://gre/modules/L10nRegistry.jsm");
-const Services = require("Services");
+const { l10n } = require("./src/modules/l10n");
 
 const { configureStore } = require("./src/create-store");
 const actions = require("./src/actions/index");
@@ -57,30 +56,15 @@ window.Application = {
     this.updateDomain();
     await this.updateWorkers();
 
-    const fluentBundles = await this.createFluentBundles();
+    await l10n.init(["devtools/application.ftl"]);
 
     // Render the root Application component.
-    const app = App({ client: this.client, fluentBundles, serviceContainer });
+    const app = App({
+      client: this.client,
+      fluentBundles: l10n.getBundles(),
+      serviceContainer,
+    });
     render(Provider({ store: this.store }, app), this.mount);
-  },
-
-  /**
-   * Retrieve message contexts for the current locales, and return them as an array of
-   * FluentBundles elements.
-   */
-  async createFluentBundles() {
-    const locales = Services.locale.appLocalesAsBCP47;
-    const generator =
-      L10nRegistry.generateBundles(locales, ["devtools/application.ftl"]);
-
-    // Return value of generateBundles is a generator and should be converted to
-    // a sync iterable before using it with React.
-    const contexts = [];
-    for await (const message of generator) {
-      contexts.push(message);
-    }
-
-    return contexts;
   },
 
   async updateWorkers() {

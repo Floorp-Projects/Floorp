@@ -242,7 +242,8 @@ nsresult LocalStorageManager::GetStorageInternal(
     }
 
     PrincipalInfo principalInfo;
-    rv = mozilla::ipc::PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
+    rv = mozilla::ipc::PrincipalToPrincipalInfo(aStoragePrincipal,
+                                                &principalInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

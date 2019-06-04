@@ -24,11 +24,11 @@
 #include <linux/ioctl.h>
 #include <linux/ipc.h>
 #include <linux/net.h>
-#include <linux/prctl.h>
 #include <linux/sched.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/prctl.h>
 #include <sys/socket.h>
 #include <sys/syscall.h>
 #include <sys/un.h>

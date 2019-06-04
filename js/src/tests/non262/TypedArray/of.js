@@ -16,8 +16,8 @@ for (var constructor of anyTypedArrayConstructors) {
     assertDeepEq(constructor.of("1", "2", "3"), new constructor([1, 2, 3]));
 
     // This method can't be transplanted to other constructors.
-    assertThrows(() => constructor.of.call(Array), TypeError);
-    assertThrows(() => constructor.of.call(Array, 1, 2, 3), TypeError);
+    assertThrowsInstanceOf(() => constructor.of.call(Array), TypeError);
+    assertThrowsInstanceOf(() => constructor.of.call(Array, 1, 2, 3), TypeError);
 
     var hits = 0;
     assertDeepEq(constructor.of.call(function(len) {

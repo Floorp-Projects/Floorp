@@ -381,10 +381,16 @@ bool HangMonitorChild::InterruptCallback() {
     }
   }
 
-  // Only handle the interrupt for cancelling content JS if we have an actual
-  // window associated with this context...
+  // Only handle the interrupt for cancelling content JS if we have a
+  // non-privileged script (i.e. not part of Gecko or an add-on).
   JS::RootedObject global(mContext, JS::CurrentGlobalOrNull(mContext));
-  RefPtr<nsGlobalWindowInner> win = xpc::WindowOrNull(global);
+  nsIPrincipal* principal = xpc::GetObjectPrincipal(global);
+  if (principal && (principal->IsSystemPrincipal() ||
+                    principal->GetIsAddonOrExpandedAddonPrincipal())) {
+    return true;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> win = xpc::WindowOrNull(global);
   if (!win) {
     return true;
   }
@@ -409,10 +415,17 @@ bool HangMonitorChild::InterruptCallback() {
   }
 
   if (cancelContentJS) {
+    js::AutoAssertNoContentJS nojs(mContext);
+    TabId currentJSTabId = BrowserChild::GetFrom(win)->GetTabId();
+    if (currentJSTabId != cancelContentJSTab) {
+      // The currently-executing content JS doesn't belong to the tab that
+      // requested cancellation of JS. Just return and let the JS continue.
+      return true;
+    }
+
     RefPtr<BrowserChild> browserChild =
         BrowserChild::FindBrowserChild(cancelContentJSTab);
     if (browserChild) {
-      js::AutoAssertNoContentJS nojs(mContext);
       nsresult rv;
       nsCOMPtr<nsIURI> uri;
 

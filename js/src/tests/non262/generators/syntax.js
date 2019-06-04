@@ -49,14 +49,14 @@ function* g() {
     yield *
     foo
 }
-assertThrows("function* g() { yield\n* foo }", SyntaxError);
+assertThrowsInstanceOf(() => Function("function* g() { yield\n* foo }"), SyntaxError);
 assertIteratorNext(function*(){
                        yield
                        3
                    }(), undefined)
 
 // A YieldExpression is not a LogicalORExpression.
-assertThrows("function* g() { yield ? yield : yield }", SyntaxError);
+assertThrowsInstanceOf(() => Function("function* g() { yield ? yield : yield }"), SyntaxError);
 
 // You can have a generator in strict mode.
 function* g() { "use strict"; yield 3; yield 4; }
