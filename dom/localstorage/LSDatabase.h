@@ -45,6 +45,12 @@ class LSDatabase final {
     mActor = nullptr;
   }
 
+  bool HasActiveSnapshot() const {
+    AssertIsOnOwningThread();
+
+    return !!mSnapshot;
+  }
+
   bool IsAllowedToClose() const {
     AssertIsOnOwningThread();
 
