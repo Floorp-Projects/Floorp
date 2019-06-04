@@ -296,19 +296,15 @@ var gConnectionsDialog = {
       pref => Services.prefs.prefIsLocked(pref));
 
     function setInputsDisabledState(isControlled) {
-      let disabled = isLocked || isControlled;
       for (let element of gConnectionsDialog.getProxyControls()) {
-        element.disabled = disabled;
+        element.disabled = isControlled;
       }
-      if (!isLocked) {
-        gConnectionsDialog.proxyTypeChanged();
-      }
+      gConnectionsDialog.proxyTypeChanged();
     }
 
     if (isLocked) {
       // An extension can't control this setting if any pref is locked.
       hideControllingExtension(PROXY_KEY);
-      setInputsDisabledState(false);
     } else {
       handleControllingExtension(PREF_SETTING_TYPE, PROXY_KEY)
         .then(setInputsDisabledState);
