@@ -4147,6 +4147,10 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
   while (NS_SUCCEEDED(
              (rv = entries->GetNextFile(getter_AddRefs(childDirectory)))) &&
          childDirectory) {
+    if (NS_WARN_IF(IsShuttingDown())) {
+      RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
+    }
+
     bool isDirectory;
     rv = childDirectory->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -4249,6 +4253,10 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
   nsCOMPtr<nsIFile> file;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
          file) {
+    if (NS_WARN_IF(IsShuttingDown())) {
+      RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
+    }
+
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5833,6 +5841,10 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
     }
   });
 
+  if (NS_WARN_IF(IsShuttingDown())) {
+    RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
+  }
+
   nsresult rv = InitializeRepository(PERSISTENCE_TYPE_DEFAULT);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     RECORD_IN_NIGHTLY(statusKeeper, rv);
@@ -5843,6 +5855,10 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
     return rv;
 #endif
+  }
+
+  if (NS_WARN_IF(IsShuttingDown())) {
+    RETURN_STATUS_OR_RESULT(statusKeeper, NS_ERROR_FAILURE);
   }
 
   rv = InitializeRepository(PERSISTENCE_TYPE_TEMPORARY);
