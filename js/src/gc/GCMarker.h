@@ -311,7 +311,9 @@ class GCMarker : public JSTracer {
   void enterWeakMarkingMode();
   void leaveWeakMarkingMode();
   void abortLinearWeakMarking() {
-    leaveWeakMarkingMode();
+    if (state == MarkingState::WeakMarking) {
+      leaveWeakMarkingMode();
+    }
     state = MarkingState::IterativeMarking;
   }
 
