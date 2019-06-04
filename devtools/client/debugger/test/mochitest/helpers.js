@@ -95,27 +95,6 @@ function waitForDispatch(dbg, actionType, eventRepeat = 1) {
 }
 
 /**
- * Waits for specific thread events.
- *
- * @memberof mochitest/waits
- * @param {Object} dbg
- * @param {String} eventName
- * @return {Promise}
- * @static
- */
-function waitForThreadEvents(dbg, eventName) {
-  info(`Waiting for thread event '${eventName}' to fire.`);
-  const thread = dbg.toolbox.threadClient;
-
-  return new Promise(function(resolve, reject) {
-    thread.once(function onEvent(...args) {
-      info(`Thread event '${eventName}' fired.`);
-      resolve.apply(resolve, args);
-    });
-  });
-}
-
-/**
  * Waits for `predicate()` to be true. `state` is the redux app state.
  *
  * @memberof mochitest/waits

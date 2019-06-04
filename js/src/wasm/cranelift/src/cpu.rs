@@ -120,7 +120,7 @@ fn make_shared_flags() -> settings::SetResult<settings::Flags> {
     sb.set("opt_level", "best")?;
 
     // TODO: Enable jump tables (requires emitting readonly data separately from text).
-    sb.set("jump_tables_enabled", "false")?;
+    sb.set("jump_tables_enabled", "true")?;
 
     Ok(settings::Flags::new(sb))
 }
