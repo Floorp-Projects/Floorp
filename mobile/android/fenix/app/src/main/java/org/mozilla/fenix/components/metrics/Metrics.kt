@@ -238,19 +238,19 @@ sealed class Event {
 
 @Suppress("ComplexMethod")
 private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
-    Pair(Component.FEATURE_FINDINPAGE, "previous") -> Event.FindInPagePrevious
-    Pair(Component.FEATURE_FINDINPAGE, "next") -> Event.FindInPageNext
-    Pair(Component.FEATURE_FINDINPAGE, "close") -> Event.FindInPageClosed
-    Pair(Component.FEATURE_FINDINPAGE, "input") -> Event.FindInPageSearchCommitted
-    Pair(Component.FEATURE_CONTEXTMENU, "item") -> {
+    Component.FEATURE_FINDINPAGE to "previous" -> Event.FindInPagePrevious
+    Component.FEATURE_FINDINPAGE to "next" -> Event.FindInPageNext
+    Component.FEATURE_FINDINPAGE to "close" -> Event.FindInPageClosed
+    Component.FEATURE_FINDINPAGE to "input" -> Event.FindInPageSearchCommitted
+    Component.FEATURE_CONTEXTMENU to "item" -> {
         metadata?.get("item")?.let { Event.ContextMenuItemTapped.create(it.toString()) }
     }
 
-    Pair(Component.FEATURE_TOOLBAR, "menu") -> {
+    Component.BROWSER_TOOLBAR to "menu" -> {
         metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened }
     }
-    Pair(Component.FEATURE_CUSTOMTABS, "close") -> Event.CustomTabsClosed
-    Pair(Component.FEATURE_CUSTOMTABS, "action_button") -> Event.CustomTabsActionTapped
+    Component.FEATURE_CUSTOMTABS to "close" -> Event.CustomTabsClosed
+    Component.FEATURE_CUSTOMTABS to "action_button" -> Event.CustomTabsActionTapped
 
     else -> null
 }
