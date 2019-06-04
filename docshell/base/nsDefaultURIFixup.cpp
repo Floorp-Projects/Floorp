@@ -14,6 +14,7 @@
 #include "nsISearchService.h"
 #include "nsIURIFixup.h"
 #include "nsIURIMutator.h"
+#include "nsIWebNavigation.h"
 #include "nsDefaultURIFixup.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ContentChild.h"
@@ -379,6 +380,27 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsDefaultURIFixup::WebNavigationFlagsToFixupFlags(const nsACString& aStringURI,
+                                                  uint32_t aDocShellFlags,
+                                                  uint32_t* aFixupFlags) {
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), aStringURI);
+  if (uri) {
+    aDocShellFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+  }
+
+  *aFixupFlags = 0;
+  if (aDocShellFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+    *aFixupFlags |= FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+  }
+  if (aDocShellFlags & nsIWebNavigation::LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
+    *aFixupFlags |= FIXUP_FLAG_FIX_SCHEME_TYPOS;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
