@@ -3,6 +3,7 @@
 <title>Cross-Origin header and nested navigable resource without such header</title>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
+<script src="/common/get-host-info.sub.js"></script>
 <div id=log></div>
 <script>
 async_test(t => {
@@ -119,5 +120,13 @@ async_test(t => {
 
   }, 500);
 }, "Top-level noopener with anonymous policy: navigating to a different policy should work");
+
+promise_test(t => {
+  let host_info = get_host_info();
+  return fetch(host_info.HTTP_REMOTE_ORIGIN+"/html/cross-origin/resources/nothing.txt",
+        {"mode": "no-cors", "method": "GET", "headers":{}}).then(r => {
+    assert_equals(r.type, "cors", "type should have been changed to cors");
+  });
+}, "Fetch policy: anonymous policy no-cors fetches should be changed to cors");
 
 </script>
