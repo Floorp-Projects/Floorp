@@ -154,13 +154,6 @@ impl Scene {
         self.root_pipeline_id = Some(pipeline_id);
     }
 
-    pub fn get_display_list_for_pipeline(&self, pipeline_id: PipelineId) -> &BuiltDisplayList {
-        &self.pipelines
-            .get(&pipeline_id)
-            .expect("Expected to find display list for pipeline")
-            .display_list
-    }
-
     pub fn set_display_list(
         &mut self,
         pipeline_id: PipelineId,
@@ -207,12 +200,10 @@ pub trait StackingContextHelpers {
     fn mix_blend_mode_for_compositing(&self) -> Option<MixBlendMode>;
     fn filter_ops_for_compositing(
         &self,
-        display_list: &BuiltDisplayList,
         input_filters: ItemRange<FilterOp>,
     ) -> Vec<Filter>;
     fn filter_datas_for_compositing(
         &self,
-        display_list: &BuiltDisplayList,
         input_filter_datas: &[TempFilterData],
     ) -> Vec<FilterData>;
 }
@@ -227,7 +218,6 @@ impl StackingContextHelpers for StackingContext {
 
     fn filter_ops_for_compositing(
         &self,
-        display_list: &BuiltDisplayList,
         input_filters: ItemRange<FilterOp>,
     ) -> Vec<Filter> {
         // TODO(gw): Now that we resolve these later on,
@@ -242,7 +232,6 @@ impl StackingContextHelpers for StackingContext {
 
     fn filter_datas_for_compositing(
         &self,
-        display_list: &BuiltDisplayList,
         input_filter_datas: &[TempFilterData],
     ) -> Vec<FilterData> {
         // TODO(gw): Now that we resolve these later on,
