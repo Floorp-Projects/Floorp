@@ -63,6 +63,7 @@ SessionStorageManager::~SessionStorageManager() {
 
 NS_IMETHODIMP
 SessionStorageManager::PrecacheStorage(nsIPrincipal* aPrincipal,
+                                       nsIPrincipal* aStoragePrincipal,
                                        Storage** aRetval) {
   // Nothing to preload.
   return NS_OK;
