@@ -84,7 +84,7 @@ class ProfilerMarkerPayload {
   mozilla::Maybe<uint32_t> mDocShellHistoryId;
 };
 
-#define DECL_STREAM_PAYLOAD                                               \
+#define DECL_BASE_STREAM_PAYLOAD                                          \
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,               \
                              const mozilla::TimeStamp& aProcessStartTime, \
                              UniqueStacks& aUniqueStacks) override;
@@ -106,7 +106,7 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
     SetDocShellHistoryId(aDocShellHistoryId);
   }
 
-  DECL_STREAM_PAYLOAD
+  DECL_BASE_STREAM_PAYLOAD
 
  private:
   const char* mCategory;
@@ -128,7 +128,7 @@ class FileIOMarkerPayload : public ProfilerMarkerPayload {
     MOZ_ASSERT(aSource);
   }
 
-  DECL_STREAM_PAYLOAD
+  DECL_BASE_STREAM_PAYLOAD
 
  private:
   const char* mSource;
@@ -161,7 +161,7 @@ class UserTimingMarkerPayload : public ProfilerMarkerPayload {
         mStartMark(aStartMark),
         mEndMark(aEndMark) {}
 
-  DECL_STREAM_PAYLOAD
+  DECL_BASE_STREAM_PAYLOAD
 
  private:
   // Either "mark" or "measure".
@@ -177,7 +177,7 @@ class HangMarkerPayload : public ProfilerMarkerPayload {
                     const mozilla::TimeStamp& aEndTime)
       : ProfilerMarkerPayload(aStartTime, aEndTime) {}
 
-  DECL_STREAM_PAYLOAD
+  DECL_BASE_STREAM_PAYLOAD
  private:
 };
 
@@ -187,7 +187,7 @@ class LongTaskMarkerPayload : public ProfilerMarkerPayload {
                         const mozilla::TimeStamp& aEndTime)
       : ProfilerMarkerPayload(aStartTime, aEndTime) {}
 
-  DECL_STREAM_PAYLOAD
+  DECL_BASE_STREAM_PAYLOAD
 };
 
 class TextMarkerPayload : public ProfilerMarkerPayload {
@@ -219,7 +219,7 @@ class TextMarkerPayload : public ProfilerMarkerPayload {
                               aDocShellHistoryId, std::move(aCause)),
         mText(aText) {}
 
-  DECL_STREAM_PAYLOAD
+  DECL_BASE_STREAM_PAYLOAD
 
  private:
   std::string mText;
@@ -233,7 +233,7 @@ class LogMarkerPayload : public ProfilerMarkerPayload {
         mModule(aModule),
         mText(aText) {}
 
-  DECL_STREAM_PAYLOAD
+  DECL_BASE_STREAM_PAYLOAD
 
  private:
   std::string mModule;  // longest known LazyLogModule name is ~24
