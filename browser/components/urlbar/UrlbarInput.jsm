@@ -1175,7 +1175,7 @@ class UrlbarInput {
       }
     }
 
-    // Ensure the start of the URL is visible for usability reasons.
+    // Make sure the domain name stays visible for spoof protection and usability.
     this.selectionStart = this.selectionEnd = 0;
 
     this.view.close();
