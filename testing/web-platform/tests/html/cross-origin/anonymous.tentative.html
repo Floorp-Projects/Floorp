@@ -1,4 +1,5 @@
 <!doctype html>
+<meta name="timeout" content="long">
 <title>Cross-Origin header and nested navigable resource without such header</title>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
@@ -95,5 +96,28 @@ async_test(t => {
     t.done();
   }, 500);
 }, "Top-level with anonymous policy: creating a popup with null policy should fail.");
+
+async_test(t => {
+  let pageLoaded = false;
+  const CHANNEL_NAME = "anon-null-top-navigation";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  bc.onmessage = t.step_func((event) => {
+    pageLoaded = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  const SECOND_CHANNEL = "anon-null-top-navigation-final";
+  let bc2 = new BroadcastChannel(SECOND_CHANNEL);
+  bc2.onmessage = t.step_func_done((event) => {
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+    assert_equals(pageLoaded, true, "Opening a null window (noopener) from anon window should work");
+  });
+
+  let win = window.open(`resources/navigate_anonymous.sub.html?channelName=${CHANNEL_NAME}&to=navigate_null.sub.html?channelName=${SECOND_CHANNEL}`, "_blank", "noopener");
+
+  }, 500);
+}, "Top-level noopener with anonymous policy: navigating to a different policy should work");
 
 </script>
