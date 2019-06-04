@@ -9,6 +9,7 @@
   align-items: center;
 }
 
+#netmonitor-main-toolbar,
 #netmonitor-toolbar-container > .devtools-toolbar {
   /* @TODO: Remove this in bug 1535956 */
   min-height: var(--primary-toolbar-height);
