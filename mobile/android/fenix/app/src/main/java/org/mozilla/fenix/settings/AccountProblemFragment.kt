@@ -9,6 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -28,13 +31,10 @@ class AccountProblemFragment : PreferenceFragmentCompat() {
 
         val preferenceSignIn =
             findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_sign_in))
-        val preferenceNewAccount =
-            findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_create_account))
-        val preferencePairSignIn =
-            findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_pair))
+        val preferenceSignOut =
+            findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sign_out))
         preferenceSignIn?.onPreferenceClickListener = getClickListenerForSignIn()
-        preferenceNewAccount?.onPreferenceClickListener = getClickListenerForSignIn()
-        preferencePairSignIn?.onPreferenceClickListener = getClickListenerForPairing()
+        preferenceSignOut?.onPreferenceClickListener = getClickListenerForSignOut()
     }
 
     private fun getClickListenerForSignIn(): Preference.OnPreferenceClickListener {
@@ -52,11 +52,12 @@ class AccountProblemFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun getClickListenerForPairing(): Preference.OnPreferenceClickListener {
+    private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
-            val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairInstructionsFragment()
-            Navigation.findNavController(view!!).navigate(directions)
-
+            CoroutineScope(Dispatchers.Main).launch {
+                requireComponents.backgroundServices.accountManager.logoutAsync().await()
+                Navigation.findNavController(view!!).popBackStack()
+            }
             true
         }
     }
