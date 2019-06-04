@@ -49,6 +49,11 @@ pref("extensions.getAddons.discovery.api_url", "https://services.addons.mozilla.
 // Enable the HTML-based discovery panel at about:addons.
 pref("extensions.htmlaboutaddons.discover.enabled", false);
 
+// The URL for the privacy policy related to recommended extensions.
+pref("extensions.recommendations.privacyPolicyUrl", "https://www.mozilla.org/privacy/firefox/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_content=privacy-policy-link#addons");
+// The URL for Firefox Color, recommended on the theme page in about:addons.
+pref("extensions.recommendations.themeRecommendationUrl", "https://color.firefox.com/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_content=theme-footer-link");
+
 pref("extensions.update.autoUpdateDefault", true);
 
 // Check AUS for system add-on updates.
