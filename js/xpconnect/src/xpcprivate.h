@@ -593,8 +593,6 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   void Initialize(JSContext* cx);
   void Shutdown(JSContext* cx) override;
 
-  void ReleaseIncrementally(nsTArray<nsISupports*>& array);
-
   static const char* const mStrings[XPCJSContext::IDX_TOTAL_COUNT];
   jsid mStrIDs[XPCJSContext::IDX_TOTAL_COUNT];
   JS::Value mStrJSVals[XPCJSContext::IDX_TOTAL_COUNT];
