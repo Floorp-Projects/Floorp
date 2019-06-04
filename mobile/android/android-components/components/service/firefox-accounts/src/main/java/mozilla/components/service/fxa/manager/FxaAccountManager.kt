@@ -264,7 +264,8 @@ open class FxaAccountManager(
 
     fun accountProfile(): Profile? {
         return when (state) {
-            AccountState.AuthenticatedWithProfile -> profile
+            AccountState.AuthenticatedWithProfile,
+            AccountState.AuthenticationProblem -> profile
             else -> null
         }
     }

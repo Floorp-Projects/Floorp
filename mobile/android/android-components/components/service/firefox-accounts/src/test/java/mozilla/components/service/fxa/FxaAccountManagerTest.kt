@@ -801,7 +801,7 @@ class FxaAccountManagerTest {
         reset(accountObserver)
         assertEquals("auth://url", manager.beginAuthenticationAsync().await())
         assertEquals(mockAccount, manager.authenticatedAccount())
-        assertNull(manager.accountProfile())
+        assertEquals(profile, manager.accountProfile())
 
         manager.finishAuthenticationAsync("dummyCode", "dummyState").await()
 
