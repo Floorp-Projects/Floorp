@@ -304,6 +304,23 @@ browser.Context = class {
   }
 
   /**
+   * Focus the current window.
+   *
+   * @return {Promise}
+   *     A promise which is resolved when the current window has been focused.
+   */
+  async focusWindow() {
+    if (Services.focus.activeWindow != this.window) {
+      let activated = waitForEvent(this.window, "activate");
+      let focused = waitForEvent(this.window, "focus", {capture: true});
+
+      this.window.focus();
+
+      await Promise.all([activated, focused]);
+    }
+  }
+
+  /**
    * Open a new browser window.
    *
    * @return {Promise}
@@ -330,14 +347,9 @@ browser.Context = class {
         await Promise.all([activated, focused, startup]);
 
         // The new window shouldn't get focused. As such set the
-        // focus back to the opening window if needed.
-        if (!focus && Services.focus.activeWindow != this.window) {
-          activated = waitForEvent(this.window, "activate");
-          focused = waitForEvent(this.window, "focus", {capture: true});
-
-          this.window.focus();
-
-          await Promise.all([activated, focused]);
+        // focus back to the opening window.
+        if (!focus) {
+          await this.focusWindow();
         }
 
         return win;
@@ -440,7 +452,9 @@ browser.Context = class {
    * @throws UnsupportedOperationError
    *     If tab handling for the current application isn't supported.
    */
-  switchToTab(index, window = undefined, focus = true) {
+  async switchToTab(index, window = undefined, focus = true) {
+    let currentTab = this.tabBrowser.selectedTab;
+
     if (window) {
       this.window = window;
       this.tabBrowser = browser.getTabBrowser(this.window);
@@ -454,16 +468,25 @@ browser.Context = class {
       this.tab = this.tabBrowser.selectedTab;
     } else {
       this.tab = this.tabBrowser.tabs[index];
+    }
 
-      if (focus) {
-        if ("selectTab" in this.tabBrowser) {
+    if (focus && this.tab != currentTab) {
+      let tabSelected = waitForEvent(this.window, "TabSelect");
+
+      switch (this.driver.appName) {
+        case "fennec":
           this.tabBrowser.selectTab(this.tab);
-        } else if ("selectedTab" in this.tabBrowser) {
+          await tabSelected;
+          break;
+
+        case "firefox":
           this.tabBrowser.selectedTab = this.tab;
-        } else {
+          await tabSelected;
+          break;
+
+        default:
           throw new UnsupportedOperationError(
             `switchToTab() not supported in ${this.driver.appName}`);
-        }
       }
     }
 
