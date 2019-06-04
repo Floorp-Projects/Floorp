@@ -24,7 +24,7 @@ class Search(private val context: Context) {
         SearchEngineManager().apply {
             registerForLocaleUpdates(context)
             GlobalScope.launch {
-                load(context).await()
+                loadAsync(context).await()
             }
             defaultSearchEngine = getDefaultSearchEngine(
                 context,
