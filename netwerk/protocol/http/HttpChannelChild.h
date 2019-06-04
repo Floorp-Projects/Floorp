@@ -141,8 +141,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const uint32_t& cacheKey, const nsCString& altDataType,
       const int64_t& altDataLen, const bool& deliveringAltData,
       const bool& aApplyConversion, const bool& aIsResolvedByTRR,
-      const ResourceTimingStruct& aTiming,
-      const bool& aAllRedirectsSameOrigin) override;
+      const ResourceTimingStruct& aTiming) override;
   mozilla::ipc::IPCResult RecvFailedAsyncOpen(const nsresult& status) override;
   mozilla::ipc::IPCResult RecvRedirect1Begin(
       const uint32_t& registrarId, const URIParams& newURI,
@@ -472,8 +471,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const NetAddr& peerAddr, const uint32_t& cacheKey,
       const nsCString& altDataType, const int64_t& altDataLen,
       const bool& deliveringAltData, const bool& aApplyConversion,
-      const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming,
-      const bool& aAllRedirectsSameOrigin);
+      const bool& aIsResolvedByTRR, const ResourceTimingStruct& aTiming);
   void MaybeDivertOnData(const nsCString& data, const uint64_t& offset,
                          const uint32_t& count);
   void OnTransportAndData(const nsresult& channelStatus, const nsresult& status,
