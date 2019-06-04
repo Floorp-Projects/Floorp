@@ -19,11 +19,18 @@
         </label>
       </vbox>
 
-      <vbox id="protections-popup-placeholder" class="identity-popup-section">
-        <label>
-          <html:h2>Watch this space! :)</html:h2>
-        </label>
-      </vbox>
+      <hbox id="protections-popup-tp-switch-section" class="identity-popup-section">
+        <vbox id="protections-popup-tp-switch-label-box" flex="1">
+          <label id="protections-popup-tp-switch-on-header">Tracking protection is ON for this site</label>
+          <label id="protections-popup-tp-switch-off-header">Tracking protection is OFF for this site</label>
+          <label id="protections-popup-tp-switch-breakage-link" class="text-link">Site not working?</label>
+        </vbox>
+        <vbox id="protections-popup-tp-switch-box">
+          <toolbarbutton id="protections-popup-tp-switch"
+              enabled="false"
+              oncommand="gProtectionsHandler.onTPSwitchCommand();" />
+        </vbox>
+      </hbox>
     </panelview>
   </panelmultiview>
 </panel>
