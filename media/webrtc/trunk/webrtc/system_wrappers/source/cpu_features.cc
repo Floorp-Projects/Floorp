@@ -68,18 +68,6 @@ static int GetCPUInfo(CPUFeature feature) {
   return 0;
 }
 
-#if !defined(ANDROID)
-#ifdef WEBRTC_ARCH_ARM_V7
-uint64_t WebRtc_GetCPUFeaturesARM(void) {
-  return kCPUFeatureARMv7
-#ifdef WEBRTC_ARCH_ARM_NEON
-         | kCPUFeatureNEON
-#endif
-         | kCPUFeatureVFPv3;
-}
-#endif // WEBRTC_ARCH_ARM_V7
-#endif // !ANDROID
-
 #endif
 
 WebRtc_CPUInfo WebRtc_GetCPUInfo = GetCPUInfo;
