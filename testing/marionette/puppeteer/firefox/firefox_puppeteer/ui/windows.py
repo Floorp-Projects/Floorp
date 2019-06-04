@@ -346,18 +346,22 @@ class BaseWindow(BaseLib):
         start_handles = self.marionette.chrome_window_handles
 
         self.switch_to()
-        with self.marionette.using_context('chrome'):
-            if callback is not None:
+
+        if callable(callback):
+            with self.marionette.using_context('chrome'):
                 callback(self)
-            else:
-                self.marionette.execute_script(""" OpenBrowserWindow(); """)
+        else:
+            result = self.marionette.open(type="window", focus=focus)
+            if result["type"] != "window":
+                raise Exception(
+                    "Newly opened browsing context is of type {} and not window.".format(
+                        result["type"]))
 
         # TODO: Needs to be replaced with observer handling code (bug 1121698)
-        def window_opened(mn):
-            return len(mn.chrome_window_handles) == len(start_handles) + 1
         Wait(self.marionette).until(
-            window_opened,
-            message='No new chrome window has been opened.')
+            lambda mn: len(mn.chrome_window_handles) == len(start_handles) + 1,
+            message="No new chrome window has been opened"
+        )
 
         handles = self.marionette.chrome_window_handles
         [new_handle] = list(set(handles) - set(start_handles))
