@@ -278,7 +278,6 @@ var gPlayTests = [
   { name:"test-7-6.1.opus", type:"audio/ogg; codecs=opus", duration:11.690 },
   { name:"test-8-7.1.opus", type:"audio/ogg; codecs=opus", duration:13.478 },
 
-  { name: "av1.mp4", type:"video/mp4", duration:1.00 },
   { name:"gizmo-short.mp4", type:"video/mp4", duration:0.27, contentDuration:0.267 },
   // Test playback of a MP4 file with a non-zero start time (and audio starting
   // a second later).
@@ -322,6 +321,11 @@ var gPlayTests = [
   // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN },
 ];
+
+if (!(manifestNavigator().userAgent.includes("Windows") &&
+      !manifestNavigator().userAgent.includes("x64"))) {
+  gPlayTests.push({ name: "av1.mp4", type:"video/mp4", duration:1.00 });
+}
 
 var gSeekToNextFrameTests = [
   // Test playback of a WebM file with vp9 video
@@ -630,6 +634,15 @@ var gCuelessWebMTests = [
 var gUnseekableTests = [
   { name:"bogus.duh", type:"bogus/duh"}
 ];
+
+function isWindows32() {
+    return navigator.userAgent.includes("Windows") &&
+        !navigator.userAgent.includes("Win64");
+}
+
+function isAndroid() {
+    return navigator.userAgent.includes("Android");
+}
 
 var androidVersion = -1; // non-Android platforms
 if (manifestNavigator().userAgent.includes("Mobile") ||
@@ -1857,6 +1870,11 @@ function mediaTestCleanup(callback) {
       A[i] = null;
     }
     SpecialPowers.exactGC(callback);
+}
+
+// B2G emulator and Android 2.3 are condidered slow platforms
+function isSlowPlatform() {
+  return SpecialPowers.Services.appinfo.name == "B2G" || getAndroidVersion() == 10;
 }
 
 async function dumpDebugInfoForToken(token) {
