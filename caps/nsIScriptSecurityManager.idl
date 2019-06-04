@@ -178,6 +178,19 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal createCodebasePrincipalFromOrigin(in ACString origin);
 
     /**
+     * Takes a principal and returns a string representation of it or a nullptr if it can't be serialized.
+     * Example output: `{"1": {"0": "https://mozilla.com", "2": "^privateBrowsingId=1"}}`
+     */
+    ACString principalToJSON(in nsIPrincipal principal);
+
+    /**
+     * Takes a string of the following format:
+     * `{"1": {"0": "https://mozilla.com", "2": "^privateBrowsingId=1"}}`
+     * and turns it into a principal or a nullptr on error.
+     */
+    nsIPrincipal JSONToPrincipal(in ACString json);
+
+    /**
      * Returns a unique nonce principal with |originAttributes|.
      * See nsIPrincipal.idl for a description of origin attributes, and
      * ChromeUtils.webidl for a list of origin attributes and their defaults.

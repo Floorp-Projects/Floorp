@@ -35,7 +35,6 @@ class HLSDecoder final : public MediaDecoder {
 
   void AddSizeOfResources(ResourceSizes* aSizes) override;
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
-  bool HadCrossOriginRedirects() override;
   bool IsTransportSeekable() override { return true; }
   void Suspend() override;
   void Resume() override;

@@ -52,29 +52,24 @@ def validate_dependent_tasks(config, jobs):
         yield job
 
 
+_REQUIRED_ARCHITECTURES = {
+    'android-aarch64-nightly',
+    'android-api-16-nightly',
+    'android-x86_64-nightly',
+    'android-x86-nightly',
+}
+
+
 def check_every_architecture_is_present_in_dependent_tasks(project, dependent_tasks):
     dep_platforms = set(t.attributes.get('build_platform') for t in dependent_tasks)
-    required_architectures = _get_required_architectures(project)
-    missed_architectures = required_architectures - dep_platforms
+    missed_architectures = _REQUIRED_ARCHITECTURES - dep_platforms
     if missed_architectures:
         raise Exception('''One or many required architectures are missing.
 
 Required architectures: {}.
 Given dependencies: {}.
-'''.format(required_architectures, dependent_tasks)
+'''.format(_REQUIRED_ARCHITECTURES, dependent_tasks)
         )
-
-
-def _get_required_architectures(project):
-    architectures = {
-        'android-api-16-nightly',
-        'android-x86-nightly',
-        'android-x86_64-nightly',
-    }
-    if project in ('mozilla-central', 'mozilla-beta', 'try'):
-        architectures.add('android-aarch64-nightly')
-
-    return architectures
 
 
 @transforms.add

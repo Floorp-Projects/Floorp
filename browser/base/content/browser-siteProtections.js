@@ -39,7 +39,7 @@ var gProtectionsHandler = {
     this.refreshProtectionsPopup();
 
     // Now open the popup, anchored off the primary chrome element
-    PanelMultiView.openPopup(this._protectionsPopup, this._protectionsIconBox, {
+    PanelMultiView.openPopup(this._protectionsPopup, gIdentityHandler._identityIcon, {
       position: "bottomcenter topleft",
       triggerEvent: event,
     }).catch(Cu.reportError);

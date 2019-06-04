@@ -6,24 +6,27 @@
 #define nsCharsetSource_h_
 
 // note: the value order defines the priority; higher numbers take priority
-#define kCharsetUninitialized 0
-#define kCharsetFromFallback 1
-#define kCharsetFromTopLevelDomain 2
-#define kCharsetFromFileURLGuess 3
-#define kCharsetFromDocTypeDefault 4  // This and up confident for XHR
-#define kCharsetFromCache 5
-#define kCharsetFromParentFrame 6
-#define kCharsetFromAutoDetection 7
-#define kCharsetFromMetaPrescan 8  // this one and smaller: HTML5 Tentative
-#define kCharsetFromMetaTag 9      // this one and greater: HTML5 Confident
-#define kCharsetFromIrreversibleAutoDetection 10
-#define kCharsetFromChannel 11
-#define kCharsetFromOtherComponent 12
-#define kCharsetFromParentForced 13  // propagates to child frames
-#define kCharsetFromUserForced 14    // propagates to child frames
-#define kCharsetFromUserForcedAutoDetection 15
-#define kCharsetFromByteOrderMark 16
-#define kCharsetFromUtf8OnlyMime 17  // For JSON, WebVTT and such
-#define kCharsetFromBuiltIn 18       // resource: URLs
+enum {
+  kCharsetUninitialized,
+  kCharsetFromFallback,
+  kCharsetFromTopLevelDomain,
+  kCharsetFromFileURLGuess,
+  kCharsetFromDocTypeDefault,  // This and up confident for XHR
+  kCharsetFromCache,
+  kCharsetFromParentFrame,
+  kCharsetFromAutoDetection,
+  kCharsetFromHintPrevDoc,
+  kCharsetFromMetaPrescan,  // this one and smaller: HTML5 Tentative
+  kCharsetFromMetaTag,      // this one and greater: HTML5 Confident
+  kCharsetFromIrreversibleAutoDetection,
+  kCharsetFromChannel,
+  kCharsetFromOtherComponent,
+  kCharsetFromParentForced,  // propagates to child frames
+  kCharsetFromUserForced,    // propagates to child frames
+  kCharsetFromUserForcedAutoDetection,
+  kCharsetFromByteOrderMark,
+  kCharsetFromUtf8OnlyMime,  // For JSON, WebVTT and such
+  kCharsetFromBuiltIn,       // resource: URLs
+};
 
 #endif /* nsCharsetSource_h_ */

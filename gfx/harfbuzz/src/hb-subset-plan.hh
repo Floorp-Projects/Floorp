@@ -40,11 +40,17 @@ struct hb_subset_plan_t
   hb_object_header_t header;
 
   bool drop_hints : 1;
-  bool drop_layout : 1;
   bool desubroutinize : 1;
+  bool retain_gids : 1;
 
   // For each cp that we'd like to retain maps to the corresponding gid.
   hb_set_t *unicodes;
+
+  // name_ids we would like to retain
+  hb_set_t *name_ids;
+
+  // Tables which should be dropped.
+  hb_set_t *drop_tables;
 
   // The glyph subset
   hb_map_t *codepoint_to_glyph;
@@ -59,16 +65,28 @@ struct hb_subset_plan_t
 
   unsigned int _num_output_glyphs;
   hb_set_t *_glyphset;
+  hb_set_t *_glyphset_gsub;
 
  public:
 
   /*
    * The set of input glyph ids which will be retained in the subset.
+   * Does NOT include ids kept due to retain_gids. You probably want to use
+   * glyph_map/reverse_glyph_map.
    */
   inline const hb_set_t *
   glyphset () const
   {
     return _glyphset;
+  }
+
+  /*
+   * The set of input glyph ids which will be retained in the subset.
+   */
+  inline const hb_set_t *
+  glyphset_gsub () const
+  {
+    return _glyphset_gsub;
   }
 
   /*

@@ -29,7 +29,7 @@ class nsCSPPolicy;
 
 [ptr] native CSPPolicyPtr(const nsCSPPolicy);
 
-[scriptable, builtinclass, uuid(b3c4c0ae-bd5e-4cad-87e0-8d210dbb3f9f)]
+[scriptable, builtinclass, uuid(1d632008-6c97-48ae-a51c-16e2daa0f4f6)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**

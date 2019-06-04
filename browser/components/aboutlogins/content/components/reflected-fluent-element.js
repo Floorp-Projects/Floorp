@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class ReflectedFluentElement extends HTMLElement {
+export default class ReflectedFluentElement extends HTMLElement {
   _isReflectedAttributePresent(attr) {
     return this.constructor.reflectedFluentIDs.includes(attr.name);
   }

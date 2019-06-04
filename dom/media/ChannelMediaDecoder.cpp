@@ -501,11 +501,6 @@ already_AddRefed<nsIPrincipal> ChannelMediaDecoder::GetCurrentPrincipal() {
   return mResource ? mResource->GetCurrentPrincipal() : nullptr;
 }
 
-bool ChannelMediaDecoder::HadCrossOriginRedirects() {
-  MOZ_ASSERT(NS_IsMainThread());
-  return mResource ? mResource->HadCrossOriginRedirects() : false;
-}
-
 bool ChannelMediaDecoder::IsTransportSeekable() {
   MOZ_ASSERT(NS_IsMainThread());
   return mResource->IsTransportSeekable();

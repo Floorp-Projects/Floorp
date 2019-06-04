@@ -130,11 +130,26 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   template <Compression compression>
   MOZ_MUST_USE JS::Result<Ok> readBuf(uint8_t* bytes, uint32_t len);
 
+  /**
+   * Read bytes to fill decodedBuffer_.
+   *
+   * On success, this guarantees there's at least 1 byte in the buffer.
+   * If there is no data, return an error.
+   */
+  MOZ_MUST_USE JS::Result<Ok> fillDecodedBuf();
+
+  void advanceDecodedBuffer(uint32_t count);
+
  public:
   /**
    * Read the header of the file.
    */
   MOZ_MUST_USE JS::Result<Ok> readHeader();
+
+  /**
+   * Read the string dictionary of the header of the file.
+   */
+  MOZ_MUST_USE JS::Result<Ok> readStringPrelude();
 
   // --- Primitive values.
   //

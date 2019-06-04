@@ -87,15 +87,15 @@ struct CPALV1Tail
   }
 
   protected:
-  LNNOffsetTo<UnsizedArrayOf<HBUINT32> >
+  LNNOffsetTo<UnsizedArrayOf<HBUINT32>>
 		paletteFlagsZ;		/* Offset from the beginning of CPAL table to
 					 * the Palette Type Array. Set to 0 if no array
 					 * is provided. */
-  LNNOffsetTo<UnsizedArrayOf<NameID> >
+  LNNOffsetTo<UnsizedArrayOf<NameID>>
 		paletteLabelsZ;		/* Offset from the beginning of CPAL table to
 					 * the palette labels array. Set to 0 if no
 					 * array is provided. */
-  LNNOffsetTo<UnsizedArrayOf<NameID> >
+  LNNOffsetTo<UnsizedArrayOf<NameID>>
 		colorLabelsZ;		/* Offset from the beginning of CPAL table to
 					 * the color labels array. Set to 0
 					 * if no array is provided. */
@@ -144,7 +144,7 @@ struct CPAL
     {
       hb_array_t<const BGRAColor> segment_colors = palette_colors.sub_array (start_offset, *color_count);
       /* Always return numColors colors per palette even if it has out-of-bounds start index. */
-      unsigned int count = MIN<unsigned int> (MAX<int> (numColors - start_offset, 0), *color_count);
+      unsigned int count = hb_min ((unsigned) hb_max ((int) (numColors - start_offset), 0), *color_count);
       *color_count = count;
       for (unsigned int i = 0; i < count; i++)
         colors[i] = segment_colors[i]; /* Bound-checked read. */
@@ -176,7 +176,7 @@ struct CPAL
   HBUINT16	numPalettes;		/* Number of palettes in the table. */
   HBUINT16	numColorRecords;	/* Total number of color records, combined for
 					 * all palettes. */
-  LNNOffsetTo<UnsizedArrayOf<BGRAColor> >
+  LNNOffsetTo<UnsizedArrayOf<BGRAColor>>
 		colorRecordsZ;		/* Offset from the beginning of CPAL table to
 					 * the first ColorRecord. */
   UnsizedArrayOf<HBUINT16>

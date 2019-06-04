@@ -50,7 +50,6 @@ window._gBrowser = {
       this._outerWindowIDBrowserMap.set(this.selectedBrowser.outerWindowID,
         this.selectedBrowser);
     }
-    messageManager.addMessageListener("DOMWindowFocus", this);
     messageManager.addMessageListener("RefreshBlocker:Blocked", this);
     messageManager.addMessageListener("Browser:WindowCreated", this);
 
@@ -4338,15 +4337,6 @@ window._gBrowser = {
       case "contextmenu":
       {
         openContextMenu(aMessage);
-        break;
-      }
-      case "DOMWindowFocus":
-      {
-        let tab = this.getTabForBrowser(browser);
-        if (!tab)
-          return undefined;
-        this.selectedTab = tab;
-        window.focus();
         break;
       }
       case "Browser:Init":

@@ -72,10 +72,6 @@ class BaseMediaResource : public MediaResource,
   // Get the current principal for the channel
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
 
-  // Return true if the loading of this resource required cross-origin
-  // redirects.
-  virtual bool HadCrossOriginRedirects() = 0;
-
   /**
    * Open the stream. This creates a stream listener and returns it in
    * aStreamListener; this listener needs to be notified of incoming data.

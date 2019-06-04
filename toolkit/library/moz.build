@@ -58,6 +58,10 @@ def Libxul(name, output_category=None):
         # and config/version.mk would lift the $(srcdir)
         RCINCLUDE = '$(DEPTH)/toolkit/library/xulrunner.rc'
 
+    # Show a breakdown of linker time. (Too verbose for local builds.)
+    if CONFIG['CC_TYPE'] == 'clang-cl' and not CONFIG['DEVELOPER_OPTIONS']:
+        LDFLAGS += ['-time']
+
     Libxul_defines()
 
     if CONFIG['MOZ_NEEDS_LIBATOMIC']:

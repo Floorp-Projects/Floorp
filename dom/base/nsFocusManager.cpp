@@ -373,6 +373,12 @@ nsFocusManager::GetActiveWindow(mozIDOMWindowProxy** aWindow) {
   return NS_OK;
 }
 
+void nsFocusManager::FocusWindow(nsPIDOMWindowOuter* aWindow) {
+  if (RefPtr<nsFocusManager> fm = sInstance) {
+    fm->SetFocusedWindow(aWindow);
+  }
+}
+
 NS_IMETHODIMP
 nsFocusManager::SetActiveWindow(mozIDOMWindowProxy* aWindow) {
   NS_ENSURE_STATE(aWindow);

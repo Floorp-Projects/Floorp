@@ -113,6 +113,7 @@ hb_ot_new_tag_to_script (hb_tag_t tag)
   return HB_SCRIPT_UNKNOWN;
 }
 
+#ifndef HB_DISABLE_DEPRECATED
 void
 hb_ot_tags_from_script (hb_script_t  script,
 			hb_tag_t    *script_tag_1,
@@ -124,6 +125,7 @@ hb_ot_tags_from_script (hb_script_t  script,
   *script_tag_1 = count > 0 ? tags[0] : HB_OT_TAG_DEFAULT_SCRIPT;
   *script_tag_2 = count > 1 ? tags[1] : HB_OT_TAG_DEFAULT_SCRIPT;
 }
+#endif
 
 /*
  * Complete list at:
@@ -198,7 +200,7 @@ lang_matches (const char *lang_str, const char *spec)
 struct LangTag
 {
   char language[4];
-  hb_tag_t tags[HB_OT_MAX_TAGS_PER_LANGUAGE];
+  hb_tag_t tag;
 
   int cmp (const char *a) const
   {
@@ -212,7 +214,7 @@ struct LangTag
     p = strchr (b, '-');
     db = p ? (unsigned int) (p - b) : strlen (b);
 
-    return strncmp (a, b, MAX (da, db));
+    return strncmp (a, b, hb_max (da, db));
   }
   int cmp (const LangTag *that) const
   { return cmp (that->language); }
@@ -230,6 +232,7 @@ struct LangTag
 /*{"??",	{HB_TAG('Y','I','C',' ')}},*/	/* Yi Classic */
 /*{"zh?",	{HB_TAG('Z','H','P',' ')}},*/	/* Chinese Phonetic */
 
+#ifndef HB_DISABLE_DEPRECATED
 hb_tag_t
 hb_ot_tag_from_language (hb_language_t language)
 {
@@ -238,6 +241,7 @@ hb_ot_tag_from_language (hb_language_t language)
   hb_ot_tags_from_script_and_language (HB_SCRIPT_UNKNOWN, language, nullptr, nullptr, &count, tags);
   return count > 0 ? tags[0] : HB_OT_TAG_DEFAULT_LANGUAGE;
 }
+#endif
 
 static void
 hb_ot_tags_from_language (const char   *lang_str,
@@ -246,6 +250,7 @@ hb_ot_tags_from_language (const char   *lang_str,
 			  hb_tag_t     *tags)
 {
   const char *s;
+  unsigned int tag_idx;
 
   /* Check for matches of multiple subtags. */
   if (hb_ot_tags_from_complex_language (lang_str, limit, count, tags))
@@ -254,7 +259,6 @@ hb_ot_tags_from_language (const char   *lang_str,
   /* Find a language matching in the first component. */
   s = strchr (lang_str, '-');
   {
-    const LangTag *lang_tag;
     if (s && limit - lang_str >= 6)
     {
       const char *extlang_end = strchr (s + 1, '-');
@@ -263,12 +267,18 @@ hb_ot_tags_from_language (const char   *lang_str,
 	  ISALPHA (s[1]))
 	lang_str = s + 1;
     }
-    lang_tag = hb_sorted_array (ot_languages).bsearch (lang_str);
-    if (lang_tag)
+    if (hb_sorted_array (ot_languages).bfind (lang_str, &tag_idx))
     {
       unsigned int i;
-      for (i = 0; i < *count && lang_tag->tags[i] != HB_TAG_NONE; i++)
-	tags[i] = lang_tag->tags[i];
+      while (tag_idx != 0 &&
+	     0 == strcmp (ot_languages[tag_idx].language, ot_languages[tag_idx - 1].language))
+	tag_idx--;
+      for (i = 0;
+	   i < *count &&
+	   tag_idx + i < ARRAY_LENGTH (ot_languages) &&
+	   0 == strcmp (ot_languages[tag_idx + i].language, ot_languages[tag_idx].language);
+	   i++)
+	tags[i] = ot_languages[tag_idx + i].tag;
       *count = i;
       return;
     }
@@ -417,20 +427,33 @@ hb_ot_tag_to_language (hb_tag_t tag)
   }
 
   for (i = 0; i < ARRAY_LENGTH (ot_languages); i++)
-    if (ot_languages[i].tags[0] == tag)
+    if (ot_languages[i].tag == tag)
       return hb_language_from_string (ot_languages[i].language, -1);
 
-  /* Else return a custom language in the form of "x-hbotABCD" */
+  /* If it's three letters long, assume it's ISO 639-3 and lower-case and use it
+   * (if it's not a registered tag, calling hb_ot_tag_from_language on the
+   * result might not return the same tag as the original tag).
+   * Else return a custom language in the form of "x-hbotABCD". */
   {
-    unsigned char buf[11] = "x-hbot";
+    char buf[11] = "x-hbot";
+    char *str = buf;
     buf[6] = tag >> 24;
     buf[7] = (tag >> 16) & 0xFF;
     buf[8] = (tag >> 8) & 0xFF;
     buf[9] = tag & 0xFF;
     if (buf[9] == 0x20)
+    {
       buf[9] = '\0';
+      if (ISALPHA (buf[6]) && ISALPHA (buf[7]) && ISALPHA (buf[8]))
+      {
+	buf[6] = TOLOWER (buf[6]);
+	buf[7] = TOLOWER (buf[7]);
+	buf[8] = TOLOWER (buf[8]);
+	str += 6;
+      }
+    }
     buf[10] = '\0';
-    return hb_language_from_string ((char *) buf, -1);
+    return hb_language_from_string (str, -1);
   }
 }
 
@@ -506,7 +529,7 @@ test_langs_sorted ()
   for (unsigned int i = 1; i < ARRAY_LENGTH (ot_languages); i++)
   {
     int c = ot_languages[i].cmp (&ot_languages[i - 1]);
-    if (c >= 0)
+    if (c > 0)
     {
       fprintf (stderr, "ot_languages not sorted at index %d: %s %d %s\n",
 	       i, ot_languages[i-1].language, c, ot_languages[i].language);

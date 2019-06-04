@@ -1117,10 +1117,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbut
     -moz-window-transform: none;
   }
 %else
-  #BMB_bookmarksPopup {
-    will-change: transform, opacity; /* workaround for bug 1414033 */
-  }
-
   #BMB_bookmarksPopup:not([animate="false"]) {
     opacity: 0;
     transform: translateY(-70px);

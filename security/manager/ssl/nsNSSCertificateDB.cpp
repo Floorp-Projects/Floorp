@@ -1223,7 +1223,7 @@ nsNSSCertificateDB::AsyncVerifyCertAtTime(
     nsICertVerificationCallback* aCallback) {
   RefPtr<VerifyCertAtTimeTask> task(new VerifyCertAtTimeTask(
       aCert, aUsage, aFlags, aHostname, aTime, aCallback));
-  return task->Dispatch("VerifyCert");
+  return task->Dispatch();
 }
 
 NS_IMETHODIMP

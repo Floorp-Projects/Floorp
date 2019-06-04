@@ -13,6 +13,7 @@ const actions = require("devtools/client/webconsole/actions/index");
 const { createEditContextMenu } = require("devtools/client/framework/toolbox-context-menu");
 const { createContextMenu } = require("devtools/client/webconsole/utils/context-menu");
 const { configureStore } = require("devtools/client/webconsole/store");
+const { PREFS } = require("devtools/client/webconsole/constants");
 
 const { isPacketPrivate } = require("devtools/client/webconsole/utils/messages");
 const { getAllMessagesById, getMessage } = require("devtools/client/webconsole/selectors/messages");
@@ -367,6 +368,21 @@ class WebConsoleWrapper {
         && !Services.appinfo.accessibilityEnabled;
       const autocomplete = prefs.autocomplete;
 
+      this.prefsObservers = new Map();
+      this.prefsObservers.set(PREFS.UI.MESSAGE_TIMESTAMP, () => {
+        const enabled = Services.prefs.getBoolPref(PREFS.UI.MESSAGE_TIMESTAMP);
+        store.dispatch(actions.timestampsToggle(enabled));
+      });
+
+      this.prefsObservers.set(PREFS.FEATURES.GROUP_WARNINGS, () => {
+        const enabled = Services.prefs.getBoolPref(PREFS.FEATURES.GROUP_WARNINGS);
+        store.dispatch(actions.warningGroupsToggle(enabled));
+      });
+
+      for (const [pref, observer] of this.prefsObservers) {
+        Services.prefs.addObserver(pref, observer);
+      }
+
       const app = App({
         serviceContainer,
         webConsoleUI,
@@ -476,10 +492,6 @@ class WebConsoleWrapper {
     this.queuedMessageAdds = this.queuedMessageAdds.filter(p => !isPacketPrivate(p));
 
     store.dispatch(actions.privateMessagesClear());
-  }
-
-  dispatchTimestampsToggle(enabled) {
-    store.dispatch(actions.timestampsToggle(enabled));
   }
 
   dispatchPaused(packet) {
@@ -658,6 +670,14 @@ class WebConsoleWrapper {
   // Called by pushing close button.
   closeSplitConsole() {
     this.toolbox.closeSplitConsole();
+  }
+
+  destroy() {
+    if (this.prefsObservers) {
+      for (const [pref, observer] of this.prefsObservers) {
+        Services.prefs.removeObserver(pref, observer);
+      }
+    }
   }
 }
 

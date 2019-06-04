@@ -29,8 +29,9 @@
 #ifndef HB_HH
 #define HB_HH
 
+
 #ifndef HB_NO_PRAGMA_GCC_DIAGNOSTIC
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #pragma warning( disable: 4068 ) /* Unknown pragma */
 #endif
 #if defined(__GNUC__) || defined(__clang__)
@@ -65,9 +66,12 @@
 #pragma GCC diagnostic error   "-Wcast-align"
 #pragma GCC diagnostic error   "-Wcast-function-type"
 #pragma GCC diagnostic error   "-Wdelete-non-virtual-dtor"
+#pragma GCC diagnostic error   "-Wdouble-promotion"
+#pragma GCC diagnostic error   "-Wextra-semi-stmt"
 #pragma GCC diagnostic error   "-Wformat-security"
 #pragma GCC diagnostic error   "-Wimplicit-function-declaration"
 #pragma GCC diagnostic error   "-Winit-self"
+#pragma GCC diagnostic error   "-Winjected-class-name"
 #pragma GCC diagnostic error   "-Wmissing-braces"
 #pragma GCC diagnostic error   "-Wmissing-declarations"
 #pragma GCC diagnostic error   "-Wmissing-prototypes"
@@ -93,6 +97,7 @@
 /* Warning.  To be investigated if happens. */
 #ifndef HB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING
 #pragma GCC diagnostic warning "-Wbuiltin-macro-redefined"
+#pragma GCC diagnostic warning "-Wdeprecated"
 #pragma GCC diagnostic warning "-Wdisabled-optimization"
 #pragma GCC diagnostic warning "-Wformat=2"
 #pragma GCC diagnostic warning "-Wignored-pragma-optimize"
@@ -120,14 +125,15 @@
 #pragma GCC diagnostic ignored "-Wpacked" // Erratic impl in clang
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #pragma GCC diagnostic ignored "-Wtype-limits"
+#pragma GCC diagnostic ignored "-Wc++11-compat" // only gcc raises it
 #endif
 
 #endif
 #endif
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+
+#include "hb-config.hh"
+
 
 /*
  * Following added based on what AC_USE_SYSTEM_EXTENSIONS adds to
@@ -166,8 +172,7 @@
 #include "hb-aat.h"
 #define HB_AAT_H_IN
 
-#include "hb-aat.h"
-
+#include <limits.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -200,7 +205,7 @@ extern "C" void  hb_free_impl(void *ptr);
 #define realloc hb_realloc_impl
 #define free hb_free_impl
 
-#if defined(hb_memalign_impl)
+#ifdef hb_memalign_impl
 extern "C" int hb_memalign_impl(void **memptr, size_t alignment, size_t size);
 #define posix_memalign hb_memalign_impl
 #else
@@ -213,59 +218,6 @@ extern "C" int hb_memalign_impl(void **memptr, size_t alignment, size_t size);
 /*
  * Compiler attributes
  */
-
-/* https://github.com/harfbuzz/harfbuzz/issues/1634 */
-#if __cplusplus < 201103L && !defined(_MSC_VER)
-
-#ifndef nullptr
-#define nullptr NULL
-#endif
-
-#ifndef constexpr
-#define constexpr const
-#endif
-
-#ifndef static_assert
-#define static_assert(e, msg) \
-	HB_UNUSED typedef int HB_PASTE(static_assertion_failed_at_line_, __LINE__) [(e) ? 1 : -1]
-#endif // static_assert
-
-#if defined(__GNUC__)
-#if (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8))
-#define thread_local __thread
-#endif
-#else
-#define thread_local
-#endif
-
-template <typename T>
-struct _hb_alignof
-{
-  struct s
-  {
-    char c;
-    T t;
-  };
-  static constexpr size_t value = offsetof (s, t);
-};
-#ifndef alignof
-#define alignof(x) (_hb_alignof<x>::value)
-#endif
-
-/* https://github.com/harfbuzz/harfbuzz/issues/1127 */
-#ifndef explicit_operator
-#define explicit_operator operator
-#endif
-
-#else /* __cplusplus >= 201103L */
-
-/* https://github.com/harfbuzz/harfbuzz/issues/1127 */
-#ifndef explicit_operator
-#define explicit_operator explicit operator
-#endif
-
-#endif /* __cplusplus < 201103L */
-
 
 #if (defined(__GNUC__) || defined(__clang__)) && defined(__OPTIMIZE__)
 #define likely(expr) (__builtin_expect (!!(expr), 1))
@@ -310,6 +262,13 @@ struct _hb_alignof
 #  define HB_INTERNAL
 #  define HB_NO_VISIBILITY 1
 # endif
+#endif
+
+/* https://github.com/harfbuzz/harfbuzz/issues/1651 */
+#if defined(__clang__) && __clang_major__ < 10
+#define static_const static
+#else
+#define static_const static const
 #endif
 
 #if defined(__GNUC__) && (__GNUC__ >= 3)
@@ -358,7 +317,7 @@ struct _hb_alignof
 #  define HB_FALLTHROUGH /* FALLTHROUGH */
 #endif
 
-#if defined(__clang__)
+#ifdef __clang__
 /* Disable certain sanitizer errors. */
 /* https://github.com/harfbuzz/harfbuzz/issues/1247 */
 #define HB_NO_SANITIZE_SIGNED_INTEGER_OVERFLOW __attribute__((no_sanitize("signed-integer-overflow")))
@@ -389,17 +348,25 @@ struct _hb_alignof
 #  if defined(_WIN32_WCE)
      /* Some things not defined on Windows CE. */
 #    define vsnprintf _vsnprintf
-#    define getenv(Name) nullptr
+#    ifndef HB_NO_GETENV
+#      define HB_NO_GETENV
+#    endif
 #    if _WIN32_WCE < 0x800
 #      define setlocale(Category, Locale) "C"
 static int errno = 0; /* Use something better? */
 #    endif
 #  elif defined(WINAPI_FAMILY) && (WINAPI_FAMILY==WINAPI_FAMILY_PC_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
-#    define getenv(Name) nullptr
+#    ifndef HB_NO_GETENV
+#      define HB_NO_GETENV
+#    endif
 #  endif
 #  if defined(_MSC_VER) && _MSC_VER < 1900
 #    define snprintf _snprintf
 #  endif
+#endif
+
+#ifdef HB_NO_GETENV
+#define getenv(Name) nullptr
 #endif
 
 #if defined(HAVE_ATEXIT) && !defined(HB_USE_ATEXIT)
@@ -460,45 +427,13 @@ static_assert ((sizeof (hb_position_t) == 4), "");
 static_assert ((sizeof (hb_mask_t) == 4), "");
 static_assert ((sizeof (hb_var_int_t) == 4), "");
 
-
-#if __cplusplus >= 201103L
-
-/* We only enable these with C++11 or later, since earlier language
- * does not allow structs with constructors in unions, and we need
- * those. */
-
-#define HB_NO_COPY_ASSIGN(TypeName) \
-  TypeName(const TypeName&); \
-  void operator=(const TypeName&)
-#define HB_NO_COPY_ASSIGN_TEMPLATE(TypeName, T) \
-  TypeName(const TypeName<T>&); \
-  void operator=(const TypeName<T>&)
-#define HB_NO_COPY_ASSIGN_TEMPLATE2(TypeName, T1, T2) \
-  TypeName(const TypeName<T1, T2>&); \
-  void operator=(const TypeName<T1, T2>&)
-#define HB_NO_CREATE_COPY_ASSIGN(TypeName) \
-  TypeName(); \
-  TypeName(const TypeName&); \
-  void operator=(const TypeName&)
-#define HB_NO_CREATE_COPY_ASSIGN_TEMPLATE(TypeName, T) \
-  TypeName(); \
-  TypeName(const TypeName<T>&); \
-  void operator=(const TypeName<T>&)
-#define HB_NO_CREATE_COPY_ASSIGN_TEMPLATE2(TypeName, T1, T2) \
-  TypeName(); \
-  TypeName(const TypeName<T1, T2>&); \
-  void operator=(const TypeName<T1, T2>&)
-
-#else /* __cpluspplus >= 201103L */
-
-#define HB_NO_COPY_ASSIGN(TypeName) static_assert (true, "")
-#define HB_NO_COPY_ASSIGN_TEMPLATE(TypeName, T) static_assert (true, "")
-#define HB_NO_COPY_ASSIGN_TEMPLATE2(TypeName, T1, T2) static_assert (true, "")
-#define HB_NO_CREATE_COPY_ASSIGN(TypeName) static_assert (true, "")
-#define HB_NO_CREATE_COPY_ASSIGN_TEMPLATE(TypeName, T) static_assert (true, "")
-#define HB_NO_CREATE_COPY_ASSIGN_TEMPLATE2(TypeName, T1, T2) static_assert (true, "")
-
-#endif /* __cpluspplus >= 201103L */
+#define HB_DELETE_COPY_ASSIGN(TypeName) \
+  TypeName(const TypeName&) = delete; \
+  void operator=(const TypeName&) = delete
+#define HB_DELETE_CREATE_COPY_ASSIGN(TypeName) \
+  TypeName() = delete; \
+  TypeName(const TypeName&) = delete; \
+  void operator=(const TypeName&) = delete
 
 
 /*
@@ -512,12 +447,12 @@ static_assert ((sizeof (hb_var_int_t) == 4), "");
  *
  * https://bugs.chromium.org/p/chromium/issues/detail?id=860184
  */
-#if !defined(HB_VECTOR_SIZE)
+#ifndef HB_VECTOR_SIZE
 #  define HB_VECTOR_SIZE 0
 #endif
 
 /* The `vector_size' attribute was introduced in gcc 3.1. */
-#if !defined(HB_VECTOR_SIZE)
+#ifndef HB_VECTOR_SIZE
 #  if defined( __GNUC__ ) && ( __GNUC__ >= 4 )
 #    define HB_VECTOR_SIZE 128
 #  else
@@ -530,16 +465,6 @@ static_assert (0 == (HB_VECTOR_SIZE % 64), "HB_VECTOR_SIZE is not multiple of 64
 typedef uint64_t hb_vector_size_impl_t __attribute__((vector_size (HB_VECTOR_SIZE / 8)));
 #else
 typedef uint64_t hb_vector_size_impl_t;
-#endif
-
-
-/* HB_NDEBUG disables some sanity checks that are very safe to disable and
- * should be disabled in production systems.  If NDEBUG is defined, enable
- * HB_NDEBUG; but if it's desirable that normal assert()s (which are very
- * light-weight) to be enabled, then HB_DEBUG can be defined to disable
- * the costlier checks. */
-#ifdef NDEBUG
-#define HB_NDEBUG 1
 #endif
 
 
@@ -624,6 +549,95 @@ _hb_memalign(void **memptr, size_t alignment, size_t size)
 
 
 /*
+ * Big-endian integers.  Here because fundamental.
+ */
+
+template <typename Type, int Bytes> struct BEInt;
+
+template <typename Type>
+struct BEInt<Type, 1>
+{
+  public:
+  BEInt<Type, 1>& operator = (Type V)
+  {
+    v = V;
+    return *this;
+  }
+  operator Type () const { return v; }
+  private: uint8_t v;
+};
+template <typename Type>
+struct BEInt<Type, 2>
+{
+  public:
+  BEInt<Type, 2>& operator = (Type V)
+  {
+    v[0] = (V >>  8) & 0xFF;
+    v[1] = (V      ) & 0xFF;
+    return *this;
+  }
+  operator Type () const
+  {
+#if ((defined(__GNUC__) && __GNUC__ >= 5) || defined(__clang__)) && \
+    defined(__BYTE_ORDER) && \
+    (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN)
+    /* Spoon-feed the compiler a big-endian integer with alignment 1.
+     * https://github.com/harfbuzz/harfbuzz/pull/1398 */
+    struct __attribute__((packed)) packed_uint16_t { uint16_t v; };
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    return __builtin_bswap16 (((packed_uint16_t *) this)->v);
+#else /* __BYTE_ORDER == __BIG_ENDIAN */
+    return ((packed_uint16_t *) this)->v;
+#endif
+#endif
+    return (v[0] <<  8)
+         + (v[1]      );
+  }
+  private: uint8_t v[2];
+};
+template <typename Type>
+struct BEInt<Type, 3>
+{
+  public:
+  BEInt<Type, 3>& operator = (Type V)
+  {
+    v[0] = (V >> 16) & 0xFF;
+    v[1] = (V >>  8) & 0xFF;
+    v[2] = (V      ) & 0xFF;
+    return *this;
+  }
+  operator Type () const
+  {
+    return (v[0] << 16)
+         + (v[1] <<  8)
+         + (v[2]      );
+  }
+  private: uint8_t v[3];
+};
+template <typename Type>
+struct BEInt<Type, 4>
+{
+  public:
+  BEInt<Type, 4>& operator = (Type V)
+  {
+    v[0] = (V >> 24) & 0xFF;
+    v[1] = (V >> 16) & 0xFF;
+    v[2] = (V >>  8) & 0xFF;
+    v[3] = (V      ) & 0xFF;
+    return *this;
+  }
+  operator Type () const
+  {
+    return (v[0] << 24)
+         + (v[1] << 16)
+         + (v[2] <<  8)
+         + (v[3]      );
+  }
+  private: uint8_t v[4];
+};
+
+
+/*
  * For lack of a better place, put Zawgyi script hack here.
  * https://github.com/harfbuzz/harfbuzz/issues/1162
  */
@@ -631,28 +645,17 @@ _hb_memalign(void **memptr, size_t alignment, size_t size)
 #define HB_SCRIPT_MYANMAR_ZAWGYI	((hb_script_t) HB_TAG ('Q','a','a','g'))
 
 
-/* Some really basic things everyone wants. */
-template <typename T> struct hb_remove_const { typedef T value; };
-template <typename T> struct hb_remove_const<const T> { typedef T value; };
-#define hb_remove_const(T) hb_remove_const<T>::value
-template <typename T> struct hb_remove_reference { typedef T value; };
-template <typename T> struct hb_remove_reference<T &> { typedef T value; };
-#define hb_remove_reference(T) hb_remove_reference<T>::value
-template <typename T> struct hb_remove_pointer { typedef T value; };
-template <typename T> struct hb_remove_pointer<T *> { typedef T value; };
-#define hb_remove_pointer(T) hb_remove_pointer<T>::value
-
-
 /* Headers we include for everyone.  Keep topologically sorted by dependency.
  * They express dependency amongst themselves, but no other file should include
  * them directly.*/
-#include "hb-atomic.hh"
+#include "hb-meta.hh"
 #include "hb-mutex.hh"
-#include "hb-null.hh"
-#include "hb-dsalgs.hh"	// Requires: hb-null
-#include "hb-iter.hh"	// Requires: hb-null
-#include "hb-debug.hh"	// Requires: hb-atomic hb-dsalgs
-#include "hb-array.hh"	// Requires: hb-dsalgs hb-iter hb-null
+#include "hb-atomic.hh"	// Requires: hb-meta
+#include "hb-null.hh"	// Requires: hb-meta
+#include "hb-algs.hh"	// Requires: hb-meta hb-null
+#include "hb-iter.hh"	// Requires: hb-algs hb-meta
+#include "hb-debug.hh"	// Requires: hb-algs hb-atomic
+#include "hb-array.hh"	// Requires: hb-algs hb-iter hb-null
 #include "hb-vector.hh"	// Requires: hb-array hb-null
 #include "hb-object.hh"	// Requires: hb-atomic hb-mutex hb-vector
 

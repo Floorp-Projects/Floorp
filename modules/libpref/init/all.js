@@ -3132,7 +3132,7 @@ pref("layout.display-list.dump-parent", false);
 // Toggle retaining display lists between paints
 #if !defined(ANDROID)
 pref("layout.display-list.retain", true);
-pref("layout.display-list.retain.chrome", false);
+pref("layout.display-list.retain.chrome", true);
 #else
 pref("layout.display-list.retain", true);
 pref("layout.display-list.retain.chrome", true);
@@ -3308,6 +3308,9 @@ pref("dom.ipc.processCount.privilegedabout", 1);
 // Limit the privileged mozilla process to a single instance only
 // to avoid multiple of these content processes
 pref("dom.ipc.processCount.privilegedmozilla", 1);
+
+// Isolated content processes are always one-per-origin.
+pref("dom.ipc.processCount.webIsolated", 1);
 
 // Keep a single privileged about process alive for performance reasons.
 // e.g. we do not want to throw content processes out every time we navigate

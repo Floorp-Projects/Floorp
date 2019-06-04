@@ -66,12 +66,8 @@ class ChannelMediaResource
   // Store information shared among resources. Main thread only.
   struct SharedInfo {
     NS_INLINE_DECL_REFCOUNTING(SharedInfo);
-
-    SharedInfo() : mHadCrossOriginRedirects(false) {}
-
     nsCOMPtr<nsIPrincipal> mPrincipal;
     nsTArray<ChannelMediaResource*> mResources;
-    bool mHadCrossOriginRedirects;
 
    private:
     ~SharedInfo() = default;
@@ -121,7 +117,6 @@ class ChannelMediaResource
   void Suspend(bool aCloseImmediately) override;
   void Resume() override;
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
-  bool HadCrossOriginRedirects() override;
   bool CanClone() override;
   already_AddRefed<BaseMediaResource> CloneData(
       MediaResourceCallback* aDecoder) override;

@@ -5238,6 +5238,12 @@ already_AddRefed<PresShell> Document::CreatePresShell(
 
   UpdateFrameRequestCallbackSchedulingState();
 
+  if (mDocumentL10n) {
+    // In case we already accumulated mutations,
+    // we'll trigger the refresh driver now.
+    mDocumentL10n->OnCreatePresShell();
+  }
+
   // Now that we have a shell, we might have @font-face rules (the presence of a
   // shell may change which rules apply to us). We don't need to do anything
   // like EnsureStyleFlush or such, there's nothing to update yet and when stuff

@@ -4163,19 +4163,6 @@ nsresult nsContentUtils::DispatchChromeEvent(
   return err.StealNSResult();
 }
 
-/* static */
-nsresult nsContentUtils::DispatchFocusChromeEvent(nsPIDOMWindowOuter* aWindow) {
-  MOZ_ASSERT(aWindow);
-
-  RefPtr<Document> doc = aWindow->GetExtantDoc();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return DispatchChromeEvent(doc, aWindow, NS_LITERAL_STRING("DOMWindowFocus"),
-                             CanBubble::eYes, Cancelable::eYes);
-}
-
 void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise) {
   RefPtr<Element> target = &aFrameElement;
   bool defaultAction = true;
@@ -7180,26 +7167,21 @@ void nsContentUtils::CallOnAllRemoteChildren(
 }
 
 struct UIStateChangeInfo {
-  UIStateChangeType mShowAccelerators;
   UIStateChangeType mShowFocusRings;
 
-  UIStateChangeInfo(UIStateChangeType aShowAccelerators,
-                    UIStateChangeType aShowFocusRings)
-      : mShowAccelerators(aShowAccelerators),
-        mShowFocusRings(aShowFocusRings) {}
+  explicit UIStateChangeInfo(UIStateChangeType aShowFocusRings)
+      : mShowFocusRings(aShowFocusRings) {}
 };
 
 bool SetKeyboardIndicatorsChild(BrowserParent* aParent, void* aArg) {
   UIStateChangeInfo* stateInfo = static_cast<UIStateChangeInfo*>(aArg);
-  Unused << aParent->SendSetKeyboardIndicators(stateInfo->mShowAccelerators,
-                                               stateInfo->mShowFocusRings);
+  Unused << aParent->SendSetKeyboardIndicators(stateInfo->mShowFocusRings);
   return false;
 }
 
 void nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
-    nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowAccelerators,
-    UIStateChangeType aShowFocusRings) {
-  UIStateChangeInfo stateInfo(aShowAccelerators, aShowFocusRings);
+    nsPIDOMWindowOuter* aWindow, UIStateChangeType aShowFocusRings) {
+  UIStateChangeInfo stateInfo(aShowFocusRings);
   CallOnAllRemoteChildren(aWindow, SetKeyboardIndicatorsChild,
                           (void*)&stateInfo);
 }
@@ -9660,15 +9642,19 @@ bool nsContentUtils::QueryTriggeringPrincipal(
     return result;
   }
 
-  nsCOMPtr<nsISupports> serializedPrincipal;
-  NS_DeserializeObject(NS_ConvertUTF16toUTF8(loadingStr),
-                       getter_AddRefs(serializedPrincipal));
-  nsCOMPtr<nsIPrincipal> serializedPrin =
-      do_QueryInterface(serializedPrincipal);
-  if (serializedPrin) {
-    result = true;
-    serializedPrin.forget(aTriggeringPrincipal);
+  nsCString binary;
+  nsresult rv = Base64Decode(NS_ConvertUTF16toUTF8(loadingStr), binary);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrincipal> serializedPrin = BasePrincipal::FromJSON(binary);
+    if (serializedPrin) {
+      result = true;
+      serializedPrin.forget(aTriggeringPrincipal);
+    }
   } else {
+    MOZ_ASSERT(false, "Unable to deserialize base64 principal");
+  }
+
+  if (!result) {
     // Fallback if the deserialization is failed.
     loadingPrincipal.forget(aTriggeringPrincipal);
   }

@@ -88,7 +88,7 @@ struct post
       return false;
     }
 
-    post_prime->version.major.set (3); // Version 3 does not have any glyph names.
+    post_prime->version.major = 3; // Version 3 does not have any glyph names.
     bool result = plan->add_table (HB_OT_TAG_post, post_prime_blob);
     hb_blob_destroy (post_prime_blob);
 
@@ -131,7 +131,7 @@ struct post
       hb_bytes_t s = find_glyph_name (glyph);
       if (!s.length) return false;
       if (!buf_len) return true;
-      unsigned int len = MIN (buf_len - 1, s.length);
+      unsigned int len = hb_min (buf_len - 1, s.length);
       strncpy (buf, s.arrayZ, len);
       buf[len] = '\0';
       return true;

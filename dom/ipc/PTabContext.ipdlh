@@ -50,7 +50,6 @@ struct FrameIPCTabContext
   nsString presentationURL;
 
   // Keyboard indicator state inherited from the parent.
-  UIStateChangeType showAccelerators;
   UIStateChangeType showFocusRings;
 };
 

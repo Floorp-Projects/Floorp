@@ -45,6 +45,7 @@ const actionTypes = {
   REVERSE_SEARCH_NEXT: "REVERSE_SEARCH_NEXT",
   REVERSE_SEARCH_BACK: "REVERSE_SEARCH_BACK",
   PAUSED_EXCECUTION_POINT: "PAUSED_EXCECUTION_POINT",
+  WARNING_GROUPS_TOGGLE: "WARNING_GROUPS_TOGGLE",
   WILL_NAVIGATE: "WILL_NAVIGATE",
 };
 
@@ -69,8 +70,10 @@ const prefs = {
       INPUT_HISTORY_COUNT: "devtools.webconsole.inputHistoryCount",
       // Is editor mode enabled.
       EDITOR: "devtools.webconsole.input.editor",
-      // Display content messages in the browser console
+      // Display content messages in the browser console.
       CONTENT_MESSAGES: "devtools.browserconsole.contentMessages",
+      // Display timestamp in messages.
+      MESSAGE_TIMESTAMP: "devtools.webconsole.timestampMessages",
     },
     FEATURES: {
       // We use the same pref to enable the sidebar on webconsole and browser console.
