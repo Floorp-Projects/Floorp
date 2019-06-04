@@ -855,11 +855,29 @@ class ActivePS {
   static void ClearExpiredExitProfiles(PSLockRef) {
     uint64_t bufferRangeStart = sInstance->mBuffer->mRangeStart;
     // Discard exit profiles that were gathered before our buffer RangeStart.
+#ifdef MOZ_BASE_PROFILER
+    if (bufferRangeStart != 0 && sInstance->mBaseProfileThreads) {
+      sInstance->mBaseProfileThreads.reset();
+    }
+#endif
     sInstance->mExitProfiles.eraseIf(
         [bufferRangeStart](const ExitProfile& aExitProfile) {
           return aExitProfile.mBufferPositionAtGatherTime < bufferRangeStart;
         });
   }
+
+#ifdef MOZ_BASE_PROFILER
+  static void AddBaseProfileThreads(PSLockRef aLock,
+                                    UniquePtr<char[]> aBaseProfileThreads) {
+    sInstance->mBaseProfileThreads = std::move(aBaseProfileThreads);
+  }
+
+  static UniquePtr<char[]> MoveBaseProfileThreads(PSLockRef aLock) {
+    ClearExpiredExitProfiles(aLock);
+
+    return std::move(sInstance->mBaseProfileThreads);
+  }
+#endif
 
   static void AddExitProfile(PSLockRef aLock, const nsCString& aExitProfile) {
     ClearExpiredExitProfiles(aLock);
@@ -953,6 +971,11 @@ class ActivePS {
   // Used to record whether the profiler was paused just before forking. False
   // at all times except just before/after forking.
   bool mWasPaused;
+#endif
+
+#ifdef MOZ_BASE_PROFILER
+  // Optional startup profile thread array from BaseProfiler.
+  UniquePtr<char[]> mBaseProfileThreads;
 #endif
 
   struct ExitProfile {
@@ -2116,6 +2139,14 @@ static void locked_profiler_stream_json_for_this_process(
                                     ActivePS::FeatureJSTracer(aLock));
 
       java::GeckoJavaSampler::Unpause();
+    }
+#endif
+
+#ifdef MOZ_BASE_PROFILER
+    UniquePtr<char[]> baseProfileThreads =
+        ActivePS::MoveBaseProfileThreads(aLock);
+    if (baseProfileThreads) {
+      aWriter.Splice(baseProfileThreads.get());
     }
 #endif
   }
@@ -3328,6 +3359,36 @@ static void locked_profiler_start(PSLockRef aLock, uint32_t aCapacity,
 
   ActivePS::Create(aLock, capacity, interval, aFeatures, aFilters, aFilterCount,
                    duration);
+
+  // ActivePS::Create can only succeed or crash.
+  MOZ_ASSERT(ActivePS::Exists(aLock));
+
+#ifdef MOZ_BASE_PROFILER
+  if (baseprofiler::profiler_is_active()) {
+    // Note that we still hold the lock, so the sampler cannot run yet and
+    // interact negatively with the still-active BaseProfiler sampler.
+    // Assume that BaseProfiler is active because of MOZ_BASE_PROFILER_STARTUP.
+    // Capture the BaseProfiler startup profile threads (if any).
+    UniquePtr<char[]> baseprofile = baseprofiler::profiler_get_profile(
+        /* aSinceTime */ 0, /* aIsShuttingDown */ false,
+        /* aOnlyThreads */ true);
+
+    // Now stop BaseProfiler, as further recording will be ignored anyway, and
+    // so that it won't clash with Gecko Profiler sampling starting after the
+    // lock is dropped.
+    // TODO: Allow non-sampling profiling to continue.
+    // TODO: Re-start BaseProfiler after Gecko Profiler shutdown, to capture
+    // post-XPCOM shutdown.
+    baseprofiler::profiler_stop();
+
+    if (baseprofile && baseprofile.get()[0] != '\0') {
+      // The BaseProfiler startup profile will be stored as a separate process
+      // in the Gecko Profiler profile, and shown as a new track under the
+      // corresponding Gecko Profiler thread.
+      ActivePS::AddBaseProfileThreads(aLock, std::move(baseprofile));
+    }
+  }
+#endif
 
   // Set up profiling for each registered thread, if appropriate.
   int tid = profiler_current_thread_id();
