@@ -69,6 +69,7 @@ constexpr bool TestForInvalidHostCharacters(char c) {
   return (c > 0 && c < 32) ||  // The control characters are [1, 31]
          c == ' ' || c == '#' || c == '/' || c == ':' || c == '?' || c == '@' ||
          c == '[' || c == '\\' || c == ']' || c == '*' || c == '<' ||
+         c == '^' ||
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
          // Mailnews %-escapes file paths into URLs.
          c == '>' || c == '|' || c == '"';
@@ -2313,6 +2314,20 @@ nsStandardURL::Resolve(const nsACString& in, nsACString& out) {
   uint32_t offset = 0;
   netCoalesceFlags coalesceFlag = NET_COALESCE_NORMAL;
 
+  nsAutoCString baseProtocol(Scheme());
+  nsAutoCString protocol;
+  rv = net_ExtractURLScheme(buf, protocol);
+
+  // Normally, if we parse a scheme, then it's an absolute URI. But because
+  // we still support a deprecated form of relative URIs such as: http:file or
+  // http:/path/file we can't do that for all protocols.
+  // So we just make sure that if there a protocol, it's the same as the
+  // current one, otherwise we treat it as an absolute URI.
+  if (NS_SUCCEEDED(rv) && protocol != baseProtocol) {
+    out = buf;
+    return NS_OK;
+  }
+
   // relative urls should never contain a host, so we always want to use
   // the noauth url parser.
   // use it to extract a possible scheme
@@ -2323,8 +2338,7 @@ nsStandardURL::Resolve(const nsACString& in, nsACString& out) {
   // reset the scheme and assume a relative url
   if (NS_FAILED(rv)) scheme.Reset();
 
-  nsAutoCString protocol(Segment(scheme));
-  nsAutoCString baseProtocol(Scheme());
+  protocol.Assign(Segment(scheme));
 
   // We need to do backslash replacement for the following cases:
   // 1. The input is an absolute path with a http/https/ftp scheme

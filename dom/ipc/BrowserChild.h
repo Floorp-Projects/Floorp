@@ -827,9 +827,6 @@ class BrowserChild final : public BrowserChildBase,
                                        Maybe<WebProgressData>& aWebProgressData,
                                        RequestData& aRequestData);
 
-  nsresult CanCancelContentJSBetweenURIs(nsIURI* aFirstURI, nsIURI* aSecondURI,
-                                         bool* aCanCancel);
-
   class DelayedDeleteRunnable;
 
   TextureFactoryIdentifier mTextureFactoryIdentifier;

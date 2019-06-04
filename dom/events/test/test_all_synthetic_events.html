@@ -288,6 +288,11 @@ const kEventConstructors = {
                                                          return new ProgressEvent(aName, aProps);
                                                        },
                                              },
+  PromiseRejectionEvent:                     { create: function (aName, aProps) {
+                                                         aProps.promise = new Promise(() => {});
+                                                         return new PromiseRejectionEvent(aName, aProps);
+                                                       },
+                                             },
   RTCDataChannelEvent:                       { create: function (aName, aProps) {
                                                          let pc = new RTCPeerConnection();
                                                          aProps.channel = pc.createDataChannel("foo");

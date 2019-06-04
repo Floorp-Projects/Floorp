@@ -820,6 +820,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ProgressEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PromiseRejectionEvent", insecureContext: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "PublicKeyCredential"},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "PushManager", insecureContext: true, fennecOrDesktop: true },

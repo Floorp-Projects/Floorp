@@ -15,7 +15,7 @@
   --markup-hidden-attr-name-color: #787878;
   --markup-hidden-attr-value-color: #a4a4a4;
   --markup-hidden-punctuation-color: #787878;
-  --markup-hidden-tag-color: #AFB5BF;
+  --markup-hidden-tag-color: var(--grey-45);
   --markup-outline: var(--theme-selection-background);
 }
 
