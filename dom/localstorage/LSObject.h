@@ -173,6 +173,9 @@ class LSObject final : public Storage {
   void EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                            ErrorResult& aError) override;
 
+  bool GetHasActiveSnapshot(nsIPrincipal& aSubjectPrincipal,
+                            ErrorResult& aError) override;
+
   //////////////////////////////////////////////////////////////////////////////
 
   NS_DECL_ISUPPORTS_INHERITED

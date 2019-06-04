@@ -28,6 +28,8 @@ if (!this.runTest) {
 
     enableTesting();
 
+    Cu.importGlobalProperties(["crypto"]);
+
     Assert.ok(typeof testSteps === "function",
               "There should be a testSteps function");
     Assert.ok(testSteps.constructor.name === "AsyncFunction",
@@ -227,9 +229,13 @@ function getCurrentPrincipal() {
   return Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 }
 
+function getDefaultPrincipal() {
+  return getPrincipal("http://example.com");
+}
+
 function getLocalStorage(principal) {
   if (!principal) {
-    principal = getCurrentPrincipal();
+    principal = getDefaultPrincipal();
   }
 
   return Services.domStorageManager.createStorage(null, principal, principal, "");
