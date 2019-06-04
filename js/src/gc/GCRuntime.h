@@ -1130,6 +1130,9 @@ inline bool GCRuntime::needZealousGC() { return false; }
 inline bool GCRuntime::hasIncrementalTwoSliceZealMode() { return false; }
 #endif
 
+bool IsCurrentlyAnimating(const mozilla::TimeStamp& lastAnimationTime,
+                          const mozilla::TimeStamp& currentTime);
+
 } /* namespace gc */
 } /* namespace js */
 
