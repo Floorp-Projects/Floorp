@@ -1,4 +1,4 @@
-# mozharness configuration for Android x86 7.0 unit tests
+# mozharness configuration for Android x86/x86_64 7.0 unit tests
 #
 # This configuration should be combined with suite definitions and other
 # mozharness configuration from android_common.py, or similar.
@@ -29,7 +29,7 @@ config = {
         # "LIBGL_DEBUG": "verbose"
     },
     "marionette_extra": "--emulator",
-    "bogomips_minimum": 4000,
+    "bogomips_minimum": 3000,
     # in support of test-verify
     "android_version": 24,
     "is_fennec": False,
