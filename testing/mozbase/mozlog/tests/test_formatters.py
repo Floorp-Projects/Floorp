@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
 import pytest
-from six import BytesIO, StringIO, unichr
+from six import BytesIO, unichr
 import unittest
 import os
 import signal
@@ -18,6 +18,7 @@ from mozlog.formatters import (
     TbplFormatter,
     HTMLFormatter,
     XUnitFormatter,
+    GroupingFormatter
 )
 from mozlog.handlers import StreamHandler
 
@@ -298,7 +299,7 @@ class FormatterTest(unittest.TestCase):
         self.position = 0
         self.logger = StructuredLogger(
             "test_%s" % type(self).__name__)
-        self.output_file = StringIO()
+        self.output_file = BytesIO()
         self.handler = StreamHandler(
             self.output_file, self.get_formatter())
         self.logger.add_handler(self.handler)
@@ -329,8 +330,8 @@ class TestHTMLFormatter(FormatterTest):
         self.logger.test_end("string_test", "FAIL",
                              extra={"data": "foobar"})
         self.logger.suite_end()
-        self.assertIn("data:text/html;charset=utf-8;base64,Zm9vYmFy",
-                      ''.join(self.loglines))
+        self.assertIn(b"data:text/html;charset=utf-8;base64,Zm9vYmFy",
+                      self.loglines[-3])
 
     def test_base64_unicode(self):
         self.logger.suite_start([])
@@ -338,8 +339,8 @@ class TestHTMLFormatter(FormatterTest):
         self.logger.test_end("unicode_test", "FAIL",
                              extra={"data": unichr(0x02A9)})
         self.logger.suite_end()
-        self.assertIn("data:text/html;charset=utf-8;base64,yqk=",
-                      ''.join(self.loglines))
+        self.assertIn(b"data:text/html;charset=utf-8;base64,yqk=",
+                      self.loglines[-3])
 
     def test_base64_other(self):
         self.logger.suite_start([])
@@ -347,8 +348,8 @@ class TestHTMLFormatter(FormatterTest):
         self.logger.test_end("int_test", "FAIL",
                              extra={"data": {"foo": "bar"}})
         self.logger.suite_end()
-        self.assertIn("data:text/html;charset=utf-8;base64,eyJmb28iOiAiYmFyIn0=",
-                      ''.join(self.loglines))
+        self.assertIn(b"data:text/html;charset=utf-8;base64,eyJmb28iOiAiYmFyIn0=",
+                      self.loglines[-3])
 
 
 class TestTBPLFormatter(FormatterTest):
@@ -362,7 +363,7 @@ class TestTBPLFormatter(FormatterTest):
         self.logger.test_end("timeout_test",
                              "TIMEOUT",
                              message="timed out")
-        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | timed out",
+        self.assertIn(b"TEST-UNEXPECTED-TIMEOUT | timeout_test | timed out",
                       self.loglines)
         self.logger.suite_end()
 
@@ -371,7 +372,7 @@ class TestTBPLFormatter(FormatterTest):
         self.logger.test_start("timeout_test")
         self.logger.test_end("timeout_test",
                              "TIMEOUT")
-        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | expected OK",
+        self.assertIn(b"TEST-UNEXPECTED-TIMEOUT | timeout_test | expected OK",
                       self.loglines)
         self.logger.suite_end()
 
@@ -381,9 +382,37 @@ class TestTBPLFormatter(FormatterTest):
         self.logger.test_status("timeout_test",
                                 "subtest",
                                 status="TIMEOUT")
-        self.assertIn("TEST-UNEXPECTED-TIMEOUT | timeout_test | subtest - expected PASS",
+        self.assertIn(b"TEST-UNEXPECTED-TIMEOUT | timeout_test | subtest - expected PASS",
                       self.loglines)
         self.logger.test_end("timeout_test", "OK")
+        self.logger.suite_end()
+
+    def test_known_intermittent_end(self):
+        self.logger.suite_start([])
+        self.logger.test_start("intermittent_test")
+        self.logger.test_end("intermittent_test",
+                             status="FAIL",
+                             expected="PASS",
+                             known_intermittent=["FAIL"])
+        # test_end log format:
+        # "TEST-KNOWN-INTERMITTENT-<STATUS> | <test> | took <duration>ms"
+        # where duration may be different each time
+        self.assertIn(b"TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | took ",
+                      self.loglines[2])
+        self.assertIn(b"ms", self.loglines[2])
+        self.logger.suite_end()
+
+    def test_known_intermittent_status(self):
+        self.logger.suite_start([])
+        self.logger.test_start("intermittent_test")
+        self.logger.test_status("intermittent_test",
+                                "subtest",
+                                status="FAIL",
+                                expected="PASS",
+                                known_intermittent=["FAIL"])
+        self.assertIn(b"TEST-KNOWN-INTERMITTENT-FAIL | intermittent_test | subtest",
+                      self.loglines)
+        self.logger.test_end("intermittent_test", "OK")
         self.logger.suite_end()
 
     def test_single_newline(self):
@@ -398,19 +427,40 @@ class TestTBPLFormatter(FormatterTest):
 
         # This sequence should not produce blanklines
         for line in self.loglines:
-            self.assertNotEqual("", line, "No blank line should be present in: %s" %
-                                self.loglines)
+            self.assertNotEqual(b"", line)
 
     def test_process_exit(self):
         self.logger.process_exit(1234, 0)
-        self.assertIn('TEST-INFO | 1234: exit 0', self.loglines)
+        self.assertIn(b'TEST-INFO | 1234: exit 0', self.loglines)
 
     @unittest.skipUnless(os.name == 'posix', 'posix only')
     def test_process_exit_with_sig(self):
         # subprocess return code is negative when process
         # has been killed by signal on posix.
         self.logger.process_exit(1234, -signal.SIGTERM)
-        self.assertIn, ('TEST-INFO | 1234: killed by SIGTERM', self.loglines)
+        self.assertIn(b'TEST-INFO | 1234: killed by SIGTERM', self.loglines)
+
+
+class TestTBPLFormatterWithShutdown(FormatterTest):
+
+    def get_formatter(self):
+        return TbplFormatter(summary_on_shutdown=True)
+
+    def test_suite_summary_on_shutdown(self):
+        self.logger.suite_start([])
+        self.logger.test_start("summary_test")
+        self.logger.test_status("summary_test",
+                                "subtest",
+                                "FAIL",
+                                "PASS",
+                                known_intermittent=["FAIL"])
+        self.logger.test_end("summary_test", "FAIL", "OK", known_intermittent=["FAIL"])
+        self.logger.suite_end()
+        self.logger.shutdown()
+
+        self.assertIn(b"suite 1: 2/2 (2 known intermittent tests)", self.loglines)
+        self.assertIn(b"Known Intermittent tests:", self.loglines)
+        self.assertIn(b"TEST-KNOWN-INTERMITTENT-FAIL | summary_test | subtest", self.loglines)
 
 
 class TestMachFormatter(FormatterTest):
@@ -434,15 +484,15 @@ class TestMachFormatter(FormatterTest):
         self.set_position()
         self.logger.suite_end()
 
-        self.assertIn("Ran 3 checks (3 tests)", self.loglines)
-        self.assertIn("Expected results: 1", self.loglines)
-        self.assertIn("""
+        self.assertIn(b"Ran 3 checks (3 tests)", self.loglines)
+        self.assertIn(b"Expected results: 1", self.loglines)
+        self.assertIn(b"""
 Unexpected results: 2
   test: 2 (1 fail, 1 pass)
-""".strip(), "\n".join(self.loglines))
-        self.assertNotIn("test1", self.loglines)
-        self.assertIn("UNEXPECTED-PASS test2", self.loglines)
-        self.assertIn("FAIL test3", self.loglines)
+""".strip(), b"\n".join(self.loglines))
+        self.assertNotIn(b"test1", self.loglines)
+        self.assertIn(b"UNEXPECTED-PASS test2", self.loglines)
+        self.assertIn(b"FAIL test3", self.loglines)
 
     def test_summary_subtests(self):
         self.logger.suite_start([])
@@ -460,13 +510,13 @@ Unexpected results: 2
         self.set_position()
         self.logger.suite_end()
 
-        self.assertIn("Ran 5 checks (3 subtests, 2 tests)", self.loglines)
-        self.assertIn("Expected results: 2", self.loglines)
-        self.assertIn("""
+        self.assertIn(b"Ran 5 checks (3 subtests, 2 tests)", self.loglines)
+        self.assertIn(b"Expected results: 2", self.loglines)
+        self.assertIn(b"""
 Unexpected results: 3
   test: 1 (1 timeout)
   subtest: 2 (1 fail, 1 timeout)
-""".strip(), "\n".join(self.loglines))
+""".strip(), b"\n".join(self.loglines))
 
     def test_summary_ok(self):
         self.logger.suite_start([])
@@ -484,28 +534,63 @@ Unexpected results: 3
         self.set_position()
         self.logger.suite_end()
 
-        self.assertIn("OK", self.loglines)
-        self.assertIn("Expected results: 5", self.loglines)
-        self.assertIn("Unexpected results: 0", self.loglines)
+        self.assertIn(b"OK", self.loglines)
+        self.assertIn(b"Expected results: 5", self.loglines)
+        self.assertIn(b"Unexpected results: 0", self.loglines)
 
     def test_process_start(self):
         self.logger.process_start(1234)
-        self.assertIn("Started process `1234`", self.loglines[0])
+        self.assertIn(b"Started process `1234`", self.loglines[0])
 
     def test_process_start_with_command(self):
         self.logger.process_start(1234, command='test cmd')
-        self.assertIn("Started process `1234` (test cmd)", self.loglines[0])
+        self.assertIn(b"Started process `1234` (test cmd)", self.loglines[0])
 
     def test_process_exit(self):
         self.logger.process_exit(1234, 0)
-        self.assertIn('1234: exit 0', self.loglines[0])
+        self.assertIn(b'1234: exit 0', self.loglines[0])
 
     @unittest.skipUnless(os.name == 'posix', 'posix only')
     def test_process_exit_with_sig(self):
         # subprocess return code is negative when process
         # has been killed by signal on posix.
         self.logger.process_exit(1234, -signal.SIGTERM)
-        self.assertIn('1234: killed by SIGTERM', self.loglines[0])
+        self.assertIn(b'1234: killed by SIGTERM', self.loglines[0])
+
+
+class TestGroupingFormatter(FormatterTest):
+
+    def get_formatter(self):
+        return GroupingFormatter()
+
+    def test_results_total(self):
+        self.logger.suite_start([])
+
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "subtest1", status="PASS")
+        self.logger.test_status("test1", "subtest1", status="PASS")
+        self.logger.test_end("test1", status="OK")
+
+        self.logger.test_start("test2")
+        self.logger.test_status("test2",
+                                "subtest2",
+                                status="FAIL",
+                                expected="PASS",
+                                known_intermittent=["FAIL"])
+        self.logger.test_end("test2", status="FAIL", expected="OK")
+
+        self.set_position()
+        self.logger.suite_end()
+
+        self.assertIn(b"Ran 2 tests finished in 0.0 seconds.", self.loglines)
+        self.assertIn(b"  \xe2\x80\xa2 1 ran as expected. 0 tests skipped.",
+                      self.loglines)
+        self.assertIn(b"  \xe2\x80\xa2 1 known intermittent results.", self.loglines)
+        self.assertIn(b"  \xe2\x80\xa2 1 tests failed unexpectedly", self.loglines)
+        self.assertIn(b"  \xe2\x96\xb6 FAIL [expected OK] test2", self.loglines)
+        self.assertIn(b"""
+  \xe2\x96\xb6 FAIL [expected PASS, known intermittent [FAIL] test2, subtest2
+""".strip(b"\n"), self.loglines)
 
 
 class TestXUnitFormatter(FormatterTest):
@@ -514,7 +599,7 @@ class TestXUnitFormatter(FormatterTest):
         return XUnitFormatter()
 
     def log_as_xml(self):
-        return ET.fromstring('\n'.join(self.loglines))
+        return ET.fromstring(b'\n'.join(self.loglines))
 
     def test_stacktrace_is_present(self):
         self.logger.suite_start([])

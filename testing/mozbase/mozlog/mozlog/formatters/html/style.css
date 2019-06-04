@@ -46,7 +46,8 @@ span.pass, .pass .col-result {
 }
 span.expected_fail, .expected_fail .col-result,
 span.expected_skip, .expected_skip .col-result,
-span.skip, .skip .col-result {
+span.skip, .skip .col-result,
+span.known_intermittent, .known_intermittent .col-result {
 	color: orange;
 }
 span.error, .error .col-result,

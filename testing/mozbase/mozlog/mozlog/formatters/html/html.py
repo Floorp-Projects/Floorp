@@ -122,9 +122,12 @@ class HTMLFormatter(base.BaseFormatter):
 
         status = status_name = data["status"]
         expected = data.get("expected", status)
+        known_intermittent = data.get("known_intermittent", [])
 
-        if status != expected:
+        if status != expected and status not in known_intermittent:
             status_name = "UNEXPECTED_" + status
+        elif status in known_intermittent:
+            status_name = "KNOWN_INTERMITTENT"
         elif status not in ("PASS", "SKIP"):
             status_name = "EXPECTED_" + status
 
@@ -245,7 +248,10 @@ class HTMLFormatter(base.BaseFormatter):
                            html.span('%i expected failures' % self.test_count["EXPECTED_FAIL"],
                                      class_='expected_fail'), ', ',
                            html.span('%i unexpected passes' % self.test_count["UNEXPECTED_PASS"],
-                                     class_='unexpected_pass'), '.'),
+                                     class_='unexpected_pass'), ', ',
+                           html.span('%i known intermittent results' %
+                                     self.test_count["KNOWN_INTERMITTENT"],
+                                     class_='known_intermittent'), '.'),
                     html.h2('Results'),
                     html.table([html.thead(
                         html.tr([
