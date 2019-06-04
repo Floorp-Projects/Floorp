@@ -301,6 +301,7 @@ add_task(async function testKeyboardSupport() {
 
   // Test opening and closing the menu.
   let moreOptionsMenu = card.querySelector("panel-list");
+  let expandButton = moreOptionsMenu.querySelector('[action="expand"]');
   is(moreOptionsMenu.open, false, "The menu is closed");
   space();
   is(moreOptionsMenu.open, true, "The menu is open");
@@ -314,12 +315,14 @@ add_task(async function testKeyboardSupport() {
   is(moreOptionsMenu.open, false, "Tabbing away from the menu closes it");
   tab();
   isFocused(moreOptionsButton, "The button is focused again");
+  let shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
   space();
+  await shown;
   is(moreOptionsMenu.open, true, "The menu is open");
   tab();
   tab();
   tab();
-  isFocused(moreOptionsButton, "The last item is focused");
+  isFocused(expandButton, "The last item is focused");
   tab();
   is(moreOptionsMenu.open, false, "Tabbing out of the menu closes it");
 
@@ -328,7 +331,7 @@ add_task(async function testKeyboardSupport() {
   isFocused(moreOptionsButton, "The button is focused again");
 
   // Open the menu to test contents.
-  let shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
+  shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
   space();
   is(moreOptionsMenu.open, true, "The menu is open");
   // Wait for the panel to be shown.
