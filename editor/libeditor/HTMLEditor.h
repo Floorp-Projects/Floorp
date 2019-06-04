@@ -464,6 +464,12 @@ class HTMLEditor final : public TextEditor,
    */
   Element* GetActiveEditingHost() const;
 
+  /**
+   * NotifyEditingHostMaybeChanged() is called when new element becomes
+   * contenteditable when the document already had contenteditable elements.
+   */
+  void NotifyEditingHostMaybeChanged();
+
   /** Insert a string as quoted text
    * (whose representation is dependant on the editor type),
    * replacing the selected text (if any).

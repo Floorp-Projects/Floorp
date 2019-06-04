@@ -10,6 +10,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
@@ -2450,8 +2451,10 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
     return;
   }
 
+  Document::EditingState previousEditingState = Document::EditingState::eOff;
   if (aChange != 0) {
     document->ChangeContentEditableCount(this, aChange);
+    previousEditingState = document->GetEditingState();
   }
 
   if (document->HasFlag(NODE_IS_EDITABLE)) {
@@ -2463,6 +2466,18 @@ void nsGenericHTMLElement::ChangeEditableState(int32_t aChange) {
   // We might as well wrap it all in one script blocker.
   nsAutoScriptBlocker scriptBlocker;
   MakeContentDescendantsEditable(this, document);
+
+  // If the document already had contenteditable and JS adds new
+  // contenteditable, that might cause changing editing host to current editing
+  // host's ancestor.  In such case, HTMLEditor needs to know that
+  // synchronously to update selection limitter.
+  if (document && aChange > 0 &&
+      previousEditingState == Document::EditingState::eContentEditable) {
+    if (HTMLEditor* htmlEditor =
+            nsContentUtils::GetHTMLEditor(document->GetPresContext())) {
+      htmlEditor->NotifyEditingHostMaybeChanged();
+    }
+  }
 }
 
 //----------------------------------------------------------------------
