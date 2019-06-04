@@ -146,6 +146,9 @@
   global.assertEqArray = assertEqArray;
 
   function assertThrows(f) {
+    if (arguments.length != 1) {
+      throw new Error("Too many arguments to assertThrows; maybe you meant assertThrowsInstanceOf?");
+    }
     var ok = false;
     try {
       f();

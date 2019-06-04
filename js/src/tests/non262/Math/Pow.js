@@ -49,7 +49,7 @@ a = c = e = 2;
 assertEq(a**/**b**/c/**/**/**d**/e, 16);
 
 // Two stars separated should not parse as exp operator
-assertThrows(function() { return Reflect.parse("2 * * 3"); }, SyntaxError);
+assertThrowsInstanceOf(function() { return Reflect.parse("2 * * 3"); }, SyntaxError);
 
 // Left-hand side expression must not be a unary expression.
 for (let unaryOp of ["delete", "typeof", "void", "+", "-", "!", "~"]) {
