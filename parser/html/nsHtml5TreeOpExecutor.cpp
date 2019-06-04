@@ -29,7 +29,6 @@
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIHTMLDocument.h"
 #include "nsINestedURI.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptError.h"
