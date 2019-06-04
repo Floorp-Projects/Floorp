@@ -1574,7 +1574,7 @@ GeckoDriver.prototype.findWindow = function(winIterable, filter) {
 
 /**
  * Switch the marionette window to a given window. If the browser in
- * the window is unregistered, registers that browser and waits for
+ * the window is unregistered, register that browser and wait for
  * the registration is complete. If |focus| is true then set the focus
  * on the window.
  *
@@ -1611,9 +1611,13 @@ GeckoDriver.prototype.setWindowHandle = async function(
 
     // .. and activate the tab if it's a content browser.
     if ("tabIndex" in winProperties) {
-      this.curBrowser.switchToTab(
+      await this.curBrowser.switchToTab(
           winProperties.tabIndex, winProperties.win, focus);
     }
+  }
+
+  if (focus) {
+    await this.curBrowser.focusWindow();
   }
 };
 
