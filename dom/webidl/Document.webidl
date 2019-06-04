@@ -192,8 +192,6 @@ partial interface Document {
    * etc.
    */
   [Func="IsChromeOrXBLOrUAWidget"] readonly attribute boolean mozSyntheticDocument;
-  [Throws, Func="IsChromeOrXBL"]
-  BoxObject? getBoxObjectFor(Element? element);
   /**
    * Returns the script element whose script is currently being processed.
    *
