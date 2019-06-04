@@ -171,7 +171,7 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--target-tasks-method',
                      help='method for selecting the target tasks to generate')
     @CommandArgument('--optimize-target-tasks',
-                     type=strtobool,
+                     type=lambda flag: bool(strtobool(flag)),
                      nargs='?', const='true',
                      help='If specified, this indicates whether the target '
                           'tasks are eligible for optimization. Otherwise, '
@@ -179,7 +179,8 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--try-task-config-file',
                      help='path to try task configuration file')
     @CommandArgument('--tasks-for',
-                     help='the tasks_for value used to generate this task')
+                     help='the tasks_for value used to generate this task',
+                     required=True)
     @CommandArgument('--include-push-tasks',
                      action='store_true',
                      help='Whether tasks from the on-push graph should be re-used '
