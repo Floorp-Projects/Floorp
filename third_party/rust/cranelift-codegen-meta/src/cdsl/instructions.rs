@@ -4,13 +4,47 @@ use crate::cdsl::formats::{
 };
 use crate::cdsl::operands::Operand;
 use crate::cdsl::type_inference::Constraint;
-use crate::cdsl::types::ValueType;
+use crate::cdsl::types::{LaneType, ValueType};
 use crate::cdsl::typevar::TypeVar;
 
 use std::fmt;
 use std::ops;
 use std::rc::Rc;
 use std::slice;
+
+pub struct InstructionGroupBuilder<'format_reg> {
+    _name: &'static str,
+    _doc: &'static str,
+    format_registry: &'format_reg FormatRegistry,
+    instructions: Vec<Instruction>,
+}
+
+impl<'format_reg> InstructionGroupBuilder<'format_reg> {
+    pub fn new(
+        name: &'static str,
+        doc: &'static str,
+        format_registry: &'format_reg FormatRegistry,
+    ) -> Self {
+        Self {
+            _name: name,
+            _doc: doc,
+            format_registry,
+            instructions: Vec::new(),
+        }
+    }
+
+    pub fn push(&mut self, builder: InstructionBuilder) {
+        self.instructions.push(builder.build(self.format_registry));
+    }
+
+    pub fn build(self) -> InstructionGroup {
+        InstructionGroup {
+            _name: self._name,
+            _doc: self._doc,
+            instructions: self.instructions,
+        }
+    }
+}
 
 /// Every instruction must belong to exactly one instruction group. A given
 /// target architecture can support instructions from multiple groups, and it
@@ -22,18 +56,6 @@ pub struct InstructionGroup {
 }
 
 impl InstructionGroup {
-    pub fn new(name: &'static str, doc: &'static str) -> Self {
-        Self {
-            _name: name,
-            _doc: doc,
-            instructions: Vec::new(),
-        }
-    }
-
-    pub fn push(&mut self, inst: Instruction) {
-        self.instructions.push(inst);
-    }
-
     pub fn iter(&self) -> slice::Iter<Instruction> {
         self.instructions.iter()
     }
@@ -54,11 +76,11 @@ pub struct PolymorphicInfo {
 
 pub struct InstructionContent {
     /// Instruction mnemonic, also becomes opcode name.
-    pub name: &'static str,
+    pub name: String,
     pub camel_name: String,
 
     /// Documentation string.
-    doc: &'static str,
+    doc: String,
 
     /// Input operands. This can be a mix of SSA value operands and other operand kinds.
     pub operands_in: Vec<Operand>,
@@ -115,15 +137,15 @@ impl ops::Deref for Instruction {
 }
 
 impl Instruction {
-    pub fn snake_name(&self) -> &'static str {
+    pub fn snake_name(&self) -> &str {
         if self.name == "return" {
             "return_"
         } else {
-            self.name
+            &self.name
         }
     }
 
-    pub fn doc_comment_first_line(&self) -> &'static str {
+    pub fn doc_comment_first_line(&self) -> &str {
         for line in self.doc.split("\n") {
             let stripped = line.trim();
             if stripped.len() > 0 {
@@ -143,6 +165,10 @@ impl Instruction {
             None => Vec::new(),
         }
     }
+
+    pub fn bind(&self, lane_type: impl Into<LaneType>) -> BoundInstruction {
+        bind(self.clone(), lane_type.into(), Vec::new())
+    }
 }
 
 impl fmt::Display for Instruction {
@@ -158,7 +184,7 @@ impl fmt::Display for Instruction {
             fmt.write_str(" = ")?;
         }
 
-        fmt.write_str(self.name)?;
+        fmt.write_str(&self.name)?;
 
         if self.operands_in.len() > 0 {
             let operands_in = self
@@ -176,8 +202,8 @@ impl fmt::Display for Instruction {
 }
 
 pub struct InstructionBuilder {
-    name: &'static str,
-    doc: &'static str,
+    name: String,
+    doc: String,
     operands_in: Option<Vec<Operand>>,
     operands_out: Option<Vec<Operand>>,
     constraints: Option<Vec<Constraint>>,
@@ -196,10 +222,10 @@ pub struct InstructionBuilder {
 }
 
 impl InstructionBuilder {
-    pub fn new(name: &'static str, doc: &'static str) -> Self {
+    pub fn new<S: Into<String>>(name: S, doc: S) -> Self {
         Self {
-            name,
-            doc,
+            name: name.into(),
+            doc: doc.into(),
             operands_in: None,
             operands_out: None,
             constraints: None,
@@ -274,7 +300,7 @@ impl InstructionBuilder {
         self
     }
 
-    pub fn finish(self, format_registry: &FormatRegistry) -> Instruction {
+    fn build(self, format_registry: &FormatRegistry) -> Instruction {
         let operands_in = self.operands_in.unwrap_or_else(Vec::new);
         let operands_out = self.operands_out.unwrap_or_else(Vec::new);
 
@@ -306,10 +332,11 @@ impl InstructionBuilder {
         // Infer from output operands whether an instruciton clobbers CPU flags or not.
         let writes_cpu_flags = operands_out.iter().any(|op| op.is_cpu_flags());
 
+        let camel_name = camel_case(&self.name);
         Instruction {
             content: Rc::new(InstructionContent {
                 name: self.name,
-                camel_name: camel_case(self.name),
+                camel_name,
                 doc: self.doc,
                 operands_in,
                 operands_out,
@@ -339,6 +366,12 @@ impl InstructionBuilder {
 pub struct BoundInstruction {
     pub inst: Instruction,
     pub value_types: Vec<ValueType>,
+}
+
+impl BoundInstruction {
+    pub fn bind(self, lane_type: impl Into<LaneType>) -> BoundInstruction {
+        bind(self.inst, lane_type.into(), self.value_types)
+    }
 }
 
 /// Check if this instruction is polymorphic, and verify its use of type variables.
@@ -373,7 +406,7 @@ fn verify_polymorphic(
             let tv = operands_in[op_num].type_var().unwrap();
             let free_typevar = tv.free_typevar();
             if (free_typevar.is_some() && tv == &free_typevar.unwrap())
-                || !tv.singleton_type().is_none()
+                || tv.singleton_type().is_some()
             {
                 match verify_ctrl_typevar(tv, &value_opnums, &operands_in, &operands_out) {
                     Ok(typevars) => {
@@ -597,4 +630,55 @@ impl InstructionPredicate {
             None => "true".into(),
         }
     }
+}
+
+/// An instruction specification, containing an instruction that has bound types or not.
+pub enum InstSpec {
+    Inst(Instruction),
+    Bound(BoundInstruction),
+}
+
+impl InstSpec {
+    pub fn inst(&self) -> &Instruction {
+        match &self {
+            InstSpec::Inst(inst) => inst,
+            InstSpec::Bound(bound_inst) => &bound_inst.inst,
+        }
+    }
+}
+
+impl Into<InstSpec> for &Instruction {
+    fn into(self) -> InstSpec {
+        InstSpec::Inst(self.clone())
+    }
+}
+
+impl Into<InstSpec> for BoundInstruction {
+    fn into(self) -> InstSpec {
+        InstSpec::Bound(self)
+    }
+}
+
+/// Helper bind reused by {Bound,}Instruction::bind.
+fn bind(
+    inst: Instruction,
+    lane_type: LaneType,
+    mut value_types: Vec<ValueType>,
+) -> BoundInstruction {
+    value_types.push(ValueType::from(lane_type));
+    match &inst.polymorphic_info {
+        Some(poly) => {
+            assert!(
+                value_types.len() <= 1 + poly.other_typevars.len(),
+                format!("trying to bind too many types for {}", inst.name)
+            );
+        }
+        None => {
+            panic!(format!(
+                "trying to bind a type for {} which is not a polymorphic instruction",
+                inst.name
+            ));
+        }
+    }
+    BoundInstruction { inst, value_types }
 }
