@@ -22,7 +22,7 @@ object MozillaProductDetector {
         FOCUS("org.mozilla.focus"),
 
         // Other products
-        LOCKBOX("org.mozilla.lockbox")
+        LOCKWISE("mozilla.lockbox")
     }
 
     fun getInstalledMozillaProducts(context: Context): List<String> {

@@ -347,7 +347,7 @@ metrics:
     description: >
       A list of all the Mozilla products installed on device. We currently scan for: Firefox, Firefox Beta,
        Firefox Aurora, Firefox Nightly, Firefox Fdroid, Firefox Lite, Reference Browser, Reference Browser Debug,
-       Fenix, Focus, and Lockbox.
+       Fenix, Focus, and Lockwise.
     send_in_pings:
     - metrics
     bugs:
