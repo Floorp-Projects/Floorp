@@ -258,4 +258,13 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
 	<p>La página web en %1$s se ha identificado como un sitio engañoso y se ha bloqueado de acuerdo con sus preferencias de seguridad.</p>
 	]]></string>
+
+    <!-- The tile for the list of external apps to open the link in -->
+    <string name="mozac_feature_applinks_open_in">Abrir en…</string>
+    <!-- The description to warn users that their private browsing session changes  -->
+    <string name="mozac_feature_applinks_confirm_dialog_title">¿Abrir en aplicación? Puede que lo que haces deje de ser privado.</string>
+    <!-- Opens the selected time -->
+    <string name="mozac_feature_applinks_confirm_dialog_confirm">Abrir</string>
+    <!-- Cancels the prompt -->
+    <string name="mozac_feature_applinks_confirm_dialog_deny">Cancelar</string>
 </resources>

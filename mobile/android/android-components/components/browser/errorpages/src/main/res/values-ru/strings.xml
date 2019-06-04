@@ -260,4 +260,13 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>Имеется информация о том, что веб-страница на %1$s является поддельным сайтом. В соответствии с вашими настройками безопасности она была заблокирована.</p>
     ]]></string>
+
+    <!-- The tile for the list of external apps to open the link in -->
+    <string name="mozac_feature_applinks_open_in">Открыть в…</string>
+    <!-- The description to warn users that their private browsing session changes  -->
+    <string name="mozac_feature_applinks_confirm_dialog_title">Открыть это в приложении? Возможно, ваши действия перестанут быть приватными.</string>
+    <!-- Opens the selected time -->
+    <string name="mozac_feature_applinks_confirm_dialog_confirm">Открыть</string>
+    <!-- Cancels the prompt -->
+    <string name="mozac_feature_applinks_confirm_dialog_deny">Отмена</string>
 </resources>

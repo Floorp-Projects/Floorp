@@ -257,4 +257,13 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
 	<p>Le site web à l’adresse %1$s a été signalé comme étant trompeur et a été bloqué suivant vos préférences de sécurité.</p>
 	]]></string>
+
+    <!-- The tile for the list of external apps to open the link in -->
+    <string name="mozac_feature_applinks_open_in">Ouvrir dans…</string>
+    <!-- The description to warn users that their private browsing session changes  -->
+    <string name="mozac_feature_applinks_confirm_dialog_title">Ouvrir dans l’application ? Votre activité pourrait ne plus être privée.</string>
+    <!-- Opens the selected time -->
+    <string name="mozac_feature_applinks_confirm_dialog_confirm">Ouvrir</string>
+    <!-- Cancels the prompt -->
+    <string name="mozac_feature_applinks_confirm_dialog_deny">Annuler</string>
 </resources>
