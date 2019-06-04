@@ -6340,6 +6340,28 @@
     "alert_emails": ["tdsmith@mozilla.com", "perfteam@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
     "releaseChannelCollection": "opt-out"
   },
+  "FX_PAGE_RELOAD_NORMAL_MS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 10000,
+    "n_buckets": 200,
+    "description": "Firefox: Time taken to reload a page (ms) when using the LOAD_RELOAD_NORMAL flag",
+    "bug_numbers": [1549519],
+    "alert_emails": ["sefeng@mozilla.com", "perfteam@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
+    "releaseChannelCollection": "opt-out"
+  },
+  "FX_PAGE_RELOAD_SKIP_CACHE_MS": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 10000,
+    "n_buckets": 200,
+    "description": "Firefox: Time taken to reload a page (ms) when caches are skipped",
+    "bug_numbers": [1549519],
+    "alert_emails": ["sefeng@mozilla.com", "perfteam@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
+    "releaseChannelCollection": "opt-out"
+  },
   "FX_SCHEDULE_PRESSURE_IDLE_SAMPLE_MS": {
     "record_in_processes": ["main"],
     "expires_in_version": "61",
