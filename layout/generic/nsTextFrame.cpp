@@ -5465,7 +5465,7 @@ gfxFloat nsTextFrame::ComputeDescentLimitForSelectionUnderline(
   gfxFloat app = aPresContext->AppUnitsPerDevPixel();
   nscoord lineHeightApp =
       ReflowInput::CalcLineHeight(GetContent(), Style(), PresContext(),
-                                  NS_AUTOHEIGHT, GetFontSizeInflation());
+                                  NS_UNCONSTRAINEDSIZE, GetFontSizeInflation());
   gfxFloat lineHeight = gfxFloat(lineHeightApp) / app;
   if (lineHeight <= aFontMetrics.maxHeight) {
     return aFontMetrics.maxDescent;

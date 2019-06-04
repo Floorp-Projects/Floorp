@@ -295,7 +295,7 @@ void nsRangeFrame::Reflow(nsPresContext* aPresContext,
 
   WritingMode wm = aReflowInput.GetWritingMode();
   nscoord computedBSize = aReflowInput.ComputedBSize();
-  if (computedBSize == NS_AUTOHEIGHT) {
+  if (computedBSize == NS_UNCONSTRAINEDSIZE) {
     computedBSize = 0;
   }
   LogicalSize finalSize(
@@ -339,7 +339,7 @@ void nsRangeFrame::ReflowAnonymousContent(nsPresContext* aPresContext,
   // for our anonymous content:
   nscoord rangeFrameContentBoxWidth = aReflowInput.ComputedWidth();
   nscoord rangeFrameContentBoxHeight = aReflowInput.ComputedHeight();
-  if (rangeFrameContentBoxHeight == NS_AUTOHEIGHT) {
+  if (rangeFrameContentBoxHeight == NS_UNCONSTRAINEDSIZE) {
     rangeFrameContentBoxHeight = 0;
   }
 

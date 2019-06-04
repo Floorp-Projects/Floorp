@@ -129,7 +129,7 @@ void nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
       aReflowInput.ComputedLogicalBorderPadding().IStartEnd(myWM);
 
   nscoord borderBoxBSize;
-  if (contentBoxBSize != NS_INTRINSICSIZE) {
+  if (contentBoxBSize != NS_UNCONSTRAINEDSIZE) {
     borderBoxBSize =
         contentBoxBSize +
         aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
@@ -138,7 +138,7 @@ void nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
   nsIFrame* outerWrapperFrame = mOuterWrapper->GetPrimaryFrame();
 
   if (!outerWrapperFrame) {  // display:none?
-    if (contentBoxBSize == NS_INTRINSICSIZE) {
+    if (contentBoxBSize == NS_UNCONSTRAINEDSIZE) {
       contentBoxBSize = 0;
       borderBoxBSize =
           aReflowInput.ComputedLogicalBorderPadding().BStartEnd(myWM);
@@ -181,7 +181,7 @@ void nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     nscoord wrappersMarginBoxBSize =
         wrappersDesiredSize.BSize(myWM) + wrapperMargin.BStartEnd(myWM);
 
-    if (contentBoxBSize == NS_INTRINSICSIZE) {
+    if (contentBoxBSize == NS_UNCONSTRAINEDSIZE) {
       // We are intrinsically sized -- we should shrinkwrap the outer wrapper's
       // block-size:
       contentBoxBSize = wrappersMarginBoxBSize;
