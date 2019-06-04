@@ -979,15 +979,20 @@ void Statistics::printStats() {
   fflush(gcTimerFile);
 }
 
-void Statistics::beginGC(JSGCInvocationKind kind) {
+void Statistics::beginGC(JSGCInvocationKind kind,
+                         const TimeStamp& currentTime) {
   slices_.clearAndFree();
   sccTimes.clearAndFree();
   gckind = kind;
   nonincrementalReason_ = gc::AbortReason::None;
 
-  preHeapSize = runtime->gc.heapSize.gcBytes();
-  startingMajorGCNumber = runtime->gc.majorGCCount();
-  startingSliceNumber = runtime->gc.gcNumber();
+  GCRuntime& gc = runtime->gc;
+  preHeapSize = gc.heapSize.gcBytes();
+  startingMajorGCNumber = gc.majorGCCount();
+  startingSliceNumber = gc.gcNumber();
+  if (gc.lastGCTime()) {
+    timeSinceLastGC = currentTime - gc.lastGCTime();
+  }
 }
 
 void Statistics::endGC() {
@@ -1044,6 +1049,13 @@ void Statistics::endGC() {
 
   const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
   runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
+
+  // Record time between GCs for the main runtime but not for workers.
+  if (!runtime->parentRuntime && timeSinceLastGC) {
+    runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_S,
+                          timeSinceLastGC.ToSeconds());
+  }
+
   thresholdTriggered = false;
 }
 
@@ -1075,12 +1087,14 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
 
   this->zoneStats = zoneStats;
 
+  TimeStamp currentTime = ReallyNow();
+
   bool first = !runtime->gc.isIncrementalGCInProgress();
   if (first) {
-    beginGC(gckind);
+    beginGC(gckind, currentTime);
   }
 
-  if (!slices_.emplaceBack(budget, reason, ReallyNow(), GetPageFaultCount(),
+  if (!slices_.emplaceBack(budget, reason, currentTime, GetPageFaultCount(),
                            runtime->gc.state())) {
     // If we are OOM, set a flag to indicate we have missing slice data.
     aborted = true;

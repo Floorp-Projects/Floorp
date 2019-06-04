@@ -372,7 +372,7 @@ struct Statistics {
   uint64_t startingMajorGCNumber;
   uint64_t startingSliceNumber;
 
-  /* Records the maximum GC pause in an API-controlled interval (in us). */
+  /* Records the maximum GC pause in an API-controlled interval. */
   mutable TimeDuration maxPauseInInterval;
 
   /* Phases that are currently on stack. */
@@ -389,6 +389,8 @@ struct Statistics {
 
   /* Sweep times for SCCs of compartments. */
   Vector<TimeDuration, 0, SystemAllocPolicy> sccTimes;
+
+  TimeDuration timeSinceLastGC;
 
   JS::GCSliceCallback sliceCallback;
   JS::GCNurseryCollectionCallback nurseryCollectionCallback;
@@ -420,7 +422,7 @@ struct Statistics {
   Phase currentPhase() const;
   Phase lookupChildPhase(PhaseKind phaseKind) const;
 
-  void beginGC(JSGCInvocationKind kind);
+  void beginGC(JSGCInvocationKind kind, const TimeStamp& currentTime);
   void endGC();
 
   void recordPhaseBegin(Phase phase);
