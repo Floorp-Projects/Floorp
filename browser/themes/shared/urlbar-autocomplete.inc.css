@@ -168,7 +168,10 @@
 .urlbarView-row[type=search]:not([selected]):not(:hover) > .urlbarView-row-inner > .urlbarView-title-separator,
 #urlbar-results[actionoverride] .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-action,
 #urlbar-results:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-url {
-  display: none;
+  /* Use visibility:collapse instead of display:none since the latter can
+     confuse the overflow state of title and url elements when their content
+     changes while they're hidden. */
+  visibility: collapse;
 }
 
 .urlbarView-tags {
