@@ -3182,7 +3182,6 @@ exports.CSS_PROPERTIES = {
       "text-combine-upright",
       "text-rendering",
       "-moz-control-character-visibility",
-      "text-underline-offset",
       "cursor",
       "pointer-events",
       "-moz-user-input",
@@ -3284,7 +3283,6 @@ exports.CSS_PROPERTIES = {
       "text-decoration-style",
       "text-decoration-color",
       "initial-letter",
-      "text-decoration-width",
       "ime-mode",
       "scrollbar-width",
       "user-select",
@@ -10736,14 +10734,6 @@ exports.PREFERENCES = [
   [
     "translate",
     "layout.css.individual-transform.enabled"
-  ],
-  [
-    "text-decoration-width",
-    "layout.css.text-decoration-width.enabled"
-  ],
-  [
-    "text-underline-offset",
-    "layout.css.text-underline-offset.enabled"
   ],
   [
     "-moz-binding",
