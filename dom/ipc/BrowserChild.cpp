@@ -3401,6 +3401,14 @@ nsresult BrowserChild::CanCancelContentJS(
   rv = history->GetEntryAtIndex(current, getter_AddRefs(entry));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIURI> currentURI = entry->GetURI();
+  if (!currentURI->SchemeIs("http") && !currentURI->SchemeIs("https") &&
+      !currentURI->SchemeIs("file")) {
+    // Only cancel content JS for http(s) and file URIs. Other URIs are probably
+    // internal and we should just let them run to completion.
+    return NS_OK;
+  }
+
   if (aNavigationType == nsIRemoteTab::NAVIGATE_BACK) {
     aNavigationIndex = current - 1;
   } else if (aNavigationType == nsIRemoteTab::NAVIGATE_FORWARD) {
@@ -3410,9 +3418,13 @@ nsresult BrowserChild::CanCancelContentJS(
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIURI> currentURI = entry->GetURI();
-    CanCancelContentJSBetweenURIs(currentURI, aNavigationURI, aCanCancel);
+    // If navigating directly to a URL (e.g. via hitting Enter in the location
+    // bar), then we can cancel anytime the next URL is different from the
+    // current, *excluding* the ref ("#").
+    bool equals;
+    rv = currentURI->EqualsExceptRef(aNavigationURI, &equals);
     NS_ENSURE_SUCCESS(rv, rv);
+    *aCanCancel = !equals;
     return NS_OK;
   }
   // Note: aNavigationType may also be NAVIGATE_INDEX, in which case we don't
@@ -3427,41 +3439,27 @@ nsresult BrowserChild::CanCancelContentJS(
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISHEntry> laterEntry = delta == 1 ? nextEntry : entry;
-    nsCOMPtr<nsIURI> uri = entry->GetURI();
+    nsCOMPtr<nsIURI> thisURI = entry->GetURI();
     nsCOMPtr<nsIURI> nextURI = nextEntry->GetURI();
 
     // If we changed origin and the load wasn't in a subframe, we know it was
     // a full document load, so we can cancel the content JS safely.
     if (!laterEntry->GetIsSubFrame()) {
-      CanCancelContentJSBetweenURIs(uri, nextURI, aCanCancel);
+      nsAutoCString thisHost;
+      rv = thisURI->GetPrePath(thisHost);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (*aCanCancel) {
+
+      nsAutoCString nextHost;
+      rv = nextURI->GetPrePath(nextHost);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!thisHost.Equals(nextHost)) {
+        *aCanCancel = true;
         return NS_OK;
       }
     }
 
     entry = nextEntry;
-  }
-
-  return NS_OK;
-}
-
-nsresult BrowserChild::CanCancelContentJSBetweenURIs(nsIURI* aFirstURI,
-                                                     nsIURI* aSecondURI,
-                                                     bool* aCanCancel) {
-  nsresult rv;
-  *aCanCancel = false;
-
-  nsAutoCString firstHost;
-  rv = aFirstURI->GetHostPort(firstHost);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString secondHost;
-  rv = aSecondURI->GetHostPort(secondHost);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!firstHost.Equals(secondHost)) {
-    *aCanCancel = true;
   }
 
   return NS_OK;

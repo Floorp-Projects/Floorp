@@ -189,6 +189,13 @@ class BrowserParent final : public PBrowserParent,
    */
   bool IsDestroyed() const { return mIsDestroyed; }
 
+  /**
+   * Returns whether we're in the process of creating a new window (from
+   * window.open). If so, LoadURL calls are being skipped until everything is
+   * set up. For further details, see `mCreatingWindow` below.
+   */
+  bool CreatingWindow() const { return mCreatingWindow; }
+
   /*
    * Visit each BrowserParent in the tree formed by PBrowser and
    * PBrowserBridge, including `this`.
