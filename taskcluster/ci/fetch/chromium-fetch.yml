@@ -34,5 +34,3 @@ mac-chromium:
     fetch:
         platform: mac
         artifact-name: chromium-mac.tar.bz2
-        # Bug 1553137 - Pin stable Chromium revision until we figure things out
-        revision: '660759'
