@@ -1650,23 +1650,20 @@ class ScriptSource::LoadSourceMatcher {
   explicit LoadSourceMatcher(JSContext* cx, ScriptSource* ss, bool* loaded)
       : cx_(cx), ss_(ss), loaded_(loaded) {}
 
-  template <typename Unit>
-  bool operator()(const Compressed<Unit>&) const {
+  template <typename Unit, SourceRetrievable CanRetrieve>
+  bool operator()(const Compressed<Unit, CanRetrieve>&) const {
     *loaded_ = true;
     return true;
   }
 
-  template <typename Unit>
-  bool operator()(const Uncompressed<Unit>&) const {
+  template <typename Unit, SourceRetrievable CanRetrieve>
+  bool operator()(const Uncompressed<Unit, CanRetrieve>&) const {
     *loaded_ = true;
     return true;
   }
 
   template <typename Unit>
   bool operator()(const Retrievable<Unit>&) {
-    MOZ_ASSERT(ss_->sourceRetrievable(),
-               "should be retrievable if Retrievable");
-
     if (!cx_->runtime()->sourceHook.ref()) {
       *loaded_ = false;
       return true;
@@ -1685,15 +1682,11 @@ class ScriptSource::LoadSourceMatcher {
   }
 
   bool operator()(const Missing&) const {
-    MOZ_ASSERT(!ss_->sourceRetrievable(),
-               "should have Retrievable<Unit> source, not Missing source, if "
-               "retrievable");
     *loaded_ = false;
     return true;
   }
 
   bool operator()(const BinAST&) const {
-    MOZ_ASSERT(!ss_->sourceRetrievable(), "binast source is never retrievable");
     *loaded_ = false;
     return true;
   }
@@ -1884,8 +1877,13 @@ void ScriptSource::convertToCompressedSource(SharedImmutableString compressed,
   MOZ_ASSERT(isUncompressed<Unit>());
   MOZ_ASSERT(uncompressedData<Unit>()->length() == uncompressedLength);
 
-  data =
-      SourceType(Compressed<Unit>(std::move(compressed), uncompressedLength));
+  if (data.is<Uncompressed<Unit, SourceRetrievable::Yes>>()) {
+    data = SourceType(Compressed<Unit, SourceRetrievable::Yes>(
+        std::move(compressed), uncompressedLength));
+  } else {
+    data = SourceType(Compressed<Unit, SourceRetrievable::No>(
+        std::move(compressed), uncompressedLength));
+  }
 }
 
 template <typename Unit>
@@ -2140,7 +2138,8 @@ JSFlatString* ScriptSource::functionBodyString(JSContext* cx) {
 
 template <typename Unit>
 MOZ_MUST_USE bool ScriptSource::setUncompressedSourceHelper(
-    JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
+    JSContext* cx, EntryUnits<Unit>&& source, size_t length,
+    SourceRetrievable retrievable) {
   auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
 
   auto uniqueChars = SourceTypeTraits<Unit>::toCacheable(std::move(source));
@@ -2150,7 +2149,13 @@ MOZ_MUST_USE bool ScriptSource::setUncompressedSourceHelper(
     return false;
   }
 
-  data = SourceType(Uncompressed<Unit>(std::move(*deduped)));
+  if (retrievable == SourceRetrievable::Yes) {
+    data = SourceType(
+        Uncompressed<Unit, SourceRetrievable::Yes>(std::move(*deduped)));
+  } else {
+    data = SourceType(
+        Uncompressed<Unit, SourceRetrievable::No>(std::move(*deduped)));
+  }
   return true;
 }
 
@@ -2158,11 +2163,11 @@ template <typename Unit>
 MOZ_MUST_USE bool ScriptSource::setRetrievedSource(JSContext* cx,
                                                    EntryUnits<Unit>&& source,
                                                    size_t length) {
-  MOZ_ASSERT(sourceRetrievable_);
   MOZ_ASSERT(data.is<Retrievable<Unit>>(),
              "retrieved source can only overwrite the corresponding "
              "retrievable source");
-  return setUncompressedSourceHelper(cx, std::move(source), length);
+  return setUncompressedSourceHelper(cx, std::move(source), length,
+                                     SourceRetrievable::Yes);
 }
 
 #if defined(JS_BUILD_BINAST)
@@ -2277,7 +2282,9 @@ MOZ_MUST_USE bool ScriptSource::initializeWithUnretrievableCompressedSource(
              "shouldn't be initializing a ScriptSource while its characters "
              "are pinned -- that only makes sense with a ScriptSource actively "
              "being inspected");
-  data = SourceType(Compressed<Unit>(std::move(*deduped), sourceLength));
+
+  data = SourceType(Compressed<Unit, SourceRetrievable::No>(std::move(*deduped),
+                                                            sourceLength));
 
   return true;
 }
@@ -2294,7 +2301,6 @@ bool ScriptSource::assignSource(JSContext* cx,
   }
 
   if (options.sourceIsLazy) {
-    sourceRetrievable_ = true;
     data = SourceType(Retrievable<Unit>());
     return true;
   }
@@ -2312,7 +2318,8 @@ bool ScriptSource::assignSource(JSContext* cx,
     return false;
   }
 
-  data = SourceType(Uncompressed<Unit>(std::move(*deduped)));
+  data = SourceType(
+      Uncompressed<Unit, SourceRetrievable::No>(std::move(*deduped)));
   return true;
 }
 
@@ -2425,8 +2432,8 @@ struct SourceCompressionTask::PerformTaskWork {
 
   explicit PerformTaskWork(SourceCompressionTask* task) : task_(task) {}
 
-  template <typename Unit>
-  void operator()(const ScriptSource::Uncompressed<Unit>&) {
+  template <typename Unit, SourceRetrievable CanRetrieve>
+  void operator()(const ScriptSource::Uncompressed<Unit, CanRetrieve>&) {
     task_->workEncodingSpecific<Unit>();
   }
 
@@ -2542,7 +2549,8 @@ template <typename Unit>
 MOZ_MUST_USE bool ScriptSource::initializeUnretrievableUncompressedSource(
     JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
   MOZ_ASSERT(data.is<Missing>(), "must be initializing a fresh ScriptSource");
-  return setUncompressedSourceHelper(cx, std::move(source), length);
+  return setUncompressedSourceHelper(cx, std::move(source), length,
+                                     SourceRetrievable::No);
 }
 
 template <typename Unit>
@@ -2636,8 +2644,7 @@ XDRResult ScriptSource::xdrUnretrievableUncompressedSource<XDR_ENCODE>(
 template <typename Unit, XDRMode mode>
 /* static */
 XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
-                                             ScriptSource* const ss,
-                                             bool retrievable) {
+                                             ScriptSource* const ss) {
   static_assert(std::is_same<Unit, Utf8Unit>::value ||
                     std::is_same<Unit, char16_t>::value,
                 "should handle UTF-8 and UTF-16");
@@ -2646,17 +2653,6 @@ XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
     MOZ_ASSERT(ss->isUncompressed<Unit>());
   } else {
     MOZ_ASSERT(ss->data.is<Missing>());
-  }
-
-  MOZ_ASSERT(retrievable == ss->sourceRetrievable());
-
-  if (retrievable) {
-    // It's unnecessary to code uncompressed data if it can just be retrieved
-    // using the source hook.
-    if (mode == XDR_DECODE) {
-      ss->data = SourceType(Retrievable<Unit>());
-    }
-    return Ok();
   }
 
   uint32_t uncompressedLength;
@@ -2672,8 +2668,7 @@ XDRResult ScriptSource::codeUncompressedData(XDRState<mode>* const xdr,
 template <typename Unit, XDRMode mode>
 /* static */
 XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
-                                           ScriptSource* const ss,
-                                           bool retrievable) {
+                                           ScriptSource* const ss) {
   static_assert(std::is_same<Unit, Utf8Unit>::value ||
                     std::is_same<Unit, char16_t>::value,
                 "should handle UTF-8 and UTF-16");
@@ -2684,26 +2679,17 @@ XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
     MOZ_ASSERT(ss->data.is<Missing>());
   }
 
-  MOZ_ASSERT(retrievable == ss->sourceRetrievable());
-
-  if (retrievable) {
-    // It's unnecessary to code compressed data if it can just be retrieved
-    // using the source hook.
-    if (mode == XDR_DECODE) {
-      ss->data = SourceType(Retrievable<Unit>());
-    }
-    return Ok();
-  }
-
   uint32_t uncompressedLength;
   if (mode == XDR_ENCODE) {
-    uncompressedLength = ss->data.as<Compressed<Unit>>().uncompressedLength;
+    uncompressedLength = ss->data.as<Compressed<Unit, SourceRetrievable::No>>()
+                             .uncompressedLength;
   }
   MOZ_TRY(xdr->codeUint32(&uncompressedLength));
 
   uint32_t compressedLength;
   if (mode == XDR_ENCODE) {
-    compressedLength = ss->data.as<Compressed<Unit>>().raw.length();
+    compressedLength =
+        ss->data.as<Compressed<Unit, SourceRetrievable::No>>().raw.length();
   }
   MOZ_TRY(xdr->codeUint32(&compressedLength));
 
@@ -2721,12 +2707,28 @@ XDRResult ScriptSource::codeCompressedData(XDRState<mode>* const xdr,
       return xdr->fail(JS::TranscodeResult_Throw);
     }
   } else {
-    void* bytes =
-        const_cast<char*>(ss->data.as<Compressed<Unit>>().raw.chars());
+    void* bytes = const_cast<char*>(ss->compressedData<Unit>()->raw.chars());
     MOZ_TRY(xdr->codeBytes(bytes, compressedLength));
   }
 
   return Ok();
+}
+
+template <typename Unit,
+          template <typename U, SourceRetrievable CanRetrieve> class Data,
+          XDRMode mode>
+/* static */
+void ScriptSource::codeRetrievable(ScriptSource* const ss) {
+  static_assert(std::is_same<Unit, Utf8Unit>::value ||
+                    std::is_same<Unit, char16_t>::value,
+                "should handle UTF-8 and UTF-16");
+
+  if (mode == XDR_ENCODE) {
+    MOZ_ASSERT((ss->data.is<Data<Unit, SourceRetrievable::Yes>>()));
+  } else {
+    MOZ_ASSERT(ss->data.is<Missing>());
+    ss->data = SourceType(Retrievable<Unit>());
+  }
 }
 
 template <XDRMode mode>
@@ -2898,25 +2900,17 @@ template <XDRMode mode>
 /* static */
 XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
                                 ScriptSource* const ss) {
-  // Retrievability is kept outside |ScriptSource::data| (and not solely as
-  // distinct variant types within it) because retrievable compressed or
-  // uncompressed data need not be XDR'd.
-  uint8_t retrievable;
-  if (mode == XDR_ENCODE) {
-    retrievable = ss->sourceRetrievable_;
-  }
-  MOZ_TRY(xdr->codeUint8(&retrievable));
-  if (mode == XDR_DECODE) {
-    ss->sourceRetrievable_ = retrievable != 0;
-  }
-
   // The order here corresponds to the type order in |ScriptSource::SourceType|
-  // for simplicity, but it isn't truly necessary that it do so.
+  // so number->internal Variant tag is a no-op.
   enum class DataType {
-    CompressedUtf8,
-    UncompressedUtf8,
-    CompressedUtf16,
-    UncompressedUtf16,
+    CompressedUtf8Retrievable,
+    UncompressedUtf8Retrievable,
+    CompressedUtf8NotRetrievable,
+    UncompressedUtf8NotRetrievable,
+    CompressedUtf16Retrievable,
+    UncompressedUtf16Retrievable,
+    CompressedUtf16NotRetrievable,
+    UncompressedUtf16NotRetrievable,
     RetrievableUtf8,
     RetrievableUtf16,
     Missing,
@@ -2932,17 +2926,33 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     // it, then switch on it (and ignore the |Variant::match| API).
     class XDRDataTag {
      public:
-      DataType operator()(const Compressed<Utf8Unit>&) {
-        return DataType::CompressedUtf8;
+      DataType operator()(const Compressed<Utf8Unit, SourceRetrievable::Yes>&) {
+        return DataType::CompressedUtf8Retrievable;
       }
-      DataType operator()(const Uncompressed<Utf8Unit>&) {
-        return DataType::UncompressedUtf8;
+      DataType operator()(
+          const Uncompressed<Utf8Unit, SourceRetrievable::Yes>&) {
+        return DataType::UncompressedUtf8Retrievable;
       }
-      DataType operator()(const Compressed<char16_t>&) {
-        return DataType::CompressedUtf16;
+      DataType operator()(const Compressed<Utf8Unit, SourceRetrievable::No>&) {
+        return DataType::CompressedUtf8NotRetrievable;
       }
-      DataType operator()(const Uncompressed<char16_t>&) {
-        return DataType::UncompressedUtf16;
+      DataType operator()(
+          const Uncompressed<Utf8Unit, SourceRetrievable::No>&) {
+        return DataType::UncompressedUtf8NotRetrievable;
+      }
+      DataType operator()(const Compressed<char16_t, SourceRetrievable::Yes>&) {
+        return DataType::CompressedUtf16Retrievable;
+      }
+      DataType operator()(
+          const Uncompressed<char16_t, SourceRetrievable::Yes>&) {
+        return DataType::UncompressedUtf16Retrievable;
+      }
+      DataType operator()(const Compressed<char16_t, SourceRetrievable::No>&) {
+        return DataType::CompressedUtf16NotRetrievable;
+      }
+      DataType operator()(
+          const Uncompressed<char16_t, SourceRetrievable::No>&) {
+        return DataType::UncompressedUtf16NotRetrievable;
       }
       DataType operator()(const Retrievable<Utf8Unit>&) {
         return DataType::RetrievableUtf8;
@@ -2970,17 +2980,33 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
   }
 
   switch (tag) {
-    case DataType::CompressedUtf8:
-      return ScriptSource::codeCompressedData<Utf8Unit>(xdr, ss, retrievable);
+    case DataType::CompressedUtf8Retrievable:
+      ScriptSource::codeRetrievable<Utf8Unit, Compressed, mode>(ss);
+      return Ok();
 
-    case DataType::UncompressedUtf8:
-      return ScriptSource::codeUncompressedData<Utf8Unit>(xdr, ss, retrievable);
+    case DataType::CompressedUtf8NotRetrievable:
+      return ScriptSource::codeCompressedData<Utf8Unit>(xdr, ss);
 
-    case DataType::CompressedUtf16:
-      return ScriptSource::codeCompressedData<char16_t>(xdr, ss, retrievable);
+    case DataType::UncompressedUtf8Retrievable:
+      ScriptSource::codeRetrievable<Utf8Unit, Uncompressed, mode>(ss);
+      return Ok();
 
-    case DataType::UncompressedUtf16:
-      return ScriptSource::codeUncompressedData<char16_t>(xdr, ss, retrievable);
+    case DataType::UncompressedUtf8NotRetrievable:
+      return ScriptSource::codeUncompressedData<Utf8Unit>(xdr, ss);
+
+    case DataType::CompressedUtf16Retrievable:
+      ScriptSource::codeRetrievable<char16_t, Compressed, mode>(ss);
+      return Ok();
+
+    case DataType::CompressedUtf16NotRetrievable:
+      return ScriptSource::codeCompressedData<char16_t>(xdr, ss);
+
+    case DataType::UncompressedUtf16Retrievable:
+      ScriptSource::codeRetrievable<char16_t, Uncompressed, mode>(ss);
+      return Ok();
+
+    case DataType::UncompressedUtf16NotRetrievable:
+      return ScriptSource::codeUncompressedData<char16_t>(xdr, ss);
 
     case DataType::Missing: {
       MOZ_ASSERT(ss->data.is<Missing>(),
@@ -2992,11 +3018,11 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     }
 
     case DataType::RetrievableUtf8:
-      codeRetrievableData<Utf8Unit, mode>(ss);
+      ScriptSource::codeRetrievableData<Utf8Unit, mode>(ss);
       return Ok();
 
     case DataType::RetrievableUtf16:
-      codeRetrievableData<char16_t, mode>(ss);
+      ScriptSource::codeRetrievableData<char16_t, mode>(ss);
       return Ok();
 
     case DataType::BinAST:
