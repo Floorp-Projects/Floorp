@@ -16,10 +16,12 @@ import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
 import mozilla.components.support.base.android.view.AutoFitTextureView
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -125,6 +127,21 @@ class QrFragmentTest {
         QrFragment.qrState = QrFragment.STATE_FIND_QRCODE
         assertNull(task.processImage(bitmap))
         verify(reader, never()).decodeWithState(any())
+    }
+
+    @Test
+    fun `async scanning decodes original unmodified image`() {
+        val listener = mock(QrFragment.OnScanCompleteListener::class.java)
+        val reader = mock(MultiFormatReader::class.java)
+        val task = QrFragment.AsyncScanningTask(listener, reader)
+        val imageCaptor = argumentCaptor<BinaryBitmap>()
+
+        val bitmap = mock(BinaryBitmap::class.java)
+
+        QrFragment.qrState = QrFragment.STATE_DECODE_PROGRESS
+        task.processImage(bitmap)
+        verify(reader).decodeWithState(imageCaptor.capture())
+        assertSame(bitmap, imageCaptor.value)
     }
 
     @Test

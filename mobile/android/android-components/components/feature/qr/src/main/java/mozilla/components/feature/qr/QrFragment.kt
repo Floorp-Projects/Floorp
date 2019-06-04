@@ -552,8 +552,7 @@ class QrFragment : Fragment() {
             }
 
             try {
-                val image = bitmap.crop(bitmap.width / 4, bitmap.height / 4, bitmap.width / 2, bitmap.height / 2)
-                val rawResult = multiFormatReader.decodeWithState(image)
+                val rawResult = multiFormatReader.decodeWithState(bitmap)
                 if (rawResult != null) {
                     qrState = STATE_QRCODE_EXIST
                     scanCompleteListener?.onScanComplete(rawResult.toString())
