@@ -1050,10 +1050,15 @@ void Statistics::endGC() {
   const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
   runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
 
-  // Record time between GCs for the main runtime but not for workers.
+  // Record scheduling telemetry for the main runtime but not for workers, which
+  // are scheduled differently.
   if (!runtime->parentRuntime && timeSinceLastGC) {
     runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_S,
                           timeSinceLastGC.ToSeconds());
+    if (!nonincremental()) {
+      runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_COUNT,
+                            slices_.length());
+    }
   }
 
   thresholdTriggered = false;
