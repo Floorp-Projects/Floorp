@@ -1,5 +1,5 @@
 use crate::cdsl::cpu_modes::CpuMode;
-use crate::cdsl::inst::InstructionGroup;
+use crate::cdsl::instructions::InstructionGroupBuilder;
 use crate::cdsl::isa::TargetIsa;
 use crate::cdsl::regs::{IsaRegs, IsaRegsBuilder, RegBankBuilder, RegClassBuilder};
 use crate::cdsl::settings::{PredicateNode, SettingGroup, SettingGroupBuilder};
@@ -57,7 +57,7 @@ fn define_settings(shared: &SettingGroup) -> SettingGroup {
         predicate!(shared_enable_simd && supports_f && supports_d),
     );
 
-    setting.finish()
+    setting.build()
 }
 
 fn define_registers() -> IsaRegs {
@@ -79,14 +79,19 @@ fn define_registers() -> IsaRegs {
     let builder = RegClassBuilder::new_toplevel("FPR", float_regs);
     regs.add_class(builder);
 
-    regs.finish()
+    regs.build()
 }
 
 pub fn define(shared_defs: &mut SharedDefinitions) -> TargetIsa {
     let settings = define_settings(&shared_defs.settings);
     let regs = define_registers();
 
-    let inst_group = InstructionGroup::new("riscv", "riscv specific instruction set");
+    let inst_group = InstructionGroupBuilder::new(
+        "riscv",
+        "riscv specific instruction set",
+        &shared_defs.format_registry,
+    )
+    .build();
 
     // CPU modes for 32-bit and 64-bit operation.
     let mut rv_32 = CpuMode::new("RV32");

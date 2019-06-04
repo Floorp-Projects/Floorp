@@ -475,6 +475,26 @@ expand.legalize(
             b << bor(b1, b2)
         ))
 
+# Expansions for fcvt_from_{u,s}int for smaller integer types.
+# These use expand and not widen because the controlling type variable for
+# these instructions are f32/f64, which are legalized as part of the expand
+# group.
+for dest_ty in [types.f32, types.f64]:
+    for src_ty in [types.i8, types.i16]:
+        expand.legalize(
+            a << insts.fcvt_from_uint.bind(dest_ty).bind(src_ty)(b),
+            Rtl(
+                x << uextend.i32(b),
+                a << insts.fcvt_from_uint.bind(dest_ty).i32(x),
+            ))
+
+        expand.legalize(
+            a << insts.fcvt_from_sint.bind(dest_ty).bind(src_ty)(b),
+            Rtl(
+                x << sextend.i32(b),
+                a << insts.fcvt_from_sint.bind(dest_ty).i32(x),
+            ))
+
 # Expansions for immediate operands that are out of range.
 for inst_imm,      inst in [
         (iadd_imm, iadd),

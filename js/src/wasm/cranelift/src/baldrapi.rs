@@ -49,7 +49,13 @@ impl CraneliftCompiledFunc {
         self.containsCalls = compiled_func.contains_calls;
 
         self.code = compiled_func.code_buffer.as_ptr();
-        self.codeSize = compiled_func.code_buffer.len();
+        self.codeSize = compiled_func.code_size as usize;
+        self.jumptablesSize = compiled_func.jumptables_size as usize;
+        self.rodataSize = compiled_func.rodata_size as usize;
+        self.totalSize = compiled_func.code_buffer.len();
+
+        self.numRodataRelocs = compiled_func.rodata_relocs.len();
+        self.rodataRelocs = compiled_func.rodata_relocs.as_ptr();
     }
 }
 

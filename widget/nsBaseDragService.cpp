@@ -600,6 +600,9 @@ nsresult nsBaseDragService::DrawDrag(nsINode* aDOMNode,
     } else {
       *aSurface = mDragStartData->TakeVisualization(aScreenDragRect);
     }
+
+    mDragStartData = nullptr;
+    return NS_OK;
   }
 
   // convert mouse position to dev pixels of the prescontext
