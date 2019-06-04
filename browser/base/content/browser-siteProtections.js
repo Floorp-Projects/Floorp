@@ -22,6 +22,11 @@ var gProtectionsHandler = {
     return this._protectionsPopupMainViewHeaderLabel =
       document.getElementById("protections-popup-mainView-panel-header-span");
   },
+  get _protectionsPopupTPSwitch() {
+    delete this._protectionsPopupTPSwitch;
+    return this._protectionsPopupTPSwitch =
+      document.getElementById("protections-popup-tp-switch");
+  },
 
   handleProtectionsButtonEvent(event) {
     event.stopPropagation();
@@ -46,11 +51,44 @@ var gProtectionsHandler = {
   },
 
   refreshProtectionsPopup() {
+    // Refresh the state of the TP toggle switch.
+    this._protectionsPopupTPSwitch.toggleAttribute("enabled",
+      !this._protectionsPopup.hasAttribute("hasException"));
+
     let host = gIdentityHandler.getHostForDisplay();
 
     // Push the appropriate strings out to the UI.
     this._protectionsPopupMainViewHeaderLabel.textContent =
       // gNavigatorBundle.getFormattedString("protections.header", [host]);
       `Tracking Protections for ${host}`;
+  },
+
+  async onTPSwitchCommand(event) {
+    // When the switch is clicked, we wait 500ms and then disable/enable
+    // protections, causing the page to refresh, and close the popup.
+    // We need to ensure we don't handle more clicks during the 500ms delay,
+    // so we keep track of state and return early if needed.
+    if (this._TPSwitchCommanding) {
+      return;
+    }
+
+    this._TPSwitchCommanding = true;
+
+    let currentlyEnabled =
+      !this._protectionsPopup.hasAttribute("hasException");
+
+    this._protectionsPopupTPSwitch.toggleAttribute("enabled", !currentlyEnabled);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    if (currentlyEnabled) {
+      ContentBlocking.disableForCurrentPage();
+      gIdentityHandler.recordClick("unblock");
+    } else {
+      ContentBlocking.enableForCurrentPage();
+      gIdentityHandler.recordClick("block");
+    }
+
+    PanelMultiView.hidePopup(this._protectionsPopup);
+    delete this._TPSwitchCommanding;
   },
 };
