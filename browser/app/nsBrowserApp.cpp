@@ -38,6 +38,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/WindowsDllBlocklist.h"
+#include "BaseProfiler.h"
 
 #ifdef LIBFUZZER
 #  include "FuzzerDefs.h"
@@ -238,6 +239,9 @@ uint32_t gBlocklistInitFlags = eDllBlocklistInitFlagDefault;
 
 int main(int argc, char* argv[], char* envp[]) {
   mozilla::TimeStamp start = mozilla::TimeStamp::Now();
+
+  AUTO_BASE_PROFILER_INIT;
+  AUTO_BASE_PROFILER_LABEL("nsBrowserApp main", OTHER);
 
 #ifdef MOZ_BROWSER_CAN_BE_CONTENTPROC
   // We are launching as a content process, delegate to the appropriate
