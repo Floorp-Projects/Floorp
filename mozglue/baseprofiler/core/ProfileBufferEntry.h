@@ -20,6 +20,9 @@
 
 #include <string>
 
+namespace mozilla {
+namespace baseprofiler {
+
 class ProfilerMarker;
 
 // NOTE!  If you add entries, you need to verify if they need to be added to the
@@ -125,12 +128,11 @@ class UniqueJSONStrings {
     aWriter.TakeAndSplice(mStringTableWriter.WriteFunc());
   }
 
-  void WriteProperty(mozilla::JSONWriter& aWriter, const char* aName,
-                     const char* aStr) {
+  void WriteProperty(JSONWriter& aWriter, const char* aName, const char* aStr) {
     aWriter.IntProperty(aName, GetOrAddIndex(aStr));
   }
 
-  void WriteElement(mozilla::JSONWriter& aWriter, const char* aStr) {
+  void WriteElement(JSONWriter& aWriter, const char* aStr) {
     aWriter.IntElement(GetOrAddIndex(aStr));
   }
 
@@ -138,20 +140,19 @@ class UniqueJSONStrings {
 
  private:
   SpliceableChunkedJSONWriter mStringTableWriter;
-  mozilla::HashMap<mozilla::HashNumber, uint32_t> mStringHashToIndexMap;
+  HashMap<HashNumber, uint32_t> mStringHashToIndexMap;
 };
 
 class UniqueStacks {
  public:
   struct FrameKey {
     explicit FrameKey(const char* aLocation)
-        : mData(NormalFrameData{std::string(aLocation), false,
-                                mozilla::Nothing(), mozilla::Nothing()}) {}
+        : mData(NormalFrameData{std::string(aLocation), false, Nothing(),
+                                Nothing()}) {}
 
     FrameKey(std::string&& aLocation, bool aRelevantForJS,
-             const mozilla::Maybe<unsigned>& aLine,
-             const mozilla::Maybe<unsigned>& aColumn,
-             const mozilla::Maybe<JS::ProfilingCategoryPair>& aCategoryPair)
+             const Maybe<unsigned>& aLine, const Maybe<unsigned>& aColumn,
+             const Maybe<ProfilingCategoryPair>& aCategoryPair)
         : mData(NormalFrameData{aLocation, aRelevantForJS, aLine, aColumn,
                                 aCategoryPair}) {}
 
@@ -167,35 +168,33 @@ class UniqueStacks {
 
       std::string mLocation;
       bool mRelevantForJS;
-      mozilla::Maybe<unsigned> mLine;
-      mozilla::Maybe<unsigned> mColumn;
-      mozilla::Maybe<JS::ProfilingCategoryPair> mCategoryPair;
+      Maybe<unsigned> mLine;
+      Maybe<unsigned> mColumn;
+      Maybe<ProfilingCategoryPair> mCategoryPair;
     };
-    mozilla::Variant<NormalFrameData> mData;
+    Variant<NormalFrameData> mData;
   };
 
   struct FrameKeyHasher {
     using Lookup = FrameKey;
 
-    static mozilla::HashNumber hash(const FrameKey& aLookup) {
-      mozilla::HashNumber hash = 0;
+    static HashNumber hash(const FrameKey& aLookup) {
+      HashNumber hash = 0;
       if (aLookup.mData.is<FrameKey::NormalFrameData>()) {
         const FrameKey::NormalFrameData& data =
             aLookup.mData.as<FrameKey::NormalFrameData>();
         if (!data.mLocation.empty()) {
-          hash = mozilla::AddToHash(
-              hash, mozilla::HashString(data.mLocation.c_str()));
+          hash = AddToHash(hash, HashString(data.mLocation.c_str()));
         }
-        hash = mozilla::AddToHash(hash, data.mRelevantForJS);
+        hash = AddToHash(hash, data.mRelevantForJS);
         if (data.mLine.isSome()) {
-          hash = mozilla::AddToHash(hash, *data.mLine);
+          hash = AddToHash(hash, *data.mLine);
         }
         if (data.mColumn.isSome()) {
-          hash = mozilla::AddToHash(hash, *data.mColumn);
+          hash = AddToHash(hash, *data.mColumn);
         }
         if (data.mCategoryPair.isSome()) {
-          hash = mozilla::AddToHash(hash,
-                                    static_cast<uint32_t>(*data.mCategoryPair));
+          hash = AddToHash(hash, static_cast<uint32_t>(*data.mCategoryPair));
         }
       }
       return hash;
@@ -211,19 +210,19 @@ class UniqueStacks {
   };
 
   struct StackKey {
-    mozilla::Maybe<uint32_t> mPrefixStackIndex;
+    Maybe<uint32_t> mPrefixStackIndex;
     uint32_t mFrameIndex;
 
     explicit StackKey(uint32_t aFrame)
-        : mFrameIndex(aFrame), mHash(mozilla::HashGeneric(aFrame)) {}
+        : mFrameIndex(aFrame), mHash(HashGeneric(aFrame)) {}
 
     StackKey(const StackKey& aPrefix, uint32_t aPrefixStackIndex,
              uint32_t aFrame)
-        : mPrefixStackIndex(mozilla::Some(aPrefixStackIndex)),
+        : mPrefixStackIndex(Some(aPrefixStackIndex)),
           mFrameIndex(aFrame),
-          mHash(mozilla::AddToHash(aPrefix.mHash, aFrame)) {}
+          mHash(AddToHash(aPrefix.mHash, aFrame)) {}
 
-    mozilla::HashNumber Hash() const { return mHash; }
+    HashNumber Hash() const { return mHash; }
 
     bool operator==(const StackKey& aOther) const {
       return mPrefixStackIndex == aOther.mPrefixStackIndex &&
@@ -231,15 +230,13 @@ class UniqueStacks {
     }
 
    private:
-    mozilla::HashNumber mHash;
+    HashNumber mHash;
   };
 
   struct StackKeyHasher {
     using Lookup = StackKey;
 
-    static mozilla::HashNumber hash(const StackKey& aLookup) {
-      return aLookup.Hash();
-    }
+    static HashNumber hash(const StackKey& aLookup) { return aLookup.Hash(); }
 
     static bool match(const StackKey& aKey, const StackKey& aLookup) {
       return aKey == aLookup;
@@ -270,14 +267,14 @@ class UniqueStacks {
   void StreamStack(const StackKey& aStack);
 
  public:
-  mozilla::UniquePtr<UniqueJSONStrings> mUniqueStrings;
+  UniquePtr<UniqueJSONStrings> mUniqueStrings;
 
  private:
   SpliceableChunkedJSONWriter mFrameTableWriter;
-  mozilla::HashMap<FrameKey, uint32_t, FrameKeyHasher> mFrameToIndexMap;
+  HashMap<FrameKey, uint32_t, FrameKeyHasher> mFrameToIndexMap;
 
   SpliceableChunkedJSONWriter mStackTableWriter;
-  mozilla::HashMap<StackKey, uint32_t, StackKeyHasher> mStackToIndexMap;
+  HashMap<StackKey, uint32_t, StackKeyHasher> mStackToIndexMap;
 };
 
 //
@@ -428,4 +425,8 @@ class UniqueStacks {
 //   },
 // }
 //
+
+}  // namespace baseprofiler
+}  // namespace mozilla
+
 #endif /* ndef ProfileBufferEntry_h */

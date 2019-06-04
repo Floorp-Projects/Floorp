@@ -19,7 +19,8 @@
 
 #  include <ostream>
 
-using namespace mozilla;
+namespace mozilla {
+namespace baseprofiler {
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileBufferEntry
@@ -340,8 +341,8 @@ void UniqueStacks::StreamNonJITFrame(const FrameKey& aFrame) {
     writer.IntElement(COLUMN, *data.mColumn);
   }
   if (data.mCategoryPair.isSome()) {
-    const JS::ProfilingCategoryPairInfo& info =
-        JS::GetBaseProfilingCategoryPairInfo(*data.mCategoryPair);
+    const ProfilingCategoryPairInfo& info =
+        GetProfilingCategoryPairInfo(*data.mCategoryPair);
     writer.IntElement(CATEGORY, uint32_t(info.mCategory));
   }
 }
@@ -457,15 +458,15 @@ class EntryGetter {
 // - ProfilingStack frames without a dynamic string:
 //
 //     Label("js::RunScript")
-//     CategoryPair(JS::ProfilingCategoryPair::JS)
+//     CategoryPair(ProfilingCategoryPair::JS)
 //
 //     Label("XREMain::XRE_main")
 //     LineNumber(4660)
-//     CategoryPair(JS::ProfilingCategoryPair::OTHER)
+//     CategoryPair(ProfilingCategoryPair::OTHER)
 //
 //     Label("ElementRestyler::ComputeStyleChangeFor")
 //     LineNumber(3003)
-//     CategoryPair(JS::ProfilingCategoryPair::CSS)
+//     CategoryPair(ProfilingCategoryPair::CSS)
 //
 // - ProfilingStack frames with a dynamic string:
 //
@@ -474,7 +475,7 @@ class EntryGetter {
 //     DynamicStringFragment("domwindo")
 //     DynamicStringFragment("wopened")
 //     LineNumber(291)
-//     CategoryPair(JS::ProfilingCategoryPair::OTHER)
+//     CategoryPair(ProfilingCategoryPair::OTHER)
 //
 //     Label("")
 //     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_JS_FRAME))
@@ -487,7 +488,7 @@ class EntryGetter {
 //     DynamicStringFragment("ay.js:5)")
 //     DynamicStringFragment("")          # this string holds the closing '\0'
 //     LineNumber(25)
-//     CategoryPair(JS::ProfilingCategoryPair::JS)
+//     CategoryPair(ProfilingCategoryPair::JS)
 //
 //     Label("")
 //     FrameFlags(uint64_t(ProfilingStackFrame::Flags::IS_JS_FRAME))
@@ -495,7 +496,7 @@ class EntryGetter {
 //     DynamicStringFragment("elf-host")
 //     DynamicStringFragment("ed:914)")
 //     LineNumber(945)
-//     CategoryPair(JS::ProfilingCategoryPair::JS)
+//     CategoryPair(ProfilingCategoryPair::JS)
 //
 // - A profiling stack frame with a dynamic string, but with privacy enabled:
 //
@@ -504,7 +505,7 @@ class EntryGetter {
 //     DynamicStringFragment("(private")
 //     DynamicStringFragment(")")
 //     LineNumber(291)
-//     CategoryPair(JS::ProfilingCategoryPair::OTHER)
+//     CategoryPair(ProfilingCategoryPair::OTHER)
 //
 // - A profiling stack frame with an overly long dynamic string:
 //
@@ -513,7 +514,7 @@ class EntryGetter {
 //     DynamicStringFragment("(too lon")
 //     DynamicStringFragment("g)")
 //     LineNumber(100)
-//     CategoryPair(JS::ProfilingCategoryPair::NETWORK)
+//     CategoryPair(ProfilingCategoryPair::NETWORK)
 //
 // - A wasm JIT frame:
 //
@@ -663,7 +664,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
         const char* label = e.Get().GetString();
         e.Next();
 
-        using FrameFlags = js::ProfilingStackFrame::Flags;
+        using FrameFlags = ProfilingStackFrame::Flags;
         uint32_t frameFlags = 0;
         if (e.Has() && e.Get().IsFrameFlags()) {
           frameFlags = uint32_t(e.Get().GetUint64());
@@ -735,10 +736,10 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           e.Next();
         }
 
-        Maybe<JS::ProfilingCategoryPair> categoryPair;
+        Maybe<ProfilingCategoryPair> categoryPair;
         if (e.Has() && e.Get().IsCategoryPair()) {
           categoryPair =
-              Some(JS::ProfilingCategoryPair(uint32_t(e.Get().GetInt())));
+              Some(ProfilingCategoryPair(uint32_t(e.Get().GetInt())));
           e.Next();
         }
 
@@ -1377,5 +1378,8 @@ void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
 
 // END ProfileBuffer
 ////////////////////////////////////////////////////////////////////////
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER

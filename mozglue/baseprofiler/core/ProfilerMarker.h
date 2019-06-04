@@ -13,6 +13,9 @@
 
 #include "mozilla/UniquePtrExtensions.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 template <typename T>
 class ProfilerLinkedList;
 
@@ -20,11 +23,10 @@ class ProfilerMarker {
   friend class ProfilerLinkedList<ProfilerMarker>;
 
  public:
-  explicit ProfilerMarker(
-      const char* aMarkerName, JS::ProfilingCategoryPair aCategoryPair,
-      int aThreadId,
-      mozilla::UniquePtr<ProfilerMarkerPayload> aPayload = nullptr,
-      double aTime = 0)
+  explicit ProfilerMarker(const char* aMarkerName,
+                          ProfilingCategoryPair aCategoryPair, int aThreadId,
+                          UniquePtr<ProfilerMarkerPayload> aPayload = nullptr,
+                          double aTime = 0)
       : mMarkerName(strdup(aMarkerName)),
         mPayload(std::move(aPayload)),
         mNext{nullptr},
@@ -46,7 +48,7 @@ class ProfilerMarker {
   int GetThreadId() const { return mThreadId; }
 
   void StreamJSON(SpliceableJSONWriter& aWriter,
-                  const mozilla::TimeStamp& aProcessStartTime,
+                  const TimeStamp& aProcessStartTime,
                   UniqueStacks& aUniqueStacks) const {
     // Schema:
     //   [name, time, category, data]
@@ -55,8 +57,8 @@ class ProfilerMarker {
     {
       aUniqueStacks.mUniqueStrings->WriteElement(aWriter, mMarkerName.get());
       aWriter.DoubleElement(mTime);
-      const JS::ProfilingCategoryPairInfo& info =
-          JS::GetBaseProfilingCategoryPairInfo(mCategoryPair);
+      const ProfilingCategoryPairInfo& info =
+          GetProfilingCategoryPairInfo(mCategoryPair);
       aWriter.IntElement(unsigned(info.mCategory));
       // TODO: Store the callsite for this marker if available:
       // if have location data
@@ -71,13 +73,13 @@ class ProfilerMarker {
   }
 
  private:
-  mozilla::UniqueFreePtr<char> mMarkerName;
-  mozilla::UniquePtr<ProfilerMarkerPayload> mPayload;
+  UniqueFreePtr<char> mMarkerName;
+  UniquePtr<ProfilerMarkerPayload> mPayload;
   ProfilerMarker* mNext;
   double mTime;
   uint64_t mPositionInBuffer;
   int mThreadId;
-  JS::ProfilingCategoryPair mCategoryPair;
+  ProfilingCategoryPair mCategoryPair;
 };
 
 template <typename T>
@@ -164,7 +166,10 @@ class ProfilerSignalSafeLinkedList {
 
   // If this is set, then it's not safe to read the list because its contents
   // are being changed.
-  mozilla::Atomic<bool> mSignalLock;
+  Atomic<bool> mSignalLock;
 };
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // ProfilerMarker_h

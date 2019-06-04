@@ -10,15 +10,17 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 // This class contains information about a thread which needs to be stored
 // across restarts of the profiler and which can be useful even after the
 // thread has stopped running.
 // It uses threadsafe refcounting and only contains immutable data.
 class ThreadInfo final {
  public:
-  ThreadInfo(
-      const char* aName, int aThreadId, bool aIsMainThread,
-      const mozilla::TimeStamp& aRegisterTime = mozilla::TimeStamp::Now())
+  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
+             const TimeStamp& aRegisterTime = TimeStamp::Now())
       : mName(aName),
         mRegisterTime(aRegisterTime),
         mThreadId(aThreadId),
@@ -40,19 +42,22 @@ class ThreadInfo final {
   }
 
   const char* Name() const { return mName.c_str(); }
-  mozilla::TimeStamp RegisterTime() const { return mRegisterTime; }
+  TimeStamp RegisterTime() const { return mRegisterTime; }
   int ThreadId() const { return mThreadId; }
   bool IsMainThread() const { return mIsMainThread; }
 
  private:
   const std::string mName;
-  const mozilla::TimeStamp mRegisterTime;
+  const TimeStamp mRegisterTime;
   const int mThreadId;
   const bool mIsMainThread;
 
-  mutable mozilla::Atomic<int32_t, mozilla::MemoryOrdering::ReleaseAcquire,
-                          mozilla::recordreplay::Behavior::DontPreserve>
+  mutable Atomic<int32_t, MemoryOrdering::ReleaseAcquire,
+                 recordreplay::Behavior::DontPreserve>
       mRefCnt;
 };
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // ThreadInfo_h

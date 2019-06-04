@@ -141,8 +141,10 @@
 #    include <ucontext.h>
 #  endif
 
-using namespace mozilla;
-using mozilla::profiler::detail::RacyFeatures;
+namespace mozilla {
+namespace baseprofiler {
+
+using detail::RacyFeatures;
 
 bool BaseProfilerLogTest(int aLevelToTest) {
   static const int maxLevel =
@@ -993,7 +995,7 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
 
   const ProfilingStack& profilingStack =
       aRegisteredThread.RacyRegisteredThread().ProfilingStack();
-  const js::ProfilingStackFrame* profilingStackFrames = profilingStack.frames;
+  const ProfilingStackFrame* profilingStackFrames = profilingStack.frames;
   uint32_t profilingStackFrameCount = profilingStack.stackSize();
 
   Maybe<uint64_t> samplePosInBuffer;
@@ -1020,7 +1022,7 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
     uint8_t* nativeStackAddr = nullptr;
 
     if (profilingStackIndex != profilingStackFrameCount) {
-      const js::ProfilingStackFrame& profilingStackFrame =
+      const ProfilingStackFrame& profilingStackFrame =
           profilingStackFrames[profilingStackIndex];
 
       if (profilingStackFrame.isLabelFrame() ||
@@ -1064,7 +1066,7 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
     // Check to see if profiling stack frame is top-most.
     if (profilingStackAddr > nativeStackAddr) {
       MOZ_ASSERT(profilingStackIndex < profilingStackFrameCount);
-      const js::ProfilingStackFrame& profilingStackFrame =
+      const ProfilingStackFrame& profilingStackFrame =
           profilingStackFrames[profilingStackIndex];
 
       // Sp marker frames are just annotations and should not be recorded in
@@ -2009,6 +2011,10 @@ void SamplerThread::Run() {
   }
 }
 
+// Temporary closing namespaces from enclosing platform.cpp.
+}  // namespace baseprofiler
+}  // namespace mozilla
+
 // We #include these files directly because it means those files can use
 // declarations from this file trivially.  These provide target-specific
 // implementations of all SamplerThread methods except Run().
@@ -2021,6 +2027,9 @@ void SamplerThread::Run() {
 #  else
 #    error "bad platform"
 #  endif
+
+namespace mozilla {
+namespace baseprofiler {
 
 UniquePlatformData AllocPlatformData(int aThreadId) {
   return UniquePlatformData(new PlatformData(aThreadId));
@@ -2426,8 +2435,6 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
   }
 }
 
-namespace mozilla {
-
 void GetProfilerEnvVarsForChildProcess(
     std::function<void(const char* key, const char* value)>&& aSetEnv) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -2463,8 +2470,6 @@ void GetProfilerEnvVarsForChildProcess(
   }
   aSetEnv("MOZ_BASE_PROFILER_STARTUP_FILTERS", filtersString.c_str());
 }
-
-}  // namespace mozilla
 
 void profiler_received_exit_profile(const std::string& aExitProfile) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -2975,7 +2980,7 @@ void profiler_thread_wake() {
   racyRegisteredThread->SetAwake();
 }
 
-bool mozilla::profiler::detail::IsThreadBeingProfiled() {
+bool detail::IsThreadBeingProfiled() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   const RacyRegisteredThread* racyRegisteredThread =
@@ -3043,7 +3048,7 @@ void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
 }
 
 static void racy_profiler_add_marker(
-    const char* aMarkerName, JS::ProfilingCategoryPair aCategoryPair,
+    const char* aMarkerName, ProfilingCategoryPair aCategoryPair,
     UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -3069,7 +3074,7 @@ static void racy_profiler_add_marker(
 }
 
 void profiler_add_marker(const char* aMarkerName,
-                         JS::ProfilingCategoryPair aCategoryPair,
+                         ProfilingCategoryPair aCategoryPair,
                          UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -3082,20 +3087,20 @@ void profiler_add_marker(const char* aMarkerName,
 }
 
 void profiler_add_marker(const char* aMarkerName,
-                         JS::ProfilingCategoryPair aCategoryPair) {
+                         ProfilingCategoryPair aCategoryPair) {
   profiler_add_marker(aMarkerName, aCategoryPair, nullptr);
 }
 
 // This is a simplified version of profiler_add_marker that can be easily passed
 // into the JS engine.
 void profiler_add_js_marker(const char* aMarkerName) {
-  profiler_add_marker(aMarkerName, JS::ProfilingCategoryPair::JS, nullptr);
+  profiler_add_marker(aMarkerName, ProfilingCategoryPair::JS, nullptr);
 }
 
 // This logic needs to add a marker for a different thread, so we actually need
 // to lock here.
 void profiler_add_marker_for_thread(int aThreadId,
-                                    JS::ProfilingCategoryPair aCategoryPair,
+                                    ProfilingCategoryPair aCategoryPair,
                                     const char* aMarkerName,
                                     UniquePtr<ProfilerMarkerPayload> aPayload) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -3136,8 +3141,8 @@ void profiler_add_marker_for_thread(int aThreadId,
 }
 
 void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
-                      JS::ProfilingCategoryPair aCategoryPair,
-                      TracingKind aKind, const Maybe<std::string>& aDocShellId,
+                      ProfilingCategoryPair aCategoryPair, TracingKind aKind,
+                      const Maybe<std::string>& aDocShellId,
                       const Maybe<uint32_t>& aDocShellHistoryId) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -3154,8 +3159,8 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
 }
 
 void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
-                      JS::ProfilingCategoryPair aCategoryPair,
-                      TracingKind aKind, UniqueProfilerBacktrace aCause,
+                      ProfilingCategoryPair aCategoryPair, TracingKind aKind,
+                      UniqueProfilerBacktrace aCause,
                       const Maybe<std::string>& aDocShellId,
                       const Maybe<uint32_t>& aDocShellHistoryId) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
@@ -3173,13 +3178,13 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
   racy_profiler_add_marker(aMarkerName, aCategoryPair, std::move(payload));
 }
 
-void profiler_add_text_marker(
-    const char* aMarkerName, const std::string& aText,
-    JS::ProfilingCategoryPair aCategoryPair,
-    const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
-    const mozilla::Maybe<std::string>& aDocShellId,
-    const mozilla::Maybe<uint32_t>& aDocShellHistoryId,
-    UniqueProfilerBacktrace aCause) {
+void profiler_add_text_marker(const char* aMarkerName, const std::string& aText,
+                              ProfilingCategoryPair aCategoryPair,
+                              const TimeStamp& aStartTime,
+                              const TimeStamp& aEndTime,
+                              const Maybe<std::string>& aDocShellId,
+                              const Maybe<uint32_t>& aDocShellHistoryId,
+                              UniqueProfilerBacktrace aCause) {
   profiler_add_marker(
       aMarkerName, aCategoryPair,
       MakeUnique<TextMarkerPayload>(aText, aStartTime, aEndTime, aDocShellId,
@@ -3254,5 +3259,8 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
 
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER
