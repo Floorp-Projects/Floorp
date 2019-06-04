@@ -615,6 +615,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        fullScreenFeature.onBackPressed()
+    }
+
     private fun removeSessionIfNeeded() {
         val session = getSessionById() ?: return
         if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(session)
