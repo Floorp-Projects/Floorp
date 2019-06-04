@@ -2,7 +2,7 @@
 
 // Test bound checks around for |byteOffset| and |length| arguments.
 
-const buffer = new ArrayBuffer(0);
+const ab = new ArrayBuffer(0);
 
 for (let TA of typedArrayConstructors) {
     // Test bound checks around INT32_MAX for |byteOffset| argument.
