@@ -134,6 +134,8 @@ NS_DEFINE_COMMAND(FormatDecreaseZIndex, cmd_decreaseZIndex)
 NS_DEFINE_COMMAND(FormatDocumentBackgroundColor, cmd_backgroundColor)
 NS_DEFINE_COMMAND(FormatEmphasis, cmd_em)
 NS_DEFINE_COMMAND(FormatIncreaseZIndex, cmd_increaseZIndex)
+NS_DEFINE_COMMAND(FormatJustify, cmd_align)  // Only for getting enabled/state
+NS_DEFINE_COMMAND(FormatJustifyNone, cmd_align)  // with empty string or params
 NS_DEFINE_COMMAND(FormatNoBreak, cmd_nobreak)
 NS_DEFINE_COMMAND(FormatRemoveList, cmd_removeList)
 NS_DEFINE_COMMAND(FormatSample, cmd_samp)
