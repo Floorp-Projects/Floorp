@@ -737,10 +737,11 @@ class Output(object):
         for pagecycle in data:
             for _sub, _value in pagecycle[0].iteritems():
                 try:
-                    percent_dropped = float(_value['droppedFrames']) / _value['decodedFrames']
+                    percent_dropped = float(_value['droppedFrames']) / _value['decodedFrames'] \
+                                      * 100.0
                 except ZeroDivisionError:
                     # if no frames have been decoded the playback failed completely
-                    percent_dropped = 1
+                    percent_dropped = 100.0
 
                 # Remove the not needed "PlaybackPerf." prefix from each test
                 _sub = _sub.split('PlaybackPerf.', 1)[-1]

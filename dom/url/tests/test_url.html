@@ -426,7 +426,7 @@
     is(url.href, "ftp://tmp/test");
 
     url = new URL("scheme://tmp\\test", base);
-    is(url.href, "scheme://tmp/test");
+    is(url.href, "scheme://tmp\\test");
   </script>
 
   <script>

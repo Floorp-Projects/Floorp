@@ -3916,10 +3916,6 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
   nsCOMPtr<nsIInputStream> postData(aLoadURIOptions.mPostData);
   nsresult rv = NS_OK;
 
-  // Create a URI from our string; if that succeeds, we want to
-  // change loadFlags to not include the ALLOW_THIRD_PARTY_FIXUP
-  // flag.
-
   NS_ConvertUTF16toUTF8 uriString(aURI);
   // Cleanup the empty spaces that might be on each end.
   uriString.Trim(" ");
@@ -3931,24 +3927,19 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
     return NS_ERROR_FAILURE;
   }
 
-  rv = NS_NewURI(getter_AddRefs(uri), uriString);
-  if (uri) {
-    loadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-  }
-
   nsCOMPtr<nsIURIFixupInfo> fixupInfo;
   if (sURIFixup) {
-    // Call the fixup object.  This will clobber the rv from NS_NewURI
-    // above, but that's fine with us.  Note that we need to do this even
-    // if NS_NewURI returned a URI, because fixup handles nested URIs, etc
-    // (things like view-source:mozilla.org for example).
-    uint32_t fixupFlags = 0;
-    if (loadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
-      fixupFlags |= nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    uint32_t fixupFlags;
+    rv = sURIFixup->WebNavigationFlagsToFixupFlags(uriString, loadFlags,
+                                                   &fixupFlags);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    // If we don't allow keyword lookups for this URL string, make sure to
+    // update loadFlags to indicate this as well.
+    if (!(fixupFlags & nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
+      loadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     }
-    if (loadFlags & LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
-      fixupFlags |= nsIURIFixup::FIXUP_FLAG_FIX_SCHEME_TYPOS;
-    }
+
     nsCOMPtr<nsIInputStream> fixupStream;
     rv = sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
                                     getter_AddRefs(fixupStream),
@@ -3973,9 +3964,11 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
                               PromiseFlatString(aURI).get());
       }
     }
+  } else {
+    // No fixup service so just create a URI and see what happens...
+    rv = NS_NewURI(getter_AddRefs(uri), uriString);
+    loadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
   }
-  // else no fixup service so just use the URI we created and see
-  // what happens
 
   if (NS_ERROR_MALFORMED_URI == rv) {
     if (DisplayLoadError(rv, uri, PromiseFlatString(aURI).get(), nullptr) &&

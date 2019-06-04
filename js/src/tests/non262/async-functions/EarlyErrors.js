@@ -4,7 +4,7 @@ var summary = "EarlyErrors for async function";
 print(BUGNUMBER + ": " + summary);
 
 function assertThrowsSE(code) {
-  assertThrows(() => Reflect.parse(code), SyntaxError);
+  assertThrowsInstanceOf(() => Reflect.parse(code), SyntaxError);
 }
 
 if (typeof Reflect !== "undefined" && Reflect.parse) {
