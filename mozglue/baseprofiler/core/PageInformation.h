@@ -7,11 +7,11 @@
 #ifndef PageInformation_h
 #define PageInformation_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsID.h"
-#include "nsISupportsImpl.h"
-#include "nsString.h"
+
+#include <string>
 
 class SpliceableJSONWriter;
 
@@ -24,17 +24,26 @@ class SpliceableJSONWriter;
 // it in the next page registration.
 class PageInformation final {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PageInformation)
-  PageInformation(const nsID& aDocShellId, uint32_t aDocShellHistoryId,
-                  const nsCString& aUrl, bool aIsSubFrame);
+  PageInformation(const std::string& aDocShellId, uint32_t aDocShellHistoryId,
+                  const std::string& aUrl, bool aIsSubFrame);
+
+  // Using hand-rolled ref-counting, because RefCounted.h macros don't produce
+  // the same code between mozglue and libxul, see bug 1536656.
+  MFBT_API void AddRef() const { ++mRefCnt; }
+  MFBT_API void Release() const {
+    MOZ_ASSERT(int32_t(mRefCnt) > 0);
+    if (--mRefCnt) {
+      delete this;
+    }
+  }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   bool Equals(PageInformation* aOtherDocShellInfo);
   void StreamJSON(SpliceableJSONWriter& aWriter);
 
   uint32_t DocShellHistoryId() { return mDocShellHistoryId; }
-  const nsID& DocShellId() { return mDocShellId; }
-  const nsCString& Url() { return mUrl; }
+  const std::string& DocShellId() { return mDocShellId; }
+  const std::string& Url() { return mUrl; }
   bool IsSubFrame() { return mIsSubFrame; }
 
   mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() {
@@ -46,9 +55,9 @@ class PageInformation final {
   }
 
  private:
-  const nsID mDocShellId;
+  const std::string mDocShellId;
   const uint32_t mDocShellHistoryId;
-  const nsCString mUrl;
+  const std::string mUrl;
   const bool mIsSubFrame;
 
   // Holds the buffer position when DocShell is unregistered.
@@ -56,7 +65,9 @@ class PageInformation final {
   // not.
   mozilla::Maybe<uint64_t> mBufferPositionWhenUnregistered;
 
-  virtual ~PageInformation() = default;
+  mutable mozilla::Atomic<int32_t, mozilla::MemoryOrdering::ReleaseAcquire,
+                          mozilla::recordreplay::Behavior::DontPreserve>
+      mRefCnt;
 };
 
 #endif  // PageInformation_h
