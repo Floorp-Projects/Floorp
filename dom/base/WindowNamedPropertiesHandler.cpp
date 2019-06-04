@@ -117,11 +117,11 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
   }
 
   // The rest of this function is for HTML documents only.
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(win->GetExtantDoc());
-  if (!htmlDoc) {
+  Document* doc = win->GetExtantDoc();
+  if (!doc || !doc->IsHTMLOrXHTML()) {
     return true;
   }
-  nsHTMLDocument* document = static_cast<nsHTMLDocument*>(htmlDoc.get());
+  nsHTMLDocument* document = doc->AsHTMLDocument();
 
   JS::Rooted<JS::Value> v(aCx);
   Element* element = document->GetElementById(str);
@@ -197,11 +197,11 @@ bool WindowNamedPropertiesHandler::ownPropNames(
   }
 
   names.Clear();
-  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(win->GetExtantDoc());
-  if (!htmlDoc) {
+  Document* doc = win->GetExtantDoc();
+  if (!doc || !doc->IsHTMLOrXHTML()) {
     return true;
   }
-  nsHTMLDocument* document = static_cast<nsHTMLDocument*>(htmlDoc.get());
+  nsHTMLDocument* document = doc->AsHTMLDocument();
   // Document names are enumerable, so we want to get them no matter what flags
   // is.
   document->GetSupportedNames(names);

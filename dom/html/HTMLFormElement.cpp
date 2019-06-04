@@ -18,8 +18,8 @@
 #include "mozilla/dom/HTMLFormControlsCollection.h"
 #include "mozilla/dom/HTMLFormElementBinding.h"
 #include "mozilla/Move.h"
-#include "nsIHTMLDocument.h"
 #include "nsGkAtoms.h"
+#include "nsHTMLDocument.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "mozilla/dom/Document.h"
@@ -358,7 +358,7 @@ static void CollectOrphans(nsINode* aRemovalRoot,
 void HTMLFormElement::UnbindFromTree(bool aNullParent) {
   // Note, this is explicitly using uncomposed doc, since we count
   // only forms in document.
-  nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(GetUncomposedDoc());
+  RefPtr<Document> oldDocument = GetUncomposedDoc();
 
   // Mark all of our controls as maybe being orphans
   MarkOrphans(mControls->mElements);
@@ -396,8 +396,8 @@ void HTMLFormElement::UnbindFromTree(bool aNullParent) {
 #endif
   );
 
-  if (oldDocument) {
-    oldDocument->RemovedForm();
+  if (oldDocument && oldDocument->IsHTMLOrXHTML()) {
+    oldDocument->AsHTMLDocument()->RemovedForm();
   }
   ForgetCurrentSubmission();
 }
@@ -1483,8 +1483,7 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
 
   nsCOMPtr<nsIURI> actionURL;
   if (action.IsEmpty()) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
-    if (!htmlDoc) {
+    if (!document->IsHTMLOrXHTML()) {
       // Must be a XML, XUL or other non-HTML document type
       // so do nothing.
       return NS_OK;
