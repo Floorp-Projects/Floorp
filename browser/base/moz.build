@@ -46,6 +46,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/sanitize/browser.ini',
     'content/test/sidebar/browser.ini',
     'content/test/siteIdentity/browser.ini',
+    'content/test/siteProtections/browser.ini',
     'content/test/static/browser.ini',
     'content/test/statuspanel/browser.ini',
     'content/test/sync/browser.ini',
