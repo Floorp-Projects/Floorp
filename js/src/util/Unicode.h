@@ -228,7 +228,7 @@ inline bool IsSpace(char16_t ch) {
   return CharInfo(ch).isSpace();
 }
 
-inline bool IsSpaceOrBOM2(char16_t ch) {
+inline bool IsSpaceOrBOM2(char32_t ch) {
   if (ch < 128) {
     return js_isspace[ch];
   }
@@ -236,6 +236,10 @@ inline bool IsSpaceOrBOM2(char16_t ch) {
   /* We accept BOM2 (0xFFFE) for compatibility reasons in the parser. */
   if (ch == NO_BREAK_SPACE || ch == BYTE_ORDER_MARK2) {
     return true;
+  }
+
+  if (ch >= NonBMPMin) {
+    return false;
   }
 
   return CharInfo(ch).isSpace();
