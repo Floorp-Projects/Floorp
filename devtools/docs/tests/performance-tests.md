@@ -55,6 +55,20 @@ The vast majority of performance issues for DevTools are OS agnostic, so it does
 * "damp" is the talos bucket in which we run DAMP.
 * And 6 is the number of times we run DAMP tests. That's to do averages between all the 6 runs and helps filtering out the noise.
 
+## How to get performance profiles on try?
+
+Once you have a successful try job for `damp`:
+* select this job in treeherder
+* click on the `...` menu in the bottom left
+* select "Create Gecko Profile"
+
+![PerfHerder Create Gecko Profile menu](perfherder-create-gecko-profile.png)
+
+This should start a new damp job called `damp-p`. Once `damp-p` is finished:
+* select the `damp-p` job
+* click on `Job Details` tab
+* click on `open in Firefox Profiler`
+
 ## What does it do?
 
 DAMP measures three important operations:
