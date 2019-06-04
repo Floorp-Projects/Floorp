@@ -66,12 +66,7 @@ pub type z_streamp = *mut z_stream;
 macro_rules! fns {
     ($($arg:tt)*) => {
         item! {
-            #[cfg(all(target_env = "msvc", target_pointer_width = "32"))]
             extern { $($arg)* }
-        }
-        item! {
-            #[cfg(not(all(target_env = "msvc", target_pointer_width = "32")))]
-            extern "system" { $($arg)* }
         }
     }
 }
