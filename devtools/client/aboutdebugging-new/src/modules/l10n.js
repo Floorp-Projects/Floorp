@@ -4,43 +4,7 @@
 
 "use strict";
 
-const Services = require("Services");
+const { FluentL10n } = require("devtools/client/shared/fluent-l10n/fluent-l10n");
 
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
-const { L10nRegistry } = require("resource://gre/modules/L10nRegistry.jsm");
-
-class L10n {
-  async init() {
-    const locales = Services.locale.appLocalesAsBCP47;
-    const generator = L10nRegistry.generateBundles(locales, [
-      "branding/brand.ftl",
-      "devtools/aboutdebugging.ftl",
-    ]);
-
-    this._bundles = [];
-    for await (const bundle of generator) {
-      this._bundles.push(bundle);
-    }
-    this._reactLocalization = new FluentReact.ReactLocalization(this._bundles);
-  }
-
-  /**
-   * Returns the fluent bundles generated for about:debugging.
-   */
-  getBundles() {
-    return this._bundles;
-  }
-
-  /**
-   * Returns the localized string for the provided id, formatted using args.
-   */
-  getString(id, args, fallback) {
-    // Forward arguments via .apply() so that the original method can:
-    // - perform asserts based on the number of arguments
-    // - add new arguments
-    return this._reactLocalization.getString.apply(this._reactLocalization, arguments);
-  }
-}
-
-// Export a singleton that will be shared by all aboutdebugging modules.
-exports.l10n = new L10n();
+// exports a singleton, which will be used across all aboutdebugging-new modules
+exports.l10n = new FluentL10n();
