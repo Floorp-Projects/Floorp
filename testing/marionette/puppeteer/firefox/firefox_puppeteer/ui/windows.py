@@ -45,23 +45,17 @@ class Windows(BaseLib):
 
         :returns: The `window handle` of the focused chrome window.
         """
-        def get_active_handle(mn):
-            with self.marionette.using_context('chrome'):
-                return self.marionette.execute_script("""
-                  Components.utils.import("resource://gre/modules/Services.jsm");
+        with self.marionette.using_context('chrome'):
+            return self.marionette.execute_script("""
+              Components.utils.import("resource://gre/modules/Services.jsm");
 
-                  let win = Services.focus.activeWindow;
-                  if (win) {
-                    return win.windowUtils.outerWindowID.toString();
-                  }
+              let win = Services.focus.activeWindow;
+              if (win) {
+                return win.windowUtils.outerWindowID.toString();
+              }
 
-                  return null;
-                """)
-
-        # In case of `None` being returned no window is currently active. This can happen
-        # when a focus change action is currently happening. So lets wait until it is done.
-        return Wait(self.marionette).until(get_active_handle,
-                                           message='No focused window has been found.')
+              return null;
+            """)
 
     def close(self, handle):
         """Closes the chrome window with the given handle.
@@ -132,14 +126,7 @@ class Windows(BaseLib):
 
         :param handle: The handle of the chrome window.
         """
-        self.switch_to(handle)
-
-        with self.marionette.using_context('chrome'):
-            self.marionette.execute_script(""" window.focus(); """)
-
-        Wait(self.marionette).until(
-            lambda _: handle == self.focused_chrome_window_handle,
-            message='Focus has not been set to chrome window handle "%s".' % handle)
+        self.switch_to(handle, focus=True)
 
     def loaded(self, handle):
         """Check if the chrome window with the given handle has been completed loading.
@@ -156,7 +143,7 @@ class Windows(BaseLib):
               return win.document.readyState == 'complete';
             """, script_args=[handle])
 
-    def switch_to(self, target):
+    def switch_to(self, target, focus=False):
         """Switches context to the specified chrome window.
 
         :param target: The window to switch to. `target` can be a `handle` or a
@@ -188,7 +175,7 @@ class Windows(BaseLib):
             raise NoSuchWindowException("No window found for '{}'"
                                         .format(target))
 
-        self.marionette.switch_to_window(target_handle)
+        self.marionette.switch_to_window(target_handle, focus=focus)
 
         return self.create_window_instance(target_handle)
 
@@ -431,9 +418,6 @@ class BaseWindow(BaseLib):
 
         :returns: Current window as :class:`BaseWindow` instance.
         """
-        if focus:
-            self._windows.focus(self.handle)
-        else:
-            self._windows.switch_to(self.handle)
+        self._windows.switch_to(self.handle, focus=focus)
 
         return self
