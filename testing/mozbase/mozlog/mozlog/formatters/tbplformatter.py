@@ -184,7 +184,7 @@ class TbplFormatter(BaseFormatter):
 
         if "expected" in data:
             if status in data.get("known_intermittent", []):
-                status = "TEST-KNOWN-INTERMITTENT-%s" % status
+                status = "KNOWN-INTERMITTENT-%s" % status
             else:
                 if not message:
                     message = "- expected %s" % data["expected"]
@@ -235,7 +235,7 @@ class TbplFormatter(BaseFormatter):
 
         if "expected" in data:
             if status in data.get("known_intermittent", []):
-                status = "TEST-KNOWN-INTERMITTENT-%s" % status
+                status = "KNOWN-INTERMITTENT-%s" % status
             else:
                 message = data.get("message", "")
                 if not message:
@@ -351,15 +351,26 @@ class TbplFormatter(BaseFormatter):
     def _format_suite_summary(self, suite, summary):
         counts = summary['counts']
         logs = summary['unexpected_logs']
+        intermittent_logs = summary['intermittent_logs']
 
         total = sum(self.summary.aggregate('count', counts).values())
         expected = sum(self.summary.aggregate('expected', counts).values())
-        status_str = "{}/{}".format(expected, total)
+        intermittents = sum(self.summary.aggregate('known_intermittent', counts).values())
+        known = " ({} known intermittent tests)".format(intermittents) if intermittents else ""
+        status_str = "{}/{}{}".format(expected, total, known)
         rv = ["{}: {}".format(suite, status_str)]
 
         for results in logs.values():
             for data in results:
                 rv.append("  {}".format(self._format_status(data)))
+
+        if intermittent_logs:
+            rv.append("Known Intermittent tests:")
+            for results in intermittent_logs.values():
+                for data in results:
+                    data["subtest"] = data.get("subtest", "")
+                    rv.append("  {}".format(self._format_status(data)))
+
         return "\n".join(rv)
 
     def shutdown(self, data):
