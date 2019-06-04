@@ -93,7 +93,10 @@ TextEditor.prototype = {
   update: async function() {
     try {
       const value = await getLongString(this.node.getNodeValue());
-      this.textNode.setState({ value });
+
+      if (this.textNode.state.value !== value) {
+        this.textNode.setState({ value });
+      }
     } catch (e) {
       console.error(e);
     }
