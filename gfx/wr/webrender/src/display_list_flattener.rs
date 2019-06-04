@@ -578,24 +578,6 @@ impl<'a> DisplayListFlattener<'a> {
         scroll_root
     }
 
-    fn get_complex_clips(
-        &self,
-        pipeline_id: PipelineId,
-        complex_clips: ItemRange<'a, ComplexClipRegion>,
-    ) -> impl 'a + Iterator<Item = ComplexClipRegion> {
-        //Note: we could make this a bit more complex to early out
-        // on `complex_clips.is_empty()` if it's worth it
-        complex_clips.iter()
-    }
-
-    fn get_clip_chain_items(
-        &self,
-        pipeline_id: PipelineId,
-        items: ItemRange<'a, ClipId>,
-    ) -> impl 'a + Iterator<Item = ClipId> {
-        items.iter()
-    }
-
     fn flatten_items(
         &mut self,
         traversal: &mut BuiltDisplayListIter<'a>,
@@ -677,11 +659,10 @@ impl<'a> DisplayListFlattener<'a> {
         parent_node_index: SpatialNodeIndex,
         pipeline_id: PipelineId,
     ) {
-        let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip());
         let current_offset = self.current_offset(parent_node_index);
         let clip_region = ClipRegion::create_for_clip_node(
             info.clip_rect,
-            complex_clips,
+            item.complex_clip().iter(),
             info.image_mask,
             &current_offset,
         );
@@ -756,11 +737,9 @@ impl<'a> DisplayListFlattener<'a> {
         }
 
         let composition_operations = {
-            // TODO(optimization?): self.traversal.display_list()
-            let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
             CompositeOps::new(
-                stacking_context.filter_ops_for_compositing(display_list, filters),
-                stacking_context.filter_datas_for_compositing(display_list, filter_datas),
+                stacking_context.filter_ops_for_compositing(filters),
+                stacking_context.filter_datas_for_compositing(filter_datas),
                 stacking_context.mix_blend_mode_for_compositing(),
             )
         };
@@ -984,7 +963,6 @@ impl<'a> DisplayListFlattener<'a> {
                     &info.color,
                     item.glyphs(),
                     info.glyph_options,
-                    pipeline_id,
                 );
             }
             DisplayItem::Rectangle(ref info) => {
@@ -1053,7 +1031,6 @@ impl<'a> DisplayListFlattener<'a> {
                     info.gradient.extend_mode,
                     info.tile_size,
                     info.tile_spacing,
-                    pipeline_id,
                     None,
                 ) {
                     self.add_nonshadowable_primitive(
@@ -1081,7 +1058,6 @@ impl<'a> DisplayListFlattener<'a> {
                     info.gradient.extend_mode,
                     info.tile_size,
                     info.tile_spacing,
-                    pipeline_id,
                     None,
                 );
 
@@ -1122,7 +1098,6 @@ impl<'a> DisplayListFlattener<'a> {
                     &layout,
                     info,
                     item.gradient_stops(),
-                    pipeline_id,
                 );
             }
             DisplayItem::PushStackingContext(ref info) => {
@@ -1164,10 +1139,9 @@ impl<'a> DisplayListFlattener<'a> {
             DisplayItem::Clip(ref info) => {
                 let parent_space = self.get_space(&info.parent_space_and_clip.spatial_id);
                 let current_offset = self.current_offset(parent_space);
-                let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip());
                 let clip_region = ClipRegion::create_for_clip_node(
                     info.clip_rect,
-                    complex_clips,
+                    item.complex_clip().iter(),
                     info.image_mask,
                     &current_offset,
                 );
@@ -1196,7 +1170,7 @@ impl<'a> DisplayListFlattener<'a> {
                 let mut clip_chain_id = parent_clip_chain_id;
 
                 // For each specified clip id
-                for clip_item in self.get_clip_chain_items(pipeline_id, item.clip_chain_items()) {
+                for clip_item in item.clip_chain_items() {
                     // Map the ClipId to an existing clip chain node.
                     let item_clip_node = self
                         .id_to_index_mapper
@@ -2502,7 +2476,6 @@ impl<'a> DisplayListFlattener<'a> {
         info: &LayoutPrimitiveInfo,
         border_item: &BorderDisplayItem,
         gradient_stops: ItemRange<GradientStop>,
-        pipeline_id: PipelineId,
     ) {
         match border_item.details {
             BorderDetails::NinePatch(ref border) => {
@@ -2544,7 +2517,6 @@ impl<'a> DisplayListFlattener<'a> {
                             gradient.extend_mode,
                             LayoutSize::new(border.height as f32, border.width as f32),
                             LayoutSize::zero(),
-                            pipeline_id,
                             Some(Box::new(nine_patch)),
                         ) {
                             Some(prim) => prim,
@@ -2569,7 +2541,6 @@ impl<'a> DisplayListFlattener<'a> {
                             gradient.extend_mode,
                             LayoutSize::new(border.height as f32, border.width as f32),
                             LayoutSize::zero(),
-                            pipeline_id,
                             Some(Box::new(nine_patch)),
                         );
 
@@ -2602,16 +2573,11 @@ impl<'a> DisplayListFlattener<'a> {
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
-        pipeline_id: PipelineId,
         nine_patch: Option<Box<NinePatchDescriptor>>,
     ) -> Option<LinearGradient> {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
 
-        // TODO(gw): It seems like we should be able to look this up once in
-        //           flatten_root() and pass to all children here to avoid
-        //           some hash lookups?
-        let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
         let mut max_alpha: f32 = 0.0;
 
         let stops = stops.iter().map(|stop| {
@@ -2669,16 +2635,10 @@ impl<'a> DisplayListFlattener<'a> {
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
-        pipeline_id: PipelineId,
         nine_patch: Option<Box<NinePatchDescriptor>>,
     ) -> RadialGradient {
         let mut prim_rect = info.rect;
         simplify_repeated_primitive(&stretch_size, &mut tile_spacing, &mut prim_rect);
-
-        // TODO(gw): It seems like we should be able to look this up once in
-        //           flatten_root() and pass to all children here to avoid
-        //           some hash lookups?
-        let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
 
         let params = RadialGradientParams {
             start_radius,
@@ -2712,7 +2672,6 @@ impl<'a> DisplayListFlattener<'a> {
         text_color: &ColorF,
         glyph_range: ItemRange<GlyphInstance>,
         glyph_options: Option<GlyphOptions>,
-        pipeline_id: PipelineId,
     ) {
         let offset = self.current_offset(clip_and_scroll.spatial_node_index);
 
@@ -2750,9 +2709,6 @@ impl<'a> DisplayListFlattener<'a> {
                 render_mode,
                 flags,
             );
-
-            // TODO(gw): We can do better than a hash lookup here...
-            let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
 
             // TODO(gw): It'd be nice not to have to allocate here for creating
             //           the primitive key, when the common case is that the

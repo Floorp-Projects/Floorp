@@ -253,7 +253,6 @@ fn write_stacking_context(
     properties: &SceneProperties,
     filter_iter: impl IntoIterator<Item = FilterOp>,
     filter_data_iter: &[TempFilterData],
-    display_list: &BuiltDisplayList,
 ) {
     enum_node(parent, "transform-style", sc.transform_style);
 
@@ -395,7 +394,6 @@ fn radial_gradient_to_yaml(
     table: &mut Table,
     gradient: &webrender::api::RadialGradient,
     stops_range: ItemRange<GradientStop>,
-    display_list: &BuiltDisplayList
 ) {
     point_node(table, "center", &gradient.center);
     size_node(table, "radius", &gradient.radius);
@@ -811,7 +809,6 @@ impl YamlFrameWriter {
     fn make_complex_clips_node(
         &mut self,
         complex_clips: ItemRange<ComplexClipRegion>,
-        list: &BuiltDisplayList,
     ) -> Option<Yaml> {
         let iter = complex_clips.iter();
         if iter.len() == 0 {
@@ -1055,7 +1052,6 @@ impl YamlFrameWriter {
                                         &mut v,
                                         &gradient,
                                         base.gradient_stops(),
-                                        display_list
                                     );
                                 }
                             }
@@ -1138,7 +1134,6 @@ impl YamlFrameWriter {
                         &mut v,
                         &item.gradient,
                         base.gradient_stops(),
-                        display_list
                     );
                 }
                 DisplayItem::Iframe(item) => {
@@ -1170,7 +1165,6 @@ impl YamlFrameWriter {
                         &scene.properties,
                         base.filters(),
                         base.filter_datas(),
-                        display_list,
                     );
 
                     let mut sub_iter = base.sub_iter();
@@ -1201,8 +1195,7 @@ impl YamlFrameWriter {
                     usize_node(&mut v, "id", clip_id_mapper.add_clip_id(item.id));
 
                     if let Some(complex) = self.make_complex_clips_node(
-                        base.complex_clip(),
-                        display_list,
+                        base.complex_clip()
                     ) {
                         yaml_node(&mut v, "complex", complex);
                     }
@@ -1235,8 +1228,7 @@ impl YamlFrameWriter {
                     vector_node(&mut v, "external-scroll-offset", &item.external_scroll_offset);
 
                     if let Some(complex) = self.make_complex_clips_node(
-                        base.complex_clip(),
-                        display_list,
+                        base.complex_clip()
                     ) {
                         yaml_node(&mut v, "complex", complex);
                     }
