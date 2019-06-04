@@ -3017,6 +3017,39 @@ void BackgroundRequestChild::PreprocessHelper::RunOnOwningThread() {
   }
 }
 
+class MemUnmap {
+  uint32_t mSize = 0;
+
+ public:
+  MemUnmap() = default;
+  explicit MemUnmap(uint32_t aSize) : mSize(aSize) {}
+
+  void operator()(uint8_t* aP) {
+    MOZ_ASSERT(mSize);
+    PR_MemUnmap(aP, mSize);
+  }
+};
+
+using UniqueMapping = UniquePtr<uint8_t, MemUnmap>;
+
+static UniqueMapping MapFile(PRFileDesc* aFile, PRFileInfo* aInfo) {
+  if (PR_GetOpenFileInfo(aFile, aInfo) != PR_SUCCESS) {
+    return nullptr;
+  }
+
+  PRFileMap* map = PR_CreateFileMap(aFile, aInfo->size, PR_PROT_READONLY);
+  if (!map) {
+    return nullptr;
+  }
+
+  // PRFileMap objects do not need to be kept alive after the memory has been
+  // mapped, so unconditionally close the PRFileMap, regardless of whether
+  // PR_MemMap succeeds.
+  uint8_t* memory = (uint8_t*)PR_MemMap(map, 0, aInfo->size);
+  PR_CloseFileMap(map);
+  return UniqueMapping(memory, MemUnmap(aInfo->size));
+}
+
 void BackgroundRequestChild::PreprocessHelper::ProcessCurrentStream() {
   MOZ_ASSERT(!IsOnOwningThread());
   MOZ_ASSERT(!mStreams.IsEmpty());
@@ -3038,8 +3071,16 @@ void BackgroundRequestChild::PreprocessHelper::ProcessCurrentStream() {
 
   MOZ_ASSERT(mCurrentBytecodeFileDesc);
 
+  PRFileInfo bytecodeInfo;
+  UniqueMapping bytecodeMapping =
+      MapFile(mCurrentBytecodeFileDesc, &bytecodeInfo);
+  if (NS_WARN_IF(!bytecodeMapping)) {
+    ContinueWithStatus(NS_ERROR_FAILURE);
+    return;
+  }
+
   RefPtr<JS::WasmModule> module =
-      JS::DeserializeWasmModule(mCurrentBytecodeFileDesc, nullptr, 0);
+      JS::DeserializeWasmModule(bytecodeMapping.get(), bytecodeInfo.size);
   if (NS_WARN_IF(!module)) {
     ContinueWithStatus(NS_ERROR_FAILURE);
     return;
