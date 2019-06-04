@@ -125,7 +125,7 @@ async function waitForMessageCount(hud, text, length, selector = ".message") {
   return messages;
 }
 
-async function warpToMessage(hud, threadClient, text) {
+async function warpToMessage(hud, dbg, text) {
   let messages = await waitForMessages(hud, text);
   ok(messages.length == 1, "Found one message");
   const message = messages.pop();
@@ -138,11 +138,9 @@ async function warpToMessage(hud, threadClient, text) {
 
   timeWarpItem.click();
 
-  await Promise.all([
-    hideConsoleContextMenu(hud),
-    once(Services.ppmm, "TimeWarpFinished"),
-    waitForThreadEvents(threadClient, "paused"),
-  ]);
+  await hideConsoleContextMenu(hud);
+  await once(Services.ppmm, "TimeWarpFinished");
+  await waitForPaused(dbg);
 
   messages = findMessages(hud, "", ".paused");
   ok(messages.length == 1, "Found one paused message");
