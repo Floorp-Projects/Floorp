@@ -555,7 +555,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                                 it.rootView,
                                 Snackbar.LENGTH_LONG
                             )
-                                .setAnchorView(nestedScrollQuickAction)
+                                .setAnchorView(toolbarComponent.uiView.view)
                                 .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                                     Navigation.findNavController(
                                         requireActivity(),

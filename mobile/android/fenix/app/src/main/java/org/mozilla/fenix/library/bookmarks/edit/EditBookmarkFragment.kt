@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks.edit
 
+import android.content.DialogInterface
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -13,6 +14,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
@@ -147,16 +149,32 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.delete_bookmark_button -> {
-                launch(IO) {
-                    requireComponents.core.bookmarksStorage.deleteNode(guidToEdit)
-                    requireComponents.analytics.metrics.track(Event.RemoveBookmark)
-                    launch(Main) {
-                        Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
-                    }
-                }
+                displayDeleteBookmarkDialog()
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun displayDeleteBookmarkDialog() {
+        activity?.let { activity ->
+            AlertDialog.Builder(activity).apply {
+                setMessage(R.string.bookmark_deletion_confirmation)
+                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
+                setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
+                    launch(IO) {
+                        requireComponents.core.bookmarksStorage.deleteNode(guidToEdit)
+                        requireComponents.analytics.metrics.track(Event.RemoveBookmark)
+                        launch(Main) {
+                            Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
+                        }
+                    }
+                    dialog.dismiss()
+                }
+                create()
+            }.show()
         }
     }
 
