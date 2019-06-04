@@ -2365,7 +2365,11 @@ static void ExtractCompatVersionInfo(const nsACString& aCompatVersion,
   aPlatformBuildID = Substring(aCompatVersion, slashPos + 1);
 }
 
-static bool IsNewIDLower(nsACString& oldID, nsACString& newID) {
+/**
+ * Compares two build IDs. Returns 0 if they match, < 0 if newID is considered
+ * newer than oldID and > 0 if the oldID is considered newer than newID.
+ */
+static int32_t CompareBuildIDs(nsACString& oldID, nsACString& newID) {
   // For Mozilla builds the build ID is a numeric date string. But it is too
   // large a number for the version comparator to handle so try to just compare
   // them as integer values first.
@@ -2397,16 +2401,22 @@ static bool IsNewIDLower(nsACString& oldID, nsACString& newID) {
 
   if (isNumeric) {
     nsresult rv;
-    uint64_t oldVal;
-    uint64_t newVal;
-    oldVal = oldID.ToInteger64(&rv);
+    CheckedInt<uint64_t> oldVal = oldID.ToInteger64(&rv);
 
-    if (NS_SUCCEEDED(rv)) {
-      newVal = newID.ToInteger64(&rv);
+    if (NS_SUCCEEDED(rv) && oldVal.isValid()) {
+      CheckedInt<uint64_t> newVal = newID.ToInteger64(&rv);
 
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv) && newVal.isValid()) {
         // We have simple numbers for both IDs.
-        return newVal < oldVal;
+        if (oldVal.value() == newVal.value()) {
+          return 0;
+        }
+
+        if (oldVal.value() > newVal.value()) {
+          return 1;
+        }
+
+        return -1;
       }
     }
   }
@@ -2415,8 +2425,8 @@ static bool IsNewIDLower(nsACString& oldID, nsACString& newID) {
   // distribution could have modified the build ID in some way. We don't know
   // what format this may be so let's just fall back to assuming that it's a
   // valid toolkit version.
-  return Version(PromiseFlatCString(newID).get()) <
-         Version(PromiseFlatCString(oldID).get());
+  return CompareVersions(PromiseFlatCString(oldID).get(),
+                         PromiseFlatCString(newID).get());
 }
 
 /**
@@ -2425,13 +2435,11 @@ static bool IsNewIDLower(nsACString& oldID, nsACString& newID) {
  * The aDowngrade parameter is set to true if the old version is "newer" than
  * the new version.
  */
-bool CheckCompatVersions(const nsACString& aOldCompatVersion,
-                         const nsACString& aNewCompatVersion,
-                         bool* aIsDowngrade) {
+int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
+                              const nsACString& aNewCompatVersion) {
   // Quick path for the common case.
   if (aOldCompatVersion.Equals(aNewCompatVersion)) {
-    *aIsDowngrade = false;
-    return true;
+    return 0;
   }
 
   // The versions differ for some reason so we will only ever return false from
@@ -2441,8 +2449,7 @@ bool CheckCompatVersions(const nsACString& aOldCompatVersion,
   // cannot tell if this is a downgrade or not so just assume it isn't and let
   // the user proceed.
   if (aOldCompatVersion.EqualsLiteral("Safe Mode")) {
-    *aIsDowngrade = false;
-    return false;
+    return -1;
   }
 
   nsCString oldVersion;
@@ -2458,24 +2465,18 @@ bool CheckCompatVersions(const nsACString& aOldCompatVersion,
                            newPlatformBuildID);
 
   // In most cases the app version will differ and this is an easy check.
-  if (Version(newVersion.get()) < Version(oldVersion.get())) {
-    *aIsDowngrade = true;
-    return false;
+  int32_t result = CompareVersions(oldVersion.get(), newVersion.get());
+  if (result != 0) {
+    return result;
   }
 
   // Fall back to build ID comparison.
-  if (IsNewIDLower(oldAppBuildID, newAppBuildID)) {
-    *aIsDowngrade = true;
-    return false;
+  result = CompareBuildIDs(oldAppBuildID, newAppBuildID);
+  if (result != 0) {
+    return result;
   }
 
-  if (IsNewIDLower(oldPlatformBuildID, newPlatformBuildID)) {
-    *aIsDowngrade = true;
-    return false;
-  }
-
-  *aIsDowngrade = false;
-  return false;
+  return CompareBuildIDs(oldPlatformBuildID, newPlatformBuildID);
 }
 
 /**
@@ -2509,7 +2510,9 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     return false;
   }
 
-  if (!CheckCompatVersions(aLastVersion, aVersion, aIsDowngrade)) {
+  int32_t result = CompareCompatVersions(aLastVersion, aVersion);
+  if (result != 0) {
+    *aIsDowngrade = result > 0;
     return false;
   }
 

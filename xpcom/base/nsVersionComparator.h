@@ -40,9 +40,18 @@
 
 namespace mozilla {
 
+/**
+ * Compares the version strings provided.
+ *
+ * Returns 0 if the versions match, < 0 if aStrB > aStrA and > 0 if
+ * aStrA > aStrB.
+ */
 int32_t CompareVersions(const char* aStrA, const char* aStrB);
 
 #ifdef XP_WIN
+/**
+ * As above but for wide character strings.
+ */
 int32_t CompareVersions(const char16_t* aStrA, const char16_t* aStrB);
 #endif
 
