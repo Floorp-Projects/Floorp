@@ -39,7 +39,7 @@ add_task(async function() {
     return content.document.location.href;
   });
 
-  const cookiePath = actualPath.substr(0, actualPath.lastIndexOf("/") + 1)
+  const cookiePath = actualPath.substr(0, actualPath.lastIndexOf("/"))
                                .replace(/file:\/\//g, "");
   await checkState([
     [

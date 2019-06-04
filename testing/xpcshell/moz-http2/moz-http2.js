@@ -661,12 +661,30 @@ function handleRequest(req, res) {
         answers: answers,
       });
 
-      response.setHeader('Content-Length', buf.length);
-      response.setHeader('Set-Cookie', 'trackyou=yes; path=/; max-age=100000;');
-      response.setHeader('Content-Type', 'application/dns-message');
-      response.writeHead(200);
-      response.write(buf);
-      response.end("");
+      function writeResponse(response, buf) {
+        response.setHeader('Content-Length', buf.length);
+        response.setHeader('Set-Cookie', 'trackyou=yes; path=/; max-age=100000;');
+        response.setHeader('Content-Type', 'application/dns-message');
+        response.writeHead(200);
+        response.write(buf);
+        response.end("");
+      }
+
+      let delay = undefined;
+      if (packet.questions[0].type == "A") {
+        delay = u.query["delayIPv4"];
+      } else if (packet.questions[0].type == "AAAA") {
+        delay = u.query["delayIPv6"];
+      }
+
+      if (delay) {
+        setTimeout((arg) => {
+          writeResponse(arg[0], arg[1]);
+        }, parseInt(delay), [response, buf]);
+        return;
+      }
+
+      writeResponse(response, buf);
       return;
     }
 

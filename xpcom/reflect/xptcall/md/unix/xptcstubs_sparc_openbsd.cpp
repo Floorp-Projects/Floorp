@@ -45,8 +45,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
         dispatchParams = paramBuffer;
 
     NS_ASSERTION(dispatchParams,"no place for params");
-    if (!dispatchParams)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     uint32_t* ap = args;
     for(i = 0; i < paramCount; i++, ap++)

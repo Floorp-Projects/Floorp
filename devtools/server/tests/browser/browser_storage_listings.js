@@ -52,7 +52,7 @@ const storeMap = {
       {
         name: "sc1",
         value: "foobar",
-        path: "/browser/devtools/server/tests/browser/",
+        path: "/browser/devtools/server/tests/browser",
         host: "sectest1.example.org",
         expires: 0,
         hostOnly: true,
@@ -82,7 +82,7 @@ const storeMap = {
       {
         name: "sc1",
         value: "foobar",
-        path: "/browser/devtools/server/tests/browser/",
+        path: "/browser/devtools/server/tests/browser",
         host: "sectest1.example.org",
         expires: 0,
         hostOnly: true,

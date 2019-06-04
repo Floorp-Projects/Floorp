@@ -23,3 +23,10 @@ exports.CSS_TYPES = {
  "gradient": 4,
  "timing-function": 10,
 };
+
+/**
+ * Supported pseudo-class locks in the order in which they appear in the pseudo-class
+ * panel in the Rules sidebar panel of the Inspector.
+ * FIXME: add ":visited" and ":link" after bug 713106 is fixed
+ */
+exports.PSEUDO_CLASSES = [":hover", ":active", ":focus", ":focus-within"];
