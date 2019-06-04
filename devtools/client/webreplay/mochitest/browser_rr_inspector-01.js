@@ -36,7 +36,7 @@ add_task(async function() {
   nodeFront = await getNodeFront("#maindiv", inspector);
   await waitFor(() => inspector.markup && getContainerForNodeFront(nodeFront, inspector));
   container = getContainerForNodeFront(nodeFront, inspector);
-  ok(container.editor.textEditor.value.textContent == "GOODBYE",
+  ok(container.editor.textEditor.textNode.state.value == "GOODBYE",
      "Correct late element text");
 
   const bp = await setBreakpoint(threadClient, "doc_inspector_basic.html", 9);
@@ -46,7 +46,7 @@ add_task(async function() {
   nodeFront = await getNodeFront("#maindiv", inspector);
   await waitFor(() => inspector.markup && getContainerForNodeFront(nodeFront, inspector));
   container = getContainerForNodeFront(nodeFront, inspector);
-  ok(container.editor.textEditor.value.textContent == "HELLO",
+  ok(container.editor.textEditor.textNode.state.value == "HELLO",
      "Correct early element text");
 
   await threadClient.removeBreakpoint(bp);
