@@ -316,9 +316,6 @@ class UrlbarInput {
 
   /**
    * Handles an event which would cause a url or text to be opened.
-   * TODO Bug 1536816 the name is currently handleCommand which is compatible with
-   * urlbarBindings. However, it is no longer called automatically by autocomplete,
-   * See _on_keydown.
    *
    * @param {Event} event The event triggering the open.
    * @param {string} [openWhere] Where we expect the result to be opened.
