@@ -635,6 +635,9 @@
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="preferences_delete_browsing_data_prompt_allow">允许</string>
 
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">浏览数据已删除</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->

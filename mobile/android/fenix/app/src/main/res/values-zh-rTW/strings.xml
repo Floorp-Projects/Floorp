@@ -608,7 +608,7 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d 個分頁</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">上網資料與網站資料</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title">瀏覽紀錄與網站資料</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 筆地址</string>
@@ -621,11 +621,14 @@
     <string name="preferences_delete_browsing_data_button">刪除瀏覽資料</string>
 
     <!-- Dialog message to the user asking to delete browsing data. Parameter is the name of the app (e.g. Fenix) -->
-    <string name="preferences_delete_browsing_data_prompt_message">要允許 %s 刪除您的上網資料嗎？</string>
+    <string name="preferences_delete_browsing_data_prompt_message">要允許 %s 刪除您的瀏覽資料嗎？</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="preferences_delete_browsing_data_prompt_cancel">不允許</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="preferences_delete_browsing_data_prompt_allow">允許</string>
+
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">已刪除瀏覽資料</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
