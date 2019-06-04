@@ -427,7 +427,7 @@ namespace JS {
   D(FULL_WHOLE_CELL_BUFFER, 17)            \
   D(FULL_GENERIC_BUFFER, 18)               \
   D(FULL_VALUE_BUFFER, 19)                 \
-  D(FULL_CELL_PTR_BUFFER, 20)              \
+  D(FULL_CELL_PTR_OBJ_BUFFER, 20)          \
   D(FULL_SLOT_BUFFER, 21)                  \
   D(FULL_SHAPE_BUFFER, 22)                 \
   D(TOO_MUCH_WASM_MEMORY, 23)              \
@@ -435,9 +435,9 @@ namespace JS {
   D(FINISH_GC, 25)                         \
   D(PREPARE_FOR_TRACING, 26)               \
   D(INCREMENTAL_ALLOC_TRIGGER, 27)         \
+  D(FULL_CELL_PTR_STR_BUFFER, 28)          \
                                            \
   /* These are reserved for future use. */ \
-  D(RESERVED4, 28)                         \
   D(RESERVED5, 29)                         \
   D(RESERVED6, 30)                         \
   D(RESERVED7, 31)                         \
