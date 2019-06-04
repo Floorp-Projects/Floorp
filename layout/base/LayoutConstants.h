@@ -18,8 +18,6 @@
 
 // NOTE: There are assumptions all over that these have the same value,
 //       namely NS_UNCONSTRAINEDSIZE.
-#define NS_INTRINSICSIZE NS_UNCONSTRAINEDSIZE
-#define NS_AUTOHEIGHT NS_UNCONSTRAINEDSIZE
 #define NS_AUTOOFFSET NS_UNCONSTRAINEDSIZE
 
 // +1 is to avoid clamped huge margin values being processed as auto margins

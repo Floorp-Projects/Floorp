@@ -5787,7 +5787,7 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
                blockStyleCoord->BehavesLikeInitialValueOnBlockAxis() &&
                !IS_TRUE_OVERFLOW_CONTAINER(this)) {
       auto cbSize = aCBSize.BSize(aWM);
-      if (cbSize != NS_AUTOHEIGHT) {
+      if (cbSize != NS_UNCONSTRAINEDSIZE) {
         // 'auto' block-size for grid-level box - fill the CB for 'stretch' /
         // 'normal' and clamp it to the CB if requested:
         bool stretch = false;
@@ -5803,7 +5803,7 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
           auto bSizeToFillCB =
               std::max(nscoord(0), cbSize - aPadding.BSize(aWM) -
                                        aBorder.BSize(aWM) - aMargin.BSize(aWM));
-          if (stretch || (result.BSize(aWM) != NS_AUTOHEIGHT &&
+          if (stretch || (result.BSize(aWM) != NS_UNCONSTRAINEDSIZE &&
                           result.BSize(aWM) > bSizeToFillCB)) {
             result.BSize(aWM) = bSizeToFillCB;
           }
@@ -6076,7 +6076,7 @@ LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
     MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
     // 'auto' block-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.BSize(aWM);
-    if (cbSize != NS_AUTOHEIGHT) {
+    if (cbSize != NS_UNCONSTRAINEDSIZE) {
       if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
         auto blockAxisAlignment =
             !aWM.IsOrthogonalTo(GetParent()->GetWritingMode())
@@ -10072,7 +10072,7 @@ nsSize nsFrame::GetXULMinSize(nsBoxLayoutState& aState) {
 }
 
 nsSize nsFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
-  nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  nsSize size(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   DISPLAY_MAX_SIZE(this, size);
   // Don't use the cache if we have HTMLReflowInput constraints --- they might
   // have changed
@@ -10227,7 +10227,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
   // lets see if we are already that size. Yes? then don't even reflow. We are
   // done.
   if (!needsReflow) {
-    if (aWidth != NS_INTRINSICSIZE && aHeight != NS_INTRINSICSIZE) {
+    if (aWidth != NS_UNCONSTRAINEDSIZE && aHeight != NS_UNCONSTRAINEDSIZE) {
       // if the new calculated size has a 0 width or a 0 height
       if ((metrics->mLastSize.width == 0 || metrics->mLastSize.height == 0) &&
           (aWidth == 0 || aHeight == 0)) {
@@ -10266,9 +10266,9 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     GetXULMargin(margin);
 
     nsSize parentSize(aWidth, aHeight);
-    if (parentSize.height != NS_INTRINSICSIZE)
+    if (parentSize.height != NS_UNCONSTRAINEDSIZE)
       parentSize.height += margin.TopBottom();
-    if (parentSize.width != NS_INTRINSICSIZE)
+    if (parentSize.width != NS_UNCONSTRAINEDSIZE)
       parentSize.width += margin.LeftRight();
 
     nsIFrame* parentFrame = GetParent();
@@ -10278,9 +10278,9 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
                                   ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
 
     // This may not do very much useful, but it's probably worth trying.
-    if (parentSize.width != NS_INTRINSICSIZE)
+    if (parentSize.width != NS_UNCONSTRAINEDSIZE)
       parentReflowInput.SetComputedWidth(std::max(parentSize.width, 0));
-    if (parentSize.height != NS_INTRINSICSIZE)
+    if (parentSize.height != NS_UNCONSTRAINEDSIZE)
       parentReflowInput.SetComputedHeight(std::max(parentSize.height, 0));
     parentReflowInput.ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
     // XXX use box methods
@@ -10311,7 +10311,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     // (It used to have a bogus parent, skipping all the boxes).
     WritingMode wm = GetWritingMode();
     LogicalSize logicalSize(wm, nsSize(aWidth, aHeight));
-    logicalSize.BSize(wm) = NS_INTRINSICSIZE;
+    logicalSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     ReflowInput reflowInput(aPresContext, *parentRI, this, logicalSize,
                             Nothing(), ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
 
@@ -10324,7 +10324,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
 
     // mComputedWidth and mComputedHeight are content-box, not
     // border-box
-    if (aWidth != NS_INTRINSICSIZE) {
+    if (aWidth != NS_UNCONSTRAINEDSIZE) {
       nscoord computedWidth =
           aWidth - reflowInput.ComputedPhysicalBorderPadding().LeftRight();
       computedWidth = std::max(computedWidth, 0);
@@ -10337,7 +10337,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     // natural height excluding any overflow area which may be caused by
     // various CSS effects such as shadow or outline.
     if (!IsBlockFrameOrSubclass()) {
-      if (aHeight != NS_INTRINSICSIZE) {
+      if (aHeight != NS_UNCONSTRAINEDSIZE) {
         nscoord computedHeight =
             aHeight - reflowInput.ComputedPhysicalBorderPadding().TopBottom();
         computedHeight = std::max(computedHeight, 0);
@@ -10411,19 +10411,19 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
   }
 
 #ifdef DEBUG_REFLOW
-  if (aHeight != NS_INTRINSICSIZE && aDesiredSize.Height() != aHeight) {
+  if (aHeight != NS_UNCONSTRAINEDSIZE && aDesiredSize.Height() != aHeight) {
     nsAdaptorAddIndents();
     printf("*****got taller!*****\n");
   }
-  if (aWidth != NS_INTRINSICSIZE && aDesiredSize.Width() != aWidth) {
+  if (aWidth != NS_UNCONSTRAINEDSIZE && aDesiredSize.Width() != aWidth) {
     nsAdaptorAddIndents();
     printf("*****got wider!******\n");
   }
 #endif
 
-  if (aWidth == NS_INTRINSICSIZE) aWidth = aDesiredSize.Width();
+  if (aWidth == NS_UNCONSTRAINEDSIZE) aWidth = aDesiredSize.Width();
 
-  if (aHeight == NS_INTRINSICSIZE) aHeight = aDesiredSize.Height();
+  if (aHeight == NS_UNCONSTRAINEDSIZE) aHeight = aDesiredSize.Height();
 
   metrics->mLastSize.width = aDesiredSize.Width();
   metrics->mLastSize.height = aDesiredSize.Height();
