@@ -138,7 +138,7 @@
 
 <!-- LOCALIZATION NOTE (options.warningGroups.label): This is the
    - label for the checkbox that toggles the warningGroups feature in the Web Console -->
-<!ENTITY options.warningGroups.label      "Group similar message">
+<!ENTITY options.warningGroups.label      "Group similar messages">
 <!ENTITY options.warningGroups.tooltip    "When enabled, similar messages are placed into groups">
 
 <!-- LOCALIZATION NOTE (options.debugger.label): This is the label for the
