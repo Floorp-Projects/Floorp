@@ -6,13 +6,20 @@
 
 DisableStlWrapping()
 
+# Important: for CppUnitTests to be run, they also need to be added
+# to testing/cppunittest.ini.
+
 GeckoCppUnitTests([
     'ShowSSEConfig',
 ], linkage=None)
 
 CppUnitTests([
+    'TestBaseProfiler',
     'TestPrintf',
 ])
+
+with Files('TestBaseProfiler.cpp'):
+    BUG_COMPONENT = ('Core', 'Gecko Profiler')
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     GeckoCppUnitTests([
