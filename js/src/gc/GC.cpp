@@ -990,7 +990,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       numArenasFreeCommitted(0),
       verifyPreData(nullptr),
       chunkAllocationSinceLastGC(false),
-      lastGCTime(ReallyNow()),
+      lastGCTime_(ReallyNow()),
       mode(TuningDefaults::Mode),
       numActiveZoneIters(0),
       cleanUpEverything(false),
@@ -6901,7 +6901,7 @@ void GCRuntime::finishCollection() {
   clearBufferedGrayRoots();
 
   auto currentTime = ReallyNow();
-  schedulingState.updateHighFrequencyMode(lastGCTime, currentTime, tunables);
+  schedulingState.updateHighFrequencyMode(lastGCTime_, currentTime, tunables);
 
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     if (zone->isCollecting()) {
@@ -6918,7 +6918,7 @@ void GCRuntime::finishCollection() {
   MOZ_ASSERT(zonesToMaybeCompact.ref().isEmpty());
   MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
 
-  lastGCTime = currentTime;
+  lastGCTime_ = currentTime;
 }
 
 static const char* HeapStateToLabel(JS::HeapState heapState) {

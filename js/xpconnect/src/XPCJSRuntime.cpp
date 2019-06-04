@@ -2734,6 +2734,15 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_PRETENURE_COUNT:
       Telemetry::Accumulate(Telemetry::GC_PRETENURE_COUNT, sample);
       break;
+    case JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE:
+      Telemetry::Accumulate(Telemetry::GC_NURSERY_PROMOTION_RATE, sample);
+      break;
+    case JS_TELEMETRY_GC_MARK_RATE:
+      Telemetry::Accumulate(Telemetry::GC_MARK_RATE, sample);
+      break;
+    case JS_TELEMETRY_GC_TIME_BETWEEN_S:
+      Telemetry::Accumulate(Telemetry::GC_TIME_BETWEEN_S, sample);
+      break;
     case JS_TELEMETRY_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS:
       Telemetry::Accumulate(
           Telemetry::JS_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS, sample);
@@ -2741,12 +2750,6 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_WEB_PARSER_COMPILE_LAZY_AFTER_MS:
       Telemetry::Accumulate(Telemetry::JS_WEB_PARSER_COMPILE_LAZY_AFTER_MS,
                             sample);
-      break;
-    case JS_TELEMETRY_GC_NURSERY_PROMOTION_RATE:
-      Telemetry::Accumulate(Telemetry::GC_NURSERY_PROMOTION_RATE, sample);
-      break;
-    case JS_TELEMETRY_GC_MARK_RATE:
-      Telemetry::Accumulate(Telemetry::GC_MARK_RATE, sample);
       break;
     case JS_TELEMETRY_DEPRECATED_ARRAY_GENERICS:
       Telemetry::Accumulate(Telemetry::JS_DEPRECATED_ARRAY_GENERICS, sample);

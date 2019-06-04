@@ -920,6 +920,17 @@
     "bug_numbers": [1475896],
     "description": "The number of objects marked per ms during GC."
   },
+  "GC_TIME_BETWEEN_S": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 120,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1556467],
+    "description": "Time spent in between garbage collections for the main runtime (seconds)"
+  },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
