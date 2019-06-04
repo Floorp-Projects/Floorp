@@ -1111,7 +1111,7 @@ void Statistics::endSlice() {
     if (slice.budget.isTimeBudget()) {
       int64_t budget_ms = slice.budget.timeBudget.budget;
       runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_MS, budget_ms);
-      if (budget_ms == runtime->gc.defaultSliceBudget()) {
+      if (IsCurrentlyAnimating(runtime->lastAnimationTime, slice.end)) {
         runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
       }
 
