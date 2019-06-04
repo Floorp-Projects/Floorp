@@ -80,10 +80,13 @@ class StoreBuffer {
 
     StoreBuffer* owner_;
 
+    JS::GCReason gcReason_;
+
     /* Maximum number of entries before we request a minor GC. */
     const static size_t MaxEntries = 48 * 1024 / sizeof(T);
 
-    explicit MonoTypeBuffer(StoreBuffer* owner) : last_(T()), owner_(owner) {}
+    explicit MonoTypeBuffer(StoreBuffer* owner, JS::GCReason reason)
+        : last_(T()), owner_(owner), gcReason_(reason) {}
 
     void clear() {
       last_ = T();
@@ -117,7 +120,7 @@ class StoreBuffer {
       last_ = T();
 
       if (MOZ_UNLIKELY(stores_.count() > MaxEntries)) {
-        owner_->setAboutToOverflow(T::FullBufferReason);
+        owner_->setAboutToOverflow(gcReason_);
       }
     }
 
@@ -276,8 +279,6 @@ class StoreBuffer {
     explicit operator bool() const { return edge != nullptr; }
 
     typedef PointerEdgeHasher<CellPtrEdge> Hasher;
-
-    static const auto FullBufferReason = JS::GCReason::FULL_CELL_PTR_BUFFER;
   };
 
   struct ValueEdge {
@@ -311,8 +312,6 @@ class StoreBuffer {
     explicit operator bool() const { return edge != nullptr; }
 
     typedef PointerEdgeHasher<ValueEdge> Hasher;
-
-    static const auto FullBufferReason = JS::GCReason::FULL_VALUE_BUFFER;
   };
 
   struct SlotsEdge {
@@ -394,8 +393,6 @@ class StoreBuffer {
       }
       static bool match(const SlotsEdge& k, const Lookup& l) { return k == l; }
     } Hasher;
-
-    static const auto FullBufferReason = JS::GCReason::FULL_SLOT_BUFFER;
   };
 
   template <typename Buffer, typename Edge>
