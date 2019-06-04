@@ -40,7 +40,7 @@
 #include "nsNodeUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
-#include "nsIHTMLDocument.h"
+#include "nsHTMLDocument.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Encoding.h"
@@ -121,10 +121,8 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
   }
 
   if (isHTML) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(d);
-    NS_ASSERTION(htmlDoc, "HTML Document doesn't implement nsIHTMLDocument?");
     d->SetCompatibilityMode(eCompatibility_FullStandards);
-    htmlDoc->SetIsXHTML(isXHTML);
+    d->AsHTMLDocument()->SetIsXHTML(isXHTML);
   }
   d->SetLoadedAsData(aLoadedAsData);
   d->SetDocumentURI(aDocumentURI);
