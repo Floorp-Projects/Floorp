@@ -1,7 +1,7 @@
 use crate::cdsl::ast::{
     Apply, DefIndex, DefPool, DummyDef, DummyExpr, Expr, PatternPosition, VarIndex, VarPool,
 };
-use crate::cdsl::inst::Instruction;
+use crate::cdsl::instructions::Instruction;
 use crate::cdsl::type_inference::{infer_transform, TypeEnvironment};
 use crate::cdsl::typevar::TypeVar;
 
@@ -348,7 +348,7 @@ impl TransformGroupBuilder {
         self.transforms.push(transform);
     }
 
-    pub fn finish_and_add_to(self, owner: &mut TransformGroups) -> TransformGroupIndex {
+    pub fn build_and_add_to(self, owner: &mut TransformGroups) -> TransformGroupIndex {
         let next_id = owner.next_key();
         owner.add(TransformGroup {
             name: self.name,
@@ -404,11 +404,14 @@ impl TransformGroups {
 #[should_panic]
 fn test_double_custom_legalization() {
     use crate::cdsl::formats::{FormatRegistry, InstructionFormatBuilder};
-    use crate::cdsl::inst::InstructionBuilder;
+    use crate::cdsl::instructions::{InstructionBuilder, InstructionGroupBuilder};
 
     let mut format = FormatRegistry::new();
     format.insert(InstructionFormatBuilder::new("nullary"));
-    let dummy_inst = InstructionBuilder::new("dummy", "doc").finish(&format);
+    let mut inst_group = InstructionGroupBuilder::new("test", "", &format);
+    inst_group.push(InstructionBuilder::new("dummy", "doc"));
+    let inst_group = inst_group.build();
+    let dummy_inst = inst_group.by_name("dummy");
 
     let mut transform_group = TransformGroupBuilder::new("test", "doc");
     transform_group.custom_legalize(&dummy_inst, "custom 1");
