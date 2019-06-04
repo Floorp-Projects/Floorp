@@ -1,5 +1,5 @@
-use crate::cdsl::ast::{bind, var, ExprBuilder, Literal};
-use crate::cdsl::inst::InstructionGroup;
+use crate::cdsl::ast::{var, ExprBuilder, Literal};
+use crate::cdsl::instructions::InstructionGroup;
 use crate::cdsl::xform::TransformGroupBuilder;
 
 use crate::shared::types::Int::{I32, I64};
@@ -289,5 +289,5 @@ pub fn define(shared: &mut SharedDefinitions, x86_instructions: &InstructionGrou
         ],
     );
 
-    group.finish_and_add_to(&mut shared.transform_groups);
+    group.build_and_add_to(&mut shared.transform_groups);
 }
