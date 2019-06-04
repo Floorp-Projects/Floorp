@@ -390,10 +390,10 @@ async function validationPing(server, client, duration) {
   let {problemData} = await validator.compareServerWithClient(server, client);
   let data = {
     // We fake duration and version just so that we can verify they"re passed through.
-    duration,
+    took: duration,
     version: validator.version,
-    recordCount: server.length,
-    problems: problemData,
+    checked: server.length,
+    problems: problemData.getSummary(true),
   };
   Svc.Obs.notify("weave:engine:validate:finish", data, "bookmarks");
   Svc.Obs.notify("weave:service:sync:finish");
