@@ -206,11 +206,14 @@ class StringsStorageEngineTest {
             sendInPings = listOf("store1")
         )
 
-        stringMetric.set("0123456789012345678901234567890123456789012345678901234567890123456789")
+        val testString = "012345678901234567890".repeat(20)
+        val expectedString = testString.take(StringsStorageEngineImplementation.MAX_LENGTH_VALUE)
+
+        stringMetric.set(testString)
         // Check that data was truncated.
         assertTrue(stringMetric.testHasValue())
         assertEquals(
-            "01234567890123456789012345678901234567890123456789",
+            expectedString,
             stringMetric.testGetValue()
         )
 

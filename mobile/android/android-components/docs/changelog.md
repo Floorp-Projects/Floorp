@@ -70,6 +70,7 @@ permalink: /changelog/
 
 * **service-glean**
   * Disabling telemetry through `setUploadEnabled` now clears all metrics (except first_run_date) immediately.
+  * The string length limit for `StringMetricType` was raised from 50 to 100 characters.
 
 * **feature-session**
   * Added `SwipeRefreshFeature` which adds pull to refresh to browsers.

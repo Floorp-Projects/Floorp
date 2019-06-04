@@ -27,7 +27,7 @@ internal open class StringsStorageEngineImplementation(
 ) : GenericStorageEngine<String>() {
     companion object {
         // Maximum length of any passed value string, in characters.
-        private const val MAX_LENGTH_VALUE = 50
+        internal const val MAX_LENGTH_VALUE = 100
     }
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): String? {
