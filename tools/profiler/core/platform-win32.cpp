@@ -269,10 +269,6 @@ void Registers::SyncPopulate() {
 #endif
 
 #if defined(GP_PLAT_amd64_windows)
-
-#  ifndef MOZ_BASE_PROFILER
-// If MOZ_BASE_PROFILER is *not* #defined, we need to implement this here, as
-// the one in mozglue/baseprofiler will not even be built.
 static WindowsDllInterceptor NtDllIntercept;
 
 typedef NTSTATUS(NTAPI* LdrUnloadDll_func)(HMODULE module);
@@ -312,18 +308,4 @@ void InitializeWin64ProfilerHooks() {
                                       &patched_LdrResolveDelayLoadedAPI);
   }
 }
-
-#  else  // ndef MOZ_BASE_PROFILER
-// If MOZ_BASE_PROFILER is #defined, we just use InitializeWin64ProfilerHooks
-// that it implements.
-
-namespace mozilla {
-namespace baseprofiler {
-MFBT_API void InitializeWin64ProfilerHooks();
-}  // namespace baseprofiler
-}  // namespace mozilla
-
-using mozilla::baseprofiler::InitializeWin64ProfilerHooks;
-
-#  endif  // ndef MOZ_BASE_PROFILER else
-#endif    // defined(GP_PLAT_amd64_windows)
+#endif  // defined(GP_PLAT_amd64_windows)
