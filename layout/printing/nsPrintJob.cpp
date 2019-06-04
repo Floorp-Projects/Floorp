@@ -815,15 +815,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
-    if (aIsPrintPreview) {
-      nsCOMPtr<nsIContentViewer> viewer;
-      docShell->GetContentViewer(getter_AddRefs(viewer));
-      if (viewer && viewer->GetDocument() &&
-          viewer->GetDocument()->IsShowing()) {
-        viewer->GetDocument()->OnPageHide(false, nullptr);
-      }
-    }
-
     nsAutoScriptBlocker scriptBlocker;
     printData->mPrintObject = MakeUnique<nsPrintObject>();
     rv = printData->mPrintObject->InitAsRootObject(docShell, aSourceDoc,
