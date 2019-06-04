@@ -35,6 +35,8 @@ class TRRService : public nsIObserver,
   bool AllowRFC1918() { return mRfc1918; }
   bool UseGET() { return mUseGET; }
   bool EarlyAAAA() { return mEarlyAAAA; }
+  bool CheckIPv6Connectivity() { return mCheckIPv6Connectivity; }
+  bool WaitForAllResponses() { return mWaitForAllResponses; }
   bool DisableIPv6() { return mDisableIPv6; }
   bool DisableECS() { return mDisableECS; }
   nsresult GetURI(nsCString& result);
@@ -85,8 +87,10 @@ class TRRService : public nsIObserver,
       mCaptiveIsPassed;           // set when captive portal check is passed
   Atomic<bool, Relaxed> mUseGET;  // do DOH using GET requests (instead of POST)
   Atomic<bool, Relaxed> mEarlyAAAA;  // allow use of AAAA results before A is in
-  Atomic<bool, Relaxed> mDisableIPv6;  // don't even try
-  Atomic<bool, Relaxed> mDisableECS;   // disable EDNS Client Subnet in requests
+  Atomic<bool, Relaxed> mCheckIPv6Connectivity;  // check IPv6 connectivity
+  Atomic<bool, Relaxed> mWaitForAllResponses;  // Don't notify until all are in
+  Atomic<bool, Relaxed> mDisableIPv6;          // don't even try
+  Atomic<bool, Relaxed> mDisableECS;  // disable EDNS Client Subnet in requests
   Atomic<uint32_t, Relaxed>
       mDisableAfterFails;  // this many fails in a row means failed TRR service
 

@@ -4838,6 +4838,42 @@ Element* HTMLEditor::GetActiveEditingHost() const {
   return content->GetEditingHost();
 }
 
+void HTMLEditor::NotifyEditingHostMaybeChanged() {
+  Document* document = GetDocument();
+  if (NS_WARN_IF(!document) ||
+      NS_WARN_IF(document->HasFlag(NODE_IS_EDITABLE))) {
+    return;
+  }
+
+  // We're HTML editor for contenteditable
+  AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return;
+  }
+
+  // Get selection ancestor limit which may be old editing host.
+  nsIContent* ancestorLimiter = SelectionRefPtr()->GetAncestorLimiter();
+  if (!ancestorLimiter) {
+    // If we've not initialized selection ancestor limit, we should wait focus
+    // event to set proper limiter.
+    return;
+  }
+
+  // Compute current editing host.
+  nsIContent* editingHost = GetActiveEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
+    return;
+  }
+
+  // Update selection ancestor limit if current editing host includes the
+  // previous editing host.
+  if (nsContentUtils::ContentIsDescendantOf(ancestorLimiter, editingHost)) {
+    // Note that don't call HTMLEditor::InitializeSelectionAncestorLimit() here
+    // because it may collapse selection to the first editable node.
+    EditorBase::InitializeSelectionAncestorLimit(*editingHost);
+  }
+}
+
 EventTarget* HTMLEditor::GetDOMEventTarget() {
   // Don't use getDocument here, because we have no way of knowing
   // whether Init() was ever called.  So we need to get the document

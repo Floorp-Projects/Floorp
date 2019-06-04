@@ -5,7 +5,8 @@
 "use strict";
 
 const {l10n} = require("devtools/shared/inspector/css-logic");
-const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
+const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const {
   InplaceEditor,
@@ -442,7 +443,7 @@ RuleEditor.prototype = {
               selectorClass = "ruleview-selector";
               break;
             case SELECTOR_PSEUDO_CLASS:
-              selectorClass = [":active", ":focus", ":focus-within", ":hover"].some(
+              selectorClass = PSEUDO_CLASSES.some(
                   pseudo => selectorText.value === pseudo) ?
                 "ruleview-selector-pseudo-class-lock" :
                 "ruleview-selector-pseudo-class";

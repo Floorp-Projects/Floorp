@@ -45,6 +45,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/net/NetworkConnectivityService.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -1240,10 +1241,15 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
     }
     bool sendAgain;
 
+    RefPtr<NetworkConnectivityService> ncs =
+        NetworkConnectivityService::GetSingleton();
+
     do {
       sendAgain = false;
       if ((TRRTYPE_AAAA == rectype) && gTRRService &&
-          gTRRService->DisableIPv6()) {
+          (gTRRService->DisableIPv6() ||
+           (gTRRService->CheckIPv6Connectivity() &&
+            ncs->GetIPv6() == nsINetworkConnectivityService::NOT_AVAILABLE))) {
         break;
       }
       LOG(("TRR Resolve %s type %d\n", addrRec->host.get(), (int)rectype));
@@ -1651,7 +1657,6 @@ void nsHostResolver::AddToEvictionQ(nsHostRecord* rec) {
 //
 // CompleteLookup() checks if the resolving should be redone and if so it
 // returns LOOKUP_RESOLVEAGAIN, but only if 'status' is not NS_ERROR_ABORT.
-// takes ownership of AddrInfo parameter
 nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
     nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
     const nsACString& aOriginsuffix) {
@@ -1724,6 +1729,11 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
         return LOOKUP_OK;
       }
 
+      if (gTRRService && gTRRService->WaitForAllResponses()) {
+        LOG(("CompleteLookup: waiting for all responses!\n"));
+        return LOOKUP_OK;
+      }
+
       if (addrRec->mTrrA && (!gTRRService || !gTRRService->EarlyAAAA())) {
         // This is an early AAAA with a pending A response. Allowed
         // only by pref.
@@ -1741,9 +1751,14 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
       // If mFirstTRR is set, merge those addresses into current set!
       if (addrRec->mFirstTRR) {
         if (NS_SUCCEEDED(status)) {
+          LOG(("Merging responses"));
           merge_rrset(newRRSet, addrRec->mFirstTRR);
         } else {
+          LOG(("Will use previous response"));
           newRRSet.swap(addrRec->mFirstTRR);  // transfers
+          // We must use the status of the first response, otherwise we'll
+          // pass an error result to the consumers.
+          status = addrRec->mFirstTRRresult;
         }
         addrRec->mFirstTRR = nullptr;
       }

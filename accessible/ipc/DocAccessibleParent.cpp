@@ -561,6 +561,15 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
     // document process. This will be returned as the parent of the
     // embedded document.
     aChildDoc->SendParentCOMProxy(WrapperFor(outerDoc));
+    if (nsWinUtils::IsWindowEmulationStarted()) {
+      // The embedded document should use the same emulated window handle as
+      // its embedder. It will return the embedder document (not a window
+      // accessible) as the parent accessible, so we pass a null accessible
+      // when sending the window to the embedded document.
+      aChildDoc->SetEmulatedWindowHandle(mEmulatedWindowHandle);
+      Unused << aChildDoc->SendEmulatedWindow(
+          reinterpret_cast<uintptr_t>(mEmulatedWindowHandle), nullptr);
+    }
   }
 #endif  // defined(XP_WIN)
 

@@ -32,7 +32,8 @@ namespace mozilla {
 
 using namespace mozilla::gfx;
 
-MediaEngineTabVideoSource::MediaEngineTabVideoSource() = default;
+MediaEngineTabVideoSource::MediaEngineTabVideoSource()
+    : mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()) {}
 
 nsresult MediaEngineTabVideoSource::StartRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -184,23 +185,44 @@ nsresult MediaEngineTabVideoSource::Reconfigure(
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineTabVideoSource::Reconfigure main thread setter",
       [self = RefPtr<MediaEngineTabVideoSource>(this), this, scrollWithPage,
-       bufWidthMax, bufHeightMax, timePerFrame, viewportOffsetX,
-       viewportOffsetY, viewportWidth, viewportHeight]() {
+       bufWidthMax, bufHeightMax, frameRate, timePerFrame, viewportOffsetX,
+       viewportOffsetY, viewportWidth, viewportHeight, windowId = mWindowId]() {
         mScrollWithPage = scrollWithPage;
         mBufWidthMax = bufWidthMax;
         mBufHeightMax = bufHeightMax;
         mTimePerFrame = timePerFrame;
+        mSettings->mScrollWithPage.Construct(scrollWithPage);
+        mSettings->mWidth.Construct(bufWidthMax);
+        mSettings->mHeight.Construct(bufHeightMax);
+        mSettings->mFrameRate.Construct(frameRate);
         if (viewportOffsetX.isSome()) {
+          mSettings->mViewportOffsetX.Construct(*viewportOffsetX);
           mViewportOffsetX = *viewportOffsetX;
+        } else {
+          mSettings->mViewportOffsetX.Reset();
         }
         if (viewportOffsetY.isSome()) {
+          mSettings->mViewportOffsetY.Construct(*viewportOffsetY);
           mViewportOffsetY = *viewportOffsetY;
+        } else {
+          mSettings->mViewportOffsetY.Reset();
         }
         if (viewportWidth.isSome()) {
+          mSettings->mViewportWidth.Construct(*viewportWidth);
           mViewportWidth = *viewportWidth;
+        } else {
+          mSettings->mViewportWidth.Reset();
         }
         if (viewportHeight.isSome()) {
+          mSettings->mViewportHeight.Construct(*viewportHeight);
           mViewportHeight = *viewportHeight;
+        } else {
+          mSettings->mViewportHeight.Reset();
+        }
+        if (windowId != -1) {
+          mSettings->mBrowserWindow.Construct(windowId);
+        } else {
+          mSettings->mBrowserWindow.Reset();
         }
       }));
   return NS_OK;
@@ -396,6 +418,12 @@ nsresult MediaEngineTabVideoSource::Stop() {
   NS_DispatchToMainThread(new StopRunnable(this));
   mState = kStopped;
   return NS_OK;
+}
+
+void MediaEngineTabVideoSource::GetSettings(
+    MediaTrackSettings& aOutSettings) const {
+  MOZ_ASSERT(NS_IsMainThread());
+  aOutSettings = *mSettings;
 }
 
 }  // namespace mozilla

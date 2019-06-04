@@ -1495,6 +1495,10 @@ function closeView(win) {
   return close_manager(win.managerWindow);
 }
 
+function switchView(win, type) {
+  return new CategoryUtilities(win.managerWindow).openType(type);
+}
+
 function mockPromptService() {
   let {prompt} = Services;
   let promptService = {

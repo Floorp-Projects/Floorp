@@ -2638,7 +2638,7 @@ pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 #if defined(DEBUG) && !defined(ANDROID)
-pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,cache-entry,config,crashes,debugging,devtools,downloads,home,memory,networking,newtab,performance,plugins,policies,profiles,restartrequired,serviceworkers,sessionrestore,support,sync-log,telemetry,url-classifier,webrtc,welcomeback");
+pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,cache-entry,config,crashes,debugging,devtools,downloads,home,networking,newtab,performance,plugins,policies,profiles,restartrequired,serviceworkers,sessionrestore,support,sync-log,telemetry,url-classifier,webrtc,welcomeback");
 // the following prefs are for testing purposes only.
 pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
@@ -5174,6 +5174,13 @@ pref("extensions.webextensions.performanceCountersMaxAge", 5000);
 pref("extensions.htmlaboutaddons.enabled", false);
 // Whether to allow the inline options browser in HTML about:addons page.
 pref("extensions.htmlaboutaddons.inline-options.enabled", true);
+// Show recommendations on the extension and theme list views.
+pref("extensions.htmlaboutaddons.recommendations.enabled", true);
+
+// The URL for the privacy policy related to recommended add-ons.
+pref("extensions.recommendations.privacyPolicyUrl", "");
+// The URL for a recommended theme, shown on the theme page in about:addons.
+pref("extensions.recommendations.themeRecommendationUrl", "");
 
 // Report Site Issue button
 // Note that on enabling the button in other release channels, make sure to
@@ -5527,6 +5534,12 @@ pref("network.trr.blacklist-duration", 60);
 pref("network.trr.request-timeout", 1500);
 // Allow AAAA entries to be used "early", before the A results are in
 pref("network.trr.early-AAAA", false);
+// When true, it only sends AAAA when the system has IPv6 connectivity
+pref("network.trr.skip-AAAA-when-not-supported", true);
+// When true, the DNS request will wait for both A and AAAA responses
+// (if both have been requested) before notifying the listeners.
+// When true, it effectively cancels `network.trr.early-AAAA`
+pref("network.trr.wait-for-A-and-AAAA", true);
 // Explicitly disable ECS (EDNS Client Subnet, RFC 7871)
 pref("network.trr.disable-ECS", true);
 // After this many failed TRR requests in a row, consider TRR borked

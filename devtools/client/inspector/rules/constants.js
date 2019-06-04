@@ -8,6 +8,3 @@
 // Rules and their Styles into one actor. For elements (which have a style
 // but no associated rule) we fake a rule with the following style id.
 exports.ELEMENT_STYLE = 100;
-
-// Pseudo classes in the pseudo class panel.
-exports.PSEUDO_CLASSES = [":active", ":focus", ":focus-within", ":hover"];

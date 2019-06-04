@@ -17,6 +17,10 @@ job-defaults:
             - type: file
               name: public/code-review/mozlint.json
               path: /builds/worker/mozlint.json
+        env:
+            RUSTFMT: /build/rust/bin/rustfmt
+            RUSTUP_HOME: /build/rust
+            CARGO_HOME: /build/rust
     run:
         using: mach
     when:
@@ -194,3 +198,15 @@ localization:
             - '**/l10n.toml'
             - 'third_party/python/compare-locales/**'
             - 'third_party/python/fluent/**'
+
+
+rustfmt:
+    description: rustfmt on the Rust code
+    platform: lint/opt
+    treeherder:
+        symbol: rustfmt
+    run:
+        mach: lint -l rustfmt -f treeherder -f json:/builds/worker/mozlint.json
+    when:
+        files-changed:
+            - '**/*.rs'

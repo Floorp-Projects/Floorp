@@ -193,16 +193,19 @@ Command GetInternalCommand(const char* aCommandName,
   // Special cases for "cmd_align".  It's mapped to multiple internal commands
   // with additional param.  Therefore, we cannot handle it with the hashtable.
   if (!strcmp(aCommandName, "cmd_align")) {
-    if (NS_WARN_IF(!aCommandParams)) {
-      return Command::DoNothing;
+    if (!aCommandParams) {
+      // Note that if this is called by EditorCommand::IsCommandEnabled(),
+      // it cannot set aCommandParams.  So, don't warn in this case even though
+      // this is illegal case for DoCommandParams().
+      return Command::FormatJustify;
     }
     nsAutoCString cValue;
     nsresult rv = aCommandParams->GetCString("state_attribute", cValue);
     if (NS_FAILED(rv)) {
       nsString value;  // Avoid copying the string buffer with using nsString.
       rv = aCommandParams->GetString("state_attribute", value);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return Command::DoNothing;
+      if (NS_FAILED(rv)) {
+        return Command::FormatJustifyNone;
       }
       cValue = NS_ConvertUTF16toUTF8(value);
     }
@@ -217,6 +220,9 @@ Command GetInternalCommand(const char* aCommandName,
     }
     if (cValue.LowerCaseEqualsASCII("justify")) {
       return Command::FormatJustifyFull;
+    }
+    if (cValue.IsEmpty()) {
+      return Command::FormatJustifyNone;
     }
     return Command::DoNothing;
   }

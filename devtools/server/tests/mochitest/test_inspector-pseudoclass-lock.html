@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript">
 "use strict";
 
-const KNOWN_PSEUDOCLASSES = [":hover", ":active", ":focus", ":focus-within"];
+const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
@@ -65,7 +65,7 @@ function checkChange(change, expectation) {
        `Target should match pseudoclass, '${pseudo}', if enabled (with .matches())`);
   }
 
-  for (const pseudo of KNOWN_PSEUDOCLASSES) {
+  for (const pseudo of PSEUDO_CLASSES) {
     if (!expectation.pseudos.some(expected => pseudo === expected)) {
       ok(!target.hasPseudoClassLock(pseudo), "Don't expect lock: " + pseudo);
       ok(!InspectorUtils.hasPseudoClassLock(target.rawNode(), pseudo),

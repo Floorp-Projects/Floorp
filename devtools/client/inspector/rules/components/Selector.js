@@ -8,16 +8,14 @@ const { createRef, PureComponent } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
+const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const {
   parsePseudoClassesAndAttributes,
   SELECTOR_ATTRIBUTE,
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS,
 } = require("devtools/shared/css/parsing-utils");
-const {
-  ELEMENT_STYLE,
-  PSEUDO_CLASSES,
-} = require("devtools/client/inspector/rules/constants");
+const { ELEMENT_STYLE } = require("devtools/client/inspector/rules/constants");
 
 const Types = require("../types");
 
