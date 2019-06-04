@@ -7,6 +7,12 @@
 #ifndef ProfilerMarkerPayload_h
 #define ProfilerMarkerPayload_h
 
+#include "BaseProfiler.h"
+
+#ifndef MOZ_BASE_PROFILER
+#  error Do not #include this header when MOZ_BASE_PROFILER is not #defined.
+#endif
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
@@ -16,7 +22,6 @@
 #include "mozilla/net/TimingStruct.h"
 
 #include "nsString.h"
-#include "BaseProfiler.h"
 
 #include "js/Utility.h"
 #include "gfxASurface.h"

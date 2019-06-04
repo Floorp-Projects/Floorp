@@ -4,28 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/GeckoProfiler-inl.h"
+#include "BaseProfiler.h"
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/Sprintf.h"
+#ifdef MOZ_BASE_PROFILER
 
-#include "jsnum.h"
+#  include "vm/GeckoProfiler-inl.h"
 
-#include "gc/GC.h"
-#include "gc/PublicIterators.h"
-#include "jit/BaselineFrame.h"
-#include "jit/BaselineJIT.h"
-#include "jit/JitcodeMap.h"
-#include "jit/JitFrames.h"
-#include "jit/JitRealm.h"
-#include "jit/JSJitFrameIter.h"
-#include "js/TraceLoggerAPI.h"
-#include "util/StringBuffer.h"
-#include "vm/JSScript.h"
+#  include "mozilla/ArrayUtils.h"
+#  include "mozilla/DebugOnly.h"
+#  include "mozilla/Sprintf.h"
 
-#include "gc/Marking-inl.h"
-#include "vm/JSScript-inl.h"
+#  include "jsnum.h"
+
+#  include "gc/GC.h"
+#  include "gc/PublicIterators.h"
+#  include "jit/BaselineFrame.h"
+#  include "jit/BaselineJIT.h"
+#  include "jit/JitcodeMap.h"
+#  include "jit/JitFrames.h"
+#  include "jit/JitRealm.h"
+#  include "jit/JSJitFrameIter.h"
+#  include "js/TraceLoggerAPI.h"
+#  include "util/StringBuffer.h"
+#  include "vm/JSScript.h"
+
+#  include "gc/Marking-inl.h"
+#  include "vm/JSScript-inl.h"
 
 using namespace js;
 
@@ -152,14 +156,14 @@ void GeckoProfilerRuntime::enable(bool enabled) {
     r->wasm.ensureProfilingLabels(enabled);
   }
 
-#ifdef JS_STRUCTURED_SPEW
+#  ifdef JS_STRUCTURED_SPEW
   // Enable the structured spewer if the environment variable is set.
   if (enabled) {
     cx->spewer().enableSpewing();
   } else {
     cx->spewer().disableSpewing();
   }
-#endif
+#  endif
 }
 
 /* Lookup the string for the function/script, creating one if necessary */
@@ -209,7 +213,7 @@ bool GeckoProfilerThread::enter(JSContext* cx, JSScript* script) {
     return false;
   }
 
-#ifdef DEBUG
+#  ifdef DEBUG
   // In debug builds, assert the JS profiling stack frames already on the
   // stack have a non-null pc. Only look at the top frames to avoid quadratic
   // behavior.
@@ -221,7 +225,7 @@ bool GeckoProfilerThread::enter(JSContext* cx, JSScript* script) {
                     profilingStack_->frames[i].pc());
     }
   }
-#endif
+#  endif
 
   profilingStack_->pushJsFrame("", dynamicString, script, script->code());
   return true;
@@ -230,7 +234,7 @@ bool GeckoProfilerThread::enter(JSContext* cx, JSScript* script) {
 void GeckoProfilerThread::exit(JSContext* cx, JSScript* script) {
   profilingStack_->pop();
 
-#ifdef DEBUG
+#  ifdef DEBUG
   /* Sanity check to make sure push/pop balanced */
   uint32_t sp = profilingStack_->stackPointer;
   if (sp < profilingStack_->stackCapacity()) {
@@ -260,7 +264,7 @@ void GeckoProfilerThread::exit(JSContext* cx, JSScript* script) {
     MOZ_ASSERT(frame.script() == script);
     MOZ_ASSERT(strcmp((const char*)frame.dynamicString(), dynamicString) == 0);
   }
-#endif
+#  endif
 }
 
 /*
@@ -379,7 +383,7 @@ void GeckoProfilerRuntime::fixupStringsMapAfterMovingGC() {
   }
 }
 
-#ifdef JSGC_HASH_TABLE_CHECKS
+#  ifdef JSGC_HASH_TABLE_CHECKS
 void GeckoProfilerRuntime::checkStringsMapAfterMovingGC() {
   for (auto r = strings().all(); !r.empty(); r.popFront()) {
     JSScript* script = r.front().key();
@@ -388,7 +392,7 @@ void GeckoProfilerRuntime::checkStringsMapAfterMovingGC() {
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
   }
 }
-#endif
+#  endif
 
 void ProfilingStackFrame::trace(JSTracer* trc) {
   if (isJsFrame()) {
@@ -571,3 +575,5 @@ JS_FRIEND_API const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
 }
 
 }  // namespace JS
+
+#endif  // MOZ_BASE_PROFILER

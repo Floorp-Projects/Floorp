@@ -16,8 +16,26 @@
 #ifndef GeckoProfiler_h
 #define GeckoProfiler_h
 
-// everything in here is also safe to include unconditionally, and only defines
-// empty macros if MOZ_BASE_PROFILER is unset
+// Everything in here is also safe to include unconditionally, and only defines
+// empty macros if MOZ_GECKO_PROFILER or MOZ_BASE_PROFILER is unset.
+
+// MOZ_BASE_PROFILER is #defined (or not) in this header, so it should be
+// #included wherever Base Profiler may be used.
+
+#ifdef MOZ_GECKO_PROFILER
+// Disable Base Profiler for now; will be enabled on supported platforms in
+// later patches.
+#  if 0
+#    define MOZ_BASE_PROFILER
+#  else
+// Other platforms are currently not supported. But you may uncomment the
+// following line to enable Base Profiler in your build.
+//#  define MOZ_BASE_PROFILER
+#  endif
+#endif  // MOZ_GECKO_PROFILER
+
+// BaseProfilerCounts.h is also safe to include unconditionally, with empty
+// macros if MOZ_BASE_PROFILER is unset.
 #include "mozilla/BaseProfilerCounts.h"
 
 #ifndef MOZ_BASE_PROFILER

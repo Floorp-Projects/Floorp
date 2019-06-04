@@ -7,6 +7,12 @@
 #ifndef js_ProfilingStack_h
 #define js_ProfilingStack_h
 
+#include "BaseProfiler.h"
+
+#ifndef MOZ_BASE_PROFILER
+#  error Do not #include this header when MOZ_BASE_PROFILER is not #defined.
+#endif
+
 #include <algorithm>
 #include <stdint.h>
 

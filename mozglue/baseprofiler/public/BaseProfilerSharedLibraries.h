@@ -7,8 +7,10 @@
 #ifndef BASE_PROFILER_SHARED_LIBRARIES_H_
 #define BASE_PROFILER_SHARED_LIBRARIES_H_
 
+#include "BaseProfiler.h"
+
 #ifndef MOZ_BASE_PROFILER
-#  error This header does not have a useful implementation on your platform!
+#  error Do not #include this header when MOZ_BASE_PROFILER is not #defined.
 #endif
 
 #include "nsNativeCharsetUtils.h"

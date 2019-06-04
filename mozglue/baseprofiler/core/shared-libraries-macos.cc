@@ -3,42 +3,46 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BaseProfilerSharedLibraries.h"
+#include "BaseProfiler.h"
 
-#include "ClearOnShutdown.h"
-#include "mozilla/StaticMutex.h"
-#include "mozilla/Unused.h"
-#include "nsNativeCharsetUtils.h"
-#include <AvailabilityMacros.h>
+#ifdef MOZ_BASE_PROFILER
 
-#include <dlfcn.h>
-#include <mach-o/arch.h>
-#include <mach-o/dyld_images.h>
-#include <mach-o/dyld.h>
-#include <mach-o/loader.h>
-#include <mach/mach_init.h>
-#include <mach/mach_traps.h>
-#include <mach/task_info.h>
-#include <mach/task.h>
-#include <sstream>
-#include <stdlib.h>
-#include <string.h>
-#include <vector>
+#  include "BaseProfilerSharedLibraries.h"
+
+#  include "ClearOnShutdown.h"
+#  include "mozilla/StaticMutex.h"
+#  include "mozilla/Unused.h"
+#  include "nsNativeCharsetUtils.h"
+#  include <AvailabilityMacros.h>
+
+#  include <dlfcn.h>
+#  include <mach-o/arch.h>
+#  include <mach-o/dyld_images.h>
+#  include <mach-o/dyld.h>
+#  include <mach-o/loader.h>
+#  include <mach/mach_init.h>
+#  include <mach/mach_traps.h>
+#  include <mach/task_info.h>
+#  include <mach/task.h>
+#  include <sstream>
+#  include <stdlib.h>
+#  include <string.h>
+#  include <vector>
 
 // Architecture specific abstraction.
-#if defined(GP_ARCH_x86)
+#  if defined(GP_ARCH_x86)
 typedef mach_header platform_mach_header;
 typedef segment_command mach_segment_command_type;
-#  define MACHO_MAGIC_NUMBER MH_MAGIC
-#  define CMD_SEGMENT LC_SEGMENT
-#  define seg_size uint32_t
-#else
+#    define MACHO_MAGIC_NUMBER MH_MAGIC
+#    define CMD_SEGMENT LC_SEGMENT
+#    define seg_size uint32_t
+#  else
 typedef mach_header_64 platform_mach_header;
 typedef segment_command_64 mach_segment_command_type;
-#  define MACHO_MAGIC_NUMBER MH_MAGIC_64
-#  define CMD_SEGMENT LC_SEGMENT_64
-#  define seg_size uint64_t
-#endif
+#    define MACHO_MAGIC_NUMBER MH_MAGIC_64
+#    define CMD_SEGMENT LC_SEGMENT_64
+#    define seg_size uint64_t
+#  endif
 
 struct NativeSharedLibrary {
   const platform_mach_header* header;
@@ -183,3 +187,5 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 
   return sharedLibraryInfo;
 }
+
+#endif  // MOZ_BASE_PROFILER

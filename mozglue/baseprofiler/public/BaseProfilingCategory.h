@@ -7,6 +7,12 @@
 #ifndef js_ProfilingCategory_h
 #define js_ProfilingCategory_h
 
+#include "BaseProfiler.h"
+
+#ifndef MOZ_BASE_PROFILER
+#  error Do not #include this header when MOZ_BASE_PROFILER is not #defined.
+#endif
+
 #include "jstypes.h"  // JS_FRIEND_API
 
 // clang-format off

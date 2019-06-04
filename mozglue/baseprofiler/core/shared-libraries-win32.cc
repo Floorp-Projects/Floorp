@@ -3,20 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <windows.h>
-#include <dbghelp.h>
-#include <sstream>
-#include <psapi.h>
+#include "BaseProfiler.h"
 
-#include "BaseProfilerSharedLibraries.h"
-#include "nsWindowsHelpers.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
-#include "nsNativeCharsetUtils.h"
-#include "nsPrintfCString.h"
-#include "nsReadableUtils.h"
+#ifdef MOZ_BASE_PROFILER
 
-#define CV_SIGNATURE 0x53445352  // 'SDSR'
+#  include <windows.h>
+#  include <dbghelp.h>
+#  include <sstream>
+#  include <psapi.h>
+
+#  include "BaseProfilerSharedLibraries.h"
+#  include "nsWindowsHelpers.h"
+#  include "mozilla/UniquePtr.h"
+#  include "mozilla/Unused.h"
+#  include "nsNativeCharsetUtils.h"
+#  include "nsPrintfCString.h"
+#  include "nsReadableUtils.h"
+
+#  define CV_SIGNATURE 0x53445352  // 'SDSR'
 
 struct CodeViewRecord70 {
   uint32_t signature;
@@ -207,3 +211,5 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 
 void SharedLibraryInfo::Initialize() { /* do nothing */
 }
+
+#endif  // MOZ_BASE_PROFILER

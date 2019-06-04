@@ -41,23 +41,27 @@
 //   src/common/dwarf/dwarf2reader.cc
 //   src/common/dwarf_cfi_to_module.cc
 
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include "BaseProfiler.h"
 
-#include <map>
-#include <stack>
-#include <string>
+#ifdef MOZ_BASE_PROFILER
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Sprintf.h"
+#  include <stdint.h>
+#  include <stdio.h>
+#  include <string.h>
+#  include <stdlib.h>
 
-#include "LulCommonExt.h"
-#include "LulDwarfInt.h"
+#  include <map>
+#  include <stack>
+#  include <string>
+
+#  include "mozilla/Assertions.h"
+#  include "mozilla/Sprintf.h"
+
+#  include "LulCommonExt.h"
+#  include "LulDwarfInt.h"
 
 // Set this to 1 for verbose logging
-#define DEBUG_DWARF 0
+#  define DEBUG_DWARF 0
 
 namespace lul {
 
@@ -2250,3 +2254,5 @@ void DwarfCFIToModule::Reporter::ExpressionCouldNotBeSummarised(
 }
 
 }  // namespace lul
+
+#endif  // MOZ_BASE_PROFILER

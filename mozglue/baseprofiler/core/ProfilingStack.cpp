@@ -4,13 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/ProfilingStack.h"
+#include "BaseProfiler.h"
 
-#include "mozilla/IntegerRange.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/UniquePtrExtensions.h"
+#ifdef MOZ_BASE_PROFILER
 
-#include <algorithm>
+#  include "js/ProfilingStack.h"
+
+#  include "mozilla/IntegerRange.h"
+#  include "mozilla/UniquePtr.h"
+#  include "mozilla/UniquePtrExtensions.h"
+
+#  include <algorithm>
 
 using namespace js;
 
@@ -44,3 +48,5 @@ void ProfilingStack::ensureCapacitySlow() {
   capacity = newCapacity;
   delete[] oldFrames;
 }
+
+#endif  // MOZ_BASE_PROFILER

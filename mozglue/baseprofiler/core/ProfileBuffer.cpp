@@ -4,14 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ProfileBuffer.h"
+#include "BaseProfiler.h"
 
-#include "ProfilerMarker.h"
+#ifdef MOZ_BASE_PROFILER
 
-#include "jsfriendapi.h"
-#include "mozilla/MathAlgorithms.h"
-#include "nsJSPrincipals.h"
-#include "nsScriptSecurityManager.h"
+#  include "ProfileBuffer.h"
+
+#  include "ProfilerMarker.h"
+
+#  include "jsfriendapi.h"
+#  include "mozilla/MathAlgorithms.h"
+#  include "nsJSPrincipals.h"
+#  include "nsScriptSecurityManager.h"
 
 using namespace mozilla;
 
@@ -188,3 +192,5 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
   mBuf.CollectCodeLocation(label, dynamicString, aFrame.flags(), line, column,
                            Some(aFrame.categoryPair()));
 }
+
+#endif  // MOZ_BASE_PROFILER

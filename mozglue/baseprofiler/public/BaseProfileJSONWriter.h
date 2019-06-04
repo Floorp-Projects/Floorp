@@ -6,6 +6,12 @@
 #ifndef PROFILEJSONWRITER_H
 #define PROFILEJSONWRITER_H
 
+#include "BaseProfiler.h"
+
+#ifndef MOZ_BASE_PROFILER
+#  error Do not #include this header when MOZ_BASE_PROFILER is not #defined.
+#endif
+
 #include "mozilla/JSONWriter.h"
 #include "mozilla/UniquePtr.h"
 

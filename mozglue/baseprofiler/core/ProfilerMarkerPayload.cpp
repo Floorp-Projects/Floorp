@@ -3,20 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BaseProfilerMarkerPayload.h"
-
 #include "BaseProfiler.h"
-#include "ProfileBufferEntry.h"
-#include "BaseProfileJSONWriter.h"
-#include "ProfilerBacktrace.h"
 
-#include "gfxASurface.h"
-#include "Layers.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/net/HttpBaseChannel.h"
-#include "mozilla/Sprintf.h"
+#ifdef MOZ_BASE_PROFILER
 
-#include <inttypes.h>
+#  include "BaseProfilerMarkerPayload.h"
+
+#  include "ProfileBufferEntry.h"
+#  include "BaseProfileJSONWriter.h"
+#  include "ProfilerBacktrace.h"
+
+#  include "gfxASurface.h"
+#  include "Layers.h"
+#  include "mozilla/Maybe.h"
+#  include "mozilla/net/HttpBaseChannel.h"
+#  include "mozilla/Sprintf.h"
+
+#  include <inttypes.h>
 
 using namespace mozilla;
 
@@ -296,3 +299,5 @@ void LongTaskMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                     aUniqueStacks);
   aWriter.StringProperty("category", "LongTask");
 }
+
+#endif  // MOZ_BASE_PROFILER
