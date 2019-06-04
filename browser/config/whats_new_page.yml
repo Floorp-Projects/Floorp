@@ -161,7 +161,7 @@
       update-channel: beta
       # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
       # This is done by taskgraph.
-      build-ids: ["<{build-id}"]
+      build-ids: ["<20190603181408"]
       locales:
           - de
           - en-CA
@@ -178,7 +178,7 @@
       update-channel: aurora
       # e.g.: ["<61.0"]. {version.major_number} reflects the current version.
       # This is done by taskgraph.
-      build-ids: ["<{build-id}"]
+      build-ids: ["<20190603181408"]
       locales:
           - de
           - en-CA
