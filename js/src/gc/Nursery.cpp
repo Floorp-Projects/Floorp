@@ -782,7 +782,8 @@ static inline bool IsFullStoreBufferReason(JS::GCReason reason) {
   return reason == JS::GCReason::FULL_WHOLE_CELL_BUFFER ||
          reason == JS::GCReason::FULL_GENERIC_BUFFER ||
          reason == JS::GCReason::FULL_VALUE_BUFFER ||
-         reason == JS::GCReason::FULL_CELL_PTR_BUFFER ||
+         reason == JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER ||
+         reason == JS::GCReason::FULL_CELL_PTR_STR_BUFFER ||
          reason == JS::GCReason::FULL_SLOT_BUFFER ||
          reason == JS::GCReason::FULL_SHAPE_BUFFER;
 }
