@@ -44,6 +44,12 @@ const char* FeatureStatusToString(FeatureStatus aStatus) {
       return "blocked-no-gfx-info";
     case FeatureStatus::BlockedOverride:
       return "blocked-override";
+    case FeatureStatus::BlockedReleaseChannelIntel:
+      return "blocked-release-channel-intel";
+    case FeatureStatus::BlockedReleaseChannelAMD:
+      return "blocked-release-channel-amd";
+    case FeatureStatus::BlockedReleaseChannelBattery:
+      return "blocked-release-channel-battery";
     case FeatureStatus::Blacklisted:
       return "blacklisted";
     case FeatureStatus::OptIn:

@@ -139,9 +139,27 @@ def log_crashes(logger,
 # determining the appropriate frame for the crash signature.
 ABORT_SIGNATURES = (
     "Abort(char const*)",
+    "GeckoCrash",
     "NS_DebugBreak",
+    # This signature is part of Rust panic stacks on some platforms. On
+    # others, it includes a template parameter containing "core::panic::" and
+    # is automatically filtered out by that pattern.
+    "core::ops::function::Fn::call",
+    "gkrust_shared::panic_hook",
+    "intentional_panic",
     "mozalloc_abort",
     "static void Abort(const char *)",
+)
+
+# Similar to above, but matches if the substring appears anywhere in the
+# frame's signature.
+ABORT_SUBSTRINGS = (
+    # On some platforms, Rust panic frames unfortunately appear without the
+    # std::panicking or core::panic namespaces.
+    "_panic_",
+    "core::panic::",
+    "core::result::unwrap_failed",
+    "std::panicking::",
 )
 
 
@@ -296,7 +314,9 @@ class CrashInfo(object):
                                 func = match.group(1).strip()
                                 signature = "@ %s" % func
 
-                                if func not in ABORT_SIGNATURES:
+                                if not (func in ABORT_SIGNATURES or
+                                        any(pat in func
+                                            for pat in ABORT_SUBSTRINGS)):
                                     break
                         break
             else:
