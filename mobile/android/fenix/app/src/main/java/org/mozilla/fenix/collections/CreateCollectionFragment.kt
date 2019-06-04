@@ -191,16 +191,24 @@ class CreateCollectionFragment : DialogFragment(), CoroutineScope {
     private fun handleBackPress(backPressFrom: SaveCollectionStep) {
         when (backPressFrom) {
             SaveCollectionStep.SelectTabs -> dismiss()
-            SaveCollectionStep.SelectCollection -> getManagedEmitter<CollectionCreationChange>().onNext(
-                CollectionCreationChange.StepChanged(SaveCollectionStep.SelectTabs)
-            )
-            SaveCollectionStep.NameCollection -> {
-                getManagedEmitter<CollectionCreationChange>()
-                    .onNext(
-                        CollectionCreationChange.StepChanged(
-                            viewModel.tabCollections.getStepForCollectionsSize()
-                        )
+            SaveCollectionStep.SelectCollection -> {
+                if (viewModel.tabs.size <= 1) dismiss() else {
+                    getManagedEmitter<CollectionCreationChange>().onNext(
+                        CollectionCreationChange.StepChanged(SaveCollectionStep.SelectTabs)
                     )
+                }
+            }
+            SaveCollectionStep.NameCollection -> {
+                if (viewModel.tabCollections.isEmpty() && viewModel.tabs.size == 1) {
+                    dismiss()
+                } else {
+                    getManagedEmitter<CollectionCreationChange>()
+                        .onNext(
+                            CollectionCreationChange.StepChanged(
+                                viewModel.tabCollections.getBackStepForCollectionsSize()
+                            )
+                        )
+                }
             }
             SaveCollectionStep.RenameCollection -> {
                 dismiss()

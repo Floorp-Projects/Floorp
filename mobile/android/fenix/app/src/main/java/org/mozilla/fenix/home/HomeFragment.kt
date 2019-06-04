@@ -414,7 +414,8 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
             }
             is CollectionAction.AddTab -> {
                 showCollectionCreationFragment(
-                    selectedTabCollection = action.collection
+                    selectedTabCollection = action.collection,
+                    step = SaveCollectionStep.SelectTabs
                 )
             }
             is CollectionAction.Rename -> {
@@ -611,7 +612,7 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
     private fun showCollectionCreationFragment(
         selectedTabId: String? = null,
         selectedTabCollection: TabCollection? = null,
-        step: SaveCollectionStep = SaveCollectionStep.SelectTabs
+        step: SaveCollectionStep? = null
     ) {
         if (findNavController(this).currentDestination?.id == R.id.createCollectionFragment) return
 
@@ -625,9 +626,10 @@ class HomeFragment : Fragment(), CoroutineScope, AccountObserver {
         val selectedTabs = tabs.find { tab -> tab.sessionId == selectedTabId }
         val selectedSet = if (selectedTabs == null) mutableSetOf() else mutableSetOf(selectedTabs)
         viewModel?.selectedTabs = selectedSet
-        viewModel?.saveCollectionStep = step
         viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
         viewModel?.selectedTabCollection = selectedTabCollection
+        viewModel?.saveCollectionStep =
+            step ?: viewModel?.getStepForTabsAndCollectionSize() ?: SaveCollectionStep.SelectTabs
 
         view?.let {
             val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
