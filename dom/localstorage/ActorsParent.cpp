@@ -7081,7 +7081,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   }
 
   if (hasDataForMigration) {
-    MOZ_DIAGNOSTIC_ASSERT(mUsage == 0);
+    MOZ_ASSERT(mUsage == 0);
 
     rv = AttachArchiveDatabase(quotaManager->GetStoragePath(), connection);
     if (NS_WARN_IF(NS_FAILED(rv))) {
