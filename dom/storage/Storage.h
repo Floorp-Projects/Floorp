@@ -110,6 +110,11 @@ class Storage : public nsISupports, public nsWrapperCache {
   virtual void EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
                                    ErrorResult& aRv) {}
 
+  virtual bool GetHasActiveSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                    ErrorResult& aRv) {
+    return false;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
 
   // Dispatch storage notification events on all impacted pages in the current

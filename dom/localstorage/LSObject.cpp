@@ -766,6 +766,24 @@ void LSObject::EndExplicitSnapshot(nsIPrincipal& aSubjectPrincipal,
   }
 }
 
+bool LSObject::GetHasActiveSnapshot(nsIPrincipal& aSubjectPrincipal,
+                                    ErrorResult& aError) {
+  AssertIsOnOwningThread();
+
+  if (!CanUseStorage(aSubjectPrincipal)) {
+    aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return 0;
+  }
+
+  if (mDatabase && mDatabase->HasActiveSnapshot()) {
+    MOZ_ASSERT(!mDatabase->IsAllowedToClose());
+
+    return true;
+  }
+
+  return false;
+}
+
 NS_IMPL_ADDREF_INHERITED(LSObject, Storage)
 NS_IMPL_RELEASE_INHERITED(LSObject, Storage)
 

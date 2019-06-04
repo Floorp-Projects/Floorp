@@ -70,4 +70,11 @@ partial interface Storage {
    */
   [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
   void endExplicitSnapshot();
+
+  /**
+   * Returns true if the underlying database has been opened and it has an
+   * active snapshot (initialized implicitly or explicitly).
+   */
+  [Throws, NeedsSubjectPrincipal, Pref="dom.storage.testing"]
+  readonly attribute boolean hasActiveSnapshot;
 };
