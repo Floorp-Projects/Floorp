@@ -32,7 +32,6 @@ function TextEditor(container, node, type) {
   this.showTextEditor = this.showTextEditor.bind(this);
 
   this.buildMarkup(type);
-  this.update();
 }
 
 TextEditor.prototype = {
@@ -42,11 +41,13 @@ TextEditor.prototype = {
     this.elt = doc.createElement("span");
     this.elt.classList.add("editor", type);
 
-    this.textNode = this.ReactDOM.render(TextNode({
-      showTextEditor: this.showTextEditor,
-      type,
-      value: "",
-    }), this.elt);
+    getLongString(this.node.getNodeValue()).then(value => {
+      this.textNode = this.ReactDOM.render(TextNode({
+        showTextEditor: this.showTextEditor,
+        type,
+        value,
+      }), this.elt);
+    });
   },
 
   get ReactDOM() {
