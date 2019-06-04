@@ -367,14 +367,8 @@ function timeSinceCheckpoint(id) {
 // The checkpoint up to which the recording runs.
 let gLastFlushCheckpoint = InvalidCheckpointId;
 
-// The last saved checkpoint.
-let gLastSavedCheckpoint = FirstCheckpointId;
-
 // How often we want to flush the recording.
 const FlushMs = 0.5 * 1000;
-
-// How often we want to save a checkpoint.
-const SavedCheckpointMs = 0.25 * 1000;
 
 function addSavedCheckpoint(checkpoint) {
   if (getCheckpointInfo(checkpoint).owner) {
@@ -384,25 +378,14 @@ function addSavedCheckpoint(checkpoint) {
   const owner = pickReplayingChild();
   getCheckpointInfo(checkpoint).owner = owner;
   owner.addSavedCheckpoint(checkpoint);
-  gLastSavedCheckpoint = checkpoint;
 }
 
 function addCheckpoint(checkpoint, duration) {
   assert(!getCheckpointInfo(checkpoint).duration);
   getCheckpointInfo(checkpoint).duration = duration;
-
-  // Mark saved checkpoints as required, unless we haven't spawned any replaying
-  // children yet.
-  if (
-    timeSinceCheckpoint(gLastSavedCheckpoint) >= SavedCheckpointMs &&
-    gReplayingChildren.length > 0
-  ) {
-    addSavedCheckpoint(checkpoint + 1);
-  }
 }
 
 function ownerChild(checkpoint) {
-  assert(checkpoint <= gLastSavedCheckpoint);
   while (!getCheckpointInfo(checkpoint).owner) {
     checkpoint--;
   }
@@ -1006,8 +989,8 @@ function handleResumeManifestResponse({
     consoleMessages.forEach(msg => gDebugger.onConsoleMessage(msg));
   }
 
-  if (gDebugger && gDebugger.onNewScript) {
-    scripts.forEach(script => gDebugger.onNewScript(script));
+  if (gDebugger) {
+    scripts.forEach(script => gDebugger._onNewScript(script));
   }
 }
 
@@ -1071,8 +1054,8 @@ function ensureFlushed() {
     spawnReplayingChildren();
   }
 
-  // Checkpoints where the recording was flushed to disk are always saved.
-  // This allows the recording to be scanned as soon as it has been flushed.
+  // Checkpoints where the recording was flushed to disk are saved. This allows
+  // the recording to be scanned as soon as it has been flushed.
   addSavedCheckpoint(gLastFlushCheckpoint);
 
   // Flushing creates a new region of the recording for replaying children
