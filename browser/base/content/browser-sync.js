@@ -16,6 +16,8 @@ ChromeUtils.defineModuleGetter(this, "Weave",
 
 const MIN_STATUS_ANIMATION_DURATION = 1600;
 
+const FXA_NO_AVATAR_ZEROS = "00000000000000000000000000000000";
+
 var gSync = {
   _initialized: false,
   // The last sync start time. Used to calculate the leftover animation time
@@ -325,7 +327,11 @@ var gSync = {
       stateValue = "unverified";
     } else if (state.status === UIState.STATUS_SIGNED_IN) {
       stateValue = "signedin";
-      if (state.avatarURL && !state.avatarIsDefault) {
+      // Firefox Account specifies a `default` avatar image that uses the convention
+      // of all 0s in url. The default used in the design of the toolbar menu is
+      // different from the one provided by Firefox Account. Perform a check and only
+      // change avatar *if* this is not a default avatar.
+      if (state.avatarURL && !state.avatarURL.includes(FXA_NO_AVATAR_ZEROS)) {
         // The user has specified a custom avatar, attempt to load the image on all the menu buttons.
         const bgImage = `url("${state.avatarURL}")`;
         let img = new Image();
@@ -367,7 +373,7 @@ var gSync = {
   emitFxaToolbarTelemetry(type, panel) {
     if (UIState.isReady() && panel) {
       const state = UIState.get();
-      const hasAvatar = state.avatarURL && !state.avatarIsDefault;
+      const hasAvatar = state.avatarURL && !state.avatarURL.includes(FXA_NO_AVATAR_ZEROS);
       let extraOptions = {"fxa_status": state.status, "fxa_avatar": hasAvatar ? "true" : "false"};
 
       // When the fxa avatar panel is within the Firefox app menu,
@@ -424,6 +430,21 @@ var gSync = {
     this.appMenuLabel.setAttribute("label", state.displayName || state.email);
     this.appMenuLabel.classList.add("subviewbutton-nav");
     this.appMenuStatus.removeAttribute("tooltiptext");
+
+    if (state.avatarURL) {
+      let bgImage = "url(\"" + state.avatarURL + "\")";
+      this.appMenuAvatar.style.listStyleImage = bgImage;
+
+      let img = new Image();
+      img.onerror = () => {
+        // Clear the image if it has trouble loading. Since this callback is asynchronous
+        // we check to make sure the image is still the same before we clear it.
+        if (this.appMenuAvatar.style.listStyleImage === bgImage) {
+          this.appMenuAvatar.style.removeProperty("list-style-image");
+        }
+      };
+      img.src = state.avatarURL;
+    }
   },
 
   updateState(state) {
