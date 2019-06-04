@@ -2550,11 +2550,11 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   *aCachesOK = (NS_FAILED(rv) || !buf.EqualsLiteral("1"));
 
   bool purgeCaches = false;
-  if (aFlagFile) {
-    aFlagFile->Exists(&purgeCaches);
+  if (aFlagFile && NS_SUCCEEDED(aFlagFile->Exists(&purgeCaches)) &&
+      purgeCaches) {
+    *aCachesOK = false;
   }
 
-  *aCachesOK = !purgeCaches && *aCachesOK;
   return true;
 }
 
@@ -4179,6 +4179,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       mProfD, version, osABI, mDirProvider.GetGREDir(), mAppData->directory,
       flagFile, &cachesOK, &isDowngrade, lastVersion);
 
+  MOZ_RELEASE_ASSERT(!cachesOK || versionOK,
+               "Caches cannot be good if the version has changed.");
+
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
   // The argument check must come first so the argument is always removed from
   // the command line regardless of whether this is a downgrade or not.
@@ -4220,7 +4223,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   bool lastStartupWasCrash = CheckLastStartupWasCrash().unwrapOr(false);
 
   if (CheckArg("purgecaches") || PR_GetEnv("MOZ_PURGE_CACHES") ||
-      lastStartupWasCrash) {
+      lastStartupWasCrash || gSafeMode) {
     cachesOK = false;
   }
 
@@ -4232,32 +4235,15 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   // re-generated to prevent mysterious component loading failures.
   //
   bool startupCacheValid = true;
-  if (gSafeMode) {
+
+  if (!cachesOK || !versionOK) {
     startupCacheValid = RemoveComponentRegistries(mProfD, mProfLD, false);
-    WriteVersion(mProfD, NS_LITERAL_CSTRING("Safe Mode"), osABI,
-                 mDirProvider.GetGREDir(), mAppData->directory,
-                 !startupCacheValid);
-  } else if (versionOK) {
-    if (!cachesOK) {
-      // Remove caches, forcing component re-registration.
-      // The new list of additional components directories is derived from
-      // information in "extensions.ini".
-      startupCacheValid = RemoveComponentRegistries(mProfD, mProfLD, false);
 
-      // Rewrite compatibility.ini to remove the flag
-      WriteVersion(mProfD, version, osABI, mDirProvider.GetGREDir(),
-                   mAppData->directory, !startupCacheValid);
-    }
-    // Nothing need be done for the normal startup case.
-  } else {
-    // Remove caches, forcing component re-registration
-    // with the default set of components (this disables any potentially
-    // troublesome incompatible XPCOM components).
-    startupCacheValid = RemoveComponentRegistries(mProfD, mProfLD, true);
-
-    // Write out version
+    // Rewrite compatibility.ini to match the current build. The next run
+    // should attempt to invalidate the caches if either this run is safe mode
+    // or the attempt to invalidate the caches this time failed.
     WriteVersion(mProfD, version, osABI, mDirProvider.GetGREDir(),
-                 mAppData->directory, !startupCacheValid);
+                 mAppData->directory, gSafeMode || !startupCacheValid);
   }
 
   if (!startupCacheValid) StartupCache::IgnoreDiskCache();
