@@ -479,7 +479,7 @@ nsSize nsGrid::GetMinRowSize(nsBoxLayoutState& aState, int32_t aRowIndex,
 
 nsSize nsGrid::GetMaxRowSize(nsBoxLayoutState& aState, int32_t aRowIndex,
                              bool aIsHorizontal) {
-  nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  nsSize size(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   if (!(aRowIndex >= 0 && aRowIndex < GetRowCount(aIsHorizontal))) return size;
 
   nscoord height = GetMaxRowHeight(aState, aRowIndex, aIsHorizontal);
@@ -880,7 +880,7 @@ nscoord nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, int32_t aIndex,
   // is the row bogus? If so then just ask it for its size
   // it should not be affected by cells in the grid.
   if (row->mIsBogus) {
-    nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+    nsSize size(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
     if (box) {
       size = box->GetXULPrefSize(aState);
       nsBox::AddMargin(box, size);
@@ -891,7 +891,7 @@ nscoord nsGrid::GetMaxRowHeight(nsBoxLayoutState& aState, int32_t aIndex,
     return row->mMax;
   }
 
-  nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  nsSize size(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   nsGridCell* child;
 

@@ -2098,7 +2098,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
 bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
   AssertFlushedPendingReflows();
 
-  nscoord blockHeight = NS_AUTOHEIGHT;
+  nscoord blockHeight = NS_UNCONSTRAINEDSIZE;
   if (StyleText()->mLineHeight.IsMozBlockHeight()) {
     if (!mInnerFrame) return false;
 

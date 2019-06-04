@@ -1593,7 +1593,7 @@ nsSize nsXULScrollFrame::GetXULMinSize(nsBoxLayoutState& aState) {
 }
 
 nsSize nsXULScrollFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
-  nsSize maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
+  nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   AddBorderAndPadding(maxSize);
   bool widthSet, heightSet;
@@ -5233,7 +5233,7 @@ bool nsXULScrollFrame::AddRemoveScrollbar(bool& aHasScrollbar, nscoord& aXY,
   nscoord size = aSize;
   nscoord xy = aXY;
 
-  if (size != NS_INTRINSICSIZE) {
+  if (size != NS_UNCONSTRAINEDSIZE) {
     if (aAdd) {
       size -= aSbSize;
       if (!aOnRightOrBottom && size >= 0) xy += aSbSize;
