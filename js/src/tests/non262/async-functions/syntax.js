@@ -19,30 +19,30 @@ if (typeof Reflect !== "undefined" && Reflect.parse) {
 
     // `await` handling for function declaration name inherits.
     assertEq(Reflect.parse("async function await() {}").body[0].id.name, "await");
-    assertThrows(() => Reflect.parse("async function f() { async function await() {} }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function f() { async function await() {} }"), SyntaxError);
 
     // `await` is not allowed in function expression name.
-    assertThrows(() => Reflect.parse("(async function await() {})"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("(async function await() {})"), SyntaxError);
 
     // Awaiting not directly inside an async function is not allowed
-    assertThrows(() => Reflect.parse("await 4;"), SyntaxError);
-    assertThrows(() => Reflect.parse("function a() { await 4; }"), SyntaxError);
-    assertThrows(() => Reflect.parse("function* a() { await 4; }"), SyntaxError);
-    assertThrows(() => Reflect.parse("async function k() { function a() { await 4; } }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("await 4;"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("function a() { await 4; }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("function* a() { await 4; }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function k() { function a() { await 4; } }"), SyntaxError);
 
     // Await is not allowed as a default expr.
-    assertThrows(() => Reflect.parse("async function a(k = await 3) {}"), SyntaxError);
-    assertThrows(() => Reflect.parse("async function a() { async function b(k = await 3) {} }"), SyntaxError);
-    assertThrows(() => Reflect.parse("async function a() { async function b(k = [await 3]) {} }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a(k = await 3) {}"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a() { async function b(k = await 3) {} }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a() { async function b(k = [await 3]) {} }"), SyntaxError);
 
-    assertThrows(() => Reflect.parse("async function a() { async function b([k = await 3]) {} }"), SyntaxError);
-    assertThrows(() => Reflect.parse("async function a() { async function b([k = [await 3]]) {} }"), SyntaxError);
-    assertThrows(() => Reflect.parse("async function a() { async function b({k = await 3}) {} }"), SyntaxError);
-    assertThrows(() => Reflect.parse("async function a() { async function b({k = [await 3]}) {} }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a() { async function b([k = await 3]) {} }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a() { async function b([k = [await 3]]) {} }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a() { async function b({k = await 3}) {} }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a() { async function b({k = [await 3]}) {} }"), SyntaxError);
 
     // Await is not legal as an identifier in an async function.
-    assertThrows(() => Reflect.parse("async function a() { var await = 4; }"), SyntaxError);
-    assertThrows(() => Reflect.parse("async function a() { return await; }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a() { var await = 4; }"), SyntaxError);
+    assertThrowsInstanceOf(() => Reflect.parse("async function a() { return await; }"), SyntaxError);
 
     // Await is still available as an identifier name in strict mode code.
     Reflect.parse("function a() { 'use strict'; var await = 3; }");
