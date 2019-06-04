@@ -1,0 +1,99 @@
+<!doctype html>
+<title>Cross-Origin header and nested navigable resource without such header</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div id=log></div>
+<script>
+async_test(t => {
+  const frame = document.createElement("iframe");
+  t.step_timeout(() => {
+    // Make sure the iframe didn't load.
+    assert_equals(frame.contentDocument, null);
+    t.done();
+  }, 500);
+  frame.src = "/common/blank.html";
+  document.body.append(frame);
+  assert_equals(frame.contentDocument.body.localName, "body");
+}, "Top-level with anonymous policy: navigating a frame to a null policy should fail.");
+
+async_test(t => {
+  const frame = document.createElement("iframe");
+
+  const CHANNEL_NAME = "frame-anon-to-blank";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  bc.onmessage = t.step_func((event) => {
+    assert_not_equals(frame.contentDocument, null);
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+    t.step_timeout(() => {
+      assert_equals(frame.contentDocument, null, "Navigation to null policy should fail");
+      t.done();
+    }, 1500);
+  });
+
+  frame.src = `resources/navigate_anonymous.sub.html?channelName=${CHANNEL_NAME}&to=/common/blank.html`;
+  document.body.append(frame);
+  assert_equals(frame.contentDocument.body.localName, "body");
+}, "Top-level with anonymous policy: navigating a frame from an anonymous policy to a null policy should fail.");
+
+
+async_test(t => {
+  const frame = document.createElement("iframe");
+
+  const CHANNEL_NAME = "frame-usecredentials-to-blank";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  bc.onmessage = t.step_func((event) => {
+    assert_not_equals(frame.contentDocument, null);
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+    t.step_timeout(() => {
+      assert_equals(frame.contentDocument, null, "Navigation to null policy should fail");
+      t.done();
+    }, 1500);
+  });
+  frame.src = `resources/navigate_usecredentials.sub.html?channelName=${CHANNEL_NAME}&to=/common/blank.html`;
+  document.body.append(frame);
+  assert_equals(frame.contentDocument.body.localName, "body");
+}, "Top-level with anonymous policy: navigating a frame from a use-credentials policy to a null policy should fail.");
+
+async_test(t => {
+  let pageLoaded = false;
+  const CHANNEL_NAME = "anon-null-window-noopener";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  let finished = false;
+  bc.onmessage = t.step_func((event) => {
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+    pageLoaded = true;
+  });
+
+  const SECOND_CHANNEL = "anon-null-window-noopener-second";
+  let bc2 = new BroadcastChannel(SECOND_CHANNEL);
+  bc2.onmessage = t.step_func_done((event) => {
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+    assert_equals(pageLoaded, true, "Opening a null window (noopener) from anon window should work");
+  });
+
+  let win = window.open(`resources/navigate_null.sub.html?channelName=${CHANNEL_NAME}&to=navigate_null.sub.html?channelName=${SECOND_CHANNEL}`, "_blank", "noopener");
+}, "Top-level with anonymous policy: creating a noopener popup with null policy should work.");
+
+async_test(t => {
+  let pageLoaded = false;
+  const CHANNEL_NAME = "anon-null-window";
+  let bc = new BroadcastChannel(CHANNEL_NAME);
+  bc.onmessage = t.step_func_done((event) => {
+    pageLoaded = true;
+    let payload = event.data;
+    assert_equals(payload, "loaded");
+  });
+
+  let win = window.open(`resources/navigate_null.sub.html?channelName=${CHANNEL_NAME}&to=/common/blank.html`, "_blank");
+  t.add_cleanup(() => win.close());
+  t.step_timeout(() => {
+    assert_equals(pageLoaded, false, "Opening a null window from anon window should fail");
+    t.done();
+  }, 500);
+}, "Top-level with anonymous policy: creating a popup with null policy should fail.");
+
+</script>
