@@ -4260,7 +4260,15 @@ void SourceListener::StopTrack(const RefPtr<SourceListener>& self,
 void SourceListener::GetSettingsFor(
     TrackID aTrackID, dom::MediaTrackSettings& aOutSettings) const {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
-  GetDeviceStateFor(aTrackID).mDevice->GetSettings(aOutSettings);
+  DeviceState& state = GetDeviceStateFor(aTrackID);
+  state.mDevice->GetSettings(aOutSettings);
+
+  MediaSourceEnum mediaSource = state.mDevice->GetMediaSource();
+  if (mediaSource == MediaSourceEnum::Camera ||
+      mediaSource == MediaSourceEnum::Microphone) {
+    aOutSettings.mDeviceId.Construct(state.mDevice->mID);
+    aOutSettings.mGroupId.Construct(state.mDevice->mGroupID);
+  }
 }
 
 void SourceListener::SetEnabledFor(TrackID aTrackID, bool aEnable) {
