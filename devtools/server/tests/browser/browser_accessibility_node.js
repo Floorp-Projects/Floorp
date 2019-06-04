@@ -106,7 +106,7 @@ add_task(async function() {
       "margin-top": "0px",
       "margin-bottom": "0px",
       "margin-right": "0px",
-      "display": "inline",
+      "display": "inline-block",
       "explicit-name": "true",
     }});
 

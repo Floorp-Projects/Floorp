@@ -33,6 +33,7 @@ function testWidthHeight(attr) {
 
   element = document.createElement('input');
   element.type = 'image';
+  element.style.display = "inline";
   document.getElementById('content').appendChild(element);
   isnot(element[attr], 0, attr + ' represents the dimension of the element if type=image');
 

@@ -161,7 +161,7 @@ add_task(async function test_set_login_empty() {
   let savedHostname = gLoginItem.shadowRoot.querySelector(".hostname-saved-value");
   is(getComputedStyle(savedHostname).display, "none", ".hostname-saved-value should be hidden for new logins");
   let hostnameInput = gLoginItem.shadowRoot.querySelector("input[name='hostname']");
-  is(getComputedStyle(hostnameInput).display, "inline", "input[name='hostname'] should be visible for new logins");
+  is(getComputedStyle(hostnameInput).display, "inline-block", "input[name='hostname'] should be visible for new logins");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='username']").value, "", "username should be empty");
   is(gLoginItem.shadowRoot.querySelector("modal-input[name='password']").value, "", "password should be empty");
   is(gLoginItem.shadowRoot.querySelector(".time-created").textContent, "", "time-created should be blank when undefined");
