@@ -435,26 +435,6 @@ of exotic object like an opaque wrapper.
     `Object.isExtensible` function, except that the object inspected is
     implicit and in a different compartment from the caller.)
 
-<code>copy(<i>value</i>)</code>
-:   Apply the HTML5 "structured cloning" algorithm to create a copy of
-    <i>value</i> in the referent's global object (and thus in the referent's
-    compartment), and return a `Debugger.Object` instance referring to the
-    copy.
-
-    Note that this returns primitive values unchanged. This means you can
-    use `Debugger.Object.prototype.copy` as a generic "debugger value to
-    debuggee value" conversion function—within the limitations of the
-    "structured cloning" algorithm.
-
-<code>create(<i>prototype</i>, [<i>properties</i>])</code>
-:   Create a new object in the referent's global (and thus in the
-    referent's compartment), and return a `Debugger.Object` referring to
-    it. The new object's prototype is <i>prototype</i>, which must be an
-    `Debugger.Object` instance. The new object's properties are as given by
-    <i>properties</i>, as if <i>properties</i> were passed to
-    `Debugger.Object.prototype.defineProperties`, with the new
-    `Debugger.Object` instance as the `this` value.
-
 <code>makeDebuggeeValue(<i>value</i>)</code>
 :   Return the debuggee value that represents <i>value</i> in the debuggee.
     If <i>value</i> is a primitive, we return it unchanged; if <i>value</i>
@@ -472,6 +452,13 @@ of exotic object like an opaque wrapper.
     <code><i>d</i>.makeDebuggeeValue(<i>o</i>)</code> returns a
     `Debugger.Object` instance that presents <i>o</i> as it would be seen
     by code in <i>d</i>'s compartment.
+
+<code>makeDebuggeeNativeFunction(<i>value</i>)</code>
+:   If <i>value</i> is a native function in the debugger's compartment, create
+    an equivalent function for the same native in the debuggee's realm, and
+    return a `Debugger.Object` instance for the new function.  The new function
+    can be accessed by code in the debuggee without going through a cross
+    compartment wrapper.
 
 <code>decompile([<i>pretty</i>])</code>
 :   If the referent is a function that is debuggee code, return the

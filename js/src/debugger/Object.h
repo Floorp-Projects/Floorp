@@ -140,6 +140,9 @@ class DebuggerObject : public NativeObject {
                                              HandleDebuggerObject object,
                                              HandleValue value,
                                              MutableHandleValue result);
+  static MOZ_MUST_USE bool makeDebuggeeNativeFunction(
+      JSContext* cx, HandleDebuggerObject object, HandleValue value,
+      MutableHandleValue result);
   static MOZ_MUST_USE bool unsafeDereference(JSContext* cx,
                                              HandleDebuggerObject object,
                                              MutableHandleObject result);
@@ -302,6 +305,9 @@ class DebuggerObject : public NativeObject {
                                                              Value* vp);
   static MOZ_MUST_USE bool makeDebuggeeValueMethod(JSContext* cx, unsigned argc,
                                                    Value* vp);
+  static MOZ_MUST_USE bool makeDebuggeeNativeFunctionMethod(JSContext* cx,
+                                                            unsigned argc,
+                                                            Value* vp);
   static MOZ_MUST_USE bool unsafeDereferenceMethod(JSContext* cx, unsigned argc,
                                                    Value* vp);
   static MOZ_MUST_USE bool unwrapMethod(JSContext* cx, unsigned argc,
