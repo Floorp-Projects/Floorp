@@ -340,10 +340,30 @@ static void MM_CFTypeOutputArg(MiddlemanCallContext& aCx) {
   MM_CFTypeOutput(aCx, arg, /* aOwnsReference = */ false);
 }
 
+static void SendMessageToObject(const void* aObject, const char* aMessage) {
+  CallArguments arguments;
+  arguments.Arg<0, const void*>() = aObject;
+  arguments.Arg<1, SEL>() = sel_registerName(aMessage);
+  RecordReplayInvokeCall(gOriginal_objc_msgSend, &arguments);
+}
+
 // For APIs whose result will be released by the middleman's autorelease pool.
 static void MM_AutoreleaseCFTypeRval(MiddlemanCallContext& aCx) {
   auto& rval = aCx.mArguments->Rval<const void*>();
   MM_SystemOutput(aCx, &rval);
+
+  if (rval) {
+    switch (aCx.mPhase) {
+      case MiddlemanCallPhase::MiddlemanOutput:
+        SendMessageToObject(rval, "retain");
+        break;
+      case MiddlemanCallPhase::MiddlemanRelease:
+        SendMessageToObject(rval, "autorelease");
+        break;
+      default:
+        break;
+    }
+  }
 }
 
 // For functions which have an input CFType value and also have side effects on

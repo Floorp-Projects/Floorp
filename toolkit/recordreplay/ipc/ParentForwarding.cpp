@@ -260,89 +260,83 @@ class MiddlemanProtocol : public ipc::IToplevelProtocol {
     return MsgProcessed;
   }
 
-  static void ForwardMessageSync(MiddlemanProtocol* aProtocol,
-                                 Message* aMessage, Message** aReply) {
-    PrintSpew("ForwardSyncMsg %s\n",
-              IPC::StringFromIPCMessageType(aMessage->type()));
+  Message* mSyncMessage = nullptr;
+  Message* mSyncMessageReply = nullptr;
+  bool mSyncMessageIsCall = false;
 
-    MOZ_RELEASE_ASSERT(!*aReply);
-    Message* nReply = new Message();
-    if (!aProtocol->GetIPCChannel()->Send(aMessage, nReply)) {
-      MOZ_RELEASE_ASSERT(aProtocol->mSide == ipc::ParentSide);
+  void MaybeSendSyncMessage(bool aLockHeld) {
+    Maybe<MonitorAutoLock> lock;
+    if (!aLockHeld) {
+      lock.emplace(*gMonitor);
+    }
+
+    if (!mSyncMessage) {
+      return;
+    }
+
+    PrintSpew("ForwardSyncMsg %s\n",
+              IPC::StringFromIPCMessageType(mSyncMessage->type()));
+
+    MOZ_RELEASE_ASSERT(!mSyncMessageReply);
+    mSyncMessageReply = new Message();
+    if (mSyncMessageIsCall
+        ? !mOpposite->GetIPCChannel()->Call(mSyncMessage, mSyncMessageReply)
+        : !mOpposite->GetIPCChannel()->Send(mSyncMessage, mSyncMessageReply)) {
+      MOZ_RELEASE_ASSERT(mSide == ipc::ChildSide);
       BeginShutdown();
     }
 
-    MonitorAutoLock lock(*gMonitor);
-    *aReply = nReply;
-    gMonitor->Notify();
+    mSyncMessage = nullptr;
+
+    gMonitor->NotifyAll();
+  }
+
+  static void StaticMaybeSendSyncMessage(MiddlemanProtocol* aProtocol) {
+    aProtocol->MaybeSendSyncMessage(false);
+  }
+
+  void HandleSyncMessage(const Message& aMessage, Message*& aReply, bool aCall) {
+    MOZ_RELEASE_ASSERT(mOppositeMessageLoop);
+
+    mSyncMessage = new Message();
+    mSyncMessage->CopyFrom(aMessage);
+    mSyncMessageIsCall = aCall;
+
+    mOppositeMessageLoop->PostTask(
+        NewRunnableFunction("StaticMaybeSendSyncMessage", StaticMaybeSendSyncMessage, this));
+
+    if (mSide == ipc::ChildSide) {
+      AutoMarkMainThreadWaitingForIPDLReply blocked;
+      while (!mSyncMessageReply) {
+        MOZ_CRASH("NYI");
+      }
+    } else {
+      MonitorAutoLock lock(*gMonitor);
+
+      // If the main thread is blocked waiting for the recording child to pause,
+      // wake it up so it can call MaybeHandlePendingSyncMessage().
+      gMonitor->NotifyAll();
+
+      while (!mSyncMessageReply) {
+        gMonitor->Wait();
+      }
+    }
+
+    aReply = mSyncMessageReply;
+    mSyncMessageReply = nullptr;
+
+    PrintSpew("SyncMsgDone\n");
   }
 
   virtual Result OnMessageReceived(const Message& aMessage,
                                    Message*& aReply) override {
-    MOZ_RELEASE_ASSERT(mOppositeMessageLoop);
-
-    Message* nMessage = new Message();
-    nMessage->CopyFrom(aMessage);
-    mOppositeMessageLoop->PostTask(
-        NewRunnableFunction("ForwardMessageSync", ForwardMessageSync, mOpposite,
-                            nMessage, &aReply));
-
-    if (mSide == ipc::ChildSide) {
-      AutoMarkMainThreadWaitingForIPDLReply blocked;
-      while (!aReply) {
-        MOZ_CRASH("NYI");
-      }
-    } else {
-      MonitorAutoLock lock(*gMonitor);
-      while (!aReply) {
-        gMonitor->Wait();
-      }
-    }
-
-    PrintSpew("SyncMsgDone\n");
+    HandleSyncMessage(aMessage, aReply, false);
     return MsgProcessed;
-  }
-
-  static void ForwardCallMessage(MiddlemanProtocol* aProtocol,
-                                 Message* aMessage, Message** aReply) {
-    PrintSpew("ForwardSyncCall %s\n",
-              IPC::StringFromIPCMessageType(aMessage->type()));
-
-    MOZ_RELEASE_ASSERT(!*aReply);
-    Message* nReply = new Message();
-    if (!aProtocol->GetIPCChannel()->Call(aMessage, nReply)) {
-      MOZ_RELEASE_ASSERT(aProtocol->mSide == ipc::ParentSide);
-      BeginShutdown();
-    }
-
-    MonitorAutoLock lock(*gMonitor);
-    *aReply = nReply;
-    gMonitor->Notify();
   }
 
   virtual Result OnCallReceived(const Message& aMessage,
                                 Message*& aReply) override {
-    MOZ_RELEASE_ASSERT(mOppositeMessageLoop);
-
-    Message* nMessage = new Message();
-    nMessage->CopyFrom(aMessage);
-    mOppositeMessageLoop->PostTask(
-        NewRunnableFunction("ForwardCallMessage", ForwardCallMessage, mOpposite,
-                            nMessage, &aReply));
-
-    if (mSide == ipc::ChildSide) {
-      AutoMarkMainThreadWaitingForIPDLReply blocked;
-      while (!aReply) {
-        MOZ_CRASH("NYI");
-      }
-    } else {
-      MonitorAutoLock lock(*gMonitor);
-      while (!aReply) {
-        gMonitor->Wait();
-      }
-    }
-
-    PrintSpew("SyncCallDone\n");
+    HandleSyncMessage(aMessage, aReply, true);
     return MsgProcessed;
   }
 
@@ -356,6 +350,12 @@ class MiddlemanProtocol : public ipc::IToplevelProtocol {
 
 static MiddlemanProtocol* gChildProtocol;
 static MiddlemanProtocol* gParentProtocol;
+
+void MaybeHandlePendingSyncMessage() {
+  if (gParentProtocol) {
+    gParentProtocol->MaybeSendSyncMessage(true);
+  }
+}
 
 ipc::MessageChannel* ChannelToUIProcess() {
   return gChildProtocol->GetIPCChannel();
