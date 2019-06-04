@@ -92,7 +92,7 @@ add_task(async function remove_bookmark() {
   await frecencyChangedPromise;
 });
 
-add_task(async function remove_multiple_bookmarks() {
+add_task(async function remove_multiple_bookmarks_simple() {
   // When removing a bookmark we need to check the frecency. First we confirm
   // that there is a normal update when it is inserted.
   let frecencyChangedPromise = promiseFrecencyChanged("http://example.com/",
@@ -121,6 +121,79 @@ add_task(async function remove_multiple_bookmarks() {
   await PlacesUtils.bookmarks.remove([bm1, bm2]);
 
   await manyFrencenciesPromise;
+});
+
+add_task(async function remove_multiple_bookmarks_complex() {
+  let bms = [];
+  for (let i = 0; i < 10; i++) {
+    bms.push(await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: `http://example.com/${i}`,
+      title: `bookmark ${i}`,
+    }));
+  }
+
+  // Remove bookmarks 2 and 3.
+  let bmsToRemove = bms.slice(2, 4);
+  let notifiedIndexes = [];
+  let notificationPromise = PlacesTestUtils.waitForNotification("onItemRemoved",
+    (itemId, parentId, index, itemType, uri, guid, parentGuid, source) => {
+      notifiedIndexes.push({guid, index});
+      return notifiedIndexes.length == bmsToRemove.length;
+    });
+  await PlacesUtils.bookmarks.remove(bmsToRemove);
+  await notificationPromise;
+
+  let indexModifier = 0;
+  for (let i = 0; i < bmsToRemove.length; i++) {
+    Assert.equal(notifiedIndexes[i].guid, bmsToRemove[i].guid,
+      `Should have been notified of the correct guid for item ${i}`);
+    Assert.equal(notifiedIndexes[i].index, bmsToRemove[i].index - indexModifier,
+      `Should have been notified of the correct index for the item ${i}`);
+    indexModifier++;
+  }
+
+  let expectedIndex = 0;
+  for (let bm of [bms[0], bms[1], ...bms.slice(4)]) {
+    const fetched = await PlacesUtils.bookmarks.fetch(bm.guid);
+    Assert.equal(fetched.index, expectedIndex,
+      "Should have the correct index after consecutive item removal");
+    bm.index = fetched.index;
+    expectedIndex++;
+  }
+
+  // Remove some more including non-consecutive.
+  bmsToRemove = [bms[1], bms[5], bms[6], bms[8]];
+  notifiedIndexes = [];
+  notificationPromise = PlacesTestUtils.waitForNotification("onItemRemoved",
+    (itemId, parentId, index, itemType, uri, guid, parentGuid, source) => {
+      notifiedIndexes.push({guid, index});
+      return notifiedIndexes.length == bmsToRemove.length;
+    });
+  await PlacesUtils.bookmarks.remove(bmsToRemove);
+  await notificationPromise;
+
+  indexModifier = 0;
+  for (let i = 0; i < bmsToRemove.length; i++) {
+    Assert.equal(notifiedIndexes[i].guid, bmsToRemove[i].guid,
+      `Should have been notified of the correct guid for item ${i}`);
+    Assert.equal(notifiedIndexes[i].index, bmsToRemove[i].index - indexModifier,
+      `Should have been notified of the correct index for the item ${i}`);
+    indexModifier++;
+  }
+
+  expectedIndex = 0;
+  const expectedRemaining = [bms[0], bms[4], bms[7], bms[9]];
+  for (let bm of expectedRemaining) {
+    const fetched = await PlacesUtils.bookmarks.fetch(bm.guid);
+    Assert.equal(fetched.index, expectedIndex,
+      "Should have the correct index after non-consecutive item removal");
+    expectedIndex++;
+  }
+
+  // Tidy up
+  await PlacesUtils.bookmarks.remove(expectedRemaining);
+  await PlacesTestUtils.promiseAsyncUpdates();
 });
 
 add_task(async function remove_bookmark_orphans() {

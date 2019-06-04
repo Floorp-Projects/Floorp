@@ -197,6 +197,9 @@ AST_MATCHER(CXXConstructorDecl, isInterestingImplicitCtor) {
       // We don't want copy of move constructors, as those are allowed to be
       // implicit
       !Declaration->isCopyOrMoveConstructor() &&
+      // We don't want inheriting constructors, since using declarations can't
+      // have attributes
+      !Declaration->isInheritingConstructor() &&
       // We don't want deleted constructors.
       !Declaration->isDeleted();
 }

@@ -241,9 +241,6 @@ nsresult NS_NewUnionEnumerator(nsISimpleEnumerator** aResult,
     *aResult = aFirstEnumerator;
   } else {
     auto* enumer = new nsUnionEnumerator(aFirstEnumerator, aSecondEnumerator);
-    if (!enumer) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     *aResult = enumer;
   }
   NS_ADDREF(*aResult);

@@ -7,7 +7,11 @@
 SOURCES += [
     'mozwayland.c',
 ]
+EXPORTS.mozilla.widget += [
+    'mozwayland.h',
+]
 
 SharedLibrary('mozwayland')
 
 CFLAGS += CONFIG['TK_CFLAGS']
+

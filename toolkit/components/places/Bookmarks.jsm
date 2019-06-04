@@ -2142,12 +2142,13 @@ function removeBookmarks(items, options) {
     let urls = [];
 
     await db.executeTransaction(async function transaction() {
-      let parentGuids = new Set();
+      // We use a map for its de-duplication properties.
+      let parents = new Map();
       let syncChangeDelta =
         PlacesSyncUtils.bookmarks.determineSyncChangeDelta(options.source);
 
       for (let item of items) {
-        parentGuids.add(item.parentGuid);
+        parents.set(item.parentGuid, item._parentId);
 
         // If it's a folder, remove its contents first.
         if (item.type == Bookmarks.TYPE_FOLDER) {
@@ -2172,13 +2173,35 @@ function removeBookmarks(items, options) {
         );
       }
 
-      for (let item of items) {
-        // Fix indices in the parent.
+      for (let [parentGuid, parentId] of parents.entries()) {
+        // Now recalculate the positions.
         await db.executeCached(
-          `UPDATE moz_bookmarks SET position = position - 1 WHERE
-           parent = :parentId AND position > :index
-          `, { parentId: item._parentId, index: item.index });
+          `WITH positions(id, pos, seq) AS (
+            SELECT id, position AS pos,
+                   (row_number() OVER (ORDER BY position)) - 1 AS seq
+            FROM moz_bookmarks
+            WHERE parent = :parentId
+          )
+          UPDATE moz_bookmarks
+            SET position = (SELECT seq FROM positions WHERE positions.id = moz_bookmarks.id)
+            WHERE id IN (SELECT id FROM positions WHERE seq <> pos)
+        `, { parentId });
 
+        // Mark this parent as changed.
+        await setAncestorsLastModified(db, parentGuid, new Date(), syncChangeDelta);
+      }
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        // For the notifications, we may need to adjust indexes if there are more
+        // than one of the same item in the folder. This makes sure that we notify
+        // the index of the item when it was removed, rather than the original index.
+        for (let j = i + 1; j < items.length; j++) {
+          if (items[j]._parentId == item._parentId &&
+              items[j].index > item.index) {
+            items[j].index--;
+          }
+        }
         if (item._grandParentId == PlacesUtils.tagsFolderId) {
           // If we're removing a tag entry, increment the change counter for all
           // bookmarks with the tagged URL.
@@ -2187,11 +2210,6 @@ function removeBookmarks(items, options) {
         }
 
         await adjustSeparatorsSyncCounter(db, item._parentId, item.index, syncChangeDelta);
-      }
-
-      for (let guid of parentGuids) {
-        // Mark all affected parents as changed.
-        await setAncestorsLastModified(db, guid, new Date(), syncChangeDelta);
       }
 
       // Write tombstones for the removed items.

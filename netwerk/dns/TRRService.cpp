@@ -252,6 +252,21 @@ nsresult TRRService::ReadPrefs(const char* name) {
       mEarlyAAAA = tmp;
     }
   }
+
+  if (!name || !strcmp(name, TRR_PREF("skip-AAAA-when-not-supported"))) {
+    bool tmp;
+    if (NS_SUCCEEDED(Preferences::GetBool(
+            TRR_PREF("skip-AAAA-when-not-supported"), &tmp))) {
+      mCheckIPv6Connectivity = tmp;
+    }
+  }
+  if (!name || !strcmp(name, TRR_PREF("wait-for-A-and-AAAA"))) {
+    bool tmp;
+    if (NS_SUCCEEDED(
+            Preferences::GetBool(TRR_PREF("wait-for-A-and-AAAA"), &tmp))) {
+      mWaitForAllResponses = tmp;
+    }
+  }
   if (!name || !strcmp(name, kDisableIpv6Pref)) {
     bool tmp;
     if (NS_SUCCEEDED(Preferences::GetBool(kDisableIpv6Pref, &tmp))) {

@@ -267,6 +267,7 @@ class EditorCommand : public nsIControllerCommand {
       case Command::FormatJustifyRight:
       case Command::FormatJustifyCenter:
       case Command::FormatJustifyFull:
+      case Command::FormatJustifyNone:
         return EditorCommandParamType::CString |
                EditorCommandParamType::String |
                EditorCommandParamType::StateAttribute;

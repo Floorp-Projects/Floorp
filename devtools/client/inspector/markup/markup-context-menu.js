@@ -8,6 +8,7 @@
 
 const Services = require("Services");
 const promise = require("promise");
+const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
@@ -648,16 +649,16 @@ class MarkupContextMenu {
     }));
 
     // Set the pseudo classes
-    for (const name of ["hover", "active", "focus", "focus-within"]) {
+    for (const name of PSEUDO_CLASSES) {
       const menuitem = new MenuItem({
-        id: "node-menu-pseudo-" + name,
-        label: name,
+        id: "node-menu-pseudo-" + name.substr(1),
+        label: name.substr(1),
         type: "checkbox",
-        click: () => this.inspector.togglePseudoClass(":" + name),
+        click: () => this.inspector.togglePseudoClass(name),
       });
 
       if (isSelectionElement) {
-        const checked = this.selection.nodeFront.hasPseudoClassLock(":" + name);
+        const checked = this.selection.nodeFront.hasPseudoClassLock(name);
         menuitem.checked = checked;
       } else {
         menuitem.disabled = true;

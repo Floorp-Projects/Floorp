@@ -262,9 +262,6 @@ class MediaEngineSource : public MediaEngineSourceInterface {
   // to tell the caller to fallback to other methods.
   nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) override;
 
-  // Makes aOutSettings empty by default.
-  void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
-
  protected:
   virtual ~MediaEngineSource();
 };

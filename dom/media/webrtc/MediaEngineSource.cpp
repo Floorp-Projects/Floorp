@@ -50,11 +50,6 @@ nsresult MediaEngineSource::TakePhoto(MediaEnginePhotoCallback* aCallback) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void MediaEngineSource::GetSettings(MediaTrackSettings& aOutSettings) const {
-  MediaTrackSettings empty;
-  aOutSettings = empty;
-}
-
 MediaEngineSource::~MediaEngineSource() = default;
 
 }  // namespace mozilla

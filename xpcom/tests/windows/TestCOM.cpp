@@ -93,10 +93,6 @@ nsresult nsTestComFactory::CreateInstance(nsISupports* aOuter,
 
   nsTestCom* t = new nsTestCom();
 
-  if (t == nullptr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   NS_ADDREF(t);
   nsresult res = t->QueryInterface(aIID, aResult);
   NS_RELEASE(t);

@@ -37,6 +37,11 @@ async function testDebuggingSW(enableMultiE10sFn, disableMultiE10sFn) {
 
   const { document, tab, window } =
     await openAboutDebugging({ enableWorkerUpdates: true });
+
+  // If the test starts too quickly, the test will timeout on some platforms.
+  // See Bug 1533111.
+  await wait(1000);
+
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
   // disable multi e10s
