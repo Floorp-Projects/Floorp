@@ -123,9 +123,7 @@ ReplayDebugger.prototype = {
   },
 
   _processResponse(request, response, divergeResponse) {
-    dumpv(
-      `SendRequest: ${JSON.stringify(request)} -> ${JSON.stringify(response)}`
-    );
+    dumpv(`SendRequest: ${stringify(request)} -> ${stringify(response)}`);
     if (response.exception) {
       ThrowError(response.exception);
     }
@@ -1370,6 +1368,14 @@ function assert(v) {
 
 function isNonNullObject(obj) {
   return obj && (typeof obj == "object" || typeof obj == "function");
+}
+
+function stringify(object) {
+  const str = JSON.stringify(object);
+  if (str.length >= 4096) {
+    return `${str.substr(0, 4096)} TRIMMED ${str.length}`;
+  }
+  return str;
 }
 
 module.exports = ReplayDebugger;
