@@ -505,6 +505,7 @@ static struct ebml_element_desc ne_mastering_metadata_elements[] = {
   E_FIELD(ID_WHITE_POINT_CHROMATICITY_Y, TYPE_FLOAT, struct mastering_metadata, white_point_chromaticity_y),
   E_FIELD(ID_LUMINANCE_MAX, TYPE_FLOAT, struct mastering_metadata, luminance_max),
   E_FIELD(ID_LUMINANCE_MIN, TYPE_FLOAT, struct mastering_metadata, luminance_min),
+  E_LAST
 };
 
 static struct ebml_element_desc ne_colour_elements[] = {

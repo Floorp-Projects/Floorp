@@ -1,7 +1,7 @@
 use crate::cdsl::formats::FormatRegistry;
-use crate::cdsl::inst::{BoundInstruction, Instruction, InstructionPredicate};
+use crate::cdsl::instructions::{InstSpec, Instruction, InstructionPredicate};
 use crate::cdsl::operands::{OperandKind, OperandKindFields};
-use crate::cdsl::types::{LaneType, ValueType};
+use crate::cdsl::types::ValueType;
 use crate::cdsl::typevar::{TypeSetBuilder, TypeVar};
 
 use cranelift_entity::{entity_impl, PrimaryMap};
@@ -364,62 +364,6 @@ impl VarPool {
     }
 }
 
-pub enum ApplyTarget {
-    Inst(Instruction),
-    Bound(BoundInstruction),
-}
-
-impl ApplyTarget {
-    pub fn inst(&self) -> &Instruction {
-        match &self {
-            ApplyTarget::Inst(inst) => inst,
-            ApplyTarget::Bound(bound_inst) => &bound_inst.inst,
-        }
-    }
-}
-
-impl Into<ApplyTarget> for &Instruction {
-    fn into(self) -> ApplyTarget {
-        ApplyTarget::Inst(self.clone())
-    }
-}
-
-impl Into<ApplyTarget> for BoundInstruction {
-    fn into(self) -> ApplyTarget {
-        ApplyTarget::Bound(self)
-    }
-}
-
-pub fn bind(target: impl Into<ApplyTarget>, lane_type: impl Into<LaneType>) -> BoundInstruction {
-    let value_type = ValueType::from(lane_type.into());
-
-    let (inst, value_types) = match target.into() {
-        ApplyTarget::Inst(inst) => (inst, vec![value_type]),
-        ApplyTarget::Bound(bound_inst) => {
-            let mut new_value_types = bound_inst.value_types;
-            new_value_types.push(value_type);
-            (bound_inst.inst, new_value_types)
-        }
-    };
-
-    match &inst.polymorphic_info {
-        Some(poly) => {
-            assert!(
-                value_types.len() <= 1 + poly.other_typevars.len(),
-                format!("trying to bind too many types for {}", inst.name)
-            );
-        }
-        None => {
-            panic!(format!(
-                "trying to bind a type for {} which is not a polymorphic instruction",
-                inst.name
-            ));
-        }
-    }
-
-    BoundInstruction { inst, value_types }
-}
-
 /// Apply an instruction to arguments.
 ///
 /// An `Apply` AST expression is created by using function call syntax on instructions. This
@@ -431,10 +375,10 @@ pub struct Apply {
 }
 
 impl Apply {
-    pub fn new(target: ApplyTarget, args: Vec<Expr>) -> Self {
+    pub fn new(target: InstSpec, args: Vec<Expr>) -> Self {
         let (inst, value_types) = match target.into() {
-            ApplyTarget::Inst(inst) => (inst, Vec::new()),
-            ApplyTarget::Bound(bound_inst) => (bound_inst.inst, bound_inst.value_types),
+            InstSpec::Inst(inst) => (inst, Vec::new()),
+            InstSpec::Bound(bound_inst) => (bound_inst.inst, bound_inst.value_types),
         };
 
         // Basic check on number of arguments.
@@ -576,7 +520,7 @@ impl Apply {
 pub enum DummyExpr {
     Var(DummyVar),
     Literal(Literal),
-    Apply(ApplyTarget, Vec<DummyExpr>),
+    Apply(InstSpec, Vec<DummyExpr>),
 }
 
 #[derive(Clone)]
@@ -609,7 +553,7 @@ pub struct ExprBuilder {
 }
 
 impl ExprBuilder {
-    pub fn apply(inst: ApplyTarget, args: Vec<DummyExpr>) -> Self {
+    pub fn apply(inst: InstSpec, args: Vec<DummyExpr>) -> Self {
         let expr = DummyExpr::Apply(inst, args);
         Self { expr }
     }
@@ -630,7 +574,7 @@ macro_rules! def_rhs {
 
     // inst.type(a, b, c)
     ($inst:ident.$type:ident($($src:expr),*)) => {
-        ExprBuilder::apply(bind($inst, $type).into(), vec![$($src.clone().into()),*])
+        ExprBuilder::apply($inst.bind($type).into(), vec![$($src.clone().into()),*])
     };
 }
 

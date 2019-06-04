@@ -137,8 +137,21 @@ struct CraneliftCompiledFunc {
   size_t framePushed;
   bool containsCalls;
 
-  size_t codeSize;
+  // The compiled code comprises machine code, relocatable jump tables, and
+  // copyable read-only data, concatenated without padding.  The "...Size"
+  // members give the sizes of the individual sections.  The code starts at
+  // offsets 0; the other offsets can be derived from the sizes.
   const uint8_t* code;
+  size_t codeSize;
+  size_t jumptablesSize;
+  size_t rodataSize;
+  size_t totalSize;
+
+  // Relocation information for instructions that reference into the jump tables
+  // and read-only data segments.  The relocation information is
+  // machine-specific.
+  size_t numRodataRelocs;
+  const uint32_t* rodataRelocs;
 };
 
 // Possible constant values for initializing globals.

@@ -50,7 +50,8 @@ ignored_js_src_dirs = [
     'js/src/devtools/',          # auxiliary stuff
     'js/src/editline/',          # imported code
     'js/src/gdb/',               # auxiliary stuff
-    'js/src/vtune/'              # imported code
+    'js/src/vtune/',             # imported code
+    'js/src/zydis/',             # imported code
 ]
 
 # We ignore #includes of these files, because they don't follow the usual rules.
@@ -106,7 +107,8 @@ included_inclnames_to_ignore = set([
     'unicode/ustring.h',        # ICU
     'unicode/utypes.h',         # ICU
     'unicode/uversion.h',       # ICU
-    'vtune/VTuneWrapper.h'      # VTune
+    'vtune/VTuneWrapper.h',     # VTune
+    'zydis/ZydisAPI.h',         # Zydis
 ])
 
 # These files have additional constraints on where they are #included, so we
