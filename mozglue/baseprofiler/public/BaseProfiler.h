@@ -23,9 +23,9 @@
 // #included wherever Base Profiler may be used.
 
 #ifdef MOZ_GECKO_PROFILER
-// Disable Base Profiler for now; will be enabled on supported platforms in
-// later patches.
-#  if 0
+// Enable Base Profiler on Mac and Non-Android Linux, which are supported.
+// (Android not implemented yet. Windows not working yet when packaged.)
+#  if defined(XP_MACOSX) || (defined(XP_LINUX) && !defined(ANDROID))
 #    define MOZ_BASE_PROFILER
 #  else
 // Other platforms are currently not supported. But you may uncomment the
