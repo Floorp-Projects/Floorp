@@ -536,6 +536,9 @@ already_AddRefed<nsIContentViewer> NS_NewContentViewer() {
 }
 
 void nsDocumentViewer::PrepareToStartLoad() {
+  MOZ_DIAGNOSTIC_ASSERT(!GetIsPrintPreview(),
+                        "Print preview tab should never navigate");
+
   mStopped = false;
   mLoaded = false;
   mAttachedToParent = false;
@@ -550,9 +553,6 @@ void nsDocumentViewer::PrepareToStartLoad() {
   if (mPrintJob) {
     mPrintJob->Destroy();
     mPrintJob = nullptr;
-#  ifdef NS_PRINT_PREVIEW
-    SetIsPrintPreview(false);
-#  endif
   }
 
 #endif  // NS_PRINTING
