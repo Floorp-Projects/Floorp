@@ -1590,12 +1590,11 @@ VARCACHE_PREF(
 
 // WHATWG promise rejection events. See
 // https://html.spec.whatwg.org/multipage/webappapis.html#promiserejectionevent
-// TODO: Enable the event interface once actually firing it (bug 1362272).
 VARCACHE_PREF(
   Live,
   "dom.promise_rejection_events.enabled",
   dom_promise_rejection_events_enabled,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, true
 )
 
 // This currently only affects XHTML. For XUL the cache is always allowed.
