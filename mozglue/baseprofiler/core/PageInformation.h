@@ -13,6 +13,9 @@
 
 #include <string>
 
+namespace mozilla {
+namespace baseprofiler {
+
 class SpliceableJSONWriter;
 
 // This class contains information that's relevant to a single page only
@@ -37,7 +40,7 @@ class PageInformation final {
     }
   }
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
   bool Equals(PageInformation* aOtherDocShellInfo);
   void StreamJSON(SpliceableJSONWriter& aWriter);
 
@@ -46,12 +49,12 @@ class PageInformation final {
   const std::string& Url() { return mUrl; }
   bool IsSubFrame() { return mIsSubFrame; }
 
-  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() {
+  Maybe<uint64_t> BufferPositionWhenUnregistered() {
     return mBufferPositionWhenUnregistered;
   }
 
   void NotifyUnregistered(uint64_t aBufferPosition) {
-    mBufferPositionWhenUnregistered = mozilla::Some(aBufferPosition);
+    mBufferPositionWhenUnregistered = Some(aBufferPosition);
   }
 
  private:
@@ -63,11 +66,14 @@ class PageInformation final {
   // Holds the buffer position when DocShell is unregistered.
   // It's used to determine if we still use this DocShell in the profiler or
   // not.
-  mozilla::Maybe<uint64_t> mBufferPositionWhenUnregistered;
+  Maybe<uint64_t> mBufferPositionWhenUnregistered;
 
-  mutable mozilla::Atomic<int32_t, mozilla::MemoryOrdering::ReleaseAcquire,
-                          mozilla::recordreplay::Behavior::DontPreserve>
+  mutable Atomic<int32_t, MemoryOrdering::ReleaseAcquire,
+                 recordreplay::Behavior::DontPreserve>
       mRefCnt;
 };
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // PageInformation_h

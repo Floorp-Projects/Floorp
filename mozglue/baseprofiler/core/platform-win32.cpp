@@ -36,6 +36,9 @@
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 int profiler_current_process_id() { return _getpid(); }
 
 int profiler_current_thread_id() {
@@ -321,3 +324,6 @@ void InitializeWin64ProfilerHooks() {
   }
 }
 #endif  // defined(GP_PLAT_amd64_windows)
+
+}  // namespace baseprofiler
+}  // namespace mozilla

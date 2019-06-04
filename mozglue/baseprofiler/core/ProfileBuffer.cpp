@@ -14,7 +14,8 @@
 
 #  include "mozilla/MathAlgorithms.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace baseprofiler {
 
 ProfileBuffer::ProfileBuffer(uint32_t aCapacity)
     : mEntryIndexMask(0), mRangeStart(0), mRangeEnd(0), mCapacity(0) {
@@ -59,7 +60,7 @@ void ProfileBuffer::AddStoredMarker(ProfilerMarker* aStoredMarker) {
 void ProfileBuffer::CollectCodeLocation(
     const char* aLabel, const char* aStr, uint32_t aFrameFlags,
     const Maybe<uint32_t>& aLineNumber, const Maybe<uint32_t>& aColumnNumber,
-    const Maybe<JS::ProfilingCategoryPair>& aCategoryPair) {
+    const Maybe<ProfilingCategoryPair>& aCategoryPair) {
   AddEntry(ProfileBufferEntry::Label(aLabel));
   AddEntry(ProfileBufferEntry::FrameFlags(uint64_t(aFrameFlags)));
 
@@ -102,8 +103,7 @@ void ProfileBuffer::DeleteExpiredStoredMarkers() {
   }
 }
 
-size_t ProfileBuffer::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+size_t ProfileBuffer::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
   n += aMallocSizeOf(mEntries.get());
 
@@ -122,7 +122,7 @@ void ProfileBufferCollector::CollectNativeLeafAddr(void* aAddr) {
 }
 
 void ProfileBufferCollector::CollectProfilingStackFrame(
-    const js::ProfilingStackFrame& aFrame) {
+    const ProfilingStackFrame& aFrame) {
   // WARNING: this function runs within the profiler's "critical section".
 
   MOZ_ASSERT(aFrame.isLabelFrame() ||
@@ -148,5 +148,8 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
   mBuf.CollectCodeLocation(label, dynamicString, aFrame.flags(), line, column,
                            Some(aFrame.categoryPair()));
 }
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER

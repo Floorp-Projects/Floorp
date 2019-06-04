@@ -13,7 +13,8 @@
 #  include "mozilla/ArrayUtils.h"
 #  include "mozilla/Assertions.h"
 
-namespace JS {
+namespace mozilla {
+namespace baseprofiler {
 
 // clang-format off
 
@@ -54,7 +55,7 @@ const ProfilingCategoryPairInfo sProfilingCategoryPairInfo[] = {
 
 // clang-format on
 
-const ProfilingCategoryPairInfo& GetBaseProfilingCategoryPairInfo(
+const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
     ProfilingCategoryPair aCategoryPair) {
   static_assert(
       MOZ_ARRAY_LENGTH(sProfilingCategoryPairInfo) ==
@@ -68,6 +69,7 @@ const ProfilingCategoryPairInfo& GetBaseProfilingCategoryPairInfo(
   return sProfilingCategoryPairInfo[categoryPairIndex];
 }
 
-}  // namespace JS
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER

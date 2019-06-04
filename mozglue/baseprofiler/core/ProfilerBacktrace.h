@@ -9,20 +9,22 @@
 
 #include "mozilla/UniquePtrExtensions.h"
 
+namespace mozilla {
+
+class TimeStamp;
+
+namespace baseprofiler {
+
 class ProfileBuffer;
 class SpliceableJSONWriter;
 class ThreadInfo;
 class UniqueStacks;
 
-namespace mozilla {
-class TimeStamp;
-}
-
 // ProfilerBacktrace encapsulates a synchronous sample.
 class ProfilerBacktrace {
  public:
   ProfilerBacktrace(const char* aName, int aThreadId,
-                    mozilla::UniquePtr<ProfileBuffer> aBuffer);
+                    UniquePtr<ProfileBuffer> aBuffer);
   ~ProfilerBacktrace();
 
   // ProfilerBacktraces' stacks are deduplicated in the context of the
@@ -32,16 +34,19 @@ class ProfilerBacktrace {
   // frame, and string tables. They should instead reuse their parent
   // profile's tables.
   void StreamJSON(SpliceableJSONWriter& aWriter,
-                  const mozilla::TimeStamp& aProcessStartTime,
+                  const TimeStamp& aProcessStartTime,
                   UniqueStacks& aUniqueStacks);
 
  private:
   ProfilerBacktrace(const ProfilerBacktrace&);
   ProfilerBacktrace& operator=(const ProfilerBacktrace&);
 
-  mozilla::UniqueFreePtr<char> mName;
+  UniqueFreePtr<char> mName;
   int mThreadId;
-  mozilla::UniquePtr<ProfileBuffer> mBuffer;
+  UniquePtr<ProfileBuffer> mBuffer;
 };
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // __PROFILER_BACKTRACE_H

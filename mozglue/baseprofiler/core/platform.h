@@ -77,6 +77,12 @@ bool BaseProfilerLogTest(int aLevelToTest);
     }                                                              \
   } while (0)
 
+namespace mozilla {
+
+class JSONWriter;
+
+namespace baseprofiler {
+
 // Thin shell around mozglue PlatformMutex, for Base Profiler internal use.
 // Does not preserve behavior in JS record/replay.
 class PSMutex : private mozilla::detail::MutexImpl {
@@ -98,8 +104,7 @@ struct PlatformDataDestructor {
   void operator()(PlatformData*);
 };
 
-typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
-    UniquePlatformData;
+typedef UniquePtr<PlatformData, PlatformDataDestructor> UniquePlatformData;
 UniquePlatformData AllocPlatformData(int aThreadId);
 
 // Convert the array of strings to a bitfield.
@@ -123,6 +128,9 @@ void profiler_received_exit_profile(const std::string& aExitProfile);
 
 // Extract all received exit profiles that have not yet expired (i.e., they
 // still intersect with this process' buffer range).
-mozilla::Vector<std::string> profiler_move_exit_profiles();
+Vector<std::string> profiler_move_exit_profiles();
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif /* ndef TOOLS_PLATFORM_H_ */

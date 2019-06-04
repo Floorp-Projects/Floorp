@@ -33,6 +33,9 @@
 
 #  include "LulMainInt.h"
 
+using mozilla::baseprofiler::profiler_current_process_id;
+using mozilla::baseprofiler::profiler_current_thread_id;
+
 // Set this to 1 for verbose logging
 #  define DEBUG_MAIN 0
 

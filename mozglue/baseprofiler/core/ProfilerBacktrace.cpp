@@ -15,14 +15,17 @@
 #  include "BaseProfileJSONWriter.h"
 #  include "ThreadInfo.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 ProfilerBacktrace::ProfilerBacktrace(const char* aName, int aThreadId,
-                                     mozilla::UniquePtr<ProfileBuffer> aBuffer)
+                                     UniquePtr<ProfileBuffer> aBuffer)
     : mName(strdup(aName)), mThreadId(aThreadId), mBuffer(std::move(aBuffer)) {}
 
 ProfilerBacktrace::~ProfilerBacktrace() {}
 
 void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
-                                   const mozilla::TimeStamp& aProcessStartTime,
+                                   const TimeStamp& aProcessStartTime,
                                    UniqueStacks& aUniqueStacks) {
   // Unlike ProfiledThreadData::StreamJSON, we don't need to call
   // ProfileBuffer::AddJITInfoForRange because mBuffer does not contain any
@@ -30,9 +33,12 @@ void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   // at sample time.
   StreamSamplesAndMarkers(mName.get(), mThreadId, *mBuffer.get(), aWriter, "",
                           aProcessStartTime,
-                          /* aRegisterTime */ mozilla::TimeStamp(),
-                          /* aUnregisterTime */ mozilla::TimeStamp(),
+                          /* aRegisterTime */ TimeStamp(),
+                          /* aUnregisterTime */ TimeStamp(),
                           /* aSinceTime */ 0, aUniqueStacks);
 }
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER

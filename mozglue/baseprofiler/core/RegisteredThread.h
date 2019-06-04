@@ -14,6 +14,9 @@
 
 #include "mozilla/UniquePtr.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 // This class contains the state for a single thread that is accessible without
 // protection from gPSMutex in platform.cpp. Because there is no external
 // protection against data races, it must provide internal protection. Hence
@@ -33,8 +36,8 @@ class RacyRegisteredThread final {
   bool IsBeingProfiled() const { return mIsBeingProfiled; }
 
   void AddPendingMarker(const char* aMarkerName,
-                        JS::ProfilingCategoryPair aCategoryPair,
-                        mozilla::UniquePtr<ProfilerMarkerPayload> aPayload,
+                        ProfilingCategoryPair aCategoryPair,
+                        UniquePtr<ProfilerMarkerPayload> aPayload,
                         double aTime) {
     // Note: We don't assert on mIsBeingProfiled, because it could have changed
     // between the check in the caller and now.
@@ -143,13 +146,12 @@ class RacyRegisteredThread final {
   static const int AWAKE = 0;
   static const int SLEEPING_NOT_OBSERVED = 1;
   static const int SLEEPING_OBSERVED = 2;
-  mozilla::Atomic<int> mSleep;
+  Atomic<int> mSleep;
 
   // Is this thread being profiled? (e.g., should markers be recorded?)
   // Accesses to this atomic are not recorded by web replay as they may occur
   // at non-deterministic points.
-  mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  Atomic<bool, MemoryOrdering::Relaxed, recordreplay::Behavior::DontPreserve>
       mIsBeingProfiled;
 };
 
@@ -172,7 +174,7 @@ class RegisteredThread final {
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   const void* StackTop() const { return mStackTop; }
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
 
@@ -184,5 +186,8 @@ class RegisteredThread final {
 
   const RefPtr<ThreadInfo> mThreadInfo;
 };
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // RegisteredThread_h

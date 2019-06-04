@@ -20,6 +20,9 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 class SpliceableJSONWriter;
 class UniqueStacks;
 
@@ -31,18 +34,17 @@ class UniqueStacks;
 class ProfilerMarkerPayload {
  public:
   explicit ProfilerMarkerPayload(
-      const mozilla::Maybe<std::string>& aDocShellId = mozilla::Nothing(),
-      const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing(),
+      const Maybe<std::string>& aDocShellId = Nothing(),
+      const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
       UniqueProfilerBacktrace aStack = nullptr)
       : mStack(std::move(aStack)),
         mDocShellId(aDocShellId),
         mDocShellHistoryId(aDocShellHistoryId) {}
 
-  ProfilerMarkerPayload(
-      const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
-      const mozilla::Maybe<std::string>& aDocShellId = mozilla::Nothing(),
-      const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing(),
-      UniqueProfilerBacktrace aStack = nullptr)
+  ProfilerMarkerPayload(const TimeStamp& aStartTime, const TimeStamp& aEndTime,
+                        const Maybe<std::string>& aDocShellId = Nothing(),
+                        const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
+                        UniqueProfilerBacktrace aStack = nullptr)
       : mStartTime(aStartTime),
         mEndTime(aEndTime),
         mStack(std::move(aStack)),
@@ -52,52 +54,51 @@ class ProfilerMarkerPayload {
   virtual ~ProfilerMarkerPayload() {}
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                             const mozilla::TimeStamp& aProcessStartTime,
+                             const TimeStamp& aProcessStartTime,
                              UniqueStacks& aUniqueStacks) = 0;
 
-  mozilla::TimeStamp GetStartTime() const { return mStartTime; }
+  TimeStamp GetStartTime() const { return mStartTime; }
 
  protected:
   MFBT_API void StreamType(const char* aMarkerType,
                            SpliceableJSONWriter& aWriter);
   MFBT_API void StreamCommonProps(const char* aMarkerType,
                                   SpliceableJSONWriter& aWriter,
-                                  const mozilla::TimeStamp& aProcessStartTime,
+                                  const TimeStamp& aProcessStartTime,
                                   UniqueStacks& aUniqueStacks);
 
   void SetStack(UniqueProfilerBacktrace aStack) { mStack = std::move(aStack); }
 
-  void SetDocShellHistoryId(
-      const mozilla::Maybe<uint32_t>& aDocShellHistoryId) {
+  void SetDocShellHistoryId(const Maybe<uint32_t>& aDocShellHistoryId) {
     mDocShellHistoryId = aDocShellHistoryId;
   }
 
-  void SetDocShellId(const mozilla::Maybe<std::string>& aDocShellId) {
+  void SetDocShellId(const Maybe<std::string>& aDocShellId) {
     mDocShellId = aDocShellId;
   }
 
  private:
-  mozilla::TimeStamp mStartTime;
-  mozilla::TimeStamp mEndTime;
+  TimeStamp mStartTime;
+  TimeStamp mEndTime;
   UniqueProfilerBacktrace mStack;
-  mozilla::Maybe<std::string> mDocShellId;
-  mozilla::Maybe<uint32_t> mDocShellHistoryId;
+  Maybe<std::string> mDocShellId;
+  Maybe<uint32_t> mDocShellHistoryId;
 };
 
-#define DECL_BASE_STREAM_PAYLOAD                                          \
-  virtual void StreamPayload(SpliceableJSONWriter& aWriter,               \
-                             const mozilla::TimeStamp& aProcessStartTime, \
-                             UniqueStacks& aUniqueStacks) override;
+#define DECL_BASE_STREAM_PAYLOAD                              \
+  virtual void StreamPayload(                                 \
+      ::mozilla::baseprofiler::SpliceableJSONWriter& aWriter, \
+      const ::mozilla::TimeStamp& aProcessStartTime,          \
+      ::mozilla::baseprofiler::UniqueStacks& aUniqueStacks) override;
 
 // TODO: Increase the coverage of tracing markers that include DocShell
 // information
 class TracingMarkerPayload : public ProfilerMarkerPayload {
  public:
-  TracingMarkerPayload(
-      const char* aCategory, TracingKind aKind,
-      const mozilla::Maybe<std::string>& aDocShellId = mozilla::Nothing(),
-      const mozilla::Maybe<uint32_t>& aDocShellHistoryId = mozilla::Nothing(),
-      UniqueProfilerBacktrace aCause = nullptr)
+  TracingMarkerPayload(const char* aCategory, TracingKind aKind,
+                       const Maybe<std::string>& aDocShellId = Nothing(),
+                       const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
+                       UniqueProfilerBacktrace aCause = nullptr)
       : mCategory(aCategory), mKind(aKind) {
     if (aCause) {
       SetStack(std::move(aCause));
@@ -116,12 +117,10 @@ class TracingMarkerPayload : public ProfilerMarkerPayload {
 class FileIOMarkerPayload : public ProfilerMarkerPayload {
  public:
   FileIOMarkerPayload(const char* aOperation, const char* aSource,
-                      const char* aFilename,
-                      const mozilla::TimeStamp& aStartTime,
-                      const mozilla::TimeStamp& aEndTime,
-                      UniqueProfilerBacktrace aStack)
-      : ProfilerMarkerPayload(aStartTime, aEndTime, mozilla::Nothing(),
-                              mozilla::Nothing(), std::move(aStack)),
+                      const char* aFilename, const TimeStamp& aStartTime,
+                      const TimeStamp& aEndTime, UniqueProfilerBacktrace aStack)
+      : ProfilerMarkerPayload(aStartTime, aEndTime, Nothing(), Nothing(),
+                              std::move(aStack)),
         mSource(aSource),
         mOperation(aOperation ? strdup(aOperation) : nullptr),
         mFilename(aFilename ? strdup(aFilename) : nullptr) {
@@ -132,28 +131,27 @@ class FileIOMarkerPayload : public ProfilerMarkerPayload {
 
  private:
   const char* mSource;
-  mozilla::UniqueFreePtr<char> mOperation;
-  mozilla::UniqueFreePtr<char> mFilename;
+  UniqueFreePtr<char> mOperation;
+  UniqueFreePtr<char> mFilename;
 };
 
 class UserTimingMarkerPayload : public ProfilerMarkerPayload {
  public:
-  UserTimingMarkerPayload(const std::string& aName,
-                          const mozilla::TimeStamp& aStartTime,
-                          const mozilla::Maybe<std::string>& aDocShellId,
-                          const mozilla::Maybe<uint32_t>& aDocShellHistoryId)
+  UserTimingMarkerPayload(const std::string& aName, const TimeStamp& aStartTime,
+                          const Maybe<std::string>& aDocShellId,
+                          const Maybe<uint32_t>& aDocShellHistoryId)
       : ProfilerMarkerPayload(aStartTime, aStartTime, aDocShellId,
                               aDocShellHistoryId),
         mEntryType("mark"),
         mName(aName) {}
 
   UserTimingMarkerPayload(const std::string& aName,
-                          const mozilla::Maybe<std::string>& aStartMark,
-                          const mozilla::Maybe<std::string>& aEndMark,
-                          const mozilla::TimeStamp& aStartTime,
-                          const mozilla::TimeStamp& aEndTime,
-                          const mozilla::Maybe<std::string>& aDocShellId,
-                          const mozilla::Maybe<uint32_t>& aDocShellHistoryId)
+                          const Maybe<std::string>& aStartMark,
+                          const Maybe<std::string>& aEndMark,
+                          const TimeStamp& aStartTime,
+                          const TimeStamp& aEndTime,
+                          const Maybe<std::string>& aDocShellId,
+                          const Maybe<uint32_t>& aDocShellHistoryId)
       : ProfilerMarkerPayload(aStartTime, aEndTime, aDocShellId,
                               aDocShellHistoryId),
         mEntryType("measure"),
@@ -167,14 +165,13 @@ class UserTimingMarkerPayload : public ProfilerMarkerPayload {
   // Either "mark" or "measure".
   const char* mEntryType;
   std::string mName;
-  mozilla::Maybe<std::string> mStartMark;
-  mozilla::Maybe<std::string> mEndMark;
+  Maybe<std::string> mStartMark;
+  Maybe<std::string> mEndMark;
 };
 
 class HangMarkerPayload : public ProfilerMarkerPayload {
  public:
-  HangMarkerPayload(const mozilla::TimeStamp& aStartTime,
-                    const mozilla::TimeStamp& aEndTime)
+  HangMarkerPayload(const TimeStamp& aStartTime, const TimeStamp& aEndTime)
       : ProfilerMarkerPayload(aStartTime, aEndTime) {}
 
   DECL_BASE_STREAM_PAYLOAD
@@ -183,8 +180,7 @@ class HangMarkerPayload : public ProfilerMarkerPayload {
 
 class LongTaskMarkerPayload : public ProfilerMarkerPayload {
  public:
-  LongTaskMarkerPayload(const mozilla::TimeStamp& aStartTime,
-                        const mozilla::TimeStamp& aEndTime)
+  LongTaskMarkerPayload(const TimeStamp& aStartTime, const TimeStamp& aEndTime)
       : ProfilerMarkerPayload(aStartTime, aEndTime) {}
 
   DECL_BASE_STREAM_PAYLOAD
@@ -192,28 +188,24 @@ class LongTaskMarkerPayload : public ProfilerMarkerPayload {
 
 class TextMarkerPayload : public ProfilerMarkerPayload {
  public:
-  TextMarkerPayload(const std::string& aText,
-                    const mozilla::TimeStamp& aStartTime)
+  TextMarkerPayload(const std::string& aText, const TimeStamp& aStartTime)
       : ProfilerMarkerPayload(aStartTime, aStartTime), mText(aText) {}
 
-  TextMarkerPayload(const std::string& aText,
-                    const mozilla::TimeStamp& aStartTime,
-                    const mozilla::TimeStamp& aEndTime)
+  TextMarkerPayload(const std::string& aText, const TimeStamp& aStartTime,
+                    const TimeStamp& aEndTime)
       : ProfilerMarkerPayload(aStartTime, aEndTime), mText(aText) {}
 
-  TextMarkerPayload(const std::string& aText,
-                    const mozilla::TimeStamp& aStartTime,
-                    const mozilla::Maybe<std::string>& aDocShellId,
-                    const mozilla::Maybe<uint32_t>& aDocShellHistoryId)
+  TextMarkerPayload(const std::string& aText, const TimeStamp& aStartTime,
+                    const Maybe<std::string>& aDocShellId,
+                    const Maybe<uint32_t>& aDocShellHistoryId)
       : ProfilerMarkerPayload(aStartTime, aStartTime, aDocShellId,
                               aDocShellHistoryId),
         mText(aText) {}
 
-  TextMarkerPayload(const std::string& aText,
-                    const mozilla::TimeStamp& aStartTime,
-                    const mozilla::TimeStamp& aEndTime,
-                    const mozilla::Maybe<std::string>& aDocShellId,
-                    const mozilla::Maybe<uint32_t>& aDocShellHistoryId,
+  TextMarkerPayload(const std::string& aText, const TimeStamp& aStartTime,
+                    const TimeStamp& aEndTime,
+                    const Maybe<std::string>& aDocShellId,
+                    const Maybe<uint32_t>& aDocShellHistoryId,
                     UniqueProfilerBacktrace aCause = nullptr)
       : ProfilerMarkerPayload(aStartTime, aEndTime, aDocShellId,
                               aDocShellHistoryId, std::move(aCause)),
@@ -228,7 +220,7 @@ class TextMarkerPayload : public ProfilerMarkerPayload {
 class LogMarkerPayload : public ProfilerMarkerPayload {
  public:
   LogMarkerPayload(const char* aModule, const char* aText,
-                   const mozilla::TimeStamp& aStartTime)
+                   const TimeStamp& aStartTime)
       : ProfilerMarkerPayload(aStartTime, aStartTime),
         mModule(aModule),
         mText(aText) {}
@@ -239,5 +231,8 @@ class LogMarkerPayload : public ProfilerMarkerPayload {
   std::string mModule;  // longest known LazyLogModule name is ~24
   std::string mText;
 };
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // BaseProfilerMarkerPayload_h

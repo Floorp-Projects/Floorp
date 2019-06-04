@@ -35,6 +35,9 @@
 #  include <unordered_map>
 #  include <string>
 
+namespace mozilla {
+namespace baseprofiler {
+
 class VTuneProfiler {
  public:
   static void Initialize();
@@ -66,6 +69,9 @@ class VTuneProfiler {
 
 #  define VTUNE_TRACING(name, kind) VTuneProfiler::Trace(name, kind)
 #  define VTUNE_REGISTER_THREAD(name) VTuneProfiler::RegisterThread(name)
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif
 

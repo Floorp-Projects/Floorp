@@ -18,7 +18,8 @@
 
 #  include <inttypes.h>
 
-using namespace mozilla;
+namespace mozilla {
+namespace baseprofiler {
 
 static void MOZ_ALWAYS_INLINE WriteTime(SpliceableJSONWriter& aWriter,
                                         const TimeStamp& aProcessStartTime,
@@ -129,5 +130,8 @@ void LongTaskMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                     aUniqueStacks);
   aWriter.StringProperty("category", "LongTask");
 }
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER

@@ -10,6 +10,9 @@
 
 #  include "RegisteredThread.h"
 
+namespace mozilla {
+namespace baseprofiler {
+
 RegisteredThread::RegisteredThread(ThreadInfo* aInfo, void* aStackTop)
     : mRacyRegisteredThread(aInfo->ThreadId()),
       mPlatformData(AllocPlatformData(aInfo->ThreadId())),
@@ -24,8 +27,7 @@ RegisteredThread::RegisteredThread(ThreadInfo* aInfo, void* aStackTop)
 
 RegisteredThread::~RegisteredThread() {}
 
-size_t RegisteredThread::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+size_t RegisteredThread::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);
 
   // Measurement of the following members may be added later if DMD finds it
@@ -38,5 +40,8 @@ size_t RegisteredThread::SizeOfIncludingThis(
 
   return n;
 }
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER

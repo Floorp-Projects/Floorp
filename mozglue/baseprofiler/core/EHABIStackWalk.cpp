@@ -56,6 +56,7 @@
 #  endif
 
 namespace mozilla {
+namespace baseprofiler {
 
 struct PRel31 {
   uint32_t mBits;
@@ -145,7 +146,7 @@ class EHTable {
 class EHAddrSpace {
   std::vector<uint32_t> mStarts;
   std::vector<EHTable> mTables;
-  static mozilla::Atomic<const EHAddrSpace*> sCurrent;
+  static Atomic<const EHAddrSpace*> sCurrent;
 
  public:
   explicit EHAddrSpace(const std::vector<EHTable>& aTables);
@@ -588,7 +589,7 @@ EHTable::EHTable(const void* aELF, size_t aSize, const std::string& aName)
 #  endif
 }
 
-mozilla::Atomic<const EHAddrSpace*> EHAddrSpace::sCurrent(nullptr);
+Atomic<const EHAddrSpace*> EHAddrSpace::sCurrent(nullptr);
 
 // Async signal safe; can fail if Update() hasn't returned yet.
 const EHAddrSpace* EHAddrSpace::Get() { return sCurrent; }
@@ -642,6 +643,7 @@ EHState::EHState(const mcontext_t& context) {
 #  endif
 }
 
+}  // namespace baseprofiler
 }  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER

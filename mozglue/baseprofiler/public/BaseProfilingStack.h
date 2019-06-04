@@ -98,7 +98,8 @@
 // everywhere. This is something that we may want to change in the future once
 // we've done measurements.
 
-namespace js {
+namespace mozilla {
+namespace baseprofiler {
 
 // A call stack can be specified to the JS engine such that all JS entry/exits
 // to functions push/pop a stack frame to/from the specified stack.
@@ -124,33 +125,28 @@ class ProfilingStackFrame {
 
   // Descriptive label for this stack frame. Must be a static string! Can be
   // an empty string, but not a null pointer.
-  mozilla::Atomic<const char*, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  Atomic<const char*, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
       label_;
 
   // An additional descriptive string of this frame which is combined with
   // |label_| in profiler output. Need not be (and usually isn't) static. Can
   // be null.
-  mozilla::Atomic<const char*, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  Atomic<const char*, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
       dynamicString_;
 
   // Stack pointer for non-JS stack frames, the script pointer otherwise.
-  mozilla::Atomic<void*, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  Atomic<void*, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
       spOrScript;
 
   // The bytecode offset for JS stack frames.
   // Must not be used on non-JS frames; it'll contain either the default 0,
   // or a leftover value from a previous JS stack frame that was using this
   // ProfilingStackFrame object.
-  mozilla::Atomic<int32_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  Atomic<int32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
       pcOffsetIfJS_;
 
   // Bits 0...8 hold the Flags. Bits 9...31 hold the category pair.
-  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  Atomic<uint32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
       flagsAndCategoryPair_;
 
  public:
@@ -215,7 +211,7 @@ class ProfilingStackFrame {
   };
 
   static_assert(
-      uint32_t(JS::ProfilingCategoryPair::LAST) <=
+      uint32_t(ProfilingCategoryPair::LAST) <=
           (UINT32_MAX >> uint32_t(Flags::FLAGS_BITCOUNT)),
       "Too many category pairs to fit into u32 with together with the "
       "reserved bits for the flags");
@@ -251,9 +247,9 @@ class ProfilingStackFrame {
     uint32_t flagsAndCategoryPair = flagsAndCategoryPair_;
     if (flagsAndCategoryPair &
         uint32_t(Flags::LABEL_DETERMINED_BY_CATEGORY_PAIR)) {
-      auto categoryPair = JS::ProfilingCategoryPair(
+      auto categoryPair = ProfilingCategoryPair(
           flagsAndCategoryPair >> uint32_t(Flags::FLAGS_BITCOUNT));
-      return JS::GetBaseProfilingCategoryPairInfo(categoryPair).mLabel;
+      return GetProfilingCategoryPairInfo(categoryPair).mLabel;
     }
     return label_;
   }
@@ -261,8 +257,7 @@ class ProfilingStackFrame {
   const char* dynamicString() const { return dynamicString_; }
 
   void initLabelFrame(const char* aLabel, const char* aDynamicString, void* sp,
-                      JS::ProfilingCategoryPair aCategoryPair,
-                      uint32_t aFlags) {
+                      ProfilingCategoryPair aCategoryPair, uint32_t aFlags) {
     label_ = aLabel;
     dynamicString_ = aDynamicString;
     spOrScript = sp;
@@ -279,7 +274,7 @@ class ProfilingStackFrame {
     spOrScript = sp;
     // pcOffsetIfJS_ is not set and must not be used on sp marker frames.
     flagsAndCategoryPair_ = uint32_t(Flags::IS_SP_MARKER_FRAME) |
-                            (uint32_t(JS::ProfilingCategoryPair::OTHER)
+                            (uint32_t(ProfilingCategoryPair::OTHER)
                              << uint32_t(Flags::FLAGS_BITCOUNT));
     MOZ_ASSERT(isSpMarkerFrame());
   }
@@ -291,7 +286,7 @@ class ProfilingStackFrame {
     spOrScript = aScript;
     pcOffsetIfJS_ = aOffset;
     flagsAndCategoryPair_ =
-        uint32_t(Flags::IS_JS_FRAME) | (uint32_t(JS::ProfilingCategoryPair::JS)
+        uint32_t(Flags::IS_JS_FRAME) | (uint32_t(ProfilingCategoryPair::JS)
                                         << uint32_t(Flags::FLAGS_BITCOUNT));
     MOZ_ASSERT(isJsFrame());
   }
@@ -300,9 +295,9 @@ class ProfilingStackFrame {
     return uint32_t(flagsAndCategoryPair_) & uint32_t(Flags::FLAGS_MASK);
   }
 
-  JS::ProfilingCategoryPair categoryPair() const {
-    return JS::ProfilingCategoryPair(flagsAndCategoryPair_ >>
-                                     uint32_t(Flags::FLAGS_BITCOUNT));
+  ProfilingCategoryPair categoryPair() const {
+    return ProfilingCategoryPair(flagsAndCategoryPair_ >>
+                                 uint32_t(Flags::FLAGS_BITCOUNT));
   }
 
   void* stackAddress() const {
@@ -336,23 +331,6 @@ class ProfilingStackFrame {
   static const int32_t NullPCOffset = -1;
 };
 
-}  // namespace js
-
-class ProfilingStack;
-
-namespace JS {
-
-typedef ProfilingStack* (*RegisterThreadCallback)(const char* threadName,
-                                                  void* stackBase);
-
-typedef void (*UnregisterThreadCallback)();
-
-MFBT_API void SetProfilingThreadCallbacks(
-    RegisterThreadCallback registerThread,
-    UnregisterThreadCallback unregisterThread);
-
-}  // namespace JS
-
 // Each thread has its own ProfilingStack. That thread modifies the
 // ProfilingStack, pushing and popping elements as necessary.
 //
@@ -379,8 +357,7 @@ class ProfilingStack final {
   MFBT_API ~ProfilingStack();
 
   void pushLabelFrame(const char* label, const char* dynamicString, void* sp,
-                      JS::ProfilingCategoryPair categoryPair,
-                      uint32_t flags = 0) {
+                      ProfilingCategoryPair categoryPair, uint32_t flags = 0) {
     // This thread is the only one that ever changes the value of
     // stackPointer.
     // Store the value of the atomic in a non-atomic local variable so that
@@ -467,8 +444,8 @@ class ProfilingStack final {
   // written from the current thread.
   //
   // This is effectively a unique pointer.
-  mozilla::Atomic<js::ProfilingStackFrame*, mozilla::SequentiallyConsistent,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  Atomic<ProfilingStackFrame*, SequentiallyConsistent,
+         recordreplay::Behavior::DontPreserve>
       frames{nullptr};
 
   // This may exceed the capacity, so instead use the stackSize() method to
@@ -482,12 +459,9 @@ class ProfilingStack final {
   // This is an atomic variable that uses ReleaseAcquire memory ordering.
   // See the "Concurrency considerations" paragraph at the top of this file
   // for more details.
-  mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
+  Atomic<uint32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
       stackPointer;
 };
-
-namespace js {
 
 class AutoGeckoProfilerEntry;
 class GeckoProfilerEntryMarker;
@@ -530,6 +504,7 @@ class GeckoProfilerThread {
   }
 };
 
-}  // namespace js
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif /* BaseProfilingStack_h */

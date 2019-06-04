@@ -17,6 +17,9 @@
 #    include <pthread.h>
 #  endif
 
+namespace mozilla {
+namespace baseprofiler {
+
 ProfiledThreadData::ProfiledThreadData(ThreadInfo* aThreadInfo)
     : mThreadInfo(aThreadInfo) {}
 
@@ -25,7 +28,7 @@ ProfiledThreadData::~ProfiledThreadData() {}
 void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
                                     SpliceableJSONWriter& aWriter,
                                     const std::string& aProcessName,
-                                    const mozilla::TimeStamp& aProcessStartTime,
+                                    const TimeStamp& aProcessStartTime,
                                     double aSinceTime) {
   UniqueStacks uniqueStacks;
 
@@ -81,9 +84,9 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
                              const ProfileBuffer& aBuffer,
                              SpliceableJSONWriter& aWriter,
                              const std::string& aProcessName,
-                             const mozilla::TimeStamp& aProcessStartTime,
-                             const mozilla::TimeStamp& aRegisterTime,
-                             const mozilla::TimeStamp& aUnregisterTime,
+                             const TimeStamp& aProcessStartTime,
+                             const TimeStamp& aRegisterTime,
+                             const TimeStamp& aUnregisterTime,
                              double aSinceTime, UniqueStacks& aUniqueStacks) {
   aWriter.StringProperty(
       "processType",
@@ -154,5 +157,8 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
   }
   aWriter.EndObject();
 }
+
+}  // namespace baseprofiler
+}  // namespace mozilla
 
 #endif  // MOZ_BASE_PROFILER
