@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !('oomTest' in this)
+
 // Adapted from randomly chosen test: js/src/jit-test/tests/debug/Memory-drainAllocationsLog-13.js
 //
 // This triggers OOMs that will cause weak marking mode to abort.
