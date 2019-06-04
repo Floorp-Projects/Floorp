@@ -60,9 +60,14 @@ nsresult AppInfoConstructor(nsISupports* aOuter, const nsID& aIID,
 // Exported for gtests.
 void BuildCompatVersion(const char* aAppVersion, const char* aAppBuildID,
                         const char* aToolkitBuildID, nsACString& aBuf);
-bool CheckCompatVersions(const nsACString& aOldCompatVersion,
-                         const nsACString& aNewCompatVersion,
-                         bool* aIsDowngrade);
+
+/**
+ * Compares the provided compatibility versions. Returns 0 if they match,
+ * < 0 if the new version is considered an upgrade from the old version and
+ * > 0 if the new version is considered a downgrade from the old version.
+ */
+int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
+                              const nsACString& aNewCompatVersion);
 
 /**
  * Create the nativeappsupport implementation.
