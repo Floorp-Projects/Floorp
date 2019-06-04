@@ -44,6 +44,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mozilla.geckoview.AllowOrDeny
@@ -1719,6 +1720,79 @@ class GeckoEngineSessionTest {
             mock(), mockLoadRequest("sample:about", triggeredByRedirect = false))
 
         assertFalse(observedTriggeredByRedirect!!)
+    }
+
+    @Test
+    fun `onLoadRequest will notify observers if the url is loaded from the user interacting with chrome`() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java),
+            geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        val fakeUrl = "https://example.com"
+        var observedTriggeredByWebContent: Boolean?
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onLoadRequest(triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+                observedTriggeredByWebContent = triggeredByWebContent
+            }
+        })
+
+        fun fakePageLoad(expectedTriggeredByWebContent: Boolean) {
+            observedTriggeredByWebContent = null
+            navigationDelegate.value.onLoadRequest(
+                mock(), mockLoadRequest(fakeUrl, triggeredByRedirect = true))
+            progressDelegate.value.onPageStop(mock(), true)
+            assertNotNull(observedTriggeredByWebContent)
+            assertEquals(expectedTriggeredByWebContent, observedTriggeredByWebContent!!)
+        }
+
+        // loadUrl(url: String)
+        engineSession.loadUrl(fakeUrl)
+        verify(geckoSession).loadUri(fakeUrl)
+        fakePageLoad(false)
+
+        // subsequent page loads _are_ from web content
+        fakePageLoad(true)
+
+        // loadData(data: String, mimeType: String, encoding: String)
+        val fakeData = "data://"
+        val fakeMimeType = ""
+        val fakeEncoding = ""
+        engineSession.loadData(data = fakeData, mimeType = fakeMimeType, encoding = fakeEncoding)
+        verify(geckoSession).loadString(fakeData, fakeMimeType)
+        fakePageLoad(false)
+
+        fakePageLoad(true)
+
+        // reload()
+        engineSession.reload()
+        verify(geckoSession).reload()
+        fakePageLoad(false)
+
+        fakePageLoad(true)
+
+        // goBack()
+        engineSession.goBack()
+        verify(geckoSession).goBack()
+        fakePageLoad(false)
+
+        fakePageLoad(true)
+
+        // goForward()
+        engineSession.goForward()
+        verify(geckoSession).goForward()
+        fakePageLoad(false)
+
+        fakePageLoad(true)
+
+        // toggleDesktopMode()
+        engineSession.toggleDesktopMode(false, reload = true)
+        // This is the second time in this test, so we actually want two invocations.
+        verify(geckoSession, times(2)).reload()
+        fakePageLoad(false)
+
+        fakePageLoad(true)
     }
 
     @Test

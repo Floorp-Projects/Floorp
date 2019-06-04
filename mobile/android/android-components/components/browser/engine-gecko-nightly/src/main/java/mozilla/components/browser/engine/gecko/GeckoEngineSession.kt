@@ -117,6 +117,7 @@ class GeckoEngineSession(
      * See [EngineSession.reload]
      */
     override fun reload() {
+        requestFromWebContent = false
         geckoSession.reload()
     }
 
@@ -124,6 +125,7 @@ class GeckoEngineSession(
      * See [EngineSession.goBack]
      */
     override fun goBack() {
+        requestFromWebContent = false
         geckoSession.goBack()
     }
 
@@ -131,6 +133,7 @@ class GeckoEngineSession(
      * See [EngineSession.goForward]
      */
     override fun goForward() {
+        requestFromWebContent = false
         geckoSession.goForward()
     }
 
@@ -203,7 +206,7 @@ class GeckoEngineSession(
         }
 
         if (reload) {
-            geckoSession.reload()
+            this.reload()
         }
     }
 
