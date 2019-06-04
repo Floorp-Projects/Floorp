@@ -139,7 +139,7 @@
     <color name="disabled_text">#cccccc</color>
     <color name="violet_05">#E7DFFF</color>
     <color name="text_scale_example_text_color">#232749</color>
-    <color name="sync_error_color">#FFF36E</color>
+    <color name="sync_error_background_color">#FFF36E</color>
     <color name="sync_error_text_color">#960E18</color>
 
     <!-- Reader View colors -->

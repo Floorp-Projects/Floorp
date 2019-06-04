@@ -14,14 +14,18 @@
         android:title="@string/preferences_sign_in" />
 
     <androidx.preference.PreferenceCategory
-        android:key = "@string/pref_key_account_category"
+        android:key="@string/pref_key_account_category"
         android:title="@string/preferences_category_account"
         app:iconSpaceReserved="false"
         app:isPreferenceVisible="false">
 
         <org.mozilla.fenix.settings.AccountPreference
             android:icon="@drawable/ic_shortcuts"
-            android:key="@string/pref_key_account"/>
+            android:key="@string/pref_key_account" />
+
+        <org.mozilla.fenix.settings.AccountAuthErrorPreference
+            android:icon="@drawable/ic_account_warning"
+            android:key="@string/pref_key_account_auth_error"/>
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

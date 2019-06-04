@@ -5,13 +5,12 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/account_preference_background"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
     android:paddingStart="16dp"
     android:paddingEnd="16dp"
-    android:foreground="?android:attr/selectableItemBackground">
+    android:background="@color/sync_error_background_color">
 
     <FrameLayout
         android:id="@+id/icon_frame"
@@ -35,30 +34,34 @@
         android:paddingBottom="16dp"
         android:layout_weight="1">
 
-        <TextView android:id="@+id/displayName"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textColor="?primaryText"
-                  android:textSize="16sp"
-                  android:ellipsize="marquee"
-                  android:fadingEdge="horizontal"
-                  android:visibility="gone"/>
+        <TextView
+            android:id="@+id/errorSummary"
+            android:text="@string/preferences_account_sync_error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/sync_error_text_color"
+            android:textSize="16sp"
+            android:ellipsize="marquee"
+            android:fadingEdge="horizontal"
+            android:visibility="visible"/>
 
-        <TextView android:id="@+id/email"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_below="@id/displayName"
-                  android:layout_alignStart="@id/displayName"
-                  android:textColor="?primaryText"
-                  android:text="@string/preferences_account_default_name"
-                  android:maxLines="4"/>
+        <TextView
+            android:id="@+id/email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/errorSummary"
+            android:layout_alignStart="@id/errorSummary"
+            android:textColor="@color/sync_error_text_color"
+            android:maxLines="4"
+            android:visibility="gone"/>
 
     </RelativeLayout>
 
-    <LinearLayout android:id="@android:id/widget_frame"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:gravity="center_vertical"
-                  android:orientation="vertical"/>
+    <LinearLayout
+        android:id="@android:id/widget_frame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="vertical"/>
 
 </LinearLayout>

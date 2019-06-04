@@ -12,8 +12,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
 
-class AccountPreference : Preference {
-    var displayName: String? = null
+class AccountAuthErrorPreference : Preference {
     var email: String? = null
 
     constructor(context: Context) : super(context)
@@ -21,23 +20,16 @@ class AccountPreference : Preference {
     constructor(context: Context, attrs: AttributeSet?, attributeSetId: Int) : super(context, attrs, attributeSetId)
 
     init {
-        layoutResource = R.layout.account_preference
+        layoutResource = R.layout.account_auth_error_preference
     }
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
-        val displayNameView = holder.findViewById(R.id.displayName) as TextView
         val emailView = holder.findViewById(R.id.email) as TextView
-
-        displayNameView.text = displayName.orEmpty()
-        displayNameView.visibility = when (displayName.isNullOrEmpty()) {
+        emailView.text = email.orEmpty()
+        emailView.visibility = when (email.isNullOrEmpty()) {
             true -> View.GONE
             false -> View.VISIBLE
         }
-        // There is a potential for a race condition here. We might not have the user profile by the time we display
-        // this field, in which case we won't have the email address (or the display name, but that we may just not have
-        // at all even after fetching the profile). We don't hide the email field or change its text if email is missing
-        // because in the layout a default value ("Firefox Account") is specified, which will be displayed instead.
-        email?.let { emailView.text = it }
     }
 }
