@@ -12,5 +12,6 @@
 void EnsureUseCocoaDockAPI(void);
 void SetupMacApplicationDelegate(void);
 void ProcessPendingGetURLAppleEvents(void);
+void DisableAppNap(void);
 
 #endif
