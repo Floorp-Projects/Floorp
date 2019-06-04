@@ -13,4 +13,5 @@ interface nsIAutoplay : nsISupports
    */
   const uint32_t ALLOWED = 0;
   const uint32_t BLOCKED = 1;
+  const uint32_t BLOCKED_ALL = 5;
 };
