@@ -42,7 +42,7 @@ MOZ_NEVER_INLINE unsigned long long Fibonacci(unsigned long long n) {
   }
   unsigned long long f2 = Fibonacci<NextDepth(DEPTH)>(n - 2);
   if (DEPTH == 0) {
-    PROFILER_ADD_MARKER("Half-way through Fibonacci", OTHER);
+    BASE_PROFILER_ADD_MARKER("Half-way through Fibonacci", OTHER);
   }
   unsigned long long f1 = Fibonacci<NextDepth(DEPTH)>(n - 1);
   return f2 + f1;
@@ -74,7 +74,7 @@ void TestProfiler() {
 
   {
     printf("profiler_init()...\n");
-    AUTO_PROFILER_INIT;
+    AUTO_BASE_PROFILER_INIT;
 
     MOZ_RELEASE_ASSERT(!profiler_is_active());
     MOZ_RELEASE_ASSERT(!profiler_thread_is_being_profiled());
@@ -87,26 +87,27 @@ void TestProfiler() {
     const uint32_t features = ProfilerFeature::Leaf |
                               ProfilerFeature::StackWalk |
                               ProfilerFeature::Threads;
-    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
-                   features, filters.begin(), filters.length());
+    profiler_start(BASE_PROFILER_DEFAULT_ENTRIES,
+                   BASE_PROFILER_DEFAULT_INTERVAL, features, filters.begin(),
+                   filters.length());
 
     MOZ_RELEASE_ASSERT(profiler_is_active());
     MOZ_RELEASE_ASSERT(profiler_thread_is_being_profiled());
     MOZ_RELEASE_ASSERT(!profiler_thread_is_sleeping());
 
     {
-      AUTO_PROFILER_TEXT_MARKER_CAUSE("fibonacci", "First leaf call", OTHER,
-                                      nullptr);
+      AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE("fibonacci", "First leaf call",
+                                           OTHER, nullptr);
       static const unsigned long long fibStart = 40;
       printf("Fibonacci(%llu)...\n", fibStart);
-      AUTO_PROFILER_LABEL("Label around Fibonacci", OTHER);
+      AUTO_BASE_PROFILER_LABEL("Label around Fibonacci", OTHER);
       unsigned long long f = Fibonacci(fibStart);
       printf("Fibonacci(%llu) = %llu\n", fibStart, f);
     }
 
     printf("Sleep 1s...\n");
     {
-      AUTO_PROFILER_THREAD_SLEEP;
+      AUTO_BASE_PROFILER_THREAD_SLEEP;
       SleepMilli(1000);
     }
 
@@ -133,14 +134,14 @@ void TestProfiler() {
 void TestProfiler() {
   // These don't need to make sense, we just want to know that they're defined
   // and don't do anything.
-  AUTO_PROFILER_INIT;
+  AUTO_BASE_PROFILER_INIT;
 
   // This wouldn't build if the macro did output its arguments.
-  AUTO_PROFILER_TEXT_MARKER_CAUSE(catch, catch, catch, catch);
+  AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(catch, catch, catch, catch);
 
-  AUTO_PROFILER_LABEL(catch, catch);
+  AUTO_BASE_PROFILER_LABEL(catch, catch);
 
-  AUTO_PROFILER_THREAD_SLEEP;
+  AUTO_BASE_PROFILER_THREAD_SLEEP;
 }
 
 #endif  // MOZ_BASE_PROFILER else
