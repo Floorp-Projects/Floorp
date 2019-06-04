@@ -7,7 +7,11 @@ from __future__ import absolute_import
 from marionette_driver import By
 from marionette_driver.keys import Keys
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin
+from marionette_harness import (
+    MarionetteTestCase,
+    skip_if_mobile,
+    WindowManagerMixin,
+)
 
 
 class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
@@ -79,6 +83,43 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
 
         self.marionette.switch_to_window(new_tab)
+        self.marionette.close()
+
+        self.marionette.switch_to_window(self.start_tab)
+        self.assertEqual(self.marionette.current_window_handle, self.start_tab)
+        self.assertEqual(self.get_selected_tab_index(), self.selected_tab_index)
+
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
+    def test_switch_tabs_in_different_windows_with_focus_change(self):
+        new_tab1 = self.open_tab(focus=True)
+        self.assertEqual(self.marionette.current_window_handle, self.start_tab)
+        self.assertEqual(self.get_selected_tab_index(), 1)
+
+        # Switch to new tab first which is already selected
+        self.marionette.switch_to_window(new_tab1)
+        self.assertEqual(self.marionette.current_window_handle, new_tab1)
+        self.assertEqual(self.get_selected_tab_index(), 1)
+
+        # Open a new browser window with a single focused tab already focused
+        with self.marionette.using_context("content"):
+            new_tab2 = self.open_window(focus=True)
+        self.assertEqual(self.marionette.current_window_handle, new_tab1)
+        self.assertEqual(self.get_selected_tab_index(), 0)
+
+        # Switch to that tab
+        self.marionette.switch_to_window(new_tab2)
+        self.assertEqual(self.marionette.current_window_handle, new_tab2)
+        self.assertEqual(self.get_selected_tab_index(), 0)
+
+        # Switch back to the 2nd tab of the original window and setting the focus
+        self.marionette.switch_to_window(new_tab1, focus=True)
+        self.assertEqual(self.marionette.current_window_handle, new_tab1)
+        self.assertEqual(self.get_selected_tab_index(), 1)
+
+        self.marionette.switch_to_window(new_tab2)
+        self.marionette.close()
+
+        self.marionette.switch_to_window(new_tab1)
         self.marionette.close()
 
         self.marionette.switch_to_window(self.start_tab)
