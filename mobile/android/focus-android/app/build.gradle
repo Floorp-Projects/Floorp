@@ -19,7 +19,7 @@ android {
         targetSdkVersion 28
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "8.0.12"
+        versionName "8.0.13"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
