@@ -184,17 +184,11 @@ nsStringEnumerator::GetNext(nsISupports** aResult) {
 
   if (mIsUnicode) {
     nsSupportsString* stringImpl = new nsSupportsString();
-    if (!stringImpl) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     stringImpl->SetData(mArray->ElementAt(mIndex++));
     *aResult = stringImpl;
   } else {
     nsSupportsCString* cstringImpl = new nsSupportsCString();
-    if (!cstringImpl) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     cstringImpl->SetData(mCArray->ElementAt(mIndex++));
     *aResult = cstringImpl;

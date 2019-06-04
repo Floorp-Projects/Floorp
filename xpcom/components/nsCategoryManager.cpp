@@ -97,9 +97,6 @@ CategoryEnumerator::GetNext(nsISupports** aResult) {
   }
 
   auto* str = new nsSupportsDependentCString(mArray[mSimpleCurItem++]);
-  if (!str) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   *aResult = str;
   NS_ADDREF(*aResult);

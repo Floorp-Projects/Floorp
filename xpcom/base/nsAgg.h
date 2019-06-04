@@ -283,10 +283,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAggregatedCycleCollectionParticipant,
       return NS_ERROR_INVALID_ARG;                                             \
                                                                                \
     RefPtr<_InstanceClass> inst = new _InstanceClass(aOuter);                  \
-    if (!inst) {                                                               \
-      return NS_ERROR_OUT_OF_MEMORY;                                           \
-    }                                                                          \
-                                                                               \
     nsISupports* inner = inst->InnerObject();                                  \
     nsresult rv = inner->QueryInterface(aIID, aResult);                        \
                                                                                \
@@ -301,10 +297,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAggregatedCycleCollectionParticipant,
       return NS_ERROR_INVALID_ARG;                                             \
                                                                                \
     RefPtr<_InstanceClass> inst = new _InstanceClass(aOuter);                  \
-    if (!inst) {                                                               \
-      return NS_ERROR_OUT_OF_MEMORY;                                           \
-    }                                                                          \
-                                                                               \
     nsISupports* inner = inst->InnerObject();                                  \
     NS_ADDREF(inner);                                                          \
     nsresult rv = inst->_InitMethod();                                         \
