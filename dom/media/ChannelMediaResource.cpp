@@ -11,7 +11,6 @@
 #include "nsIClassOfService.h"
 #include "nsIInputStream.h"
 #include "nsIThreadRetargetableRequest.h"
-#include "nsITimedChannel.h"
 #include "nsHttp.h"
 #include "nsNetUtil.h"
 
@@ -605,11 +604,6 @@ already_AddRefed<nsIPrincipal> ChannelMediaResource::GetCurrentPrincipal() {
   return do_AddRef(mSharedInfo->mPrincipal);
 }
 
-bool ChannelMediaResource::HadCrossOriginRedirects() {
-  MOZ_ASSERT(NS_IsMainThread());
-  return mSharedInfo->mHadCrossOriginRedirects;
-}
-
 bool ChannelMediaResource::CanClone() {
   return !mClosed && mCacheStream.IsAvailableForSharing();
 }
@@ -820,20 +814,6 @@ void ChannelMediaResource::UpdatePrincipal() {
                                                 principal)) {
     for (auto* r : mSharedInfo->mResources) {
       r->CacheClientNotifyPrincipalChanged();
-    }
-  }
-
-  // ChannelMediaResource can recreate the channel. When this happens, we don't
-  // want to overwrite mHadCrossOriginRedirects because the new channel could
-  // skip intermediate redirects.
-  if (!mSharedInfo->mHadCrossOriginRedirects) {
-    nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel);
-    if (timedChannel) {
-      bool allRedirectsSameOrigin = false;
-      mSharedInfo->mHadCrossOriginRedirects =
-          NS_SUCCEEDED(timedChannel->GetAllRedirectsSameOrigin(
-              &allRedirectsSameOrigin)) &&
-          !allRedirectsSameOrigin;
     }
   }
 }

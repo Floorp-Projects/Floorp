@@ -770,10 +770,8 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
 
   // Check security.
   nsCOMPtr<nsIPrincipal> principal = aVideoEl.GetCurrentVideoPrincipal();
-  bool hadCrossOriginRedirects = aVideoEl.HadCrossOriginRedirects();
   bool CORSUsed = aVideoEl.GetCORSMode() != CORS_NONE;
-  bool writeOnly =
-      CheckWriteOnlySecurity(CORSUsed, principal, hadCrossOriginRedirects);
+  bool writeOnly = CheckWriteOnlySecurity(CORSUsed, principal);
 
   // Create ImageBitmap.
   RefPtr<layers::Image> data = aVideoEl.GetCurrentImage();

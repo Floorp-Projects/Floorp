@@ -1467,9 +1467,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   bool isResolvedByTRR = false;
   chan->GetIsResolvedByTRR(&isResolvedByTRR);
 
-  bool allRedirectsSameOrigin = false;
-  chan->GetAllRedirectsSameOrigin(&allRedirectsSameOrigin);
-
   rv = NS_OK;
   if (mIPCClosed ||
       !SendOnStartRequest(
@@ -1479,8 +1476,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
           mCacheEntry ? true : false, cacheEntryId, fetchCount, expirationTime,
           cachedCharset, secInfoSerialization, chan->GetSelfAddr(),
           chan->GetPeerAddr(), redirectCount, cacheKey, altDataType, altDataLen,
-          deliveringAltData, applyConversion, isResolvedByTRR, timing,
-          allRedirectsSameOrigin)) {
+          deliveringAltData, applyConversion, isResolvedByTRR, timing)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();
