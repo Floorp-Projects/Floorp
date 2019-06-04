@@ -162,7 +162,12 @@ class BrowserParent final : public PBrowserParent,
   nsIXULBrowserWindow* GetXULBrowserWindow();
 
   /**
-   * Return the top level doc accessible parent for this tab.
+   * Return the top level DocAccessibleParent for this BrowserParent.
+   * Note that in the case of an out-of-process iframe, the returned actor
+   * might not be at the top level of the DocAccessibleParent tree; i.e. it
+   * might have a parent. However, it will be at the top level in its content
+   * process. That is, doc->IsTopLevelInContentProcess() will always be true,
+   * but doc->IsTopLevel() might not.
    */
   a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 

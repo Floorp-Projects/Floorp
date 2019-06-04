@@ -130,4 +130,11 @@ std::string string_trim(const std::string& s) {
   return s.substr(first, last - first + 1);
 }
 
+std::string ToHex(const int i) {
+  char buffer[50];
+  snprintf(buffer, sizeof(buffer), "%x", i);
+
+  return std::string(buffer);
+}
+
 }  // namespace rtc

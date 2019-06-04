@@ -11,7 +11,6 @@
 #include "nsContentUtils.h"
 #include "nsIFileChannel.h"
 #include "nsIFileStreams.h"
-#include "nsITimedChannel.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
@@ -116,20 +115,6 @@ already_AddRefed<nsIPrincipal> FileMediaResource::GetCurrentPrincipal() {
   if (!secMan || !mChannel) return nullptr;
   secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
   return principal.forget();
-}
-
-bool FileMediaResource::HadCrossOriginRedirects() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel);
-  if (!timedChannel) {
-    return false;
-  }
-
-  bool allRedirectsSameOrigin = false;
-  return NS_SUCCEEDED(timedChannel->GetAllRedirectsSameOrigin(
-             &allRedirectsSameOrigin)) &&
-         !allRedirectsSameOrigin;
 }
 
 nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset,

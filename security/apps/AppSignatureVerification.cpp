@@ -1368,5 +1368,5 @@ nsNSSCertificateDB::OpenSignedAppFileAsync(
   SignaturePolicy policy(policyInt);
   RefPtr<OpenSignedAppFileTask> task(
       new OpenSignedAppFileTask(aTrustedRoot, aJarFile, policy, aCallback));
-  return task->Dispatch("SignedJAR");
+  return task->Dispatch();
 }

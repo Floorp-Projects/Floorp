@@ -32,6 +32,8 @@
 #include "hb-subset-cff-common.hh"
 #include "hb-cff2-interp-cs.hh"
 
+#ifndef HB_NO_SUBSET_CFF
+
 using namespace CFF;
 
 struct cff2_sub_table_offsets_t : cff_sub_table_offsets_t
@@ -183,7 +185,7 @@ struct cff2_cs_opset_subr_subset_t : cff2_cs_opset_t<cff2_cs_opset_subr_subset_t
 
       case OpCode_return:
 	param.current_parsed_str->set_parsed ();
-	env.returnFromSubr ();
+	env.return_from_subr ();
 	param.set_current_str (env, false);
 	break;
 
@@ -213,7 +215,7 @@ struct cff2_cs_opset_subr_subset_t : cff2_cs_opset_t<cff2_cs_opset_subr_subset_t
 				 cff2_biased_subrs_t& subrs, hb_set_t *closure)
   {
     byte_str_ref_t    str_ref = env.str_ref;
-    env.callSubr (subrs, type);
+    env.call_subr (subrs, type);
     param.current_parsed_str->add_call_op (op, str_ref, env.context.subr_num);
     hb_set_add (closure, env.context.subr_num);
     param.set_current_str (env, true);
@@ -225,8 +227,8 @@ struct cff2_cs_opset_subr_subset_t : cff2_cs_opset_t<cff2_cs_opset_subr_subset_t
 
 struct cff2_subr_subsetter_t : subr_subsetter_t<cff2_subr_subsetter_t, CFF2Subrs, const OT::cff2::accelerator_subset_t, cff2_cs_interp_env_t, cff2_cs_opset_subr_subset_t>
 {
-  cff2_subr_subsetter_t (const OT::cff2::accelerator_subset_t &acc, const hb_subset_plan_t *plan)
-    : subr_subsetter_t (acc, plan) {}
+  cff2_subr_subsetter_t (const OT::cff2::accelerator_subset_t &acc_, const hb_subset_plan_t *plan_)
+    : subr_subsetter_t (acc_, plan_) {}
 
   static void finalize_parsed_str (cff2_cs_interp_env_t &env, subr_subset_param_t& param, parsed_cs_str_t &charstring)
   {
@@ -451,14 +453,14 @@ static inline bool _write_cff2 (const cff2_subset_plan &plan,
     return false;
 
   /* header */
-  cff2->version.major.set (0x02);
-  cff2->version.minor.set (0x00);
-  cff2->topDict.set (OT::cff2::static_size);
+  cff2->version.major = 0x02;
+  cff2->version.minor = 0x00;
+  cff2->topDict = OT::cff2::static_size;
 
   /* top dict */
   {
     assert (cff2->topDict == (unsigned) (c.head - c.start));
-    cff2->topDictSize.set (plan.offsets.topDictInfo.size);
+    cff2->topDictSize = plan.offsets.topDictInfo.size;
     TopDict &dict = cff2 + cff2->topDict;
     cff2_top_dict_op_serializer_t topSzr;
     if (unlikely (!dict.serialize (&c, acc.topDict, topSzr, plan.offsets)))
@@ -571,7 +573,7 @@ static inline bool _write_cff2 (const cff2_subset_plan &plan,
   return true;
 }
 
-static bool
+static inline bool
 _hb_subset_cff2 (const OT::cff2::accelerator_subset_t  &acc,
 		const char		      *data,
 		hb_subset_plan_t		*plan,
@@ -626,3 +628,5 @@ hb_subset_cff2 (hb_subset_plan_t *plan,
 
   return result;
 }
+
+#endif

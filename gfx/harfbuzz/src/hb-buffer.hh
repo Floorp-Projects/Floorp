@@ -379,7 +379,7 @@ struct hb_buffer_t
 				     unsigned int cluster) const
   {
     for (unsigned int i = start; i < end; i++)
-      cluster = MIN<unsigned int> (cluster, infos[i].cluster);
+      cluster = hb_min (cluster, infos[i].cluster);
     return cluster;
   }
   void

@@ -164,6 +164,8 @@ class DocumentL10n final : public nsIObserver,
   void OnChange();
   static void SetRootInfo(Element* aElement);
 
+  void OnCreatePresShell();
+
  protected:
   void DisconnectRoots();
   void TranslateRoots();

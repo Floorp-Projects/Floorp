@@ -146,7 +146,7 @@ set_myanmar_properties (hb_glyph_info_t &info)
       break;
 
     case 0xAA74u: case 0xAA75u: case 0xAA76u:
-      /* https://github.com/roozbehp/unicode-data/issues/3 */
+      /* https://github.com/harfbuzz/harfbuzz/issues/218 */
       cat = OT_C;
       break;
   }

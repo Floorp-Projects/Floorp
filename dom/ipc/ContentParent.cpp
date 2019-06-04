@@ -703,19 +703,27 @@ uint32_t ContentParent::GetPoolSize(const nsAString& aContentProcessType) {
 /*static*/
 uint32_t ContentParent::GetMaxProcessCount(
     const nsAString& aContentProcessType) {
-  if (aContentProcessType.EqualsLiteral("web")) {
+  // The suffix after a `=` in a remoteType is dynamic, and used to control the
+  // process pool to use. Max process count is based only on the prefix.
+  int32_t equalIdx = aContentProcessType.FindChar(L'=');
+  if (equalIdx == kNotFound) {
+    equalIdx = aContentProcessType.Length();
+  }
+  const nsDependentSubstring processTypePrefix =
+      StringHead(aContentProcessType, equalIdx);
+
+  // Check for the default remote type of "web", as it uses different prefs.
+  if (processTypePrefix.EqualsLiteral("web")) {
     return GetMaxWebProcessCount();
   }
 
+  // Read the pref controling this remote type. `dom.ipc.processCount` is not
+  // used as a fallback, as it is intended to control the number of "web"
+  // content processes, checked in `mozilla::GetMaxWebProcessCount()`.
   nsAutoCString processCountPref("dom.ipc.processCount.");
-  processCountPref.Append(NS_ConvertUTF16toUTF8(aContentProcessType));
+  AppendUTF16toUTF8(processTypePrefix, processCountPref);
 
-  int32_t maxContentParents;
-  if (NS_FAILED(
-          Preferences::GetInt(processCountPref.get(), &maxContentParents))) {
-    maxContentParents = Preferences::GetInt("dom.ipc.processCount", 1);
-  }
-
+  int32_t maxContentParents = Preferences::GetInt(processCountPref.get(), 1);
   if (maxContentParents < 1) {
     maxContentParents = 1;
   }

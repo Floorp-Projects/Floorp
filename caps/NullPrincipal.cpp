@@ -24,6 +24,8 @@
 #include "nsScriptSecurityManager.h"
 #include "pratom.h"
 
+#include "json/json.h"
+
 using namespace mozilla;
 
 NS_IMPL_CLASSINFO(NullPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
@@ -211,20 +213,68 @@ NullPrincipal::Read(nsIObjectInputStream* aStream) {
 
 NS_IMETHODIMP
 NullPrincipal::Write(nsIObjectOutputStream* aStream) {
-  NS_ENSURE_STATE(mURI);
+  // Read is used still for legacy principals
+  MOZ_RELEASE_ASSERT(false, "Old style serialization is removed");
+  return NS_OK;
+}
 
-  nsAutoCString spec;
-  nsresult rv = mURI->GetSpec(spec);
+nsresult NullPrincipal::PopulateJSONObject(Json::Value& aObject) {
+  nsAutoCString codebase;
+  nsresult rv = mURI->GetSpec(codebase);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aStream->WriteStringZ(spec.get());
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(codebase.Length() ==
+                 NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":").Length() +
+                     NSID_LENGTH - 1,
+             "Length of the URI should be: (scheme, uuid, - nullptr)");
+  aObject[std::to_string(eSpec)] = codebase.get();
 
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
-
-  rv = aStream->WriteStringZ(suffix.get());
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (suffix.Length() > 0) {
+    aObject[std::to_string(eSuffix)] = suffix.get();
+  }
 
   return NS_OK;
+}
+
+already_AddRefed<BasePrincipal> NullPrincipal::FromProperties(
+    nsTArray<NullPrincipal::KeyVal>& aFields) {
+  MOZ_ASSERT(aFields.Length() == eMax + 1, "Must have all the keys");
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  OriginAttributes attrs;
+
+  // The odd structure here is to make the code to not compile
+  // if all the switch enum cases haven't been codified
+  for (const auto& field : aFields) {
+    switch (field.key) {
+      case NullPrincipal::eSpec:
+        if (!field.valueWasSerialized) {
+          MOZ_ASSERT(false,
+                     "Null principals require a spec URI in serialized JSON");
+          return nullptr;
+        }
+        rv = NS_NewURI(getter_AddRefs(uri), field.value);
+        NS_ENSURE_SUCCESS(rv, nullptr);
+        break;
+      case NullPrincipal::eSuffix:
+        bool ok = attrs.PopulateFromSuffix(field.value);
+        if (!ok) {
+          return nullptr;
+        }
+        break;
+    }
+  }
+
+  if (!uri) {
+    MOZ_ASSERT(false, "No URI deserialized");
+    return nullptr;
+  }
+
+  RefPtr<NullPrincipal> nullPrincipal = new NullPrincipal();
+  rv = nullPrincipal->Init(attrs, uri);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+  return nullPrincipal.forget();
 }

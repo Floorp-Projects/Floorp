@@ -32,6 +32,8 @@
 #include "hb-subset-cff-common.hh"
 #include "hb-cff1-interp-cs.hh"
 
+#ifndef HB_NO_SUBSET_CFF
+
 using namespace CFF;
 
 struct remap_sid_t : remap_t
@@ -147,7 +149,7 @@ struct cff1_top_dict_op_serializer_t : cff_top_dict_op_serializer_t<cff1_top_dic
 	    return_trace (false);
 	  HBUINT8 *p = c->allocate_size<HBUINT8> (1);
 	  if (unlikely (p == nullptr)) return_trace (false);
-	  p->set (OpCode_Private);
+	  *p = OpCode_Private;
 	}
 	break;
 
@@ -351,7 +353,7 @@ struct cff1_cs_opset_subr_subset_t : cff1_cs_opset_t<cff1_cs_opset_subr_subset_t
       case OpCode_return:
 	param.current_parsed_str->add_op (op, env.str_ref);
 	param.current_parsed_str->set_parsed ();
-	env.returnFromSubr ();
+	env.return_from_subr ();
 	param.set_current_str (env, false);
 	break;
 
@@ -382,7 +384,7 @@ struct cff1_cs_opset_subr_subset_t : cff1_cs_opset_t<cff1_cs_opset_subr_subset_t
 				 cff1_biased_subrs_t& subrs, hb_set_t *closure)
   {
     byte_str_ref_t    str_ref = env.str_ref;
-    env.callSubr (subrs, type);
+    env.call_subr (subrs, type);
     param.current_parsed_str->add_call_op (op, str_ref, env.context.subr_num);
     hb_set_add (closure, env.context.subr_num);
     param.set_current_str (env, true);
@@ -394,8 +396,8 @@ struct cff1_cs_opset_subr_subset_t : cff1_cs_opset_t<cff1_cs_opset_subr_subset_t
 
 struct cff1_subr_subsetter_t : subr_subsetter_t<cff1_subr_subsetter_t, CFF1Subrs, const OT::cff1::accelerator_subset_t, cff1_cs_interp_env_t, cff1_cs_opset_subr_subset_t, OpCode_endchar>
 {
-  cff1_subr_subsetter_t (const OT::cff1::accelerator_subset_t &acc, const hb_subset_plan_t *plan)
-    : subr_subsetter_t (acc, plan) {}
+  cff1_subr_subsetter_t (const OT::cff1::accelerator_subset_t &acc_, const hb_subset_plan_t *plan_)
+    : subr_subsetter_t (acc_, plan_) {}
 
   static void finalize_parsed_str (cff1_cs_interp_env_t &env, subr_subset_param_t& param, parsed_cs_str_t &charstring)
   {
@@ -892,10 +894,10 @@ static inline bool _write_cff1 (const cff_subset_plan &plan,
     return false;
 
   /* header */
-  cff->version.major.set (0x01);
-  cff->version.minor.set (0x00);
-  cff->nameIndex.set (cff->min_size);
-  cff->offSize.set (4); /* unused? */
+  cff->version.major = 0x01;
+  cff->version.minor = 0x00;
+  cff->nameIndex = cff->min_size;
+  cff->offSize = 4; /* unused? */
 
   /* name INDEX */
   {
@@ -912,7 +914,7 @@ static inline bool _write_cff1 (const cff_subset_plan &plan,
   /* top dict INDEX */
   {
     assert (plan.offsets.topDictInfo.offset == (unsigned) (c.head - c.start));
-    CFF1IndexOf<TopDict> *dest = c.start_embed< CFF1IndexOf<TopDict> > ();
+    CFF1IndexOf<TopDict> *dest = c.start_embed< CFF1IndexOf<TopDict>> ();
     if (dest == nullptr) return false;
     cff1_top_dict_op_serializer_t topSzr;
     top_dict_modifiers_t  modifier (plan.offsets, plan.topDictModSIDs);
@@ -1064,7 +1066,7 @@ static inline bool _write_cff1 (const cff_subset_plan &plan,
   return true;
 }
 
-static bool
+static inline bool
 _hb_subset_cff1 (const OT::cff1::accelerator_subset_t  &acc,
 		const char		*data,
 		hb_subset_plan_t	*plan,
@@ -1118,3 +1120,5 @@ hb_subset_cff1 (hb_subset_plan_t *plan,
 
   return result;
 }
+
+#endif

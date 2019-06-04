@@ -56,12 +56,17 @@ UNIFIED_SOURCES += [
     'SystemPrincipal.cpp',
 ]
 
+USE_LIBS += [
+    'jsoncpp',
+]
+
 LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
     '/js/xpconnect/src',
     '/netwerk/base',
     '/netwerk/cookie',
+    '/toolkit/components/jsoncpp/include',
 ]
 
 if CONFIG['ENABLE_TESTS']:

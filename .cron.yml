@@ -83,6 +83,17 @@ jobs:
               mozilla-central: [{hour: 10, minute: 0}]
               # No default
 
+    - name: tp6m-fennec-v64
+      job:
+          type: decision-task
+          treeherder-symbol: f64
+          target-tasks-method: fennec_v64
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {weekday: 'Saturday', hour: 5, minute: 0}
+
     - name: searchfox-index
       job:
           type: decision-task

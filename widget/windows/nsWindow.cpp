@@ -5866,16 +5866,11 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         int32_t action = LOWORD(wParam);
         if (action == UIS_SET || action == UIS_CLEAR) {
           int32_t flags = HIWORD(wParam);
-          UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
           UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
-          if (flags & UISF_HIDEACCEL)
-            showAccelerators = (action == UIS_SET) ? UIStateChangeType_Clear
-                                                   : UIStateChangeType_Set;
           if (flags & UISF_HIDEFOCUS)
             showFocusRings = (action == UIS_SET) ? UIStateChangeType_Clear
                                                  : UIStateChangeType_Set;
-
-          NotifyUIStateChanged(showAccelerators, showFocusRings);
+          NotifyUIStateChanged(showFocusRings);
         }
       }
 

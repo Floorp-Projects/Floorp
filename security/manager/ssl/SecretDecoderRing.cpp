@@ -20,6 +20,7 @@
 #include "nsITokenPasswordDialogs.h"
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
+#include "nsNetCID.h"
 #include "nsPK11TokenDB.h"
 #include "pk11func.h"
 #include "pk11sdr.h"  // For PK11SDR_Encrypt, PK11SDR_Decrypt
@@ -170,9 +171,12 @@ SecretDecoderRing::AsyncEncryptStrings(uint32_t plaintextsCount,
         BackgroundSdrEncryptStrings(plaintextsUtf8, promise);
       }));
 
-  nsCOMPtr<nsIThread> encryptionThread;
-  nsresult rv = NS_NewNamedThread("AsyncSDRThread",
-                                  getter_AddRefs(encryptionThread), runnable);
+  nsCOMPtr<nsIEventTarget> target(
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+  if (!target) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = target->Dispatch(runnable, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

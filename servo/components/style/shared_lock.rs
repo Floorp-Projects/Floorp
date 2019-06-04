@@ -71,11 +71,21 @@ impl SharedRwLock {
         }
     }
 
+    /// Create a new global shared lock (servo).
+    #[cfg(feature = "servo")]
+    pub fn new_leaked() -> Self {
+        SharedRwLock {
+            arc: Arc::new_leaked(RwLock::new(())),
+        }
+    }
+
     /// Create a new global shared lock (gecko).
     #[cfg(feature = "gecko")]
     pub fn new_leaked() -> Self {
         SharedRwLock {
-            cell: Some(Arc::new_leaked(AtomicRefCell::new(SomethingZeroSizedButTyped))),
+            cell: Some(Arc::new_leaked(AtomicRefCell::new(
+                SomethingZeroSizedButTyped,
+            ))),
         }
     }
 

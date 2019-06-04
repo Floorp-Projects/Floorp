@@ -81,7 +81,7 @@ struct cff1_cs_interp_env_t : cs_interp_env_t<number_t, CFF1Subrs>
   typedef cs_interp_env_t<number_t, CFF1Subrs> SUPER;
 };
 
-template <typename OPSET, typename PARAM, typename PATH=path_procs_null_t<cff1_cs_interp_env_t, PARAM> >
+template <typename OPSET, typename PARAM, typename PATH=path_procs_null_t<cff1_cs_interp_env_t, PARAM>>
 struct cff1_cs_opset_t : cs_opset_t<number_t, OPSET, cff1_cs_interp_env_t, PARAM, PATH>
 {
   /* PostScript-originated legacy opcodes (OpCode_add etc) are unsupported */

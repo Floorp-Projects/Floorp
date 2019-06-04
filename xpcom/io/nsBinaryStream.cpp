@@ -877,6 +877,18 @@ nsBinaryInputStream::ReadObject(bool aIsStrongRef, nsISupports** aObject) {
     const nsIID newURIiid = NS_IURI_IID;
     iid = newURIiid;
   }
+
+  // Hack around bug 1508939
+  // The old CSP serialization can't be handled cleanly when
+  // it's embedded in an old style principal
+  static const nsIID oldCSPiid = {
+      0xb3c4c0ae,
+      0xbd5e,
+      0x4cad,
+      {0x87, 0xe0, 0x8d, 0x21, 0x0d, 0xbb, 0x3f, 0x9f}};
+  if (iid.Equals(oldCSPiid)) {
+    return NS_ERROR_FAILURE;
+  }
   // END HACK
 
   // HACK:  Service workers store resource security info on disk in the dom

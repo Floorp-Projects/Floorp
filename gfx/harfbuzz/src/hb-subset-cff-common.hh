@@ -209,7 +209,7 @@ struct cff_font_dict_op_serializer_t : op_serializer_t
       /* serialize the opcode */
       HBUINT8 *p = c->allocate_size<HBUINT8> (1);
       if (unlikely (p == nullptr)) return_trace (false);
-      p->set (OpCode_Private);
+      *p = OpCode_Private;
 
       return_trace (true);
     }

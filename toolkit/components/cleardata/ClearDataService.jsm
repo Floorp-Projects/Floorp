@@ -93,8 +93,10 @@ const CertCleaner = {
   },
 
   deleteAll() {
+    let overrideService = Cc["@mozilla.org/security/certoverride;1"]
+                            .getService(Ci.nsICertOverrideService);
     return new Promise(aResolve => {
-      Cu.reportError("CertCleaner.deleteAll is not implemented");
+      overrideService.clearAllOverrides();
       aResolve();
     });
   },

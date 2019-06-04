@@ -68,7 +68,7 @@ struct hb_ot_map_t
     unsigned short random : 1;
     hb_mask_t mask;
 
-    static int cmp (const void *pa, const void *pb)
+    HB_INTERNAL static int cmp (const void *pa, const void *pb)
     {
       const lookup_map_t *a = (const lookup_map_t *) pa;
       const lookup_map_t *b = (const lookup_map_t *) pb;
@@ -167,7 +167,7 @@ struct hb_ot_map_t
 
   hb_mask_t global_mask;
 
-  hb_vector_t<feature_map_t> features;
+  hb_sorted_vector_t<feature_map_t> features;
   hb_vector_t<lookup_map_t> lookups[2]; /* GSUB/GPOS */
   hb_vector_t<stage_map_t> stages[2]; /* GSUB/GPOS */
 };
@@ -247,7 +247,7 @@ struct hb_ot_map_builder_t
     unsigned int default_value; /* for non-global features, what should the unset glyphs take */
     unsigned int stage[2]; /* GSUB/GPOS */
 
-    static int cmp (const void *pa, const void *pb)
+    HB_INTERNAL static int cmp (const void *pa, const void *pb)
     {
       const feature_info_t *a = (const feature_info_t *) pa;
       const feature_info_t *b = (const feature_info_t *) pb;

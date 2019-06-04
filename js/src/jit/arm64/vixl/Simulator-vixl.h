@@ -849,6 +849,8 @@ class Simulator : public DecoderVisitor {
   bool Z() const { return nzcv_.Z() != 0; }
   bool C() const { return nzcv_.C() != 0; }
   bool V() const { return nzcv_.V() != 0; }
+
+  SimSystemRegister& ReadNzcv() { return nzcv_; }
   SimSystemRegister& nzcv() { return nzcv_; }
 
   // TODO: Find a way to make the fpcr_ members return the proper types, so
@@ -2291,6 +2293,7 @@ class Simulator : public DecoderVisitor {
   int64_t FPToInt64(double value, FPRounding rmode);
   uint32_t FPToUInt32(double value, FPRounding rmode);
   uint64_t FPToUInt64(double value, FPRounding rmode);
+  int32_t FPToFixedJS(double value);
 
   template <typename T>
   T FPAdd(T op1, T op2);

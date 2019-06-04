@@ -279,10 +279,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // principal. Returns null if nothing is playing.
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
-  // Return true if the loading of this resource required cross-origin
-  // redirects.
-  bool HadCrossOriginRedirects();
-
   // Principal of the currently playing video resource. Anything accessing the
   // image container of this element must have a principal that subsumes this
   // principal. If there are no live video tracks but content has been rendered

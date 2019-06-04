@@ -176,8 +176,7 @@ void DashArrayToJSVal(nsTArray<T>& dashes, JSContext* cx,
 
 // returns true if write-only mode must used for this principal based on
 // the incumbent global.
-bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal,
-                            bool aHadCrossOriginRedirects);
+bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal);
 
 }  // namespace CanvasUtils
 }  // namespace mozilla

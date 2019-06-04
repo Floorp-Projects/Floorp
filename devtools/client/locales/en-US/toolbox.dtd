@@ -136,6 +136,11 @@
 <!ENTITY options.timestampMessages.label      "Enable timestamps">
 <!ENTITY options.timestampMessages.tooltip    "If you enable this option commands and output in the Web Console will display a timestamp">
 
+<!-- LOCALIZATION NOTE (options.warningGroups.label): This is the
+   - label for the checkbox that toggles the warningGroups feature in the Web Console -->
+<!ENTITY options.warningGroups.label      "Group similar message">
+<!ENTITY options.warningGroups.tooltip    "When enabled, similar messages are placed into groups">
+
 <!-- LOCALIZATION NOTE (options.debugger.label): This is the label for the
   -  heading of the group of Debugger preferences in the options panel. -->
 <!ENTITY options.debugger.label            "Debugger">

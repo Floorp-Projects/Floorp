@@ -368,7 +368,8 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
   if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
     return;
 
-  /* Note: This loop is extra overhead, but should not be measurable. */
+  /* Note: This loop is extra overhead, but should not be measurable.
+   * TODO Use a buffer scratch flag to remove the loop. */
   bool has_broken_syllables = false;
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
@@ -407,7 +408,6 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
       ginfo.cluster = buffer->cur().cluster;
       ginfo.mask = buffer->cur().mask;
       ginfo.syllable() = buffer->cur().syllable();
-      /* TODO Set glyph_props? */
 
       /* Insert dottedcircle after possible Repha. */
       while (buffer->idx < buffer->len && buffer->successful &&
