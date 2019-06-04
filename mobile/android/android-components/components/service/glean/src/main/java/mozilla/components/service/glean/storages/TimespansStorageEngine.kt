@@ -140,9 +140,6 @@ internal open class TimespansStorageEngineImplementation(
         // Store the time unit: we'll need it when snapshotting.
         timeUnitsMap[timespanName] = timeUnit
 
-        // Use a custom combiner to sum the new timespan to the one already stored. We
-        // can't adjust the time unit before storing so that we still allow for values
-        // lower than the desired time unit to accumulate.
         super.recordMetric(metricData, elapsedNanos, timeUnit) { currentValue, newValue ->
             newValue
         }
