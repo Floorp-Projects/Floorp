@@ -3558,6 +3558,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mLetterSpacing({0.}),
       mLineHeight(StyleLineHeight::Normal()),
       mTextIndent(LengthPercentage::Zero()),
+      mTextUnderlineOffset(LengthOrAuto::Auto()),
       mWebkitTextStrokeWidth(0) {
   MOZ_COUNT_CTOR(nsStyleText);
   RefPtr<nsAtom> language = aDocument.GetContentLanguageAsAtomForStyle();
@@ -3594,6 +3595,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mLetterSpacing(aSource.mLetterSpacing),
       mLineHeight(aSource.mLineHeight),
       mTextIndent(aSource.mTextIndent),
+      mTextUnderlineOffset(aSource.mTextUnderlineOffset),
       mWebkitTextStrokeWidth(aSource.mWebkitTextStrokeWidth),
       mTextShadow(aSource.mTextShadow),
       mTextEmphasisStyleString(aSource.mTextEmphasisStyleString) {
@@ -3627,6 +3629,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mLetterSpacing != aNewData.mLetterSpacing) ||
       (mLineHeight != aNewData.mLineHeight) ||
       (mTextIndent != aNewData.mTextIndent) ||
+      (mTextUnderlineOffset != aNewData.mTextUnderlineOffset) ||
       (mTextJustify != aNewData.mTextJustify) ||
       (mWordSpacing != aNewData.mWordSpacing) ||
       (mMozTabSize != aNewData.mMozTabSize)) {

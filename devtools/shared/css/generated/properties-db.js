@@ -3182,6 +3182,7 @@ exports.CSS_PROPERTIES = {
       "text-combine-upright",
       "text-rendering",
       "-moz-control-character-visibility",
+      "text-underline-offset",
       "cursor",
       "pointer-events",
       "-moz-user-input",
@@ -10730,6 +10731,10 @@ exports.PREFERENCES = [
   [
     "scrollbar-color",
     "layout.css.scrollbar-color.enabled"
+  ],
+  [
+    "text-underline-offset",
+    "layout.css.text-underline-offset.enabled"
   ],
   [
     "translate",

@@ -342,6 +342,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "stroke-width",
     "-moz-tab-size",
     "text-indent",
+    "text-underline-offset",
     "top",
     "vertical-align",
     "width",
