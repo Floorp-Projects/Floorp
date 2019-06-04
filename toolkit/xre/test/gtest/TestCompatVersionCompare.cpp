@@ -12,11 +12,10 @@ void CheckCompatVersionCompare(const nsCString& aOldCompatVersion,
                                bool aExpectedSame, bool aExpectedDowngrade) {
   printf("Comparing '%s' to '%s'.\n", aOldCompatVersion.get(), aNewCompatVersion.get());
 
-  bool isDowngrade = false;
-  bool isSame = CheckCompatVersions(aOldCompatVersion, aNewCompatVersion, &isDowngrade);
+  int32_t result = CompareCompatVersions(aOldCompatVersion, aNewCompatVersion);
 
-  ASSERT_EQ(aExpectedSame, isSame) << "Version sameness check should match.";
-  ASSERT_EQ(aExpectedDowngrade, isDowngrade) << "Version downgrade check should match.";
+  ASSERT_EQ(aExpectedSame, result == 0) << "Version sameness check should match.";
+  ASSERT_EQ(aExpectedDowngrade, result > 0) << "Version downgrade check should match.";
 }
 
 void CheckExpectedResult(
@@ -34,6 +33,7 @@ void CheckExpectedResult(
                             aExpectedSame, aExpectedDowngrade);
 }
 
+// clang-format off
 TEST(CompatVersionCompare, CompareVersionChange) {
   // Identical
   CheckExpectedResult(
@@ -124,8 +124,26 @@ TEST(CompatVersionCompare, CompareVersionChange) {
     "67.0.5", "20190523030228","20190523030228",
     false, false);
   CheckExpectedResult(
-    "67.0.5", "20190523030228","20190523030228",
+    "67.0.5", "20190523030228", "20190523030228",
     "67.0",   "20190516215225", "20190516215225",
+    false, true);
+
+  // A newer or equal version should not go on to test the build IDs (bug 1556612).
+  CheckExpectedResult(
+    "65.0",   "30000000000000", "20000000000000",
+    "66.0",   "20000000000000", "20000000000000",
+    false, false);
+  CheckExpectedResult(
+    "65.0",   "20000000000000", "30000000000000",
+    "66.0",   "20000000000000", "20000000000000",
+    false, false);
+  CheckExpectedResult(
+    "66.0",   "30000000000000", "20000000000000",
+    "65.0",   "20000000000000", "20000000000000",
+    false, true);
+  CheckExpectedResult(
+    "66.0",   "20000000000000", "30000000000000",
+    "65.0",   "20000000000000", "20000000000000",
     false, true);
 
   // Check that if the last run was safe mode then we consider this an upgrade.
@@ -134,3 +152,4 @@ TEST(CompatVersionCompare, CompareVersionChange) {
     NS_LITERAL_CSTRING("67.0.1_20000000000000/20000000000000"),
     false, false);
 }
+// clang-format on
