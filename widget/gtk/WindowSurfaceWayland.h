@@ -11,7 +11,7 @@
 #include "mozilla/gfx/Types.h"
 #include "nsWaylandDisplay.h"
 #ifdef HAVE_LIBDRM
-#  include "mozilla/gfx/WaylandDMABufSurface.h"
+#  include "WaylandDMABufSurface.h"
 #endif
 
 #define BACK_BUFFER_NUM 2

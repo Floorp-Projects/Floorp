@@ -106,6 +106,14 @@ if CONFIG['MOZ_WAYLAND']:
         'nsWaylandDisplayShutdown.h',
     ]
 
+if CONFIG['MOZ_WAYLAND'] and CONFIG['HAVE_LIBDRM']:
+    SOURCES += [
+        'WaylandDMABufSurface.cpp',
+    ]
+    EXPORTS.mozilla.widget += [
+        'WaylandDMABufSurface.h',
+    ]
+
 if CONFIG['ACCESSIBILITY']:
     UNIFIED_SOURCES += [
         'maiRedundantObjectFactory.c',
