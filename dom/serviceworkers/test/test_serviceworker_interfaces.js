@@ -197,6 +197,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ProgressEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "PromiseRejectionEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "PushEvent", fennecOrDesktop: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     { name: "PushManager", fennecOrDesktop: true },
