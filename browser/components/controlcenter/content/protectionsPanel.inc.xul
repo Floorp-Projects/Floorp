@@ -7,6 +7,8 @@
        hidden="true"
        photon="true"
        role="alertdialog"
+       onpopupshown="gProtectionsHandler.onPopupShown(event);"
+       onpopuphidden="gProtectionsHandler.onPopupHidden(event);"
        orient="vertical">
 
   <panelmultiview id="protections-popup-multiView"
