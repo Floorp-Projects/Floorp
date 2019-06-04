@@ -147,9 +147,9 @@ ANDROID_BEETMOVER_BUCKET_SCOPES = {
         'release': 'beetmover:bucket:release',
     },
     'default': {
-        'nightly': 'beetmover:bucket:nightly',
-        'beta': 'beetmover:bucket:release',
-        'release': 'beetmover:bucket:release',
+        'nightly': 'beetmover:bucket:dep',
+        'beta': 'beetmover:bucket:dep',
+        'release': 'beetmover:bucket:dep',
     },
 }
 
