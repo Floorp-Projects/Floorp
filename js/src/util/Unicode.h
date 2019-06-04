@@ -80,7 +80,6 @@ constexpr char16_t GREEK_SMALL_LETTER_SIGMA = 0x03C3;
 constexpr char16_t LINE_SEPARATOR = 0x2028;
 constexpr char16_t PARA_SEPARATOR = 0x2029;
 constexpr char16_t REPLACEMENT_CHARACTER = 0xFFFD;
-constexpr char16_t BYTE_ORDER_MARK2 = 0xFFFE;
 
 const char16_t LeadSurrogateMin = 0xD800;
 const char16_t LeadSurrogateMax = 0xDBFF;
@@ -204,19 +203,28 @@ inline bool IsUnicodeIDStart(uint32_t codePoint) {
   return IsUnicodeIDStart(char16_t(codePoint));
 }
 
+// IsSpace checks if a code point is included in the merged set of WhiteSpace
+// and LineTerminator specified by #sec-white-space and #sec-line-terminators.
+// We combine them because nearly every calling function wants this, excepting
+// only some tokenizer code that necessarily handles LineTerminator specially
+// due to UTF-8/UTF-16 template specialization.
 inline bool IsSpace(char16_t ch) {
-  /*
-   * IsSpace checks if some character is included in the merged set
-   * of WhiteSpace and LineTerminator, specified by ES2016 11.2 and 11.3.
-   * We combined them, because in practice nearly every
-   * calling function wants this, except some code in the tokenizer.
-   *
-   * We use a lookup table for ASCII-7 characters, because they are
-   * very common and must be handled quickly in the tokenizer.
-   * NO-BREAK SPACE is supposed to be the most common character not in
-   * this range, so we inline this case, too.
-   */
+  // ASCII code points are very common and must be handled quickly, so use a
+  // lookup table for them.
+  if (ch < 128) {
+    return js_isspace[ch];
+  }
 
+  // NO-BREAK SPACE is supposed to be the most common non-ASCII WhiteSpace code
+  // point, so inline its handling too.
+  if (ch == NO_BREAK_SPACE) {
+    return true;
+  }
+
+  return CharInfo(ch).isSpace();
+}
+
+inline bool IsSpace(JS::Latin1Char ch) {
   if (ch < 128) {
     return js_isspace[ch];
   }
@@ -225,16 +233,20 @@ inline bool IsSpace(char16_t ch) {
     return true;
   }
 
-  return CharInfo(ch).isSpace();
+  MOZ_ASSERT(!CharInfo(ch).isSpace());
+  return false;
 }
 
-inline bool IsSpaceOrBOM2(char32_t ch) {
+inline bool IsSpace(char ch) {
+  return IsSpace(static_cast<JS::Latin1Char>(ch));
+}
+
+inline bool IsSpace(char32_t ch) {
   if (ch < 128) {
     return js_isspace[ch];
   }
 
-  /* We accept BOM2 (0xFFFE) for compatibility reasons in the parser. */
-  if (ch == NO_BREAK_SPACE || ch == BYTE_ORDER_MARK2) {
+  if (ch == NO_BREAK_SPACE) {
     return true;
   }
 
