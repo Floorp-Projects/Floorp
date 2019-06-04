@@ -8,7 +8,7 @@
 
 #ifdef MOZ_BASE_PROFILER
 
-#  include "js/ProfilingStack.h"
+#  include "BaseProfilingStack.h"
 
 #  include "mozilla/IntegerRange.h"
 #  include "mozilla/UniquePtr.h"

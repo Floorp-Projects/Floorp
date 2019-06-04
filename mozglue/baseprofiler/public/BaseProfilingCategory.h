@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_ProfilingCategory_h
-#define js_ProfilingCategory_h
+#ifndef BaseProfilingCategory_h
+#define BaseProfilingCategory_h
 
 #include "BaseProfiler.h"
 
@@ -13,7 +13,9 @@
 #  error Do not #include this header when MOZ_BASE_PROFILER is not #defined.
 #endif
 
-#include "jstypes.h"  // JS_FRIEND_API
+#include "mozilla/Types.h"
+
+#include <cstdint>
 
 // clang-format off
 
@@ -121,9 +123,9 @@ struct ProfilingCategoryPairInfo {
   const char* mLabel;
 };
 
-JS_FRIEND_API const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
+MFBT_API const ProfilingCategoryPairInfo& GetBaseProfilingCategoryPairInfo(
     ProfilingCategoryPair aCategoryPair);
 
 }  // namespace JS
 
-#endif /* js_ProfilingCategory_h */
+#endif /* BaseProfilingCategory_h */

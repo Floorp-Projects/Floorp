@@ -13,12 +13,11 @@
 #  include <psapi.h>
 
 #  include "BaseProfilerSharedLibraries.h"
-#  include "nsWindowsHelpers.h"
+
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/Unused.h"
-#  include "nsNativeCharsetUtils.h"
-#  include "nsPrintfCString.h"
-#  include "nsReadableUtils.h"
+
+#  include <string>
 
 #  define CV_SIGNATURE 0x53445352  // 'SDSR'
 
@@ -31,8 +30,41 @@ struct CodeViewRecord70 {
   char pdbFileName[1];
 };
 
-static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge,
-                       char** aPdbName) {
+static constexpr char digits[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+static void AppendHex(const unsigned char* aBegin, const unsigned char* aEnd,
+                      std::string& aOut) {
+  for (const unsigned char* p = aBegin; p < aEnd; ++p) {
+    unsigned char c = *p;
+    aOut += digits[c >> 4];
+    aOut += digits[c & 0xFu];
+  }
+}
+
+static constexpr bool WITH_PADDING = true;
+static constexpr bool WITHOUT_PADDING = false;
+template <typename T>
+static void AppendHex(T aValue, std::string& aOut, bool aWithPadding) {
+  for (int i = sizeof(T) * 2 - 1; i >= 0; --i) {
+    unsigned nibble = (aValue >> (i * 4)) & 0xFu;
+    // If no-padding requested, skip starting zeroes -- unless we're on the very
+    // last nibble (so we don't output a blank).
+    if (!aWithPadding && i != 0) {
+      if (nibble == 0) {
+        // Requested no padding, skip zeroes.
+        continue;
+      }
+      // Requested no padding, got first non-zero, pretend we now want padding
+      // so we don't skip zeroes anymore.
+      aWithPadding = true;
+    }
+    aOut += digits[nibble];
+  }
+}
+
+static bool GetPdbInfo(uintptr_t aStart, std::string& aSignature,
+                       uint32_t& aAge, char** aPdbName) {
   if (!aStart) {
     return false;
   }
@@ -69,10 +101,13 @@ static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge,
 
   aAge = debugInfo->pdbAge;
   GUID& pdbSignature = debugInfo->pdbSignature;
-  aSignature.m0 = pdbSignature.Data1;
-  aSignature.m1 = pdbSignature.Data2;
-  aSignature.m2 = pdbSignature.Data3;
-  memcpy(aSignature.m3, pdbSignature.Data4, sizeof(pdbSignature.Data4));
+  AppendHex(pdbSignature.Data1, aSignature, WITH_PADDING);
+  AppendHex(pdbSignature.Data2, aSignature, WITH_PADDING);
+  AppendHex(pdbSignature.Data3, aSignature, WITH_PADDING);
+  AppendHex(reinterpret_cast<const unsigned char*>(&pdbSignature.Data4),
+            reinterpret_cast<const unsigned char*>(&pdbSignature.Data4) +
+                sizeof(pdbSignature.Data4),
+            aSignature);
 
   // The PDB file name could be different from module filename, so report both
   // e.g. The PDB for C:\Windows\SysWOW64\ntdll.dll is wntdll.pdb
@@ -81,32 +116,31 @@ static bool GetPdbInfo(uintptr_t aStart, nsID& aSignature, uint32_t& aAge,
   return true;
 }
 
-static nsCString GetVersion(WCHAR* dllPath) {
-  DWORD infoSize = GetFileVersionInfoSizeW(dllPath, nullptr);
+static std::string GetVersion(char* dllPath) {
+  DWORD infoSize = GetFileVersionInfoSizeA(dllPath, nullptr);
   if (infoSize == 0) {
-    return EmptyCString();
+    return {};
   }
 
   mozilla::UniquePtr<unsigned char[]> infoData =
       mozilla::MakeUnique<unsigned char[]>(infoSize);
-  if (!GetFileVersionInfoW(dllPath, 0, infoSize, infoData.get())) {
-    return EmptyCString();
+  if (!GetFileVersionInfoA(dllPath, 0, infoSize, infoData.get())) {
+    return {};
   }
 
   VS_FIXEDFILEINFO* vInfo;
   UINT vInfoLen;
   if (!VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen)) {
-    return EmptyCString();
+    return {};
   }
   if (!vInfo) {
-    return EmptyCString();
+    return {};
   }
 
-  nsPrintfCString version("%d.%d.%d.%d", vInfo->dwFileVersionMS >> 16,
-                          vInfo->dwFileVersionMS & 0xFFFF,
-                          vInfo->dwFileVersionLS >> 16,
-                          vInfo->dwFileVersionLS & 0xFFFF);
-  return std::move(version);
+  return std::to_string(vInfo->dwFileVersionMS >> 16) + '.' +
+         std::to_string(vInfo->dwFileVersionMS & 0xFFFF) + '.' +
+         std::to_string(vInfo->dwFileVersionLS >> 16) + '.' +
+         std::to_string(vInfo->dwFileVersionLS & 0xFFFF);
 }
 
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
@@ -133,13 +167,13 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   }
 
   for (unsigned int i = 0; i < modulesNum; i++) {
-    nsAutoString pdbPathStr;
-    nsAutoString pdbNameStr;
+    std::string pdbPathStr;
+    std::string pdbNameStr;
     char* pdbName = NULL;
-    WCHAR modulePath[MAX_PATH + 1];
+    char modulePath[MAX_PATH + 1];
 
     if (!GetModuleFileNameEx(hProcess, hMods[i], modulePath,
-                             sizeof(modulePath) / sizeof(WCHAR))) {
+                             sizeof(modulePath) / sizeof(char))) {
       continue;
     }
 
@@ -149,13 +183,14 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       continue;
     }
 
-    nsCString breakpadId;
+    std::string breakpadId;
     // Load the module again to make sure that its handle will remain
     // valid as we attempt to read the PDB information from it.  We load the
     // DLL as a datafile so that if the module actually gets unloaded between
-    // the call to EnumProcessModules and the following LoadLibraryEx, we don't
-    // end up running the now newly loaded module's DllMain function.  If the
-    // module is already loaded, LoadLibraryEx just increments its refcount.
+    // the call to EnumProcessModules and the following LoadLibraryEx, we
+    // don't end up running the now newly loaded module's DllMain function. If
+    // the module is already loaded, LoadLibraryEx just increments its
+    // refcount.
     //
     // Note that because of the race condition above, merely loading the DLL
     // again is not safe enough, therefore we also need to make sure that we
@@ -164,37 +199,28 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     HMODULE handleLock =
         LoadLibraryEx(modulePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
     MEMORY_BASIC_INFORMATION vmemInfo = {0};
-    nsID pdbSig;
+    std::string pdbSig;
     uint32_t pdbAge;
     if (handleLock &&
         sizeof(vmemInfo) ==
             VirtualQuery(module.lpBaseOfDll, &vmemInfo, sizeof(vmemInfo)) &&
         vmemInfo.State == MEM_COMMIT &&
         GetPdbInfo((uintptr_t)module.lpBaseOfDll, pdbSig, pdbAge, &pdbName)) {
-      MOZ_ASSERT(breakpadId.IsEmpty());
-      breakpadId.AppendPrintf(
-          "%08X"                              // m0
-          "%04X%04X"                          // m1,m2
-          "%02X%02X%02X%02X%02X%02X%02X%02X"  // m3
-          "%X",                               // pdbAge
-          pdbSig.m0, pdbSig.m1, pdbSig.m2, pdbSig.m3[0], pdbSig.m3[1],
-          pdbSig.m3[2], pdbSig.m3[3], pdbSig.m3[4], pdbSig.m3[5], pdbSig.m3[6],
-          pdbSig.m3[7], pdbAge);
+      MOZ_ASSERT(breakpadId.empty());
+      breakpadId += pdbSig;
+      AppendHex(pdbAge, breakpadId, WITHOUT_PADDING);
 
-      pdbPathStr = NS_ConvertUTF8toUTF16(pdbName);
-      pdbNameStr = pdbPathStr;
-      int32_t pos = pdbNameStr.RFindChar('\\');
-      if (pos != kNotFound) {
-        pdbNameStr.Cut(0, pos + 1);
-      }
+      pdbPathStr = pdbName;
+      size_t pos = pdbPathStr.rfind('\\');
+      pdbNameStr =
+          (pos != std::string::npos) ? pdbPathStr.substr(pos + 1) : pdbPathStr;
     }
 
-    nsAutoString modulePathStr(modulePath);
-    nsAutoString moduleNameStr = modulePathStr;
-    int32_t pos = moduleNameStr.RFindChar('\\');
-    if (pos != kNotFound) {
-      moduleNameStr.Cut(0, pos + 1);
-    }
+    std::string modulePathStr(modulePath);
+    size_t pos = modulePathStr.rfind('\\');
+    std::string moduleNameStr = (pos != std::string::npos)
+                                    ? modulePathStr.substr(pos + 1)
+                                    : modulePathStr;
 
     SharedLibrary shlib((uintptr_t)module.lpBaseOfDll,
                         (uintptr_t)module.lpBaseOfDll + module.SizeOfImage,

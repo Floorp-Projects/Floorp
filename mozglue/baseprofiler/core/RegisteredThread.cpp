@@ -10,18 +10,11 @@
 
 #  include "RegisteredThread.h"
 
-RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread,
-                                   void* aStackTop)
+RegisteredThread::RegisteredThread(ThreadInfo* aInfo, void* aStackTop)
     : mRacyRegisteredThread(aInfo->ThreadId()),
       mPlatformData(AllocPlatformData(aInfo->ThreadId())),
       mStackTop(aStackTop),
-      mThreadInfo(aInfo),
-      mThread(aThread),
-      mContext(nullptr),
-      mJSSampling(INACTIVE),
-      mJSFlags(0) {
-  MOZ_COUNT_CTOR(RegisteredThread);
-
+      mThreadInfo(aInfo) {
   // We don't have to guess on mac
 #  if defined(GP_OS_darwin)
   pthread_t self = pthread_self();
@@ -29,7 +22,7 @@ RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread,
 #  endif
 }
 
-RegisteredThread::~RegisteredThread() { MOZ_COUNT_DTOR(RegisteredThread); }
+RegisteredThread::~RegisteredThread() {}
 
 size_t RegisteredThread::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {

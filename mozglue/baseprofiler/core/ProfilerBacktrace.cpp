@@ -17,11 +17,9 @@
 
 ProfilerBacktrace::ProfilerBacktrace(const char* aName, int aThreadId,
                                      mozilla::UniquePtr<ProfileBuffer> aBuffer)
-    : mName(strdup(aName)), mThreadId(aThreadId), mBuffer(std::move(aBuffer)) {
-  MOZ_COUNT_CTOR(ProfilerBacktrace);
-}
+    : mName(strdup(aName)), mThreadId(aThreadId), mBuffer(std::move(aBuffer)) {}
 
-ProfilerBacktrace::~ProfilerBacktrace() { MOZ_COUNT_DTOR(ProfilerBacktrace); }
+ProfilerBacktrace::~ProfilerBacktrace() {}
 
 void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
                                    const mozilla::TimeStamp& aProcessStartTime,
@@ -30,8 +28,8 @@ void ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   // ProfileBuffer::AddJITInfoForRange because mBuffer does not contain any
   // JitReturnAddr entries. For synchronous samples, JIT frames get expanded
   // at sample time.
-  StreamSamplesAndMarkers(mName.get(), mThreadId, *mBuffer.get(), aWriter,
-                          NS_LITERAL_CSTRING(""), aProcessStartTime,
+  StreamSamplesAndMarkers(mName.get(), mThreadId, *mBuffer.get(), aWriter, "",
+                          aProcessStartTime,
                           /* aRegisterTime */ mozilla::TimeStamp(),
                           /* aUnregisterTime */ mozilla::TimeStamp(),
                           /* aSinceTime */ 0, aUniqueStacks);

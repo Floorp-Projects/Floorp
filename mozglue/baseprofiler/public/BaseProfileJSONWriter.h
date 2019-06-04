@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef PROFILEJSONWRITER_H
-#define PROFILEJSONWRITER_H
+#ifndef BASEPROFILEJSONWRITER_H
+#define BASEPROFILEJSONWRITER_H
 
 #include "BaseProfiler.h"
 
@@ -144,4 +144,4 @@ class JSONSchemaWriter {
   ~JSONSchemaWriter() { mWriter.EndObject(); }
 };
 
-#endif  // PROFILEJSONWRITER_H
+#endif  // BASEPROFILEJSONWRITER_H

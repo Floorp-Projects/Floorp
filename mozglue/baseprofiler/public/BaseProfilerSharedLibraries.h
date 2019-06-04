@@ -13,10 +13,6 @@
 #  error Do not #include this header when MOZ_BASE_PROFILER is not #defined.
 #endif
 
-#include "nsNativeCharsetUtils.h"
-#include "nsString.h"
-#include <nsID.h>
-
 #include <algorithm>
 #include <stdint.h>
 #include <stdlib.h>
@@ -26,9 +22,9 @@
 class SharedLibrary {
  public:
   SharedLibrary(uintptr_t aStart, uintptr_t aEnd, uintptr_t aOffset,
-                const nsCString& aBreakpadId, const nsString& aModuleName,
-                const nsString& aModulePath, const nsString& aDebugName,
-                const nsString& aDebugPath, const nsCString& aVersion,
+                const std::string& aBreakpadId, const std::string& aModuleName,
+                const std::string& aModulePath, const std::string& aDebugName,
+                const std::string& aDebugPath, const std::string& aVersion,
                 const char* aArch)
       : mStart(aStart),
         mEnd(aEnd),
@@ -83,19 +79,12 @@ class SharedLibrary {
   uintptr_t GetStart() const { return mStart; }
   uintptr_t GetEnd() const { return mEnd; }
   uintptr_t GetOffset() const { return mOffset; }
-  const nsCString& GetBreakpadId() const { return mBreakpadId; }
-  const nsString& GetModuleName() const { return mModuleName; }
-  const nsString& GetModulePath() const { return mModulePath; }
-  const std::string GetNativeDebugPath() const {
-    nsAutoCString debugPathStr;
-
-    NS_CopyUnicodeToNative(mDebugPath, debugPathStr);
-
-    return debugPathStr.get();
-  }
-  const nsString& GetDebugName() const { return mDebugName; }
-  const nsString& GetDebugPath() const { return mDebugPath; }
-  const nsCString& GetVersion() const { return mVersion; }
+  const std::string& GetBreakpadId() const { return mBreakpadId; }
+  const std::string& GetModuleName() const { return mModuleName; }
+  const std::string& GetModulePath() const { return mModulePath; }
+  const std::string& GetDebugName() const { return mDebugName; }
+  const std::string& GetDebugPath() const { return mDebugPath; }
+  const std::string& GetVersion() const { return mVersion; }
   const std::string& GetArch() const { return mArch; }
 
  private:
@@ -104,12 +93,12 @@ class SharedLibrary {
   uintptr_t mStart;
   uintptr_t mEnd;
   uintptr_t mOffset;
-  nsCString mBreakpadId;
-  nsString mModuleName;
-  nsString mModulePath;
-  nsString mDebugName;
-  nsString mDebugPath;
-  nsCString mVersion;
+  std::string mBreakpadId;
+  std::string mModuleName;
+  std::string mModulePath;
+  std::string mDebugName;
+  std::string mDebugPath;
+  std::string mVersion;
   std::string mArch;
 };
 

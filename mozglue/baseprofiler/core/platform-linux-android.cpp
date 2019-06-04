@@ -80,6 +80,12 @@ int profiler_current_thread_id() {
 #endif
 }
 
+static int64_t MicrosecondsSince1970() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return int64_t(tv.tv_sec) * 1000000 + int64_t(tv.tv_usec);
+}
+
 void* GetStackTop(void* aGuess) { return aGuess; }
 
 static void PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext) {
@@ -127,9 +133,9 @@ int tgkill(pid_t tgid, pid_t tid, int signalno) {
 
 class PlatformData {
  public:
-  explicit PlatformData(int aThreadId) { MOZ_COUNT_CTOR(PlatformData); }
+  explicit PlatformData(int aThreadId) {}
 
-  ~PlatformData() { MOZ_COUNT_DTOR(PlatformData); }
+  ~PlatformData() {}
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -396,7 +402,7 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
     lul->EnableUnwinding();
 
     // Has a test been requested?
-    if (PR_GetEnv("MOZ_PROFILER_LUL_TEST")) {
+    if (getenv("MOZ_PROFILER_LUL_TEST")) {
       int nTests = 0, nTestsPassed = 0;
       RunLulUnitTests(&nTests, &nTestsPassed, lul);
     }
@@ -468,7 +474,7 @@ void SamplerThread::Stop(PSLockRef aLock) {
 static void paf_prepare() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (ActivePS::Exists(lock)) {
     ActivePS::SetWasPaused(lock, ActivePS::IsPaused(lock));
@@ -480,7 +486,7 @@ static void paf_prepare() {
 static void paf_parent() {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
-  PSAutoLock lock(gPSMutex);
+  PSAutoLock lock;
 
   if (ActivePS::Exists(lock)) {
     ActivePS::SetIsPaused(lock, ActivePS::WasPaused(lock));
@@ -503,11 +509,13 @@ static void PlatformInit(PSLockRef aLock) {}
 // Context used by synchronous samples. It's safe to have a single one because
 // only one synchronous sample can be taken at a time (due to
 // profiler_get_backtrace()'s PSAutoLock).
-ucontext_t sSyncUContext;
+// ucontext_t sSyncUContext;
 
 void Registers::SyncPopulate() {
-  if (!getcontext(&sSyncUContext)) {
-    PopulateRegsFromContext(*this, &sSyncUContext);
-  }
+  // TODO port getcontext from breakpad, if profiler_get_backtrace is needed.
+  MOZ_CRASH("profiler_get_backtrace() unsupported");
+  // if (!getcontext(&sSyncUContext)) {
+  //   PopulateRegsFromContext(*this, &sSyncUContext);
+  // }
 }
 #endif

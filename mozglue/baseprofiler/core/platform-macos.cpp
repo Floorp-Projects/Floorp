@@ -39,6 +39,12 @@ int profiler_current_thread_id() {
   return static_cast<int>(static_cast<pid_t>(syscall(SYS_thread_selfid)));
 }
 
+static int64_t MicrosecondsSince1970() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return int64_t(tv.tv_sec) * 1000000 + int64_t(tv.tv_usec);
+}
+
 void* GetStackTop(void* aGuess) {
   pthread_t thread = pthread_self();
   return pthread_get_stackaddr_np(thread);
@@ -46,15 +52,11 @@ void* GetStackTop(void* aGuess) {
 
 class PlatformData {
  public:
-  explicit PlatformData(int aThreadId) : mProfiledThread(mach_thread_self()) {
-    MOZ_COUNT_CTOR(PlatformData);
-  }
+  explicit PlatformData(int aThreadId) : mProfiledThread(mach_thread_self()) {}
 
   ~PlatformData() {
     // Deallocate Mach port for thread.
     mach_port_deallocate(mach_task_self(), mProfiledThread);
-
-    MOZ_COUNT_DTOR(PlatformData);
   }
 
   thread_act_t ProfiledThread() { return mProfiledThread; }
