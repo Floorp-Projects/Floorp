@@ -4,9 +4,8 @@
 
 package org.mozilla.fenix.components
 
-import mozilla.components.feature.accounts.FirefoxAccountsAuthFeature
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import org.mozilla.fenix.components.features.FirefoxAccountsAuthFeature
 import org.mozilla.fenix.test.Mockable
 
 /**
@@ -14,13 +13,11 @@ import org.mozilla.fenix.test.Mockable
  */
 @Mockable
 class Services(
-    private val accountManager: FxaAccountManager,
-    private val tabsUseCases: TabsUseCases
+    private val accountManager: FxaAccountManager
 ) {
     val accountsAuthFeature by lazy {
         FirefoxAccountsAuthFeature(
             accountManager,
-            tabsUseCases,
             redirectUrl = BackgroundServices.REDIRECT_URL
         )
     }

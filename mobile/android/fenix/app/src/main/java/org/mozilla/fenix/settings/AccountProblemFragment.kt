@@ -39,7 +39,7 @@ class AccountProblemFragment : PreferenceFragmentCompat() {
 
     private fun getClickListenerForSignIn(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
-            requireComponents.services.accountsAuthFeature.beginAuthentication()
+            requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
             // TODO The sign-in web content populates session history,
             // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
             // session history stack.

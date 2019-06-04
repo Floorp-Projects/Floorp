@@ -7,17 +7,20 @@ package org.mozilla.fenix.settings
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.HomeActivity
+import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 
-class TurnOnSyncFragment : PreferenceFragmentCompat() {
-
+@SuppressWarnings("TooManyFunctions")
+class TurnOnSyncFragment : PreferenceFragmentCompat(), AccountObserver {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireComponents.analytics.metrics.track(Event.SyncAuthOpened)
@@ -30,6 +33,11 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
+        if (requireComponents.backgroundServices.accountManager.authenticatedAccount() != null) {
+            findNavController(this).popBackStack()
+        }
+
+        requireComponents.backgroundServices.accountManager.register(this, owner = this)
         (activity as AppCompatActivity).title = getString(R.string.preferences_sync)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
@@ -50,16 +58,13 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
 
     private fun getClickListenerForSignIn(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
-            requireComponents.services.accountsAuthFeature.beginAuthentication()
+            requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
             // TODO The sign-in web content populates session history,
             // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
             // session history stack.
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
             requireComponents.analytics.metrics.track(Event.SyncAuthSignIn)
-            view?.let {
-                (activity as HomeActivity).openToBrowser(BrowserDirection.FromTurnOnSync)
-            }
             true
         }
     }
@@ -67,11 +72,8 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
     private fun getClickListenerForCreateAccount(): Preference.OnPreferenceClickListener {
         // Currently the same as sign in, as FxA handles this, however we want to emit a different telemetry event
         return Preference.OnPreferenceClickListener {
-            requireComponents.services.accountsAuthFeature.beginAuthentication()
+            requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
             requireComponents.analytics.metrics.track(Event.SyncAuthCreateAccount)
-            view?.let {
-                (activity as HomeActivity).openToBrowser(BrowserDirection.FromTurnOnSync)
-            }
             true
         }
     }
@@ -85,4 +87,14 @@ class TurnOnSyncFragment : PreferenceFragmentCompat() {
             true
         }
     }
-}
+
+    override fun onAuthenticated(account: OAuthAccount) {
+        FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_SHORT)
+            .setText(requireContext().getString(R.string.sync_syncing_in_progress))
+            .show()
+    }
+
+    override fun onAuthenticationProblems() {}
+    override fun onError(error: Exception) {}
+    override fun onLoggedOut() {}
+    override fun onProfileUpdated(profile: Profile) {} }

@@ -16,8 +16,6 @@ import androidx.navigation.fragment.NavHostFragment.findNavController
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 
@@ -43,8 +41,12 @@ class PairFragment : Fragment(), BackHandler {
                     requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
                 },
                 onScanResult = { pairingUrl ->
-                    requireComponents.services.accountsAuthFeature.beginPairingAuthentication(pairingUrl)
-                    (activity as HomeActivity).openToBrowser(BrowserDirection.FromPair)
+                    requireComponents.services.accountsAuthFeature.beginPairingAuthentication(
+                        requireContext(),
+                        pairingUrl
+                    )
+                    findNavController(this@PairFragment)
+                        .popBackStack(R.id.turnOnSyncFragment, false)
                 }),
             owner = this,
             view = view
@@ -63,7 +65,8 @@ class PairFragment : Fragment(), BackHandler {
 
     override fun onBackPressed(): Boolean {
         qrFeature.onBackPressed()
-        findNavController(this@PairFragment).navigateUp()
+        findNavController(this@PairFragment)
+            .popBackStack(R.id.turnOnSyncFragment, false)
         return true
     }
 

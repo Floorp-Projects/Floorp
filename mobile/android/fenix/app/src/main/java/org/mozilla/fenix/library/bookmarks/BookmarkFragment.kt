@@ -284,7 +284,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
             .subscribe {
                 when (it) {
                     is SignInAction.ClickedSignIn -> {
-                        context?.components?.services?.accountsAuthFeature?.beginAuthentication()
+                        context?.components?.services?.accountsAuthFeature?.beginAuthentication(requireContext())
                         (activity as HomeActivity).openToBrowser(BrowserDirection.FromBookmarks)
                     }
                 }
