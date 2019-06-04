@@ -2743,6 +2743,9 @@ static void AccumulateTelemetryCallback(int id, uint32_t sample,
     case JS_TELEMETRY_GC_TIME_BETWEEN_S:
       Telemetry::Accumulate(Telemetry::GC_TIME_BETWEEN_S, sample);
       break;
+    case JS_TELEMETRY_GC_TIME_BETWEEN_SLICES_MS:
+      Telemetry::Accumulate(Telemetry::GC_TIME_BETWEEN_SLICES_MS, sample);
+      break;
     case JS_TELEMETRY_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS:
       Telemetry::Accumulate(
           Telemetry::JS_PRIVILEGED_PARSER_COMPILE_LAZY_AFTER_MS, sample);

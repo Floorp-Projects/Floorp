@@ -1094,6 +1094,12 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
     beginGC(gckind, currentTime);
   }
 
+  if (!runtime->parentRuntime && !slices_.empty()) {
+    TimeDuration timeSinceLastSlice = currentTime - slices_.back().end;
+    runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_SLICES_MS,
+                          uint32_t(timeSinceLastSlice.ToMilliseconds()));
+  }
+
   if (!slices_.emplaceBack(budget, reason, currentTime, GetPageFaultCount(),
                            runtime->gc.state())) {
     // If we are OOM, set a flag to indicate we have missing slice data.
