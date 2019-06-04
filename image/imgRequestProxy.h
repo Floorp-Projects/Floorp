@@ -237,13 +237,9 @@ class imgRequestProxy : public imgIRequest,
 // certain behaviours must be overridden to compensate.
 class imgRequestProxyStatic : public imgRequestProxy {
  public:
-  imgRequestProxyStatic(Image* aImage, nsIPrincipal* aPrincipal,
-                        bool hadCrossOriginRedirects);
+  imgRequestProxyStatic(Image* aImage, nsIPrincipal* aPrincipal);
 
   NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal) override;
-
-  NS_IMETHOD GetHadCrossOriginRedirects(
-      bool* aHadCrossOriginRedirects) override;
 
  protected:
   imgRequestProxy* NewClonedProxy() override;
@@ -251,7 +247,6 @@ class imgRequestProxyStatic : public imgRequestProxy {
   // Our principal. We have to cache it, rather than accessing the underlying
   // request on-demand, because static proxies don't have an underlying request.
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  const bool mHadCrossOriginRedirects;
 };
 
 #endif  // mozilla_image_imgRequestProxy_h

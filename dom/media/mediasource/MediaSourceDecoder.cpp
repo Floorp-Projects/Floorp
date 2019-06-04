@@ -335,11 +335,6 @@ already_AddRefed<nsIPrincipal> MediaSourceDecoder::GetCurrentPrincipal() {
   return do_AddRef(mPrincipal);
 }
 
-bool MediaSourceDecoder::HadCrossOriginRedirects() {
-  MOZ_ASSERT(NS_IsMainThread());
-  return false;
-}
-
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
 

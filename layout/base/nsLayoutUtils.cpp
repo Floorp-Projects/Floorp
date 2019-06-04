@@ -7514,14 +7514,10 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     result.mCORSUsed = (corsmode != imgIRequest::CORS_NONE);
   }
 
-  bool hadCrossOriginRedirects = true;
-  imgRequest->GetHadCrossOriginRedirects(&hadCrossOriginRedirects);
-
   result.mPrincipal = principal.forget();
-  result.mHadCrossOriginRedirects = hadCrossOriginRedirects;
   result.mImageRequest = imgRequest.forget();
-  result.mIsWriteOnly = CanvasUtils::CheckWriteOnlySecurity(
-      result.mCORSUsed, result.mPrincipal, result.mHadCrossOriginRedirects);
+  result.mIsWriteOnly =
+      CanvasUtils::CheckWriteOnlySecurity(result.mCORSUsed, result.mPrincipal);
 
   return result;
 }
@@ -7569,7 +7565,6 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   result.mHasSize = true;
   result.mSize = size;
   result.mPrincipal = aElement->NodePrincipal();
-  result.mHadCrossOriginRedirects = false;
   result.mIsWriteOnly = aElement->IsWriteOnly();
 
   return result;
@@ -7616,9 +7611,8 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   result.mHasSize = true;
   result.mSize = result.mLayersImage->GetSize();
   result.mPrincipal = principal.forget();
-  result.mHadCrossOriginRedirects = aElement->HadCrossOriginRedirects();
-  result.mIsWriteOnly = CanvasUtils::CheckWriteOnlySecurity(
-      result.mCORSUsed, result.mPrincipal, result.mHadCrossOriginRedirects);
+  result.mIsWriteOnly =
+      CanvasUtils::CheckWriteOnlySecurity(result.mCORSUsed, result.mPrincipal);
 
   return result;
 }
@@ -8632,8 +8626,7 @@ bool nsLayoutUtils::IsAPZTestLoggingEnabled() {
 
 nsLayoutUtils::SurfaceFromElementResult::SurfaceFromElementResult()
     // Use safe default values here
-    : mHadCrossOriginRedirects(false),
-      mIsWriteOnly(true),
+    : mIsWriteOnly(true),
       mIsStillLoading(false),
       mHasSize(false),
       mCORSUsed(false),

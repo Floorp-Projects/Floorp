@@ -164,20 +164,6 @@ CloneableWithRangeMediaResource::GetCurrentPrincipal() {
   return principal.forget();
 }
 
-bool CloneableWithRangeMediaResource::HadCrossOriginRedirects() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel);
-  if (!timedChannel) {
-    return false;
-  }
-
-  bool allRedirectsSameOrigin = false;
-  return NS_SUCCEEDED(timedChannel->GetAllRedirectsSameOrigin(
-             &allRedirectsSameOrigin)) &&
-         !allRedirectsSameOrigin;
-}
-
 nsresult CloneableWithRangeMediaResource::ReadFromCache(char* aBuffer,
                                                         int64_t aOffset,
                                                         uint32_t aCount) {

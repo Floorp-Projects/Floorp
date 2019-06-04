@@ -129,8 +129,7 @@ child:
                        bool                deliveringAltData,
                        bool                applyConversion,
                        bool                isResolvedByTRR,
-                       ResourceTimingStruct timing,
-                       bool                allRedirectsSameOrigin);
+                       ResourceTimingStruct timing);
 
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.

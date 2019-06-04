@@ -113,11 +113,6 @@ interface imgIRequest : nsIRequest
   readonly attribute nsIPrincipal imagePrincipal;
 
   /**
-   * true if the loading of the image required cross-origin redirects.
-   */
-  readonly attribute bool hadCrossOriginRedirects;
-
-  /**
    * Whether the request is multipart (ie, multipart/x-mixed-replace)
    */
   readonly attribute bool multipart;

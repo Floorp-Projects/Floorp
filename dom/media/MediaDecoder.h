@@ -126,10 +126,6 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // Return the principal of the current URI being played or downloaded.
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
 
-  // Return true if the loading of this resource required cross-origin
-  // redirects.
-  virtual bool HadCrossOriginRedirects() = 0;
-
   // Return the time position in the video stream being
   // played measured in seconds.
   virtual double GetCurrentTime();

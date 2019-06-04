@@ -182,12 +182,6 @@ already_AddRefed<nsIPrincipal> HLSDecoder::GetCurrentPrincipal() {
   return nullptr;
 }
 
-bool HLSDecoder::HadCrossOriginRedirects() {
-  MOZ_ASSERT(NS_IsMainThread());
-  // Bug 1478843
-  return false;
-}
-
 void HLSDecoder::Play() {
   MOZ_ASSERT(NS_IsMainThread());
   HLS_DEBUG("HLSDecoder", "MediaElement called Play");
