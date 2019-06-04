@@ -233,6 +233,8 @@ for inst,           rrr in [
     X86_64.enc(inst.i32.any, *r.rc(0xd3, rrr=rrr))
 
 for inst,           rrr in [
+        (base.rotl_imm, 0),
+        (base.rotr_imm, 1),
         (base.ishl_imm, 4),
         (base.ushr_imm, 5),
         (base.sshr_imm, 7)]:
@@ -338,6 +340,13 @@ enc_x86_64(x86.pop.i64, r.popq, 0x58)
 # special regunit immediate operands with the current constraint language.
 X86_64.enc(base.copy_special, *r.copysp.rex(0x89, w=1))
 X86_32.enc(base.copy_special, *r.copysp(0x89))
+
+# Stack-slot-to-the-same-stack-slot copy, which is guaranteed to turn
+# into a no-op.
+X86_64.enc(base.copy_nop.i64, r.stacknull, 0)
+X86_64.enc(base.copy_nop.i32, r.stacknull, 0)
+X86_64.enc(base.copy_nop.f64, r.stacknull, 0)
+X86_64.enc(base.copy_nop.f32, r.stacknull, 0)
 
 # Adjust SP down by a dynamic value (or up, with a negative operand).
 X86_32.enc(base.adjust_sp_down.i32, *r.adjustsp(0x29))
@@ -481,8 +490,10 @@ X86_64.enc(base.x_return, *r.ret(0xc3))
 #
 # Branches
 #
-enc_both(base.jump, r.jmpb, 0xeb)
-enc_both(base.jump, r.jmpd, 0xe9)
+X86_32.enc(base.jump, *r.jmpb(0xeb))
+X86_64.enc(base.jump, *r.jmpb(0xeb))
+X86_32.enc(base.jump, *r.jmpd(0xe9))
+X86_64.enc(base.jump, *r.jmpd(0xe9))
 
 enc_both(base.brif, r.brib, 0x70)
 enc_both(base.brif, r.brid, 0x0f, 0x80)
