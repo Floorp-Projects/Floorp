@@ -69,7 +69,7 @@ void VTuneProfiler::RegisterThreadInternal(const char* aName) {
   // TODO re-implement here if vtune is needed
   // string str(aName);
 
-  // if (!str.compare("GeckoMain")) {
+  // if (!str.compare("Main Thread (Base Profiler)")) {
   //   // Process main thread.
   //   switch (XRE_GetProcessType()) {
   //     case GeckoProcessType::GeckoProcessType_Default:
