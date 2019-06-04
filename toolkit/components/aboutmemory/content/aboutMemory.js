@@ -129,8 +129,8 @@ function stringMatchesFilter(aString, aFilter) {
 
 // ---------------------------------------------------------------------------
 
-function onUnload() {
-}
+window.onunload = function() {
+};
 
 // ---------------------------------------------------------------------------
 
@@ -272,7 +272,7 @@ function appendHiddenFileInput(aP, aId, aChangeListener) {
   return input;
 }
 
-function onLoad() {
+window.onload = function() {
   // Generate the header.
 
   let header = appendElement(document.body, "div", "ancillary");
@@ -430,7 +430,7 @@ function onLoad() {
       }
     }
   }
-}
+};
 
 // ---------------------------------------------------------------------------
 
