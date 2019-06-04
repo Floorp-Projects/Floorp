@@ -126,6 +126,9 @@ void MemoryMove(void* aDst, const void* aSrc, size_t aSize);
 // dynamic code loading.
 void MemoryZero(void* aDst, size_t aSize);
 
+// Get the amount of allocated memory used by data of the specified kind.
+size_t GetMemoryUsage(MemoryKind aKind);
+
 }  // namespace recordreplay
 }  // namespace mozilla
 

@@ -565,6 +565,13 @@ static bool FetchContent(JSContext* aCx, HandleString aURL,
 // Recording/Replaying Methods
 ///////////////////////////////////////////////////////////////////////////////
 
+static bool RecordReplay_ChildId(JSContext* aCx, unsigned aArgc, Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  args.rval().setInt32(child::GetId());
+  return true;
+}
+
 static bool RecordReplay_AreThreadEventsDisallowed(JSContext* aCx,
                                                    unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
@@ -1007,6 +1014,7 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
     JS_FS_END};
 
 static const JSFunctionSpec gRecordReplayMethods[] = {
+    JS_FN("childId", RecordReplay_ChildId, 0, 0),
     JS_FN("areThreadEventsDisallowed", RecordReplay_AreThreadEventsDisallowed,
           0, 0),
     JS_FN("divergeFromRecording", RecordReplay_DivergeFromRecording, 0, 0),
