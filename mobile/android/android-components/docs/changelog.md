@@ -17,6 +17,9 @@ permalink: /changelog/
     to ensure that their view constraints will not be broken. We do this manually because autoResizeText
     does not work with views that have a non-fixed height.
 
+* **samples-firefox-accounts**
+  * Switch FxA sample to production servers, fix pairing.
+
 # 0.55.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.54.0...v0.55.0)

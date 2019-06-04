@@ -42,9 +42,9 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         get() = Dispatchers.Main + job
 
     companion object {
-        const val CLIENT_ID = "12cc4070a481bc73"
-        const val REDIRECT_URL = "fxaclient://android.redirect"
-        const val CONFIG_URL = "https://latest.dev.lcip.org"
+        const val CLIENT_ID = "3c49430b43dfba77"
+        const val CONFIG_URL = "https://accounts.firefox.com"
+        const val REDIRECT_URL = "$CONFIG_URL/oauth/success/3c49430b43dfba77"
         const val FXA_STATE_PREFS_KEY = "fxaAppState"
         const val FXA_STATE_KEY = "fxaState"
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
@@ -66,10 +66,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                 ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
             },
             onScanResult = { pairingUrl ->
-                val config = Config(CONFIG_URL, CLIENT_ID, REDIRECT_URL)
-                val acct = FirefoxAccount(config)
                 launch {
-                    val url = acct.beginPairingFlowAsync(pairingUrl, scopes).await()
+                    val url = account.beginPairingFlowAsync(pairingUrl, scopes).await()
                     if (url == null) {
                         Log.log(
                             Log.Priority.ERROR,
