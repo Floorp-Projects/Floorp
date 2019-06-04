@@ -31,4 +31,6 @@
     <string name="device_sharing_microphone">Microphone is on</string>
     <string name="device_sharing_camera">Camera is on</string>
     <string name="device_sharing_camera_and_mic">Camera and microphone are on</string>
+    <string name="new_tab">New tab</string>
+    <string name="close_tab">Close tab</string>
 </resources>
