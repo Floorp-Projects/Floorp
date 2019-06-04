@@ -6,7 +6,8 @@
     "node": ">=8.9.4"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test-ci": "jest --json"
   },
   "dependencies": {
     "jest": "^23.0.0",
