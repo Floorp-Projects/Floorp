@@ -288,15 +288,11 @@ var gPrivacyPane = {
     /* Initialize Content Blocking */
     this.initContentBlocking();
 
-    this.blockAutoplayReadPrefs();
     this.trackingProtectionReadPrefs();
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
 
     Services.telemetry.setEventRecordingEnabled("pwmgr", true);
-
-    Preferences.get("media.autoplay.default").on("change",
-      gPrivacyPane.blockAutoplayReadPrefs.bind(gPrivacyPane));
 
     Preferences.get("privacy.trackingprotection.enabled").on("change",
       gPrivacyPane.trackingProtectionReadPrefs.bind(gPrivacyPane));
@@ -361,6 +357,8 @@ var gPrivacyPane = {
     this._initMasterPasswordUI();
     this._initSafeBrowsing();
 
+    setEventListener("autoplaySettingsButton", "command",
+      gPrivacyPane.showAutoplayMediaExceptions);
     setEventListener("notificationSettingsButton", "command",
       gPrivacyPane.showNotificationExceptions);
     setEventListener("locationSettingsButton", "command",
@@ -371,10 +369,6 @@ var gPrivacyPane = {
       gPrivacyPane.showMicrophoneExceptions);
     setEventListener("popupPolicyButton", "command",
       gPrivacyPane.showPopupExceptions);
-    setEventListener("autoplayMediaCheckbox", "command",
-      gPrivacyPane.toggleAutoplayMedia);
-    setEventListener("autoplayMediaPolicyButton", "command",
-      gPrivacyPane.showAutoplayMediaExceptions);
     setEventListener("notificationsDoNotDisturb", "command",
       gPrivacyPane.toggleDoNotDisturbNotifications);
 
@@ -1291,31 +1285,10 @@ var gPrivacyPane = {
 
   // MEDIA
 
-  blockAutoplayReadPrefs() {
-    let blocked =
-      Preferences.get("media.autoplay.default").value == Ci.nsIAutoplay.BLOCKED;
-    document.getElementById("autoplayMediaCheckbox").checked = blocked;
-  },
-
-  /**
-   * The checkbox enabled sets the pref to BLOCKED
-   */
-  toggleAutoplayMedia(event) {
-    let blocked = event.target.checked ? Ci.nsIAutoplay.BLOCKED : Ci.nsIAutoplay.ALLOWED;
-    Services.prefs.setIntPref("media.autoplay.default", blocked);
-  },
-
-  /**
-   * Displays the autoplay exceptions dialog where specific site autoplay preferences
-   * can be set.
-   */
   showAutoplayMediaExceptions() {
-    var params = {
-      blockVisible: true, sessionVisible: false, allowVisible: true,
-      prefilledHost: "", permissionType: "autoplay-media",
-    };
+    var params = { permissionType: "autoplay-media" };
 
-    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
+    gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
       "resizable=yes", params);
   },
 
