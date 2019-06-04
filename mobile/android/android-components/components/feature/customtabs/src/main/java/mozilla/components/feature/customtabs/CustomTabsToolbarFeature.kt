@@ -147,6 +147,7 @@ class CustomTabsToolbarFeature(
 
         val button = Toolbar.ActionButton(drawable, context.getString(R.string.mozac_feature_customtabs_share_link)) {
             val listener = shareListener ?: { context.share(session.url) }
+            emitActionButtonFact()
             listener.invoke()
         }
 
