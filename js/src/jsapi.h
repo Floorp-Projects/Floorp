@@ -3029,7 +3029,7 @@ extern JS_PUBLIC_API RefPtr<WasmModule> GetWasmModule(HandleObject obj);
  */
 
 extern JS_PUBLIC_API RefPtr<WasmModule> DeserializeWasmModule(
-    PRFileDesc* bytecode, JS::UniqueChars filename, unsigned line);
+    const uint8_t* bytecode, size_t bytecodeLength);
 
 /**
  * If a large allocation fails when calling pod_{calloc,realloc}CanGC, the JS

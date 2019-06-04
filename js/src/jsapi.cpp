@@ -5819,8 +5819,8 @@ JS_PUBLIC_API RefPtr<JS::WasmModule> JS::GetWasmModule(HandleObject obj) {
 }
 
 JS_PUBLIC_API RefPtr<JS::WasmModule> JS::DeserializeWasmModule(
-    PRFileDesc* bytecode, UniqueChars filename, unsigned line) {
-  return wasm::DeserializeModule(bytecode, std::move(filename), line);
+    const uint8_t* bytecode, size_t bytecodeLength) {
+  return wasm::DeserializeModule(bytecode, bytecodeLength);
 }
 
 JS_PUBLIC_API void JS::SetProcessLargeAllocationFailureCallback(
