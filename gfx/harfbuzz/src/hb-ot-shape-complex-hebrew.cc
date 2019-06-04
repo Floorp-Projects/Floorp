@@ -70,6 +70,10 @@ compose_hebrew (const hb_ot_shape_normalize_context_t *c,
 
   bool found = (bool) c->unicode->compose (a, b, ab);
 
+#ifdef HB_NO_OT_SHAPE_COMPLEX_HEBREW_FALLBACK
+  return found;
+#endif
+
   if (!found && !c->plan->has_gpos_mark)
   {
       /* Special-case Hebrew presentation forms that are excluded from

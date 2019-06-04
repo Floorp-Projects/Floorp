@@ -2030,6 +2030,9 @@ class Assembler : public MozBaseAssembler {
   // FP convert to signed integer, nearest with ties to even.
   void fcvtns(const VRegister& rd, const VRegister& vn);
 
+  // FP JavaScript convert to signed integer, rounding toward zero [Armv8.3].
+  void fjcvtzs(const Register& rd, const VRegister& vn);
+
   // FP convert to unsigned integer, nearest with ties to even.
   void fcvtnu(const VRegister& rd, const VRegister& vn);
 
@@ -4016,6 +4019,12 @@ class Assembler : public MozBaseAssembler {
     return pic_;
   }
 
+  CPUFeatures* GetCPUFeatures() { return &cpu_features_; }
+
+  void SetCPUFeatures(const CPUFeatures& cpu_features) {
+    cpu_features_ = cpu_features;
+  }
+
   bool AllowPageOffsetDependentCode() const {
     return (pic() == PageOffsetDependentCode) ||
            (pic() == PositionDependentCode);
@@ -4118,6 +4127,25 @@ class Assembler : public MozBaseAssembler {
     const CPURegister& rt, const CPURegister& rt2);
   static LoadLiteralOp LoadLiteralOpFor(const CPURegister& rt);
 
+  // Convenience pass-through for CPU feature checks.
+  bool CPUHas(CPUFeatures::Feature feature0,
+              CPUFeatures::Feature feature1 = CPUFeatures::kNone,
+              CPUFeatures::Feature feature2 = CPUFeatures::kNone,
+              CPUFeatures::Feature feature3 = CPUFeatures::kNone) const {
+    return cpu_features_.Has(feature0, feature1, feature2, feature3);
+  }
+
+  // Determine whether the target CPU has the specified registers, based on the
+  // currently-enabled CPU features. Presence of a register does not imply
+  // support for arbitrary operations on it. For example, CPUs with FP have H
+  // registers, but most half-precision operations require the FPHalf feature.
+  //
+  // These are used to check CPU features in loads and stores that have the same
+  // entry point for both integer and FP registers.
+  bool CPUHas(const CPURegister& rt) const;
+  bool CPUHas(const CPURegister& rt, const CPURegister& rt2) const;
+
+  bool CPUHas(SystemRegister sysreg) const;
 
  private:
   static uint32_t FP32ToImm8(float imm);
@@ -4285,6 +4313,8 @@ class Assembler : public MozBaseAssembler {
  protected:
   // Buffer where the code is emitted.
   PositionIndependentCodeOption pic_;
+
+  CPUFeatures cpu_features_;
 
 #ifdef DEBUG
   bool finalized_;

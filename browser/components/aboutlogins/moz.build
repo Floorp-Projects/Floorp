@@ -18,4 +18,4 @@ FINAL_TARGET_FILES.actors += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
-MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']

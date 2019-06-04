@@ -590,10 +590,10 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent) {
   docShell->SetChromeEventHandler(chromeHandler);
 
   if (window->GetCurrentInnerWindow()) {
-    window->SetKeyboardIndicators(ShowAccelerators(), ShowFocusRings());
+    window->SetKeyboardIndicators(ShowFocusRings());
   } else {
     // Skip ShouldShowFocusRing check if no inner window is available
-    window->SetInitialKeyboardIndicators(ShowAccelerators(), ShowFocusRings());
+    window->SetInitialKeyboardIndicators(ShowFocusRings());
   }
 
   nsContentUtils::SetScrollbarsVisibility(
@@ -1468,12 +1468,10 @@ mozilla::ipc::IPCResult BrowserChild::RecvParentActivated(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvSetKeyboardIndicators(
-    const UIStateChangeType& aShowAccelerators,
     const UIStateChangeType& aShowFocusRings) {
   nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
   NS_ENSURE_TRUE(window, IPC_OK());
-
-  window->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);
+  window->SetKeyboardIndicators(aShowFocusRings);
   return IPC_OK();
 }
 

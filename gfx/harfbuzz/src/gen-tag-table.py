@@ -895,20 +895,18 @@ def language_name_intersection (a, b):
 def get_matching_language_name (intersection, candidates):
 	return next (iter (c for c in candidates if not intersection.isdisjoint (get_variant_set (c))))
 
-maximum_tags = 0
+def same_tag (bcp_47_tag, ot_tags):
+	return len (bcp_47_tag) == 3 and len (ot_tags) == 1 and bcp_47_tag == ot_tags[0].lower ()
+
 for language, tags in sorted (ot.from_bcp_47.items ()):
 	if language == '' or '-' in language:
 		continue
-	print ('  {\"%s\",\t{' % language, end='')
-	maximum_tags = max (maximum_tags, len (tags))
-	tag_count = len (tags)
+	commented_out = same_tag (language, tags)
 	for i, tag in enumerate (tags, start=1):
-		if i > 1:
-			print ('\t\t ', end='')
-		print (hb_tag (tag), end='')
-		if i == tag_count:
-			print ('}}', end='')
-		print (',\t/* ', end='')
+		print ('%s{\"%s\",\t%s},' % ('/*' if commented_out else '  ', language, hb_tag (tag)), end='')
+		if commented_out:
+			print ('*/', end='')
+		print ('\t/* ', end='')
 		bcp_47_name = bcp_47.names.get (language, '')
 		bcp_47_name_candidates = bcp_47_name.split ('\n')
 		intersection = language_name_intersection (bcp_47_name, ot.names[tag])
@@ -922,8 +920,6 @@ for language, tags in sorted (ot.from_bcp_47.items ()):
 		print (' */')
 
 print ('};')
-print ()
-print ('static_assert (HB_OT_MAX_TAGS_PER_LANGUAGE == %iu, "");' % maximum_tags)
 print ()
 
 print ('/**')
@@ -1051,7 +1047,8 @@ print (' * @tag: A language tag.')
 print (' *')
 print (' * Converts @tag to a BCP 47 language tag if it is ambiguous (it corresponds to')
 print (' * many language tags) and the best tag is not the alphabetically first, or if')
-print (' * the best tag consists of multiple subtags.')
+print (' * the best tag consists of multiple subtags, or if the best tag does not appear')
+print (' * in #ot_languages.')
 print (' *')
 print (' * Return value: The #hb_language_t corresponding to the BCP 47 language tag,')
 print (' * or #HB_LANGUAGE_INVALID if @tag is not ambiguous.')
@@ -1102,7 +1099,8 @@ def verify_disambiguation_dict ():
 						'%s is not a valid disambiguation for %s' % (disambiguation[ot_tag], ot_tag))
 			elif ot_tag not in disambiguation:
 				disambiguation[ot_tag] = macrolanguages[0]
-			if disambiguation[ot_tag] == sorted (primary_tags)[0] and '-' not in disambiguation[ot_tag]:
+			different_primary_tags = sorted (t for t in primary_tags if not same_tag (t, ot.from_bcp_47.get (t)))
+			if different_primary_tags and disambiguation[ot_tag] == different_primary_tags[0] and '-' not in disambiguation[ot_tag]:
 				del disambiguation[ot_tag]
 	for ot_tag in disambiguation.keys ():
 		expect (ot_tag in ot.to_bcp_47, 'unknown OT tag: %s' % ot_tag)

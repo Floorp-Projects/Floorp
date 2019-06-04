@@ -614,7 +614,7 @@
                           hidden="true"/>
                 <menuitem id="helpPolicySupport"
                           hidden="true"
-                          oncommand="openUILink(this.getAttribute('href'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
+                          oncommand="openUILinkIn(Services.policies.getSupportMenu().URL.href, 'tab', {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
                           onclick="checkForMiddleClick(this, event);"/>
                 <menuseparator id="aboutSeparator"/>
                 <menuitem id="aboutName"

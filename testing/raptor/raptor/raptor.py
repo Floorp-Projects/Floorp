@@ -60,7 +60,6 @@ from gen_test_config import gen_test_config
 from outputhandler import OutputHandler
 from manifest import get_raptor_test_list
 from memory import generate_android_memory_profile
-from mozproxy import get_playback
 from power import init_android_power_test, finish_android_power_test
 from results import RaptorResultsHandler
 from utils import view_gecko_profile
@@ -276,6 +275,12 @@ class Raptor(object):
             'playback_binary_manifest': test.get('playback_binary_manifest'),
             'playback_pageset_manifest': test.get('playback_pageset_manifest'),
         })
+        # By default we are connecting to upstream. In the future we might want
+        # to flip that default to false so all tests will stop connecting to
+        # the upstream server.
+        upstream = test.get("playback_upstream_cert", "true")
+        self.config["playback_upstream_cert"] = upstream.lower() in ("true", "1")
+
         for key in ('playback_pageset_manifest', 'playback_pageset_zip'):
             if self.config.get(key) is None:
                 continue
@@ -333,16 +338,29 @@ class Raptor(object):
                                for recording_path in recording_paths]
 
         if version == "2.0.2":
-            self.playback.config['playback_tool_args'] = ["--replay-kill-extra",
-                                                          "--script",
-                                                          '""{} {}""'.
-                                                          format(script,
-                                                                 " ".join(recording_paths))]
+            args = [
+                "--replay-kill-extra",
+                "-v",
+                "--script",
+                '""{} {}""'.format(script, " ".join(recording_paths)),
+            ]
+
+            if not self.config["playback_upstream_cert"]:
+                self.log.info("No upstream certificate sniffing")
+                args.insert(0, "--no-upstream-cert")
+            self.playback.config["playback_tool_args"] = args
         elif version == "4.0.4":
-            self.playback.config['playback_tool_args'] = ["--scripts", script,
-                                                          "--set",
-                                                          "server_replay={}".
-                                                          format(" ".join(recording_paths))]
+            args = [
+                "--scripts",
+                script,
+                "-v",
+                "--set",
+                "server_replay={}".format(" ".join(recording_paths)),
+            ]
+            if not self.config["playback_upstream_cert"]:
+                self.log.info("No upstream certificate sniffing")
+                args = ["--set", "upstream_cert=false"] + args
+            self.playback.config["playback_tool_args"] = args
         else:
             raise Exception("Mitmproxy version is unknown!")
 

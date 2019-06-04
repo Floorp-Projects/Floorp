@@ -30,7 +30,7 @@
 #include "hb.hh"
 
 #include "hb-ot-shape.hh"
-
+#include "hb-aat-ltag-table.hh"
 
 struct hb_aat_feature_mapping_t
 {
@@ -39,7 +39,7 @@ struct hb_aat_feature_mapping_t
   hb_aat_layout_feature_selector_t selectorToEnable;
   hb_aat_layout_feature_selector_t selectorToDisable;
 
-  static int cmp (const void *key_, const void *entry_)
+  HB_INTERNAL static int cmp (const void *key_, const void *entry_)
   {
     hb_tag_t key = * (unsigned int *) key_;
     const hb_aat_feature_mapping_t * entry = (const hb_aat_feature_mapping_t *) entry_;
@@ -77,9 +77,13 @@ hb_aat_layout_track (const hb_ot_shape_plan_t *plan,
 		     hb_font_t *font,
 		     hb_buffer_t *buffer);
 
-HB_INTERNAL hb_language_t
+
+inline hb_language_t
 _hb_aat_language_get (hb_face_t *face,
-		      unsigned int i);
+                      unsigned int i)
+{
+  return face->table.ltag->get_language (i);
+}
 
 
 #endif /* HB_AAT_LAYOUT_HH */

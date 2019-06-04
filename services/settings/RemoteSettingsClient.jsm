@@ -25,6 +25,8 @@ ChromeUtils.defineModuleGetter(this, "Utils",
                                "resource://services-settings/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "Downloader",
                                "resource://services-settings/Attachments.jsm");
+ChromeUtils.defineModuleGetter(this, "ObjectUtils",
+                               "resource://gre/modules/ObjectUtils.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
@@ -178,6 +180,11 @@ class RemoteSettingsClient extends EventEmitter {
     return this._lastCheckTimePref || `services.settings.${this.bucketName}.${this.collectionName}.last_check`;
   }
 
+  httpClient() {
+    const api = new KintoHttpClient(gServerURL);
+    return api.bucket(this.bucketName).collection(this.collectionName);
+  }
+
   /**
    * Open the underlying Kinto collection, using the appropriate adapter and options.
    */
@@ -235,9 +242,15 @@ class RemoteSettingsClient extends EventEmitter {
 
     if (verifySignature) {
       console.debug("Verify signature of local data");
-      const localRecords = data.map(r => kintoCollection.cleanLocalFields(r));
+      const { data: allData } = await kintoCollection.list({ order: "" });
+      const localRecords = allData.map(r => kintoCollection.cleanLocalFields(r));
       const timestamp = await kintoCollection.db.getLastModified();
-      const metadata = await kintoCollection.metadata();
+      let metadata = await kintoCollection.metadata();
+      if (syncIfEmpty && ObjectUtils.isEmpty(metadata)) {
+        // No sync occured yet, may have records from dump but no metadata.
+        console.debug(`Required metadata for ${this.identifier}, fetching from server.`);
+        metadata = await kintoCollection.pullMetadata(this.httpClient());
+      }
       await this._validateCollectionSignature([],
                                               timestamp,
                                               metadata,
@@ -316,6 +329,20 @@ class RemoteSettingsClient extends EventEmitter {
       // to record the fact that a check happened.
       if (expectedTimestamp <= collectionLastModified) {
         console.debug(`${this.identifier} local data is up-to-date`);
+        // If the data is up-to-date but don't have metadata (records loaded from dump),
+        // we fetch them and validate the signature immediately.
+        if (this.verifySignature && ObjectUtils.isEmpty(await kintoCollection.metadata())) {
+          console.debug("Verify signature of local data");
+          const { data: allData } = await kintoCollection.list({ order: "" });
+          const localRecords = allData.map(r => kintoCollection.cleanLocalFields(r));
+          const metadata = await kintoCollection.pullMetadata(this.httpClient());
+          if (this.verifySignature) {
+            await this._validateCollectionSignature([],
+                                                    collectionLastModified,
+                                                    metadata,
+                                                    { localRecords });
+          }
+        }
         reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
         return;
       }
@@ -325,10 +352,10 @@ class RemoteSettingsClient extends EventEmitter {
       if (this.verifySignature) {
         kintoCollection.hooks["incoming-changes"] = [async (payload, collection) => {
           const { changes: remoteRecords, lastModified: timestamp } = payload;
-          const { data } = await kintoCollection.list({ order: "" }); // no need to sort.
+          const { data } = await collection.list({ order: "" }); // no need to sort.
           const metadata = await collection.metadata();
           // Local fields are stripped to compute the collection signature (server does not have them).
-          const localRecords = data.map(r => kintoCollection.cleanLocalFields(r));
+          const localRecords = data.map(r => collection.cleanLocalFields(r));
           await this._validateCollectionSignature(remoteRecords,
                                                   timestamp,
                                                   metadata,
@@ -478,8 +505,7 @@ class RemoteSettingsClient extends EventEmitter {
    */
   async _retrySyncFromScratch(kintoCollection, expectedTimestamp) {
     // Fetch collection metadata.
-    const api = new KintoHttpClient(gServerURL);
-    const client = await api.bucket(this.bucketName).collection(this.collectionName);
+    const client = this.httpClient();
     const metadata = await client.getData({ query: { _expected: expectedTimestamp }});
     // Fetch whole list of records.
     const {

@@ -704,8 +704,8 @@ impl<'le> GeckoElement<'le> {
                     .map(GeckoElement)
             }
         } else {
-            let binding_parent = unsafe { self.non_xul_xbl_binding_parent().as_ref() }
-                .map(GeckoElement);
+            let binding_parent =
+                unsafe { self.non_xul_xbl_binding_parent().as_ref() }.map(GeckoElement);
 
             debug_assert!(
                 binding_parent ==
@@ -722,9 +722,8 @@ impl<'le> GeckoElement<'le> {
     #[inline]
     fn non_xul_xbl_binding_parent(&self) -> *mut RawGeckoElement {
         debug_assert!(!self.is_xul_element());
-        self.extended_slots().map_or(ptr::null_mut(), |slots| {
-            slots._base.mBindingParent.mRawPtr
-        })
+        self.extended_slots()
+            .map_or(ptr::null_mut(), |slots| slots._base.mBindingParent.mRawPtr)
     }
 
     #[inline]
@@ -1165,6 +1164,19 @@ impl<'le> TElement for GeckoElement<'le> {
     #[inline]
     fn is_xul_element(&self) -> bool {
         self.namespace_id() == structs::root::kNameSpaceID_XUL as i32
+    }
+
+    #[inline]
+    fn local_name(&self) -> &WeakAtom {
+        unsafe { WeakAtom::new(self.as_node().node_info().mInner.mName) }
+    }
+
+    #[inline]
+    fn namespace(&self) -> &WeakNamespace {
+        unsafe {
+            let namespace_manager = structs::nsContentUtils_sNameSpaceManager;
+            WeakNamespace::new((*namespace_manager).mURIArray[self.namespace_id() as usize].mRawPtr)
+        }
     }
 
     /// Return the list of slotted nodes of this node.
@@ -2072,16 +2084,18 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
     }
 
     #[inline]
-    fn local_name(&self) -> &WeakAtom {
-        unsafe { WeakAtom::new(self.as_node().node_info().mInner.mName) }
+    fn has_local_name(&self, name: &WeakAtom) -> bool {
+        self.local_name() == name
     }
 
     #[inline]
-    fn namespace(&self) -> &WeakNamespace {
-        unsafe {
-            let namespace_manager = structs::nsContentUtils_sNameSpaceManager;
-            WeakNamespace::new((*namespace_manager).mURIArray[self.namespace_id() as usize].mRawPtr)
-        }
+    fn has_namespace(&self, ns: &WeakNamespace) -> bool {
+        self.namespace() == ns
+    }
+
+    #[inline]
+    fn is_same_type(&self, other: &Self) -> bool {
+        self.local_name() == other.local_name() && self.namespace() == other.namespace()
     }
 
     fn match_non_ts_pseudo_class<F>(

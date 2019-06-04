@@ -1342,6 +1342,9 @@ function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
       }
 
       expectedMessage = expectedMessage.replace("| ", "");
+    } else {
+      is(message.querySelector(".indent").getAttribute("data-indent"),
+        "0", "The message has the expected indent");
     }
 
     ok(message.textContent.trim().includes(expectedMessage.trim()), `Message includes ` +

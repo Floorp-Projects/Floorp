@@ -28,54 +28,6 @@ add_task(function test_nullPrincipal() {
   is(p2.originAttributes.userContextId, 2, "Expected a userContextId of 2");
 });
 
-add_task(async function test_contentPrincipal() {
-  /*
-   This test should NOT be resilient to changes in versioning,
-   however it exists purely to verify the code doesn't unintentionally change without updating versioning and migration code.
-  */
-  let tests = [
-    {
-      input: ["http://example.com/", {}],
-      expected: "ZT4OTT7kRfqycpfCC8AeuAAAAAAAAAAAwAAAAAAAAEYB3pRy0IA0EdOTmQAQS6D9QJIHOlRteE8wkTq4cYEyCMYAAAAC/////wAAAFABAAAAE2h0dHA6Ly9leGFtcGxlLmNvbS8AAAAAAAAABAAAAAcAAAALAAAAB/////8AAAAH/////wAAAAcAAAALAAAAEgAAAAEAAAASAAAAAQAAABIAAAABAAAAEwAAAAAAAAAT/////wAAAAD/////AAAAEv////8AAAAS/////wEAAAAAAAAAAAAAAAA=",
-    },
-    {
-      input: ["http://mozilla1.com/", {}],
-      expected: "ZT4OTT7kRfqycpfCC8AeuAAAAAAAAAAAwAAAAAAAAEYB3pRy0IA0EdOTmQAQS6D9QJIHOlRteE8wkTq4cYEyCMYAAAAC/////wAAAFABAAAAFGh0dHA6Ly9tb3ppbGxhMS5jb20vAAAAAAAAAAQAAAAHAAAADAAAAAf/////AAAAB/////8AAAAHAAAADAAAABMAAAABAAAAEwAAAAEAAAATAAAAAQAAABQAAAAAAAAAFP////8AAAAA/////wAAABP/////AAAAE/////8BAAAAAAAAAAAAAAAA",
-    },
-    {
-      input: ["http://mozilla2.com/", { userContextId: 0 }],
-      expected: "ZT4OTT7kRfqycpfCC8AeuAAAAAAAAAAAwAAAAAAAAEYB3pRy0IA0EdOTmQAQS6D9QJIHOlRteE8wkTq4cYEyCMYAAAAC/////wAAAFABAAAAFGh0dHA6Ly9tb3ppbGxhMi5jb20vAAAAAAAAAAQAAAAHAAAADAAAAAf/////AAAAB/////8AAAAHAAAADAAAABMAAAABAAAAEwAAAAEAAAATAAAAAQAAABQAAAAAAAAAFP////8AAAAA/////wAAABP/////AAAAE/////8BAAAAAAAAAAAAAAAA",
-    },
-    {
-      input: ["http://mozilla3.com/", { userContextId: 2 }],
-      expected: "ZT4OTT7kRfqycpfCC8AeuAAAAAAAAAAAwAAAAAAAAEYB3pRy0IA0EdOTmQAQS6D9QJIHOlRteE8wkTq4cYEyCMYAAAAC/////wAAAFABAAAAFGh0dHA6Ly9tb3ppbGxhMy5jb20vAAAAAAAAAAQAAAAHAAAADAAAAAf/////AAAAB/////8AAAAHAAAADAAAABMAAAABAAAAEwAAAAEAAAATAAAAAQAAABQAAAAAAAAAFP////8AAAAA/////wAAABP/////AAAAE/////8BAAAAAAAAAAAAABBedXNlckNvbnRleHRJZD0yAA==",
-    },
-    {
-      input: ["http://mozilla4.com/", { privateBrowsingId: 1 }],
-      expected: "ZT4OTT7kRfqycpfCC8AeuAAAAAAAAAAAwAAAAAAAAEYB3pRy0IA0EdOTmQAQS6D9QJIHOlRteE8wkTq4cYEyCMYAAAAC/////wAAAFABAAAAFGh0dHA6Ly9tb3ppbGxhNC5jb20vAAAAAAAAAAQAAAAHAAAADAAAAAf/////AAAAB/////8AAAAHAAAADAAAABMAAAABAAAAEwAAAAEAAAATAAAAAQAAABQAAAAAAAAAFP////8AAAAA/////wAAABP/////AAAAE/////8BAAAAAAAAAAAAABRecHJpdmF0ZUJyb3dzaW5nSWQ9MQA=",
-    },
-    {
-      input: ["http://mozilla5.com/", { privateBrowsingId: 0 }],
-      expected: "ZT4OTT7kRfqycpfCC8AeuAAAAAAAAAAAwAAAAAAAAEYB3pRy0IA0EdOTmQAQS6D9QJIHOlRteE8wkTq4cYEyCMYAAAAC/////wAAAFABAAAAFGh0dHA6Ly9tb3ppbGxhNS5jb20vAAAAAAAAAAQAAAAHAAAADAAAAAf/////AAAAB/////8AAAAHAAAADAAAABMAAAABAAAAEwAAAAEAAAATAAAAAQAAABQAAAAAAAAAFP////8AAAAA/////wAAABP/////AAAAE/////8BAAAAAAAAAAAAAAAA",
-    },
-  ];
-
-  for (let test of tests) {
-    let uri = Services.io.newURI(test.input[0]);
-    let p = Services.scriptSecurityManager.createCodebasePrincipal(uri, test.input[1]);
-    let sp = E10SUtils.serializePrincipal(p);
-    is(test.expected, sp, "Expected serialized string for " + test.input[0]);
-    let dp = E10SUtils.deserializePrincipal(sp);
-    is(dp.URI.spec, test.input[0], "Ensure spec is the same");
-
-    // Check all the origin attributes
-    for (let key in test.input[1]) {
-      is(dp.originAttributes[key], test.input[1][key], "Ensure value of " + key + " is " + test.input[1][key]);
-    }
-  }
-});
-
-
 add_task(async function test_realHistoryCheck() {
   /*
   This test should be resilient to changes in principal serialization, if these are failing then it's likely the code will break session storage.

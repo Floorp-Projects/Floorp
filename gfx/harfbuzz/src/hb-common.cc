@@ -67,7 +67,7 @@ _hb_options_init ()
         p = c + strlen (c);
 
 #define OPTION(name, symbol) \
-	if (0 == strncmp (c, name, p - c) && strlen (name) == p - c) u.opts.symbol = true;
+	if (0 == strncmp (c, name, p - c) && strlen (name) == p - c) do { u.opts.symbol = true; } while (0)
 
       OPTION ("uniscribe-bug-compatible", uniscribe_bug_compatible);
       OPTION ("aat", aat);
@@ -356,7 +356,7 @@ hb_language_from_string (const char *str, int len)
   {
     /* NUL-terminate it. */
     char strbuf[64];
-    len = MIN (len, (int) sizeof (strbuf) - 1);
+    len = hb_min (len, (int) sizeof (strbuf) - 1);
     memcpy (strbuf, str, len);
     strbuf[len] = '\0';
     item = lang_find_or_insert (strbuf);
@@ -488,7 +488,7 @@ hb_script_from_string (const char *str, int len)
 
 /**
  * hb_script_to_iso15924_tag:
- * @script: an #hb_script_ to convert.
+ * @script: an #hb_script_t to convert.
  *
  * See hb_script_from_iso15924_tag().
  *
@@ -720,7 +720,7 @@ static bool
 parse_uint (const char **pp, const char *end, unsigned int *pv)
 {
   char buf[32];
-  unsigned int len = MIN (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
+  unsigned int len = hb_min (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
   strncpy (buf, *pp, len);
   buf[len] = '\0';
 
@@ -744,7 +744,7 @@ static bool
 parse_uint32 (const char **pp, const char *end, uint32_t *pv)
 {
   char buf[32];
-  unsigned int len = MIN (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
+  unsigned int len = hb_min (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
   strncpy (buf, *pp, len);
   buf[len] = '\0';
 
@@ -783,7 +783,7 @@ parse_uint32 (const char **pp, const char *end, uint32_t *pv)
 static void free_static_C_locale ();
 #endif
 
-static struct hb_C_locale_lazy_loader_t : hb_lazy_loader_t<hb_remove_pointer (HB_LOCALE_T),
+static struct hb_C_locale_lazy_loader_t : hb_lazy_loader_t<hb_remove_pointer<HB_LOCALE_T>,
 							  hb_C_locale_lazy_loader_t>
 {
   static HB_LOCALE_T create ()
@@ -825,7 +825,7 @@ static bool
 parse_float (const char **pp, const char *end, float *pv)
 {
   char buf[32];
-  unsigned int len = MIN (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
+  unsigned int len = hb_min (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
   strncpy (buf, *pp, len);
   buf[len] = '\0';
 
@@ -1071,21 +1071,21 @@ hb_feature_to_string (hb_feature_t *feature,
   {
     s[len++] = '[';
     if (feature->start)
-      len += MAX (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->start));
+      len += hb_max (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->start));
     if (feature->end != feature->start + 1) {
       s[len++] = ':';
       if (feature->end != (unsigned int) -1)
-	len += MAX (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->end));
+	len += hb_max (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->end));
     }
     s[len++] = ']';
   }
   if (feature->value > 1)
   {
     s[len++] = '=';
-    len += MAX (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->value));
+    len += hb_max (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->value));
   }
   assert (len < ARRAY_LENGTH (s));
-  len = MIN (len, size - 1);
+  len = hb_min (len, size - 1);
   memcpy (buf, s, len);
   buf[len] = '\0';
 }
@@ -1152,13 +1152,70 @@ hb_variation_to_string (hb_variation_t *variation,
   while (len && s[len - 1] == ' ')
     len--;
   s[len++] = '=';
-  len += MAX (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%g", (double) variation->value));
+  len += hb_max (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%g", (double) variation->value));
 
   assert (len < ARRAY_LENGTH (s));
-  len = MIN (len, size - 1);
+  len = hb_min (len, size - 1);
   memcpy (buf, s, len);
   buf[len] = '\0';
 }
+
+/**
+ * hb_color_get_alpha:
+ * color: a #hb_color_t we are interested in its channels.
+ *
+ * Return value: Alpha channel value of the given color
+ *
+ * Since: 2.1.0
+ */
+uint8_t
+(hb_color_get_alpha) (hb_color_t color)
+{
+  return hb_color_get_alpha (color);
+}
+
+/**
+ * hb_color_get_red:
+ * color: a #hb_color_t we are interested in its channels.
+ *
+ * Return value: Red channel value of the given color
+ *
+ * Since: 2.1.0
+ */
+uint8_t
+(hb_color_get_red) (hb_color_t color)
+{
+  return hb_color_get_red (color);
+}
+
+/**
+ * hb_color_get_green:
+ * color: a #hb_color_t we are interested in its channels.
+ *
+ * Return value: Green channel value of the given color
+ *
+ * Since: 2.1.0
+ */
+uint8_t
+(hb_color_get_green) (hb_color_t color)
+{
+  return hb_color_get_green (color);
+}
+
+/**
+ * hb_color_get_blue:
+ * color: a #hb_color_t we are interested in its channels.
+ *
+ * Return value: Blue channel value of the given color
+ *
+ * Since: 2.1.0
+ */
+uint8_t
+(hb_color_get_blue) (hb_color_t color)
+{
+  return hb_color_get_blue (color);
+}
+
 
 /* If there is no visibility control, then hb-static.cc will NOT
  * define anything.  Instead, we get it to define one set in here

@@ -6,10 +6,12 @@
 # * best-match response handling is used to improve success rates
 from __future__ import absolute_import, print_function
 
+import os
 import hashlib
 import sys
 import urllib
 from collections import defaultdict
+import json
 
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -18,9 +20,75 @@ from mitmproxy import io
 from typing import Any  # noqa
 from typing import List  # noqa
 
+# PATCHING AREA  - ALLOWS HTTP/2 WITH NO CERT SNIFFING
+from mitmproxy.proxy.protocol import tls
+from mitmproxy.proxy.protocol.http2 import Http2Layer, SafeH2Connection
+
+_PROTO = {}
+
+
+@property
+def _alpn(self):
+    proto = _PROTO.get(self.server_sni, b"")
+    if proto.startswith(b"HTTP/2"):
+        return b"h2"
+    elif proto.startswith(b"HTTP/1"):
+        return b"h1"
+    return b""
+
+
+tls.TlsLayer.alpn_for_client_connection = _alpn
+
+
+def _server_conn(self):
+    if not self.server_conn.connected() and self.server_conn not in self.connections:
+        # we can't use ctx.log in this layer
+        print("Ignored CONNECT call on upstream server")
+        return
+    if self.server_conn.connected():
+        import h2.config
+
+        config = h2.config.H2Configuration(
+            client_side=True,
+            header_encoding=False,
+            validate_outbound_headers=False,
+            validate_inbound_headers=False,
+        )
+        self.connections[self.server_conn] = SafeH2Connection(
+            self.server_conn, config=config
+        )
+    self.connections[self.server_conn].initiate_connection()
+    self.server_conn.send(self.connections[self.server_conn].data_to_send())
+
+
+Http2Layer._initiate_server_conn = _server_conn
+
+
+def _remote_settings_changed(self, event, other_conn):
+    if other_conn not in self.connections:
+        # we can't use ctx.log in this layer
+        print("Ignored remote settings upstream")
+        return True
+    new_settings = dict(
+        [(key, cs.new_value) for (key, cs) in event.changed_settings.items()]
+    )
+    self.connections[other_conn].safe_update_settings(new_settings)
+    return True
+
+
+Http2Layer._handle_remote_settings_changed = _remote_settings_changed
+# END OF PATCHING
+
 
 class ServerPlayback:
     def __init__(self, replayfiles):
+        if len(replayfiles) > 0:
+            for path in replayfiles:
+                proto = os.path.splitext(path)[0] + ".json"
+                if os.path.exists(proto):
+                    ctx.log.info("Loading proto info from %s" % proto)
+                    with open(proto) as f:
+                        _PROTO.update(json.loads(f.read()))
         self.options = None
         self.replayfiles = replayfiles
         self.flowmap = {}
@@ -46,7 +114,7 @@ class ServerPlayback:
 
         content = None
         formdata = None
-        if r.raw_content != b'':
+        if r.raw_content != b"":
             if r.multipart_form:
                 formdata = r.multipart_form
             elif r.urlencoded_form:
@@ -68,9 +136,7 @@ class ServerPlayback:
         if len(queries):
             key.append("?")
 
-        return hashlib.sha256(
-            repr(key).encode("utf8", "surrogateescape")
-        ).digest()
+        return hashlib.sha256(repr(key).encode("utf8", "surrogateescape")).digest()
 
     def _match(self, request_a, request_b):
         """
@@ -134,23 +200,32 @@ class ServerPlayback:
         # if it's an exact match, great!
         if len(flows) == 1:
             candidate = flows[0]
-            if (candidate.request.url == request.url and
-               candidate.request.raw_content == request.raw_content):
-                ctx.log.info("For request {} found exact replay match".format(request.url))
+            if (
+                candidate.request.url == request.url
+                and candidate.request.raw_content == request.raw_content
+            ):
+                ctx.log.info(
+                    "For request {} found exact replay match".format(request.url)
+                )
                 return candidate
 
         # find the best match between the request and the available flow candidates
         match = -1
         flow = None
-        ctx.log.debug("Candiate flows for request: {}".format(request.url))
+        ctx.log.debug("Candidate flows for request: {}".format(request.url))
         for candidate_flow in flows:
             candidate_match = self._match(candidate_flow.request, request)
-            ctx.log.debug("  score={} url={}".format(candidate_match, candidate_flow.request.url))
+            ctx.log.debug(
+                "  score={} url={}".format(candidate_match, candidate_flow.request.url)
+            )
             if candidate_match >= match:
                 match = candidate_match
                 flow = candidate_flow
-        ctx.log.info("For request {} best match {} with score=={}".format(request.url,
-                     flow.request.url, match))
+        ctx.log.info(
+            "For request {} best match {} with score=={}".format(
+                request.url, flow.request.url, match
+            )
+        )
         return flow
 
     def configure(self, options, updated):
@@ -177,7 +252,9 @@ class ServerPlayback:
                         f.request.url
                     )
                 )
-                f.response = http.HTTPResponse.make(404, b'', {'content-type': 'text/plain'})
+                f.response = http.HTTPResponse.make(
+                    404, b"", {"content-type": "text/plain"}
+                )
 
 
 def start():

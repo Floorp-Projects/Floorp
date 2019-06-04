@@ -248,7 +248,7 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
   // only cases when we call CalculateHypotheticalBox().
   if ((pos->mOffset.Get(eSideTop).IsAuto() &&
        pos->mOffset.Get(eSideBottom).IsAuto()) ||
-      (pos->mOffset.Get(eSideLeft).IsAuto() ||
+      (pos->mOffset.Get(eSideLeft).IsAuto() &&
        pos->mOffset.Get(eSideRight).IsAuto())) {
     return true;
   }

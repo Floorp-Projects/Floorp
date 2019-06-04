@@ -34,12 +34,6 @@ OuterDocAccessible::OuterDocAccessible(nsIContent* aContent,
     : AccessibleWrap(aContent, aDoc) {
   mType = eOuterDocType;
 
-#ifdef XP_WIN
-  if (DocAccessibleParent* remoteDoc = RemoteChildDoc()) {
-    remoteDoc->SendParentCOMProxy();
-  }
-#endif
-
   if (IPCAccessibilityActive()) {
     auto bridge = dom::BrowserBridgeChild::GetFrom(aContent);
     if (bridge) {

@@ -5,32 +5,94 @@
 # * returns 404 rather than dropping the whole HTTP/2 connection on the floor
 # * remove the replay packages that don't have any content in their response package
 
+import os
+import json
 import hashlib
 import urllib
 
 import typing
 from urllib import parse
-from mitmproxy import command
+
 from mitmproxy import ctx, http
 from mitmproxy import exceptions
 from mitmproxy import io
 
+# PATCHING AREA  - ALLOWS HTTP/2 WITH NO CERT SNIFFING
+from mitmproxy.proxy.protocol import tls
+from mitmproxy.proxy.protocol.http2 import Http2Layer, SafeH2Connection
+
+_PROTO = {}
+
+
+@property
+def _alpn(self):
+    proto = _PROTO.get(self.server_sni)
+    if proto is None:
+        return b""
+    if proto.startswith("HTTP/2"):
+        return b"h2"
+    elif proto.startswith("HTTP/1"):
+        return b"h1"
+    return b""
+
+
+tls.TlsLayer.alpn_for_client_connection = _alpn
+
+
+def _server_conn(self):
+    if not self.server_conn.connected() and self.server_conn not in self.connections:
+        # we can't use ctx.log in this layer
+        print("Ignored CONNECT call on upstream server")
+        return
+    if self.server_conn.connected():
+        import h2.config
+
+        config = h2.config.H2Configuration(
+            client_side=True,
+            header_encoding=False,
+            validate_outbound_headers=False,
+            validate_inbound_headers=False,
+        )
+        self.connections[self.server_conn] = SafeH2Connection(
+            self.server_conn, config=config
+        )
+    self.connections[self.server_conn].initiate_connection()
+    self.server_conn.send(self.connections[self.server_conn].data_to_send())
+
+
+Http2Layer._initiate_server_conn = _server_conn
+
+
+def _remote_settings_changed(self, event, other_conn):
+    if other_conn not in self.connections:
+        # we can't use ctx.log in this layer
+        print("Ignored remote settings upstream")
+        return True
+    new_settings = dict(
+        [(key, cs.new_value) for (key, cs) in event.changed_settings.items()]
+    )
+    self.connections[other_conn].safe_update_settings(new_settings)
+    return True
+
+
+Http2Layer._handle_remote_settings_changed = _remote_settings_changed
+# END OF PATCHING
+
 
 class AlternateServerPlayback:
-
     def __init__(self):
         ctx.master.addons.remove(ctx.master.addons.get("serverplayback"))
         self.flowmap = {}
         self.configured = False
 
     def load(self, loader):
-        ctx.log.info("load options")
         loader.add_option(
-            "server_replay", typing.Sequence[str], [],
-            "Replay server responses from a saved file."
+            "server_replay",
+            typing.Sequence[str],
+            [],
+            "Replay server responses from a saved file.",
         )
 
-    @command.command("replay.server")
     def load_flows(self, flows):
         """
             Replay server responses from flows.
@@ -44,29 +106,24 @@ class AlternateServerPlayback:
                 l.append(i)
             else:
                 ctx.log.info(
-                    "Request %s has no response data content. Removing from request list" %
-                    i.request.url)
+                    "Request %s has no response data content. Removing from request list"
+                    % i.request.url
+                )
         ctx.master.addons.trigger("update", [])
 
-    @command.command("replay.server.file")
-    def load_file(self, path):
-        try:
-            flows = io.read_flows_from_paths([path])
-        except exceptions.FlowReadException as e:
-            raise exceptions.CommandError(str(e))
-        self.load_flows(flows)
-
-    @command.command("replay.server.stop")
-    def clear(self):
-        """
-            Stop server replay.
-        """
-        self.flowmap = {}
-        ctx.master.addons.trigger("update", [])
-
-    @command.command("replay.server.count")
-    def count(self):
-        return sum([len(i) for i in self.flowmap.values()])
+    def load_files(self, paths):
+        for path in paths:
+            ctx.log.info("Loading flows from %s" % path)
+            try:
+                flows = io.read_flows_from_paths([path])
+            except exceptions.FlowReadException as e:
+                raise exceptions.CommandError(str(e))
+            self.load_flows(flows)
+            proto = os.path.splitext(path)[0] + ".json"
+            if os.path.exists(proto):
+                ctx.log.info("Loading proto info from %s" % proto)
+                with open(proto) as f:
+                    _PROTO.update(json.loads(f.read()))
 
     def _hash(self, flow):
         """
@@ -87,9 +144,7 @@ class AlternateServerPlayback:
             key.append(p[0])
             key.append(p[1])
 
-        return hashlib.sha256(
-            repr(key).encode("utf8", "surrogateescape")
-        ).digest()
+        return hashlib.sha256(repr(key).encode("utf8", "surrogateescape")).digest()
 
     def next_flow(self, request):
         """
@@ -103,11 +158,7 @@ class AlternateServerPlayback:
     def configure(self, updated):
         if not self.configured and ctx.options.server_replay:
             self.configured = True
-            try:
-                flows = io.read_flows_from_paths(ctx.options.server_replay)
-            except exceptions.FlowReadException as e:
-                raise exceptions.OptionsError(str(e))
-            self.load_flows(flows)
+            self.load_files(ctx.options.server_replay)
 
     def request(self, f):
         if self.flowmap:
@@ -127,7 +178,9 @@ class AlternateServerPlayback:
                         f.request.url
                     )
                 )
-                f.response = http.HTTPResponse.make(404, b'', {'content-type': 'text/plain'})
+                f.response = http.HTTPResponse.make(
+                    404, b"", {"content-type": "text/plain"}
+                )
 
 
 addons = [AlternateServerPlayback()]

@@ -110,7 +110,8 @@ struct Encoding1 {
     {
       if (glyph <= ranges[i].nLeft)
       {
-	return (hb_codepoint_t)ranges[i].first + glyph;
+	hb_codepoint_t code = (hb_codepoint_t) ranges[i].first + glyph;
+	return (likely (code < 0x100) ? code: CFF_UNDEF_CODE);
       }
       glyph -= (ranges[i].nLeft + 1);
     }
@@ -196,18 +197,18 @@ struct Encoding {
     TRACE_SERIALIZE (this);
     Encoding *dest = c->extend_min (*this);
     if (unlikely (dest == nullptr)) return_trace (false);
-    dest->format.set (format | ((supp_codes.length > 0)? 0x80: 0));
+    dest->format = format | ((supp_codes.length > 0)? 0x80: 0);
     if (format == 0)
     {
       Encoding0 *fmt0 = c->allocate_size<Encoding0> (Encoding0::min_size + HBUINT8::static_size * enc_count);
     if (unlikely (fmt0 == nullptr)) return_trace (false);
-      fmt0->nCodes ().set (enc_count);
+      fmt0->nCodes () = enc_count;
       unsigned int glyph = 0;
       for (unsigned int i = 0; i < code_ranges.length; i++)
       {
 	hb_codepoint_t code = code_ranges[i].code;
 	for (int left = (int)code_ranges[i].glyph; left >= 0; left--)
-	  fmt0->codes[glyph++].set (code++);
+	  fmt0->codes[glyph++] = code++;
 	if (unlikely (!((glyph <= 0x100) && (code <= 0x100))))
 	  return_trace (false);
       }
@@ -216,24 +217,24 @@ struct Encoding {
     {
       Encoding1 *fmt1 = c->allocate_size<Encoding1> (Encoding1::min_size + Encoding1_Range::static_size * code_ranges.length);
       if (unlikely (fmt1 == nullptr)) return_trace (false);
-      fmt1->nRanges ().set (code_ranges.length);
+      fmt1->nRanges () = code_ranges.length;
       for (unsigned int i = 0; i < code_ranges.length; i++)
       {
 	if (unlikely (!((code_ranges[i].code <= 0xFF) && (code_ranges[i].glyph <= 0xFF))))
 	  return_trace (false);
-	fmt1->ranges[i].first.set (code_ranges[i].code);
-	fmt1->ranges[i].nLeft.set (code_ranges[i].glyph);
+	fmt1->ranges[i].first = code_ranges[i].code;
+	fmt1->ranges[i].nLeft = code_ranges[i].glyph;
       }
     }
     if (supp_codes.length > 0)
     {
       CFF1SuppEncData *suppData = c->allocate_size<CFF1SuppEncData> (CFF1SuppEncData::min_size + SuppEncoding::static_size * supp_codes.length);
       if (unlikely (suppData == nullptr)) return_trace (false);
-      suppData->nSups ().set (supp_codes.length);
+      suppData->nSups () = supp_codes.length;
       for (unsigned int i = 0; i < supp_codes.length; i++)
       {
-	suppData->supps[i].code.set (supp_codes[i].code);
-	suppData->supps[i].glyph.set (supp_codes[i].glyph); /* actually SID */
+	suppData->supps[i].code = supp_codes[i].code;
+	suppData->supps[i].glyph = supp_codes[i].glyph; /* actually SID */
       }
     }
     return_trace (true);
@@ -469,7 +470,7 @@ struct Charset {
     TRACE_SERIALIZE (this);
     Charset *dest = c->extend_min (*this);
     if (unlikely (dest == nullptr)) return_trace (false);
-    dest->format.set (format);
+    dest->format = format;
     if (format == 0)
     {
       Charset0 *fmt0 = c->allocate_size<Charset0> (Charset0::min_size + HBUINT16::static_size * (num_glyphs - 1));
@@ -479,7 +480,7 @@ struct Charset {
       {
 	hb_codepoint_t sid = sid_ranges[i].code;
 	for (int left = (int)sid_ranges[i].glyph; left >= 0; left--)
-	  fmt0->sids[glyph++].set (sid++);
+	  fmt0->sids[glyph++] = sid++;
       }
     }
     else if (format == 1)
@@ -490,8 +491,8 @@ struct Charset {
       {
       	if (unlikely (!(sid_ranges[i].glyph <= 0xFF)))
 	  return_trace (false);
-	fmt1->ranges[i].first.set (sid_ranges[i].code);
-	fmt1->ranges[i].nLeft.set (sid_ranges[i].glyph);
+	fmt1->ranges[i].first = sid_ranges[i].code;
+	fmt1->ranges[i].nLeft = sid_ranges[i].glyph;
       }
     }
     else /* format 2 */
@@ -502,8 +503,8 @@ struct Charset {
       {
       	if (unlikely (!(sid_ranges[i].glyph <= 0xFFFF)))
 	  return_trace (false);
-	fmt2->ranges[i].first.set (sid_ranges[i].code);
-	fmt2->ranges[i].nLeft.set (sid_ranges[i].glyph);
+	fmt2->ranges[i].first = sid_ranges[i].code;
+	fmt2->ranges[i].nLeft = sid_ranges[i].glyph;
       }
     }
     return_trace (true);
@@ -575,9 +576,9 @@ struct CFF1StringIndex : CFF1Index
     TRACE_SERIALIZE (this);
     if (unlikely ((strings.count == 0) || (sidmap.get_count () == 0)))
     {
-      if (!unlikely (c->extend_min (this->count)))
+      if (unlikely (!c->extend_min (this->count)))
 	return_trace (false);
-      count.set (0);
+      count = 0;
       return_trace (true);
     }
 
@@ -598,9 +599,9 @@ struct CFF1StringIndex : CFF1Index
   }
 
   /* in parallel to above */
-  unsigned int calculate_serialized_size (unsigned int &offSize /*OUT*/, const remap_t &sidmap) const
+  unsigned int calculate_serialized_size (unsigned int &offSize_ /*OUT*/, const remap_t &sidmap) const
   {
-    offSize = 0;
+    offSize_ = 0;
     if ((count == 0) || (sidmap.get_count () == 0))
       return count.static_size;
 
@@ -609,8 +610,8 @@ struct CFF1StringIndex : CFF1Index
       if (sidmap[i] != CFF_UNDEF_CODE)
 	dataSize += length_at (i);
 
-    offSize = calcOffSize(dataSize);
-    return CFF1Index::calculate_serialized_size (offSize, sidmap.get_count (), dataSize);
+    offSize_ = calcOffSize(dataSize);
+    return CFF1Index::calculate_serialized_size (offSize_, sidmap.get_count (), dataSize);
   }
 };
 

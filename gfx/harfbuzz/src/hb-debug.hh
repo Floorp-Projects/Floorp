@@ -29,7 +29,7 @@
 
 #include "hb.hh"
 #include "hb-atomic.hh"
-#include "hb-dsalgs.hh"
+#include "hb-algs.hh"
 
 
 #ifndef HB_DEBUG
@@ -63,6 +63,9 @@ extern HB_INTERNAL hb_atomic_int_t _hb_options;
 static inline hb_options_t
 hb_options ()
 {
+#ifdef HB_NO_GETENV
+  return hb_options_t ();
+#endif
   /* Make a local copy, so we can access bitfield threadsafely. */
   hb_options_union_t u;
   u.i = _hb_options.get_relaxed ();
@@ -158,7 +161,7 @@ _hb_debug_msg_va (const char *what,
       VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR VBAR;
     fprintf (stderr, "%2u %s" VRBAR "%s",
 	     level,
-	     bars + sizeof (bars) - 1 - MIN ((unsigned int) sizeof (bars) - 1, (unsigned int) (sizeof (VBAR) - 1) * level),
+	     bars + sizeof (bars) - 1 - hb_min ((unsigned int) sizeof (bars) - 1, (unsigned int) (sizeof (VBAR) - 1) * level),
 	     level_dir ? (level_dir > 0 ? DLBAR : ULBAR) : LBAR);
   } else
     fprintf (stderr, "   " VRBAR LBAR);
@@ -246,8 +249,8 @@ struct hb_printer_t<bool> {
 };
 
 template <>
-struct hb_printer_t<hb_void_t> {
-  const char *print (hb_void_t) { return ""; }
+struct hb_printer_t<hb_empty_t> {
+  const char *print (hb_empty_t) { return ""; }
 };
 
 
@@ -263,7 +266,7 @@ static inline void _hb_warn_no_return (bool returned)
   }
 }
 template <>
-/*static*/ inline void _hb_warn_no_return<hb_void_t> (bool returned HB_UNUSED)
+/*static*/ inline void _hb_warn_no_return<hb_empty_t> (bool returned HB_UNUSED)
 {}
 
 template <int max_level, typename ret_t>
@@ -327,18 +330,20 @@ struct hb_auto_trace_t<0, ret_t>
 				   const char *message,
 				   ...) HB_PRINTF_FUNC(6, 7) {}
 
-  ret_t ret (ret_t v,
-	     const char *func HB_UNUSED = nullptr,
-	     unsigned int line HB_UNUSED = 0) { return v; }
+  template <typename T>
+  T ret (T&& v,
+	 const char *func HB_UNUSED = nullptr,
+	 unsigned int line HB_UNUSED = 0) { return hb_forward<T> (v); }
 };
 
 /* For disabled tracing; optimize out everything.
  * https://github.com/harfbuzz/harfbuzz/pull/605 */
 template <typename ret_t>
 struct hb_no_trace_t {
-  ret_t ret (ret_t v,
-	     const char *func HB_UNUSED = "",
-	     unsigned int line HB_UNUSED = 0) { return v; }
+  template <typename T>
+  T ret (T&& v,
+	 const char *func HB_UNUSED = nullptr,
+	 unsigned int line HB_UNUSED = 0) { return hb_forward<T> (v); }
 };
 
 #define return_trace(RET) return trace.ret (RET, HB_FUNC, __LINE__)
@@ -437,25 +442,12 @@ struct hb_no_trace_t {
 #define TRACE_SUBSET(this) hb_no_trace_t<bool> trace
 #endif
 
-#ifndef HB_DEBUG_WOULD_APPLY
-#define HB_DEBUG_WOULD_APPLY (HB_DEBUG+0)
-#endif
-#if HB_DEBUG_WOULD_APPLY
-#define TRACE_WOULD_APPLY(this) \
-	hb_auto_trace_t<HB_DEBUG_WOULD_APPLY, bool> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "%d glyphs", c->len);
-#else
-#define TRACE_WOULD_APPLY(this) hb_no_trace_t<bool> trace
-#endif
-
 #ifndef HB_DEBUG_DISPATCH
 #define HB_DEBUG_DISPATCH ( \
 	HB_DEBUG_APPLY + \
 	HB_DEBUG_SANITIZE + \
 	HB_DEBUG_SERIALIZE + \
-  HB_DEBUG_SUBSET + \
-	HB_DEBUG_WOULD_APPLY + \
+	HB_DEBUG_SUBSET + \
 	0)
 #endif
 #if HB_DEBUG_DISPATCH

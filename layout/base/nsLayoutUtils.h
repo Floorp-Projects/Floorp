@@ -2163,9 +2163,6 @@ class nsLayoutUtils {
     nsCOMPtr<nsIPrincipal> mPrincipal;
     /* The image request, if the element is an nsIImageLoadingContent */
     nsCOMPtr<imgIRequest> mImageRequest;
-    /* True if cross-origins redirects have been done in order to load this
-     * resource */
-    bool mHadCrossOriginRedirects;
     /* Whether the element was "write only", that is, the bits should not be
      * exposed to content */
     bool mIsWriteOnly;

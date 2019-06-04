@@ -15,14 +15,14 @@ add_task(async function setup() {
 });
 
 add_task(async function test_help_menu() {
+  is(Services.policies.getSupportMenu().URL.href, "https://example.com/",
+     "The policy should have the correct URL.");
   buildHelpMenu();
   let supportMenu = document.getElementById("helpPolicySupport");
   is(supportMenu.hidden, false,
      "The policy menu should be visible.");
   is(supportMenu.getAttribute("label"), "Title",
      "The policy menu should have the correct title.");
-  is(supportMenu.getAttribute("href"), "https://example.com/",
-     "The policy menu should have the correct URL.");
   is(supportMenu.getAttribute("accesskey"), "T",
      "The policy menu should have the correct access key.");
 });

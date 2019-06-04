@@ -305,17 +305,17 @@ raptor-tp6m-1-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-1
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-1-refbrow:
@@ -347,17 +347,17 @@ raptor-tp6m-2-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-2
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-2-geckoview:
@@ -426,17 +426,17 @@ raptor-tp6m-3-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-3
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-4-geckoview:
@@ -444,10 +444,7 @@ raptor-tp6m-4-geckoview:
     try-name: raptor-tp6m-4-geckoview
     treeherder-symbol: Rap(tp6m-4)
     target: geckoview_example.apk
-    run-on-projects:
-        by-test-platform:
-            android-hw.*/pgo: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -479,30 +476,24 @@ raptor-tp6m-4-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-4
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-5-geckoview:
     description: "Raptor tp6m-5 on Geckoview"
     try-name: raptor-tp6m-5-geckoview
     treeherder-symbol: Rap(tp6m-5)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
-            android-hw-g5.*/pgo: ['try', 'mozilla-central']
-            android-hw-.*-api-16/opt: ['try']
-            android-hw-.*-aarch64/opt: ['try', 'trunk']
-            default: ['try', 'trunk', 'mozilla-beta']
+    run-on-projects: ['try', 'mozilla-central']
     target: geckoview_example.apk
     tier: 2
     mozharness:
@@ -536,30 +527,24 @@ raptor-tp6m-5-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-5
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-6-geckoview:
     description: "Raptor tp6m-6 on Geckoview"
     try-name: raptor-tp6m-6-geckoview
     treeherder-symbol: Rap(tp6m-6)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
-            android-hw-g5.*/pgo: ['try', 'mozilla-central']
-            android-hw-.*-api-16/opt: ['try']
-            android-hw-.*-aarch64/opt: ['try', 'trunk']
-            default: ['try', 'trunk', 'mozilla-beta']
+    run-on-projects: ['try', 'mozilla-central']
     target: geckoview_example.apk
     tier: 2
     mozharness:
@@ -592,27 +577,24 @@ raptor-tp6m-6-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-6
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-7-geckoview:
     description: "Raptor tp6m-7 on Geckoview"
     try-name: raptor-tp6m-7-geckoview
     treeherder-symbol: Rap(tp6m-7)
-    run-on-projects:
-        by-test-platform:
-            android-hw.*/pgo: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     target: geckoview_example.apk
     tier: 2
     mozharness:
@@ -646,30 +628,24 @@ raptor-tp6m-7-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-7
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-8-geckoview:
     description: "Raptor tp6m-8 on Geckoview"
     try-name: raptor-tp6m-8-geckoview
     treeherder-symbol: Rap(tp6m-8)
-    run-on-projects:
-        by-test-platform:
-            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
-            android-hw-g5.*/pgo: ['try', 'mozilla-central']
-            android-hw-.*-api-16/opt: ['try']
-            android-hw-.*-aarch64/opt: ['try', 'trunk']
-            default: ['try', 'trunk', 'mozilla-beta']
+    run-on-projects: ['try', 'mozilla-central']
     target: geckoview_example.apk
     tier: 2
     mozharness:
@@ -702,17 +678,17 @@ raptor-tp6m-8-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-8
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-9-geckoview:
@@ -720,10 +696,7 @@ raptor-tp6m-9-geckoview:
     try-name: raptor-tp6m-9-geckoview
     treeherder-symbol: Rap(tp6m-9)
     target: geckoview_example.apk
-    run-on-projects:
-        by-test-platform:
-            android-hw.*/pgo: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -756,17 +729,17 @@ raptor-tp6m-9-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-9
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-10-geckoview:
@@ -774,10 +747,7 @@ raptor-tp6m-10-geckoview:
     try-name: raptor-tp6m-10-geckoview
     treeherder-symbol: Rap(tp6m-10)
     target: geckoview_example.apk
-    run-on-projects:
-        by-test-platform:
-            android-hw.*/pgo: ['try', 'mozilla-central']
-            default: ['try']
+    run-on-projects: ['try', 'mozilla-central']
     tier: 2
     mozharness:
         extra-options:
@@ -810,17 +780,17 @@ raptor-tp6m-10-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-10
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-1-fennec:
@@ -962,17 +932,17 @@ raptor-tp6m-1-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-1
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-2-fenix-cold:
@@ -984,17 +954,17 @@ raptor-tp6m-2-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-2
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-3-fenix-cold:
@@ -1006,17 +976,17 @@ raptor-tp6m-3-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-3
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-4-fenix-cold:
@@ -1028,17 +998,17 @@ raptor-tp6m-4-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-4
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-5-fenix-cold:
@@ -1050,17 +1020,17 @@ raptor-tp6m-5-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-5
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-6-fenix-cold:
@@ -1072,17 +1042,17 @@ raptor-tp6m-6-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-6
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-7-fenix-cold:
@@ -1094,17 +1064,17 @@ raptor-tp6m-7-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-7
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-8-fenix-cold:
@@ -1116,17 +1086,17 @@ raptor-tp6m-8-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-8
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-9-fenix-cold:
@@ -1138,17 +1108,17 @@ raptor-tp6m-9-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-9
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-10-fenix-cold:
@@ -1160,17 +1130,17 @@ raptor-tp6m-10-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-10
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-11-fenix-cold:
@@ -1182,17 +1152,17 @@ raptor-tp6m-11-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-11
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-12-fenix-cold:
@@ -1204,17 +1174,17 @@ raptor-tp6m-12-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-12
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-13-fenix-cold:
@@ -1226,17 +1196,17 @@ raptor-tp6m-13-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-13
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-tp6m-14-fenix-cold:
@@ -1248,17 +1218,17 @@ raptor-tp6m-14-fenix-cold:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-tp6m-cold-14
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
 
 raptor-speedometer-firefox:
@@ -1330,10 +1300,10 @@ raptor-scn-power-idle-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 3
     max-run-time: 1800
@@ -1341,7 +1311,7 @@ raptor-scn-power-idle-fenix:
         extra-options:
             - --test=raptor-scn-power-idle
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
             - --host HOST_IP
             - --activity=org.mozilla.fenix.browser.BrowserPerformanceTestActivity
@@ -2069,7 +2039,12 @@ raptor-tp6m-7-geckoview-cold:
     max-run-time: 2700
     try-name: raptor-tp6m-7-geckoview-cold
     treeherder-symbol: Rap(tp6m-c-7)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try', 'trunk']
+            android-hw-.*-aarch64/opt: ['try', 'trunk']
+            default: ['try', 'trunk', 'mozilla-beta']
     e10s: true
     target: geckoview_example.apk
     tier: 2
@@ -2085,7 +2060,12 @@ raptor-tp6m-8-geckoview-cold:
     max-run-time: 2700
     try-name: raptor-tp6m-8-geckoview-cold
     treeherder-symbol: Rap(tp6m-c-8)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try', 'trunk']
+            android-hw-.*-aarch64/opt: ['try', 'trunk']
+            default: ['try', 'trunk', 'mozilla-beta']
     e10s: true
     target: geckoview_example.apk
     tier: 2
@@ -2101,7 +2081,12 @@ raptor-tp6m-9-geckoview-cold:
     max-run-time: 2700
     try-name: raptor-tp6m-9-geckoview-cold
     treeherder-symbol: Rap(tp6m-c-9)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try', 'trunk']
+            android-hw-.*-aarch64/opt: ['try', 'trunk']
+            default: ['try', 'trunk', 'mozilla-beta']
     e10s: true
     target: geckoview_example.apk
     tier: 2
@@ -2117,7 +2102,12 @@ raptor-tp6m-10-geckoview-cold:
     max-run-time: 2700
     try-name: raptor-tp6m-10-geckoview-cold
     treeherder-symbol: Rap(tp6m-c-10)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try', 'trunk']
+            android-hw-.*-aarch64/opt: ['try', 'trunk']
+            default: ['try', 'trunk', 'mozilla-beta']
     e10s: true
     target: geckoview_example.apk
     tier: 2
@@ -2133,7 +2123,12 @@ raptor-tp6m-11-geckoview-cold:
     max-run-time: 2700
     try-name: raptor-tp6m-11-geckoview-cold
     treeherder-symbol: Rap(tp6m-c-11)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try', 'trunk']
+            android-hw-.*-aarch64/opt: ['try', 'trunk']
+            default: ['try', 'trunk', 'mozilla-beta']
     e10s: true
     target: geckoview_example.apk
     tier: 2
@@ -2149,7 +2144,12 @@ raptor-tp6m-12-geckoview-cold:
     max-run-time: 2700
     try-name: raptor-tp6m-12-geckoview-cold
     treeherder-symbol: Rap(tp6m-c-12)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try', 'trunk']
+            android-hw-.*-aarch64/opt: ['try', 'trunk']
+            default: ['try', 'trunk', 'mozilla-beta']
     e10s: true
     target: geckoview_example.apk
     tier: 2
@@ -2165,7 +2165,12 @@ raptor-tp6m-13-geckoview-cold:
     max-run-time: 2700
     try-name: raptor-tp6m-13-geckoview-cold
     treeherder-symbol: Rap(tp6m-c-13)
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2-8-0-arm7.*/pgo: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try', 'trunk']
+            android-hw-.*-aarch64/opt: ['try', 'trunk']
+            default: ['try', 'trunk', 'mozilla-beta']
     e10s: true
     target: geckoview_example.apk
     tier: 2

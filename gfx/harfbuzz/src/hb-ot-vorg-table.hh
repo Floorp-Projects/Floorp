@@ -81,11 +81,11 @@ struct VORG
     if (unlikely (!c.extend_min (*subset_table)))
       return false;
 
-    subset_table->version.major.set (1);
-    subset_table->version.minor.set (0);
+    subset_table->version.major = 1;
+    subset_table->version.minor = 0;
 
-    subset_table->defaultVertOriginY.set (vorg_table->defaultVertOriginY);
-    subset_table->vertYOrigins.len.set (subset_metrics.length);
+    subset_table->defaultVertOriginY = vorg_table->defaultVertOriginY;
+    subset_table->vertYOrigins.len = subset_metrics.length;
 
     bool success = true;
     if (subset_metrics.length > 0)
@@ -130,8 +130,8 @@ struct VORG
         if (plan->new_gid_for_old_gid (old_glyph, &new_glyph))
         {
           VertOriginMetric *metrics = subset_metrics.push ();
-          metrics->glyph.set (new_glyph);
-          metrics->vertOriginY.set (vertYOrigins[i].vertOriginY);
+          metrics->glyph = new_glyph;
+          metrics->vertOriginY = vertYOrigins[i].vertOriginY;
         }
       }
     }

@@ -14,6 +14,10 @@
 
 class nsIContentSecurityPolicy;
 
+namespace Json {
+class Value;
+}
+
 class ExpandedPrincipal : public nsIExpandedPrincipal,
                           public mozilla::BasePrincipal {
  public:
@@ -55,6 +59,20 @@ class ExpandedPrincipal : public nsIExpandedPrincipal,
   nsIPrincipal* PrincipalToInherit(nsIURI* aRequestedURI = nullptr);
 
   nsresult GetSiteIdentifier(mozilla::SiteIdentifier& aSite) override;
+
+  virtual nsresult PopulateJSONObject(Json::Value& aObject) override;
+  // Serializable keys are the valid enum fields the serialization supports
+  enum SerializableKeys { eSpecs = 0, eMax = eSpecs };
+  // KeyVal is a lightweight storage that passes
+  // SerializableKeys and values after JSON parsing in the BasePrincipal to
+  // FromProperties
+  struct KeyVal {
+    bool valueWasSerialized;
+    nsCString value;
+    SerializableKeys key;
+  };
+  static already_AddRefed<BasePrincipal> FromProperties(
+      nsTArray<ExpandedPrincipal::KeyVal>& aFields);
 
  protected:
   explicit ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>>& aAllowList);

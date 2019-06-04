@@ -26,13 +26,17 @@ function importDependencies(templateFrame, destinationEl) {
 }
 
 function stubFluentL10n(argsMap) {
-  document.l10n = {
-    setAttributes(element, id, args) {
-      element.setAttribute("data-l10n-id", id);
-      for (let attrName of Object.keys(argsMap)) {
-        let varName = argsMap[attrName];
-        element.setAttribute(attrName, args[varName]);
-      }
+  Object.defineProperty(document, "l10n", {
+    configurable: true,
+    writable: true,
+    value: {
+      setAttributes(element, id, args) {
+        element.setAttribute("data-l10n-id", id);
+        for (let attrName of Object.keys(argsMap)) {
+          let varName = argsMap[attrName];
+          element.setAttribute(attrName, args[varName]);
+        }
+      },
     },
-  };
+  });
 }

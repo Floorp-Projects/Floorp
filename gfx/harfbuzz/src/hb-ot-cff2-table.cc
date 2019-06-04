@@ -27,6 +27,8 @@
 #include "hb-ot-cff2-table.hh"
 #include "hb-cff2-interp-cs.hh"
 
+#ifndef HB_NO_OT_FONT_CFF
+
 using namespace CFF;
 
 struct extents_param_t
@@ -34,10 +36,10 @@ struct extents_param_t
   void init ()
   {
     path_open = false;
-    min_x.set_int (0x7FFFFFFF);
-    min_y.set_int (0x7FFFFFFF);
-    max_x.set_int (-0x80000000);
-    max_y.set_int (-0x80000000);
+    min_x.set_int (INT_MAX);
+    min_y.set_int (INT_MAX);
+    max_x.set_int (INT_MIN);
+    max_y.set_int (INT_MIN);
   }
 
   void start_path ()         { path_open = true; }
@@ -99,6 +101,11 @@ bool OT::cff2::accelerator_t::get_extents (hb_font_t *font,
 					   hb_codepoint_t glyph,
 					   hb_glyph_extents_t *extents) const
 {
+#ifdef HB_NO_OT_FONT_CFF
+  /* XXX Remove check when this code moves to .hh file. */
+  return true;
+#endif
+
   if (unlikely (!is_valid () || (glyph >= num_glyphs))) return false;
 
   unsigned int num_coords;
@@ -134,3 +141,5 @@ bool OT::cff2::accelerator_t::get_extents (hb_font_t *font,
 
   return true;
 }
+
+#endif

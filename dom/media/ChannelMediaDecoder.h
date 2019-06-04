@@ -91,7 +91,6 @@ class ChannelMediaDecoder
 
   void AddSizeOfResources(ResourceSizes* aSizes) override;
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
-  bool HadCrossOriginRedirects() override;
   bool IsTransportSeekable() override;
   void SetLoadInBackground(bool aLoadInBackground) override;
   void Suspend() override;
