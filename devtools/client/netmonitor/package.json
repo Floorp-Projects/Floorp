@@ -26,7 +26,8 @@
   },
   "scripts": {
     "start": "node bin/dev-server",
-    "test": "jest"
+    "test": "jest",
+    "test-ci": "jest --json"
   },
   "devDependencies": {}
 }
