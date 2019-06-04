@@ -158,7 +158,7 @@ let arrowAwaitBlock = async () => { return await 2; };
 assertEventuallyEq(arrowAwaitBlock(), 2);
 
 // Async functions are not constructible
-assertThrows(() => {
+assertThrowsInstanceOf(() => {
   async function Person() {
 
   }

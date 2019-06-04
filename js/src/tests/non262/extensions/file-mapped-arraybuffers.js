@@ -7,16 +7,6 @@ function viewToString(view)
   return String.fromCharCode.apply(null, view);
 }
 
-function assertThrows(f, wantException)
-{
-    try {
-      f();
-      assertEq(true, false, "expected " + wantException + " exception");
-    } catch (e) {
-      assertEq(e.name, wantException.name, e.toString());
-    }
-}
-
 function test() {
     var filename = "file-mapped-arraybuffers.txt";
     var buffer = createMappedArrayBuffer(filename);
@@ -32,8 +22,8 @@ function test() {
     assertEq(viewToString(view), "01234567");
 
     // Check that invalid sizes and offsets are caught
-    assertThrows(() => createMappedArrayBuffer("empty.txt", 8), RangeError);
-    assertThrows(() => createMappedArrayBuffer("empty.txt", 0, 8), Error);
+    assertThrowsInstanceOf(() => createMappedArrayBuffer("empty.txt", 8), RangeError);
+    assertThrowsInstanceOf(() => createMappedArrayBuffer("empty.txt", 0, 8), Error);
 }
 
 if (getBuildConfiguration()["mapped-array-buffer"])
