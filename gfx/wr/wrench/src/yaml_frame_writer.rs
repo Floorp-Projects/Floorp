@@ -251,7 +251,7 @@ fn write_stacking_context(
     parent: &mut Table,
     sc: &StackingContext,
     properties: &SceneProperties,
-    filter_iter: AuxIter<FilterOp>,
+    filter_iter: impl IntoIterator<Item = FilterOp>,
     filter_data_iter: &[TempFilterData],
     display_list: &BuiltDisplayList,
 ) {
@@ -317,7 +317,7 @@ fn write_stacking_context(
     // filter datas
     let mut filter_datas = vec![];
     for filter_data in filter_data_iter {
-        let func_types = display_list.get(filter_data.func_types).map(|func_type| {
+        let func_types = filter_data.func_types.iter().map(|func_type| {
             match func_type {
                 ComponentTransferFuncType::Identity => { Yaml::String("Identity".to_string()) }
                 ComponentTransferFuncType::Table => { Yaml::String("Table".to_string()) }
@@ -326,16 +326,16 @@ fn write_stacking_context(
                 ComponentTransferFuncType::Gamma => { Yaml::String("Gamma".to_string()) }
             }
         }).collect();
-        let r_values = display_list.get(filter_data.r_values).map(|value| {
+        let r_values = filter_data.r_values.iter().map(|value| {
             Yaml::String(format!("{}", value))
         }).collect();
-        let g_values = display_list.get(filter_data.g_values).map(|value| {
+        let g_values = filter_data.g_values.iter().map(|value| {
             Yaml::String(format!("{}", value))
         }).collect();
-        let b_values = display_list.get(filter_data.b_values).map(|value| {
+        let b_values = filter_data.b_values.iter().map(|value| {
             Yaml::String(format!("{}", value))
         }).collect();
-        let a_values = display_list.get(filter_data.a_values).map(|value| {
+        let a_values = filter_data.a_values.iter().map(|value| {
             Yaml::String(format!("{}", value))
         }).collect();
 
@@ -406,7 +406,7 @@ fn radial_gradient_to_yaml(
     assert!(first_offset <= last_offset);
 
     let mut denormalized_stops = vec![];
-    for stop in display_list.get(stops_range) {
+    for stop in stops_range {
         let denormalized_stop = (stop.offset * stops_delta) + first_offset;
         denormalized_stops.push(Yaml::Real(denormalized_stop.to_string()));
         denormalized_stops.push(Yaml::String(color_to_string(stop.color)));
@@ -810,15 +810,15 @@ impl YamlFrameWriter {
 
     fn make_complex_clips_node(
         &mut self,
-        complex_clip_count: usize,
         complex_clips: ItemRange<ComplexClipRegion>,
         list: &BuiltDisplayList,
     ) -> Option<Yaml> {
-        if complex_clip_count == 0 {
+        let iter = complex_clips.iter();
+        if iter.len() == 0 {
             return None;
         }
 
-        let complex_items = list.get(complex_clips)
+        let complex_items = iter
             .map(|ccx| if ccx.radii.is_zero() {
                 rect_yaml(&ccx.rect)
             } else {
@@ -889,10 +889,9 @@ impl YamlFrameWriter {
                     str_node(&mut v, "style", item.style.as_str());
                 }
                 DisplayItem::Text(item) => {
-                    let gi = display_list.get(base.glyphs());
                     let mut indices: Vec<u32> = vec![];
                     let mut offsets: Vec<f32> = vec![];
-                    for g in gi {
+                    for g in base.glyphs() {
                         indices.push(g.index);
                         offsets.push(g.point.x);
                         offsets.push(g.point.y);
@@ -1043,7 +1042,7 @@ impl YamlFrameWriter {
                                     point_node(&mut v, "start", &gradient.start_point);
                                     point_node(&mut v, "end", &gradient.end_point);
                                     let mut stops = vec![];
-                                    for stop in display_list.get(base.gradient_stops()) {
+                                    for stop in base.gradient_stops() {
                                         stops.push(Yaml::Real(stop.offset.to_string()));
                                         stops.push(Yaml::String(color_to_string(stop.color)));
                                     }
@@ -1118,7 +1117,7 @@ impl YamlFrameWriter {
                     size_node(&mut v, "tile-size", &item.tile_size);
                     size_node(&mut v, "tile-spacing", &item.tile_spacing);
                     let mut stops = vec![];
-                    for stop in display_list.get(base.gradient_stops()) {
+                    for stop in base.gradient_stops() {
                         stops.push(Yaml::Real(stop.offset.to_string()));
                         stops.push(Yaml::String(color_to_string(stop.color)));
                     }
@@ -1165,12 +1164,11 @@ impl YamlFrameWriter {
                     );
                     point_node(&mut v, "origin", &item.origin);
                     bool_node(&mut v, "backface-visible", item.is_backface_visible);
-                    let filters = display_list.get(base.filters());
                     write_stacking_context(
                         &mut v,
                         &item.stacking_context,
                         &scene.properties,
-                        filters,
+                        base.filters(),
                         base.filter_datas(),
                         display_list,
                     );
@@ -1202,10 +1200,8 @@ impl YamlFrameWriter {
                     rect_node(&mut v, "clip-rect", &item.clip_rect);
                     usize_node(&mut v, "id", clip_id_mapper.add_clip_id(item.id));
 
-                    let (complex_clips, complex_clip_count) = base.complex_clip();
                     if let Some(complex) = self.make_complex_clips_node(
-                        complex_clip_count,
-                        complex_clips,
+                        base.complex_clip(),
                         display_list,
                     ) {
                         yaml_node(&mut v, "complex", complex);
@@ -1221,7 +1217,7 @@ impl YamlFrameWriter {
                     let id = ClipId::ClipChain(item.id);
                     u32_node(&mut v, "id", clip_id_mapper.add_clip_id(id) as u32);
 
-                    let clip_ids = display_list.get(base.clip_chain_items()).map(|clip_id| {
+                    let clip_ids = base.clip_chain_items().iter().map(|clip_id| {
                         clip_id_mapper.map_clip_id(&clip_id)
                     }).collect();
                     yaml_node(&mut v, "clips", Yaml::Array(clip_ids));
@@ -1238,10 +1234,8 @@ impl YamlFrameWriter {
                     rect_node(&mut v, "bounds", &item.clip_rect);
                     vector_node(&mut v, "external-scroll-offset", &item.external_scroll_offset);
 
-                    let (complex_clips, complex_clip_count) = base.complex_clip();
                     if let Some(complex) = self.make_complex_clips_node(
-                        complex_clip_count,
-                        complex_clips,
+                        base.complex_clip(),
                         display_list,
                     ) {
                         yaml_node(&mut v, "complex", complex);

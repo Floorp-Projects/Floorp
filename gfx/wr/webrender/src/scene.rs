@@ -234,7 +234,7 @@ impl StackingContextHelpers for StackingContext {
         //           we could probably make it a bit
         //           more efficient than cloning these here.
         let mut filters = vec![];
-        for filter in display_list.get(input_filters) {
+        for filter in input_filters {
             filters.push(filter.into());
         }
         filters
@@ -250,17 +250,17 @@ impl StackingContextHelpers for StackingContext {
         //           more efficient than cloning these here.
         let mut filter_datas = vec![];
         for temp_filter_data in input_filter_datas {
-            let func_types : Vec<ComponentTransferFuncType> = display_list.get(temp_filter_data.func_types).collect();
+            let func_types : Vec<ComponentTransferFuncType> = temp_filter_data.func_types.iter().collect();
             debug_assert!(func_types.len() == 4);
             filter_datas.push( FilterData {
                 func_r_type: func_types[0],
-                r_values: display_list.get(temp_filter_data.r_values).collect(),
+                r_values: temp_filter_data.r_values.iter().collect(),
                 func_g_type: func_types[1],
-                g_values: display_list.get(temp_filter_data.g_values).collect(),
+                g_values: temp_filter_data.g_values.iter().collect(),
                 func_b_type: func_types[2],
-                b_values: display_list.get(temp_filter_data.b_values).collect(),
+                b_values: temp_filter_data.b_values.iter().collect(),
                 func_a_type: func_types[3],
-                a_values: display_list.get(temp_filter_data.a_values).collect(),
+                a_values: temp_filter_data.a_values.iter().collect(),
             });
         }
         filter_datas

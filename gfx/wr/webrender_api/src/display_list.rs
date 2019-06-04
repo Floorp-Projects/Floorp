@@ -39,43 +39,61 @@ const FIRST_CLIP_NODE_INDEX: usize = 1;
 
 #[repr(C)]
 #[derive(Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct ItemRange<T> {
-    start: usize,
-    length: usize,
+pub struct ItemRange<'a, T> {
+    bytes: &'a [u8],
     _boo: PhantomData<T>,
 }
 
-impl<T> Copy for ItemRange<T> {}
-impl<T> Clone for ItemRange<T> {
+impl<'a, T> Copy for ItemRange<'a, T> {}
+impl<'a, T> Clone for ItemRange<'a, T> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<T> Default for ItemRange<T> {
+impl<'a, T> Default for ItemRange<'a, T> {
     fn default() -> Self {
         ItemRange {
-            start: 0,
-            length: 0,
+            bytes: Default::default(),
             _boo: PhantomData,
         }
     }
 }
 
-impl<T> ItemRange<T> {
+impl<'a, T> ItemRange<'a, T> {
     pub fn is_empty(&self) -> bool {
         // Nothing more than space for a length (0).
-        self.length <= mem::size_of::<u64>()
+        self.bytes.len() <= mem::size_of::<usize>()
+    }
+}
+
+impl<'a, T> ItemRange<'a, T>
+where
+    for<'de> T: Deserialize<'de>,
+{
+    pub fn iter(&self) -> AuxIter<'a, T> {
+        AuxIter::new(self.bytes)
+    }
+}
+
+impl<'a, T> IntoIterator for ItemRange<'a, T>
+where
+    for<'de> T: Deserialize<'de>,
+{
+    type Item = T;
+    type IntoIter = AuxIter<'a, T>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 
 #[derive(Copy, Clone)]
-pub struct TempFilterData {
-    pub func_types: ItemRange<di::ComponentTransferFuncType>,
-    pub r_values: ItemRange<f32>,
-    pub g_values: ItemRange<f32>,
-    pub b_values: ItemRange<f32>,
-    pub a_values: ItemRange<f32>,
+pub struct TempFilterData<'a> {
+    pub func_types: ItemRange<'a, di::ComponentTransferFuncType>,
+    pub r_values: ItemRange<'a, f32>,
+    pub g_values: ItemRange<'a, f32>,
+    pub b_values: ItemRange<'a, f32>,
+    pub a_values: ItemRange<'a, f32>,
 }
 
 /// A display list.
@@ -109,12 +127,12 @@ pub struct BuiltDisplayListIter<'a> {
     list: &'a BuiltDisplayList,
     data: &'a [u8],
     cur_item: di::DisplayItem,
-    cur_stops: ItemRange<di::GradientStop>,
-    cur_glyphs: ItemRange<GlyphInstance>,
-    cur_filters: ItemRange<di::FilterOp>,
-    cur_filter_data: Vec<TempFilterData>,
-    cur_clip_chain_items: ItemRange<di::ClipId>,
-    cur_complex_clip: (ItemRange<di::ComplexClipRegion>, usize),
+    cur_stops: ItemRange<'a, di::GradientStop>,
+    cur_glyphs: ItemRange<'a, GlyphInstance>,
+    cur_filters: ItemRange<'a, di::FilterOp>,
+    cur_filter_data: Vec<TempFilterData<'a>>,
+    cur_clip_chain_items: ItemRange<'a, di::ClipId>,
+    cur_complex_clip: ItemRange<'a, di::ComplexClipRegion>,
     peeking: Peek,
     /// Should just be initialized but never populated in release builds
     debug_stats: DebugStats,
@@ -126,6 +144,54 @@ struct DebugStats {
     /// Last address in the buffer we pointed to, for computing serialized sizes
     last_addr: usize,
     stats: HashMap<&'static str, ItemStats>,
+}
+
+impl DebugStats {
+    #[cfg(feature = "display_list_stats")]
+    fn _update_entry(&mut self, name: &'static str, item_count: usize, byte_count: usize) {
+        let entry = self.stats.entry(name).or_default();
+        entry.total_count += item_count;
+        entry.num_bytes += byte_count;
+    }
+
+    /// Computes the number of bytes we've processed since we last called
+    /// this method, so we can compute the serialized size of a display item.
+    #[cfg(feature = "display_list_stats")]
+    fn debug_num_bytes(&mut self, data: &[u8]) -> usize {
+        let old_addr = self.last_addr;
+        let new_addr = data.as_ptr() as usize;
+        let delta = new_addr - old_addr;
+        self.last_addr = new_addr;
+
+        delta
+    }
+
+    /// Logs stats for the last deserialized display item
+    #[cfg(feature = "display_list_stats")]
+    fn log_item(&mut self, data: &[u8], item: &di::DisplayItem) {
+        let num_bytes = self.debug_num_bytes(data);
+        self._update_entry(item.debug_name(), 1, num_bytes);
+    }
+
+    /// Logs the stats for the given serialized slice
+    #[cfg(feature = "display_list_stats")]
+    fn log_slice<T: for<'de> Deserialize<'de>>(
+        &mut self,
+        slice_name: &'static str,
+        range: &ItemRange<T>,
+    ) {
+        // Run this so log_item_stats is accurate, but ignore its result
+        // because log_slice_stats may be called after multiple slices have been
+        // processed, and the `range` has everything we need.
+        self.last_addr = range.bytes.as_ptr() as usize + range.bytes.len();
+
+        self._update_entry(slice_name, range.iter().size_hint().0, range.bytes.len());
+    }
+
+    #[cfg(not(feature = "display_list_stats"))]
+    fn log_slice<T>(&mut self, _slice_name: &str, _range: &ItemRange<T>) {
+        /* no-op */
+    }
 }
 
 /// Stats for an individual item
@@ -199,40 +265,23 @@ impl BuiltDisplayList {
     pub fn iter(&self) -> BuiltDisplayListIter {
         BuiltDisplayListIter::new(self)
     }
-
-    pub fn get<'de, T: Deserialize<'de>>(&self, range: ItemRange<T>) -> AuxIter<T> {
-        AuxIter::new(&self.data[range.start .. range.start + range.length])
-    }
 }
 
 /// Returns the byte-range the slice occupied, and the number of elements
 /// in the slice.
-fn skip_slice<T: for<'de> Deserialize<'de>>(
-    list: &BuiltDisplayList,
-    mut data: &mut &[u8],
-) -> (ItemRange<T>, usize) {
-    let base = list.data.as_ptr() as usize;
+fn skip_slice<'a, T: for<'de> Deserialize<'de>>(mut data: &mut &'a [u8]) -> ItemRange<'a, T> {
+    let skip_offset: usize = bincode::deserialize_from(&mut data).expect("MEH: malicious input?");
 
-    let byte_size: usize = bincode::deserialize_from(&mut data)
-                                    .expect("MEH: malicious input?");
-    let start = data.as_ptr() as usize;
-    let item_count: usize = bincode::deserialize_from(&mut data)
-                                    .expect("MEH: malicious input?");
-
-    // Remember how many bytes item_count occupied
-    let item_count_size = data.as_ptr() as usize - start;
-
-    let range = ItemRange {
-        start: start - base,                      // byte offset to item_count
-        length: byte_size + item_count_size,      // number of bytes for item_count + payload
-        _boo: PhantomData,
-    };
+    let (skip, rest) = data.split_at(skip_offset);
 
     // Adjust data pointer to skip read values
-    *data = &data[byte_size ..];
-    (range, item_count)
-}
+    *data = rest;
 
+    ItemRange {
+        bytes: skip.into(),
+        _boo: PhantomData,
+    }
+}
 
 impl<'a> BuiltDisplayListIter<'a> {
     pub fn new(list: &'a BuiltDisplayList) -> Self {
@@ -249,7 +298,7 @@ impl<'a> BuiltDisplayListIter<'a> {
             cur_filters: ItemRange::default(),
             cur_filter_data: Vec::new(),
             cur_clip_chain_items: ItemRange::default(),
-            cur_complex_clip: (ItemRange::default(), 0),
+            cur_complex_clip: ItemRange::default(),
             peeking: Peek::NotPeeking,
             debug_stats: DebugStats {
                 last_addr: data.as_ptr() as usize,
@@ -278,7 +327,7 @@ impl<'a> BuiltDisplayListIter<'a> {
 
         // Don't let these bleed into another item
         self.cur_stops = ItemRange::default();
-        self.cur_complex_clip = (ItemRange::default(), 0);
+        self.cur_complex_clip = ItemRange::default();
         self.cur_clip_chain_items = ItemRange::default();
 
         loop {
@@ -319,60 +368,50 @@ impl<'a> BuiltDisplayListIter<'a> {
 
         match self.cur_item {
             SetGradientStops => {
-                self.cur_stops = skip_slice::<di::GradientStop>(self.list, &mut self.data).0;
-                let temp = self.cur_stops;
-                self.log_slice_stats("set_gradient_stops.stops", temp);
+                self.cur_stops = skip_slice::<di::GradientStop>(&mut self.data);
+                self.debug_stats.log_slice("set_gradient_stops.stops", &self.cur_stops);
             }
             SetFilterOps => {
-                self.cur_filters = skip_slice::<di::FilterOp>(self.list, &mut self.data).0;
-                let temp = self.cur_filters;
-                self.log_slice_stats("set_filter_ops.ops", temp);
+                self.cur_filters = skip_slice::<di::FilterOp>(&mut self.data);
+                self.debug_stats.log_slice("set_filter_ops.ops", &self.cur_filters);
             }
             SetFilterData => {
                 self.cur_filter_data.push(TempFilterData {
-                    func_types: skip_slice::<di::ComponentTransferFuncType>(self.list, &mut self.data).0,
-                    r_values: skip_slice::<f32>(self.list, &mut self.data).0,
-                    g_values: skip_slice::<f32>(self.list, &mut self.data).0,
-                    b_values: skip_slice::<f32>(self.list, &mut self.data).0,
-                    a_values: skip_slice::<f32>(self.list, &mut self.data).0,
+                    func_types: skip_slice::<di::ComponentTransferFuncType>(&mut self.data),
+                    r_values: skip_slice::<f32>(&mut self.data),
+                    g_values: skip_slice::<f32>(&mut self.data),
+                    b_values: skip_slice::<f32>(&mut self.data),
+                    a_values: skip_slice::<f32>(&mut self.data),
                 });
 
                 let data = *self.cur_filter_data.last().unwrap();
-                self.log_slice_stats("set_filter_data.func_types", data.func_types);
-                self.log_slice_stats("set_filter_data.r_values", data.r_values);
-                self.log_slice_stats("set_filter_data.g_values", data.g_values);
-                self.log_slice_stats("set_filter_data.b_values", data.b_values);
-                self.log_slice_stats("set_filter_data.a_values", data.a_values);
+                self.debug_stats.log_slice("set_filter_data.func_types", &data.func_types);
+                self.debug_stats.log_slice("set_filter_data.r_values", &data.r_values);
+                self.debug_stats.log_slice("set_filter_data.g_values", &data.g_values);
+                self.debug_stats.log_slice("set_filter_data.b_values", &data.b_values);
+                self.debug_stats.log_slice("set_filter_data.a_values", &data.a_values);
             }
             ClipChain(_) => {
-                self.cur_clip_chain_items = skip_slice::<di::ClipId>(self.list, &mut self.data).0;
-                let temp = self.cur_clip_chain_items;
-                self.log_slice_stats("clip_chain.clip_ids", temp);
+                self.cur_clip_chain_items = skip_slice::<di::ClipId>(&mut self.data);
+                self.debug_stats.log_slice("clip_chain.clip_ids", &self.cur_clip_chain_items);
             }
             Clip(_) | ScrollFrame(_) => {
-                self.cur_complex_clip = self.skip_slice::<di::ComplexClipRegion>();
-
+                self.cur_complex_clip = skip_slice::<di::ComplexClipRegion>(&mut self.data);
                 let name = if let Clip(_) = self.cur_item {
                     "clip.complex_clips"
                 } else {
                     "scroll_frame.complex_clips"
                 };
-                let temp = self.cur_complex_clip.0;
-                self.log_slice_stats(name, temp);
+                self.debug_stats.log_slice(name, &self.cur_complex_clip);
             }
             Text(_) => {
-                self.cur_glyphs = self.skip_slice::<GlyphInstance>().0;
-                let temp = self.cur_glyphs;
-                self.log_slice_stats("text.glyphs", temp);
+                self.cur_glyphs = skip_slice::<GlyphInstance>(&mut self.data);
+                self.debug_stats.log_slice("text.glyphs", &self.cur_glyphs);
             }
             _ => { /* do nothing */ }
         }
 
         Some(self.as_ref())
-    }
-
-    fn skip_slice<T: for<'de> Deserialize<'de>>(&mut self) -> (ItemRange<T>, usize) {
-        skip_slice::<T>(self.list, &mut self.data)
     }
 
     pub fn as_ref<'b>(&'b self) -> DisplayItemRef<'a, 'b> {
@@ -430,45 +469,11 @@ impl<'a> BuiltDisplayListIter<'a> {
     /// Logs stats for the last deserialized display item
     #[cfg(feature = "display_list_stats")]
     fn log_item_stats(&mut self) {
-        let num_bytes = self.debug_num_bytes();
-
-        let item_name = self.cur_item.debug_name();
-        let entry = self.debug_stats.stats.entry(item_name).or_default();
-
-        entry.total_count += 1;
-        entry.num_bytes += num_bytes;
-    }
-
-    /// Logs the stats for the given serialized slice
-    #[cfg(feature = "display_list_stats")]
-    fn log_slice_stats<T: for<'de> Deserialize<'de>>(&mut self, slice_name: &'static str, range: ItemRange<T>) {
-        // Run this so log_item_stats is accurate, but ignore its result
-        // because log_slice_stats may be called after multiple slices have been
-        // processed, and the `range` has everything we need.
-        self.debug_num_bytes();
-
-        let entry = self.debug_stats.stats.entry(slice_name).or_default();
-
-        entry.total_count += self.list.get(range).size_hint().0;
-        entry.num_bytes += range.length;
-    }
-
-    /// Computes the number of bytes we've processed since we last called
-    /// this method, so we can compute the serialized size of a display item.
-    #[cfg(feature = "display_list_stats")]
-    fn debug_num_bytes(&mut self) -> usize {
-        let old_addr = self.debug_stats.last_addr;
-        let new_addr = self.data.as_ptr() as usize;
-        let delta = new_addr - old_addr;
-        self.debug_stats.last_addr = new_addr;
-
-        delta
+        self.debug_stats.log_item(self.data, &self.cur_item);
     }
 
     #[cfg(not(feature = "display_list_stats"))]
     fn log_item_stats(&mut self) { /* no-op */ }
-    #[cfg(not(feature = "display_list_stats"))]
-    fn log_slice_stats<T>(&mut self, _slice_name: &str, _range: ItemRange<T>) { /* no-op */ }
 }
 
 // Some of these might just become ItemRanges
@@ -477,7 +482,7 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
         &self.iter.cur_item
     }
 
-    pub fn complex_clip(&self) -> (ItemRange<di::ComplexClipRegion>, usize) {
+    pub fn complex_clip(&self) -> ItemRange<di::ComplexClipRegion> {
         self.iter.cur_complex_clip
     }
 
@@ -562,43 +567,43 @@ impl Serialize for BuiltDisplayList {
             let serial_di = match *item.item() {
                 Real::Clip(v) => Debug::Clip(
                     v,
-                    item.iter.list.get(item.iter.cur_complex_clip.0).collect()
+                    item.iter.cur_complex_clip.iter().collect()
                 ),
                 Real::ClipChain(v) => Debug::ClipChain(
                     v,
-                    item.iter.list.get(item.iter.cur_clip_chain_items).collect(),
+                    item.iter.cur_clip_chain_items.iter().collect()
                 ),
                 Real::ScrollFrame(v) => Debug::ScrollFrame(
                     v,
-                    item.iter.list.get(item.iter.cur_complex_clip.0).collect()
+                    item.iter.cur_complex_clip.iter().collect()
                 ),
                 Real::Text(v) => Debug::Text(
                     v,
-                    item.iter.list.get(item.iter.cur_glyphs).collect()
+                    item.iter.cur_glyphs.iter().collect()
                 ),
                 Real::SetFilterOps => Debug::SetFilterOps(
-                    item.iter.list.get(item.iter.cur_filters).collect()
+                    item.iter.cur_filters.iter().collect()
                 ),
                 Real::SetFilterData => {
                     debug_assert!(!item.iter.cur_filter_data.is_empty());
                     let temp_filter_data = &item.iter.cur_filter_data[item.iter.cur_filter_data.len()-1];
 
                     let func_types: Vec<di::ComponentTransferFuncType> =
-                        item.iter.list.get(temp_filter_data.func_types).collect();
+                        temp_filter_data.func_types.iter().collect();
                     debug_assert!(func_types.len() == 4);
                     Debug::SetFilterData(di::FilterData {
                         func_r_type: func_types[0],
-                        r_values: item.iter.list.get(temp_filter_data.r_values).collect(),
+                        r_values: temp_filter_data.r_values.iter().collect(),
                         func_g_type: func_types[1],
-                        g_values: item.iter.list.get(temp_filter_data.g_values).collect(),
+                        g_values: temp_filter_data.g_values.iter().collect(),
                         func_b_type: func_types[2],
-                        b_values: item.iter.list.get(temp_filter_data.b_values).collect(),
+                        b_values: temp_filter_data.b_values.iter().collect(),
                         func_a_type: func_types[3],
-                        a_values: item.iter.list.get(temp_filter_data.a_values).collect(),
+                        a_values: temp_filter_data.a_values.iter().collect(),
                     })
                 },
                 Real::SetGradientStops => Debug::SetGradientStops(
-                    item.iter.list.get(item.iter.cur_stops).collect()
+                    item.iter.cur_stops.iter().collect()
                 ),
                 Real::StickyFrame(v) => Debug::StickyFrame(v),
                 Real::Rectangle(v) => Debug::Rectangle(v),
@@ -1102,9 +1107,8 @@ impl DisplayListBuilder {
         // We write a dummy value so there's room for later
         let byte_size_offset = data.len();
         serialize_fast(data, &0usize);
-        serialize_fast(data, &len);
         let payload_offset = data.len();
-
+        serialize_fast(data, &len);
         let count = serialize_iter_fast(data, iter);
 
         // Now write the actual byte_size

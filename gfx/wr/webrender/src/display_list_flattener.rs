@@ -581,23 +581,19 @@ impl<'a> DisplayListFlattener<'a> {
     fn get_complex_clips(
         &self,
         pipeline_id: PipelineId,
-        complex_clips: ItemRange<ComplexClipRegion>,
+        complex_clips: ItemRange<'a, ComplexClipRegion>,
     ) -> impl 'a + Iterator<Item = ComplexClipRegion> {
         //Note: we could make this a bit more complex to early out
         // on `complex_clips.is_empty()` if it's worth it
-        self.scene
-            .get_display_list_for_pipeline(pipeline_id)
-            .get(complex_clips)
+        complex_clips.iter()
     }
 
     fn get_clip_chain_items(
         &self,
         pipeline_id: PipelineId,
-        items: ItemRange<ClipId>,
+        items: ItemRange<'a, ClipId>,
     ) -> impl 'a + Iterator<Item = ClipId> {
-        self.scene
-            .get_display_list_for_pipeline(pipeline_id)
-            .get(items)
+        items.iter()
     }
 
     fn flatten_items(
@@ -681,7 +677,7 @@ impl<'a> DisplayListFlattener<'a> {
         parent_node_index: SpatialNodeIndex,
         pipeline_id: PipelineId,
     ) {
-        let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
+        let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip());
         let current_offset = self.current_offset(parent_node_index);
         let clip_region = ClipRegion::create_for_clip_node(
             info.clip_rect,
@@ -1168,7 +1164,7 @@ impl<'a> DisplayListFlattener<'a> {
             DisplayItem::Clip(ref info) => {
                 let parent_space = self.get_space(&info.parent_space_and_clip.spatial_id);
                 let current_offset = self.current_offset(parent_space);
-                let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
+                let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip());
                 let clip_region = ClipRegion::create_for_clip_node(
                     info.clip_rect,
                     complex_clips,
@@ -2618,7 +2614,7 @@ impl<'a> DisplayListFlattener<'a> {
         let display_list = self.scene.get_display_list_for_pipeline(pipeline_id);
         let mut max_alpha: f32 = 0.0;
 
-        let stops = display_list.get(stops).map(|stop| {
+        let stops = stops.iter().map(|stop| {
             max_alpha = max_alpha.max(stop.color.a);
             GradientStopKey {
                 offset: stop.offset,
@@ -2690,7 +2686,7 @@ impl<'a> DisplayListFlattener<'a> {
             ratio_xy,
         };
 
-        let stops = display_list.get(stops).map(|stop| {
+        let stops = stops.iter().map(|stop| {
             GradientStopKey {
                 offset: stop.offset,
                 color: stop.color.into(),
@@ -2763,8 +2759,8 @@ impl<'a> DisplayListFlattener<'a> {
             //           hash will match and we won't end up creating a new
             //           primitive template.
             let prim_offset = prim_info.rect.origin.to_vector() - offset;
-            let glyphs = display_list
-                .get(glyph_range)
+            let glyphs = glyph_range
+                .iter()
                 .map(|glyph| {
                     GlyphInstance {
                         index: glyph.index,
