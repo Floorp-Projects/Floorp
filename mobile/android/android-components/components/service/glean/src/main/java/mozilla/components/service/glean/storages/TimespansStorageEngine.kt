@@ -122,6 +122,33 @@ internal open class TimespansStorageEngineImplementation(
     }
 
     /**
+     * Set the elapsed time explicitly.
+     *
+     * @param metricData the metric information for the timespan
+     * @param timeUnit the time unit we want the data in when snapshotting
+     * @param elapsedNanos the time to record, in nanoseconds
+     */
+    @Synchronized
+    fun set(
+        metricData: CommonMetricData,
+        timeUnit: TimeUnit,
+        elapsedNanos: Long
+    ) {
+        // Look for the start time: if it's there, commit the timespan.
+        val timespanName = metricData.identifier
+
+        // Store the time unit: we'll need it when snapshotting.
+        timeUnitsMap[timespanName] = timeUnit
+
+        // Use a custom combiner to sum the new timespan to the one already stored. We
+        // can't adjust the time unit before storing so that we still allow for values
+        // lower than the desired time unit to accumulate.
+        super.recordMetric(metricData, elapsedNanos, timeUnit) { currentValue, newValue ->
+            newValue
+        }
+    }
+
+    /**
      * Get a snapshot of the stored timespans and adjust it to the desired time units.
      *
      * @param storeName the name of the desired store

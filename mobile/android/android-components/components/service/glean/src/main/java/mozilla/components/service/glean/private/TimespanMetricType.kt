@@ -85,6 +85,30 @@ data class TimespanMetricType(
     }
 
     /**
+     * Explicitly set the timespan value, in nanoseconds.
+     *
+     * This API should only be used if your library or application requires recording
+     * times in a way that can not make use of [start]/[stopAndSum]/[cancel].
+     *
+     * @param elapsedNanos The elapsed time to record, in nanoseconds.
+     */
+    fun setRawNanos(elapsedNanos: Long) {
+        if (!shouldRecord(logger)) {
+            return
+        }
+
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        Dispatchers.API.launch {
+            // Delegate storing the boolean to the storage engine.
+            TimespansStorageEngine.set(
+                this@TimespanMetricType,
+                timeUnit,
+                elapsedNanos
+            )
+        }
+    }
+
+    /**
      * Tests whether a value is stored for the metric for testing purposes only
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults

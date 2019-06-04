@@ -413,7 +413,7 @@ fun onShowLogin(e: Event) {
 }
 
 fun onLogin(e: Event) {
-    Auth.loginTime.stop(e.target)
+    Auth.loginTime.stopAndSum(e.target)
     // ...
 }
 
@@ -425,6 +425,21 @@ fun onLoginCancel(e: Event) {
 
 The time reported in the telemetry ping will be the sum of all of these
 timespans recorded during the lifetime of the ping.
+
+If the above `start`/`stopAndSum`/`cancel` API isn't practical to use from your
+application, you may use the alternative lower-level API `setRawNanos`. Unlike
+the above, this sets the value of the timespan directly, and does not sum it to
+the existing value, so use with caution if the span of the ping the metric is
+sent in may include multiple timings.
+
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.Auth
+
+fun onLogin(e: Event) {
+    Auth.loginTime.setRawNanos(timeInNanos)
+    // ...
+}
+```
 
 There are test APIs available too:
 
