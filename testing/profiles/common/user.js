@@ -37,6 +37,8 @@ user_pref("extensions.enabledScopes", 5);
 user_pref("extensions.legacy.enabled", true);
 // Turn off extension updates so they don't bother tests
 user_pref("extensions.update.enabled", false);
+// Prevent network access for recommendations by default. The payload is {"results":[]}.
+user_pref("extensions.getAddons.discovery.api_url", "data:;base64,eyJyZXN1bHRzIjpbXX0%3D");
 // Disable useragent updates.
 user_pref("general.useragent.updates.enabled", false);
 // Ensure WR doesn't get enabled in tests unless we do it explicitly with the MOZ_WEBRENDER envvar.
