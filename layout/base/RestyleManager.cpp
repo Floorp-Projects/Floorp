@@ -3363,8 +3363,8 @@ static inline bool AttributeChangeRequiresSubtreeRestyle(
     return aElement.IsHTMLElement(nsGkAtoms::table);
   }
   if (aAttr == nsGkAtoms::lwtheme || aAttr == nsGkAtoms::lwthemetextcolor) {
-    Document* doc = aElement.OwnerDoc();
-    return doc->IsInChromeDocShell() && &aElement == doc->GetRootElement();
+    return aElement.GetNameSpaceID() == kNameSpaceID_XUL &&
+           &aElement == aElement.OwnerDoc()->GetRootElement();
   }
 
   return aAttr == nsGkAtoms::lang;
