@@ -24,6 +24,7 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.Companion.SAFE_BROWSING_ALL
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.fenix.AppRequestInterceptor
@@ -104,6 +105,10 @@ class Core(private val context: Context) {
         SessionManager(engine).also { sessionManager ->
             // Install the "icons" WebExtension to automatically load icons for every visited website.
             icons.install(engine, sessionManager)
+
+            // Show an ongoing notification when recording devices (camera, microphone) are used by web content
+            RecordingDevicesNotificationFeature(context, sessionManager)
+                .enable()
 
             // Restore the previous state.
             GlobalScope.launch(Dispatchers.Main) {

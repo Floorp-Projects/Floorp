@@ -304,6 +304,7 @@ dependencies {
     implementation Deps.mozilla_feature_customtabs
     implementation Deps.mozilla_feature_downloads
     implementation Deps.mozilla_feature_intent
+    implementation Deps.mozilla_feature_media
     implementation Deps.mozilla_feature_prompts
     implementation Deps.mozilla_feature_qr
     implementation Deps.mozilla_feature_session

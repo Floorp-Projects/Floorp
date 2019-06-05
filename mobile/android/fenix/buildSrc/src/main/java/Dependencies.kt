@@ -102,6 +102,7 @@ object Deps {
     const val mozilla_feature_contextmenu = "org.mozilla.components:feature-contextmenu:${Versions.mozilla_android_components}"
     const val mozilla_feature_customtabs = "org.mozilla.components:feature-customtabs:${Versions.mozilla_android_components}"
     const val mozilla_feature_intent = "org.mozilla.components:feature-intent:${Versions.mozilla_android_components}"
+    const val mozilla_feature_media = "org.mozilla.components:feature-media:${Versions.mozilla_android_components}"
     const val mozilla_feature_qr = "org.mozilla.components:feature-qr:${Versions.mozilla_android_components}"
     const val mozilla_feature_search = "org.mozilla.components:feature-search:${Versions.mozilla_android_components}"
     const val mozilla_feature_session = "org.mozilla.components:feature-session:${Versions.mozilla_android_components}"
