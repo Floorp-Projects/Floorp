@@ -6,6 +6,9 @@
 #define NetworkConnectivityService_h_
 
 #include "nsINetworkConnectivityService.h"
+#include "nsIObserver.h"
+#include "nsIDNSListener.h"
+#include "nsIStreamListener.h"
 
 namespace mozilla {
 namespace net {
