@@ -304,9 +304,9 @@ impl Example for App {
 
     fn get_image_handlers(
         &mut self,
-        _gl: &gl::Gl,
-    ) -> (Option<Box<webrender::ExternalImageHandler>>,
-          Option<Box<webrender::OutputImageHandler>>) {
+        _gl: &dyn gl::Gl,
+    ) -> (Option<Box<dyn webrender::ExternalImageHandler>>,
+          Option<Box<dyn webrender::OutputImageHandler>>) {
         (Some(Box::new(ImageGenerator::new())), None)
     }
 }

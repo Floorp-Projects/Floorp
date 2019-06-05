@@ -37,6 +37,7 @@ module.exports = async function() {
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
   Services.prefs.clearUserPref("devtools.debugger.features.map-scopes");
+  Services.prefs.clearUserPref("devtools.testing");
   await testTeardown();
 };
 

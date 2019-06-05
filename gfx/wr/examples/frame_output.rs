@@ -183,9 +183,9 @@ impl Example for App {
 
     fn get_image_handlers(
         &mut self,
-        gl: &gl::Gl,
-    ) -> (Option<Box<webrender::ExternalImageHandler>>,
-          Option<Box<webrender::OutputImageHandler>>) {
+        gl: &dyn gl::Gl,
+    ) -> (Option<Box<dyn webrender::ExternalImageHandler>>,
+          Option<Box<dyn webrender::OutputImageHandler>>) {
         let texture_id = gl.gen_textures(1)[0];
 
         gl.bind_texture(gl::TEXTURE_2D, texture_id);

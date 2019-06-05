@@ -46,7 +46,7 @@ environment by Metrowerks. GCC for MPW and Symantec
 
   Required files are downloadable from:
 
-      http://developer.apple.com/tools/mpw-tools/index.html
+      http://macintoshgarden.org/apps/macintosh-programmers-workshop
 
   Also you can find documents how to update by MPW-PR.
 
@@ -54,7 +54,7 @@ environment by Metrowerks. GCC for MPW and Symantec
   skeletons. Python bundled to Mac OS X is enough. For
   classic MacOS, MacPython is available:
 
-      http://homepages.cwi.nl/~jack/macpython/
+      https://homepages.cwi.nl/~jack/macpython/
 
   MPW requires all files are typed by resource fork.
   ResEdit bundled to MPW is enough. In Mac OS X,
@@ -280,7 +280,7 @@ APPENDIX I
     migrate to FSRef datatype. The big differences of FSRef
     against FSSpec are explained in Apple TechNotes 2078.
 
-    http://developer.apple.com/technotes/tn2002/tn2078.html
+    https://developer.apple.com/library/archive/technotes/tn2078/
 
     - filename length: the max length of file
     name of FSRef is 255 chars (it is limit of HFS+),
@@ -314,7 +314,7 @@ APPENDIX I
     of FontManager emulation without QuickDraw is
     explained in
 
-      http://www.gyve.org/~mpsuzuki/ats_benchmark.html
+      http://gyvern.ipc.hiroshima-u.ac.jp/~mpsuzuki/ats_benchmark.html
 
   A-3. Framework Availabilities
   -----------------------------

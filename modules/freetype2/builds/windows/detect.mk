@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2018 by
+# Copyright (C) 1996-2019 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -118,64 +118,82 @@ ifeq ($(PLATFORM),windows)
   ifneq ($(findstring visualc,$(MAKECMDGOALS)),)     # Visual C/C++
     CONFIG_FILE := w32-vcc.mk
     CC          := cl
-    visualc: setup
+
     .PHONY: visualc
+    visualc: setup
+	    @cd .
   endif
 
   ifneq ($(findstring intelc,$(MAKECMDGOALS)),)      # Intel C/C++
     CONFIG_FILE := w32-intl.mk
     CC          := cl
-    visualc: setup
+
     .PHONY: intelc
+    visualc: setup
+	    @cd .
   endif
 
   ifneq ($(findstring watcom,$(MAKECMDGOALS)),)      # Watcom C/C++
     CONFIG_FILE := w32-wat.mk
     CC          := wcc386
-    watcom: setup
+
     .PHONY: watcom
+    watcom: setup
+	    @cd .
   endif
 
   ifneq ($(findstring visualage,$(MAKECMDGOALS)),)   # Visual Age C++
     CONFIG_FILE := w32-icc.mk
     CC          := icc
-    visualage: setup
+
     .PHONY: visualage
+    visualage: setup
+	    @cd .
   endif
 
   ifneq ($(findstring lcc,$(MAKECMDGOALS)),)         # LCC-Win32
     CONFIG_FILE := w32-lcc.mk
     CC          := lcc
-    lcc: setup
+
     .PHONY: lcc
+    lcc: setup
+	    @cd .
   endif
 
   ifneq ($(findstring mingw32,$(MAKECMDGOALS)),)     # mingw32
     CONFIG_FILE := w32-mingw32.mk
     CC          := gcc
-    mingw32: setup
+
     .PHONY: mingw32
+    mingw32: setup
+	    @cd .
   endif
 
   ifneq ($(findstring bcc32,$(MAKECMDGOALS)),)       # Borland C++
     CONFIG_FILE := w32-bcc.mk
     CC          := bcc32
-    bcc32: setup
+
     .PHONY: bcc32
+    bcc32: setup
+	    @cd .
   endif
 
   ifneq ($(findstring devel-bcc,$(MAKECMDGOALS)),)   # development target
     CONFIG_FILE := w32-bccd.mk
     CC          := bcc32
-    devel-bcc: setup
+
     .PHONY: devel-bcc
+    devel-bcc: setup
+	    @cd .
   endif
 
   ifneq ($(findstring devel-gcc,$(MAKECMDGOALS)),)   # development target
     CONFIG_FILE := w32-dev.mk
     CC          := gcc
-    devel-gcc: setup
+
     .PHONY: devel-gcc
+    devel-gcc: setup
+	    @cd .
   endif
 
 endif   # test PLATFORM windows

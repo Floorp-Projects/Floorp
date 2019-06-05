@@ -165,8 +165,8 @@ which isn't supported yet please send a mail too.
     partially defined in MHP 1.0.3 (also called ETSI TS 101812 V1.3.1)
     section 7.4.
 
-      http://www.etsi.org/
-      http://webapp.etsi.org/workprogram/Report_WorkItem.asp?WKI_ID=18799
+      https://www.etsi.org/
+      https://webapp.etsi.org/workprogram/Report_WorkItem.asp?WKI_ID=18799
 
 [3] Support  is rudimentary  currently; some  tables or  data are  not
     loaded yet.
@@ -191,7 +191,7 @@ which isn't supported yet please send a mail too.
 
 ------------------------------------------------------------------------
 
-Copyright 2004-2018 by
+Copyright (C) 2004-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,

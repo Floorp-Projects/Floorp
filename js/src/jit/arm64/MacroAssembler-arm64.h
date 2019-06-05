@@ -530,26 +530,55 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
                             bool negativeZeroCheck = true) {
-    vixl::UseScratchRegisterScope temps(this);
-    const ARMFPRegister scratch64 = temps.AcquireD();
-
-    ARMFPRegister fsrc(src, 64);
+    ARMFPRegister fsrc64(src, 64);
     ARMRegister dest32(dest, 32);
-    ARMRegister dest64(dest, 64);
 
-    MOZ_ASSERT(!scratch64.Is(fsrc));
+    // ARMv8.3 chips support the FJCVTZS instruction, which handles
+    // exactly this logic.
+    if (CPUHas(vixl::CPUFeatures::kFP, vixl::CPUFeatures::kJSCVT)) {
+      // Convert double to integer, rounding toward zero.
+      // The Z-flag is set iff the conversion is exact. -0 unsets the Z-flag.
+      Fjcvtzs(dest32, fsrc64);
 
-    Fcvtzs(dest32, fsrc);      // Convert, rounding toward zero.
-    Scvtf(scratch64, dest32);  // Convert back, using FPCR rounding mode.
-    Fcmp(scratch64, fsrc);
-    B(fail, Assembler::NotEqual);
+      if (negativeZeroCheck) {
+        B(fail, Assembler::NonZero);
+      } else {
+        Label done;
+        B(&done, Assembler::Zero);  // If conversion was exact, go to end.
 
-    if (negativeZeroCheck) {
-      Label nonzero;
-      Cbnz(dest32, &nonzero);
-      Fmov(dest64, fsrc);
-      Cbnz(dest64, fail);
-      bind(&nonzero);
+        // The conversion was inexact, but the caller intends to allow -0.
+        vixl::UseScratchRegisterScope temps(this);
+        const ARMFPRegister scratch64 = temps.AcquireD();
+        MOZ_ASSERT(!scratch64.Is(fsrc64));
+
+        // Compare fsrc64 to 0.
+        // If fsrc64 == 0 and FJCVTZS conversion was inexact, then fsrc64 is -0.
+        Fmov(scratch64, xzr);
+        Fcmp(scratch64, fsrc64);
+        B(fail, Assembler::NotEqual);  // Pass through -0; fail otherwise.
+
+        bind(&done);
+      }
+    } else {
+      // Older processors use a significantly slower path.
+      ARMRegister dest64(dest, 64);
+
+      vixl::UseScratchRegisterScope temps(this);
+      const ARMFPRegister scratch64 = temps.AcquireD();
+      MOZ_ASSERT(!scratch64.Is(fsrc64));
+
+      Fcvtzs(dest32, fsrc64);    // Convert, rounding toward zero.
+      Scvtf(scratch64, dest32);  // Convert back, using FPCR rounding mode.
+      Fcmp(scratch64, fsrc64);
+      B(fail, Assembler::NotEqual);
+
+      if (negativeZeroCheck) {
+        Label nonzero;
+        Cbnz(dest32, &nonzero);
+        Fmov(dest64, fsrc64);
+        Cbnz(dest64, fail);
+        bind(&nonzero);
+      }
     }
   }
   void convertFloat32ToInt32(FloatRegister src, Register dest, Label* fail,

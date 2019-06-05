@@ -2393,7 +2393,7 @@
 
 	* src/autofit/afcjk.c (af_cjk_get_standard_width): New function.
 	(af_cjk_writing_system_class): Updated.
-	* src/autofit/afdummy.c	(af_dummy_writing_system_class): Updated.
+	* src/autofit/afdummy.c (af_dummy_writing_system_class): Updated.
 	* src/autofit/afindic.c (af_cjk_get_standard_width): New function.
 	(af_indic_writing_system_class): Updated.
 	* src/autofit/aflatin.c (af_latin_get_standard_width): New function.
@@ -5695,7 +5695,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2015-2018 by
+Copyright (C) 2015-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

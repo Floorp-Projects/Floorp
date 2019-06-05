@@ -750,7 +750,7 @@
 2009-07-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
 	sfnt: Cast a charcode to 32-bit in cmap format 14 parser.
-	
+
 	* src/sfnt/ttcmap.c (tt_cmap14_char_var_index,
 	tt_cmap14_char_var_isdefault, tt_cmap14_char_variants,
 	tt_cmap14_variant_chars): Correct mismatches from
@@ -1344,24 +1344,24 @@
 	* include/freetype/config/ftstdlib.h: Introduce
 	FT_INT_MIN, to use in signed integer overflow in
 	16-bit and 64-bit platforms.
-	
+
 	* include/freetype/internal/fttrace.h: Add a tracer
 	to ftsynth.c.
-	
+
 	* src/base/ftbitmap.c (FT_Bitmap_Embolden): Check
 	invalid strength causing integer overflow on 16-bit
 	platform.
-	
+
 	* src/base/ftcalc.c (ft_corner_orientation): Change
 	the internal calculation from FT_Int to FT_Long, to
 	avoid an overflow on 16-bit platforms.  The caller of
 	this function should use only the sign of result,
 	so the cast to FT_Int is acceptable.
-	
+
 	* src/base/ftsynth.c: Introduce a tracer for synth module.
 	(FT_GlyphSlot_Embolden): Check invalid strength causing
 	integer overflow on 16-bit platform.
-	
+
 	* src/bdf/bdfdrivr.c (BDF_Face_Init): The glyph index
 	in FT2 API is typed as FT_UInt, although BDF driver
 	can handle unsigned long glyph index internally.  To
@@ -1372,25 +1372,25 @@
 	glyph pitch internally.  To avoid integer overflow on
 	16-bit platform, too large glyph pitch should not be
 	returned.
-	
+
 	* src/pfr/pfrsbit.c (pfr_slot_load_bitmap): The glyph
 	pitch in FT2 is typed as FT_UInt, although PFR font
 	format can include huge bitmap glyph with 24-bit pitch
 	(however, a glyph spends 16.7 pixel, it's not realistic).
 	To avoid integer overflow on 16-bit platform, huge
 	bitmap glyph should be excluded.
-	
+
 	* src/smooth/ftgrays.c (gray_hline): As FT_Span.x is
 	truncated to fit its type (16-bit short), FT_Span.y
 	should be truncated to fit its type (FT_Int).
-	
+
 	* src/cff/cffdrivr.c (cff_get_ros): CFF specification
 	defines the supplement in ROS as a real number.
 	Truncate it to fit public FT2 API.
-	
+
 	* src/cff/cffparse.c (cff_parse_cid_ros): Warn the
 	supplement if it is truncated or rounded in cff_get_ros().
-	
+
 	* src/cff/cfftypes.h: Change the type of internal variable
 	`supplement' from FT_Long to FT_ULong to fit the signedness
 	to the type in public API.
@@ -1653,7 +1653,7 @@
 
 	cff: Fix some data types mismatching with their sources.
 
-	* src/cff/cffgload.c (cff_slot_load): The types of	
+	* src/cff/cffgload.c (cff_slot_load): The types of
 	`top_upm' and `sub_upm' are matched with
 	CFF_FontRecDict->units_per_em.
 
@@ -1811,56 +1811,56 @@
 	gxv_XClassTable_lookupval_validate,
 	gxv_XClassTable_lookupfmt4_transit):
 	Update from GXV_LookupValueDesc to GXV_LookupValueCPtr.
-	
+
 	* src/gxvalid/gxvbsln.c (gxv_bsln_LookupValue_validate,
 	gxv_bsln_LookupFmt4_transit): Ditto.
-	
+
 	* src/gxvalid/gxvjust.c
 	(gxv_just_pcTable_LookupValue_entry_validate,
 	gxv_just_classTable_entry_validate,
 	gxv_just_wdcTable_LookupValue_validate): Ditto.
-	
+
 	* src/gxvalid/gxvkern.c
 	(gxv_kern_subtable_fmt1_entry_validate): Ditto.
-	
+
 	* src/gxvalid/gxvlcar.c (gxv_lcar_LookupValue_validate,
 	gxv_lcar_LookupFmt4_transit): Ditto.
-	
+
 	* src/gxvalid/gxvopbd.c (gxv_opbd_LookupValue_validate,
 	gxv_opbd_LookupFmt4_transit): Ditto.
-	
+
 	* src/gxvalid/gxvprop.c (gxv_prop_LookupValue_validate,
 	gxv_prop_LookupFmt4_transit): Ditto.
-	
+
 	* src/gxvalid/gxvmort4.c
 	(gxv_mort_subtable_type4_lookupval_validate): Ditto.
-	
+
 	* src/gxvalid/gxvmort0.c
 	(gxv_mort_subtable_type0_entry_validate): Update
 	from GXV_StateTable_GlyphOffsetDesc
 	to GXV_StateTable_GlyphOffsetCPtr.
-	
+
 	* src/gxvalid/gxvmort1.c
 	(gxv_mort_subtable_type1_entry_validate): Ditto.
-	
+
 	* src/gxvalid/gxvmort2.c
 	(gxv_mort_subtable_type2_entry_validate): Ditto.
-	
+
 	* src/gxvalid/gxvmort5.c
 	(gxv_mort_subtable_type5_entry_validate): Ditto.
-	
+
 	* src/gxvalid/gxvmorx2.c
 	(gxv_morx_subtable_type2_entry_validate): Ditto.
-	
+
 	* src/gxvalid/gxvmorx5.c
 	(gxv_morx_subtable_type5_entry_validate): Ditto.
-	
+
 	* src/gxvalid/gxvmorx1.c
 	(gxv_morx_subtable_type1_entry_validate): Ditto.
 	(gxv_morx_subtable_type1_LookupValue_validate,
 	gxv_morx_subtable_type1_LookupFmt4_transit):
 	Update from GXV_LookupValueDesc to GXV_LookupValueCPtr.
-	
+
 	* src/gxvalid/gxvmorx0.c
 	(gxv_morx_subtable_type0_entry_validate): Update
 	from GXV_XStateTable_GlyphOffsetDesc
@@ -1976,7 +1976,7 @@
 	Prevent the overflows by a glyph with too many points or contours.
 	The bug is reported by Boris Letocha <b.letocha@gmc.net>.  See
 	https://lists.gnu.org/archive/html/freetype-devel/2009-06/msg00031.html
-	https://lists.gnu.org/archive/html/freetype-devel/2009-07/msg00002.html	
+	https://lists.gnu.org/archive/html/freetype-devel/2009-07/msg00002.html
 
 	* include/freetype/ftimage.h (FT_OUTLINE_CONTOURS_MAX,
 	FT_OUTLINE_POINTS_MAX): New macros to declare the maximum
@@ -6948,7 +6948,7 @@
 
 2006-11-25  David Turner  <david@freetype.org>
 
-	* src/autofit/afhints.c	(af_glyph_hints_dump_points,
+	* src/autofit/afhints.c (af_glyph_hints_dump_points,
 	af_glyph_hints_dump_segments, af_glyph_hints_dumpedges) [!AF_DEBUG]:
 	Add stubs to link the `ftgrid' test program when debugging is
 	disabled in the auto-hinter.
@@ -7932,7 +7932,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2006-2018 by
+Copyright (C) 2006-2019 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

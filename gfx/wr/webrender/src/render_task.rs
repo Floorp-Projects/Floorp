@@ -1944,7 +1944,7 @@ pub fn dump_render_tasks_as_svg(
 
 #[allow(dead_code)]
 fn dump_task_dependency_link(
-    output: &mut io::Write,
+    output: &mut dyn io::Write,
     x1: f32, y1: f32,
     x2: f32, y2: f32,
 ) {
