@@ -35,13 +35,6 @@ namespace jit {
   _(UnaryArith_Fallback)              \
                                       \
   _(Call_Fallback)                    \
-  _(Call_Scripted)                    \
-  _(Call_AnyScripted)                 \
-  _(Call_Native)                      \
-  _(Call_ClassHook)                   \
-  _(Call_ScriptedApplyArray)          \
-  _(Call_ScriptedApplyArguments)      \
-  _(Call_ScriptedFunCall)             \
                                       \
   _(GetElem_Fallback)                 \
   _(SetElem_Fallback)                 \
