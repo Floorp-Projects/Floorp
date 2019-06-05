@@ -91,3 +91,126 @@ TEST(PrincipalSerialization, TwoKeys)
 }
 
 #endif  // ifndef MOZ_DEBUG
+
+TEST(PrincipalSerialization, ExpandedPrincipal)
+{
+  // Check basic Expandedprincipal works without OA
+  nsCOMPtr<nsIScriptSecurityManager> ssm =
+      nsScriptSecurityManager::GetScriptSecurityManager();
+
+  uint32_t length = 2;
+  nsTArray<nsCOMPtr<nsIPrincipal> > allowedDomains(length);
+  allowedDomains.SetLength(length);
+
+  nsAutoCString spec("https://mozilla.com");
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv =
+      ssm->CreateCodebasePrincipalFromOrigin(spec, getter_AddRefs(principal));
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(BasePrincipal::Cast(principal)->Kind(),
+            BasePrincipal::eCodebasePrincipal);
+  allowedDomains[0] = principal;
+
+  nsAutoCString spec2("https://mozilla.org");
+  nsCOMPtr<nsIPrincipal> principal2;
+  rv =
+      ssm->CreateCodebasePrincipalFromOrigin(spec2, getter_AddRefs(principal2));
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(BasePrincipal::Cast(principal2)->Kind(),
+            BasePrincipal::eCodebasePrincipal);
+  allowedDomains[1] = principal2;
+
+  OriginAttributes attrs;
+  RefPtr<ExpandedPrincipal> result =
+      ExpandedPrincipal::Create(allowedDomains, attrs);
+  ASSERT_EQ(BasePrincipal::Cast(result)->Kind(),
+            BasePrincipal::eExpandedPrincipal);
+
+  nsAutoCString JSON;
+  rv = BasePrincipal::Cast(result)->ToJSON(JSON);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_TRUE(JSON.EqualsLiteral(
+      "{\"2\":{\"0\":\"eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEuY29tLyJ9fQ==,"
+      "eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEub3JnLyJ9fQ==\"}}"));
+
+  nsCOMPtr<nsIPrincipal> returnedPrincipal = BasePrincipal::FromJSON(JSON);
+  auto outPrincipal = BasePrincipal::Cast(returnedPrincipal);
+  ASSERT_EQ(outPrincipal->Kind(), BasePrincipal::eExpandedPrincipal);
+
+  ASSERT_TRUE(outPrincipal->FastSubsumesIgnoringFPD(principal));
+  ASSERT_TRUE(outPrincipal->FastSubsumesIgnoringFPD(principal2));
+
+  nsAutoCString specDev("https://mozilla.dev");
+  nsCOMPtr<nsIPrincipal> principalDev;
+  rv = ssm->CreateCodebasePrincipalFromOrigin(specDev,
+                                              getter_AddRefs(principalDev));
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(BasePrincipal::Cast(principalDev)->Kind(),
+            BasePrincipal::eCodebasePrincipal);
+
+  ASSERT_FALSE(outPrincipal->FastSubsumesIgnoringFPD(principalDev));
+}
+
+TEST(PrincipalSerialization, ExpandedPrincipalOA)
+{
+  // Check Expandedprincipal works with top level OA
+  nsCOMPtr<nsIScriptSecurityManager> ssm =
+      nsScriptSecurityManager::GetScriptSecurityManager();
+
+  uint32_t length = 2;
+  nsTArray<nsCOMPtr<nsIPrincipal> > allowedDomains(length);
+  allowedDomains.SetLength(length);
+
+  nsAutoCString spec("https://mozilla.com");
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv =
+      ssm->CreateCodebasePrincipalFromOrigin(spec, getter_AddRefs(principal));
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(BasePrincipal::Cast(principal)->Kind(),
+            BasePrincipal::eCodebasePrincipal);
+  allowedDomains[0] = principal;
+
+  nsAutoCString spec2("https://mozilla.org");
+  nsCOMPtr<nsIPrincipal> principal2;
+  rv =
+      ssm->CreateCodebasePrincipalFromOrigin(spec2, getter_AddRefs(principal2));
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(BasePrincipal::Cast(principal2)->Kind(),
+            BasePrincipal::eCodebasePrincipal);
+  allowedDomains[1] = principal2;
+
+  OriginAttributes attrs;
+  nsAutoCString suffix("^userContextId=1");
+  bool ok = attrs.PopulateFromSuffix(suffix);
+  ASSERT_TRUE(ok);
+
+  RefPtr<ExpandedPrincipal> result =
+      ExpandedPrincipal::Create(allowedDomains, attrs);
+  ASSERT_EQ(BasePrincipal::Cast(result)->Kind(),
+            BasePrincipal::eExpandedPrincipal);
+
+  nsAutoCString JSON;
+  rv = BasePrincipal::Cast(result)->ToJSON(JSON);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_TRUE(JSON.EqualsLiteral(
+      "{\"2\":{\"0\":\"eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEuY29tLyJ9fQ==,"
+      "eyIxIjp7IjAiOiJodHRwczovL21vemlsbGEub3JnLyJ9fQ==\",\"1\":\"^"
+      "userContextId=1\"}}"));
+
+  nsCOMPtr<nsIPrincipal> returnedPrincipal = BasePrincipal::FromJSON(JSON);
+  auto outPrincipal = BasePrincipal::Cast(returnedPrincipal);
+  ASSERT_EQ(outPrincipal->Kind(), BasePrincipal::eExpandedPrincipal);
+
+  ASSERT_TRUE(outPrincipal->FastSubsumesIgnoringFPD(principal));
+  ASSERT_TRUE(outPrincipal->FastSubsumesIgnoringFPD(principal2));
+
+  nsAutoCString specDev("https://mozilla.dev");
+  nsCOMPtr<nsIPrincipal> principalDev;
+  rv = ssm->CreateCodebasePrincipalFromOrigin(specDev,
+                                              getter_AddRefs(principalDev));
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(BasePrincipal::Cast(principalDev)->Kind(),
+            BasePrincipal::eCodebasePrincipal);
+
+  ASSERT_FALSE(outPrincipal->FastSubsumesIgnoringFPD(principalDev));
+}
