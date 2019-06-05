@@ -111,13 +111,9 @@ static void CompressSourceSync(JS::Handle<JSFunction*> fun, JSContext* cx) {
   MOZ_RELEASE_ASSERT(script);
   MOZ_RELEASE_ASSERT(script->scriptSource()->hasSourceText());
 
-  js::RunPendingSourceCompressions(cx->runtime());
+  js::RunPendingSourceCompressions(cx);
 
-  // XXX Temporarily don't assert this because not all builds guarantee it.
-  //     We test behavior that is *affected in its implementation* by this
-  //     condition, but is the same whether or not this assertion actually
-  //     holds.  We'll figure out how to guarantee it in a followup change.
-  // MOZ_RELEASE_ASSERT(script->scriptSource()->hasCompressedSource());
+  MOZ_RELEASE_ASSERT(script->scriptSource()->hasCompressedSource());
 }
 
 static constexpr char FunctionStart[] = "function @() {";
