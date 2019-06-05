@@ -60,6 +60,20 @@ var Match =
       }
     }
 
+    class ObjectWithExactly extends Pattern {
+      constructor(template) {
+        super(template);
+      }
+
+      match(actual) {
+        return matchObjectWithExactly(actual, this.template)
+      }
+    }
+
+    Pattern.OBJECT_WITH_EXACTLY = function (template) {
+      return new ObjectWithExactly(template);
+    }
+
     var quote = uneval;
 
     class MatchError extends Error {
@@ -126,7 +140,8 @@ var Match =
         throw new Error("bad pattern: " + exp.toSource());
     }
 
-    function matchObject(act, exp) {
+    // Match an object having at least the expected properties.
+    function matchObjectWithAtLeast(act, exp) {
         if (!isObject(act))
             throw new MatchError("expected object, got " + quote(act));
 
@@ -141,6 +156,19 @@ var Match =
                 }
                 inner.message = `matching property ${uneval(key)}:\n${inner.message}`;
                 throw inner;
+            }
+        }
+
+        return true;
+    }
+
+    // Match an object having all the expected properties and no more.
+    function matchObjectWithExactly(act, exp) {
+        matchObjectWithAtLeast(act, exp);
+
+        for (var key in act) {
+            if (!(key in exp)) {
+                throw new MatchError("unexpected property " + quote(key));
             }
         }
 
@@ -200,7 +228,7 @@ var Match =
             return matchFunction(act, exp);
 
         if (isObject(exp))
-            return matchObject(act, exp);
+            return matchObjectWithAtLeast(act, exp);
 
         throw new Error("bad pattern: " + exp.toSource());
     }
