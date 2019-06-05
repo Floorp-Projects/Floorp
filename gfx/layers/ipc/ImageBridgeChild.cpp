@@ -135,11 +135,18 @@ void ImageBridgeChild::UseComponentAlphaTextures(
 
 void ImageBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
     TextureClient* aClient) {
-  // Wait ReleaseCompositableRef only when TextureFlags::RECYCLE is set on
-  // ImageBridge.
-  if (!aClient || !(aClient->GetFlags() & TextureFlags::RECYCLE)) {
+  if (!aClient) {
     return;
   }
+  // Wait ReleaseCompositableRef only when TextureFlags::RECYCLE or
+  // TextureFlags::WAIT_HOST_USAGE_END is set on ImageBridge.
+  bool waitNotifyNotUsed =
+      aClient->GetFlags() & TextureFlags::RECYCLE ||
+      aClient->GetFlags() & TextureFlags::WAIT_HOST_USAGE_END;
+  if (!waitNotifyNotUsed) {
+    return;
+  }
+
   aClient->SetLastFwdTransactionId(GetFwdTransactionId());
   mTexturesWaitingNotifyNotUsed.emplace(aClient->GetSerial(), aClient);
 }
