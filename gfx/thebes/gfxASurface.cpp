@@ -280,11 +280,10 @@ already_AddRefed<gfxImageSurface> gfxASurface::CopyToARGB32ImageSurface() {
   RefPtr<gfxImageSurface> imgSurface =
       new gfxImageSurface(size, SurfaceFormat::A8R8G8B8_UINT32);
 
-  RefPtr<DrawTarget> dt =
-      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(
-          imgSurface, IntSize(size.width, size.height));
+  RefPtr<DrawTarget> dt = gfxPlatform::CreateDrawTargetForSurface(
+      imgSurface, IntSize(size.width, size.height));
   RefPtr<SourceSurface> source =
-      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, this);
+      gfxPlatform::GetSourceSurfaceForSurface(dt, this);
 
   dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
 
