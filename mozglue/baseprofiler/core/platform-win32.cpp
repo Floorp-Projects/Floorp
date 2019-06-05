@@ -314,7 +314,15 @@ static PVOID WINAPI patched_LdrResolveDelayLoadedAPI(
                                        ThunkAddress, Flags);
 }
 
-void InitializeWin64ProfilerHooks() {
+MFBT_API void InitializeWin64ProfilerHooks() {
+  // This function could be called by both profilers, but we only want to run
+  // it once.
+  static bool ran = false;
+  if (ran) {
+    return;
+  }
+  ran = true;
+
   NtDllIntercept.Init("ntdll.dll");
   stub_LdrUnloadDll.Set(NtDllIntercept, "LdrUnloadDll", &patched_LdrUnloadDll);
   if (IsWin8OrLater()) {  // LdrResolveDelayLoadedAPI was introduced in Win8
