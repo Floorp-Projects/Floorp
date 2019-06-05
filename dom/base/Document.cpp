@@ -298,7 +298,6 @@
 #  include "nsXULPopupManager.h"
 #  include "nsIDocShellTreeOwner.h"
 #endif
-#include "mozilla/dom/BoxObject.h"
 
 #include "mozilla/DocLoadingTimelineMarker.h"
 
@@ -1247,7 +1246,6 @@ Document::Document(const char* aContentType)
       mAutoFocusFired(false),
       mScrolledToRefAlready(false),
       mChangeScrollPosWhenScrollingToRef(false),
-      mHasWarnedAboutBoxObjects(false),
       mDelayFrameLoaderInitialization(false),
       mSynchronousDOMContentLoaded(false),
       mMaybeServiceWorkerControlled(false),
@@ -1315,7 +1313,6 @@ Document::Document(const char* aContentType)
       mFlashClassification(FlashClassification::Unknown),
       mScrollAnchorAdjustmentLength(0),
       mScrollAnchorAdjustmentCount(0),
-      mBoxObjectTable(nullptr),
       mCurrentOrientationAngle(0),
       mCurrentOrientationType(OrientationType::Portrait_primary),
       mServoRestyleRootDirtyBits(0),
@@ -1469,19 +1466,6 @@ void Document::GetFailedCertSecurityInfo(
     return;
   }
   aInfo.mSubjectAltNames = subjectAltNames;
-}
-
-void Document::ClearAllBoxObjects() {
-  if (mBoxObjectTable) {
-    for (auto iter = mBoxObjectTable->Iter(); !iter.Done(); iter.Next()) {
-      nsPIBoxObject* boxObject = iter.UserData();
-      if (boxObject) {
-        boxObject->Clear();
-      }
-    }
-    delete mBoxObjectTable;
-    mBoxObjectTable = nullptr;
-  }
 }
 
 bool Document::IsAboutPage() const {
@@ -1679,8 +1663,6 @@ Document::~Document() {
 
   delete mHeaderData;
 
-  ClearAllBoxObjects();
-
   mPendingTitleChangeEvent.Revoke();
 
   mPlugins.Clear();
@@ -1817,15 +1799,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
 
   DocumentOrShadowRoot::Traverse(tmp, cb);
 
-  // The boxobject for an element will only exist as long as it's in the
-  // document, so we'll traverse the table here instead of from the element.
-  if (tmp->mBoxObjectTable) {
-    for (auto iter = tmp->mBoxObjectTable->Iter(); !iter.Done(); iter.Next()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mBoxObjectTable entry");
-      cb.NoteXPCOMChild(iter.UserData());
-    }
-  }
-
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
@@ -1955,8 +1928,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadingImages)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntersectionObservers)
-
-  tmp->ClearAllBoxObjects();
 
   if (tmp->mListenerManager) {
     tmp->mListenerManager->Disconnect();
@@ -7774,55 +7745,6 @@ void Document::DoNotifyPossibleTitleChange() {
   nsContentUtils::DispatchChromeEvent(this, ToSupports(this),
                                       NS_LITERAL_STRING("DOMTitleChanged"),
                                       CanBubble::eYes, Cancelable::eYes);
-}
-
-already_AddRefed<BoxObject> Document::GetBoxObjectFor(Element* aElement,
-                                                      ErrorResult& aRv) {
-  if (!aElement) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  Document* doc = aElement->OwnerDoc();
-  if (doc != this) {
-    aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
-    return nullptr;
-  }
-
-  if (!mHasWarnedAboutBoxObjects && !aElement->IsXULElement()) {
-    mHasWarnedAboutBoxObjects = true;
-    nsContentUtils::ReportToConsole(
-        nsIScriptError::warningFlag, NS_LITERAL_CSTRING("BoxObjects"), this,
-        nsContentUtils::eDOM_PROPERTIES, "UseOfGetBoxObjectForWarning");
-  }
-
-  if (!mBoxObjectTable) {
-    mBoxObjectTable =
-        new nsRefPtrHashtable<nsPtrHashKey<nsIContent>, BoxObject>(6);
-  }
-
-  RefPtr<BoxObject> boxObject;
-  auto entry = mBoxObjectTable->LookupForAdd(aElement);
-  if (entry) {
-    boxObject = entry.Data();
-    return boxObject.forget();
-  }
-
-  boxObject = new BoxObject();
-  boxObject->Init(aElement);
-  entry.OrInsert([&boxObject]() { return boxObject; });
-
-  return boxObject.forget();
-}
-
-void Document::ClearBoxObjectFor(nsIContent* aContent) {
-  if (mBoxObjectTable) {
-    if (auto entry = mBoxObjectTable->Lookup(aContent)) {
-      nsPIBoxObject* boxObject = entry.Data();
-      boxObject->Clear();
-      entry.Remove();
-    }
-  }
 }
 
 already_AddRefed<MediaQueryList> Document::MatchMedia(
