@@ -10,6 +10,7 @@ import logging
 
 from .registry import register_callback_action
 from .util import create_tasks, fetch_graph_and_labels
+from ..target_tasks import standard_filter
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,10 @@ def add_all_talos(parameters, graph_config, input, task_group_id, task_id):
     for i in xrange(times):
         to_run = [label
                   for label, entry
-                  in full_task_graph.tasks.iteritems() if 'talos_try_name' in entry.attributes]
+                  in full_task_graph.tasks.iteritems()
+                  if 'talos_try_name' in entry.attributes
+                  and standard_filter(entry, parameters)
+                  ]
 
         create_tasks(
             graph_config,
