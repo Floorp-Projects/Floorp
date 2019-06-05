@@ -7,13 +7,6 @@ import sys
 
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
-if os.environ.get('SCRIPTSPATH', None) is not None:
-    # in production it is env SCRIPTS_PATH
-    mozharness_dir = os.environ['SCRIPTSPATH']
-else:
-    # locally it's in source tree
-    mozharness_dir = os.path.join(here, '../../mozharness')
-sys.path.insert(1, mozharness_dir)
 
 raptor_dir = os.path.join(os.path.dirname(here), 'raptor')
 sys.path.insert(0, raptor_dir)
