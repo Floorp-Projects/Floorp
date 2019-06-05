@@ -3195,6 +3195,24 @@ void GetProfilerEnvVarsForChildProcess(
     }
   }
   aSetEnv("MOZ_PROFILER_STARTUP_FILTERS", filtersString.c_str());
+
+#ifdef MOZ_BASE_PROFILER
+  // Blindly copy MOZ_BASE_PROFILER_STARTUP* env-vars.
+  auto copyEnv = [&](const char* aName) {
+    const char* env = getenv(aName);
+    if (!env) {
+      return;
+    }
+    aSetEnv(aName, env);
+  };
+  copyEnv("MOZ_BASE_PROFILER_STARTUP");
+  copyEnv("MOZ_BASE_PROFILER_STARTUP_ENTRIES");
+  copyEnv("MOZ_BASE_PROFILER_STARTUP_DURATION");
+  copyEnv("MOZ_BASE_PROFILER_STARTUP_INTERVAL");
+  copyEnv("MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD");
+  copyEnv("MOZ_BASE_PROFILER_STARTUP_FEATURES");
+  copyEnv("MOZ_BASE_PROFILER_STARTUP_FILTERS");
+#endif
 }
 
 }  // namespace mozilla
