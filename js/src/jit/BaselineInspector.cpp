@@ -699,11 +699,6 @@ JSObject* BaselineInspector::getTemplateObject(jsbytecode* pc) {
         return stub->toNewObject_Fallback()->templateObject();
       case ICStub::Rest_Fallback:
         return stub->toRest_Fallback()->templateObject();
-      case ICStub::Call_Scripted:
-        if (JSObject* obj = stub->toCall_Scripted()->templateObject()) {
-          return obj;
-        }
-        break;
       case ICStub::CacheIR_Regular:
       case ICStub::CacheIR_Monitored:
       case ICStub::CacheIR_Updated: {
@@ -753,10 +748,6 @@ JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
     return nullptr;
   }
 
-  if (stub->isCall_Scripted()) {
-    return stub->toCall_Scripted()->callee();
-  }
-
   if (ICStub::IsCacheIRKind(stub->kind())) {
     const CacheIRStubInfo* stubInfo = GetCacheIRStubInfo(stub);
     mozilla::Maybe<CacheIRReader> argReader;
@@ -775,10 +766,6 @@ JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
                                                         Native native) {
   const ICEntry& entry = icEntryFromPC(pc);
   for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
-    if (stub->isCall_Native() &&
-        stub->toCall_Native()->callee()->native() == native) {
-      return stub->toCall_Native()->templateObject();
-    }
     if (ICStub::IsCacheIRKind(stub->kind())) {
       auto filter = [stub, native](CacheIRReader& reader,
                                    const CacheIRStubInfo* info) {
@@ -801,10 +788,6 @@ JSObject* BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc,
                                                            const Class* clasp) {
   const ICEntry& entry = icEntryFromPC(pc);
   for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
-    if (stub->isCall_ClassHook() &&
-        stub->toCall_ClassHook()->clasp() == clasp) {
-      return stub->toCall_ClassHook()->templateObject();
-    }
     if (ICStub::IsCacheIRKind(stub->kind())) {
       auto filter = [stub, clasp](CacheIRReader& args,
                                   const CacheIRStubInfo* info) {
