@@ -863,8 +863,7 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvShow(
 
     bool isPlugin = true;
     RefPtr<gfx::SourceSurface> sourceSurface =
-        gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface,
-                                                               isPlugin);
+        gfxPlatform::GetSourceSurfaceForSurface(nullptr, surface, isPlugin);
     RefPtr<SourceSurfaceImage> image =
         new SourceSurfaceImage(surface->GetSize(), sourceSurface);
 
@@ -1051,9 +1050,8 @@ nsresult PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
              "Update outside of background area");
 #endif
 
-  RefPtr<gfx::DrawTarget> dt =
-      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(
-          mBackground, gfx::IntSize(sz.width, sz.height));
+  RefPtr<gfx::DrawTarget> dt = gfxPlatform::CreateDrawTargetForSurface(
+      mBackground, gfx::IntSize(sz.width, sz.height));
   dt.forget(aDrawTarget);
 
   return NS_OK;

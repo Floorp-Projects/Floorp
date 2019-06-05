@@ -500,8 +500,7 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
     // wrap the cached cairo_surface_t from ScreenReferenceSurface():
     RefPtr<gfxASurface> refSurf =
         gfxPlatform::GetPlatform()->ScreenReferenceSurface();
-    tmpDT = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(
-        refSurf, IntSize(1, 1));
+    tmpDT = gfxPlatform::CreateDrawTargetForSurface(refSurf, IntSize(1, 1));
 #else
     tmpDT = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
 #endif
