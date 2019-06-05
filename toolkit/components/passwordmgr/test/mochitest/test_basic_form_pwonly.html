@@ -16,8 +16,8 @@ runInParent(() => {
   const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
   var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
 
-  // pwlogin1 uses a unique formSubmitURL, to check forms where no other logins
-  // will apply. pwlogin2 uses the normal formSubmitURL, so that we can test
+  // pwlogin1 uses a unique formActionOrigin, to check forms where no other logins
+  // will apply. pwlogin2 uses the normal formActionOrigin, so that we can test
   // forms with a mix of username and non-username logins that might apply.
   //
   // Note: pwlogin2 is deleted at the end of the test.

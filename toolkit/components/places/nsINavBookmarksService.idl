@@ -83,11 +83,9 @@ interface nsINavBookmarkObserver : nsISupports
    * @param aItemId
    *        The id of the item that was changed.
    * @param aProperty
-   *        The property which changed.  Can be null for the removal of all of
-   *        the annotations, in this case aIsAnnotationProperty is true.
+   *        The property which changed.
    * @param aIsAnnotationProperty
-   *        Whether or not aProperty is the name of an annotation.  If true
-   *        aNewValue is always an empty string.
+   *        Obsolete and unused.
    * @param aNewValue
    *        For certain properties, this is set to the new value of the
    *        property (see the list below).

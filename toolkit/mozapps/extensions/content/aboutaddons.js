@@ -2157,9 +2157,12 @@ class AddonList extends HTMLElement {
   }
 
   onUninstalling(addon) {
-    this.pendingUninstallAddons.add(addon);
-    this.addPendingUninstallBar(addon);
-    this.updateAddon(addon);
+    if (isPending(addon, "uninstall") &&
+        (this.type === "all" || addon.type === this.type)) {
+      this.pendingUninstallAddons.add(addon);
+      this.addPendingUninstallBar(addon);
+      this.updateAddon(addon);
+    }
   }
 
   onInstalled(addon) {

@@ -20,11 +20,11 @@ add_task(function test_addLogin_invalid_characters_legacy() {
   // Test newlines and carriage returns in properties that contain URLs.
   for (let testValue of ["http://newline\n.example.com",
                          "http://carriagereturn.example.com\r"]) {
-    let loginInfo = TestData.formLogin({ hostname: testValue });
+    let loginInfo = TestData.formLogin({ origin: testValue });
     Assert.throws(() => Services.logins.addLogin(loginInfo),
                   /login values can't contain newlines/);
 
-    loginInfo = TestData.formLogin({ formSubmitURL: testValue });
+    loginInfo = TestData.formLogin({ formActionOrigin: testValue });
     Assert.throws(() => Services.logins.addLogin(loginInfo),
                   /login values can't contain newlines/);
 
@@ -44,29 +44,29 @@ add_task(function test_addLogin_invalid_characters_legacy() {
                   /login values can't contain newlines/);
   }
 
-  // Test a single dot as the value of usernameField and formSubmitURL.
+  // Test a single dot as the value of usernameField and formActionOrigin.
   let loginInfo = TestData.formLogin({ usernameField: "." });
   Assert.throws(() => Services.logins.addLogin(loginInfo),
                 /login values can't be periods/);
 
-  loginInfo = TestData.formLogin({ formSubmitURL: "." });
+  loginInfo = TestData.formLogin({ formActionOrigin: "." });
   Assert.throws(() => Services.logins.addLogin(loginInfo),
                 /login values can't be periods/);
 
-  // Test the sequence " (" inside the value of the "hostname" property.
-  loginInfo = TestData.formLogin({ hostname: "http://parens (.example.com" });
+  // Test the sequence " (" inside the value of the "origin" property.
+  loginInfo = TestData.formLogin({ origin: "http://parens (.example.com" });
   Assert.throws(() => Services.logins.addLogin(loginInfo),
-                /bad parens in hostname/);
+                /bad parens in origin/);
 });
 
 /**
  * Tests legacy validation with setLoginSavingEnabled.
  */
 add_task(function test_setLoginSavingEnabled_invalid_characters_legacy() {
-  for (let hostname of ["http://newline\n.example.com",
-                        "http://carriagereturn.example.com\r",
-                        "."]) {
-    Assert.throws(() => Services.logins.setLoginSavingEnabled(hostname, false),
-                  /Invalid hostname/);
+  for (let origin of ["http://newline\n.example.com",
+                      "http://carriagereturn.example.com\r",
+                      "."]) {
+    Assert.throws(() => Services.logins.setLoginSavingEnabled(origin, false),
+                  /Invalid origin/);
   }
 });

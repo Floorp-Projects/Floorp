@@ -5,12 +5,12 @@ let gLogins = [{
     guid: "70a",
     username: "jared",
     password: "deraj",
-    hostname: "https://www.example.com",
+    origin: "https://www.example.com",
   }, {
     guid: "70b",
     username: "firefox",
     password: "xoferif",
-    hostname: "https://www.example.com",
+    origin: "https://www.example.com",
   },
 ];
 

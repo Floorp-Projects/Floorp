@@ -834,7 +834,7 @@ WindowsVaultFormPasswords.prototype = {
           // create a new login
           logins.push({
             username, password,
-            hostname: realURL.prePath,
+            origin: realURL.prePath,
             timeCreated: creation,
           });
 

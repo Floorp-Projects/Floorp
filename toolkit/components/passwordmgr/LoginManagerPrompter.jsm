@@ -140,11 +140,11 @@ LoginManagerPromptFactory.prototype = {
     // already waiting on a master password entry.
     var prompt = this._asyncPrompts[hashKey];
     var prompter = prompt.prompter;
-    var [hostname, httpRealm] = prompter._getAuthTarget(prompt.channel, prompt.authInfo);
-    var hasLogins = (Services.logins.countLogins(hostname, null, httpRealm) > 0);
-    if (!hasLogins && LoginHelper.schemeUpgrades && hostname.startsWith("https://")) {
-      let httpHostname = hostname.replace(/^https:\/\//, "http://");
-      hasLogins = (Services.logins.countLogins(httpHostname, null, httpRealm) > 0);
+    var [origin, httpRealm] = prompter._getAuthTarget(prompt.channel, prompt.authInfo);
+    var hasLogins = (Services.logins.countLogins(origin, null, httpRealm) > 0);
+    if (!hasLogins && LoginHelper.schemeUpgrades && origin.startsWith("https://")) {
+      let httpOrigin = origin.replace(/^https:\/\//, "http://");
+      hasLogins = (Services.logins.countLogins(httpOrigin, null, httpRealm) > 0);
     }
     if (hasLogins && Services.logins.uiBusy) {
       this.log("_doAsyncPrompt:run bypassed, master password UI busy");
@@ -365,15 +365,15 @@ LoginManagerPrompter.prototype = {
     var selectedLogin = null;
     var checkBox = { value: false };
     var checkBoxLabel = null;
-    var [hostname, realm, unused] = this._getRealmInfo(aPasswordRealm);
+    var [origin, realm, unused] = this._getRealmInfo(aPasswordRealm);
 
-    // If hostname is null, we can't save this login.
-    if (hostname) {
+    // If origin is null, we can't save this login.
+    if (origin) {
       var canRememberLogin = false;
       if (this._allowRememberLogin) {
         canRememberLogin = (aSavePassword ==
                             Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
-                           Services.logins.getLoginSavingEnabled(hostname);
+                           Services.logins.getLoginSavingEnabled(origin);
       }
 
       // if checkBoxLabel is null, the checkbox won't be shown at all.
@@ -382,7 +382,7 @@ LoginManagerPrompter.prototype = {
       }
 
       // Look for existing logins.
-      foundLogins = Services.logins.findLogins(hostname, null, realm);
+      foundLogins = Services.logins.findLogins(origin, null, realm);
 
       // XXX Like the original code, we can't deal with multiple
       // account selection. (bug 227632)
@@ -412,7 +412,7 @@ LoginManagerPrompter.prototype = {
                                                        aDialogTitle, aText, aUsername, aPassword,
                                                        checkBoxLabel, checkBox);
 
-    if (!ok || !checkBox.value || !hostname) {
+    if (!ok || !checkBox.value || !origin) {
       return ok;
     }
 
@@ -430,7 +430,7 @@ LoginManagerPrompter.prototype = {
     // changed, save as a new login.
     let newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
                    createInstance(Ci.nsILoginInfo);
-    newLogin.init(hostname, null, realm,
+    newLogin.init(origin, null, realm,
                   aUsername.value, aPassword.value, "", "");
     if (!selectedLogin) {
       // add as new
@@ -468,15 +468,15 @@ LoginManagerPrompter.prototype = {
 
     var checkBox = { value: false };
     var checkBoxLabel = null;
-    var [hostname, realm, username] = this._getRealmInfo(aPasswordRealm);
+    var [origin, realm, username] = this._getRealmInfo(aPasswordRealm);
 
     username = decodeURIComponent(username);
 
-    // If hostname is null, we can't save this login.
-    if (hostname && !this._inPrivateBrowsing) {
+    // If origin is null, we can't save this login.
+    if (origin && !this._inPrivateBrowsing) {
       var canRememberLogin = (aSavePassword ==
                               Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY) &&
-                             Services.logins.getLoginSavingEnabled(hostname);
+                             Services.logins.getLoginSavingEnabled(origin);
 
       // if checkBoxLabel is null, the checkbox won't be shown at all.
       if (canRememberLogin) {
@@ -485,7 +485,7 @@ LoginManagerPrompter.prototype = {
 
       if (!aPassword.value) {
         // Look for existing logins.
-        var foundLogins = Services.logins.findLogins(hostname, null, realm);
+        var foundLogins = Services.logins.findLogins(origin, null, realm);
 
         // XXX Like the original code, we can't deal with multiple
         // account selection (bug 227632). We can deal with finding the
@@ -505,10 +505,10 @@ LoginManagerPrompter.prototype = {
                                             aText, aPassword,
                                             checkBoxLabel, checkBox);
 
-    if (ok && checkBox.value && hostname && aPassword.value) {
+    if (ok && checkBox.value && origin && aPassword.value) {
       var newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
                      createInstance(Ci.nsILoginInfo);
-      newLogin.init(hostname, null, realm, username,
+      newLogin.init(origin, null, realm, username,
                     aPassword.value, "", "");
 
       this.log("New login seen for " + realm);
@@ -525,8 +525,8 @@ LoginManagerPrompter.prototype = {
   /**
    * Given aRealmString, such as "http://user@example.com/foo", returns an
    * array of:
-   *   - the formatted hostname
-   *   - the realm (hostname + path)
+   *   - the formatted origin
+   *   - the realm (origin + path)
    *   - the username, if present
    *
    * If aRealmString is in the format produced by NS_GetAuthKey for HTTP[S]
@@ -547,9 +547,9 @@ LoginManagerPrompter.prototype = {
       pathname = uri.pathQueryRef;
     }
 
-    var formattedHostname = this._getFormattedHostname(uri);
+    var formattedOrigin = this._getFormattedOrigin(uri);
 
-    return [formattedHostname, formattedHostname + pathname, uri.username];
+    return [formattedOrigin, formattedOrigin + pathname, uri.username];
   },
 
   /* ---------- nsIAuthPrompt2 prompts ---------- */
@@ -581,11 +581,11 @@ LoginManagerPrompter.prototype = {
       // be prompted for authentication again, which brings us here.
       this._removeLoginNotifications();
 
-      var [hostname, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
+      var [origin, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
 
       // Looks for existing logins to prefill the prompt with.
       foundLogins = LoginHelper.searchLoginsWithObject({
-        hostname,
+        origin,
         httpRealm,
         schemeUpgrades: LoginHelper.schemeUpgrades,
       });
@@ -594,7 +594,7 @@ LoginManagerPrompter.prototype = {
         "scheme",
         "timePasswordChanged",
       ];
-      foundLogins = LoginHelper.dedupeLogins(foundLogins, ["username"], resolveBy, hostname);
+      foundLogins = LoginHelper.dedupeLogins(foundLogins, ["username"], resolveBy, origin);
       this.log(foundLogins.length, "matching logins remain after deduping");
 
       // XXX Can't select from multiple accounts yet. (bug 227632)
@@ -615,7 +615,7 @@ LoginManagerPrompter.prototype = {
         checkbox.value = true;
       }
 
-      var canRememberLogin = Services.logins.getLoginSavingEnabled(hostname);
+      var canRememberLogin = Services.logins.getLoginSavingEnabled(origin);
       if (!this._allowRememberLogin) {
         canRememberLogin = false;
       }
@@ -642,7 +642,7 @@ LoginManagerPrompter.prototype = {
       let topLevelHost = browser.currentURI.host;
       baseDomain = PromptAbuseHelper.getBaseDomainOrFallback(topLevelHost);
     } catch (e) {
-      baseDomain = PromptAbuseHelper.getBaseDomainOrFallback(hostname);
+      baseDomain = PromptAbuseHelper.getBaseDomainOrFallback(origin);
     }
 
     if (!ok) {
@@ -697,11 +697,11 @@ LoginManagerPrompter.prototype = {
       // changed, save as a new login.
       let newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
                      createInstance(Ci.nsILoginInfo);
-      newLogin.init(hostname, null, httpRealm,
+      newLogin.init(origin, null, httpRealm,
                     username, password, "", "");
       if (!selectedLogin) {
         this.log("New login seen for " + username +
-                 " @ " + hostname + " (" + httpRealm + ")");
+                 " @ " + origin + " (" + httpRealm + ")");
 
         if (notifyObj) {
           this._showLoginCaptureDoorhanger(newLogin, "password-save", {
@@ -713,7 +713,7 @@ LoginManagerPrompter.prototype = {
         }
       } else if (password != selectedLogin.password) {
         this.log("Updating password for " + username +
-                 " @ " + hostname + " (" + httpRealm + ")");
+                 " @ " + origin + " (" + httpRealm + ")");
         if (notifyObj) {
           this._showChangeLoginNotification(notifyObj,
                                             selectedLogin, newLogin);
@@ -745,9 +745,9 @@ LoginManagerPrompter.prototype = {
 
       cancelable = this._newAsyncPromptConsumer(aCallback, aContext);
 
-      var [hostname, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
+      var [origin, httpRealm] = this._getAuthTarget(aChannel, aAuthInfo);
 
-      var hashKey = aLevel + "|" + hostname + "|" + httpRealm;
+      var hashKey = aLevel + "|" + origin + "|" + httpRealm;
       this.log("Async prompt key = " + hashKey);
       var asyncPrompt = this._factory._asyncPrompts[hashKey];
       if (asyncPrompt) {
@@ -865,7 +865,7 @@ LoginManagerPrompter.prototype = {
 
     let brandBundle = Services.strings.createBundle(BRAND_BUNDLE);
     let brandShortName = brandBundle.GetStringFromName("brandShortName");
-    let host = this._getShortDisplayHost(login.hostname);
+    let host = this._getShortDisplayHost(login.origin);
     let promptMsg = type == "password-save" ? this._getLocalizedString(saveMsgNames.prompt, [brandShortName, host])
                                             : this._getLocalizedString(changeMsgNames.prompt);
 
@@ -895,8 +895,8 @@ LoginManagerPrompter.prototype = {
 
     let updateButtonLabel = () => {
       let foundLogins = LoginHelper.searchLoginsWithObject({
-        formSubmitURL: login.formSubmitURL,
-        hostname: login.hostname,
+        formActionOrigin: login.formActionOrigin,
+        origin: login.origin,
         httpRealm: login.httpRealm,
         schemeUpgrades: LoginHelper.schemeUpgrades,
       });
@@ -968,8 +968,8 @@ LoginManagerPrompter.prototype = {
 
     let persistData = () => {
       let foundLogins = LoginHelper.searchLoginsWithObject({
-        formSubmitURL: login.formSubmitURL,
-        hostname: login.hostname,
+        formActionOrigin: login.formActionOrigin,
+        origin: login.origin,
         httpRealm: login.httpRealm,
         schemeUpgrades: LoginHelper.schemeUpgrades,
       });
@@ -979,13 +979,13 @@ LoginManagerPrompter.prototype = {
         "scheme",
         "timePasswordChanged",
       ];
-      logins = LoginHelper.dedupeLogins(logins, ["username"], resolveBy, login.hostname);
+      logins = LoginHelper.dedupeLogins(logins, ["username"], resolveBy, login.origin);
 
       if (logins.length == 0) {
         // The original login we have been provided with might have its own
         // metadata, but we don't want it propagated to the newly created one.
-        Services.logins.addLogin(new LoginInfo(login.hostname,
-                                               login.formSubmitURL,
+        Services.logins.addLogin(new LoginInfo(login.origin,
+                                               login.formActionOrigin,
                                                login.httpRealm,
                                                login.username,
                                                login.password,
@@ -1037,7 +1037,7 @@ LoginManagerPrompter.prototype = {
         callback: () => {
           histogram.add(PROMPT_NEVER);
           Services.obs.notifyObservers(null, "weave:telemetry:histogram", histogramName);
-          Services.logins.setLoginSavingEnabled(login.hostname, false);
+          Services.logins.setLoginSavingEnabled(login.origin, false);
           browser.focus();
         },
       });
@@ -1127,7 +1127,7 @@ LoginManagerPrompter.prototype = {
         (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1) +
         (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2);
 
-    var displayHost = this._getShortDisplayHost(aLogin.hostname);
+    var displayHost = this._getShortDisplayHost(aLogin.origin);
 
     var dialogText;
     if (aLogin.username) {
@@ -1154,10 +1154,10 @@ LoginManagerPrompter.prototype = {
     //   1 - Ignore the login this time
     //   2 - Never save logins for this site
     if (userChoice == 2) {
-      this.log("Disabling " + aLogin.hostname + " logins by request.");
-      Services.logins.setLoginSavingEnabled(aLogin.hostname, false);
+      this.log("Disabling " + aLogin.origin + " logins by request.");
+      Services.logins.setLoginSavingEnabled(aLogin.origin, false);
     } else if (userChoice == 0) {
-      this.log("Saving login for " + aLogin.hostname);
+      this.log("Saving login for " + aLogin.origin);
       Services.logins.addLogin(aLogin);
     } else {
       // userChoice == 1 --> just ignore the login.
@@ -1209,8 +1209,8 @@ LoginManagerPrompter.prototype = {
    *        dismissed on being shown.
    */
   _showChangeLoginNotification(aNotifyObj, aOldLogin, aNewLogin, dismissed = false) {
-    aOldLogin.hostname = aNewLogin.hostname;
-    aOldLogin.formSubmitURL = aNewLogin.formSubmitURL;
+    aOldLogin.origin = aNewLogin.origin;
+    aOldLogin.formActionOrigin = aNewLogin.formActionOrigin;
     aOldLogin.password = aNewLogin.password;
     aOldLogin.username = aNewLogin.username;
     this._showLoginCaptureDoorhanger(aOldLogin, "password-change", {dismissed});
@@ -1280,8 +1280,8 @@ LoginManagerPrompter.prototype = {
       this.log("Updating password for user " + selectedLogin.username);
       var newLoginWithUsername = Cc["@mozilla.org/login-manager/loginInfo;1"].
                      createInstance(Ci.nsILoginInfo);
-      newLoginWithUsername.init(aNewLogin.hostname,
-                                aNewLogin.formSubmitURL, aNewLogin.httpRealm,
+      newLoginWithUsername.init(aNewLogin.origin,
+                                aNewLogin.formActionOrigin, aNewLogin.httpRealm,
                                 selectedLogin.username, aNewLogin.password,
                                 selectedLogin.usernameField, aNewLogin.passwordField);
       this._updateLogin(selectedLogin, newLoginWithUsername);
@@ -1301,8 +1301,8 @@ LoginManagerPrompter.prototype = {
     var propBag = Cc["@mozilla.org/hash-property-bag;1"].
                   createInstance(Ci.nsIWritablePropertyBag);
     if (aNewLogin) {
-      propBag.setProperty("formSubmitURL", aNewLogin.formSubmitURL);
-      propBag.setProperty("hostname", aNewLogin.hostname);
+      propBag.setProperty("formActionOrigin", aNewLogin.formActionOrigin);
+      propBag.setProperty("origin", aNewLogin.origin);
       propBag.setProperty("password", aNewLogin.password);
       propBag.setProperty("username", aNewLogin.username);
       // Explicitly set the password change time here (even though it would
@@ -1431,10 +1431,10 @@ LoginManagerPrompter.prototype = {
   /**
    * The aURI parameter may either be a string uri, or an nsIURI instance.
    *
-   * Returns the hostname to use in a nsILoginInfo object (for example,
+   * Returns the origin to use in a nsILoginInfo object (for example,
    * "http://example.com").
    */
-  _getFormattedHostname(aURI) {
+  _getFormattedOrigin(aURI) {
     let uri;
     if (aURI instanceof Ci.nsIURI) {
       uri = aURI;
@@ -1447,7 +1447,7 @@ LoginManagerPrompter.prototype = {
 
 
   /**
-   * Converts a login's hostname field (a URL) to a short string for
+   * Converts a login's origin field (a URL) to a short string for
    * prompting purposes. Eg, "http://foo.com" --> "foo.com", or
    * "ftp://www.site.co.uk" --> "site.co.uk".
    */
@@ -1473,11 +1473,11 @@ LoginManagerPrompter.prototype = {
 
 
   /**
-   * Returns the hostname and realm for which authentication is being
+   * Returns the origin and realm for which authentication is being
    * requested, in the format expected to be used with nsILoginInfo.
    */
   _getAuthTarget(aChannel, aAuthInfo) {
-    var hostname, realm;
+    var origin, realm;
 
     // If our proxy is demanding authentication, don't use the
     // channel's actual destination.
@@ -1496,28 +1496,28 @@ LoginManagerPrompter.prototype = {
       // so that it's more obvious what the login is for.
       var idnService = Cc["@mozilla.org/network/idn-service;1"].
                        getService(Ci.nsIIDNService);
-      hostname = "moz-proxy://" +
+      origin = "moz-proxy://" +
                   idnService.convertUTF8toACE(info.host) +
                   ":" + info.port;
       realm = aAuthInfo.realm;
       if (!realm) {
-        realm = hostname;
+        realm = origin;
       }
 
-      return [hostname, realm];
+      return [origin, realm];
     }
 
-    hostname = this._getFormattedHostname(aChannel.URI);
+    origin = this._getFormattedOrigin(aChannel.URI);
 
     // If a HTTP WWW-Authenticate header specified a realm, that value
     // will be available here. If it wasn't set or wasn't HTTP, we'll use
-    // the formatted hostname instead.
+    // the formatted origin instead.
     realm = aAuthInfo.realm;
     if (!realm) {
-      realm = hostname;
+      realm = origin;
     }
 
-    return [hostname, realm];
+    return [origin, realm];
   },
 
 

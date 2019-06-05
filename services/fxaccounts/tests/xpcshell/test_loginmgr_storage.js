@@ -218,7 +218,7 @@ add_task(async function test_uidMigration() {
   let loginInfo = new Components.Constructor(
    "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
   let login = new loginInfo(FXA_PWDMGR_HOST,
-                            null, // aFormSubmitURL,
+                            null, // aFormActionOrigin,
                             FXA_PWDMGR_REALM, // aHttpRealm,
                             "foo@bar.com", // aUsername
                             JSON.stringify(contents), // aPassword

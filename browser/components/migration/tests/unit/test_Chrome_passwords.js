@@ -12,8 +12,8 @@ const TEST_LOGINS = [
     id: 1, // id of the row in the chrome login db
     username: "username",
     password: "password",
-    hostname: "https://c9.io",
-    formSubmitURL: "https://c9.io",
+    origin: "https://c9.io",
+    formActionOrigin: "https://c9.io",
     httpRealm: null,
     usernameField: "inputEmail",
     passwordField: "inputPassword",
@@ -25,8 +25,8 @@ const TEST_LOGINS = [
     id: 2,
     username: "username@gmail.com",
     password: "password2",
-    hostname: "https://accounts.google.com",
-    formSubmitURL: "https://accounts.google.com",
+    origin: "https://accounts.google.com",
+    formActionOrigin: "https://accounts.google.com",
     httpRealm: null,
     usernameField: "Email",
     passwordField: "Passwd",
@@ -38,8 +38,8 @@ const TEST_LOGINS = [
     id: 3,
     username: "username",
     password: "password3",
-    hostname: "https://www.facebook.com",
-    formSubmitURL: "https://www.facebook.com",
+    origin: "https://www.facebook.com",
+    formActionOrigin: "https://www.facebook.com",
     httpRealm: null,
     usernameField: "email",
     passwordField: "pass",
@@ -51,8 +51,8 @@ const TEST_LOGINS = [
     id: 4,
     username: "user",
     password: "اقرأPÀßwörd",
-    hostname: "http://httpbin.org",
-    formSubmitURL: null,
+    origin: "http://httpbin.org",
+    formActionOrigin: null,
     httpRealm: "me@kennethreitz.com", // Digest auth.
     usernameField: "",
     passwordField: "",
@@ -64,8 +64,8 @@ const TEST_LOGINS = [
     id: 5,
     username: "buser",
     password: "bpassword",
-    hostname: "http://httpbin.org",
-    formSubmitURL: null,
+    origin: "http://httpbin.org",
+    formActionOrigin: null,
     httpRealm: "Fake Realm", // Basic auth.
     usernameField: "",
     passwordField: "",
@@ -77,8 +77,8 @@ const TEST_LOGINS = [
     id: 6,
     username: "username",
     password: "password6",
-    hostname: "https://www.example.com",
-    formSubmitURL: "", // NULL `action_url`
+    origin: "https://www.example.com",
+    formActionOrigin: "", // NULL `action_url`
     httpRealm: null,
     usernameField: "",
     passwordField: "pass",
@@ -107,10 +107,10 @@ function checkLoginsAreEqual(passwordManagerLogin, chromeLogin, id) {
                "The two logins ID " + id + " have the same username");
   Assert.equal(passwordManagerLogin.password, chromeLogin.password,
                "The two logins ID " + id + " have the same password");
-  Assert.equal(passwordManagerLogin.hostname, chromeLogin.hostname,
-               "The two logins ID " + id + " have the same hostname");
-  Assert.equal(passwordManagerLogin.formSubmitURL, chromeLogin.formSubmitURL,
-               "The two logins ID " + id + " have the same formSubmitURL");
+  Assert.equal(passwordManagerLogin.origin, chromeLogin.origin,
+               "The two logins ID " + id + " have the same origin");
+  Assert.equal(passwordManagerLogin.formActionOrigin, chromeLogin.formActionOrigin,
+               "The two logins ID " + id + " have the same formActionOrigin");
   Assert.equal(passwordManagerLogin.httpRealm, chromeLogin.httpRealm,
                "The two logins ID " + id + " have the same httpRealm");
   Assert.equal(passwordManagerLogin.usernameField, chromeLogin.usernameField,
@@ -128,7 +128,7 @@ function checkLoginsAreEqual(passwordManagerLogin, chromeLogin, id) {
 function generateDifferentLogin(login) {
   let newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
 
-  newLogin.init(login.hostname, login.formSubmitURL, null,
+  newLogin.init(login.origin, login.formActionOrigin, null,
                 login.username, login.password + 1, login.usernameField + 1,
                 login.passwordField + 1);
   newLogin.QueryInterface(Ci.nsILoginMetaInfo);

@@ -296,7 +296,8 @@ class nsCookieService final : public nsICookieService,
                             bool& aEqualsFound);
   static bool ParseAttributes(nsCString& aCookieHeader,
                               mozilla::net::CookieStruct& aCookieData,
-                              nsACString& aExpires, nsACString& aMaxage);
+                              nsACString& aExpires, nsACString& aMaxage,
+                              bool& aAcceptedByParser);
   bool RequireThirdPartyCheck();
   static bool CheckDomain(mozilla::net::CookieStruct& aCookieData,
                           nsIURI* aHostURI, const nsCString& aBaseDomain,

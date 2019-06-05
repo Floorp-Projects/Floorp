@@ -61,12 +61,12 @@ add_task(async function test_input_events() {
 add_task(async function test_list_filtered() {
   const LOGINS = [{
     guid: "123456789",
-    hostname: "https://example.com",
+    origin: "https://example.com",
     username: "user1",
     password: "pass1",
   }, {
     guid: "987654321",
-    hostname: "https://example.com",
+    origin: "https://example.com",
     username: "user2",
     password: "pass2",
   }];
@@ -83,9 +83,9 @@ add_task(async function test_list_filtered() {
     [LOGINS[0].password + "-notfound", 0],
     [LOGINS[0].password.substr(2, 3), 0],
     ["", 2],
-    [LOGINS[0].hostname, 2],
-    [LOGINS[0].hostname + "-notfound", 0],
-    [LOGINS[0].hostname.substr(2, 3), 2],
+    [LOGINS[0].origin, 2],
+    [LOGINS[0].origin + "-notfound", 0],
+    [LOGINS[0].origin.substr(2, 3), 2],
     ["", 2],
     // The guid is not used for search.
     [LOGINS[0].guid, 0],

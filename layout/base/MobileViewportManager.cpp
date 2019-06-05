@@ -184,13 +184,13 @@ CSSToScreenScale MobileViewportManager::ClampZoom(
 CSSToScreenScale MobileViewportManager::ScaleZoomWithDisplayWidth(
     const CSSToScreenScale& aZoom, const float& aDisplayWidthChangeRatio,
     const CSSSize& aNewViewport, const CSSSize& aOldViewport) {
-  float cssViewportChangeRatio = (aOldViewport.width == 0)
-                                     ? 1.0f
-                                     : aNewViewport.width / aOldViewport.width;
-  CSSToScreenScale newZoom(aZoom.scale * aDisplayWidthChangeRatio /
-                           cssViewportChangeRatio);
-  MVM_LOG("%p: Old zoom was %f, changed by %f/%f to %f\n", this, aZoom.scale,
-          aDisplayWidthChangeRatio, cssViewportChangeRatio, newZoom.scale);
+  float inverseCssWidthChangeRatio =
+      (aNewViewport.width == 0) ? 1.0f
+                                : aOldViewport.width / aNewViewport.width;
+  CSSToScreenScale newZoom(aZoom.scale * aDisplayWidthChangeRatio *
+                           inverseCssWidthChangeRatio);
+  MVM_LOG("%p: Old zoom was %f, changed by %f * %f to %f\n", this, aZoom.scale,
+          aDisplayWidthChangeRatio, inverseCssWidthChangeRatio, newZoom.scale);
   return newZoom;
 }
 
@@ -295,9 +295,14 @@ void MobileViewportManager::UpdateResolution(
         // result of clamping to either the minimum or maximum zoom level
         // allowed by the viewport. If we naively scale the zoom level with
         // the change in the display width, we might be scaling one of these
-        // clamped values. What we really want to do is to make scaling of the
-        // zoom aware of these minimum and maximum clamping points, so that we
-        // keep display width changes completely reversible.
+        // previously clamped values. What we really want to do is to make
+        // scaling of the zoom aware of these minimum and maximum clamping
+        // points for the existing content size, so that we keep display
+        // width changes completely reversible.
+
+        // We don't consider here if we are scaling to a zoom value outside
+        // of our viewport limits, because we'll clamp to the viewport limits
+        // as a final step.
 
         // Because of the behavior of ShrinkToDisplaySizeIfNeeded, we are
         // choosing zoom clamping points based on the content size of the
@@ -325,8 +330,7 @@ void MobileViewportManager::UpdateResolution(
         float c(oldDisplaySize.width);
         float d(newDisplaySize.width);
 
-        // For both oldDisplaySize and aDisplaySize, the values are in one of
-        // three "zones":
+        // The oldDisplaySize value is in one of three "zones":
         // 1) Less than or equal to minZoomDisplaySize.
         // 2) Between minZoomDisplaySize and maxZoomDisplaySize.
         // 3) Greater than or equal to maxZoomDisplaySize.
@@ -334,26 +338,24 @@ void MobileViewportManager::UpdateResolution(
         // Depending on which zone each are in, the adjusted ratio is shown in
         // the table below (using the a-b-c-d coding from above):
 
-        //   d | 1 | 2 | 3 |
-        // c   +---+---+---+
-        //     | a | d | b |
-        // 1   | a | a | a |
-        //     +---+---+---+
-        //     | a | d | b |
-        // 2   | c | c | c |
-        //     +---+---+---+
-        //     | a | d | b |
-        // 3   | b | b | b |
-        //     +---+---+---+
+        // c   +---+
+        //     | d |
+        // 1   | a |
+        //     +---+
+        //     | d |
+        // 2   | c |
+        //     +---+
+        //     | d |
+        // 3   | b |
+        //     +---+
 
-        // Conveniently, the numerator is just d clamped to a..b, and the
-        // denominator is c clamped to a..b.
-        float numerator = clamped(d, a, b);
+        // Conveniently, the denominator is c clamped to a..b.
         float denominator = clamped(c, a, b);
 
-        float adjustedRatio = numerator / denominator;
-        newZoom = Some(ScaleZoomWithDisplayWidth(
-            zoom, adjustedRatio, viewportSize, mMobileViewportSize));
+        float adjustedRatio = d / denominator;
+        CSSToScreenScale adjustedZoom = ScaleZoomWithDisplayWidth(
+            zoom, adjustedRatio, viewportSize, mMobileViewportSize);
+        newZoom = Some(ClampZoom(adjustedZoom, aViewportInfo));
       }
     }
   } else {  // aType == UpdateType::ContentSize

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test that logins with non-matching formSubmitURL appear in autocomplete dropdown</title>
+  <title>Test that logins with non-matching formActionOrigin appear in autocomplete dropdown</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
@@ -10,7 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-Login Manager test: logins with non-matching formSubmitURL appear in autocomplete dropdown
+Login Manager test: logins with non-matching formActionOrigin appear in autocomplete dropdown
 
 <script>
 var chromeScript = runChecksAfterCommonInit();
@@ -74,10 +74,10 @@ add_task(async function test_form1_initial_empty() {
 });
 
 /* For this testcase, the only login that exists for this origin
- * is one with a different formSubmitURL, so the login will appear
+ * is one with a different formActionOrigin, so the login will appear
  * in the autocomplete popup.
  */
-add_task(async function test_form1_menu_shows_logins_for_different_formSubmitURL() {
+add_task(async function test_form1_menu_shows_logins_for_different_formActionOrigin() {
   await SimpleTest.promiseFocus(window);
   // Trigger autocomplete popup
   restoreForm();

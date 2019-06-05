@@ -193,6 +193,18 @@ var setViewportSize = async function(ui, manager, width, height) {
   }
 };
 
+// This performs the same function as setViewportSize, but additionally
+// ensures that reflow of the viewport has completed.
+var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
+  await setViewportSize(ui, manager, width, height);
+  const reflowed = ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+    return new Promise(resolve => {
+      content.requestAnimationFrame(resolve);
+    });
+  });
+  await reflowed;
+};
+
 function getViewportDevicePixelRatio(ui) {
   return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
     return content.devicePixelRatio;
@@ -564,4 +576,43 @@ function rotateViewport(ui) {
   const { document } = ui.toolWindow;
   const rotateButton = document.getElementById("rotate-button");
   rotateButton.click();
+}
+
+// Call this to switch between on/off support for meta viewports.
+async function setTouchAndMetaViewportSupport(ui, value) {
+  const reloadNeeded = await ui.updateTouchSimulation(value);
+  if (reloadNeeded) {
+    info("Reload is needed -- waiting for it.");
+    const reload = waitForViewportLoad(ui);
+    const browser = ui.getViewportBrowser();
+    browser.reload();
+    await reload;
+  }
+  return reloadNeeded;
+}
+
+// This function checks that zoom, layout viewport width and height
+// are all as expected.
+async function testViewportZoomWidthAndHeight(message, ui, zoom, width, height) {
+  if (typeof zoom !== "undefined") {
+    const resolution = await spawnViewportTask(ui, {}, function() {
+      return content.windowUtils.getResolution();
+    });
+    is(resolution, zoom, message + " should have expected zoom.");
+  }
+
+  if (typeof width !== "undefined" || typeof height !== "undefined") {
+    const layoutSize = await spawnViewportTask(ui, {}, function() {
+      return {
+        width: content.screen.width,
+        height: content.screen.height,
+      };
+    });
+    if (typeof width !== "undefined") {
+      is(layoutSize.width, width, message + " should have expected layout width.");
+    }
+    if (typeof height !== "undefined") {
+      is(layoutSize.height, height, message + " should have expected layout height.");
+    }
+  }
 }

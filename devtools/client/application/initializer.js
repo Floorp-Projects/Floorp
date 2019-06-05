@@ -19,6 +19,9 @@ const { l10n } = require("./src/modules/l10n");
 const { configureStore } = require("./src/create-store");
 const actions = require("./src/actions/index");
 
+const { WorkersListener } =
+  require("devtools/client/shared/workers-listener");
+
 const App = createFactory(require("./src/components/App"));
 
 /**
@@ -43,14 +46,9 @@ window.Application = {
         return toolbox.selectTool(toolId);
       },
     };
-    this.toolbox.target.on("workerListChanged", this.updateWorkers);
-    this.client.mainRoot.on("serviceWorkerRegistrationListChanged", this.updateWorkers);
-    this.client.mainRoot.on("processListChanged", this.updateWorkers);
-    this.client.mainRoot.onFront("serviceWorkerRegistration", front => {
-      this.serviceWorkerRegistrationFronts.push(front);
-      front.on("push-subscription-modified", this.updateWorkers);
-      front.on("registration-changed", this.updateWorkers);
-    });
+
+    this.workersListener = new WorkersListener(this.client.mainRoot);
+    this.workersListener.addListener(this.updateWorkers);
     this.toolbox.target.on("navigate", this.updateDomain);
 
     this.updateDomain();
@@ -72,24 +70,12 @@ window.Application = {
     this.actions.updateWorkers(service);
   },
 
-  removeRegistrationFrontListeners() {
-    for (const front of this.serviceWorkerRegistrationFronts) {
-      front.off("push-subscription-modified", this.updateWorkers);
-      front.off("registration-changed", this.updateWorkers);
-    }
-    this.serviceWorkerRegistrationFronts = [];
-  },
-
   updateDomain() {
     this.actions.updateDomain(this.toolbox.target.url);
   },
 
   destroy() {
-    this.toolbox.target.off("workerListChanged", this.updateWorkers);
-    this.client.mainRoot.off("serviceWorkerRegistrationListChanged",
-      this.updateWorkers);
-    this.client.mainRoot.off("processListChanged", this.updateWorkers);
-    this.removeRegistrationFrontListeners();
+    this.workersListener.removeListener();
     this.toolbox.target.off("navigate", this.updateDomain);
 
     unmountComponentAtNode(this.mount);

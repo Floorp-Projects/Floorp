@@ -19,8 +19,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   const LOGIN_FIELDS = {
-    hostname: "http://example.org/tests/robocop/robocop_blank_01.html",
-    formSubmitUrl: "",
+    origin: "http://example.org/tests/robocop/robocop_blank_01.html",
+    formActionOrigin: "",
     realmAny: null,
     username: "username1",
     password: "password1",
@@ -31,8 +31,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   const LoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", "nsILoginInfo", "init");
 
   function add_login(login) {
-    let newLogin = new LoginInfo(login.hostname,
-                                 login.formSubmitUrl,
+    let newLogin = new LoginInfo(login.origin,
+                                 login.formActionOrigin,
                                  login.realmAny,
                                  login.username,
                                  login.password,
@@ -77,8 +77,8 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     let logins_list = browser.contentDocument.getElementById("logins-list");
 
     // Test that the (single) entry added in setup is correct.
-    let hostname = logins_list.querySelector(".hostname");
-    is(hostname.textContent, LOGIN_FIELDS.hostname, "hostname is correct");
+    let origin = logins_list.querySelector(".origin");
+    is(origin.textContent, LOGIN_FIELDS.origin, "origin is correct");
 
     let username = logins_list.querySelector(".username");
     is(username.textContent, LOGIN_FIELDS.username, "username is correct");
