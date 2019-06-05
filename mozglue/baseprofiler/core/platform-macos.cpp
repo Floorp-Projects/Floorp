@@ -33,6 +33,9 @@
 
 // this port is based off of v8 svn revision 9837
 
+namespace mozilla {
+namespace baseprofiler {
+
 int profiler_current_process_id() { return getpid(); }
 
 int profiler_current_thread_id() {
@@ -192,3 +195,6 @@ void Registers::SyncPopulate() {
   mLR = 0;
 }
 #endif
+
+}  // namespace baseprofiler
+}  // namespace mozilla
