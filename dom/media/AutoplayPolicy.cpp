@@ -21,8 +21,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/Services.h"
-#include "nsIPermissionManager.h"
 
 mozilla::LazyLogModule gAutoplayPermissionLog("Autoplay");
 
@@ -65,18 +63,18 @@ static bool IsActivelyCapturingOrHasAPermission(nsPIDOMWindowInner* aWindow) {
                                                NS_LITERAL_CSTRING("screen")));
 }
 
-static uint32_t SiteAutoplayPerm(const Document* aDocument) {
-  nsIPrincipal* principal = aDocument->NodePrincipal();
-  if (!principal) {
-    return nsIPermissionManager::DENY_ACTION;
-  }
-  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-  NS_ENSURE_TRUE(permMgr, nsIPermissionManager::DENY_ACTION);
+static bool IsSiteInAutoplayWhiteList(const Document* aDocument) {
+  return aDocument ? nsContentUtils::IsExactSitePermAllow(
+                         aDocument->NodePrincipal(),
+                         NS_LITERAL_CSTRING("autoplay-media"))
+                   : false;
+}
 
-  uint32_t perm;
-  nsresult rv = permMgr->TestExactPermissionFromPrincipal(principal, NS_LITERAL_CSTRING("autoplay-media"), &perm);
-  NS_ENSURE_SUCCESS(rv, nsIPermissionManager::DENY_ACTION);
-  return perm;
+static bool IsSiteInAutoplayBlackList(const Document* aDocument) {
+  return aDocument ? nsContentUtils::IsExactSitePermDeny(
+                         aDocument->NodePrincipal(),
+                         NS_LITERAL_CSTRING("autoplay-media"))
+                   : false;
 }
 
 static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
@@ -121,24 +119,25 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
 static uint32_t DefaultAutoplayBehaviour() {
   int prefValue =
       Preferences::GetInt("media.autoplay.default", nsIAutoplay::ALLOWED);
-  if (prefValue == nsIAutoplay::ALLOWED) {
-    return nsIAutoplay::ALLOWED;
+  if (prefValue < nsIAutoplay::ALLOWED || prefValue > nsIAutoplay::BLOCKED) {
+    // Invalid pref values are just converted to BLOCKED.
+    return nsIAutoplay::BLOCKED;
   }
-  if (prefValue == nsIAutoplay::BLOCKED_ALL) {
-    return nsIAutoplay::BLOCKED_ALL;
-  }
-  return nsIAutoplay::BLOCKED;
+  return prefValue;
 }
 
-static bool IsMediaElementInaudible(const HTMLMediaElement& aElement) {
-  if (aElement.Volume() == 0.0 || aElement.Muted()) {
-    AUTOPLAY_LOG("Media %p is muted.", &aElement);
+static bool IsMediaElementAllowedToPlay(const HTMLMediaElement& aElement) {
+  const bool isAllowedMuted =
+      Preferences::GetBool("media.autoplay.allow-muted", true);
+  if ((aElement.Volume() == 0.0 || aElement.Muted()) && isAllowedMuted) {
+    AUTOPLAY_LOG("Allow muted media %p to autoplay.", &aElement);
     return true;
   }
 
   if (!aElement.HasAudio() &&
-      aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA) {
-    AUTOPLAY_LOG("Media %p has no audio track", &aElement);
+      aElement.ReadyState() >= HTMLMediaElement_Binding::HAVE_METADATA &&
+      isAllowedMuted) {
+    AUTOPLAY_LOG("Allow media %p without audio track to autoplay", &aElement);
     return true;
   }
 
@@ -154,13 +153,14 @@ static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
 static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
   return DefaultAutoplayBehaviour() != nsIAutoplay::ALLOWED &&
          Preferences::GetBool("media.autoplay.block-webaudio", false) &&
-         StaticPrefs::MediaAutoplayUserGesturesNeeded();
+         Preferences::GetBool("media.autoplay.enabled.user-gestures-needed",
+                              false);
 }
 
 /* static */
 bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
     const HTMLMediaElement& aElement) {
-  return IsMediaElementInaudible(aElement) ||
+  return IsMediaElementAllowedToPlay(aElement) ||
          IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
 }
 
@@ -170,52 +170,42 @@ bool AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(
   return IsAudioContextAllowedToPlay(aContext);
 }
 
-static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {
-  if (!StaticPrefs::MediaAutoplayUserGesturesNeeded()) {
-  // If element is blessed, it would always be allowed to play().
-  return aElement.IsBlessed() || EventStateManager::IsHandlingUserInput();
+static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
+  /**
+   * The autoplay checking has 4 different phases,
+   * 1. check whether media element itself meets the autoplay condition
+   * 2. check whethr the site is in the autoplay whitelist
+   * 3. check global autoplay setting and check wether the site is in the
+   *    autoplay blacklist.
+   * 4. check whether media is allowed under current blocking model
+   *    (click-to-play or user-gesture-activation)
+   */
+  if (IsMediaElementAllowedToPlay(aElement)) {
+    return true;
+  }
+
+  Document* approver = ApproverDocOf(*aElement.OwnerDoc());
+  if (IsSiteInAutoplayWhiteList(approver)) {
+    AUTOPLAY_LOG(
+        "Allow autoplay as document has permanent autoplay permission.");
+    return true;
+  }
+
+  if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED &&
+      !(IsSiteInAutoplayBlackList(approver) &&
+        StaticPrefs::MediaAutoplayBlackListOverrideDefault())) {
+    AUTOPLAY_LOG(
+        "Allow autoplay as global autoplay setting is allowing autoplay by "
+        "default.");
+    return true;
+  }
+
+  if (!Preferences::GetBool("media.autoplay.enabled.user-gestures-needed",
+                            false)) {
+    // If element is blessed, it would always be allowed to play().
+    return aElement.IsBlessed() || EventStateManager::IsHandlingUserInput();
   }
   return IsWindowAllowedToPlay(aElement.OwnerDoc()->GetInnerWindow());
-}
-
-static bool IsAllowedToPlayInternal(const HTMLMediaElement& aElement) {
-  Document* approver = ApproverDocOf(*aElement.OwnerDoc());
-
-  bool isInaudible = IsMediaElementInaudible(aElement);
-  bool isUsingAutoplayModel = IsAllowedToPlayByBlockingModel(aElement);
-
-  uint32_t defaultBehaviour = DefaultAutoplayBehaviour();
-  uint32_t sitePermission = SiteAutoplayPerm(approver);
-
-  AUTOPLAY_LOG("IsAllowedToPlayInternal, isInaudible=%d,"
-    "isUsingAutoplayModel=%d, sitePermission=%d, defaultBehaviour=%d",
-    isInaudible, isUsingAutoplayModel, sitePermission, defaultBehaviour);
-
-  // For site permissions we store permissionManager values except
-  // for BLOCKED_ALL, for the default pref values we store
-  // nsIAutoplay values.
-  if (sitePermission == nsIPermissionManager::ALLOW_ACTION) {
-    return true;
-  }
-
-  if (sitePermission == nsIPermissionManager::DENY_ACTION) {
-    return isInaudible || isUsingAutoplayModel;
-  }
-
-  if (sitePermission == nsIAutoplay::BLOCKED_ALL) {
-    return isUsingAutoplayModel;
-  }
-
-  if (defaultBehaviour == nsIAutoplay::ALLOWED) {
-    return true;
-  }
-
-  if (defaultBehaviour == nsIAutoplay::BLOCKED) {
-    return isInaudible || isUsingAutoplayModel;
-  }
-
-  MOZ_ASSERT(defaultBehaviour == nsIAutoplay::BLOCKED_ALL);
-  return isUsingAutoplayModel;
 }
 
 /* static */
@@ -245,17 +235,14 @@ bool AutoplayPolicy::IsAllowedToPlay(const AudioContext& aContext) {
   Document* approver = aContext.GetParentObject()
                            ? ApproverDocOf(*(window->GetExtantDoc()))
                            : nullptr;
-  uint32_t sitePermission = SiteAutoplayPerm(approver);
-
-  if (sitePermission == nsIPermissionManager::ALLOW_ACTION) {
+  if (IsSiteInAutoplayWhiteList(approver)) {
     AUTOPLAY_LOG(
         "Allow autoplay as document has permanent autoplay permission.");
     return true;
   }
 
   if (DefaultAutoplayBehaviour() == nsIAutoplay::ALLOWED &&
-      sitePermission != nsIPermissionManager::DENY_ACTION &&
-      sitePermission != nsIAutoplay::BLOCKED_ALL) {
+      !IsSiteInAutoplayBlackList(approver)) {
     AUTOPLAY_LOG(
         "Allow autoplay as global autoplay setting is allowing autoplay by "
         "default.");
@@ -276,7 +263,7 @@ DocumentAutoplayPolicy AutoplayPolicy::IsAllowedToPlay(
     return DocumentAutoplayPolicy::Allowed;
   }
 
-  if (DefaultAutoplayBehaviour() == nsIAutoplay::BLOCKED) {
+  if (StaticPrefs::MediaAutoplayAllowMuted()) {
     return DocumentAutoplayPolicy::Allowed_muted;
   }
 
