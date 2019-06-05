@@ -8,7 +8,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsCOMPtr.h"
 #include "nsTreeSelection.h"
-#include "nsIBoxObject.h"
 #include "XULTreeElement.h"
 #include "nsITreeView.h"
 #include "nsString.h"

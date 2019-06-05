@@ -15,26 +15,14 @@ if CONFIG['ENABLE_TESTS']:
     MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
     BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-XPIDL_SOURCES += [
-    'nsIBoxObject.idl',
-]
-
-XPIDL_MODULE = 'layout_xul'
-
 EXPORTS += [
     'nsBox.h',
     'nsIScrollbarMediator.h',
-    'nsPIBoxObject.h',
     'nsXULPopupManager.h',
     'nsXULTooltipListener.h',
 ]
 
-EXPORTS.mozilla.dom += [
-    'BoxObject.h',
-]
-
 UNIFIED_SOURCES += [
-    'BoxObject.cpp',
     'nsBox.cpp',
     'nsBoxFrame.cpp',
     'nsBoxLayout.cpp',
