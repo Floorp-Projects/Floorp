@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -64,14 +65,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        job = Job()
-        setupAccountUI()
-        updateSignInVisibility()
-        displayAccountErrorIfNecessary()
-
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener { sharedPreferences, key ->
+    private val preferenceChangeListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
             try {
                 context?.let {
                     it.components.analytics.metrics.track(
@@ -85,6 +80,15 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
                 // The setting is not a boolean, not tracked
             }
         }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        job = Job()
+        setupAccountUI()
+        updateSignInVisibility()
+        displayAccountErrorIfNecessary()
+
+        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -212,6 +216,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onDestroy() {
         super.onDestroy()
         job.cancel()
+        preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener)
     }
 
     private fun setupAccountUI() {
