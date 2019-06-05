@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1551798 - SameSite=lax by default</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+const CROSS_ORIGIN = "http://example.com/";
+const PATH = "tests/dom/security/test/general/closeWindow.sjs";
+
+async function realTest(noneRequiresSecure) {
+  let types = ["unset", "lax", "none"];
+  for (let i = 0; i < types.length; ++i) {
+    info("Loading a new top-level page (" + types[i] + ")");
+    await new Promise(resolve => {
+      window.addEventListener("message", _ => {
+        resolve();
+      }, { once: true });
+      window.open(CROSS_ORIGIN + PATH + "?" + types[i]);
+    });
+  }
+
+  info("Check cookies");
+  let chromeScript = SpecialPowers.loadChromeScript(() => {
+    const {sendAsyncMessage} = this;
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    let cookies = { test: null, test2: null, test3: null };
+
+    for (let cookie of Services.cookies.enumerator) {
+      if (cookie.host != "example.com") continue;
+
+      if (cookie.name == "test" && cookie.value == "wow") {
+        cookies.test = cookie.sameSite == Ci.nsICookie.SAMESITE_LAX ? 'lax' : 'none';
+      }
+
+      if (cookie.name == "test2" && cookie.value == "wow2") {
+        cookies.test2 = cookie.sameSite == Ci.nsICookie.SAMESITE_LAX ? 'lax' : 'none';
+      }
+
+      if (cookie.name == "test3" && cookie.value == "wow3") {
+        cookies.test3 = cookie.sameSite == Ci.nsICookie.SAMESITE_LAX ? 'lax' : 'none';
+      }
+    }
+
+    Services.cookies.removeAll();
+    sendAsyncMessage('result', cookies);
+  });
+
+  let cookies = await new Promise(resolve => {
+    chromeScript.addMessageListener('result', cookies => {
+      chromeScript.destroy();
+      resolve(cookies);
+    });
+  });
+
+  is(cookies.test, "lax", "Cookie set without samesite is lax by default");
+  if (noneRequiresSecure) {
+    is(cookies.test2, null, "Cookie set with samesite none, but not secure");
+  } else {
+    is(cookies.test2, "none", "Cookie set with samesite none");
+  }
+  is(cookies.test3, "lax", "Cookie set with samesite lax");
+}
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["network.cookie.sameSite.laxByDefault", true],
+  ["network.cookie.sameSite.noneRequiresSecure", false],
+]}).then(_ => {
+  return realTest(false);
+}).then(_ => {
+  return SpecialPowers.pushPrefEnv({"set": [
+    ["network.cookie.sameSite.laxByDefault", true],
+    ["network.cookie.sameSite.noneRequiresSecure", true]]});
+}).then(_ => {
+  return realTest(true);
+}).then(SimpleTest.finish);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
