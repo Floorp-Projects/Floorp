@@ -183,6 +183,20 @@ add_task(async function testExtensionList() {
   await extension2.unload();
   await extension.unload();
 
+  // Install a theme and verify that it is not listed in the pending
+  // uninstall message bars while the list extensions view is loaded.
+  const themeXpi = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      name: "My theme",
+      applications: {gecko: {id: "theme@mochi.test"}},
+      theme: {},
+    },
+  });
+  const themeAddon = await AddonManager.installTemporaryAddon(themeXpi);
+  // Leave it pending uninstall, the following assertions related to
+  // the pending uninstall message bars will fail if the theme is listed.
+  await themeAddon.uninstall(true);
+
   // Install a third addon to verify that is being fully removed once the
   // about:addons page is closed.
   const xpi = AddonTestUtils.createTempWebExtensionFile({
@@ -215,6 +229,14 @@ add_task(async function testExtensionList() {
 
   ok(!await AddonManager.getAddonByID(addon3.id),
      "The third addon has been fully uninstalled");
+
+  ok(themeAddon.pendingOperations & AddonManager.PENDING_UNINSTALL,
+     "The theme addon is pending after the list extension view is closed");
+
+  await themeAddon.uninstall();
+
+  ok(!await AddonManager.getAddonByID(themeAddon.id),
+     "The theme addon is fully uninstalled");
 });
 
 add_task(async function testMouseSupport() {
