@@ -2531,14 +2531,15 @@ MOZ_MUST_USE bool ScriptSource::initializeUncompressedSource(
 }
 
 template <typename Unit>
-struct SourceDecoder {
+struct UnretrievableSourceDecoder {
   XDRState<XDR_DECODE>* const xdr_;
   ScriptSource* const scriptSource_;
   const uint32_t uncompressedLength_;
 
  public:
-  SourceDecoder(XDRState<XDR_DECODE>* xdr, ScriptSource* scriptSource,
-                uint32_t uncompressedLength)
+  UnretrievableSourceDecoder(XDRState<XDR_DECODE>* xdr,
+                             ScriptSource* scriptSource,
+                             uint32_t uncompressedLength)
       : xdr_(xdr),
         scriptSource_(scriptSource),
         uncompressedLength_(uncompressedLength) {}
@@ -2570,24 +2571,24 @@ XDRResult ScriptSource::xdrUnretrievableUncompressedSource<XDR_DECODE>(
   MOZ_ASSERT(sourceCharSize == 1 || sourceCharSize == 2);
 
   if (sourceCharSize == 1) {
-    SourceDecoder<Utf8Unit> decoder(xdr, this, uncompressedLength);
+    UnretrievableSourceDecoder<Utf8Unit> decoder(xdr, this, uncompressedLength);
     return decoder.decode();
   }
 
-  SourceDecoder<char16_t> decoder(xdr, this, uncompressedLength);
+  UnretrievableSourceDecoder<char16_t> decoder(xdr, this, uncompressedLength);
   return decoder.decode();
 }
 
 }  // namespace js
 
 template <typename Unit>
-struct SourceEncoder {
+struct UnretrievableSourceEncoder {
   XDRState<XDR_ENCODE>* const xdr_;
   ScriptSource* const source_;
   const uint32_t uncompressedLength_;
 
-  SourceEncoder(XDRState<XDR_ENCODE>* xdr, ScriptSource* source,
-                uint32_t uncompressedLength)
+  UnretrievableSourceEncoder(XDRState<XDR_ENCODE>* xdr, ScriptSource* source,
+                             uint32_t uncompressedLength)
       : xdr_(xdr), source_(source), uncompressedLength_(uncompressedLength) {}
 
   XDRResult encode() {
@@ -2606,11 +2607,11 @@ XDRResult ScriptSource::xdrUnretrievableUncompressedSource<XDR_ENCODE>(
   MOZ_ASSERT(sourceCharSize == 1 || sourceCharSize == 2);
 
   if (sourceCharSize == 1) {
-    SourceEncoder<Utf8Unit> encoder(xdr, this, uncompressedLength);
+    UnretrievableSourceEncoder<Utf8Unit> encoder(xdr, this, uncompressedLength);
     return encoder.encode();
   }
 
-  SourceEncoder<char16_t> encoder(xdr, this, uncompressedLength);
+  UnretrievableSourceEncoder<char16_t> encoder(xdr, this, uncompressedLength);
   return encoder.encode();
 }
 
