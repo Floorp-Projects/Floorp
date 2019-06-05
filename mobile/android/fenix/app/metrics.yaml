@@ -335,6 +335,7 @@ metrics:
       `source` will either be `action` or `suggestion`
     send_in_pings:
     - metrics
+    - baseline
     bugs:
     - 1158
     data_reviews:
