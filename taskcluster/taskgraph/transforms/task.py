@@ -882,6 +882,7 @@ def build_generic_worker_payload(config, task, task_def):
     Optional('mac-behavior'): Any(
         "mac_notarize", "mac_sign", "mac_sign_and_pkg", "mac_pkg",
     ),
+    Optional('entitlements-url'): basestring,
 })
 def build_scriptworker_signing_payload(config, task, task_def):
     worker = task['worker']
@@ -892,6 +893,8 @@ def build_scriptworker_signing_payload(config, task, task_def):
     }
     if worker.get('mac-behavior'):
         task_def['payload']['behavior'] = worker['mac-behavior']
+        if worker.get('entitlements-url'):
+            task_def['payload']['entitlements-url'] = worker['entitlements-url']
     artifacts = set(task.get('release-artifacts', []))
     for upstream_artifact in worker['upstream-artifacts']:
         for path in upstream_artifact['paths']:

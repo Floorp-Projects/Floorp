@@ -74,6 +74,24 @@ transforms.add_validate(signing_description_schema)
 
 
 @transforms.add
+def add_entitlements_link(config, jobs):
+    for job in jobs:
+        entitlements_path = evaluate_keyed_by(
+            config.graph_config['mac-notarization']['mac-entitlements'],
+            "mac entitlements",
+            {
+                'platform': job['primary-dependency'].attributes.get('build_platform'),
+                'project': config.params['project'],
+            },
+        )
+        if entitlements_path:
+            job['entitlements-url'] = config.params.file_url(
+                entitlements_path, endpoint="raw-file"
+            )
+        yield job
+
+
+@transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
@@ -169,6 +187,8 @@ def make_task_description(config, jobs):
                 },
             )
             task['worker']['mac-behavior'] = mac_behavior
+            if job.get('entitlements-url'):
+                task['worker']['entitlements-url'] = job['entitlements-url']
 
         task['worker-type'] = worker_type_alias
         if treeherder:
