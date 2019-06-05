@@ -4327,21 +4327,11 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Are "-webkit-{min|max}-device-pixel-ratio" media queries supported? (Note:
-// this pref has no effect if the master 'layout.css.prefixes.webkit' pref is
-// set to false.)
+// Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
 VARCACHE_PREF(
   Live,
   "layout.css.prefixes.device-pixel-ratio-webkit",
   layout_css_prefixes_device_pixel_ratio_webkit,
-  bool, true
-)
-
-// Are webkit-prefixed properties & property-values supported?
-VARCACHE_PREF(
-  Live,
-  "layout.css.prefixes.webkit",
-  layout_css_prefixes_webkit,
   bool, true
 )
 
