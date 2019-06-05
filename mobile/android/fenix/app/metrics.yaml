@@ -128,7 +128,7 @@ events:
     description: >
       A counter of URIs visited by the user in the current session, including page reloads. This does not include background page requests and URIs from embedded pages or private browsing.
     send_in_pings:
-    - metrics
+    - baseline
     bugs:
     - 1301
     data_reviews:
