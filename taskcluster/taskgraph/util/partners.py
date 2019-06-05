@@ -327,7 +327,7 @@ def get_partner_config_by_kind(config, kind):
     else:
         return {}
     # if we're only interested in a subset of partners we remove the rest
-    if isinstance(partner_subset, (list, tuple)):
+    if partner_subset:
         # TODO - should be fatal to have an unknown partner in partner_subset
         for partner in kind_config.keys():
             if partner not in partner_subset:
