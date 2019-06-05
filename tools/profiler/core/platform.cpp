@@ -87,8 +87,8 @@
 #endif
 
 #if defined(GP_OS_android)
-#  include "FennecJNINatives.h"
-#  include "FennecJNIWrappers.h"
+#  include "GeneratedJNINatives.h"
+#  include "GeneratedJNIWrappers.h"
 #endif
 
 // Win32 builds always have frame pointers, so FramePointerStackWalk() always
@@ -461,12 +461,6 @@ class ActivePS {
   static uint32_t AdjustFeatures(uint32_t aFeatures, uint32_t aFilterCount) {
     // Filter out any features unavailable in this platform/configuration.
     aFeatures &= AvailableFeatures();
-
-#if defined(GP_OS_android)
-    if (!jni::IsFennec()) {
-      aFeatures &= ~ProfilerFeature::Java;
-    }
-#endif
 
     // Always enable ProfilerFeature::Threads if we have a filter, because
     // users sometimes ask to filter by a list of threads but forget to
@@ -2892,7 +2886,7 @@ void profiler_init(void* aStackTop) {
 #endif
 
 #if defined(GP_OS_android)
-    if (jni::IsFennec()) {
+    if (jni::IsAvailable()) {
       GeckoJavaSampler::Init();
     }
 #endif
