@@ -7,6 +7,18 @@
 #include "nsAppRunner.h"
 #include "nsString.h"
 
+void CheckCompatVersionCompare(const nsCString& aOldCompatVersion,
+                               const nsCString& aNewCompatVersion,
+                               bool aExpectedSame, bool aExpectedDowngrade) {
+  printf("Comparing '%s' to '%s'.\n", aOldCompatVersion.get(), aNewCompatVersion.get());
+
+  bool isDowngrade = false;
+  bool isSame = CheckCompatVersions(aOldCompatVersion, aNewCompatVersion, &isDowngrade);
+
+  ASSERT_EQ(aExpectedSame, isSame) << "Version sameness check should match.";
+  ASSERT_EQ(aExpectedDowngrade, isDowngrade) << "Version downgrade check should match.";
+}
+
 void CheckExpectedResult(
   const char* aOldAppVersion, const char* aOldAppID, const char* aOldToolkitID,
   const char* aNewAppVersion, const char* aNewAppID, const char* aNewToolkitID,
@@ -18,13 +30,8 @@ void CheckExpectedResult(
   nsCString newCompatVersion;
   BuildCompatVersion(aNewAppVersion, aNewAppID, aNewToolkitID, newCompatVersion);
 
-  printf("Comparing '%s' to '%s'.\n", oldCompatVersion.get(), newCompatVersion.get());
-
-  bool isDowngrade = false;
-  bool isSame = CheckCompatVersions(oldCompatVersion, newCompatVersion, &isDowngrade);
-
-  ASSERT_EQ(aExpectedSame, isSame) << "Version sameness check should match.";
-  ASSERT_EQ(aExpectedDowngrade, isDowngrade) << "Version downgrade check should match.";
+  CheckCompatVersionCompare(oldCompatVersion, newCompatVersion,
+                            aExpectedSame, aExpectedDowngrade);
 }
 
 TEST(CompatVersionCompare, CompareVersionChange) {
@@ -120,4 +127,10 @@ TEST(CompatVersionCompare, CompareVersionChange) {
     "67.0.5", "20190523030228","20190523030228",
     "67.0",   "20190516215225", "20190516215225",
     false, true);
+
+  // Check that if the last run was safe mode then we consider this an upgrade.
+  CheckCompatVersionCompare(
+    NS_LITERAL_CSTRING("Safe Mode"),
+    NS_LITERAL_CSTRING("67.0.1_20000000000000/20000000000000"),
+    false, false);
 }

@@ -2437,6 +2437,14 @@ bool CheckCompatVersions(const nsACString& aOldCompatVersion,
   // The versions differ for some reason so we will only ever return false from
   // here onwards. We just have to figure out if this is a downgrade or not.
 
+  // Hardcode the case where the last run was in safe mode (Bug 1556612). We
+  // cannot tell if this is a downgrade or not so just assume it isn't and let
+  // the user proceed.
+  if (aOldCompatVersion.EqualsLiteral("Safe Mode")) {
+    *aIsDowngrade = false;
+    return false;
+  }
+
   nsCString oldVersion;
   nsCString oldAppBuildID;
   nsCString oldPlatformBuildID;
