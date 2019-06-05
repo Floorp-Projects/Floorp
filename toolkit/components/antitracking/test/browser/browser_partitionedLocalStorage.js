@@ -1,4 +1,5 @@
 /* import-globals-from antitracking_head.js */
+/* import-globals-from partitionedstorage_head.js */
 
 AntiTracking.runTest("localStorage and Storage Access API",
   async _ => {
@@ -76,3 +77,25 @@ AntiTracking.runTest("localStorage and Storage Access API",
   },
   [["privacy.restrict3rdpartystorage.partitionedHosts", "tracking.example.org,tracking.example.com"]],
   false, false);
+
+PartitionedStorageHelper.runPartitioningTest(
+  "Partitioned tabs - localStorage",
+
+  // getDataCallback
+  async win => {
+    return ("foo" in win.localStorage) ? win.localStorage.foo : "";
+  },
+
+  // addDataCallback
+  async (win, value) => {
+    win.localStorage.foo = value;
+    return true;
+  },
+
+  // cleanup
+  async _ => {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value => resolve());
+    });
+  }
+);
