@@ -84,7 +84,7 @@ export const clearSelectedLocation = (cx: Context) => ({
 export function selectSourceURL(
   cx: Context,
   url: string,
-  options: PartialPosition = { line: 1 }
+  options: PartialPosition = {}
 ) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceByURL(getState(), url);
@@ -105,7 +105,7 @@ export function selectSourceURL(
 export function selectSource(
   cx: Context,
   sourceId: string,
-  options: PartialPosition = { line: 1 }
+  options: PartialPosition = {}
 ) {
   return async ({ dispatch }: ThunkArgs) => {
     const location = createLocation({ ...options, sourceId });
