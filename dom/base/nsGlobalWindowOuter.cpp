@@ -1537,10 +1537,8 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
     return true;
   }
 
-  bool equal;
-  if (NS_SUCCEEDED(mDoc->NodePrincipal()->Equals(aNewDocument->NodePrincipal(),
-                                                 &equal)) &&
-      equal) {
+  if (BasePrincipal::Cast(mDoc->NodePrincipal())
+          ->FastEqualsConsideringDomain(aNewDocument->NodePrincipal())) {
     // The origin is the same.
     return true;
   }
@@ -2321,7 +2319,8 @@ void nsGlobalWindowOuter::PreloadLocalStorage() {
   }
 
   nsIPrincipal* principal = GetPrincipal();
-  if (!principal) {
+  nsIPrincipal* storagePrincipal = GetEffectiveStoragePrincipal();
+  if (!principal || !storagePrincipal) {
     return;
   }
 
@@ -2337,7 +2336,8 @@ void nsGlobalWindowOuter::PreloadLocalStorage() {
   // only try to precache storage when we're not a private browsing window.
   if (principal->GetPrivateBrowsingId() == 0) {
     RefPtr<Storage> storage;
-    rv = storageManager->PrecacheStorage(principal, getter_AddRefs(storage));
+    rv = storageManager->PrecacheStorage(principal, storagePrincipal,
+                                         getter_AddRefs(storage));
     if (NS_SUCCEEDED(rv)) {
       mLocalStorage = storage;
     }

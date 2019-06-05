@@ -136,4 +136,15 @@ inline js::PromiseObject* js::DebuggerObject::promise() const {
   return &referent->as<PromiseObject>();
 }
 
+inline bool js::DebuggerFrame::hasGenerator() const {
+  return !getReservedSlot(GENERATOR_INFO_SLOT).isUndefined();
+}
+
+inline js::DebuggerFrame::GeneratorInfo* js::DebuggerFrame::generatorInfo()
+    const {
+  MOZ_ASSERT(hasGenerator());
+  return static_cast<GeneratorInfo*>(
+      getReservedSlot(GENERATOR_INFO_SLOT).toPrivate());
+}
+
 #endif /* vm_Debugger_inl_h */

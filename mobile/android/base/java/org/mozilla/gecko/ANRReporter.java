@@ -300,7 +300,7 @@ public final class ANRReporter extends BroadcastReceiver
         return data.length;
     }
 
-    private static void fillPingHeader(OutputStream ping, String slug)
+    private static void fillPingHeader(Context context, OutputStream ping, String slug)
             throws IOException {
 
         // ping file header
@@ -332,7 +332,7 @@ public final class ANRReporter extends BroadcastReceiver
                 "\"platformBuildID\":" + JSONObject.quote(AppConstants.MOZ_APP_BUILDID) + "," +
                 "\"locale\":" + JSONObject.quote(Locales.getLanguageTag(Locale.getDefault())) + "," +
                 "\"cpucount\":" + String.valueOf(SysInfo.getCPUCount()) + "," +
-                "\"memsize\":" + String.valueOf(SysInfo.getMemSize()) + "," +
+                "\"memsize\":" + String.valueOf(SysInfo.getMemSize(context)) + "," +
                 "\"arch\":" + JSONObject.quote(SysInfo.getArchABI()) + "," +
                 "\"kernel_version\":" + JSONObject.quote(SysInfo.getKernelVersion()) + "," +
                 "\"device\":" + JSONObject.quote(SysInfo.getDevice()) + "," +
@@ -479,19 +479,19 @@ public final class ANRReporter extends BroadcastReceiver
         }
     }
 
-    private static void processTraces(Reader traces, File pingFile) {
+    private static void processTraces(Context context, Reader traces, File pingFile) {
 
         // Only get native stack if Gecko is running.
         // Also, unwinding is memory intensive, so only unwind if we have enough memory.
         final boolean haveNativeStack =
             GeckoThread.isRunning() ?
-            requestNativeStack(/* unwind */ SysInfo.getMemSize() >= 640) : false;
+            requestNativeStack(/* unwind */ SysInfo.getMemSize(context) >= 640) : false;
 
         try {
             OutputStream ping = new BufferedOutputStream(
                 new FileOutputStream(pingFile), TRACES_BLOCK_SIZE);
             try {
-                fillPingHeader(ping, pingFile.getName());
+                fillPingHeader(context, ping, pingFile.getName());
                 // Traces file has the format
                 //    ----- pid xxx at xxx -----
                 //    Cmd line: org.mozilla.xxx
@@ -527,12 +527,12 @@ public final class ANRReporter extends BroadcastReceiver
         }
     }
 
-    private static void processTraces(File tracesFile, File pingFile) {
+    private static void processTraces(Context context, File tracesFile, File pingFile) {
         try {
             Reader traces = new InputStreamReader(
                 new FileInputStream(tracesFile), TRACES_CHARSET);
             try {
-                processTraces(traces, pingFile);
+                processTraces(context, traces, pingFile);
             } finally {
                 traces.close();
             }
@@ -596,6 +596,6 @@ public final class ANRReporter extends BroadcastReceiver
             return;
         }
         Log.i(LOGTAG, "processing Gecko ANR");
-        processTraces(tracesFile, pingFile);
+        processTraces(context, tracesFile, pingFile);
     }
 }

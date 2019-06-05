@@ -166,12 +166,16 @@ if CONFIG['CPU_ARCH'] == 'ppc':
 
 if CONFIG['CPU_ARCH'] == 'ppc64':
     if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):
-          SOURCES += [
-              'xptcinvoke_asm_ppc64_linux.S',
-              'xptcinvoke_ppc64_linux.cpp',
-              'xptcstubs_asm_ppc64_linux.S',
-              'xptcstubs_ppc64_linux.cpp',
-          ]
+        SOURCES += [
+            'xptcinvoke_asm_ppc64_linux.S',
+            'xptcinvoke_ppc64_linux.cpp',
+            'xptcstubs_asm_ppc64_linux.S',
+            'xptcstubs_ppc64_linux.cpp',
+        ]
+        if CONFIG['CC_TYPE'] == 'clang':
+            ASFLAGS += [
+                '-fno-integrated-as',
+            ]
 
 if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['CPU_ARCH'] == 'ppc':
     SOURCES += [
@@ -236,6 +240,10 @@ if CONFIG['OS_ARCH'] == 'Linux':
             '-fomit-frame-pointer',
             '-mbackchain',
         ]
+        if CONFIG['CC_TYPE'] == 'clang':
+            CXXFLAGS += [
+                '-fno-integrated-as',
+            ]
 
 FINAL_LIBRARY = 'xul'
 

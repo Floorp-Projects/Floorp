@@ -219,6 +219,16 @@ async function openMirror(name, options = {}) {
         options.recordTelemetryEvent.call(this, ...args);
       }
     },
+    recordStepTelemetry(...args) {
+      if (options.recordStepTelemetry) {
+        options.recordStepTelemetry.call(this, ...args);
+      }
+    },
+    recordValidationTelemetry(...args) {
+      if (options.recordValidationTelemetry) {
+        options.recordValidationTelemetry.call(this, ...args);
+      }
+    },
   });
   return buf;
 }

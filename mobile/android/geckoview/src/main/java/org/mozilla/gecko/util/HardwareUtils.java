@@ -12,7 +12,6 @@ import android.os.Build;
 import android.system.Os;
 import android.util.Log;
 
-import org.mozilla.gecko.SysInfo;
 import org.mozilla.geckoview.BuildConfig;
 
 import java.io.File;
@@ -77,10 +76,6 @@ public final class HardwareUtils {
 
     public static boolean isTelevision() {
         return sIsTelevision;
-    }
-
-    public static int getMemSize() {
-        return SysInfo.getMemSize();
     }
 
     private static String getPreferredAbi() {

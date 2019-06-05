@@ -21,9 +21,7 @@ function getMisspelledWords(editor) {
 
 function getDictionaryList(editor) {
   var spellchecker = editor.getInlineSpellChecker(true).spellChecker;
-  var o1 = {};
-  spellchecker.GetDictionaryList(o1, {});
-  return o1.value;
+  return spellchecker.GetDictionaryList();
 }
 
 function getCurrentDictionary(editor) {

@@ -566,7 +566,11 @@ class ScriptSource {
   // BinAST source.
   struct BinAST {
     SharedImmutableString string;
-    explicit BinAST(SharedImmutableString&& str) : string(std::move(str)) {}
+    UniquePtr<frontend::BinASTSourceMetadata> metadata;
+
+    BinAST(SharedImmutableString&& str,
+           UniquePtr<frontend::BinASTSourceMetadata> metadata)
+        : string(std::move(str)), metadata(std::move(metadata)) {}
   };
 
   using SourceType =
@@ -667,8 +671,6 @@ class ScriptSource {
   bool hasIntroductionOffset_ : 1;
   bool containsAsmJS_ : 1;
 
-  UniquePtr<frontend::BinASTSourceMetadata> binASTMetadata_;
-
   template <typename Unit>
   const Unit* chunkUnits(JSContext* cx,
                          UncompressedSourceCache::AutoHoldEntry& holder,
@@ -752,25 +754,23 @@ class ScriptSource {
 
   void setBinASTSourceMetadata(frontend::BinASTSourceMetadata* metadata) {
     MOZ_ASSERT(hasBinASTSource());
-    binASTMetadata_.reset(metadata);
+    data.as<BinAST>().metadata.reset(metadata);
   }
   frontend::BinASTSourceMetadata* binASTSourceMetadata() const {
     MOZ_ASSERT(hasBinASTSource());
-    return binASTMetadata_.get();
+    return data.as<BinAST>().metadata.get();
   }
 
  private:
+  template <typename Unit>
   struct UncompressedDataMatcher {
-    template <typename Unit>
-    const void* operator()(const Uncompressed<Unit>& u) {
-      return u.units();
-    }
+    const Unit* operator()(const Uncompressed<Unit>& u) { return u.units(); }
 
     template <typename T>
-    const void* operator()(const T&) {
+    const Unit* operator()(const T&) {
       MOZ_CRASH(
-          "attempting to access uncompressed data in a "
-          "ScriptSource not containing it");
+          "attempting to access uncompressed data in a ScriptSource not "
+          "containing it");
       return nullptr;
     }
   };
@@ -778,12 +778,12 @@ class ScriptSource {
  public:
   template <typename Unit>
   const Unit* uncompressedData() {
-    return static_cast<const Unit*>(data.match(UncompressedDataMatcher()));
+    return data.match(UncompressedDataMatcher<Unit>());
   }
 
  private:
+  template <typename Unit>
   struct CompressedDataMatcher {
-    template <typename Unit>
     char* operator()(const Compressed<Unit>& c) {
       return const_cast<char*>(c.raw.chars());
     }
@@ -791,8 +791,8 @@ class ScriptSource {
     template <typename T>
     char* operator()(const T&) {
       MOZ_CRASH(
-          "attempting to access compressed data in a ScriptSource "
-          "not containing it");
+          "attempting to access compressed data in a ScriptSource not "
+          "containing it");
       return nullptr;
     }
   };
@@ -800,7 +800,7 @@ class ScriptSource {
  public:
   template <typename Unit>
   char* compressedData() {
-    return data.match(CompressedDataMatcher());
+    return data.match(CompressedDataMatcher<Unit>());
   }
 
  private:

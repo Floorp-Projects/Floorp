@@ -14,6 +14,7 @@
 #include "mozilla/Variant.h"
 
 #include <stddef.h>
+#include <utility>
 
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
@@ -116,10 +117,17 @@ class CrossCompartmentKey {
         : Debuggee(debugger, referent) {}
   };
 
-  using WrappedType =
-      mozilla::Variant<JSObject*, JSString*, DebuggeeObject, DebuggeeJSScript,
-                       DebuggeeWasmScript, DebuggeeLazyScript,
-                       DebuggeeEnvironment, DebuggeeSource>;
+  // Key under which we find debugger's Debugger.Frame for the generator call
+  // whose AbstractGeneratorObject is referent.
+  struct DebuggeeFrameGenerator : Debuggee<NativeObject> {
+    DebuggeeFrameGenerator(NativeObject* debugger, NativeObject* referent)
+        : Debuggee(debugger, referent) {}
+  };
+
+  using WrappedType = mozilla::Variant<JSObject*, JSString*, DebuggeeObject,
+                                       DebuggeeJSScript, DebuggeeWasmScript,
+                                       DebuggeeLazyScript, DebuggeeEnvironment,
+                                       DebuggeeSource, DebuggeeFrameGenerator>;
 
   explicit CrossCompartmentKey(JSObject* obj) : wrapped(obj) {
     MOZ_RELEASE_ASSERT(obj);
@@ -134,10 +142,16 @@ class CrossCompartmentKey {
   // For most debuggee keys, we must let the caller choose the key type
   // themselves. But for JSScript and LazyScript, there is only one key type
   // that makes sense, so we provide an overloaded constructor.
-  explicit CrossCompartmentKey(DebuggeeObject&& key) : wrapped(key) {}
-  explicit CrossCompartmentKey(DebuggeeSource&& key) : wrapped(key) {}
-  explicit CrossCompartmentKey(DebuggeeEnvironment&& key) : wrapped(key) {}
-  explicit CrossCompartmentKey(DebuggeeWasmScript&& key) : wrapped(key) {}
+  explicit CrossCompartmentKey(DebuggeeObject&& key)
+      : wrapped(std::move(key)) {}
+  explicit CrossCompartmentKey(DebuggeeSource&& key)
+      : wrapped(std::move(key)) {}
+  explicit CrossCompartmentKey(DebuggeeEnvironment&& key)
+      : wrapped(std::move(key)) {}
+  explicit CrossCompartmentKey(DebuggeeWasmScript&& key)
+      : wrapped(std::move(key)) {}
+  explicit CrossCompartmentKey(DebuggeeFrameGenerator&& key)
+      : wrapped(std::move(key)) {}
   explicit CrossCompartmentKey(NativeObject* debugger, JSScript* referent)
       : wrapped(DebuggeeJSScript(debugger, referent)) {}
   explicit CrossCompartmentKey(NativeObject* debugger, LazyScript* referent)

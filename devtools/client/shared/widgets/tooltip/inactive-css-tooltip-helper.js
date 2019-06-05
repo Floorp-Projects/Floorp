@@ -76,7 +76,7 @@ class InactiveCssTooltipHelper {
    */
   getTemplate(data, tooltip) {
     const XHTML_NS = "http://www.w3.org/1999/xhtml";
-    const { fixId, msgId, numFixProps, property } = data;
+    const { fixId, msgId, numFixProps, property, display } = data;
     const { doc } = tooltip;
 
     this._currentTooltip = tooltip;
@@ -89,7 +89,7 @@ class InactiveCssTooltipHelper {
     templateNode.innerHTML = `
     <div class="devtools-tooltip-inactive-css">
       <p data-l10n-id="${msgId}"
-         data-l10n-args='${JSON.stringify({property})}'>
+         data-l10n-args='${JSON.stringify({property, display})}'>
         <strong></strong>
       </p>
       <p data-l10n-id="${fixId}">
