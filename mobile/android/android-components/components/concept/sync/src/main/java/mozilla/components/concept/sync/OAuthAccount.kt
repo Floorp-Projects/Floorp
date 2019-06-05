@@ -25,12 +25,13 @@ class AuthException(type: AuthExceptionType, cause: Exception? = null) : Throwab
  */
 @SuppressWarnings("TooManyFunctions")
 interface OAuthAccount : AutoCloseable {
-    fun beginOAuthFlowAsync(scopes: Array<String>, wantsKeys: Boolean): Deferred<String?>
-    fun beginPairingFlowAsync(pairingUrl: String, scopes: Array<String>): Deferred<String?>
+    fun beginOAuthFlowAsync(scopes: Set<String>, wantsKeys: Boolean): Deferred<String?>
+    fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<String?>
     fun getProfileAsync(ignoreCache: Boolean): Deferred<Profile?>
     fun getProfileAsync(): Deferred<Profile?>
     fun completeOAuthFlowAsync(code: String, state: String): Deferred<Boolean>
     fun getAccessTokenAsync(singleScope: String): Deferred<AccessTokenInfo?>
+    fun checkAuthorizationStatusAsync(singleScope: String): Deferred<Boolean?>
     fun getTokenServerEndpointURL(): String
     fun registerPersistenceCallback(callback: StatePersistenceCallback)
     fun deviceConstellation(): DeviceConstellation

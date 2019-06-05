@@ -78,6 +78,8 @@ private interface OAuthObserver {
     fun onError()
 }
 
+const val PROFILE_SCOPE = "profile"
+
 /**
  * Helper data class that wraps common device initialization parameters.
  */
@@ -93,14 +95,14 @@ data class DeviceTuple(val name: String, val type: DeviceType, val capabilities:
  *
  * @param context A [Context] instance that's used for internal messaging and interacting with local storage.
  * @param config A [Config] used for account initialization.
- * @param scopes A list of scopes which will be requested during account authentication.
+ * @param applicationScopes A list of scopes which will be requested during account authentication.
  * @param deviceTuple A description of the current device (name, type, capabilities).
  */
 @Suppress("TooManyFunctions")
 open class FxaAccountManager(
     private val context: Context,
     private val config: Config,
-    private val scopes: Array<String>,
+    private val applicationScopes: Array<String>,
     private val deviceTuple: DeviceTuple,
     syncManager: SyncManager? = null,
     // We want a single-threaded execution model for our account-related "actions" (state machine side-effects).
@@ -109,6 +111,9 @@ open class FxaAccountManager(
             .newSingleThreadExecutor().asCoroutineDispatcher() + SupervisorJob()
 ) : Closeable, Observable<AccountObserver> by ObserverRegistry() {
     private val logger = Logger("FirefoxAccountStateMachine")
+
+    // We always obtain a "profile" scope, in addition to whatever scopes application requested.
+    private val scopes: Set<String> = setOf(PROFILE_SCOPE).plus(applicationScopes)
 
     // This is used during 'beginAuthenticationAsync' call, which returns a Deferred<String>.
     // 'deferredAuthUrl' is set on this observer and returned, and resolved once state machine goes
@@ -194,6 +199,7 @@ open class FxaAccountManager(
                 AccountState.AuthenticationProblem -> when (event) {
                     Event.Authenticate -> AccountState.AuthenticationProblem
                     Event.FailedToAuthenticate -> AccountState.AuthenticationProblem
+                    Event.RecoveredFromAuthenticationProblem -> AccountState.AuthenticatedNoProfile
                     is Event.Authenticated -> AccountState.AuthenticatedNoProfile
                     Event.Logout -> AccountState.NotAuthenticated
                     else -> null
@@ -239,6 +245,9 @@ open class FxaAccountManager(
     /**
      * Indicates if account needs to be re-authenticated via [beginAuthenticationAsync].
      * Most common reason for an account to need re-authentication is a password change.
+     *
+     * TODO this may return a false-positive, if we're currently going through a recovery flow.
+     * Prefer to be notified of auth problems via [AccountObserver], which is reliable.
      *
      * @return A boolean flag indicating if account needs to be re-authenticated.
      */
@@ -438,6 +447,28 @@ open class FxaAccountManager(
 
                         Event.FetchProfile
                     }
+                    Event.RecoveredFromAuthenticationProblem -> {
+                        // This path is a blend of "authenticated" and "account restored".
+                        // We need to re-initialize an fxa device, but we don't need to complete an auth.
+                        logger.info("Registering persistence callback")
+                        account.registerPersistenceCallback(statePersistenceCallback)
+
+                        logger.info("Registering device constellation observer")
+                        account.deviceConstellation().register(deviceEventsIntegration)
+
+                        logger.info("Initializing device")
+                        // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
+                        account.deviceConstellation().initDeviceAsync(
+                                deviceTuple.name, deviceTuple.type, deviceTuple.capabilities
+                        ).await()
+
+                        logger.info("Starting periodic refresh of the device constellation")
+                        account.deviceConstellation().startPeriodicRefresh()
+
+                        notifyObservers { onAuthenticated(account) }
+
+                        Event.FetchProfile
+                    }
                     Event.FetchProfile -> {
                         // Profile fetching and account authentication issues:
                         // https://github.com/mozilla/application-services/issues/483
@@ -470,7 +501,52 @@ open class FxaAccountManager(
                         return doAuthenticate()
                     }
                     is Event.AuthenticationError -> {
-                        notifyObservers { onAuthenticationProblems() }
+                        // Somewhere in the system, we've just hit an authentication problem.
+                        // There are two main causes:
+                        // 1) an access token we've obtain from fxalib via 'getAccessToken' expired
+                        // 2) password was changed, or device was revoked
+                        // We can recover from (1) and test if we're in (2) by asking the fxalib
+                        // to give us a new access token. If it succeeds, then we can go back to whatever
+                        // state we were in before. Future operations that involve access tokens should
+                        // succeed.
+                        // If we fail with a 401, then we know we have a legitimate authentication problem.
+                        logger.info("Hit auth problem. Trying to recover.")
+
+                        // We request an access token for a "profile" scope since that's the only
+                        // scope we're guaranteed to have at this point. That is, we don't rely on
+                        // passed-in application-specific scopes.
+                        when (account.checkAuthorizationStatusAsync(PROFILE_SCOPE).await()) {
+                            true -> {
+                                logger.info("Able to recover from an auth problem.")
+
+                                // And now we can go back to our regular programming.
+                                return Event.RecoveredFromAuthenticationProblem
+                            }
+                            null, false -> {
+                                // We are either certainly in the scenario (2), or were unable to determine
+                                // our connectivity state. Let's assume we need to re-authenticate.
+                                // This uncertainty about real state means that, hopefully rarely,
+                                // we will disconnect users that hit transient network errors during
+                                // an authorization check.
+                                // See https://github.com/mozilla-mobile/android-components/issues/3347
+                                logger.info("Unable to recover from an auth problem, clearing state.")
+
+                                // We perform similar actions to what we do on logout, except for destroying
+                                // the device. We don't have valid access tokens at this point to do that!
+
+                                // Clean up resources.
+                                profile = null
+                                account.close()
+                                // Delete persisted state.
+                                getAccountStorage().clear()
+                                // Re-initialize account.
+                                account = createAccount(config)
+
+                                // Finally, tell our listeners we're in a bad auth state.
+                                notifyObservers { onAuthenticationProblems() }
+                            }
+                        }
+
                         null
                     }
                     else -> null

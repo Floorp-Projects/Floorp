@@ -45,6 +45,7 @@ internal sealed class Event {
             return this.javaClass.simpleName
         }
     }
+    object RecoveredFromAuthenticationProblem : Event()
     object FetchProfile : Event()
     object FetchedProfile : Event()
 

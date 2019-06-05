@@ -27,6 +27,12 @@ permalink: /changelog/
 * **samples-firefox-accounts**
   * Switch FxA sample to production servers, fix pairing.
 
+* **service-firefox-accounts**
+  * `FxaAccountManager` will is now able to complete re-authentication flow after encountering an auth problem (e.g. password change)
+  * `FxaAccountManager` will now attempt to automatically recover from a certain class of temporary auth problems.
+  * `FirefoxAccount` grew a new method: `checkAuthorizationStatusAsync`, used to facilitate above flows.
+  * It is no longer necessary to pass in the "profile" scope to `FxaAccountManager`, as it will always obtain it regardless. Specifying that scope has no effect.
+
 * **browser-domains**
   * New domain autocomplete providers `ShippedDomainsProvider` and `CustomDomainsProvider` that
     should be used instead of deprecated `DomainAutoCompleteProvider`.

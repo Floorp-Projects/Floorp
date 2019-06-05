@@ -17,6 +17,7 @@ import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.StatePersistenceCallback
+import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.base.log.logger.Logger
 
 typealias PersistCallback = mozilla.appservices.fxaclient.FirefoxAccount.PersistCallback
@@ -106,18 +107,18 @@ class FirefoxAccount internal constructor(
      * @param wantsKeys Fetch keys for end-to-end encryption of data from Mozilla-hosted services
      * @return Deferred<String> that resolves to the flow URL when complete
      */
-    override fun beginOAuthFlowAsync(scopes: Array<String>, wantsKeys: Boolean): Deferred<String?> {
+    override fun beginOAuthFlowAsync(scopes: Set<String>, wantsKeys: Boolean): Deferred<String?> {
         return scope.async {
             handleFxaExceptions(logger, "begin oauth flow", { null }) {
-                inner.beginOAuthFlow(scopes, wantsKeys)
+                inner.beginOAuthFlow(scopes.toTypedArray(), wantsKeys)
             }
         }
     }
 
-    override fun beginPairingFlowAsync(pairingUrl: String, scopes: Array<String>): Deferred<String?> {
+    override fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<String?> {
         return scope.async {
             handleFxaExceptions(logger, "begin oauth pairing flow", { null }) {
-                inner.beginPairingFlow(pairingUrl, scopes)
+                inner.beginPairingFlow(pairingUrl, scopes.toTypedArray())
             }
         }
     }
@@ -177,6 +178,7 @@ class FirefoxAccount internal constructor(
      * Tries to fetch an access token for the given scope.
      *
      * @param singleScope Single OAuth scope (no spaces) for which the client wants access
+     * @param notifyAuthErrorRegistry Whether or not to notify [authErrorRegistry] of failures
      * @return [AccessTokenInfo] that stores the token, along with its scope, key and
      *                           expiration timestamp (in seconds) since epoch when complete
      */
@@ -185,6 +187,48 @@ class FirefoxAccount internal constructor(
             handleFxaExceptions(logger, "get access token", { null }) {
                 inner.getAccessToken(singleScope).into()
             }
+        }
+    }
+
+    /**
+     * This method should be called when a request made with an OAuth token failed with an
+     * authentication error. It will re-build cached state and perform a connectivity check.
+     *
+     * This will use the network.
+     *
+     * In time, fxalib will grow a similar method, at which point we'll just relay to it.
+     * See https://github.com/mozilla/application-services/issues/1263
+     *
+     * @param singleScope An oauth scope for which to check authorization state.
+     * @return An optional [Boolean] flag indicating if we're connected, or need to go through
+     * re-authentication. A null result means we were not able to determine state at this time.
+     */
+    override fun checkAuthorizationStatusAsync(singleScope: String): Deferred<Boolean?> {
+        // fxalib maintains some internal token caches that need to be cleared whenever we
+        // hit an auth problem. Call below makes that clean-up happen.
+        inner.clearAccessTokenCache()
+
+        // Now that internal token caches are cleared, we can perform a connectivity check.
+        // Do so by requesting a new access token using an internally-stored "refresh token".
+        // Success here means that we're still able to connect - our cached access token simply expired.
+        // Failure indicates that we need to re-authenticate.
+        return scope.async {
+            try {
+                inner.getAccessToken(singleScope)
+                // We were able to obtain a token, so we're in a good authorization state.
+                true
+            } catch (e: FxaUnauthorizedException) {
+                // We got back a 401 while trying to obtain a new access token, which means our refresh
+                // token is also in a bad state. We need re-authentication for the tested scope.
+                false
+            } catch (e: FxaPanicException) {
+                // Re-throw any panics we may encounter.
+                throw e
+            } catch (e: FxaException) {
+                // On any other FxaExceptions (networking, etc) we have to return an indeterminate result.
+                null
+            }
+            // Re-throw all other exceptions.
         }
     }
 

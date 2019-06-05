@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mozilla.components.concept.sync.AuthException
+import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.AuthInfo
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.StoreSyncStatus
@@ -15,6 +16,7 @@ import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.concept.sync.SyncResult
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncStatusObserver
+import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -72,7 +74,18 @@ class StorageSync(
     ): StoreSyncStatus {
         return StoreSyncStatus(store.sync(auth).also {
             if (it is SyncStatus.Error) {
-                logger.error("Error synchronizing a $storeName store", it.exception)
+                val message = it.exception.message
+                // TODO hackiness of this check is temporary. Eventually underlying libraries will
+                // surface reliable authentication exceptions which we can check by type.
+                // See https://github.com/mozilla-mobile/android-components/issues/3322
+                if (message != null && message.contains("401")) {
+                    logger.error("Hit an auth error during syncing")
+                    authErrorRegistry.notifyObservers {
+                        onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED))
+                    }
+                } else {
+                    logger.error("Error synchronizing a $storeName store", it.exception)
+                }
             } else {
                 logger.info("Synchronized $storeName store.")
             }
