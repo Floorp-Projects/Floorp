@@ -8,6 +8,8 @@
 
 #include "platform.h"
 
+#include "BaseProfiler.h"
+
 // Find out, in a platform-dependent way, where the code modules got
 // mapped in the process' virtual address space, and get |aLUL| to
 // load unwind info for them.
