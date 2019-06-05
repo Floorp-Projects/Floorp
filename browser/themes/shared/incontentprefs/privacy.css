@@ -82,10 +82,6 @@
   list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification.svg);
 }
 
-.autoplay-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media-detailed.svg);
-}
-
 .midi-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/midi.svg);
 }

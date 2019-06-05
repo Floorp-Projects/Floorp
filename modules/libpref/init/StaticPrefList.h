@@ -4724,13 +4724,6 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
-  "media.autoplay.enabled.user-gestures-needed",
-  MediaAutoplayUserGesturesNeeded,
-  bool, false
-)
-
-VARCACHE_PREF(
-  Live,
   "media.autoplay.allow-muted",
   MediaAutoplayAllowMuted,
   RelaxedAtomicBool, true
