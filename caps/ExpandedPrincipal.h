@@ -62,7 +62,7 @@ class ExpandedPrincipal : public nsIExpandedPrincipal,
 
   virtual nsresult PopulateJSONObject(Json::Value& aObject) override;
   // Serializable keys are the valid enum fields the serialization supports
-  enum SerializableKeys { eSpecs = 0, eMax = eSpecs };
+  enum SerializableKeys { eSpecs = 0, eSuffix, eMax = eSuffix };
   // KeyVal is a lightweight storage that passes
   // SerializableKeys and values after JSON parsing in the BasePrincipal to
   // FromProperties
