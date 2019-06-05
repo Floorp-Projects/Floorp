@@ -935,15 +935,14 @@ gfxUserFontType gfxFontUtils::DetermineFontDataType(const uint8_t* aFontData,
     }
   }
 
-  // test for WOFF
+  // test for WOFF or WOFF2
   if (aFontDataLength >= sizeof(AutoSwap_PRUint32)) {
     const AutoSwap_PRUint32* version =
         reinterpret_cast<const AutoSwap_PRUint32*>(aFontData);
     if (uint32_t(*version) == TRUETYPE_TAG('w', 'O', 'F', 'F')) {
       return GFX_USERFONT_WOFF;
     }
-    if (Preferences::GetBool(GFX_PREF_WOFF2_ENABLED) &&
-        uint32_t(*version) == TRUETYPE_TAG('w', 'O', 'F', '2')) {
+    if (uint32_t(*version) == TRUETYPE_TAG('w', 'O', 'F', '2')) {
       return GFX_USERFONT_WOFF2;
     }
   }
