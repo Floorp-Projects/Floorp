@@ -44,6 +44,21 @@ int profiler_current_thread_id() {
   return int(threadId);
 }
 
+static int64_t MicrosecondsSince1970() {
+  int64_t prt;
+  FILETIME ft;
+  SYSTEMTIME st;
+
+  GetSystemTime(&st);
+  SystemTimeToFileTime(&st, &ft);
+  static_assert(sizeof(ft) == sizeof(prt), "Expect FILETIME to be 64 bits");
+  memcpy(&prt, &ft, sizeof(prt));
+  const int64_t epochBias = 116444736000000000LL;
+  prt = (prt - epochBias) / 10;
+
+  return prt;
+}
+
 void* GetStackTop(void* aGuess) {
   PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
   return reinterpret_cast<void*>(pTib->StackBase);
@@ -78,16 +93,13 @@ class PlatformData {
   explicit PlatformData(int aThreadId)
       : mProfiledThread(OpenThread(THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME |
                                        THREAD_QUERY_INFORMATION,
-                                   false, aThreadId)) {
-    MOZ_COUNT_CTOR(PlatformData);
-  }
+                                   false, aThreadId)) {}
 
   ~PlatformData() {
     if (mProfiledThread != nullptr) {
       CloseHandle(mProfiledThread);
       mProfiledThread = nullptr;
     }
-    MOZ_COUNT_DTOR(PlatformData);
   }
 
   HANDLE ProfiledThread() { return mProfiledThread; }
