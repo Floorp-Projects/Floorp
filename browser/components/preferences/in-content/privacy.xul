@@ -708,38 +708,32 @@
                 " />
       </hbox>
     </hbox>
+  </vbox>
 
-    <vbox id="notificationsDoNotDisturbBox" hidden="true">
-      <checkbox id="notificationsDoNotDisturb" class="indent"/>
-    </vbox>
-
-    <hbox id="autoplaySettingsRow" align="center" role="group" aria-labelledby="autoplayPermissionsLabel">
-      <description flex="1">
-        <image class="autoplay-icon permission-icon" />
-        <separator orient="vertical" class="thin"/>
-        <label id="autoplayPermissionsLabel"
-               data-l10n-id="permissions-autoplay"/>
-      </description>
-      <hbox pack="end">
-        <button id="autoplaySettingsButton"
-                is="highlightable-button"
-                class="accessory-button"
-                data-l10n-id="permissions-autoplay-settings"
-                search-l10n-ids="
-                  permissions-remove.label,
-                  permissions-remove-all.label,
-                  permissions-button-cancel.label,
-                  permissions-button-ok.label,
-                  permissions-site-autoplay-window.title,
-                  permissions-site-autoplay-desc,
-                  permissions-site-autoplay-disable-label,
-                  permissions-site-autoplay-disable-desc,
-                " />
-      </hbox>
-    </hbox>
+  <vbox id="notificationsDoNotDisturbBox" hidden="true">
+    <checkbox id="notificationsDoNotDisturb" class="indent"/>
   </vbox>
 
   <separator flex="1"/>
+
+  <hbox align="start" id="autoplayMediaCheckboxWrapper">
+    <checkbox id="autoplayMediaCheckbox"
+              data-l10n-id="permissions-block-autoplay-media2"
+              flex="1" />
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="autoplayMediaPolicyButton"
+              is="highlightable-button"
+              class="accessory-button"
+              data-l10n-id="permissions-block-autoplay-media-exceptions"
+              search-l10n-ids="permissions-address,
+                               permissions-button-cancel.label,
+                               permissions-button-ok.label,
+                               permissions-exceptions-autoplay-media-window2.title,
+                               permissions-exceptions-autoplay-media-desc2
+                               " />
+    </hbox>
+  </hbox>
 
   <hbox data-subcategory="permissions-block-popups">
     <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
