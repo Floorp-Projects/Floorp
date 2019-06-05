@@ -4479,13 +4479,15 @@ Storage* nsGlobalWindowInner::GetLocalStorage(ErrorResult& aError) {
   }
 
   // Note that this behavior is observable: if we grant storage permission to a
-  // tracker, we pass from the partitioned LocalStorage to the 'normal'
-  // LocalStorage. The previous data is lost and the 2 window.localStorage
-  // objects, before and after the permission granted, will be different.
+  // tracker, we pass from the partitioned LocalStorage (or a partitioned cookie
+  // jar) to the 'normal' one. The previous data is lost and the 2
+  // window.localStorage objects, before and after the permission granted, will
+  // be different.
   if ((StoragePartitioningEnabled(access, cookieSettings) ||
        !ShouldPartitionStorage(access)) &&
       (!mLocalStorage ||
-       mLocalStorage->Type() == Storage::ePartitionedLocalStorage)) {
+       mLocalStorage->Type() == Storage::ePartitionedLocalStorage ||
+       mLocalStorage->StoragePrincipal() != GetEffectiveStoragePrincipal())) {
     RefPtr<Storage> storage;
 
     if (NextGenLocalStorageEnabled()) {
@@ -6963,8 +6965,7 @@ void nsGlobalWindowInner::StorageAccessGranted() {
   // If we have a partitioned localStorage, it's time to replace it with a real
   // one in order to receive notifications.
 
-  if (mLocalStorage &&
-      mLocalStorage->Type() == Storage::ePartitionedLocalStorage) {
+  if (mLocalStorage) {
     IgnoredErrorResult error;
     GetLocalStorage(error);
     if (NS_WARN_IF(error.Failed())) {
